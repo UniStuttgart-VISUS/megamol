@@ -1392,6 +1392,16 @@ namespace protein {
 			return *this;
 		}
 
+		/*
+		 */
+		inline bool IsSolvent(const Residue *res) {
+			// TODO: index tests here?
+			int idx = res->MoleculeIndex();
+			const Molecule& molecule = this->Molecules()[idx];
+			const Chain& chain = this->Chains()[molecule.ChainIndex()];
+			return chain.Type() == MolecularDataCall::Chain::SOLVENT;
+		}
+
     private:
         // -------------------- variables --------------------
 
