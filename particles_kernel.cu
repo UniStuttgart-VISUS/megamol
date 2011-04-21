@@ -1404,8 +1404,8 @@ __device__ uint findNeighborsInCellCBCuda(
 					smallCircle.x = vec.x;
 					smallCircle.y = vec.y;
 					smallCircle.z = vec.z;
-					smallCircle.w = 1.0;
-                    //smallCircle.w = sqrt(((pos.w + params.probeRadius) * (pos.w + params.probeRadius)) - dot( vec, vec));
+					//smallCircle.w = 1.0;
+                    smallCircle.w = sqrt(((pos.w + params.probeRadius) * (pos.w + params.probeRadius)) - dot( vec, vec));
 					smallCircles[index*params.maxNumNeighbors+neighborIndex+count] = smallCircle;
 					// increment the neighbor counter
 					count++;
@@ -1463,6 +1463,113 @@ __global__ void findNeighborsCBCuda(
 
     // write new neighbor atom count back to (sorted) index location
     neighborCount[index] = count;
+}
+
+// find and remove unnecessary small circles
+__global__ void removeCoveredSmallCirclesCBCuda(
+        float4* smallCircles,         // in/out: small circles
+        uint*   neighborCount,        // in/out: number of neighbors
+        uint*   neighbors,            // input: neighbor indices
+        float4* atomPos,              // input: sorted atom positions
+        uint    numAtoms) {
+    // get atom index
+    uint atomIdx = blockIdx.y * blockDim.y + threadIdx.y;
+    // get neighbor atom index
+    uint jIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    // check, if atom index is within bounds
+    if( atomIdx >= numAtoms ) return;
+    // check, if neighbor index is within bounds
+    if( jIdx >= params.maxNumNeighbors ) return;
+    // check, if neighbor index is within bounds
+    uint numNeighbors = neighborCount[atomIdx];
+    if( jIdx >= numNeighbors ) return;
+
+    // read position and radius of atom i from sorted array
+	float4 atomi = FETCH( atomPos, atomIdx);
+    float3 pi = make_float3( atomi.x, atomi.y, atomi.z);
+    float R = atomi.w + params.probeRadius;
+
+    // flag wether j sould be added (true) is cut off (false)
+    bool addJ = true;
+
+    // the atom index of j
+    uint j = neighbors[atomIdx * params.maxNumNeighbors + jIdx];
+    // get small circle j
+    float4 scj = smallCircles[atomIdx * params.maxNumNeighbors + jIdx];
+    // vj = the small circle center
+    float3 vj = make_float3( scj.x, scj.y, scj.z);
+    // pj = center of atom j
+    float4 aj = FETCH( atomPos, j);
+    float3 pj = make_float3( aj.x, aj.y, aj.z);
+    // variables for k
+    uint k;
+    float4 sck;
+    float3 vk;
+    float4 ak;
+    float3 pk;
+    float vjvk;
+    float denom;
+    float3 h;
+    float3 nj;
+    float3 nk;
+    float3 q;
+    float3 mj;
+    float3 mk;
+
+    // check j with all other neighbors k
+    for( uint kCnt = 0; kCnt < neighborCount[atomIdx]; kCnt++ ) {
+        // don't compare the circle with itself
+        if( jIdx == kCnt ) 
+            continue;
+        // the atom index of k
+        k = neighbors[atomIdx * params.maxNumNeighbors + kCnt];
+        // get small circle k
+        sck = smallCircles[atomIdx * params.maxNumNeighbors + kCnt];
+        // vk = the small circle center
+        vk = make_float3( sck.x, sck.y, sck.z);
+        // pk = center of atom k
+        ak = FETCH( atomPos, k);
+        pk = make_float3( ak.x, ak.y, ak.z);
+        // vj * vk
+        vjvk = dot( vj, vk);
+        // denominator
+        denom = dot( vj, vj) * dot( vk, vk) - vjvk * vjvk;
+        // point on straight line (intersection of small circle planes)
+        h = vj * ( dot( vj, vj - vk) * dot( vk, vk) ) / denom + vk * ( dot( vk - vj, vk) * dot( vj, vj) ) / denom;
+        // compute cases
+        nj = normalize( pi - pj);
+        nk = normalize( pi - pk);
+        q = vk - vj;
+        // if normals are the same (unrealistic, yet theoretically possible)
+        if( dot( nj, nk) - 1.0f < 0.000001 ) {
+            if( dot( nj, nk) > 0.0 ) {
+                if( dot( nj, q) > 0.0 ) {
+                    // k cuts off j --> remove j
+                    addJ = false;
+                    break;
+                }
+            }
+        } else if( dot( h, h) > ( R * R) ) {
+            mj = ( vj - h);
+            mk = ( vk - h);
+            if( dot( nj, nk) > 0.0 ) {
+                if( dot( mj, mk) > 0.0 && dot( nj, q) > 0.0 ) {
+                    // k cuts off j --> remove j
+                    addJ = false;
+                    break;
+                }
+		    } else {
+				if( dot( mj, mk) > 0.0 && dot( nj, q) < 0.0 ) {
+                    // atom i has no contour
+                    neighborCount[atomIdx] = 0;
+                }
+			}
+        }
+    }
+    // all k were tested, see if j is cut off
+    if( !addJ ) {
+        smallCircles[atomIdx * params.maxNumNeighbors + jIdx].w = -1.0;
+    }
 }
 
 #endif

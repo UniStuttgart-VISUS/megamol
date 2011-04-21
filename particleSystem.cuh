@@ -177,4 +177,12 @@ void findNeighborsCB(
     uint   numNeighbors,
     uint   numCells);
 
+void removeCoveredSmallCirclesCB(
+    float* smallCircles,
+    uint*  neighborCount,
+    uint*  neighbors,
+    float* sortedPos,
+    uint   numAtoms,
+    uint   numNeighbors);
+
 }
