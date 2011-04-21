@@ -598,4 +598,35 @@ void findNeighborsCB(
     cutilSafeCall( cudaUnbindTexture( cellEndTex));
 }
 
+void removeCoveredSmallCirclesCB(
+        float* smallCircles,
+        uint*  neighborCount,
+        uint*  neighbors,
+        float* sortedPos,
+        uint   numAtoms,
+        uint   numNeighbors) {
+    cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
+	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+
+    // one thread per particle neighbor
+    dim3 numThreads;
+    numThreads.x = 16;
+    numThreads.y = 16;
+    numThreads.z = 1;
+    dim3 numBlocks;
+    numBlocks.x = numNeighbors / numThreads.x + ( numNeighbors % numThreads.x == 0 ? 0:1);
+    numBlocks.y = numAtoms / numThreads.y + ( numAtoms % numThreads.y == 0 ? 0:1);
+    numBlocks.z = 1;
+
+    // execute the kernel
+    removeCoveredSmallCirclesCBCuda<<< numBlocks, numThreads >>>(
+        (float4*)smallCircles, neighborCount, neighbors, (float4*)sortedPos, numAtoms);
+
+    // check if kernel invocation generated an error
+    cutilCheckMsg("Kernel execution failed");
+
+    cutilSafeCall( cudaUnbindTexture( atomPosTex));
+	cutilSafeCall( cudaUnbindTexture( neighborsTex));
+}
+
 }   // extern "C"

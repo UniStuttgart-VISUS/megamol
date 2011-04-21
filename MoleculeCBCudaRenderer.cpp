@@ -244,7 +244,11 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 	glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 	glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
 
+#if 1
     this->ContourBuildupCuda( mol);
+#else
+    this->ContourBuildupCPU( mol);
+#endif
 
     glPopMatrix();
     return true;
@@ -308,6 +312,120 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
         this->atomNeighborCount,
 		this->numGridCells);
 
+    // find and remove unnecessary small circles
+    removeCoveredSmallCirclesCB(
+        m_dSmallCircles,
+        m_dNeighborCount,
+        m_dNeighbors,
+        m_dSortedPos,
+        numAtoms,
+        params.maxNumNeighbors);
+
+#if 1
+	// get CUDA stuff
+    copyArrayFromDevice( m_hNeighborCount, m_dNeighborCount, 0, sizeof(uint)*this->numAtoms);
+    //copyArrayFromDevice( m_hNeighbors, m_dNeighbors, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
+    //copyArrayFromDevice( m_hParticleIndex, m_dGridParticleIndex, 0, sizeof(uint)*this->numAtoms);
+    copyArrayFromDevice( m_hPos, m_dSortedPos, 0, sizeof(float)*4*this->numAtoms);
+    copyArrayFromDevice( m_hSmallCircles, m_dSmallCircles, 0, sizeof(float)*4*this->numAtoms*this->atomNeighborCount);
+
+	// do actual rendering
+	float viewportStuff[4] = {
+		cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
+		cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
+	if( viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
+	if( viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+	viewportStuff[2] = 2.0f / viewportStuff[2];
+	viewportStuff[3] = 2.0f / viewportStuff[3];
+
+	this->sphereShader.Enable();
+	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+
+    int cnt1, cnt2, cnt3; 
+	vislib::math::Vector<float, 3> tmpVec1, tmpVec2, tmpVec3, ex( 1, 0, 0), ey( 0, 1, 0);
+	vislib::math::Quaternion<float> tmpQuat;
+
+	// draw small circles
+	glBegin( GL_POINTS);
+	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
+        tmpVec1.Set( m_hPos[cnt1*4], m_hPos[cnt1*4+1], m_hPos[cnt1*4+2]);
+        for( cnt2 = 0; cnt2 < m_hNeighborCount[cnt1]; ++cnt2 ) {
+            if( m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4 + 3] < 0.0 )
+                continue;
+            tmpVec2.Set( m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4],
+                m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4 + 1],
+                m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4 + 2]);
+            // center of small circle
+			glColor3f( 0.0f, 0.0f, 1.0f);
+			glVertex4f(
+				tmpVec1.X() + tmpVec2.X(),
+				tmpVec1.Y() + tmpVec2.Y(),
+				tmpVec1.Z() + tmpVec2.Z(),
+				0.1f);
+			// point on small circle
+			glColor3f( 1.0f, 1.0f, 0.0f);
+			tmpVec3 = tmpVec2.Cross( ey);
+			tmpVec3.Normalise();
+            tmpVec3 *= m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4 + 3];
+			tmpQuat.Set( float( vislib::math::PI_DOUBLE / 50.0), tmpVec2 / tmpVec2.Length());
+			for( cnt3 = 0; cnt3 < 100; ++cnt3 ) {
+				tmpVec3 = tmpQuat * tmpVec3;
+				glVertex4f(
+					tmpVec1.X() + tmpVec2.X() + tmpVec3.X(),
+					tmpVec1.Y() + tmpVec2.Y() + tmpVec3.Y(),
+					tmpVec1.Z() + tmpVec2.Z() + tmpVec3.Z(),
+					0.1f);
+			}
+		}
+	}
+	glEnd();
+
+    /*
+    // render atoms    
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glColor3ub( 255, 125, 0);
+    glEnableClientState( GL_VERTEX_ARRAY);
+    glBindBuffer( GL_ARRAY_BUFFER, this->atomPosVBO);
+    glVertexPointer( 4, GL_FLOAT, 0, 0);
+    glDrawArrays( GL_POINTS, 0, mol->AtomCount());
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    glDisableClientState( GL_VERTEX_ARRAY);
+    */
+
+	// START draw atoms ...
+    //glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);   // standard transparency
+    //glBlendFunc( GL_DST_COLOR, GL_ONE_MINUS_DST_ALPHA);   // pretty cool & useful...
+    glBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);     // very useful
+	glEnable( GL_BLEND);
+    glDisable( GL_CULL_FACE);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
+	glBegin( GL_POINTS);
+	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
+		if( cnt1 == 0 )
+			glColor4f( 1.0, 0.0, 1.0, this->opacityParam.Param<param::FloatParam>()->Value());
+		else
+			glColor4f( 1.0, 0.0, 0.0, this->opacityParam.Param<param::FloatParam>()->Value());
+		glVertex4f(
+            //m_hPos[cnt1*4+0],
+            //m_hPos[cnt1*4+1],
+            //m_hPos[cnt1*4+2],
+            //m_hPos[cnt1*4+3] + this->probeRadius);
+			mol->AtomPositions()[cnt1*3+0],
+			mol->AtomPositions()[cnt1*3+1],
+			mol->AtomPositions()[cnt1*3+2],
+			//mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius());
+            //mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius() * 0.1f);
+			mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius() + this->probeRadius);
+	}
+	glEnd();
+    glDisable( GL_BLEND);
+    // ... END draw atoms
+
+    sphereShader.Disable();
+#endif
 }
 
 /*
@@ -378,7 +496,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU( MolecularDataCall *mol) {
 	viewportStuff[3] = 2.0f / viewportStuff[3];
 
 	// ========= RENDERING =========
-    unsigned int cnt1;
+    unsigned int cnt1, cnt2;
     int cnt3; 
 	vislib::math::Vector<float, 3> tmpVec1, tmpVec2, tmpVec3, ex( 1, 0, 0), ey( 0, 1, 0);
 	vislib::math::Quaternion<float> tmpQuat;
@@ -479,7 +597,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU( MolecularDataCall *mol) {
 					}
                 }
             }
-            // all k were tested, see if j is cut of or sould be added
+            // all k were tested, see if j is cut off or sould be added
             if( addJ ) {
                 this->smallCircles[iCnt].Add( vj);
 				this->smallCircleRadii[iCnt].Add( 1.0f);
@@ -494,6 +612,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU( MolecularDataCall *mol) {
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+#define DRAW_SMALL_ALL_CIRCLES 1
 #if DRAW_SMALL_ALL_CIRCLES
 	// draw small circles
 	glBegin( GL_POINTS);
