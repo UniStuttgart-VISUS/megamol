@@ -1541,7 +1541,7 @@ __global__ void removeCoveredSmallCirclesCBCuda(
         nk = normalize( pi - pk);
         q = vk - vj;
         // if normals are the same (unrealistic, yet theoretically possible)
-        if( dot( nj, nk) - 1.0f < 0.000001 ) {
+        if( dot( nj, nk) == 1.0 ) {
             if( dot( nj, nk) > 0.0 ) {
                 if( dot( nj, q) > 0.0 ) {
                     // k cuts off j --> remove j
@@ -1549,7 +1549,7 @@ __global__ void removeCoveredSmallCirclesCBCuda(
                     break;
                 }
             }
-        } else if( dot( h, h) > ( R * R) ) {
+        } else if( length( h) > R ) {
             mj = ( vj - h);
             mk = ( vk - h);
             if( dot( nj, nk) > 0.0 ) {
