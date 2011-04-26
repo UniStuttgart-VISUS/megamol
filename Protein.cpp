@@ -68,6 +68,7 @@
 #include "vislib/vislibversion.h"
 
 #include "vislib/Log.h"
+#include "vislib/Trace.h"
 #include "vislib/ThreadSafeStackTrace.h"
 
 
@@ -221,6 +222,12 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
  * mmplgConnectStatics
  */
 PROTEIN_API bool mmplgConnectStatics(int which, void* value) {
+
+#if defined(DEBUG) || defined(_DEBUG)
+    // only trace non-vislib messages
+    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
+#endif /* DEBUG || _DEBUG */
+
     static vislib::sys::Log::EchoTargetRedirect etr(NULL);
     switch (which) {
 

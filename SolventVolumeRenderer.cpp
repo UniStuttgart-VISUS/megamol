@@ -1731,11 +1731,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 
 		bool isSolvent = false;
 #if 1
-		int idx = residue->MoleculeIndex();
-		const MolecularDataCall::Molecule& molecule = mol->Molecules()[idx];
-		idx = molecule.ChainIndex();
-		const MolecularDataCall::Chain& chain = mol->Chains()[idx];
-		isSolvent = (chain.Type() == MolecularDataCall::Chain::SOLVENT);
+		isSolvent = mol->IsSolvent(residue);
 #else
 		for(int i = 0 ; i < this->solventResidueTypeIds.Count(); i++ ) {
 			if (this->solventResidueTypeIds[i] == residue->Type()) {
@@ -1744,9 +1740,38 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 			}
 		}
 #endif
+
+		// test to visualize hydrogen bounds from the polymer to the solvent and map color to the volume surface
+		if (coloringByHydroBonds) {
+			for(int atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++) {
+				if (this->hBondInterPtr[atomIdx] == -1)
+					continue;
+				int sortedVolumeIdx = atomCount - (atomCntSol+1);
+				int connection = this->hBondInterPtr[atomIdx];
+				float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
+				float *solventAtomColor = &updatVolumeTextureColors[sortedVolumeIdx*3];
+				float *interPos = &this->atomPosInterPtr[atomIdx*3];
+				float *interPos2 = &this->atomPosInterPtr[connection*3];
+				// hydrogen bonds in the middle between the two connected atoms ...
+				atomPos[0] = ((interPos[0]+interPos2[0])*0.5f + this->translation.X()) * this->scale;
+				atomPos[1] = ((interPos[1]+interPos2[1])*0.5f + this->translation.Y()) * this->scale;
+				atomPos[2] = ((interPos[2]+interPos2[2])*0.5f + this->translation.Z()) * this->scale;
+				//atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
+				atomPos[3] = mol->AtomHydrogenBondDistance() * this->scale;
+				//atomPos[3] = (atomTypes[atomTypeIndices[atomIdx]].Radius()
+				//				+atomTypes[atomTypeIndices[connection]].Radius()) * this->scale * 0.5;
+				solventAtomColor[0] = 1;
+				solventAtomColor[1] = 0;
+				solventAtomColor[2] = 0;
+				atomCntSol++;
+			}
+		}
+
+		/* sort atoms into different arrays depending whether they form the solvent or the polymer ... */
 		if (isSolvent) {
 			if (coloringByHydroBonds)
 				continue;
+
 			/* solvent (creates volume coloring ...) */
 			int atomIdx;
 			//#pragma omp parallel for // das verlangsamt alles enorm unter windows! (komisch ...)
@@ -1778,28 +1803,6 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 				atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
 				atomPos[2] = (interPos[2] + this->translation.Z()) * this->scale;
 				atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
-
-				// test to visualize hydrogen bounds from the polymer to the solvent and map color to the volume surface
-				if (coloringByHydroBonds && hBondInterPtr[atomIdx] != -1) {
-					int sortedVolumeIdx = atomCount - (atomCntSol+1);
-					int connection = this->hBondInterPtr[atomIdx];
-					float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
-					float *solventAtomColor = &updatVolumeTextureColors[sortedVolumeIdx*3];
-					float *interPos = &this->atomPosInterPtr[atomIdx*3];
-					float *interPos2 = &this->atomPosInterPtr[connection*3];
-					// hydrogen bonds in the middle between the two connected atoms ...
-					atomPos[0] = ((interPos[0]+interPos2[0])*0.5f + this->translation.X()) * this->scale;
-					atomPos[1] = ((interPos[1]+interPos2[1])*0.5f + this->translation.Y()) * this->scale;
-					atomPos[2] = ((interPos[2]+interPos2[2])*0.5f + this->translation.Z()) * this->scale;
-					//atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
-					atomPos[3] = mol->AtomHydrogenBondDistance() * this->scale;
-					//atomPos[3] = (atomTypes[atomTypeIndices[atomIdx]].Radius()
-					//				+atomTypes[atomTypeIndices[connection]].Radius()) * this->scale * 0.5;
-					solventAtomColor[0] = 1;
-					solventAtomColor[1] = 0;
-					solventAtomColor[2] = 0;
-					atomCntSol++;
-				}
 			}
 			atomCntMol += (lastAtomIndx - firstAtomIndex);
 		}

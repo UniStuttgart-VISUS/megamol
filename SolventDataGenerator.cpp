@@ -39,6 +39,8 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 		molDataInputCallerSlot( "getInputData", "molecular data source (usually the PDB loader)"),
 		hBondDataFile( "hBondDataFile", "file to store hydrogen bond data"),
 		hBondDistance("hBondDistance", "distance for hydrogen bonds (angstroem?)"),
+		hBondDonorAcceptorDistance("hBondDonorAcceptorDistance", "distance between donor and acceptor of the hydrogen bonds"),
+		hBondDonorAcceptorAngle("hBondDonorAcceptorAngle", "angle between donor-acceptor and donor-hydrogen in degrees"),
 		showMiddlePositions("showMiddlePositions", "show the middle of all atom positions over time")
 {
 	this->molDataInputCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -52,6 +54,14 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 	this->hBondDistance.SetParameter(new param::FloatParam(1.9f, 0.0f));
 	this->MakeSlotAvailable( &this->hBondDistance);
 
+	// distance between donor and acceptor of the hydrogen bonds
+	this->hBondDonorAcceptorDistance.SetParameter(new param::FloatParam(3.0f, 0.0f));
+	this->MakeSlotAvailable( &this->hBondDonorAcceptorDistance);
+
+	// angle between donor-acceptor and donor-hydrogen in degrees
+	this->hBondDonorAcceptorAngle.SetParameter(new param::FloatParam(30.0f, 0.0f));
+	this->MakeSlotAvailable( &this->hBondDonorAcceptorAngle);
+
 	this->hBondDataFile.SetParameter(new param::StringParam("hbond.dat"));
 	this->MakeSlotAvailable( &this->hBondDataFile);
 
@@ -63,6 +73,7 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 
 	this->maxOMPThreads = omp_get_max_threads();
 	this->neighbourIndices = new vislib::Array<unsigned int>[this->maxOMPThreads];
+	//this->neighbHydrogenIndices = new vislib::Array<unsigned int>[this->maxOMPThreads];
 }
 
 megamol::protein::SolventDataGenerator::~SolventDataGenerator() {
@@ -205,13 +216,10 @@ public:
 
 
 void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(MolecularDataCall *data, const float *atomPositions, int *atomHydroBondsIndicesPtr) {
-	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
 	//const float *atomPositions = data->AtomPositions();
 	const MolecularDataCall::AtomType *atomTypes = data->AtomTypes();
 	const unsigned int *atomTypeIndices = data->AtomTypeIndices();
 	const int *atomResidueIndices = data->AtomResidueIndices();
-
-	neighbourFinder.SetPointData(atomPositions, data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
 
     // set all entries to "not connected"
 	memset(atomHydroBondsIndicesPtr, -1, sizeof(int)*data->AtomCount());
@@ -223,17 +231,17 @@ void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(Molecular
 
 	time_t t = clock();
 
+#if 0
+	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
+	neighbourFinder.SetPointData(atomPositions, data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
+
 	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
 #pragma omp parallel for num_threads(maxOMPThreads)
 	for( int rIdx = 0; rIdx < data->ResidueCount(); rIdx++ ) {
 		const MolecularDataCall::Residue *residue = data->Residues()[rIdx];
 
 		// we're only interested in hydrogen bonds between polymer/protein molecule and surounding solvent
-		int idx = residue->MoleculeIndex();
-		const MolecularDataCall::Molecule& molecule = data->Molecules()[idx];
-		idx = molecule.ChainIndex();
-		const MolecularDataCall::Chain& chain = data->Chains()[idx];
-		if (chain.Type() == MolecularDataCall::Chain::SOLVENT)
+		if (data->IsSolvent(residue))
 			continue;
 
 		// find possible acceptor atoms in the current residuum (for now just O, N, C(?)
@@ -250,9 +258,9 @@ void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(Molecular
 			char element = name[0];
 
 /*
-JW: ich f�rchte f�r eine allgemeine Deffinition der Wasserstoffbr�cken mu� man �ber die Bindungsenergien gehen und diese berechnen.
-F�r meine Simulationen und alle Bio-Geschichten reicht die Annahme, dass Sauerstoff, Stickstoff und Fluor (was fast nie vorkommt)
-Wasserstoffbr�cken bilden und dabei als Donor und Aktzeptor dienen k�nne. Dabei ist der Wasserstoff am Donor gebunden und bildet die Br�cke zum Akzeptor.
+JW: ich fuerchte fuer eine allgemeine Deffinition der Wasserstoffbruecken muss man ueber die Bindungsenergien gehen und diese berechnen.
+Fuer meine Simulationen und alle Bio-Geschichten reicht die Annahme, dass Sauerstoff, Stickstoff und Fluor (was fast nie vorkommt)
+Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabei ist der Wasserstoff am Donor gebunden und bildet die Bruecke zum Akzeptor.
 */
 			if (element=='N' || element=='O' /*|| element=='F' || element=='C'??*/) {
 				int ompThreadID = omp_get_thread_num();
@@ -272,12 +280,147 @@ Wasserstoffbr�cken bilden und dabei als Donor und Aktzeptor dienen k�nne. Da
 						// TODO: maybe mark double time? or double with negative index?
 					}
 				}
+			} else if (element=='H') {
+				// TODO !?
 			}
 		}
 	}
+#else
+
+	/* create hydrogen connections */
+	if (hydrogenConnections.Count() <= data->AtomCount() * MAX_HYDROGENS_PER_ATOM) {
+		hydrogenConnections.SetCount(data->AtomCount() * MAX_HYDROGENS_PER_ATOM);
+		memset(&hydrogenConnections[0], -1, sizeof(int)*data->AtomCount()*MAX_HYDROGENS_PER_ATOM);
+		int count = data->ConnectionCount();
+		for(int i = 0; i < count; i++) {
+			int idx0 = data->Connection()[2*i];
+			int idx1 = data->Connection()[2*i+1];
+			char element0 = atomTypes[atomTypeIndices[idx0]].Name()[0];
+			char element1 = atomTypes[atomTypeIndices[idx1]].Name()[0];
+
+			/* make sure the hydrogen atom is 'idx1' */
+			if (element0 == 'H') {
+				vislib::math::Swap(idx0, idx1);
+				vislib::math::Swap(element0, element1);
+			}
+
+			// check if we have a possible donor/acceptor here ...
+			if (element0 != 'O' && element0 != 'N')
+				continue;
+
+			// add hydrogen connection if present ...
+			if (element1 == 'H') {
+				int hydrogenConnIdx = idx0*MAX_HYDROGENS_PER_ATOM;
+				for(int j = 0; j < MAX_HYDROGENS_PER_ATOM; j++) {
+					if (hydrogenConnections[hydrogenConnIdx] == -1) {
+						hydrogenConnections[hydrogenConnIdx] = idx1;
+						break;
+					}
+					hydrogenConnIdx++;
+				}
+			}
+		}
+
+		donorAcceptors.SetCount(data->AtomCount());
+		memset(&donorAcceptors[0], -1, sizeof(int)*data->AtomCount());
+		for(int i = 0; i < data->AtomCount(); i++) {
+			char element = atomTypes[atomTypeIndices[i]].Name()[0];
+			if (element == 'O' || element == 'N')
+				donorAcceptors[i] = 1;
+		}
+	}
+
+	// only fill in donors/acceptors into the neighbour finder grid ...
+	float hbondDonorAcceptorDist = hBondDonorAcceptorDistance.Param<param::FloatParam>()->Value();
+	float hbondDonorAcceptorAngle = hBondDonorAcceptorAngle.Param<param::FloatParam>()->Value() * vislib::math::PI_DOUBLE / 180.0;
+	neighbourFinder.SetPointData(atomPositions, data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDonorAcceptorDist, &donorAcceptors[0] );
+
+	const int *hydrogenConnectionsPtr = hydrogenConnections.PeekElements();
+
+	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
+#pragma omp parallel for num_threads(maxOMPThreads)
+	for( int rIdx = 0; rIdx < data->ResidueCount(); rIdx++ ) {
+		const MolecularDataCall::Residue *residue = data->Residues()[rIdx];
+
+		// we're only interested in hydrogen bonds between polymer/protein molecule and surounding solvent
+//#error großes Problem: es werden so nicht alle Wasserstoffbrücken gefunden?!
+		if (data->IsSolvent(residue))
+			continue;
+
+		// find possible acceptor atoms in the current residuum (for now just O, N, C(?)
+
+		// vorerst nur Sauerstoff und Stickstoff als Akzeptor/Donator (N, O)
+		int lastAtomIdx = residue->FirstAtomIndex()+residue->AtomCount();
+		for(int atomIndex = residue->FirstAtomIndex(); atomIndex < lastAtomIdx; atomIndex++) {
+			// is this atom already connected?
+			//if (reverseConnectionPtr[atomIndex] >= 0 continue;
+
+/*
+JW: ich fuerchte fuer eine allgemeine Deffinition der Wasserstoffbruecken muss man ueber die Bindungsenergien gehen und diese berechnen.
+Fuer meine Simulationen und alle Bio-Geschichten reicht die Annahme, dass Sauerstoff, Stickstoff und Fluor (was fast nie vorkommt)
+Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabei ist der Wasserstoff am Donor gebunden und bildet die Bruecke zum Akzeptor.
+*/
+
+//#error poly->solv, solv->poly! und poly->poly! solv->solv auf keine fall auf der oberfläche! (zumindest unterscheiden)
+
+			// nitrogen and oxygen can be donors and acceptors here ...
+			if (donorAcceptors[atomIndex] != -1 /*element=='N' || element=='O'*/) {
+				// access a private array for this parallel thread ...
+				vislib::Array<unsigned int>& privateNeighbourIndices = neighbourIndices[omp_get_thread_num()];
+				privateNeighbourIndices.Clear(); // clear, keep capacity ...
+				privateNeighbourIndices.SetCapacityIncrement( 100); // set capacity increment
+				neighbourFinder.FindNeighboursInRange(&atomPositions[atomIndex*3], hbondDonorAcceptorDist, privateNeighbourIndices);
+
+				for(int nIdx = 0; nIdx < privateNeighbourIndices.Count(); nIdx++) {
+					int neighbIndex = privateNeighbourIndices[nIdx];
+					//char elementNeighb = atomTypes[atomTypeIndices[neighbIndex]].Name()[0];
+
+					// atom from the current residue?
+					if (atomResidueIndices[neighbIndex]==rIdx)
+						continue;
+
+					//ASSERT(donorAcceptors[neighbIndex] != -1);
+					//if ( elementNeighb=='O' || elementNeighb=='N' ) { ... }
+
+
+					// DEBUG
+					//atomHydroBondsIndicesPtr[atomIndex] = neighbIndex;
+					//atomHydroBondsIndicesPtr[neighbIndex] = atomIndex;
+
+					// check for other acceptor/donor - all atoms inside 'neighbourFinder' only consist of donor/acceptor atoms ..
+					// loop over hydrogen atoms from donor 'atomIndex'-  - 'neighbIndex' is the acceptor
+					int hydrogenConnIdx = atomIndex*MAX_HYDROGENS_PER_ATOM;
+					for(int j = 0; j < MAX_HYDROGENS_PER_ATOM; j++) {
+						int hydrogenAtomIdx = hydrogenConnectionsPtr[hydrogenConnIdx];
+						if (hydrogenAtomIdx != -1 && validHydrogenBond(atomIndex, hydrogenAtomIdx, neighbIndex, atomPositions, hbondDonorAcceptorAngle)) {
+							atomHydroBondsIndicesPtr[neighbIndex] = hydrogenAtomIdx;
+							// mark this donor/acceptor pair as already connetected with a hydrogen bond
+							//reverseConnectionPtr[atomIndex] = neighbIndex;
+							// TODO: maybe mark double time? or double with negative index?
+							break;
+						}
+						hydrogenConnIdx++;
+					}
+					// loop over hydrogen atoms from donor 'neighbIndex' - 'atomIndex' is the acceptor
+					hydrogenConnIdx = neighbIndex*MAX_HYDROGENS_PER_ATOM;
+					for(int j = 0; j < MAX_HYDROGENS_PER_ATOM; j++) {
+						int hydrogenAtomIdx = hydrogenConnectionsPtr[hydrogenConnIdx];
+						if (hydrogenAtomIdx != -1 && validHydrogenBond(neighbIndex, hydrogenAtomIdx, atomIndex, atomPositions, hbondDonorAcceptorAngle)) {
+							atomHydroBondsIndicesPtr[atomIndex] = hydrogenAtomIdx;
+							// mark this donor/acceptor pair as already connetected with a hydrogen bond
+							//reverseConnectionPtr[neighbIndex] = atomIndex;
+							// TODO: maybe mark double time? or double with negative index?
+							break;
+						}
+						hydrogenConnIdx++;
+					}
+				}
+			}
+		}
+	}
+#endif
 
     std::cout << "Hydrogen bonds computed in " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << " seconds." << std::endl;
-
 }
 
 
@@ -408,8 +551,10 @@ bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
 	} else {
 
 		// reset all hbond data if this parameter changes ...
-		if (hBondDistance.IsDirty()) {
-			hBondDistance.ResetDirty();
+		if (this->hBondDistance.IsDirty() || this->hBondDonorAcceptorDistance.IsDirty() || this->hBondDonorAcceptorAngle.IsDirty()) {
+			this->hBondDistance.ResetDirty();
+			this->hBondDonorAcceptorDistance.ResetDirty();
+			this->hBondDonorAcceptorAngle.ResetDirty();
 			for(int i = 0; i < HYDROGEN_BOND_IN_CORE; i++)
 				this->curHBondFrame[i] = -1;
 			molDest->SetDataHash(molSource->DataHash()*666); // hacky ?

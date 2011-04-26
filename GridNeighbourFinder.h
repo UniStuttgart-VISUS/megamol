@@ -44,12 +44,13 @@ namespace protein {
 		 * Set new point data to the neighbourhood search grid.
 		 * @params TODO
 		 */
-		void SetPointData( const T *pointData, unsigned int pointCount, vislib::math::Cuboid<T> boundingBox, T searchDistance ) {
+		void SetPointData( const T *pointData, unsigned int pointCount, vislib::math::Cuboid<T> boundingBox, T searchDistance, int *filter=0) {
 			this->elementPositions = pointData;
 			this->elementCount = pointCount;
 
 			// does the new BBox fit into the old one?
 			if( !elementGrid || !(this->elementBBox.Contains(boundingBox.GetLeftBottomBack(),-1) && this->elementBBox.Contains(boundingBox.GetRightTopFront(),-1)) ) {
+				/* resize bounding-box and grid structure */
 				vislib::math::Dimension<T, 3> dim = boundingBox.GetSize();
 				for(int i = 0; i < 3; i++)
 					this->gridResolution[i] =  floor(dim[i] / (2*searchDistance) + 1.0);
@@ -70,12 +71,8 @@ namespace protein {
 			}
 
 			this->elementOrigin = this->elementBBox.GetOrigin();
-			initElementGrid();
-		}
 
-	private:
-		/** fill the internal grid structure */
-		void initElementGrid() {
+			/** fill the internal grid structure */
 			vislib::math::Dimension<T, 3> bBoxDimension = this->elementBBox.GetSize();
 			for(int i = 0 ; i < 3; i++) {
 				this->gridResolutionFactors[i] = (T)this->gridResolution[i] / bBoxDimension[i];
@@ -85,7 +82,8 @@ namespace protein {
 			for(int i = 0; i < this->elementCount; i++) {
 				// we can skip this assert becaus another ASSERT in 'insertPointIntoGrid'
 				//ASSERT( elementBBox.Contains(vislib::math::ShallowPoint<T,3>(const_cast<T*>(&elementPositions[i*3]))) );
-				insertPointIntoGrid(&this->elementPositions[i*3]);
+				if (!filter || filter[i] != -1)
+					insertPointIntoGrid(&this->elementPositions[i*3]);
 			}
 		}
 
