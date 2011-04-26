@@ -120,6 +120,8 @@ namespace protein {
 
 		/** Distance for hydrogen bonds */
 		megamol::core::param::ParamSlot hBondDistance;
+		megamol::core::param::ParamSlot hBondDonorAcceptorDistance;
+		megamol::core::param::ParamSlot hBondDonorAcceptorAngle;
 		megamol::core::param::ParamSlot hBondDataFile;
 		megamol::core::param::ParamSlot showMiddlePositions;
 
@@ -132,6 +134,12 @@ namespace protein {
 
 		/** temporary variable to store the neighbour indices for the hydrogen-bound search ...*/
 		vislib::Array<unsigned int> *neighbourIndices;
+		//vislib::Array<unsigned int> *neighbHydrogenIndices;
+		/** store hydrogen connections per atom ... */
+		vislib::Array<int> hydrogenConnections;
+		vislib::Array<int> donorAcceptors;
+		enum { MAX_HYDROGENS_PER_ATOM = 4 };
+		//enum { DONOR_ACCEPTOR_TYPE_COUNT = 2 /* only 'O' and 'N' can be donor/acceptor*/};
 		int maxOMPThreads;
 
 		/** array to check atoms already connected ... */
@@ -143,6 +151,15 @@ namespace protein {
 		/** store hydrogen bounds ...*/
 		vislib::Array<int> atomHydroBondsIndices[HYDROGEN_BOND_IN_CORE];
 		int curHBondFrame[HYDROGEN_BOND_IN_CORE];
+
+		inline bool validHydrogenBond(int donorIdx, int hydrogenIdx, int acceptorIdx, const float *atomPositions, float angle) const {
+			vislib::math::ShallowPoint</*const*/ float,3> donorPos(const_cast<float*>(atomPositions)+donorIdx*3);
+			vislib::math::ShallowPoint</*const*/ float,3> acceptorPos(const_cast<float*>(atomPositions)+acceptorIdx*3);
+			vislib::math::ShallowPoint</*const*/ float,3> hydrogenPos(const_cast<float*>(atomPositions)+hydrogenIdx*3);
+			//vislib::math::Vector<float,3> tmp(hydrogenPos-donorPos);
+			//vislib::math::Vector<float,3> tmp2(acceptorPos-donorPos);
+			return (hydrogenPos-donorPos).Angle(acceptorPos-donorPos) <= angle;
+		}
 	};
 
 
