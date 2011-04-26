@@ -23,9 +23,8 @@ namespace vislib {
      * @param right A reference to a variable to be swapped
      */
     template<class T> void Swap(T &left, T &right) {
-        T tmp; 
-        tmp = left; 
-        left = right; 
+        T tmp = left;
+        left = right;
         right = tmp;
     }
 

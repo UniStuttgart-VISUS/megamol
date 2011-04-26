@@ -20,6 +20,7 @@
 #include "vislib/assert.h"
 #include "vislib/mathtypes.h"
 #include "vislib/Pair.h"
+#include "vislib/utils.h"
 
 
 namespace vislib {
@@ -249,17 +250,12 @@ namespace math {
     }
 
 
-    /**
-     * Swaps two values.
-     *
-     * @param a The first value.
-     * @param b The second value.
+    /*
+     * There was a second implementation of 'Swap' here.
+     * Instead use '::vislib::Swap' from 'vislib/utils' from base!
+     * This 'using' is to preserve the name for backward compatibility.
      */
-    template<class T> inline void Swap(T& a,  T& b) {
-        T tmp = a;
-        a = b;
-        b = tmp;
-    }
+    using ::vislib::Swap;
 
 
     /**
