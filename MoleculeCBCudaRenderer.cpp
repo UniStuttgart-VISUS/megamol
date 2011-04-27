@@ -321,7 +321,18 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
         numAtoms,
         params.maxNumNeighbors);
 
-#if 1
+    /*
+    // compute all arcs for all small circles
+    computeArcsCB(
+        m_dSmallCircles,
+        m_dNeighborCount,
+        m_dNeighbors,
+        m_dSortedPos,
+        numAtoms,
+        params.maxNumNeighbors);
+    */
+
+#if 0
 	// get CUDA stuff
     copyArrayFromDevice( m_hNeighborCount, m_dNeighborCount, 0, sizeof(uint)*this->numAtoms);
     //copyArrayFromDevice( m_hNeighbors, m_dNeighbors, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
@@ -369,7 +380,9 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 			glColor3f( 1.0f, 1.0f, 0.0f);
 			tmpVec3 = tmpVec2.Cross( ey);
 			tmpVec3.Normalise();
-            tmpVec3 *= m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4 + 3];
+            tmpVec3 *= 
+                //sqrt(((m_hPos[cnt1*4+3] + this->probeRadius) * (m_hPos[cnt1*4+3] + this->probeRadius)) - tmpVec2.Dot( tmpVec2));
+                m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4 + 3];
 			tmpQuat.Set( float( vislib::math::PI_DOUBLE / 50.0), tmpVec2 / tmpVec2.Length());
 			for( cnt3 = 0; cnt3 < 100; ++cnt3 ) {
 				tmpVec3 = tmpQuat * tmpVec3;
