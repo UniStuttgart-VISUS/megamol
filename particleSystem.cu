@@ -634,6 +634,8 @@ void computeArcsCB(
         uint*  neighborCount,
         uint*  neighbors,
         float* sortedPos,
+        float* arcs,
+        uint*  arcCount,
         uint   numAtoms,
         uint   numNeighbors) {
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
@@ -651,7 +653,7 @@ void computeArcsCB(
 
     // execute the kernel
     computeArcsCBCuda<<< numBlocks, numThreads >>>(
-        (float4*)smallCircles, neighborCount, neighbors, (float4*)sortedPos, numAtoms);
+        (float4*)smallCircles, neighborCount, neighbors, (float4*)sortedPos, (float4*)arcs, arcCount, numAtoms);
 
     // check if kernel invocation generated an error
     cutilCheckMsg("Kernel execution failed");

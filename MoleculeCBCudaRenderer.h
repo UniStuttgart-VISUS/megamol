@@ -230,6 +230,7 @@ namespace protein {
 		uint*  m_hCellStart;
 		uint*  m_hCellEnd;
         float* m_hArcs;
+        uint* m_hArcCount;
 
 		// GPU data
 		float* m_dPos;
@@ -238,6 +239,7 @@ namespace protein {
 		uint*  m_dNeighbors;
 		float* m_dSmallCircles;
         float* m_dArcs;
+        uint*  m_dArcCount;
 
 		// grid data for sorting method
 		uint*  m_dGridParticleHash; // grid hash value for each particle
