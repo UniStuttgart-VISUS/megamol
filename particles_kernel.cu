@@ -1404,8 +1404,8 @@ __device__ uint findNeighborsInCellCBCuda(
 					smallCircle.x = vec.x;
 					smallCircle.y = vec.y;
 					smallCircle.z = vec.z;
-					smallCircle.w = 1.0;
-                    //smallCircle.w = sqrt(((pos.w + params.probeRadius) * (pos.w + params.probeRadius)) - dot( vec, vec));
+					//smallCircle.w = 1.0;
+                    smallCircle.w = sqrt(((pos.w + params.probeRadius) * (pos.w + params.probeRadius)) - dot( vec, vec));
 					smallCircles[index*params.maxNumNeighbors+neighborIndex+count] = smallCircle;
 					// increment the neighbor counter
 					count++;
@@ -1515,7 +1515,6 @@ __global__ void removeCoveredSmallCirclesCBCuda(
     float3 q;
     float3 mj;
     float3 mk;
-    float dist;
 
     // check j with all other neighbors k
     for( uint kCnt = 0; kCnt < numNeighbors; kCnt++ ) {
@@ -1573,10 +1572,12 @@ __global__ void removeCoveredSmallCirclesCBCuda(
 
 // compute all arcs of atom j on the surface of atom i
 __global__ void computeArcsCBCuda(
-        float4* smallCircles,         // in/out: small circles
-        uint*   neighborCount,        // in/out: number of neighbors
-        uint*   neighbors,            // input: neighbor indices
-        float4* atomPos,              // input: sorted atom positions
+        float4* smallCircles,           // in: small circles
+        uint*   neighborCount,          // in: number of neighbors
+        uint*   neighbors,              // in: neighbor indices
+        float4* atomPos,                // in: sorted atom positions
+        float4* arcs,                   // out: the arcs
+        uint*   arcCount,               // out: the number of arcs
         uint    numAtoms) {
     // get atom index
     uint atomIdx = blockIdx.y * blockDim.y + threadIdx.y;
@@ -1611,9 +1612,15 @@ __global__ void computeArcsCBCuda(
     // store all arcs
     float start[64];
     float end[64];
+    bool arcValid[64];
     start[0] = 0.0f;
-    end[0] = 3.14159265359f;
+    end[0] = 6.28318530718f;
+    arcValid[0] = true;
     uint arcCnt = 1;
+    // temporary arc arrays for new arcs
+    float tmpStart[16];
+    float tmpEnd[16];
+    uint tmpArcCnt = 0;
 	// compute axes of local coordinate system
     float3 ex = make_float3( 1.0f, 0.0f, 0.0f);
     float3 ey = make_float3( 0.0f, 1.0f, 0.0f);
@@ -1644,6 +1651,9 @@ __global__ void computeArcsCBCuda(
     float yX2;
     float angleX1;
     float angleX2;
+    uint aCnt;
+
+    bool test = false;
 
     // check j with all other neighbors k
     for( uint kCnt = 0; kCnt < numNeighbors; kCnt++ ) {
@@ -1695,6 +1705,7 @@ __global__ void computeArcsCBCuda(
 		if( angleX1 > 6.28318530718f ) {
 			angleX1 = fmod( angleX1, 6.28318530718f);
 			angleX2 = fmod( angleX2, 6.28318530718f);
+                test = true;
 		}
 		// angle of x2 has to be larger than angle of x1 (add 2 PI)
 		if( angleX2 < angleX1 ) {
@@ -1707,99 +1718,170 @@ __global__ void computeArcsCBCuda(
 		}
 
 		// check all existing arcs with new arc k
-		for( uint aCnt = 0; aCnt < arcCnt; aCnt++ ) {
-			if( angleX1 < start[aCnt] ) {
-				// case (1) & (10)
-				if( ( start[aCnt] - angleX1) > ( angleX2 - angleX1)) {
-					if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) > 6.28318530718f ) {
-						if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) < ( 6.28318530718f + angleX2 - angleX1) ) {
-							// case (10)
-							start[aCnt] = angleX1;
-							end[aCnt] = fmod( end[aCnt], 6.28318530718f);
-							// second angle check
-							end[aCnt] = fmod( end[aCnt], 6.28318530718f);
-							if( end[aCnt] < start[aCnt] )
-								end[aCnt] += 6.28318530718f;
-						} else {
-							start[aCnt] = angleX1;
-							end[aCnt] = angleX2;
-							// second angle check
-							end[aCnt] = fmod( end[aCnt], 6.28318530718f);
-							if( end[aCnt] < start[aCnt] )
-								end[aCnt] += 6.28318530718f;
-						}
-					} else {
-						// case (1)
-						//arcAngles.RemoveAt( aCnt);
-                        arcCnt--;
-						aCnt--;
-					}
-				} else {
-					if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) > ( angleX2 - angleX1) ) {
-						// case (5)
-						end[aCnt] = angleX2;
-						// second angle check
-						end[aCnt] = fmod( end[aCnt], 6.28318530718f);
-						if( end[aCnt] < start[aCnt] )
-							end[aCnt] += 6.28318530718f;
-						if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) > 6.28318530718f ) {
-							//// case (6)
-							//tmpArcAngles.Add( vislib::Pair<float, float>( angleX1, fmod( end[aCnt], 6.28318530718f)));
-							//// second angle check
-							//tmpArcAngles.Last().SetSecond( fmod( tmpArcAngles.Last().Second(), 6.28318530718f));
-							//if( tmpArcAngles.Last().Second() < tmpArcAngles.Last().First() )
-							//	tmpArcAngles.Last().SetSecond( tmpArcAngles.Last().Second() + 6.28318530718f);
-						}
-					}
-				} // case (4): Do nothing!
-			} else { // angleX1 > s
-				// case (2) & (9)
-				if( ( angleX1 - start[aCnt]) > ( end[aCnt] - start[aCnt])) {
-					if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) > 6.28318530718f ) {
-						if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) < ( 6.28318530718f + end[aCnt] - start[aCnt])) {
-							// case (9)
-							end[aCnt] = fmod( angleX2, 6.28318530718f);
-							// second angle check
-							end[aCnt] = fmod( end[aCnt], 6.28318530718f);
-							if( end[aCnt] < start[aCnt] )
-								end[aCnt] += 6.28318530718f;
-						}
-					} else {
-						// case (2)
-						//arcAngles.RemoveAt( aCnt);
-                        arcCnt--;
-						aCnt--;
-					}
-				} else {
-					if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) > ( end[aCnt] - start[aCnt]) ) {
-						// case (7)
-						start[aCnt] = angleX1;
-						// second angle check
-						end[aCnt] = fmod( end[aCnt], 6.28318530718f);
-						if( end[aCnt] < start[aCnt] )
-							end[aCnt] += 6.28318530718f;
-						if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) > 6.28318530718f ) {
-							//// case (8)
-							//tmpArcAngles.Add( vislib::Pair<float, float>( start[aCnt], fmod( angleX2, 6.28318530718f)));
-							//// second angle check
-							//tmpArcAngles.Last().SetSecond( fmod( tmpArcAngles.Last().Second(), 6.28318530718f));
-							//if( tmpArcAngles.Last().Second() < tmpArcAngles.Last().First() )
-							//	tmpArcAngles.Last().SetSecond( tmpArcAngles.Last().Second() + 6.28318530718f);
-						}
-					} else {
-						// case (3)
-						start[aCnt] = angleX1;
-						end[aCnt] = angleX2;
-						// second angle check
-						end[aCnt] = fmod( end[aCnt], 6.28318530718f);
-						if( end[aCnt] < start[aCnt] )
-							end[aCnt] += 6.28318530718f;
-					}
-				}
-			}
-		}
+		for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
+            if( arcValid[aCnt] ) {
+			    if( angleX1 < start[aCnt] ) {
+				    // case (1) & (10)
+				    if( ( start[aCnt] - angleX1) > ( angleX2 - angleX1)) {
+					    if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) > 6.28318530718f ) {
+						    if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) < ( 6.28318530718f + angleX2 - angleX1) ) {
+							    // case (10)
+							    start[aCnt] = angleX1;
+							    end[aCnt] = fmod( end[aCnt], 6.28318530718f);
+							    // second angle check
+							    if( end[aCnt] < start[aCnt] )
+								    end[aCnt] += 6.28318530718f;
+						    } else {
+							    start[aCnt] = angleX1;
+							    end[aCnt] = fmod( angleX2, 6.28318530718f);
+							    // second angle check
+							    if( end[aCnt] < start[aCnt] )
+								    end[aCnt] += 6.28318530718f;
+						    }
+					    } else {
+						    // case (1)
+						    //arcAngles.RemoveAt( aCnt);
+						    //aCnt--;
+                            arcValid[aCnt] = false;
+					    }
+				    } else {
+					    if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) > ( angleX2 - angleX1) ) {
+						    // case (5)
+						    end[aCnt] = fmod( angleX2, 6.28318530718f);
+						    // second angle check
+						    if( end[aCnt] < start[aCnt] )
+							    end[aCnt] += 6.28318530718f;
+						    if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) > 6.28318530718f ) {
+							    // case (6)
+                                tmpStart[tmpArcCnt] = angleX1;
+                                tmpEnd[tmpArcCnt] = fmod( end[aCnt], 6.28318530718f);
+							    // second angle check
+                                if( tmpEnd[tmpArcCnt] < tmpStart[tmpArcCnt] )
+                                    tmpEnd[tmpArcCnt] += 6.28318530718f;
+                                tmpArcCnt++;
+						    }
+					    }
+				    } // case (4): Do nothing!
+			    } else { // angleX1 > s
+				    // case (2) & (9)
+				    if( ( angleX1 - start[aCnt]) > ( end[aCnt] - start[aCnt])) {
+					    if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) > 6.28318530718f ) {
+						    if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) < ( 6.28318530718f + end[aCnt] - start[aCnt])) {
+							    // case (9)
+							    end[aCnt] = fmod( angleX2, 6.28318530718f);
+							    // second angle check
+							    if( end[aCnt] < start[aCnt] )
+								    end[aCnt] += 6.28318530718f;
+						    }
+					    } else {
+						    // case (2)
+						    //arcAngles.RemoveAt( aCnt);
+						    //aCnt--;
+                            arcValid[aCnt] = false;
+					    }
+				    } else {
+					    if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) > ( end[aCnt] - start[aCnt]) ) {
+						    // case (7)
+						    start[aCnt] = angleX1;
+						    // second angle check
+						    end[aCnt] = fmod( end[aCnt], 6.28318530718f);
+						    if( end[aCnt] < start[aCnt] )
+							    end[aCnt] += 6.28318530718f;
+						    if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) > 6.28318530718f ) {
+							    // case (8)
+                                tmpStart[tmpArcCnt] = start[aCnt];
+                                tmpEnd[tmpArcCnt] = fmod( angleX2, 6.28318530718f);
+							    // second angle check
+                                if( tmpEnd[tmpArcCnt] < tmpStart[tmpArcCnt] )
+                                    tmpEnd[tmpArcCnt] += 6.28318530718f;
+                                tmpArcCnt++;
+						    }
+					    } else {
+						    // case (3)
+						    start[aCnt] = angleX1;
+						    end[aCnt] = fmod( angleX2, 6.28318530718f);
+						    // second angle check
+						    if( end[aCnt] < start[aCnt] )
+							    end[aCnt] += 6.28318530718f;
+					    }
+				    }
+			    }
+            } // if( arcValid[aCnt] )
+		} // for( uint aCnt = 0; aCnt < arcCnt; aCnt++ )
 
+        // copy new arcs to arc array
+        for( aCnt = 0; aCnt < tmpArcCnt; aCnt++ ) {
+            start[aCnt + arcCnt] = tmpStart[aCnt];
+            end[aCnt + arcCnt] = tmpEnd[aCnt];
+            arcValid[aCnt + arcCnt] = true;
+        }
+        // add new arcs to arc count
+        arcCnt += tmpArcCnt;
+        // "reset" temporary arc array
+        tmpArcCnt = 0;
+
+        // fill gaps (overwrite invalid arcs)
+        uint counter = 0;
+        for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
+            if( arcValid[aCnt] ) {
+                start[aCnt - counter] = start[aCnt];
+                end[aCnt - counter] = end[aCnt];
+                arcValid[aCnt - counter] = arcValid[aCnt];
+            } else {
+                counter++;
+            }
+        }
+        // subtract number of invalid arcs from total number of arcs
+        arcCnt -= counter;
+    } // for( uint kCnt = 0; kCnt < numNeighbors; kCnt++ )
+
+    // TODO: remove/merge split arcs ( x..2*PI / 0..y --> x..y+2*PI )
+
+    /*
+	// merge arcs if arc with angle 0 and arc with angle 2*PI exist
+	int idx0 = -1;
+	int idx2pi = -1;
+	for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
+		if( start[aCnt] < 0.0001f ) {
+			idx0 = int( aCnt);
+		} else if( abs( end[aCnt] - 6.28318530718f) < 0.001f ) {
+			idx2pi = int( aCnt);
+		}
+	}
+	if( idx0 >= 0 && idx2pi >= 0 ) {
+        start[uint(idx0)] = start[uint(idx2pi)];
+		// second angle check
+		end[uint(idx0)] = fmod( end[uint(idx0)], 6.28318530718f);
+		if( end[uint(idx0)] < start[uint(idx0)] )
+			end[uint(idx0)] += 6.28318530718f;
+        // fill gaps (overwrite removed arc idx2pi)
+        for( aCnt = uint(idx2pi); aCnt < arcCnt - 1; aCnt++ ) {
+            start[aCnt] = start[aCnt + 1];
+            end[aCnt] = end[aCnt + 1];
+            arcValid[aCnt] = true;
+        }
+        // subtract the removed arc from total number of arcs
+        arcCnt--;
+	}
+    */
+
+    // write number of arcs
+    arcCount[atomIdx * params.maxNumNeighbors + jIdx] = arcCnt;
+    // copy arcs to global arc array
+    for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
+        if( test ) {
+            arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcCnt * 2] = 
+                make_float4( pi + vj + ( cos( start[aCnt]) * xAxis + sin( start[aCnt]) * yAxis) * scj.w, 1.0f);
+            arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcCnt * 2 + 1] = 
+                make_float4( pi + vj + ( cos( end[aCnt]) * xAxis + sin( end[aCnt]) * yAxis) * scj.w, 1.0f);
+        } else {
+        arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcCnt * 2] = 
+            make_float4( pi + vj + ( cos( start[aCnt]) * xAxis + sin( start[aCnt]) * yAxis) * scj.w, 0.2f); //start[aCnt]);
+        arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcCnt * 2 + 1] = 
+            make_float4( pi + vj + ( cos( end[aCnt]) * xAxis + sin( end[aCnt]) * yAxis) * scj.w, 0.2f); //end[aCnt]);
+        }
     }
+
 }
 
 #endif

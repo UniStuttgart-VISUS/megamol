@@ -321,24 +321,31 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
         numAtoms,
         params.maxNumNeighbors);
 
-    /*
     // compute all arcs for all small circles
     computeArcsCB(
         m_dSmallCircles,
         m_dNeighborCount,
         m_dNeighbors,
         m_dSortedPos,
+        m_dArcs,
+        m_dArcCount,
         numAtoms,
         params.maxNumNeighbors);
-    */
 
-#if 0
+#if 1
 	// get CUDA stuff
     copyArrayFromDevice( m_hNeighborCount, m_dNeighborCount, 0, sizeof(uint)*this->numAtoms);
     //copyArrayFromDevice( m_hNeighbors, m_dNeighbors, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
     //copyArrayFromDevice( m_hParticleIndex, m_dGridParticleIndex, 0, sizeof(uint)*this->numAtoms);
     copyArrayFromDevice( m_hPos, m_dSortedPos, 0, sizeof(float)*4*this->numAtoms);
     copyArrayFromDevice( m_hSmallCircles, m_dSmallCircles, 0, sizeof(float)*4*this->numAtoms*this->atomNeighborCount);
+    copyArrayFromDevice( m_hArcCount, m_dArcCount, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
+    copyArrayFromDevice( m_hArcs, m_dArcs, 0, sizeof(float)*4*this->numAtoms*this->atomNeighborCount*this->atomNeighborCount);
+
+    for( unsigned int i = 0; i < this->numAtoms*this->atomNeighborCount; i++ ) {
+        if( m_hArcCount[i] > 1 )
+            std::cout << "more than 1 arc! " << i << std::endl;
+    }
 
 	// do actual rendering
 	float viewportStuff[4] = {
@@ -370,12 +377,12 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
                 m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4 + 1],
                 m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4 + 2]);
             // center of small circle
-			glColor3f( 0.0f, 0.0f, 1.0f);
-			glVertex4f(
-				tmpVec1.X() + tmpVec2.X(),
-				tmpVec1.Y() + tmpVec2.Y(),
-				tmpVec1.Z() + tmpVec2.Z(),
-				0.1f);
+			//glColor3f( 0.0f, 0.0f, 1.0f);
+			//glVertex4f(
+			//	tmpVec1.X() + tmpVec2.X(),
+			//	tmpVec1.Y() + tmpVec2.Y(),
+			//	tmpVec1.Z() + tmpVec2.Z(),
+			//	0.1f);
 			// point on small circle
 			glColor3f( 1.0f, 1.0f, 0.0f);
 			tmpVec3 = tmpVec2.Cross( ey);
@@ -393,6 +400,15 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 					0.1f);
 			}
 		}
+	}
+	glEnd();
+
+	// draw arc start and end points
+    glColor3f( 0.0f, 1.0f, 0.0f);
+	glBegin( GL_POINTS);
+	for( cnt1 = 0; cnt1 < ( this->numAtoms * this->atomNeighborCount * this->atomNeighborCount * 4); cnt1 += 4 ) {
+        //glVertex4f( m_hArcs[cnt1], m_hArcs[cnt1+1], m_hArcs[cnt1+2], 0.2f);
+        glVertex4fv( &m_hArcs[cnt1]);
 	}
 	glEnd();
 
@@ -899,112 +915,109 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU( MolecularDataCall *mol) {
 					angleX1 += float( vislib::math::PI_DOUBLE) * 2.0f;
 					angleX2 += float( vislib::math::PI_DOUBLE) * 2.0f;
 				}
-				//if( arcAngles.Count() == 0 ) {
-				//	arcAngles.Add( vislib::Pair<float, float>( angleX1, angleX2));
- 				//} else {
-					// temporary arc array for newly created arcs
-					vislib::Array<vislib::Pair<float, float>> tmpArcAngles;
-					tmpArcAngles.SetCapacityIncrement( 10);
-					// check all existing arcs with new arc k
-					for( int aCnt = 0; aCnt < arcAngles.Count(); aCnt++ ) {
-						float s = arcAngles[aCnt].First();
-						float e = arcAngles[aCnt].Second();
-						if( angleX1 < s ) {
-							// case (1) & (10)
-							if( ( s - angleX1) > ( angleX2 - angleX1)) {
+
+				// temporary arc array for newly created arcs
+				vislib::Array<vislib::Pair<float, float>> tmpArcAngles;
+				tmpArcAngles.SetCapacityIncrement( 10);
+				// check all existing arcs with new arc k
+				for( int aCnt = 0; aCnt < arcAngles.Count(); aCnt++ ) {
+					float s = arcAngles[aCnt].First();
+					float e = arcAngles[aCnt].Second();
+					if( angleX1 < s ) {
+						// case (1) & (10)
+						if( ( s - angleX1) > ( angleX2 - angleX1)) {
+							if( ( ( s - angleX1) + ( e - s)) > pi2 ) {
+								if( ( ( s - angleX1) + ( e - s)) < ( pi2 + angleX2 - angleX1) ) {
+									// case (10)
+									arcAngles[aCnt].SetFirst( angleX1);
+									arcAngles[aCnt].SetSecond( fmodf( e, pi2));
+									// second angle check
+									arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
+									if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
+										arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
+								} else {
+									arcAngles[aCnt].SetFirst( angleX1);
+									arcAngles[aCnt].SetSecond( angleX2);
+									// second angle check
+									arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
+									if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
+										arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
+								}
+							} else {
+								// case (1)
+								arcAngles.RemoveAt( aCnt);
+								aCnt--;
+							}
+						} else {
+							if( ( ( s - angleX1) + ( e - s)) > ( angleX2 - angleX1) ) {
+								// case (5)
+								arcAngles[aCnt].SetSecond( angleX2);
+								// second angle check
+								arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
+								if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
+									arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
 								if( ( ( s - angleX1) + ( e - s)) > pi2 ) {
-									if( ( ( s - angleX1) + ( e - s)) < ( pi2 + angleX2 - angleX1) ) {
-										// case (10)
-										arcAngles[aCnt].SetFirst( angleX1);
-										arcAngles[aCnt].SetSecond( fmodf( e, pi2));
-										// second angle check
-										arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
-										if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
-											arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
-									} else {
-										arcAngles[aCnt].SetFirst( angleX1);
-										arcAngles[aCnt].SetSecond( angleX2);
-										// second angle check
-										arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
-										if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
-											arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
-									}
-								} else {
-									// case (1)
-									arcAngles.RemoveAt( aCnt);
-									aCnt--;
+									// case (6)
+									tmpArcAngles.Add( vislib::Pair<float, float>( angleX1, fmodf( e, pi2)));
+									// second angle check
+									tmpArcAngles.Last().SetSecond( fmodf( tmpArcAngles.Last().Second(), pi2));
+									if( tmpArcAngles.Last().Second() < tmpArcAngles.Last().First() )
+										tmpArcAngles.Last().SetSecond( tmpArcAngles.Last().Second() + pi2);
 								}
-							} else {
-								if( ( ( s - angleX1) + ( e - s)) > ( angleX2 - angleX1) ) {
-									// case (5)
-									arcAngles[aCnt].SetSecond( angleX2);
+							}
+						} // case (4): Do nothing!
+					} else { // angleX1 > s
+						// case (2) & (9)
+						if( ( angleX1 - s) > ( e - s)) {
+							if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > pi2 ) {
+								if( ( ( angleX1 - s) + ( angleX2 - angleX1)) < ( pi2 + e - s)) {
+									// case (9)
+									arcAngles[aCnt].SetSecond( fmodf( angleX2, pi2));
 									// second angle check
 									arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
 									if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
 										arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
-									if( ( ( s - angleX1) + ( e - s)) > pi2 ) {
-										// case (6)
-										tmpArcAngles.Add( vislib::Pair<float, float>( angleX1, fmodf( e, pi2)));
-										// second angle check
-										tmpArcAngles.Last().SetSecond( fmodf( tmpArcAngles.Last().Second(), pi2));
-										if( tmpArcAngles.Last().Second() < tmpArcAngles.Last().First() )
-											tmpArcAngles.Last().SetSecond( tmpArcAngles.Last().Second() + pi2);
-									}
 								}
-							} // case (4): Do nothing!
-						} else { // angleX1 > s
-							// case (2) & (9)
-							if( ( angleX1 - s) > ( e - s)) {
+							} else {
+								// case (2)
+								arcAngles.RemoveAt( aCnt);
+								aCnt--;
+							}
+						} else {
+							if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > ( e - s) ) {
+								// case (7)
+								arcAngles[aCnt].SetFirst( angleX1);
+								// second angle check
+								arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
+								if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
+									arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
 								if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > pi2 ) {
-									if( ( ( angleX1 - s) + ( angleX2 - angleX1)) < ( pi2 + e - s)) {
-										// case (9)
-										arcAngles[aCnt].SetSecond( fmodf( angleX2, pi2));
-										// second angle check
-										arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
-										if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
-											arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
-									}
-								} else {
-									// case (2)
-									arcAngles.RemoveAt( aCnt);
-									aCnt--;
+									// case (8)
+									tmpArcAngles.Add( vislib::Pair<float, float>( s, fmodf( angleX2, pi2)));
+									// second angle check
+									tmpArcAngles.Last().SetSecond( fmodf( tmpArcAngles.Last().Second(), pi2));
+									if( tmpArcAngles.Last().Second() < tmpArcAngles.Last().First() )
+										tmpArcAngles.Last().SetSecond( tmpArcAngles.Last().Second() + pi2);
 								}
 							} else {
-								if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > ( e - s) ) {
-									// case (7)
-									arcAngles[aCnt].SetFirst( angleX1);
-									// second angle check
-									arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
-									if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
-										arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
-									if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > pi2 ) {
-										// case (8)
-										tmpArcAngles.Add( vislib::Pair<float, float>( s, fmodf( angleX2, pi2)));
-										// second angle check
-										tmpArcAngles.Last().SetSecond( fmodf( tmpArcAngles.Last().Second(), pi2));
-										if( tmpArcAngles.Last().Second() < tmpArcAngles.Last().First() )
-											tmpArcAngles.Last().SetSecond( tmpArcAngles.Last().Second() + pi2);
-									}
-								} else {
-									// case (3)
-									arcAngles[aCnt].SetFirst( angleX1);
-									arcAngles[aCnt].SetSecond( angleX2);
-									// second angle check
-									arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
-									if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
-										arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
-								}
+								// case (3)
+								arcAngles[aCnt].SetFirst( angleX1);
+								arcAngles[aCnt].SetSecond( angleX2);
+								// second angle check
+								arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
+								if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
+									arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
 							}
 						}
 					}
-					// add new angles from temporary array to angle array
-					for( unsigned int aCnt = 0; aCnt < tmpArcAngles.Count(); aCnt++ ) {
-						arcAngles.Add( tmpArcAngles[aCnt]);
-					}
-				//}
+				} // for( int aCnt = 0; aCnt < arcAngles.Count(); aCnt++ )
+				// add new angles from temporary array to angle array
+				for( unsigned int aCnt = 0; aCnt < tmpArcAngles.Count(); aCnt++ ) {
+					arcAngles.Add( tmpArcAngles[aCnt]);
+				}
 #endif
 #endif
-			}
+			} // for( int kCnt = 0; kCnt < this->neighbors[iCnt].Count(); ++kCnt )
 #if 0
 			// draw small circles
 			tmpVec1.Set( mol->AtomPositions()[iCnt*3], mol->AtomPositions()[iCnt*3+1], mol->AtomPositions()[iCnt*3+2]);
@@ -1087,7 +1100,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU( MolecularDataCall *mol) {
 				}
 			}
 #endif
-        }
+        } // for( int jCnt = 0; jCnt < this->neighbors[iCnt].Count(); ++jCnt )
     }
     glEnd(); // GL_POINTS
     
@@ -1211,8 +1224,11 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
 	m_hSmallCircles = new float[this->numAtoms*this->atomNeighborCount*4];
 	memset( m_hSmallCircles, 0, this->numAtoms*this->atomNeighborCount*4*sizeof(float));
 
-	m_hArcs = new float[this->numAtoms*this->atomNeighborCount*4*4];
-	memset( m_hArcs, 0, this->numAtoms*this->atomNeighborCount*4*4*sizeof(float));
+	m_hArcs = new float[this->numAtoms*this->atomNeighborCount*this->atomNeighborCount*4];
+	memset( m_hArcs, 0, this->numAtoms*this->atomNeighborCount*this->atomNeighborCount*4*sizeof(float));
+
+	m_hArcCount = new uint[this->numAtoms*this->atomNeighborCount];
+	memset( m_hArcCount, 0, this->numAtoms*this->atomNeighborCount*sizeof(uint));
 
     m_hParticleIndex = new uint[this->numAtoms];
 	memset( m_hParticleIndex, 0, this->numAtoms*sizeof(uint));
@@ -1240,7 +1256,9 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
 	// array for the small circles
 	allocateArray((void**)&m_dSmallCircles, this->numAtoms*this->atomNeighborCount*4*sizeof(float));
 	// array for the arcs
-	allocateArray((void**)&m_dArcs, this->numAtoms*this->atomNeighborCount*4*4*sizeof(float));
+    allocateArray((void**)&m_dArcs, this->numAtoms*this->atomNeighborCount*this->atomNeighborCount*4*sizeof(float));
+	// array for the arc count
+    allocateArray((void**)&m_dArcCount, this->numAtoms*this->atomNeighborCount*sizeof(uint));
 
     allocateArray((void**)&m_dGridParticleHash, this->numAtoms*sizeof(uint));
     allocateArray((void**)&m_dGridParticleIndex, this->numAtoms*sizeof(uint));

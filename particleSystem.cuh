@@ -190,6 +190,8 @@ void computeArcsCB(
     uint*  neighborCount,
     uint*  neighbors,
     float* sortedPos,
+    float* arcs,
+    uint*  arcCount,
     uint   numAtoms,
     uint   numNeighbors);
 
