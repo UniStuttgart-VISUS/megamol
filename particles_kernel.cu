@@ -1404,8 +1404,8 @@ __device__ uint findNeighborsInCellCBCuda(
 					smallCircle.x = vec.x;
 					smallCircle.y = vec.y;
 					smallCircle.z = vec.z;
-					//smallCircle.w = 1.0;
-                    smallCircle.w = sqrt(((pos.w + params.probeRadius) * (pos.w + params.probeRadius)) - dot( vec, vec));
+					smallCircle.w = 1.0;
+                    //smallCircle.w = sqrt(((pos.w + params.probeRadius) * (pos.w + params.probeRadius)) - dot( vec, vec));
 					smallCircles[index*params.maxNumNeighbors+neighborIndex+count] = smallCircle;
 					// increment the neighbor counter
 					count++;
@@ -1493,7 +1493,7 @@ __global__ void removeCoveredSmallCirclesCBCuda(
     bool addJ = true;
 
     // the atom index of j
-    uint j = neighbors[atomIdx * params.maxNumNeighbors + jIdx];
+    uint j = FETCH( neighbors, atomIdx * params.maxNumNeighbors + jIdx);
     // get small circle j
     float4 scj = smallCircles[atomIdx * params.maxNumNeighbors + jIdx];
     // vj = the small circle center
@@ -1515,16 +1515,149 @@ __global__ void removeCoveredSmallCirclesCBCuda(
     float3 q;
     float3 mj;
     float3 mk;
+    float dist;
 
     // check j with all other neighbors k
-    for( uint kCnt = 0; kCnt < neighborCount[atomIdx]; kCnt++ ) {
+    for( uint kCnt = 0; kCnt < numNeighbors; kCnt++ ) {
+        // don't compare the circle with itself
+        if( jIdx != kCnt ) {
+            // the atom index of k
+            k = FETCH( neighbors, atomIdx * params.maxNumNeighbors + kCnt);
+            // pk = center of atom k
+            ak = FETCH( atomPos, k);
+            pk = make_float3( ak.x, ak.y, ak.z);
+            // get small circle k
+            sck = smallCircles[atomIdx * params.maxNumNeighbors + kCnt];
+            // vk = the small circle center
+            vk = make_float3( sck.x, sck.y, sck.z);
+            // vj * vk
+            vjvk = dot( vj, vk);
+            // denominator
+            denom = dot( vj, vj) * dot( vk, vk) - vjvk * vjvk;
+            // point on straight line (intersection of small circle planes)
+            h = vj * ( dot( vj, vj - vk) * dot( vk, vk) ) / denom + vk * ( dot( vk - vj, vk) * dot( vj, vj) ) / denom;
+            // compute cases
+            nj = normalize( pi - pj);
+            nk = normalize( pi - pk);
+            q = vk - vj;
+            // if normals are the same (unrealistic, yet theoretically possible)
+            if( dot( nj, nk) == 1.0 ) {
+                if( dot( nj, nk) > 0.0 ) {
+                    if( dot( nj, q) > 0.0 ) {
+                        // k cuts off j --> remove j
+                        addJ = false;
+                    }
+                }
+            } else if( length( h) > R ) {
+                mj = ( vj - h);
+                mk = ( vk - h);
+                if( dot( nj, nk) > 0.0 ) {
+                    if( dot( mj, mk) > 0.0 && dot( nj, q) > 0.0 ) {
+                        // k cuts off j --> remove j
+                        addJ = false;
+                    }
+		        } else {
+				    if( dot( mj, mk) > 0.0 && dot( nj, q) < 0.0 ) {
+                        // atom i has no contour
+                        neighborCount[atomIdx] = 0;
+                    }
+			    }
+            }
+        }
+    }
+    // all k were tested, see if j is cut off
+    if( !addJ ) {
+        smallCircles[atomIdx * params.maxNumNeighbors + jIdx].w = -1.0;
+    }
+}
+
+// compute all arcs of atom j on the surface of atom i
+__global__ void computeArcsCBCuda(
+        float4* smallCircles,         // in/out: small circles
+        uint*   neighborCount,        // in/out: number of neighbors
+        uint*   neighbors,            // input: neighbor indices
+        float4* atomPos,              // input: sorted atom positions
+        uint    numAtoms) {
+    // get atom index
+    uint atomIdx = blockIdx.y * blockDim.y + threadIdx.y;
+    // get neighbor atom index
+    uint jIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    // check, if atom index is within bounds
+    if( atomIdx >= numAtoms ) return;
+    // check, if neighbor index is within bounds
+    if( jIdx >= params.maxNumNeighbors ) return;
+    // check, if neighbor index is within bounds
+    uint numNeighbors = neighborCount[atomIdx];
+    if( jIdx >= numNeighbors ) return;
+
+    // read position and radius of atom i from sorted array
+	float4 atomi = FETCH( atomPos, atomIdx);
+    float3 pi = make_float3( atomi.x, atomi.y, atomi.z);
+    float R = atomi.w + params.probeRadius;
+
+    // the atom index of j
+    //uint j = neighbors[atomIdx * params.maxNumNeighbors + jIdx];
+    uint j = FETCH( neighbors, atomIdx * params.maxNumNeighbors + jIdx);
+    // get small circle j
+    float4 scj = smallCircles[atomIdx * params.maxNumNeighbors + jIdx];
+    // do nothing if small circle j has radius -1 (removed)
+    if( scj.w < 0.0 )
+        return;
+    // vj = the small circle center
+    float3 vj = make_float3( scj.x, scj.y, scj.z);
+    // pj = center of atom j
+    float4 aj = FETCH( atomPos, j);
+    float3 pj = make_float3( aj.x, aj.y, aj.z);
+    // store all arcs
+    float start[64];
+    float end[64];
+    start[0] = 0.0f;
+    end[0] = 3.14159265359f;
+    uint arcCnt = 1;
+	// compute axes of local coordinate system
+    float3 ex = make_float3( 1.0f, 0.0f, 0.0f);
+    float3 ey = make_float3( 0.0f, 1.0f, 0.0f);
+	float3 xAxis = cross( vj, ey);
+	if( dot( xAxis, xAxis) == 0.0f ) {
+		xAxis = cross( vj, ex);
+	}
+	xAxis = normalize( xAxis);
+	float3 yAxis = cross( xAxis, vj);
+	yAxis = normalize( yAxis);
+
+    // variables for k
+    uint k;
+    float4 sck;
+    float3 vk;
+    float4 ak;
+    float3 pk;
+    float vjvk;
+    float denom;
+    float3 h;
+    float root;
+    float3 x1;
+    float3 x2;
+    float3 tmpVec;
+    float xX1;
+    float yX1;
+    float xX2;
+    float yX2;
+    float angleX1;
+    float angleX2;
+
+    // check j with all other neighbors k
+    for( uint kCnt = 0; kCnt < numNeighbors; kCnt++ ) {
         // don't compare the circle with itself
         if( jIdx == kCnt ) 
             continue;
         // the atom index of k
-        k = neighbors[atomIdx * params.maxNumNeighbors + kCnt];
+        //k = neighbors[atomIdx * params.maxNumNeighbors + kCnt];
+        k = FETCH( neighbors, atomIdx * params.maxNumNeighbors + kCnt);
         // get small circle k
         sck = smallCircles[atomIdx * params.maxNumNeighbors + kCnt];
+        // do nothing if small circle k has radius -1 (removed)
+        if( sck.w < 0.0 )
+            continue;
         // vk = the small circle center
         vk = make_float3( sck.x, sck.y, sck.z);
         // pk = center of atom k
@@ -1536,39 +1669,136 @@ __global__ void removeCoveredSmallCirclesCBCuda(
         denom = dot( vj, vj) * dot( vk, vk) - vjvk * vjvk;
         // point on straight line (intersection of small circle planes)
         h = vj * ( dot( vj, vj - vk) * dot( vk, vk) ) / denom + vk * ( dot( vk - vj, vk) * dot( vj, vj) ) / denom;
-        // compute cases
-        nj = normalize( pi - pj);
-        nk = normalize( pi - pk);
-        q = vk - vj;
-        // if normals are the same (unrealistic, yet theoretically possible)
-        if( dot( nj, nk) == 1.0 ) {
-            if( dot( nj, nk) > 0.0 ) {
-                if( dot( nj, q) > 0.0 ) {
-                    // k cuts off j --> remove j
-                    addJ = false;
-                    break;
-                }
-            }
-        } else if( length( h) > R ) {
-            mj = ( vj - h);
-            mk = ( vk - h);
-            if( dot( nj, nk) > 0.0 ) {
-                if( dot( mj, mk) > 0.0 && dot( nj, q) > 0.0 ) {
-                    // k cuts off j --> remove j
-                    addJ = false;
-                    break;
-                }
-		    } else {
-				if( dot( mj, mk) > 0.0 && dot( nj, q) < 0.0 ) {
-                    // atom i has no contour
-                    neighborCount[atomIdx] = 0;
-                }
-			}
+
+        // do nothing if h is outside of the extended sphere of atom i
+        if( length( h) > R ) 
+            continue;
+        // compute the root
+        root = sqrt( ( R*R - dot( h, h)) / dot( cross( vk, vj), cross( vk, vj)));
+        // compute the two intersection points
+        x1 = h + cross( vk, vj) * root;
+        x2 = h - cross( vk, vj) * root;
+        // swap x1 & x2 if vj points in the opposit direction of pj-pi
+        if( dot( vk, pk - pi) < 0.0 ) {
+            tmpVec = x1;
+            x1 = x2;
+            x2 = tmpVec;
         }
-    }
-    // all k were tested, see if j is cut off
-    if( !addJ ) {
-        smallCircles[atomIdx * params.maxNumNeighbors + jIdx].w = -1.0;
+		// transform x1 and x2 to small circle coordinate system
+		xX1 = dot( x1 - vj, xAxis);
+		yX1 = dot( x1 - vj, yAxis);
+		xX2 = dot( x2 - vj, xAxis);
+		yX2 = dot( x2 - vj, yAxis);
+		angleX1 = atan2( yX1, xX1);
+		angleX2 = atan2( yX2, xX2);
+		// limit angles to 0..2*PI
+		if( angleX1 > 6.28318530718f ) {
+			angleX1 = fmod( angleX1, 6.28318530718f);
+			angleX2 = fmod( angleX2, 6.28318530718f);
+		}
+		// angle of x2 has to be larger than angle of x1 (add 2 PI)
+		if( angleX2 < angleX1 ) {
+			angleX2 += 6.28318530718f;
+		}
+		// make all angles positive (add 2 PI)
+		if( angleX1 < 0.0f ) {
+			angleX1 += 6.28318530718f;
+			angleX2 += 6.28318530718f;
+		}
+
+		// check all existing arcs with new arc k
+		for( uint aCnt = 0; aCnt < arcCnt; aCnt++ ) {
+			if( angleX1 < start[aCnt] ) {
+				// case (1) & (10)
+				if( ( start[aCnt] - angleX1) > ( angleX2 - angleX1)) {
+					if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) > 6.28318530718f ) {
+						if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) < ( 6.28318530718f + angleX2 - angleX1) ) {
+							// case (10)
+							start[aCnt] = angleX1;
+							end[aCnt] = fmod( end[aCnt], 6.28318530718f);
+							// second angle check
+							end[aCnt] = fmod( end[aCnt], 6.28318530718f);
+							if( end[aCnt] < start[aCnt] )
+								end[aCnt] += 6.28318530718f;
+						} else {
+							start[aCnt] = angleX1;
+							end[aCnt] = angleX2;
+							// second angle check
+							end[aCnt] = fmod( end[aCnt], 6.28318530718f);
+							if( end[aCnt] < start[aCnt] )
+								end[aCnt] += 6.28318530718f;
+						}
+					} else {
+						// case (1)
+						//arcAngles.RemoveAt( aCnt);
+                        arcCnt--;
+						aCnt--;
+					}
+				} else {
+					if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) > ( angleX2 - angleX1) ) {
+						// case (5)
+						end[aCnt] = angleX2;
+						// second angle check
+						end[aCnt] = fmod( end[aCnt], 6.28318530718f);
+						if( end[aCnt] < start[aCnt] )
+							end[aCnt] += 6.28318530718f;
+						if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) > 6.28318530718f ) {
+							//// case (6)
+							//tmpArcAngles.Add( vislib::Pair<float, float>( angleX1, fmod( end[aCnt], 6.28318530718f)));
+							//// second angle check
+							//tmpArcAngles.Last().SetSecond( fmod( tmpArcAngles.Last().Second(), 6.28318530718f));
+							//if( tmpArcAngles.Last().Second() < tmpArcAngles.Last().First() )
+							//	tmpArcAngles.Last().SetSecond( tmpArcAngles.Last().Second() + 6.28318530718f);
+						}
+					}
+				} // case (4): Do nothing!
+			} else { // angleX1 > s
+				// case (2) & (9)
+				if( ( angleX1 - start[aCnt]) > ( end[aCnt] - start[aCnt])) {
+					if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) > 6.28318530718f ) {
+						if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) < ( 6.28318530718f + end[aCnt] - start[aCnt])) {
+							// case (9)
+							end[aCnt] = fmod( angleX2, 6.28318530718f);
+							// second angle check
+							end[aCnt] = fmod( end[aCnt], 6.28318530718f);
+							if( end[aCnt] < start[aCnt] )
+								end[aCnt] += 6.28318530718f;
+						}
+					} else {
+						// case (2)
+						//arcAngles.RemoveAt( aCnt);
+                        arcCnt--;
+						aCnt--;
+					}
+				} else {
+					if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) > ( end[aCnt] - start[aCnt]) ) {
+						// case (7)
+						start[aCnt] = angleX1;
+						// second angle check
+						end[aCnt] = fmod( end[aCnt], 6.28318530718f);
+						if( end[aCnt] < start[aCnt] )
+							end[aCnt] += 6.28318530718f;
+						if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) > 6.28318530718f ) {
+							//// case (8)
+							//tmpArcAngles.Add( vislib::Pair<float, float>( start[aCnt], fmod( angleX2, 6.28318530718f)));
+							//// second angle check
+							//tmpArcAngles.Last().SetSecond( fmod( tmpArcAngles.Last().Second(), 6.28318530718f));
+							//if( tmpArcAngles.Last().Second() < tmpArcAngles.Last().First() )
+							//	tmpArcAngles.Last().SetSecond( tmpArcAngles.Last().Second() + 6.28318530718f);
+						}
+					} else {
+						// case (3)
+						start[aCnt] = angleX1;
+						end[aCnt] = angleX2;
+						// second angle check
+						end[aCnt] = fmod( end[aCnt], 6.28318530718f);
+						if( end[aCnt] < start[aCnt] )
+							end[aCnt] += 6.28318530718f;
+					}
+				}
+			}
+		}
+
     }
 }
 

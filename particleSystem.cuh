@@ -185,4 +185,12 @@ void removeCoveredSmallCirclesCB(
     uint   numAtoms,
     uint   numNeighbors);
 
+void computeArcsCB(
+    float* smallCircles,
+    uint*  neighborCount,
+    uint*  neighbors,
+    float* sortedPos,
+    uint   numAtoms,
+    uint   numNeighbors);
+
 }
