@@ -197,6 +197,9 @@ void computeArcsCB(
 
 void writeProbePositionsCB(
 	float*	probePos,
+	float*	sphereTriaVec1,
+	float*	sphereTriaVec2,
+	float*	sphereTriaVec3,
     uint*   neighborCount,
     uint*   neighbors,
     float*  sortedAtomPos,

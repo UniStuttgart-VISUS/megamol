@@ -1899,12 +1899,12 @@ __global__ void computeArcsCBCuda(
 		if( atomIdx < j ) {
 			if( j < startkIndex[aCnt] ) {
 				arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcWritten] = 
-					make_float4( pi + vj + ( cos( start[aCnt]) * xAxis + sin( start[aCnt]) * yAxis) * scj.w, 0.2f); //start[aCnt]);
+					make_float4( pi + vj + ( cos( start[aCnt]) * xAxis + sin( start[aCnt]) * yAxis) * scj.w, float( startkIndex[aCnt]) + 0.2f); //start[aCnt]);
 				arcWritten++;
 			}
 			if( j < endkIndex[aCnt] ) {
 				arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcWritten] = 
-					make_float4( pi + vj + ( cos( end[aCnt]) * xAxis + sin( end[aCnt]) * yAxis) * scj.w, 0.2f); //end[aCnt]);
+					make_float4( pi + vj + ( cos( end[aCnt]) * xAxis + sin( end[aCnt]) * yAxis) * scj.w, float( endkIndex[aCnt]) + 0.2f); //end[aCnt]);
 				arcWritten++;
 			}
 		}
@@ -1924,6 +1924,9 @@ __global__ void computeArcsCBCuda(
 // Write all arc start and end points to a vertex array.
 __global__ void writeProbePositionsCBCuda(
 		float4*	probePos,		// out: the probe positions
+		float4*	sphereTriaVec1,	// out: the spherical triangle vector 1
+		float4*	sphereTriaVec2,	// out: the spherical triangle vector 2
+		float4*	sphereTriaVec3,	// out: the spherical triangle vector 3
 		uint*   neighborCount,	// in: the number of neighbors per atom
         uint*   neighbors,		// in: neighbor indices
         float4* atomPos,		// in: sorted atom positions
@@ -1941,15 +1944,26 @@ __global__ void writeProbePositionsCBCuda(
     uint numNeighbors = FETCH( neighborCount, atomIdx);
     if( jIdx >= numNeighbors ) return;
 
+	float4 ai = FETCH( atomPos, atomIdx);
+	float4 aj = FETCH( atomPos, FETCH( neighbors, atomIdx * params.maxNumNeighbors + jIdx));
+	float4 ak;
+
 	// get number of probes and the sum of previous probes for this neighbor
 	uint numProbes = arcCount[atomIdx * params.maxNumNeighbors + jIdx];
 	uint numPreviousProbes = arcCountScan[atomIdx * params.maxNumNeighbors + jIdx];
 
 	float4 tmpProbePos;
+	uint kIdx;
 
 	for( uint cnt = 0; cnt < numProbes; cnt++ ) {
 		tmpProbePos = arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + cnt];
-		probePos[numPreviousProbes + cnt] = tmpProbePos;
+		probePos[numPreviousProbes + cnt] = make_float4( tmpProbePos.x, tmpProbePos.y, tmpProbePos.z, params.probeRadius);
+		kIdx = uint( floor( tmpProbePos.w));
+		//ak = FETCH( atomPos, FETCH( neighbors, kIdx));
+		ak = FETCH( atomPos, kIdx);
+		sphereTriaVec1[numPreviousProbes + cnt] = make_float4( make_float3( ai) - make_float3( tmpProbePos), 1.0);
+		sphereTriaVec2[numPreviousProbes + cnt] = make_float4( make_float3( aj) - make_float3( tmpProbePos), 1.0);
+		sphereTriaVec3[numPreviousProbes + cnt] = make_float4( make_float3( ak) - make_float3( tmpProbePos), params.probeRadius * params.probeRadius);
 	}
 }
 
