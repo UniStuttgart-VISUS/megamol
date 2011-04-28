@@ -1612,14 +1612,20 @@ __global__ void computeArcsCBCuda(
     // store all arcs
     float start[64];
     float end[64];
+    uint startkIndex[64];
+    uint endkIndex[64];
     bool arcValid[64];
     start[0] = 0.0f;
     end[0] = 6.28318530718f;
+	startkIndex[0] = 0;
+	endkIndex[0] = 0;
     arcValid[0] = true;
     uint arcCnt = 1;
     // temporary arc arrays for new arcs
     float tmpStart[16];
     float tmpEnd[16];
+	uint tmpStartkIndex[16];
+	uint tmpEndkIndex[16];
     uint tmpArcCnt = 0;
 	// compute axes of local coordinate system
     float3 ex = make_float3( 1.0f, 0.0f, 0.0f);
@@ -1654,6 +1660,8 @@ __global__ void computeArcsCBCuda(
     uint aCnt;
 	float s;
 	float e;
+	float skIndex;
+	float ekIndex;
 
     // check j with all other neighbors k
     for( uint kCnt = 0; kCnt < numNeighbors; kCnt++ ) {
@@ -1720,6 +1728,8 @@ __global__ void computeArcsCBCuda(
 		for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
 			s = start[aCnt];
 			e = end[aCnt];
+			skIndex = startkIndex[aCnt];
+			ekIndex = endkIndex[aCnt];
             if( arcValid[aCnt] ) {
 			    if( angleX1 < s ) {
 				    // case (1) & (10)
@@ -1728,13 +1738,16 @@ __global__ void computeArcsCBCuda(
 						    if( ( ( s - angleX1) + ( e - s)) < ( 6.28318530718f + angleX2 - angleX1) ) {
 							    // case (10)
 							    start[aCnt] = angleX1;
+								startkIndex[aCnt] = k;
 							    end[aCnt] = fmod( e, 6.28318530718f);
 							    // second angle check
 							    if( end[aCnt] < start[aCnt] )
 								    end[aCnt] += 6.28318530718f;
 						    } else {
 							    start[aCnt] = angleX1;
+								startkIndex[aCnt] = k;
 							    end[aCnt] = fmod( angleX2, 6.28318530718f);
+								endkIndex[aCnt] = k;
 							    // second angle check
 							    if( end[aCnt] < start[aCnt] )
 								    end[aCnt] += 6.28318530718f;
@@ -1749,13 +1762,16 @@ __global__ void computeArcsCBCuda(
 					    if( ( ( s - angleX1) + ( e - s)) > ( angleX2 - angleX1) ) {
 						    // case (5)
 						    end[aCnt] = fmod( angleX2, 6.28318530718f);
+							endkIndex[aCnt] = k;
 						    // second angle check
 						    if( end[aCnt] < start[aCnt] )
 							    end[aCnt] += 6.28318530718f;
 						    if( ( ( s - angleX1) + ( e - s)) > 6.28318530718f ) {
 							    // case (6)
                                 tmpStart[tmpArcCnt] = angleX1;
+								tmpStartkIndex[tmpArcCnt] = k;
                                 tmpEnd[tmpArcCnt] = fmod( e, 6.28318530718f);
+								tmpEndkIndex[tmpArcCnt] = ekIndex;
 							    // second angle check
                                 if( tmpEnd[tmpArcCnt] < tmpStart[tmpArcCnt] )
                                     tmpEnd[tmpArcCnt] += 6.28318530718f;
@@ -1770,6 +1786,7 @@ __global__ void computeArcsCBCuda(
 						    if( ( ( angleX1 - s) + ( angleX2 - angleX1)) < ( 6.28318530718f + e - s)) {
 							    // case (9)
 							    end[aCnt] = fmod( angleX2, 6.28318530718f);
+								endkIndex[aCnt] = k;
 							    // second angle check
 							    if( end[aCnt] < start[aCnt] )
 								    end[aCnt] += 6.28318530718f;
@@ -1784,6 +1801,7 @@ __global__ void computeArcsCBCuda(
 					    if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > ( e - s) ) {
 						    // case (7)
 						    start[aCnt] = angleX1;
+							startkIndex[aCnt] = k;
 						    // second angle check
 						    end[aCnt] = fmod( end[aCnt], 6.28318530718f);
 						    if( end[aCnt] < start[aCnt] )
@@ -1791,7 +1809,9 @@ __global__ void computeArcsCBCuda(
 						    if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > 6.28318530718f ) {
 							    // case (8)
                                 tmpStart[tmpArcCnt] = s;
+								tmpStartkIndex[tmpArcCnt] = skIndex;
                                 tmpEnd[tmpArcCnt] = fmod( angleX2, 6.28318530718f);
+								tmpEndkIndex[tmpArcCnt] = k;
 							    // second angle check
                                 if( tmpEnd[tmpArcCnt] < tmpStart[tmpArcCnt] )
                                     tmpEnd[tmpArcCnt] += 6.28318530718f;
@@ -1800,7 +1820,9 @@ __global__ void computeArcsCBCuda(
 					    } else {
 						    // case (3)
 						    start[aCnt] = angleX1;
+							startkIndex[aCnt] = k;
 						    end[aCnt] = fmod( angleX2, 6.28318530718f);
+							endkIndex[aCnt] = k;
 						    // second angle check
 						    if( end[aCnt] < start[aCnt] )
 							    end[aCnt] += 6.28318530718f;
@@ -1814,6 +1836,8 @@ __global__ void computeArcsCBCuda(
         for( aCnt = 0; aCnt < tmpArcCnt; aCnt++ ) {
             start[aCnt + arcCnt] = tmpStart[aCnt];
             end[aCnt + arcCnt] = tmpEnd[aCnt];
+            startkIndex[aCnt + arcCnt] = tmpStartkIndex[aCnt];
+            endkIndex[aCnt + arcCnt] = tmpEndkIndex[aCnt];
             arcValid[aCnt + arcCnt] = true;
         }
         // add new arcs to arc count
@@ -1827,6 +1851,8 @@ __global__ void computeArcsCBCuda(
             if( arcValid[aCnt] ) {
                 start[aCnt - counter] = start[aCnt];
                 end[aCnt - counter] = end[aCnt];
+                startkIndex[aCnt - counter] = startkIndex[aCnt];
+                endkIndex[aCnt - counter] = endkIndex[aCnt];
                 arcValid[aCnt - counter] = arcValid[aCnt];
             } else {
                 counter++;
@@ -1850,6 +1876,7 @@ __global__ void computeArcsCBCuda(
 	}
 	if( idx0 >= 0 && idx2pi >= 0 ) {
         start[uint(idx0)] = start[uint(idx2pi)];
+		startkIndex[uint(idx0)] = startkIndex[uint(idx2pi)];
 		// second angle check
 		end[uint(idx0)] = fmod( end[uint(idx0)], 6.28318530718f);
 		if( end[uint(idx0)] < start[uint(idx0)] )
@@ -1858,21 +1885,72 @@ __global__ void computeArcsCBCuda(
         for( aCnt = uint(idx2pi); aCnt < arcCnt - 1; aCnt++ ) {
             start[aCnt] = start[aCnt + 1];
             end[aCnt] = end[aCnt + 1];
+            startkIndex[aCnt] = startkIndex[aCnt + 1];
+            endkIndex[aCnt] = endkIndex[aCnt + 1];
             arcValid[aCnt] = true;
         }
         // subtract the removed arc from total number of arcs
         arcCnt--;
 	}
 
-    // write number of arcs
-    arcCount[atomIdx * params.maxNumNeighbors + jIdx] = arcCnt;
+	uint arcWritten = 0;
     // copy arcs to global arc array
     for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
-        arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + aCnt * 2] = 
-            make_float4( pi + vj + ( cos( start[aCnt]) * xAxis + sin( start[aCnt]) * yAxis) * scj.w, 0.2f); //start[aCnt]);
-        arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + aCnt * 2 + 1] = 
-            make_float4( pi + vj + ( cos( end[aCnt]) * xAxis + sin( end[aCnt]) * yAxis) * scj.w, 0.2f); //end[aCnt]);
+		if( atomIdx < j ) {
+			if( j < startkIndex[aCnt] ) {
+				arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcWritten] = 
+					make_float4( pi + vj + ( cos( start[aCnt]) * xAxis + sin( start[aCnt]) * yAxis) * scj.w, 0.2f); //start[aCnt]);
+				arcWritten++;
+			}
+			if( j < endkIndex[aCnt] ) {
+				arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcWritten] = 
+					make_float4( pi + vj + ( cos( end[aCnt]) * xAxis + sin( end[aCnt]) * yAxis) * scj.w, 0.2f); //end[aCnt]);
+				arcWritten++;
+			}
+		}
     }
+
+    // write number of arcs
+    arcCount[atomIdx * params.maxNumNeighbors + jIdx] = arcWritten;
+
+	// set small circle j invalid if no arc was created
+	// DO NOT USE THIS!! It will create false, internal arcs!
+	//if( arcCnt == 0 ) {
+	//	smallCircles[atomIdx * params.maxNumNeighbors + jIdx].w = -1.0f;
+	//}
+
+}
+
+// Write all arc start and end points to a vertex array.
+__global__ void writeProbePositionsCBCuda(
+		float4*	probePos,		// out: the probe positions
+		uint*   neighborCount,	// in: the number of neighbors per atom
+        uint*   neighbors,		// in: neighbor indices
+        float4* atomPos,		// in: sorted atom positions
+		float4* arcs,			// in: the arc start and end points
+		uint*	arcCount,		// in: the number of probes
+		uint*	arcCountScan,	// in: the prefix sum of "arcCount"
+        uint    numAtoms) {
+    // get atom index
+    uint atomIdx = blockIdx.y * blockDim.y + threadIdx.y;
+    // get neighbor atom index
+    uint jIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    // check, if atom index is within bounds
+    if( atomIdx >= numAtoms ) return;
+    // check, if neighbor index is within bounds
+    uint numNeighbors = FETCH( neighborCount, atomIdx);
+    if( jIdx >= numNeighbors ) return;
+
+	// get number of probes and the sum of previous probes for this neighbor
+	uint numProbes = arcCount[atomIdx * params.maxNumNeighbors + jIdx];
+	uint numPreviousProbes = arcCountScan[atomIdx * params.maxNumNeighbors + jIdx];
+
+	float4 tmpProbePos;
+
+	for( uint cnt = 0; cnt < numProbes; cnt++ ) {
+		tmpProbePos = arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + cnt];
+		probePos[numPreviousProbes + cnt] = tmpProbePos;
+	}
 }
 
 #endif

@@ -212,6 +212,8 @@ namespace protein {
 
 		// CUDA Radix sort
         CUDPPHandle sortHandle;
+		// CUDA Scan
+        CUDPPHandle scanHandle;
 
 		// params
 		bool cudaInitalized;
@@ -230,7 +232,8 @@ namespace protein {
 		uint*  m_hCellStart;
 		uint*  m_hCellEnd;
         float* m_hArcs;
-        uint* m_hArcCount;
+        uint*  m_hArcCount;
+        uint*  m_hArcCountScan;
 
 		// GPU data
 		float* m_dPos;
@@ -239,7 +242,9 @@ namespace protein {
 		uint*  m_dNeighbors;
 		float* m_dSmallCircles;
         float* m_dArcs;
+        uint*  m_dArcIdxK;
         uint*  m_dArcCount;
+        uint*  m_dArcCountScan;
 
 		// grid data for sorting method
 		uint*  m_dGridParticleHash; // grid hash value for each particle
@@ -258,6 +263,8 @@ namespace protein {
 
 		// VBO for all atoms
 		GLuint atomPosVBO;
+		// VBO for probe positions
+		GLuint probePosVBO;
 
 	};
 
