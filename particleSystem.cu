@@ -662,4 +662,41 @@ void computeArcsCB(
 	cutilSafeCall( cudaUnbindTexture( neighborsTex));
 }
 
+void writeProbePositionsCB(
+		float*	probePos,
+		uint*   neighborCount,
+		uint*   neighbors,
+		float*  sortedAtomPos,
+		float*  arcs,
+		uint*	arcCount,
+		uint*	arcCountScan,
+		uint    numAtoms,
+		uint    numNeighbors) {
+    cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedAtomPos, numAtoms*sizeof(float4)));
+	cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+
+    // one thread per particle neighbor
+    dim3 numThreads;
+    numThreads.x = 64;
+    numThreads.y = 4;
+    numThreads.z = 1;
+    dim3 numBlocks;
+    numBlocks.x = numNeighbors / numThreads.x + ( numNeighbors % numThreads.x == 0 ? 0:1);
+    numBlocks.y = numAtoms / numThreads.y + ( numAtoms % numThreads.y == 0 ? 0:1);
+    numBlocks.z = 1;
+
+    // execute the kernel
+    writeProbePositionsCBCuda<<< numBlocks, numThreads >>>( (float4*)probePos,
+		neighborCount, neighbors, (float4*)sortedAtomPos, (float4*)arcs, arcCount, arcCountScan, numAtoms);
+
+    // check if kernel invocation generated an error
+    cutilCheckMsg("Kernel execution failed");
+
+    cutilSafeCall( cudaUnbindTexture( atomPosTex));
+	cutilSafeCall( cudaUnbindTexture( neighborCountTex));
+	cutilSafeCall( cudaUnbindTexture( neighborsTex));
+}
+
+
 }   // extern "C"

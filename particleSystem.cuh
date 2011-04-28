@@ -195,4 +195,15 @@ void computeArcsCB(
     uint   numAtoms,
     uint   numNeighbors);
 
+void writeProbePositionsCB(
+	float*	probePos,
+    uint*   neighborCount,
+    uint*   neighbors,
+    float*  sortedAtomPos,
+	float*  arcs,
+	uint*	arcCount,
+	uint*	arcCountScan,
+    uint    numAtoms,
+	uint    numNeighbors);
+
 }

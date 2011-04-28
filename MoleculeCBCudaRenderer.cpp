@@ -61,7 +61,7 @@ MoleculeCBCudaRenderer::MoleculeCBCudaRenderer( void ) : Renderer3DModule (),
     opacityParam( "opacity", "Atom opacity"),
     stepsParam( "steps", "Drawing steps"),
 	probeRadius( 1.4f), atomNeighborCount( 64), cudaInitalized( false), 
-    atomPosVBO( 0)
+    atomPosVBO( 0), probePosVBO( 0)
 {
 	this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
 	this->MakeSlotAvailable ( &this->molDataCallerSlot );
@@ -95,6 +95,7 @@ MoleculeCBCudaRenderer::~MoleculeCBCudaRenderer(void) {
 void protein::MoleculeCBCudaRenderer::release( void ) {
 
     cudppDestroyPlan( this->sortHandle);
+    cudppDestroyPlan( this->scanHandle);
 }
 
 
@@ -213,6 +214,10 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 	// if something went wrong --> return
 	if( !mol) return false;
 
+    // set call time
+    mol->SetCalltime(callTime);
+    // set frame ID and call data
+    mol->SetFrameID(static_cast<int>( callTime));
 	// execute the call
 	if ( !(*mol)(MolecularDataCall::CallForGetData) )
 		return false;
@@ -331,6 +336,74 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
         m_dArcCount,
         numAtoms,
         params.maxNumNeighbors);
+
+    // count total number of arcs
+	cudppScan( this->scanHandle, m_dArcCountScan, m_dArcCount, this->numAtoms * this->atomNeighborCount);
+
+    // map OpenGL buffer object for writing from CUDA
+    float *probePosPtr;
+	cudaGLMapBufferObject((void**)&probePosPtr, this->probePosVBO);
+
+	// compute vertex buffer objects for probe positions
+	writeProbePositionsCB( probePosPtr, m_dNeighborCount, m_dNeighbors, m_dSortedPos, m_dArcs, m_dArcCount, m_dArcCountScan, this->numAtoms, this->atomNeighborCount);
+
+    // unmap buffer object
+    cudaGLUnmapBufferObject( this->probePosVBO);
+
+	// get total number of probes
+	uint numProbes = 0;
+	uint lastProbeCnt = 0;
+    cutilSafeCall( cudaMemcpy( (void *)&numProbes, (void *)(m_dArcCountScan + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
+    cutilSafeCall( cudaMemcpy( (void *)&lastProbeCnt, (void *)(m_dArcCount + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
+	numProbes += lastProbeCnt;
+
+#if 1
+	// do actual rendering
+	float viewportStuff[4] = {
+		cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
+		cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
+	if( viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
+	if( viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+	viewportStuff[2] = 2.0f / viewportStuff[2];
+	viewportStuff[3] = 2.0f / viewportStuff[3];
+
+	// enable and set up sphere shader
+	this->sphereShader.Enable();
+	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+	
+    // render probes VBO
+    glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
+    glColor3ub( 0, 255, 0);
+    glEnableClientState( GL_VERTEX_ARRAY);
+	glBindBuffer( GL_ARRAY_BUFFER, this->probePosVBO);
+    glVertexPointer( 4, GL_FLOAT, 0, 0);
+    glDrawArrays( GL_POINTS, 0, numProbes);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    glDisableClientState( GL_VERTEX_ARRAY);
+	
+    // render atoms VBO
+    glBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);     // very useful
+	glEnable( GL_BLEND);
+    glDisable( GL_CULL_FACE);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
+
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+	glColor4f( 1.0, 0.0, 0.0, this->opacityParam.Param<param::FloatParam>()->Value());
+    glEnableClientState( GL_VERTEX_ARRAY);
+    glBindBuffer( GL_ARRAY_BUFFER, this->atomPosVBO);
+    glVertexPointer( 4, GL_FLOAT, 0, 0);
+    glDrawArrays( GL_POINTS, 0, mol->AtomCount());
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    glDisableClientState( GL_VERTEX_ARRAY);
+	
+    glDisable( GL_BLEND);
+
+	// disable sphere shader
+    sphereShader.Disable();
+#endif
 
 #if 0
 	// get CUDA stuff
@@ -1225,6 +1298,9 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
 	m_hArcCount = new uint[this->numAtoms*this->atomNeighborCount];
 	memset( m_hArcCount, 0, this->numAtoms*this->atomNeighborCount*sizeof(uint));
 
+	m_hArcCountScan = new uint[this->numAtoms*this->atomNeighborCount];
+	memset( m_hArcCountScan, 0, this->numAtoms*this->atomNeighborCount*sizeof(uint));
+
     m_hParticleIndex = new uint[this->numAtoms];
 	memset( m_hParticleIndex, 0, this->numAtoms*sizeof(uint));
 
@@ -1252,8 +1328,12 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
 	allocateArray((void**)&m_dSmallCircles, this->numAtoms*this->atomNeighborCount*4*sizeof(float));
 	// array for the arcs
     allocateArray((void**)&m_dArcs, this->numAtoms*this->atomNeighborCount*this->atomNeighborCount*4*sizeof(float));
+	// array for the arcs
+    allocateArray((void**)&m_dArcIdxK, this->numAtoms*this->atomNeighborCount*this->atomNeighborCount*sizeof(uint));
 	// array for the arc count
     allocateArray((void**)&m_dArcCount, this->numAtoms*this->atomNeighborCount*sizeof(uint));
+	// array for the arc count scan (prefix sum)
+    allocateArray((void**)&m_dArcCountScan, this->numAtoms*this->atomNeighborCount*sizeof(uint));
 
     allocateArray((void**)&m_dGridParticleHash, this->numAtoms*sizeof(uint));
     allocateArray((void**)&m_dGridParticleIndex, this->numAtoms*sizeof(uint));
@@ -1263,13 +1343,36 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
 
     // Create the CUDPP radix sort
     CUDPPConfiguration sortConfig;
-    sortConfig.algorithm = CUDPP_SORT_RADIX;
-    sortConfig.datatype = CUDPP_UINT;
-    sortConfig.op = CUDPP_ADD;
-    sortConfig.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
+    sortConfig.algorithm	= CUDPP_SORT_RADIX;
+    sortConfig.datatype		= CUDPP_UINT;
+    sortConfig.op			= CUDPP_ADD;
+    sortConfig.options		= CUDPP_OPTION_KEY_VALUE_PAIRS;
     cudppPlan( &this->sortHandle, sortConfig, this->numAtoms, 1, 0);
 
+    // Create the CUDPP scan (prefix sum)
+    CUDPPConfiguration scanConfig;
+    scanConfig.algorithm    = CUDPP_SCAN;
+    scanConfig.datatype     = CUDPP_UINT;
+    scanConfig.op           = CUDPP_ADD;
+    scanConfig.options      = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
+	cudppPlan( &this->scanHandle, scanConfig, this->numAtoms*this->atomNeighborCount, 1, 0);
+
+	// set parameters
 	setParameters( &this->params);
+
+	// create probe position vertex buffer object
+    if( glIsBuffer( this->probePosVBO) ) {
+		// delete buffer, if already available
+		glDeleteBuffers( 1, &this->probePosVBO);
+	}
+    // generate buffer
+    glGenBuffers( 1, &this->probePosVBO);
+    // bind buffer, enable the vertex array client state and resize the vbo accordingly
+    glBindBuffer( GL_ARRAY_BUFFER, this->probePosVBO);
+	glBufferData( GL_ARRAY_BUFFER, this->numAtoms*this->atomNeighborCount*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    // register this buffer object with CUDA
+    cudaGLRegisterBufferObject( this->probePosVBO);
 
 	return true;
 }
