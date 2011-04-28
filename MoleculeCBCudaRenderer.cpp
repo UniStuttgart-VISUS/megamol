@@ -332,7 +332,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
         numAtoms,
         params.maxNumNeighbors);
 
-#if 1
+#if 0
 	// get CUDA stuff
     copyArrayFromDevice( m_hNeighborCount, m_dNeighborCount, 0, sizeof(uint)*this->numAtoms);
     //copyArrayFromDevice( m_hNeighbors, m_dNeighbors, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
@@ -341,11 +341,6 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
     copyArrayFromDevice( m_hSmallCircles, m_dSmallCircles, 0, sizeof(float)*4*this->numAtoms*this->atomNeighborCount);
     copyArrayFromDevice( m_hArcCount, m_dArcCount, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
     copyArrayFromDevice( m_hArcs, m_dArcs, 0, sizeof(float)*4*this->numAtoms*this->atomNeighborCount*this->atomNeighborCount);
-
-    for( unsigned int i = 0; i < this->numAtoms*this->atomNeighborCount; i++ ) {
-        if( m_hArcCount[i] > 1 )
-            std::cout << "more than 1 arc! " << i << std::endl;
-    }
 
 	// do actual rendering
 	float viewportStuff[4] = {

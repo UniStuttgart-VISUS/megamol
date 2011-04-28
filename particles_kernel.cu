@@ -1652,8 +1652,8 @@ __global__ void computeArcsCBCuda(
     float angleX1;
     float angleX2;
     uint aCnt;
-
-    bool test = false;
+	float s;
+	float e;
 
     // check j with all other neighbors k
     for( uint kCnt = 0; kCnt < numNeighbors; kCnt++ ) {
@@ -1705,7 +1705,6 @@ __global__ void computeArcsCBCuda(
 		if( angleX1 > 6.28318530718f ) {
 			angleX1 = fmod( angleX1, 6.28318530718f);
 			angleX2 = fmod( angleX2, 6.28318530718f);
-                test = true;
 		}
 		// angle of x2 has to be larger than angle of x1 (add 2 PI)
 		if( angleX2 < angleX1 ) {
@@ -1719,15 +1718,17 @@ __global__ void computeArcsCBCuda(
 
 		// check all existing arcs with new arc k
 		for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
+			s = start[aCnt];
+			e = end[aCnt];
             if( arcValid[aCnt] ) {
-			    if( angleX1 < start[aCnt] ) {
+			    if( angleX1 < s ) {
 				    // case (1) & (10)
-				    if( ( start[aCnt] - angleX1) > ( angleX2 - angleX1)) {
-					    if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) > 6.28318530718f ) {
-						    if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) < ( 6.28318530718f + angleX2 - angleX1) ) {
+				    if( ( s - angleX1) > ( angleX2 - angleX1)) {
+					    if( ( ( s - angleX1) + ( e - s)) > 6.28318530718f ) {
+						    if( ( ( s - angleX1) + ( e - s)) < ( 6.28318530718f + angleX2 - angleX1) ) {
 							    // case (10)
 							    start[aCnt] = angleX1;
-							    end[aCnt] = fmod( end[aCnt], 6.28318530718f);
+							    end[aCnt] = fmod( e, 6.28318530718f);
 							    // second angle check
 							    if( end[aCnt] < start[aCnt] )
 								    end[aCnt] += 6.28318530718f;
@@ -1745,16 +1746,16 @@ __global__ void computeArcsCBCuda(
                             arcValid[aCnt] = false;
 					    }
 				    } else {
-					    if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) > ( angleX2 - angleX1) ) {
+					    if( ( ( s - angleX1) + ( e - s)) > ( angleX2 - angleX1) ) {
 						    // case (5)
 						    end[aCnt] = fmod( angleX2, 6.28318530718f);
 						    // second angle check
 						    if( end[aCnt] < start[aCnt] )
 							    end[aCnt] += 6.28318530718f;
-						    if( ( ( start[aCnt] - angleX1) + ( end[aCnt] - start[aCnt])) > 6.28318530718f ) {
+						    if( ( ( s - angleX1) + ( e - s)) > 6.28318530718f ) {
 							    // case (6)
                                 tmpStart[tmpArcCnt] = angleX1;
-                                tmpEnd[tmpArcCnt] = fmod( end[aCnt], 6.28318530718f);
+                                tmpEnd[tmpArcCnt] = fmod( e, 6.28318530718f);
 							    // second angle check
                                 if( tmpEnd[tmpArcCnt] < tmpStart[tmpArcCnt] )
                                     tmpEnd[tmpArcCnt] += 6.28318530718f;
@@ -1764,9 +1765,9 @@ __global__ void computeArcsCBCuda(
 				    } // case (4): Do nothing!
 			    } else { // angleX1 > s
 				    // case (2) & (9)
-				    if( ( angleX1 - start[aCnt]) > ( end[aCnt] - start[aCnt])) {
-					    if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) > 6.28318530718f ) {
-						    if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) < ( 6.28318530718f + end[aCnt] - start[aCnt])) {
+				    if( ( angleX1 - s) > ( e - s)) {
+					    if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > 6.28318530718f ) {
+						    if( ( ( angleX1 - s) + ( angleX2 - angleX1)) < ( 6.28318530718f + e - s)) {
 							    // case (9)
 							    end[aCnt] = fmod( angleX2, 6.28318530718f);
 							    // second angle check
@@ -1780,16 +1781,16 @@ __global__ void computeArcsCBCuda(
                             arcValid[aCnt] = false;
 					    }
 				    } else {
-					    if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) > ( end[aCnt] - start[aCnt]) ) {
+					    if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > ( e - s) ) {
 						    // case (7)
 						    start[aCnt] = angleX1;
 						    // second angle check
 						    end[aCnt] = fmod( end[aCnt], 6.28318530718f);
 						    if( end[aCnt] < start[aCnt] )
 							    end[aCnt] += 6.28318530718f;
-						    if( ( ( angleX1 - start[aCnt]) + ( angleX2 - angleX1)) > 6.28318530718f ) {
+						    if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > 6.28318530718f ) {
 							    // case (8)
-                                tmpStart[tmpArcCnt] = start[aCnt];
+                                tmpStart[tmpArcCnt] = s;
                                 tmpEnd[tmpArcCnt] = fmod( angleX2, 6.28318530718f);
 							    // second angle check
                                 if( tmpEnd[tmpArcCnt] < tmpStart[tmpArcCnt] )
@@ -1837,14 +1838,13 @@ __global__ void computeArcsCBCuda(
 
     // TODO: remove/merge split arcs ( x..2*PI / 0..y --> x..y+2*PI )
 
-    /*
 	// merge arcs if arc with angle 0 and arc with angle 2*PI exist
 	int idx0 = -1;
 	int idx2pi = -1;
 	for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
-		if( start[aCnt] < 0.0001f ) {
+		if( start[aCnt] < 0.00001f ) {
 			idx0 = int( aCnt);
-		} else if( abs( end[aCnt] - 6.28318530718f) < 0.001f ) {
+		} else if( abs( end[aCnt] - 6.28318530718f) < 0.0001f ) {
 			idx2pi = int( aCnt);
 		}
 	}
@@ -1863,25 +1863,16 @@ __global__ void computeArcsCBCuda(
         // subtract the removed arc from total number of arcs
         arcCnt--;
 	}
-    */
 
     // write number of arcs
     arcCount[atomIdx * params.maxNumNeighbors + jIdx] = arcCnt;
     // copy arcs to global arc array
     for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
-        if( test ) {
-            arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcCnt * 2] = 
-                make_float4( pi + vj + ( cos( start[aCnt]) * xAxis + sin( start[aCnt]) * yAxis) * scj.w, 1.0f);
-            arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcCnt * 2 + 1] = 
-                make_float4( pi + vj + ( cos( end[aCnt]) * xAxis + sin( end[aCnt]) * yAxis) * scj.w, 1.0f);
-        } else {
-        arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcCnt * 2] = 
+        arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + aCnt * 2] = 
             make_float4( pi + vj + ( cos( start[aCnt]) * xAxis + sin( start[aCnt]) * yAxis) * scj.w, 0.2f); //start[aCnt]);
-        arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcCnt * 2 + 1] = 
+        arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + aCnt * 2 + 1] = 
             make_float4( pi + vj + ( cos( end[aCnt]) * xAxis + sin( end[aCnt]) * yAxis) * scj.w, 0.2f); //end[aCnt]);
-        }
     }
-
 }
 
 #endif
