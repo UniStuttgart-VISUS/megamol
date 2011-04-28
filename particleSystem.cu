@@ -600,6 +600,7 @@ void findNeighborsCB(
 
 void removeCoveredSmallCirclesCB(
         float* smallCircles,
+        uint*  smallCircleVisible,
         uint*  neighborCount,
         uint*  neighbors,
         float* sortedPos,
@@ -620,7 +621,7 @@ void removeCoveredSmallCirclesCB(
 
     // execute the kernel
     removeCoveredSmallCirclesCBCuda<<< numBlocks, numThreads >>>(
-        (float4*)smallCircles, neighborCount, neighbors, (float4*)sortedPos, numAtoms);
+        (float4*)smallCircles, smallCircleVisible, neighborCount, neighbors, (float4*)sortedPos, numAtoms);
 
     // check if kernel invocation generated an error
     cutilCheckMsg("Kernel execution failed");
@@ -631,6 +632,7 @@ void removeCoveredSmallCirclesCB(
 
 void computeArcsCB(
         float* smallCircles,
+        uint*  smallCircleVisible,
         uint*  neighborCount,
         uint*  neighbors,
         float* sortedPos,
@@ -639,7 +641,9 @@ void computeArcsCB(
         uint   numAtoms,
         uint   numNeighbors) {
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
+	cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
 	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+	cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
 
     // one thread per particle neighbor
     dim3 numThreads;
@@ -653,13 +657,15 @@ void computeArcsCB(
 
     // execute the kernel
     computeArcsCBCuda<<< numBlocks, numThreads >>>(
-        (float4*)smallCircles, neighborCount, neighbors, (float4*)sortedPos, (float4*)arcs, arcCount, numAtoms);
+		smallCircleVisible, (float4*)arcs, arcCount, numAtoms);
 
     // check if kernel invocation generated an error
     cutilCheckMsg("Kernel execution failed");
 
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
+	cutilSafeCall( cudaUnbindTexture( neighborCountTex));
 	cutilSafeCall( cudaUnbindTexture( neighborsTex));
+	cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
 }
 
 void writeProbePositionsCB(
@@ -667,17 +673,24 @@ void writeProbePositionsCB(
 		float*	sphereTriaVec1,
 		float*	sphereTriaVec2,
 		float*	sphereTriaVec3,
+		float*	torusPos,
+		float*	torusVS,
+		float*	torusAxis,
 		uint*   neighborCount,
 		uint*   neighbors,
 		float*  sortedAtomPos,
 		float*  arcs,
 		uint*	arcCount,
 		uint*	arcCountScan,
+		uint*	scCount,
+		uint*	scCountScan,
+		float*	smallCircles,
 		uint    numAtoms,
 		uint    numNeighbors) {
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedAtomPos, numAtoms*sizeof(float4)));
 	cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
 	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+	cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
 
     // one thread per particle neighbor
     dim3 numThreads;
@@ -692,7 +705,8 @@ void writeProbePositionsCB(
     // execute the kernel
     writeProbePositionsCBCuda<<< numBlocks, numThreads >>>( (float4*)probePos, 
 		(float4*)sphereTriaVec1, (float4*)sphereTriaVec2, (float4*)sphereTriaVec3,
-		neighborCount, neighbors, (float4*)sortedAtomPos, (float4*)arcs, arcCount, arcCountScan, numAtoms);
+		(float4*)torusPos, (float4*)torusVS, (float4*)torusAxis,
+		(float4*)arcs, arcCount, arcCountScan, scCount, scCountScan, numAtoms);
 
     // check if kernel invocation generated an error
     cutilCheckMsg("Kernel execution failed");
@@ -700,6 +714,7 @@ void writeProbePositionsCB(
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
 	cutilSafeCall( cudaUnbindTexture( neighborCountTex));
 	cutilSafeCall( cudaUnbindTexture( neighborsTex));
+	cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
 }
 
 

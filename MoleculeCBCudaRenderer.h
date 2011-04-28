@@ -202,6 +202,8 @@ namespace protein {
 		vislib::graphics::gl::GLSLShader sphereShader;
 		// shader for the spherical triangle raycasting
 		vislib::graphics::gl::GLSLShader sphericalTriangleShader;
+		// shader for the torus raycasting
+		vislib::graphics::gl::GLSLShader torusShader;
 
 		// the bounding box of the protein
 		vislib::math::Cuboid<float> bBox;
@@ -243,6 +245,8 @@ namespace protein {
 		uint*  m_dNeighborCount;
 		uint*  m_dNeighbors;
 		float* m_dSmallCircles;
+		uint*  m_dSmallCircleVisible;
+		uint*  m_dSmallCircleVisibleScan;
         float* m_dArcs;
         uint*  m_dArcIdxK;
         uint*  m_dArcCount;
@@ -273,6 +277,12 @@ namespace protein {
 		GLuint sphereTriaVec2VBO;
 		// VBO for spherical triangle vector 3
 		GLuint sphereTriaVec3VBO;
+		// VBO for torus center
+		GLuint torusPosVBO;
+		// VBO for torus visibility sphere
+		GLuint torusVSVBO;
+		// VBO for torus axis
+		GLuint torusAxisVBO;
 
 	};
 

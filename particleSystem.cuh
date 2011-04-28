@@ -179,6 +179,7 @@ void findNeighborsCB(
 
 void removeCoveredSmallCirclesCB(
     float* smallCircles,
+	uint*  smallCircleVisible,
     uint*  neighborCount,
     uint*  neighbors,
     float* sortedPos,
@@ -187,6 +188,7 @@ void removeCoveredSmallCirclesCB(
 
 void computeArcsCB(
     float* smallCircles,
+	uint*  smallCircleVisible,
     uint*  neighborCount,
     uint*  neighbors,
     float* sortedPos,
@@ -200,12 +202,18 @@ void writeProbePositionsCB(
 	float*	sphereTriaVec1,
 	float*	sphereTriaVec2,
 	float*	sphereTriaVec3,
+	float*	torusPos,
+	float*	torusVS,
+	float*	torusAxis,
     uint*   neighborCount,
     uint*   neighbors,
     float*  sortedAtomPos,
 	float*  arcs,
 	uint*	arcCount,
 	uint*	arcCountScan,
+	uint*	scCount,
+	uint*	scCountScan,
+	float*	smallCircles,
     uint    numAtoms,
 	uint    numNeighbors);
 

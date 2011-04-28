@@ -151,6 +151,29 @@ bool MoleculeCBCudaRenderer::create( void ) {
 		return false;
 	}
 
+	///////////////////////////////////////////////////
+	// load the shader source for the torus renderer //
+	///////////////////////////////////////////////////
+	if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::torusVertex2", vertSrc ) ) {
+		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+			"%s: Unable to load vertex shader source for torus shader", this->ClassName() );
+		return false;
+	}
+	if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::torusFragment2", fragSrc ) ) {
+		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+			"%s: Unable to load fragment shader source for torus shader", this->ClassName() );
+		return false;
+	} 
+	try {
+		if( !this->torusShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
+			throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
+		}
+	} catch( vislib::Exception e ) {
+		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+			"%s: Unable to create torus shader: %s\n", this->ClassName(), e.GetMsgA() );
+		return false;
+	}
+
 	////////////////////////////////////////////////////////////////
 	// load the shader source for the spherical triangle renderer //
 	////////////////////////////////////////////////////////////////
@@ -343,6 +366,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
     // find and remove unnecessary small circles
     removeCoveredSmallCirclesCB(
         m_dSmallCircles,
+		m_dSmallCircleVisible,
         m_dNeighborCount,
         m_dNeighbors,
         m_dSortedPos,
@@ -352,6 +376,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
     // compute all arcs for all small circles
     computeArcsCB(
         m_dSmallCircles,
+        m_dSmallCircleVisible,
         m_dNeighborCount,
         m_dNeighbors,
         m_dSortedPos,
@@ -360,9 +385,17 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
         numAtoms,
         params.maxNumNeighbors);
 
+    // count total number of small circles
+	cudppScan( this->scanHandle, m_dSmallCircleVisibleScan, m_dSmallCircleVisible, this->numAtoms * this->atomNeighborCount);
+	// get total number of small circles
+	uint numSC = 0;
+	uint lastSC = 0;
+    cutilSafeCall( cudaMemcpy( (void *)&numSC, (void *)(m_dSmallCircleVisibleScan + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
+    cutilSafeCall( cudaMemcpy( (void *)&lastSC, (void *)(m_dSmallCircleVisible + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
+	numSC += lastSC;
+
     // count total number of arcs
 	cudppScan( this->scanHandle, m_dArcCountScan, m_dArcCount, this->numAtoms * this->atomNeighborCount);
-
 	// get total number of probes
 	uint numProbes = 0;
 	uint lastProbeCnt = 0;
@@ -370,18 +403,29 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
     cutilSafeCall( cudaMemcpy( (void *)&lastProbeCnt, (void *)(m_dArcCount + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
 	numProbes += lastProbeCnt;
 
-	// resize buffer object
+	// resize torus buffer objects
+    cudaGLUnregisterBufferObject( this->torusPosVBO);
+    cudaGLUnregisterBufferObject( this->torusVSVBO);
+    cudaGLUnregisterBufferObject( this->torusAxisVBO);
+    glBindBuffer( GL_ARRAY_BUFFER, this->torusPosVBO);
+	glBufferData( GL_ARRAY_BUFFER, numSC*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, this->torusVSVBO);
+	glBufferData( GL_ARRAY_BUFFER, numSC*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, this->torusAxisVBO);
+	glBufferData( GL_ARRAY_BUFFER, numSC*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    cudaGLRegisterBufferObject( this->torusPosVBO);
+    cudaGLRegisterBufferObject( this->torusVSVBO);
+    cudaGLRegisterBufferObject( this->torusAxisVBO);
+
+	// resize probe buffer object
     cudaGLUnregisterBufferObject( this->probePosVBO);
     glBindBuffer( GL_ARRAY_BUFFER, this->probePosVBO);
 	glBufferData( GL_ARRAY_BUFFER, numProbes*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
     glBindBuffer( GL_ARRAY_BUFFER, 0);
     cudaGLRegisterBufferObject( this->probePosVBO);
 
-    // map OpenGL buffer object for writing from CUDA
-    float *probePosPtr;
-	cudaGLMapBufferObject((void**)&probePosPtr, this->probePosVBO);
-
-	// resize buffer objects
+	// resize spherical triangle buffer objects
     cudaGLUnregisterBufferObject( this->sphereTriaVec1VBO);
     cudaGLUnregisterBufferObject( this->sphereTriaVec2VBO);
     cudaGLUnregisterBufferObject( this->sphereTriaVec3VBO);
@@ -396,11 +440,21 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
     cudaGLRegisterBufferObject( this->sphereTriaVec2VBO);
     cudaGLRegisterBufferObject( this->sphereTriaVec3VBO);
 
-    // map OpenGL buffer objects for writing from CUDA
+    // map probe buffer object for writing from CUDA
+    float *probePosPtr;
+	cudaGLMapBufferObject((void**)&probePosPtr, this->probePosVBO);
+
+    // map spherical triangle buffer objects for writing from CUDA
 	float *sphereTriaVec1Ptr, *sphereTriaVec2Ptr, *sphereTriaVec3Ptr;
 	cudaGLMapBufferObject((void**)&sphereTriaVec1Ptr, this->sphereTriaVec1VBO);
 	cudaGLMapBufferObject((void**)&sphereTriaVec2Ptr, this->sphereTriaVec2VBO);
 	cudaGLMapBufferObject((void**)&sphereTriaVec3Ptr, this->sphereTriaVec3VBO);
+
+    // map torus buffer objects for writing from CUDA
+	float *torusPosPtr, *torusVSPtr, *torusAxisPtr;
+	cudaGLMapBufferObject((void**)&torusPosPtr, this->torusPosVBO);
+	cudaGLMapBufferObject((void**)&torusVSPtr, this->torusVSVBO);
+	cudaGLMapBufferObject((void**)&torusAxisPtr, this->torusAxisVBO);
 
 	// compute vertex buffer objects for probe positions
 	writeProbePositionsCB( 
@@ -408,21 +462,32 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 		sphereTriaVec1Ptr, 
 		sphereTriaVec2Ptr, 
 		sphereTriaVec3Ptr,
+		torusPosPtr,
+		torusVSPtr,
+		torusAxisPtr,
 		m_dNeighborCount, 
 		m_dNeighbors, 
 		m_dSortedPos, 
 		m_dArcs, 
 		m_dArcCount, 
 		m_dArcCountScan, 
+		m_dSmallCircleVisible,
+		m_dSmallCircleVisibleScan,
+		m_dSmallCircles,
 		this->numAtoms, 
 		this->atomNeighborCount);
 
-	// unmap buffer objects 
+	// unmap torus buffer objects 
+	cudaGLUnmapBufferObject( this->torusPosVBO);
+	cudaGLUnmapBufferObject( this->torusVSVBO);
+	cudaGLUnmapBufferObject( this->torusAxisVBO);
+
+	// unmap spherical triangle buffer objects 
 	cudaGLUnmapBufferObject( this->sphereTriaVec1VBO);
 	cudaGLUnmapBufferObject( this->sphereTriaVec2VBO);
 	cudaGLUnmapBufferObject( this->sphereTriaVec3VBO);
 
-    // unmap buffer object
+    // unmap probe buffer object
     cudaGLUnmapBufferObject( this->probePosVBO);
 
 #if 1
@@ -435,6 +500,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	viewportStuff[2] = 2.0f / viewportStuff[2];
 	viewportStuff[3] = 2.0f / viewportStuff[3];
 
+	glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
+
 	// enable and set up sphere shader
 	this->sphereShader.Enable();
 	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
@@ -443,7 +510,6 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 	
     // render probes VBO
-	//glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
 	//glColor3ub( 0, 255, 0);
 	//glEnableClientState( GL_VERTEX_ARRAY);
 	//glBindBuffer( GL_ARRAY_BUFFER, this->probePosVBO);
@@ -452,6 +518,17 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	//glBindBuffer( GL_ARRAY_BUFFER, 0);
 	//glDisableClientState( GL_VERTEX_ARRAY);
 	
+
+    // render torus VBO
+	//glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
+	//glColor3ub( 0, 255, 0);
+	//glEnableClientState( GL_VERTEX_ARRAY);
+	//glBindBuffer( GL_ARRAY_BUFFER, this->torusPosVBO);
+	//glVertexPointer( 4, GL_FLOAT, 0, 0);
+	//glBindBuffer( GL_ARRAY_BUFFER, 0);
+	//glDrawArrays( GL_POINTS, 0, numSC);
+	//glDisableClientState( GL_VERTEX_ARRAY);
+
     // render atoms VBO
 	glBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);     // very useful
 	glEnable( GL_BLEND);
@@ -472,14 +549,15 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	// disable sphere shader
 	sphereShader.Disable();
 
-	/////////////////////////////////////////////////
-	// ray cast the spherical triangles on the GPU //
-	/////////////////////////////////////////////////
     // get clear color (i.e. background color) for fogging
     float *clearColor = new float[4];
     glGetFloatv( GL_COLOR_CLEAR_VALUE, clearColor);
     vislib::math::Vector<float, 3> fogCol( clearColor[0], clearColor[1], clearColor[2]);
 	delete[] clearColor;
+
+	/////////////////////////////////////////////////
+	// ray cast the spherical triangles on the GPU //
+	/////////////////////////////////////////////////
 	// bind texture
 	//glBindTexture( GL_TEXTURE_2D, singularityTexture[cntRS]);
 	// enable spherical triangle shader
@@ -530,6 +608,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	glVertexAttribPointer( attribVec3, 4, GL_FLOAT, 0, 0, 0);
 	glBindBuffer( GL_ARRAY_BUFFER, this->probePosVBO);
 	glVertexPointer( 4, GL_FLOAT, 0, 0);
+	glBindBuffer( GL_ARRAY_BUFFER, 0);
 	glDrawArrays( GL_POINTS, 0, numProbes);
 	// disable vertex attribute arrays for the attribute locations
 	glDisableVertexAttribArrayARB( attribVec1);
@@ -544,6 +623,47 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	this->sphericalTriangleShader.Disable();
 	// unbind texture
 	//glBindTexture( GL_TEXTURE_2D, 0);
+
+    //////////////////////////////////
+    // ray cast the tori on the GPU //
+    //////////////////////////////////
+    // enable torus shader
+    this->torusShader.Enable();
+    // set shader variables
+    glUniform4fvARB( this->torusShader.ParameterLocation( "viewAttr"), 1, viewportStuff);
+    glUniform3fvARB( this->torusShader.ParameterLocation( "camIn"), 1, this->cameraInfo->Front().PeekComponents());
+    glUniform3fvARB( this->torusShader.ParameterLocation( "camRight"), 1, this->cameraInfo->Right().PeekComponents());
+    glUniform3fvARB( this->torusShader.ParameterLocation( "camUp"), 1, this->cameraInfo->Up().PeekComponents());
+    glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), 0.5f, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+    glUniform3fARB( this->torusShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
+    glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), 1.0f);
+    // get attribute locations
+    GLuint attribInTorusAxis = glGetAttribLocationARB( this->torusShader, "inTorusAxis");
+    GLuint attribInSphere = glGetAttribLocationARB( this->torusShader, "inSphere");
+    GLuint attribInColors = glGetAttribLocationARB( this->torusShader, "inColors");
+    // set color to orange
+    glColor3f( 1.0f, 0.75f, 0.0f);
+    glEnableClientState( GL_VERTEX_ARRAY);
+    // enable vertex attribute arrays for the attribute locations
+    glEnableVertexAttribArrayARB( attribInTorusAxis);
+    glEnableVertexAttribArrayARB( attribInSphere);
+    glEnableVertexAttribArrayARB( attribInColors);
+    // set vertex and attribute pointers and draw them
+	glBindBuffer( GL_ARRAY_BUFFER, this->torusAxisVBO);
+	glVertexAttribPointer( attribInTorusAxis, 4, GL_FLOAT, 0, 0, 0);
+	glBindBuffer( GL_ARRAY_BUFFER, this->torusVSVBO);
+	glVertexAttribPointer( attribInSphere, 4, GL_FLOAT, 0, 0, 0);
+	glBindBuffer( GL_ARRAY_BUFFER, this->torusPosVBO);
+	glVertexPointer( 4, GL_FLOAT, 0, 0);
+	glBindBuffer( GL_ARRAY_BUFFER, 0);
+	glDrawArrays( GL_POINTS, 0, numSC);
+    // disable vertex attribute arrays for the attribute locations
+    glDisableVertexAttribArrayARB( attribInTorusAxis);
+    glDisableVertexAttribArrayARB( attribInSphere);
+    glDisableVertexAttribArrayARB( attribInColors);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    // enable torus shader
+    this->torusShader.Disable();
 #endif
 
 #if 0
@@ -1467,6 +1587,10 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
 	allocateArray((void**)&m_dNeighbors, this->numAtoms*this->atomNeighborCount*sizeof(uint));
 	// array for the small circles
 	allocateArray((void**)&m_dSmallCircles, this->numAtoms*this->atomNeighborCount*4*sizeof(float));
+	// array for the small circle visibility
+	allocateArray((void**)&m_dSmallCircleVisible, this->numAtoms*this->atomNeighborCount*sizeof(uint));
+	// array for the small circle visibility prefix sum
+	allocateArray((void**)&m_dSmallCircleVisibleScan, this->numAtoms*this->atomNeighborCount*sizeof(uint));
 	// array for the arcs
     allocateArray((void**)&m_dArcs, this->numAtoms*this->atomNeighborCount*this->atomNeighborCount*4*sizeof(float));
 	// array for the arcs
@@ -1541,6 +1665,33 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
 	glBufferData( GL_ARRAY_BUFFER, this->numAtoms*this->atomNeighborCount*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
     glBindBuffer( GL_ARRAY_BUFFER, 0);
     cudaGLRegisterBufferObject( this->sphereTriaVec3VBO);
+
+	// create torus center vertex buffer object
+    if( glIsBuffer( this->torusPosVBO) )
+		glDeleteBuffers( 1, &this->torusPosVBO);
+    glGenBuffers( 1, &this->torusPosVBO);
+    glBindBuffer( GL_ARRAY_BUFFER, this->torusPosVBO);
+	glBufferData( GL_ARRAY_BUFFER, this->numAtoms*this->atomNeighborCount*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    cudaGLRegisterBufferObject( this->torusPosVBO);
+
+	// create torus visibility sphere vertex buffer object
+    if( glIsBuffer( this->torusVSVBO) )
+		glDeleteBuffers( 1, &this->torusVSVBO);
+    glGenBuffers( 1, &this->torusVSVBO);
+    glBindBuffer( GL_ARRAY_BUFFER, this->torusVSVBO);
+	glBufferData( GL_ARRAY_BUFFER, this->numAtoms*this->atomNeighborCount*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    cudaGLRegisterBufferObject( this->torusVSVBO);
+
+	// create torus axis buffer object
+    if( glIsBuffer( this->torusAxisVBO) )
+		glDeleteBuffers( 1, &this->torusAxisVBO);
+    glGenBuffers( 1, &this->torusAxisVBO);
+    glBindBuffer( GL_ARRAY_BUFFER, this->torusAxisVBO);
+	glBufferData( GL_ARRAY_BUFFER, this->numAtoms*this->atomNeighborCount*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    cudaGLRegisterBufferObject( this->torusAxisVBO);
 
 	return true;
 }
