@@ -151,6 +151,29 @@ bool MoleculeCBCudaRenderer::create( void ) {
 		return false;
 	}
 
+	////////////////////////////////////////////////////////////////
+	// load the shader source for the spherical triangle renderer //
+	////////////////////////////////////////////////////////////////
+	if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphericaltriangleVertex", vertSrc ) ) {
+		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+			"%s: Unable to load vertex shader source for sphere shader", this->ClassName() );
+		return false;
+	}
+	if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphericaltriangleFragment", fragSrc ) ) {
+		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+			"%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName() );
+		return false;
+	}
+	try {
+		if( !this->sphericalTriangleShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
+			throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
+		}
+	} catch( vislib::Exception e ) {
+		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+			"%s: Unable to create spherical triangle shader: %s\n", this->ClassName(), e.GetMsgA() );
+		return false;
+	}
+
 	return true;
 }
 
@@ -340,22 +363,67 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
     // count total number of arcs
 	cudppScan( this->scanHandle, m_dArcCountScan, m_dArcCount, this->numAtoms * this->atomNeighborCount);
 
-    // map OpenGL buffer object for writing from CUDA
-    float *probePosPtr;
-	cudaGLMapBufferObject((void**)&probePosPtr, this->probePosVBO);
-
-	// compute vertex buffer objects for probe positions
-	writeProbePositionsCB( probePosPtr, m_dNeighborCount, m_dNeighbors, m_dSortedPos, m_dArcs, m_dArcCount, m_dArcCountScan, this->numAtoms, this->atomNeighborCount);
-
-    // unmap buffer object
-    cudaGLUnmapBufferObject( this->probePosVBO);
-
 	// get total number of probes
 	uint numProbes = 0;
 	uint lastProbeCnt = 0;
     cutilSafeCall( cudaMemcpy( (void *)&numProbes, (void *)(m_dArcCountScan + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
     cutilSafeCall( cudaMemcpy( (void *)&lastProbeCnt, (void *)(m_dArcCount + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
 	numProbes += lastProbeCnt;
+
+	// resize buffer object
+    cudaGLUnregisterBufferObject( this->probePosVBO);
+    glBindBuffer( GL_ARRAY_BUFFER, this->probePosVBO);
+	glBufferData( GL_ARRAY_BUFFER, numProbes*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    cudaGLRegisterBufferObject( this->probePosVBO);
+
+    // map OpenGL buffer object for writing from CUDA
+    float *probePosPtr;
+	cudaGLMapBufferObject((void**)&probePosPtr, this->probePosVBO);
+
+	// resize buffer objects
+    cudaGLUnregisterBufferObject( this->sphereTriaVec1VBO);
+    cudaGLUnregisterBufferObject( this->sphereTriaVec2VBO);
+    cudaGLUnregisterBufferObject( this->sphereTriaVec3VBO);
+    glBindBuffer( GL_ARRAY_BUFFER, this->sphereTriaVec1VBO);
+	glBufferData( GL_ARRAY_BUFFER, numProbes*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, this->sphereTriaVec2VBO);
+	glBufferData( GL_ARRAY_BUFFER, numProbes*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, this->sphereTriaVec3VBO);
+	glBufferData( GL_ARRAY_BUFFER, numProbes*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    cudaGLRegisterBufferObject( this->sphereTriaVec1VBO);
+    cudaGLRegisterBufferObject( this->sphereTriaVec2VBO);
+    cudaGLRegisterBufferObject( this->sphereTriaVec3VBO);
+
+    // map OpenGL buffer objects for writing from CUDA
+	float *sphereTriaVec1Ptr, *sphereTriaVec2Ptr, *sphereTriaVec3Ptr;
+	cudaGLMapBufferObject((void**)&sphereTriaVec1Ptr, this->sphereTriaVec1VBO);
+	cudaGLMapBufferObject((void**)&sphereTriaVec2Ptr, this->sphereTriaVec2VBO);
+	cudaGLMapBufferObject((void**)&sphereTriaVec3Ptr, this->sphereTriaVec3VBO);
+
+	// compute vertex buffer objects for probe positions
+	writeProbePositionsCB( 
+		probePosPtr, 
+		sphereTriaVec1Ptr, 
+		sphereTriaVec2Ptr, 
+		sphereTriaVec3Ptr,
+		m_dNeighborCount, 
+		m_dNeighbors, 
+		m_dSortedPos, 
+		m_dArcs, 
+		m_dArcCount, 
+		m_dArcCountScan, 
+		this->numAtoms, 
+		this->atomNeighborCount);
+
+	// unmap buffer objects 
+	cudaGLUnmapBufferObject( this->sphereTriaVec1VBO);
+	cudaGLUnmapBufferObject( this->sphereTriaVec2VBO);
+	cudaGLUnmapBufferObject( this->sphereTriaVec3VBO);
+
+    // unmap buffer object
+    cudaGLUnmapBufferObject( this->probePosVBO);
 
 #if 1
 	// do actual rendering
@@ -375,34 +443,107 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 	
     // render probes VBO
-    glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
-    glColor3ub( 0, 255, 0);
-    glEnableClientState( GL_VERTEX_ARRAY);
-	glBindBuffer( GL_ARRAY_BUFFER, this->probePosVBO);
-    glVertexPointer( 4, GL_FLOAT, 0, 0);
-    glDrawArrays( GL_POINTS, 0, numProbes);
-    glBindBuffer( GL_ARRAY_BUFFER, 0);
-    glDisableClientState( GL_VERTEX_ARRAY);
+	//glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
+	//glColor3ub( 0, 255, 0);
+	//glEnableClientState( GL_VERTEX_ARRAY);
+	//glBindBuffer( GL_ARRAY_BUFFER, this->probePosVBO);
+	//glVertexPointer( 4, GL_FLOAT, 0, 0);
+	//glDrawArrays( GL_POINTS, 0, numProbes);
+	//glBindBuffer( GL_ARRAY_BUFFER, 0);
+	//glDisableClientState( GL_VERTEX_ARRAY);
 	
     // render atoms VBO
-    glBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);     // very useful
+	glBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);     // very useful
 	glEnable( GL_BLEND);
-    glDisable( GL_CULL_FACE);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
+	glDisable( GL_CULL_FACE);
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
 
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 	glColor4f( 1.0, 0.0, 0.0, this->opacityParam.Param<param::FloatParam>()->Value());
-    glEnableClientState( GL_VERTEX_ARRAY);
-    glBindBuffer( GL_ARRAY_BUFFER, this->atomPosVBO);
-    glVertexPointer( 4, GL_FLOAT, 0, 0);
-    glDrawArrays( GL_POINTS, 0, mol->AtomCount());
-    glBindBuffer( GL_ARRAY_BUFFER, 0);
-    glDisableClientState( GL_VERTEX_ARRAY);
-	
-    glDisable( GL_BLEND);
+	glEnableClientState( GL_VERTEX_ARRAY);
+	glBindBuffer( GL_ARRAY_BUFFER, this->atomPosVBO);
+	glVertexPointer( 4, GL_FLOAT, 0, 0);
+	glDrawArrays( GL_POINTS, 0, mol->AtomCount());
+	glBindBuffer( GL_ARRAY_BUFFER, 0);
+	glDisableClientState( GL_VERTEX_ARRAY);
+
+	glDisable( GL_BLEND);
 
 	// disable sphere shader
-    sphereShader.Disable();
+	sphereShader.Disable();
+
+	/////////////////////////////////////////////////
+	// ray cast the spherical triangles on the GPU //
+	/////////////////////////////////////////////////
+    // get clear color (i.e. background color) for fogging
+    float *clearColor = new float[4];
+    glGetFloatv( GL_COLOR_CLEAR_VALUE, clearColor);
+    vislib::math::Vector<float, 3> fogCol( clearColor[0], clearColor[1], clearColor[2]);
+	delete[] clearColor;
+	// bind texture
+	//glBindTexture( GL_TEXTURE_2D, singularityTexture[cntRS]);
+	// enable spherical triangle shader
+	this->sphericalTriangleShader.Enable();
+	// set shader variables
+	glUniform4fvARB( this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+	glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
+	glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
+	glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
+	glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "zValues"), 0.5f, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+	glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
+	//glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"), 1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
+	glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alpha"), 1.0f);
+	// get attribute locations
+	GLuint attribVec1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec1");
+	GLuint attribVec2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec2");
+	GLuint attribVec3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec3");
+	//GLuint attribTexCoord1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord1");
+	//GLuint attribTexCoord2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord2");
+	//GLuint attribTexCoord3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord3");
+	//GLuint attribColors = glGetAttribLocationARB( this->sphericalTriangleShader, "attribColors");
+	// set color to turquoise
+	glColor3f( 0.0f, 0.75f, 1.0f);
+	glEnableClientState( GL_VERTEX_ARRAY);
+	// enable vertex attribute arrays for the attribute locations
+	glEnableVertexAttribArrayARB( attribVec1);
+	glEnableVertexAttribArrayARB( attribVec2);
+	glEnableVertexAttribArrayARB( attribVec3);
+	//glEnableVertexAttribArrayARB( attribTexCoord1);
+	//glEnableVertexAttribArrayARB( attribTexCoord2);
+	//glEnableVertexAttribArrayARB( attribTexCoord3);
+	//glEnableVertexAttribArrayARB( attribColors);
+	// set vertex and attribute pointers and draw them
+	//glVertexAttribPointerARB( attribVec1, 4, GL_FLOAT, 0, 0, this->sphericTriaVec1[cntRS].PeekElements());
+	//glVertexAttribPointerARB( attribVec2, 4, GL_FLOAT, 0, 0, this->sphericTriaVec2[cntRS].PeekElements());
+	//glVertexAttribPointerARB( attribVec3, 4, GL_FLOAT, 0, 0, this->sphericTriaVec3[cntRS].PeekElements());
+	//glVertexAttribPointerARB( attribTexCoord1, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord1[cntRS].PeekElements());
+	//glVertexAttribPointerARB( attribTexCoord2, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord2[cntRS].PeekElements());
+	//glVertexAttribPointerARB( attribTexCoord3, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord3[cntRS].PeekElements());
+	//glVertexAttribPointerARB( attribColors, 3, GL_FLOAT, 0, 0, this->sphericTriaColors[cntRS].PeekElements());
+	//glVertexPointer( 4, GL_FLOAT, 0, this->sphericTriaVertexArray[cntRS].PeekElements());
+	//glDrawArrays( GL_POINTS, 0, ((unsigned int)this->sphericTriaVertexArray[cntRS].Count())/4);
+	glBindBuffer( GL_ARRAY_BUFFER, this->sphereTriaVec1VBO);
+	glVertexAttribPointer( attribVec1, 4, GL_FLOAT, 0, 0, 0);
+	glBindBuffer( GL_ARRAY_BUFFER, this->sphereTriaVec2VBO);
+	glVertexAttribPointer( attribVec2, 4, GL_FLOAT, 0, 0, 0);
+	glBindBuffer( GL_ARRAY_BUFFER, this->sphereTriaVec3VBO);
+	glVertexAttribPointer( attribVec3, 4, GL_FLOAT, 0, 0, 0);
+	glBindBuffer( GL_ARRAY_BUFFER, this->probePosVBO);
+	glVertexPointer( 4, GL_FLOAT, 0, 0);
+	glDrawArrays( GL_POINTS, 0, numProbes);
+	// disable vertex attribute arrays for the attribute locations
+	glDisableVertexAttribArrayARB( attribVec1);
+	glDisableVertexAttribArrayARB( attribVec2);
+	glDisableVertexAttribArrayARB( attribVec3);
+	//glDisableVertexAttribArrayARB( attribTexCoord1);
+	//glDisableVertexAttribArrayARB( attribTexCoord2);
+	//glDisableVertexAttribArrayARB( attribTexCoord3);
+	//glDisableVertexAttribArrayARB( attribColors);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	// disable spherical triangle shader
+	this->sphericalTriangleShader.Disable();
+	// unbind texture
+	//glBindTexture( GL_TEXTURE_2D, 0);
 #endif
 
 #if 0
@@ -1373,6 +1514,33 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
     glBindBuffer( GL_ARRAY_BUFFER, 0);
     // register this buffer object with CUDA
     cudaGLRegisterBufferObject( this->probePosVBO);
+
+	// create spherical triangle vector 1 vertex buffer object
+    if( glIsBuffer( this->sphereTriaVec1VBO) )
+		glDeleteBuffers( 1, &this->sphereTriaVec1VBO);
+    glGenBuffers( 1, &this->sphereTriaVec1VBO);
+    glBindBuffer( GL_ARRAY_BUFFER, this->sphereTriaVec1VBO);
+	glBufferData( GL_ARRAY_BUFFER, this->numAtoms*this->atomNeighborCount*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    cudaGLRegisterBufferObject( this->sphereTriaVec1VBO);
+
+	// create spherical triangle vector 2 vertex buffer object
+    if( glIsBuffer( this->sphereTriaVec2VBO) )
+		glDeleteBuffers( 1, &this->sphereTriaVec2VBO);
+    glGenBuffers( 1, &this->sphereTriaVec2VBO);
+    glBindBuffer( GL_ARRAY_BUFFER, this->sphereTriaVec2VBO);
+	glBufferData( GL_ARRAY_BUFFER, this->numAtoms*this->atomNeighborCount*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    cudaGLRegisterBufferObject( this->sphereTriaVec2VBO);
+
+	// create spherical triangle vector 3 vertex buffer object
+    if( glIsBuffer( this->sphereTriaVec3VBO) )
+		glDeleteBuffers( 1, &this->sphereTriaVec3VBO);
+    glGenBuffers( 1, &this->sphereTriaVec3VBO);
+    glBindBuffer( GL_ARRAY_BUFFER, this->sphereTriaVec3VBO);
+	glBufferData( GL_ARRAY_BUFFER, this->numAtoms*this->atomNeighborCount*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    cudaGLRegisterBufferObject( this->sphereTriaVec3VBO);
 
 	return true;
 }

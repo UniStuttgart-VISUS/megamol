@@ -200,6 +200,8 @@ namespace protein {
 
 		// shader for the sphere raycasting
 		vislib::graphics::gl::GLSLShader sphereShader;
+		// shader for the spherical triangle raycasting
+		vislib::graphics::gl::GLSLShader sphericalTriangleShader;
 
 		// the bounding box of the protein
 		vislib::math::Cuboid<float> bBox;
@@ -265,6 +267,12 @@ namespace protein {
 		GLuint atomPosVBO;
 		// VBO for probe positions
 		GLuint probePosVBO;
+		// VBO for spherical triangle vector 1
+		GLuint sphereTriaVec1VBO;
+		// VBO for spherical triangle vector 2
+		GLuint sphereTriaVec2VBO;
+		// VBO for spherical triangle vector 3
+		GLuint sphereTriaVec3VBO;
 
 	};
 

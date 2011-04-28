@@ -664,6 +664,9 @@ void computeArcsCB(
 
 void writeProbePositionsCB(
 		float*	probePos,
+		float*	sphereTriaVec1,
+		float*	sphereTriaVec2,
+		float*	sphereTriaVec3,
 		uint*   neighborCount,
 		uint*   neighbors,
 		float*  sortedAtomPos,
@@ -687,7 +690,8 @@ void writeProbePositionsCB(
     numBlocks.z = 1;
 
     // execute the kernel
-    writeProbePositionsCBCuda<<< numBlocks, numThreads >>>( (float4*)probePos,
+    writeProbePositionsCBCuda<<< numBlocks, numThreads >>>( (float4*)probePos, 
+		(float4*)sphereTriaVec1, (float4*)sphereTriaVec2, (float4*)sphereTriaVec3,
 		neighborCount, neighbors, (float4*)sortedAtomPos, (float4*)arcs, arcCount, arcCountScan, numAtoms);
 
     // check if kernel invocation generated an error
