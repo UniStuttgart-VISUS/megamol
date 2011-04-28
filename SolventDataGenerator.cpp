@@ -74,14 +74,23 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 	this->maxOMPThreads = omp_get_max_threads();
 	this->neighbourIndices = new vislib::Array<unsigned int>[this->maxOMPThreads];
 	//this->neighbHydrogenIndices = new vislib::Array<unsigned int>[this->maxOMPThreads];
+
+	/* for now we store statistics for 2 solvent residues ...*/
+	this->solvResCount = 2;
 }
 
 megamol::protein::SolventDataGenerator::~SolventDataGenerator() {
-	delete[] this->neighbourIndices;
+	delete [] this->neighbourIndices;
+	this->Release();
 }
 
 bool megamol::protein::SolventDataGenerator::create(void) {
+	// hier alle initialisierungen rein, die fehlschlagen können
 	return true;
+}
+
+void megamol::protein::SolventDataGenerator::release(void) {
+	// hier alles freigeben was in create() initialisiert wird!
 }
 
 /**
@@ -95,12 +104,13 @@ void megamol::protein::SolventDataGenerator::calcSpatialProbabilities(MolecularD
 	int nFrames = src->FrameCount();
 	int nAtoms = src->AtomCount();
 
-	//middleAtomPos.AssertCapacity(nAtoms*3);
-	middleAtomPos.SetCount(nAtoms*3);
+	if (this->middleAtomPos.Count() < nAtoms*3) {
+		this->middleAtomPos.SetCount(nAtoms*3);
+	}
+	memset(&this->middleAtomPos[0], 0, this->middleAtomPos.Count()*sizeof(float));
 
-	float *middlePosPtr = &middleAtomPos.First();
+	float *middlePosPtr = &this->middleAtomPos[0];
 	const float *atomPositions = src->AtomPositions();
-	memset(middlePosPtr, 0, sizeof(float)*3*nAtoms);
 
 //#pragma omp parallel for private( ??? )
 	for(int i = 0; i < nFrames; i++) {
@@ -136,6 +146,7 @@ void megamol::protein::SolventDataGenerator::findDonors(MolecularDataCall *data)
 */
 
 
+#if 0
 class HbondIO {
 private:
 	vislib::sys::File *readHandle, *writeHandle;
@@ -213,6 +224,7 @@ public:
 		return true;
 	}
 };
+#endif
 
 
 void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(MolecularDataCall *data, const float *atomPositions, int *atomHydroBondsIndicesPtr) {
@@ -227,7 +239,7 @@ void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(Molecular
 	if (reverseConnection.Count() < data->AtomCount())
 		reverseConnection.SetCount(data->AtomCount());
 	int *reverseConnectionPtr = &reverseConnection[0];
-	memset(reverseConnectionPtr, -1, sizeof(int)*data->AtomCount());
+	memset(reverseConnectionPtr, -1, reverseConnection.Count()*sizeof(int));
 
 	time_t t = clock();
 
@@ -236,7 +248,7 @@ void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(Molecular
 	neighbourFinder.SetPointData(atomPositions, data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
 
 	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
-#pragma omp parallel for num_threads(maxOMPThreads)
+#pragma omp parallel for
 	for( int rIdx = 0; rIdx < data->ResidueCount(); rIdx++ ) {
 		const MolecularDataCall::Residue *residue = data->Residues()[rIdx];
 
@@ -288,9 +300,9 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 #else
 
 	/* create hydrogen connections */
-	if (hydrogenConnections.Count() <= data->AtomCount() * MAX_HYDROGENS_PER_ATOM) {
-		hydrogenConnections.SetCount(data->AtomCount() * MAX_HYDROGENS_PER_ATOM);
-		memset(&hydrogenConnections[0], -1, sizeof(int)*data->AtomCount()*MAX_HYDROGENS_PER_ATOM);
+	if (this->hydrogenConnections.Count() <= data->AtomCount() * MAX_HYDROGENS_PER_ATOM) {
+		this->hydrogenConnections.SetCount(data->AtomCount() * MAX_HYDROGENS_PER_ATOM);
+		memset(&this->hydrogenConnections[0], -1, this->hydrogenConnections.Count()*sizeof(int));
 		int count = data->ConnectionCount();
 		for(int i = 0; i < count; i++) {
 			int idx0 = data->Connection()[2*i];
@@ -321,8 +333,8 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 			}
 		}
 
-		donorAcceptors.SetCount(data->AtomCount());
-		memset(&donorAcceptors[0], -1, sizeof(int)*data->AtomCount());
+		this->donorAcceptors.SetCount(data->AtomCount());
+		memset(&this->donorAcceptors[0], -1, this->donorAcceptors.Count()*sizeof(int));
 		for(int i = 0; i < data->AtomCount(); i++) {
 			char element = atomTypes[atomTypeIndices[i]].Name()[0];
 			if (element == 'O' || element == 'N')
@@ -338,7 +350,7 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 	const int *hydrogenConnectionsPtr = hydrogenConnections.PeekElements();
 
 	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
-#pragma omp parallel for num_threads(maxOMPThreads)
+#pragma omp parallel for
 	for( int rIdx = 0; rIdx < data->ResidueCount(); rIdx++ ) {
 		const MolecularDataCall::Residue *residue = data->Residues()[rIdx];
 
@@ -424,6 +436,65 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 }
 
 
+#if 1
+bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(MolecularDataCall *dataTarget, MolecularDataCall *dataSource) {
+	int savedFrameId = dataSource->FrameID();
+
+	if (this->hydrogenBondStatistics.Count() < this->solvResCount*dataSource->AtomCount()) {
+		this->hydrogenBondStatistics.SetCount(this->solvResCount*dataSource->AtomCount());
+		memset(&this->hydrogenBondStatistics[0], 0, this->hydrogenBondStatistics.Count()*sizeof(unsigned int));
+	}
+	unsigned int *hydrogenBondStatisticsPtr = &this->hydrogenBondStatistics[0];
+
+	for(int frameId = 0; frameId < dataSource->FrameCount(); frameId++) {
+		dataSource->SetFrameID(frameId);
+		if (!(*dataSource)(MolecularDataCall::CallForGetData))
+			return false;
+		this->getHBonds(dataTarget, dataSource);
+		int atomCnt = dataTarget->AtomCount();
+		const int *hydrogenBonds = dataTarget->AtomHydrogenBondIndices();
+		const int *residueIndices = dataTarget->AtomResidueIndices();
+/*#pragma omp parallel for
+		for(int atomIdx = 0; atomIdx < atomCnt; atomIdx++) {
+			int residueIdx = residueIndices[atomIdx];
+			if (dataTarget->IsSolvent(dataTarget->Residues()[residueIdx]))
+				continue;
+		}*/
+
+#pragma omp parallel for
+		for( int rIdx = 0; rIdx < dataSource->ResidueCount(); rIdx++ ) {
+			const MolecularDataCall::Residue *residue = dataSource->Residues()[rIdx];
+
+			//if (dataSource->IsSolvent(residue)) continue;
+			bool isSolvent = dataSource->IsSolvent(residue);
+
+			// vorerst nur Sauerstoff und Stickstoff als Akzeptor/Donator (N, O)
+			int lastAtomIdx = residue->FirstAtomIndex()+residue->AtomCount();
+			for(int atomIndex = residue->FirstAtomIndex(); atomIndex < lastAtomIdx; atomIndex++) {
+				if (hydrogenBonds[atomIndex] == -1)
+					continue;
+				int otherAtomIndex = hydrogenBonds[atomIndex];
+				int otherResidueIdx = residueIndices[otherAtomIndex];
+				const MolecularDataCall::Residue *otherResidue = dataSource->Residues()[otherResidueIdx];
+				bool isOtherSolvent = dataTarget->IsSolvent(otherResidue);
+				if(isSolvent != isOtherSolvent) {
+					// polymer/solvent HBond ...
+					if (isSolvent) {
+						hydrogenBondStatisticsPtr[this->solvResCount*atomIndex + (rIdx%solvResCount)]++;
+					} else /*isOtherSolvent*/ {
+						hydrogenBondStatisticsPtr[this->solvResCount*otherAtomIndex + (otherResidueIdx%solvResCount)]++;
+					}
+				} else {
+					// both atoms solvent or both polymer?
+				}
+			}
+		}
+	}
+
+	dataSource->SetFrameID(savedFrameId);
+}
+#endif
+
 bool megamol::protein::SolventDataGenerator::getHBonds(MolecularDataCall *dataTarget, MolecularDataCall *dataSource) {
 	int reqFrame = dataTarget->FrameID();
 	int cacheIndex = reqFrame % HYDROGEN_BOND_IN_CORE;
@@ -447,10 +518,10 @@ bool megamol::protein::SolventDataGenerator::getHBonds(MolecularDataCall *dataTa
 		return false;
 
 	if (vislib::sys::File::Exists(fileName)) {
-		HbondIO input(data->AtomCount(), data->FrameCount(), fileName, true);
+		HbondIO input(dataSource->AtomCount(), dataSource->FrameCount(), fileName, true);
 		if (input.readFrame(&atomHydroBonds[0], reqFrame)) {
 			curHBondFrame[cacheIndex] = reqFrame;
-			data->SetAtomHydrogenBondIndices(atomHydroBonds.PeekElements());
+			dataTarget->SetAtomHydrogenBondIndices(atomHydroBonds.PeekElements());
 			dataTarget->SetAtomHydrogenBondDistance(hbondDist);
 			return true;
 		}
@@ -535,6 +606,11 @@ bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
 
 	*molDest = *molSource;
 
+	// testing?
+/*	if (!this->hydrogenBondStatistics.Count()) {
+		this->calcHydrogenBondStatistics(molDest, molSource);
+	}*/
+
 	if (this->showMiddlePositions.Param<param::BoolParam>()->Value()) {
 		if (!middleAtomPos.Count()) {
 			calcSpatialProbabilities(molSource, molDest);
@@ -560,12 +636,8 @@ bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
 			molDest->SetDataHash(molSource->DataHash()*666); // hacky ?
 		}
 
-		// test: only compute hydrogen bounds once at startup ... (this is not suficcient for trajectories)
 		getHBonds(molDest, molSource);
 	}
 
 	return true;
-}
-
-void megamol::protein::SolventDataGenerator::release(void) {
 }

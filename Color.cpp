@@ -987,8 +987,8 @@ void Color::ReadColorTableFromFile( vislib::StringA filename,
         colorLookupTable.AssertCapacity( file.Count());
         // get colors from file
         for( unsigned int cnt = 0; cnt < file.Count(); ++cnt ) {
-            if( utility::ColourParser::FromString( vislib::StringA(
-              file.Line( cnt)), r, g, b) ) {
+        	vislib::StringA lineStr( file.Line(cnt) );
+            if( lineStr.Length() > 0 && utility::ColourParser::FromString( lineStr, r, g, b) ) {
                 colorLookupTable.Add( vislib::math::Vector<float, 3>
                   ( r, g, b));
             }

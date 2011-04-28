@@ -173,7 +173,7 @@ namespace protein {
 		/** short for gridResolution[0]*gridResolution[1]*gridResolution[2] */
 		unsigned int gridSize;
 	};
-}; //namespace megamol
-}; //namespace protein
+} //namespace megamol
+} //namespace protein
 
 #endif
