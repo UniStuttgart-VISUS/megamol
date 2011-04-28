@@ -1468,6 +1468,7 @@ __global__ void findNeighborsCBCuda(
 // find and remove unnecessary small circles
 __global__ void removeCoveredSmallCirclesCBCuda(
         float4* smallCircles,         // in/out: small circles
+		uint*   smallCircleVisible,   // out: small circle visibility
         uint*   neighborCount,        // in/out: number of neighbors
         uint*   neighbors,            // input: neighbor indices
         float4* atomPos,              // input: sorted atom positions
@@ -1480,6 +1481,8 @@ __global__ void removeCoveredSmallCirclesCBCuda(
     if( atomIdx >= numAtoms ) return;
     // check, if neighbor index is within bounds
     if( jIdx >= params.maxNumNeighbors ) return;
+	// set small circle visibility to false
+	smallCircleVisible[atomIdx * params.maxNumNeighbors + jIdx] = 0;
     // check, if neighbor index is within bounds
     uint numNeighbors = neighborCount[atomIdx];
     if( jIdx >= numNeighbors ) return;
@@ -1572,12 +1575,9 @@ __global__ void removeCoveredSmallCirclesCBCuda(
 
 // compute all arcs of atom j on the surface of atom i
 __global__ void computeArcsCBCuda(
-        float4* smallCircles,           // in: small circles
-        uint*   neighborCount,          // in: number of neighbors
-        uint*   neighbors,              // in: neighbor indices
-        float4* atomPos,                // in: sorted atom positions
-        float4* arcs,                   // out: the arcs
-        uint*   arcCount,               // out: the number of arcs
+		uint*   smallCircleVisible,		// out: small circle visibility
+        float4* arcs,					// out: the arcs
+        uint*   arcCount,				// out: the number of arcs
         uint    numAtoms) {
     // get atom index
     uint atomIdx = blockIdx.y * blockDim.y + threadIdx.y;
@@ -1588,7 +1588,7 @@ __global__ void computeArcsCBCuda(
     // check, if neighbor index is within bounds
     if( jIdx >= params.maxNumNeighbors ) return;
     // check, if neighbor index is within bounds
-    uint numNeighbors = neighborCount[atomIdx];
+    uint numNeighbors = FETCH( neighborCount, atomIdx);
     if( jIdx >= numNeighbors ) return;
 
     // read position and radius of atom i from sorted array
@@ -1600,7 +1600,7 @@ __global__ void computeArcsCBCuda(
     //uint j = neighbors[atomIdx * params.maxNumNeighbors + jIdx];
     uint j = FETCH( neighbors, atomIdx * params.maxNumNeighbors + jIdx);
     // get small circle j
-    float4 scj = smallCircles[atomIdx * params.maxNumNeighbors + jIdx];
+    float4 scj = FETCH( smallCircles, atomIdx * params.maxNumNeighbors + jIdx);
     // do nothing if small circle j has radius -1 (removed)
     if( scj.w < 0.0 )
         return;
@@ -1672,7 +1672,7 @@ __global__ void computeArcsCBCuda(
         //k = neighbors[atomIdx * params.maxNumNeighbors + kCnt];
         k = FETCH( neighbors, atomIdx * params.maxNumNeighbors + kCnt);
         // get small circle k
-        sck = smallCircles[atomIdx * params.maxNumNeighbors + kCnt];
+        sck = FETCH( smallCircles, atomIdx * params.maxNumNeighbors + kCnt);
         // do nothing if small circle k has radius -1 (removed)
         if( sck.w < 0.0 )
             continue;
@@ -1913,7 +1913,11 @@ __global__ void computeArcsCBCuda(
     // write number of arcs
     arcCount[atomIdx * params.maxNumNeighbors + jIdx] = arcWritten;
 
-	// set small circle j invalid if no arc was created
+	// set small circle j visible if at least one arc was created and i < j
+	if( atomIdx < j && arcCnt > 0 ) {
+	//if( arcWritten > 0 ) {
+		smallCircleVisible[atomIdx * params.maxNumNeighbors + jIdx] = 1;
+	}
 	// DO NOT USE THIS!! It will create false, internal arcs!
 	//if( arcCnt == 0 ) {
 	//	smallCircles[atomIdx * params.maxNumNeighbors + jIdx].w = -1.0f;
@@ -1927,12 +1931,14 @@ __global__ void writeProbePositionsCBCuda(
 		float4*	sphereTriaVec1,	// out: the spherical triangle vector 1
 		float4*	sphereTriaVec2,	// out: the spherical triangle vector 2
 		float4*	sphereTriaVec3,	// out: the spherical triangle vector 3
-		uint*   neighborCount,	// in: the number of neighbors per atom
-        uint*   neighbors,		// in: neighbor indices
-        float4* atomPos,		// in: sorted atom positions
+		float4*	torusPos,		// out: torus center
+		float4*	torusVS,		// out: torus visibility sphere
+		float4*	torusAxis,		// out: torus axis
 		float4* arcs,			// in: the arc start and end points
 		uint*	arcCount,		// in: the number of probes
 		uint*	arcCountScan,	// in: the prefix sum of "arcCount"
+		uint*	scCount,		// in: the small circle count
+		uint*	scCountScan,	// in: the prefix sum of "scCount"
         uint    numAtoms) {
     // get atom index
     uint atomIdx = blockIdx.y * blockDim.y + threadIdx.y;
@@ -1947,6 +1953,8 @@ __global__ void writeProbePositionsCBCuda(
 	float4 ai = FETCH( atomPos, atomIdx);
 	float4 aj = FETCH( atomPos, FETCH( neighbors, atomIdx * params.maxNumNeighbors + jIdx));
 	float4 ak;
+
+	// ---------- write spherical triangle ----------
 
 	// get number of probes and the sum of previous probes for this neighbor
 	uint numProbes = arcCount[atomIdx * params.maxNumNeighbors + jIdx];
@@ -1965,6 +1973,36 @@ __global__ void writeProbePositionsCBCuda(
 		sphereTriaVec2[numPreviousProbes + cnt] = make_float4( make_float3( aj) - make_float3( tmpProbePos), 1.0);
 		sphereTriaVec3[numPreviousProbes + cnt] = make_float4( make_float3( ak) - make_float3( tmpProbePos), params.probeRadius * params.probeRadius);
 	}
+
+	// ---------- write torus ----------
+
+	if( scCount[atomIdx * params.maxNumNeighbors + jIdx] > 0 ) {
+		float4 sc;
+		uint torusIdx = scCountScan[atomIdx * params.maxNumNeighbors + jIdx];
+		sc = FETCH( smallCircles, atomIdx * params.maxNumNeighbors + jIdx);
+		// torus axis
+		float3 ta = normalize( make_float3( sc));
+		// torus center
+		float3 tc = make_float3( sc) + make_float3( ai);
+		float3 ortho = normalize( cross( ta, make_float3( 0.0, 0.0, 1.0)));
+
+		// compute the tangential point X2 of the spheres
+        float3 P = tc + ( ortho * sc.w);
+        float3 X = normalize( P - make_float3( ai)) * ai.w;
+        float3 C = ( length( P - make_float3( ai)) /
+			( length( P - make_float3( aj)) + length( P - make_float3( ai)))) * 
+			( make_float3( aj) - make_float3( ai));
+        float distance = length( X - C);
+        C = ( C + make_float3( ai)) - tc;
+
+		// write torus center & torus radius R
+		torusPos[torusIdx] = make_float4( tc, sc.w);
+		// write torus axis & probe radius (= torus radius r)
+		torusAxis[torusIdx] = make_float4( ta, params.probeRadius);
+		// write visibility sphere
+		torusVS[torusIdx] = make_float4( C, distance);
+	}
+
 }
 
 #endif
