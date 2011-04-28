@@ -60,6 +60,7 @@
 #include "testquaternion.h"
 //#include "testtriangle.h"
 #include "testBitmapImage.h"
+#include "testdelegate.h"
 #ifdef _WIN32
 #include "testwinreg.h"
 #endif /* _WIN32 */
@@ -95,6 +96,7 @@ VislibTest tests[] = {
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
     {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
+    {_T("Delegate"), ::TestDelegate, "Tests VISlib Delegate"},
     // graphics
     {_T("BitmapCodecSimple"), ::TestBitmapCodecSimple, "Performs very simple tests of vislib::graphics::*BitmapCodec"},
     {_T("NamedColours"), ::TestNamedColours, "Tests NamedColours"},

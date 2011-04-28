@@ -490,6 +490,20 @@
     <ClCompile Include="src\Collection.cpp" />
     <ClCompile Include="src\ColumnFormatter.cpp" />
     <ClCompile Include="src\ConstIterator.cpp" />
+    <ClCompile Include="src\Delegate.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugImport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugImport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\Exception.cpp" />
     <ClCompile Include="src\forceinline.cpp" />
     <ClCompile Include="src\FormatException.cpp" />
@@ -614,6 +628,7 @@
     <ClInclude Include="include\vislib\Collection.h" />
     <ClInclude Include="include\vislib\ColumnFormatter.h" />
     <ClInclude Include="include\vislib\ConstIterator.h" />
+    <ClInclude Include="include\vislib\Delegate.h" />
     <ClInclude Include="include\vislib\deprecated.h" />
     <ClInclude Include="include\vislib\Exception.h" />
     <ClInclude Include="include\vislib\forceinline.h" />
@@ -669,6 +684,20 @@
     <ClInclude Include="vislibversion.template.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="implementDelegate.pl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugImport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugImport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
     <None Include="include\vislib\vislibsymbolimportexport.inl" />
     <CustomBuild Include="makevislibversion.pl">
       <FileType>Document</FileType>

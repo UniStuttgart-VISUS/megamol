@@ -222,6 +222,7 @@
     <ClCompile Include="testcollection.cpp" />
     <ClCompile Include="testcomm.cpp" />
     <ClCompile Include="testdate.cpp" />
+    <ClCompile Include="testdelegate.cpp" />
     <ClCompile Include="testdimandrect.cpp" />
     <ClCompile Include="testdimred.cpp" />
     <ClCompile Include="testdirectoryiterator.cpp" />
@@ -272,6 +273,7 @@
     <ClInclude Include="testcollection.h" />
     <ClInclude Include="testcomm.h" />
     <ClInclude Include="testdate.h" />
+    <ClInclude Include="testdelegate.h" />
     <ClInclude Include="testdimandrect.h" />
     <ClInclude Include="testdimred.h" />
     <ClInclude Include="testdirectoryiterator.h" />

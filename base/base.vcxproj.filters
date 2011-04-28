@@ -183,6 +183,9 @@
     <ClCompile Include="src\xmlUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Delegate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\AlreadyExistsException.h">
@@ -377,11 +380,15 @@
     <ClInclude Include="vislibversion.template.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\vislib\Delegate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\vislib\vislibsymbolimportexport.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="implementDelegate.pl" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="project.mk" />
