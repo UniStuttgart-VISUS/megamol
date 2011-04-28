@@ -450,7 +450,8 @@ bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(Molecula
 		dataSource->SetFrameID(frameId);
 		if (!(*dataSource)(MolecularDataCall::CallForGetData))
 			return false;
-		this->getHBonds(dataTarget, dataSource);
+		if (!this->getHBonds(dataTarget, dataSource))
+			return false;
 		int atomCnt = dataTarget->AtomCount();
 		const int *hydrogenBonds = dataTarget->AtomHydrogenBondIndices();
 		const int *residueIndices = dataTarget->AtomResidueIndices();
@@ -461,7 +462,7 @@ bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(Molecula
 				continue;
 		}*/
 
-#pragma omp parallel for
+//#pragma omp parallel for
 		for( int rIdx = 0; rIdx < dataSource->ResidueCount(); rIdx++ ) {
 			const MolecularDataCall::Residue *residue = dataSource->Residues()[rIdx];
 
@@ -477,20 +478,28 @@ bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(Molecula
 				int otherResidueIdx = residueIndices[otherAtomIndex];
 				const MolecularDataCall::Residue *otherResidue = dataSource->Residues()[otherResidueIdx];
 				bool isOtherSolvent = dataTarget->IsSolvent(otherResidue);
+#if 0
 				if(isSolvent != isOtherSolvent) {
 					// polymer/solvent HBond ...
-					if (isSolvent) {
+					if (!isSolvent) {
 						hydrogenBondStatisticsPtr[this->solvResCount*atomIndex + (rIdx%solvResCount)]++;
-					} else /*isOtherSolvent*/ {
+					} else /*if (!isOtherSolvent)*/ {
 						hydrogenBondStatisticsPtr[this->solvResCount*otherAtomIndex + (otherResidueIdx%solvResCount)]++;
 					}
 				} else {
 					// both atoms solvent or both polymer?
 				}
+#else
+				if (!isSolvent)
+					hydrogenBondStatisticsPtr[atomIndex]++;
+				if (!isOtherSolvent)
+					hydrogenBondStatisticsPtr[otherAtomIndex]++;
+#endif
 			}
 		}
 	}
 
+	dataSource->SetAtomHydrogenBondStatistics(hydrogenBondStatisticsPtr);
 	dataSource->SetFrameID(savedFrameId);
 }
 #endif
@@ -607,9 +616,9 @@ bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
 	*molDest = *molSource;
 
 	// testing?
-/*	if (!this->hydrogenBondStatistics.Count()) {
+	if (!this->hydrogenBondStatistics.Count()) {
 		this->calcHydrogenBondStatistics(molDest, molSource);
-	}*/
+	}
 
 	if (this->showMiddlePositions.Param<param::BoolParam>()->Value()) {
 		if (!middleAtomPos.Count()) {

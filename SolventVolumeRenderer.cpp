@@ -110,6 +110,7 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 		cm->SetTypePair( cMode, Color::GetName( cMode).c_str());
 	}
 	cm->SetTypePair( numClrModes, "Hydrogen Bonds" );
+	cm->SetTypePair( numClrModes+1, "Hydrogen Bond statistics" );
 	delete mol;
 	/*
 	cm->SetTypePair( Color::ELEMENT, "Element" );
@@ -986,12 +987,29 @@ void protein::SolventVolumeRenderer::RenderStickSolvent(/*const*/ MolecularDataC
 	float stickRadius = this->stickRadiusParam.Param<param::FloatParam>()->Value();
 
 	// copy atom pos and radius to vertex array
-#pragma omp parallel for
-	for( cnt = 0; cnt < int( mol->AtomCount()); ++cnt ) {
-		this->vertSpheres[4*cnt+0] = atomPos[3*cnt+0];
-		this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
-		this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
-		this->vertSpheres[4*cnt+3] = stickRadius;
+	if (this->coloringModeParam.Param<param::EnumParam>()->Value() >= Color::GetNumOfColoringModes(mol)+1 &&
+			mol->AtomHydrogenBondStatistics()) {
+		// render atom spheres size according to their hydrogen bond statistics ...
+		float factor = 1.0 / mol->FrameCount();
+		const unsigned int *hbStatistics = mol->AtomHydrogenBondStatistics();
+		#pragma omp parallel for
+		for( cnt = 0; cnt < int( mol->AtomCount()); ++cnt ) {
+			this->vertSpheres[4*cnt+0] = atomPos[3*cnt+0];
+			this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
+			this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
+			// warning: we do not know if there will be always just two kinds of hydrogen bond statistics per atom!
+			this->vertSpheres[4*cnt+3] = stickRadius + stickRadius*(
+					(float)(/*hbStatistics[numSolventResidues*cnt]+hbStatistics[numSolventResidues*cnt+1]*/ hbStatistics[cnt])*factor);
+		}
+	} else {
+		// render spheres in normal mode (sphere-radius is the same as stick-radius)
+		#pragma omp parallel for
+		for( cnt = 0; cnt < int( mol->AtomCount()); ++cnt ) {
+			this->vertSpheres[4*cnt+0] = atomPos[3*cnt+0];
+			this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
+			this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
+			this->vertSpheres[4*cnt+3] = stickRadius;
+		}
 	}
 
 	unsigned int idx0, idx1;

@@ -1069,6 +1069,9 @@ namespace protein {
         void SetAtomHydrogenBondIndices(const int*indices) { atomHydrogenBondIdx = indices; }
 		float AtomHydrogenBondDistance(void) const { return atomHydrogenBondDistance; }
 		void SetAtomHydrogenBondDistance(float dist) { atomHydrogenBondDistance = dist; }
+        const unsigned int* AtomHydrogenBondStatistics(void) const { return atomHydrogenBondStatistics; }
+        void SetAtomHydrogenBondStatistics(const unsigned int*statistics) { atomHydrogenBondStatistics = statistics; }
+
 
 
         /**
@@ -1367,6 +1370,8 @@ namespace protein {
 			this->atomTypeIdx = s.atomTypeIdx;
 			this->atomResidueIdx = s.atomResidueIdx;
 			this->atomHydrogenBondIdx = s.atomHydrogenBondIdx;
+			this->atomHydrogenBondDistance = s.atomHydrogenBondDistance;
+			this->atomHydrogenBondStatistics = s.atomHydrogenBondStatistics;
 			this->atomType = s.atomType;
 			this->atomBFactors = s.atomBFactors;
 			this->atomCharges = s.atomCharges;
@@ -1416,6 +1421,7 @@ namespace protein {
 		/** marks wether an atom has a hydrogen bond to another H-atom (-1 marks "no connection") */
 		const int *atomHydrogenBondIdx;
 		float atomHydrogenBondDistance;
+		const unsigned int *atomHydrogenBondStatistics;
 
         /** The array of residues. */
         const Residue** residues;
