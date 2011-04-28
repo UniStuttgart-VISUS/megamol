@@ -33,8 +33,7 @@ namespace protein {
 	 * this class can be put in place between PDBLoader and a molecule renderer (SolventVolumeRenderer for example)...
      */
 
-    class SolventDataGenerator : public megamol::core::/*view::AnimData*/Module
-    {
+    class SolventDataGenerator : public megamol::core::/*view::AnimData*/Module {
     public:
 
         /** Ctor */
@@ -93,13 +92,29 @@ namespace protein {
 
 		bool dataChanged(core::Call& call);
 
+		/**
+		 * for now just calculate the arithmetic average positions of each atom ...
+		 */
 		void calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst);
 
+		/**
+		 * Get the hydrogen bonds for the current frameID of 'dataSource' and store the result in 'dataTarget'.
+		 * The hydrogen-bonds may be already precomputed (in core or file-IO) so this function won't take much time.
+		 */
 		bool getHBonds(MolecularDataCall *dataTarget, MolecularDataCall *dataSource);
+
+		/**
+		 * calculate hydrogen-bonds with a neighbor-search of possible donors/acceptors and check for connected hydrogens ...
+		 */
 		void calcHydroBondsForCurFrame(MolecularDataCall *data, const float *atomPositions, int *atomHydroBondsIndicesPtr);
 		inline void calcHydroBondsForCurFrame(MolecularDataCall *data, int *atomHydroBondsIndicesPtr) {
 			calcHydroBondsForCurFrame(data, data->AtomPositions(), atomHydroBondsIndicesPtr);
 		}
+
+		/**
+		 * create hydrogen-bond statistics for the polymer atoms ...
+		 */
+		bool calcHydrogenBondStatistics(MolecularDataCall *dataTarget, MolecularDataCall *dataSource);
 
 		/**
          * Implementation of 'Release'.
@@ -138,6 +153,8 @@ namespace protein {
 		/** store hydrogen connections per atom ... */
 		vislib::Array<int> hydrogenConnections;
 		vislib::Array<int> donorAcceptors;
+		vislib::Array<unsigned int> hydrogenBondStatistics;
+		int solvResCount;
 		enum { MAX_HYDROGENS_PER_ATOM = 4 };
 		//enum { DONOR_ACCEPTOR_TYPE_COUNT = 2 /* only 'O' and 'N' can be donor/acceptor*/};
 		int maxOMPThreads;
