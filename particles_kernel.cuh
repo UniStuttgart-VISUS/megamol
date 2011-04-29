@@ -35,6 +35,8 @@ struct SimParams {
 	float probeRadius;
 
     uint maxNumNeighbors;
+
+    uint texSize;
 };
 
 // Reduced Surface parameters

@@ -152,7 +152,7 @@ void reorderDataAndFindCellStart(uint*  cellStart,
     // set all cells to empty
 	cutilSafeCall(cudaMemset(cellStart, 0xffffffff, numCells*sizeof(uint)));
 
-    cutilSafeCall(cudaBindTexture(0, oldPosTex, oldPos, numParticles*sizeof(float4)));
+    //cutilSafeCall(cudaBindTexture(0, oldPosTex, oldPos, numParticles*sizeof(float4)));
 
     uint smemSize = sizeof(uint)*(numThreads+1);
     reorderDataAndFindCellStartD<<< numBlocks, numThreads, smemSize>>>(
@@ -165,9 +165,7 @@ void reorderDataAndFindCellStart(uint*  cellStart,
         numParticles);
     cutilCheckMsg("Kernel execution failed: reorderDataAndFindCellStartD");
 
-#if USE_TEX
-    cutilSafeCall(cudaUnbindTexture(oldPosTex));
-#endif
+    //cutilSafeCall(cudaUnbindTexture(oldPosTex));
 }
 
 void countNeighbors( uint*  neighborCount,
@@ -715,6 +713,34 @@ void writeProbePositionsCB(
 	cutilSafeCall( cudaUnbindTexture( neighborCountTex));
 	cutilSafeCall( cudaUnbindTexture( neighborsTex));
 	cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
+}
+
+void writeSingularityTextureCB(
+        float*  texCoord,
+        float*  singTex,
+        float*  sortedProbePos,
+        uint*   gridProbeIndex,
+        uint*   cellStart,
+        uint*   cellEnd,
+        uint    numProbes,
+        uint    numNeighbors,
+        uint    numCells) {
+    cutilSafeCall( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, cellEndTex, cellEnd, numCells*sizeof(uint)));
+
+    // thread per particle
+    uint numThreads, numBlocks;
+    computeGridSize( numProbes, 64, numBlocks, numThreads);
+
+    //// execute the kernel
+    findProbeNeighborsCBCuda<<< numBlocks, numThreads >>>( (float3*)texCoord, (float3*)singTex, 
+        (float4*)sortedProbePos, gridProbeIndex, cellStart, cellEnd, numProbes, numNeighbors);
+
+    // check if kernel invocation generated an error
+    cutilCheckMsg("Kernel execution failed");
+
+    cutilSafeCall( cudaUnbindTexture( cellStartTex));
+    cutilSafeCall( cudaUnbindTexture( cellEndTex));
 }
 
 

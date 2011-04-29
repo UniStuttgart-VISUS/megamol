@@ -61,7 +61,7 @@ MoleculeCBCudaRenderer::MoleculeCBCudaRenderer( void ) : Renderer3DModule (),
     opacityParam( "opacity", "Atom opacity"),
     stepsParam( "steps", "Drawing steps"),
 	probeRadius( 1.4f), atomNeighborCount( 64), cudaInitalized( false), 
-    atomPosVBO( 0), probePosVBO( 0)
+    atomPosVBO( 0), probePosVBO( 0), probeNeighborCount( 32), texHeight( 0), texWidth( 0)
 {
 	this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
 	this->MakeSlotAvailable ( &this->molDataCallerSlot );
@@ -94,8 +94,44 @@ MoleculeCBCudaRenderer::~MoleculeCBCudaRenderer(void) {
  */
 void protein::MoleculeCBCudaRenderer::release( void ) {
 
-    cudppDestroyPlan( this->sortHandle);
-    cudppDestroyPlan( this->scanHandle);
+    // release shaders
+    this->sphereShader.Release();
+    this->torusShader.Release();
+    this->sphericalTriangleShader.Release();
+
+    if( this->cudaInitalized ) {
+        delete[] m_hPos;
+        delete[] m_hNeighborCount;
+        delete[] m_hNeighbors;
+        delete[] m_hSmallCircles;
+        delete[] m_hArcs;
+        delete[] m_hCellStart;
+        delete[] m_hCellEnd;
+        delete[] m_hParticleIndex;
+
+        freeArray( m_dPos);
+        freeArray( m_dSortedPos);
+        freeArray( m_dSortedProbePos);
+        freeArray( m_dNeighborCount);
+        freeArray( m_dNeighbors);
+        freeArray( m_dSmallCircles);
+		freeArray( m_dSmallCircleVisible);
+		freeArray( m_dSmallCircleVisibleScan);
+        freeArray( m_dArcs);
+        freeArray( m_dArcIdxK);
+        freeArray( m_dArcCount);
+        freeArray( m_dArcCountScan);
+        freeArray( m_dGridParticleHash);
+        freeArray( m_dGridParticleIndex);
+        freeArray( m_dGridProbeHash);
+        freeArray( m_dGridProbeIndex);
+        freeArray( m_dCellStart);
+        freeArray( m_dCellEnd);
+
+        cudppDestroyPlan( this->sortHandle);
+        cudppDestroyPlan( this->probeSortHandle);
+        cudppDestroyPlan( this->scanHandle);
+    }
 }
 
 
@@ -373,6 +409,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
         numAtoms,
         params.maxNumNeighbors);
 
+	cudaMemset( m_dArcCount, 0, this->numAtoms*this->atomNeighborCount*sizeof(uint));
+
     // compute all arcs for all small circles
     computeArcsCB(
         m_dSmallCircles,
@@ -384,6 +422,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
         m_dArcCount,
         numAtoms,
         params.maxNumNeighbors);
+
+	// ---------- vertex buffer object generation (for rendering) ----------
 
     // count total number of small circles
 	cudppScan( this->scanHandle, m_dSmallCircleVisibleScan, m_dSmallCircleVisible, this->numAtoms * this->atomNeighborCount);
@@ -487,10 +527,100 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	cudaGLUnmapBufferObject( this->sphereTriaVec2VBO);
 	cudaGLUnmapBufferObject( this->sphereTriaVec3VBO);
 
+	// ---------- singularity handling ----------
+
+	// calculate grid hash
+	calcHash(
+		m_dGridProbeHash,
+		m_dGridProbeIndex,
+		probePosPtr,
+		numProbes);
+    
+	// sort probes based on hash
+    cudppSort( this->probeSortHandle, m_dGridProbeHash, m_dGridProbeIndex, this->gridSortBits, numProbes);
+
+	// reorder particle arrays into sorted order and find start and end of each cell
+	reorderDataAndFindCellStart(
+		m_dCellStart,
+		m_dCellEnd,
+		m_dSortedProbePos,
+		m_dGridProbeHash,
+		m_dGridProbeIndex,
+        probePosPtr,
+		numProbes,
+		this->numGridCells);
+
+    //copyArrayFromDevice( m_hNeighbors, m_dGridProbeIndex, 0, sizeof(uint)*20);
+    //copyArrayFromDevice( m_hPos, probePosPtr, 0, sizeof(float)*4*20);
+    //copyArrayFromDevice( m_hArcs, m_dSortedProbePos, 0, sizeof(float)*4*20);
+    //for( unsigned int i = 0; i < 20; i++ ) {
+    //    uint idx = m_hNeighbors[i];
+    //    std::cout << "index: " << i << " origIndex: " << idx << std::endl;
+    //    std::cout << "   " << m_hPos[idx*4+0] << " " << m_hPos[idx*4+1] << " " << m_hPos[idx*4+2] << std::endl;
+    //    std::cout << "   " << m_hArcs[i*4+0] << " " << m_hArcs[i*4+1] << " " << m_hArcs[i*4+2] << std::endl;
+    //}
+
     // unmap probe buffer object
     cudaGLUnmapBufferObject( this->probePosVBO);
+    
+	// resize texture coordinate buffer object
+    cudaGLUnregisterBufferObject( this->texCoordVBO);
+    cudaGLUnregisterBufferObject( this->singTexPBO);
+    glBindBuffer( GL_ARRAY_BUFFER, this->texCoordVBO);
+	glBufferData( GL_ARRAY_BUFFER, numProbes*3*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, this->singTexPBO);
+    glBufferData( GL_ARRAY_BUFFER, numProbes*this->probeNeighborCount*3*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    cudaGLRegisterBufferObject( this->texCoordVBO);
+    cudaGLRegisterBufferObject( this->singTexPBO);
+    
+    // map texture coordinate buffer object for writing from CUDA
+    float *texCoordPtr;
+    cudaGLMapBufferObject((void**)&texCoordPtr, this->texCoordVBO);
+    // map singularity texture buffer object for writing from CUDA
+    float *singTexPtr;
+    cudaGLMapBufferObject((void**)&singTexPtr, this->singTexPBO);
+
+	// find all intersecting probes for each probe and write them to a texture
+    writeSingularityTextureCB(
+        texCoordPtr,
+        singTexPtr,
+        m_dSortedProbePos,
+        m_dGridProbeIndex,
+        m_dCellStart,
+        m_dCellEnd,
+        numProbes,
+        this->probeNeighborCount,
+        this->numGridCells);
+
+    //copyArrayFromDevice( m_hArcs, texCoordPtr, 0, sizeof(float)*3);
+    //copyArrayFromDevice( m_hPos, m_dSortedProbePos, 0, sizeof(float)*4);
+    //std::cout << "probe: " << m_hPos[0] << ", " << m_hPos[1] << ", " << m_hPos[2] << " r = " << m_hPos[3] << std::endl;
+    //std::cout << "#neighbors: " << m_hArcs[0] << " texCoord:" << m_hArcs[1] << ", " << m_hArcs[2] << std::endl;
+    //copyArrayFromDevice( m_hPos, singTexPtr, 0, sizeof(float)*3*this->probeNeighborCount);
+    //for( unsigned int i = 0; i < this->probeNeighborCount; i++ ) {
+    //    std::cout << "neighbor probe " << i << ": " << m_hPos[i*3] << " " << m_hPos[i*3+1] << " " << m_hPos[i*3+2] << std::endl;
+    //}
+
+    // unmap texture coordinate buffer object
+    cudaGLUnmapBufferObject( this->texCoordVBO);
+    // unmap singularity texture buffer object
+    cudaGLUnmapBufferObject( this->singTexPBO);
+    
+    // copy PBO to texture
+    glBindBuffer( GL_PIXEL_UNPACK_BUFFER, this->singTexPBO);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, this->singTex);
+    glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, ( numProbes/params.texSize + 1) * this->probeNeighborCount, numProbes % params.texSize, GL_RGB, GL_FLOAT, NULL);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+    glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0);
 
 #if 1
+    ///////////////////////////////////////////////////////////////////////////
+    // RENDER THE SOLVENT EXCLUDED SURFACE
+    ///////////////////////////////////////////////////////////////////////////
+
 	// do actual rendering
 	float viewportStuff[4] = {
 		cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
@@ -509,26 +639,6 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 	
-    // render probes VBO
-	//glColor3ub( 0, 255, 0);
-	//glEnableClientState( GL_VERTEX_ARRAY);
-	//glBindBuffer( GL_ARRAY_BUFFER, this->probePosVBO);
-	//glVertexPointer( 4, GL_FLOAT, 0, 0);
-	//glDrawArrays( GL_POINTS, 0, numProbes);
-	//glBindBuffer( GL_ARRAY_BUFFER, 0);
-	//glDisableClientState( GL_VERTEX_ARRAY);
-	
-
-    // render torus VBO
-	//glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
-	//glColor3ub( 0, 255, 0);
-	//glEnableClientState( GL_VERTEX_ARRAY);
-	//glBindBuffer( GL_ARRAY_BUFFER, this->torusPosVBO);
-	//glVertexPointer( 4, GL_FLOAT, 0, 0);
-	//glBindBuffer( GL_ARRAY_BUFFER, 0);
-	//glDrawArrays( GL_POINTS, 0, numSC);
-	//glDisableClientState( GL_VERTEX_ARRAY);
-
     // render atoms VBO
 	glBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);     // very useful
 	glEnable( GL_BLEND);
@@ -559,7 +669,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	// ray cast the spherical triangles on the GPU //
 	/////////////////////////////////////////////////
 	// bind texture
-	//glBindTexture( GL_TEXTURE_2D, singularityTexture[cntRS]);
+    glBindTexture( GL_TEXTURE_2D, this->singTex);
 	// enable spherical triangle shader
 	this->sphericalTriangleShader.Enable();
 	// set shader variables
@@ -575,7 +685,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	GLuint attribVec1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec1");
 	GLuint attribVec2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec2");
 	GLuint attribVec3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec3");
-	//GLuint attribTexCoord1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord1");
+	GLuint attribTexCoord1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord1");
 	//GLuint attribTexCoord2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord2");
 	//GLuint attribTexCoord3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord3");
 	//GLuint attribColors = glGetAttribLocationARB( this->sphericalTriangleShader, "attribColors");
@@ -586,7 +696,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	glEnableVertexAttribArrayARB( attribVec1);
 	glEnableVertexAttribArrayARB( attribVec2);
 	glEnableVertexAttribArrayARB( attribVec3);
-	//glEnableVertexAttribArrayARB( attribTexCoord1);
+	glEnableVertexAttribArrayARB( attribTexCoord1);
 	//glEnableVertexAttribArrayARB( attribTexCoord2);
 	//glEnableVertexAttribArrayARB( attribTexCoord3);
 	//glEnableVertexAttribArrayARB( attribColors);
@@ -600,6 +710,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	//glVertexAttribPointerARB( attribColors, 3, GL_FLOAT, 0, 0, this->sphericTriaColors[cntRS].PeekElements());
 	//glVertexPointer( 4, GL_FLOAT, 0, this->sphericTriaVertexArray[cntRS].PeekElements());
 	//glDrawArrays( GL_POINTS, 0, ((unsigned int)this->sphericTriaVertexArray[cntRS].Count())/4);
+    glBindBuffer( GL_ARRAY_BUFFER, this->texCoordVBO);
+	glVertexAttribPointer( attribTexCoord1, 3, GL_FLOAT, 0, 0, 0);
 	glBindBuffer( GL_ARRAY_BUFFER, this->sphereTriaVec1VBO);
 	glVertexAttribPointer( attribVec1, 4, GL_FLOAT, 0, 0, 0);
 	glBindBuffer( GL_ARRAY_BUFFER, this->sphereTriaVec2VBO);
@@ -614,7 +726,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	glDisableVertexAttribArrayARB( attribVec1);
 	glDisableVertexAttribArrayARB( attribVec2);
 	glDisableVertexAttribArrayARB( attribVec3);
-	//glDisableVertexAttribArrayARB( attribTexCoord1);
+	glDisableVertexAttribArrayARB( attribTexCoord1);
 	//glDisableVertexAttribArrayARB( attribTexCoord2);
 	//glDisableVertexAttribArrayARB( attribTexCoord3);
 	//glDisableVertexAttribArrayARB( attribColors);
@@ -622,7 +734,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	// disable spherical triangle shader
 	this->sphericalTriangleShader.Disable();
 	// unbind texture
-	//glBindTexture( GL_TEXTURE_2D, 0);
+	glBindTexture( GL_TEXTURE_2D, 0);
 
     //////////////////////////////////
     // ray cast the tori on the GPU //
@@ -1480,32 +1592,6 @@ void MoleculeCBCudaRenderer::UpdateParameters( const MolecularDataCall *mol) {
  * MoleculeCBCudaRenderer::deinitialise
  */
 void MoleculeCBCudaRenderer::deinitialise(void) {
-	// release shaders
-	this->sphereShader.Release();
-	
-	if( this->cudaInitalized ) {
-		delete[] m_hPos;
-		delete[] m_hNeighborCount;
-		delete[] m_hNeighbors;
-		delete[] m_hSmallCircles;
-		delete[] m_hArcs;
-		delete[] m_hCellStart;
-		delete[] m_hCellEnd;
-        delete[] m_hParticleIndex;
-
-		freeArray( m_dPos);
-		freeArray( m_dSortedPos);
-		freeArray( m_dNeighborCount);
-		freeArray( m_dNeighbors);
-		freeArray( m_dSmallCircles);
-		freeArray( m_dArcs);
-		freeArray( m_dGridParticleHash);
-		freeArray( m_dGridParticleIndex);
-		freeArray( m_dCellStart);
-		freeArray( m_dCellEnd);
-
-        cudppDestroyPlan( this->sortHandle);
-	}
 }
 
 /*
@@ -1581,6 +1667,8 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
 
 	// array for sorted atom positions
     allocateArray((void**)&m_dSortedPos, memSize);
+	// array for sorted atom positions
+    allocateArray((void**)&m_dSortedProbePos, memSize * this->atomNeighborCount);
 	// array for the counted number of atoms
 	allocateArray((void**)&m_dNeighborCount, this->numAtoms*sizeof(uint));
 	// array for the neighbor atoms
@@ -1603,16 +1691,27 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
     allocateArray((void**)&m_dGridParticleHash, this->numAtoms*sizeof(uint));
     allocateArray((void**)&m_dGridParticleIndex, this->numAtoms*sizeof(uint));
 
+    allocateArray((void**)&m_dGridProbeHash, this->numAtoms*this->atomNeighborCount*sizeof(uint));
+    allocateArray((void**)&m_dGridProbeIndex, this->numAtoms*this->atomNeighborCount*sizeof(uint));
+
     allocateArray((void**)&m_dCellStart, this->numGridCells*sizeof(uint));
     allocateArray((void**)&m_dCellEnd, this->numGridCells*sizeof(uint));
 
     // Create the CUDPP radix sort
     CUDPPConfiguration sortConfig;
-    sortConfig.algorithm	= CUDPP_SORT_RADIX;
-    sortConfig.datatype		= CUDPP_UINT;
-    sortConfig.op			= CUDPP_ADD;
-    sortConfig.options		= CUDPP_OPTION_KEY_VALUE_PAIRS;
+    sortConfig.algorithm    = CUDPP_SORT_RADIX;
+    sortConfig.datatype     = CUDPP_UINT;
+    sortConfig.op           = CUDPP_ADD;
+    sortConfig.options      = CUDPP_OPTION_KEY_VALUE_PAIRS;
     cudppPlan( &this->sortHandle, sortConfig, this->numAtoms, 1, 0);
+
+    // Create the CUDPP radix sort
+    CUDPPConfiguration probeSortConfig;
+    probeSortConfig.algorithm   = CUDPP_SORT_RADIX;
+    probeSortConfig.datatype    = CUDPP_UINT;
+    probeSortConfig.op          = CUDPP_ADD;
+    probeSortConfig.options     = CUDPP_OPTION_KEY_VALUE_PAIRS;
+    cudppPlan( &this->probeSortHandle, probeSortConfig, this->numAtoms*this->atomNeighborCount, 1, 0);
 
     // Create the CUDPP scan (prefix sum)
     CUDPPConfiguration scanConfig;
@@ -1621,9 +1720,6 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
     scanConfig.op           = CUDPP_ADD;
     scanConfig.options      = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
 	cudppPlan( &this->scanHandle, scanConfig, this->numAtoms*this->atomNeighborCount, 1, 0);
-
-	// set parameters
-	setParameters( &this->params);
 
 	// create probe position vertex buffer object
     if( glIsBuffer( this->probePosVBO) ) {
@@ -1693,6 +1789,45 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
     glBindBuffer( GL_ARRAY_BUFFER, 0);
     cudaGLRegisterBufferObject( this->torusAxisVBO);
 
+	// get maximum texture size
+	GLint texSize;
+	glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
+    texHeight = vislib::math::Min<int>( this->numAtoms * 3, texSize);
+    texWidth = this->probeNeighborCount * ( ( this->numAtoms * 3) / texSize + 1);
+    this->params.texSize = texSize;
+    // create singularity texture
+    glEnable(GL_TEXTURE_2D);
+    glGenTextures(1, &this->singTex);
+    glBindTexture(GL_TEXTURE_2D, this->singTex);
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F_ARB, texWidth, texHeight, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+
+    // create PBO
+    if( glIsBuffer( this->singTexPBO) )
+        glDeleteBuffers( 1, &this->singTexPBO);
+    glGenBuffers( 1, &this->singTexPBO);
+    glBindBuffer( GL_PIXEL_UNPACK_BUFFER, this->singTexPBO);
+    glBufferData( GL_PIXEL_UNPACK_BUFFER, this->texWidth*texHeight*3*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    cudaGLRegisterBufferObject( this->singTexPBO);
+
+	// create texture coordinate buffer object
+    if( glIsBuffer( this->texCoordVBO) )
+		glDeleteBuffers( 1, &this->texCoordVBO);
+    glGenBuffers( 1, &this->texCoordVBO);
+    glBindBuffer( GL_ARRAY_BUFFER, this->texCoordVBO);
+	glBufferData( GL_ARRAY_BUFFER, this->numAtoms*3*3*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    cudaGLRegisterBufferObject( this->texCoordVBO);
+
+	// set parameters
+	setParameters( &this->params);
+
 	return true;
 }
 
@@ -1717,7 +1852,7 @@ void MoleculeCBCudaRenderer::writeAtomPositions( const MolecularDataCall *mol ) 
 /*
  * Write atom positions and radii to a VBO for processing in CUDA
  */
-void MoleculeCBCudaRenderer::writeAtomPositionsVBO( const MolecularDataCall *mol) {
+void MoleculeCBCudaRenderer::writeAtomPositionsVBO( MolecularDataCall *mol) {
 	// write atoms to array
 	for( int cnt = 0; cnt < mol->AtomCount(); cnt++ ) {
 		// write pos and rad to array
@@ -1726,6 +1861,31 @@ void MoleculeCBCudaRenderer::writeAtomPositionsVBO( const MolecularDataCall *mol
 		m_hPos[cnt*4+2] = mol->AtomPositions()[cnt*3+2];
 		m_hPos[cnt*4+3] = mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius();
 	}
+#if 0
+    // set next frame ID to get positions of the second frame
+	if( ( mol->FrameID() + 1) < int(mol->FrameCount()) ) 
+		mol->SetFrameID( mol->FrameID() + 1);
+    if( (*mol)(MolecularDataCall::CallForGetData)) {
+		float inter = mol->Calltime() - static_cast<float>(static_cast<int>( mol->Calltime()));
+		float threshold = vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Width(),
+			vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
+			mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) * 0.75f;
+#pragma omp parallel for
+		for( int cnt = 0; cnt < int(mol->AtomCount()); ++cnt ) {
+			if( std::sqrt( std::pow( m_hPos[4*cnt+0] - mol->AtomPositions()[3*cnt+0], 2) +
+					std::pow( m_hPos[4*cnt+1] - mol->AtomPositions()[3*cnt+1], 2) +
+					std::pow( m_hPos[4*cnt+2] - mol->AtomPositions()[3*cnt+2], 2) ) < threshold ) {
+				m_hPos[4*cnt+0] = (1.0f - inter) * m_hPos[4*cnt+0] + inter * mol->AtomPositions()[3*cnt+0];
+				m_hPos[4*cnt+1] = (1.0f - inter) * m_hPos[4*cnt+1] + inter * mol->AtomPositions()[3*cnt+1];
+				m_hPos[4*cnt+2] = (1.0f - inter) * m_hPos[4*cnt+2] + inter * mol->AtomPositions()[3*cnt+2];
+			} else if( inter > 0.5f ) {
+				m_hPos[4*cnt+0] = mol->AtomPositions()[3*cnt+0];
+				m_hPos[4*cnt+1] = mol->AtomPositions()[3*cnt+1];
+				m_hPos[4*cnt+2] = mol->AtomPositions()[3*cnt+2];
+			}
+		}
+	}
+#endif
 
     bool newlyGenerated = false;
     // generate buffer, if not already available

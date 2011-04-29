@@ -121,7 +121,7 @@ namespace protein {
 		/**
 		 * Write atom positions and radii to a VBO for processing in CUDA
 		 */
-		void writeAtomPositionsVBO( const MolecularDataCall *mol);
+		void writeAtomPositionsVBO( MolecularDataCall *mol);
 
     private:
 
@@ -218,6 +218,8 @@ namespace protein {
         CUDPPHandle sortHandle;
 		// CUDA Scan
         CUDPPHandle scanHandle;
+		// CUDA Radix sort
+        CUDPPHandle probeSortHandle;
 
 		// params
 		bool cudaInitalized;
@@ -242,6 +244,7 @@ namespace protein {
 		// GPU data
 		float* m_dPos;
 		float* m_dSortedPos;
+		float* m_dSortedProbePos;
 		uint*  m_dNeighborCount;
 		uint*  m_dNeighbors;
 		float* m_dSmallCircles;
@@ -255,6 +258,8 @@ namespace protein {
 		// grid data for sorting method
 		uint*  m_dGridParticleHash; // grid hash value for each particle
 		uint*  m_dGridParticleIndex;// particle index for each particle
+		uint*  m_dGridProbeHash;    // grid hash value for each probe
+		uint*  m_dGridProbeIndex;   // particle index for each probe
 		uint*  m_dCellStart;        // index of start of each cell in sorted list
 		uint*  m_dCellEnd;          // index of end of cell
 		uint   gridSortBits;
@@ -284,6 +289,16 @@ namespace protein {
 		// VBO for torus axis
 		GLuint torusAxisVBO;
 
+        // singularity texture
+        GLuint singTex;
+        // singularity texture pixel buffer object
+        GLuint singTexPBO;
+        // texture coordinates
+        GLuint texCoordVBO;
+        // maximum number of probe neighbors
+        uint probeNeighborCount;
+        unsigned int texHeight;
+        unsigned int texWidth;
 	};
 
 } /* end namespace protein */
