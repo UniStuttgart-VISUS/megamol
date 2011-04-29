@@ -217,4 +217,15 @@ void writeProbePositionsCB(
     uint    numAtoms,
 	uint    numNeighbors);
 
+void writeSingularityTextureCB(
+    float*  texCoord,
+    float*  singTex,
+    float*  sortedProbePos,
+    uint*   gridProbeIndex,
+    uint*   cellStart,
+    uint*   cellEnd,
+    uint    numProbes,
+    uint    numNeighbors,
+    uint    numCells);
+
 }

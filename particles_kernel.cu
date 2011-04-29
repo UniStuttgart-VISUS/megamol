@@ -155,7 +155,8 @@ void reorderDataAndFindCellStartD(uint*   cellStart,        // output: cell star
 
 	    // Now use the sorted index to reorder the pos data
 	    uint sortedIndex = gridParticleIndex[index];
-	    float4 pos = FETCH( oldPos, sortedIndex);       // macro does either global read or texture fetch
+	    //float4 pos = FETCH( oldPos, sortedIndex);       // macro does either global read or texture fetch
+        float4 pos = oldPos[sortedIndex];       // Do not use texture for large arrays!
 
         sortedPos[index] = pos;
 	}
@@ -2003,6 +2004,104 @@ __global__ void writeProbePositionsCBCuda(
 		torusVS[torusIdx] = make_float4( C, distance);
 	}
 
+}
+
+// find all probe neighbors in a given cell
+__device__ uint findProbeNeighborsInCellCBCuda(
+        float3* singTex,        // out: singularity texture
+        uint    neighborIndex,  // in: first index for writing in neighbor list
+        int3    gridPos,        // in: the current grid cell
+        uint    index,          // in: the index of the probe
+        float4  pos,            // in: the position of the probe
+        float4* probePos,       // in: the (sorted) probe position array
+        uint*   gridProbeIndex, // input: sorted probe indices
+        uint*   cellStart,
+        uint*   cellEnd,
+        uint    numNeighbors ) {
+    uint gridHash = calcGridHash(gridPos);
+
+    // get start of bucket for this cell
+    uint startIndex = FETCH( cellStart, gridHash);
+
+    uint count = 0;
+	float4 pos2;
+	float3 relPos;
+	float dist;
+	float neighborDist;
+    if( startIndex != 0xffffffff ) {	// cell is not empty
+        // iterate over atoms in this cell
+        uint endIndex = FETCH( cellEnd, gridHash);
+        for( uint j = startIndex; j < endIndex; j++) {
+			// do not count self
+            if( j != index) {
+				// get position of potential neighbor
+	            pos2 = probePos[j];
+                // check distance
+				relPos = make_float3( pos2.x, pos2.y, pos2.z) - make_float3( pos.x, pos.y, pos.z);
+				dist = length( relPos);
+				neighborDist = params.probeRadius + params.probeRadius;
+				if( dist < neighborDist ) {
+                    // check number of neighbors
+                    if( ( neighborIndex + count) >= numNeighbors ) return count;
+                    // write singTex
+                    singTex[index * numNeighbors + neighborIndex + count] = make_float3( pos);
+					// increment the neighbor counter
+					count++;
+				}
+            }
+        }
+    }
+    return count;
+}
+
+// Find and count probe neighbors and write them to the singularity texture
+__global__ void findProbeNeighborsCBCuda(
+        float3* texCoord,       // out: #neighbors + texture coords
+        float3* singTex,        // out: singularity texture
+        float4* probePos,       // in: probe positions
+        uint*   gridProbeIndex, // input: sorted probe indices
+        uint*   cellStart,
+        uint*   cellEnd,
+        uint    numProbes,
+        uint    numNeighbors ) {
+    uint index = __mul24( blockIdx.x, blockDim.x) + threadIdx.x;
+    if( index >= numProbes ) return;
+
+    // read atom data from sorted arrays
+	float4 pos = probePos[index];
+
+    // get address in grid
+    int3 gridPos = calcGridPos( make_float3( pos));
+
+	int3 gridSize;
+	gridSize.x = int( params.gridSize.x);
+	gridSize.y = int( params.gridSize.y);
+	gridSize.z = int( params.gridSize.z);
+	// search range for neighbor atoms: max atom diameter + probe diameter
+	float range = params.probeRadius + params.probeRadius;
+	// compute number of grid cells
+	int3 cellsInRange;
+	cellsInRange.x = ceil( range / params.cellSize.x);
+	cellsInRange.y = ceil( range / params.cellSize.y);
+	cellsInRange.z = ceil( range / params.cellSize.z);
+	int3 start = gridPos - cellsInRange;
+	int3 end = gridPos + cellsInRange;
+
+    // examine neighbouring cells
+    uint count = 0;
+	int3 neighborPos;
+	for( int z = ( start.z > 0 ? start.z : 0); z < ( end.z > gridSize.z ? gridSize.z : end.z) ; z++ ) {
+        for( int y = ( start.y > 0 ? start.y : 0); y < ( end.y > gridSize.y ? gridSize.y : end.y) ; y++ ) {
+            for( int x = ( start.x > 0 ? start.x : 0); x < ( end.x > gridSize.x ? gridSize.x : end.x) ; x++ ) {
+                neighborPos = make_int3( x, y, z);
+				count += findProbeNeighborsInCellCBCuda( singTex, count, neighborPos, index, pos, probePos, gridProbeIndex, cellStart, cellEnd, numNeighbors);
+            }
+        }
+    }
+
+    uint xCoord = index / params.texSize;
+    // write probe neighbor count and texture coordinates
+    texCoord[gridProbeIndex[index]] = make_float3( float( count), float( xCoord), float( index % params.texSize));
 }
 
 #endif
