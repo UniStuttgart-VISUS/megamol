@@ -11,18 +11,24 @@
 #include "CoreInstance.h"
 #include "CalleeSlot.h"
 #include "CallerSlot.h"
-#include "Filter.h"
+#include "param/EnumParam.h"
+#include "param/FloatParam.h"
+#include "param/BoolParam.h"
+#include "param/IntParam.h"
 #include "MolecularDataCall.h"
 
-//#if (defined(WITH_CUDA) && (WITH_CUDA))
+#include "Filter.h"
 
-//#include "FilterCuda.cuh"
+#if (defined(WITH_CUDA) && (WITH_CUDA))
 
-/*#include <cutil_inline.h>
+#include <cutil_inline.h>
 #include <cutil_gl_inline.h>
-#include <cuda_gl_interop.h>*/
+#include <cuda_gl_interop.h>
+#include <cudpp/cudpp.h>
 
-//#endif // (defined(WITH_CUDA) && (WITH_CUDA))
+#include "filter_cuda.cuh"
+
+#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
 using namespace megamol;
 using namespace megamol::core;
@@ -35,6 +41,10 @@ using namespace megamol::protein;
 Filter::Filter(void) : core::Module(), 
     molDataCallerSlot("getData", "Connects the filter with molecule data storage"), 
     dataOutSlot("dataout", "The slot providing the filtered data"),
+    hierarchyParam("hierarchy", "Bottom-up/Top-down parsing of the hierarchy"),
+    solvRadiusParam("solvRadius", "Range of solvent atom neighbourhood filtering"),
+    interpolParam("posInterpolation", "Enable positional interpolation between frames"),
+    gridSizeParam("cudaGridSize", "Gridsize"),
     calltimeOld(-1.0), atmCnt(0) {
 
     // Enable caller slot
@@ -49,6 +59,57 @@ Filter::Filter(void) : core::Module(),
         MolecularDataCall::FunctionName(MolecularDataCall::CallForGetExtent), 
         &Filter::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
+    
+    // Set hierarchical visibility information
+    param::EnumParam *h = new param::EnumParam(TOPDOWN);
+    h->SetTypePair(TOPDOWN, "TopDown");
+    h->SetTypePair(BOTTOMUP, "BottomUp");
+    this->hierarchyParam << h;
+    this->MakeSlotAvailable(&this->hierarchyParam);
+    
+    // Set range of solvent atom neighbourhood
+    this->solvRadiusParam.SetParameter(new param::FloatParam(75.0f, 0.0f));
+    this->MakeSlotAvailable(&this->solvRadiusParam);
+    
+    // En-/disable positional interpolation
+    this->interpolParam.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->interpolParam);
+    
+    param::EnumParam *gs = new param::EnumParam(16);
+    gs->SetTypePair(2, "2");
+    gs->SetTypePair(4, "4");
+    gs->SetTypePair(8, "8");
+    gs->SetTypePair(16, "16");
+    gs->SetTypePair(32, "32");
+    gs->SetTypePair(64, "64");
+    this->gridSizeParam << gs;
+    
+    this->atomVisibility = NULL;
+    this->atmPosProt     = NULL;
+    this->isSolventAtom  = NULL;
+    
+#if (defined(WITH_CUDA) && (WITH_CUDA))
+
+    this->MakeSlotAvailable(&this->gridSizeParam);
+    
+    this->atomPosD = NULL;
+    this->atomPosProtD = NULL;
+    this->atomPosProtSortedD = NULL;
+    
+    this->gridAtomHashD = NULL;
+    this->gridAtomIndexD = NULL;
+    
+    this->isSolventAtomD = NULL;
+    
+    this->cellStartD = NULL;
+    this->cellEndD = NULL;
+    
+    this->atomVisibilityD = NULL;
+    
+    //cudaGLSetGLDevice(cutGetMaxGflopsDeviceId());
+    cutilSafeCall(cudaSetDevice(cutGetMaxGflopsDeviceId()));
+
+#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
 }
 
@@ -56,8 +117,7 @@ Filter::Filter(void) : core::Module(),
 /*
  * Filter::~Filter
  */
-Filter::~Filter(void)  {
-    
+Filter::~Filter(void)  {    
     this->Release();
 }
 
@@ -66,7 +126,6 @@ Filter::~Filter(void)  {
  * Filter::create
  */
 bool Filter::create(void) {
-
     return true;
 }
 
@@ -75,56 +134,32 @@ bool Filter::create(void) {
  * Filter::release
  */
 void Filter::release(void) {
-    //cudppDestroyPlan(this->sortHandle);
-    //cudppDestroyPlan(this->sortConfig);
-}
-
-
-//#if (defined(WITH_CUDA) && (WITH_CUDA))
-
-/*
- * Filter::initCuda
- */
-void Filter::initCuda() {
-
-
-    /*uint3 gridSize;
-    uint numCells;
-    float3 worldOrigin;
-    float3 cellSize;
-    uint numBodies;
-    float probeRadius;*/
-
-    // Init params 
-        
-    // Use CUDA device with highest Gflops/s
-    //cudaGLSetGLDevice(cutGetMaxGflopsDeviceId());
-
-    // set parameters
-    /*this->params.gridSize = gridSize;
-    this->params.numCells = numGridCells;
-    this->params.numBodies = this->atmCnt;
-    this->params.worldOrigin.x = mol->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetX();
-    this->params.worldOrigin.y = mol->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetY();
-    this->params.worldOrigin.z = mol->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetZ();
-
-    this->params.cellSize.x = worldsize.x / gridSize.x;
-    this->params.cellSize.y = worldsize.y / gridSize.y;
-    this->params.cellSize.z = worldsize.z / gridSize.z;
-
-    this->params.probeRadius = 3.0;
-    this->params.maxNumNeighbors = 50;
     
-    this->sortConfig.algorithm = CUDPP_SORT_RADIX;
-    this->sortConfig.datatype = CUDPP_UINT;
-    this->sortConfig.op = CUDPP_ADD;
-    this->sortConfig.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
+    if(this->atomVisibility != NULL) delete[] this->atomVisibility;
+    if(this->atmPosProt != NULL) delete[] this->atmPosProt;
+    if(this->isSolventAtom != NULL) delete[] this->isSolventAtom;
     
-    cudppPlan(&this->sortHandle, this->sortConfig, this->atmCnt - this->solventAtmCnt, 1, 0);*/
+#if (defined(WITH_CUDA) && (WITH_CUDA))
+
+    if(this->atomPosD != NULL) cutilSafeCall(cudaFree(this->atomPosD));
+    if(this->atomPosProtD != NULL) cutilSafeCall(cudaFree(this->atomPosProtD));
+    if(this->atomPosProtSortedD != NULL) cutilSafeCall(cudaFree(this->atomPosProtSortedD));
+    
+    if(this->gridAtomHashD != NULL) cutilSafeCall(cudaFree(this->gridAtomHashD));
+    if(this->gridAtomIndexD != NULL) cutilSafeCall(cudaFree(this->gridAtomIndexD));
+    
+    if(this->isSolventAtomD != NULL) cutilSafeCall(cudaFree(this->isSolventAtomD));
+
+    if(this->cellStartD != NULL) cutilSafeCall(cudaFree(this->cellStartD));
+    if(this->cellEndD != NULL) cutilSafeCall(cudaFree(this->cellEndD));
+    
+    if(this->atomVisibilityD != NULL) cutilSafeCall(cudaFree(this->atomVisibilityD));
+    
+    cudppDestroyPlan(this->sortHandle);
+
+#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
 }
-
-//#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
 
 /*
@@ -148,7 +183,7 @@ bool Filter::getData(megamol::core::Call& call) {
     if(molIn->Calltime() == this->calltimeOld) {
 
         // Set the frame ID, calltime and call data
-        molOut->SetFrameID(static_cast<int>(molIn->Calltime()));
+        molOut->SetFrameID(molIn->FrameID());
         molOut->SetCalltime(molIn->Calltime());
         if(!(*molOut)(MolecularDataCall::CallForGetData)) return false;   
 
@@ -158,17 +193,19 @@ bool Filter::getData(megamol::core::Call& call) {
 
         // Get the second frame first
         molOut->SetCalltime(molIn->Calltime());
-        if(((static_cast<int>(molIn->Calltime()) + 1) < int(molOut->FrameCount()))) 
-            molOut->SetFrameID(static_cast<int>(molIn->Calltime()) + 1);
-        else
-            molOut->SetFrameID(static_cast<int>(molIn->Calltime()));
+        
+        if((molIn->FrameID()+1 < molOut->FrameCount()) &&
+            (this->interpolParam.Param<param::BoolParam>()->Value())) { 
+            molOut->SetFrameID(molIn->FrameID()+1);
+        }
+        else {
+            molOut->SetFrameID(molIn->FrameID());
+        }
 
         if(!(*molOut)(MolecularDataCall::CallForGetData)) return false;
         
-        // Check wheter the data source has changed
-        if(molOut->AtomCount() != this->atmCnt) {
-            updateParams(molOut);
-        }
+        // Update parameters
+        this->updateParams(molOut);
         
         // Get positions of the second frame
         float *pos1 = new float[molOut->AtomCount() * 3];
@@ -176,7 +213,7 @@ bool Filter::getData(megamol::core::Call& call) {
         
         // Unlock the second frame and get the first frame
         molOut->Unlock();
-        molOut->SetFrameID(static_cast<int>(molIn->Calltime()));
+        molOut->SetFrameID(molIn->FrameID());
         
         if (!(*molOut)(MolecularDataCall::CallForGetData)) {
             delete[] pos1;
@@ -184,15 +221,16 @@ bool Filter::getData(megamol::core::Call& call) {
         }
         
         float *pos0 = new float[molOut->AtomCount() * 3];
-        memcpy(pos0, molOut->AtomPositions(), molOut->AtomCount() * 3 * sizeof( float));
+        memcpy(pos0, molOut->AtomPositions(), molOut->AtomCount()*3*sizeof(float));
     
         // Interpolate atom positions between frames
-        float *posInter = new float [molOut->AtomCount() * 3];
+        float *posInter = new float [molOut->AtomCount()*3];
         
-        float inter = molIn->Calltime() - static_cast<float>(static_cast<int>(molIn->Calltime()));
+        float inter = molIn->Calltime() - static_cast<float>(molIn->FrameID());
         float threshold = vislib::math::Min(molOut->AccessBoundingBoxes().ObjectSpaceBBox().Width(),
-            vislib::math::Min(molOut->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
-            molOut->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) * 0.75f;
+                          vislib::math::Min(molOut->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
+                          molOut->AccessBoundingBoxes().ObjectSpaceBBox().Depth()))*0.75f;
+            
 #pragma omp parallel for
         for(cnt = 0; cnt < int(molOut->AtomCount()); ++cnt ) {
             if( std::sqrt( std::pow( pos0[3*cnt+0] - pos1[3*cnt+0], 2) +
@@ -212,10 +250,10 @@ bool Filter::getData(megamol::core::Call& call) {
             }
         }
         
-        // Filter 
-        
-        filterSolventAtoms(molOut, posInter, 50.0f);        
-        
+        // Filter
+        //this->initAtomVisibility(1);  
+        this->filterSolventAtoms(posInter);
+           
         this->calltimeOld = molIn->Calltime();
         
         delete[] pos0;
@@ -224,7 +262,8 @@ bool Filter::getData(megamol::core::Call& call) {
     }
     
     // Write filter information
-    molIn->SetFilter(this->atomVisibility.PeekElements());
+    molIn->SetFilter(this->atomVisibility);
+    this->setHierarchicalVisibility(molIn);
 
     // Transfer data from outgoing to incoming data call
     *molIn = *molOut;
@@ -264,55 +303,143 @@ bool Filter::getExtent(core::Call& call) {
 /*
  * Filter::updateParams
  */
-void Filter::updateParams(const MolecularDataCall *mol) {
+// TODO
+void Filter::updateParams(MolecularDataCall *mol) {
     
-    this->atmCnt = mol->AtomCount();
-    this->atomVisibility.SetCount(this->atmCnt);
+    using namespace vislib::sys;
     
-    flagSolventAtoms(mol);
+    if((mol->AtomCount() != this->atmCnt) 
+        || this->solvRadiusParam.IsDirty()
+        || this->gridSizeParam.IsDirty()) {
+            
+        this->solvRadiusParam.ResetDirty();
+        this->gridSizeParam.ResetDirty();
+    
+        this->atmCnt = mol->AtomCount();
+    
+        if(this->atomVisibility != NULL) delete[] this->atomVisibility;
+        this->atomVisibility = new int[this->atmCnt];
+    
+        this->flagSolventAtoms(mol);
+    
+        if(this->atmPosProt != NULL) delete[] this->atmPosProt;
+        this->atmPosProt = new float[(this->atmCnt - this->solvAtmCnt)*3];
+    
+#if (defined(WITH_CUDA) && (WITH_CUDA))
+        
+        // Set parameters
+        
+        this->params.gridSize.x = this->gridSizeParam.Param<param::EnumParam>()->Value();
+        this->params.gridSize.y = this->gridSizeParam.Param<param::EnumParam>()->Value();
+        this->params.gridSize.z = this->gridSizeParam.Param<param::EnumParam>()->Value();
+        
+        this->params.worldOrigin.x = mol->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetX();
+        this->params.worldOrigin.y = mol->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetY();
+        this->params.worldOrigin.z = mol->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetZ();
+        
+        this->params.cellSize.x = mol->AccessBoundingBoxes().ObjectSpaceBBox().Width()  / this->params.gridSize.x;
+        this->params.cellSize.y = mol->AccessBoundingBoxes().ObjectSpaceBBox().Height() / this->params.gridSize.y;
+        this->params.cellSize.z = mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth()  / this->params.gridSize.z;
+        
+        this->params.numCells   = this->params.gridSize.x * this->params.gridSize.y * this->params.gridSize.z;
+        this->params.solvRange  = this->solvRadiusParam.Param<param::FloatParam>()->Value();
+        this->params.atmCnt     = this->atmCnt;
+        this->params.atmCntProt = this->atmCnt - this->solvAtmCnt;
+        
+        this->params.discRange.x = ceil(this->params.solvRange / this->params.cellSize.x);
+        this->params.discRange.y = ceil(this->params.solvRange / this->params.cellSize.y);
+        this->params.discRange.z = ceil(this->params.solvRange / this->params.cellSize.z);
+        
+        // Calculate body diagonal of one cell
+        float cellBodyDiagonal = sqrt(this->params.cellSize.x * this->params.cellSize.x +
+                                      this->params.cellSize.y * this->params.cellSize.y +
+                                      this->params.cellSize.z * this->params.cellSize.z);
+                                             
+        this->params.innerDiscRange = (int)(this->params.solvRange / cellBodyDiagonal) - 1;
 
-//#if (defined(WITH_CUDA) && (WITH_CUDA))
+        setFilterParams(&this->params);
+        
+        // Create CUDPP radix sort
+        
+        CUDPPConfiguration sortConfig;
+        sortConfig.algorithm = CUDPP_SORT_RADIX;
+        sortConfig.datatype  = CUDPP_UINT;
+        sortConfig.op        = CUDPP_ADD;
+        sortConfig.options   = CUDPP_OPTION_KEY_VALUE_PAIRS;
     
-    // set grid dimensions
-    /*uint3 gridSize;
-    gridSize.x = gridSize.y = gridSize.z = 16;
-    unsigned int numGridCells = gridSize.x * gridSize.y * gridSize.z;
+        if(cudppPlan(&this->sortHandle, sortConfig, this->atmCnt, 1, 0) != CUDPP_SUCCESS) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error creating CUDPPPlan");
+            exit(-1);
+        }
+
+        // Clean up 
+        
+        if(this->atomPosD != NULL) cutilSafeCall(cudaFree(this->atomPosD));
+        if(this->atomPosProtD != NULL) cutilSafeCall(cudaFree(this->atomPosProtD));
+        if(this->atomPosProtSortedD != NULL) cutilSafeCall(cudaFree(this->atomPosProtSortedD));
+        
+        if(this->gridAtomHashD != NULL) cutilSafeCall(cudaFree(this->gridAtomHashD));
+        if(this->gridAtomIndexD != NULL) cutilSafeCall(cudaFree(this->gridAtomIndexD));
+        
+        if(this->isSolventAtomD != NULL) cutilSafeCall(cudaFree(this->isSolventAtomD));
     
-    float3 worldsize;
-    worldsize.x = mol->AccessBoundingBoxes().ObjectSpaceBBox().Width();
-    worldsize.y = mol->AccessBoundingBoxes().ObjectSpaceBBox().Height();
-    worldsize.z = mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth();
+        if(this->cellStartD != NULL) cutilSafeCall(cudaFree(this->cellStartD));
+        if(this->cellEndD != NULL) cutilSafeCall(cudaFree(this->cellEndD));
+        
+        if(this->atomVisibilityD != NULL) cutilSafeCall(cudaFree(this->atomVisibilityD));
+        
+        // Allocate device memory 
+        
+        cutilSafeCall(cudaMalloc((void **)&this->atomPosD, sizeof(float)*this->atmCnt*3));
+        cutilSafeCall(cudaMalloc((void **)&this->atomPosProtD, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3));   
+        cutilSafeCall(cudaMalloc((void **)&this->atomPosProtSortedD, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3)); 
+        
+        cutilSafeCall(cudaMalloc((void **)&this->gridAtomHashD, sizeof(unsigned int)*(this->atmCnt - this->solvAtmCnt)));
+        cutilSafeCall(cudaMalloc((void **)&this->gridAtomIndexD, sizeof(unsigned int)*(this->atmCnt - this->solvAtmCnt)));
+        
+        cutilSafeCall(cudaMalloc((void **)&this->isSolventAtomD, sizeof(bool)*this->atmCnt));
+        
+        cutilSafeCall(cudaMalloc((void **)&this->cellStartD, sizeof(unsigned int)*this->params.numCells));
+        cutilSafeCall(cudaMalloc((void **)&this->cellEndD, sizeof(unsigned int)*this->params.numCells));
     
-    initCuda();*/
+        cutilSafeCall(cudaMalloc((void **)&this->atomVisibilityD, sizeof(int)*this->atmCnt));
+        
+        // Copy data to device memory
+        
+        cutilSafeCall(cudaMemcpy(isSolventAtomD, this->isSolventAtom, 
+            sizeof(bool)*this->atmCnt, cudaMemcpyHostToDevice));
+
     
-    // copy arrays etc
-    
-//#endif // (defined(WITH_CUDA) && (WITH_CUDA))
+#endif // (defined(WITH_CUDA) && (WITH_CUDA))
+    }
+
 }
 
 
 /*
  * Filter::initVisibility
  */
-void Filter::initVisibility(bool visibility) {
+void Filter::initAtomVisibility(int visibility) {
 
     for(unsigned int i = 0; i < this->atmCnt; i++) {
         this->atomVisibility[i] = visibility;
     }
+    
 }
 
 
 /*
- * Filter::flagSolventAtoms
+ * Filter::flagSolventAtoms 
  */
 void Filter::flagSolventAtoms(const MolecularDataCall *mol) {
     
-    unsigned int prot=0, solv=0;
     unsigned int ch, at, res, m;
     
-    //this->solventAtmCnt=0;
-    this->isSolventAtom.SetCount(mol->AtomCount());
-
+    this->solvAtmCnt = 0;
+    this->isSolventAtom = new bool[mol->AtomCount()];
+    
+    // Init
+    memset(this->isSolventAtom, 0, mol->AtomCount());
 
     // Loop through all chains
     for(ch = 0; ch < mol->ChainCount(); ch++) {
@@ -334,28 +461,127 @@ void Filter::flagSolventAtoms(const MolecularDataCall *mol) {
                         at++) {
                         
                         this->isSolventAtom[at] = true;
+                        this->solvAtmCnt++;
                          
                     }
                 }
             }
         }
-        // Chain doesn't contain solvent atoms
-        else { 
+    }
+}
+
+
+/*
+ * Filter::getProtAtoms
+ */
+void Filter::getProtAtoms(float *atomPos) {
+
+    unsigned int at, protCnt = 0;
+    
+    for(at = 0; at < this->atmCnt; at++){
+        if(!this->isSolventAtom[at]) {
+            this->atmPosProt[protCnt*3] = atomPos[at*3];
+            this->atmPosProt[protCnt*3+1] = atomPos[at*3+1];
+            this->atmPosProt[protCnt*3+2] = atomPos[at*3+2];
+            protCnt++;
+        }
+    }
+}
+
+
+/*
+ * Filter::setHierarchicalVisibility
+ */
+void Filter::setHierarchicalVisibility(const MolecularDataCall *mol) {
+    
+     // TODO: this is ugly!
+    
+    unsigned int ch, at, res, m;
+    
+    // Visibility of one child implies the visibility of the parent
+    if(this->hierarchyParam.Param<param::EnumParam>()->Value() == BOTTOMUP) {
+        
+        // Loop through all chains
+        for(ch = 0; ch < mol->ChainCount(); ch++) {
+    
+            const_cast<MolecularDataCall::Chain*>(mol->Chains())[ch].SetFilter(0);
+            
             // Loop through all molecules of this chain
             for(m = mol->Chains()[ch].FirstMoleculeIndex(); 
                 m < mol->Chains()[ch].MoleculeCount() + mol->Chains()[ch].FirstMoleculeIndex(); 
                 m++) {
+                    
+                const_cast<MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(0);
+                
                 // Loop through all residues of this molecule
                 for(res = mol->Molecules()[m].FirstResidueIndex(); 
                     res < mol->Molecules()[m].ResidueCount() + mol->Molecules()[m].FirstResidueIndex(); 
                     res++) {
+                        
+                    const_cast<MolecularDataCall::Residue**>(mol->Residues())[res]->SetFilter(0);
+                    
                     // Loop through all atoms of this residue
                     for(at = mol->Residues()[res]->FirstAtomIndex(); 
                         at < mol->Residues()[res]->AtomCount() + mol->Residues()[res]->FirstAtomIndex();
                         at++) {
-                            
-                        this->isSolventAtom[at] = false;
+                        
+                        if(this->atomVisibility[at] == 1) {
+                            const_cast<MolecularDataCall::Residue**>(mol->Residues())[res]->SetFilter(1);
+                            break;
+                        }
                     }
+                    
+                    if(mol->Residues()[res]->Filter() == 1) {
+                        const_cast<MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(1);
+                    }
+                }
+                
+                if(mol->Molecules()[m].Filter() == 1) {
+                    const_cast<MolecularDataCall::Chain*>(mol->Chains())[ch].SetFilter(1);
+                }
+            }
+        }
+    }
+    // Visibility of the parent implies the visibility of all children
+    else {
+        
+        // Loop through all chains
+        for(ch = 0; ch < mol->ChainCount(); ch++) {
+            
+            const_cast<MolecularDataCall::Chain*>(mol->Chains())[ch].SetFilter(1);
+            
+            // Loop through all molecules of this chain
+            for(m = mol->Chains()[ch].FirstMoleculeIndex(); 
+                m < mol->Chains()[ch].MoleculeCount() + mol->Chains()[ch].FirstMoleculeIndex(); 
+                m++) {
+                    
+                const_cast<MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(1);
+                
+                // Loop through all residues of this molecule
+                for(res = mol->Molecules()[m].FirstResidueIndex(); 
+                    res < mol->Molecules()[m].ResidueCount() + mol->Molecules()[m].FirstResidueIndex(); 
+                    res++) {
+                        
+                    const_cast<MolecularDataCall::Residue**>(mol->Residues())[res]->SetFilter(1);
+                    
+                    // Loop through all atoms of this residue
+                    for(at = mol->Residues()[res]->FirstAtomIndex(); 
+                        at < mol->Residues()[res]->AtomCount() + mol->Residues()[res]->FirstAtomIndex();
+                        at++) {
+                        
+                        if(this->atomVisibility[at] == 0) {
+                            const_cast<MolecularDataCall::Residue**>(mol->Residues())[res]->SetFilter(0);
+                            break;
+                        }
+                    }
+                    
+                    if(mol->Residues()[res]->Filter() == 0) {
+                        const_cast<MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(0);
+                    }
+                }
+                
+                if(mol->Molecules()[m].Filter() == 0) {
+                    const_cast<MolecularDataCall::Chain*>(mol->Chains())[ch].SetFilter(0);
                 }
             }
         }
@@ -366,90 +592,66 @@ void Filter::flagSolventAtoms(const MolecularDataCall *mol) {
 /*
  * Filter::filerSolventAtoms
  */
-void Filter::filterSolventAtoms(MolecularDataCall *mol, float *atomPos, float rad) {
+void Filter::filterSolventAtoms(float *atomPos) {
+    
+    using namespace vislib::sys;
+    
+#if (defined(WITH_CUDA) && (WITH_CUDA)) // GPU
 
-    
-//#if (defined(WITH_CUDA) && (WITH_CUDA))
+    this->getProtAtoms(atomPos);
 
-/*    initCuda(mol);
+    // Get current atom positions
+    cutilSafeCall(cudaMemcpy(this->atomPosD, atomPos, sizeof(float)*this->atmCnt*3, 
+        cudaMemcpyHostToDevice));  
+        
+    cutilSafeCall(cudaMemcpy(this->atomPosProtD, this->atmPosProt, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3, 
+        cudaMemcpyHostToDevice));
     
-    setParameters(&this->params);
-    
-    unsigned int atomCntProt = this->atmCnt - this->solventAtmCnt;
-    
-    // Calculate grid hash for non solvent atoms
-    float *atomPosProteinD;
-    unsigned int *gridAtomHashProteinD;
-    unsigned int *gridAtomIndexProteinD;
-    
-    allocateArray((void **)&atomPosProteinD, sizeof(float)*atomCntProt*3);
-    cudaMemcpy(atomPosProteinD, this->atomPosProt.PeekElements(), sizeof(float)*atomCntProt*3, cudaMemcpyHostToDevice);
-    
-    allocateArray((void **)&gridAtomHashProteinD, sizeof(unsigned int)*atomCntProt);
-    allocateArray((void **)&gridAtomIndexProteinD, sizeof(unsigned int)*atomCntProt);
-    
-    calcHash(gridAtomHashProteinD, gridAtomIndexProteinD, atomPosProteinD, atomCntProt);    
+    // Calculate hash grid
+    calcFilterHashGrid(this->gridAtomHashD, 
+                       this->gridAtomIndexD,
+                       this->atomPosProtD,
+                       (this->atmCnt - this->solvAtmCnt));
+        
+    // Sort atoms based on hash
+    if(cudppSort(this->sortHandle, this->gridAtomHashD, this->gridAtomIndexD, 18, 
+        (this->atmCnt - this->solvAtmCnt)) != CUDPP_SUCCESS) {
+        
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error performing CUDPPSort");
+        exit(-1);
+    }
+        
+    // Set all cells to empty
+    cutilSafeCall(cudaMemset(this->cellStartD, 0xffffffff, this->params.numCells*sizeof(unsigned int))); 
 
-    // Sort atoms based on hash 
-    unsigned int gridSortBits = 18;
-
-    cudppSort(this->sortHandle, gridAtomHashProteinD, gridAtomIndexProteinD, gridSortBits, atomCntProt);
+    // Reorder position array into sorted order and find start and end of each cell
+    reorderFilterData(this->cellStartD, 
+                      this->cellEndD, 
+                      this->gridAtomHashD,
+                      this->gridAtomIndexD, 
+                      this->atomPosProtD,
+                      this->atomPosProtSortedD,
+                      (this->atmCnt - this->solvAtmCnt));
     
-    // Reorder position array into sorted order and find start and end of each cell 
-    unsigned int *cellStartD;
-    unsigned int *cellEndD;
-    float *atomPosProteinSortedD;
     
-    unsigned int gridDim = 16; // TODO: every axis?
-
-    allocateArray((void **)&cellStartD, sizeof(unsigned int) * gridDim * gridDim * gridDim);
-    allocateArray((void **)&cellEndD, sizeof(unsigned int) * gridDim * gridDim * gridDim);
-    allocateArray((void **)&atomPosProteinSortedD, sizeof(float)*atomCntProt*3);
+    // Set all atoms invisible
+    cutilSafeCall(cudaMemset(this->atomVisibilityD, 0x00000000, this->atmCnt*sizeof(int)));
     
-    reorderDataAndFindCellStart(cellStartD, cellEndD, atomPosProteinSortedD, gridAtomHashProteinD,
-                                gridAtomIndexProteinD, atomPosProteinD, atomCntProt,
-                                gridDim*gridDim*gridDim);
-                                
-    // Calculate visibility of solvent atoms 
-    bool *atomVisibilityD;
-    bool *isSolventAtomD;
-    float *atomPosD;
+    // Calculate visibility of solvent atoms     
+    calcSolventVisibility(this->cellStartD,
+                          this->cellEndD,
+                          this->atomPosD,
+                          this->atomPosProtSortedD,
+                          this->isSolventAtomD,
+                          this->atomVisibilityD,
+                          this->atmCnt);
+                                               
     
-    allocateArray((void **)&atomVisibilityD, sizeof(bool)*this->atmCnt);
-    allocateArray((void **)&atomPosD, sizeof(float)*this->atmCnt*3);
-    allocateArray((void **)&isSolventAtomD, sizeof(bool)*this->atmCnt);
-
-    cudaMemcpy(isSolventAtomD, this->isSolventAtom.PeekElements(), sizeof(bool)*this->atmCnt, cudaMemcpyHostToDevice);
-
-    setParameters(&this->params);
-    // Calculate visibility
-    calcSolventVisibility(cellStartD,
-                          cellEndD,
-                          atomPosD,
-                          atomPosProteinSortedD,
-                          isSolventAtomD,
-                          this->atmCnt,
-                          rad,
-                          atomVisibilityD); // output
-                               
     // Copy visibility information from device to host
-    /*bool *atomVisibilityH = new bool[this->atmCnt];
-    cudaMemcpy(atomVisibilityH, atomVisibilityD, sizeof(bool)*this->atmCnt, cudaMemcpyDeviceToHost);
-    
-    // Clean up
-    delete[] atomVisibilityH;
-    freeArray(atomPosProteinD);
-    freeArray(gridAtomHashProteinD);
-    freeArray(gridAtomIndexProteinD);
-    freeArray(atomPosD);
-    freeArray(atomPosProteinSortedD);
-    freeArray(cellStartD);
-    freeArray(cellEndD);
-    freeArray(atomVisibilityD);
-    freeArray(isSolventAtomD);*/
-    
+    cutilSafeCall(cudaMemcpy(this->atomVisibility, this->atomVisibilityD, 
+        sizeof(int)*this->atmCnt, cudaMemcpyDeviceToHost));
 
-//#else // CPU
+#else // CPU
 
     unsigned int at, b;
     for(at = 0; at < this->atmCnt; at++) {
@@ -462,7 +664,8 @@ void Filter::filterSolventAtoms(MolecularDataCall *mol, float *atomPos, float ra
                 if(!this->isSolventAtom[b]) {
                     if(sqrt(pow(atomPos[3*at+0]-atomPos[3*b+0], 2)
                               + pow(atomPos[3*at+1]-atomPos[3*b+1], 2)
-                              + pow(atomPos[3*at+2]-atomPos[3*b+2], 2)) <= rad) {
+                              + pow(atomPos[3*at+2]-atomPos[3*b+2], 2)) 
+                                <= this->solvRadiusParam.Param<param::FloatParam>()->Value()) {
                         
                         this->atomVisibility[at] = 1;
                         break;
@@ -479,6 +682,6 @@ void Filter::filterSolventAtoms(MolecularDataCall *mol, float *atomPos, float ra
 
     }
 
-//#endif // (defined(WITH_CUDA) && (WITH_CUDA))
+#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
 }

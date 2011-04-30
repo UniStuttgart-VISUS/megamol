@@ -49,7 +49,7 @@ CudaReleaseDir    := $(ReleaseDir)/Cuda
 CudaDebugDir      := $(DebugDir)/Cuda
 
 # note: not the dependencies (i.e. particle_kernel.cu)!
-CU_SOURCES        := particleSystem.cu 
+CU_SOURCES        := particleSystem.cu filter_cuda.cu
 
 CU_R_OBS          := $(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
 CU_D_OBS          := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
@@ -171,7 +171,7 @@ $(IntDir)/$(CudaDebugDir)/%.o:
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"NVCC "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(Q)$(NVCC) -c -g -G $(NVCCFLAGS) $< -o $@
+	$(Q)$(NVCC) -g -G -c $(NVCCFLAGS) $< -o $@
 
 $(IntDir)/$(CudaReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
@@ -218,3 +218,4 @@ sweep:
 rebuild: clean all
 
 .PHONY: clean sweep rebuild tags
+

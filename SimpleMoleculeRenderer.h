@@ -165,6 +165,14 @@ namespace protein {
          * @param atomPos    Pointer to the interpolated atom positions.
          */
         void RenderSAS( const MolecularDataCall *mol, const float *atomPos);
+        
+        /**
+         * Test the filter module.
+         *
+         * @param mol        Pointer to the data call.
+         * @param atomPos    Pointer to the interpolated atom positions.
+         */
+        void RenderPointsFilter(const MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Update all parameter slots.
