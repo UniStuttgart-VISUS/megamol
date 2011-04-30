@@ -393,6 +393,8 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     } else if( this->currentRenderMode == SAS ) {
         this->RenderSAS( mol, posInter);
     }
+    
+    //RenderPointsFilter(mol, posInter);
 
     //glDisable(GL_DEPTH_TEST);
 
@@ -835,6 +837,42 @@ void SimpleMoleculeRenderer::RenderSAS( const MolecularDataCall *mol, const floa
     // disable sphere shader
     this->sphereShader.Disable();
 }
+
+
+/*
+ * renderPointsFilter
+ * 
+ * Helper function to test the filter module.
+ */
+void SimpleMoleculeRenderer::RenderPointsFilter(const MolecularDataCall *mol, 
+    const float *atomPos) {
+    
+    vislib::Array<unsigned int> idx;
+    unsigned int i, visAtmCnt = 0;
+    
+    idx.SetCapacityIncrement(1000);
+
+    // Get indices of visible atoms
+    for(i = 0; i < mol->AtomCount(); i++) {
+        if(mol->Filter()[i] == 1) {
+            idx.Add(i);
+            visAtmCnt++;
+        }
+    }
+    
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+ 
+    glVertexPointer(3, GL_FLOAT, 0, atomPos);
+    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    
+    glDrawElements(GL_POINTS, visAtmCnt, GL_UNSIGNED_INT, idx.PeekElements());
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+
+}
+
 
 /*
  * update parameters

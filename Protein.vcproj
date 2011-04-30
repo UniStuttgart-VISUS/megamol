@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="Protein"
 	ProjectGUID="{B68B06CD-66AF-475E-BF71-36EA0DED696B}"
 	RootNamespace="Protein"
@@ -1927,6 +1927,14 @@
 		<Filter
 			Name="CUDA Files"
 			>
+			<File
+				RelativePath=".\filter_cuda.cu"
+				>
+			</File>
+			<File
+				RelativePath=".\filter_cuda.cuh"
+				>
+			</File>
 			<File
 				RelativePath=".\particles_kernel.cu"
 				>
