@@ -746,7 +746,7 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
         dataOutSlot( "dataout", "The slot providing the loaded data"),
         maxFramesSlot( "maxFrames", "The maximum number of frames to be loaded"),
         strideFlagSlot( "strideFlag", "The flag wether STRIDE should be used or not."),
-		residuesToChain( "residuesToChain", "slot to specify a ;-list of residues to be merged into separate chains"),
+		solventResidues( "solventResidues", "slot to specify a ;-list of residues to be merged into separate chains"),
         bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0),
         stride( 0), secStructAvailable( false), numXTCFrames( 0),
         XTCFrameOffset( 0), xtcFileValid(false) {
@@ -769,8 +769,8 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
     this->strideFlagSlot << new param::BoolParam(true);
     this->MakeSlotAvailable( &this->strideFlagSlot);
 
-	this->residuesToChain << new param::StringParam("");
-    this->MakeSlotAvailable( &this->residuesToChain);
+	this->solventResidues << new param::StringParam("");
+    this->MakeSlotAvailable( &this->solventResidues);
 }
 
 /*
@@ -797,9 +797,9 @@ bool PDBLoader::getData( core::Call& call) {
     MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>( &call);
     if ( dc == NULL ) return false;
 
-    if ( this->pdbFilenameSlot.IsDirty() || this->residuesToChain.IsDirty() ) {
+    if ( this->pdbFilenameSlot.IsDirty() || this->solventResidues.IsDirty() ) {
         this->pdbFilenameSlot.ResetDirty();
-        this->residuesToChain.ResetDirty();
+        this->solventResidues.ResetDirty();
         this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
@@ -867,6 +867,7 @@ bool PDBLoader::getData( core::Call& call) {
     dc->SetResidues( this->residue.Count(),
         (const MolecularDataCall::Residue**)this->residue.PeekElements());
 //	dc->SetAtomResidueIndices(this->atomResidueIdx.PeekElements());
+	dc->SetSolventResidueIndices( this->solventResidueIdx.Count(), this->solventResidueIdx.PeekElements());
     dc->SetResidueTypeNames( this->residueTypeName.Count(),
         (vislib::StringA*)this->residueTypeName.PeekElements());
     dc->SetMolecules( this->molecule.Count(),
@@ -896,9 +897,9 @@ bool PDBLoader::getExtent( core::Call& call) {
     MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>( &call);
     if ( dc == NULL ) return false;
 
-    if ( this->pdbFilenameSlot.IsDirty() || this->residuesToChain.IsDirty() ) {
+    if ( this->pdbFilenameSlot.IsDirty() || this->solventResidues.IsDirty() ) {
         this->pdbFilenameSlot.ResetDirty();
-		this->residuesToChain.ResetDirty();
+		this->solventResidues.ResetDirty();
         this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
@@ -1070,9 +1071,17 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
         this->atomResidueIdx.SetCount(atomEntries.Count());
 
+		// check for residue-parameter and make it a chain of its own ( if no chain-id is specified ...?)
+		const vislib::TString& solventResiduesStr = this->solventResidues.Param<core::param::StringParam>()->Value();
+		// get all the solvent residue names to filter out
+		vislib::Array<vislib::TString> solventResidueNames = vislib::StringTokeniser<vislib::TCharTraits>::Split( solventResiduesStr, ';', true);
+		//this->solventResidueIdx.SetCount(solventResidueNames);
+		//memset(&this->solventResidueIdx[0], -1, this->solventResidueIdx.Count()*sizeof(int));
+		this->solventResidueIdx.Clear();
+
         // parse all atoms of the first frame
         for( atomCnt = 0; atomCnt < atomEntries.Count(); ++atomCnt ) {
-            this->parseAtomEntry( atomEntries[atomCnt], atomCnt, frameCnt);
+            this->parseAtomEntry( atomEntries[atomCnt], atomCnt, frameCnt, solventResidueNames);
         }
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for parsing first frame: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 
@@ -1275,7 +1284,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
  * parse one atom entry
  */
 void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
-        unsigned int frame) {
+        unsigned int frame, vislib::Array<vislib::TString>& solventResidueNames) {
     // temp variables
     vislib::StringA tmpStr;
     vislib::math::Vector<float, 3> pos;
@@ -1333,21 +1342,29 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
     if( resTypeNameIdx ==  vislib::Array<vislib::StringA>::INVALID_POS ) {
         resTypeIdx = this->residueTypeName.Count();
         this->residueTypeName.Add( resName);
-    } else {
+
+		// check if the name of the residue is matched by one of the solvent residue names
+		for( unsigned int filterCnt = 0; filterCnt < solventResidueNames.Count(); ++filterCnt ) {
+			if ( resName.StartsWithInsensitive( solventResidueNames[filterCnt]) ) {
+				tmpChainId = SOLVENT_CHAIN_IDENTIFIER;
+				tmpChainType = MolecularDataCall::Chain::SOLVENT;
+				this->solventResidueIdx.Add(resTypeIdx);
+				break;
+			}
+		}
+	} else {
         resTypeIdx = resTypeNameIdx;
+
+		// check if the index of the residue is matched by one of the existent solvent residue indices
+		for( unsigned int srIdx = 0; srIdx < this->solventResidueIdx.Count(); ++srIdx ) {
+			if( this->solventResidueIdx[srIdx] == resTypeIdx ) {
+				tmpChainId = SOLVENT_CHAIN_IDENTIFIER;
+				tmpChainType = MolecularDataCall::Chain::SOLVENT;
+				break;
+			}
+		}
     }
 
-	// check for residue-parameter and make it a chain of its own ( if no chain-id is specified ...?)
-	const vislib::TString& residuesToChain = this->residuesToChain.Param<core::param::StringParam>()->Value();
-    // get all the solvent residue names to filter out
-    vislib::Array<vislib::TString> resFilters = vislib::StringTokeniser<vislib::TCharTraits>::Split( residuesToChain, ';', true);
-    // check if the name of the residue is matched by one of the filters
-    for( unsigned int filterCnt = 0; filterCnt < resFilters.Count(); ++filterCnt ) {
-        if ( resName.StartsWithInsensitive( resFilters[filterCnt]) ) {
-            tmpChainId = SOLVENT_CHAIN_IDENTIFIER;
-            tmpChainType = MolecularDataCall::Chain::SOLVENT;
-	    }
-    }
 
     // get the sequence number of the residue
     tmpStr = atomEntry.Substring( 22, 4);

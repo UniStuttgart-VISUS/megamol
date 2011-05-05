@@ -103,7 +103,7 @@ namespace protein {
          *
          * @return whether data gas changed
          */
-		bool dataChanged(core::Call& call) {return false;/*return residuesToChain.IsDirty();*/}
+		bool dataChanged(core::Call& call) {return false;/*return solventResidues.IsDirty();*/}
 
         /**
          * Implementation of 'Release'.
@@ -512,7 +512,7 @@ namespace protein {
          * @param atom      The number of the current atom.
          * @param frame     The number of the current frame.
          */
-        void parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom, unsigned int frame);
+        void parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom, unsigned int frame, vislib::Array<vislib::TString>& solventResidueNames);
 
         /**
          * Get the radius of the element.
@@ -605,7 +605,7 @@ namespace protein {
         /** The STRIDE usage flag slot */
         core::param::ParamSlot strideFlagSlot;
         /** slot to specify a ;-list of residues to be merged into separate chains ... */
-        core::param::ParamSlot residuesToChain;
+        core::param::ParamSlot solventResidues;
 
         /** The data */
         vislib::Array<Frame*> data;
@@ -630,6 +630,9 @@ namespace protein {
 
         /** The array of residue type names */
         vislib::Array<vislib::StringA> residueTypeName;
+
+		/** residue indices marked as solvent */
+		vislib::Array<unsigned int> solventResidueIdx;
 
         /** The array of molecules */
         vislib::Array<MolecularDataCall::Molecule> molecule;

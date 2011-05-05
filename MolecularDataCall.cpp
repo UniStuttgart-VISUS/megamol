@@ -493,7 +493,7 @@ const unsigned int protein::MolecularDataCall::CallForGetExtent = 1;
  * protein::MolecularDataCall::MolecularDataCall
  */
 protein::MolecularDataCall::MolecularDataCall(void) : AbstractGetData3DCall(),
-        atomCount( 0), atomPos( 0), atomTypeIdx( 0), atomResidueIdx( 0), atomHydrogenBondIdx( 0), atomHydrogenBondStatistics(0),
+        atomCount( 0), atomPos( 0), atomTypeIdx( 0), atomResidueIdx( 0), atomHydrogenBondIdx( 0), atomHydrogenBondStatistics(0), atomSolventResCount(0),
         residues( 0), resCount( 0),
         molecules( 0), molCount( 0),
         chains( 0), chainCount( 0),
