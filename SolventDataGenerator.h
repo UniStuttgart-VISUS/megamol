@@ -154,7 +154,6 @@ namespace protein {
 		vislib::Array<int> hydrogenConnections;
 		vislib::Array<int> donorAcceptors;
 		vislib::Array<unsigned int> hydrogenBondStatistics;
-		int solvResCount;
 		enum { MAX_HYDROGENS_PER_ATOM = 4 };
 		//enum { DONOR_ACCEPTOR_TYPE_COUNT = 2 /* only 'O' and 'N' can be donor/acceptor*/};
 		int maxOMPThreads;

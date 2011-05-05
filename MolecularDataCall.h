@@ -1070,9 +1070,10 @@ namespace protein {
 		float AtomHydrogenBondDistance(void) const { return atomHydrogenBondDistance; }
 		void SetAtomHydrogenBondDistance(float dist) { atomHydrogenBondDistance = dist; }
         const unsigned int* AtomHydrogenBondStatistics(void) const { return atomHydrogenBondStatistics; }
-        void SetAtomHydrogenBondStatistics(const unsigned int*statistics) { atomHydrogenBondStatistics = statistics; }
-
-
+        unsigned int AtomSolventResidueCount(void) const { return atomSolventResCount; }
+        void SetAtomHydrogenBondStatistics(const unsigned int*statistics /*, int solventResCount*/) { atomHydrogenBondStatistics = statistics; /*atomSolventResCount=solventResCount;*/ }
+		void SetSolventResidueIndices(unsigned int count, const unsigned int *residueIndices) {this->solventResidueIdx = residueIndices; atomSolventResCount = count; }
+		const unsigned int* SolventResidueIndices(void) const { return solventResidueIdx; }
 
         /**
          * Get the residue count.
@@ -1372,6 +1373,8 @@ namespace protein {
 			this->atomHydrogenBondIdx = s.atomHydrogenBondIdx;
 			this->atomHydrogenBondDistance = s.atomHydrogenBondDistance;
 			this->atomHydrogenBondStatistics = s.atomHydrogenBondStatistics;
+			this->solventResidueIdx = s.solventResidueIdx;
+			this->atomSolventResCount = s.atomSolventResCount;
 			this->atomType = s.atomType;
 			this->atomBFactors = s.atomBFactors;
 			this->atomCharges = s.atomCharges;
@@ -1422,6 +1425,9 @@ namespace protein {
 		const int *atomHydrogenBondIdx;
 		float atomHydrogenBondDistance;
 		const unsigned int *atomHydrogenBondStatistics;
+
+		const unsigned int *solventResidueIdx;
+		unsigned int atomSolventResCount;
 
         /** The array of residues. */
         const Residue** residues;

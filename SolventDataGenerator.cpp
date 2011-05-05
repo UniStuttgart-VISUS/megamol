@@ -55,7 +55,7 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 	this->MakeSlotAvailable( &this->hBondDistance);
 
 	// distance between donor and acceptor of the hydrogen bonds
-	this->hBondDonorAcceptorDistance.SetParameter(new param::FloatParam(3.0f, 0.0f));
+	this->hBondDonorAcceptorDistance.SetParameter(new param::FloatParam(3.5f, 0.0f));
 	this->MakeSlotAvailable( &this->hBondDonorAcceptorDistance);
 
 	// angle between donor-acceptor and donor-hydrogen in degrees
@@ -74,9 +74,6 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 	this->maxOMPThreads = omp_get_max_threads();
 	this->neighbourIndices = new vislib::Array<unsigned int>[this->maxOMPThreads];
 	//this->neighbHydrogenIndices = new vislib::Array<unsigned int>[this->maxOMPThreads];
-
-	/* for now we store statistics for 2 solvent residues ...*/
-	this->solvResCount = 2;
 }
 
 megamol::protein::SolventDataGenerator::~SolventDataGenerator() {
@@ -438,16 +435,21 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 
 #if 1
 bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(MolecularDataCall *dataTarget, MolecularDataCall *dataSource) {
-	int savedFrameId = dataSource->FrameID();
+	int savedSrcFrameId = dataSource->FrameID();
+	int savedTargetFrameId = dataTarget->FrameID();
 
-	if (this->hydrogenBondStatistics.Count() < this->solvResCount*dataSource->AtomCount()) {
-		this->hydrogenBondStatistics.SetCount(this->solvResCount*dataSource->AtomCount());
-		memset(&this->hydrogenBondStatistics[0], 0, this->hydrogenBondStatistics.Count()*sizeof(unsigned int));
+	int solvResCount = dataSource->AtomSolventResidueCount();
+	const unsigned int *solventResidueIndices = dataSource->SolventResidueIndices();
+
+	if (this->hydrogenBondStatistics.Count() < solvResCount*dataSource->AtomCount()) {
+		this->hydrogenBondStatistics.SetCount(solvResCount*dataSource->AtomCount());
+		memset(&this->hydrogenBondStatistics[0], 0, hydrogenBondStatistics.Count()*sizeof(unsigned int));
 	}
 	unsigned int *hydrogenBondStatisticsPtr = &this->hydrogenBondStatistics[0];
 
 	for(int frameId = 0; frameId < dataSource->FrameCount(); frameId++) {
 		dataSource->SetFrameID(frameId);
+		dataTarget->SetFrameID(frameId);
 		if (!(*dataSource)(MolecularDataCall::CallForGetData))
 			return false;
 		if (!this->getHBonds(dataTarget, dataSource))
@@ -478,13 +480,22 @@ bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(Molecula
 				int otherResidueIdx = residueIndices[otherAtomIndex];
 				const MolecularDataCall::Residue *otherResidue = dataSource->Residues()[otherResidueIdx];
 				bool isOtherSolvent = dataTarget->IsSolvent(otherResidue);
-#if 0
+#if 1
+
 				if(isSolvent != isOtherSolvent) {
 					// polymer/solvent HBond ...
 					if (!isSolvent) {
-						hydrogenBondStatisticsPtr[this->solvResCount*atomIndex + (rIdx%solvResCount)]++;
+						for(int srIdx = 0;srIdx < solvResCount; srIdx++) {
+							if (solventResidueIndices[srIdx]==otherResidue->Type())
+								hydrogenBondStatisticsPtr[solvResCount*atomIndex + srIdx]++;
+						}
+						//hydrogenBondStatisticsPtr[solvResCount*atomIndex + (rIdx%this->solvResCount)]++;
 					} else /*if (!isOtherSolvent)*/ {
-						hydrogenBondStatisticsPtr[this->solvResCount*otherAtomIndex + (otherResidueIdx%solvResCount)]++;
+						for(int srIdx = 0;srIdx < solvResCount; srIdx++) {
+							if (solventResidueIndices[srIdx]==residue->Type())
+								hydrogenBondStatisticsPtr[solvResCount*otherAtomIndex + srIdx]++;
+						}
+						//hydrogenBondStatisticsPtr[solvResCount*otherAtomIndex + (otherResidueIdx%this->solvResCount)]++;
 					}
 				} else {
 					// both atoms solvent or both polymer?
@@ -499,8 +510,9 @@ bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(Molecula
 		}
 	}
 
-	dataSource->SetAtomHydrogenBondStatistics(hydrogenBondStatisticsPtr);
-	dataSource->SetFrameID(savedFrameId);
+	/*dataSource*/dataTarget->SetAtomHydrogenBondStatistics(hydrogenBondStatisticsPtr/*, this->solvResCount*/);
+	dataSource->SetFrameID(savedSrcFrameId);
+	dataTarget->SetFrameID(savedTargetFrameId);
 }
 #endif
 
@@ -618,6 +630,8 @@ bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
 	// testing?
 	if (!this->hydrogenBondStatistics.Count()) {
 		this->calcHydrogenBondStatistics(molDest, molSource);
+	} else {
+		molDest->SetAtomHydrogenBondStatistics(this->hydrogenBondStatistics.PeekElements());
 	}
 
 	if (this->showMiddlePositions.Param<param::BoolParam>()->Value()) {
