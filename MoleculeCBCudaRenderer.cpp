@@ -424,7 +424,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
         params.maxNumNeighbors);
 
 	// ---------- vertex buffer object generation (for rendering) ----------
-
+#if 1
     // count total number of small circles
 	cudppScan( this->scanHandle, m_dSmallCircleVisibleScan, m_dSmallCircleVisible, this->numAtoms * this->atomNeighborCount);
 	// get total number of small circles
@@ -528,7 +528,10 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	cudaGLUnmapBufferObject( this->sphereTriaVec3VBO);
 
 	// ---------- singularity handling ----------
-
+#if 0
+    // unmap probe buffer object
+    cudaGLUnmapBufferObject( this->probePosVBO);
+#else
 	// calculate grid hash
 	calcHash(
 		m_dGridProbeHash,
@@ -608,13 +611,14 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
     cudaGLUnmapBufferObject( this->singTexPBO);
     
     // copy PBO to texture
-    glBindBuffer( GL_PIXEL_UNPACK_BUFFER, this->singTexPBO);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, this->singTex);
-    glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, ( numProbes/params.texSize + 1) * this->probeNeighborCount, numProbes % params.texSize, GL_RGB, GL_FLOAT, NULL);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
-    glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0);
+    //glBindBuffer( GL_PIXEL_UNPACK_BUFFER, this->singTexPBO);
+    //glEnable(GL_TEXTURE_2D);
+    //glBindTexture(GL_TEXTURE_2D, this->singTex);
+    //glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, ( numProbes/params.texSize + 1) * this->probeNeighborCount, numProbes % params.texSize, GL_RGB, GL_FLOAT, NULL);
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    //glDisable(GL_TEXTURE_2D);
+    //glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0);
+#endif
 
 #if 1
     ///////////////////////////////////////////////////////////////////////////
@@ -776,6 +780,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
     glDisableClientState(GL_VERTEX_ARRAY);
     // enable torus shader
     this->torusShader.Disable();
+#endif
 #endif
 
 #if 0
@@ -1705,6 +1710,7 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
     sortConfig.options      = CUDPP_OPTION_KEY_VALUE_PAIRS;
     cudppPlan( &this->sortHandle, sortConfig, this->numAtoms, 1, 0);
 
+    
     // Create the CUDPP radix sort
     CUDPPConfiguration probeSortConfig;
     probeSortConfig.algorithm   = CUDPP_SORT_RADIX;
