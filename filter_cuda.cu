@@ -1,3 +1,18 @@
+/*
+ * Copyright 1993-2009 NVIDIA Corporation.  All rights reserved.
+ *
+ * NVIDIA Corporation and its licensors retain all intellectual property and 
+ * proprietary rights in and to this software and related documentation. 
+ * Any use, reproduction, disclosure, or distribution of this software 
+ * and related documentation without an express license agreement from
+ * NVIDIA Corporation is strictly prohibited.
+ *
+ * Please refer to the applicable NVIDIA end user license agreement (EULA) 
+ * associated with this source code for terms and conditions that govern 
+ * your use of this NVIDIA software.
+ * 
+ */
+
 #include <cutil_inline.h>
 #include <vector_types.h>
 #include <cutil_math.h>
@@ -6,6 +21,41 @@
 
 // Parameters in constant memory
 __constant__ FilterParams fparams;
+
+
+/*
+ * hashValMultiGrid
+ * 
+ * Hash function resulting in a distribution of values with eight successive
+ * hash values remaining inside the same cube.
+ * 
+ */
+__device__
+unsigned int hashValMultiGrid(int3 gridPos) {
+    
+    // 
+    // (1) Grid size of coarse grid: 
+    //      coarseGridSize  = fparams.gridSize.x / 2
+    //
+    // (2) Address of subcube in coarse grid: 
+    //      subCubeAddr = 
+    //      (int)(gridPos.y/2) * coarseGridSize 
+    //      + (int)(gridPos.x/2) 
+    //      + (int)(gridPos.z/2) * coarseGridSize  * coarseGridSize ;
+    // 
+    // (3) Hash value within one subcube: 
+    //      h = ((gridPos.x)%2 + gridPos.y%2 * 2 + 2 * 2 * (gridPos.z%2))
+    // 
+    // (4) Actual hash value: 
+    //      h + 8 * subCubeAddr
+    
+    unsigned int coarseGridSize = fparams.gridSize.x / 2;
+    
+    // TODO: gridPos.x % 2 = gridPos.x & (2 - 1) ?
+    return (gridPos.x % 2) + (((gridPos.y % 2) + (gridPos.z % 2) * 2)
+            + 2 * 2 * (gridPos.y/2 * coarseGridSize + gridPos.x/2 
+                    + gridPos.z/2 * coarseGridSize) * coarseGridSize) * 2;
+}
 
 
 /*
@@ -26,17 +76,19 @@ void calcFilterHashGridD(unsigned int *gridHash,
                              floor((atmPos[idx].z - fparams.worldOrigin.z) / fparams.cellSize.z));
 
     // Wrap grid, assumes size is power of 2
-    //gridPos.x = gridPos.x & (fparams.gridSize.x - 1);  
-    //gridPos.y = gridPos.y & (fparams.gridSize.y - 1);
-    //gridPos.z = gridPos.z & (fparams.gridSize.z - 1);*/
+    /*gridPos.x = gridPos.x & (fparams.gridSize.x - 1);  
+    gridPos.y = gridPos.y & (fparams.gridSize.y - 1);
+    gridPos.z = gridPos.z & (fparams.gridSize.z - 1);*/
 
     // Calculate hash value
     gridHash[idx]  = __umul24(__umul24(gridPos.z, fparams.gridSize.y), 
         fparams.gridSize.x) + __umul24(gridPos.y, fparams.gridSize.x) + gridPos.x;
+    
 
     // Init index array 
     gridIndex[idx] = idx;
 }
+
 
 
 /*
@@ -98,6 +150,7 @@ void reorderFilterDataD(unsigned int *cellStart,
 }
 
 
+
 /*
  * calcSolventVisibilityD
  */
@@ -110,7 +163,7 @@ void calcSolventVisibilityD(unsigned int *cellStart,
                             int          *atomVisibility) {
 
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
+    
     if(idx >= fparams.atmCnt) {
         return;
     }
@@ -121,9 +174,8 @@ void calcSolventVisibilityD(unsigned int *cellStart,
         return;
     }
     
-    unsigned int startIdx, endIdx, hash, j;
-    int3 neighbourPos;
-    int x,y,z;
+    // Note: startIndex/endIndex are referring to the position in the sorted array
+    unsigned int startIdx, endIdx, hash, at, x, y, z;
     
     // Get position of the atom
     float3 p = atmPos[idx];
@@ -131,61 +183,44 @@ void calcSolventVisibilityD(unsigned int *cellStart,
     int3 gridPos = make_int3(floor((p.x - fparams.worldOrigin.x) / fparams.cellSize.x),
                              floor((p.y - fparams.worldOrigin.y) / fparams.cellSize.y),
                              floor((p.z - fparams.worldOrigin.z) / fparams.cellSize.z));
+                             
+    int3 discRangeCeil = make_int3(
+        (gridPos.x + fparams.discRange.x < fparams.gridSize.x) ? 
+            (gridPos.x + fparams.discRange.x) : fparams.gridSize.x,
+        (gridPos.y + fparams.discRange.y < fparams.gridSize.y) ? 
+            (gridPos.y + fparams.discRange.y) : fparams.gridSize.y,
+        (gridPos.z + fparams.discRange.z < fparams.gridSize.z) ? 
+            (gridPos.z + fparams.discRange.z) : fparams.gridSize.z);
+        
+    int3 discRangeFloor = make_int3(
+        (gridPos.x - fparams.discRange.x >= 0) ? (gridPos.x - fparams.discRange.x) : 0,
+        (gridPos.y - fparams.discRange.y >= 0) ? (gridPos.y - fparams.discRange.y) : 0,
+        (gridPos.z - fparams.discRange.z >= 0) ? (gridPos.z - fparams.discRange.z) : 0);
     
     // Examine neighbouring cells within the given range
-    for(z = -fparams.discRange.z; z <= fparams.discRange.z; z++) {
-            
-        neighbourPos.z = (gridPos.z + z);
-        if((neighbourPos.z < 0) || (neighbourPos.z >= fparams.gridSize.z)) 
-            continue;
-        
-        for(y = -fparams.discRange.y; y <= fparams.discRange.y; y++) {
-            
-            neighbourPos.y = (gridPos.y + y);
-            if((neighbourPos.y < 0) || (neighbourPos.y >= fparams.gridSize.y)) 
-                continue;
-            
-            for(x = -fparams.discRange.x; x <= fparams.discRange.x; x++) {
-                
-                neighbourPos.x = gridPos.x + x;
-                if((neighbourPos.x < 0) || (neighbourPos.x >= fparams.gridSize.x)) 
-                    continue;
+    for(z = discRangeFloor.z; z < discRangeCeil.z; z++) {
+        for(y = discRangeFloor.y; y < discRangeCeil.y; y++) {
+            for(x = discRangeFloor.x; x < discRangeCeil.x; x++) {
                     
-                hash = __umul24(__umul24(neighbourPos.z, fparams.gridSize.y), 
-                           fparams.gridSize.x) + __umul24(neighbourPos.y, 
-                           fparams.gridSize.x) + neighbourPos.x;
-                           
-                // Note: startIndex/endIndex are referring to the position in
-                // the sorted array
+                hash = __umul24(__umul24(z, fparams.gridSize.y), fparams.gridSize.x) + 
+                       __umul24(y, fparams.gridSize.x) + 
+                       x;
+                        
                 startIdx = cellStart[hash];
                 
                 if(startIdx == 0xffffffff) {
                    continue; // Cell is empty - continue with next cell
                 }
                 else {
-                
-                    // Note: startIndex/endIndex are referring to the position in
-                    // the sorted array
+
                     endIdx = cellEnd[hash];
-                    
-                    // If cell contains non-solvent atoms and is within inner
-                    // range the atom is visible
-                    if((abs(neighbourPos.x) <= fparams.innerDiscRange) &&
-                    (abs(neighbourPos.y) <= fparams.innerDiscRange) &&
-                    (abs(neighbourPos.z) <= fparams.innerDiscRange)) {
-                    
-                        atomVisibility[idx] = 1;
-                        return; 
-                    }
-                    else {
             
-                        // Iterate over all atoms in this cell
-                        for(j = startIdx; j < endIdx; j++) {
-                            if(length(atmPosProtSorted[j] - p) <= fparams.solvRange) {
-                                
-                                atomVisibility[idx] = 1;
-                                return; 
-                            }
+                    // Iterate over all atoms in this cell
+                    for(at = startIdx; at < endIdx; at++) {
+                        if(length(atmPosProtSorted[at] - p) <= fparams.solvRange) {
+                            
+                            atomVisibility[idx] = 1;
+                            return; 
                         }
                     }
                 }
@@ -193,6 +228,7 @@ void calcSolventVisibilityD(unsigned int *cellStart,
         }
     }
 }
+
 
 
 extern "C" {
@@ -208,7 +244,7 @@ extern "C" {
 
 
     /*
-     * calcHashGrid
+     * calcFilterHashGrid
      */
     void calcFilterHashGrid(unsigned int *gridHash,
                             unsigned int *gridIndex,
@@ -283,5 +319,6 @@ extern "C" {
         
         cutilCheckMsg("calcSolventVisibilityD");                                                              
     }
+                                 
 
 } // extern "C"
