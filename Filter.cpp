@@ -17,16 +17,24 @@
 #include "param/IntParam.h"
 #include "MolecularDataCall.h"
 
+#include "glh/glh_genext.h"
+#include "glh/glh_extensions.h"
+#include <GL/gl.h>
+#include <GL/glu.h>
+
 #include "Filter.h"
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
 #include <cutil_inline.h>
 #include <cutil_gl_inline.h>
+#include <cutil_gl_error.h>
 #include <cuda_gl_interop.h>
 #include <cudpp/cudpp.h>
 
 #include "filter_cuda.cuh"
+
+#include <vector_types.h>
 
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
@@ -75,7 +83,7 @@ Filter::Filter(void) : core::Module(),
     this->interpolParam.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->interpolParam);
     
-    param::EnumParam *gs = new param::EnumParam(16);
+    param::EnumParam *gs = new param::EnumParam(2);
     gs->SetTypePair(2, "2");
     gs->SetTypePair(4, "4");
     gs->SetTypePair(8, "8");
@@ -105,9 +113,6 @@ Filter::Filter(void) : core::Module(),
     this->cellEndD = NULL;
     
     this->atomVisibilityD = NULL;
-    
-    //cudaGLSetGLDevice(cutGetMaxGflopsDeviceId());
-    cutilSafeCall(cudaSetDevice(cutGetMaxGflopsDeviceId()));
 
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
@@ -125,7 +130,7 @@ Filter::~Filter(void)  {
 /*
  * Filter::create
  */
-bool Filter::create(void) {
+bool Filter::create(void) {    
     return true;
 }
 
@@ -303,7 +308,6 @@ bool Filter::getExtent(core::Call& call) {
 /*
  * Filter::updateParams
  */
-// TODO
 void Filter::updateParams(MolecularDataCall *mol) {
     
     using namespace vislib::sys;
@@ -349,14 +353,7 @@ void Filter::updateParams(MolecularDataCall *mol) {
         this->params.discRange.x = ceil(this->params.solvRange / this->params.cellSize.x);
         this->params.discRange.y = ceil(this->params.solvRange / this->params.cellSize.y);
         this->params.discRange.z = ceil(this->params.solvRange / this->params.cellSize.z);
-        
-        // Calculate body diagonal of one cell
-        float cellBodyDiagonal = sqrt(this->params.cellSize.x * this->params.cellSize.x +
-                                      this->params.cellSize.y * this->params.cellSize.y +
-                                      this->params.cellSize.z * this->params.cellSize.z);
-                                             
-        this->params.innerDiscRange = (int)(this->params.solvRange / cellBodyDiagonal) - 1;
-
+                                    
         setFilterParams(&this->params);
         
         // Create CUDPP radix sort
@@ -387,6 +384,7 @@ void Filter::updateParams(MolecularDataCall *mol) {
         if(this->cellEndD != NULL) cutilSafeCall(cudaFree(this->cellEndD));
         
         if(this->atomVisibilityD != NULL) cutilSafeCall(cudaFree(this->atomVisibilityD));
+
         
         // Allocate device memory 
         
@@ -408,11 +406,9 @@ void Filter::updateParams(MolecularDataCall *mol) {
         
         cutilSafeCall(cudaMemcpy(isSolventAtomD, this->isSolventAtom, 
             sizeof(bool)*this->atmCnt, cudaMemcpyHostToDevice));
-
     
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))
     }
-
 }
 
 
@@ -468,6 +464,8 @@ void Filter::flagSolventAtoms(const MolecularDataCall *mol) {
             }
         }
     }
+    
+    this->protAtmCnt = this->atmCnt - this->solvAtmCnt;
 }
 
 
@@ -612,6 +610,7 @@ void Filter::filterSolventAtoms(float *atomPos) {
                        this->gridAtomIndexD,
                        this->atomPosProtD,
                        (this->atmCnt - this->solvAtmCnt));
+    
         
     // Sort atoms based on hash
     if(cudppSort(this->sortHandle, this->gridAtomHashD, this->gridAtomIndexD, 18, 
@@ -620,6 +619,7 @@ void Filter::filterSolventAtoms(float *atomPos) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error performing CUDPPSort");
         exit(-1);
     }
+    
         
     // Set all cells to empty
     cutilSafeCall(cudaMemset(this->cellStartD, 0xffffffff, this->params.numCells*sizeof(unsigned int))); 
@@ -631,8 +631,7 @@ void Filter::filterSolventAtoms(float *atomPos) {
                       this->gridAtomIndexD, 
                       this->atomPosProtD,
                       this->atomPosProtSortedD,
-                      (this->atmCnt - this->solvAtmCnt));
-    
+                      (this->atmCnt - this->solvAtmCnt));    
     
     // Set all atoms invisible
     cutilSafeCall(cudaMemset(this->atomVisibilityD, 0x00000000, this->atmCnt*sizeof(int)));
@@ -679,9 +678,9 @@ void Filter::filterSolventAtoms(float *atomPos) {
             this->atomVisibility[at] = 1; 
 
         }
-
     }
 
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
 }
+

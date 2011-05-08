@@ -16,6 +16,7 @@
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
 #include "MolecularDataCall.h"
+#include "view/Renderer3DModule.h"
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
@@ -148,8 +149,7 @@ namespace protein {
         
             MolecularDataCall *mol;
 
-        };
-        
+        };        
         
         /**
          * Update all parameters.
@@ -197,7 +197,7 @@ namespace protein {
          */
         void filterSolventAtoms(float *atomPos);
 
-
+        
         /** Caller/callee slot */
         megamol::core::CallerSlot molDataCallerSlot;
         megamol::core::CalleeSlot dataOutSlot;
@@ -214,6 +214,7 @@ namespace protein {
         /** Number of atoms */
         unsigned int atmCnt;
         unsigned int solvAtmCnt;
+        unsigned int protAtmCnt;
         
         /** Array with atom visibility information */
         int *atomVisibility; // note: 1 = visible, 0 = invisible
@@ -245,6 +246,7 @@ namespace protein {
         unsigned int *cellEndD;
 
         int *atomVisibilityD;
+        
 
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
