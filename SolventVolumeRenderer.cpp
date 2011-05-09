@@ -1797,9 +1797,11 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		}
 #if 1
 		else if (coloringByHydroBondStats && !isSolvent) {
+			// visalize hydrogen bond statistics ...
 			unsigned int numSolventResidues = mol->AtomSolventResidueCount();
 			float factor = 1.0 / mol->FrameCount();
 			const unsigned int *hbStatistics = mol->AtomHydrogenBondStatistics();
+			const unsigned int *solventResidueIndices = mol->SolventResidueIndices();
 
 			// colorLookupTable[i]; error: we don't have residue index of HB statistics ...
 			for(int atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++) {
@@ -1817,7 +1819,13 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 			// for quick testing mix the three color channels ...
 				solventAtomColor[0] = solventAtomColor[1] = solventAtomColor[2] = 0;
 				for(int j = 0; j < numSolventResidues; j++) {
-					solventAtomColor[j%3] += (float)hbStatistics[numSolventResidues*atomIdx+j] * factor;
+					float value = (float)hbStatistics[numSolventResidues*atomIdx+j] * factor;
+					//solventAtomColor[j%3] += value;
+					int residueType = solventResidueIndices[j];
+					const vislib::math::Vector<float, 3>& residueColor = this->colorLookupTable[residueType%this->colorLookupTable.Count()];
+					solventAtomColor[0] += residueColor.X() * value;
+					solventAtomColor[1] += residueColor.Y() * value;
+					solventAtomColor[2] += residueColor.Z() * value;
 				}
 
 				atomCntColor++;
