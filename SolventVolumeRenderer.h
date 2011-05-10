@@ -92,6 +92,12 @@ namespace protein {
 
 	protected:
 		
+        enum {
+        	VOLCM_SolventConcentration,
+        	VOLCM_HydrogenBonds,
+        	VOlCM_HydrogenBondStats,
+        };
+
 		/**
 		 * Implementation of 'Create'.
 		 *
@@ -258,8 +264,7 @@ namespace protein {
 		
 		megamol::core::param::ParamSlot coloringModeSolventParam;
 		megamol::core::param::ParamSlot coloringModePolymerParam;
-		int coloringModeHydrogenBondStatistics;
-		int coloringModeHydrogenBonds;
+		megamol::core::param::ParamSlot coloringModeVolSurfParam;
 		// parameters for the volume rendering
 		megamol::core::param::ParamSlot volIsoValue1Param;
 		//megamol::core::param::ParamSlot volIsoValue2Param;
