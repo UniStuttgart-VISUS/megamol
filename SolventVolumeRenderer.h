@@ -89,8 +89,6 @@ namespace protein {
 		 * 'set'-functions
 	    **********************************************************************/
 
-		/** Set current coloring mode */
-        inline void SetColoringMode( Color::ColoringMode cm) { currentColoringMode = cm; };
 
 	protected:
 		
@@ -145,6 +143,8 @@ namespace protein {
 		* @return The return value of the function.
 		*/
 		virtual bool Render( megamol::core::Call& call);
+		void UpdateColorTable(MolecularDataCall *mol);
+		void ColorAtom(float *atomColor, MolecularDataCall *mol, int polymerColorMode, int atomIdx, int residueIdx );
 
 		/**
          * Volume rendering using molecular data.
@@ -256,7 +256,10 @@ namespace protein {
         // translation of the scene
         vislib::math::Vector<float, 3> translation;
 		
-		megamol::core::param::ParamSlot coloringModeParam;
+		megamol::core::param::ParamSlot coloringModeSolventParam;
+		megamol::core::param::ParamSlot coloringModePolymerParam;
+		int coloringModeHydrogenBondStatistics;
+		int coloringModeHydrogenBonds;
 		// parameters for the volume rendering
 		megamol::core::param::ParamSlot volIsoValue1Param;
 		//megamol::core::param::ParamSlot volIsoValue2Param;
@@ -291,6 +294,7 @@ namespace protein {
 		/** clear volume or accumulate stuff over time? ... */
 		megamol::core::param::ParamSlot accumulateColors;
 		megamol::core::param::ParamSlot accumulateVolume;
+		megamol::core::param::ParamSlot accumulateFactor;
 
 		// shader for the spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader sphereSolventShader;
@@ -312,9 +316,6 @@ namespace protein {
         vislib::graphics::gl::GLSLShader volRayLengthShader;
 		// DEBUG
         vislib::graphics::gl::GLSLShader sphereShader;
-		
-		// current coloring mode
-		Color::ColoringMode currentColoringMode;
 		
 		// attribute locations for GLSL-Shader
 		GLint attribLocInParams;
@@ -398,7 +399,7 @@ namespace protein {
 		vislib::Array<float> update_vol, update_clr;
 		vislib::Array<float> vertSpheres, vertCylinders, quatCylinders, inParaCylinders, color1Cylinders, color2Cylinders;
 
-        bool forceUpdateVolumeTexture;
+        bool forceUpdateVolumeTexture, forceUpdateColoringMode;
 
 		megamol::protein::GridNeighbourFinder<float> gnf;
 	};

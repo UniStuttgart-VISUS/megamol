@@ -1509,7 +1509,8 @@ vislib::math::Vector<unsigned char, 3> PDBLoader::getElementColor( vislib::Strin
     if( name[cnt] == 'H' ) // white or light grey
         return vislib::math::Vector<unsigned char, 3>( 240, 240, 240);
     if( name[cnt] == 'C' ) // (dark) grey or green
-        return vislib::math::Vector<unsigned char, 3>( 125, 125, 125);
+        return vislib::math::Vector<unsigned char, 3>( 90, 90, 90);
+        //return vislib::math::Vector<unsigned char, 3>( 125, 125, 125);
         //return vislib::math::Vector<unsigned char, 3>( 90, 175, 50);
     if( name[cnt] == 'N' ) // blue
         //return vislib::math::Vector<unsigned char, 3>( 37, 136, 195);
@@ -1522,6 +1523,8 @@ vislib::math::Vector<unsigned char, 3> PDBLoader::getElementColor( vislib::Strin
         return vislib::math::Vector<unsigned char, 3>( 255, 215, 0);
     if( name[cnt] == 'P' ) // orange
         return vislib::math::Vector<unsigned char, 3>( 255, 128, 64);
+    if( name[cnt] == 'M' /*&& name[cnt+1] == 'e'*/ ) // Methanol? -> same as carbon ...
+        return vislib::math::Vector<unsigned char, 3>( 90, 90, 90);
 	/*
     if( name[cnt] == 'H' ) // white or light grey
         return vislib::math::Vector<unsigned char, 3>( 240, 240, 240);
