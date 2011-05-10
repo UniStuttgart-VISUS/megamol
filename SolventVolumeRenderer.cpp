@@ -57,8 +57,9 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 		callFrameCalleeSlot ( "callFrame", "Connects the volume rendering with frame call from RMS renderer" ),
 	//	protRendererCallerSlot ( "renderProtein", "Connects the volume rendering with a protein renderer" ),
 		dataOutSlot ( "volumeout", "Connects the volume rendering with a volume slice renderer" ),
-		coloringModeSolventParam ( "coloringModeSolvent", "Coloring Mode" ),
-		coloringModePolymerParam ( "coloringModePolymer", "Coloring Mode" ),
+		coloringModeSolventParam ( "coloringModeSolvent", "solvent coloring mode" ),
+		coloringModePolymerParam ( "coloringModePolymer", "polymer coloring node" ),
+		coloringModeVolSurfParam ( "coloringModeVolSurf", "volume surface coloring mode"),
 		volIsoValue1Param( "volIsoValue1", "First isovalue for isosurface rendering"),
 		//volIsoValue2Param( "volIsoValue2", "Second isovalue for isosurface rendering"),
 		volFilterRadiusParam( "volFilterRadius", "Filter Radius for volume generation"),
@@ -113,10 +114,6 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 	delete mol;
 
 	param::EnumParam *solventCMEnum = new param::EnumParam ( *polymerCMEnum );
-	coloringModeHydrogenBonds = numClrModes;
-	coloringModeHydrogenBondStatistics = numClrModes+1;
-	solventCMEnum->SetTypePair( coloringModeHydrogenBonds, "Hydrogen Bonds" );
-	solventCMEnum->SetTypePair( coloringModeHydrogenBondStatistics, "Hydrogen Bond statistics" );
 
 	this->coloringModePolymerParam << polymerCMEnum;
 	this->coloringModeSolventParam << solventCMEnum;
@@ -134,6 +131,13 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 
 	this->MakeSlotAvailable( &this->coloringModePolymerParam );
 	this->MakeSlotAvailable( &this->coloringModeSolventParam );
+
+	param::EnumParam *isoSurfCMEnum = new param::EnumParam (VOLCM_SolventConcentration);
+	isoSurfCMEnum->SetTypePair(VOLCM_SolventConcentration, "solvent concentration");
+	isoSurfCMEnum->SetTypePair(VOLCM_HydrogenBonds, "hydrogen Bonds");
+	isoSurfCMEnum->SetTypePair(VOlCM_HydrogenBondStats, "hydr. bond statistics");
+	this->coloringModeVolSurfParam << isoSurfCMEnum;
+	this->MakeSlotAvailable( &this->coloringModeVolSurfParam );
 
 	// --- set up parameters for isovalues ---
 	this->volIsoValue1Param.SetParameter( new param::FloatParam( this->isoValue1) );
@@ -1093,7 +1097,7 @@ void protein::SolventVolumeRenderer::RenderStickSolvent(/*const*/ MolecularDataC
 	float stickRadius = this->stickRadiusParam.Param<param::FloatParam>()->Value();
 
 	// copy atom pos and radius to vertex array
-	if (this->coloringModeSolventParam.Param<param::EnumParam>()->Value() == this->coloringModeHydrogenBondStatistics &&
+	if (this->coloringModeVolSurfParam.Param<param::EnumParam>()->Value() == VOlCM_HydrogenBondStats &&
 			mol->AtomHydrogenBondStatistics()) {
 		// render atom spheres size according to their hydrogen bond statistics ...
 		float factor = 1.0 / mol->FrameCount();
@@ -1347,9 +1351,10 @@ bool protein::SolventVolumeRenderer::RenderMolecularData( view::CallRender3D *ca
 void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call, MolecularDataCall *mol) {
 	
 	// parameter refresh
-	if( this->coloringModeSolventParam.IsDirty() || this->coloringModePolymerParam.IsDirty() ) {
+	if( this->coloringModeSolventParam.IsDirty() || this->coloringModePolymerParam.IsDirty() || this->coloringModeVolSurfParam.IsDirty() ) {
 		this->coloringModeSolventParam.ResetDirty();
 		this->coloringModePolymerParam.ResetDirty();
+		this->coloringModeVolSurfParam.ResetDirty();
 		this->forceUpdateVolumeTexture = true;
 		this->forceUpdateColoringMode = true;
 	}
@@ -1760,11 +1765,11 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		CHECK_FOR_OGL_ERROR();
 	}
 
+	int coloringModeVolSurf = this->coloringModeVolSurfParam.Param<param::EnumParam>()->Value();
+
 	// coloring mode
-	bool coloringByHydroBonds = this->coloringModeSolventParam.Param<param::EnumParam>()->Value()
-			== this->coloringModeHydrogenBonds && hBondInterPtr;
-	bool coloringByHydroBondStats = this->coloringModeSolventParam.Param<param::EnumParam>()->Value()
-			== this->coloringModeHydrogenBondStatistics && mol->AtomHydrogenBondStatistics();
+	bool coloringByHydroBonds = coloringModeVolSurf == VOLCM_HydrogenBonds && hBondInterPtr;
+	bool coloringByHydroBondStats = coloringModeVolSurf== VOlCM_HydrogenBondStats && mol->AtomHydrogenBondStatistics();
 
 	// store current frame buffer object ID
 	GLint prevFBO;
@@ -1933,28 +1938,27 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 
 		/* sort atoms into different arrays depending whether they form the solvent or the polymer ... */
 		if (isSolvent) {
-			if (coloringByHydroBonds || coloringByHydroBondStats)
-				continue;
-
-			/* solvent (creates volume coloring ...) */
-			int atomIdx;
-			//#pragma omp parallel for // das verlangsamt alles enorm unter windows! (komisch ...)
-			for(atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++) {
-				// fill the solvent atoms in reverse into the array ...
-				int sortedVolumeIdx = atomCount - (atomCntColor+(atomIdx-firstAtomIndex)+1);
-				float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
-				float *solventAtomColor = &updatVolumeTextureColors[sortedVolumeIdx*3];
-				float *interPos = &this->atomPosInterPtr[atomIdx*3];
-				const float *clr = &atomColorTablePtr[atomIdx*3];
-				atomPos[0] = (interPos[0] + this->translation.X()) * this->scale;
-				atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
-				atomPos[2] = (interPos[2] + this->translation.Z()) * this->scale;
-				atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
-				solventAtomColor[0] = clr[0];
-				solventAtomColor[1] = clr[1];
-				solventAtomColor[2] = clr[2];
+			if (coloringModeVolSurf == VOLCM_SolventConcentration) {
+				/* solvent (creates volume coloring ...) */
+				int atomIdx;
+				//#pragma omp parallel for // das verlangsamt alles enorm unter windows! (komisch ...)
+				for(atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++) {
+					// fill the solvent atoms in reverse into the array ...
+					int sortedVolumeIdx = atomCount - (atomCntColor+(atomIdx-firstAtomIndex)+1);
+					float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
+					float *solventAtomColor = &updatVolumeTextureColors[sortedVolumeIdx*3];
+					float *interPos = &this->atomPosInterPtr[atomIdx*3];
+					const float *clr = &atomColorTablePtr[atomIdx*3];
+					atomPos[0] = (interPos[0] + this->translation.X()) * this->scale;
+					atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
+					atomPos[2] = (interPos[2] + this->translation.Z()) * this->scale;
+					atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
+					solventAtomColor[0] = clr[0];
+					solventAtomColor[1] = clr[1];
+					solventAtomColor[2] = clr[2];
+				}
+				atomCntColor += (lastAtomIndx - firstAtomIndex);
 			}
-			atomCntColor += (lastAtomIndx - firstAtomIndex);
 		} else {
 			/* not solvent (creates volume) */
 			int atomIdx;
