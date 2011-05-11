@@ -298,8 +298,6 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
                     continue;
             }
 
-            ::glColor3ub(255, 0, 0); // TODO: DEBUG, remove me!
-
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
             glDisableClientState(GL_COLOR_ARRAY);

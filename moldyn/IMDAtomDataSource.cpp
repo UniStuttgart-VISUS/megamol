@@ -786,6 +786,12 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
         dirXColNameSlot("dir::x", ""),
         dirYColNameSlot("dir::y", ""),
         dirZColNameSlot("dir::z", ""),
+        dircolourModeSlot("dir::colmode", "The colouring option"),
+        dircolourSlot("dir::col", "The default colour to be used for the \"const\" colour mode"),
+        dircolourColumnSlot("dir::colcolumn", "The data column used for the \"column\" colour mode"),
+        dirautoColumnRangeSlot("dir::autoColumnRange", "Whether or not to automatically calculate the column value range"),
+        dirminColumnValSlot("dir::minColumnValue", "The minimum value for the colour mapping of the column"),
+        dirmaxColumnValSlot("dir::maxColumnValue", "The maximum value for the colour mapping of the column"),
         posData(), colData(), headerMinX(0.0f), headerMinY(0.0f),
         headerMinZ(0.0f), headerMaxX(1.0f), headerMaxY(1.0f),
         headerMaxZ(1.0f), minX(0.0f), minY(0.0f), minZ(0.0f), maxX(1.0f),
@@ -847,6 +853,22 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
     this->MakeSlotAvailable(&this->dirYColNameSlot);
     this->dirZColNameSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->dirZColNameSlot);
+    cm = new param::EnumParam(1);
+    cm->SetTypePair(0, "const");
+    cm->SetTypePair(1, "column");
+    this->dircolourModeSlot << cm;
+    this->MakeSlotAvailable(&this->dircolourModeSlot);
+    this->dircolourSlot << new param::StringParam("Silver");
+    this->dircolourSlot.ForceSetDirty();
+    this->MakeSlotAvailable(&this->dircolourSlot);
+    this->dircolourColumnSlot << new param::StringParam("0");
+    this->MakeSlotAvailable(&this->dircolourColumnSlot);
+    this->dirautoColumnRangeSlot << new param::BoolParam(true);
+    this->MakeSlotAvailable(&this->dirautoColumnRangeSlot);
+    this->dirminColumnValSlot << new param::FloatParam(0.0f);
+    this->MakeSlotAvailable(&this->dirminColumnValSlot);
+    this->dirmaxColumnValSlot << new param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->dirmaxColumnValSlot);
 
 }
 
@@ -902,6 +924,20 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
     if ((colMode == 1) && (this->colData.GetSize() == 0)) {
         colMode = 0;
     }
+    if (this->dircolourSlot.IsDirty()) {
+        this->dircolourSlot.ResetDirty();
+        float r, g, b;
+        if (utility::ColourParser::FromString(this->dircolourSlot.Param<param::StringParam>()->Value(), r, g, b)) {
+            this->dirdefCol[0] = static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(r * 255.0f), 0, 255));
+            this->dirdefCol[1] = static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(g * 255.0f), 0, 255));
+            this->dirdefCol[2] = static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(b * 255.0f), 0, 255));
+        } else {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to parse default dir::colour \"%s\"\n",
+                vislib::StringA(this->dircolourSlot.Param<param::StringParam>()->Value()).PeekBuffer());
+        }
+    }
+    int dircolMode = this->dircolourModeSlot.Param<param::EnumParam>()->Value();
 
     if (mpdc != NULL) {
         mpdc->SetFrameID(0);
@@ -943,21 +979,21 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
             dpdc->SetFrameID(0);
             dpdc->SetDataHash(this->datahash);
             dpdc->SetParticleListCount(1); // For the moment
-            dpdc->AccessParticles(0).SetGlobalColour(this->defCol[0], this->defCol[1], this->defCol[2]);
+            dpdc->AccessParticles(0).SetGlobalColour(this->dirdefCol[0], this->dirdefCol[1], this->dirdefCol[2]);
             dpdc->AccessParticles(0).SetGlobalRadius(this->radiusSlot.Param<param::FloatParam>()->Value());
             dpdc->AccessParticles(0).SetCount(this->posData.GetSize() / (3 * sizeof(float)));
 
-            switch (colMode) {
+            switch (dircolMode) {
                 case 0:
                     dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
                     break;
                 case 1:
-                    if (this->autoColumnRangeSlot.Param<param::BoolParam>()->Value()) {
+                    if (this->dirautoColumnRangeSlot.Param<param::BoolParam>()->Value()) {
                         dpdc->AccessParticles(0).SetColourMapIndexValues(this->minC, this->maxC);
                     } else {
                         dpdc->AccessParticles(0).SetColourMapIndexValues(
-                            this->minColumnValSlot.Param<param::FloatParam>()->Value(),
-                            this->maxColumnValSlot.Param<param::FloatParam>()->Value());
+                            this->dirminColumnValSlot.Param<param::FloatParam>()->Value(),
+                            this->dirmaxColumnValSlot.Param<param::FloatParam>()->Value());
                     }
                     dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I, this->colData.As<void>());
                     break;
@@ -979,9 +1015,9 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
             dpdc->SetFrameID(0);
             dpdc->SetDataHash(this->datahash);
             dpdc->SetParticleListCount(1); // For the moment
-            dpdc->AccessParticles(0).SetGlobalColour(this->defCol[0], this->defCol[1], this->defCol[2]);
+            dpdc->AccessParticles(0).SetGlobalColour(this->dirdefCol[0], this->dirdefCol[1], this->dirdefCol[2]);
             dpdc->AccessParticles(0).SetGlobalRadius(this->radiusSlot.Param<param::FloatParam>()->Value());
-            unsigned int fpp = (colMode == 1) ? 7 : 6; // floats per particle
+            unsigned int fpp = (dircolMode == 1) ? 7 : 6; // floats per particle
             dpdc->AccessParticles(0).SetCount(this->allDirData.GetSize() / (fpp * sizeof(float)));
             if (dpdc->AccessParticles(0).GetCount() == 0) {
                 dpdc->AccessParticles(0).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_NONE, NULL);
@@ -990,13 +1026,13 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
             } else {
                 dpdc->AccessParticles(0).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                     this->allDirData, fpp * sizeof(float));
-                if (colMode == 1) {
-                    if (this->autoColumnRangeSlot.Param<param::BoolParam>()->Value()) {
+                if (dircolMode == 1) {
+                    if (this->dirautoColumnRangeSlot.Param<param::BoolParam>()->Value()) {
                         dpdc->AccessParticles(0).SetColourMapIndexValues(this->minC, this->maxC);
                     } else {
                         dpdc->AccessParticles(0).SetColourMapIndexValues(
-                            this->minColumnValSlot.Param<param::FloatParam>()->Value(),
-                            this->maxColumnValSlot.Param<param::FloatParam>()->Value());
+                            this->dirminColumnValSlot.Param<param::FloatParam>()->Value(),
+                            this->dirmaxColumnValSlot.Param<param::FloatParam>()->Value());
                     }
                     dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
                         this->allDirData.At(3 * sizeof(float)), fpp * sizeof(float));
@@ -1004,7 +1040,7 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
                     dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
                 }
                 dpdc->AccessParticles(0).SetDirData(DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
-                    this->allDirData.At(((colMode == 1) ? 4 : 3) * sizeof(float)), fpp * sizeof(float));
+                    this->allDirData.At(((dircolMode == 1) ? 4 : 3) * sizeof(float)), fpp * sizeof(float));
             }
             dpdc->SetUnlocker(NULL);
 
@@ -1078,6 +1114,8 @@ void moldyn::IMDAtomDataSource::assertData(void) {
             && !this->dirXColNameSlot.IsDirty()
             && !this->dirYColNameSlot.IsDirty()
             && !this->dirZColNameSlot.IsDirty()
+            && !this->dircolourModeSlot.IsDirty()
+            && !this->dircolourColumnSlot.IsDirty()
         ) return;
     this->filenameSlot.ResetDirty();
     this->colourModeSlot.ResetDirty();
@@ -1086,6 +1124,8 @@ void moldyn::IMDAtomDataSource::assertData(void) {
     this->dirXColNameSlot.ResetDirty();
     this->dirYColNameSlot.ResetDirty();
     this->dirZColNameSlot.ResetDirty();
+    this->dircolourModeSlot.ResetDirty();
+    this->dircolourColumnSlot.ResetDirty();
 
     this->clear();
 
@@ -1399,10 +1439,11 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
     bool fail = false;
     float x = 0.0f, y = 0.0f, z = 0.0f;
     bool first = true;
-    float c = 0.0f;
+    float c = 0.0f, dc = 0.0f;
     float dx = 0.0f, dy = 0.0f, dz = 0.0f;
     unsigned int column;
     unsigned int colcolumn = UINT_MAX;
+    unsigned int dircolcolumn = UINT_MAX;
 
     vislib::StringA dirXColName = this->dirXColNameSlot.Param<param::StringParam>()->Value();
     vislib::StringA dirYColName = this->dirYColNameSlot.Param<param::StringParam>()->Value();
@@ -1458,40 +1499,83 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
         }
     }
 
+    if (this->dircolourModeSlot.Param<param::EnumParam>()->Value() == 1) {
+        // column colouring mode
+        vislib::StringA dircolcolname(this->dircolourColumnSlot.Param<param::StringParam>()->Value());
+        // 1. exact match
+        for (SIZE_T i = 0; i < header.captions.Count(); i++) {
+            if (header.captions[i].Equals(dircolcolname)) {
+                dircolcolumn = static_cast<unsigned int>(i);
+                break;
+            }
+        }
+        if (dircolcolumn == UINT_MAX) {
+            // 2. caseless match
+            for (SIZE_T i = 0; i < header.captions.Count(); i++) {
+                if (header.captions[i].Equals(dircolcolname, false)) {
+                    dircolcolumn = static_cast<unsigned int>(i);
+                    break;
+                }
+            }
+        }
+        if (dircolcolumn == UINT_MAX) {
+            // 3. index
+            try {
+                dircolcolumn = vislib::CharTraitsA::ParseInt(dircolcolname);
+                if (dircolcolumn >= static_cast<unsigned int>(header.captions.Count())) {
+                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                        "The parsed dir colouring column index is out of range (%u not in 0..%d)\n",
+                        dircolcolumn, static_cast<int>(header.captions.Count()) - 1);
+                    dircolcolumn = UINT_MAX;
+                }
+            } catch(...) {
+                dircolcolumn = UINT_MAX;
+            }
+        }
+        if (dircolcolumn == UINT_MAX) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Failed to parse dir colour column selection: %s\n",
+                dircolcolname.PeekBuffer());
+        }
+    }
+
     while (!fail) {
         column = 0;
 
         if (header.id) {
-            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol)){
+            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol) || (column == dircolcolumn)){
                 float f = static_cast<float>(reader.ReadInt(fail));
                 if (column == colcolumn) c = f;
                 if (column == dirXCol) dx = f;
                 if (column == dirYCol) dy = f;
                 if (column == dirZCol) dz = f;
+                if (column == dircolcolumn) dc = f;
             } else {
                 reader.SkipInt(fail);
             }
             column++;
         }
         if (header.type) {
-            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol)){
+            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol) || (column == dircolcolumn)){
                 float f = static_cast<float>(reader.ReadInt(fail));
                 if (column == colcolumn) c = f;
                 if (column == dirXCol) dx = f;
                 if (column == dirYCol) dy = f;
                 if (column == dirZCol) dz = f;
+                if (column == dircolcolumn) dc = f;
             } else {
                 reader.SkipInt(fail);
             }
             column++;
         }
         if (header.mass) {
-            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol)){
+            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol) || (column == dircolcolumn)){
                 float f = reader.ReadFloat(fail);
                 if (column == colcolumn) c = f;
                 if (column == dirXCol) dx = f;
                 if (column == dirYCol) dy = f;
                 if (column == dirZCol) dz = f;
+                if (column == dircolcolumn) dc = f;
             } else {
                 reader.SkipFloat(fail);
             }
@@ -1504,6 +1588,7 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
                 if (column == dirXCol) dx = x;
                 if (column == dirYCol) dy = x;
                 if (column == dirZCol) dz = x;
+                if (column == dircolcolumn) dc = x;
             }
             if (i == 1) {
                 y = reader.ReadFloat(fail);
@@ -1511,6 +1596,7 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
                 if (column == dirXCol) dx = y;
                 if (column == dirYCol) dy = y;
                 if (column == dirZCol) dz = y;
+                if (column == dircolcolumn) dc = y;
             }
             if (i == 2) {
                 z = reader.ReadFloat(fail);
@@ -1518,14 +1604,16 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
                 if (column == dirXCol) dx = z;
                 if (column == dirYCol) dy = z;
                 if (column == dirZCol) dz = z;
+                if (column == dircolcolumn) dc = z;
             }
             if (i >= 3) {
-                if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol)){
+                if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol) || (column == dircolcolumn)){
                     float f = reader.ReadFloat(fail);
                     if (column == colcolumn) c = f;
                     if (column == dirXCol) dx = f;
                     if (column == dirYCol) dy = f;
                     if (column == dirZCol) dz = f;
+                    if (column == dircolcolumn) dc = f;
                 } else {
                     reader.SkipFloat(fail);
                 }
@@ -1533,24 +1621,26 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
             column++;
         }
         for (int i = 0; i < header.vel; i++) {
-            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol)){
+            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol) || (column == dircolcolumn)){
                 float f = reader.ReadFloat(fail);
                 if (column == colcolumn) c = f;
                 if (column == dirXCol) dx = f;
                 if (column == dirYCol) dy = f;
                 if (column == dirZCol) dz = f;
+                if (column == dircolcolumn) dc = f;
             } else {
                 reader.SkipFloat(fail);
             }
             column++;
         }
         for (int i = 0; i < header.dat; i++) {
-            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol)){
+            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol) || (column == dircolcolumn)){
                 float f = reader.ReadFloat(fail);
                 if (column == colcolumn) c = f;
                 if (column == dirXCol) dx = f;
                 if (column == dirYCol) dy = f;
                 if (column == dirZCol) dz = f;
+                if (column == dircolcolumn) dc = f;
             } else {
                 reader.SkipFloat(fail);
             }
@@ -1576,6 +1666,10 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
                 if (this->minC > c) this->minC = c; else
                 if (this->maxC < c) this->maxC = c;
             }
+            if (dircolcolumn != UINT_MAX) {
+                if (this->minC > dc) this->minC = dc; else
+                if (this->maxC < dc) this->maxC = dc;
+            }
 
             if (loadDir) {
                 if (splitDir) {
@@ -1586,12 +1680,14 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
                         if (colcolumn != UINT_MAX) col << c;
                     } else {
                         dir << x << y << z;
-                        if (colcolumn != UINT_MAX) dir << c;
+                        if (dircolcolumn != UINT_MAX) dir << dc;
+                        else if (colcolumn != UINT_MAX) dir << c;
                         dir << dx << dy << dz;
                     }
                 } else {
                     dir << x << y << z;
-                    if (colcolumn != UINT_MAX) dir << c;
+                    if (dircolcolumn != UINT_MAX) dir << dc;
+                    else if (colcolumn != UINT_MAX) dir << c;
                     dir << dx << dy << dz;
                 }
             } else {

@@ -240,6 +240,14 @@ namespace moldyn {
         param::ParamSlot dirYColNameSlot;
         param::ParamSlot dirZColNameSlot;
 
+        param::ParamSlot dircolourModeSlot;
+        param::ParamSlot dircolourSlot;
+        param::ParamSlot dircolourColumnSlot;
+        param::ParamSlot dirautoColumnRangeSlot;
+        param::ParamSlot dirminColumnValSlot;
+        param::ParamSlot dirmaxColumnValSlot;
+        unsigned char dirdefCol[3];
+
         /** The xyz position data */
         vislib::RawStorage posData;
 
