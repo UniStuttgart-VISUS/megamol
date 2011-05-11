@@ -60,6 +60,8 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 		coloringModeSolventParam ( "coloringModeSolvent", "solvent coloring mode" ),
 		coloringModePolymerParam ( "coloringModePolymer", "polymer coloring node" ),
 		coloringModeVolSurfParam ( "coloringModeVolSurf", "volume surface coloring mode"),
+		colorFilterRadiusParam( "colorFilterRadius", "color filter radius"),
+		colorIntensityScaleParam( "colorIntensityScale", "color intensity scale"),
 		volIsoValue1Param( "volIsoValue1", "First isovalue for isosurface rendering"),
 		//volIsoValue2Param( "volIsoValue2", "Second isovalue for isosurface rendering"),
 		volFilterRadiusParam( "volFilterRadius", "Filter Radius for volume generation"),
@@ -133,11 +135,16 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 	this->MakeSlotAvailable( &this->coloringModeSolventParam );
 
 	param::EnumParam *isoSurfCMEnum = new param::EnumParam (VOLCM_SolventConcentration);
-	isoSurfCMEnum->SetTypePair(VOLCM_SolventConcentration, "solvent concentration");
-	isoSurfCMEnum->SetTypePair(VOLCM_HydrogenBonds, "hydrogen Bonds");
-	isoSurfCMEnum->SetTypePair(VOlCM_HydrogenBondStats, "hydr. bond statistics");
+	isoSurfCMEnum->SetTypePair(VOLCM_SolventConcentration, "SolventConcentration");
+	isoSurfCMEnum->SetTypePair(VOLCM_HydrogenBonds, "HydrogenBonds");
+	isoSurfCMEnum->SetTypePair(VOlCM_HydrogenBondStats, "HydrogenBondStats");
 	this->coloringModeVolSurfParam << isoSurfCMEnum;
 	this->MakeSlotAvailable( &this->coloringModeVolSurfParam );
+
+	this->colorFilterRadiusParam.SetParameter( new param::FloatParam(this->volFilterRadius, 0.0f));
+	this->MakeSlotAvailable( &this->colorFilterRadiusParam );
+	this->colorIntensityScaleParam.SetParameter( new param::FloatParam(1.0f, 0.0f));
+	this->MakeSlotAvailable( &this->colorIntensityScaleParam );
 
 	// --- set up parameters for isovalues ---
 	this->volIsoValue1Param.SetParameter( new param::FloatParam( this->isoValue1) );
@@ -1355,8 +1362,16 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call,
 		this->coloringModeSolventParam.ResetDirty();
 		this->coloringModePolymerParam.ResetDirty();
 		this->coloringModeVolSurfParam.ResetDirty();
+		/* hydrogen statistics map surface by residue color -> only residue coloring makes sense for solvent here */
+		if (this->coloringModeVolSurfParam.Param<param::EnumParam>()->Value() == VOlCM_HydrogenBondStats)
+			this->coloringModeSolventParam.Param<param::EnumParam>()->SetValue(Color::RESIDUE);
 		this->forceUpdateVolumeTexture = true;
 		this->forceUpdateColoringMode = true;
+	}
+	if (this->colorIntensityScaleParam.IsDirty() || this->colorFilterRadiusParam.IsDirty()) {
+		this->colorIntensityScaleParam.ResetDirty();
+		this->colorFilterRadiusParam.ResetDirty();
+		this->forceUpdateVolumeTexture = true;
 	}
 	if (this->accumulateColors.IsDirty()) {
 		this->accumulateColors.ResetDirty();
@@ -1856,6 +1871,8 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 	/* sortierung nach atomen die das loesungsmittel bilden und der rest ... atomIdxSol  laeuuft rueckwaerts .. */
 	int atomCntDensity = 0, atomCntColor = 0;
 
+	//float colorScale = this->colorFilterRadiusParam.Param<param::FloatParam>()->Value();
+
 	for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
 		const MolecularDataCall::Residue *residue = residues[residueIdx];
 		int firstAtomIndex = residue->FirstAtomIndex();
@@ -1889,7 +1906,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 				atomPos[1] = ((interPos[1]+interPos2[1])*0.5f + this->translation.Y()) * this->scale;
 				atomPos[2] = ((interPos[2]+interPos2[2])*0.5f + this->translation.Z()) * this->scale;
 				//atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
-				atomPos[3] = mol->AtomHydrogenBondDistance() * this->scale;
+				atomPos[3] = mol->AtomHydrogenBondDistance() * this->scale; // * colorScale;
 				//atomPos[3] = (atomTypes[atomTypeIndices[atomIdx]].Radius()
 				//				+atomTypes[atomTypeIndices[connection]].Radius()) * this->scale * 0.5;
 				solventAtomColor[0] = 1;
@@ -1916,7 +1933,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 				atomPos[0] = (interPos[0] + this->translation.X()) * this->scale;
 				atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
 				atomPos[2] = (interPos[2] + this->translation.Z()) * this->scale;
-				atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
+				atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale; // * colorScale;
 				//atomPos[3] = mol->AtomHydrogenBondDistance() * this->scale;
 
 			// for quick testing mix the three color channels ...
@@ -1952,7 +1969,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 					atomPos[0] = (interPos[0] + this->translation.X()) * this->scale;
 					atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
 					atomPos[2] = (interPos[2] + this->translation.Z()) * this->scale;
-					atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
+					atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale; // * colorScale;
 					solventAtomColor[0] = clr[0];
 					solventAtomColor[1] = clr[1];
 					solventAtomColor[2] = clr[2];
@@ -2011,12 +2028,13 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 	glBindTexture( GL_TEXTURE_3D, this->volumeTex);
 #endif
 
+
 //	vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO, "rendering %d solvent atoms", atomCntColor );
 	vislib::graphics::gl::GLSLShader& volumeColorShader =  coloringByHydroBonds ? this->updateVolumeShaderHBondColor : this->updateVolumeShaderSolventColor;
 	volumeColorShader.Enable();
 		// set shader params
-		glUniform1f( volumeColorShader.ParameterLocation( "filterRadius"), this->volFilterRadius /*2.0*/);
-		glUniform1f( volumeColorShader.ParameterLocation( "densityScale"), this->volDensityScale /*1.0*/);
+		glUniform1f( volumeColorShader.ParameterLocation( "filterRadius"), this->colorFilterRadiusParam.Param<param::FloatParam>()->Value()/*this->volFilterRadius*/);
+		glUniform1f( volumeColorShader.ParameterLocation( "densityScale"), this->colorIntensityScaleParam.Param<param::FloatParam>()->Value()/*this->volDensityScale*/);
 		glUniform3fv( volumeColorShader.ParameterLocation( "scaleVol"), 1, this->volScale);
 		glUniform3fv( volumeColorShader.ParameterLocation( "scaleVolInv"), 1, this->volScaleInv);
 		glUniform3f( volumeColorShader.ParameterLocation( "invVolRes"),
