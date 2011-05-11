@@ -294,7 +294,7 @@ void main() {
     vec3 normal = vec3(0.0, normalize(intersection.yz));
 
     // chose color for lighting
-    vec3 col = vec3(0.75);
+    vec3 col = gl_Color.rgb;
 
     // lighting
     vec3 lightDir = normalize(lightPos.xyz);

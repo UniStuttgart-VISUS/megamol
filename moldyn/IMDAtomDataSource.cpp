@@ -792,6 +792,7 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
         dirautoColumnRangeSlot("dir::autoColumnRange", "Whether or not to automatically calculate the column value range"),
         dirminColumnValSlot("dir::minColumnValue", "The minimum value for the colour mapping of the column"),
         dirmaxColumnValSlot("dir::maxColumnValue", "The maximum value for the colour mapping of the column"),
+        dirradiusSlot("dir::radius", "The radius to be used for the data"),
         posData(), colData(), headerMinX(0.0f), headerMinY(0.0f),
         headerMinZ(0.0f), headerMaxX(1.0f), headerMaxY(1.0f),
         headerMaxZ(1.0f), minX(0.0f), minY(0.0f), minZ(0.0f), maxX(1.0f),
@@ -869,6 +870,8 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
     this->MakeSlotAvailable(&this->dirminColumnValSlot);
     this->dirmaxColumnValSlot << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->dirmaxColumnValSlot);
+    this->dirradiusSlot << new param::FloatParam(0.5f, 0.0000001f);
+    this->MakeSlotAvailable(&this->dirradiusSlot);
 
 }
 
@@ -980,7 +983,7 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
             dpdc->SetDataHash(this->datahash);
             dpdc->SetParticleListCount(1); // For the moment
             dpdc->AccessParticles(0).SetGlobalColour(this->dirdefCol[0], this->dirdefCol[1], this->dirdefCol[2]);
-            dpdc->AccessParticles(0).SetGlobalRadius(this->radiusSlot.Param<param::FloatParam>()->Value());
+            dpdc->AccessParticles(0).SetGlobalRadius(this->dirradiusSlot.Param<param::FloatParam>()->Value());
             dpdc->AccessParticles(0).SetCount(this->posData.GetSize() / (3 * sizeof(float)));
 
             switch (dircolMode) {
@@ -1016,7 +1019,7 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
             dpdc->SetDataHash(this->datahash);
             dpdc->SetParticleListCount(1); // For the moment
             dpdc->AccessParticles(0).SetGlobalColour(this->dirdefCol[0], this->dirdefCol[1], this->dirdefCol[2]);
-            dpdc->AccessParticles(0).SetGlobalRadius(this->radiusSlot.Param<param::FloatParam>()->Value());
+            dpdc->AccessParticles(0).SetGlobalRadius(this->dirradiusSlot.Param<param::FloatParam>()->Value());
             unsigned int fpp = (dircolMode == 1) ? 7 : 6; // floats per particle
             dpdc->AccessParticles(0).SetCount(this->allDirData.GetSize() / (fpp * sizeof(float)));
             if (dpdc->AccessParticles(0).GetCount() == 0) {
@@ -1067,8 +1070,10 @@ bool moldyn::IMDAtomDataSource::getExtentCallback(Call& caller) {
         mpdc->SetDataHash(this->datahash);
         mpdc->SetFrameCount(1);
         mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
-            this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
-            this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
+            this->headerMinX, this->headerMinY, this->headerMinZ,
+            this->headerMaxX, this->headerMaxY, this->headerMaxZ);
+            //this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
+            //this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
         mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
             this->minX - rad, this->minY - rad, this->minZ - rad,
             this->maxX + rad, this->maxY + rad, this->maxZ + rad);
@@ -1076,8 +1081,10 @@ bool moldyn::IMDAtomDataSource::getExtentCallback(Call& caller) {
         dpdc->SetDataHash(this->datahash);
         dpdc->SetFrameCount(1);
         dpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
-            this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
-            this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
+            this->headerMinX, this->headerMinY, this->headerMinZ,
+            this->headerMaxX, this->headerMaxY, this->headerMaxZ);
+            //this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
+            //this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
         dpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
             this->minX - rad, this->minY - rad, this->minZ - rad,
             this->maxX + rad, this->maxY + rad, this->maxZ + rad);
