@@ -1711,6 +1711,10 @@
 				Name="Header Files"
 				>
 				<File
+					RelativePath=".\moldyn\AbstractParticleDataCall.h"
+					>
+				</File>
+				<File
 					RelativePath=".\moldyn\AddParticleColours.h"
 					>
 				</File>
@@ -1720,6 +1724,10 @@
 				</File>
 				<File
 					RelativePath=".\moldyn\DataGridder.h"
+					>
+				</File>
+				<File
+					RelativePath=".\moldyn\DirectionalParticleDataCall.h"
 					>
 				</File>
 				<File
@@ -1783,6 +1791,10 @@
 				Name="Source Files"
 				>
 				<File
+					RelativePath=".\moldyn\AbstractParticleDataCall.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\moldyn\AddParticleColours.cpp"
 					>
 				</File>
@@ -1792,6 +1804,10 @@
 				</File>
 				<File
 					RelativePath=".\moldyn\DataGridder.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\moldyn\DirectionalParticleDataCall.cpp"
 					>
 				</File>
 				<File

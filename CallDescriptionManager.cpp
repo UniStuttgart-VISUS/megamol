@@ -15,6 +15,7 @@
 #include "misc/ExtBezierDataCall.h"
 #include "misc/LinesDataCall.h"
 #include "DataWriterCtrlCall.h"
+#include "moldyn/DirectionalParticleDataCall.h"
 #include "moldyn/MultiParticleDataCall.h"
 #include "moldyn/ParticleGridDataCall.h"
 #include "cluster/CallRegisterAtController.h"
@@ -45,6 +46,7 @@ CallDescriptionManager::Instance() {
         instance->registerAutoDescription<misc::BezierDataCall>();
         instance->registerAutoDescription<misc::ExtBezierDataCall>();
         instance->registerAutoDescription<misc::LinesDataCall>();
+        instance->registerAutoDescription<moldyn::DirectionalParticleDataCall>();
         instance->registerAutoDescription<moldyn::MultiParticleDataCall>();
         instance->registerAutoDescription<moldyn::ParticleGridDataCall>();
         instance->registerAutoDescription<view::CallClipPlane>();
