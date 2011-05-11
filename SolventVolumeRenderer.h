@@ -265,6 +265,8 @@ namespace protein {
 		megamol::core::param::ParamSlot coloringModeSolventParam;
 		megamol::core::param::ParamSlot coloringModePolymerParam;
 		megamol::core::param::ParamSlot coloringModeVolSurfParam;
+		megamol::core::param::ParamSlot colorFilterRadiusParam;
+		megamol::core::param::ParamSlot colorIntensityScaleParam;
 		// parameters for the volume rendering
 		megamol::core::param::ParamSlot volIsoValue1Param;
 		//megamol::core::param::ParamSlot volIsoValue2Param;
