@@ -229,6 +229,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
 
     if (c2 != NULL) {
         unsigned int cial = glGetAttribLocationARB(this->arrowShader, "colIdx");
+        unsigned int tpal = glGetAttribLocationARB(this->arrowShader, "dir");
 
         for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
             DirectionalParticleDataCall::Particles &parts = c2->AccessParticles(i);
@@ -298,11 +299,22 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
                     continue;
             }
 
+            // direction
+            switch (parts.GetDirDataType()) {
+                case DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ:
+                    ::glEnableVertexAttribArrayARB(tpal);
+                    ::glVertexAttribPointerARB(tpal, 3, GL_FLOAT, GL_FALSE, parts.GetDirDataStride(), parts.GetDirData());
+                    break;
+                default:
+                    continue;
+            }
+
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
             glDisableClientState(GL_COLOR_ARRAY);
             glDisableClientState(GL_VERTEX_ARRAY);
             glDisableVertexAttribArrayARB(cial);
+            glDisableVertexAttribArrayARB(tpal);
             glDisable(GL_TEXTURE_1D);
         }
 
