@@ -113,14 +113,14 @@ namespace moldyn {
         /** The call for data */
         CallerSlot getDataSlot;
 
-        ///** The call for Transfer function */
-        //CallerSlot getTFSlot;
+        /** The call for Transfer function */
+        CallerSlot getTFSlot;
 
         ///** The call for clipping plane */
         //CallerSlot getClipPlaneSlot;
 
-        ///** A simple black-to-white transfer function texture as fallback */
-        //unsigned int greyTF;
+        /** A simple black-to-white transfer function texture as fallback */
+        unsigned int greyTF;
 
     };
 

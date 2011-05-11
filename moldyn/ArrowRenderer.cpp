@@ -22,16 +22,16 @@ using namespace megamol::core;
  * moldyn::ArrowRenderer::ArrowRenderer
  */
 moldyn::ArrowRenderer::ArrowRenderer(void) : Renderer3DModule(),
-        arrowShader(), getDataSlot("getdata", "Connects to the data source")/*,
+        arrowShader(), getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
-        getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
-        greyTF(0)*/ {
+        //getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
+        greyTF(0) {
 
     this->getDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    //this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
-    //this->MakeSlotAvailable(&this->getTFSlot);
+    this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
+    this->MakeSlotAvailable(&this->getTFSlot);
 
     //this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
     //this->MakeSlotAvailable(&this->getClipPlaneSlot);
@@ -86,19 +86,18 @@ bool moldyn::ArrowRenderer::create(void) {
         return false;
     }
 
-    //glEnable(GL_TEXTURE_1D);
-    //glGenTextures(1, &this->greyTF);
-    //unsigned char tex[6] = {
-    //    0, 0, 0,  255, 255, 255
-    //};
-    //glBindTexture(GL_TEXTURE_1D, this->greyTF);
-    //glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
-    //glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    //glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    //glBindTexture(GL_TEXTURE_1D, 0);
-
-    //glDisable(GL_TEXTURE_1D);
+    glEnable(GL_TEXTURE_1D);
+    glGenTextures(1, &this->greyTF);
+    unsigned char tex[6] = {
+        0, 0, 0,  255, 255, 255
+    };
+    glBindTexture(GL_TEXTURE_1D, this->greyTF);
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glBindTexture(GL_TEXTURE_1D, 0);
+    glDisable(GL_TEXTURE_1D);
 
     return true;
 }
@@ -155,7 +154,7 @@ bool moldyn::ArrowRenderer::GetExtents(Call& call) {
  */
 void moldyn::ArrowRenderer::release(void) {
     this->arrowShader.Release();
-    //::glDeleteTextures(1, &this->greyTF);
+    ::glDeleteTextures(1, &this->greyTF);
 }
 
 
@@ -257,27 +256,25 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
                     glEnableClientState(GL_COLOR_ARRAY);
                     glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), parts.GetColourData());
                     break;
-                //case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-                //    glEnableVertexAttribArrayARB(cial);
-                //    glVertexAttribPointerARB(cial, 1, GL_FLOAT, GL_FALSE,
-                //        parts.GetColourDataStride(), parts.GetColourData());
+                case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+                    glEnableVertexAttribArrayARB(cial);
+                    glVertexAttribPointerARB(cial, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
 
-                //    glEnable(GL_TEXTURE_1D);
+                    glEnable(GL_TEXTURE_1D);
+                    view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+                    if ((cgtf != NULL) && ((*cgtf)())) {
+                        glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
+                        colTabSize = cgtf->TextureSize();
+                    } else {
+                        glBindTexture(GL_TEXTURE_1D, this->greyTF);
+                        colTabSize = 2;
+                    }
 
-                //    view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-                //    if ((cgtf != NULL) && ((*cgtf)())) {
-                //        glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-                //        colTabSize = cgtf->TextureSize();
-                //    } else {
-                //        glBindTexture(GL_TEXTURE_1D, this->greyTF);
-                //        colTabSize = 2;
-                //    }
-
-                //    glUniform1iARB(this->arrayShader.ParameterLocation("colTab"), 0);
-                //    minC = parts.GetMinColourIndexValue();
-                //    maxC = parts.GetMaxColourIndexValue();
-                //    glColor3ub(127, 127, 127);
-                //} break;
+                    glUniform1iARB(this->arrowShader.ParameterLocation("colTab"), 0);
+                    minC = parts.GetMinColourIndexValue();
+                    maxC = parts.GetMaxColourIndexValue();
+                    glColor3ub(127, 127, 127);
+                } break;
                 default:
                     glColor3ub(127, 127, 127);
                     break;
