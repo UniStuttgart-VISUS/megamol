@@ -30,6 +30,7 @@
 #include "misc/LinesRenderer.h"
 #include "misc/SiffCSplineFitter.h"
 #include "moldyn/AddParticleColours.h"
+#include "moldyn/ArrowRenderer.h"
 #include "moldyn/DataFileSequence.h"
 #include "moldyn/DataGridder.h"
 #include "moldyn/GrimRenderer.h"
@@ -96,6 +97,7 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<misc::LinesRenderer>();
         instance->registerAutoDescription<misc::SiffCSplineFitter>();
         instance->registerAutoDescription<moldyn::AddParticleColours>();
+        instance->registerAutoDescription<moldyn::ArrowRenderer>();
         instance->registerAutoDescription<moldyn::DataFileSequence>();
         instance->registerAutoDescription<moldyn::DataGridder>();
         instance->registerAutoDescription<moldyn::GrimRenderer>();

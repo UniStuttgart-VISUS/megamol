@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "IMDAtomDataSource.h"
 #include <climits>
+#include "DirectionalParticleDataCall.h"
 #include "MultiParticleDataCall.h"
 #include "param/BoolParam.h"
 #include "param/ButtonParam.h"
@@ -788,10 +789,10 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
     this->filenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
 
-    this->getDataSlot.SetCallback("MultiParticleDataCall", "GetData",
-        &IMDAtomDataSource::getDataCallback);
-    this->getDataSlot.SetCallback("MultiParticleDataCall", "GetExtent",
-        &IMDAtomDataSource::getExtentCallback);
+    this->getDataSlot.SetCallback("MultiParticleDataCall", "GetData", &IMDAtomDataSource::getDataCallback);
+    this->getDataSlot.SetCallback("MultiParticleDataCall", "GetExtent", &IMDAtomDataSource::getExtentCallback);
+    this->getDataSlot.SetCallback("DirectionalParticleDataCall", "GetData", &IMDAtomDataSource::getDataCallback);
+    this->getDataSlot.SetCallback("DirectionalParticleDataCall", "GetExtent", &IMDAtomDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->radiusSlot << new param::FloatParam(0.5f, 0.0000001f);
@@ -865,12 +866,10 @@ void moldyn::IMDAtomDataSource::release(void) {
  */
 bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
     MultiParticleDataCall *mpdc = dynamic_cast<MultiParticleDataCall*>(&caller);
-    if (mpdc == NULL) return false;
+    DirectionalParticleDataCall *dpdc = dynamic_cast<DirectionalParticleDataCall*>(&caller);
+    if ((mpdc == NULL) && (dpdc == NULL)) return false;
     this->assertData();
 
-    mpdc->SetFrameID(0);
-    mpdc->SetDataHash(this->datahash);
-    mpdc->SetParticleListCount(1); // For the moment
     if (this->colourSlot.IsDirty()) {
         this->colourSlot.ResetDirty();
         float r, g, b;
@@ -884,49 +883,85 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
                 vislib::StringA(this->colourSlot.Param<param::StringParam>()->Value()).PeekBuffer());
         }
     }
-    mpdc->AccessParticles(0).SetGlobalColour(
-        this->defCol[0], this->defCol[1], this->defCol[2]);
-    mpdc->AccessParticles(0).SetGlobalRadius(
-        this->radiusSlot.Param<param::FloatParam>()->Value());
-
-    mpdc->AccessParticles(0).SetCount(
-        this->posData.GetSize() / (3 * sizeof(float)));
-
     int colMode = this->colourModeSlot.Param<param::EnumParam>()->Value();
     if ((colMode == 1) && (this->colData.GetSize() == 0)) {
         colMode = 0;
     }
-    switch (colMode) {
-        case 0:
-            mpdc->AccessParticles(0).SetColourData(
-                MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
-            break;
-        case 1:
-            if (this->autoColumnRangeSlot.Param<param::BoolParam>()->Value()) {
-                mpdc->AccessParticles(0).SetColourMapIndexValues(this->minC, this->maxC);
-            } else {
-                mpdc->AccessParticles(0).SetColourMapIndexValues(
-                    this->minColumnValSlot.Param<param::FloatParam>()->Value(),
-                    this->maxColumnValSlot.Param<param::FloatParam>()->Value());
-            }
-            mpdc->AccessParticles(0).SetColourData(
-                MultiParticleDataCall::Particles::COLDATA_FLOAT_I, this->colData.As<void>());
-            break;
-        default:
-            mpdc->AccessParticles(0).SetColourData( // some internal error
-                MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
-            break;
-    }
 
-    if (!this->posData.IsEmpty()) {
-        mpdc->AccessParticles(0).SetVertexData(
-            MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
-            this->posData.As<void>());
-    } else {
-        mpdc->AccessParticles(0).SetVertexData(
-            MultiParticleDataCall::Particles::VERTDATA_NONE, NULL);
+    if (mpdc != NULL) {
+        mpdc->SetFrameID(0);
+        mpdc->SetDataHash(this->datahash);
+        mpdc->SetParticleListCount(1); // For the moment
+        mpdc->AccessParticles(0).SetGlobalColour(this->defCol[0], this->defCol[1], this->defCol[2]);
+        mpdc->AccessParticles(0).SetGlobalRadius(this->radiusSlot.Param<param::FloatParam>()->Value());
+        mpdc->AccessParticles(0).SetCount(this->posData.GetSize() / (3 * sizeof(float)));
+
+        switch (colMode) {
+            case 0:
+                mpdc->AccessParticles(0).SetColourData(MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+                break;
+            case 1:
+                if (this->autoColumnRangeSlot.Param<param::BoolParam>()->Value()) {
+                    mpdc->AccessParticles(0).SetColourMapIndexValues(this->minC, this->maxC);
+                } else {
+                    mpdc->AccessParticles(0).SetColourMapIndexValues(
+                        this->minColumnValSlot.Param<param::FloatParam>()->Value(),
+                        this->maxColumnValSlot.Param<param::FloatParam>()->Value());
+                }
+                mpdc->AccessParticles(0).SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, this->colData.As<void>());
+                break;
+            default:
+                mpdc->AccessParticles(0).SetColourData( // some internal error
+                    MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+                break;
+        }
+
+        if (!this->posData.IsEmpty()) {
+            mpdc->AccessParticles(0).SetVertexData(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->posData.As<void>());
+        } else {
+            mpdc->AccessParticles(0).SetVertexData(MultiParticleDataCall::Particles::VERTDATA_NONE, NULL);
+        }
+        mpdc->SetUnlocker(NULL);
+
+    } else if (dpdc != NULL) {
+        dpdc->SetFrameID(0);
+        dpdc->SetDataHash(this->datahash);
+        dpdc->SetParticleListCount(1); // For the moment
+        dpdc->AccessParticles(0).SetGlobalColour(this->defCol[0], this->defCol[1], this->defCol[2]);
+        dpdc->AccessParticles(0).SetGlobalRadius(this->radiusSlot.Param<param::FloatParam>()->Value());
+        dpdc->AccessParticles(0).SetCount(this->posData.GetSize() / (3 * sizeof(float)));
+
+        switch (colMode) {
+            case 0:
+                dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
+                break;
+            case 1:
+                if (this->autoColumnRangeSlot.Param<param::BoolParam>()->Value()) {
+                    dpdc->AccessParticles(0).SetColourMapIndexValues(this->minC, this->maxC);
+                } else {
+                    dpdc->AccessParticles(0).SetColourMapIndexValues(
+                        this->minColumnValSlot.Param<param::FloatParam>()->Value(),
+                        this->maxColumnValSlot.Param<param::FloatParam>()->Value());
+                }
+                dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I, this->colData.As<void>());
+                break;
+            default:
+                dpdc->AccessParticles(0).SetColourData( // some internal error
+                    DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
+                break;
+        }
+
+        if (!this->posData.IsEmpty()) {
+            dpdc->AccessParticles(0).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->posData.As<void>());
+        } else {
+            dpdc->AccessParticles(0).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_NONE, NULL);
+        }
+
+        // TODO: Implement
+        dpdc->AccessParticles(0).SetDirData(DirectionalParticleDataCall::Particles::DIRDATA_NONE, NULL);
+
+        dpdc->SetUnlocker(NULL);
     }
-    mpdc->SetUnlocker(NULL);
 
     return true;
 }
@@ -937,19 +972,31 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
  */
 bool moldyn::IMDAtomDataSource::getExtentCallback(Call& caller) {
     MultiParticleDataCall *mpdc = dynamic_cast<MultiParticleDataCall*>(&caller);
-    if (mpdc == NULL) return false;
+    DirectionalParticleDataCall *dpdc = dynamic_cast<DirectionalParticleDataCall*>(&caller);
+    if ((mpdc == NULL) && (dpdc == NULL)) return false;
     this->assertData();
 
-    mpdc->SetDataHash(this->datahash);
     float rad = this->radiusSlot.Param<param::FloatParam>()->Value();
 
-    mpdc->SetFrameCount(1);
-    mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
-        this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
-        this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
-    mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
-        this->minX - rad, this->minY - rad, this->minZ - rad,
-        this->maxX + rad, this->maxY + rad, this->maxZ + rad);
+    if (mpdc != NULL) {
+        mpdc->SetDataHash(this->datahash);
+        mpdc->SetFrameCount(1);
+        mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
+            this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
+            this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
+        mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
+            this->minX - rad, this->minY - rad, this->minZ - rad,
+            this->maxX + rad, this->maxY + rad, this->maxZ + rad);
+    } else if (dpdc != NULL) {
+        dpdc->SetDataHash(this->datahash);
+        dpdc->SetFrameCount(1);
+        dpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
+            this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
+            this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
+        dpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
+            this->minX - rad, this->minY - rad, this->minZ - rad,
+            this->maxX + rad, this->maxY + rad, this->maxZ + rad);
+    }
 
     return true;
 }

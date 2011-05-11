@@ -1719,6 +1719,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\moldyn\ArrowRenderer.h"
+					>
+				</File>
+				<File
 					RelativePath=".\moldyn\DataFileSequence.h"
 					>
 				</File>
@@ -1796,6 +1800,10 @@
 				</File>
 				<File
 					RelativePath=".\moldyn\AddParticleColours.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\moldyn\ArrowRenderer.cpp"
 					>
 				</File>
 				<File
