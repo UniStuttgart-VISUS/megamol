@@ -15,9 +15,9 @@ using namespace megamol::core;
 
 
 /*
- * moldyn::MultiParticleDataCall::Particles::Particles
+ * moldyn::SimpleSphericalParticles::SimpleSphericalParticles
  */
-moldyn::MultiParticleDataCall::Particles::Particles(void)
+moldyn::SimpleSphericalParticles::SimpleSphericalParticles(void)
         : colDataType(COLDATA_NONE), colPtr(NULL), colStride(0), count(0),
         maxColI(1.0f), minColI(0.0f), radius(0.5f),
         vertDataType(VERTDATA_NONE), vertPtr(NULL), vertStride(0) {
@@ -29,18 +29,18 @@ moldyn::MultiParticleDataCall::Particles::Particles(void)
 
 
 /*
- * moldyn::MultiParticleDataCall::Particles::Particles
+ * moldyn::SimpleSphericalParticles::SimpleSphericalParticles
  */
-moldyn::MultiParticleDataCall::Particles::Particles(
-        const moldyn::MultiParticleDataCall::Particles& src) {
+moldyn::SimpleSphericalParticles::SimpleSphericalParticles(
+        const moldyn::SimpleSphericalParticles& src) {
     *this = src;
 }
 
 
 /*
- * moldyn::MultiParticleDataCall::Particles::~Particles
+ * moldyn::SimpleSphericalParticles::~SimpleSphericalParticles
  */
-moldyn::MultiParticleDataCall::Particles::~Particles(void) {
+moldyn::SimpleSphericalParticles::~SimpleSphericalParticles(void) {
     this->colDataType = COLDATA_NONE;
     this->colPtr = NULL; // DO NOT DELETE
     this->count = 0;
@@ -50,11 +50,11 @@ moldyn::MultiParticleDataCall::Particles::~Particles(void) {
 
 
 /*
- * moldyn::MultiParticleDataCall::Particles::operator=
+ * moldyn::SimpleSphericalParticles::operator=
  */
-moldyn::MultiParticleDataCall::Particles&
-moldyn::MultiParticleDataCall::Particles::operator=(
-        const moldyn::MultiParticleDataCall::Particles& rhs) {
+moldyn::SimpleSphericalParticles&
+moldyn::SimpleSphericalParticles::operator=(
+        const moldyn::SimpleSphericalParticles& rhs) {
     this->col[0] = rhs.col[0];
     this->col[1] = rhs.col[1];
     this->col[2] = rhs.col[2];
@@ -74,10 +74,10 @@ moldyn::MultiParticleDataCall::Particles::operator=(
 
 
 /*
- * moldyn::MultiParticleDataCall::Particles::operator==
+ * moldyn::SimpleSphericalParticles::operator==
  */
-bool moldyn::MultiParticleDataCall::Particles::operator==(
-        const moldyn::MultiParticleDataCall::Particles& rhs) const {
+bool moldyn::SimpleSphericalParticles::operator==(
+        const moldyn::SimpleSphericalParticles& rhs) const {
     return ((this->col[0] == rhs.col[0])
         && (this->col[1] == rhs.col[1])
         && (this->col[2] == rhs.col[2])
@@ -101,7 +101,7 @@ bool moldyn::MultiParticleDataCall::Particles::operator==(
  * moldyn::MultiParticleDataCall::MultiParticleDataCall
  */
 moldyn::MultiParticleDataCall::MultiParticleDataCall(void)
-        : AbstractGetData3DCall(), lists() {
+        : AbstractParticleDataCall<SimpleSphericalParticles>() {
     // Intentionally empty
 }
 
@@ -110,8 +110,7 @@ moldyn::MultiParticleDataCall::MultiParticleDataCall(void)
  * moldyn::MultiParticleDataCall::~MultiParticleDataCall
  */
 moldyn::MultiParticleDataCall::~MultiParticleDataCall(void) {
-    this->Unlock();
-    this->lists.Clear();
+    // Intentionally empty
 }
 
 
@@ -120,10 +119,6 @@ moldyn::MultiParticleDataCall::~MultiParticleDataCall(void) {
  */
 moldyn::MultiParticleDataCall& moldyn::MultiParticleDataCall::operator=(
         const moldyn::MultiParticleDataCall& rhs) {
-    AbstractGetData3DCall::operator =(rhs);
-    this->lists.SetCount(rhs.lists.Count());
-    for (SIZE_T i = 0; i < this->lists.Count(); i++) {
-        this->lists[i] = rhs.lists[i];
-    }
+    AbstractParticleDataCall<SimpleSphericalParticles>::operator =(rhs);
     return *this;
 }
