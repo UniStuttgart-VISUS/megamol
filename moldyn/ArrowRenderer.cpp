@@ -56,10 +56,10 @@ bool moldyn::ArrowRenderer::create(void) {
 
     vislib::graphics::gl::ShaderSource vert, frag;
 
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("simplesphere::vertex", vert)) {
+    if (!instance()->ShaderSourceFactory().MakeShaderSource("arrow::vertex", vert)) {
         return false;
     }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("simplesphere::fragment", frag)) {
+    if (!instance()->ShaderSourceFactory().MakeShaderSource("arrow::fragment", frag)) {
         return false;
     }
 
