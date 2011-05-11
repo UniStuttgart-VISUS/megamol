@@ -78,6 +78,8 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 		maxGradColorParam( "maxGradColor", "The color for the maximum value for gradient coloring" ),
 		//solventResidues("solventResidues", ";-list of residue names which compose the solvent"),
 		stickRadiusParam( "stickRadius", "The radius for stick rendering"),
+		atomRadiusFactorParam("atomRadiusFactor", "factor for atom sphere radius"),
+		atomSpaceFillingParam("atomSpaceFilling", "render atoms space filling using Van-der-Waals radii"),
 		solventMolThreshold( "solventMolThreshold", "threshold of visible solvent-molecules" ),
 		accumulateColors("accumulateColors", "accumulate color distribution on the volume surface over time"),
 		accumulateVolume("accumulateVolume", "accumulate volume density over time"),
@@ -202,6 +204,13 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 	// fill color table with default values and set the filename param
 	this->stickRadiusParam.SetParameter(new param::FloatParam( 0.3f, 0.0f));
 	this->MakeSlotAvailable( &this->stickRadiusParam);
+
+	this->atomRadiusFactorParam.SetParameter(new param::FloatParam( 1.0f, 0.0f));
+	this->MakeSlotAvailable( &this->atomRadiusFactorParam);
+
+
+	this->atomSpaceFillingParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable( &this->atomSpaceFillingParam);
 
 	// 
 	this->solventMolThreshold.SetParameter(new param::FloatParam( 0.01f, 0.0f));
@@ -815,7 +824,7 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 			scale = 1.0f;
 		glScalef( scale, scale, scale);
 		//cr3d->SetOutputBuffer( &this->proteinFBO); // TODO: Handle incoming buffers!
-		RenderStickSolvent(mol, this->atomPosInterPtr);
+		RenderMolecules(mol, this->atomPosInterPtr);
 
 		RenderHydrogenBounds(mol, this->atomPosInterPtr); // TEST
 	glPopMatrix();
@@ -954,25 +963,25 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 	vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
 	float angle;
 	// loop over all connections and compute cylinder parameters
-	int cnt = 0;
+	unsigned int curCount = 0;
 	// parallelisierung geht hier nicht?! weil es von den dynamischen daten abhaengt an welchem index ein zylinder sitzt?!
 	// (variable 'cnt' haengt von 'hydrogenConnections' ab ...)
 //#pragma omp parallel for private( idx0, idx1, connection, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
-	for (int aIdx = 0; aIdx < mol->AtomCount(); ++aIdx) {
-		int connection = hydrogenConnections[aIdx];
+	for (unsigned int atomIdx = 0; atomIdx < mol->AtomCount(); atomIdx++) {
+		int connection = hydrogenConnections[atomIdx];
 		if (connection == -1)
 			continue;
 
-		if (this->vertCylinders.Count() <= cnt*4) {
-			this->vertCylinders.SetCount( (cnt + 100)*4 );
-			this->quatCylinders.SetCount( (cnt + 100)*4 );
-			this->inParaCylinders.SetCount( (cnt + 100)*2 );
-			this->color1Cylinders.SetCount( (cnt + 100)*3 );
-			this->color2Cylinders.SetCount( (cnt + 100)*3 );
+		if (this->vertCylinders.Count() <= curCount*4) {
+			this->vertCylinders.SetCount( (curCount + 100)*4 );
+			this->quatCylinders.SetCount( (curCount + 100)*4 );
+			this->inParaCylinders.SetCount( (curCount + 100)*2 );
+			this->color1Cylinders.SetCount( (curCount + 100)*3 );
+			this->color2Cylinders.SetCount( (curCount + 100)*3 );
 		}
 
-		int idx0 = aIdx;
-		int idx1 = connection;
+		unsigned int idx0 = atomIdx;
+		unsigned int idx1 = (unsigned)connection;
 
 		vislib::math::Vector<float, 3> firstAtomPos(atomPos+3*idx0), secondAtomPos(atomPos+3*idx1);
 
@@ -986,35 +995,35 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 		// compute the absolute position 'position' of the cylinder (center point)
 		position = firstAtomPos + (dir/2.0f);
 
-		this->inParaCylinders[2*cnt] = stickRadius;
-		this->inParaCylinders[2*cnt+1] = ( firstAtomPos-secondAtomPos).Length();
+		this->inParaCylinders[2*curCount] = stickRadius;
+		this->inParaCylinders[2*curCount+1] = ( firstAtomPos-secondAtomPos).Length();
 
 		// thomasbm: hotfix for jumping molecules near bounding box
-		if(this->inParaCylinders[2*cnt+1] > mol->AtomHydrogenBondDistance() * 1.5f
+		if(this->inParaCylinders[2*curCount+1] > mol->AtomHydrogenBondDistance() * 1.5f
 				/*mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius()*/ ) {
-			this->inParaCylinders[2*cnt+1] = 0;
+			this->inParaCylinders[2*curCount+1] = 0;
 		}
 
-		this->quatCylinders[4*cnt+0] = quatC.GetX();
-		this->quatCylinders[4*cnt+1] = quatC.GetY();
-		this->quatCylinders[4*cnt+2] = quatC.GetZ();
-		this->quatCylinders[4*cnt+3] = quatC.GetW();
+		this->quatCylinders[4*curCount+0] = quatC.GetX();
+		this->quatCylinders[4*curCount+1] = quatC.GetY();
+		this->quatCylinders[4*curCount+2] = quatC.GetZ();
+		this->quatCylinders[4*curCount+3] = quatC.GetW();
 
 		// red at the oxygen/acceptor-part end of the hydrogen bound
-		this->color1Cylinders[3*cnt+0] = 1; // this->atomColorTable[3*idx0+0];
-		this->color1Cylinders[3*cnt+1] = 0; // this->atomColorTable[3*idx0+1];
-		this->color1Cylinders[3*cnt+2] = 0; // this->atomColorTable[3*idx0+2];
+		this->color1Cylinders[3*curCount+0] = 1; // this->atomColorTable[3*idx0+0];
+		this->color1Cylinders[3*curCount+1] = 0; // this->atomColorTable[3*idx0+1];
+		this->color1Cylinders[3*curCount+2] = 0; // this->atomColorTable[3*idx0+2];
 
-		this->color2Cylinders[3*cnt+0] = 1; // this->atomColorTable[3*idx1+0];
-		this->color2Cylinders[3*cnt+1] = 1; // this->atomColorTable[3*idx1+1];
-		this->color2Cylinders[3*cnt+2] = 0; // this->atomColorTable[3*idx1+2];
+		this->color2Cylinders[3*curCount+0] = 1; // this->atomColorTable[3*idx1+0];
+		this->color2Cylinders[3*curCount+1] = 1; // this->atomColorTable[3*idx1+1];
+		this->color2Cylinders[3*curCount+2] = 0; // this->atomColorTable[3*idx1+2];
 
-		this->vertCylinders[4*cnt+0] = position.X();
-		this->vertCylinders[4*cnt+1] = position.Y();
-		this->vertCylinders[4*cnt+2] = position.Z();
-		this->vertCylinders[4*cnt+3] = 0.0f;
+		this->vertCylinders[4*curCount+0] = position.X();
+		this->vertCylinders[4*curCount+1] = position.Y();
+		this->vertCylinders[4*curCount+2] = position.Z();
+		this->vertCylinders[4*curCount+3] = 0.0f;
 
-		cnt++;
+		curCount++;
 	}
 
 	// ---------- actual rendering ----------
@@ -1069,7 +1078,7 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 	glVertexAttribPointerARB( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
 	glVertexAttribPointerARB( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
 	glVertexAttribPointerARB( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
-	glDrawArrays( GL_POINTS, 0, cnt);
+	glDrawArrays( GL_POINTS, 0, curCount);
 	// disable vertex attribute arrays for the attribute locations
 	glDisableVertexAttribArrayARB( this->attribLocInParams);
 	glDisableVertexAttribArrayARB( this->attribLocQuatC);
@@ -1085,7 +1094,7 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 /*
  * Render the molecular data in stick mode. Special case when using solvent rendering: only render solvent molecules near the isosurface between the solvent and the molecule.
  */
-void protein::SolventVolumeRenderer::RenderStickSolvent(/*const*/ MolecularDataCall *mol, const float *atomPos) {
+void protein::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataCall *mol, const float *atomPos) {
 	// ----- prepare stick raycasting -----
 	if (this->vertSpheres.Count() <= mol->AtomCount() * 4) {
 		this->vertSpheres.SetCount( mol->AtomCount() * 4 );
@@ -1096,9 +1105,9 @@ void protein::SolventVolumeRenderer::RenderStickSolvent(/*const*/ MolecularDataC
 		this->color2Cylinders.SetCount( mol->ConnectionCount() * 3);
 	}
 
-	int cnt;
-
 	float stickRadius = this->stickRadiusParam.Param<param::FloatParam>()->Value();
+	float atomRadiusFactor = this->atomRadiusFactorParam.Param<param::FloatParam>()->Value();
+	bool spaceFilling = this->atomSpaceFillingParam.Param<param::BoolParam>()->Value();
 
 	// copy atom pos and radius to vertex array
 	if (this->coloringModeVolSurfParam.Param<param::EnumParam>()->Value() == VOlCM_HydrogenBondStats &&
@@ -1109,77 +1118,79 @@ void protein::SolventVolumeRenderer::RenderStickSolvent(/*const*/ MolecularDataC
 		unsigned int numSolventResidues = mol->AtomSolventResidueCount();
 
 		#pragma omp parallel for
-		for( cnt = 0; cnt < int( mol->AtomCount()); ++cnt ) {
-			this->vertSpheres[4*cnt+0] = atomPos[3*cnt+0];
-			this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
-			this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
+		for (unsigned int atomIdx = 0; atomIdx < mol->AtomCount(); atomIdx++) {
+			this->vertSpheres[4*atomIdx+0] = atomPos[3*atomIdx+0];
+			this->vertSpheres[4*atomIdx+1] = atomPos[3*atomIdx+1];
+			this->vertSpheres[4*atomIdx+2] = atomPos[3*atomIdx+2];
 			int atomStatistics = 0;
-			for(int j = 0; j < numSolventResidues; j++) {
-				atomStatistics += hbStatistics[numSolventResidues*cnt+j];
+			for(unsigned int j = 0; j < numSolventResidues; j++) {
+				atomStatistics += hbStatistics[numSolventResidues*atomIdx+j];
 			}
-			this->vertSpheres[4*cnt+3] = stickRadius + stickRadius*(
+			float radius = (spaceFilling ? mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius() : stickRadius)*atomRadiusFactor;
+			this->vertSpheres[4*atomIdx+3] = radius + radius*(
 					(float)(atomStatistics /*hbStatistics[cnt]*/)*factor);
 		}
 	} else {
 		// render spheres in normal mode (sphere-radius is the same as stick-radius)
 		#pragma omp parallel for
-		for( cnt = 0; cnt < int( mol->AtomCount()); ++cnt ) {
-			this->vertSpheres[4*cnt+0] = atomPos[3*cnt+0];
-			this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
-			this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
-			this->vertSpheres[4*cnt+3] = stickRadius;
+		for (unsigned int atomIdx = 0; atomIdx < mol->AtomCount(); atomIdx++) {
+			this->vertSpheres[4*atomIdx+0] = atomPos[3*atomIdx+0];
+			this->vertSpheres[4*atomIdx+1] = atomPos[3*atomIdx+1];
+			this->vertSpheres[4*atomIdx+2] = atomPos[3*atomIdx+2];
+			this->vertSpheres[4*atomIdx+3] = (spaceFilling ? mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius() : stickRadius)*atomRadiusFactor;
 		}
 	}
 
-	unsigned int idx0, idx1;
-	//vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
-	vislib::math::Quaternion<float> quatC( 0, 0, 0, 1);
-	vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
-	float angle;
-	// loop over all connections and compute cylinder parameters
-#pragma omp parallel for private( idx0, idx1, /*firstAtomPos, secondAtomPos,*/ quatC, tmpVec, ortho, dir, position, angle)
-	for( cnt = 0; cnt < int( mol->ConnectionCount()); ++cnt ) {
-		idx0 = mol->Connection()[2*cnt];
-		idx1 = mol->Connection()[2*cnt+1];
+	/*if (!spaceFilling)*/ {
+		//vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
+		vislib::math::Quaternion<float> quatC( 0, 0, 0, 1);
+		vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
+		float angle;
+		// loop over all connections and compute cylinder parameters
+	#pragma omp parallel for private(quatC, tmpVec, ortho, dir, position, angle)
+		for (unsigned int atomIdx = 0; atomIdx < mol->ConnectionCount(); atomIdx++) {
+			unsigned int idx0 = mol->Connection()[2*atomIdx];
+			unsigned int idx1 = mol->Connection()[2*atomIdx+1];
 
-		vislib::math::Vector<float, 3> firstAtomPos(atomPos+3*idx0), secondAtomPos(atomPos+3*idx1);
+			vislib::math::Vector<float, 3> firstAtomPos(atomPos+3*idx0), secondAtomPos(atomPos+3*idx1);
 
-		// compute the quaternion for the rotation of the cylinder
-		dir = secondAtomPos - firstAtomPos;
-		tmpVec.Set( 1.0f, 0.0f, 0.0f);
-		angle = - tmpVec.Angle( dir);
-		ortho = tmpVec.Cross( dir);
-		ortho.Normalise();
-		quatC.Set( angle, ortho);
-		// compute the absolute position 'position' of the cylinder (center point)
-		position = firstAtomPos + (dir/2.0f);
+			// compute the quaternion for the rotation of the cylinder
+			dir = secondAtomPos - firstAtomPos;
+			tmpVec.Set( 1.0f, 0.0f, 0.0f);
+			angle = - tmpVec.Angle( dir);
+			ortho = tmpVec.Cross( dir);
+			ortho.Normalise();
+			quatC.Set( angle, ortho);
+			// compute the absolute position 'position' of the cylinder (center point)
+			position = firstAtomPos + (dir/2.0f);
 
-		this->inParaCylinders[2*cnt] = stickRadius;
-		this->inParaCylinders[2*cnt+1] = ( firstAtomPos-secondAtomPos).Length();
+			this->inParaCylinders[2*atomIdx] = stickRadius;
+			this->inParaCylinders[2*atomIdx+1] = ( firstAtomPos-secondAtomPos).Length();
 
-		// thomasbm: hotfix for jumping molecules near bounding box
-		if(this->inParaCylinders[2*cnt+1] >
-				mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius() ) {
-			this->inParaCylinders[2*cnt+1] = 0;
+			// thomasbm: hotfix for jumping molecules near bounding box
+			if(this->inParaCylinders[2*atomIdx+1] >
+					mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius() ) {
+				this->inParaCylinders[2*atomIdx+1] = 0;
+			}
+
+			this->quatCylinders[4*atomIdx+0] = quatC.GetX();
+			this->quatCylinders[4*atomIdx+1] = quatC.GetY();
+			this->quatCylinders[4*atomIdx+2] = quatC.GetZ();
+			this->quatCylinders[4*atomIdx+3] = quatC.GetW();
+
+			this->color1Cylinders[3*atomIdx+0] = this->atomColorTable[3*idx0+0];
+			this->color1Cylinders[3*atomIdx+1] = this->atomColorTable[3*idx0+1];
+			this->color1Cylinders[3*atomIdx+2] = this->atomColorTable[3*idx0+2];
+
+			this->color2Cylinders[3*atomIdx+0] = this->atomColorTable[3*idx1+0];
+			this->color2Cylinders[3*atomIdx+1] = this->atomColorTable[3*idx1+1];
+			this->color2Cylinders[3*atomIdx+2] = this->atomColorTable[3*idx1+2];
+
+			this->vertCylinders[4*atomIdx+0] = position.X();
+			this->vertCylinders[4*atomIdx+1] = position.Y();
+			this->vertCylinders[4*atomIdx+2] = position.Z();
+			this->vertCylinders[4*atomIdx+3] = 0.0f;
 		}
-
-		this->quatCylinders[4*cnt+0] = quatC.GetX();
-		this->quatCylinders[4*cnt+1] = quatC.GetY();
-		this->quatCylinders[4*cnt+2] = quatC.GetZ();
-		this->quatCylinders[4*cnt+3] = quatC.GetW();
-
-		this->color1Cylinders[3*cnt+0] = this->atomColorTable[3*idx0+0];
-		this->color1Cylinders[3*cnt+1] = this->atomColorTable[3*idx0+1];
-		this->color1Cylinders[3*cnt+2] = this->atomColorTable[3*idx0+2];
-
-		this->color2Cylinders[3*cnt+0] = this->atomColorTable[3*idx1+0];
-		this->color2Cylinders[3*cnt+1] = this->atomColorTable[3*idx1+1];
-		this->color2Cylinders[3*cnt+2] = this->atomColorTable[3*idx1+2];
-
-		this->vertCylinders[4*cnt+0] = position.X();
-		this->vertCylinders[4*cnt+1] = position.Y();
-		this->vertCylinders[4*cnt+2] = position.Z();
-		this->vertCylinders[4*cnt+3] = 0.0f;
 	}
 
 	// ---------- actual rendering ----------
@@ -1226,42 +1237,44 @@ void protein::SolventVolumeRenderer::RenderStickSolvent(/*const*/ MolecularDataC
 
 
 	// enable cylinder shader
-	this->cylinderSolventShader.Enable();
-	// set shader variables
-	glUniform4fvARB( this->cylinderSolventShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB( this->cylinderSolventShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-	glUniform3fvARB( this->cylinderSolventShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-	glUniform3fvARB( this->cylinderSolventShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-	glUniform1iARB(this->cylinderSolventShader.ParameterLocation("volumeSampler"), 0);
-	glUniform3fvARB(this->cylinderSolventShader.ParameterLocation("minBBox"), 1, bbox.GetOrigin().PeekCoordinates());
-	glUniform3fvARB(this->cylinderSolventShader.ParameterLocation("invBBoxExtend"), 1, invBBoxDimension.PeekComponents() );
-	glUniform1fARB(this->cylinderSolventShader.ParameterLocation("solventMolThreshold"), solventMolThreshold.Param<param::FloatParam>()->Value() );
-	// get the attribute locations
-	attribLocInParams = glGetAttribLocationARB( this->cylinderSolventShader, "inParams");
-	attribLocQuatC = glGetAttribLocationARB( this->cylinderSolventShader, "quatC");
-	attribLocColor1 = glGetAttribLocationARB( this->cylinderSolventShader, "color1");
-	attribLocColor2 = glGetAttribLocationARB( this->cylinderSolventShader, "color2");
-	// enable vertex attribute arrays for the attribute locations
-	glDisableClientState( GL_COLOR_ARRAY);
-	glEnableVertexAttribArrayARB( this->attribLocInParams);
-	glEnableVertexAttribArrayARB( this->attribLocQuatC);
-	glEnableVertexAttribArrayARB( this->attribLocColor1);
-	glEnableVertexAttribArrayARB( this->attribLocColor2);
-	// set vertex and attribute pointers and draw them
-	glVertexPointer( 4, GL_FLOAT, 0, this->vertCylinders.PeekElements());
-	glVertexAttribPointerARB( this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
-	glVertexAttribPointerARB( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
-	glVertexAttribPointerARB( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
-	glVertexAttribPointerARB( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
-	glDrawArrays( GL_POINTS, 0, mol->ConnectionCount());
-	// disable vertex attribute arrays for the attribute locations
-	glDisableVertexAttribArrayARB( this->attribLocInParams);
-	glDisableVertexAttribArrayARB( this->attribLocQuatC);
-	glDisableVertexAttribArrayARB( this->attribLocColor1);
-	glDisableVertexAttribArrayARB( this->attribLocColor2);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	// disable cylinder shader
-	this->cylinderSolventShader.Disable();
+	/*if (!spaceFilling)*/ {
+		this->cylinderSolventShader.Enable();
+		// set shader variables
+		glUniform4fvARB( this->cylinderSolventShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fvARB( this->cylinderSolventShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+		glUniform3fvARB( this->cylinderSolventShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+		glUniform3fvARB( this->cylinderSolventShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+		glUniform1iARB(this->cylinderSolventShader.ParameterLocation("volumeSampler"), 0);
+		glUniform3fvARB(this->cylinderSolventShader.ParameterLocation("minBBox"), 1, bbox.GetOrigin().PeekCoordinates());
+		glUniform3fvARB(this->cylinderSolventShader.ParameterLocation("invBBoxExtend"), 1, invBBoxDimension.PeekComponents() );
+		glUniform1fARB(this->cylinderSolventShader.ParameterLocation("solventMolThreshold"), solventMolThreshold.Param<param::FloatParam>()->Value() );
+		// get the attribute locations
+		attribLocInParams = glGetAttribLocationARB( this->cylinderSolventShader, "inParams");
+		attribLocQuatC = glGetAttribLocationARB( this->cylinderSolventShader, "quatC");
+		attribLocColor1 = glGetAttribLocationARB( this->cylinderSolventShader, "color1");
+		attribLocColor2 = glGetAttribLocationARB( this->cylinderSolventShader, "color2");
+		// enable vertex attribute arrays for the attribute locations
+		glDisableClientState( GL_COLOR_ARRAY);
+		glEnableVertexAttribArrayARB( this->attribLocInParams);
+		glEnableVertexAttribArrayARB( this->attribLocQuatC);
+		glEnableVertexAttribArrayARB( this->attribLocColor1);
+		glEnableVertexAttribArrayARB( this->attribLocColor2);
+		// set vertex and attribute pointers and draw them
+		glVertexPointer( 4, GL_FLOAT, 0, this->vertCylinders.PeekElements());
+		glVertexAttribPointerARB( this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
+		glVertexAttribPointerARB( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
+		glVertexAttribPointerARB( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
+		glVertexAttribPointerARB( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
+		glDrawArrays( GL_POINTS, 0, mol->ConnectionCount());
+		// disable vertex attribute arrays for the attribute locations
+		glDisableVertexAttribArrayARB( this->attribLocInParams);
+		glDisableVertexAttribArrayARB( this->attribLocQuatC);
+		glDisableVertexAttribArrayARB( this->attribLocColor1);
+		glDisableVertexAttribArrayARB( this->attribLocColor2);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		// disable cylinder shader
+		this->cylinderSolventShader.Disable();
+	}
 
 	glBindTexture( GL_TEXTURE_3D, 0 ); // state aufraeumen
 }
@@ -1874,7 +1887,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 
 	//float colorScale = this->colorFilterRadiusParam.Param<param::FloatParam>()->Value();
 
-	for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
+	for (unsigned int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++) {
 		const MolecularDataCall::Residue *residue = residues[residueIdx];
 		int firstAtomIndex = residue->FirstAtomIndex();
 		int lastAtomIndx = residue->FirstAtomIndex() + residue->AtomCount();

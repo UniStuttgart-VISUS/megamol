@@ -95,7 +95,7 @@ namespace protein {
         enum {
         	VOLCM_SolventConcentration,
         	VOLCM_HydrogenBonds,
-        	VOlCM_HydrogenBondStats,
+        	VOlCM_HydrogenBondStats
         };
 
 		/**
@@ -196,7 +196,7 @@ namespace protein {
 		 * Render the molecular data in stick mode.
 		 * Special case when using solvent rendering: only render solvent molecules near the isosurface between the solvent and the molecule.
 		 */
-		void RenderStickSolvent( /*const*/ MolecularDataCall *mol, const float *atomPos);
+		void RenderMolecules( /*const*/ MolecularDataCall *mol, const float *atomPos);
 
 		/*
 		 * Render hydrogen bounds
@@ -281,6 +281,8 @@ namespace protein {
         megamol::core::param::ParamSlot interpolParam;
         /** parameter slot for stick radius */
         megamol::core::param::ParamSlot stickRadiusParam;
+        megamol::core::param::ParamSlot atomRadiusFactorParam;
+        megamol::core::param::ParamSlot atomSpaceFillingParam;
 
         /** parameter slot for color table filename */
         megamol::core::param::ParamSlot colorTableFileParam;
@@ -400,8 +402,8 @@ namespace protein {
 
 		vislib::Array<float> interpAtomPosTmpArray;
 		vislib::Array<int> interpHBondTmpArray;
-		int interpFrame0, interpFrame1;
-		int interpDataHash0, interpDataHash1;
+		unsigned int interpFrame0, interpFrame1;
+		unsigned int interpDataHash0, interpDataHash1;
 
 		vislib::Array<float> update_vol, update_clr;
 		vislib::Array<float> vertSpheres, vertCylinders, quatCylinders, inParaCylinders, color1Cylinders, color2Cylinders;
