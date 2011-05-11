@@ -20,6 +20,7 @@
 #include "vislib/Array.h"
 #include "vislib/forceinline.h"
 #include "vislib/Log.h"
+#include "vislib/ShallowVector.h"
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sysfunctions.h"
@@ -781,10 +782,15 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
         posXFilter("filter::posX", ""),
         posXMinFilter("filter::posXMin", ""),
         posXMaxFilter("filter::posXMax", ""),
+        splitLoadDiredDataSlot("dir::split", ""),
+        dirXColNameSlot("dir::x", ""),
+        dirYColNameSlot("dir::y", ""),
+        dirZColNameSlot("dir::z", ""),
         posData(), colData(), headerMinX(0.0f), headerMinY(0.0f),
         headerMinZ(0.0f), headerMaxX(1.0f), headerMaxY(1.0f),
         headerMaxZ(1.0f), minX(0.0f), minY(0.0f), minZ(0.0f), maxX(1.0f),
-        maxY(1.0f), maxZ(1.0f), minC(0.0f), maxC(1.0f), datahash(0) {
+        maxY(1.0f), maxZ(1.0f), minC(0.0f), maxC(1.0f), datahash(0),
+        allDirData() {
 
     this->filenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
@@ -832,6 +838,15 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
     this->posXMaxFilter << new param::FloatParam(1.0f);
     this->posXMaxFilter.SetUpdateCallback(&IMDAtomDataSource::posXFilterUpdate);
     this->MakeSlotAvailable(&this->posXMaxFilter);
+
+    this->splitLoadDiredDataSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->splitLoadDiredDataSlot);
+    this->dirXColNameSlot << new param::StringParam("");
+    this->MakeSlotAvailable(&this->dirXColNameSlot);
+    this->dirYColNameSlot << new param::StringParam("");
+    this->MakeSlotAvailable(&this->dirYColNameSlot);
+    this->dirZColNameSlot << new param::StringParam("");
+    this->MakeSlotAvailable(&this->dirZColNameSlot);
 
 }
 
@@ -924,43 +939,77 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
         mpdc->SetUnlocker(NULL);
 
     } else if (dpdc != NULL) {
-        dpdc->SetFrameID(0);
-        dpdc->SetDataHash(this->datahash);
-        dpdc->SetParticleListCount(1); // For the moment
-        dpdc->AccessParticles(0).SetGlobalColour(this->defCol[0], this->defCol[1], this->defCol[2]);
-        dpdc->AccessParticles(0).SetGlobalRadius(this->radiusSlot.Param<param::FloatParam>()->Value());
-        dpdc->AccessParticles(0).SetCount(this->posData.GetSize() / (3 * sizeof(float)));
+        if (this->allDirData.GetSize() == 0) {
+            dpdc->SetFrameID(0);
+            dpdc->SetDataHash(this->datahash);
+            dpdc->SetParticleListCount(1); // For the moment
+            dpdc->AccessParticles(0).SetGlobalColour(this->defCol[0], this->defCol[1], this->defCol[2]);
+            dpdc->AccessParticles(0).SetGlobalRadius(this->radiusSlot.Param<param::FloatParam>()->Value());
+            dpdc->AccessParticles(0).SetCount(this->posData.GetSize() / (3 * sizeof(float)));
 
-        switch (colMode) {
-            case 0:
-                dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
-                break;
-            case 1:
-                if (this->autoColumnRangeSlot.Param<param::BoolParam>()->Value()) {
-                    dpdc->AccessParticles(0).SetColourMapIndexValues(this->minC, this->maxC);
-                } else {
-                    dpdc->AccessParticles(0).SetColourMapIndexValues(
-                        this->minColumnValSlot.Param<param::FloatParam>()->Value(),
-                        this->maxColumnValSlot.Param<param::FloatParam>()->Value());
-                }
-                dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I, this->colData.As<void>());
-                break;
-            default:
-                dpdc->AccessParticles(0).SetColourData( // some internal error
-                    DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
-                break;
-        }
+            switch (colMode) {
+                case 0:
+                    dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
+                    break;
+                case 1:
+                    if (this->autoColumnRangeSlot.Param<param::BoolParam>()->Value()) {
+                        dpdc->AccessParticles(0).SetColourMapIndexValues(this->minC, this->maxC);
+                    } else {
+                        dpdc->AccessParticles(0).SetColourMapIndexValues(
+                            this->minColumnValSlot.Param<param::FloatParam>()->Value(),
+                            this->maxColumnValSlot.Param<param::FloatParam>()->Value());
+                    }
+                    dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I, this->colData.As<void>());
+                    break;
+                default:
+                    dpdc->AccessParticles(0).SetColourData( // some internal error
+                        DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
+                    break;
+            }
 
-        if (!this->posData.IsEmpty()) {
-            dpdc->AccessParticles(0).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->posData.As<void>());
+            if (!this->posData.IsEmpty()) {
+                dpdc->AccessParticles(0).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->posData.As<void>());
+            } else {
+                dpdc->AccessParticles(0).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_NONE, NULL);
+            }
+            dpdc->AccessParticles(0).SetDirData(DirectionalParticleDataCall::Particles::DIRDATA_NONE, NULL);
+            dpdc->SetUnlocker(NULL);
+
         } else {
-            dpdc->AccessParticles(0).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_NONE, NULL);
+            dpdc->SetFrameID(0);
+            dpdc->SetDataHash(this->datahash);
+            dpdc->SetParticleListCount(1); // For the moment
+            dpdc->AccessParticles(0).SetGlobalColour(this->defCol[0], this->defCol[1], this->defCol[2]);
+            dpdc->AccessParticles(0).SetGlobalRadius(this->radiusSlot.Param<param::FloatParam>()->Value());
+            unsigned int fpp = (colMode == 1) ? 7 : 6; // floats per particle
+            dpdc->AccessParticles(0).SetCount(this->allDirData.GetSize() / (fpp * sizeof(float)));
+            if (dpdc->AccessParticles(0).GetCount() == 0) {
+                dpdc->AccessParticles(0).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_NONE, NULL);
+                dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
+                dpdc->AccessParticles(0).SetDirData(DirectionalParticleDataCall::Particles::DIRDATA_NONE, NULL);
+            } else {
+                dpdc->AccessParticles(0).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                    this->allDirData, fpp * sizeof(float));
+                if (colMode == 1) {
+                    if (this->autoColumnRangeSlot.Param<param::BoolParam>()->Value()) {
+                        dpdc->AccessParticles(0).SetColourMapIndexValues(this->minC, this->maxC);
+                    } else {
+                        dpdc->AccessParticles(0).SetColourMapIndexValues(
+                            this->minColumnValSlot.Param<param::FloatParam>()->Value(),
+                            this->maxColumnValSlot.Param<param::FloatParam>()->Value());
+                    }
+                    dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
+                        this->allDirData.At(3 * sizeof(float)), fpp * sizeof(float));
+                } else {
+                    dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
+                }
+                dpdc->AccessParticles(0).SetDirData(DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+                    this->allDirData.At(((colMode == 1) ? 4 : 3) * sizeof(float)), fpp * sizeof(float));
+            }
+            dpdc->SetUnlocker(NULL);
+
         }
 
-        // TODO: Implement
-        dpdc->AccessParticles(0).SetDirData(DirectionalParticleDataCall::Particles::DIRDATA_NONE, NULL);
-
-        dpdc->SetUnlocker(NULL);
     }
 
     return true;
@@ -1008,6 +1057,7 @@ bool moldyn::IMDAtomDataSource::getExtentCallback(Call& caller) {
 void moldyn::IMDAtomDataSource::clear(void) {
     this->posData.EnforceSize(0);
     this->colData.EnforceSize(0);
+    this->allDirData.EnforceSize(0);
     this->headerMinX = this->headerMinY = this->headerMinZ = 0.0f;
     this->headerMaxX = this->headerMaxY = this->headerMaxZ = 1.0f;
     this->minX = this->minY = this->minZ = 0.0f;
@@ -1021,11 +1071,21 @@ void moldyn::IMDAtomDataSource::clear(void) {
  */
 void moldyn::IMDAtomDataSource::assertData(void) {
     using vislib::sys::Log;
-    if (!this->filenameSlot.IsDirty() && !this->colourModeSlot.IsDirty()
-            && !this->colourColumnSlot.IsDirty()) return;
+    if (!this->filenameSlot.IsDirty()
+            && !this->colourModeSlot.IsDirty()
+            && !this->colourColumnSlot.IsDirty()
+            && !this->splitLoadDiredDataSlot.IsDirty()
+            && !this->dirXColNameSlot.IsDirty()
+            && !this->dirYColNameSlot.IsDirty()
+            && !this->dirZColNameSlot.IsDirty()
+        ) return;
     this->filenameSlot.ResetDirty();
     this->colourModeSlot.ResetDirty();
     this->colourColumnSlot.ResetDirty();
+    this->splitLoadDiredDataSlot.ResetDirty();
+    this->dirXColNameSlot.ResetDirty();
+    this->dirYColNameSlot.ResetDirty();
+    this->dirZColNameSlot.ResetDirty();
 
     this->clear();
 
@@ -1062,33 +1122,43 @@ void moldyn::IMDAtomDataSource::assertData(void) {
         && (endianTestBytes[2] == 0x34)
         && (endianTestBytes[3] == 0x12));
 
+    vislib::StringA dirXColName = this->dirXColNameSlot.Param<param::StringParam>()->Value();
+    vislib::StringA dirYColName = this->dirYColNameSlot.Param<param::StringParam>()->Value();
+    vislib::StringA dirZColName = this->dirZColNameSlot.Param<param::StringParam>()->Value();
+    INT_PTR dirXCol = dirXColName.IsEmpty() ? -1 : header.captions.IndexOf(dirXColName);
+    INT_PTR dirYCol = dirYColName.IsEmpty() ? -1 : header.captions.IndexOf(dirYColName);
+    INT_PTR dirZCol = dirZColName.IsEmpty() ? -1 : header.captions.IndexOf(dirZColName);
+    bool loadDir = (dirXCol >= 0) && (dirYCol >= 0) && (dirZCol >= 0);
+    bool splitLoadDir = this->splitLoadDiredDataSlot.Param<param::BoolParam>()->Value();
+
     vislib::RawStorageWriter posWriter(this->posData, 0, 0, 10 * 1024 * 1024);
     vislib::RawStorageWriter colWriter(this->colData, 0, 0, 10 * 1024 * 1024);
+    vislib::RawStorageWriter dirWriter(this->allDirData, 0, 0, 10 * 1024 * 1024);
 
     bool retval = false;
     switch (header.format) {
         case 'A': // ASCII
-            retval = this->readData<imdinternal::AtomReaderASCII>(file, header, posWriter, colWriter);
+            retval = this->readData<imdinternal::AtomReaderASCII>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir);
             break;
         case 'B': // binary, big endian, double
             retval = (machineBigEndian)
-                ? this->readData<imdinternal::AtomReaderDoubleSwitched>(file, header, posWriter, colWriter)
-                : this->readData<imdinternal::AtomReaderDouble>(file, header, posWriter, colWriter);
+                ? this->readData<imdinternal::AtomReaderDoubleSwitched>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir)
+                : this->readData<imdinternal::AtomReaderDouble>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir);
             break;
         case 'b': // binary, big endian, float
             retval = (machineBigEndian)
-                ? this->readData<imdinternal::AtomReaderFloatSwitched>(file, header, posWriter, colWriter)
-                : this->readData<imdinternal::AtomReaderFloat>(file, header, posWriter, colWriter);
+                ? this->readData<imdinternal::AtomReaderFloatSwitched>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir)
+                : this->readData<imdinternal::AtomReaderFloat>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir);
             break;
         case 'L': // binary, little endian, double
             retval = (machineBigEndian)
-                ? this->readData<imdinternal::AtomReaderDouble>(file, header, posWriter, colWriter)
-                : this->readData<imdinternal::AtomReaderDoubleSwitched>(file, header, posWriter, colWriter);
+                ? this->readData<imdinternal::AtomReaderDouble>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir)
+                : this->readData<imdinternal::AtomReaderDoubleSwitched>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir);
             break;
         case 'l': // binary, little endian float
             retval = (machineBigEndian)
-                ? this->readData<imdinternal::AtomReaderFloat>(file, header, posWriter, colWriter)
-                : this->readData<imdinternal::AtomReaderFloatSwitched>(file, header, posWriter, colWriter);
+                ? this->readData<imdinternal::AtomReaderFloat>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir)
+                : this->readData<imdinternal::AtomReaderFloatSwitched>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir);
             break;
         default:
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1099,13 +1169,11 @@ void moldyn::IMDAtomDataSource::assertData(void) {
     if (retval) {
         this->posData.EnforceSize(posWriter.End(), true);
         this->colData.EnforceSize(colWriter.End(), true);
+        this->allDirData.EnforceSize(dirWriter.End(), true);
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-            "%d Atoms loaded\n", this->posData.GetSize() / (sizeof(float) * 3));
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100,
-            "Data bounding box = (%f, %f, %f) ... (%f, %f, %f)\n", 
-            this->minX, this->minY, this->minZ,
-            this->maxX, this->maxY, this->maxZ);
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%d Atoms loaded\n", this->posData.GetSize() / (sizeof(float) * 3));
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Data bounding box = (%f, %f, %f) ... (%f, %f, %f)\n", 
+            this->minX, this->minY, this->minZ, this->maxX, this->maxY, this->maxZ);
 
         //this->datahash = (this->datahash << (sizeof(SIZE_T) / 2))
         //    || (this->datahash >> (sizeof(SIZE_T) / 2));
@@ -1118,7 +1186,8 @@ void moldyn::IMDAtomDataSource::assertData(void) {
         // error already logged
         this->posData.EnforceSize(0, true);
         this->colData.EnforceSize(0, true);
-        this->datahash = 0;
+        this->allDirData.EnforceSize(0, true);
+        //this->datahash = 0;
     }
 
     file.Close();
@@ -1324,14 +1393,26 @@ bool moldyn::IMDAtomDataSource::readHeader(vislib::sys::File& file,
 template<typename T>
 bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
         const moldyn::IMDAtomDataSource::HeaderData& header,
-        vislib::RawStorageWriter& pos, vislib::RawStorageWriter& col) {
+        vislib::RawStorageWriter& pos, vislib::RawStorageWriter& col,
+        vislib::RawStorageWriter& dir, bool loadDir, bool splitDir) {
     T reader(file);
     bool fail = false;
     float x = 0.0f, y = 0.0f, z = 0.0f;
     bool first = true;
     float c = 0.0f;
+    float dx = 0.0f, dy = 0.0f, dz = 0.0f;
     unsigned int column;
     unsigned int colcolumn = UINT_MAX;
+
+    vislib::StringA dirXColName = this->dirXColNameSlot.Param<param::StringParam>()->Value();
+    vislib::StringA dirYColName = this->dirYColNameSlot.Param<param::StringParam>()->Value();
+    vislib::StringA dirZColName = this->dirZColNameSlot.Param<param::StringParam>()->Value();
+    INT_PTR dirXCol = dirXColName.IsEmpty() ? -1 : header.captions.IndexOf(dirXColName);
+    INT_PTR dirYCol = dirYColName.IsEmpty() ? -1 : header.captions.IndexOf(dirYColName);
+    INT_PTR dirZCol = dirZColName.IsEmpty() ? -1 : header.captions.IndexOf(dirZColName);
+    ASSERT(!loadDir || (dirXCol >= 0));
+    ASSERT(!loadDir || (dirYCol >= 0));
+    ASSERT(!loadDir || (dirZCol >= 0));
 
     if (this->colourModeSlot.Param<param::EnumParam>()->Value() == 1) {
         // column colouring mode
@@ -1381,24 +1462,36 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
         column = 0;
 
         if (header.id) {
-            if (column == colcolumn) {
-                c = static_cast<float>(reader.ReadInt(fail));
+            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol)){
+                float f = static_cast<float>(reader.ReadInt(fail));
+                if (column == colcolumn) c = f;
+                if (column == dirXCol) dx = f;
+                if (column == dirYCol) dy = f;
+                if (column == dirZCol) dz = f;
             } else {
                 reader.SkipInt(fail);
             }
             column++;
         }
         if (header.type) {
-            if (column == colcolumn) {
-                c = static_cast<float>(reader.ReadInt(fail));
+            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol)){
+                float f = static_cast<float>(reader.ReadInt(fail));
+                if (column == colcolumn) c = f;
+                if (column == dirXCol) dx = f;
+                if (column == dirYCol) dy = f;
+                if (column == dirZCol) dz = f;
             } else {
                 reader.SkipInt(fail);
             }
             column++;
         }
         if (header.mass) {
-            if (column == colcolumn) {
-                c = reader.ReadFloat(fail);
+            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol)){
+                float f = reader.ReadFloat(fail);
+                if (column == colcolumn) c = f;
+                if (column == dirXCol) dx = f;
+                if (column == dirYCol) dy = f;
+                if (column == dirZCol) dz = f;
             } else {
                 reader.SkipFloat(fail);
             }
@@ -1408,18 +1501,31 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
             if (i == 0) {
                 x = reader.ReadFloat(fail);
                 if (column == colcolumn) c = x;
+                if (column == dirXCol) dx = x;
+                if (column == dirYCol) dy = x;
+                if (column == dirZCol) dz = x;
             }
             if (i == 1) {
                 y = reader.ReadFloat(fail);
                 if (column == colcolumn) c = y;
+                if (column == dirXCol) dx = y;
+                if (column == dirYCol) dy = y;
+                if (column == dirZCol) dz = y;
             }
             if (i == 2) {
                 z = reader.ReadFloat(fail);
                 if (column == colcolumn) c = z;
+                if (column == dirXCol) dx = z;
+                if (column == dirYCol) dy = z;
+                if (column == dirZCol) dz = z;
             }
             if (i >= 3) {
-                if (column == colcolumn) {
-                    c = reader.ReadFloat(fail);
+                if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol)){
+                    float f = reader.ReadFloat(fail);
+                    if (column == colcolumn) c = f;
+                    if (column == dirXCol) dx = f;
+                    if (column == dirYCol) dy = f;
+                    if (column == dirZCol) dz = f;
                 } else {
                     reader.SkipFloat(fail);
                 }
@@ -1427,16 +1533,24 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
             column++;
         }
         for (int i = 0; i < header.vel; i++) {
-            if (column == colcolumn) {
-                c = reader.ReadFloat(fail);
+            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol)){
+                float f = reader.ReadFloat(fail);
+                if (column == colcolumn) c = f;
+                if (column == dirXCol) dx = f;
+                if (column == dirYCol) dy = f;
+                if (column == dirZCol) dz = f;
             } else {
                 reader.SkipFloat(fail);
             }
             column++;
         }
         for (int i = 0; i < header.dat; i++) {
-            if (column == colcolumn) {
-                c = reader.ReadFloat(fail);
+            if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol)){
+                float f = reader.ReadFloat(fail);
+                if (column == colcolumn) c = f;
+                if (column == dirXCol) dx = f;
+                if (column == dirYCol) dy = f;
+                if (column == dirZCol) dz = f;
             } else {
                 reader.SkipFloat(fail);
             }
@@ -1445,12 +1559,12 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
 
         if (!fail) {
             if (!first) {
-                if (this->minX > x) this->minX = x; else
-                if (this->maxX < x) this->maxX = x;
-                if (this->minY > y) this->minY = y; else
-                if (this->maxY < y) this->maxY = y;
-                if (this->minZ > z) this->minZ = z; else
-                if (this->maxZ < z) this->maxZ = z;
+                if (this->minX > x) this->minX = x;
+                else if (this->maxX < x) this->maxX = x;
+                if (this->minY > y) this->minY = y;
+                else if (this->maxY < y) this->maxY = y;
+                if (this->minZ > z) this->minZ = z;
+                else if (this->maxZ < z) this->maxZ = z;
             } else {
                 first = false;
                 this->minX = this->maxX = x;
@@ -1458,12 +1572,33 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
                 this->minZ = this->maxZ = z;
                 this->minC = this->maxC = c;
             }
-            pos << x << y << z;
             if (colcolumn != UINT_MAX) {
-                col << c;
                 if (this->minC > c) this->minC = c; else
                 if (this->maxC < c) this->maxC = c;
             }
+
+            if (loadDir) {
+                if (splitDir) {
+                    if (vislib::math::IsEqual(dx, 0.0f)
+                            && vislib::math::IsEqual(dy, 0.0f)
+                            && vislib::math::IsEqual(dz, 0.0f)) {
+                        pos << x << y << z;
+                        if (colcolumn != UINT_MAX) col << c;
+                    } else {
+                        dir << x << y << z;
+                        if (colcolumn != UINT_MAX) dir << c;
+                        dir << dx << dy << dz;
+                    }
+                } else {
+                    dir << x << y << z;
+                    if (colcolumn != UINT_MAX) dir << c;
+                    dir << dx << dy << dz;
+                }
+            } else {
+                pos << x << y << z;
+                if (colcolumn != UINT_MAX) col << c;
+            }
+
         }
     }
 

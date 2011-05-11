@@ -185,12 +185,18 @@ namespace moldyn {
          * @param header The struct holding the header data
          * @param pos The writer receiving the read position data
          * @param col The writer receiving the read colour data
+         * @param dir The writer receiving all directed particle data
+         * @param loadDir Flag to activate the use of 'dir'
+         * @param splitDir Particles with direction NULL vector will be stored
+         *                 in pos and col, while all others will be stored in
+         *                 dir if (loadDir==true)
          *
          * @return 'true' on success
          */
         template<typename T> bool readData(vislib::sys::File& file,
             const HeaderData& header, vislib::RawStorageWriter& pos,
-            vislib::RawStorageWriter& col);
+            vislib::RawStorageWriter& col, vislib::RawStorageWriter& dir,
+            bool loadDir, bool splitDir);
 
         /**
          * Updates the posX filter data (decrese only!)
@@ -229,6 +235,11 @@ namespace moldyn {
         param::ParamSlot posXMinFilter;
         param::ParamSlot posXMaxFilter;
 
+        param::ParamSlot splitLoadDiredDataSlot;
+        param::ParamSlot dirXColNameSlot;
+        param::ParamSlot dirYColNameSlot;
+        param::ParamSlot dirZColNameSlot;
+
         /** The xyz position data */
         vislib::RawStorage posData;
 
@@ -249,6 +260,9 @@ namespace moldyn {
 
         /** The hash value of the loaded data */
         SIZE_T datahash;
+
+        /** All data for directional particles */
+        vislib::RawStorage allDirData;
 
     };
 
