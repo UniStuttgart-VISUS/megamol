@@ -248,6 +248,7 @@ namespace moldyn {
         param::ParamSlot dirmaxColumnValSlot;
         unsigned char dirdefCol[3];
         param::ParamSlot dirradiusSlot;
+        param::ParamSlot dirNormDirSlot;
 
         /** The xyz position data */
         vislib::RawStorage posData;

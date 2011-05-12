@@ -793,6 +793,7 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
         dirminColumnValSlot("dir::minColumnValue", "The minimum value for the colour mapping of the column"),
         dirmaxColumnValSlot("dir::maxColumnValue", "The maximum value for the colour mapping of the column"),
         dirradiusSlot("dir::radius", "The radius to be used for the data"),
+        dirNormDirSlot("dir::normalise", ""),
         posData(), colData(), headerMinX(0.0f), headerMinY(0.0f),
         headerMinZ(0.0f), headerMaxX(1.0f), headerMaxY(1.0f),
         headerMaxZ(1.0f), minX(0.0f), minY(0.0f), minZ(0.0f), maxX(1.0f),
@@ -872,6 +873,8 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
     this->MakeSlotAvailable(&this->dirmaxColumnValSlot);
     this->dirradiusSlot << new param::FloatParam(0.5f, 0.0000001f);
     this->MakeSlotAvailable(&this->dirradiusSlot);
+    this->dirNormDirSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->dirNormDirSlot);
 
 }
 
@@ -1452,6 +1455,7 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
     unsigned int colcolumn = UINT_MAX;
     unsigned int dircolcolumn = UINT_MAX;
 
+    bool normaliseDir = this->dirNormDirSlot.Param<param::BoolParam>()->Value();
     vislib::StringA dirXColName = this->dirXColNameSlot.Param<param::StringParam>()->Value();
     vislib::StringA dirYColName = this->dirYColNameSlot.Param<param::StringParam>()->Value();
     vislib::StringA dirZColName = this->dirZColNameSlot.Param<param::StringParam>()->Value();
@@ -1679,6 +1683,13 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
             }
 
             if (loadDir) {
+                if (normaliseDir) {
+                    vislib::math::Vector<float, 3> dir(dx, dy, dz);
+                    dir.Normalise();
+                    dx = dir.X();
+                    dy = dir.Y();
+                    dz = dir.Z();
+                }
                 if (splitDir) {
                     if (vislib::math::IsEqual(dx, 0.0f)
                             && vislib::math::IsEqual(dy, 0.0f)
