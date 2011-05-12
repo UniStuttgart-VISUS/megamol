@@ -9,6 +9,7 @@
 #include "ArrowRenderer.h"
 #include "DirectionalParticleDataCall.h"
 #include "CoreInstance.h"
+#include "param/FloatParam.h"
 #include "view/CallClipPlane.h"
 #include "view/CallGetTransferFunction.h"
 #include "view/CallRender3D.h"
@@ -25,7 +26,8 @@ moldyn::ArrowRenderer::ArrowRenderer(void) : Renderer3DModule(),
         arrowShader(), getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         //getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
-        greyTF(0) {
+        greyTF(0),
+        lengthScaleSlot("lengthScale", "") {
 
     this->getDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -35,6 +37,9 @@ moldyn::ArrowRenderer::ArrowRenderer(void) : Renderer3DModule(),
 
     //this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
     //this->MakeSlotAvailable(&this->getClipPlaneSlot);
+
+    this->lengthScaleSlot << new param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->lengthScaleSlot);
 }
 
 
@@ -185,6 +190,8 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
         return false;
     }
 
+    float lengthScale = this->lengthScaleSlot.Param<param::FloatParam>()->Value();
+
     //view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
     //float clipDat[4];
     //float clipCol[3];
@@ -221,6 +228,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     glUniform3fvARB(this->arrowShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
     glUniform3fvARB(this->arrowShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
     glUniform3fvARB(this->arrowShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+    this->arrowShader.SetParameter("lengthScale", lengthScale);
 
     //glUniform4fvARB(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);
     //glUniform3fvARB(this->arrowShader.ParameterLocation("clipCol"), 1, clipCol);
