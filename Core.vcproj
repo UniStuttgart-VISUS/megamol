@@ -2354,6 +2354,10 @@
 			Filter="btf"
 			>
 			<File
+				RelativePath=".\Shaders\arrow.btf"
+				>
+			</File>
+			<File
 				RelativePath=".\Shaders\arrow.glfp"
 				>
 			</File>

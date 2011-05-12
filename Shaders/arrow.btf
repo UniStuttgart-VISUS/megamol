@@ -66,8 +66,8 @@ void main(void) {
     //const vec4 quatConst = vec4(1.0, -1.0, 0.5, 0.0);
     vec4 tmp, tmp1;
 
-    vec3 fromPos = gl_Vertex.xyz + dir;
-    vec3 toPos = gl_Vertex.xyz;
+    vec3 fromPos = gl_Vertex.xyz + (dir * 0.5);
+    vec3 toPos = gl_Vertex.xyz - (dir * 0.5);
 
     inPos = vec4((fromPos + toPos) * vec3(0.5), 1.0);
 
