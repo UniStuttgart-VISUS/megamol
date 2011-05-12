@@ -726,7 +726,7 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 
 		// interpolate atom positions between frames
 #pragma omp parallel for
-		for(unsigned int atomIdx = 0; atomIdx < mol->AtomCount(); atomIdx++) {
+		for(int atomIdx = 0; atomIdx < (int)mol->AtomCount(); atomIdx++) {
 			float localInter = frameInterp;
 #if 0
 			vislib::math::ShallowPoint<float,3> atomPosFrame0( interAtomPosFrame0Ptr + atomIdx*3 );
@@ -771,7 +771,6 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 
 	for(unsigned int cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt )
 		glClipPlane( GL_CLIP_PLANE0+cpCnt, this->volClipPlane[cpCnt].PeekComponents());
-	
 
 	// =============== Volume Rendering ===============
 	bool retval = false;
@@ -877,7 +876,7 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 	vislib::Array<float> colTab( mol->AtomCount() * 3);
 	colTab.SetCount( mol->AtomCount() * 3);
 #pragma omp parallel for
-	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
+	for( cnt1 = 0; cnt1 < (int)mol->AtomCount(); ++cnt1 ) {
 		colTab[cnt1*3+0] = 1.0f;
 		colTab[cnt1*3+1] = 0.0f;
 		colTab[cnt1*3+2] = 0.0f;
@@ -1118,7 +1117,7 @@ void protein::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataCall
 		unsigned int numSolventResidues = mol->AtomSolventResidueCount();
 
 		#pragma omp parallel for
-		for (unsigned int atomIdx = 0; atomIdx < mol->AtomCount(); atomIdx++) {
+		for (int atomIdx = 0; atomIdx < (int)mol->AtomCount(); atomIdx++) {
 			this->vertSpheres[4*atomIdx+0] = atomPos[3*atomIdx+0];
 			this->vertSpheres[4*atomIdx+1] = atomPos[3*atomIdx+1];
 			this->vertSpheres[4*atomIdx+2] = atomPos[3*atomIdx+2];
@@ -1133,7 +1132,7 @@ void protein::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataCall
 	} else {
 		// render spheres in normal mode (sphere-radius is the same as stick-radius)
 		#pragma omp parallel for
-		for (unsigned int atomIdx = 0; atomIdx < mol->AtomCount(); atomIdx++) {
+		for (int atomIdx = 0; atomIdx < (int)mol->AtomCount(); atomIdx++) {
 			this->vertSpheres[4*atomIdx+0] = atomPos[3*atomIdx+0];
 			this->vertSpheres[4*atomIdx+1] = atomPos[3*atomIdx+1];
 			this->vertSpheres[4*atomIdx+2] = atomPos[3*atomIdx+2];
@@ -1148,7 +1147,7 @@ void protein::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataCall
 		float angle;
 		// loop over all connections and compute cylinder parameters
 	#pragma omp parallel for private(quatC, tmpVec, ortho, dir, position, angle)
-		for (unsigned int atomIdx = 0; atomIdx < mol->ConnectionCount(); atomIdx++) {
+		for (int atomIdx = 0; atomIdx < (int)mol->ConnectionCount(); atomIdx++) {
 			unsigned int idx0 = mol->Connection()[2*atomIdx];
 			unsigned int idx1 = mol->Connection()[2*atomIdx+1];
 
@@ -2673,7 +2672,7 @@ void SolventVolumeRenderer::writeVolumeRAW() {
 	glBindTexture( GL_TEXTURE_3D, 0);
 
 #pragma omp parallel for
-	for(unsigned int voxelIdx = 0; voxelIdx < numVoxel; voxelIdx++) {
+	for(int voxelIdx = 0; voxelIdx < (int)numVoxel; voxelIdx++) {
 		ucVol[voxelIdx] = int( ( volume[voxelIdx]*10.0f) < 0 ? 0 : ( ( volume[voxelIdx]*10.0f) > 128 ? 128 : ( volume[voxelIdx]*10.0f)));
 		//ucVol[voxelIdx] = int( volume[voxelIdx]*10.0f);
 	}

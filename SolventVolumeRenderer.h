@@ -403,7 +403,7 @@ namespace protein {
 		vislib::Array<float> interpAtomPosTmpArray;
 		vislib::Array<int> interpHBondTmpArray;
 		unsigned int interpFrame0, interpFrame1;
-		unsigned int interpDataHash0, interpDataHash1;
+		SIZE_T interpDataHash0, interpDataHash1;
 
 		vislib::Array<float> update_vol, update_clr;
 		vislib::Array<float> vertSpheres, vertCylinders, quatCylinders, inParaCylinders, color1Cylinders, color2Cylinders;
