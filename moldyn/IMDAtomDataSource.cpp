@@ -858,6 +858,7 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
     cm = new param::EnumParam(1);
     cm->SetTypePair(0, "const");
     cm->SetTypePair(1, "column");
+    cm->SetTypePair(2, "direction");
     this->dircolourModeSlot << cm;
     this->MakeSlotAvailable(&this->dircolourModeSlot);
     this->dircolourSlot << new param::StringParam("Silver");
@@ -1023,7 +1024,7 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
             dpdc->SetParticleListCount(1); // For the moment
             dpdc->AccessParticles(0).SetGlobalColour(this->dirdefCol[0], this->dirdefCol[1], this->dirdefCol[2]);
             dpdc->AccessParticles(0).SetGlobalRadius(this->dirradiusSlot.Param<param::FloatParam>()->Value());
-            unsigned int fpp = (dircolMode == 1) ? 7 : 6; // floats per particle
+            unsigned int fpp = (dircolMode == 1) ? 7 : ((dircolMode == 2) ? 9 : 6); // floats per particle
             dpdc->AccessParticles(0).SetCount(this->allDirData.GetSize() / (fpp * sizeof(float)));
             if (dpdc->AccessParticles(0).GetCount() == 0) {
                 dpdc->AccessParticles(0).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_NONE, NULL);
@@ -1042,11 +1043,14 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
                     }
                     dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
                         this->allDirData.At(3 * sizeof(float)), fpp * sizeof(float));
+                } else if (dircolMode == 2) {
+                    dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_FLOAT_RGB,
+                        this->allDirData.At(3 * sizeof(float)), fpp * sizeof(float));
                 } else {
                     dpdc->AccessParticles(0).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
                 }
                 dpdc->AccessParticles(0).SetDirData(DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
-                    this->allDirData.At(((dircolMode == 1) ? 4 : 3) * sizeof(float)), fpp * sizeof(float));
+                    this->allDirData.At(((dircolMode == 1) ? 4 : ((dircolMode == 2) ? 6 : 3)) * sizeof(float)), fpp * sizeof(float));
             }
             dpdc->SetUnlocker(NULL);
 
@@ -1465,6 +1469,7 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
     ASSERT(!loadDir || (dirXCol >= 0));
     ASSERT(!loadDir || (dirYCol >= 0));
     ASSERT(!loadDir || (dirZCol >= 0));
+    int dircolMode = this->dircolourModeSlot.Param<param::EnumParam>()->Value();
 
     if (this->colourModeSlot.Param<param::EnumParam>()->Value() == 1) {
         // column colouring mode
@@ -1510,7 +1515,7 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
         }
     }
 
-    if (this->dircolourModeSlot.Param<param::EnumParam>()->Value() == 1) {
+    if (dircolMode == 1) {
         // column colouring mode
         vislib::StringA dircolcolname(this->dircolourColumnSlot.Param<param::StringParam>()->Value());
         // 1. exact match
@@ -1684,27 +1689,45 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
 
             if (loadDir) {
                 if (normaliseDir) {
-                    vislib::math::Vector<float, 3> dir(dx, dy, dz);
-                    dir.Normalise();
-                    dx = dir.X();
-                    dy = dir.Y();
-                    dz = dir.Z();
+                    vislib::math::Vector<float, 3> dv(dx, dy, dz);
+                    dv.Normalise();
+                    dx = dv.X();
+                    dy = dv.Y();
+                    dz = dv.Z();
                 }
-                if (splitDir) {
-                    if (vislib::math::IsEqual(dx, 0.0f)
-                            && vislib::math::IsEqual(dy, 0.0f)
-                            && vislib::math::IsEqual(dz, 0.0f)) {
-                        pos << x << y << z;
-                        if (colcolumn != UINT_MAX) col << c;
-                    } else {
-                        dir << x << y << z;
-                        if (dircolcolumn != UINT_MAX) dir << dc;
-                        else if (colcolumn != UINT_MAX) dir << c;
-                        dir << dx << dy << dz;
-                    }
+                if (splitDir && vislib::math::IsEqual(dx, 0.0f)
+                        && vislib::math::IsEqual(dy, 0.0f)
+                        && vislib::math::IsEqual(dz, 0.0f)) {
+                    pos << x << y << z;
+                    if (colcolumn != UINT_MAX) col << c;
                 } else {
                     dir << x << y << z;
-                    if (dircolcolumn != UINT_MAX) dir << dc;
+                    if (dircolMode == 2) {
+                        vislib::math::Vector<float, 3> dv(dx, dy, dz);
+                        dv.Normalise();
+                        float xr = 1.0f, xg = 0.0f, xb = 0.0f, yr = 0.0f, yg = 1.0f, yb = 0.0f, zr = 0.0f, zg = 0.0f, zb = 1.0f;
+                        if (dv.X() < 0.0f) {
+                            xr = 1.0f - xr;
+                            xg = 1.0f - xg;
+                            xb = 1.0f - xb;
+                        }
+                        if (dv.Y() < 0.0f) {
+                            yr = 1.0f - yr;
+                            yg = 1.0f - yg;
+                            yb = 1.0f - yb;
+                        }
+                        if (dv.Z() < 0.0f) {
+                            zr = 1.0f - zr;
+                            zg = 1.0f - zg;
+                            zb = 1.0f - zb;
+                        }
+                        dv.Set(dv.X() * dv.X(), dv.Y() * dv.Y(), dv.Z() * dv.Z());
+                        
+                        dir << (xr * dv.X() + yr * dv.Y() + zr * dv.Z());
+                        dir << (xg * dv.X() + yg * dv.Y() + zg * dv.Z());
+                        dir << (xb * dv.X() + yb * dv.Y() + zb * dv.Z());
+
+                    } else if (dircolcolumn != UINT_MAX) dir << dc;
                     else if (colcolumn != UINT_MAX) dir << c;
                     dir << dx << dy << dz;
                 }
