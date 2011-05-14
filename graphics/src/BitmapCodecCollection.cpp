@@ -122,7 +122,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
 
         CodecArray sure;
         CodecArray unsure;
-        this->autodetecCodec(admem.operator->(), adsize, this->codecs,
+        this->autodetecCodec(admem.operator->(), adsize, codecs,
             sure, unsure);
 
         for (SIZE_T i = 0; i < sure.Count(); i++) {
@@ -192,7 +192,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
 
         CodecArray sure;
         CodecArray unsure;
-        this->autodetecCodec(admem.operator->(), adsize, this->codecs,
+        this->autodetecCodec(admem.operator->(), adsize, codecs,
             sure, unsure);
 
         for (SIZE_T i = 0; i < sure.Count(); i++) {

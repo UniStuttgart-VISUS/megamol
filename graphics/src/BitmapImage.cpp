@@ -393,6 +393,7 @@ vislib::graphics::BitmapImage::Extension::~Extension(void) {
     // intentionally empty
 }
 
+/****************************************************************************/
 
 
 /*
@@ -441,7 +442,7 @@ vislib::graphics::BitmapImage::TemplateByteRGBA(
  * vislib::graphics::BitmapImage::BitmapImage
  */
 vislib::graphics::BitmapImage::BitmapImage(void) : data(NULL),
-        chanType(CHANNELTYPE_BYTE), ext(NULL), height(0), labels(NULL),
+        chanType(CHANNELTYPE_BYTE), exts(), height(0), labels(NULL),
         numChans(0), width(0) {
     // intentionally empty
 }
@@ -453,7 +454,7 @@ vislib::graphics::BitmapImage::BitmapImage(void) : data(NULL),
 vislib::graphics::BitmapImage::BitmapImage(unsigned int width,
         unsigned int height, unsigned int channels,
         vislib::graphics::BitmapImage::ChannelType type, const void *data)
-        : data(NULL), chanType(CHANNELTYPE_BYTE), ext(NULL), height(0),
+        : data(NULL), chanType(CHANNELTYPE_BYTE), exts(), height(0),
         labels(NULL), numChans(0), width(0) {
     this->CreateImage(width, height, channels, type, data);
 }
@@ -464,7 +465,7 @@ vislib::graphics::BitmapImage::BitmapImage(unsigned int width,
  */
 vislib::graphics::BitmapImage::BitmapImage(unsigned int width,
         unsigned int height, const vislib::graphics::BitmapImage& tmpl,
-        const void *data) : data(NULL), chanType(CHANNELTYPE_BYTE), ext(NULL),
+        const void *data) : data(NULL), chanType(CHANNELTYPE_BYTE), exts(),
         height(0), labels(NULL), numChans(0), width(0) {
     this->CreateImage(width, height, tmpl, data);
 }
@@ -475,7 +476,7 @@ vislib::graphics::BitmapImage::BitmapImage(unsigned int width,
  */
 vislib::graphics::BitmapImage::BitmapImage(
         const vislib::graphics::BitmapImage& src, bool copyExt) : data(NULL),
-        chanType(CHANNELTYPE_BYTE), ext(NULL), height(0), labels(NULL),
+        chanType(CHANNELTYPE_BYTE), exts(), height(0), labels(NULL),
         numChans(0), width(0) {
     this->CopyFrom(src, copyExt);
 }
@@ -487,7 +488,7 @@ vislib::graphics::BitmapImage::BitmapImage(
 vislib::graphics::BitmapImage::BitmapImage(
         vislib::graphics::BitmapImage::ChannelType type,
         vislib::graphics::BitmapImage::ChannelLabel label1) : data(NULL),
-        chanType(type), ext(NULL), height(0), labels(NULL), numChans(1),
+        chanType(type), exts(), height(0), labels(NULL), numChans(1),
         width(0) {
     this->labels = new ChannelLabel[1];
     this->labels[0] = label1;
@@ -501,7 +502,7 @@ vislib::graphics::BitmapImage::BitmapImage(
         vislib::graphics::BitmapImage::ChannelType type,
         vislib::graphics::BitmapImage::ChannelLabel label1,
         vislib::graphics::BitmapImage::ChannelLabel label2) : data(NULL),
-        chanType(type), ext(NULL), height(0), labels(NULL), numChans(2),
+        chanType(type), exts(), height(0), labels(NULL), numChans(2),
         width(0) {
     this->labels = new ChannelLabel[2];
     this->labels[0] = label1;
@@ -517,7 +518,7 @@ vislib::graphics::BitmapImage::BitmapImage(
         vislib::graphics::BitmapImage::ChannelLabel label1,
         vislib::graphics::BitmapImage::ChannelLabel label2,
         vislib::graphics::BitmapImage::ChannelLabel label3) : data(NULL),
-        chanType(type), ext(NULL), height(0), labels(NULL), numChans(3),
+        chanType(type), exts(), height(0), labels(NULL), numChans(3),
         width(0) {
     this->labels = new ChannelLabel[3];
     this->labels[0] = label1;
@@ -535,7 +536,7 @@ vislib::graphics::BitmapImage::BitmapImage(
         vislib::graphics::BitmapImage::ChannelLabel label2,
         vislib::graphics::BitmapImage::ChannelLabel label3,
         vislib::graphics::BitmapImage::ChannelLabel label4) : data(NULL),
-        chanType(type), ext(NULL), height(0), labels(NULL), numChans(4),
+        chanType(type), exts(), height(0), labels(NULL), numChans(4),
         width(0) {
     this->labels = new ChannelLabel[4];
     this->labels[0] = label1;
@@ -551,10 +552,7 @@ vislib::graphics::BitmapImage::BitmapImage(
 vislib::graphics::BitmapImage::~BitmapImage(void) {
     ARY_SAFE_DELETE(this->data);
     this->height = 0;   // set for paranoia reasons
-    if (this->ext != NULL) {
-        delete this->ext;
-        this->ext = NULL;
-    }
+    this->exts.Clear();
     ARY_SAFE_DELETE(this->labels);
     this->numChans = 0;
     this->width = 0;
@@ -570,10 +568,12 @@ void vislib::graphics::BitmapImage::CopyFrom(
     ARY_SAFE_DELETE(this->data);
     this->data = new char[len];
     memcpy(this->data, src.data, len);
-    if (copyExt && (src.ext != NULL)) {
-        this->SetExtension(src.ext->Clone(*this));
-    } else {
-        this->SetExtension(NULL);
+    this->exts.Clear();
+    if (copyExt && (!src.exts.IsEmpty())) {
+        SIZE_T eCnt = src.exts.Count();
+        for (SIZE_T i = 0; i < eCnt; i++) {
+            this->exts.Append(src.exts[i]->Clone(*this));
+        }
     }
     this->chanType = src.chanType;
     this->height = src.height;
@@ -1005,29 +1005,6 @@ void vislib::graphics::BitmapImage::Invert(unsigned int channel) {
         case CHANNELTYPE_FLOAT:
             this->invert<float>(1.0f, channel);
             break;
-    }
-}
-
-
-/*
- * vislib::graphics::BitmapImage::SetExtension
- */
-void vislib::graphics::BitmapImage::SetExtension(
-        vislib::graphics::BitmapImage::Extension *ext) {
-    if (ext != NULL) {
-        if (this->ext != ext) {
-            if (&(ext->Owner()) != this) {
-                throw vislib::IllegalParamException("ext owner != image", __FILE__, __LINE__);
-            }
-            if (this->ext != NULL) {
-                delete this->ext;
-            }
-            this->ext = ext;
-        }
-
-    } else if (this->ext != NULL) {
-        delete this->ext;
-        this->ext = NULL;
     }
 }
 

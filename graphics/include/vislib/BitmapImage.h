@@ -16,6 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/forceinline.h"
+#include "vislib/PtrArray.h"
 #include "vislib/types.h"
 #include "vislib/UnsupportedOperationException.h"
 
@@ -77,7 +78,7 @@ namespace graphics {
              *
              * @return A clone (deep copy) of this object
              */
-            virtual Extension * Clone(BitmapImage& newowner) = 0;
+            virtual Extension * Clone(BitmapImage& newowner) const = 0;
 
             /**
              * Answer the owner of the extension
@@ -103,6 +104,9 @@ namespace graphics {
             BitmapImage& owner;
 
         };
+
+        /** The of list of extensions */
+        typedef PtrArray<Extension> ExtensionList;
 
         /** A BitmapImage template with Gray byte channels */
         static const BitmapImage TemplateByteGray;
@@ -220,6 +224,15 @@ namespace graphics {
         ~BitmapImage(void);
 
         /**
+         * Adds an image extension object
+         *
+         * @param ext The image extension object
+         */
+        inline void AddExtension(Extension *ext) {
+            this->exts.Append(ext);
+        }
+
+        /**
          * Answers the bytes per pixel of this image.
          *
          * @return The bytes per pixel of this image.
@@ -234,6 +247,13 @@ namespace graphics {
 #endif /* !_WIN32 */
             }
             return base * this->numChans;
+        }
+
+        /**
+         * Removes all image extension objects
+         */
+        inline void ClearExtensions(void) {
+            this->exts.Clear();
         }
 
         /**
@@ -339,6 +359,38 @@ namespace graphics {
         void FlipVertical(void);
 
         /**
+         * Finds the extension of the specified type
+         *
+         * @return The first extension object of the specified type or NULL
+         *         if no extension object of this type is present
+         */
+        template<class Tp>
+        inline Tp* FindExtension(void) {
+            SIZE_T extCnt = this->exts.Count();
+            for (SIZE_T i = 0; i < extCnt; i++) {
+                Tp *ptr = dynamic_cast<Tp *>(this->exts[i]);
+                if (ptr != NULL) return ptr;
+            }
+            return NULL;
+        }
+
+        /**
+         * Finds the extension of the specified type
+         *
+         * @return The first extension object of the specified type or NULL
+         *         if no extension object of this type is present
+         */
+        template<class Tp>
+        inline const Tp* FindExtension(void) const {
+            SIZE_T extCnt = this->exts.Count();
+            for (SIZE_T i = 0; i < extCnt; i++) {
+                const Tp *ptr = dynamic_cast<Tp *>(this->exts[i]);
+                if (ptr != NULL) return ptr;
+            }
+            return NULL;
+        }
+
+        /**
          * Answer the number of channels
          *
          * @return The number of channels
@@ -375,8 +427,8 @@ namespace graphics {
          *
          * @return The image extension object
          */
-        inline Extension * GetExtension(void) {
-            return this->ext;
+        inline ExtensionList& GetExtensions(void) {
+            return this->exts;
         }
 
         /**
@@ -384,8 +436,8 @@ namespace graphics {
          *
          * @return The image extension object
          */
-        inline const Extension * GetExtension(void) const {
-            return this->ext;
+        inline const ExtensionList& GetExtensions(void) const {
+            return this->exts;
         }
 
         /**
@@ -526,10 +578,17 @@ namespace graphics {
         }
 
         /**
-         * Removes the image extension object
+         * Removes the image extension object.
+         *
+         * @param ext The extension object to be removed. If NULL all
+         *            extension objects will be removed.
          */
-        inline void RemoveExtension(void) {
-            this->SetExtension(NULL);
+        inline void RemoveExtension(Extension *ext = NULL) {
+            if (ext == NULL) {
+                this->exts.Clear();
+            } else {
+                this->exts.RemoveAll(ext);
+            }
         }
 
         /**
@@ -546,11 +605,15 @@ namespace graphics {
         }
 
         /**
-         * Sets the image extension object
+         * Sets the image extension object by removing all currently set
+         * extensions and adding the specified one
          *
          * @param ext The image extension object
          */
-        void SetExtension(Extension *ext);
+        inline void SetExtension(Extension *ext) {
+            this->exts.Clear();
+            this->exts.Append(ext);
+        }
 
         /**
          * Answer the width of the image.
@@ -923,7 +986,7 @@ namespace graphics {
         ChannelType chanType;
 
         /** The image extension */
-        Extension *ext;
+        ExtensionList exts;
 
         /** The height of the image in pixels */
         unsigned int height;
