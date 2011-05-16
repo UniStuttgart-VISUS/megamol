@@ -239,9 +239,14 @@ namespace gl {
          * This method preserved the 2D texture state, the 2D texture binding 
          * state and matrix stack contents.
          *
-         * @param colourAttachment The colour attachment to retrieve the ID of.
+         * @param colourAttachment The colour attachment to be drawn. Defaults 
+         *                         to 0.
          * @param minFilter        The texture filtering used for minification.
+         *                         Defaults to GL_LINEAR.
          * @param magFilter        The texture filtering used for magnification.
+         *                         Defaults to GL_LINEAR.
+         * @param depth            The depth in z-direction of the rectangle 
+         *                         drawn.
          *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          *
@@ -252,9 +257,10 @@ namespace gl {
          */
         inline GLenum DrawColourTexture(const UINT colourAttachment = 0,
                 const GLint minFilter = GL_LINEAR, 
-                const GLint magFilter = GL_LINEAR) const {
+                const GLint magFilter = GL_LINEAR,
+                const double depth = 0.5) const {
             return this->drawTexture(this->GetColourTextureID(
-                colourAttachment), minFilter, magFilter);
+                colourAttachment), minFilter, magFilter, depth);
         }
 
         /**
@@ -265,16 +271,20 @@ namespace gl {
          * state and matrix stack contents.
          *
          * @param minFilter The texture filtering used for minification.
+         *                  Defaults to GL_LINEAR.
          * @param magFilter The texture filtering used for magnification.
+         *                  Defaults to GL_LINEAR.
+         * @param depth     The depth in z-direction of the rectangle drawn.
          *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          *
          * @throw IllegalStateException If no depth texture attachment exists.
          */
         inline GLenum DrawDepthTexture(const GLint minFilter = GL_LINEAR,
-                const GLint magFilter = GL_LINEAR) const {
+                const GLint magFilter = GL_LINEAR, 
+                const double depth = 0.5) const {
             return this->drawTexture(this->GetDepthTextureID(), minFilter, 
-                magFilter);
+                magFilter, depth);
         }
 
         /**
@@ -508,11 +518,12 @@ namespace gl {
          * @param id        The ID of a 2D texture.
          * @param minFilter The texture filtering used for minification.
          * @param magFilter The texture filtering used for magnification.
+         * @param depth     The depth in z-direction of the rectangle drawn.
          *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          */
         GLenum drawTexture(const GLuint id, const GLint minFilter, 
-            const GLint magFilter) const;
+            const GLint magFilter, const double depth) const;
 
         /**
          * Check for completeness of the framebuffer. The framebuffer object 

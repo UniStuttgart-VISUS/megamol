@@ -606,7 +606,8 @@ void vislib::graphics::gl::FramebufferObject::createTexture(GLuint& outID,
  * vislib::graphics::gl::FramebufferObject::drawTexture
  */
 GLenum vislib::graphics::gl::FramebufferObject::drawTexture(
-        const GLuint id, const GLint minFilter, const GLint magFilter) const {
+        const GLuint id, const GLint minFilter, const GLint magFilter,
+        const double depth) const {
     USES_GL_VERIFY;
 
     ::glPushAttrib(GL_TEXTURE_BIT | GL_TRANSFORM_BIT);
@@ -627,13 +628,13 @@ GLenum vislib::graphics::gl::FramebufferObject::drawTexture(
 
     ::glBegin(GL_QUADS);
     ::glTexCoord2d(0.0, 0.0);
-    ::glVertex3d(-1.0, -1.0, 0.5);
+    ::glVertex3d(-1.0, -1.0, depth);
     ::glTexCoord2d(1.0, 0.0);
-    ::glVertex3d(1.0, -1.0, 0.5);
+    ::glVertex3d(1.0, -1.0, depth);
     ::glTexCoord2d(1.0, 1.0);
-    ::glVertex3d(1.0, 1.0, 0.5);
+    ::glVertex3d(1.0, 1.0, depth);
     ::glTexCoord2d(0.0, 1.0);
-    ::glVertex3d(-1.0, 1.0, 0.5);
+    ::glVertex3d(-1.0, 1.0, depth);
     ::glEnd();
 
     ::glPopMatrix();
