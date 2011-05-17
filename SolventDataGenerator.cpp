@@ -24,7 +24,7 @@
 #include "vislib/StringTokeniser.h"
 #include "vislib/ASCIIFileBuffer.h"
 #include "vislib/ShallowPoint.h"
-#include <ctime>
+#include "vislib/PerformanceCounter.h"
 #include <iostream>
 #include <fstream>
 #include <omp.h>
@@ -238,7 +238,7 @@ void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(Molecular
 	int *reverseConnectionPtr = &reverseConnection[0];
 	memset(reverseConnectionPtr, -1, reverseConnection.Count()*sizeof(int));
 
-	time_t t = clock();
+	vislib::sys::PerformanceCounter timer(true);
 
 #if 0
 	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
@@ -429,7 +429,7 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 	}
 #endif
 
-    std::cout << "Hydrogen bonds computed in " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << " seconds." << std::endl;
+	std::cout << "Hydrogen bonds computed in " << timer.QueryMillis() << " ms." << std::endl;
 }
 
 
