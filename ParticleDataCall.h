@@ -78,6 +78,7 @@ namespace protein {
                 case 1:
                     return "GetExtend";
             }
+			return "";
         }
 
         /** Ctor. */
