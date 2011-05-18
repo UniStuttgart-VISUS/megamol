@@ -18,8 +18,8 @@ using namespace megamol::trisoup;
  * AbstractTriMeshDataSource::AbstractTriMeshDataSource
  */
 AbstractTriMeshDataSource::AbstractTriMeshDataSource(void) : core::Module(),
-        getDataSlot("getdata", "The slot publishing the loaded data"),
-        objs(), mats(), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0) {
+        objs(), mats(), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0),
+        getDataSlot("getdata", "The slot publishing the loaded data") {
 
     this->getDataSlot.SetCallback(CallTriMeshData::ClassName(), "GetData", &AbstractTriMeshDataSource::getDataCallback);
     this->getDataSlot.SetCallback(CallTriMeshData::ClassName(), "GetExtent", &AbstractTriMeshDataSource::getExtentCallback);

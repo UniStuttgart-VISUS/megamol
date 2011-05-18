@@ -44,6 +44,13 @@ namespace trisoup {
             /** Ctor */
             Material(void);
 
+            /**
+             * Copy ctor
+             *
+             * @param src The object to clone from
+             */
+            Material(const Material& src);
+
             /** Dtor */
             ~Material(void);
 
@@ -309,6 +316,15 @@ namespace trisoup {
             void SetBumpMapFileName(const vislib::TString& filename);
 
             /**
+             * Assignment operator
+             *
+             * @param rhs The right hand side operand
+             *
+             * @return Reference to this
+             */
+            Material& operator=(const Material& rhs);
+
+            /**
              * Test for equality
              *
              * @param rhs The right hand side operand
@@ -328,9 +344,6 @@ namespace trisoup {
              * @return The OpenGL texture object id on success or 0 on failure
              */
             static unsigned int loadTexture(vislib::TString &filename);
-
-            /** Forbidden copy ctor */
-            Material(const Material& src);
 
             /** specular component of the Phong shading model ranges between 0 and 128 */
             float Ns;
@@ -394,6 +407,13 @@ namespace trisoup {
 
             /** Ctor */
             Mesh(void);
+
+            /**
+             * Copy ctor
+             *
+             * @param src The object to clone from
+             */
+            Mesh(const Mesh& src);
 
             /** Dtor */
             ~Mesh(void);
@@ -693,6 +713,15 @@ namespace trisoup {
             }
 
             /**
+             * Assignment operator
+             *
+             * @param rhs The right hand side operand
+             *
+             * @return Reference to this
+             */
+            Mesh& operator=(const Mesh& rhs);
+
+            /**
              * Test for equality
              *
              * @param rhs The right hand side operand
@@ -703,9 +732,6 @@ namespace trisoup {
 
         protected:
         private:
-
-            /** Forbidden copy ctor */
-            Mesh(const Mesh& src);
 
             /**
              * Clears all triangle index data

@@ -13,6 +13,7 @@
 #include "vislib/BitmapImage.h"
 #include "vislib/Exception.h"
 #include "vislib/Log.h"
+#include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 using namespace megamol::trisoup;
@@ -31,6 +32,14 @@ CallTriMeshData::Material::Material(void) : Ns(0.0f), Ni(0.0f), d(0.0f),
     this->Kd[0] = this->Kd[1] = this->Kd[2] = 0.8f;
     this->Ks[0] = this->Ks[1] = this->Ks[2] = 0.0f;
     this->Ke[0] = this->Ke[1] = this->Ke[2] = 0.0f;
+}
+
+
+/*
+ * CallTriMeshData::Material::Material
+ */
+CallTriMeshData::Material::Material(const CallTriMeshData::Material& src) {
+    *this = src;
 }
 
 
@@ -136,6 +145,38 @@ void CallTriMeshData::Material::SetBumpMapFileName(const vislib::TString& filena
 
 
 /*
+ * CallTriMeshData::Material::operator=
+ */
+CallTriMeshData::Material& CallTriMeshData::Material::operator=(const CallTriMeshData::Material& rhs) {
+    this->Ns = rhs.Ns;
+    this->Ni = rhs.Ni;
+    this->d  = rhs.d;
+    this->Tr = rhs.Tr;
+    this->Tf[0] = rhs.Tf[0];
+    this->Tf[1] = rhs.Tf[1];
+    this->Tf[2] = rhs.Tf[2];
+    this->illum = rhs.illum;
+    this->Ka[0] = rhs.Ka[0];
+    this->Ka[1] = rhs.Ka[1];
+    this->Ka[2] = rhs.Ka[2];
+    this->Kd[0] = rhs.Kd[0];
+    this->Kd[1] = rhs.Kd[1];
+    this->Kd[2] = rhs.Kd[2];
+    this->Ks[0] = rhs.Ks[0];
+    this->Ks[1] = rhs.Ks[1];
+    this->Ks[2] = rhs.Ks[2];
+    this->Ke[0] = rhs.Ke[0];
+    this->Ke[1] = rhs.Ke[1];
+    this->Ke[2] = rhs.Ke[2];
+    this->mapFileName = rhs.mapFileName;
+    this->bumpMapFileName = rhs.bumpMapFileName;
+    this->mapID = 0; // texture will be loaded again
+    this->bumpMapID = 0; // texture will be loaded again
+    return *this;
+}
+
+
+/*
  * CallTriMeshData::Material::operator==
  */
 bool CallTriMeshData::Material::operator==(const CallTriMeshData::Material& rhs) const {
@@ -205,14 +246,6 @@ unsigned int CallTriMeshData::Material::loadTexture(vislib::TString &filename) {
     return tex;
 }
 
-
-/*
- * CallTriMeshData::Material::Material
- */
-CallTriMeshData::Material::Material(const CallTriMeshData::Material& src) {
-    throw vislib::UnsupportedOperationException("CallTriMeshData::Material Copy-Ctor", __FILE__, __LINE__);
-}
-
 /****************************************************************************/
 
 
@@ -231,6 +264,14 @@ CallTriMeshData::Mesh::Mesh(void) : triCnt(0), triDT(DT_NONE), /*tri(NULL), */tr
 
 
 /*
+ * CallTriMeshData::Mesh::Mesh
+ */
+CallTriMeshData::Mesh::Mesh(const CallTriMeshData::Mesh& src) {
+    *this = src;
+}
+
+
+/*
  * CallTriMeshData::Mesh::~Mesh
  */
 CallTriMeshData::Mesh::~Mesh(void) {
@@ -238,6 +279,41 @@ CallTriMeshData::Mesh::~Mesh(void) {
     this->clearVrtData();
     this->mat = NULL; // DO NOT DELETE
 
+}
+
+
+/*
+ * CallTriMeshData::Mesh::operator=
+ */
+CallTriMeshData::Mesh& CallTriMeshData::Mesh::operator=(const CallTriMeshData::Mesh& rhs) {
+    this->triCnt = rhs.triCnt;
+    this->triDT = rhs.triDT;
+    this->tri.dataByte = rhs.tri.dataByte;
+    this->triMemOwned = false;
+    if (rhs.triMemOwned) {
+        VLTRACE(VISLIB_TRCELVL_WARN, "Assignment from \"owning\" mesh might by critical");
+    }
+
+    this->vrtCnt = rhs.vrtCnt;
+    this->vrtDT = rhs.vrtDT;
+    this->vrt.dataFloat = rhs.vrt.dataFloat;
+    this->vrtMemOwned = false;
+    if (rhs.vrtMemOwned) {
+        VLTRACE(VISLIB_TRCELVL_WARN, "Assignment from \"owning\" mesh might by critical");
+    }
+
+    this->nrmDT = rhs.nrmDT;
+    this->nrm.dataFloat = rhs.nrm.dataFloat;
+
+    this->colDT = rhs.colDT;
+    this->col.dataByte = rhs.col.dataByte;
+
+    this->texDT = rhs.texDT;
+    this->tex.dataFloat = rhs.tex.dataFloat;
+
+    this->mat = rhs.mat;
+
+    return *this;
 }
 
 
@@ -260,14 +336,6 @@ bool CallTriMeshData::Mesh::operator==(const CallTriMeshData::Mesh& rhs) const {
         && (this->vrtDT == rhs.vrtDT)
         && (this->vrtCnt == rhs.vrtCnt)
         && (this->vrtMemOwned == rhs.vrtMemOwned);
-}
-
-
-/*
- * CallTriMeshData::Mesh::Mesh
- */
-CallTriMeshData::Mesh::Mesh(const CallTriMeshData::Mesh& src) {
-    throw vislib::UnsupportedOperationException("CallTriMeshData::Mesh Copy-Ctor", __FILE__, __LINE__);
 }
 
 

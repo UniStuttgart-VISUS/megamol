@@ -72,7 +72,7 @@ namespace volumetrics {
         bool areSurfacesJoinable(int sjdIdx1, int surfIdx1, int sjdIdx2, int surfIdx2);
 
         // thomasbm: full enclosing test for two surfaces specified by global-id
-        bool testFullEnclosing(int enclosingIdx, int enclosedIdx, vislib::Array<vislib::Array<Surface*>>& globaIdSurfaces);
+        bool testFullEnclosing(int enclosingIdx, int enclosedIdx, vislib::Array<vislib::Array<Surface*> >& globaIdSurfaces);
 
         unsigned int MaxGlobalID;
 
@@ -81,7 +81,7 @@ namespace volumetrics {
         vislib::sys::CriticalSection RewriteGlobalID;
 
         // thomasbm: TODO: use hash table here!? STL-version?
-        vislib::Array<BoundingBox<unsigned>> globalIdBoxes;
+        vislib::Array<BoundingBox<unsigned> > globalIdBoxes;
 
         vislib::Array<SubJobData*> SubJobDataList;
 
