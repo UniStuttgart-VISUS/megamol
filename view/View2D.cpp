@@ -30,8 +30,8 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         resetViewSlot("resetView", "Triggers the reset of the view"),
         showBBoxSlot("showBBox", "Shows/hides the bounding box"),
-        viewX(0.0f), viewY(0.0f), viewZoom(1.0f), width(1.0f),
-        incomingCall(NULL) {
+        viewX(0.0f), viewY(0.0f), viewZoom(1.0f), viewUpdateCnt(0),
+        width(1.0f), incomingCall(NULL), overrideViewTile(NULL) {
 
     this->rendererSlot.SetCompatibleCall<CallRender2DDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
@@ -52,6 +52,7 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
  */
 view::View2D::~View2D(void) {
     this->Release();
+    this->overrideViewTile = NULL;
 }
 
 
@@ -59,7 +60,7 @@ view::View2D::~View2D(void) {
  * view::View2D::GetCameraSyncNumber
  */
 unsigned int view::View2D::GetCameraSyncNumber(void) const {
-    return 0; // TODO: Implement
+    return this->viewUpdateCnt;
 }
 
 
@@ -67,7 +68,9 @@ unsigned int view::View2D::GetCameraSyncNumber(void) const {
  * view::View2D::SerialiseCamera
  */
 void view::View2D::SerialiseCamera(vislib::Serialiser& serialiser) const {
-    // TODO: Implement
+    serialiser.Serialise(this->viewX, "viewX");
+    serialiser.Serialise(this->viewY, "viewY");
+    serialiser.Serialise(this->viewZoom, "viewZ");
 }
 
 
@@ -75,7 +78,9 @@ void view::View2D::SerialiseCamera(vislib::Serialiser& serialiser) const {
  * view::View2D::DeserialiseCamera
  */
 void view::View2D::DeserialiseCamera(vislib::Serialiser& serialiser) {
-    // TODO: Implement
+    serialiser.Deserialise(this->viewX, "viewX");
+    serialiser.Deserialise(this->viewY, "viewY");
+    serialiser.Deserialise(this->viewZoom, "viewZ");
 }
 
 
@@ -110,18 +115,9 @@ void view::View2D::Render(void) {
             static_cast<GLsizei>(this->height));
     }
 
-    if (this->incomingCall != NULL) {
-        if (this->incomingCall->IsViewportSet()) {
-            ::glViewport(0, 0,
-                this->incomingCall->ViewportWidth(),
-                this->incomingCall->ViewportHeight());
-        }
-    }
-
     const float *bkgndCol = (this->overrideBkgndCol != NULL)
         ? this->overrideBkgndCol : this->bkgndColour();
     ::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
-    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // depth could be required even for 2d
 
     if (cr2d == NULL) {
         this->renderTitle(0.0f, 0.0f, this->width, this->height,
@@ -144,13 +140,32 @@ void view::View2D::Render(void) {
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
     float asp = h / w;
+    if (this->overrideViewTile != NULL) {
+        asp = this->overrideViewTile[3]
+            / this->overrideViewTile[2];
+    }
     ::glScalef(asp, 1.0f, 1.0f);
+
+    float vx = this->viewX;
+    float vy = this->viewY;
+    float vz = this->viewZoom;
+    if (this->overrideViewTile != NULL) {
+        float xo = (this->overrideViewTile[0] + 0.5f * this->overrideViewTile[2] - 0.5f * this->overrideViewTile[4])
+            / this->overrideViewTile[4];
+        float yo = (this->overrideViewTile[1] + 0.5f * this->overrideViewTile[3] - 0.5f * this->overrideViewTile[5])
+            / this->overrideViewTile[5];
+        float zf = this->overrideViewTile[5]
+            / this->overrideViewTile[3];
+        vx -= (xo / (0.5f * vz)) * this->overrideViewTile[4] / this->overrideViewTile[5];
+        vy += yo / (0.5f * vz);
+        vz *= zf;
+    }
 
     ::glMatrixMode(GL_MODELVIEW);
     ::glLoadIdentity();
 
-    ::glScalef(this->viewZoom, this->viewZoom, 1.0f);
-    ::glTranslatef(this->viewX, this->viewY, 0.0f);
+    ::glScalef(vz, vz, 1.0f);
+    ::glTranslatef(vx, vy, 0.0f);
 
     cr2d->SetBackgroundColour(
         static_cast<unsigned char>(bkgndCol[0] * 255.0f),
@@ -159,10 +174,10 @@ void view::View2D::Render(void) {
 
     asp = 1.0f / asp;
     vislib::math::Rectangle<float> vr(
-        (-asp / this->viewZoom - this->viewX),
-        (-1.0f / this->viewZoom - this->viewY),
-        (asp / this->viewZoom - this->viewX),
-        (1.0f / this->viewZoom - this->viewY));
+        (-asp / vz - vx),
+        (-1.0f / vz - vy),
+        (asp / vz - vx),
+        (1.0f / vz - vy));
     cr2d->SetBoundingBox(vr);
 
     if (this->incomingCall == NULL) {
@@ -171,6 +186,7 @@ void view::View2D::Render(void) {
     } else {
         cr2d->SetOutputBuffer(*this->incomingCall);
     }
+    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // depth could be required even for 2d
 
     if (this->showBBoxSlot.Param<param::BoolParam>()->Value()) {
         ::glEnable(GL_BLEND);
@@ -222,6 +238,7 @@ void view::View2D::ResetView(void) {
         this->viewY = 0.0f;
         this->viewZoom = 1.0f;
     }
+    this->viewUpdateCnt++;
 }
 
 
@@ -320,6 +337,9 @@ void view::View2D::SetCursor2DPosition(float x, float y) {
         float movSpeed = 2.0f / (this->viewZoom * this->height);
         this->viewX -= (this->mouseX - x) * movSpeed;
         this->viewY += (this->mouseY - y) * movSpeed;
+        if (((this->mouseX - x) > 0.0f) || ((this->mouseY - y) > 0.0f)) {
+            this->viewUpdateCnt++;
+        }
 
     } else if (this->mouseMode == 2) { // zoom
         const double spd = 2.0;
@@ -336,6 +356,9 @@ void view::View2D::SetCursor2DPosition(float x, float y) {
             log(static_cast<double>(this->viewZoom / base)) / logSpd
             + static_cast<double>(((this->mouseY - y) * 1.0f / this->height)))) * base;
 
+        if (!vislib::math::IsEqual(newZoom, this->viewZoom)) {
+            this->viewUpdateCnt++;
+        }
         this->viewZoom = newZoom;
 
     }
@@ -371,27 +394,25 @@ void view::View2D::SetInputModifier(mmcInputModifier mod, bool down) {
 bool view::View2D::OnRenderView(Call& call) {
     float overBC[3];
     int overVP[4] = {0, 0, 0, 0};
+    float overTile[6];
     view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
     if (crv == NULL) return false;
 
     this->incomingCall = crv;
-
-    this->overrideViewport = overVP;
-    //if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
-    //    this->cam.SetParameters(this->camOverrides);
-    //    this->camOverrides.DynamicCast<CameraParamOverride>()
-    //        ->SetOverrides(*crv);
-        if (crv->IsViewportSet()) {
-            overVP[2] = crv->ViewportWidth();
-            overVP[3] = crv->ViewportHeight();
-            //if (!crv->IsTileSet()) {
-            //    this->camOverrides->SetVirtualViewSize(
-            //        static_cast<vislib::graphics::ImageSpaceType>(crv->ViewportWidth()),
-            //        static_cast<vislib::graphics::ImageSpaceType>(crv->ViewportHeight()));
-            //    this->camOverrides->ResetTileRect();
-            //}
-        }
-    //}
+    this->overrideViewport = overVP; // never set window viewport
+    if (crv->IsViewportSet()) {
+        overVP[2] = crv->ViewportWidth();
+        overVP[3] = crv->ViewportHeight();
+    }
+    if (crv->IsTileSet()) {
+        overTile[0] = crv->TileX();
+        overTile[1] = crv->TileY();
+        overTile[2] = crv->TileWidth();
+        overTile[3] = crv->TileHeight();
+        overTile[4] = crv->VirtualWidth();
+        overTile[5] = crv->VirtualHeight();
+        this->overrideViewTile = overTile;
+    }
     if (crv->IsBackgroundSet()) {
         overBC[0] = static_cast<float>(crv->BackgroundRed()) / 255.0f;
         overBC[1] = static_cast<float>(crv->BackgroundGreen()) / 255.0f;
@@ -401,11 +422,9 @@ bool view::View2D::OnRenderView(Call& call) {
 
     this->Render();
 
-    //if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
-    //    this->cam.SetParameters(this->frozenValues ? this->frozenValues->camParams : this->camParams);
-    //}
     this->overrideBkgndCol = NULL;
     this->overrideViewport = NULL;
+    this->overrideViewTile = NULL;
     this->incomingCall = NULL;
 
     return true;

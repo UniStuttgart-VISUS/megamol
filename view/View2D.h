@@ -241,11 +241,20 @@ namespace view {
         /** The view zoom factor */
         float viewZoom;
 
+        /** the update counter for the view settings */
+        unsigned int viewUpdateCnt;
+
         /** the viewport width */
         float width;
 
         /** the incoming rendering call */
         class CallRenderView *incomingCall;
+
+        /**
+         * 6 floats holding the override information for the viewing tile:
+         *   tileX, tileY, tileW, tileH, fullW, fullH
+         */
+        float *overrideViewTile;
 
     };
 
