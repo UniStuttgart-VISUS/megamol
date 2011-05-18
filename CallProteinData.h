@@ -99,11 +99,12 @@ namespace protein {
          */
         static const char * FunctionName(unsigned int idx) {
             switch( idx) {
-                case 0:
-            return "GetData";
-                case 1:
-                    return "GetExtend";
+            case 0:
+                return "GetData";
+            case 1:
+                return "GetExtend";
             }
+			return "";
         }
 
         /** name alias for index pairs */

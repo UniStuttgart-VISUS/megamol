@@ -239,6 +239,7 @@ void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(Molecular
 	memset(reverseConnectionPtr, -1, reverseConnection.Count()*sizeof(int));
 
 	vislib::sys::PerformanceCounter timer(true);
+	//timer.SetMark();
 
 #if 0
 	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
@@ -429,7 +430,7 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 	}
 #endif
 
-	std::cout << "Hydrogen bonds computed in " << timer.QueryMillis() << " ms." << std::endl;
+	std::cout << "Hydrogen bonds computed in " << std::fixed << timer.ToMillis(timer.Difference()) << " ms." << std::endl;
 }
 
 
@@ -446,6 +447,9 @@ bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(Molecula
 		memset(&this->hydrogenBondStatistics[0], 0, hydrogenBondStatistics.Count()*sizeof(unsigned int));
 	}
 	unsigned int *hydrogenBondStatisticsPtr = &this->hydrogenBondStatistics[0];
+
+	unsigned int solventAtoms = 0;
+	unsigned int polymerAtoms = 0;
 
 	for(int frameId = 0; frameId < dataSource->FrameCount(); frameId++) {
 		dataSource->SetFrameID(frameId);
@@ -470,6 +474,13 @@ bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(Molecula
 
 			//if (dataSource->IsSolvent(residue)) continue;
 			bool isSolvent = dataSource->IsSolvent(residue);
+
+			if (frameId==0) {
+				if (isSolvent)
+					solventAtoms += residue->AtomCount();
+				else
+					polymerAtoms += residue->AtomCount();
+			}
 
 			// vorerst nur Sauerstoff und Stickstoff als Akzeptor/Donator (N, O)
 			int lastAtomIdx = residue->FirstAtomIndex()+residue->AtomCount();
@@ -513,6 +524,10 @@ bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(Molecula
 	/*dataSource*/dataTarget->SetAtomHydrogenBondStatistics(hydrogenBondStatisticsPtr/*, this->solvResCount*/);
 	dataSource->SetFrameID(savedSrcFrameId);
 	dataTarget->SetFrameID(savedTargetFrameId);
+
+	std::cout << "solvent atoms: " << solventAtoms << " polymer atoms: " << polymerAtoms << std::endl;
+
+	return true;
 }
 #endif
 

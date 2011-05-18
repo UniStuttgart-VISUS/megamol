@@ -341,6 +341,7 @@ bool protein::SolventVolumeRenderer::create ( void ) {
 
 #ifdef USE_VERTEX_SKIP_SHADER
 	// this version of the volume vertex shader saves a lot of fragment processing power in UpdateVolumeTexture()
+#pragma message ( "WARNING: since the user can controll density and coloing filter radius separately, this optimization might skip too many vertices!" )
 	vislib::StringA updateVolumeVertex("volume::std::updateVolumeSkipDensityVertex");
 #else
 	vislib::StringA updateVolumeVertex("volume::std::updateVolumeVertex");
@@ -1818,11 +1819,11 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->volFBO);
 	glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 
-	glColor4f( 0.0, 0.0, 0.0, 1.0);
+	glColor4f( 0.0f, 0.0f, 0.0f, 1.0f);
 
 	float bgColor[4];
 	glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
-	glClearColor( 0.1, 0.1, 0.1, 0.0);
+	glClearColor( 0.1f, 0.1f, 0.1f, 0.0f);
 	//glClearColor( 0.5, 0.5, 0.5, 0.0);
 	// clear 3d texture
 
