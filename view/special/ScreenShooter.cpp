@@ -208,7 +208,7 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
         animToSlot("anim::to", "The last time"),
         animStepSlot("anim::step", "The time step"),
         makeAnimSlot("anim::makeAnim", "Flag whether or not to make an animation of screen shots"),
-        running(false), animLastFrameTime(0) {
+        running(false), animLastFrameTime(0), outputCounter(0) {
 
     this->viewNameSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->viewNameSlot);
@@ -249,7 +249,8 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
     this->animToSlot << new param::IntParam(0, 0);
     this->MakeSlotAvailable(&this->animToSlot);
 
-    this->animStepSlot << new param::IntParam(1, 1);
+    this->animStepSlot << new param::FloatParam(1.0f, 0.1f);
+    //this->animStepSlot << new param::IntParam(1, 1);
     this->MakeSlotAvailable(&this->animStepSlot);
 
     this->makeAnimSlot << new param::BoolParam(false);
@@ -328,7 +329,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
     if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
         param::ParamSlot* time = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time"));
         if (time != NULL) {
-            unsigned int frameTime = static_cast<unsigned int>(time->Param<param::FloatParam>()->Value());
+            float frameTime = time->Param<param::FloatParam>()->Value();
             if (frameTime == this->animLastFrameTime) {
                 this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
                 Log::DefaultLog.WriteInfo("Animation screen shooting aborted: time code did not change");
@@ -340,7 +341,12 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
                 if (ext.EndsWith(_T(".png"))) {
                     filename.Truncate(filename.Length() - 4);
                 }
-                ext.Format(_T(".%.5u.png"), this->animLastFrameTime);
+                //ext.Format(_T(".%.5u.png"), this->animLastFrameTime);
+				//ext.Format(_T(".%.5u.png"), this->outputCounter);
+				int intPart = floor(this->animLastFrameTime);
+				float fractPart = this->animLastFrameTime-(float)intPart;
+				ext.Format(_T(".%.5d.%03d.png"), intPart, (int)(fractPart*1000.0f));
+				outputCounter++;
                 filename += ext;
             }
         } else {
@@ -793,13 +799,13 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
     vislib::sys::Log::DefaultLog.WriteInfo("Screen shot stored");
 
     if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
-        if (this->animLastFrameTime >= static_cast<unsigned int>(this->animToSlot.Param<param::IntParam>()->Value())) {
+        if (this->animLastFrameTime >= this->animToSlot.Param<param::IntParam>()->Value()) {
             Log::DefaultLog.WriteInfo("Animation screen shots complete");
         } else {
             param::ParamSlot* time = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time"));
             if (time != NULL) {
-                unsigned int nextTime = this->animLastFrameTime
-                    + this->animStepSlot.Param<param::IntParam>()->Value();
+                float nextTime = this->animLastFrameTime
+                    + this->animStepSlot.Param<param::FloatParam>()->Value();
                 time->Param<param::FloatParam>()->SetValue(static_cast<float>(nextTime));
                 closeAfter = false;
 
