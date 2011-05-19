@@ -236,6 +236,13 @@ namespace protein {
          */
         void writeVolumeRAW();
 
+		/**
+		 * Count visible solvent molecules (by type).
+		 *
+		 * @param mol The data interface.
+		 */
+		void FindVisibleSolventMolecules( MolecularDataCall *mol);
+
 		/**********************************************************************
 		 * variables
 		 **********************************************************************/
@@ -305,6 +312,9 @@ namespace protein {
 		megamol::core::param::ParamSlot accumulateVolume;
 		megamol::core::param::ParamSlot accumulateFactor;
 
+        // compute number of solvent molecules (by residue type) in hydration shell
+		megamol::core::param::ParamSlot countSolMolParam;
+
 		// shader for the spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader sphereSolventShader;
 		// shader for the cylinders (raycasting view)
@@ -325,6 +335,8 @@ namespace protein {
         vislib::graphics::gl::GLSLShader volRayLengthShader;
 		// DEBUG
         vislib::graphics::gl::GLSLShader sphereShader;
+        vislib::graphics::gl::GLSLShader visMolShader;
+        vislib::graphics::gl::GLSLShader solTypeCountShader;
 		
 		// attribute locations for GLSL-Shader
 		GLint attribLocInParams;
@@ -411,6 +423,21 @@ namespace protein {
         bool forceUpdateVolumeTexture, forceUpdateColoringMode;
 
 		megamol::protein::GridNeighbourFinder<float> gnf;
+
+		// array for rendering the solvent molecules' atoms
+		vislib::Array<float> solventAtomPos;
+		// array for solvent molecules' atom residue type & the atom idx
+		vislib::Array<float> solventAtomParams;
+		// textures/FBOs for visible molecule counting
+		vislib::graphics::gl::FramebufferObject molVisFbo;
+        // dimensions of the molVisFbo
+        unsigned int molVisFboWidth;
+        unsigned int molVisFboHeight;
+        // VBO for visible molecule counting
+        GLuint molVisVbo;
+        // framebuffer object for molecule type counting
+        vislib::graphics::gl::FramebufferObject solTypeCountFbo;
+
 	};
 
 

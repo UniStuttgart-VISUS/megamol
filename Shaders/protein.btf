@@ -376,6 +376,66 @@ void main(void) {
           </snippet>
         </shader>
 
+        <shader name="visibleSolventMoleculeVertex">
+            <snippet type="version">110</snippet>
+            <snippet type="string">
+                <!--
+// density volume lookup for a simple neighbour test ...
+uniform sampler3D volumeSampler;
+uniform vec3 minBBox;
+uniform vec3 invBBoxExtend;
+uniform float solventMolThreshold;
+
+attribute vec2 inParams;
+
+void main(void) {
+	// translate position to 3d-texture coordinates: ( pos - min) / ||max-min||
+	vec3 volPos = ( gl_Vertex.xyz - minBBox) * invBBoxExtend;
+	float visible = texture3D( volumeSampler, volPos).w < solventMolThreshold ? 0.0 : 1.0;	
+    
+    // send color to fragment shader
+    //gl_FrontColor = vec4( 1.0, inParams.x, inParams.y, 1.0);
+    gl_FrontColor = vec4( visible, inParams.x, inParams.y, 1.0);
+    
+    
+    gl_Position = gl_ModelViewProjectionMatrix * vec4( float( int( inParams.y + 0.5) / 8192), 
+        float( mod( floor( inParams.y + 0.5), 8192.0)), 
+        0.0, visible);
+    
+    //gl_Position = gl_ModelViewProjectionMatrix * vec4( inParams.x, 0.0, 0.0, visible);
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="solventTypeCountVertex">
+            <snippet type="version">110</snippet>
+            <snippet type="string">
+                <!--
+void main(void) {
+    // send color to fragment shader
+    if( gl_Vertex.x > 0.0 )
+        gl_FrontColor = vec4( 1.0, 1.0, 1.0, 1.0);
+    else
+        gl_FrontColor = vec4( 0.0, 0.0, 0.0, 0.0);
+    
+    gl_Position = gl_ModelViewProjectionMatrix * vec4( gl_Vertex.y, 0.0, 0.0, 1.0);
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="visibleSolventMoleculeFragment">
+            <snippet type="version">110</snippet>
+            <snippet type="string">
+                <!--
+void main(void) {
+    gl_FragColor = gl_Color;
+}
+-->
+            </snippet>
+        </shader>
+
         <shader name="sphereFragment">
             <snippet type="version">110</snippet>
             <snippet name="commondefines"/>
@@ -6455,7 +6515,7 @@ void main(void) {
         color = decodeColor( colors.y);
 #endif // FLATSHADE_SES
     // uniform color
-    color = vec3( 1.0, 0.75, 0.0);
+    //color = vec3( 1.0, 0.75, 0.0);
     //color = vec3( 0.98, 0.82, 0.0 ); // for VIS
     //color = vec3( 0.02, 0.75, 0.02);
     //color = vec3( 0.19, 0.52, 0.82);
@@ -7175,7 +7235,7 @@ void main(void) {
 #endif // FLATSHADE_SES
     // ========== END compute color ==========
     // uniform color
-    color = vec3( 0.0, 0.75, 1.0);
+    //color = vec3( 0.0, 0.75, 1.0);
     //color = vec3( 0.0, 0.6, 0.6 ); // for VIS
     //color = vec3( texCoord2.xy, 0.0);
     //color = vec3( 0.8, 0.0, 0.2);

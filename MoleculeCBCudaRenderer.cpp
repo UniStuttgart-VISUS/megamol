@@ -611,13 +611,13 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
     cudaGLUnmapBufferObject( this->singTexPBO);
     
     // copy PBO to texture
-    //glBindBuffer( GL_PIXEL_UNPACK_BUFFER, this->singTexPBO);
-    //glEnable(GL_TEXTURE_2D);
-    //glBindTexture(GL_TEXTURE_2D, this->singTex);
-    //glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, ( numProbes/params.texSize + 1) * this->probeNeighborCount, numProbes % params.texSize, GL_RGB, GL_FLOAT, NULL);
-    //glBindTexture(GL_TEXTURE_2D, 0);
-    //glDisable(GL_TEXTURE_2D);
-    //glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0);
+    glBindBuffer( GL_PIXEL_UNPACK_BUFFER, this->singTexPBO);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, this->singTex);
+    glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, ( numProbes/params.texSize + 1) * this->probeNeighborCount, numProbes % params.texSize, GL_RGB, GL_FLOAT, NULL);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+    glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0);
 #endif
 
 #if 1
@@ -1670,6 +1670,11 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
     //cudaError e;
     //e = cudaGetLastError();
 
+	//cuMemGetInfo 
+	uint free, total;
+	cuMemGetInfo( &free, &total);
+	vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR, 
+		"Free GPU Memory: %i / %i (MB)", free / ( 1024 * 1024), total / ( 1024 * 1024));
 	// array for sorted atom positions
     allocateArray((void**)&m_dSortedPos, memSize);
 	// array for sorted atom positions
