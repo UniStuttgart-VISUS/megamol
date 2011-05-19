@@ -28,7 +28,7 @@
 
 #include <cutil_inline.h>
 #include <cutil_gl_inline.h>
-#include <cutil_gl_error.h>
+//#include <cutil_gl_error.h>
 #include <cuda_gl_interop.h>
 #include <cudpp/cudpp.h>
 

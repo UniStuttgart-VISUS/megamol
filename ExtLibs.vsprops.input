@@ -12,7 +12,7 @@
   <Tool
 		Name="VCLinkerTool"
 		AdditionalLibraryDirectories="%withNETCDF%!$(NETCDFPath)\lib$(BitsD);!!%withOPENCL%!$(OPENCLPath)\OpenCL\common\lib\x64;!!%withCUDA%!$(CUDA_LIB_PATH);$(CUDAPath)/C/common/lib;!!"
-		AdditionalDependencies="%withNETCDF%!netcdf$(Bits).lib !!%withOPENCL%!OpenCL.lib !!%withCUDA%!cudart.lib cutil$(BitsD).lib cudpp$(BitsD).lib !!"
+		AdditionalDependencies="%withNETCDF%!netcdf$(Bits).lib !!%withOPENCL%!OpenCL.lib !!%withCUDA%!cudart.lib cutil$(BitsD).lib cudpp$(BitsD).lib cuda.lib !!"
 	/>
   <UserMacro
   Name="OutputBin"

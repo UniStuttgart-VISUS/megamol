@@ -84,13 +84,15 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 		accumulateColors("accumulateColors", "accumulate color distribution on the volume surface over time"),
 		accumulateVolume("accumulateVolume", "accumulate volume density over time"),
 		accumulateFactor("accumulateFactor", "accumulate factor for color/volume accumulation ..."),
+        countSolMolParam("countSolventMol", "compute number of solvent molecules (by residue type) in hydration shell"),
 		currentFrameId ( 0 ), atomCount( 0 ), volumeTex( 0), volumeSize( 128), volFBO( 0),
 		volFilterRadius( 1.75f), volDensityScale( 1.0f),
 		width( 0), height( 0), volRayTexWidth( 0), volRayTexHeight( 0),
 		volRayStartTex( 0), volRayLengthTex( 0), volRayDistTex( 0),
 		renderIsometric( true), meanDensityValue( 0.0f), isoValue1( 0.5f), /*isoValue2(-0.5f),*/
 		volIsoOpacity( 0.4f), volClipPlaneFlag( false), volClipPlaneOpacity( 0.4f),
-		forceUpdateVolumeTexture( true), forceUpdateColoringMode(true)
+		forceUpdateVolumeTexture( true), forceUpdateColoringMode(true),
+        molVisVbo( 0)
 {
 	// set caller slot for different data calls
 	this->protDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -225,6 +227,8 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 	this->accumulateFactor.SetParameter(new param::FloatParam(0.2f, 0.0f));
 	this->MakeSlotAvailable( &this->accumulateFactor);
 
+    this->countSolMolParam.SetParameter(new param::BoolParam( false));
+	this->MakeSlotAvailable( &this->countSolMolParam);
 
 	// make all slots available
 	this->MakeSlotAvailable( &this->volIsoValue1Param );
@@ -369,6 +373,14 @@ bool protein::SolventVolumeRenderer::create ( void ) {
 
 	// Load dual isosurface rendering shader
 	if( !loadShader( this->dualIsosurfaceShader, "volume::std::volumeDualIsoVertex", "volume::std::volumeDualIsoFragment" ) )
+		return false;
+
+	// Load visible solvent molecule shader
+	if( !loadShader( this->visMolShader, "protein::std::visibleSolventMoleculeVertex", "protein::std::visibleSolventMoleculeFragment" ) )
+		return false;
+
+	// Load solvent type counting shader
+    if( !loadShader( this->solTypeCountShader, "protein::std::solventTypeCountVertex", "protein::std::visibleSolventMoleculeFragment" ) )
 		return false;
 
 	return true;
@@ -799,9 +811,22 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 	// re-enable the output buffer
 	cr3d->EnableOutputBuffer();
 #else
-	// =============== Protein Rendering ===============
-	// disable the output buffer
-	cr3d->DisableOutputBuffer();
+	// =============== Molecule Rendering ===============
+
+    if( this->countSolMolParam.Param<param::BoolParam>()->Value() ) {
+        // disable the output buffer
+        cr3d->DisableOutputBuffer();
+        // find visible molecules
+	    //glEnable( GL_DEPTH_TEST);
+	    //glDepthFunc(GL_LEQUAL);
+        glDisable( GL_DEPTH_TEST);
+        this->FindVisibleSolventMolecules( mol);
+        // re-enable the output buffer
+        cr3d->EnableOutputBuffer();
+    }
+
+    // disable the output buffer
+    cr3d->DisableOutputBuffer();
 	// start rendering to the FBO for protein rendering
 	this->proteinFBO.Enable();
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -824,14 +849,17 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 			scale = 1.0f;
 		glScalef( scale, scale, scale);
 		//cr3d->SetOutputBuffer( &this->proteinFBO); // TODO: Handle incoming buffers!
+
 		RenderMolecules(mol, this->atomPosInterPtr);
 
 		RenderHydrogenBounds(mol, this->atomPosInterPtr); // TEST
+
 	glPopMatrix();
 	// stop rendering to the FBO for protein rendering
 	this->proteinFBO.Disable();
 	// re-enable the output buffer
 	cr3d->EnableOutputBuffer();
+    
 #endif
 		
 // DEBUG
@@ -944,6 +972,242 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 	return retval;
 }
 
+/*
+ * count visible solvent molecules
+ */
+void protein::SolventVolumeRenderer::FindVisibleSolventMolecules( MolecularDataCall *mol) {
+    // TODO: write list of solvent atoms and residue indices only once, update atom positions for each frame
+
+    // atom counter
+    unsigned int atomCnt = 0;
+    unsigned int molCnt = 0;
+	// reserve memory
+	this->solventAtomPos.AssertCapacity( mol->AtomCount() * 3);
+    this->solventAtomPos.Clear();
+    this->solventAtomParams.AssertCapacity( mol->AtomCount() * 2);
+    this->solventAtomParams.Clear();
+	// get all atoms of all solvent molecules
+	// loop over all chains
+	for( unsigned int chCnt = 0; chCnt < mol->ChainCount(); chCnt++ ) {
+		// check chain type (do nothing if not solvent
+		if( mol->Chains()[chCnt].Type() != MolecularDataCall::Chain::SOLVENT )
+			continue;
+        // molecule indices of current chain
+        unsigned int firstMolIdx = mol->Chains()[chCnt].FirstMoleculeIndex();
+        unsigned int lastMolIdx = firstMolIdx + mol->Chains()[chCnt].MoleculeCount();
+        for( unsigned int mCnt = firstMolIdx; mCnt < lastMolIdx; mCnt++ ) {
+            // count all solvent molecules
+            molCnt++;
+            // residue indices of current molecule
+            unsigned int firstResIdx = mol->Molecules()[mCnt].FirstResidueIndex();
+            unsigned int lastResIdx = firstResIdx + mol->Molecules()[mCnt].ResidueCount();            
+            for( unsigned int rCnt = firstResIdx; rCnt < lastResIdx; rCnt++ ) {
+                // atom indices of current residue
+                unsigned int firstAtomIdx = mol->Residues()[rCnt]->FirstAtomIndex();
+                unsigned int lastAtomIdx = firstAtomIdx + mol->Residues()[rCnt]->AtomCount();
+                // search for solvent residue type index
+                unsigned int solResIdx = 0;
+                for( unsigned int i = 0; i < mol->AtomSolventResidueCount(); i++ ) {
+                    if( mol->SolventResidueIndices()[i] == mol->Residues()[rCnt]->Type() ) {
+                        solResIdx = i;
+                        break;
+                    }
+                }
+                for( unsigned int aCnt = firstAtomIdx; aCnt < lastAtomIdx; aCnt++ ) {
+                    // set solvent residue type index
+                    this->solventAtomParams.Add( static_cast<float>(solResIdx));
+                    this->solventAtomParams.Add( static_cast<float>(mCnt));
+                    // set the atom position
+                    this->solventAtomPos.Add( mol->AtomPositions()[aCnt*3]);
+                    this->solventAtomPos.Add( mol->AtomPositions()[aCnt*3+1]);
+                    this->solventAtomPos.Add( mol->AtomPositions()[aCnt*3+2]);
+                    // count new atom
+                    atomCnt++;
+                }
+            }
+        }
+	}
+
+    // compute the dimensions of the FBO
+    this->molVisFboWidth = molCnt / 8192 + 1;
+    this->molVisFboHeight = vislib::math::Min( molCnt, 8192U);
+    //this->molVisFboWidth = mol->AtomSolventResidueCount();
+    //this->molVisFboHeight = 1;
+    // create fbo
+    if( this->molVisFbo.IsValid() ) {
+        if( this->molVisFbo.GetHeight() != this->molVisFboHeight || this->molVisFbo.GetWidth() != this->molVisFboWidth ) {
+            this->molVisFbo.Create( this->molVisFboWidth, this->molVisFboHeight, GL_RGB32F, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        }
+    } else {
+        this->molVisFbo.Create( this->molVisFboWidth, this->molVisFboHeight, GL_RGB32F, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+    }
+
+    // create VBO
+    if( !glIsBuffer( this->molVisVbo) )
+        glGenBuffers( 1, &this->molVisVbo);
+    glBindBuffer( GL_PIXEL_PACK_BUFFER_EXT, molVisVbo);
+    glBufferData( GL_PIXEL_PACK_BUFFER_EXT, this->molVisFboWidth*this->molVisFboHeight*3*sizeof(float), NULL, GL_DYNAMIC_DRAW_ARB );
+    glBindBuffer( GL_PIXEL_PACK_BUFFER_EXT, 0);
+
+    // --- start rendering ---
+	vislib::math::Cuboid<float> bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+	vislib::math::Vector<float, 3> invBBoxDimension( 1.0f/bbox.Width(), 1.0f/bbox.Height(), 1.0f/bbox.Depth());
+
+    // START draw overlay
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    //glOrtho( 0.0, mol->AtomSolventResidueCount(), 0.0, 1.0, 0.0, 1.0);
+    glOrtho( 0.0, molVisFboWidth, 0.0, molVisFboHeight, 0.0, 1.0);
+    glDisable( GL_LIGHTING);
+
+    // start rendering to FBO
+    this->molVisFbo.Enable();
+    // get and set clear color and clear
+    float clearCol[4];
+    glGetFloatv( GL_COLOR_CLEAR_VALUE, clearCol);
+    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f);
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+	// volume texture to look up densities ...
+	glActiveTexture( GL_TEXTURE0);
+	glBindTexture( GL_TEXTURE_3D, this->volumeTex);
+
+	//glBlendFunc( GL_ONE, GL_ONE);
+	//glEnable( GL_BLEND);
+
+    // render all atoms as spheres and write the Id to the red color channel
+    this->visMolShader.Enable();
+    // set uniform parameters
+	glUniform1i( this->visMolShader.ParameterLocation("volumeSampler"), 0);
+	glUniform3fv( this->visMolShader.ParameterLocation("minBBox"), 1, bbox.GetOrigin().PeekCoordinates());
+	glUniform3fv( this->visMolShader.ParameterLocation("invBBoxExtend"), 1, invBBoxDimension.PeekComponents() );
+	glUniform1f( this->visMolShader.ParameterLocation("solventMolThreshold"), solventMolThreshold.Param<param::FloatParam>()->Value() );
+    GLint inparams = glGetAttribLocation( this->visMolShader, "inParams");
+    glEnableClientState( GL_VERTEX_ARRAY);
+    glEnableVertexAttribArray( inparams);
+    glVertexAttribPointer( inparams, 2, GL_FLOAT, GL_FALSE, 0, this->solventAtomParams.PeekElements());
+    glVertexPointer( 3, GL_FLOAT, 0, this->solventAtomPos.PeekElements());
+    glDrawArrays( GL_POINTS, 0, atomCnt);
+    glDisableVertexAttribArray( inparams);
+    glDisableClientState( GL_VERTEX_ARRAY);
+    this->visMolShader.Disable();
+
+    //glDisable( GL_BLEND);
+
+    glBindTexture( GL_TEXTURE_3D, 0);
+
+    // read FBO to VBO
+    glBindBuffer( GL_PIXEL_PACK_BUFFER_EXT, this->molVisVbo);
+    glReadPixels( 0, 0, this->molVisFboWidth, this->molVisFboHeight, GL_RGB, GL_FLOAT, 0);
+    glBindBuffer( GL_PIXEL_PACK_BUFFER_EXT, 0 );
+    // stop rendering to FBO
+    this->molVisFbo.Disable();
+
+    // reset viewport to normal view
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    
+    //// DEBUG ...
+    //float *t = new float[this->molVisFboWidth * this->molVisFboHeight * 3];
+    //glBindBuffer( GL_PIXEL_PACK_BUFFER_EXT, this->molVisVbo);
+    //float *vboPtr = static_cast<float*>(glMapBuffer( GL_PIXEL_PACK_BUFFER_EXT, GL_READ_ONLY));
+    //memcpy( t, vboPtr, this->molVisFboWidth*this->molVisFboHeight*3*sizeof(float));
+    //glUnmapBuffer( GL_PIXEL_PACK_BUFFER_EXT);
+    //glBindBuffer( GL_PIXEL_PACK_BUFFER_EXT, 0);
+    ////this->molVisFbo.GetColourTexture( t, 0, GL_RGB, GL_FLOAT);
+    //for( unsigned int i = 0; i < this->molVisFboWidth; i++ ) {
+    //    for( unsigned int j = 0; j < this->molVisFboHeight; j++ ) {
+    //        if( t[( i * 8192 + j) * 3 + 0] > 0 ) {
+    //            std::cout << "value " << i << "," << j << " = " << t[( i * 8192 + j) * 3 + 0] << " " << t[( i * 8192 + j) * 3 + 1] << " " << t[( i * 8192 + j) * 3 + 2] << std::endl;
+    //        }
+    //    }
+    //}
+    //// ... DEBUG
+
+    // ----- render the results of the last step (stored in a vertex buffer object) ------
+
+    // create fbo
+    if( this->solTypeCountFbo.IsValid() ) {
+        if( this->solTypeCountFbo.GetWidth() != mol->AtomSolventResidueCount() ) {
+            this->solTypeCountFbo.Create( mol->AtomSolventResidueCount(), 1.0f, GL_RGB32F, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        }
+    } else {
+        this->solTypeCountFbo.Create( mol->AtomSolventResidueCount(), 1.0f, GL_RGB32F, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+    }
+
+    // START draw overlay
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho( 0.0, this->solTypeCountFbo.GetWidth(), 0.0, 1.0, 0.0, 1.0);
+    glDisable( GL_LIGHTING);
+    // start rendering to FBO
+    this->solTypeCountFbo.Enable();
+    // set clear color and clear
+    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f);
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+    // TODO
+    glBlendFunc( GL_ONE, GL_ONE);
+	glEnable( GL_BLEND);
+    this->solTypeCountShader.Enable();
+
+    // TODO: fix buggy rendering
+    // count molecules of the same solvent type
+    glEnableClientState( GL_VERTEX_ARRAY);
+    glBindBuffer( GL_ARRAY_BUFFER, this->molVisVbo);
+    glVertexPointer( 3, GL_FLOAT, 0, 0);
+    glDrawArrays( GL_POINTS, 0, this->molVisFboWidth * this->molVisFboHeight);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    glDisableClientState( GL_VERTEX_ARRAY);
+    
+    //glBegin( GL_POINTS);
+    //glVertex3f( 1.0, 0.0, 0.0);
+    //glVertex3f( 1.0, 0.0, 0.0);
+    //glVertex3f( 1.0, 1.0, 0.0);
+    //glVertex3f( 1.0, 1.0, 0.0);
+    //glVertex3f( 1.0, 1.0, 0.0);
+    //glEnd(); // GL_POINTS
+
+    this->solTypeCountShader.Disable();
+    glDisable( GL_BLEND);
+
+    // stop rendering to FBO
+    this->solTypeCountFbo.Disable();
+    // reset viewport to normal view
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    float *counter = new float[mol->AtomSolventResidueCount()];
+    this->solTypeCountFbo.GetColourTexture( counter, 0, GL_RED, GL_FLOAT);
+    vislib::StringA str, tmpStr;
+    for( unsigned int i = 0; i < mol->AtomSolventResidueCount(); i++ ) {
+        tmpStr.Format( "Solvent Molecule Type %i, count: %i; ", i, int( counter[i]));
+        str += tmpStr;
+    }
+    //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, "Solvent Molecule Type %i, count: %i", i, int( counter[i]));
+    //vislib::graphics::gl::SimpleFont f;
+    //if( f.Initialise() ) {
+    //    glColor3f( 0.5f, 0.5f, 0.5f);    
+    //    f.DrawString( 0.0, 0.0, 10.0f, true, str.PeekBuffer());
+    //}
+
+    delete[] counter;
+
+    // reset clear color
+    glClearColor( clearCol[0], clearCol[1], clearCol[2], clearCol[3]);
+}
 
 /*
  * boese dreckig hingerotzt ...
@@ -1332,7 +1596,10 @@ bool protein::SolventVolumeRenderer::RenderMolecularData( view::CallRender3D *ca
 		this->forceUpdateVolumeTexture = false;
 	}
 
+    //glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glEnable( GL_BLEND);
 	this->proteinFBO.DrawColourTexture();
+    //glDisable( GL_BLEND);
 	CHECK_FOR_OGL_ERROR();
 
 	unsigned int cpCnt;

@@ -2044,7 +2044,7 @@ __device__ uint findProbeNeighborsInCellCBCuda(
                     // check number of neighbors
                     if( ( neighborIndex + count) >= numNeighbors ) return count;
                     // write singTex
-                    singTex[index * numNeighbors + neighborIndex + count] = make_float3( pos);
+                    singTex[index * numNeighbors + neighborIndex + count] = make_float3( pos2);
 					// increment the neighbor counter
 					count++;
 				}
