@@ -132,7 +132,6 @@ bool udpBroadcastAdapters(const vislib::net::NetworkInformation::Adapter& adapte
  * cluster::SimpleClusterClient::create
  */
 bool cluster::SimpleClusterClient::create(void) {
-
     if (this->instance()->Configuration().IsConfigValueSet("scname")) {
         this->clusterNameSlot.Param<param::StringParam>()->SetValue(
             this->instance()->Configuration().ConfigValue("scname"));
@@ -337,19 +336,28 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
     SimpleClusterClient *that = reinterpret_cast<SimpleClusterClient *>(ctxt);
     SimpleClusterDatagram datagram;
     vislib::sys::Log::DefaultLog.WriteInfo("UDP Receiver started\n");
+    vislib::net::Socket::Startup();
     try {
+        vislib::sys::Thread::Reschedule();
+        vislib::sys::Thread::Sleep(10);
         while (that->udpInSocket.IsValid()) {
             //vislib::net::IPEndPoint fromEP;
             that->udpInSocket.Receive(/*fromEP, */&datagram, sizeof(datagram));
 
+            vislib::sys::Log::DefaultLog.WriteInfo(200, "UDP receive answered ...");
+
             if (datagram.cntEchoed > 0) {
                 datagram.cntEchoed--;
+                vislib::sys::Log::DefaultLog.WriteInfo(200, "UDP echo requested ...");
                 // echo broadcast
                 vislib::StringA baddr(that->udpEchoBAddrSlot.Param<param::StringParam>()->Value());
                 vislib::net::IPAddress addr;
                 if (addr.Lookup(baddr)) {
                     int bport = that->udpPortSlot.Param<param::IntParam>()->Value();
                     vislib::net::IPEndPoint ep(addr, bport);
+                    vislib::sys::Log::DefaultLog.WriteInfo(200,
+                        "UDP echo scheduled to %s",
+                        ep.ToStringA().PeekBuffer());
                     that->udpInSocket.Send(ep, &datagram, sizeof(datagram));
                 }
             }
@@ -383,10 +391,19 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                                 DWORD sleepTime = 100 + static_cast<DWORD>(500.0f
                                         * static_cast<float>(::rand())
                                         / static_cast<float>(RAND_MAX));
-                                vislib::sys::Log::DefaultLog.WriteInfo(200, "Wait %u milliseconds before connecting ...", sleepTime);
+                                vislib::sys::Log::DefaultLog.WriteInfo(200,
+                                    "Wait %u milliseconds before connecting to %s ...",
+                                    sleepTime, srv.PeekBuffer());
                                 vislib::sys::Thread::Sleep(sleepTime);
 
-                                that->tcpChan->Connect(srv);
+                                vislib::net::IPEndPoint ep;
+                                float epw = vislib::net::NetworkInformation::GuessRemoteEndPoint(ep, srv);
+                                vislib::sys::Log::DefaultLog.WriteInfo("Guessed remote end point %s with wildness %f\n",
+                                    ep.ToStringA().PeekBuffer(), epw);
+                                that->tcpChan->Connect(ep);
+                                vislib::sys::Log::DefaultLog.WriteInfo(200,
+                                    "TCP connection to %s established",
+                                    srv.PeekBuffer());
                                 vislib::net::AbstractInboundCommChannel *cc
                                     = dynamic_cast<vislib::net::AbstractInboundCommChannel *>(that->tcpChan);
                                 that->tcpSan.Start(cc);
@@ -450,6 +467,7 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
     } catch(...) {
         vislib::sys::Log::DefaultLog.WriteError("UDP Receive error: unexpected exception\n");
     }
+    vislib::net::Socket::Cleanup();
     vislib::sys::Log::DefaultLog.WriteInfo("UDP Receiver stopped\n");
     return 0;
 }
@@ -475,7 +493,6 @@ bool cluster::SimpleClusterClient::onViewRegisters(Call& call) {
 bool cluster::SimpleClusterClient::onUdpPortChanged(param::ParamSlot& slot) {
     using vislib::sys::Log;
     ASSERT(&slot == &this->udpPortSlot);
-
     try {
         this->udpInSocket.Close();
         if (this->udpReceiver.IsRunning()) {
@@ -484,8 +501,12 @@ bool cluster::SimpleClusterClient::onUdpPortChanged(param::ParamSlot& slot) {
         this->udpInSocket.Create(vislib::net::Socket::FAMILY_INET,
             vislib::net::Socket::TYPE_DGRAM,
             vislib::net::Socket::PROTOCOL_UDP);
-        this->udpInSocket.Bind(vislib::net::IPEndPoint(vislib::net::IPAddress::ANY,
-            this->udpPortSlot.Param<param::IntParam>()->Value()));
+        this->udpInSocket.SetReuseAddr(true); // ugly, but as long as it then works ...
+        vislib::net::IPEndPoint udpEndPoint(vislib::net::IPAddress::ANY,
+            this->udpPortSlot.Param<param::IntParam>()->Value());
+        Log::DefaultLog.WriteInfo(200, "Starting UDP receiver on endpoint %s",
+            udpEndPoint.ToStringA().PeekBuffer());
+        this->udpInSocket.Bind(udpEndPoint);
         this->udpReceiver.Start(reinterpret_cast<void*>(this));
 
     } catch(vislib::Exception ex) {
