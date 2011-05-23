@@ -249,7 +249,7 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
     this->animToSlot << new param::IntParam(0, 0);
     this->MakeSlotAvailable(&this->animToSlot);
 
-    this->animStepSlot << new param::FloatParam(1.0f, 0.1f);
+    this->animStepSlot << new param::FloatParam(1.0f, 0.01f);
     //this->animStepSlot << new param::IntParam(1, 1);
     this->MakeSlotAvailable(&this->animStepSlot);
 
@@ -341,12 +341,15 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
                 if (ext.EndsWith(_T(".png"))) {
                     filename.Truncate(filename.Length() - 4);
                 }
+#if 1
                 //ext.Format(_T(".%.5u.png"), this->animLastFrameTime);
-				//ext.Format(_T(".%.5u.png"), this->outputCounter);
-				int intPart = floor(this->animLastFrameTime);
-				float fractPart = this->animLastFrameTime-(float)intPart;
-				ext.Format(_T(".%.5d.%03d.png"), intPart, (int)(fractPart*1000.0f));
-				outputCounter++;
+                ext.Format(_T(".%.5u.png"), this->outputCounter);
+                outputCounter++;
+#else
+                int intPart = floor(this->animLastFrameTime);
+                float fractPart = this->animLastFrameTime-(float)intPart;
+                ext.Format(_T(".%.5d.%03d.png"), intPart, (int)(fractPart*1000.0f));
+#endif
                 filename += ext;
             }
         } else {
@@ -801,6 +804,11 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
     if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
         if (this->animLastFrameTime >= this->animToSlot.Param<param::IntParam>()->Value()) {
             Log::DefaultLog.WriteInfo("Animation screen shots complete");
+
+            // stop animation
+            param::ParamSlot *palySlot = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::play"));
+            if (palySlot != NULL)
+                palySlot->Param<param::BoolParam>()->SetValue(false);
         } else {
             param::ParamSlot* time = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time"));
             if (time != NULL) {
@@ -846,13 +854,16 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
         if (vi->View() != NULL) {
             if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
                 param::ParamSlot *timeSlot = dynamic_cast<param::ParamSlot*>(vi->View()->FindNamedObject("anim::time"));
+                param::ParamSlot *palySlot = dynamic_cast<param::ParamSlot*>(vi->View()->FindNamedObject("anim::play"));
                 if (timeSlot != NULL) {
                     timeSlot->Param<param::FloatParam>()->SetValue(static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value()));
-                    this->animLastFrameTime = UINT_MAX;
+                    this->animLastFrameTime = (float)UINT_MAX;
                 } else {
                     Log::DefaultLog.WriteError("Unable to make animation screen shots");
                     this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
                 }
+                if (palySlot != NULL)
+                    palySlot->Param<param::BoolParam>()->SetValue(true);
             }
             vi->View()->RegisterHook(this);
         } else {
