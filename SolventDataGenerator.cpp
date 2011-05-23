@@ -37,7 +37,7 @@ using namespace megamol::protein;
 megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 		dataOutSlot( "dataout", "The slot providing the generated solvent data"),
 		molDataInputCallerSlot( "getInputData", "molecular data source (usually the PDB loader)"),
-		hBondDataFile( "hBondDataFile", "file to store hydrogen bond data"),
+		//hBondDataFile( "hBondDataFile", "file to store hydrogen bond data"),
 		hBondDistance("hBondDistance", "distance for hydrogen bonds (angstroem?)"),
 		hBondDonorAcceptorDistance("hBondDonorAcceptorDistance", "distance between donor and acceptor of the hydrogen bonds"),
 		hBondDonorAcceptorAngle("hBondDonorAcceptorAngle", "angle between donor-acceptor and donor-hydrogen in degrees"),
@@ -62,8 +62,8 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 	this->hBondDonorAcceptorAngle.SetParameter(new param::FloatParam(30.0f, 0.0f));
 	this->MakeSlotAvailable( &this->hBondDonorAcceptorAngle);
 
-	this->hBondDataFile.SetParameter(new param::StringParam("hbond.dat"));
-	this->MakeSlotAvailable( &this->hBondDataFile);
+	//this->hBondDataFile.SetParameter(new param::StringParam("hbond.dat"));
+	//this->MakeSlotAvailable( &this->hBondDataFile);
 
 	this->showMiddlePositions.SetParameter(new param::BoolParam(false));
 	this->MakeSlotAvailable( &this->showMiddlePositions);

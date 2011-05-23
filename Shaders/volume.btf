@@ -260,7 +260,8 @@ void main(void) {
 	vec3 pos = vec3( gl_FragCoord.xy * invVolRes.xy, sliceDepth) * scaleVolInv;
 	float density = computeDensity( pos);
 	//gl_FragColor.rgb = color * density * scale;
-	gl_FragColor.rgb = color * density; // * scale;
+	//gl_FragColor.rgb = color * density; // * scale;
+	gl_FragColor.rgb = color * density * densityScale;
 }
 -->
   </snippet>
