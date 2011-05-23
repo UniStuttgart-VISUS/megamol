@@ -137,7 +137,7 @@ namespace protein {
 		megamol::core::param::ParamSlot hBondDistance;
 		megamol::core::param::ParamSlot hBondDonorAcceptorDistance;
 		megamol::core::param::ParamSlot hBondDonorAcceptorAngle;
-		megamol::core::param::ParamSlot hBondDataFile;
+		//megamol::core::param::ParamSlot hBondDataFile;
 		megamol::core::param::ParamSlot showMiddlePositions;
 
 		/** temporary variable to store a set of atom positions */
