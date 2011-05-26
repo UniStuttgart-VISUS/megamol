@@ -220,6 +220,46 @@ bool vislib::sys::File::Exists(const wchar_t *filename) {
 
 
 /*
+ * vislib::sys::File::GetSize
+ */
+vislib::sys::File::FileSize vislib::sys::File::GetSize(const char *filename) {
+#ifdef _WIN32
+    WIN32_FILE_ATTRIBUTE_DATA buf;
+    if (::GetFileAttributesExA(filename, GetFileExInfoStandard, &buf) == 0) {
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
+    }
+    return (static_cast<FileSize>(buf.nFileSizeHigh) << 32)
+        + static_cast<FileSize>(buf.nFileSizeLow);
+#else /* _WIN32 */
+    struct stat buf;
+    int i = stat(filename, &buf); 
+    if (i != 0) throw vislib::Exception(__FILE__, __LINE__);
+    return buf.st_size;
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::File::GetSize
+ */
+vislib::sys::File::FileSize vislib::sys::File::GetSize(const wchar_t *filename) {
+#ifdef _WIN32
+    WIN32_FILE_ATTRIBUTE_DATA buf;
+    if (::GetFileAttributesExW(filename, GetFileExInfoStandard, &buf) == 0) {
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
+    }
+    return (static_cast<FileSize>(buf.nFileSizeHigh) << 32)
+        + static_cast<FileSize>(buf.nFileSizeLow);
+#else /* _WIN32 */
+    struct stat buf;
+    int i = stat(W2A(filename), &buf); 
+    if (i != 0) throw vislib::Exception(__FILE__, __LINE__);
+    return buf.st_size;
+#endif /* _WIN32 */
+}
+
+
+/*
  * vislib::sys::File::Rename
  */
 bool vislib::sys::File::IsDirectory(const char *filename) {

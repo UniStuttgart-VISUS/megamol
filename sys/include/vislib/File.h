@@ -177,6 +177,28 @@ namespace sys {
         static bool Exists(const wchar_t *filename);
 
         /**
+         * Answer the size of a file
+         *
+         * @param filename Path to the file
+         *
+         * @return The size of the file.
+         *
+         * @throws SystemException in most error cases.
+         */
+        static FileSize GetSize(const char *filename);
+
+        /**
+         * Answer the size of a file
+         *
+         * @param filename Path to the file
+         *
+         * @return The size of the file.
+         *
+         * @throws SystemException in most error cases.
+         */
+        static FileSize GetSize(const wchar_t *filename);
+
+        /**
          * Answer whether a file with the specified name is a directory.
          *
          * @param filename Path to the file to be tested.
