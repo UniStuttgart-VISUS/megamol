@@ -1128,9 +1128,9 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU( MolecularDataCall *mol) {
 
     // ========== contour buildup ==========
     glBegin( GL_POINTS);
-    vislib::Array<vislib::Pair<vislib::math::Vector<float, 3>, vislib::math::Vector<float, 3>>> arcs;
+    vislib::Array<vislib::Pair<vislib::math::Vector<float, 3>, vislib::math::Vector<float, 3> > > arcs;
     arcs.SetCapacityIncrement( 100);
-    vislib::Array<vislib::Pair<float, float>> arcAngles;
+    vislib::Array<vislib::Pair<float, float> > arcAngles;
 	arcAngles.SetCapacityIncrement( 100);
 	// store 2 * PI
 	float pi2 = float( vislib::math::PI_DOUBLE * 2.0);
@@ -1363,7 +1363,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU( MolecularDataCall *mol) {
 				}
 
 				// temporary arc array for newly created arcs
-				vislib::Array<vislib::Pair<float, float>> tmpArcAngles;
+				vislib::Array<vislib::Pair<float, float> > tmpArcAngles;
 				tmpArcAngles.SetCapacityIncrement( 10);
 				// check all existing arcs with new arc k
 				for( int aCnt = 0; aCnt < arcAngles.Count(); aCnt++ ) {
