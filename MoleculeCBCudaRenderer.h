@@ -268,9 +268,9 @@ namespace protein {
 		float *m_cudaColorVBO;      // these are the CUDA deviceMem Color
 
         
-        vislib::Array<vislib::Array<vislib::math::Vector<float, 3>>> smallCircles;
-        vislib::Array<vislib::Array<float>> smallCircleRadii;
-        vislib::Array<vislib::Array<unsigned int>> neighbors;
+        vislib::Array<vislib::Array<vislib::math::Vector<float, 3> > > smallCircles;
+        vislib::Array<vislib::Array<float> > smallCircleRadii;
+        vislib::Array<vislib::Array<unsigned int> > neighbors;
 
 		// VBO for all atoms
 		GLuint atomPosVBO;
