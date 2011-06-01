@@ -111,7 +111,7 @@ namespace graphics {
         /** A BitmapImage template with Gray byte channels */
         static const BitmapImage TemplateByteGray;
 
-        /** A BitmapImage template with RGB byte channels */
+        /** A BitmapImage template with Gray/Alpha byte channels */
         static const BitmapImage TemplateByteGrayAlpha;
 
         /** A BitmapImage template with RGB byte channels */
@@ -119,6 +119,18 @@ namespace graphics {
 
         /** A BitmapImage template with RGBA byte channels */
         static const BitmapImage TemplateByteRGBA;
+
+        /** A BitmapImage template with Gray float channels */
+        static const BitmapImage TemplateFloatGray;
+
+        /** A BitmapImage template with Gray/Alpha float channels */
+        static const BitmapImage TemplateFloatGrayAlpha;
+
+        /** A BitmapImage template with RGB float channels */
+        static const BitmapImage TemplateFloatRGB;
+
+        /** A BitmapImage template with RGBA float channels */
+        static const BitmapImage TemplateFloatRGBA;
 
         /**
          * Ctor. Creates an empty bitmap (channel count, width, and height
@@ -336,6 +348,17 @@ namespace graphics {
          */
         void CreateImage(unsigned int width, unsigned int height,
             const BitmapImage& tmpl, const void *data = NULL);
+
+        /**
+         * Answers if this bitmap image has an equal channel layout (number,
+         * type, and labels in the same order) as the specified template
+         * 'tmpl'.
+         *
+         * @param tmpl The bitmap image template to compare to
+         *
+         * @return true if 'this' and 'tmpl' have identical channel layout
+         */
+        bool EqualChannelLayout(const BitmapImage& tmpl) const;
 
         /**
          * Extracts a rectangular area from a source image. The extraction

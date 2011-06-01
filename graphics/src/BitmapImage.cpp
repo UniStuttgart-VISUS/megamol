@@ -439,6 +439,48 @@ vislib::graphics::BitmapImage::TemplateByteRGBA(
 
 
 /*
+ * vislib::graphics::BitmapImage::TemplateFloatGray
+ */
+const vislib::graphics::BitmapImage
+vislib::graphics::BitmapImage::TemplateFloatGray(
+    vislib::graphics::BitmapImage::CHANNELTYPE_FLOAT,
+    vislib::graphics::BitmapImage::CHANNEL_GRAY);
+
+
+/*
+ * vislib::graphics::BitmapImage::TemplateFloatGrayAlpha
+ */
+const vislib::graphics::BitmapImage
+vislib::graphics::BitmapImage::TemplateFloatGrayAlpha(
+    vislib::graphics::BitmapImage::CHANNELTYPE_FLOAT,
+    vislib::graphics::BitmapImage::CHANNEL_GRAY,
+    vislib::graphics::BitmapImage::CHANNEL_ALPHA);
+
+
+/*
+ * vislib::graphics::BitmapImage::TemplateFloatRGB
+ */
+const vislib::graphics::BitmapImage
+vislib::graphics::BitmapImage::TemplateFloatRGB(
+    vislib::graphics::BitmapImage::CHANNELTYPE_FLOAT,
+    vislib::graphics::BitmapImage::CHANNEL_RED,
+    vislib::graphics::BitmapImage::CHANNEL_GREEN,
+    vislib::graphics::BitmapImage::CHANNEL_BLUE);
+
+
+/*
+ * vislib::graphics::BitmapImage::TemplateFloatRGBA
+ */
+const vislib::graphics::BitmapImage
+vislib::graphics::BitmapImage::TemplateFloatRGBA(
+    vislib::graphics::BitmapImage::CHANNELTYPE_FLOAT,
+    vislib::graphics::BitmapImage::CHANNEL_RED,
+    vislib::graphics::BitmapImage::CHANNEL_GREEN,
+    vislib::graphics::BitmapImage::CHANNEL_BLUE,
+    vislib::graphics::BitmapImage::CHANNEL_ALPHA);
+
+
+/*
  * vislib::graphics::BitmapImage::BitmapImage
  */
 vislib::graphics::BitmapImage::BitmapImage(void) : data(NULL),
@@ -904,6 +946,19 @@ void vislib::graphics::BitmapImage::CreateImage(unsigned int width,
 
     ::memcpy(this->labels, tmplLabels, tmpl.numChans * sizeof(ChannelLabel));
     delete[] tmplLabels;
+}
+
+
+/*
+ * vislib::graphics::BitmapImage::EqualChannelLayout
+ */
+bool vislib::graphics::BitmapImage::EqualChannelLayout(
+        const vislib::graphics::BitmapImage& tmpl) const {
+    if ((this->chanType != tmpl.chanType) || (this->numChans != tmpl.numChans)) return false;
+    for (unsigned int i = 0; i < this->numChans; i++) {
+        if (this->labels[i] != tmpl.labels[i]) return false;
+    }
+    return true;
 }
 
 
