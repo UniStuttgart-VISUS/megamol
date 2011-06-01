@@ -669,6 +669,9 @@ namespace protein {
         vislib::Array<unsigned int> XTCFrameOffset;
         /** Flag whether the current xtc-filename is valid */
         bool xtcFileValid;
+
+        /** Per atom filter information to be used by MolecularDataCall */
+        vislib::Array<int> atomVisibility;
     };
 
 

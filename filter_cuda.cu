@@ -23,6 +23,13 @@
 __constant__ FilterParams fparams;
 
 
+__device__ float getDistanceSq(float3 posA, float3 posB) {
+    
+    return (posA.x-posB.x)*(posA.x-posB.x) + (posA.y-posB.y)*(posA.y-posB.y) +
+           (posA.z-posB.z)*(posA.z-posB.z); 
+}
+
+
 /*
  * hashValMultiGrid
  * 
@@ -217,7 +224,7 @@ void calcSolventVisibilityD(unsigned int *cellStart,
             
                     // Iterate over all atoms in this cell
                     for(at = startIdx; at < endIdx; at++) {
-                        if(length(atmPosProtSorted[at] - p) <= fparams.solvRange) {
+                        if(getDistanceSq(atmPosProtSorted[at], p) <= fparams.solvRangeSq) {
                             
                             atomVisibility[idx] = 1;
                             return; 
@@ -228,6 +235,86 @@ void calcSolventVisibilityD(unsigned int *cellStart,
         }
     }
 }
+
+
+
+/*
+ * calcSolventVisibilityAltD
+ */
+__global__
+void calcSolventVisibilityAltD(unsigned int *cellStart,
+                               unsigned int *cellEnd,
+                               float3       *atmPos,
+                               float3       *atmPosProtSorted,
+                               bool         *isSolventAtom,
+                               int          *atomVisibility,
+                               int3          *neighbourCellPos) {
+                                
+    extern __shared__ bool sharedVisibility[];
+
+    unsigned int atmIdx = blockIdx.x;
+    unsigned int neighbourCellIdx = threadIdx.x;
+    
+    if(!((atmIdx >= fparams.atmCnt) || (neighbourCellIdx >= fparams.numNeighbours))) {
+        
+        sharedVisibility[threadIdx.x] = false;
+         
+        if(!isSolventAtom[atmIdx]) { // Non-solvent atoms are visible
+            sharedVisibility[threadIdx.x] = true;            
+        }
+        else {        
+            // Get position of the atom
+            float3 p = atmPos[atmIdx];
+        
+            int3 gridPos = make_int3(floor((p.x - fparams.worldOrigin.x) / fparams.cellSize.x),
+                                     floor((p.y - fparams.worldOrigin.y) / fparams.cellSize.y),
+                                     floor((p.z - fparams.worldOrigin.z) / fparams.cellSize.z));
+                                     
+            
+            int3 neighbourPos = make_int3((gridPos.x + neighbourCellPos[neighbourCellIdx].x) & (fparams.gridSize.x - 1),  // wrap grid
+                                         (gridPos.y + neighbourCellPos[neighbourCellIdx].y) & (fparams.gridSize.y - 1),
+                                         (gridPos.z + neighbourCellPos[neighbourCellIdx].z) & (fparams.gridSize.z - 1));
+            
+                                    
+            unsigned int hash = __umul24(__umul24(neighbourPos.z, fparams.gridSize.y), fparams.gridSize.x) + 
+                                __umul24(neighbourPos.y, fparams.gridSize.x) + 
+                                neighbourPos.x;
+                    
+            unsigned int startIdx = cellStart[hash];
+            
+            if(startIdx != 0xffffffff) {
+        
+                unsigned int endIdx = cellEnd[hash];
+
+        
+                // Iterate over all atoms in the neighbour cell
+                // TODO
+                for(unsigned int at = startIdx; at < endIdx; at++) {
+                    if(getDistanceSq(atmPosProtSorted[at], p) <= fparams.solvRangeSq) {
+                        sharedVisibility[threadIdx.x] = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    else
+        return;
+    
+    __syncthreads();
+    
+    // Merge visibility information
+    if(threadIdx.x == 0) {
+        atomVisibility[atmIdx] = 0;
+        for(int i = 0; i < fparams.numNeighbours; i++) {
+            if(sharedVisibility[i] == true) {
+                atomVisibility[atmIdx] = 1;
+                break;
+            }
+        }
+    }
+}
+
 
 
 
@@ -275,7 +362,6 @@ extern "C" {
                            float        *atmPosProtSorted,
                            unsigned int  atmCntProt) {
   
-        // Compute grid size
         unsigned int numThreads = min(256, atmCntProt);
         unsigned int numBlocks  = ceil((float)atmCntProt/(float)numThreads);
         
@@ -293,6 +379,38 @@ extern "C" {
         cutilCheckMsg("reorderFilterDataD");
     }
                                        
+    
+    /*
+     * calcSolventVisibilityAlt
+     */
+    void calcSolventVisibilityAlt(unsigned int *cellStart,
+                                  unsigned int *cellEnd,
+                                  float        *atmPos,
+                                  float        *atmPosProtSorted,
+                                  bool         *isSolventAtom,
+                                  int          *atomVisibility,
+                                  int          *neighbourCellPos,
+                                  unsigned int  atmCnt,
+                                  unsigned int  numNeighbours) {
+                                   
+        
+        unsigned int numThreads = numNeighbours; // TODO this only works if number of neighbour cells is less than 512
+        unsigned int memSize = numNeighbours*sizeof(bool);
+        unsigned int numBlocks = atmCnt;
+                                         
+        // Execute kernel
+        calcSolventVisibilityAltD <<< numBlocks, numThreads, memSize >>> (cellStart,
+                                                          cellEnd,
+                                                          (float3*) atmPos,
+                                                          (float3*) atmPosProtSorted,
+                                                          isSolventAtom,
+                                                          atomVisibility,
+                                                          (int3*) neighbourCellPos);
+        
+        cutilCheckMsg("calcSolventVisibilityAltD");
+        
+    }
+    
     
     /*
      * calcSolventVisibility
@@ -319,6 +437,8 @@ extern "C" {
         
         cutilCheckMsg("calcSolventVisibilityD");                                                              
     }
+
                                  
 
 } // extern "C"
+

@@ -28,7 +28,12 @@ struct FilterParams {
     unsigned int atmCnt;
     unsigned int atmCntProt;
     float        solvRange;
+    float        solvRangeSq;
     int3         discRange;
+    int3         discRangeWide;
+    unsigned int numNeighbours;
+    unsigned int innerCellRange;
+    
 };
 
 
@@ -52,6 +57,17 @@ extern "C" {
                            unsigned int  atmCntProt);
                            
     
+    void calcSolventVisibilityAlt(unsigned int *cellStart,
+                                  unsigned int *cellEnd,
+                                  float        *atmPos,
+                                  float        *atmPosProtSorted,
+                                  bool         *isSolventAtom,
+                                  int          *atomVisibility,
+                                  int          *neighbourCellPos,
+                                  unsigned int  atmCnt,
+                                  unsigned int  numNeighbours);  
+                               
+                       
     void calcSolventVisibility(unsigned int *cellStart,
                                unsigned int *cellEnd,
                                float        *atmPos,
@@ -59,6 +75,7 @@ extern "C" {
                                bool         *isSolventAtom,
                                int          *atomVisibility,
                                unsigned int  atmCnt);                         
+                       
                                
 }
 

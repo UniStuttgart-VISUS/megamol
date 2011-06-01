@@ -28,7 +28,6 @@
 
 #include <cutil_inline.h>
 #include <cutil_gl_inline.h>
-//#include <cutil_gl_error.h>
 #include <cuda_gl_interop.h>
 #include <cudpp/cudpp.h>
 
@@ -53,6 +52,7 @@ Filter::Filter(void) : core::Module(),
     solvRadiusParam("solvRadius", "Range of solvent atom neighbourhood filtering"),
     interpolParam("posInterpolation", "Enable positional interpolation between frames"),
     gridSizeParam("cudaGridSize", "Gridsize"),
+    filterParam("filter", "Choose the filter to be used"),
     calltimeOld(-1.0), atmCnt(0) {
 
     // Enable caller slot
@@ -92,6 +92,14 @@ Filter::Filter(void) : core::Module(),
     gs->SetTypePair(64, "64");
     this->gridSizeParam << gs;
     
+    // Set filter param
+    param::EnumParam *f = new param::EnumParam(NONE);
+    f->SetTypePair(NONE, "None");
+    f->SetTypePair(SOLVENT, "Solvent");
+    f->SetTypePair(SOLVENTALT, "SolventAlt");
+    this->filterParam << f;
+    this->MakeSlotAvailable(&this->filterParam);
+    
     this->atomVisibility = NULL;
     this->atmPosProt     = NULL;
     this->isSolventAtom  = NULL;
@@ -113,6 +121,8 @@ Filter::Filter(void) : core::Module(),
     this->cellEndD = NULL;
     
     this->atomVisibilityD = NULL;
+    
+    this->neighbourCellPosD = NULL;
 
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
@@ -124,6 +134,7 @@ Filter::Filter(void) : core::Module(),
  */
 Filter::~Filter(void)  {    
     this->Release();
+    _CrtDumpMemoryLeaks();
 }
 
 
@@ -156,9 +167,11 @@ void Filter::release(void) {
     if(this->isSolventAtomD != NULL) cutilSafeCall(cudaFree(this->isSolventAtomD));
 
     if(this->cellStartD != NULL) cutilSafeCall(cudaFree(this->cellStartD));
-    if(this->cellEndD != NULL) cutilSafeCall(cudaFree(this->cellEndD));
+    if(this->cellEndD != NULL) cutilSafeCall(cudaFree(this->cellEndD));;    
     
     if(this->atomVisibilityD != NULL) cutilSafeCall(cudaFree(this->atomVisibilityD));
+    
+    if(this->neighbourCellPosD != NULL) cutilSafeCall(cudaFree(this->neighbourCellPosD));
     
     cudppDestroyPlan(this->sortHandle);
 
@@ -256,8 +269,11 @@ bool Filter::getData(megamol::core::Call& call) {
         }
         
         // Filter
-        //this->initAtomVisibility(1);  
-        this->filterSolventAtoms(posInter);
+        switch(this->filterParam.Param<param::EnumParam>()->Value()) {
+            case NONE       : this->initAtomVisibility(1); break;
+            case SOLVENT    : this->filterSolventAtoms(posInter); break;
+            case SOLVENTALT : this->filterSolventAtomsAlt(posInter); break;
+        }
            
         this->calltimeOld = molIn->Calltime();
         
@@ -346,14 +362,33 @@ void Filter::updateParams(MolecularDataCall *mol) {
         this->params.cellSize.z = mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth()  / this->params.gridSize.z;
         
         this->params.numCells   = this->params.gridSize.x * this->params.gridSize.y * this->params.gridSize.z;
+        
         this->params.solvRange  = this->solvRadiusParam.Param<param::FloatParam>()->Value();
+        this->params.solvRangeSq = this->params.solvRange * this->params.solvRange;
+        
         this->params.atmCnt     = this->atmCnt;
         this->params.atmCntProt = this->atmCnt - this->solvAtmCnt;
         
         this->params.discRange.x = ceil(this->params.solvRange / this->params.cellSize.x);
         this->params.discRange.y = ceil(this->params.solvRange / this->params.cellSize.y);
         this->params.discRange.z = ceil(this->params.solvRange / this->params.cellSize.z);
-                                    
+        
+        this->params.discRangeWide.x = (this->params.discRange.x*2 + 1);
+        this->params.discRangeWide.y = (this->params.discRange.y*2 + 1);
+        this->params.discRangeWide.z = (this->params.discRange.z*2 + 1);
+        
+        this->params.numNeighbours = (this->params.discRange.x*2 + 1)
+                                    *(this->params.discRange.y*2 + 1)
+                                    *(this->params.discRange.z*2 + 1);
+        
+        //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "numNeighbours: %u",this->params.numNeighbours );   
+        
+        float cellBodyDiagonal = sqrt(this->params.cellSize.x * this->params.cellSize.x +
+                                this->params.cellSize.y * this->params.cellSize.y +
+                                this->params.cellSize.z * this->params.cellSize.z);
+        
+        this->params.innerCellRange = (int)(this->params.solvRange / cellBodyDiagonal); 
+        
         setFilterParams(&this->params);
         
         // Create CUDPP radix sort
@@ -381,11 +416,11 @@ void Filter::updateParams(MolecularDataCall *mol) {
         if(this->isSolventAtomD != NULL) cutilSafeCall(cudaFree(this->isSolventAtomD));
     
         if(this->cellStartD != NULL) cutilSafeCall(cudaFree(this->cellStartD));
-        if(this->cellEndD != NULL) cutilSafeCall(cudaFree(this->cellEndD));
+        if(this->cellEndD != NULL) cutilSafeCall(cudaFree(this->cellEndD)); 
         
         if(this->atomVisibilityD != NULL) cutilSafeCall(cudaFree(this->atomVisibilityD));
+        if(this->neighbourCellPosD != NULL) cutilSafeCall(cudaFree(this->neighbourCellPosD));
 
-        
         // Allocate device memory 
         
         cutilSafeCall(cudaMalloc((void **)&this->atomPosD, sizeof(float)*this->atmCnt*3));
@@ -399,12 +434,29 @@ void Filter::updateParams(MolecularDataCall *mol) {
         
         cutilSafeCall(cudaMalloc((void **)&this->cellStartD, sizeof(unsigned int)*this->params.numCells));
         cutilSafeCall(cudaMalloc((void **)&this->cellEndD, sizeof(unsigned int)*this->params.numCells));
+        
     
         cutilSafeCall(cudaMalloc((void **)&this->atomVisibilityD, sizeof(int)*this->atmCnt));
         
+        
+        // Calculate positions of neighbour cells in respect to the hash-value
+        int *neighbourCellPos = new int[sizeof(int)*3*this->params.numNeighbours];
+        for(unsigned int i = 0; i < this->params.numNeighbours; i++) {
+            neighbourCellPos[i*3+0] = (i % this->params.discRangeWide.x) - this->params.discRange.x;
+            neighbourCellPos[i*3+1] = ((i / this->params.discRangeWide.x) % this->params.discRangeWide.y) - this->params.discRange.y;
+            neighbourCellPos[i*3+2] = ((i / this->params.discRangeWide.x) / this->params.discRangeWide.y) - this->params.discRange.z;
+        }
+               
+        cutilSafeCall(cudaMalloc((void **)&this->neighbourCellPosD, sizeof(int)*3*this->params.numNeighbours));
+        
+        cutilSafeCall(cudaMemcpy(this->neighbourCellPosD, neighbourCellPos, 
+            sizeof(int)*3*this->params.numNeighbours, cudaMemcpyHostToDevice));
+        
+        delete[] neighbourCellPos; 
+        
         // Copy data to device memory
         
-        cutilSafeCall(cudaMemcpy(isSolventAtomD, this->isSolventAtom, 
+        cutilSafeCall(cudaMemcpy(this->isSolventAtomD, this->isSolventAtom, 
             sizeof(bool)*this->atmCnt, cudaMemcpyHostToDevice));
     
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))
@@ -590,6 +642,107 @@ void Filter::setHierarchicalVisibility(const MolecularDataCall *mol) {
 /*
  * Filter::filerSolventAtoms
  */
+void Filter::filterSolventAtomsAlt(float *atomPos) {
+    
+    using namespace vislib::sys;
+    
+#if (defined(WITH_CUDA) && (WITH_CUDA)) // GPU
+
+    this->getProtAtoms(atomPos);
+
+    // Get current atom positions
+    cutilSafeCall(cudaMemcpy(this->atomPosD, atomPos, sizeof(float)*this->atmCnt*3, 
+        cudaMemcpyHostToDevice));  
+        
+    cutilSafeCall(cudaMemcpy(this->atomPosProtD, this->atmPosProt, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3, 
+        cudaMemcpyHostToDevice));
+    
+    // Calculate hash grid
+    calcFilterHashGrid(this->gridAtomHashD, 
+                       this->gridAtomIndexD,
+                       this->atomPosProtD,
+                       (this->atmCnt - this->solvAtmCnt));
+    
+        
+    // Sort atoms based on hash
+    if(cudppSort(this->sortHandle, this->gridAtomHashD, this->gridAtomIndexD, 18, 
+        (this->atmCnt - this->solvAtmCnt)) != CUDPP_SUCCESS) {
+        
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error performing CUDPPSort");
+        exit(-1);
+    }
+    
+        
+    // Set all cells to empty
+    cutilSafeCall(cudaMemset(this->cellStartD, 0xffffffff, this->params.numCells*sizeof(unsigned int))); 
+
+    // Reorder position array into sorted order and find start and end of each cell
+    reorderFilterData(this->cellStartD, 
+                      this->cellEndD, 
+                      this->gridAtomHashD,
+                      this->gridAtomIndexD, 
+                      this->atomPosProtD,
+                      this->atomPosProtSortedD,
+                      (this->atmCnt - this->solvAtmCnt));    
+    
+    // Set all atoms invisible
+    cutilSafeCall(cudaMemset(this->atomVisibilityD, 0x00000000, this->atmCnt*sizeof(int)));
+    
+    // Calculate visibility of solvent atoms     
+    calcSolventVisibilityAlt(this->cellStartD,
+                          this->cellEndD,
+                          this->atomPosD,
+                          this->atomPosProtSortedD,
+                          this->isSolventAtomD,
+                          this->atomVisibilityD,
+                          this->neighbourCellPosD,
+                          this->atmCnt,
+                          this->params.numNeighbours);
+                                               
+    
+    // Copy visibility information from device to host
+    cutilSafeCall(cudaMemcpy(this->atomVisibility, this->atomVisibilityD, 
+        sizeof(int)*this->atmCnt, cudaMemcpyDeviceToHost));
+
+#else // CPU
+
+    unsigned int at, b;
+    for(at = 0; at < this->atmCnt; at++) {
+        
+        if(this->isSolventAtom[at]) {
+            
+            // Check whether there are non-solvent atoms within the range
+            this->atomVisibility[at] = 0;            
+            for(b = 0; b < this->atmCnt; b++) {
+                if(!this->isSolventAtom[b]) {
+                    if(sqrt(pow(atomPos[3*at+0]-atomPos[3*b+0], 2)
+                              + pow(atomPos[3*at+1]-atomPos[3*b+1], 2)
+                              + pow(atomPos[3*at+2]-atomPos[3*b+2], 2)) 
+                                <= this->solvRadiusParam.Param<param::FloatParam>()->Value()) {
+                        
+                        this->atomVisibility[at] = 1;
+                        break;
+                    }
+                }
+            }           
+        }
+        else { 
+            
+            // Non-solvent atoms are visible
+            this->atomVisibility[at] = 1; 
+
+        }
+    }
+
+#endif // (defined(WITH_CUDA) && (WITH_CUDA))
+
+}
+
+
+
+/*
+ * Filter::filerSolventAtoms
+ */
 void Filter::filterSolventAtoms(float *atomPos) {
     
     using namespace vislib::sys;
@@ -683,4 +836,5 @@ void Filter::filterSolventAtoms(float *atomPos) {
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
 }
+
 
