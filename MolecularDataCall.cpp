@@ -20,7 +20,8 @@ using namespace megamol::protein;
  * protein::MolecularDataCall::Residue::Residue
  */
 protein::MolecularDataCall::Residue::Residue(void) : atomCnt(0), 
-        firstAtomIdx(0), boundingBox( 0, 0, 0, 0, 0, 0), type( 0), moleculeIndex(-1) {
+        firstAtomIdx(0), boundingBox( 0, 0, 0, 0, 0, 0), type( 0), moleculeIndex(-1),
+        filter(1) {
     // intentionally empty
 }
 
@@ -31,7 +32,7 @@ protein::MolecularDataCall::Residue::Residue(void) : atomCnt(0),
 protein::MolecularDataCall::Residue::Residue(
         const protein::MolecularDataCall::Residue& src) : atomCnt( src.atomCnt),
         firstAtomIdx( src.firstAtomIdx), boundingBox( src.boundingBox),
-        type( src.type), moleculeIndex(src.moleculeIndex) {
+        type( src.type), moleculeIndex(src.moleculeIndex),filter(1) {
     // intentionally empty
 }
 
@@ -42,7 +43,7 @@ protein::MolecularDataCall::Residue::Residue(
 protein::MolecularDataCall::Residue::Residue( unsigned int firstAtomIdx,
         unsigned int atomCnt, vislib::math::Cuboid<float> bbox, 
         unsigned int typeIdx, int moleculeIdx) : atomCnt(atomCnt), firstAtomIdx(firstAtomIdx), 
-        boundingBox( bbox), type( typeIdx), moleculeIndex(moleculeIdx) {
+        boundingBox( bbox), type( typeIdx), moleculeIndex(moleculeIdx), filter(1) {
     // intentionally empty
 }
 
@@ -76,6 +77,7 @@ protein::MolecularDataCall::Residue::operator=(
     this->boundingBox = rhs.boundingBox;
     this->type = rhs.type;
 	this->moleculeIndex = rhs.moleculeIndex;
+    this->filter = rhs.filter;
     return *this;
 }
 
@@ -342,7 +344,7 @@ bool protein::MolecularDataCall::AtomType::operator==(
  */
 protein::MolecularDataCall::Molecule::Molecule(void) : firstResidueIndex(0), 
         residueCount(0), firstSecStructIdx( 0), secStructCount( 0),
-        firstConIdx( 0), conCount( 0), chainIndex(-1) {
+        firstConIdx( 0), conCount( 0), chainIndex(-1), filter(1) {
     // intentionally empty
 }
 
@@ -356,7 +358,8 @@ protein::MolecularDataCall::Molecule::Molecule(
     residueCount( src.residueCount), 
     firstSecStructIdx( src.firstSecStructIdx),
     secStructCount( src.secStructCount),
-    firstConIdx( src.firstConIdx), conCount( src.conCount), chainIndex(src.chainIndex) {
+    firstConIdx( src.firstConIdx), conCount( src.conCount), chainIndex(src.chainIndex),
+    filter(1){
     // intentionally empty
 }
 
@@ -367,7 +370,8 @@ protein::MolecularDataCall::Molecule::Molecule(
 protein::MolecularDataCall::Molecule::Molecule( unsigned int firstResIdx,
     unsigned int resCnt, int chainIdx) : firstResidueIndex( firstResIdx),
     residueCount(resCnt), firstSecStructIdx( 0), secStructCount( 0),
-    firstConIdx( 0), conCount( 0), chainIndex(chainIdx) {
+    firstConIdx( 0), conCount( 0), chainIndex(chainIdx),
+    filter(1) {
     // intentionally empty
 }
 
@@ -393,6 +397,7 @@ protein::MolecularDataCall::Molecule::operator=(
     this->secStructCount = rhs.secStructCount;
     this->firstConIdx = rhs.firstConIdx;
     this->conCount = rhs.conCount;
+    this->filter = rhs.filter;
     return *this;
 }
 
@@ -417,7 +422,7 @@ bool protein::MolecularDataCall::Molecule::operator==(
  * protein::MolecularDataCall::Chain::Chain
  */
 protein::MolecularDataCall::Chain::Chain(void) : firstMoleculeIndex(0), 
-    moleculeCount(0), type( UNSPECIFIC) {
+    moleculeCount(0), type( UNSPECIFIC), filter(1) {
     // intentionally empty
 }
 
@@ -429,7 +434,7 @@ protein::MolecularDataCall::Chain::Chain(
     const protein::MolecularDataCall::Chain& src) : 
     firstMoleculeIndex( src.firstMoleculeIndex), 
     moleculeCount( src.moleculeCount),
-    type( src.type) {
+    type( src.type), filter(1) {
     // intentionally empty
 }
 
@@ -439,7 +444,7 @@ protein::MolecularDataCall::Chain::Chain(
  */
 protein::MolecularDataCall::Chain::Chain( unsigned int firstMolIdx,
     unsigned int molCnt, ChainType chainType) : firstMoleculeIndex( firstMolIdx),
-    moleculeCount( molCnt), type( chainType) {
+    moleculeCount( molCnt), type( chainType), filter(1) {
     // intentionally empty
 }
 
@@ -461,6 +466,7 @@ protein::MolecularDataCall::Chain::operator=(
     this->firstMoleculeIndex = rhs.firstMoleculeIndex;
     this->moleculeCount = rhs.moleculeCount;
     this->type = rhs.type;
+    this->filter = rhs.filter;
     return *this;
 }
 

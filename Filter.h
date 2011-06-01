@@ -117,6 +117,8 @@ namespace protein {
     
         enum {TOPDOWN, BOTTOMUP};
         
+        enum filterMode {NONE, SOLVENT, SOLVENTALT};
+        
         
         /**
          * Helper class to unlock frame data.
@@ -196,6 +198,15 @@ namespace protein {
          * @param atomPos The current atom positions
          */
         void filterSolventAtoms(float *atomPos);
+        
+        
+        /**
+         * Filters solvent atoms according to the number of non-solvent atoms
+         * within their neighbourhood cells defined by a given range.
+         *
+         * @param atomPos The current atom positions
+         */
+        void filterSolventAtomsAlt(float *atomPos);
 
         
         /** Caller/callee slot */
@@ -207,6 +218,7 @@ namespace protein {
         megamol::core::param::ParamSlot solvRadiusParam;
         megamol::core::param::ParamSlot interpolParam;
         megamol::core::param::ParamSlot gridSizeParam;
+        megamol::core::param::ParamSlot filterParam;
         
         /** The calltime of the last call */
         float calltimeOld;
@@ -247,6 +259,7 @@ namespace protein {
 
         int *atomVisibilityD;
         
+        int *neighbourCellPosD;
 
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))
 

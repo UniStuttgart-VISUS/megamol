@@ -887,6 +887,9 @@ bool PDBLoader::getData( core::Call& call) {
         this->stride->WriteToInterface( dc);
     }
 
+    // Set the filter array for the molecular data call
+    dc->SetFilter(this->atomVisibility.PeekElements());
+
     return true;
 }
 
@@ -1054,6 +1057,13 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
             lineCnt++;
         }
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Atom count: %i", atomEntries.Count() ); // DEBUG
+
+        // Init atom filter array with 1 (= 'visible')
+        if(!this->atomVisibility.IsEmpty())
+            this->atomVisibility.Clear(true);
+        this->atomVisibility.SetCount(atomEntries.Count());
+        for(unsigned int at = 0; at < atomEntries.Count(); at++)
+            this->atomVisibility[at] = 1;
 
         // set the atom count for the first frame
         frameCnt = 0;
