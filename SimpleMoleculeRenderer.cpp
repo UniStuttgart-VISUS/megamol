@@ -381,6 +381,7 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
+#if 1
     // render data using the current rendering mode
     if( this->currentRenderMode == LINES ) {
         this->RenderLines( mol, posInter);
@@ -393,9 +394,9 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     } else if( this->currentRenderMode == SAS ) {
         this->RenderSAS( mol, posInter);
     }
-    
-    //RenderPointsFilter(mol, posInter);
-
+#else
+    RenderPointsFilter(mol, posInter);
+#endif
     //glDisable(GL_DEPTH_TEST);
 
     glPopMatrix();
