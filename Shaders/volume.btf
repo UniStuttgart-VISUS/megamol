@@ -941,6 +941,7 @@ void main(void) {
         discard;
     else
         gl_FragColor = vec4( texCol.xyz * 0.2 + vec3( 149.0/255.0, 202.0/255.0, 222.0/255.0) * 0.8, 1.0);
+		//gl_FragColor = vec4( texCol.xyz, 1.0);
 }
 
 -->

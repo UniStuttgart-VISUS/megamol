@@ -7179,7 +7179,6 @@ void main(void) {
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
         }
     }
-    /*
     numProbes = min( int(texCoord2.x), 16);
     if( numProbes > 0 )
     {
@@ -7200,7 +7199,6 @@ void main(void) {
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
         }
     }
-    */
     // "calc" normal at intersection point
     vec3 normal = -sphereintersection / rad;
 #ifdef SMALL_SPRITE_LIGHTING
