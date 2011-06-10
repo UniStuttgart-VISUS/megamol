@@ -13,6 +13,7 @@
 
 #include "view/AbstractTileView.h"
 #include "CallerSlot.h"
+#include "param/ParamSlot.h"
 #include "vislib/AbstractSimpleMessage.h"
 #include "vislib/Serialiser.h"
 #include "vislib/String.h"
@@ -175,6 +176,9 @@ namespace cluster {
 
         /** The initialization message */
         vislib::net::AbstractSimpleMessage *initMsg;
+
+        param::ParamSlot heartBeatPortSlot;
+        param::ParamSlot heartBeatServerSlot;
 
     };
 

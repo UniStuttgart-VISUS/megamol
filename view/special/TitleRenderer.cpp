@@ -425,7 +425,9 @@ void view::special::TitleRenderer::Render(
     ::glTranslatef(((this->titleWidth * titleScale) + titleGap) * 0.5f, 0.0f, 0.0f);
 
     double angle;
-    //angle = 15.0 * core->GetInstanceTime(); // not synchronized at all
+    angle = 15.0 * core->GetInstanceTime(); // will be synchronized over ClusterClient Heartbeat
+
+// not synchronized at all
 //#ifdef _WIN32
 //    //SYSTEMTIME now; // not sufficiently synchronized :-(
 //    //GetSystemTime(&now);
@@ -435,7 +437,7 @@ void view::special::TitleRenderer::Render(
 //    //angle += static_cast<double>(now.wMilliseconds) * 0.001;
 //    //angle *= 30.0; // 20 deg per second
 //#else /* _WIN32 */
-    angle = 0.0;
+//    angle = 0.0;
 //#endif /* _WIN32 */
 
     ::glPushMatrix();
