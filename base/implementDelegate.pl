@@ -116,22 +116,26 @@ sub WriteClass {
         /**
          * Ctor
          *
-         * \@param funcPtr Function pointer to be set (must not be NULL)
+         * \@param funcPtr Function pointer to be set
          */
         Delegate($returnType (*funcPtr)($paramTypeList))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * \@param funcPtr Function pointer to be set (must not be NULL)
+         * \@param funcPtr Function pointer to be set
          * \@param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate($returnType (*funcPtr)($paramCtxtTypeList), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -181,23 +185,27 @@ sub WriteClass {
         /**
          * Sets the target for this delegate
          *
-         * \@param funcPtr Function pointer to be set (must not be NULL)
+         * \@param funcPtr Function pointer to be set
          */
         void Set($returnType (*funcPtr)($paramTypeList)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * \@param funcPtr Function pointer to be set (must not be NULL)
+         * \@param funcPtr Function pointer to be set
          * \@param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set($returnType (*funcPtr)($paramCtxtTypeList), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -272,6 +280,18 @@ sub WriteClass {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * \@param funcPtr Function pointer to be set
+         *
+         * \@return A reference to this object
+         */
+        Delegate& operator=($returnType (*funcPtr)($paramTypeList)) {
+            this->Set(funcPtr);
             return *this;
         }
 

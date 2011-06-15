@@ -60,22 +60,26 @@ namespace vislib {
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, CT1), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -125,23 +129,27 @@ namespace vislib {
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, CT1), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -216,6 +224,18 @@ namespace vislib {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * @param funcPtr Function pointer to be set
+         *
+         * @return A reference to this object
+         */
+        Delegate& operator=(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)) {
+            this->Set(funcPtr);
             return *this;
         }
 
@@ -529,22 +549,26 @@ namespace vislib {
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, CT1), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -594,23 +618,27 @@ namespace vislib {
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, CT1), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -685,6 +713,18 @@ namespace vislib {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * @param funcPtr Function pointer to be set
+         *
+         * @return A reference to this object
+         */
+        Delegate& operator=(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9)) {
+            this->Set(funcPtr);
             return *this;
         }
 
@@ -998,22 +1038,26 @@ namespace vislib {
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, CT1), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -1063,23 +1107,27 @@ namespace vislib {
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, CT1), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -1154,6 +1202,18 @@ namespace vislib {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * @param funcPtr Function pointer to be set
+         *
+         * @return A reference to this object
+         */
+        Delegate& operator=(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8)) {
+            this->Set(funcPtr);
             return *this;
         }
 
@@ -1467,22 +1527,26 @@ namespace vislib {
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, CT1), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -1532,23 +1596,27 @@ namespace vislib {
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, CT1), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -1623,6 +1691,18 @@ namespace vislib {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * @param funcPtr Function pointer to be set
+         *
+         * @return A reference to this object
+         */
+        Delegate& operator=(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7)) {
+            this->Set(funcPtr);
             return *this;
         }
 
@@ -1936,22 +2016,26 @@ namespace vislib {
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, CT1), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -2001,23 +2085,27 @@ namespace vislib {
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, CT1), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -2092,6 +2180,18 @@ namespace vislib {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * @param funcPtr Function pointer to be set
+         *
+         * @return A reference to this object
+         */
+        Delegate& operator=(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6)) {
+            this->Set(funcPtr);
             return *this;
         }
 
@@ -2405,22 +2505,26 @@ namespace vislib {
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, P5))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, P5, CT1), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -2470,23 +2574,27 @@ namespace vislib {
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, CT1), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -2561,6 +2669,18 @@ namespace vislib {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * @param funcPtr Function pointer to be set
+         *
+         * @return A reference to this object
+         */
+        Delegate& operator=(Rv (*funcPtr)(P1, P2, P3, P4, P5)) {
+            this->Set(funcPtr);
             return *this;
         }
 
@@ -2874,22 +2994,26 @@ namespace vislib {
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate(Rv (*funcPtr)(P1, P2, P3, P4, CT1), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -2939,23 +3063,27 @@ namespace vislib {
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, CT1), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -3030,6 +3158,18 @@ namespace vislib {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * @param funcPtr Function pointer to be set
+         *
+         * @return A reference to this object
+         */
+        Delegate& operator=(Rv (*funcPtr)(P1, P2, P3, P4)) {
+            this->Set(funcPtr);
             return *this;
         }
 
@@ -3343,22 +3483,26 @@ namespace vislib {
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         Delegate(Rv (*funcPtr)(P1, P2, P3))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate(Rv (*funcPtr)(P1, P2, P3, CT1), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -3408,23 +3552,27 @@ namespace vislib {
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, CT1), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -3499,6 +3647,18 @@ namespace vislib {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * @param funcPtr Function pointer to be set
+         *
+         * @return A reference to this object
+         */
+        Delegate& operator=(Rv (*funcPtr)(P1, P2, P3)) {
+            this->Set(funcPtr);
             return *this;
         }
 
@@ -3812,22 +3972,26 @@ namespace vislib {
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         Delegate(Rv (*funcPtr)(P1, P2))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate(Rv (*funcPtr)(P1, P2, CT1), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -3877,23 +4041,27 @@ namespace vislib {
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, CT1), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -3968,6 +4136,18 @@ namespace vislib {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * @param funcPtr Function pointer to be set
+         *
+         * @return A reference to this object
+         */
+        Delegate& operator=(Rv (*funcPtr)(P1, P2)) {
+            this->Set(funcPtr);
             return *this;
         }
 
@@ -4281,22 +4461,26 @@ namespace vislib {
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         Delegate(Rv (*funcPtr)(P1))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate(Rv (*funcPtr)(P1, CT1), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -4346,23 +4530,27 @@ namespace vislib {
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, CT1), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -4437,6 +4625,18 @@ namespace vislib {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * @param funcPtr Function pointer to be set
+         *
+         * @return A reference to this object
+         */
+        Delegate& operator=(Rv (*funcPtr)(P1)) {
+            this->Set(funcPtr);
             return *this;
         }
 
@@ -4750,22 +4950,26 @@ namespace vislib {
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         Delegate(Rv (*funcPtr)(void))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate(Rv (*funcPtr)(CT1), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -4815,23 +5019,27 @@ namespace vislib {
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(void)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(CT1), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -4906,6 +5114,18 @@ namespace vislib {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * @param funcPtr Function pointer to be set
+         *
+         * @return A reference to this object
+         */
+        Delegate& operator=(Rv (*funcPtr)(void)) {
+            this->Set(funcPtr);
             return *this;
         }
 
@@ -5220,22 +5440,26 @@ namespace vislib {
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         Delegate(void (*funcPtr)(void))
-                : callee(new FunctionCallee(funcPtr)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionCallee(funcPtr)) {
             // intentionally empty
         }
 
         /**
          * Ctor
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         Delegate(void (*funcPtr)(CT1), CT2 ctxt)
-                : callee(new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
+                : callee((funcPtr == NULL)
+                    ? NULL
+                    : new FunctionContextCallee<CT1>(funcPtr, ctxt)) {
             // intentionally empty
         }
 
@@ -5285,23 +5509,27 @@ namespace vislib {
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          */
         void Set(void (*funcPtr)(void)) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionCallee(funcPtr);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionCallee(funcPtr);
+            }
         }
 
         /**
          * Sets the target for this delegate
          *
-         * @param funcPtr Function pointer to be set (must not be NULL)
+         * @param funcPtr Function pointer to be set
          * @param ctxt The user data context used when calling the function
          */
         template<class CT1, class CT2>
         void Set(void (*funcPtr)(CT1), CT2 ctxt) {
             SAFE_DELETE(this->callee);
-            this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            if (funcPtr != NULL) {
+                this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
+            }
         }
 
         /**
@@ -5376,6 +5604,18 @@ namespace vislib {
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
+            return *this;
+        }
+
+        /**
+         * Sets the target for this delegate
+         *
+         * @param funcPtr Function pointer to be set
+         *
+         * @return A reference to this object
+         */
+        Delegate& operator=(void (*funcPtr)(void)) {
+            this->Set(funcPtr);
             return *this;
         }
 
