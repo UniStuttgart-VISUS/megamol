@@ -103,7 +103,7 @@ namespace graphics {
          *
          * @return A pointer to all components
          */
-        inline const unsigned char * PeekComponentes(void) const {
+        inline const unsigned char * PeekComponents(void) const {
             return this->comp;
         }
 
