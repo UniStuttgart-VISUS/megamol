@@ -134,7 +134,6 @@ Filter::Filter(void) : core::Module(),
  */
 Filter::~Filter(void)  {    
     this->Release();
-    _CrtDumpMemoryLeaks();
 }
 
 
