@@ -508,10 +508,10 @@ void vislib::sys::Log::EchoOfflineMessages(bool remove) {
     OfflineTarget *mot = this->mainTarget->DynamicCast<OfflineTarget>();
     OfflineTarget *eot = this->echoTarget->DynamicCast<OfflineTarget>();
 
-    if ((mot == NULL) && (eot != NULL)) {
-        eot->Reecho(*mot, remove);
-    } else if ((mot != NULL) && (eot == NULL)) {
-        mot->Reecho(*eot, remove);
+    if ((mot == NULL) && (eot != NULL) && !this->mainTarget.IsNull()) {
+        eot->Reecho(**this->mainTarget, remove);
+    } else if ((mot != NULL) && (eot == NULL) && !this->echoTarget.IsNull()) {
+        mot->Reecho(**this->echoTarget, remove);
     }
 }
 
@@ -605,9 +605,13 @@ void vislib::sys::Log::SetEchoTarget(
     OfflineTarget *ot = oet.DynamicCast<OfflineTarget>();
 
     *this->echoTarget = target;
-    (*this->echoTarget)->SetLevel(oet->Level());
-    if (ot != NULL) {
-        ot->Reecho(**this->echoTarget);
+    if (!this->echoTarget->IsNull()) {
+        if (!oet.IsNull()) {
+            (*this->echoTarget)->SetLevel(oet->Level());
+        }
+        if (ot != NULL) {
+            ot->Reecho(**this->echoTarget);
+        }
     }
 }
 
