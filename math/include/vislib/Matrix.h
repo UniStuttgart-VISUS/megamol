@@ -369,7 +369,7 @@ namespace math {
          * @param rhs The object to be cloned.
          */
         inline Matrix(const Matrix& rhs) : Super() {
-            ::memcpy(this->components, rhs.component, 
+            ::memcpy(this->components, rhs.components, 
                 Super::CNT_COMPONENTS * sizeof(T));
         }
 
