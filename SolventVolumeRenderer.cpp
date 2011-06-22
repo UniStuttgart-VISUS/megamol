@@ -167,12 +167,12 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 	this->volClipPlaneFlagParam.SetParameter( new param::BoolParam( this->volClipPlaneFlag));
 	// --- set up parameter for volume clipping plane normal ---
 	vislib::math::Vector<float, 3> cp0n(
-		this->volClipPlane[0].PeekComponents()[0], 
-		this->volClipPlane[0].PeekComponents()[1], 
-		this->volClipPlane[0].PeekComponents()[2]);
+		(float)this->volClipPlane[0].PeekComponents()[0], 
+		(float)this->volClipPlane[0].PeekComponents()[1], 
+		(float)this->volClipPlane[0].PeekComponents()[2]);
 	this->volClipPlane0NormParam.SetParameter( new param::Vector3fParam( cp0n) );
 	// --- set up parameter for volume clipping plane distance ---
-	float d = this->volClipPlane[0].PeekComponents()[3];
+	float d = (float)this->volClipPlane[0].PeekComponents()[3];
 	this->volClipPlane0DistParam.SetParameter( new param::FloatParam( d, 0.0f, 1.0f) );
 	// --- set up parameter for clipping plane opacity ---
 	this->volClipPlaneOpacityParam.SetParameter( new param::FloatParam( this->volClipPlaneOpacity, 0.0f, 1.0f ) );
@@ -1135,10 +1135,10 @@ void protein::SolventVolumeRenderer::FindVisibleSolventMolecules( MolecularDataC
     // create fbo
     if( this->solTypeCountFbo.IsValid() ) {
         if( this->solTypeCountFbo.GetWidth() != mol->AtomSolventResidueCount() ) {
-            this->solTypeCountFbo.Create( mol->AtomSolventResidueCount(), 1.0f, GL_RGB32F, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+            this->solTypeCountFbo.Create( mol->AtomSolventResidueCount(), 1, GL_RGB32F, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
         }
     } else {
-        this->solTypeCountFbo.Create( mol->AtomSolventResidueCount(), 1.0f, GL_RGB32F, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        this->solTypeCountFbo.Create( mol->AtomSolventResidueCount(), 1, GL_RGB32F, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
     }
 
     // START draw overlay
@@ -1195,13 +1195,13 @@ void protein::SolventVolumeRenderer::FindVisibleSolventMolecules( MolecularDataC
     for( unsigned int i = 0; i < mol->AtomSolventResidueCount(); i++ ) {
         tmpStr.Format( "Solvent Molecule Type %i, count: %i; ", i, int( counter[i]));
         str += tmpStr;
+        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, "Solvent Molecule Type %i, count: %i", i, int( counter[i]));
     }
-    //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, "Solvent Molecule Type %i, count: %i", i, int( counter[i]));
-    //vislib::graphics::gl::SimpleFont f;
-    //if( f.Initialise() ) {
-    //    glColor3f( 0.5f, 0.5f, 0.5f);    
-    //    f.DrawString( 0.0, 0.0, 10.0f, true, str.PeekBuffer());
-    //}
+/*    vislib::graphics::gl::SimpleFont f;
+    if( f.Initialise() ) {
+        glColor3f( 0.5f, 0.5f, 0.5f);    
+        f.DrawString( 0.0, 0.0, 10.0f, true, str.PeekBuffer());
+    }*/
 
     delete[] counter;
 
@@ -1221,7 +1221,7 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 	/* render hydrogen bounds using sticks ... */
 
 	// stick radius of hbounds is significant smaller than regular atom bindings ...
-	float stickRadius = this->stickRadiusParam.Param<param::FloatParam>()->Value() * 0.4; // * 0.2;
+	float stickRadius = this->stickRadiusParam.Param<param::FloatParam>()->Value() * 0.4f; // * 0.2f;
 
 	vislib::math::Quaternion<float> quatC( 0, 0, 0, 1);
 	vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
@@ -1377,7 +1377,7 @@ void protein::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataCall
 	if (this->coloringModeVolSurfParam.Param<param::EnumParam>()->Value() == VOlCM_HydrogenBondStats &&
 			mol->AtomHydrogenBondStatistics()) {
 		// render atom spheres size according to their hydrogen bond statistics ...
-		float factor = 1.0 / mol->FrameCount();
+		float factor = 1.0f / (float)mol->FrameCount();
 		const unsigned int *hbStatistics = mol->AtomHydrogenBondStatistics();
 		unsigned int numSolventResidues = mol->AtomSolventResidueCount();
 
@@ -2200,7 +2200,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		else if (coloringByHydroBondStats && !isSolvent) {
 			// visalize hydrogen bond statistics ...
 			unsigned int numSolventResidues = mol->AtomSolventResidueCount();
-			float factor = 1.0 / mol->FrameCount();
+			float factor = 1.0f / (float)mol->FrameCount();
 			const unsigned int *hbStatistics = mol->AtomHydrogenBondStatistics();
 			const unsigned int *solventResidueIndices = mol->SolventResidueIndices();
 
@@ -2921,7 +2921,7 @@ void SolventVolumeRenderer::drawClippedPolygon( vislib::math::Cuboid<float> boun
 		slices.setupSingleSlice( this->volClipPlane[i].PeekComponents(), position.PeekComponents());
 		float d = 0.0f;
 		glBegin(GL_TRIANGLE_FAN);
-			slices.drawSingleSlice(-(-d + this->volClipPlane[i].PeekComponents()[3]-0.0001f));
+			slices.drawSingleSlice(-(-d + (float)this->volClipPlane[i].PeekComponents()[3] - 0.0001f));
 		glEnd();
 	}
 }
