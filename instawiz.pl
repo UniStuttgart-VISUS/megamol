@@ -121,12 +121,14 @@ if (IsInputNo($temp)) {
 
 # action jackson
 foreach $temp (glob "MegaMolPlugin.*") {
-    $temp =~ /.*\.(\S+)$/;
+    $temp =~ /^[^\.]*\.(.+)$/;
     my $ext = $1;
     print "$temp -> $filename.$ext: ";
     if (rename $temp, "$filename.$ext") {
         print "ok\n";
-    } else {
+    } elsif (-e "$filename.$ext") {
+		print "ok(magic)\n";
+	} else {
         autoEuthanize("FAILED.");
     }
 }
@@ -136,14 +138,16 @@ $temp =~ s/MegaMolPlugin/$filename/g;
 $temp =~ s/$SRCGUID/$guid/g;
 writeFile("$filename.sln", $temp);
 
-$temp = slurpFile("$filename.vcproj");
-$temp =~ s/Name="MegaMolPlugin"/Name="$filename"/g;
-$temp =~ s/RootNamespace="MegaMolPlugin"/RootNamespace="$filename"/g;
+$temp = slurpFile("$filename.vcxproj");
 $temp =~ s/$SRCGUID/$guid/g;
 $temp =~ s/MEGAMOLPLUGIN_EXPORTS/\U$filename\E_EXPORTS/g;
-$temp =~ s/OutputFile="\$\(OutDir\)\\Template\$\(BitsD\).win\$\(Bits\).mmplg"/OutputFile="\$\(OutDir\)\\$filename\$\(BitsD\).win\$\(Bits\).mmplg"/g;
+$temp =~ s/Template\$\(BitsD\).win\$\(Bits\)/$filename\$\(BitsD\).win\$\(Bits\)/g;
 $temp =~ s/MegaMolPlugin/$filename/g;
-writeFile("$filename.vcproj", $temp);
+writeFile("$filename.vcxproj", $temp);
+
+$temp = slurpFile("$filename.vcxproj.filters");
+$temp =~ s/MegaMolPlugin/$filename/g;
+writeFile("$filename.vcxproj.filters", $temp);
 
 $temp = slurpFile("Makefile");
 $temp =~ s/TargetName := Template/TargetName := $filename/g;

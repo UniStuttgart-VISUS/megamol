@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup Label="UserMacros">
+		<OutputBin>%outbin%</OutputBin>
+		<MegaMolCorePath>%mmcorePath%</MegaMolCorePath>
+		<VISlibPath>%vislib%</VISlibPath>
+	</PropertyGroup>
+	<PropertyGroup>
+		<_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+	</PropertyGroup>
+	<ItemGroup>
+		<BuildMacro Include="OutputBin">
+			<Value>$(OutputBin)</Value>
+		</BuildMacro>
+		<BuildMacro Include="MegaMolCorePath">
+			<Value>$(MegaMolCorePath)</Value>
+		</BuildMacro>
+		<BuildMacro Include="VISlibPath">
+			<Value>$(VISlibPath)</Value>
+		</BuildMacro>
+	</ItemGroup>
+</Project>
