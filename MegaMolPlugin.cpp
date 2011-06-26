@@ -26,7 +26,7 @@ MEGAMOLPLUGIN_API int mmplgPluginAPIVersion(void) {
  * mmplgPluginName
  */
 MEGAMOLPLUGIN_API const char * mmplgPluginName(void) {
-    return "PluginTemplate"; // TODO: Change this name
+    return "PluginTemplate";
 }
 
 
@@ -87,14 +87,12 @@ MEGAMOLPLUGIN_API void* mmplgCallDescription(int idx) {
  * mmplgConnectStatics
  */
 MEGAMOLPLUGIN_API bool mmplgConnectStatics(int which, void* value) {
-    static vislib::sys::Log::EchoTargetRedirect etr(NULL);
     switch (which) {
 
         case 1: // vislib::log
-            etr.SetTarget(static_cast<vislib::sys::Log*>(value));
             vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
             vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
-            vislib::sys::Log::DefaultLog.SetEchoOutTarget(&etr);
+            vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(static_cast<vislib::sys::Log*>(value)));
             vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
             vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
             return true;
