@@ -259,6 +259,7 @@
     <ClCompile Include="testthread.cpp" />
     <ClCompile Include="testthreadpool.cpp" />
     <ClCompile Include="testtrayicon.cpp" />
+    <ClCompile Include="testtriangle.cpp" />
     <ClCompile Include="testvector.cpp" />
     <ClCompile Include="testVIPCStrTab.cpp" />
     <ClCompile Include="testwinreg.cpp" />
@@ -310,6 +311,7 @@
     <ClInclude Include="testthread.h" />
     <ClInclude Include="testthreadpool.h" />
     <ClInclude Include="testtrayicon.h" />
+    <ClInclude Include="testtriangle.h" />
     <ClInclude Include="testvector.h" />
     <ClInclude Include="testVIPCStrTab.h" />
     <ClInclude Include="testwinreg.h" />

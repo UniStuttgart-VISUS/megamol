@@ -12,4 +12,6 @@
 
 void TestMatrix(void);
 
+void TestCovarianceMatrix(void);
+
 #endif /* VISLIBTEST_TESTMATRIX_H_INCLUDED */

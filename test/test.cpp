@@ -58,9 +58,8 @@
 #include "testmsgdisp.h"
 #include "testpolynom.h"
 #include "testquaternion.h"
-//#include "testtriangle.h"
+#include "testtriangle.h"
 #include "testBitmapImage.h"
-#include "testdelegate.h"
 #ifdef _WIN32
 #include "testwinreg.h"
 #endif /* _WIN32 */
@@ -96,11 +95,9 @@ VislibTest tests[] = {
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
     {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
-    {_T("Delegate"), ::TestDelegate, "Tests VISlib Delegate"},
     // graphics
     {_T("BitmapCodecSimple"), ::TestBitmapCodecSimple, "Performs very simple tests of vislib::graphics::*BitmapCodec"},
     {_T("NamedColours"), ::TestNamedColours, "Tests NamedColours"},
-    {_T("BitmapImage"), ::TestBitmapImage, "Tests BitmapImage"},
     {_T("BitmapPainter"), ::TestBitmapPainter, "Test BitmapPainter"},
     // math
     {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
@@ -115,6 +112,8 @@ VislibTest tests[] = {
     {_T("Quaternion"), ::TestQuaternion, "Test vislib::math::Quaternion"},
     {_T("Frustum"), ::TestFrustum, "Tests vislib::math::WorldSpaceFrustum"},
     {_T("Bezier"), ::TestBezier, "Tests vislib::math::BezierCurve"},
+    {_T("Triangle"), ::TestTriangle, "Tests vislib::math::Triangle and ShallowTriangle"},
+    {_T("CovarianceMatrix"), ::TestCovarianceMatrix, "Tests CalcCovarianceMatrix"},
     // net
     {_T("ClusterDiscovery"), ::TestClusterDiscoveryService, "Tests vislib::net::ClusterDiscoveryService and utility classes"},
     {_T("ClusterDiscovery2"), ::TestClusterDiscoveryObserver, "Tests vislib::net::ClusterDiscoveryService in observer mode"},
@@ -297,10 +296,7 @@ int main(int argc, char **argv) {
 
 #if defined(_WIN32) && defined(_DEBUG) // VC Debugger Halt on Stop Crowbar
 #pragma warning(disable: 4996)
-    if ((getenv("VS_HALT_ON_STOP_CROWBAR") != NULL)
-        || (getenv("_ACP_LIB") != NULL) // MSVC 2008
-        || (getenv("COMPLUS_NoGuiFromShim") != NULL) // MSVC 2010
-        ) system("pause");
+    if (getenv("_ACP_LIB") != NULL) system("pause");
 #pragma warning(default: 4996)
 #endif
     return 0;

@@ -19,6 +19,7 @@
 #include "vislib/Matrix4.h"
 #include "vislib/Polynom.h"
 #include "vislib/Quaternion.h"
+#include "vislib/pcautils.h"
 
 
 void TestMatrix(void) {
@@ -586,5 +587,40 @@ Eigenvektor zu Eigenwert 5,299783664336905:
         qo = m3d;
         AssertEqual("Quaternion reconstructed from matrix", qo, qi);
     }
+
+}
+
+
+/*
+ * TestCovarianceMatrix
+ */
+void TestCovarianceMatrix(void) {
+
+    vislib::Array<vislib::math::Vector<float, 3> > relCoords;
+    relCoords.Add(vislib::math::Vector<float, 3>(3.0f, 0.0f, 0.0f));
+    relCoords.Add(vislib::math::Vector<float, 3>(-3.0f, 0.0f, 0.0f));
+    relCoords.Add(vislib::math::Vector<float, 3>(0.0f, 2.0f, 0.0f));
+    relCoords.Add(vislib::math::Vector<float, 3>(0.0f, -2.0f, 0.0f));
+    relCoords.Add(vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
+    relCoords.Add(vislib::math::Vector<float, 3>(0.0f, 0.0f, -1.0f));
+
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> covMat;
+
+    AssertNoException("Calculate Covariance Matrix", vislib::math::CalcCovarianceMatrix(covMat, relCoords));
+
+    float eva[3];
+    vislib::math::Vector<float, 3> eve[3];
+    unsigned int evc = covMat.FindEigenvalues(eva, eve, 3);
+
+    AssertEqual("Covariance Matrix has three real eigenvalues", evc, 3u);
+    AssertNoException("Sorting Eigenvectors", vislib::math::SortEigenvectors(&*eve, eva, evc));
+
+    AssertEqual("Smallest Eigenvalue correct", eva[0], 0.33333334f); // sqrt(1) / 3 <= variance / dimensionality
+    AssertEqual("Second Eigenvalue correct", eva[1], 1.3333334f); // sqrt(2) / 3
+    AssertEqual("Largest Eigenvalue correct", eva[2], 3.0f); // sqrt(3) / 3
+
+    AssertTrue("Smallest Eigenvector correct", eve[0].IsParallel(vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f)));
+    AssertTrue("Second Eigenvector correct", eve[1].IsParallel(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f)));
+    AssertTrue("Largest Eigenvector correct", eve[2].IsParallel(vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f)));
 
 }
