@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Shader Files">
+      <UniqueIdentifier>{92f91bbe-16ae-4c58-b548-a40280587882}</UniqueIdentifier>
+      <Extensions>btf</Extensions>
+    </Filter>
+    <Filter Include="Config and Make Files">
+      <UniqueIdentifier>{aa4a8743-5608-4be4-85dd-f137d703a587}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="volumetrics">
+      <UniqueIdentifier>{18d262f8-44d0-4ed7-a825-3d0499379928}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="volumetrics\Header Files">
+      <UniqueIdentifier>{a37b1d06-5b48-4d24-94ae-27f42c6993b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="volumetrics\Source Files">
+      <UniqueIdentifier>{0329623e-1083-471f-a3b1-c4c849b131ee}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AbstractTriMeshDataSource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AbstractTriMeshLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlockVolumeMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CallBinaryVolumeData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CallTriMeshData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CoordSysMarker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OSCBFix.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TrackerRendererTransform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TriSoup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TriSoupDataSource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TriSoupRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WavefrontObjDataSource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="volumetrics\MarchingCubeTables.cpp">
+      <Filter>volumetrics\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="volumetrics\MarchingSquareTables.cpp">
+      <Filter>volumetrics\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="volumetrics\TagVolume.cpp">
+      <Filter>volumetrics\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="volumetrics\TetraVoxelizer.cpp">
+      <Filter>volumetrics\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="volumetrics\VoluMetricJob.cpp">
+      <Filter>volumetrics\Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AbstractTriMeshDataSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractTriMeshLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BlockVolumeMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CallBinaryVolumeData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CallTriMeshData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CoordSysMarker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OSCBFix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TrackerRendererTransform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TriSoup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TriSoupDataSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TriSoupRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WavefrontObjDataSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="volumetrics\JobStructures.h">
+      <Filter>volumetrics\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="volumetrics\MarchingCubeTables.h">
+      <Filter>volumetrics\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="volumetrics\MarchingSquareTables.h">
+      <Filter>volumetrics\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="volumetrics\TagVolume.h">
+      <Filter>volumetrics\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="volumetrics\TetraVoxelizer.h">
+      <Filter>volumetrics\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="volumetrics\VoluMetricJob.h">
+      <Filter>volumetrics\Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="common.mk">
+      <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="config.bat">
+      <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="config.sh">
+      <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="configure.lin.pl">
+      <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="configure.win.pl">
+      <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="ExtLibs.mk.input">
+      <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="Makefile">
+      <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="ExtLibs.props.input">
+      <Filter>Config and Make Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

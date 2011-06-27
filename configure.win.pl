@@ -26,6 +26,8 @@ $a = PathParameter->new();
     $a->placeholder("%outbin%");
     $a->autoDetect(0);
     $a->value("../bin");
+    $a->directorySeparator("\\");
+    $a->enforceTrailingDirectorySeparator(1);
     push @pps, $a;
 
 $a = PathParameter->new();
@@ -35,6 +37,8 @@ $a = PathParameter->new();
     $a->markerFile("api/MegaMolCore.h\$");
     $a->relativeLocation("../");
     $a->autoDetect(1);
+    $a->directorySeparator("\\");
+    $a->enforceTrailingDirectorySeparator(1);
     push @pps, $a;
 $a = PathParameter->new();
     $a->id("vislib");
@@ -43,6 +47,8 @@ $a = PathParameter->new();
     $a->markerFile("vislib.sln\$");
     $a->relativeLocation("./");
     $a->autoDetect(1);
+    $a->directorySeparator("\\");
+    $a->enforceTrailingDirectorySeparator(1);
     push @pps, $a;
 
 $b = FlagParameter->new();
@@ -60,11 +66,13 @@ $a = PathParameter->new();
     $a->autoDetect(1);
     $a->dependencyFlagID("withVrpn");
     $a->dependencyDisabledValue("");
+    $a->directorySeparator("\\");
+    $a->enforceTrailingDirectorySeparator(1);
     push @pps, $a;
 
 $c = ConfigFilePair->new();
-    $c->inFile("ExtLibs.vsprops.input");
-    $c->outFile("ExtLibs.vsprops");
+    $c->inFile("ExtLibs.props.input");
+    $c->outFile("ExtLibs.props");
     push @cfps, $c;
 
 VISUS::configperl::Configure("MegaMol(TM) Plugin Configuration for Windows", ".megamol.plg.win.cache", \@pps, \@fps, \@cfps, \@sps);
