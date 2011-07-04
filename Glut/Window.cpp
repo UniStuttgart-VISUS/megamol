@@ -28,7 +28,8 @@ megamol::viewer::Window::Window(megamol::viewer::Viewer& owner)
     Window *fw = this->owner.FirstWindow();
     if (fw != NULL) {
         ::glutSetWindow(fw->glutID);
-        ::glutShareContextWithNextWindow();
+        // all glut windows share the same context
+        ::glutSetOption(GLUT_RENDERING_CONTEXT, GLUT_USE_CURRENT_CONTEXT);
     }
 
     this->glutID = ::glutCreateWindow("MegaMol");

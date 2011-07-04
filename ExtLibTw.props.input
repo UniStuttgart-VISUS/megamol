@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="UserMacros">
+    <TweakbarPath>%tweakbarpath%</TweakbarPath>
+    <LibTweakbarRelease>%withTweakbar%!AntTweakBar$(Bits).lib!!</LibTweakbarRelease>
+    <LibTweakbarDebug>%withTweakbar%!AntTweakBar%debugTweakbar%|$(BitsD)|$(Bits)c|.lib!!</LibTweakbarDebug>
+  </PropertyGroup>
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%withTweakbar%!$(TweakbarPath)include;!!%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>%withTweakbar%!WITH_TWEAKBAR;!!%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>%withTweakbar%!$(TweakbarPath)lib;!!%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="TweakbarPath">
+      <Value>$(TweakbarPath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="LibTweakbarRelease">
+      <Value>$(LibTweakbarRelease)</Value>
+    </BuildMacro>
+    <BuildMacro Include="LibTweakbarDebug">
+      <Value>$(LibTweakbarDebug)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

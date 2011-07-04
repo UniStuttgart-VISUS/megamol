@@ -30,6 +30,10 @@ megamol::viewer::Viewer::~Viewer(void) {
     this->windows.Clear();
     iter = helper.GetIterator();
     while (iter.HasNext()) { delete iter.Next(); }
+    try {
+        ::glutExit();
+    } catch(...) {
+    }
 }
 
 

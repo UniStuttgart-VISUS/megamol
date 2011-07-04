@@ -131,24 +131,26 @@ void MEGAMOLCORE_CALLBACK writeLogEchoToConsole(unsigned int level,
 /**
  * Yet another utility class
  */
-class writeLogEchoToConsoleEchoTarget : public vislib::sys::Log::EchoTarget {
+class writeLogEchoToConsoleEchoTarget : public vislib::sys::Log::Target {
 public:
 
     /** ctor */
-    writeLogEchoToConsoleEchoTarget() : vislib::sys::Log::EchoTarget() { }
+    writeLogEchoToConsoleEchoTarget() : vislib::sys::Log::Target() { }
 
     /** dtor */
     virtual ~writeLogEchoToConsoleEchoTarget() { }
 
     /**
-     * Writes a string to the echo output target. Implementations may 
-     * assume that message ends with a new line control sequence.
-     *
-     * @param level The message level.
-     * @param message The message ANSI string.
-     */
-    virtual void Write(UINT level, const char *message) const {
-        writeLogEchoToConsole(level, message);
+        * Writes a message to the log target
+        *
+        * @param level The level of the message
+        * @param time The time stamp of the message
+        * @param sid The object id of the source of the message
+        * @param msg The message text itself
+        */
+    virtual void Msg(UINT level, vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+            const char *msg) {
+        writeLogEchoToConsole(level, msg);
     }
 
 };
@@ -157,7 +159,7 @@ public:
 /**
  * Instance of the utility class
  */
-static vislib::SmartPtr<writeLogEchoToConsoleEchoTarget> dummyEchoTarget;
+static vislib::SmartPtr<vislib::sys::Log::Target> dummyEchoTarget;
 
 
 /**
@@ -635,14 +637,21 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     }
 
     try { // initialise core
-
         MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore,
             MMC_INITVAL_LOGECHOFUNC, MMC_TYPE_VOIDP,
             function_cast<void*>(writeLogEchoToConsole)));
 
-        MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore,
-            MMC_INITVAL_INCOMINGLOG, MMC_TYPE_VOIDP, 
-            static_cast<void*>(&Log::DefaultLog)));
+        //MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, // is now deprecated
+        //    MMC_INITVAL_INCOMINGLOG, MMC_TYPE_VOIDP, 
+        //    static_cast<void*>(&Log::DefaultLog)));
+        // HAZARD!!! Cross-Heap-Allocation Problem
+        // instead inquire the core log
+        vislib::sys::Log *corelog = NULL;
+        MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, MMC_INITVAL_CORELOG, MMC_TYPE_VOIDP, static_cast<void*>(&corelog)));
+        if (corelog != NULL) {
+            Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(corelog, Log::LEVEL_ALL));
+            Log::DefaultLog.EchoOfflineMessages(true);
+        }
 
         if (parser->IsConfigFileSpecified()) {
             MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, 
@@ -1114,9 +1123,8 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 200, "unloading Viewer");
         megamol::viewer::mmvUnloadLibrary();
     }
-    dummyEchoTarget = new writeLogEchoToConsoleEchoTarget();
-    Log::DefaultLog.SetEchoOutTarget(
-        dummyEchoTarget.DynamicCast<vislib::sys::Log::EchoTarget>());
+    //dummyEchoTarget = new writeLogEchoToConsoleEchoTarget();
+    Log::DefaultLog.SetEchoTarget(NULL);
     hCore.DestroyHandle();
 
     return retval;
@@ -1164,7 +1172,7 @@ int main(int argc, char* argv[]) {
         vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_ALL);
         vislib::sys::Log::DefaultLog.SetEchoLevel(
             vislib::sys::Log::LEVEL_NONE);
-        vislib::sys::Log::DefaultLog.SetEchoOutTarget(NULL);
+        vislib::sys::Log::DefaultLog.SetEchoTarget(NULL);
 
         megamol::console::utility::AboutInfo::LogGreeting();
         megamol::console::utility::AboutInfo::LogVersionInfo();
