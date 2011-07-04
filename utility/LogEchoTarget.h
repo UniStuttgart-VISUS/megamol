@@ -23,7 +23,7 @@ namespace utility {
     /*
      * internal helper class of external echo targets.
      */
-    class LogEchoTarget : public vislib::sys::Log::EchoTarget {
+    class LogEchoTarget : public vislib::sys::Log::Target {
     public:
 
         /** ctor */
@@ -46,8 +46,16 @@ namespace utility {
          */
         void SetTarget(mmcLogEchoFunction target);
 
-        /** Write */
-        virtual void Write(UINT level, const char *message) const;
+        /**
+            * Writes a message to the log target
+            *
+            * @param level The level of the message
+            * @param time The time stamp of the message
+            * @param sid The object id of the source of the message
+            * @param msg The message text itself
+            */
+        virtual void Msg(UINT level, vislib::sys::Log::TimeStamp time,
+            vislib::sys::Log::SourceID sid, const char *msg);
 
     private:
 

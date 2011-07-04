@@ -22,6 +22,7 @@
 #include "vislib/assert.h"
 #include "vislib/AutoLock.h"
 #include "vislib/IPAddress.h"
+#include "vislib/IPCommEndPoint.h"
 #include "vislib/Log.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/RawStorage.h"
@@ -49,7 +50,7 @@ cluster::SimpleClusterServer::Client::Client(SimpleClusterServer& parent, vislib
         : vislib::net::SimpleMessageDispatchListener(), parent(parent), dispatcher(), terminationImminent(false) {
     this->dispatcher.AddListener(this);
     /* *HAZARD* This has to be exactly this cast! */
-    vislib::net::AbstractInboundCommChannel *cc = dynamic_cast<vislib::net::AbstractInboundCommChannel *>(channel.operator ->());
+    vislib::net::AbstractCommChannel *cc = dynamic_cast<vislib::net::AbstractCommChannel *>(channel.operator ->());
     this->dispatcher.Start(cc);
 }
 
@@ -202,8 +203,8 @@ bool cluster::SimpleClusterServer::Client::OnMessageReceived(
 void cluster::SimpleClusterServer::Client::send(const vislib::net::AbstractSimpleMessage& msg) {
     using vislib::sys::Log;
     try {
-        this->dispatcher.GetChannel().DynamicCast<vislib::net::AbstractOutboundCommChannel>()->
-            Send(msg, msg.GetMessageSize(), vislib::net::AbstractOutboundCommChannel::TIMEOUT_INFINITE, true);
+        this->dispatcher.GetChannel().DynamicCast<vislib::net::AbstractCommChannel>()->
+            Send(msg, msg.GetMessageSize(), vislib::net::AbstractCommChannel::TIMEOUT_INFINITE, true);
     } catch(vislib::Exception ex) {
         Log::DefaultLog.WriteError("Failed to send simple TCP message: %s\n", ex.GetMsgA());
     } catch(...) {
@@ -658,11 +659,9 @@ bool cluster::SimpleClusterServer::onServerRestartClicked(param::ParamSlot& slot
     ep.SetIPAddress(vislib::net::IPAddress::ANY);
     ep.SetPort(this->serverPortSlot.Param<param::IntParam>()->Value());
 
-    this->serverThread.Configure(
-        new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY
-            | vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS),
-        ep.ToStringA());
-    this->serverThread.Start();
+    vislib::net::CommServer::Configuration cfg(vislib::net::TcpCommChannel::Create(vislib::net::TcpCommChannel::FLAG_NODELAY
+        | vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS), vislib::net::IPCommEndPoint::Create(ep));
+    this->serverThread.Start(&cfg);
     vislib::sys::Thread::Sleep(500);
 
     if (this->serverThread.IsRunning()) {

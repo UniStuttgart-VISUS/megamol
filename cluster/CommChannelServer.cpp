@@ -10,6 +10,7 @@
 #include "cluster/NetMessages.h"
 #include "vislib/assert.h"
 #include "vislib/AutoLock.h"
+#include "vislib/IPCommEndPoint.h"
 #include "vislib/Log.h"
 #include "vislib/SocketException.h"
 #include "vislib/String.h"
@@ -51,15 +52,12 @@ bool cluster::CommChannelServer::IsRunning(void) const {
 void cluster::CommChannelServer::Start(vislib::net::IPEndPoint& ep) {
     this->Stop();
     if (this->commChannel.IsNull()) {
-        this->commChannel = new vislib::net::TcpCommChannel(
+        this->commChannel = vislib::net::TcpCommChannel::Create(
             vislib::net::TcpCommChannel::FLAG_NODELAY
             | vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS);
     }
-    vislib::SmartRef<vislib::net::AbstractServerEndPoint> endpoint = 
-        this->commChannel.DynamicCast<vislib::net::AbstractServerEndPoint>();
-    vislib::StringA address = ep.ToStringA();
-    this->server.Configure(endpoint, address);
-    this->server.Start(NULL);
+    vislib::net::CommServer::Configuration cfg(this->commChannel, vislib::net::IPCommEndPoint::Create(ep));
+    this->server.Start(&cfg);
 }
 
 
@@ -156,7 +154,7 @@ bool cluster::CommChannelServer::OnServerError(const vislib::net::CommServer& sr
  * cluster::CommChannelServer::OnNewConnection
  */
 bool cluster::CommChannelServer::OnNewConnection(const vislib::net::CommServer& src, vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw() {
-    vislib::SmartRef<vislib::net::AbstractBidiCommChannel> bidiChannel = channel.DynamicCast<vislib::net::AbstractBidiCommChannel>();
+    vislib::SmartRef<vislib::net::AbstractCommChannel> bidiChannel = channel.DynamicCast<vislib::net::AbstractCommChannel>();
     ASSERT(!bidiChannel.IsNull()); // internal error like problem (should never happen)
     try {
         vislib::sys::AutoLock(this->clientsLock);

@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/AbstractBidiCommChannel.h"
+#include "vislib/AbstractCommChannel.h"
 #include "vislib/AbstractSimpleMessage.h"
 #include "vislib/Listenable.h"
 #include "vislib/RunnableThread.h"
@@ -120,7 +120,7 @@ namespace cluster {
          *
          * @param channel The channel to be used
          */
-        void Open(vislib::SmartRef<vislib::net::AbstractBidiCommChannel> channel);
+        void Open(vislib::SmartRef<vislib::net::AbstractCommChannel> channel);
 
         /**
          * Sends a message to all nodes in the cluster.
@@ -231,7 +231,7 @@ namespace cluster {
     private:
 
         /** The communication channel */
-        vislib::SmartRef<vislib::net::AbstractBidiCommChannel> channel;
+        vislib::SmartRef<vislib::net::AbstractCommChannel> channel;
 
         /** The receiver thread */
         vislib::sys::RunnableThread<vislib::net::SimpleMessageDispatcher> receiver;

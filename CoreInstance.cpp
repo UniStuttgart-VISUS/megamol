@@ -91,7 +91,7 @@ void megamol::core::CoreInstance::ViewJobHandleDalloc(void *data,
  */
 megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         preInit(new PreInit), config(),
-        shaderSourceFactory(config), log(), logRedirection(), logEchoTarget(),
+        shaderSourceFactory(config), log(),
         builtinViewDescs(), projViewDescs(), builtinJobDescs(), projJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         timeOffset(0.0), plugins(), paramUpdateListeners() {
@@ -101,7 +101,6 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
 #endif /* ULTRA_SOCKET_STARTUP */
 
     this->config.instanceLog = &this->log;
-    this->logRedirection.SetTarget(&this->log);
 
     // Normalize timer with time offset to something less crappy shitty hateworthy
     this->timeOffset = -this->GetInstanceTime();
@@ -122,13 +121,12 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         static_cast<const char*>(NULL), false);
     vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
     vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-    vislib::sys::Log::DefaultLog.SetEchoOutTarget(&this->logRedirection);
+    vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(&this->log));
 
     this->log.SetLogFileName(static_cast<const char*>(NULL), false);
     this->log.SetLevel(vislib::sys::Log::LEVEL_ALL);
     this->log.SetEchoLevel(vislib::sys::Log::LEVEL_NONE);
     this->log.SetOfflineMessageBufferSize(25);
-    this->log.SetEchoOutTarget(&this->logEchoTarget);
 
     //////////////////////////////////////////////////////////////////////
     // register builtin descriptions
@@ -402,20 +400,25 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key,
                     utility::APIValueUtil::AsUint32(type, value));
                 break;
             case MMC_INITVAL_INCOMINGLOG: {
+                //if (type != MMC_TYPE_VOIDP) { return MMC_ERR_TYPE; }
+                //vislib::sys::Log *log = static_cast<vislib::sys::Log*>(
+                //    const_cast<void*>(value));
+                //log->SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
+                //log->SetEchoTarget(&this->logRedirection);
+                //log->EchoOfflineMessages(true);
+                //log->SetLogFileName(static_cast<const char*>(NULL), false);
+                //log->SetLevel(vislib::sys::Log::LEVEL_NONE);
+                return MMC_ERR_NOT_IMPLEMENTED; // use MMC_INITVAL_CORELOG instead
+            } break;
+            case MMC_INITVAL_CORELOG: {
                 if (type != MMC_TYPE_VOIDP) { return MMC_ERR_TYPE; }
-                vislib::sys::Log *log = static_cast<vislib::sys::Log*>(
+                vislib::sys::Log **log = static_cast<vislib::sys::Log**>(
                     const_cast<void*>(value));
-                log->SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-                log->SetEchoOutTarget(&this->logRedirection);
-                log->EchoOfflineMessages(true);
-                log->SetLogFileName(static_cast<const char*>(NULL), false);
-                log->SetLevel(vislib::sys::Log::LEVEL_NONE);
+                *log = &this->log;
             } break;
             case MMC_INITVAL_LOGECHOFUNC:
                 if (type != MMC_TYPE_VOIDP) { return MMC_ERR_TYPE; }
-                this->logEchoTarget.SetTarget(
-                    function_cast<mmcLogEchoFunction>(
-                        const_cast<void*>(value)));
+                this->log.SetEchoTarget(new utility::LogEchoTarget(function_cast<mmcLogEchoFunction>(const_cast<void*>(value))));
                 break;
             default:
                 return MMC_ERR_UNKNOWN;

@@ -40,7 +40,7 @@ $b = FlagParameter->new();
     $b->id("withUserExpat");
     $b->description("Use a local user compiled expat 2 library (MegaMol-Lib-Naming required)");
     $b->placeholder("%withUserExpat%");
-    $b->value(1);
+    $b->value(0);
     push @fps, $b;
 $a = PathParameter->new();
     $a->id("expat");

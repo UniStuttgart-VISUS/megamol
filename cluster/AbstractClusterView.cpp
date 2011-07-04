@@ -14,6 +14,7 @@
 #include "view/AbstractView.h"
 #include <GL/gl.h>
 #include "vislib/AutoLock.h"
+#include "vislib/IPCommEndPoint.h"
 #include "vislib/IPEndPoint.h"
 #include "vislib/Log.h"
 #include "vislib/NetworkInformation.h"
@@ -482,12 +483,12 @@ bool cluster::AbstractClusterView::onServerAddressChanged(param::ParamSlot& slot
         "Starting server on \"%s\" guessed from \"%s\" with wildness: %f\n",
         ep.ToStringA().PeekBuffer(), address.PeekBuffer(), wildness);
 
-    vislib::SmartRef<vislib::net::TcpCommChannel> channel = new vislib::net::TcpCommChannel(
+    vislib::SmartRef<vislib::net::TcpCommChannel> channel = vislib::net::TcpCommChannel::Create(
         vislib::net::TcpCommChannel::FLAG_NODELAY | vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS);
 
     try {
-        channel->Connect(ep);
-        this->ctrlChannel.Open(channel.DynamicCast<vislib::net::AbstractBidiCommChannel>());
+        channel->Connect(vislib::net::IPCommEndPoint::Create(ep));
+        this->ctrlChannel.Open(channel.DynamicCast<vislib::net::AbstractCommChannel>());
     } catch(vislib::Exception ex) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to connect to server: %s\n", ex.GetMsgA());

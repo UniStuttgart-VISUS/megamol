@@ -76,12 +76,11 @@ bool cluster::CommChannel::IsOpen(void) const {
 /*
  * cluster::CommChannel::Open
  */
-void cluster::CommChannel::Open(vislib::SmartRef<vislib::net::AbstractBidiCommChannel> channel) {
+void cluster::CommChannel::Open(vislib::SmartRef<vislib::net::AbstractCommChannel> channel) {
     this->Close();
     this->channel = channel;
-    /* HAS BEEN FIXED */
-    vislib::net::AbstractInboundCommChannel *cc = dynamic_cast<vislib::net::AbstractInboundCommChannel *>(this->channel.operator ->());
-    this->receiver.Start(cc);
+    vislib::net::SimpleMessageDispatcher::Configuration cfg(channel);
+    this->receiver.Start(&cfg);
     if ((!this->receiver.IsRunning()) && (!this->channel.IsNull())) {
         try {
             this->channel->Close();

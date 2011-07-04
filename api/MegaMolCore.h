@@ -118,9 +118,10 @@ typedef enum _mmcInitValueEnum {
     MMC_INITVAL_LOGLEVEL, // The log level to use.
     MMC_INITVAL_LOGECHOLEVEL, // The log echo level to use.
     MMC_INITVAL_INCOMINGLOG, // Connects an incoming log object to the one of 
-                             // the core instance
+                             // the core instance IS NOT DEPRECATED
     MMC_INITVAL_LOGECHOFUNC, // The log echo function to use.
-    MMC_INITVAL_VISLIB_STACKTRACEMANAGER // The vislib StackTrace manager object
+    MMC_INITVAL_VISLIB_STACKTRACEMANAGER, // The vislib StackTrace manager object
+    MMC_INITVAL_CORELOG // Returns the pointer to the core log
 } mmcInitValue;
 
 /** Possible input modifier values */

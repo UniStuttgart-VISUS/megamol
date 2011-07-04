@@ -720,12 +720,6 @@ namespace core {
         /** The log object */
         vislib::sys::Log log;
 
-        /** redirection from the default log to the instance log object */
-        vislib::sys::Log::EchoTargetRedirect logRedirection;
-
-        /** The log echo target function wrapper */
-        megamol::core::utility::LogEchoTarget logEchoTarget;
-
         /** The manager of the builtin view descriptions */
         megamol::core::ObjectDescriptionManager<
             megamol::core::ViewDescription> builtinViewDescs;

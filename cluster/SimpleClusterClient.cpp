@@ -15,6 +15,7 @@
 #include "param/StringParam.h"
 #include "vislib/assert.h"
 #include "vislib/Log.h"
+#include "vislib/IPCommEndPoint.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"
@@ -385,7 +386,7 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                                 that->tcpSan.Join();
                             }
 
-                            that->tcpChan = new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY);
+                            that->tcpChan = vislib::net::TcpCommChannel::Create(vislib::net::TcpCommChannel::FLAG_NODELAY);
                             try {
 
                                 DWORD sleepTime = 100 + static_cast<DWORD>(500.0f
@@ -400,13 +401,12 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                                 float epw = vislib::net::NetworkInformation::GuessRemoteEndPoint(ep, srv);
                                 vislib::sys::Log::DefaultLog.WriteInfo("Guessed remote end point %s with wildness %f\n",
                                     ep.ToStringA().PeekBuffer(), epw);
-                                that->tcpChan->Connect(ep);
+                                that->tcpChan->Connect(vislib::net::IPCommEndPoint::Create(ep));
                                 vislib::sys::Log::DefaultLog.WriteInfo(200,
                                     "TCP connection to %s established",
                                     srv.PeekBuffer());
-                                vislib::net::AbstractInboundCommChannel *cc
-                                    = dynamic_cast<vislib::net::AbstractInboundCommChannel *>(that->tcpChan);
-                                that->tcpSan.Start(cc);
+                                vislib::net::SimpleMessageDispatcher::Configuration cfg(that->tcpChan);
+                                that->tcpSan.Start(&cfg);
                                 vislib::sys::Thread::Sleep(500);
                                 vislib::sys::Log::DefaultLog.WriteInfo("TCP Connection started to \"%s\"", srv.PeekBuffer());
 

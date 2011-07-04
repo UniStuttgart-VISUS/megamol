@@ -1,0 +1,796 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F34CA35F-7F60-431D-A40D-4679B6A82259}</ProjectGuid>
+    <RootNamespace>MegaMolCore</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="vislibVSProps\TargetRelease32.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="vislibVSProps\TargetDebug32.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="vislibVSProps\TargetRelease64.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="vislibVSProps\TargetDebug64.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Win$(Bits)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Win$(Bits)\$(Configuration)\</IntDir>
+    <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">*.obj%3b*.ilk%3b*.tlb%3b*.tli%3b*.tlh%3b*.tmp%3b*.rsp%3b*.pgc%3b*.pgd%3b$(TargetPath)%3b*.pch</ExtensionsToDeleteOnClean>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Win$(Bits)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Win$(Bits)\$(Configuration)\</IntDir>
+    <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">*.obj%3b*.ilk%3b*.tlb%3b*.tli%3b*.tlh%3b*.tmp%3b*.rsp%3b*.pgc%3b*.pgd%3b$(TargetPath)%3b*.pch</ExtensionsToDeleteOnClean>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Win$(Bits)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Win$(Bits)\$(Configuration)\</IntDir>
+    <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">*.obj%3b*.ilk%3b*.tlb%3b*.tli%3b*.tlh%3b*.tmp%3b*.rsp%3b*.pgc%3b*.pgd%3b$(TargetPath)%3b*.pch</ExtensionsToDeleteOnClean>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Win$(Bits)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Win$(Bits)\$(Configuration)\</IntDir>
+    <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Release|x64'">*.obj%3b*.ilk%3b*.tlb%3b*.tli%3b*.tlh%3b*.tmp%3b*.rsp%3b*.pgc%3b*.pgd%3b$(TargetPath)%3b*.pch</ExtensionsToDeleteOnClean>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MegaMolCore$(BitsD)</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MegaMolCore$(BitsD)</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MegaMolCore$(BitsD)</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MegaMolCore$(BitsD)</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PreBuildEvent>
+      <Message>Generating productversion.gen.h</Message>
+      <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(SolutionDir)\."</Command>
+    </PreBuildEvent>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(ProjectDir)\lib" mkdir "$(ProjectDir)\lib"
+if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
+xcopy "$(TargetDir)\$(TargetName).dll" "$(ProjectDir)\lib" /Y /F /V /G /K
+xcopy "$(TargetDir)\$(TargetName).lib" "$(ProjectDir)\lib" /Y /F /V /G /K
+xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PreBuildEvent>
+      <Message>Generating productversion.gen.h</Message>
+      <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(SolutionDir)\."</Command>
+    </PreBuildEvent>
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(ProjectDir)\lib" mkdir "$(ProjectDir)\lib"
+if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
+xcopy "$(TargetDir)\$(TargetName).dll" "$(ProjectDir)\lib" /Y /F /V /G /K
+xcopy "$(TargetDir)\$(TargetName).lib" "$(ProjectDir)\lib" /Y /F /V /G /K
+xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PreBuildEvent>
+      <Message>Generating productversion.gen.h</Message>
+      <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(SolutionDir)\."</Command>
+    </PreBuildEvent>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(ProjectDir)\lib" mkdir "$(ProjectDir)\lib"
+if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
+xcopy "$(TargetDir)\$(TargetName).dll" "$(ProjectDir)\lib" /Y /F /V /G /K
+xcopy "$(TargetDir)\$(TargetName).lib" "$(ProjectDir)\lib" /Y /F /V /G /K
+xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PreBuildEvent>
+      <Message>Generating productversion.gen.h</Message>
+      <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(SolutionDir)\."</Command>
+    </PreBuildEvent>
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(ProjectDir)\lib" mkdir "$(ProjectDir)\lib"
+if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
+xcopy "$(TargetDir)\$(TargetName).dll" "$(ProjectDir)\lib" /Y /F /V /G /K
+xcopy "$(TargetDir)\$(TargetName).lib" "$(ProjectDir)\lib" /Y /F /V /G /K
+xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="AbstractDataWriter.cpp" />
+    <ClCompile Include="AbstractGetData3DCall.cpp" />
+    <ClCompile Include="AbstractGetDataCall.cpp" />
+    <ClCompile Include="AbstractNamedObject.cpp" />
+    <ClCompile Include="AbstractNamedObjectContainer.cpp" />
+    <ClCompile Include="AbstractSlot.cpp" />
+    <ClCompile Include="ApiHandle.cpp" />
+    <ClCompile Include="BoundingBoxes.cpp" />
+    <ClCompile Include="Call.cpp" />
+    <ClCompile Include="CallAutoDescription.cpp" />
+    <ClCompile Include="CallDescription.cpp" />
+    <ClCompile Include="CallDescriptionManager.cpp" />
+    <ClCompile Include="CalleeSlot.cpp" />
+    <ClCompile Include="CallerSlot.cpp" />
+    <ClCompile Include="CoreInstance.cpp" />
+    <ClCompile Include="DataFileSequencer.cpp" />
+    <ClCompile Include="DataWriterCtrlCall.cpp" />
+    <ClCompile Include="InstanceDescription.cpp" />
+    <ClCompile Include="InstanceRequest.cpp" />
+    <ClCompile Include="JobDescription.cpp" />
+    <ClCompile Include="JobInstance.cpp" />
+    <ClCompile Include="JobInstanceRequest.cpp" />
+    <ClCompile Include="LoaderADModuleAutoDescription.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="MegaMolCore.cpp" />
+    <ClCompile Include="Module.cpp" />
+    <ClCompile Include="ModuleAutoDescription.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="ModuleDescription.cpp" />
+    <ClCompile Include="ModuleDescriptionManager.cpp" />
+    <ClCompile Include="ModuleNamespace.cpp" />
+    <ClCompile Include="ObjectDescription.cpp" />
+    <ClCompile Include="ObjectDescriptionManager.cpp" />
+    <ClCompile Include="ParamValueSetRequest.cpp" />
+    <ClCompile Include="RootModuleNamespace.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdafx.h</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ViewDescription.cpp" />
+    <ClCompile Include="ViewInstance.cpp" />
+    <ClCompile Include="ViewInstanceRequest.cpp" />
+    <ClCompile Include="utility\APIValueUtil.cpp" />
+    <ClCompile Include="utility\BTFParser.cpp" />
+    <ClCompile Include="utility\ColourParser.cpp" />
+    <ClCompile Include="Utility\Configuration.cpp" />
+    <ClCompile Include="utility\LogEchoTarget.cpp" />
+    <ClCompile Include="utility\ProjectParser.cpp" />
+    <ClCompile Include="utility\ShaderSourceFactory.cpp" />
+    <ClCompile Include="utility\xml\ConditionalParser.cpp" />
+    <ClCompile Include="utility\xml\ConfigurationParser.cpp" />
+    <ClCompile Include="utility\xml\XmlParser.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
+    </ClCompile>
+    <ClCompile Include="utility\xml\XmlReader.cpp" />
+    <ClCompile Include="special\AbstractStereoDisplay.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="special\AnaglyphStereoDisplay.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="special\ColStereoDisplay.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="view\AbstractCallRender.cpp" />
+    <ClCompile Include="view\AbstractOverrideView.cpp" />
+    <ClCompile Include="view\AbstractRenderingView.cpp" />
+    <ClCompile Include="view\AbstractTileView.cpp" />
+    <ClCompile Include="view\AbstractView.cpp" />
+    <ClCompile Include="view\AbstractView3D.cpp" />
+    <ClCompile Include="view\AnimDataModule.cpp" />
+    <ClCompile Include="view\CallClipPlane.cpp" />
+    <ClCompile Include="view\CallGetTransferFunction.cpp" />
+    <ClCompile Include="view\CallRender2D.cpp" />
+    <ClCompile Include="view\CallRender3D.cpp" />
+    <ClCompile Include="view\CallRenderView.cpp" />
+    <ClCompile Include="view\CameraParamOverride.cpp" />
+    <ClCompile Include="view\ClipPlane.cpp" />
+    <ClCompile Include="view\DataSourceModule.cpp" />
+    <ClCompile Include="view\graphicsresources.cpp" />
+    <ClCompile Include="view\LinearTransferFunction.cpp" />
+    <ClCompile Include="view\MouseFlags.cpp" />
+    <ClCompile Include="view\MuxRenderer3D.cpp" />
+    <ClCompile Include="view\Renderer2DModule.cpp" />
+    <ClCompile Include="view\Renderer3DModule.cpp" />
+    <ClCompile Include="view\SwitchRenderer3D.cpp" />
+    <ClCompile Include="view\TileView.cpp" />
+    <ClCompile Include="view\View2D.cpp" />
+    <ClCompile Include="view\View3D.cpp" />
+    <ClCompile Include="view\special\AbstractStereoView.cpp" />
+    <ClCompile Include="view\special\AnaglyphStereoView.cpp" />
+    <ClCompile Include="view\special\ChronoGraph.cpp" />
+    <ClCompile Include="view\special\DemoRenderer2D.cpp" />
+    <ClCompile Include="view\special\MegaMolLogo.cpp" />
+    <ClCompile Include="view\special\QuadBufferStereoView.cpp" />
+    <ClCompile Include="view\special\ScreenShooter.cpp" />
+    <ClCompile Include="view\special\TitleRenderer.cpp" />
+    <ClCompile Include="job\AbstractJob.cpp" />
+    <ClCompile Include="job\AbstractThreadedJob.cpp" />
+    <ClCompile Include="job\DataWriterJob.cpp" />
+    <ClCompile Include="job\JobThread.cpp" />
+    <ClCompile Include="misc\AbstractBezierRaycastRenderer.cpp" />
+    <ClCompile Include="misc\BezierControlLines.cpp" />
+    <ClCompile Include="misc\BezierDataCall.cpp" />
+    <ClCompile Include="misc\BezierDataSource.cpp" />
+    <ClCompile Include="misc\BezierMeshRenderer.cpp" />
+    <ClCompile Include="misc\BezierRaycastRenderer.cpp" />
+    <ClCompile Include="misc\ExtBezierDataCall.cpp" />
+    <ClCompile Include="misc\ExtBezierDataSource.cpp" />
+    <ClCompile Include="misc\ExtBezierMeshRenderer.cpp" />
+    <ClCompile Include="misc\ExtBezierRaycastRenderer.cpp" />
+    <ClCompile Include="misc\ImageViewer.cpp" />
+    <ClCompile Include="misc\LinesDataCall.cpp" />
+    <ClCompile Include="misc\LinesRenderer.cpp" />
+    <ClCompile Include="misc\SiffCSplineFitter.cpp" />
+    <ClCompile Include="vismol2\Mol20DataCall.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="vismol2\Mol20DataSource.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="vismol2\Mol20Renderer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="vismol2\Mol2Data.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="moldyn\AbstractParticleDataCall.cpp" />
+    <ClCompile Include="moldyn\AddParticleColours.cpp" />
+    <ClCompile Include="moldyn\ArrowRenderer.cpp" />
+    <ClCompile Include="moldyn\DataFileSequence.cpp" />
+    <ClCompile Include="moldyn\DataGridder.cpp" />
+    <ClCompile Include="moldyn\DirectionalParticleDataCall.cpp" />
+    <ClCompile Include="moldyn\GrimRenderer.cpp" />
+    <ClCompile Include="moldyn\IMDAtomDataSource.cpp" />
+    <ClCompile Include="moldyn\MipDepthSphereRenderer.cpp" />
+    <ClCompile Include="moldyn\MMPGDDataSource.cpp" />
+    <ClCompile Include="moldyn\MMPGDWriter.cpp" />
+    <ClCompile Include="moldyn\MMPLDDataSource.cpp" />
+    <ClCompile Include="moldyn\MMPLDWriter.cpp" />
+    <ClCompile Include="moldyn\MultiParticleDataCall.cpp" />
+    <ClCompile Include="moldyn\OracleSphereRenderer.cpp" />
+    <ClCompile Include="moldyn\ParticleGridDataCall.cpp" />
+    <ClCompile Include="moldyn\SIFFDataSource.cpp" />
+    <ClCompile Include="moldyn\SimpleSphereRenderer.cpp" />
+    <ClCompile Include="moldyn\VIMDataSource.cpp" />
+    <ClCompile Include="moldyn\VisIttDataSource.cpp" />
+    <ClCompile Include="param\AbstractParam.cpp" />
+    <ClCompile Include="param\AbstractParamSlot.cpp" />
+    <ClCompile Include="param\BoolParam.cpp" />
+    <ClCompile Include="param\ButtonParam.cpp" />
+    <ClCompile Include="param\EnumParam.cpp" />
+    <ClCompile Include="param\FilePathParam.cpp" />
+    <ClCompile Include="param\FloatParam.cpp" />
+    <ClCompile Include="param\IntParam.cpp" />
+    <ClCompile Include="param\ParamHandle.cpp" />
+    <ClCompile Include="param\ParamSlot.cpp" />
+    <ClCompile Include="param\ParamUpdateListener.cpp" />
+    <ClCompile Include="param\StringParam.cpp" />
+    <ClCompile Include="param\TernaryParam.cpp" />
+    <ClCompile Include="param\Vector2fParam.cpp" />
+    <ClCompile Include="param\Vector3fParam.cpp" />
+    <ClCompile Include="param\Vector4fParam.cpp" />
+    <ClCompile Include="cluster\AbstractClusterView.cpp" />
+    <ClCompile Include="cluster\CallRegisterAtController.cpp" />
+    <ClCompile Include="cluster\ClusterController.cpp" />
+    <ClCompile Include="cluster\ClusterControllerClient.cpp" />
+    <ClCompile Include="cluster\ClusterViewMaster.cpp" />
+    <ClCompile Include="cluster\CommChannel.cpp" />
+    <ClCompile Include="cluster\CommChannelServer.cpp" />
+    <ClCompile Include="cluster\InfoIconRenderer.cpp" />
+    <ClCompile Include="cluster\NetMessages.cpp" />
+    <ClCompile Include="cluster\NetVSyncBarrier.cpp" />
+    <ClCompile Include="cluster\NetVSyncBarrierServer.cpp" />
+    <ClCompile Include="cluster\PowerwallView.cpp" />
+    <ClCompile Include="cluster\SimpleClusterClient.cpp" />
+    <ClCompile Include="cluster\SimpleClusterClientViewRegistration.cpp" />
+    <ClCompile Include="cluster\SimpleClusterCommUtil.cpp" />
+    <ClCompile Include="cluster\SimpleClusterServer.cpp" />
+    <ClCompile Include="cluster\SimpleClusterView.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AbstractDataWriter.h" />
+    <ClInclude Include="AbstractGetData3DCall.h" />
+    <ClInclude Include="AbstractGetDataCall.h" />
+    <ClInclude Include="AbstractNamedObject.h" />
+    <ClInclude Include="AbstractNamedObjectContainer.h" />
+    <ClInclude Include="AbstractSlot.h" />
+    <ClInclude Include="ApiHandle.h" />
+    <ClInclude Include="BoundingBoxes.h" />
+    <ClInclude Include="Call.h" />
+    <ClInclude Include="CallAutoDescription.h" />
+    <ClInclude Include="CallDescription.h" />
+    <ClInclude Include="CallDescriptionManager.h" />
+    <ClInclude Include="CalleeSlot.h" />
+    <ClInclude Include="CallerSlot.h" />
+    <ClInclude Include="CoreInstance.h" />
+    <ClInclude Include="DataFileSequencer.h" />
+    <ClInclude Include="DataWriterCtrlCall.h" />
+    <ClInclude Include="InstanceDescription.h" />
+    <ClInclude Include="InstanceRequest.h" />
+    <ClInclude Include="JobDescription.h" />
+    <ClInclude Include="JobInstance.h" />
+    <ClInclude Include="JobInstanceRequest.h" />
+    <ClInclude Include="LoaderADModuleAutoDescription.h" />
+    <ClInclude Include="Module.h" />
+    <ClInclude Include="ModuleAutoDescription.h" />
+    <ClInclude Include="ModuleDescription.h" />
+    <ClInclude Include="ModuleDescriptionManager.h" />
+    <ClInclude Include="ModuleNamespace.h" />
+    <ClInclude Include="ObjectDescription.h" />
+    <ClInclude Include="ObjectDescriptionManager.h" />
+    <ClInclude Include="ParamValueSetRequest.h" />
+    <ClInclude Include="productversion.gen.h" />
+    <ClInclude Include="productversion.h" />
+    <ClInclude Include="productversion.template.h" />
+    <ClInclude Include="RootModuleNamespace.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="versioninfo.h" />
+    <ClInclude Include="ViewDescription.h" />
+    <ClInclude Include="ViewInstance.h" />
+    <ClInclude Include="ViewInstanceRequest.h" />
+    <ClInclude Include="utility\APIValueUtil.h" />
+    <ClInclude Include="utility\BTFParser.h" />
+    <ClInclude Include="utility\ColourParser.h" />
+    <ClInclude Include="Utility\Configuration.h" />
+    <ClInclude Include="utility\LogEchoTarget.h" />
+    <ClInclude Include="utility\ProjectParser.h" />
+    <ClInclude Include="utility\ShaderSourceFactory.h" />
+    <ClInclude Include="utility\xml\ConditionalParser.h" />
+    <ClInclude Include="utility\xml\ConfigurationParser.h" />
+    <ClInclude Include="utility\xml\XmlParser.h" />
+    <ClInclude Include="utility\xml\XmlReader.h" />
+    <ClInclude Include="special\AbstractStereoDisplay.h" />
+    <ClInclude Include="special\AnaglyphStereoDisplay.h" />
+    <ClInclude Include="special\ColStereoDisplay.h" />
+    <ClInclude Include="view\AbstractCallRender.h" />
+    <ClInclude Include="view\AbstractOverrideView.h" />
+    <ClInclude Include="view\AbstractRenderingView.h" />
+    <ClInclude Include="view\AbstractTileView.h" />
+    <ClInclude Include="view\AbstractView.h" />
+    <ClInclude Include="view\AbstractView3D.h" />
+    <ClInclude Include="view\AnimDataModule.h" />
+    <ClInclude Include="view\CallClipPlane.h" />
+    <ClInclude Include="view\CallGetTransferFunction.h" />
+    <ClInclude Include="view\CallRender2D.h" />
+    <ClInclude Include="view\CallRender3D.h" />
+    <ClInclude Include="view\CallRenderView.h" />
+    <ClInclude Include="view\CameraParamOverride.h" />
+    <ClInclude Include="view\ClipPlane.h" />
+    <ClInclude Include="view\DataSourceModule.h" />
+    <ClInclude Include="view\graphicsresources.h" />
+    <ClInclude Include="view\LinearTransferFunction.h" />
+    <ClInclude Include="view\MouseFlags.h" />
+    <ClInclude Include="view\MuxRenderer3D.h" />
+    <ClInclude Include="view\Renderer2DModule.h" />
+    <ClInclude Include="view\Renderer3DModule.h" />
+    <ClInclude Include="view\SwitchRenderer3D.h" />
+    <ClInclude Include="view\TileView.h" />
+    <ClInclude Include="view\View2D.h" />
+    <ClInclude Include="view\View3D.h" />
+    <ClInclude Include="view\special\AbstractStereoView.h" />
+    <ClInclude Include="view\special\AnaglyphStereoView.h" />
+    <ClInclude Include="view\special\ChronoGraph.h" />
+    <ClInclude Include="view\special\DemoRenderer2D.h" />
+    <ClInclude Include="view\special\MegaMolLogo.h" />
+    <ClInclude Include="view\special\QuadBufferStereoView.h" />
+    <ClInclude Include="view\special\ScreenShooter.h" />
+    <ClInclude Include="view\special\TitleRenderer.h" />
+    <ClInclude Include="job\AbstractJob.h" />
+    <ClInclude Include="job\AbstractThreadedJob.h" />
+    <ClInclude Include="job\DataWriterJob.h" />
+    <ClInclude Include="job\JobThread.h" />
+    <ClInclude Include="misc\AbstractBezierRaycastRenderer.h" />
+    <ClInclude Include="misc\BezierControlLines.h" />
+    <ClInclude Include="misc\BezierDataCall.h" />
+    <ClInclude Include="misc\BezierDataSource.h" />
+    <ClInclude Include="misc\BezierMeshRenderer.h" />
+    <ClInclude Include="misc\BezierRaycastRenderer.h" />
+    <ClInclude Include="misc\ExtBezierDataCall.h" />
+    <ClInclude Include="misc\ExtBezierDataSource.h" />
+    <ClInclude Include="misc\ExtBezierMeshRenderer.h" />
+    <ClInclude Include="misc\ExtBezierRaycastRenderer.h" />
+    <ClInclude Include="misc\ImageViewer.h" />
+    <ClInclude Include="misc\LinesDataCall.h" />
+    <ClInclude Include="misc\LinesRenderer.h" />
+    <ClInclude Include="misc\SiffCSplineFitter.h" />
+    <ClInclude Include="vismol2\Mol20DataCall.h" />
+    <ClInclude Include="vismol2\Mol20DataSource.h" />
+    <ClInclude Include="vismol2\Mol20Renderer.h" />
+    <ClInclude Include="vismol2\Mol2Data.h" />
+    <ClInclude Include="moldyn\AbstractParticleDataCall.h" />
+    <ClInclude Include="moldyn\AddParticleColours.h" />
+    <ClInclude Include="moldyn\ArrowRenderer.h" />
+    <ClInclude Include="moldyn\DataFileSequence.h" />
+    <ClInclude Include="moldyn\DataGridder.h" />
+    <ClInclude Include="moldyn\DirectionalParticleDataCall.h" />
+    <ClInclude Include="moldyn\GrimRenderer.h" />
+    <ClInclude Include="moldyn\IMDAtomDataSource.h" />
+    <ClInclude Include="moldyn\MipDepthSphereRenderer.h" />
+    <ClInclude Include="moldyn\MMPGDDataSource.h" />
+    <ClInclude Include="moldyn\MMPGDWriter.h" />
+    <ClInclude Include="moldyn\MMPLDDataSource.h" />
+    <ClInclude Include="moldyn\MMPLDWriter.h" />
+    <ClInclude Include="moldyn\MultiParticleDataCall.h" />
+    <ClInclude Include="moldyn\OracleSphereRenderer.h" />
+    <ClInclude Include="moldyn\ParticleGridDataCall.h" />
+    <ClInclude Include="moldyn\SIFFDataSource.h" />
+    <ClInclude Include="moldyn\SimpleSphereRenderer.h" />
+    <ClInclude Include="moldyn\VIMDataSource.h" />
+    <ClInclude Include="moldyn\VisIttDataSource.h" />
+    <ClInclude Include="param\AbstractParam.h" />
+    <ClInclude Include="param\AbstractParamSlot.h" />
+    <ClInclude Include="param\BoolParam.h" />
+    <ClInclude Include="param\ButtonParam.h" />
+    <ClInclude Include="param\EnumParam.h" />
+    <ClInclude Include="param\FilePathParam.h" />
+    <ClInclude Include="param\FloatParam.h" />
+    <ClInclude Include="param\IntParam.h" />
+    <ClInclude Include="param\ParamHandle.h" />
+    <ClInclude Include="param\ParamSlot.h" />
+    <ClInclude Include="param\ParamUpdateListener.h" />
+    <ClInclude Include="param\StringParam.h" />
+    <ClInclude Include="param\TernaryParam.h" />
+    <ClInclude Include="param\Vector2fParam.h" />
+    <ClInclude Include="param\Vector3fParam.h" />
+    <ClInclude Include="param\Vector4fParam.h" />
+    <ClInclude Include="api\MegaMolCore.h" />
+    <ClInclude Include="api\MegaMolCore.std.h" />
+    <ClInclude Include="api\MegaMolCore.std.template.h" />
+    <ClInclude Include="cluster\AbstractClusterView.h" />
+    <ClInclude Include="cluster\CallRegisterAtController.h" />
+    <ClInclude Include="cluster\ClusterController.h" />
+    <ClInclude Include="cluster\ClusterControllerClient.h" />
+    <ClInclude Include="cluster\ClusterViewMaster.h" />
+    <ClInclude Include="cluster\CommChannel.h" />
+    <ClInclude Include="cluster\CommChannelServer.h" />
+    <ClInclude Include="cluster\InfoIconRenderer.h" />
+    <ClInclude Include="cluster\NetMessages.h" />
+    <ClInclude Include="cluster\NetVSyncBarrier.h" />
+    <ClInclude Include="cluster\NetVSyncBarrierServer.h" />
+    <ClInclude Include="cluster\PowerwallView.h" />
+    <ClInclude Include="cluster\SimpleClusterClient.h" />
+    <ClInclude Include="cluster\SimpleClusterClientViewRegistration.h" />
+    <ClInclude Include="cluster\SimpleClusterCommUtil.h" />
+    <ClInclude Include="cluster\SimpleClusterServer.h" />
+    <ClInclude Include="cluster\SimpleClusterView.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="icons.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ExtLibs.props.input" />
+    <None Include="view\special\MegaMolLogoData.inl" />
+    <CustomBuildStep Include="config.bat">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="config.sh">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="configure.lin.pl">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="configure.win.pl">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuild Include="api\gencs.pl">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating MegaMolCore.gen.cs ...</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl "%(FullPath)" "%(RootDir)%(Directory)MegaMolCore.h" "%(RootDir)%(Directory)MegaMolCore.gen.cs"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)\MegaMolCore.gen.cs;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating MegaMolCore.gen.cs ...</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">perl "%(FullPath)" "%(RootDir)%(Directory)MegaMolCore.h" "%(RootDir)%(Directory)MegaMolCore.gen.cs"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)\MegaMolCore.gen.cs;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating MegaMolCore.gen.cs ...</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl "%(FullPath)" "%(RootDir)%(Directory)MegaMolCore.h" "%(RootDir)%(Directory)MegaMolCore.gen.cs"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(RootDir)%(Directory)\MegaMolCore.gen.cs;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating MegaMolCore.gen.cs ...</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">perl "%(FullPath)" "%(RootDir)%(Directory)MegaMolCore.h" "%(RootDir)%(Directory)MegaMolCore.gen.cs"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)\MegaMolCore.gen.cs;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="api\geninl.pl">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating MegaMolCore.inl ...</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl "%(FullPath)" "%(RootDir)%(Directory)\MegaMolCore.h" "%(RootDir)%(Directory)\MegaMolCore.inl"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)\MegaMolCore.inl;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating MegaMolCore.inl ...</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">perl "%(FullPath)" "%(RootDir)%(Directory)\MegaMolCore.h" "%(RootDir)%(Directory)\MegaMolCore.inl"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)\MegaMolCore.inl;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating MegaMolCore.inl ...</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl "%(FullPath)" "%(RootDir)%(Directory)\MegaMolCore.h" "%(RootDir)%(Directory)\MegaMolCore.inl"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(RootDir)%(Directory)\MegaMolCore.inl;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating MegaMolCore.inl ...</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">perl "%(FullPath)" "%(RootDir)%(Directory)\MegaMolCore.h" "%(RootDir)%(Directory)\MegaMolCore.inl"
+</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)\MegaMolCore.inl;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuildStep Include="VersionInfo.pl">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <None Include="common.mk" />
+    <None Include="ExtLibs.mk.input" />
+    <CustomBuildStep Include="Makefile">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <None Include="Shaders\arrow.btf" />
+    <None Include="Shaders\arrow.glfp" />
+    <None Include="Shaders\arrow.glvp" />
+    <None Include="Shaders\bezier.btf" />
+    <None Include="Shaders\common.btf" />
+    <None Include="Shaders\commondefines.glsl" />
+    <None Include="Shaders\cylinder.glfp" />
+    <None Include="Shaders\cylinder.glvp" />
+    <None Include="Shaders\extbezier.btf" />
+    <None Include="Shaders\lightdirectional.glsl" />
+    <None Include="Shaders\mipdepth.btf" />
+    <None Include="Shaders\mipdepth2.btf" />
+    <None Include="Shaders\mipdepth3.btf" />
+    <None Include="Shaders\mipdepth4.btf" />
+    <None Include="Shaders\mipdepth5.btf" />
+    <None Include="Shaders\mipdepth6.btf" />
+    <None Include="Shaders\oraclesphere.btf" />
+    <None Include="Shaders\perpixellight.glfp" />
+    <None Include="Shaders\perpixellight.glvp" />
+    <None Include="Shaders\simplesphere.btf" />
+    <None Include="Shaders\sphere.glfs" />
+    <None Include="Shaders\sphere.glvs" />
+    <None Include="Shaders\sphere.slfp" />
+    <None Include="Shaders\sphere.slvp" />
+    <None Include="Shaders\titlelogo.btf" />
+    <None Include="Shaders\sphereEx\body.glvs" />
+    <None Include="Shaders\sphereEx\box_analytic_aa.glvs" />
+    <None Include="Shaders\sphereEx\box_lumberjack_aa.glvs" />
+    <None Include="Shaders\sphereEx\box_point.glvs" />
+    <None Include="Shaders\sphereEx\box_quad.glgs" />
+    <None Include="Shaders\sphereEx\box_quad.glvs" />
+    <None Include="Shaders\sphereEx\footer.glgs" />
+    <None Include="Shaders\sphereEx\footer.glvs" />
+    <None Include="Shaders\sphereEx\header.glgs" />
+    <None Include="Shaders\sphereEx\header.glvs" />
+    <None Include="Shaders\sphereEx\params_upload.glvs" />
+    <None Include="api\MegaMolCore.inl" />
+    <CustomBuildStep Include="api\MegaMolCore.cs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="api\MegaMolCore.gen.cs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <None Include="cluster\HelvUC.inc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

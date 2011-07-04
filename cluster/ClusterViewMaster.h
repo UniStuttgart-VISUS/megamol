@@ -18,7 +18,7 @@
 #include "Module.h"
 #include "param/ParamSlot.h"
 #include "param/ParamUpdateListener.h"
-#include "vislib/AbstractServerEndPoint.h"
+#include "vislib/AbstractCommEndPoint.h"
 #include "vislib/CommServer.h"
 #include "vislib/CommServerListener.h"
 #include "vislib/RunnableThread.h"

@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "cluster/NetVSyncBarrier.h"
 #include "cluster/NetMessages.h"
+#include "vislib/IPCommEndPoint.h"
 #include "vislib/IPEndPoint.h"
 #include "vislib/Log.h"
 #include "vislib/NetworkInformation.h"
@@ -52,11 +53,11 @@ bool cluster::NetVSyncBarrier::Connect(const vislib::StringA& address) {
         "Guessed remote end-point \"%s\" from input \"%s\" with wildness %f\n",
         ep.ToStringA().PeekBuffer(), address.PeekBuffer(), wildness);
 
-    vislib::net::TcpCommChannel *tcp
-        = new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY
+    vislib::SmartRef<vislib::net::TcpCommChannel> tcp
+        = vislib::net::TcpCommChannel::Create(vislib::net::TcpCommChannel::FLAG_NODELAY
             | vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS);
-    this->channel = tcp;
-    tcp->Connect(ep);
+    this->channel = tcp.DynamicCast<vislib::net::AbstractCommChannel>();
+    tcp->Connect(vislib::net::IPCommEndPoint::Create(ep));
 
     return true;
 }

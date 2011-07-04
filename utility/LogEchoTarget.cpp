@@ -13,7 +13,7 @@
  * megamol::core::utility::LogEchoTarget::LogEchoTarget
  */
 megamol::core::utility::LogEchoTarget::LogEchoTarget(void) 
-        : vislib::sys::Log::EchoTarget(), target(NULL) {
+        : vislib::sys::Log::Target(), target(NULL) {
     // Intentionally empty
 }
 
@@ -22,7 +22,7 @@ megamol::core::utility::LogEchoTarget::LogEchoTarget(void)
  * megamol::core::utility::LogEchoTarget::LogEchoTarget
  */
 megamol::core::utility::LogEchoTarget::LogEchoTarget(mmcLogEchoFunction target)
-        : vislib::sys::Log::EchoTarget(), target(target) {
+        : vislib::sys::Log::Target(), target(target) {
     // Intentionally empty
 }
 
@@ -45,11 +45,11 @@ void megamol::core::utility::LogEchoTarget::SetTarget(
 
 
 /*
- * megamol::core::utility::LogEchoTarget::Write
+ * megamol::core::utility::LogEchoTarget::Msg
  */
-void megamol::core::utility::LogEchoTarget::Write(UINT level,
-        const char *message) const {
+void megamol::core::utility::LogEchoTarget::Msg(UINT level, vislib::sys::Log::TimeStamp time,
+        vislib::sys::Log::SourceID sid, const char *msg) {
     if (this->target) {
-        this->target(level, message);
+        this->target(level, msg);
     }
 }

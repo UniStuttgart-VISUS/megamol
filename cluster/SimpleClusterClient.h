@@ -197,7 +197,7 @@ namespace cluster {
         param::ParamSlot udpEchoBAddrSlot;
 
         /** the tcp communication channel */
-        vislib::net::TcpCommChannel *tcpChan;
+        vislib::SmartRef<vislib::net::TcpCommChannel> tcpChan;
 
         /** The TCP communication */
         vislib::sys::RunnableThread<vislib::net::SimpleMessageDispatcher> tcpSan;

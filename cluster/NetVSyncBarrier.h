@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/AbstractBidiCommChannel.h"
+#include "vislib/AbstractCommChannel.h"
 #include "vislib/RawStorage.h"
 #include "vislib/SmartRef.h"
 #include "vislib/String.h"
@@ -82,7 +82,7 @@ namespace cluster {
     private:
 
         /** The communication channel */
-        vislib::SmartRef<vislib::net::AbstractBidiCommChannel> channel;
+        vislib::SmartRef<vislib::net::AbstractCommChannel> channel;
 
         /** The barrier payload data */
         vislib::RawStorage data;
