@@ -222,28 +222,18 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
  * mmplgConnectStatics
  */
 PROTEIN_API bool mmplgConnectStatics(int which, void* value) {
-
-#if defined(DEBUG) || defined(_DEBUG)
-    // only trace non-vislib messages
-    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
-#endif /* DEBUG || _DEBUG */
-
-    static vislib::sys::Log::EchoTargetRedirect etr(NULL);
-    switch (which) {
-
-        case 1: // vislib::log
-            etr.SetTarget(static_cast<vislib::sys::Log*>(value));
-            vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
-            vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
-            vislib::sys::Log::DefaultLog.SetEchoOutTarget(&etr);
-            vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-            vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
-            return true;
-
-        case 2: // vislib::stacktrace
-            return vislib::sys::ThreadSafeStackTrace::Initialise(
-                *static_cast<const vislib::SmartPtr<vislib::StackTrace>*>(value), true);
-
-    }
+    switch (which) { 
+        case 1: // vislib::log 
+            vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false); 
+            vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE); 
+            vislib::sys::Log::DefaultLog.SetEchoTarget(new 
+                vislib::sys::Log::RedirectTarget(static_cast<vislib::sys::Log*>(value))); 
+            vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL); 
+            vislib::sys::Log::DefaultLog.EchoOfflineMessages(true); 
+            return true; 
+        case 2: // vislib::stacktrace 
+            return vislib::sys::ThreadSafeStackTrace::Initialise( 
+                *static_cast<const vislib::SmartPtr<vislib::StackTrace>*>(value), true); 
+    } 
     return false;
 }
