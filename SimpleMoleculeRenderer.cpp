@@ -89,7 +89,9 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModule (),
     //this->currentRenderMode = SAS;
     param::EnumParam *rm = new param::EnumParam(int(this->currentRenderMode));
     rm->SetTypePair( LINES, "Lines");
+    rm->SetTypePair( LINES_FILTER, "Lines-Filter");
     rm->SetTypePair( STICK, "Stick");
+    rm->SetTypePair( STICK_FILTER, "Stick-Filter");
     rm->SetTypePair( BALL_AND_STICK, "Ball-and-Stick");
     rm->SetTypePair( SPACEFILLING, "Spacefilling");
     rm->SetTypePair( SAS, "SAS");
@@ -191,6 +193,24 @@ bool SimpleMoleculeRenderer::create(void) {
         return false;
     }
 
+    // Load filter sphere shader
+        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::filterSphereVertex", vertSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for filter sphere shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragment", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for filter sphere shader");
+        return false;
+    }
+    try {
+        if (!this->filterSphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+        }
+    } catch(vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create filter sphere shader: %s\n", e.GetMsgA());
+        return false;
+    }
+
     // Load cylinder shader
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
@@ -206,6 +226,24 @@ bool SimpleMoleculeRenderer::create(void) {
         }
     } catch(vislib::Exception e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create cylinder shader: %s\n", e.GetMsgA());
+        return false;
+    }
+
+    // Load filter cylinder shader
+        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::filterCylinderVertex", vertSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for filter cylinder shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::filterCylinderFragment", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for filter cylinder shader");
+        return false;
+    }
+    try {
+        if (!this->filterCylinderShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+        }
+    } catch(vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create filter cylinder shader: %s\n", e.GetMsgA());
         return false;
     }
 
@@ -381,7 +419,7 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-#if 1
+
     // render data using the current rendering mode
     if( this->currentRenderMode == LINES ) {
         this->RenderLines( mol, posInter);
@@ -393,11 +431,11 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
         this->RenderSpacefilling( mol, posInter);
     } else if( this->currentRenderMode == SAS ) {
         this->RenderSAS( mol, posInter);
+    } else if( this->currentRenderMode == LINES_FILTER ) {
+        this->RenderLinesFilter(mol, posInter);
+    } else if( this->currentRenderMode == STICK_FILTER ) {
+        this->RenderStickFilter(mol, posInter);
     }
-#else
-    RenderPointsFilter(mol, posInter);
-#endif
-    //glDisable(GL_DEPTH_TEST);
 
     glPopMatrix();
 
@@ -872,6 +910,304 @@ void SimpleMoleculeRenderer::RenderPointsFilter(const MolecularDataCall *mol,
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
 
+}
+
+/*
+ * renderLinesFilter
+ * 
+ * Helper function to test the filter module.
+ */
+void SimpleMoleculeRenderer::RenderLinesFilter(const MolecularDataCall *mol, 
+    const float *atomPos) {
+
+    vislib::Array<unsigned int> visAtmIdx;
+    vislib::Array<unsigned int> visConIdx;
+    
+    unsigned int visAtmCnt = 0, visConCnt = 0;
+    unsigned int m, at, c;
+    unsigned int firstAtmIdx, lastAtmIdx, firstConIdx, lastConIdx;
+
+    visAtmIdx.SetCapacityIncrement(2000);
+    visConIdx.SetCapacityIncrement(2000);
+
+   // Loop through all molecules
+    for(m = 0; m < mol->MoleculeCount(); m++) {
+        
+        // If the molecule is visible
+        if(mol->Molecules()[m].Filter() == 1) {
+
+            // Get indices of all atoms in this molecule
+            firstAtmIdx = 
+                mol->Residues()[mol->Molecules()[m].FirstResidueIndex()]->FirstAtomIndex();
+            
+            lastAtmIdx =
+                mol->Residues()[ mol->Molecules()[m].FirstResidueIndex() + 
+                    mol->Molecules()[m].ResidueCount() - 1]->FirstAtomIndex()
+                + mol->Residues()[mol->Molecules()[m].FirstResidueIndex() + 
+                    mol->Molecules()[m].ResidueCount() - 1]->AtomCount() - 1;
+
+            for(at = firstAtmIdx; at <= lastAtmIdx; at++)  {
+                visAtmIdx.Add(at);
+            }
+
+            visAtmCnt += (lastAtmIdx - firstAtmIdx + 1);
+            
+            // Get indices of all connections in this molecule
+            if(mol->Molecules()[m].ConnectionCount() > 0) {
+                
+                firstConIdx = 
+                    mol->Molecules()[m].FirstConnectionIndex();
+
+                lastConIdx = 
+                    mol->Molecules()[m].FirstConnectionIndex()
+                    + (mol->Molecules()[m].ConnectionCount() - 1)*2;
+                
+                for(c = firstConIdx; c <= lastConIdx; c += 2) {
+                    
+                    visConIdx.Add(mol->Connection()[c]);
+                    visConIdx.Add(mol->Connection()[c+1]);
+                }
+                visConCnt += (lastConIdx - firstConIdx + 2);
+            }
+        }
+    }
+    
+    glDisable( GL_LIGHTING);
+    glLineWidth( 2.0f);
+    
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+ 
+    glVertexPointer(3, GL_FLOAT, 0, atomPos);
+    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    
+    // Draw visible atoms
+    glDrawElements(GL_POINTS, visAtmCnt, GL_UNSIGNED_INT, visAtmIdx.PeekElements());
+    // Draw vivisble bonds
+    glDrawElements(GL_LINES, visConCnt, GL_UNSIGNED_INT, visConIdx.PeekElements());
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    
+    glEnable( GL_LIGHTING);
+}
+
+
+/*
+ * Render the molecular data in stick mode.
+ */
+void SimpleMoleculeRenderer::RenderStickFilter( const MolecularDataCall *mol, const float *atomPos) {
+    
+    //int n;
+    //glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n);
+    //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+    //  "Maximum num of generic vertex attributes: %i\n", n);
+
+    // ----- prepare stick raycasting -----
+    this->vertSpheres.SetCount( mol->AtomCount() * 4 );
+    this->vertCylinders.SetCount( mol->ConnectionCount() * 4);
+    this->quatCylinders.SetCount( mol->ConnectionCount() * 4);
+    this->inParaCylinders.SetCount( mol->ConnectionCount() * 2);
+    this->color1Cylinders.SetCount( mol->ConnectionCount() * 3);
+    this->color2Cylinders.SetCount( mol->ConnectionCount() * 3);
+    this->conFilter.SetCount( mol->ConnectionCount());
+
+    int cnt;
+
+    // copy atom pos and radius to vertex array
+#pragma omp parallel for
+    for( cnt = 0; cnt < int( mol->AtomCount()); ++cnt ) {
+        this->vertSpheres[4*cnt+0] = atomPos[3*cnt+0];
+        this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
+        this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
+        this->vertSpheres[4*cnt+3] =
+            this->stickRadiusParam.Param<param::FloatParam>()->Value();
+    }
+
+    unsigned int idx0, idx1;
+    vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
+    vislib::math::Quaternion<float> quatC( 0, 0, 0, 1);
+    vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
+    float angle;
+    // loop over all connections and compute cylinder parameters
+#pragma omp parallel for private( idx0, idx1, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
+    for( cnt = 0; cnt < int( mol->ConnectionCount()); ++cnt ) {
+        idx0 = mol->Connection()[2*cnt];
+        idx1 = mol->Connection()[2*cnt+1];
+
+        firstAtomPos.SetX( atomPos[3*idx0+0]);
+        firstAtomPos.SetY( atomPos[3*idx0+1]);
+        firstAtomPos.SetZ( atomPos[3*idx0+2]);
+
+        secondAtomPos.SetX( atomPos[3*idx1+0]);
+        secondAtomPos.SetY( atomPos[3*idx1+1]);
+        secondAtomPos.SetZ( atomPos[3*idx1+2]);
+
+        // Set filter information for this connection
+        if((mol->Filter()[idx0] == 1) && (mol->Filter()[idx1] == 1)) 
+            this->conFilter[cnt] = 1.0f;
+        else
+            this->conFilter[cnt] = 0.0f;    
+
+        // compute the quaternion for the rotation of the cylinder
+        dir = secondAtomPos - firstAtomPos;
+        tmpVec.Set( 1.0f, 0.0f, 0.0f);
+        angle = - tmpVec.Angle( dir);
+        ortho = tmpVec.Cross( dir);
+        ortho.Normalise();
+        quatC.Set( angle, ortho);
+        // compute the absolute position 'position' of the cylinder (center point)
+        position = firstAtomPos + (dir/2.0f);
+
+        this->inParaCylinders[2*cnt] = this->stickRadiusParam.Param<param::FloatParam>()->Value();
+		this->inParaCylinders[2*cnt+1] = ( firstAtomPos-secondAtomPos).Length();
+
+		// thomasbm: hotfix for jumping molecules near bounding box
+		if(this->inParaCylinders[2*cnt+1] > mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() 
+            + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius() ) {
+			this->inParaCylinders[2*cnt+1] = 0;
+		}
+
+        this->quatCylinders[4*cnt+0] = quatC.GetX();
+        this->quatCylinders[4*cnt+1] = quatC.GetY();
+        this->quatCylinders[4*cnt+2] = quatC.GetZ();
+        this->quatCylinders[4*cnt+3] = quatC.GetW();
+
+        this->color1Cylinders[3*cnt+0] = this->atomColorTable[3*idx0+0];
+        this->color1Cylinders[3*cnt+1] = this->atomColorTable[3*idx0+1];
+        this->color1Cylinders[3*cnt+2] = this->atomColorTable[3*idx0+2];
+
+        this->color2Cylinders[3*cnt+0] = this->atomColorTable[3*idx1+0];
+        this->color2Cylinders[3*cnt+1] = this->atomColorTable[3*idx1+1];
+        this->color2Cylinders[3*cnt+2] = this->atomColorTable[3*idx1+2];
+
+        this->vertCylinders[4*cnt+0] = position.X();
+        this->vertCylinders[4*cnt+1] = position.Y();
+        this->vertCylinders[4*cnt+2] = position.Z();
+        this->vertCylinders[4*cnt+3] = 0.0f;
+    }
+
+
+    unsigned int c, m, firstConIdx, lastConIdx;
+
+    // Set filter information of connections according to molecules
+    /*for(m = 0; m < mol->MoleculeCount(); m++) {
+        if(mol->Molecules()[m].ConnectionCount() > 0) {
+            
+            firstConIdx = 
+                mol->Molecules()[m].FirstConnectionIndex();
+
+            lastConIdx = 
+                mol->Molecules()[m].FirstConnectionIndex()
+                + mol->Molecules()[m].ConnectionCount() - 1;
+
+            if(mol->Molecules()[m].Filter() == 1) {
+                for(c = firstConIdx; c <= lastConIdx; c ++) {
+                    //conFilter[c] = 1.0;
+                    conFilter.Add(1.0);
+                }
+            }
+            else {
+                for(c = firstConIdx; c <= lastConIdx; c ++) {
+                    conFilter.Add(0.0);
+                    //conFilter[c] = 0.0;
+                }
+            }
+        }
+    }*/
+
+    // ---------- actual rendering ----------
+
+    // get viewpoint parameters for raycasting
+    float viewportStuff[4] = {
+        cameraInfo->TileRect().Left(),
+        cameraInfo->TileRect().Bottom(),
+        cameraInfo->TileRect().Width(),
+        cameraInfo->TileRect().Height()};
+    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    viewportStuff[2] = 2.0f / viewportStuff[2];
+    viewportStuff[3] = 2.0f / viewportStuff[3];
+
+    // enable sphere shader
+    this->filterSphereShader.Enable();
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+   
+    // set shader variables
+    glUniform4fvARB(this->filterSphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->filterSphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+    glUniform3fvARB(this->filterSphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+    glUniform3fvARB(this->filterSphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+
+    // Set filter attribute
+    this->attribLocAtomFilter = glGetAttribLocationARB(this->filterSphereShader.ProgramHandle(), "filter");
+    glEnableVertexAttribArrayARB(this->attribLocAtomFilter);
+
+    // Set vertex and color pointers and draw them
+    glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+
+    // Set attribute pointer
+    glVertexAttribPointerARB(this->attribLocAtomFilter, 1, GL_INT, 0, 0, mol->Filter());
+
+    glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+
+    glDisableVertexAttribArrayARB(this->attribLocAtomFilter);
+    
+    // disable sphere shader
+    this->filterSphereShader.Disable();
+
+    // enable cylinder shader
+    this->filterCylinderShader.Enable();
+    // set shader variables
+    glUniform4fvARB( this->filterCylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB( this->filterCylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+    glUniform3fvARB( this->filterCylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+    glUniform3fvARB( this->filterCylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+
+    // get the attribute locations
+    attribLocInParams = glGetAttribLocationARB( this->filterCylinderShader, "inParams");
+    attribLocQuatC = glGetAttribLocationARB( this->filterCylinderShader, "quatC");
+    attribLocColor1 = glGetAttribLocationARB( this->filterCylinderShader, "color1");
+    attribLocColor2 = glGetAttribLocationARB( this->filterCylinderShader, "color2");
+    this->attribLocConFilter = glGetAttribLocationARB( this->filterCylinderShader, "filter");
+    // enable vertex attribute arrays for the attribute locations
+    glDisableClientState( GL_COLOR_ARRAY);
+    glEnableVertexAttribArrayARB( this->attribLocInParams);
+    glEnableVertexAttribArrayARB( this->attribLocQuatC);
+    glEnableVertexAttribArrayARB( this->attribLocColor1);
+    glEnableVertexAttribArrayARB( this->attribLocColor2);
+    glEnableVertexAttribArrayARB( this->attribLocConFilter);
+    // set vertex and attribute pointers and draw them
+    glVertexPointer( 4, GL_FLOAT, 0, this->vertCylinders.PeekElements());
+    glVertexAttribPointerARB( this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
+    glVertexAttribPointerARB( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
+    glVertexAttribPointerARB( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
+    glVertexAttribPointerARB( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
+    glVertexAttribPointerARB( this->attribLocConFilter, 1, GL_FLOAT, 0, 0, this->conFilter.PeekElements());
+
+    glDrawArrays( GL_POINTS, 0, mol->ConnectionCount());
+    // disable vertex attribute arrays for the attribute locations
+    glDisableVertexAttribArrayARB( this->attribLocInParams);
+    glDisableVertexAttribArrayARB( this->attribLocQuatC);
+    glDisableVertexAttribArrayARB( this->attribLocColor1);
+    glDisableVertexAttribArrayARB( this->attribLocColor2);
+    glDisableVertexAttribArrayARB( this->attribLocConFilter);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    // disable cylinder shader
+    this->filterCylinderShader.Disable();
+
+   /* GLenum errCode;
+    const GLubyte *errString;
+    
+    if ((errCode = glGetError()) != GL_NO_ERROR) {
+        errString = gluErrorString(errCode);
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+            "OpenGL Error: %s\n", errString);
+        //fprintf (stderr, "OpenGL Error: %s\n", errString);
+    }*/
 }
 
 

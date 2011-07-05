@@ -38,7 +38,9 @@ namespace protein {
             STICK            = 1,
             BALL_AND_STICK   = 2,
             SPACEFILLING     = 3,
-            SAS              = 4
+            SAS              = 4,
+            LINES_FILTER     = 5,
+            STICK_FILTER     = 6
         };
 
         /**
@@ -174,6 +176,22 @@ namespace protein {
          */
         void RenderPointsFilter(const MolecularDataCall *mol, const float *atomPos);
 
+		/**
+         * Test the filter module.
+         *
+         * @param mol        Pointer to the data call.
+         * @param atomPos    Pointer to the interpolated atom positions.
+         */
+        void RenderLinesFilter(const MolecularDataCall *mol, const float *atomPos);
+
+        /**
+         * Render the molecular data in stick mode.
+         *
+         * @param mol        Pointer to the data call.
+         * @param atomPos    Pointer to the interpolated atom positions.
+         */
+        void RenderStickFilter( const MolecularDataCall *mol, const float *atomPos);
+
         /**
          * Update all parameter slots.
          *
@@ -219,12 +237,17 @@ namespace protein {
         vislib::graphics::gl::GLSLShader sphereShader;
         /** shader for the cylinders (raycasting view) */
         vislib::graphics::gl::GLSLShader cylinderShader;
+		/** Shader for the spheres that uses filter information */
+        vislib::graphics::gl::GLSLShader filterSphereShader;
+        vislib::graphics::gl::GLSLShader filterCylinderShader;
 
         // attribute locations for GLSL-Shader
         GLint attribLocInParams;
         GLint attribLocQuatC;
         GLint attribLocColor1;
         GLint attribLocColor2;
+        GLint attribLocAtomFilter;
+        GLint attribLocConFilter;
 
         /** The current coloring mode */
         Color::ColoringMode currentColoringMode;
@@ -252,6 +275,8 @@ namespace protein {
         vislib::Array<float> color1Cylinders;
         /** second color array for cylinder */
         vislib::Array<float> color2Cylinders;
+        /** Connections filter */
+        vislib::Array<float> conFilter;
 
         // the list of molecular indices
         vislib::Array<vislib::StringA> molIdxList;

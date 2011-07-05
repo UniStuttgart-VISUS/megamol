@@ -96,7 +96,7 @@ Filter::Filter(void) : core::Module(),
     param::EnumParam *f = new param::EnumParam(NONE);
     f->SetTypePair(NONE, "None");
     f->SetTypePair(SOLVENT, "Solvent");
-    f->SetTypePair(SOLVENTALT, "SolventAlt");
+    //f->SetTypePair(SOLVENTALT, "SolventAlt");
     this->filterParam << f;
     this->MakeSlotAvailable(&this->filterParam);
     
