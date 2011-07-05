@@ -408,6 +408,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\AbsoluteCursor3D.cpp" />
     <ClCompile Include="src\AbstractBitmapCodec.cpp" />
     <ClCompile Include="src\AbstractCameraController.cpp" />
     <ClCompile Include="src\AbstractCursor.cpp" />
@@ -425,6 +426,20 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="src\AbstractCursor3DEvent.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugImport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugImport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\AbstractCursorEvent.cpp" />
     <ClCompile Include="src\AbstractFont.cpp" />
     <ClCompile Include="src\AbstractVISLogo.cpp" />
@@ -433,6 +448,7 @@
     <ClCompile Include="src\BitmapPainter.cpp" />
     <ClCompile Include="src\BmpBitmapCodec.cpp" />
     <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\CameraAdjust3D.cpp" />
     <ClCompile Include="src\CameraLookAtDist.cpp" />
     <ClCompile Include="src\CameraMove2D.cpp" />
     <ClCompile Include="src\CameraParameterLimits.cpp" />
@@ -472,13 +488,16 @@
     <ClCompile Include="src\NamedColours.cpp" />
     <ClCompile Include="src\ObservableCameraParams.cpp" />
     <ClCompile Include="src\PpmBitmapCodec.cpp" />
+    <ClCompile Include="src\RelativeCursor3D.cpp" />
     <ClCompile Include="src\ZoomToRectangle.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\vislib\AbsoluteCursor3D.h" />
     <ClInclude Include="include\vislib\AbstractBitmapCodec.h" />
     <ClInclude Include="include\vislib\AbstractCameraController.h" />
     <ClInclude Include="include\vislib\AbstractCursor.h" />
     <ClInclude Include="include\vislib\AbstractCursor2DEvent.h" />
+    <ClInclude Include="include\vislib\AbstractCursor3DEvent.h" />
     <ClInclude Include="include\vislib\AbstractCursorEvent.h" />
     <ClInclude Include="include\vislib\AbstractFont.h" />
     <ClInclude Include="include\vislib\AbstractVISLogo.h" />
@@ -487,6 +506,7 @@
     <ClInclude Include="include\vislib\BitmapPainter.h" />
     <ClInclude Include="include\vislib\BmpBitmapCodec.h" />
     <ClInclude Include="include\vislib\Camera.h" />
+    <ClInclude Include="include\vislib\CameraAdjust3D.h" />
     <ClInclude Include="include\vislib\CameraLookAtDist.h" />
     <ClInclude Include="include\vislib\CameraMove2D.h" />
     <ClInclude Include="include\vislib\CameraParameterLimits.h" />
@@ -514,6 +534,7 @@
     <ClInclude Include="include\vislib\NamedColours.h" />
     <ClInclude Include="include\vislib\ObservableCameraParams.h" />
     <ClInclude Include="include\vislib\PpmBitmapCodec.h" />
+    <ClInclude Include="include\vislib\RelativeCursor3D.h" />
     <ClInclude Include="include\vislib\ZoomToRectangle.h" />
   </ItemGroup>
   <ItemGroup>
