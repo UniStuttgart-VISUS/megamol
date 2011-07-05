@@ -60,12 +60,11 @@ cluster::SimpleClusterView::~SimpleClusterView(void) {
 
 namespace intern {
 
-
     /**
      * Selects adapters which match this predicate
      */
     bool iamSelectAdapterCallback(const vislib::net::NetworkInformation::Adapter& adapter, void *userContext) {
-        vislib::net::IPHostEntryW *he = static_cast<vislib::net::IPHostEntryW*>(userContext);
+        vislib::net::TIPHostEntry *he = static_cast<vislib::net::TIPHostEntry*>(userContext);
         vislib::Array<vislib::net::IPAgnosticAddress> a1 = he->GetAddresses();
         vislib::net::NetworkInformation::UnicastAddressList a2 = adapter.GetUnicastAddresses();
         for (int i2 = 0; i2 < a2.Count(); i2++) {
@@ -76,8 +75,7 @@ namespace intern {
         return false;
     }
 
-
-};
+}
 
 
 /*
@@ -135,7 +133,7 @@ void cluster::SimpleClusterView::Render(void) {
 
     if (this->heartBeatPortSlot.IsDirty() || this->heartBeatServerSlot.IsDirty()) {
         try {
-            vislib::net::IPHostEntryW he;
+            vislib::net::TIPHostEntry he;
             vislib::net::DNS::GetHostEntry(he, this->heartBeatServerSlot.Param<param::StringParam>()->Value());
             vislib::net::NetworkInformation::AdapterList adapters;
             vislib::net::NetworkInformation::GetAdaptersForPredicate(adapters,
