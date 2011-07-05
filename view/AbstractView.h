@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "api/MegaMolCore.h"
+#include "api/MegaMolCore.std.h"
 #include "CalleeSlot.h"
 #include "Module.h"
 #include "param/AbstractParam.h"
@@ -30,13 +31,13 @@ namespace view {
     /**
      * Abstract base class of rendering views
      */
-    class AbstractView : public Module {
+    class MEGAMOLCORE_API AbstractView : public Module {
     public:
 
         /**
          * Interfaces class for hooking into view processes
          */
-        class Hooks {
+        class MEGAMOLCORE_API Hooks {
         public:
 
             /**
@@ -337,8 +338,14 @@ namespace view {
         /** Slot for incoming rendering requests */
         CalleeSlot renderSlot;
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /** List of registered hooks */
         vislib::SingleLinkedList<Hooks *> hooks;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
     };
 

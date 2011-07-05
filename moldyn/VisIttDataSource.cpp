@@ -142,10 +142,12 @@ void moldyn::VisIttDataSource::loadFrame(view::AnimDataModule::Frame *frame, uns
     ASSERT(idx < this->FrameCount());
     ASSERT(this->headerIdx.Count() >= 3);
 
-    SIZE_T len = ((idx + 1 < this->frameTable.Count()) ? this->frameTable[idx + 1] : this->file->GetSize()) - this->frameTable[idx];
+    SIZE_T len = static_cast<SIZE_T>(
+        ((idx + 1 < this->frameTable.Count()) ? this->frameTable[idx + 1] : this->file->GetSize())
+        - this->frameTable[idx]);
     this->file->Seek(this->frameTable[idx]);
     char *buf = new char[len + 2];
-    len = this->file->Read(buf, len);
+    len = static_cast<SIZE_T>(this->file->Read(buf, len));
     buf[len] = '\n';
     buf[len + 1] = 0;
     int filterType = this->filter.Param<param::EnumParam>()->Value();
@@ -549,7 +551,7 @@ void moldyn::VisIttDataSource::findFilterColumn(void) {
     if (this->filterIndex == UINT_MAX) {
         try {
             int idx = vislib::CharTraitsA::ParseInt(filtCol);
-            if ((idx >= 0) && (idx < this->header.Count())) {
+            if ((idx >= 0) && (idx < static_cast<int>(this->header.Count()))) {
                 this->filterIndex = idx;
             }
         } catch(...) {

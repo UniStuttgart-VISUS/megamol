@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "api/MegaMolCore.std.h"
 #include "param/ParamSlot.h"
 #include "view/AbstractView.h"
 #include "vislib/FpsCounter.h"
@@ -24,13 +25,13 @@ namespace view {
     /**
      * Abstract base class of rendering views
      */
-    class AbstractRenderingView : public AbstractView {
+    class MEGAMOLCORE_API AbstractRenderingView : public AbstractView {
     public:
 
         /**
          * Interface definition
          */
-        class AbstractTitleRenderer {
+        class MEGAMOLCORE_API AbstractTitleRenderer {
         public:
 
             /** Ctor */
@@ -202,8 +203,14 @@ namespace view {
         /** The title renderer */
         mutable AbstractTitleRenderer* titleRenderer;
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /** The frames per second counter */
         vislib::graphics::FpsCounter fpsCounter;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
         /** A timer managing the fps output */
         unsigned int fpsOutputTimer;

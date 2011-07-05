@@ -14,6 +14,7 @@
 #define ENABLE_KEYBOARD_VIEW_CONTROL 1
 
 #include "BoundingBoxes.h"
+#include "api/MegaMolCore.std.h"
 #include "view/AbstractCallRender.h"
 #include "view/AbstractView3D.h"
 #include "CalleeSlot.h"
@@ -43,7 +44,7 @@ namespace view {
     /**
      * Base class of rendering graph calls
      */
-    class View3D: public AbstractView3D {
+    class MEGAMOLCORE_API View3D: public AbstractView3D {
     public:
 
         /**
@@ -341,6 +342,9 @@ namespace view {
         // */
         //inline void renderViewCubeEdge(int x1, int y1, int z1, int x2, int y2, int z2);
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /** The scene camera */
         vislib::graphics::gl::CameraOpenGL cam;
 
@@ -373,12 +377,21 @@ namespace view {
 
         /** camera look-at distance changer */
         vislib::graphics::CameraLookAtDist lookAtDist;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
         /** Slot to call the renderer to render */
         CallerSlot rendererSlot;
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /** The light direction vector (NOT LIGHT POSITION) */
         vislib::graphics::SceneSpaceVector3D lightDir;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
         /** flag whether or not the light is a camera relative light */
         bool isCamLight;
@@ -428,8 +441,14 @@ namespace view {
          */
         bool firstImg;
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /** The frozen values */
         FrozenValues *frozenValues;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
         /**
          * Flag whether the light is relative to the camera or to the world 
@@ -522,8 +541,14 @@ namespace view {
         /** Slows down the animation */
         param::ParamSlot animSpeedDownSlot;
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /** The colour of the bounding box */
         vislib::graphics::ColourRGBAu8 bboxCol;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
         /** Parameter slot for the bounding box colour */
         param::ParamSlot bboxColSlot;

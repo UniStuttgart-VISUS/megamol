@@ -67,7 +67,7 @@ namespace intern {
         vislib::net::TIPHostEntry *he = static_cast<vislib::net::TIPHostEntry*>(userContext);
         vislib::Array<vislib::net::IPAgnosticAddress> a1 = he->GetAddresses();
         vislib::net::NetworkInformation::UnicastAddressList a2 = adapter.GetUnicastAddresses();
-        for (int i2 = 0; i2 < a2.Count(); i2++) {
+        for (SIZE_T i2 = 0; i2 < a2.Count(); i2++) {
             if (a1.Contains(a2[i2].GetAddress())) {
                 return true;
             }

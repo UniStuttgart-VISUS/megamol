@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "view/AbstractRenderingView.h"
+#include "api/MegaMolCore.std.h"
 
 
 namespace megamol {
@@ -22,7 +23,7 @@ namespace view {
     /**
      * Abstract base class of 3d rendering views
      */
-    class AbstractView3D : public AbstractRenderingView {
+    class MEGAMOLCORE_API AbstractView3D : public AbstractRenderingView {
     public:
 
         /** Ctor. */
