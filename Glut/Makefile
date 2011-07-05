@@ -22,7 +22,7 @@ VISlibs := gl graphics sys math base
 
 # Additional compiler flags
 CompilerFlags := $(CompilerFlags) -fPIC -DMEGAMOLVIEWER_EXPORTS -DMEGAMOLVIEWER_USESTATIC
-ExcludeFromBuild += ./DllEntry.c
+ExcludeFromBuild += ./DllEntry.c ./NVSwapGroupController.cpp
 
 
 # Libraries
