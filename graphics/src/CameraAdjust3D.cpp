@@ -19,7 +19,7 @@
 vislib::graphics::CameraAdjust3D::CameraAdjust3D(
         const SmartPtr<CameraParameters>& cameraParams) :
         AbstractCursor3DEvent(), AbstractCameraController(cameraParams),
-        altMod(UINT_MAX), switchYZ(false), singleAxis(false), invertX(false),
+        /*altMod(UINT_MAX), */switchYZ(false), singleAxis(false), invertX(false),
         invertY(false), invertZ(false), noTranslate(false), noRotate(false) {
     // Intentionally empty
 }
@@ -55,16 +55,16 @@ void vislib::graphics::CameraAdjust3D::Trigger(
         math::Vector<float, 3> rotateVector = cursor->getRotate();
 
         // Get the current state of the alt key
-        bool alt = false;
-        if ((cursor->GetInputModifiers() != NULL) 
-                && (cursor->GetInputModifiers()->GetModifierCount()
-                    > this->altMod)) {
-            alt = cursor->GetInputModifiers()->GetModifierState(this->altMod);
-        }
+        //bool alt = false;
+        //if ((cursor->GetInputModifiers() != NULL) 
+        //        && (cursor->GetInputModifiers()->GetModifierCount()
+        //            > this->altMod)) {
+        //    alt = cursor->GetInputModifiers()->GetModifierState(this->altMod);
+        //}
 
-        if (alt) {
-            // some functionality - maybe locking a direction or something
-        }
+        //if (alt) {
+        //    // some functionality - maybe locking a direction or something
+        //}
 
         /* Tests for various modes */
 

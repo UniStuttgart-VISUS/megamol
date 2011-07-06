@@ -31,10 +31,9 @@ namespace graphics {
      * Cursor3DEvent adjusting the camera pan/zoom/rotate based on either
      * relative or absolute 3d cursor movement.
      *
-     * You should set up a button test and you should set the alternative
-     * adjustion modifier if you use this class. Normal adjustion schema
-     * adjusts the object, while the alternative adjustion schema adjusts
-     * the camera.
+     * You should set up a button test if you use this class. Normal adjustion
+     * schema adjusts the camera. It is possible to invert the axes to rotate
+     * the camera around its focal point.
      */
     class CameraAdjust3D : public AbstractCursor3DEvent, 
         public AbstractCameraController {
@@ -53,9 +52,9 @@ namespace graphics {
 
         /**
          * Callback method called by a Cursor3D this event is registered to
-         * when a cursor event occurs. REASON_BUTTON_DOWN, REASON_MOVE and
-         * REASON_BUTTON_UP control the mouse position tracking and the 
-         * rotation of the beholder. Other calling reasons have no effect.
+         * when a cursor event occurs. REASON_MOVE controls the mouse position
+         * tracking and the rotation of the camera. Other calling reasons have
+         * no effect.
          *
          * @param caller The AbstractCursor object which calls this methode.
          * @param reason The reason for this call.
@@ -63,26 +62,6 @@ namespace graphics {
          */
         virtual void Trigger(AbstractCursor *caller, TriggerReason reason,
             unsigned int param);
-
-        /**
-         * Sets the modifier for alternative rotation schema. The normal
-         * rotation schema modelles pitch and yaw rotations, while the
-         * alternative rotation schema modelles roll rotations.
-         *
-         * @param modifier The modifier
-         */
-        inline void SetAltModifier(InputModifiers::Modifier modifier) {
-            this->altMod = modifier;
-        }
-
-        /**
-         * Returns the modifier for alternative rotation schema.
-         *
-         * @return The modifier
-         */
-        inline InputModifiers::Modifier GetAltModifier(void) const {
-            return this->altMod;
-        }
 
         /**
          * Sets the Single Axis mode value
@@ -210,23 +189,7 @@ namespace graphics {
             return this->invertZ;
         }
 
-        /**
-         * Saves the current look at point as the local objectCenter variable.
-         */
-        inline void SetObjectCenter(void) {
-            this->objectCenter = this->CameraParams()->LookAt();
-        }
-
     private:
-
-        /** The modifier for alternate rotation */
-        InputModifiers::Modifier altMod;
-
-        /**
-         * The object center (set as the look at point) (crappy way of finding
-         * the center of the object)
-         */
-        math::Point<SceneSpaceType, 3> objectCenter;
 
         /**
          * Switches axes so that the plane of the table is corresponds to the
