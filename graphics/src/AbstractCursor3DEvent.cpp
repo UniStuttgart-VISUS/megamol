@@ -7,7 +7,6 @@
 
 
 #include "vislib/AbstractCursor3DEvent.h"
-#include "AbstractCursor3DEvent.h"
 
 
 /*
