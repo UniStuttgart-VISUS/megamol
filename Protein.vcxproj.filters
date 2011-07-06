@@ -430,17 +430,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <CUDA_Build_Rule Include="filter_cuda.cu">
-      <Filter>CUDA Files</Filter>
-    </CUDA_Build_Rule>
-    <CUDA_Build_Rule Include="particles_kernel.cu">
-      <Filter>CUDA Files</Filter>
-    </CUDA_Build_Rule>
-    <CUDA_Build_Rule Include="particleSystem.cu">
-      <Filter>CUDA Files</Filter>
-    </CUDA_Build_Rule>
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuildStep Include="Shaders\protein.btf">
       <Filter>Shader Files</Filter>
     </CustomBuildStep>
@@ -456,14 +445,25 @@
     <CustomBuildStep Include="Shaders\contourbuildupKernel.cl">
       <Filter>OpenCL Files</Filter>
     </CustomBuildStep>
-    <CustomBuildStep Include="filter_cuda.cuh">
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="filter_cuda.cu">
       <Filter>CUDA Files</Filter>
-    </CustomBuildStep>
-    <CustomBuildStep Include="particles_kernel.cuh">
+    </CudaCompile>
+    <CudaCompile Include="filter_cuda.cuh">
       <Filter>CUDA Files</Filter>
-    </CustomBuildStep>
-    <CustomBuildStep Include="particleSystem.cuh">
+    </CudaCompile>
+    <CudaCompile Include="particleSystem.cu">
       <Filter>CUDA Files</Filter>
-    </CustomBuildStep>
+    </CudaCompile>
+    <CudaCompile Include="particleSystem.cuh">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="particles_kernel.cuh">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="particles_kernel.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>
