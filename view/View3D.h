@@ -198,6 +198,32 @@ namespace view {
          */
         virtual void unpackMouseCoordinates(float &x, float &y);
 
+        /**
+         * Implementation of 'Create'.
+         *
+         * @return 'true' on success, 'false' otherwise.
+         */
+        virtual bool create(void);
+
+        /**
+         * Implementation of 'Release'.
+         */
+        virtual void release(void);
+
+        // protected variables //
+
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
+        /** the input modifiers corresponding to this cursor. */
+        vislib::graphics::InputModifiers modkeys;
+
+        /** The normal camera parameters */
+        vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
+
     private:
 
         /**
@@ -225,18 +251,6 @@ namespace view {
             unsigned int freezeCounter;
 
         };
-
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
-
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
 
         /**
          * Renders the vertices of the bounding box
@@ -348,17 +362,11 @@ namespace view {
         /** The scene camera */
         vislib::graphics::gl::CameraOpenGL cam;
 
-        /** The normal camera parameters */
-        vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
-
         /** The camera parameter overrides */
         vislib::SmartPtr<vislib::graphics::CameraParameters> camOverrides;
 
         /** the 2d cursor of this view */
         vislib::graphics::Cursor2D cursor2d;
-
-        /** the input modifiers corresponding to this cursor. */
-        vislib::graphics::InputModifiers modkeys;
 
         /** camera look at rotator */
         vislib::graphics::CameraRotate2DLookAt rotator1;
