@@ -15,6 +15,10 @@
 
 extern "C"
 {
+void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numParticles);
+
+void scanParticles(uint *dInput, uint *dOutput, uint count);
+
 void cudaInit(int argc, char **argv);
 
 void allocateArray(void **devPtr, int size);

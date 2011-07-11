@@ -30,7 +30,7 @@
 #include "particles_kernel.cuh"
 #include "vector_functions.h"
 #include "cuda_runtime_api.h"
-#include "cudpp/cudpp.h"
+//#include "cudpp/cudpp.h"
 
 namespace megamol {
 namespace protein {
@@ -179,7 +179,7 @@ namespace protein {
 		const unsigned int atomNeighborCount;
 
 		// CUDA Radix sort
-        CUDPPHandle sortHandle;
+        //CUDPPHandle sortHandle;
 
 		// params
 		bool cudaInitalized;

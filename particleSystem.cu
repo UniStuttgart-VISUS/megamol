@@ -29,10 +29,26 @@
 
 #include <cuda_gl_interop.h>
 
+#include "thrust/device_ptr.h"
+#include "thrust/sort.h"
+#include "thrust/scan.h"
+
 #include "particles_kernel.cu"
 
 extern "C"
 {
+
+void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numParticles) {
+    thrust::sort_by_key(thrust::device_ptr<uint>(dGridParticleHash),
+                        thrust::device_ptr<uint>(dGridParticleHash + numParticles),
+                        thrust::device_ptr<uint>(dGridParticleIndex));
+}
+
+void scanParticles(uint *dInput, uint *dOutput, uint count) {
+    thrust::exclusive_scan(thrust::device_ptr<uint>(dInput), 
+                           thrust::device_ptr<uint>(dInput + count),
+                           thrust::device_ptr<uint>(dOutput));
+}
 
 void cudaInit(int argc, char **argv) {   
     // use command-line specified CUDA device, otherwise use device with highest Gflops/s

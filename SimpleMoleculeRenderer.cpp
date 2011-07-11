@@ -194,7 +194,7 @@ bool SimpleMoleculeRenderer::create(void) {
     }
 
     // Load filter sphere shader
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::filterSphereVertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::filterSphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for filter sphere shader");
         return false;
     }

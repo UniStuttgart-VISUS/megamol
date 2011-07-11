@@ -100,7 +100,7 @@ void protein::ProteinRendererSESGPUCuda::release( void )
     if( this->singTexData ) delete[] this->singTexData;
     if( this->singTexCoords ) delete[] this->singTexCoords;
  
-    cudppDestroyPlan( this->sortHandle);   
+    //cudppDestroyPlan( this->sortHandle);   
 }
 
 
@@ -538,12 +538,12 @@ bool ProteinRendererSESGPUCuda::initCuda( const CallProteinData *protein, uint g
     allocateArray((void**)&m_dCellEnd, this->numGridCells*sizeof(uint));
 
     // Create the CUDPP radix sort
-    CUDPPConfiguration sortConfig;
-    sortConfig.algorithm = CUDPP_SORT_RADIX;
-    sortConfig.datatype = CUDPP_UINT;
-    sortConfig.op = CUDPP_ADD;
-    sortConfig.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
-    cudppPlan( &this->sortHandle, sortConfig, this->numAtoms, 1, 0);
+    //CUDPPConfiguration sortConfig;
+    //sortConfig.algorithm = CUDPP_SORT_RADIX;
+    //sortConfig.datatype = CUDPP_UINT;
+    //sortConfig.op = CUDPP_ADD;
+    //sortConfig.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
+    //cudppPlan( &this->sortHandle, sortConfig, this->numAtoms, 1, 0);
 
 	setParameters( &this->params);
 
@@ -1447,7 +1447,8 @@ void ProteinRendererSESGPUCuda::ComputeVicinityTableCUDA( const CallProteinData 
 			this->numAtoms);
 
 		// sort particles based on hash
-        cudppSort( this->sortHandle, m_dGridParticleHash, m_dGridParticleIndex, this->gridSortBits, this->numAtoms);
+        //cudppSort( this->sortHandle, m_dGridParticleHash, m_dGridParticleIndex, this->gridSortBits, this->numAtoms);
+        sortParticles( m_dGridParticleHash, m_dGridParticleIndex, this->numAtoms);
 
 		// reorder particle arrays into sorted order and
 		// find start and end of each cell

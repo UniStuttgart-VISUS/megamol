@@ -128,9 +128,9 @@ void protein::MoleculeCBCudaRenderer::release( void ) {
         freeArray( m_dCellStart);
         freeArray( m_dCellEnd);
 
-        cudppDestroyPlan( this->sortHandle);
-        cudppDestroyPlan( this->probeSortHandle);
-        cudppDestroyPlan( this->scanHandle);
+        //cudppDestroyPlan( this->sortHandle);
+        //cudppDestroyPlan( this->probeSortHandle);
+        //cudppDestroyPlan( this->scanHandle);
     }
 }
 
@@ -369,7 +369,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 		this->numAtoms);
 
 	// sort particles based on hash
-    cudppSort( this->sortHandle, m_dGridParticleHash, m_dGridParticleIndex, this->gridSortBits, this->numAtoms);
+    //cudppSort( this->sortHandle, m_dGridParticleHash, m_dGridParticleIndex, this->gridSortBits, this->numAtoms);
+    sortParticles(m_dGridParticleHash, m_dGridParticleIndex, this->numAtoms);
 
 	// reorder particle arrays into sorted order and
 	// find start and end of each cell
@@ -426,7 +427,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	// ---------- vertex buffer object generation (for rendering) ----------
 #if 1
     // count total number of small circles
-	cudppScan( this->scanHandle, m_dSmallCircleVisibleScan, m_dSmallCircleVisible, this->numAtoms * this->atomNeighborCount);
+	//cudppScan( this->scanHandle, m_dSmallCircleVisibleScan, m_dSmallCircleVisible, this->numAtoms * this->atomNeighborCount);
+    scanParticles( m_dSmallCircleVisible, m_dSmallCircleVisibleScan, this->numAtoms * this->atomNeighborCount);
 	// get total number of small circles
 	uint numSC = 0;
 	uint lastSC = 0;
@@ -435,7 +437,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	numSC += lastSC;
 
     // count total number of arcs
-	cudppScan( this->scanHandle, m_dArcCountScan, m_dArcCount, this->numAtoms * this->atomNeighborCount);
+	//cudppScan( this->scanHandle, m_dArcCountScan, m_dArcCount, this->numAtoms * this->atomNeighborCount);
+    scanParticles( m_dArcCount, m_dArcCountScan, this->numAtoms * this->atomNeighborCount);
 	// get total number of probes
 	uint numProbes = 0;
 	uint lastProbeCnt = 0;
@@ -540,7 +543,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 		numProbes);
     
 	// sort probes based on hash
-    cudppSort( this->probeSortHandle, m_dGridProbeHash, m_dGridProbeIndex, this->gridSortBits, numProbes);
+    //cudppSort( this->probeSortHandle, m_dGridProbeHash, m_dGridProbeIndex, this->gridSortBits, numProbes);
+    sortParticles(m_dGridProbeHash, m_dGridProbeIndex, numProbes);
 
 	// reorder particle arrays into sorted order and find start and end of each cell
 	reorderDataAndFindCellStart(
@@ -925,7 +929,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU( MolecularDataCall *mol) {
 			this->numAtoms);
 
 		// sort particles based on hash
-        cudppSort( this->sortHandle, m_dGridParticleHash, m_dGridParticleIndex, this->gridSortBits, this->numAtoms);
+        //cudppSort( this->sortHandle, m_dGridParticleHash, m_dGridParticleIndex, this->gridSortBits, this->numAtoms);
+        sortParticles(m_dGridParticleHash, m_dGridParticleIndex, this->numAtoms);
 
 		// reorder particle arrays into sorted order and
 		// find start and end of each cell
@@ -1671,10 +1676,10 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
     //e = cudaGetLastError();
 
 	//cuMemGetInfo 
-	uint free, total;
-	cuMemGetInfo( &free, &total);
-	vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR, 
-		"Free GPU Memory: %i / %i (MB)", free / ( 1024 * 1024), total / ( 1024 * 1024));
+	//uint free, total;
+	//cuMemGetInfo( &free, &total);
+	//vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR, 
+	//	"Free GPU Memory: %i / %i (MB)", free / ( 1024 * 1024), total / ( 1024 * 1024));
 	// array for sorted atom positions
     allocateArray((void**)&m_dSortedPos, memSize);
 	// array for sorted atom positions
@@ -1708,29 +1713,29 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
     allocateArray((void**)&m_dCellEnd, this->numGridCells*sizeof(uint));
 
     // Create the CUDPP radix sort
-    CUDPPConfiguration sortConfig;
-    sortConfig.algorithm    = CUDPP_SORT_RADIX;
-    sortConfig.datatype     = CUDPP_UINT;
-    sortConfig.op           = CUDPP_ADD;
-    sortConfig.options      = CUDPP_OPTION_KEY_VALUE_PAIRS;
-    cudppPlan( &this->sortHandle, sortConfig, this->numAtoms, 1, 0);
+    //CUDPPConfiguration sortConfig;
+    //sortConfig.algorithm    = CUDPP_SORT_RADIX;
+    //sortConfig.datatype     = CUDPP_UINT;
+    //sortConfig.op           = CUDPP_ADD;
+    //sortConfig.options      = CUDPP_OPTION_KEY_VALUE_PAIRS;
+    //cudppPlan( &this->sortHandle, sortConfig, this->numAtoms, 1, 0);
 
     
     // Create the CUDPP radix sort
-    CUDPPConfiguration probeSortConfig;
-    probeSortConfig.algorithm   = CUDPP_SORT_RADIX;
-    probeSortConfig.datatype    = CUDPP_UINT;
-    probeSortConfig.op          = CUDPP_ADD;
-    probeSortConfig.options     = CUDPP_OPTION_KEY_VALUE_PAIRS;
-    cudppPlan( &this->probeSortHandle, probeSortConfig, this->numAtoms*this->atomNeighborCount, 1, 0);
+    //CUDPPConfiguration probeSortConfig;
+    //probeSortConfig.algorithm   = CUDPP_SORT_RADIX;
+    //probeSortConfig.datatype    = CUDPP_UINT;
+    //probeSortConfig.op          = CUDPP_ADD;
+    //probeSortConfig.options     = CUDPP_OPTION_KEY_VALUE_PAIRS;
+    //cudppPlan( &this->probeSortHandle, probeSortConfig, this->numAtoms*this->atomNeighborCount, 1, 0);
 
     // Create the CUDPP scan (prefix sum)
-    CUDPPConfiguration scanConfig;
-    scanConfig.algorithm    = CUDPP_SCAN;
-    scanConfig.datatype     = CUDPP_UINT;
-    scanConfig.op           = CUDPP_ADD;
-    scanConfig.options      = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
-	cudppPlan( &this->scanHandle, scanConfig, this->numAtoms*this->atomNeighborCount, 1, 0);
+    //CUDPPConfiguration scanConfig;
+    //scanConfig.algorithm    = CUDPP_SCAN;
+    //scanConfig.datatype     = CUDPP_UINT;
+    //scanConfig.op           = CUDPP_ADD;
+    //scanConfig.options      = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
+    //cudppPlan( &this->scanHandle, scanConfig, this->numAtoms*this->atomNeighborCount, 1, 0);
 
 	// create probe position vertex buffer object
     if( glIsBuffer( this->probePosVBO) ) {
