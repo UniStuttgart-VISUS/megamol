@@ -490,19 +490,19 @@ void MEGAMOLCORE_CALLBACK testParameterRelevance(const char* str, void *data) {
  */
 void menuCommandCallback(void *wnd, int *params) {
     switch(*params) {
-        case 0: // write parameter file
+        case 1: // write parameter file
             if (parameterFile.IsEmpty()) break;
             writeParameterFile();
             break;
-        case 1: // read parameter file
+        case 2: // read parameter file
             if (parameterFile.IsEmpty()) break;
             readParameterFile();
             break;
 #ifdef WITH_TWEAKBAR
-        case 2:
+        case 3:
             static_cast<megamol::console::Window *>(wnd)->ActivateGUI();
             break;
-        case 3:
+        case 4:
             static_cast<megamol::console::Window *>(wnd)->DeactivateGUI();
             break;
 #endif /* WITH_TWEAKBAR */
@@ -927,8 +927,8 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 #ifdef WITH_TWEAKBAR
                 /* TODO: Move GUI */
                 /*if (::mmvSupportParameterGUI(win->HWnd()))*/ {
-                    ::mmvInstallContextMenuCommandA(win->HWnd(), "Activate GUI", 2);
-                    ::mmvInstallContextMenuCommandA(win->HWnd(), "Deactivate GUI", 3);
+                    ::mmvInstallContextMenuCommandA(win->HWnd(), "Activate GUI", 3);
+                    ::mmvInstallContextMenuCommandA(win->HWnd(), "Deactivate GUI", 4);
                     if (hideGUI) {
                         win->DeactivateGUI();
                     }
@@ -943,9 +943,9 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 
                 if (!parameterFile.IsEmpty()) {
                     ::mmvInstallContextMenuCommandA(win->HWnd(),
-                        "Write Parameter File", 0);
+                        "Write Parameter File", 1);
                     ::mmvInstallContextMenuCommandA(win->HWnd(),
-                        "Read Parameter File", 1);
+                        "Read Parameter File", 2);
                 }
             }
             if (!parameterFile.IsEmpty()) {
