@@ -428,6 +428,15 @@
     <None Include="ExtLibs.props.input">
       <Filter>Config and Make Files</Filter>
     </None>
+    <None Include="particles_kernel.cuh">
+      <Filter>CUDA Files</Filter>
+    </None>
+    <None Include="particleSystem.cuh">
+      <Filter>CUDA Files</Filter>
+    </None>
+    <None Include="filter_cuda.cuh">
+      <Filter>CUDA Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="Shaders\protein.btf">
@@ -450,16 +459,7 @@
     <CudaCompile Include="filter_cuda.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
-    <CudaCompile Include="filter_cuda.cuh">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
     <CudaCompile Include="particleSystem.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="particleSystem.cuh">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="particles_kernel.cuh">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="particles_kernel.cu">

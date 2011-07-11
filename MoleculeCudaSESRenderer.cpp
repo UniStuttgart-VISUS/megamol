@@ -118,8 +118,8 @@ void protein::MoleculeCudaSESRenderer::release( void ) {
     if( this->singTexData ) delete[] this->singTexData;
     if( this->singTexCoords ) delete[] this->singTexCoords;
 
-    cudppDestroyPlan( this->sortHandle);
-    cudppDestroyPlan( this->sortHandleProbe);
+    //cudppDestroyPlan( this->sortHandle);
+    //cudppDestroyPlan( this->sortHandleProbe);
 }
 
 
@@ -508,12 +508,12 @@ bool MoleculeCudaSESRenderer::initCuda( MolecularDataCall *protein, uint gridDim
     allocateArray((void**)&m_dCellEnd, this->numGridCells*sizeof(uint));
 
     // Create the CUDPP radix sort
-    CUDPPConfiguration sortConfig;
-    sortConfig.algorithm = CUDPP_SORT_RADIX;
-    sortConfig.datatype = CUDPP_UINT;
-    sortConfig.op = CUDPP_ADD;
-    sortConfig.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
-    cudppPlan( &this->sortHandle, sortConfig, this->numAtoms, 1, 0);
+    //CUDPPConfiguration sortConfig;
+    //sortConfig.algorithm = CUDPP_SORT_RADIX;
+    //sortConfig.datatype = CUDPP_UINT;
+    //sortConfig.op = CUDPP_ADD;
+    //sortConfig.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
+    //cudppPlan( &this->sortHandle, sortConfig, this->numAtoms, 1, 0);
 
 	setParameters( &this->params);
 
@@ -1452,7 +1452,8 @@ void MoleculeCudaSESRenderer::ComputeVicinityTableCUDA( MolecularDataCall *prote
 			this->numAtoms);
 
 		// sort particles based on hash
-        cudppSort( this->sortHandle, m_dGridParticleHash, m_dGridParticleIndex, this->gridSortBits, this->numAtoms);
+        //cudppSort( this->sortHandle, m_dGridParticleHash, m_dGridParticleIndex, this->gridSortBits, this->numAtoms);
+        sortParticles(m_dGridParticleHash, m_dGridParticleIndex, this->numAtoms);
 
 		// reorder particle arrays into sorted order and
 		// find start and end of each cell
@@ -2111,16 +2112,17 @@ void MoleculeCudaSESRenderer::CreateSingularityTextureCuda( MolecularDataCall *m
         numProbes);
 
     // Create the CUDPP radix sort
-    cudppDestroyPlan( this->sortHandleProbe);
-    CUDPPConfiguration sortConfig;
-    sortConfig.algorithm = CUDPP_SORT_RADIX;
-    sortConfig.datatype = CUDPP_UINT;
-    sortConfig.op = CUDPP_ADD;
-    sortConfig.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
-    cudppPlan( &this->sortHandleProbe, sortConfig, numProbes, 1, 0);
+    //cudppDestroyPlan( this->sortHandleProbe);
+    //CUDPPConfiguration sortConfig;
+    //sortConfig.algorithm = CUDPP_SORT_RADIX;
+    //sortConfig.datatype = CUDPP_UINT;
+    //sortConfig.op = CUDPP_ADD;
+    //sortConfig.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
+    //cudppPlan( &this->sortHandleProbe, sortConfig, numProbes, 1, 0);
 
     // sort particles based on hash
-    cudppSort( this->sortHandleProbe, m_dGridProbeHash, m_dGridProbeIndex, this->gridSortBits, numProbes);
+    //cudppSort( this->sortHandleProbe, m_dGridProbeHash, m_dGridProbeIndex, this->gridSortBits, numProbes);
+    sortParticles(m_dGridProbeHash, m_dGridProbeIndex, numProbes);
 
     // reorder particle arrays into sorted order and find start and end of each cell
     reorderDataAndFindCellStart(

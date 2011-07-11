@@ -29,9 +29,10 @@
 #include <cutil_inline.h>
 #include <cutil_gl_inline.h>
 #include <cuda_gl_interop.h>
-#include <cudpp/cudpp.h>
 
 #include "filter_cuda.cuh"
+#include "particles_kernel.cuh"
+#include "particleSystem.cuh"
 
 #include <vector_types.h>
 
@@ -172,7 +173,7 @@ void Filter::release(void) {
     
     if(this->neighbourCellPosD != NULL) cutilSafeCall(cudaFree(this->neighbourCellPosD));
     
-    cudppDestroyPlan(this->sortHandle);
+    //cudppDestroyPlan(this->sortHandle);
 
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
@@ -390,21 +391,18 @@ void Filter::updateParams(MolecularDataCall *mol) {
         
         setFilterParams(&this->params);
         
-        // Create CUDPP radix sort
-        
-        CUDPPConfiguration sortConfig;
-        sortConfig.algorithm = CUDPP_SORT_RADIX;
-        sortConfig.datatype  = CUDPP_UINT;
-        sortConfig.op        = CUDPP_ADD;
-        sortConfig.options   = CUDPP_OPTION_KEY_VALUE_PAIRS;
-    
-        if(cudppPlan(&this->sortHandle, sortConfig, this->atmCnt, 1, 0) != CUDPP_SUCCESS) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error creating CUDPPPlan");
-            exit(-1);
-        }
+        // Create CUDPP radix sort        
+        //CUDPPConfiguration sortConfig;
+        //sortConfig.algorithm = CUDPP_SORT_RADIX;
+        //sortConfig.datatype  = CUDPP_UINT;
+        //sortConfig.op        = CUDPP_ADD;
+        //sortConfig.options   = CUDPP_OPTION_KEY_VALUE_PAIRS;
+        //if(cudppPlan(&this->sortHandle, sortConfig, this->atmCnt, 1, 0) != CUDPP_SUCCESS) {
+        //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error creating CUDPPPlan");
+        //    exit(-1);
+        //}
 
         // Clean up 
-        
         if(this->atomPosD != NULL) cutilSafeCall(cudaFree(this->atomPosD));
         if(this->atomPosProtD != NULL) cutilSafeCall(cudaFree(this->atomPosProtD));
         if(this->atomPosProtSortedD != NULL) cutilSafeCall(cudaFree(this->atomPosProtSortedD));
@@ -664,12 +662,13 @@ void Filter::filterSolventAtomsAlt(float *atomPos) {
     
         
     // Sort atoms based on hash
-    if(cudppSort(this->sortHandle, this->gridAtomHashD, this->gridAtomIndexD, 18, 
-        (this->atmCnt - this->solvAtmCnt)) != CUDPP_SUCCESS) {
-        
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error performing CUDPPSort");
-        exit(-1);
-    }
+    //if(cudppSort(this->sortHandle, this->gridAtomHashD, this->gridAtomIndexD, 18, 
+    //    (this->atmCnt - this->solvAtmCnt)) != CUDPP_SUCCESS) {
+    //    
+    //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error performing CUDPPSort");
+    //    exit(-1);
+    //}
+    sortParticles(this->gridAtomHashD, this->gridAtomIndexD, (this->atmCnt - this->solvAtmCnt));
     
         
     // Set all cells to empty
@@ -765,12 +764,13 @@ void Filter::filterSolventAtoms(float *atomPos) {
     
         
     // Sort atoms based on hash
-    if(cudppSort(this->sortHandle, this->gridAtomHashD, this->gridAtomIndexD, 18, 
-        (this->atmCnt - this->solvAtmCnt)) != CUDPP_SUCCESS) {
-        
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error performing CUDPPSort");
-        exit(-1);
-    }
+    //if(cudppSort(this->sortHandle, this->gridAtomHashD, this->gridAtomIndexD, 18, 
+    //    (this->atmCnt - this->solvAtmCnt)) != CUDPP_SUCCESS) {
+    //    
+    //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error performing CUDPPSort");
+    //    exit(-1);
+    //}
+    sortParticles(this->gridAtomHashD, this->gridAtomIndexD, (this->atmCnt - this->solvAtmCnt));
     
         
     // Set all cells to empty

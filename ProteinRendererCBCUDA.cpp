@@ -76,7 +76,7 @@ ProteinRendererCBCUDA::~ProteinRendererCBCUDA(void) {
  */
 void protein::ProteinRendererCBCUDA::release( void ) {
 
-    cudppDestroyPlan( this->sortHandle);
+    //cudppDestroyPlan( this->sortHandle);
 }
 
 
@@ -219,7 +219,8 @@ bool ProteinRendererCBCUDA::Render( Call& call ) {
 			this->numAtoms);
 
 		// sort particles based on hash
-        cudppSort( this->sortHandle, m_dGridParticleHash, m_dGridParticleIndex, this->gridSortBits, this->numAtoms);
+        //cudppSort( this->sortHandle, m_dGridParticleHash, m_dGridParticleIndex, this->gridSortBits, this->numAtoms);
+        sortParticles(m_dGridParticleHash, m_dGridParticleIndex, this->numAtoms);
 
 		// reorder particle arrays into sorted order and
 		// find start and end of each cell
@@ -622,9 +623,7 @@ void ProteinRendererCBCUDA::deinitialise(void) {
 		freeArray( m_dGridParticleIndex);
 		freeArray( m_dCellStart);
 		freeArray( m_dCellEnd);
-
-        cudppDestroyPlan( this->sortHandle);
-	}
+    }
 }
 
 /*
@@ -708,12 +707,12 @@ bool ProteinRendererCBCUDA::initCuda( const CallProteinData *protein, uint gridD
     allocateArray((void**)&m_dCellEnd, this->numGridCells*sizeof(uint));
 
     // Create the CUDPP radix sort
-    CUDPPConfiguration sortConfig;
-    sortConfig.algorithm = CUDPP_SORT_RADIX;
-    sortConfig.datatype = CUDPP_UINT;
-    sortConfig.op = CUDPP_ADD;
-    sortConfig.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
-    cudppPlan( &this->sortHandle, sortConfig, this->numAtoms, 1, 0);
+    //CUDPPConfiguration sortConfig;
+    //sortConfig.algorithm = CUDPP_SORT_RADIX;
+    //sortConfig.datatype = CUDPP_UINT;
+    //sortConfig.op = CUDPP_ADD;
+    //sortConfig.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
+    //cudppPlan( &this->sortHandle, sortConfig, this->numAtoms, 1, 0);
 
 	setParameters( &this->params);
 

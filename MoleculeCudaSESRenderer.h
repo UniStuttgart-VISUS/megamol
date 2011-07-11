@@ -27,7 +27,7 @@
 #include "particles_kernel.cuh"
 #include "vector_functions.h"
 #include "cuda_runtime_api.h"
-#include "cudpp/cudpp.h"
+//#include "cudpp/cudpp.h"
 
 #define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
 
@@ -438,8 +438,8 @@ namespace protein {
         bool first;
 
         // CUDA Radix sort
-        CUDPPHandle sortHandle;
-        CUDPPHandle sortHandleProbe;
+        //CUDPPHandle sortHandle;
+        //CUDPPHandle sortHandleProbe;
 
         // params
         bool cudaInitalized;

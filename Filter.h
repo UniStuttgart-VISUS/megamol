@@ -20,7 +20,7 @@
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
-#include <cudpp/cudpp.h>
+//#include <cudpp/cudpp.h>
 #include "filter_cuda.cuh"
 
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))
@@ -242,7 +242,7 @@ namespace protein {
         
         /** CUDA **/ 
         
-        CUDPPHandle sortHandle;
+        //CUDPPHandle sortHandle;
         FilterParams params;
         
         float *atomPosD;
