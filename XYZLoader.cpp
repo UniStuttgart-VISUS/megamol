@@ -132,16 +132,18 @@ void XYZLoader::loadFile( const vislib::TString& filename) {
     this->datahash++;
 
 #ifdef USE_RANDOM_ROT_TRANS
-    srand( time( NULL));
-    vislib::math::Vector<float, 3> rotAxis( rand(), rand(), rand());
+    srand( unsigned int(time( NULL)));
+    vislib::math::Vector<float, 3> rotAxis( static_cast<float>(rand()), 
+        static_cast<float>(rand()), static_cast<float>(rand()));
     rotAxis.Normalise();
-    vislib::math::Vector<float, 3> trans( rand(), rand(), rand());
+    vislib::math::Vector<float, 3> trans( static_cast<float>(rand()), 
+        static_cast<float>(rand()), static_cast<float>(rand()));
     trans.Normalise();
     float angle = float( rand()) / float( RAND_MAX);
 #endif
 
     vislib::StringA line, name;
-    unsigned int cnt, idx, pCnt;
+    unsigned int cnt, pCnt;
 
     time_t t = clock(); // DEBUG
 
@@ -173,9 +175,9 @@ void XYZLoader::loadFile( const vislib::TString& filename) {
             entries = vislib::StringTokeniser<vislib::CharTraitsA>::Split( line, " ", true);
             if( entries.Count() > 3 ) {
                 // position
-                this->particles[cnt*4+0] = atof( entries[1]);
-                this->particles[cnt*4+1] = atof( entries[2]);
-                this->particles[cnt*4+2] = atof( entries[3]);
+                this->particles[cnt*4+0] = static_cast<float>(atof( entries[1]));
+                this->particles[cnt*4+1] = static_cast<float>(atof( entries[2]));
+                this->particles[cnt*4+2] = static_cast<float>(atof( entries[3]));
                 // radius
                 this->particles[cnt*4+3] = this->getElementRadius( entries[0]);
                 //color
@@ -185,11 +187,11 @@ void XYZLoader::loadFile( const vislib::TString& filename) {
                 this->colors[cnt*3+2] = color.Z();
                 // charges
                 if( entries.Count() > 4 )
-                    this->charges[cnt*3+0] = atof( entries[4]);
+                    this->charges[cnt*3+0] = static_cast<float>(atof( entries[4]));
                 if( entries.Count() > 5 )
-                    this->charges[cnt*3+1] = atof( entries[5]);
+                    this->charges[cnt*3+1] = static_cast<float>(atof( entries[5]));
                 if( entries.Count() > 6 )
-                    this->charges[cnt*3+2] = atof( entries[6]);
+                    this->charges[cnt*3+2] = static_cast<float>(atof( entries[6]));
                 // update the bounding box
                 sphereBBox.Set( 
                     this->particles[cnt*4+0] - this->particles[cnt*4+3], 
@@ -240,16 +242,16 @@ float XYZLoader::getElementRadius( vislib::StringA name) {
     // extract the element symbol from the name
     unsigned int cnt = 0;
     vislib::StringA element;
-    while( cnt < name.Length() && vislib::CharTraitsA::IsDigit( name[cnt]) ) {
+    while( cnt < static_cast<unsigned int>(name.Length()) && vislib::CharTraitsA::IsDigit( name[cnt]) ) {
         cnt++;
     }
 
     // --- van der Waals radii ---
-    if( cnt < name.Length() ) {
+    if( cnt < static_cast<unsigned int>(name.Length()) ) {
         if( name[cnt] == 'H' )
             return 1.2f;
         else if( name[cnt] == 'C' ) {
-            if( ( cnt + 1) < name.Length() )
+            if( ( cnt + 1) < static_cast<unsigned int>(name.Length()) )
                 if( name[cnt+1] == 'l' )
                     return 1.75f; // chlorine
             return 1.7f; // carbon
@@ -275,7 +277,7 @@ vislib::math::Vector<float, 3> XYZLoader::getElementColor( vislib::StringA name)
     // extract the element symbol from the name
     unsigned int cnt = 0;
     vislib::StringA element;
-    while( cnt < name.Length() && vislib::CharTraitsA::IsDigit( name[cnt]) ) {
+    while( cnt < static_cast<unsigned int>(name.Length()) && vislib::CharTraitsA::IsDigit( name[cnt]) ) {
         cnt++;
     }
 
@@ -284,14 +286,14 @@ vislib::math::Vector<float, 3> XYZLoader::getElementColor( vislib::StringA name)
     vislib::math::Vector<float, 3> colFloat;
 
     // check element
-    if( cnt < name.Length() ) {
+    if( cnt < static_cast<unsigned int>(name.Length()) ) {
         if( name[cnt] == 'H' ) // white or light grey
             col.Set( 240, 240, 240);
         else if( name[cnt] == 'C' ) { 
             // Carbon: (dark) grey or green
             col.Set( 125, 125, 125);
             //col.Set( 90, 175, 50);
-            if( ( cnt + 1) < name.Length() )
+            if( ( cnt + 1) < static_cast<unsigned int>(name.Length()) )
                 // Chlorine: yellowgreen
                 col.Set( 173, 255, 47);
         } else if( name[cnt] == 'N' ) // blue

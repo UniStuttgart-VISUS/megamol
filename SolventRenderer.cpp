@@ -295,7 +295,7 @@ bool protein::SolventRenderer::Render(Call& call)
         bool withinDistance = false;
         if( this->distance > vislib::math::FLOAT_EPSILON ) {
 #pragma omp parallel for
-            for( filterCnt = 0; filterCnt < protein->ProteinAtomCount(); ++filterCnt ) {
+            for( filterCnt = 0; filterCnt < static_cast<int>(protein->ProteinAtomCount()); ++filterCnt ) {
                 if( sqrt( pow( protein->SolventAtomPositions()[3*atomCnt+0] - protein->ProteinAtomPositions()[3*filterCnt+0], 2) + 
                     pow( protein->SolventAtomPositions()[3*atomCnt+1] - protein->ProteinAtomPositions()[3*filterCnt+1], 2) + 
                     pow( protein->SolventAtomPositions()[3*atomCnt+2] - protein->ProteinAtomPositions()[3*filterCnt+2], 2) ) < this->distance ) {

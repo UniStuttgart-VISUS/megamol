@@ -342,14 +342,14 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 
 	// only fill in donors/acceptors into the neighbour finder grid ...
 	float hbondDonorAcceptorDist = hBondDonorAcceptorDistance.Param<param::FloatParam>()->Value();
-	float hbondDonorAcceptorAngle = hBondDonorAcceptorAngle.Param<param::FloatParam>()->Value() * (float)(vislib::math::PI_DOUBLE / 180.0);
+	float hbondDonorAcceptorAngle = hBondDonorAcceptorAngle.Param<param::FloatParam>()->Value() * static_cast<float>(vislib::math::PI_DOUBLE / 180.0);
 	neighbourFinder.SetPointData(atomPositions, data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDonorAcceptorDist, &donorAcceptors[0] );
 
 	const int *hydrogenConnectionsPtr = hydrogenConnections.PeekElements();
 
 	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
 #pragma omp parallel for
-	for(int rIdx = 0; rIdx < (int)data->ResidueCount(); rIdx++ ) {
+	for( int rIdx = 0; rIdx < static_cast<int>(data->ResidueCount()); rIdx++ ) {
 		const MolecularDataCall::Residue *residue = data->Residues()[rIdx];
 
 		// we're only interested in hydrogen bonds between polymer/protein molecule and surounding solvent

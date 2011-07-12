@@ -1803,7 +1803,6 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call,
 void protein::SolventVolumeRenderer::DrawLabel( unsigned int frameID )
 {
 	using namespace vislib::graphics;
-	char frameChar[15];
 
 	glPushAttrib( GL_ENABLE_BIT);
 	glDisable( GL_CULL_FACE);
@@ -1821,13 +1820,16 @@ void protein::SolventVolumeRenderer::DrawLabel( unsigned int frameID )
 			vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_WARN, "SolventVolumeRenderer: Problems to initalise the Font" );
 		}
 	}
+    
+//	char frameChar[15];
+//#if _WIN32
+//#define snprintf _snprintf
+//#endif
+//	snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
+    vislib::StringA tmpStr;
+    tmpStr.Format( "Frame: %i", frameID);
 
-#if _WIN32
-#define snprintf _snprintf
-#endif
-	snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
-
-	this->frameLabel->DrawString( 0.0f, 0.0f, 0.1f, true, frameChar, AbstractFont::ALIGN_LEFT_TOP );
+    this->frameLabel->DrawString( 0.0f, 0.0f, 0.1f, true, tmpStr.PeekBuffer(), AbstractFont::ALIGN_LEFT_TOP );
 
 	glPopMatrix();
 

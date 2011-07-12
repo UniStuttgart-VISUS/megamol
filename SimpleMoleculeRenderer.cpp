@@ -1087,11 +1087,11 @@ void SimpleMoleculeRenderer::RenderStickFilter( const MolecularDataCall *mol, co
         this->vertCylinders[4*cnt+3] = 0.0f;
     }
 
-
-    unsigned int c, m, firstConIdx, lastConIdx;
-
     // Set filter information of connections according to molecules
-    /*for(m = 0; m < mol->MoleculeCount(); m++) {
+    /*
+    unsigned int c, m, firstConIdx, lastConIdx;
+    
+    for(m = 0; m < mol->MoleculeCount(); m++) {
         if(mol->Molecules()[m].ConnectionCount() > 0) {
             
             firstConIdx = 
@@ -1114,7 +1114,8 @@ void SimpleMoleculeRenderer::RenderStickFilter( const MolecularDataCall *mol, co
                 }
             }
         }
-    }*/
+    }
+    */
 
     // ---------- actual rendering ----------
 
