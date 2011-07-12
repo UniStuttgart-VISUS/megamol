@@ -91,7 +91,7 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 		volRayStartTex( 0), volRayLengthTex( 0), volRayDistTex( 0),
 		renderIsometric( true), meanDensityValue( 0.0f), isoValue1( 0.5f), /*isoValue2(-0.5f),*/
 		volIsoOpacity( 0.4f), volClipPlaneFlag( false), volClipPlaneOpacity( 0.4f),
-		forceUpdateVolumeTexture( true), forceUpdateColoringMode(true),
+		forceUpdateVolumeTexture( true), lastUpdateVolumeTextureTime(0), forceUpdateColoringMode(true),
         molVisVbo( 0)
 {
 	// set caller slot for different data calls
@@ -1589,8 +1589,10 @@ bool protein::SolventVolumeRenderer::RenderMolecularData( view::CallRender3D *ca
 	
 	vislib::StringA paramSlotName( call->PeekCallerSlot()->Parent()->FullName());
 	paramSlotName += "::anim::play";
-	param::ParamSlot *paramSlot = dynamic_cast<param::ParamSlot*>( this->FindNamedObject( paramSlotName, true));
-	if( paramSlot->Param<param::BoolParam>()->Value() || this->forceUpdateVolumeTexture ) {
+	param::ParamSlot *playSlot = dynamic_cast<param::ParamSlot*>( this->FindNamedObject( paramSlotName, true));
+
+	if( playSlot->Param<param::BoolParam>()->Value() || this->forceUpdateVolumeTexture || fabs(call->Time() - this->lastUpdateVolumeTextureTime) > 0.01) {
+		this->lastUpdateVolumeTextureTime = call->Time();
 		this->UpdateVolumeTexture( mol);
 		CHECK_FOR_OGL_ERROR();
 		this->forceUpdateVolumeTexture = false;

@@ -402,6 +402,7 @@ namespace protein {
         // interpolated atom positions
         float *atomPosInterPtr;
 		int *hBondInterPtr;
+		float lastUpdateVolumeTextureTime;
 
 		// temporary atom array as member - do not use new-operator inside render()-routines!
 		// temporary arrays for rendering operations ...
