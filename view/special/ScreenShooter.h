@@ -158,9 +158,10 @@ namespace special {
         param::ParamSlot animFromSlot;
         param::ParamSlot animToSlot;
         param::ParamSlot animStepSlot;
+        param::ParamSlot animAddTime2FrameSlot;
         param::ParamSlot makeAnimSlot;
         float animLastFrameTime;
-		int outputCounter;
+        int outputCounter;
 
         /** A simple running flag */
         bool running;
