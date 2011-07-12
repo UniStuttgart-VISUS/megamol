@@ -333,7 +333,7 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 
 		this->donorAcceptors.SetCount(data->AtomCount());
 		memset(&this->donorAcceptors[0], -1, this->donorAcceptors.Count()*sizeof(int));
-		for(int i = 0; i < data->AtomCount(); i++) {
+		for(unsigned int i = 0; i < data->AtomCount(); i++) {
 			char element = atomTypes[atomTypeIndices[i]].Name()[0];
 			if (element == 'O' || element == 'N')
 				donorAcceptors[i] = 1;
@@ -342,14 +342,14 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 
 	// only fill in donors/acceptors into the neighbour finder grid ...
 	float hbondDonorAcceptorDist = hBondDonorAcceptorDistance.Param<param::FloatParam>()->Value();
-	float hbondDonorAcceptorAngle = hBondDonorAcceptorAngle.Param<param::FloatParam>()->Value() * vislib::math::PI_DOUBLE / 180.0;
+	float hbondDonorAcceptorAngle = hBondDonorAcceptorAngle.Param<param::FloatParam>()->Value() * (float)(vislib::math::PI_DOUBLE / 180.0);
 	neighbourFinder.SetPointData(atomPositions, data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDonorAcceptorDist, &donorAcceptors[0] );
 
 	const int *hydrogenConnectionsPtr = hydrogenConnections.PeekElements();
 
 	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
 #pragma omp parallel for
-	for( int rIdx = 0; rIdx < data->ResidueCount(); rIdx++ ) {
+	for(int rIdx = 0; rIdx < (int)data->ResidueCount(); rIdx++ ) {
 		const MolecularDataCall::Residue *residue = data->Residues()[rIdx];
 
 		// we're only interested in hydrogen bonds between polymer/protein molecule and surounding solvent
@@ -360,8 +360,8 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 		// find possible acceptor atoms in the current residuum (for now just O, N, C(?)
 
 		// vorerst nur Sauerstoff und Stickstoff als Akzeptor/Donator (N, O)
-		int lastAtomIdx = residue->FirstAtomIndex()+residue->AtomCount();
-		for(int atomIndex = residue->FirstAtomIndex(); atomIndex < lastAtomIdx; atomIndex++) {
+		unsigned int lastAtomIdx = residue->FirstAtomIndex()+residue->AtomCount();
+		for(unsigned int atomIndex = residue->FirstAtomIndex(); atomIndex < lastAtomIdx; atomIndex++) {
 			// is this atom already connected?
 			//if (reverseConnectionPtr[atomIndex] >= 0 continue;
 
@@ -451,7 +451,7 @@ bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(Molecula
 	unsigned int solventAtoms = 0;
 	unsigned int polymerAtoms = 0;
 
-	for(int frameId = 0; frameId < dataSource->FrameCount(); frameId++) {
+	for(unsigned int frameId = 0; frameId < dataSource->FrameCount(); frameId++) {
 		dataSource->SetFrameID(frameId);
 		dataTarget->SetFrameID(frameId);
 		if (!(*dataSource)(MolecularDataCall::CallForGetData))
@@ -469,7 +469,7 @@ bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(Molecula
 		}*/
 
 //#pragma omp parallel for
-		for( int rIdx = 0; rIdx < dataSource->ResidueCount(); rIdx++ ) {
+		for(unsigned int rIdx = 0; rIdx < dataSource->ResidueCount(); rIdx++ ) {
 			const MolecularDataCall::Residue *residue = dataSource->Residues()[rIdx];
 
 			//if (dataSource->IsSolvent(residue)) continue;
