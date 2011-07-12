@@ -1225,9 +1225,9 @@ std::vector<ReducedSurfaceSimplified::RSFace*> ReducedSurfaceSimplified::GetProb
 	//maxXId = (unsigned int)floorf( this->bBox.Width() / this->voxelLength);
 	//maxYId = (unsigned int)floorf( this->bBox.Height() / this->voxelLength);
 	//maxZId = (unsigned int)floorf( this->bBox.Depth() / this->voxelLength);
-	maxXId = this->voxelMapProbes.size()-1;
-	maxYId = this->voxelMapProbes[0].size()-1;
-	maxZId = this->voxelMapProbes[0][0].size()-1;
+	maxXId = static_cast<unsigned int>(this->voxelMapProbes.size() - 1);
+	maxYId = static_cast<unsigned int>(this->voxelMapProbes[0].size() - 1);
+	maxZId = static_cast<unsigned int>(this->voxelMapProbes[0][0].size() - 1);
 	int cntX, cntY, cntZ;
 
 	vislib::math::Vector<float, 3> v1, v2, center, probe, dir21;
@@ -1290,9 +1290,9 @@ void ReducedSurfaceSimplified::WriteProbesCutEdge( RSEdge *edge)
 	//maxXId = (unsigned int)floorf( this->bBox.Width() / this->voxelLength);
 	//maxYId = (unsigned int)floorf( this->bBox.Height() / this->voxelLength);
 	//maxZId = (unsigned int)floorf( this->bBox.Depth() / this->voxelLength);
-	maxXId = this->voxelMapProbes.size()-1;
-	maxYId = this->voxelMapProbes[0].size()-1;
-	maxZId = this->voxelMapProbes[0][0].size()-1;
+	maxXId = static_cast<unsigned int>(this->voxelMapProbes.size() - 1);
+	maxYId = static_cast<unsigned int>(this->voxelMapProbes[0].size() - 1);
+	maxZId = static_cast<unsigned int>(this->voxelMapProbes[0][0].size() - 1);
 	int cntX, cntY, cntZ;
 
 	vislib::math::Vector<float, 3> v1, v2, center, probe, dir21;
@@ -1353,9 +1353,9 @@ void ReducedSurfaceSimplified::ComputeProbeCutVertex( RSVertex *vertex)
 	//maxXId = (unsigned int)floorf( this->bBox.Width() / this->voxelLength);
 	//maxYId = (unsigned int)floorf( this->bBox.Height() / this->voxelLength);
 	//maxZId = (unsigned int)floorf( this->bBox.Depth() / this->voxelLength);
-	maxXId = this->voxelMap.size()-1;
-	maxYId = this->voxelMap[0].size()-1;
-	maxZId = this->voxelMap[0][0].size()-1;
+	maxXId = static_cast<unsigned int>(this->voxelMap.size() - 1);
+	maxYId = static_cast<unsigned int>(this->voxelMap[0].size() - 1);
+	maxZId = static_cast<unsigned int>(this->voxelMap[0][0].size() - 1);
 	int cntX, cntY, cntZ;
 
 	vislib::math::Vector<float, 3> v1, probe;

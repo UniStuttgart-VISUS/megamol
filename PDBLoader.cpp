@@ -363,7 +363,7 @@ bool PDBLoader::Frame::encodeints(char *outbuff, int num_of_bits,
 
     // loop trough all three ints and encode
     for(i = 1; i < 3; i++) {
-        if(inbuff[i] >= sizes[i]) {
+        if(inbuff[i] >= static_cast<int>(sizes[i])) {
             return false;
         }
 
@@ -382,8 +382,8 @@ bool PDBLoader::Frame::encodeints(char *outbuff, int num_of_bits,
     }
 
     // write the result in the outbuffer
-    if (num_of_bits >= num_of_bytes * 8) {
-        for (i = 0; i < num_of_bytes; i++) {
+    if (num_of_bits >= static_cast<int>(num_of_bytes) * 8) {
+        for (i = 0; i < static_cast<int>(num_of_bytes); i++) {
             // bitsize = 8 --> offset doesn't change
             encodebits(buffPt, 8, bitoffset, bytes[i]);
             buffPt++;
@@ -391,7 +391,7 @@ bool PDBLoader::Frame::encodeints(char *outbuff, int num_of_bits,
         encodebits(buffPt, num_of_bits - num_of_bytes * 8, bitoffset, 0);
     }
     else {
-        for (i = 0; i < num_of_bytes-1; i++) {
+        for (i = 0; i < static_cast<int>(num_of_bytes-1); i++) {
             // bitsize = 8 --> offset doesn't change
             encodebits(buffPt, 8, bitoffset, bytes[i]);
             buffPt++;
@@ -688,8 +688,6 @@ void PDBLoader::Frame::readFrame(std::fstream *file) {
         sizesmall[0] = sizesmall[1] = sizesmall[2] = magicints[smallidx] ;
     }
 
-
-
     delete[] buffer;
 
     // set file pointer to the beginning of the next frame
@@ -811,14 +809,14 @@ bool PDBLoader::getData( core::Call& call) {
         //if( dc->FrameID() >= this->data.Count() ) return false;
         if( dc->FrameID() >= this->data.Count() ) {
             if( this->data.Count() > 0 ) {
-                dc->SetFrameID( this->data.Count() -  1);
+                dc->SetFrameID( static_cast<unsigned int>(this->data.Count() - 1));
             } else {
                 return false;
             }
         }
 
         dc->SetAtoms(this->data[dc->FrameID()]->AtomCount(),
-                     this->atomType.Count(),
+                     static_cast<unsigned int>(this->atomType.Count()),
             this->atomTypeIdx.PeekElements(),
             this->data[dc->FrameID()]->AtomPositions(),
             this->atomType.PeekElements(),
@@ -828,11 +826,11 @@ bool PDBLoader::getData( core::Call& call) {
             this->data[dc->FrameID()]->AtomOccupancy());
 
         dc->SetBFactorRange( this->data[dc->FrameID()]->MinBFactor(),
-        this->data[dc->FrameID()]->MaxBFactor());
+            this->data[dc->FrameID()]->MaxBFactor());
         dc->SetChargeRange( this->data[dc->FrameID()]->MinCharge(),
-        this->data[dc->FrameID()]->MaxCharge());
+            this->data[dc->FrameID()]->MaxCharge());
         dc->SetOccupancyRange( this->data[dc->FrameID()]->MinOccupancy(),
-        this->data[dc->FrameID()]->MaxOccupancy());
+            this->data[dc->FrameID()]->MaxOccupancy());
     } else {
 
         Frame *fr = NULL;
@@ -845,7 +843,7 @@ bool PDBLoader::getData( core::Call& call) {
         dc->SetUnlocker(new Unlocker(*fr));
 
         dc->SetAtoms( this->data[0]->AtomCount(),
-                      this->atomType.Count(),
+                      static_cast<unsigned int>(this->atomType.Count()),
                       this->atomTypeIdx.PeekElements(),
                       fr->AtomPositions(),
                       this->atomType.PeekElements(),
@@ -862,21 +860,22 @@ bool PDBLoader::getData( core::Call& call) {
                                this->data[0]->MaxOccupancy());
     }
 
-    dc->SetConnections( this->connectivity.Count() / 2,
+    dc->SetConnections( static_cast<unsigned int>(this->connectivity.Count() / 2),
                         (unsigned int*)this->connectivity.PeekElements());
-    dc->SetResidues( this->residue.Count(),
+    dc->SetResidues( static_cast<unsigned int>(this->residue.Count()),
         (const MolecularDataCall::Residue**)this->residue.PeekElements());
 //	dc->SetAtomResidueIndices(this->atomResidueIdx.PeekElements());
-	dc->SetSolventResidueIndices( this->solventResidueIdx.Count(), this->solventResidueIdx.PeekElements());
-    dc->SetResidueTypeNames( this->residueTypeName.Count(),
+	dc->SetSolventResidueIndices( static_cast<unsigned int>(this->solventResidueIdx.Count()), 
+        this->solventResidueIdx.PeekElements());
+    dc->SetResidueTypeNames( static_cast<unsigned int>(this->residueTypeName.Count()),
         (vislib::StringA*)this->residueTypeName.PeekElements());
-    dc->SetMolecules( this->molecule.Count(),
+    dc->SetMolecules( static_cast<unsigned int>(this->molecule.Count()),
         (MolecularDataCall::Molecule*)this->molecule.PeekElements());
-    dc->SetChains( this->chain.Count(),
+    dc->SetChains( static_cast<unsigned int>(this->chain.Count()),
         (MolecularDataCall::Chain*)this->chain.PeekElements());
 
     if( !this->secStructAvailable &&
-      this->strideFlagSlot.Param<param::BoolParam>()->Value() ) {
+            this->strideFlagSlot.Param<param::BoolParam>()->Value() ) {
         time_t t = clock(); // DEBUG
         if( this->stride ) delete this->stride;
         this->stride = new Stride( dc);
@@ -1070,7 +1069,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
         this->data.AssertCapacity( frameCapacity);
         this->data.SetCount( 1);
         this->data[0] = new Frame(*const_cast<PDBLoader*>(this));
-        this->data[0]->SetAtomCount( atomEntries.Count());
+        this->data[0]->SetAtomCount( static_cast<unsigned int>(atomEntries.Count()));
         this->data[0]->setFrameIdx(0);
         // resize atom type index array
         this->atomTypeIdx.SetCount( atomEntries.Count());
@@ -1112,16 +1111,17 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                 this->molecule.Add( MolecularDataCall::Molecule(
                     this->molecule.Last().FirstResidueIndex()
                     + this->molecule.Last().ResidueCount(), 1, chainCnt));
-                firstConIdx = this->connectivity.Count();
+                firstConIdx = static_cast<unsigned int>(this->connectivity.Count());
             }
             // add new chain
-            this->chain.Add( MolecularDataCall::Chain( this->molecule.Count()-1, 1, this->chainType[chainCnt]));
+            this->chain.Add( MolecularDataCall::Chain( static_cast<unsigned int>(this->molecule.Count() - 1), 
+                1, this->chainType[chainCnt]));
             // get the residue range of the current chain
             first = this->chainFirstRes[chainCnt];
             cnt = first + this->chainResCount[chainCnt];
             // loop over all residues in the current chain
             for( resCnt = first; resCnt < cnt; ++resCnt ) {
-                this->residue[resCnt]->SetMoleculeIndex(this->molecule.Count()-1);
+                this->residue[resCnt]->SetMoleculeIndex( static_cast<unsigned int>(this->molecule.Count() - 1));
                 // search for connections inside the current residue
                 this->MakeResidueConnections( resCnt, 0);
                 // search for connections between consecutive residues
@@ -1131,8 +1131,8 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                             this->molecule.Last().FirstResidueIndex(),
                             this->molecule.Last().ResidueCount() + 1);
                     } else {
-                        this->molecule.Last().SetConnectionRange( firstConIdx, ( this->connectivity.Count() - firstConIdx) / 2);
-                        firstConIdx = this->connectivity.Count();
+                        this->molecule.Last().SetConnectionRange( firstConIdx, ( static_cast<unsigned int>(this->connectivity.Count()) - firstConIdx) / 2);
+                        firstConIdx = static_cast<unsigned int>(this->connectivity.Count());
                         this->molecule.Add( MolecularDataCall::Molecule( resCnt+1, 1, chainCnt));
                         this->chain.Last().SetPosition(
                             this->chain.Last().FirstMoleculeIndex(),
@@ -1140,7 +1140,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                     }
                 }
             }
-            this->molecule.Last().SetConnectionRange( firstConIdx, ( this->connectivity.Count() - firstConIdx) / 2);
+            this->molecule.Last().SetConnectionRange( firstConIdx, ( static_cast<unsigned int>(this->connectivity.Count()) - firstConIdx) / 2);
         }
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for finding all bonds: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 
@@ -1185,7 +1185,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                     if( atomCnt == 0 ) {
                         frameCnt++;
                         // check if max frame count is reached
-                        if( frameCnt > this->maxFramesSlot.Param<param::IntParam>()->Value() ) {
+                        if( frameCnt > static_cast<unsigned int>(this->maxFramesSlot.Param<param::IntParam>()->Value()) ) {
                             break;
                         }
                         if( this->data.Count() == frameCapacity ) {
@@ -1194,7 +1194,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                         }
                         this->data.SetCount( frameCnt + 1);
                         this->data[frameCnt] = new Frame(*const_cast<PDBLoader*>(this));
-                        this->data[frameCnt]->SetAtomCount( atomEntries.Count());
+                        this->data[frameCnt]->SetAtomCount( static_cast<unsigned int>(atomEntries.Count()));
                         this->data[frameCnt]->setFrameIdx(frameCnt);
                     }
                     // ignore alternate locations
@@ -1271,9 +1271,9 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
                     xtcFileValid = true;
 
-                    int maxFrames = std::min(
-                        (unsigned int)this->maxFramesSlot.Param<core::param::IntParam>()->Value(),
-                        this->numXTCFrames);
+                    int maxFrames = vislib::math::Min<int>(
+                        this->maxFramesSlot.Param<core::param::IntParam>()->Value(),
+                        static_cast<int>(this->numXTCFrames));
 
                     // frames in xtc-file - 1 (without the last frame)
                     this->setFrameCount( this->numXTCFrames);
@@ -1318,10 +1318,10 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
     INT_PTR atomTypeIdx = atomType.IndexOf( type);
     if( atomTypeIdx ==
             vislib::Array<MolecularDataCall::AtomType>::INVALID_POS ) {
-        this->atomTypeIdx[atom] = this->atomType.Count();
+        this->atomTypeIdx[atom] = static_cast<unsigned int>(this->atomType.Count());
         this->atomType.Add( type);
     } else {
-        this->atomTypeIdx[atom] = atomTypeIdx;
+        this->atomTypeIdx[atom] = static_cast<unsigned int>(atomTypeIdx);
     }
 
     // update the bounding box
@@ -1350,7 +1350,7 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
 	// search for current residue type name in the array
     INT_PTR resTypeNameIdx = this->residueTypeName.IndexOf( resName);
     if( resTypeNameIdx ==  vislib::Array<vislib::StringA>::INVALID_POS ) {
-        resTypeIdx = this->residueTypeName.Count();
+        resTypeIdx = static_cast<unsigned int>(this->residueTypeName.Count());
         this->residueTypeName.Add( resName);
 
 		// check if the name of the residue is matched by one of the solvent residue names
@@ -1363,7 +1363,7 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
 			}
 		}
 	} else {
-        resTypeIdx = resTypeNameIdx;
+        resTypeIdx = static_cast<unsigned int>(resTypeNameIdx);
 
 		// check if the index of the residue is matched by one of the existent solvent residue indices
 		for( unsigned int srIdx = 0; srIdx < this->solventResidueIdx.Count(); ++srIdx ) {
@@ -1379,7 +1379,7 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
     // get the sequence number of the residue
     tmpStr = atomEntry.Substring( 22, 4);
     tmpStr.TrimSpaces();
-    unsigned int newResSeq = float( atof(tmpStr));
+    unsigned int newResSeq = static_cast<unsigned int>(atoi(tmpStr));
     // handle residue
     if( this->residue.Count() == 0 ) {
         // create first residue
@@ -1425,12 +1425,12 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
             this->chainResCount.Last()++;
         } else {
             this->chainId = tmpChainId;
-            this->chainFirstRes.Add( this->residue.Count()-1);
+            this->chainFirstRes.Add( static_cast<unsigned int>(this->residue.Count() - 1));
             this->chainResCount.Add( 1);
             this->chainType.Add( tmpChainType);
         }
     }
-    this->atomResidueIdx[atom] = this->residue.Count()-1;
+    this->atomResidueIdx[atom] = static_cast<int>(this->residue.Count() - 1);
 
     // get the temperature factor (b-factor)
     tmpStr = atomEntry.Substring( 60, 6);

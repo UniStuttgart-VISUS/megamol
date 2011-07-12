@@ -688,13 +688,13 @@ bool protein::ProteinData::ParsePDBAtom( const vislib::StringA &line )
 			this->tmp_atomTypes[tmpTypeTableId].Colour()[1],
 			this->tmp_atomTypes[tmpTypeTableId].Colour()[2]) );
 		// set atom type index to the index of the newly added atom type
-		atomTypeIdx = this->m_atomTypes.Count() - 1;
+		atomTypeIdx = static_cast<unsigned int>(this->m_atomTypes.Count() - 1);
 	}
 	// check if the atom is the sulfur atom of a cysteine
 	if( str.Equals( "SG" ) )
 	{
 		// add the index of the atom to the cysteine sulfur atom list
-		this->tmp_cysteineSulfurAtoms.Add ( this->m_protAtomData.Count() );
+		this->tmp_cysteineSulfurAtoms.Add ( static_cast<unsigned int>(this->m_protAtomData.Count()) );
 	}
 
 	// get the temperature factor (b-factor)

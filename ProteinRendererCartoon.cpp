@@ -766,7 +766,7 @@ bool protein::ProteinRendererCartoon::Render(Call& call)
 	for ( cntChain = 0; cntChain < protein->ProteinChainCount(); ++cntChain ) {
 		// check number of secondary structure elements
 		if( protein->ProteinChain( cntChain).SecondaryStructureCount() < 2 ) {
-			last = protein->ProteinChain( cntChain).AminoAcid()[0].Connectivity().Count();
+			last = static_cast<unsigned int>(protein->ProteinChain( cntChain).AminoAcid()[0].Connectivity().Count());
 			for( unsigned int conCnt = 0; conCnt < last; ++conCnt ) {
 				first = protein->ProteinChain( cntChain).AminoAcid()[0].Connectivity()[conCnt].First();
 				first += protein->ProteinChain( cntChain).AminoAcid()[0].FirstAtomIndex();
@@ -858,7 +858,6 @@ bool protein::ProteinRendererCartoon::ProcessFrameRequest(Call& call)
 void protein::ProteinRendererCartoon::DrawLabel(unsigned int frameID)
 {
 	using namespace vislib::graphics;
-	char frameChar[15];
 
 	glPushAttrib(GL_ENABLE_BIT);
 	glDisable(GL_CULL_FACE);
@@ -878,12 +877,16 @@ void protein::ProteinRendererCartoon::DrawLabel(unsigned int frameID)
 				vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "ProteinRenderer: Problems to initalise the Font");
 			}
 		}
-#if _WIN32
-#define snprintf _snprintf
-#endif
-        snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
+        
+//  char frameChar[15];
+//#if _WIN32
+//#define snprintf _snprintf
+//#endif
+//  snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
+    vislib::StringA tmpStr;
+    tmpStr.Format( "Frame: %i", frameID);
 
-		this->m_frameLabel->DrawString(0.0f, 0.0f, 0.1f, true, frameChar, AbstractFont::ALIGN_LEFT_TOP);
+    this->m_frameLabel->DrawString(0.0f, 0.0f, 0.1f, true, tmpStr.PeekBuffer(), AbstractFont::ALIGN_LEFT_TOP);
 
 	glPopMatrix();
 

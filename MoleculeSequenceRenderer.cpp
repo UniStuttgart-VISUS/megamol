@@ -40,9 +40,7 @@ bool MoleculeSequenceRenderer::GetExtents(CallRender2D& call)
 
 	unsigned int residueCount = data->ResidueCount();
 	
-	call.SetBoundingBox(0, 0, residueCount * 20, 45);
-
-
+	call.SetBoundingBox( 0.0f, 0.0f, static_cast<float>(residueCount * 20), 45.0f);
 
 	return true;
 }
@@ -93,42 +91,35 @@ bool MoleculeSequenceRenderer::Render(CallRender2D& call)
 			{
 				//TODO: filter AminoAcids
 				this->paintButton(
-						residuePosition, 0, 
+						static_cast<float>(residuePosition), 0.0f, 
 						buttonWidth - buttonSpacing, buttonHeight, 
 						0.4f, 0.4f, 0.6f,
-						//"residue"
-                        data->ResidueTypeNames()[residues[residue]->Type()].PeekBuffer()
-				);
-				residuePosition += buttonWidth;
+                        data->ResidueTypeNames()[residues[residue]->Type()].PeekBuffer());
+				residuePosition += static_cast<unsigned int>(buttonWidth);
 			}
 
-			residuesWidth = residueCount * (buttonWidth + buttonSpacing);		
+			residuesWidth = residueCount * static_cast<unsigned int>(buttonWidth + buttonSpacing);		
 			
             tmpStr.Format( " Molecule %i", molecule);
 			this->paintButton(
-					moleculePosition, 15,
+					static_cast<float>(moleculePosition), 15.0f,
 					residuesWidth - buttonSpacing, buttonHeight, 
 					1.0f, 0.8f, 0.0f,
-					//"Molecule"
-                    tmpStr.PeekBuffer()
-			);
+                    tmpStr.PeekBuffer());
 			moleculePosition += residuesWidth;
 		}
 		
-		moleculeWidth = moleculeCount * (residuesWidth + buttonSpacing);
+		moleculeWidth = moleculeCount * static_cast<unsigned int>(residuesWidth + buttonSpacing);
 
         tmpStr.Format( " Chain %i", chain);
 		this->paintButton(
-				chainPosition, 30,
-				moleculeWidth, buttonHeight, 
+				static_cast<float>(chainPosition), 30.0f,
+				static_cast<float>(moleculeWidth), buttonHeight, 
 				1.0f, 0.0f, 0.0f,
-				//"chain"
-                tmpStr
-		);
+                tmpStr);
 		chainPosition += moleculeWidth;
 	}
 
-	
 	widgetLibrary.renderWidgets();
 	return true;
 }
@@ -149,7 +140,7 @@ void MoleculeSequenceRenderer::paintButton(float x, float y, float w, float h, f
 	SimpleFont f;
     if( f.Initialise() ) {
 	    glColor3f( 1.0f, 1.0f, 1.0f); 
-	    f.DrawString( x, y+h, int( h), true, text);
+	    f.DrawString( x, y+h, h, true, text);
     }
 }
 

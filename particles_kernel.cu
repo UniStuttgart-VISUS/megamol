@@ -211,18 +211,18 @@ uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
 					r = ( (pos.w + params.probeRadius)*(pos.w + params.probeRadius))
 						+ ( dist * dist) //dot( relPos, relPos) 
 						- ( (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius));
-					r = r / (2.0 * dist * dist); // dot( relPos, relPos));
+					r = r / (2.0f * dist * dist); // dot( relPos, relPos));
 					/*
 					r = (pos.w + params.probeRadius)*(pos.w + params.probeRadius)
 						- (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius);
-                    r = r / (2.0 * dot( relPos, relPos));
+                    r = r / (2.0f * dot( relPos, relPos));
 					r = r + 0.5f;
 					*/
 					vec = relPos * r;
 					smallCircle.x = vec.x;
 					smallCircle.y = vec.y;
 					smallCircle.z = vec.z;
-					smallCircle.w = 1.0;
+					smallCircle.w = 1.0f;
 					smallCircles[atomIndex*params.maxNumNeighbors+neighborIndex+count] = smallCircle;
 					// increment the neighbor counter
 					count++;
@@ -362,7 +362,7 @@ void countNeighbors( uint*   neighborCount,        // output: number of neighbor
 	gridSize.y = int( params.gridSize.y);
 	gridSize.z = int( params.gridSize.z);
 	// search range for neighbor atoms: max atom diameter + probe diameter
-	float range = ( pos.w + 3.0 + 2.0 * params.probeRadius);
+	float range = ( pos.w + 3.0f + 2.0f * params.probeRadius);
 	// compute number of grid cells
 	int3 cellsInRange;
 	cellsInRange.x = ceil( range / params.cellSize.x);
@@ -415,7 +415,7 @@ void countNeighbors( uint*   neighborCount,        // output: number of neighbor
 	gridSize.y = int( params.gridSize.y);
 	gridSize.z = int( params.gridSize.z);
 	// search range for neighbor atoms: max atom diameter + probe diameter
-	float range = ( pos.w + 3.0 + 2.0 * params.probeRadius);
+	float range = ( pos.w + 3.0f + 2.0f * params.probeRadius);
 	// compute number of grid cells
 	int3 cellsInRange;
 	cellsInRange.x = ceil( range / params.cellSize.x);
@@ -470,7 +470,7 @@ void countProbeNeighbors( //uint*   probeNeighborCount, // output: number of nei
 	gridSize.y = int( params.gridSize.y);
 	gridSize.z = int( params.gridSize.z);
 	// search range for neighbor probes: 2x probe diameter
-	float range = 2.0 * params.probeRadius;
+	float range = 2.0f * params.probeRadius;
 	// compute number of grid cells
 	int3 cellsInRange;
 	cellsInRange.x = ceil( range / params.cellSize.x);
@@ -563,7 +563,7 @@ void computeArcs( float4* arcs,                 // output: arcs
 		cross_rj_rk = cross( rj, rk);
         tmpFloat3 = cross_rj_rk * sqrt( ( Ri2 - dot( rm, rm)) / dot( cross_rj_rk, cross_rj_rk));
 		
-		if( dot( rj, aj - ai) < 0.0 ) {
+		if( dot( rj, aj - ai) < 0.0f ) {
 			// x1
 			p1 = rm + tmpFloat3;
 			// x2
@@ -575,7 +575,7 @@ void computeArcs( float4* arcs,                 // output: arcs
 			p1 = rm - tmpFloat3;
 		}
 
-        if( dot( cross( p1 - rk, p2 - rk), rk) < 0.0 ) {
+        if( dot( cross( p1 - rk, p2 - rk), rk) < 0.0f ) {
             tmpFloat3 = p1;
             p1 = p2;
             p2 = tmpFloat3;
@@ -584,8 +584,8 @@ void computeArcs( float4* arcs,                 // output: arcs
         // if the current arc ist the first:
         if( numArcs == 0 ) {
             // write the first arc
-            //arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p1, 1.0);
-            //arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0);
+            //arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p1, 1.0f);
+            //arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0f);
             numArcs++;
 
             e1 = p1;
@@ -597,25 +597,25 @@ void computeArcs( float4* arcs,                 // output: arcs
 		/*
         tmpAngle1 = acos( dot( normalize( p1 - rk), e1));
         tmpAngle = dot( normalize( p1 - rk), e2);
-        if( tmpAngle < 0.0 )
-            tmpAngle1 = 6.2831853 - tmpAngle1;
+        if( tmpAngle < 0.0f )
+            tmpAngle1 = 6.2831853f - tmpAngle1;
         tmpAngle2 = acos( dot( normalize( p2 - rk), e1));
         tmpAngle = dot( normalize( p2 - rk), e2);
-        if( tmpAngle < 0.0 )
-            tmpAngle2 = 6.2831853 - tmpAngle2;
+        if( tmpAngle < 0.0f )
+            tmpAngle2 = 6.2831853f - tmpAngle2;
 
         // check cases
         if( tmpAngle1 > angle1 ) {
             angle1 = tmpAngle1;
-            arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p1, 1.0);
+            arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p1, 1.0f);
         }
         if( tmpAngle2 < angle2 ) {
             angle2 = tmpAngle2;
-            arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0);
+            arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0f);
         }
         if( tmpAngle1 < angle2 && tmpAngle2 > angle1 ) {
             angle2 = tmpAngle2;
-            arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0);
+            arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0f);
             // TODO: second arc segment
         }
 		*/
@@ -623,31 +623,31 @@ void computeArcs( float4* arcs,                 // output: arcs
 		float d2 = dot( aj - ai, e2 - rj);
 		float d3 = dot( rk, aj - ai) * dot( cross( e1, p1), e2);
 
-		if( d1 > 0.0 ) {
-			if( d2 > 0.0 ) {
-				if( d3 > 0.0 ) {
-					e1 = make_float3( 0.0, 0.0, 0.0);
-					e2 = make_float3( 0.0, 0.0, 0.0);
+		if( d1 > 0.0f ) {
+			if( d2 > 0.0f ) {
+				if( d3 > 0.0f ) {
+					e1 = make_float3( 0.0f, 0.0f, 0.0f);
+					e2 = make_float3( 0.0f, 0.0f, 0.0f);
 				} else { // d3 < 0
 					e1 = p1;
 					e2 = p2;
 				}
 			} else { // d2 < 0
-				if( d3 > 0.0 ) {
+				if( d3 > 0.0f ) {
 					e1 = p1;
 				} else { // d3 < 0
 					e1 = p2;
 				}
 			}
 		} else { // d1 < 0
-			if( d2 > 0.0 ) {
-				if( d3 > 0.0 ) {
+			if( d2 > 0.0f ) {
+				if( d3 > 0.0f ) {
 					e2 = p1;
 				} else { // d3 < 0
 					e2 = p2;
 				}
 			} else { // d2 < 0
-				if( d3 > 0.0 ) {
+				if( d3 > 0.0f ) {
 					// Teilung in zwei Bögen
 				} else { // d3 < 0
 					// keine Auswirkung
@@ -655,8 +655,8 @@ void computeArcs( float4* arcs,                 // output: arcs
 			}
 		}
     }
-    arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( e1, 1.0);
-    arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( e2, 1.0);
+    arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( e1, 1.0f);
+    arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( e2, 1.0f);
 
     /*
     for( uint cnt = 0; cnt < numNeighbors; ++cnt ) {
@@ -689,9 +689,9 @@ void computeArcs( float4* arcs,                 // output: arcs
         // if the current arc ist the first:
         if( numArcs == 0 ) {
             // write the first arc
-            arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p1, 1.0);
+            arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p1, 1.0f);
             numArcs++;
-            arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0);
+            arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0f);
             numArcs++;
             sk = 1.0f;
             continue;
@@ -702,31 +702,31 @@ void computeArcs( float4* arcs,                 // output: arcs
         c2 = dot( rj, make_float3( arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1]) - rj);
         d = sk * dot( cross( make_float3( arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0]), p1), make_float3( arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1]));
 
-        if( c1 > 0.0 && c2 < 0.0 ) {
-            if( d > 0.0 ) {
-                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p1, 1.0);
+        if( c1 > 0.0f && c2 < 0.0f ) {
+            if( d > 0.0f ) {
+                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p1, 1.0f);
             } else {
-                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p2, 1.0);
+                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p2, 1.0f);
             }
-        } else if( c1 < 0.0 && c2 > 0.0 ) {
-            if( d > 0.0 ) {
-                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p1, 1.0);
+        } else if( c1 < 0.0f && c2 > 0.0f ) {
+            if( d > 0.0f ) {
+                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p1, 1.0f);
             } else {
-                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0);
+                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0f);
             }
-        } else if( c1 > 0.0 && c2 > 0.0 ) {
-            if( d > 0.0 ) {
+        } else if( c1 > 0.0f && c2 > 0.0f ) {
+            if( d > 0.0f ) {
                 return;
             } else {
-                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p1, 1.0);
-                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0);
+                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p1, 1.0f);
+                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0f);
             }
         }
-        else { // c1 < 0.0 && c2 < 0.0
-            if( d > 0.0 ) {
+        else { // c1 < 0.0f && c2 < 0.0f
+            if( d > 0.0f ) {
                 arcs[origAtomIdx * params.maxNumNeighbors * 4 + 2] = arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1];
-                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p1, 1.0);
-                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 3] = make_float4( p2, 1.0);
+                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p1, 1.0f);
+                arcs[origAtomIdx * params.maxNumNeighbors * 4 + 3] = make_float4( p2, 1.0f);
             }
         }
         // ... COMPUTATION WITH GLOBAL MEMORY
@@ -808,14 +808,14 @@ void computeReducedSurface( uint4* point1,      // output: the atom indices
         ( ( rj - rk)*( rj - rk) > djk*djk ) ) {
         return;
     }
-    tij = 0.5*( ai + aj) + 0.5*( aj - ai) * ( ( ri + params.probeRadius)*( ri + params.probeRadius) - ( rj + params.probeRadius)*( rj + params.probeRadius))/( dij*dij);
-    tik = 0.5*( ai + ak) + 0.5*( ak - ai) * ( ( ri + params.probeRadius)*( ri + params.probeRadius) - ( rk + params.probeRadius)*( rk + params.probeRadius))/( dik*dik);
+    tij = 0.5f*( ai + aj) + 0.5f*( aj - ai) * ( ( ri + params.probeRadius)*( ri + params.probeRadius) - ( rj + params.probeRadius)*( rj + params.probeRadius))/( dij*dij);
+    tik = 0.5f*( ai + ak) + 0.5f*( ak - ai) * ( ( ri + params.probeRadius)*( ri + params.probeRadius) - ( rk + params.probeRadius)*( rk + params.probeRadius))/( dik*dik);
     wijk = acos( dot( uij, uik) );
     uijk = cross( uij, uik) / sin( wijk);
     utb = cross( uijk, uij);
     bijk = tij + utb * ( dot( uik, tik - tij) / sin( wijk));
     tmpFloat = ( ri + params.probeRadius)*( ri + params.probeRadius) - length( bijk - ai)*length( bijk - ai);
-    if( tmpFloat < 0.0 ) {
+    if( tmpFloat < 0.0f ) {
         return;
     }
     hijk = sqrt( tmpFloat);
@@ -833,37 +833,37 @@ void computeReducedSurface( uint4* point1,      // output: the atom indices
     for( cutId = 0; cutId < stop1; ++cutId ) {
         voxel = FETCH( atomPos, FETCH( neighbors, params.maxNumNeighbors * atomId + cutId));
         voxelPos = make_float3( voxel.x, voxel.y, voxel.z);
-        if( length( pijk0 - voxelPos ) < ( params.probeRadius + voxel.w - 0.001 ) )
+        if( length( pijk0 - voxelPos ) < ( params.probeRadius + voxel.w - 0.001f ) )
             draw0 = false;
-        if( length( pijk1 - voxelPos ) < ( params.probeRadius + voxel.w - 0.001 ) )
+        if( length( pijk1 - voxelPos ) < ( params.probeRadius + voxel.w - 0.001f ) )
             draw1 = false;
     }
     for( cutId = stop1+1; cutId < stop2; ++cutId ) {
         voxel = FETCH( atomPos, FETCH( neighbors, params.maxNumNeighbors * atomId + cutId));
         voxelPos = make_float3( voxel.x, voxel.y, voxel.z);
-        if( length( pijk0 - voxelPos ) < ( params.probeRadius + voxel.w - 0.001 ) )
+        if( length( pijk0 - voxelPos ) < ( params.probeRadius + voxel.w - 0.001f ) )
             draw0 = false;
-        if( length( pijk1 - voxelPos ) < ( params.probeRadius + voxel.w - 0.001 ) )
+        if( length( pijk1 - voxelPos ) < ( params.probeRadius + voxel.w - 0.001f ) )
             draw1 = false;
     }
     for( cutId = stop2+1; cutId < vicinityCnt; ++cutId ) {
         voxel = FETCH( atomPos, FETCH( neighbors, params.maxNumNeighbors * atomId + cutId));
         voxelPos = make_float3( voxel.x, voxel.y, voxel.z);
-        if( length( pijk0 - voxelPos ) < ( params.probeRadius + voxel.w - 0.001 ) )
+        if( length( pijk0 - voxelPos ) < ( params.probeRadius + voxel.w - 0.001f ) )
             draw0 = false;
-        if( length( pijk1 - voxelPos ) < ( params.probeRadius + voxel.w - 0.001 ) )
+        if( length( pijk1 - voxelPos ) < ( params.probeRadius + voxel.w - 0.001f ) )
             draw1 = false;
     }
     
     if( draw0 && draw1 ) {
         point1[visibleAtomIdx * params.maxNumNeighbors * params.maxNumNeighbors + idxX] = make_uint4( aiIdx, ajIdx, visibleAtomIdx, 1);
-        probePos[visibleAtomIdx * params.maxNumNeighbors * params.maxNumNeighbors + idxX] = make_float4( pijk0.x, pijk0.y, pijk0.z,-1.0);
+        probePos[visibleAtomIdx * params.maxNumNeighbors * params.maxNumNeighbors + idxX] = make_float4( pijk0.x, pijk0.y, pijk0.z,-1.0f);
     } else if( draw0 && !draw1 ) {
         point1[visibleAtomIdx * params.maxNumNeighbors * params.maxNumNeighbors + idxX] = make_uint4( aiIdx, ajIdx, visibleAtomIdx, 1);
-        probePos[visibleAtomIdx * params.maxNumNeighbors * params.maxNumNeighbors + idxX] = make_float4( pijk0.x, pijk0.y, pijk0.z, 1.0);
+        probePos[visibleAtomIdx * params.maxNumNeighbors * params.maxNumNeighbors + idxX] = make_float4( pijk0.x, pijk0.y, pijk0.z, 1.0f);
     } else if( !draw0 && draw1 ) {
         point1[visibleAtomIdx * params.maxNumNeighbors * params.maxNumNeighbors + idxX] = make_uint4( aiIdx, ajIdx, visibleAtomIdx, 1);
-        probePos[visibleAtomIdx * params.maxNumNeighbors * params.maxNumNeighbors + idxX] = make_float4( pijk1.x, pijk1.y, pijk1.z, 1.0);
+        probePos[visibleAtomIdx * params.maxNumNeighbors * params.maxNumNeighbors + idxX] = make_float4( pijk1.x, pijk1.y, pijk1.z, 1.0f);
     } else {
         return;
     }
@@ -898,8 +898,8 @@ void computeTriangleVBO( float3* vbo,           // output: triangle vertices and
     }
 
     // the color value for visibility checking
-    //float3 color = { float( visibleAtomIdx), float( idxX), 0.0};
-    float3 color = { float( idxX), float( visibleAtomIdx), 0.0};
+    //float3 color = { float( visibleAtomIdx), float( idxX), 0.0f};
+    float3 color = { float( idxX), float( visibleAtomIdx), 0.0f};
     float4 pos; 
     // compute the index of the array
     uint pointIdx = visibleAtomIdx * params.maxNumNeighbors * params.maxNumNeighbors + idxX;
@@ -911,26 +911,26 @@ void computeTriangleVBO( float3* vbo,           // output: triangle vertices and
 	uint4 point = point1[pointIdx];
     //pos = FETCH( atomPos, point1[pointIdx].x);
 	pos = FETCH( atomPos, point.x);
-    pos.w = 1.0;
+    pos.w = 1.0f;
     vbo[vboIdx+0] = make_float3( pos);
 
-    color.z = 0.0;
+    color.z = 0.0f;
     vbo[vboIdx+1] = color;
 
     //pos = FETCH( atomPos, point1[pointIdx].y);
     pos = FETCH( atomPos, point.y);
-    pos.w = 1.0;
+    pos.w = 1.0f;
     vbo[vboIdx+2] = make_float3( pos);
 
-    color.z = 1.0;
+    color.z = 1.0f;
     vbo[vboIdx+3] = color;
 
     //pos = FETCH( visibleAtoms, point1[pointIdx].z);
 	pos = FETCH( visibleAtoms, point.z);
-    pos.w = 1.0;
+    pos.w = 1.0f;
     vbo[vboIdx+4] = make_float3( pos);
 
-    color.z = 2.0;
+    color.z = 2.0f;
     vbo[vboIdx+5] = color;
 }
 
@@ -958,8 +958,8 @@ void computeVisibleTriangleVBO( float3* vbo,           // output: triangle verti
     }
 
     // the color value for visibility checking
-    //float3 color = { float( visibleAtomIdx), float( idxX), 0.0};
-    float3 color = { float( idxX), float( visibleAtomIdx), 0.0};
+    //float3 color = { float( visibleAtomIdx), float( idxX), 0.0f};
+    float3 color = { float( idxX), float( visibleAtomIdx), 0.0f};
     float4 pos; 
     // compute the index of the array
     uint pointIdx = visibleAtomIdx * params.maxNumNeighbors * params.maxNumNeighbors + idxX;
@@ -973,26 +973,26 @@ void computeVisibleTriangleVBO( float3* vbo,           // output: triangle verti
 	uint4 point = point1[pointIdx];
     //pos = FETCH( atomPos, point1[pointIdx].x);
 	pos = FETCH( atomPos, point.x);
-    pos.w = 1.0;
+    pos.w = 1.0f;
     vbo[vboIdx+0] = make_float3( pos) * visible;
 
-    color.z = 0.0;
+    color.z = 0.0f;
     vbo[vboIdx+1] = color;
 
     //pos = FETCH( atomPos, point1[pointIdx].y);
     pos = FETCH( atomPos, point.y);
-    pos.w = 1.0;
+    pos.w = 1.0f;
     vbo[vboIdx+2] = make_float3( pos) * visible;
 
-    color.z = 1.0;
+    color.z = 1.0f;
     vbo[vboIdx+3] = color;
 
     //pos = FETCH( visibleAtoms, point1[pointIdx].z);
     pos = FETCH( visibleAtoms, point.z);
-    pos.w = 1.0;
+    pos.w = 1.0f;
     vbo[vboIdx+4] = make_float3( pos) * visible;
 
-    color.z = 2.0;
+    color.z = 2.0f;
     vbo[vboIdx+5] = color;
 }
 
@@ -1013,8 +1013,8 @@ void computeTorusVBO(
     uint idx = blockIdx.x * blockDim.x + threadIdx.x;
     // get the coordinates of the atom index array
     float4 indicesFloat = inVBO[idx];
-    uint xIdx = uint( floor( indicesFloat.x + 0.5));
-    uint yIdx = uint( floor( indicesFloat.y + 0.5));
+    uint xIdx = uint( floor( indicesFloat.x + 0.5f));
+    uint yIdx = uint( floor( indicesFloat.y + 0.5f));
     uint arrayIdx = params.maxNumNeighbors * params.maxNumNeighbors * yIdx + xIdx;
     uint4 pointIdx = point1[arrayIdx];
     // get the points
@@ -1038,12 +1038,12 @@ void computeTorusVBO(
     dik = length( ak - ai);
     djk = length( ak - aj);
     
-    tij = 0.5*( ai + aj) + 0.5*( aj - ai) * ( ( ri + params.probeRadius)*( ri + params.probeRadius) - ( rj + params.probeRadius)*( rj + params.probeRadius))/( dij*dij);
-    tik = 0.5*( ai + ak) + 0.5*( ak - ai) * ( ( ri + params.probeRadius)*( ri + params.probeRadius) - ( rk + params.probeRadius)*( rk + params.probeRadius))/( dik*dik);
-    tjk = 0.5*( aj + ak) + 0.5*( ak - aj) * ( ( rj + params.probeRadius)*( rj + params.probeRadius) - ( rk + params.probeRadius)*( rk + params.probeRadius))/( djk*djk);
-    rij = 0.5*sqrt( float( (ri + rj + 2.0*params.probeRadius)*(ri + rj + 2.0*params.probeRadius) - dij*dij)) * ( sqrt( float( dij*dij - ( ri - rj)*( ri - rj))) / dij);
-    rik = 0.5*sqrt( float( (ri + rk + 2.0*params.probeRadius)*(ri + rk + 2.0*params.probeRadius) - dik*dik)) * ( sqrt( float( dik*dik - ( ri - rk)*( ri - rk))) / dik);
-    rjk = 0.5*sqrt( float( (rj + rk + 2.0*params.probeRadius)*(rj + rk + 2.0*params.probeRadius) - djk*djk)) * ( sqrt( float( djk*djk - ( rj - rk)*( rj - rk))) / djk);
+    tij = 0.5f*( ai + aj) + 0.5f*( aj - ai) * ( ( ri + params.probeRadius)*( ri + params.probeRadius) - ( rj + params.probeRadius)*( rj + params.probeRadius))/( dij*dij);
+    tik = 0.5f*( ai + ak) + 0.5f*( ak - ai) * ( ( ri + params.probeRadius)*( ri + params.probeRadius) - ( rk + params.probeRadius)*( rk + params.probeRadius))/( dik*dik);
+    tjk = 0.5f*( aj + ak) + 0.5f*( ak - aj) * ( ( rj + params.probeRadius)*( rj + params.probeRadius) - ( rk + params.probeRadius)*( rk + params.probeRadius))/( djk*djk);
+    rij = 0.5f*sqrt( float( (ri + rj + 2.0f*params.probeRadius)*(ri + rj + 2.0f*params.probeRadius) - dij*dij)) * ( sqrt( float( dij*dij - ( ri - rj)*( ri - rj))) / dij);
+    rik = 0.5f*sqrt( float( (ri + rk + 2.0f*params.probeRadius)*(ri + rk + 2.0f*params.probeRadius) - dik*dik)) * ( sqrt( float( dik*dik - ( ri - rk)*( ri - rk))) / dik);
+    rjk = 0.5f*sqrt( float( (rj + rk + 2.0f*params.probeRadius)*(rj + rk + 2.0f*params.probeRadius) - djk*djk)) * ( sqrt( float( djk*djk - ( rj - rk)*( rj - rk))) / djk);
     pijk0 = make_float3( probe.x, probe.y, probe.z);
     pijk1 = pijk0*probe.w;
 
@@ -1053,20 +1053,20 @@ void computeTorusVBO(
     // get the rotation axis of the torus
     float3 torusAxis = normalize( ai - tij);
     // get the axis for rotating the torus rotations axis on the z-axis
-    float3 rotAxis = normalize( cross( torusAxis, make_float3( 0.0, 0.0, 1.0)));
+    float3 rotAxis = normalize( cross( torusAxis, make_float3( 0.0f, 0.0f, 1.0f)));
     // compute quaternion
     float4 quatC;
-    float angle = acos( dot( torusAxis, make_float3( 0.0, 0.0, 1.0)));
+    float angle = acos( dot( torusAxis, make_float3( 0.0f, 0.0f, 1.0f)));
     float len = length( rotAxis);
-    float halfAngle = 0.5 * angle;
-    if( len > 0.0 ) {
+    float halfAngle = 0.5f * angle;
+    if( len > 0.0f ) {
         len = sin( halfAngle);
         quatC.x = rotAxis.x * len;
         quatC.y = rotAxis.y * len;
         quatC.z = rotAxis.z * len;
         quatC.w = cos( halfAngle);
     } else {
-        quatC = make_float4( 0.0, 0.0, 0.0, 1.0);
+        quatC = make_float4( 0.0f, 0.0f, 0.0f, 1.0f);
     }
     // compute the tangential point X2 of the spheres
     float3 P = tij + rotAxis * rij;
@@ -1077,8 +1077,8 @@ void computeTorusVBO(
     float distance = length( X2 - C);
     C = ( C + aj) - tij;
     // write the parameters
-    outTorusVBO[idx*3*4] = make_float4( tij.x, tij.y, tij.z, 1.0);
-    outTorusVBO[idx*3*4+1] = make_float4( params.probeRadius, rij, 1.0, 1.0);
+    outTorusVBO[idx*3*4] = make_float4( tij.x, tij.y, tij.z, 1.0f);
+    outTorusVBO[idx*3*4+1] = make_float4( params.probeRadius, rij, 1.0f, 1.0f);
     outTorusVBO[idx*3*4+2] = quatC;
     outTorusVBO[idx*3*4+3] = make_float4( C.x, C.y, C.z, distance);
 
@@ -1088,19 +1088,19 @@ void computeTorusVBO(
     // get the rotation axis of the torus
     torusAxis = normalize( ai - tik);
     // get the axis for rotating the torus rotations axis on the z-axis
-    rotAxis = normalize( cross( torusAxis, make_float3( 0.0, 0.0, 1.0)));
+    rotAxis = normalize( cross( torusAxis, make_float3( 0.0f, 0.0f, 1.0f)));
     // compute quaternion
-    angle = acos( dot( torusAxis, make_float3( 0.0, 0.0, 1.0)));
+    angle = acos( dot( torusAxis, make_float3( 0.0f, 0.0f, 1.0f)));
     len = length( rotAxis);
-    halfAngle = 0.5 * angle;
-    if( len > 0.0 ) {
+    halfAngle = 0.5f * angle;
+    if( len > 0.0f ) {
         len = sin( halfAngle);
         quatC.x = rotAxis.x * len;
         quatC.y = rotAxis.y * len;
         quatC.z = rotAxis.z * len;
         quatC.w = cos( halfAngle);
     } else {
-        quatC = make_float4( 0.0, 0.0, 0.0, 1.0);
+        quatC = make_float4( 0.0f, 0.0f, 0.0f, 1.0f);
     }
     // compute the tangential point X2 of the spheres
     P = tik + rotAxis * rik;
@@ -1111,8 +1111,8 @@ void computeTorusVBO(
     distance = length( X2 - C);
     C = ( C + ak) - tik;
     // write the parameters
-    outTorusVBO[idx*3*4+4] = make_float4( tik.x, tik.y, tik.z, 1.0);
-    outTorusVBO[idx*3*4+5] = make_float4( params.probeRadius, rik, 1.0, 1.0);
+    outTorusVBO[idx*3*4+4] = make_float4( tik.x, tik.y, tik.z, 1.0f);
+    outTorusVBO[idx*3*4+5] = make_float4( params.probeRadius, rik, 1.0f, 1.0f);
     outTorusVBO[idx*3*4+6] = quatC;
     outTorusVBO[idx*3*4+7] = make_float4( C.x, C.y, C.z, distance);
 
@@ -1122,19 +1122,19 @@ void computeTorusVBO(
     // get the rotation axis of the torus
     torusAxis = normalize( aj - tjk);
     // get the axis for rotating the torus rotations axis on the z-axis
-    rotAxis = normalize( cross( torusAxis, make_float3( 0.0, 0.0, 1.0)));
+    rotAxis = normalize( cross( torusAxis, make_float3( 0.0f, 0.0f, 1.0f)));
     // compute quaternion
-    angle = acos( dot( torusAxis, make_float3( 0.0, 0.0, 1.0)));
+    angle = acos( dot( torusAxis, make_float3( 0.0f, 0.0f, 1.0f)));
     len = length( rotAxis);
-    halfAngle = 0.5 * angle;
-    if( len > 0.0 ) {
+    halfAngle = 0.5f * angle;
+    if( len > 0.0f ) {
         len = sin(halfAngle);
         quatC.x = rotAxis.x * len;
         quatC.y = rotAxis.y * len;
         quatC.z = rotAxis.z * len;
         quatC.w = cos( halfAngle);
     } else {
-        quatC = make_float4( 0.0, 0.0, 0.0, 1.0);
+        quatC = make_float4( 0.0f, 0.0f, 0.0f, 1.0f);
     }
     // compute the tangential point X2 of the spheres
     P = tjk + rotAxis * rjk;
@@ -1145,8 +1145,8 @@ void computeTorusVBO(
     distance = length( X2 - C);
     C = ( C + ak) - tjk;
     // write the parameters
-    outTorusVBO[idx*3*4+8] = make_float4( tjk.x, tjk.y, tjk.z, 1.0);
-    outTorusVBO[idx*3*4+9] = make_float4( params.probeRadius, rjk, 1.0, 1.0);
+    outTorusVBO[idx*3*4+8] = make_float4( tjk.x, tjk.y, tjk.z, 1.0f);
+    outTorusVBO[idx*3*4+9] = make_float4( params.probeRadius, rjk, 1.0f, 1.0f);
     outTorusVBO[idx*3*4+10] = quatC;
     outTorusVBO[idx*3*4+11] = make_float4( C.x, C.y, C.z, distance);
 
@@ -1154,16 +1154,16 @@ void computeTorusVBO(
     // emit varyings and position for first spherical triangle //
     /////////////////////////////////////////////////////////////
     outSTriaVBO[idx*2*4] = make_float4( pijk0, params.probeRadius);
-    outSTriaVBO[idx*2*4+1] = make_float4( ai - pijk0, 1.0);
-    outSTriaVBO[idx*2*4+2] = make_float4( aj - pijk0, 1.0);
+    outSTriaVBO[idx*2*4+1] = make_float4( ai - pijk0, 1.0f);
+    outSTriaVBO[idx*2*4+2] = make_float4( aj - pijk0, 1.0f);
     outSTriaVBO[idx*2*4+3] = make_float4( ak - pijk0, params.probeRadius*params.probeRadius);
     
     //////////////////////////////////////////////////////////////
     // emit varyings and position for second spherical triangle //
     //////////////////////////////////////////////////////////////
     outSTriaVBO[idx*2*4+4] = make_float4( pijk1, params.probeRadius);
-    outSTriaVBO[idx*2*4+5] = make_float4( ai - pijk1, 1.0);
-    outSTriaVBO[idx*2*4+6] = make_float4( aj - pijk1, 1.0);
+    outSTriaVBO[idx*2*4+5] = make_float4( ai - pijk1, 1.0f);
+    outSTriaVBO[idx*2*4+6] = make_float4( aj - pijk1, 1.0f);
     outSTriaVBO[idx*2*4+7] = make_float4( ak - pijk1, params.probeRadius*params.probeRadius);
     
     ///////////////////////////////////////////////////////////////////////
@@ -1189,7 +1189,7 @@ void writeProbePositions(
     if( idx >= numProbes ) return;
     // copy data
     probePos[idx] = sTriaVbo[idx*4];
-    probePos[idx].w = 1.0;
+    probePos[idx].w = 1.0f;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1276,7 +1276,7 @@ void findAdjacentTriangles(
         // copy visibility information to PBO
         outPbo[arrayIdx] = visibility;
         // check visibility
-        if( tex2D( inVisibilityTex, xcoord+cnt, visibleAtomIdx).x > 0.5 ) {
+        if( tex2D( inVisibilityTex, xcoord+cnt, visibleAtomIdx).x > 0.5f ) {
             // if a second visible triangle was found: do nothing!
             if( visible ) secondVisible = true;
             // get the points
@@ -1288,7 +1288,7 @@ void findAdjacentTriangles(
             visible = true;
         } else {
             tmp = FETCH( atomPos, pointIdx.y);
-            if( tmp.w > 0.5 ) {
+            if( tmp.w > 0.5f ) {
                 invisibleTriaNormal[counter] = probePos[arrayIdx];
                 invisibleTriaId[counter] = cnt;
                 counter++;
@@ -1316,19 +1316,19 @@ void findAdjacentTriangles(
     float3 T = normalize( ai - ak);
 
     float dik = length( ak - ai);
-    float3 tik = 0.5*( ai + ak) + 0.5*( ak - ai) * ( ( ri + params.probeRadius)*( ri + params.probeRadius) - ( rk + params.probeRadius)*( rk + params.probeRadius))/( dik*dik);
+    float3 tik = 0.5f*( ai + ak) + 0.5f*( ak - ai) * ( ( ri + params.probeRadius)*( ri + params.probeRadius) - ( rk + params.probeRadius)*( rk + params.probeRadius))/( dik*dik);
     float3 B = normalize( make_float3( visibleTriaNormal.x, visibleTriaNormal.y, visibleTriaNormal.z) - tik);
     
     float3 N = normalize( cross( T, B));
     
     // set angle to more than 2*PI
-    angle = 7.0;
+    angle = 7.0f;
     for( cnt = 0; cnt < counter; ++cnt ) {
         // get direction to pijk'
         tmpDir = normalize( make_float3( invisibleTriaNormal[cnt].x, invisibleTriaNormal[cnt].y, invisibleTriaNormal[cnt].z) - tik);
         // project direction to tangent space
         tmpDirTS = make_float3( dot(T, tmpDir), dot(B, tmpDir), dot(N, tmpDir));
-        tmpAngle = atan2f( tmpDirTS.z, tmpDirTS.y) + 3.14159265;
+        tmpAngle = atan2f( tmpDirTS.z, tmpDirTS.y) + 3.14159265f;
         if( tmpAngle < angle ) {
             angle = tmpAngle;
             smallest = invisibleTriaId[cnt];
@@ -1337,7 +1337,7 @@ void findAdjacentTriangles(
         tmpDir = normalize( make_float3( invisibleTriaNormal[cnt].x, invisibleTriaNormal[cnt].y, invisibleTriaNormal[cnt].z)*invisibleTriaNormal[cnt].w - tik);
         // project direction to tangent space
         tmpDirTS = make_float3( dot(T, tmpDir), dot(B, tmpDir), dot(N, tmpDir));
-        tmpAngle = atan2f( tmpDirTS.z, tmpDirTS.y) + 3.14159265;
+        tmpAngle = atan2f( tmpDirTS.z, tmpDirTS.y) + 3.14159265f;
         if( tmpAngle < angle ) {
             angle = tmpAngle;
             smallest = invisibleTriaId[cnt];
@@ -1345,7 +1345,7 @@ void findAdjacentTriangles(
     }
     
     if( smallest >= 0 )
-        outPbo[params.maxNumNeighbors * params.maxNumNeighbors * visibleAtomIdx + xcoord + uint(smallest)] = 1.0;
+        outPbo[params.maxNumNeighbors * params.maxNumNeighbors * visibleAtomIdx + xcoord + uint(smallest)] = 1.0f;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1399,13 +1399,13 @@ __device__ uint findNeighborsInCellCBCuda(
 					r = ( (pos.w + params.probeRadius)*(pos.w + params.probeRadius))
 						+ ( dist * dist)
 						- ( (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius));
-					r = r / (2.0 * dist * dist);
+					r = r / (2.0f * dist * dist);
 					vec = relPos * r;
                     // set small circle
 					smallCircle.x = vec.x;
 					smallCircle.y = vec.y;
 					smallCircle.z = vec.z;
-					//smallCircle.w = 1.0;
+					//smallCircle.w = 1.0f;
                     smallCircle.w = sqrt(((pos.w + params.probeRadius) * (pos.w + params.probeRadius)) - dot( vec, vec));
 					smallCircles[index*params.maxNumNeighbors+neighborIndex+count] = smallCircle;
 					// increment the neighbor counter
@@ -1441,7 +1441,7 @@ __global__ void findNeighborsCBCuda(
 	gridSize.y = int( params.gridSize.y);
 	gridSize.z = int( params.gridSize.z);
 	// search range for neighbor atoms: max atom diameter + probe diameter
-	float range = ( pos.w + 3.0 + 2.0 * params.probeRadius);
+	float range = ( pos.w + 3.0f + 2.0f * params.probeRadius);
 	// compute number of grid cells
 	int3 cellsInRange;
 	cellsInRange.x = ceil( range / params.cellSize.x);
@@ -1544,9 +1544,9 @@ __global__ void removeCoveredSmallCirclesCBCuda(
             nk = normalize( pi - pk);
             q = vk - vj;
             // if normals are the same (unrealistic, yet theoretically possible)
-            if( dot( nj, nk) == 1.0 ) {
-                if( dot( nj, nk) > 0.0 ) {
-                    if( dot( nj, q) > 0.0 ) {
+            if( dot( nj, nk) == 1.0f ) {
+                if( dot( nj, nk) > 0.0f ) {
+                    if( dot( nj, q) > 0.0f ) {
                         // k cuts off j --> remove j
                         addJ = false;
                     }
@@ -1554,13 +1554,13 @@ __global__ void removeCoveredSmallCirclesCBCuda(
             } else if( length( h) > R ) {
                 mj = ( vj - h);
                 mk = ( vk - h);
-                if( dot( nj, nk) > 0.0 ) {
-                    if( dot( mj, mk) > 0.0 && dot( nj, q) > 0.0 ) {
+                if( dot( nj, nk) > 0.0f ) {
+                    if( dot( mj, mk) > 0.0f && dot( nj, q) > 0.0f ) {
                         // k cuts off j --> remove j
                         addJ = false;
                     }
 		        } else {
-				    if( dot( mj, mk) > 0.0 && dot( nj, q) < 0.0 ) {
+				    if( dot( mj, mk) > 0.0f && dot( nj, q) < 0.0f ) {
                         // atom i has no contour
                         neighborCount[atomIdx] = 0;
                     }
@@ -1570,7 +1570,7 @@ __global__ void removeCoveredSmallCirclesCBCuda(
     }
     // all k were tested, see if j is cut off
     if( !addJ ) {
-        smallCircles[atomIdx * params.maxNumNeighbors + jIdx].w = -1.0;
+        smallCircles[atomIdx * params.maxNumNeighbors + jIdx].w = -1.0f;
     }
 }
 
@@ -1603,7 +1603,7 @@ __global__ void computeArcsCBCuda(
     // get small circle j
     float4 scj = FETCH( smallCircles, atomIdx * params.maxNumNeighbors + jIdx);
     // do nothing if small circle j has radius -1 (removed)
-    if( scj.w < 0.0 )
+    if( scj.w < 0.0f )
         return;
     // vj = the small circle center
     float3 vj = make_float3( scj.x, scj.y, scj.z);
@@ -1675,7 +1675,7 @@ __global__ void computeArcsCBCuda(
         // get small circle k
         sck = FETCH( smallCircles, atomIdx * params.maxNumNeighbors + kCnt);
         // do nothing if small circle k has radius -1 (removed)
-        if( sck.w < 0.0 )
+        if( sck.w < 0.0f )
             continue;
         // vk = the small circle center
         vk = make_float3( sck.x, sck.y, sck.z);
@@ -1698,7 +1698,7 @@ __global__ void computeArcsCBCuda(
         x1 = h + cross( vk, vj) * root;
         x2 = h - cross( vk, vj) * root;
         // swap x1 & x2 if vj points in the opposit direction of pj-pi
-        if( dot( vk, pk - pi) < 0.0 ) {
+        if( dot( vk, pk - pi) < 0.0f ) {
             tmpVec = x1;
             x1 = x2;
             x2 = tmpVec;
@@ -1970,8 +1970,8 @@ __global__ void writeProbePositionsCBCuda(
 		kIdx = uint( floor( tmpProbePos.w));
 		//ak = FETCH( atomPos, FETCH( neighbors, kIdx));
 		ak = FETCH( atomPos, kIdx);
-		sphereTriaVec1[numPreviousProbes + cnt] = make_float4( make_float3( ai) - make_float3( tmpProbePos), 1.0);
-		sphereTriaVec2[numPreviousProbes + cnt] = make_float4( make_float3( aj) - make_float3( tmpProbePos), 1.0);
+		sphereTriaVec1[numPreviousProbes + cnt] = make_float4( make_float3( ai) - make_float3( tmpProbePos), 1.0f);
+		sphereTriaVec2[numPreviousProbes + cnt] = make_float4( make_float3( aj) - make_float3( tmpProbePos), 1.0f);
 		sphereTriaVec3[numPreviousProbes + cnt] = make_float4( make_float3( ak) - make_float3( tmpProbePos), params.probeRadius * params.probeRadius);
 	}
 
@@ -1985,7 +1985,7 @@ __global__ void writeProbePositionsCBCuda(
 		float3 ta = normalize( make_float3( sc));
 		// torus center
 		float3 tc = make_float3( sc) + make_float3( ai);
-		float3 ortho = normalize( cross( ta, make_float3( 0.0, 0.0, 1.0)));
+		float3 ortho = normalize( cross( ta, make_float3( 0.0f, 0.0f, 1.0f)));
 
 		// compute the tangential point X2 of the spheres
         float3 P = tc + ( ortho * sc.w);

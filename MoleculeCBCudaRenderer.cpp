@@ -1870,7 +1870,7 @@ void MoleculeCBCudaRenderer::writeAtomPositions( const MolecularDataCall *mol ) 
  */
 void MoleculeCBCudaRenderer::writeAtomPositionsVBO( MolecularDataCall *mol) {
 	// write atoms to array
-	for( int cnt = 0; cnt < mol->AtomCount(); cnt++ ) {
+	for( unsigned int cnt = 0; cnt < mol->AtomCount(); cnt++ ) {
 		// write pos and rad to array
 		m_hPos[cnt*4] = mol->AtomPositions()[cnt*3];
 		m_hPos[cnt*4+1] = mol->AtomPositions()[cnt*3+1];

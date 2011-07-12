@@ -155,12 +155,12 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
     this->volClipPlaneFlagParam.SetParameter( new param::BoolParam( this->volClipPlaneFlag));
     // --- set up parameter for volume clipping plane normal ---
     vislib::math::Vector<float, 3> cp0n(
-        this->volClipPlane[0].PeekComponents()[0], 
-        this->volClipPlane[0].PeekComponents()[1], 
-        this->volClipPlane[0].PeekComponents()[2]);
+        static_cast<float>(this->volClipPlane[0].PeekComponents()[0]), 
+        static_cast<float>(this->volClipPlane[0].PeekComponents()[1]), 
+        static_cast<float>(this->volClipPlane[0].PeekComponents()[2]));
     this->volClipPlane0NormParam.SetParameter( new param::Vector3fParam( cp0n) );
     // --- set up parameter for volume clipping plane distance ---
-    float d = this->volClipPlane[0].PeekComponents()[3];
+    float d = static_cast<float>(this->volClipPlane[0].PeekComponents()[3]);
     this->volClipPlane0DistParam.SetParameter( new param::FloatParam( d, 0.0f, 1.0f) );
     // --- set up parameter for clipping plane opacity ---
     this->volClipPlaneOpacityParam.SetParameter( new param::FloatParam( this->volClipPlaneOpacity, 0.0f, 1.0f ) );
@@ -592,13 +592,15 @@ bool ProteinVolumeRenderer::getSegmentationData( core::Call& call) {
 #ifdef PLOT_PERCENTAGE
         range.Set( protein->FrameCount(), 1.0f);
 #else
-        range.Set( protein->FrameCount(), this->volumeSize * this->volumeSize);
+        range.Set( static_cast<float>(protein->FrameCount()), 
+            static_cast<float>(this->volumeSize * this->volumeSize));
 #endif
     else if( mol )
 #ifdef PLOT_PERCENTAGE
         range.Set( mol->FrameCount(), 1.0f);
 #else
-        range.Set( mol->FrameCount(), this->volumeSize * this->volumeSize);
+        range.Set( static_cast<float>(mol->FrameCount()), 
+            static_cast<float>(this->volumeSize * this->volumeSize));
 #endif
     else
         return false;
@@ -672,7 +674,7 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // render the current mouse position
-    this->RenderMousePosition( cr3d, 0.3);
+    this->RenderMousePosition( cr3d, 0.3f);
 
     // draw segmented voxels
     this->RenderSegmentedVoxels( cr3d);
@@ -726,7 +728,7 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
             this->drawMarker = true;
         }
         // store number of voxels
-        this->oldVoxelCount = this->segmentedVoxels.size();
+        this->oldVoxelCount = static_cast<unsigned int>(this->segmentedVoxels.size());
     }
 #endif
 
@@ -839,7 +841,7 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
         this->startVolumeSegmentation( callTime);
         this->startVolSeg = false;
         this->stopSegmentation = false;
-        this->oldVoxelCount = this->segmentedVoxels.size();
+        this->oldVoxelCount = static_cast<unsigned int>(this->segmentedVoxels.size());
         this->fixedNumberOfVoxels = false;
     } else if( !this->stopSegmentation ) {
         //this->updateVolumeSegmentation( callTime);
@@ -1381,7 +1383,6 @@ bool protein::ProteinVolumeRenderer::ProcessFrameRequest ( Call& call )
 void protein::ProteinVolumeRenderer::DrawLabel( unsigned int frameID )
 {
     using namespace vislib::graphics;
-    char frameChar[15];
 
     glPushAttrib( GL_ENABLE_BIT);
     glDisable( GL_CULL_FACE);
@@ -1399,13 +1400,16 @@ void protein::ProteinVolumeRenderer::DrawLabel( unsigned int frameID )
             vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_WARN, "ProteinVolumeRenderer: Problems to initalise the Font" );
         }
     }
+    
+//    char frameChar[15];
+//#if _WIN32
+//#define snprintf _snprintf
+//#endif
+//    snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
+    vislib::StringA tmpStr;
+    tmpStr.Format( "Frame: %i", frameID);
 
-#if _WIN32
-#define snprintf _snprintf
-#endif
-    snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
-
-    this->frameLabel->DrawString( 0.0f, 0.0f, 0.1f, true, frameChar, AbstractFont::ALIGN_LEFT_TOP );
+    this->frameLabel->DrawString( 0.0f, 0.0f, 0.1f, true, tmpStr.PeekBuffer(), AbstractFont::ALIGN_LEFT_TOP );
 
     glPopMatrix();
 
@@ -1474,7 +1478,7 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinData 
     
     float bgColor[4];
     glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
-    glClearColor( 0.1, 0.1, 0.1, 0.0);
+    glClearColor( 0.1f, 0.1f, 0.1f, 0.0f);
     // clear 3d texture
     for( z = 0; z < this->volumeSize; ++z) {
         // attach texture slice to FBO
@@ -1608,7 +1612,7 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
     
     float bgColor[4];
     glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
-    glClearColor( 0.1, 0.1, 0.1, 0.0);
+    glClearColor( 0.1f, 0.1f, 0.1f, 0.0f);
     // clear 3d texture
     for( z = 0; z < this->volumeSize; ++z) {
         // attach texture slice to FBO
@@ -1650,7 +1654,7 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
     float *atoms = new float[mol->AtomCount()*4];
     int atomCnt;
 #pragma omp parallel for
-    for( atomCnt = 0; atomCnt < mol->AtomCount(); ++atomCnt ) {
+    for( atomCnt = 0; atomCnt < static_cast<int>(mol->AtomCount()); ++atomCnt ) {
         atoms[atomCnt*4+0] = ( this->posInter[3*atomCnt+0] + this->translation.X()) * this->scale;
         atoms[atomCnt*4+1] = ( this->posInter[3*atomCnt+1] + this->translation.Y()) * this->scale;
         atoms[atomCnt*4+2] = ( this->posInter[3*atomCnt+2] + this->translation.Z()) * this->scale;
@@ -2644,11 +2648,13 @@ void ProteinVolumeRenderer::drawClippedPolygon( vislib::math::Cuboid<float> boun
     position *= this->scale;
 
     // check for each clip plane
+    float vcpd;
     for( int i = 0; i < this->volClipPlane.Count(); ++i ) {
         slices.setupSingleSlice( this->volClipPlane[i].PeekComponents(), position.PeekComponents());
         float d = 0.0f;
+        vcpd = static_cast<float>(this->volClipPlane[i].PeekComponents()[3]);
         glBegin(GL_TRIANGLE_FAN);
-            slices.drawSingleSlice(-(-d + this->volClipPlane[i].PeekComponents()[3]-0.0001f));
+        slices.drawSingleSlice(-(-d + vcpd - 0.0001f));
         glEnd();
     }
 }
@@ -2697,15 +2703,15 @@ void ProteinVolumeRenderer::startVolumeSegmentation( float time) {
             cnt++;
             if( cnt > initialSegmentationSizeParam.Param<param::IntParam>()->Value() )
                 break;
-            if( volPos.X() < (this->volumeSize-1) )
+            if( volPos.X() < static_cast<int>(this->volumeSize-1) )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()+1, volPos.Y(), volPos.Z()));
             if( volPos.X() > 0 )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()-1, volPos.Y(), volPos.Z()));
-            if( volPos.Y() < (this->volumeSize-1) )
+            if( volPos.Y() < static_cast<int>(this->volumeSize-1) )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()+1, volPos.Z()));
             if( volPos.Y() > 0 )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()-1, volPos.Z()));
-            if( volPos.Z() < (this->volumeSize-1) )
+            if( volPos.Z() < static_cast<int>(this->volumeSize-1) )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()+1));
             if( volPos.Z() > 0 )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()-1));
@@ -2728,7 +2734,7 @@ void ProteinVolumeRenderer::updateVolumeSegmentation( float time) {
     time_t t = clock(); // DEBUG
     // do nothing if no previous segmentation exists
     if( this->segmentedVoxels.empty() ) return;
-    int segmentSize = this->segmentedVoxels.size();
+    int segmentSize = static_cast<int>(this->segmentedVoxels.size());
 
     unsigned int numVoxel = this->volumeSize * this->volumeSize * this->volumeSize;
     unsigned int z = this->volumeSize * this->volumeSize;
@@ -2773,15 +2779,15 @@ void ProteinVolumeRenderer::updateVolumeSegmentation( float time) {
             cnt++;
             if( cnt > 1000 ) 
                 break;
-            if( volPos.X() < (this->volumeSize-1) )
+            if( volPos.X() < static_cast<int>(this->volumeSize-1) )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()+1, volPos.Y(), volPos.Z()));
             if( volPos.X() > 0 )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()-1, volPos.Y(), volPos.Z()));
-            if( volPos.Y() < (this->volumeSize-1) )
+            if( volPos.Y() < static_cast<int>(this->volumeSize-1) )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()+1, volPos.Z()));
             if( volPos.Y() > 0 )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()-1, volPos.Z()));
-            if( volPos.Z() < (this->volumeSize-1) )
+            if( volPos.Z() < static_cast<int>(this->volumeSize-1) )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()+1));
             if( volPos.Z() > 0 )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()-1));
@@ -2805,7 +2811,7 @@ void ProteinVolumeRenderer::updateVolumeSegmentation2( float time) {
     time_t t = clock(); // DEBUG
     // do nothing if no previous segmentation exists
     if( this->segmentedVoxels.empty() ) return;
-    int segmentSize = this->segmentedVoxels.size();
+    int segmentSize = static_cast<int>(this->segmentedVoxels.size());
 
     unsigned int numVoxel = this->volumeSize * this->volumeSize * this->volumeSize;
     unsigned int z = this->volumeSize * this->volumeSize;
@@ -2827,7 +2833,7 @@ void ProteinVolumeRenderer::updateVolumeSegmentation2( float time) {
 
     // start ...
     std::list<vislib::math::Vector<int, 3> >::iterator iter;
-    int a, b, c;
+
     iter = this->segmentedVoxels.begin();
     cnt = 0;
     vislib::math::Vector<int, 3> pos( 0, 0, 0);
@@ -2837,7 +2843,7 @@ void ProteinVolumeRenderer::updateVolumeSegmentation2( float time) {
         iter++;
     }
     pos /= cnt;
-    pos += this->clickedPos * this->volumeSize;
+    pos += this->clickedPos * static_cast<float>(this->volumeSize);
     pos /= 2;
 
     // write all current voxels to voxel map, if they are still within the cavity
@@ -2881,15 +2887,15 @@ void ProteinVolumeRenderer::updateVolumeSegmentation2( float time) {
             if( cnt > int( this->segmentationDeltaParam.Param<param::FloatParam>()->Value() * float( this->oldVoxelCount)) ) 
                 break;
 #endif
-            if( volPos.X() < (this->volumeSize-1) )
+            if( volPos.X() < static_cast<int>(this->volumeSize-1) )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()+1, volPos.Y(), volPos.Z()));
             if( volPos.X() > 0 )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()-1, volPos.Y(), volPos.Z()));
-            if( volPos.Y() < (this->volumeSize-1) )
+            if( volPos.Y() < static_cast<int>(this->volumeSize-1) )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()+1, volPos.Z()));
             if( volPos.Y() > 0 )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()-1, volPos.Z()));
-            if( volPos.Z() < (this->volumeSize-1) )
+            if( volPos.Z() < static_cast<int>(this->volumeSize-1) )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()+1));
             if( volPos.Z() > 0 )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()-1));
@@ -2912,7 +2918,7 @@ void ProteinVolumeRenderer::updateVolumeSegmentationRmsd( float time) {
     time_t t = clock(); // DEBUG
     // do nothing if no previous segmentation exists
     if( this->segmentedVoxels.empty() ) return;
-    int segmentSize = this->segmentedVoxels.size();
+    int segmentSize = static_cast<int>(this->segmentedVoxels.size());
 
     unsigned int numVoxel = this->volumeSize * this->volumeSize * this->volumeSize;
     unsigned int z = this->volumeSize * this->volumeSize;
@@ -2934,8 +2940,7 @@ void ProteinVolumeRenderer::updateVolumeSegmentationRmsd( float time) {
 
     // start ...
     std::list<vislib::math::Vector<int, 3> >::iterator iter;
-    int a, b, c;
-    vislib::math::Vector<int, 3> pos( this->clickedPos * this->volumeSize);
+    vislib::math::Vector<int, 3> pos( this->clickedPos * static_cast<float>(this->volumeSize));
     vislib::math::Vector<int, 3> pos2( pos);
 
     // write all current voxels to voxel map, if they are still within the cavity
@@ -2950,7 +2955,7 @@ void ProteinVolumeRenderer::updateVolumeSegmentationRmsd( float time) {
         }
     }
 
-    float l1, l2;
+    int l1, l2;
     if( !volPosList.empty() ) {
         iter = volPosList.begin();
         pos2 = *iter;
@@ -2988,22 +2993,22 @@ void ProteinVolumeRenderer::updateVolumeSegmentationRmsd( float time) {
             if( cnt == this->oldVoxelCount && this->fixedNumberOfVoxels )
                 break;
 #endif
-            if( volPos.X() < (this->volumeSize-1) )
+            if( volPos.X() < static_cast<int>(this->volumeSize-1) )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()+1, volPos.Y(), volPos.Z()));
             if( volPos.X() > 0 )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()-1, volPos.Y(), volPos.Z()));
-            if( volPos.Y() < (this->volumeSize-1) )
+            if( volPos.Y() < static_cast<int>(this->volumeSize-1) )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()+1, volPos.Z()));
             if( volPos.Y() > 0 )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()-1, volPos.Z()));
-            if( volPos.Z() < (this->volumeSize-1) )
+            if( volPos.Z() < static_cast<int>(this->volumeSize-1) )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()+1));
             if( volPos.Z() > 0 )
                 volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()-1));
         }
     }
     // check size of segmented region
-    if( cnt < this->oldVoxelCount )
+    if( cnt < static_cast<int>(this->oldVoxelCount) )
         this->fixedNumberOfVoxels = false;
 
     // store time
@@ -3031,7 +3036,7 @@ void ProteinVolumeRenderer::writeVolumeRAW() {
 
     int cnt;
 #pragma omp parallel for
-    for( cnt = 0; cnt < numVoxel; ++cnt ) {
+    for( cnt = 0; cnt < static_cast<int>(numVoxel); ++cnt ) {
         ucVol[cnt] = int( ( volume[cnt]*10.0f) < 0 ? 0 : ( ( volume[cnt]*10.0f) > 128 ? 128 : ( volume[cnt]*10.0f)));
         //ucVol[cnt] = int( volume[cnt]*10.0f);
     }
