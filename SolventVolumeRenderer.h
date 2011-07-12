@@ -231,11 +231,6 @@ namespace protein {
          */
         void drawClippedPolygon( vislib::math::Cuboid<float> boundingbox);
 
-        /**
-         * Write the current volume as a raw file.
-         */
-        void writeVolumeRAW();
-
 		/**
 		 * Count visible solvent molecules (by type).
 		 *
