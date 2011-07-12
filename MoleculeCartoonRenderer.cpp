@@ -669,7 +669,7 @@ bool protein::MoleculeCartoonRenderer::Render(Call& call) {
         vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
         mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) * 0.75f;
 #pragma omp parallel for
-    for( cnt = 0; cnt < static_cast<unsigned int>(mol->AtomCount()); ++cnt ) {
+    for( cnt = 0; cnt < static_cast<int>(mol->AtomCount()); ++cnt ) {
         if( std::sqrt( std::pow( pos0[3*cnt+0] - pos1[3*cnt+0], 2) +
                 std::pow( pos0[3*cnt+1] - pos1[3*cnt+1], 2) +
                 std::pow( pos0[3*cnt+2] - pos1[3*cnt+2], 2) ) < threshold ) {
@@ -848,7 +848,6 @@ void MoleculeCartoonRenderer::UpdateParameters( const MolecularDataCall *mol) {
  */
 void protein::MoleculeCartoonRenderer::DrawLabel(unsigned int frameID) {
     using namespace vislib::graphics;
-    char frameChar[15];
 
     glPushAttrib(GL_ENABLE_BIT);
     glDisable(GL_CULL_FACE);
@@ -867,12 +866,15 @@ void protein::MoleculeCartoonRenderer::DrawLabel(unsigned int frameID) {
             }
         }
 
-#if _WIN32
-#define snprintf _snprintf
-#endif
-        snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
+//    char frameChar[15];
+//#if _WIN32
+//#define snprintf _snprintf
+//#endif
+//    snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
+    vislib::StringA tmpStr;
+    tmpStr.Format( "Frame: %i", frameID);
 
-        this->frameLabel->DrawString(0.0f, 0.0f, 0.1f, true, frameChar, AbstractFont::ALIGN_LEFT_TOP);
+    this->frameLabel->DrawString(0.0f, 0.0f, 0.1f, true, tmpStr.PeekBuffer(), AbstractFont::ALIGN_LEFT_TOP);
 
     glPopMatrix();
 

@@ -361,7 +361,7 @@ bool GromacsLoader::Frame::encodeints(char *outbuff, int num_of_bits,
 
     // loop trough all three ints and encode
     for(i = 1; i < 3; i++) {
-        if(inbuff[i] >= sizes[i]) {
+        if(inbuff[i] >= static_cast<int>(sizes[i])) {
             return false;
         }
 
@@ -380,8 +380,8 @@ bool GromacsLoader::Frame::encodeints(char *outbuff, int num_of_bits,
     }
 
     // write the result in the outbuffer
-    if (num_of_bits >= num_of_bytes * 8) {
-        for (i = 0; i < num_of_bytes; i++) {
+    if (num_of_bits >= static_cast<int>(num_of_bytes) * 8) {
+        for (i = 0; i < static_cast<int>(num_of_bytes); i++) {
             // bitsize = 8 --> offset doesn't change
             encodebits(buffPt, 8, bitoffset, bytes[i]);
             buffPt++;
@@ -389,7 +389,7 @@ bool GromacsLoader::Frame::encodeints(char *outbuff, int num_of_bits,
         encodebits(buffPt, num_of_bits - num_of_bytes * 8, bitoffset, 0);
     }
     else {
-        for (i = 0; i < num_of_bytes-1; i++) {
+        for (i = 0; i < static_cast<int>(num_of_bytes-1); i++) {
             // bitsize = 8 --> offset doesn't change
             encodebits(buffPt, 8, bitoffset, bytes[i]);
             buffPt++;
@@ -798,21 +798,21 @@ bool GromacsLoader::getData( core::Call& call) {
         //if( dc->FrameID() >= this->data.Count() ) return false;
         if( dc->FrameID() >= this->data.Count() ) {
             if( this->data.Count() > 0 ) {
-                dc->SetFrameID( this->data.Count() -  1);
+                dc->SetFrameID( static_cast<unsigned int>(this->data.Count() - 1));
             } else {
                 return false;
             }
         }
 
         dc->SetAtoms(this->data[dc->FrameID()]->AtomCount(),
-             this->atomType.Count(),
-             this->atomTypeIdx.PeekElements(),
-             this->data[dc->FrameID()]->AtomPositions(),
-			 this->atomType.PeekElements(),
-             this->atomResidueIdx.PeekElements(),
-             this->data[dc->FrameID()]->AtomBFactor(),
-             this->data[dc->FrameID()]->AtomCharge(),
-             this->data[dc->FrameID()]->AtomOccupancy());
+                     static_cast<unsigned int>(this->atomType.Count()),
+            this->atomTypeIdx.PeekElements(),
+            this->data[dc->FrameID()]->AtomPositions(),
+            this->atomType.PeekElements(),
+            this->atomResidueIdx.PeekElements(),
+            this->data[dc->FrameID()]->AtomBFactor(),
+            this->data[dc->FrameID()]->AtomCharge(),
+            this->data[dc->FrameID()]->AtomOccupancy());
 
         dc->SetBFactorRange( this->data[dc->FrameID()]->MinBFactor(),
             this->data[dc->FrameID()]->MaxBFactor());
@@ -832,7 +832,7 @@ bool GromacsLoader::getData( core::Call& call) {
         dc->SetUnlocker(new Unlocker(*fr));
 
         dc->SetAtoms( this->data[0]->AtomCount(),
-                      this->atomType.Count(),
+                      static_cast<unsigned int>(this->atomType.Count()),
                       this->atomTypeIdx.PeekElements(),
                       fr->AtomPositions(),
                       this->atomType.PeekElements(),
@@ -849,11 +849,16 @@ bool GromacsLoader::getData( core::Call& call) {
                                this->data[0]->MaxOccupancy());
     }
 
-    dc->SetConnections( this->connectivity.Count() / 2, this->connectivity.PeekElements());
-	dc->SetResidues( this->residue.Count(), (const MolecularDataCall::Residue**)this->residue.PeekElements());
-    dc->SetResidueTypeNames( this->residueTypeName.Count(), this->residueTypeName.PeekElements());
-    dc->SetMolecules( this->molecule.Count(), this->molecule.PeekElements());
-    dc->SetChains( this->chain.Count(), this->chain.PeekElements());
+    dc->SetConnections( static_cast<unsigned int>(this->connectivity.Count() / 2), 
+        this->connectivity.PeekElements());
+    dc->SetResidues( static_cast<unsigned int>(this->residue.Count()),
+        (const MolecularDataCall::Residue**)this->residue.PeekElements());
+    dc->SetResidueTypeNames( static_cast<unsigned int>(this->residueTypeName.Count()), 
+        this->residueTypeName.PeekElements());
+    dc->SetMolecules( static_cast<unsigned int>(this->molecule.Count()), 
+        this->molecule.PeekElements());
+    dc->SetChains( static_cast<unsigned int>(this->chain.Count()), 
+        this->chain.PeekElements());
 
     if( !this->secStructAvailable &&
             this->strideFlagSlot.Param<param::BoolParam>()->Value() ) {
@@ -915,6 +920,12 @@ void GromacsLoader::release(void) {
     for(int i = 0; i < this->data.Count(); i++)
         delete data[i];
     this->data.Clear();
+
+    for(int i = 0; i < this->residue.Count(); i++)
+        delete residue[i];
+    this->residue.Clear();
+
+	delete stride;
 }
 
 
@@ -990,7 +1001,6 @@ void GromacsLoader::loadFile( const vislib::TString& filename) {
 
 
     vislib::StringA line;
-    unsigned int idx, atomCnt, lineCnt, frameCnt, resCnt, chainCnt;
 
     time_t t = clock(); // DEBUG
 
@@ -1187,7 +1197,6 @@ bool GromacsLoader::readTpxHeader( XDR *xdr, TpxHeader &tpx) {
  */
 bool GromacsLoader::readState( XDR *xdr, t_state &state, int natoms, int ngtc) {
     using vislib::sys::Log;
-    int i;
     gmx_bool bDum = TRUE;
 
     // ---------- init state ----------
@@ -1386,7 +1395,6 @@ bool GromacsLoader::do_xdr( XDR *xdr, void *item, int nitem, int eio) {
     float fvec[DIM];
     double dvec[DIM];
     int j, m, *iptr, idum;
-    gmx_large_int_t sdum;
     real *ptr;
     unsigned short us;
     double d = 0;
@@ -1401,7 +1409,7 @@ bool GromacsLoader::do_xdr( XDR *xdr, void *item, int nitem, int eio) {
                 d = *((real *) item);
             res = xdr_double( xdr, &d);
             if (item)
-                *((real *) item) = d;
+                *((real *) item) = static_cast<float>(d);
         }
         else
         {
@@ -1477,7 +1485,7 @@ bool GromacsLoader::do_xdr( XDR *xdr, void *item, int nitem, int eio) {
                              (xdrproc_t) xdr_double);
             if (item)
                 for (m = 0; (m < DIM); m++)
-                    ((real *) item)[m] = dvec[m];
+                    ((real *) item)[m] = static_cast<float>(dvec[m]);
         }
         else
         {

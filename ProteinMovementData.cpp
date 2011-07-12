@@ -566,7 +566,7 @@ bool protein::ProteinMovementData::ParsePDBAtom ( const vislib::StringA &line )
             this->tmp_atomTypes[tmpTypeTableId].Colour()[1],
             this->tmp_atomTypes[tmpTypeTableId].Colour()[2]) );
         // set atom type index to the index of the newly added atom type
-        atomTypeIdx = this->atomTypes.Count() - 1;
+        atomTypeIdx = static_cast<unsigned int>(this->atomTypes.Count() - 1);
     }
 
     // add atom data to protein atom data array
