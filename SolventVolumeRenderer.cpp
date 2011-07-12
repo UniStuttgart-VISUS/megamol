@@ -2927,35 +2927,3 @@ void SolventVolumeRenderer::drawClippedPolygon( vislib::math::Cuboid<float> boun
 		glEnd();
 	}
 }
-
-/*
- * write the current volume as a raw file
- */
-void SolventVolumeRenderer::writeVolumeRAW() {
-	unsigned int numVoxel = this->volumeSize * this->volumeSize * this->volumeSize;
-
-	float *volume = new float[numVoxel];
-	unsigned char *ucVol = new unsigned char[numVoxel];
-
-	glBindTexture( GL_TEXTURE_3D, this->volumeTex);
-	glGetTexImage( GL_TEXTURE_3D, 0, GL_ALPHA, GL_FLOAT, volume);
-	glBindTexture( GL_TEXTURE_3D, 0);
-
-#pragma omp parallel for
-	for(int voxelIdx = 0; voxelIdx < (int)numVoxel; voxelIdx++) {
-		ucVol[voxelIdx] = int( ( volume[voxelIdx]*10.0f) < 0 ? 0 : ( ( volume[voxelIdx]*10.0f) > 128 ? 128 : ( volume[voxelIdx]*10.0f)));
-		//ucVol[voxelIdx] = int( volume[voxelIdx]*10.0f);
-	}
-
-	// write array to file
-	FILE *foutRaw = fopen( "test.raw", "wb");
-	if( !foutRaw ) {
-		std::cout << "could not open file for writing." << std::endl;
-	} else {
-		fwrite( ucVol, sizeof(unsigned char), numVoxel, foutRaw );
-		fclose( foutRaw);
-	}
-
-	delete[] volume;
-	delete[] ucVol;
-}
