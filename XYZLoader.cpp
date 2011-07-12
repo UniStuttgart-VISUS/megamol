@@ -132,7 +132,7 @@ void XYZLoader::loadFile( const vislib::TString& filename) {
     this->datahash++;
 
 #ifdef USE_RANDOM_ROT_TRANS
-    srand( unsigned int(time( NULL)));
+    srand( static_cast<unsigned int>(time( NULL)));
     vislib::math::Vector<float, 3> rotAxis( static_cast<float>(rand()), 
         static_cast<float>(rand()), static_cast<float>(rand()));
     rotAxis.Normalise();
