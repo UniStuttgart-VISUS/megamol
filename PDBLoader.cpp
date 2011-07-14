@@ -741,10 +741,16 @@ bool PDBLoader::Frame::SetAtomOccupancy( unsigned int idx, float val) {
 PDBLoader::PDBLoader(void) : AnimDataModule(),
         pdbFilenameSlot( "pdbFilename", "The path to the PDB data file to be loaded"),
         xtcFilenameSlot( "xtcFilename", "The path to the XTC data file to be loaded"),
+        forceDataCallerSlot( "getforcedata", "Connects the loader with force data storage"),
         dataOutSlot( "dataout", "The slot providing the loaded data"),
         maxFramesSlot( "maxFrames", "The maximum number of frames to be loaded"),
         strideFlagSlot( "strideFlag", "The flag wether STRIDE should be used or not."),
-		solventResidues( "solventResidues", "slot to specify a ;-list of residues to be merged into separate chains"),
+        solventResidues( "solventResidues", "slot to specify a ;-list of residues to be merged into separate chains"),
+        mDDHostAddressSlot( "mDDHostAddress", "The host address of the machine running MDDriver."),
+        mDDPortSlot( "mDDPort", "The port used for data transfer on the machine running MDDriver."),
+        mDDGoSlot( "mDDGo", "The toggle to pause/unpause the MDDriver simulation."),
+        mDDTransferRateSlot( "mDDTransferRate", "The data transfer rate used by MDDriver."),
+
         bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0),
         stride( 0), secStructAvailable( false), numXTCFrames( 0),
         XTCFrameOffset( 0), xtcFileValid(false) {
@@ -754,6 +760,9 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
 
     this->xtcFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable( &this->xtcFilenameSlot);
+
+    this->forceDataCallerSlot.SetCompatibleCall<ForceDataCallDescription>();
+    this->MakeSlotAvailable( &this->forceDataCallerSlot);
 
     this->dataOutSlot.SetCallback( CallProteinData::ClassName(), CallProteinData::FunctionName(CallProteinData::CallForGetData), &PDBLoader::getData);
     this->dataOutSlot.SetCallback( CallProteinData::ClassName(), CallProteinData::FunctionName(CallProteinData::CallForGetExtent), &PDBLoader::getExtent);
@@ -767,14 +776,37 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
     this->strideFlagSlot << new param::BoolParam(true);
     this->MakeSlotAvailable( &this->strideFlagSlot);
 
-	this->solventResidues << new param::StringParam("");
+    this->solventResidues << new param::StringParam("");
     this->MakeSlotAvailable( &this->solventResidues);
+    // MDDriver host name/ip
+    this->mDDHostAddressSlot << new param::StringParam( "");
+    this->MakeSlotAvailable( &this->mDDHostAddressSlot);
+    // port (default, min, max)
+    this->mDDPortSlot << new param::IntParam( 3000, 1024, 32767);
+    this->MakeSlotAvailable( &this->mDDPortSlot);
+    // go (off by default)
+    this->mDDGoSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable( &this->mDDGoSlot);
+    // transfer rate in ms (default, min, max)
+    this->mDDTransferRateSlot << new param::IntParam( 1, 1, 5000);
+    this->MakeSlotAvailable( &this->mDDTransferRateSlot);
+
+    mdd = NULL; // no mdd object
 }
 
 /*
  * protein::PDBLoader::~PDBLoader
  */
 PDBLoader::~PDBLoader(void) {
+    if (mdd != NULL) {
+        if (mdd->IsRunning()) {
+            mdd->RequestTerminate();
+        }
+        while (mdd->IsRunning()) {
+            // wait for the thread to finish
+        }
+        delete mdd;
+    }
     this->Release ();
 }
 
@@ -800,6 +832,87 @@ bool PDBLoader::getData( core::Call& call) {
         this->solventResidues.ResetDirty();
         this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
+
+    if ( this->mDDHostAddressSlot.IsDirty() || this->mDDPortSlot.IsDirty() ) {
+        this->mDDHostAddressSlot.ResetDirty();
+        this->mDDPortSlot.ResetDirty();
+
+        if (mdd != NULL) {
+            if (mdd->IsRunning()) {
+                mdd->RequestTerminate();
+            }
+
+            while (mdd->IsRunning()) {
+                // wait for thread to terminate
+            }
+            delete mdd;
+            mdd = NULL;
+        }
+
+        mdd = new vislib::sys::RunnableThread<MDDriverConnector>;
+
+        ASSERT(mdd != NULL); // make sure memory was able to be allocated
+
+        // Set the correct host and port in the mdd
+        this->mdd->Initialize(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value(),
+            this->mDDPortSlot.Param<core::param::IntParam>()->Value());
+
+        // Check if simulation should be paused at the start
+        if (this->mDDGoSlot.Param<core::param::BoolParam>()->Value() == false) {
+            this->mdd->RequestPause(); // if so, request a pause message
+        }
+
+        // only start the thread if a valid host is provided (non-blank)
+        if (!(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value()).IsEmpty()) {
+            mdd->Start(); // start the mdd thread (also starts up the socket)
+        }
+    }
+
+    // If mdd has been allocated, do work with it
+    if (mdd != NULL) {
+        // check if pause/unpause needs to be set
+        if (this->mDDGoSlot.IsDirty()) {
+            this->mDDGoSlot.ResetDirty();
+            if (this->mDDGoSlot.Param<core::param::BoolParam>()->Value() == true) {
+                // unpause the simulation (check if socket is valid first)
+                if (mdd->IsSocketFunctional()) {
+                    this->mdd->RequestGo();
+                    // DEBUG also send the transfer rate again to see if it gets rid of the choppiness
+                    this->mdd->RequestTransferRate(this->mDDTransferRateSlot.Param<core::param::IntParam>()->Value());
+                }
+            } else {
+                // pause the simulation (check if socket is valid first)
+                if (mdd->IsSocketFunctional()) {
+                    this->mdd->RequestPause();
+                }
+            }
+        }
+
+        // update transfer rate if necessary
+        if (this->mDDTransferRateSlot.IsDirty()) {
+            this->mDDTransferRateSlot.ResetDirty();
+            // check that socket is valid first
+            if (mdd->IsSocketFunctional()) {
+                this->mdd->RequestTransferRate(this->mDDTransferRateSlot.Param<core::param::IntParam>()->Value());
+            }
+        }
+
+        // get data via MDDriver if socket is valid and go is on
+        if (mdd->IsSocketFunctional() && this->mDDGoSlot.Param<core::param::BoolParam>()->Value() == true) {
+            this->mdd->GetCoordinates(this->data[0]->AtomCount(), const_cast<float*>(this->data[0]->AtomPositions()));
+        }
+
+        // get pointer to ForceDataCall
+        ForceDataCall *force = this->forceDataCallerSlot.CallAs<ForceDataCall>();
+        if( force != NULL) {
+
+            if ((*force)(ForceDataCall::CallForGetForceData)) {
+  
+                // send force data to MDDriver
+                this->mdd->RequestForces(force->ForceCount(), force->AtomIDs(), force->Forces());
+            }
+        }
+    } // mdd != NULL
 
     dc->SetDataHash( this->datahash);
 
@@ -901,9 +1014,73 @@ bool PDBLoader::getExtent( core::Call& call) {
 
     if ( this->pdbFilenameSlot.IsDirty() || this->solventResidues.IsDirty() ) {
         this->pdbFilenameSlot.ResetDirty();
-		this->solventResidues.ResetDirty();
+        this->solventResidues.ResetDirty();
         this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
+
+    if ( this->mDDHostAddressSlot.IsDirty() || this->mDDPortSlot.IsDirty() ) {
+        this->mDDHostAddressSlot.ResetDirty();
+        this->mDDPortSlot.ResetDirty();
+        
+        if (mdd != NULL) {
+            if (mdd->IsRunning()) {
+                mdd->RequestTerminate();
+            }
+
+            while (mdd->IsRunning()) {
+                // wait for thread to terminate
+            }
+            delete mdd;
+            mdd = NULL;
+        }
+
+        mdd = new vislib::sys::RunnableThread<MDDriverConnector>;
+
+        ASSERT(mdd != NULL); // make sure memory was able to be allocated
+
+        // Set the correct host and port in the mdd
+        this->mdd->Initialize(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value(),
+            this->mDDPortSlot.Param<core::param::IntParam>()->Value());
+
+        // Check if simulation should be paused at the start
+        if (this->mDDGoSlot.Param<core::param::BoolParam>()->Value() == false) {
+            this->mdd->RequestPause(); // if so, request a pause message
+        }
+
+        if (!(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value()).IsEmpty()) {
+            mdd->Start(); // start the mdd thread (also starts up the socket)
+        }
+    }
+
+    // Only deal with mdd if it is valid
+    if (mdd != NULL) {
+        // check if pause/unpause needs to be set
+        if (this->mDDGoSlot.IsDirty()) {
+            this->mDDGoSlot.ResetDirty();
+            if (this->mDDGoSlot.Param<core::param::BoolParam>()->Value() == true) {
+                // unpause the simulation (check if socket is valid first)
+                if (mdd->IsSocketFunctional()) {
+                    this->mdd->RequestGo();
+                    // Also send transfer rate again otherwise the simulation is choppy
+                    this->mdd->RequestTransferRate(this->mDDTransferRateSlot.Param<core::param::IntParam>()->Value());
+                }
+            } else {
+                // pause the simulation (check if socket is valid first)
+                if (mdd->IsSocketFunctional()) {
+                    this->mdd->RequestPause();
+                }
+            }
+        }
+
+        // update transfer rate if necessary
+        if (this->mDDTransferRateSlot.IsDirty()) {
+            this->mDDTransferRateSlot.ResetDirty();
+            // check that socket is valid first
+            if (mdd->IsSocketFunctional()) {
+                this->mdd->RequestTransferRate(this->mDDTransferRateSlot.Param<core::param::IntParam>()->Value());
+            }
+        }
+    } // mdd != NULL
 
     // grow bounding box by 3.0 Angstrom (for volume rendering / SAS)
     vislib::math::Cuboid<float> bBoxPlus3( this->bbox);
@@ -936,7 +1113,7 @@ void PDBLoader::release(void) {
     // stop frame-loading thread before clearing data array
     resetFrameCache();
 
-	for(int i = 0; i < this->data.Count(); i++)
+    for(int i = 0; i < this->data.Count(); i++)
         delete data[i];
     this->data.Clear();
 
@@ -944,7 +1121,7 @@ void PDBLoader::release(void) {
         delete residue[i];
     this->residue.Clear();
 
-	delete stride;
+    delete stride;
 }
 
 
@@ -1080,13 +1257,13 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
         this->atomResidueIdx.SetCount(atomEntries.Count());
 
-		// check for residue-parameter and make it a chain of its own ( if no chain-id is specified ...?)
-		const vislib::TString& solventResiduesStr = this->solventResidues.Param<core::param::StringParam>()->Value();
-		// get all the solvent residue names to filter out
-		vislib::Array<vislib::TString> solventResidueNames = vislib::StringTokeniser<vislib::TCharTraits>::Split( solventResiduesStr, ';', true);
-		//this->solventResidueIdx.SetCount(solventResidueNames);
-		//memset(&this->solventResidueIdx[0], -1, this->solventResidueIdx.Count()*sizeof(int));
-		this->solventResidueIdx.Clear();
+        // check for residue-parameter and make it a chain of its own ( if no chain-id is specified ...?)
+        const vislib::TString& solventResiduesStr = this->solventResidues.Param<core::param::StringParam>()->Value();
+        // get all the solvent residue names to filter out
+        vislib::Array<vislib::TString> solventResidueNames = vislib::StringTokeniser<vislib::TCharTraits>::Split( solventResiduesStr, ';', true);
+        //this->solventResidueIdx.SetCount(solventResidueNames);
+        //memset(&this->solventResidueIdx[0], -1, this->solventResidueIdx.Count()*sizeof(int));
+        this->solventResidueIdx.Clear();
 
         // parse all atoms of the first frame
         for( atomCnt = 0; atomCnt < atomEntries.Count(); ++atomCnt ) {
@@ -1347,32 +1524,32 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
     vislib::StringA resName = tmpStr;
     unsigned int resTypeIdx;
 
-	// search for current residue type name in the array
+    // search for current residue type name in the array
     INT_PTR resTypeNameIdx = this->residueTypeName.IndexOf( resName);
     if( resTypeNameIdx ==  vislib::Array<vislib::StringA>::INVALID_POS ) {
         resTypeIdx = static_cast<unsigned int>(this->residueTypeName.Count());
         this->residueTypeName.Add( resName);
 
-		// check if the name of the residue is matched by one of the solvent residue names
-		for( unsigned int filterCnt = 0; filterCnt < solventResidueNames.Count(); ++filterCnt ) {
-			if ( resName.StartsWithInsensitive( solventResidueNames[filterCnt]) ) {
-				tmpChainId = SOLVENT_CHAIN_IDENTIFIER;
-				tmpChainType = MolecularDataCall::Chain::SOLVENT;
-				this->solventResidueIdx.Add(resTypeIdx);
-				break;
-			}
-		}
-	} else {
+        // check if the name of the residue is matched by one of the solvent residue names
+        for( unsigned int filterCnt = 0; filterCnt < solventResidueNames.Count(); ++filterCnt ) {
+            if ( resName.StartsWithInsensitive( solventResidueNames[filterCnt]) ) {
+                tmpChainId = SOLVENT_CHAIN_IDENTIFIER;
+                tmpChainType = MolecularDataCall::Chain::SOLVENT;
+                this->solventResidueIdx.Add(resTypeIdx);
+                break;
+            }
+        }
+    } else {
         resTypeIdx = static_cast<unsigned int>(resTypeNameIdx);
 
-		// check if the index of the residue is matched by one of the existent solvent residue indices
-		for( unsigned int srIdx = 0; srIdx < this->solventResidueIdx.Count(); ++srIdx ) {
-			if( this->solventResidueIdx[srIdx] == resTypeIdx ) {
-				tmpChainId = SOLVENT_CHAIN_IDENTIFIER;
-				tmpChainType = MolecularDataCall::Chain::SOLVENT;
-				break;
-			}
-		}
+        // check if the index of the residue is matched by one of the existent solvent residue indices
+        for( unsigned int srIdx = 0; srIdx < this->solventResidueIdx.Count(); ++srIdx ) {
+            if( this->solventResidueIdx[srIdx] == resTypeIdx ) {
+                tmpChainId = SOLVENT_CHAIN_IDENTIFIER;
+                tmpChainType = MolecularDataCall::Chain::SOLVENT;
+                break;
+            }
+        }
     }
 
 
@@ -1535,20 +1712,20 @@ vislib::math::Vector<unsigned char, 3> PDBLoader::getElementColor( vislib::Strin
         return vislib::math::Vector<unsigned char, 3>( 255, 128, 64);
     if( name[cnt] == 'M' /*&& name[cnt+1] == 'e'*/ ) // Methanol? -> same as carbon ...
         return vislib::math::Vector<unsigned char, 3>( 90, 90, 90);
-	/*
+    /*
     if( name[cnt] == 'H' ) // white or light grey
         return vislib::math::Vector<unsigned char, 3>( 240, 240, 240);
     if( name[cnt] == 'C' ) // (dark) grey
-		return vislib::math::Vector<unsigned char, 3>( 175, 175, 175);
+        return vislib::math::Vector<unsigned char, 3>( 175, 175, 175);
     if( name[cnt] == 'N' ) // blue
         return vislib::math::Vector<unsigned char, 3>( 40, 160, 220);
     if( name[cnt] == 'O' ) // red
-		return vislib::math::Vector<unsigned char, 3>( 230, 50, 50);
+        return vislib::math::Vector<unsigned char, 3>( 230, 50, 50);
     if( name[cnt] == 'S' ) // yellow
         return vislib::math::Vector<unsigned char, 3>( 255, 215, 0);
     if( name[cnt] == 'P' ) // orange
         return vislib::math::Vector<unsigned char, 3>( 255, 128, 64);
-	*/
+    */
 
     return vislib::math::Vector<unsigned char, 3>( 191, 191, 191);
 }
