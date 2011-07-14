@@ -69,9 +69,7 @@ DWORD MDDriverConnector::Run(void *config) {
 
         // Pause request
         if (this->pauseRequested == true && terminateRequested == false) {
-            if (this->sendPause() == false) {
-                //this->terminateRequested = true; // if the request fails, terminate the thread
-            }
+            this->sendPause();
             this->pauseRequested = false; // flag pause done
             this->paused = true; // flag currently paused
         }
@@ -87,17 +85,13 @@ DWORD MDDriverConnector::Run(void *config) {
 
         // Transfer rate request
         if (this->rateRequested != 0 && terminateRequested == false) {
-            if (this->sendTransferRate() == false) {
-                //this->terminateRequested = true; // if the request fails, terminate the thread
-            }
+            this->sendTransferRate();
             this->rateRequested = 0; // flag transfer rate done
         }
 
         // Forces send request
         if (this->forcesCount != 0 && terminateRequested == false) {
-            if (this->sendForces() == false) {
-                //this->terminateRequested = true; // if the request fails, terminate the thread
-            }
+            this->sendForces();
             this->forcesCount = 0; // flag force send done
         }
 
@@ -187,7 +181,25 @@ void MDDriverConnector::RequestForces(int count, const unsigned int *atomIDs, co
             this->forceIDs.Unlock();
         }
     } else {
-        this->forcesCount = 0;
+        // create a 0 force to clear other forces (not sure this is necessary)
+        if (this->forceIDs.TryLock()) {
+            if (this->forceList.TryLock()) {
+                this->forceIDs.AssertCapacity(1);
+                this->forceIDs.Clear();
+                // apply force to 0th atom
+                this->forceIDs.Add(1);
+                this->forceList.AssertCapacity(3);
+                this->forceList.Clear();
+                // apply 0 vector force
+                this->forceList.Add(0.0f);
+                this->forceList.Add(0.0f);
+                this->forceList.Add(0.0f);
+                this->forcesCount = 1;
+                this->forceList.Unlock();
+            }
+            this->forceIDs.Unlock();
+        }
+
     }
 }
 

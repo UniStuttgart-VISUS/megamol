@@ -57,6 +57,7 @@ HapticsMoleculeRenderer::HapticsMoleculeRenderer(void) : Renderer3DModule (),
     molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"),
     specialColorParam( "specialColor", "The color for the specified molecules" ),
     interpolParam( "posInterpolation", "Enable positional interpolation between frames" ),
+    multiforceParam("multiforce", "Enable multiple forces to be applied simulataneously"),
     width( 0), height( 0), currentDragAtom(-1), atomPositions( 0), atomPositionCount( 0),
     forceCount(0), forceAtomIDs(NULL), forces(NULL)
 {
@@ -126,6 +127,10 @@ HapticsMoleculeRenderer::HapticsMoleculeRenderer(void) : Renderer3DModule (),
     // en-/disable positional interpolation
     this->interpolParam.SetParameter(new param::BoolParam( true));
     this->MakeSlotAvailable( &this->interpolParam);
+
+    // en-/disable multiple forces
+    this->multiforceParam.SetParameter(new param::BoolParam( false));
+    this->MakeSlotAvailable( &this->multiforceParam);
 
     // --- set the radius for the arrows ---
     this->radiusArrow = 0.15f;
@@ -865,61 +870,8 @@ unsigned int HapticsMoleculeRenderer::getAtomID( bool click, bool touch) {
         }
         return this->currentDragAtom; // return the current drag atom
 
-
-        /* OLD METHOD 
-        // button clicked - get id (if any) and return it
-
-        this->currentDragAtom = -1; // temp test val
-
-        vislib::math::Point<float, 3> cursorPos; // need the current cursor position
-        cursorPos = this->absoluteCursor3d.GetCurrentPosition();
-
-        // Get cursor position on 2d viewplane
-        double modelview[16], projection[16];
-        int viewport[4];
-
-        glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-        glGetDoublev(GL_PROJECTION_MATRIX, projection);
-        glGetIntegerv(GL_VIEWPORT, viewport);
-
-        double screenX, screenY, Z;
-  
-        gluProject(cursorPos.GetX(), cursorPos.GetY(), cursorPos.GetZ(), 
-        modelview, projection, viewport,
-        &screenX, &screenY, &Z);
-
-        // check color (i.e. ID) of the current atom
-        int atomId = -1;
-        float *image = new float[this->width * this->height];
-        this->sphereIdFbo.BindColourTexture();
-        glGetTexImage( GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, image);
-        atomId = int(image[int(screenY) * int(this->width) + int(screenX)]);
-        // unbind texture
-        glBindTexture( GL_TEXTURE_2D, 0);
-        delete[] image;
-
-        // return -1 if no atom id was found
-        if( atomId < 0 ) {
-            return -1;
-        }
-
-        // Make sure that the object beneath the cursor is actually the one being touched
-        if( atomId < this->atomPositionCount ) {
-            vislib::math::Point<float, 3> objectPos( &this->atomPositions[atomId * 3]); 
-            // check distance between atom center and proxy position
-            // TODO: use actual atom radius (multiplied by 1.1) for this test
-            if( (this->absoluteCursor3d.GetCurrentPosition() - objectPos).Length() > 2.0f ) {
-                return -1;
-            }
-        }
-        
-        // set current drag atom id to the correct value
-        this->currentDragAtom = atomId;
-        // return the current atom id
-        return atomId;
-        * END OLD METHOD */
     } else if (click == true && touch == false) {
-        // Clear the forces - this should really be handled another way (e.g. params/only retain forces if alt is held/something, but this is what we'll do for now
+        // Clear the forces - this should really be handled another way (e.g. params/only retain forces if alt is held/something) but this is what we'll do for now
         this->forceCount = 0;
         this->forceAtomIDs.Clear();
         this->forces.Clear();
@@ -927,9 +879,19 @@ unsigned int HapticsMoleculeRenderer::getAtomID( bool click, bool touch) {
         this->currentDragAtom = -1;
         return -1;
     } else {
-        // stop dragging, but don't clear the forces
-        this->currentDragAtom = -1;
-        return -1;
+        // check the multiforce param
+        if (this->multiforceParam.Param<core::param::BoolParam>()->Value() == true) {
+            // stop dragging, but don't clear the forces
+            this->currentDragAtom = -1;
+            return -1;
+        } else {
+            // stop dragging and clear the forces
+            this->forceCount = 0;
+            this->forceAtomIDs.Clear();
+            this->forces.Clear();
+            this->currentDragAtom = -1;
+            return -1;
+        }
     }
 }
 
