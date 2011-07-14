@@ -13,13 +13,17 @@
 
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
+#include "CallerSlot.h"
 #include "vislib/Array.h"
 #include "vislib/Vector.h"
 #include "vislib/Cuboid.h"
+#include "vislib/RunnableThread.h"
 #include "CallProteinData.h"
 #include "MolecularDataCall.h"
+#include "ForceDataCall.h"
 #include "Stride.h"
 #include "view/AnimDataModule.h"
+#include "MDDriverConnector.h"
 #include <fstream>
 
 
@@ -103,7 +107,7 @@ namespace protein {
          *
          * @return whether data gas changed
          */
-		bool dataChanged(core::Call& call) {return false;/*return solventResidues.IsDirty();*/}
+        bool dataChanged(core::Call& call) {return false;/*return solventResidues.IsDirty();*/}
 
         /**
          * Implementation of 'Release'.
@@ -599,6 +603,8 @@ namespace protein {
         core::param::ParamSlot xtcFilenameSlot;
         /** The data callee slot */
         core::CalleeSlot dataOutSlot;
+        /** caller slot */
+        core::CallerSlot forceDataCallerSlot;
 
         /** The maximum frame slot */
         core::param::ParamSlot maxFramesSlot;
@@ -606,6 +612,15 @@ namespace protein {
         core::param::ParamSlot strideFlagSlot;
         /** slot to specify a ;-list of residues to be merged into separate chains ... */
         core::param::ParamSlot solventResidues;
+
+        /** The MDDriver host address */
+        core::param::ParamSlot mDDHostAddressSlot;
+        /** The MDDriver port */
+        core::param::ParamSlot mDDPortSlot;
+        /** The MDDriver go/pause toggle */
+        core::param::ParamSlot mDDGoSlot;
+        /** The MDDriver transfer rate */
+        core::param::ParamSlot mDDTransferRateSlot;
 
         /** The data */
         vislib::Array<Frame*> data;
@@ -619,8 +634,8 @@ namespace protein {
         /** Stores for each atom the index of its type */
         vislib::Array<unsigned int> atomTypeIdx;
 
-		/* Residue index per atom - may be undefined (-1) */
-		vislib::Array<int> atomResidueIdx;
+        /* Residue index per atom - may be undefined (-1) */
+        vislib::Array<int> atomResidueIdx;
 
         /** The array of atom types */
         vislib::Array<MolecularDataCall::AtomType> atomType;
@@ -631,8 +646,8 @@ namespace protein {
         /** The array of residue type names */
         vislib::Array<vislib::StringA> residueTypeName;
 
-		/** residue indices marked as solvent */
-		vislib::Array<unsigned int> solventResidueIdx;
+        /** residue indices marked as solvent */
+        vislib::Array<unsigned int> solventResidueIdx;
 
         /** The array of molecules */
         vislib::Array<MolecularDataCall::Molecule> molecule;
@@ -669,6 +684,9 @@ namespace protein {
         vislib::Array<unsigned int> XTCFrameOffset;
         /** Flag whether the current xtc-filename is valid */
         bool xtcFileValid;
+
+        /** MDDriverLoader object for connecting to MDDriver */
+        vislib::sys::RunnableThread<MDDriverConnector>* mdd;
 
         /** Per atom filter information to be used by MolecularDataCall */
         vislib::Array<int> atomVisibility;

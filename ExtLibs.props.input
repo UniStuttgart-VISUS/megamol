@@ -7,18 +7,19 @@
     <NETCDFPath>%netcdfPath%</NETCDFPath>
     <OPENCLPath>%openclPath%</OPENCLPath>
     <CUDAPath>%cudaPath%</CUDAPath>
+    <HAPTICSPath>%hapticsPath%</HAPTICSPath>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>%withNETCDF%!$(NETCDFPath)include;!!%withOPENCL%!$(OPENCLPath)OpenCL/common/inc;!!%withCUDA%!$(CUDAPath)C/common/inc;$(CUDAPath)shared/inc;!!%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>%withNETCDF%!WITH_NETCDF;!!%withOPENCL%!WITH_OPENCL;!!%withCUDA%!WITH_CUDA;!!%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%withNETCDF%!$(NETCDFPath)include;!!%withOPENCL%!$(OPENCLPath)OpenCL/common/inc;!!%withCUDA%!$(CUDAPath)C/common/inc;$(CUDAPath)shared/inc;!!%withHAPTICS%!$(HAPTICSPath)/include;$(HAPTICSPath)/utilities/include;!!%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>%withNETCDF%!WITH_NETCDF;!!%withOPENCL%!WITH_OPENCL;!!%withCUDA%!WITH_CUDA;!!%withHAPTICS%!WITH_OPENHAPTICS;!!%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>%withNETCDF%!$(NETCDFPath)lib$(BitsD);!!%withOPENCL%!$(OPENCLPath)OpenCL/common/lib/$(PlatformName);!!%withCUDA%!$(CUDAPath)C/common/lib/$(PlatformName);$(CUDAPath)shared/lib/$(PlatformName);!!%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>%withNETCDF%!netcdf$(Bits).lib !!%withOPENCL%!OpenCL.lib !!%withCUDA%!cudart.lib;cutil$(BitsD).lib;!!%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%withNETCDF%!$(NETCDFPath)lib$(BitsD);!!%withOPENCL%!$(OPENCLPath)OpenCL/common/lib/$(PlatformName);!!%withCUDA%!$(CUDAPath)C/common/lib/$(PlatformName);$(CUDAPath)shared/lib/$(PlatformName);!!%withHAPTICS%!$(HAPTICSPath)\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\utilities\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\lib\$(Platform);!!%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%withNETCDF%!netcdf$(Bits).lib !!%withOPENCL%!OpenCL.lib !!%withCUDA%!cudart.lib;cutil$(BitsD).lib;!!%withHAPTICS%!hl.lib;hlu.lib;hd.lib;hdu.lib;!!%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -39,6 +40,9 @@
     </BuildMacro>
     <BuildMacro Include="CUDAPath">
       <Value>$(CUDAPath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="HAPTICSPath">
+      <Value>$(HAPTICSPath)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>
