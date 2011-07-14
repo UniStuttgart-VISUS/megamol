@@ -226,6 +226,8 @@ namespace protein {
         megamol::core::param::ParamSlot specialColorParam;
         /** parameter slot for positional interpolation */
         megamol::core::param::ParamSlot interpolParam;
+        /** parameter slot for multi-force capability */
+        megamol::core::param::ParamSlot multiforceParam;
 
         /** The data callee slot */
         core::CalleeSlot forceDataOutSlot;
