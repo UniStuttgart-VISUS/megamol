@@ -473,6 +473,9 @@
     <None Include="filter_cuda.cuh">
       <Filter>CUDA Files</Filter>
     </None>
+    <None Include="particles_kernel.cu">
+      <Filter>CUDA Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="Shaders\protein.btf">
@@ -496,9 +499,6 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="particleSystem.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="particles_kernel.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
   </ItemGroup>
