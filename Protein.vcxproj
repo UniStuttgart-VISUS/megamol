@@ -563,6 +563,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="GROLoader.cpp" />
     <ClCompile Include="GromacsLoader.cpp" />
     <ClCompile Include="HapticsMoleculeRenderer.cpp" />
     <ClCompile Include="MDDriverConnector.cpp" />
@@ -641,6 +642,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="GlWidgetLibrary.h" />
     <ClInclude Include="gmx_system_xdr.h" />
     <ClInclude Include="GridNeighbourFinder.h" />
+    <ClInclude Include="GROLoader.h" />
     <ClInclude Include="GromacsLoader.h" />
     <ClInclude Include="HapticsMoleculeRenderer.h" />
     <ClInclude Include="MDDriverConnector.h" />
