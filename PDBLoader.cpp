@@ -746,10 +746,6 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
         maxFramesSlot( "maxFrames", "The maximum number of frames to be loaded"),
         strideFlagSlot( "strideFlag", "The flag wether STRIDE should be used or not."),
         solventResidues( "solventResidues", "slot to specify a ;-list of residues to be merged into separate chains"),
-        mDDHostAddressSlot( "mDDHostAddress", "The host address of the machine running MDDriver."),
-        mDDPortSlot( "mDDPort", "The port used for data transfer on the machine running MDDriver."),
-        mDDGoSlot( "mDDGo", "The toggle to pause/unpause the MDDriver simulation."),
-        mDDTransferRateSlot( "mDDTransferRate", "The data transfer rate used by MDDriver."),
 
         bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0),
         stride( 0), secStructAvailable( false), numXTCFrames( 0),
@@ -778,18 +774,6 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
 
     this->solventResidues << new param::StringParam("");
     this->MakeSlotAvailable( &this->solventResidues);
-    // MDDriver host name/ip
-    this->mDDHostAddressSlot << new param::StringParam( "");
-    this->MakeSlotAvailable( &this->mDDHostAddressSlot);
-    // port (default, min, max)
-    this->mDDPortSlot << new param::IntParam( 3000, 1024, 32767);
-    this->MakeSlotAvailable( &this->mDDPortSlot);
-    // go (off by default)
-    this->mDDGoSlot << new param::BoolParam(false);
-    this->MakeSlotAvailable( &this->mDDGoSlot);
-    // transfer rate in ms (default, min, max)
-    this->mDDTransferRateSlot << new param::IntParam( 1, 1, 5000);
-    this->MakeSlotAvailable( &this->mDDTransferRateSlot);
 
     mdd = NULL; // no mdd object
 }
@@ -832,87 +816,6 @@ bool PDBLoader::getData( core::Call& call) {
         this->solventResidues.ResetDirty();
         this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
-
-    if ( this->mDDHostAddressSlot.IsDirty() || this->mDDPortSlot.IsDirty() ) {
-        this->mDDHostAddressSlot.ResetDirty();
-        this->mDDPortSlot.ResetDirty();
-
-        if (mdd != NULL) {
-            if (mdd->IsRunning()) {
-                mdd->RequestTerminate();
-            }
-
-            while (mdd->IsRunning()) {
-                // wait for thread to terminate
-            }
-            delete mdd;
-            mdd = NULL;
-        }
-
-        mdd = new vislib::sys::RunnableThread<MDDriverConnector>;
-
-        ASSERT(mdd != NULL); // make sure memory was able to be allocated
-
-        // Set the correct host and port in the mdd
-        this->mdd->Initialize(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value(),
-            this->mDDPortSlot.Param<core::param::IntParam>()->Value());
-
-        // Check if simulation should be paused at the start
-        if (this->mDDGoSlot.Param<core::param::BoolParam>()->Value() == false) {
-            this->mdd->RequestPause(); // if so, request a pause message
-        }
-
-        // only start the thread if a valid host is provided (non-blank)
-        if (!(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value()).IsEmpty()) {
-            mdd->Start(); // start the mdd thread (also starts up the socket)
-        }
-    }
-
-    // If mdd has been allocated, do work with it
-    if (mdd != NULL) {
-        // check if pause/unpause needs to be set
-        if (this->mDDGoSlot.IsDirty()) {
-            this->mDDGoSlot.ResetDirty();
-            if (this->mDDGoSlot.Param<core::param::BoolParam>()->Value() == true) {
-                // unpause the simulation (check if socket is valid first)
-                if (mdd->IsSocketFunctional()) {
-                    this->mdd->RequestGo();
-                    // DEBUG also send the transfer rate again to see if it gets rid of the choppiness
-                    this->mdd->RequestTransferRate(this->mDDTransferRateSlot.Param<core::param::IntParam>()->Value());
-                }
-            } else {
-                // pause the simulation (check if socket is valid first)
-                if (mdd->IsSocketFunctional()) {
-                    this->mdd->RequestPause();
-                }
-            }
-        }
-
-        // update transfer rate if necessary
-        if (this->mDDTransferRateSlot.IsDirty()) {
-            this->mDDTransferRateSlot.ResetDirty();
-            // check that socket is valid first
-            if (mdd->IsSocketFunctional()) {
-                this->mdd->RequestTransferRate(this->mDDTransferRateSlot.Param<core::param::IntParam>()->Value());
-            }
-        }
-
-        // get data via MDDriver if socket is valid and go is on
-        if (mdd->IsSocketFunctional() && this->mDDGoSlot.Param<core::param::BoolParam>()->Value() == true) {
-            this->mdd->GetCoordinates(this->data[0]->AtomCount(), const_cast<float*>(this->data[0]->AtomPositions()));
-        }
-
-        // get pointer to ForceDataCall
-        ForceDataCall *force = this->forceDataCallerSlot.CallAs<ForceDataCall>();
-        if( force != NULL) {
-
-            if ((*force)(ForceDataCall::CallForGetForceData)) {
-  
-                // send force data to MDDriver
-                this->mdd->RequestForces(force->ForceCount(), force->AtomIDs(), force->Forces());
-            }
-        }
-    } // mdd != NULL
 
     dc->SetDataHash( this->datahash);
 
@@ -1017,70 +920,6 @@ bool PDBLoader::getExtent( core::Call& call) {
         this->solventResidues.ResetDirty();
         this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
-
-    if ( this->mDDHostAddressSlot.IsDirty() || this->mDDPortSlot.IsDirty() ) {
-        this->mDDHostAddressSlot.ResetDirty();
-        this->mDDPortSlot.ResetDirty();
-        
-        if (mdd != NULL) {
-            if (mdd->IsRunning()) {
-                mdd->RequestTerminate();
-            }
-
-            while (mdd->IsRunning()) {
-                // wait for thread to terminate
-            }
-            delete mdd;
-            mdd = NULL;
-        }
-
-        mdd = new vislib::sys::RunnableThread<MDDriverConnector>;
-
-        ASSERT(mdd != NULL); // make sure memory was able to be allocated
-
-        // Set the correct host and port in the mdd
-        this->mdd->Initialize(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value(),
-            this->mDDPortSlot.Param<core::param::IntParam>()->Value());
-
-        // Check if simulation should be paused at the start
-        if (this->mDDGoSlot.Param<core::param::BoolParam>()->Value() == false) {
-            this->mdd->RequestPause(); // if so, request a pause message
-        }
-
-        if (!(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value()).IsEmpty()) {
-            mdd->Start(); // start the mdd thread (also starts up the socket)
-        }
-    }
-
-    // Only deal with mdd if it is valid
-    if (mdd != NULL) {
-        // check if pause/unpause needs to be set
-        if (this->mDDGoSlot.IsDirty()) {
-            this->mDDGoSlot.ResetDirty();
-            if (this->mDDGoSlot.Param<core::param::BoolParam>()->Value() == true) {
-                // unpause the simulation (check if socket is valid first)
-                if (mdd->IsSocketFunctional()) {
-                    this->mdd->RequestGo();
-                    // Also send transfer rate again otherwise the simulation is choppy
-                    this->mdd->RequestTransferRate(this->mDDTransferRateSlot.Param<core::param::IntParam>()->Value());
-                }
-            } else {
-                // pause the simulation (check if socket is valid first)
-                if (mdd->IsSocketFunctional()) {
-                    this->mdd->RequestPause();
-                }
-            }
-        }
-
-        // update transfer rate if necessary
-        if (this->mDDTransferRateSlot.IsDirty()) {
-            this->mDDTransferRateSlot.ResetDirty();
-            // check that socket is valid first
-            if (mdd->IsSocketFunctional()) {
-                this->mdd->RequestTransferRate(this->mDDTransferRateSlot.Param<core::param::IntParam>()->Value());
-            }
-        }
-    } // mdd != NULL
 
     // grow bounding box by 3.0 Angstrom (for volume rendering / SAS)
     vislib::math::Cuboid<float> bBoxPlus3( this->bbox);

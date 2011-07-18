@@ -613,15 +613,6 @@ namespace protein {
         /** slot to specify a ;-list of residues to be merged into separate chains ... */
         core::param::ParamSlot solventResidues;
 
-        /** The MDDriver host address */
-        core::param::ParamSlot mDDHostAddressSlot;
-        /** The MDDriver port */
-        core::param::ParamSlot mDDPortSlot;
-        /** The MDDriver go/pause toggle */
-        core::param::ParamSlot mDDGoSlot;
-        /** The MDDriver transfer rate */
-        core::param::ParamSlot mDDTransferRateSlot;
-
         /** The data */
         vislib::Array<Frame*> data;
 

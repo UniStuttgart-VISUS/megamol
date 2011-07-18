@@ -192,10 +192,6 @@ bool View3DSpaceMouse::create(void) {
     
     this->adjustor.SetCameraParams(this->camParams);
     this->adjustor.SetModifierTestCount(3);
-    /* TODO: fix this
-    this->adjustor.SetAltModifier(
-        vislib::graphics::InputModifiers::MODIFIER_SHIFT);
-    */
     this->adjustor.SetModifierTestCount(2);
     this->adjustor.SetModifierTest(0,
         vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
