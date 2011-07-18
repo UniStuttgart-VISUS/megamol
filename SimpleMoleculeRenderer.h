@@ -40,7 +40,8 @@ namespace protein {
             SPACEFILLING     = 3,
             SAS              = 4,
             LINES_FILTER     = 5,
-            STICK_FILTER     = 6
+            STICK_FILTER     = 6,
+            SPACEFILL_FILTER = 7
         };
 
         /**
@@ -191,6 +192,14 @@ namespace protein {
          * @param atomPos    Pointer to the interpolated atom positions.
          */
         void RenderStickFilter( const MolecularDataCall *mol, const float *atomPos);
+        
+        /**
+         * Render the molecular data in spacefilling mode.
+         *
+         * @param mol        Pointer to the data call.
+         * @param atomPos    Pointer to the interpolated atom positions.
+         */
+        void RenderSpacefillingFilter( const MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Update all parameter slots.

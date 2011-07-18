@@ -94,6 +94,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModule (),
     rm->SetTypePair( STICK_FILTER, "Stick-Filter");
     rm->SetTypePair( BALL_AND_STICK, "Ball-and-Stick");
     rm->SetTypePair( SPACEFILLING, "Spacefilling");
+    rm->SetTypePair( SPACEFILL_FILTER, "Spacefilling-Filter");
     rm->SetTypePair( SAS, "SAS");
     this->renderModeParam << rm;
     this->MakeSlotAvailable( &this->renderModeParam);
@@ -429,6 +430,8 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
         this->RenderBallAndStick( mol, posInter);
     } else if( this->currentRenderMode == SPACEFILLING ) {
         this->RenderSpacefilling( mol, posInter);
+    } else if( this->currentRenderMode == SPACEFILL_FILTER ) {
+        this->RenderSpacefillingFilter( mol, posInter);
     } else if( this->currentRenderMode == SAS ) {
         this->RenderSAS( mol, posInter);
     } else if( this->currentRenderMode == LINES_FILTER ) {
@@ -1209,6 +1212,71 @@ void SimpleMoleculeRenderer::RenderStickFilter( const MolecularDataCall *mol, co
             "OpenGL Error: %s\n", errString);
         //fprintf (stderr, "OpenGL Error: %s\n", errString);
     }*/
+}
+
+/*
+ * Render the molecular data in stick mode.
+ */
+void SimpleMoleculeRenderer::RenderSpacefillingFilter( const MolecularDataCall *mol, const float *atomPos) {
+    
+    // ----- prepare stick raycasting -----
+    this->vertSpheres.SetCount( mol->AtomCount() * 4 );
+
+    int cnt;
+
+    // copy atom pos and radius to vertex array
+#pragma omp parallel for
+    for( cnt = 0; cnt < int( mol->AtomCount()); ++cnt ) {
+        this->vertSpheres[4*cnt+0] = atomPos[3*cnt+0];
+        this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
+        this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
+        this->vertSpheres[4*cnt+3] =
+            mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius();
+    }
+
+    // ---------- actual rendering ----------
+
+    // get viewpoint parameters for raycasting
+    float viewportStuff[4] = {
+        cameraInfo->TileRect().Left(),
+        cameraInfo->TileRect().Bottom(),
+        cameraInfo->TileRect().Width(),
+        cameraInfo->TileRect().Height()};
+    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    viewportStuff[2] = 2.0f / viewportStuff[2];
+    viewportStuff[3] = 2.0f / viewportStuff[3];
+
+    // enable sphere shader
+    this->filterSphereShader.Enable();
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+   
+    // set shader variables
+    glUniform4fvARB(this->filterSphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->filterSphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+    glUniform3fvARB(this->filterSphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+    glUniform3fvARB(this->filterSphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+
+    // Set filter attribute
+    this->attribLocAtomFilter = glGetAttribLocationARB(this->filterSphereShader.ProgramHandle(), "filter");
+    glEnableVertexAttribArrayARB(this->attribLocAtomFilter);
+
+    // Set vertex and color pointers and draw them
+    glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+
+    // Set attribute pointer
+    glVertexAttribPointerARB(this->attribLocAtomFilter, 1, GL_INT, 0, 0, mol->Filter());
+
+    glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+
+    glDisableVertexAttribArrayARB(this->attribLocAtomFilter);
+    
+    // disable sphere shader
+    this->filterSphereShader.Disable();
+
 }
 
 
