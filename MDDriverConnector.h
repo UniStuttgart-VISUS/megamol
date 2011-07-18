@@ -310,6 +310,9 @@ namespace protein {
         /** The list of actual forces */
         vislib::Array<float, vislib::sys::CriticalSection> forceList;
 
+        /** Flag if the forces have been zeroed out since the last time forces were applied and removed */
+        bool zeroForce;
+
         /** The host name to which the thread socket will connect */
         vislib::TString host; 
 

@@ -25,7 +25,7 @@ using namespace megamol::protein;
  * MDDriverConnector::MDDriverConnector
  */
 MDDriverConnector::MDDriverConnector(void) : socketValidity(false),
-    pauseRequested(false), goRequested(false), rateRequested(0),
+    pauseRequested(false), goRequested(false), rateRequested(0), zeroForce(false),
     forcesCount(0), terminateRequested(false), paused(false), reset(0),
     atomCount(0) { 
 
@@ -165,6 +165,7 @@ void MDDriverConnector::RequestForces(int count, const unsigned int *atomIDs, co
     if (count != 0) {
         if (this->forceIDs.TryLock()) {
             if (this->forceList.TryLock()) {
+                // Copy the new forces into the forces arrays
                 this->forceIDs.AssertCapacity(count);
                 this->forceIDs.Clear();
                 for (int iter = 0; iter < count; iter += 1) {
@@ -176,11 +177,12 @@ void MDDriverConnector::RequestForces(int count, const unsigned int *atomIDs, co
                     this->forceList.Add(forces[iter]);
                 }
                 this->forcesCount = count;
+                this->zeroForce = true; // mark that the forces will need to be zeroed when they are removed
                 this->forceList.Unlock();
             }
             this->forceIDs.Unlock();
         }
-    } else {
+    } else if (count == 0 && this->zeroForce == true) {
         // create a 0 force to clear other forces (not sure this is necessary)
         if (this->forceIDs.TryLock()) {
             if (this->forceList.TryLock()) {
@@ -195,11 +197,13 @@ void MDDriverConnector::RequestForces(int count, const unsigned int *atomIDs, co
                 this->forceList.Add(0.0f);
                 this->forceList.Add(0.0f);
                 this->forcesCount = 1;
+                this->zeroForce = false; // mark that a zero force has been applied so it won't be applied again
                 this->forceList.Unlock();
             }
             this->forceIDs.Unlock();
+        } else { // if count == 0 and zeroForce == false
+            this->forcesCount = 0; // don't apply any forces, not even a zero
         }
-
     }
 }
 
