@@ -72,8 +72,8 @@ const char * view::CallRenderView::FunctionName(unsigned int idx) {
 /*
  * view::CallRenderView::CallRenderView
  */
-view::CallRenderView::CallRenderView(void) : AbstractCallRender(), bkgndB(0),
-        bkgndG(0), bkgndR(0),
+view::CallRenderView::CallRenderView(void) : AbstractCallRender(), RenderOutput(),
+        bkgndB(0), bkgndG(0), bkgndR(0),
         eye(vislib::graphics::CameraParameters::RIGHT_EYE), flagBkgnd(false),
         flagProj(false), flagTile(false), height(1.0f),
         projType(vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
@@ -87,7 +87,7 @@ view::CallRenderView::CallRenderView(void) : AbstractCallRender(), bkgndB(0),
  * view::CallRenderView::CallRenderView
  */
 view::CallRenderView::CallRenderView(const CallRenderView& src)
-        : AbstractCallRender() {
+        : AbstractCallRender(), RenderOutput() {
     *this = src;
 }
 
@@ -105,6 +105,7 @@ view::CallRenderView::~CallRenderView(void) {
  */
 view::CallRenderView& view::CallRenderView::operator=(const view::CallRenderView& rhs) {
     view::AbstractCallRender::operator=(rhs);
+    view::RenderOutput::operator=(rhs);
     this->bkgndB = rhs.bkgndB;
     this->bkgndG = rhs.bkgndG;
     this->bkgndR = rhs.bkgndR;

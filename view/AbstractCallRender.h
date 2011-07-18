@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Call.h"
+#include "view/AbstractRenderOutput.h"
 #include "vislib/Array.h"
 #include "vislib/FramebufferObject.h"
 #include "vislib/Rectangle.h"
@@ -29,351 +30,68 @@ namespace view {
      *
      * Handles the output buffer control.
      */
-    class MEGAMOLCORE_API AbstractCallRender : public Call {
+    class MEGAMOLCORE_API AbstractCallRender : public Call, public virtual AbstractRenderOutput {
     public:
 
         /** Dtor. */
         virtual ~AbstractCallRender(void);
 
         /**
-         * Deactivates the output buffer
-         */
-        void DisableOutputBuffer(void);
-
-        /**
-         * Activates the output buffer
-         */
-        void EnableOutputBuffer(void);
-
-        /**
-         * Answer the framebuffer object to be used.
+         * Gets the instance time code
          *
-         * @return The framebuffer object to be used
+         * @return The instance time code
          */
-        vislib::graphics::gl::FramebufferObject *FrameBufferObject(void) const;
-
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
-        /**
-         * Answer the viewport on the output buffer to be used.
-         *
-         * @return The viewport on the output buffer to be used
-         */
-        const vislib::math::Rectangle<int>& GetViewport(void) const;
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
-
-        /**
-         * Answer the opengl built-in output buffer to be used.
-         *
-         * @return The opengl built-in output buffer to be used
-         */
-        GLenum OutputBuffer(void) const;
-
-        /**
-         * Resets the output buffer setting to use the opengl built-in output
-         * buffer 'BACK'.
-         */
-        void ResetOutputBuffer(void);
-
-        /**
-         * Copies the output buffer settings of 'call'
-         *
-         * @param call The source object to copy from
-         */
-        inline void SetOutputBuffer(AbstractCallRender& call) {
-            this->outputBuffer = call.outputBuffer;
-            this->outputFBO = call.outputFBO;
-            this->outputFBOTargets = call.outputFBOTargets;
-            this->outputViewport = call.outputViewport;
+        inline float InstanceTime(void) const {
+            return this->instTime;
         }
 
         /**
-         * Sets the opengl built-in output buffer to use. This also sets the
-         * framebuffer object to NULL. The viewport to be sued will be set to
-         * the current opengl viewport.
+         * Sets the instance time code
          *
-         * @param buffer The opengl built-in output buffer to be used
+         * @param time The time code of the frame to render
          */
-        inline void SetOutputBuffer(GLenum buffer = GL_BACK) {
-            GLint vp[4];
-            ::glGetIntegerv(GL_VIEWPORT, vp);
-            this->SetOutputBuffer(buffer, vp[0], vp[1], vp[2], vp[3]);
+        inline void SetInstanceTime(float time) {
+            this->instTime = time;
         }
 
         /**
-         * Sets the output buffer to an framebuffer object. If the framebuffer
-         * object is not NULL, it is used, otherwise the opengl built-in output
-         * buffer is used. The viewport to be used will be set to the full size
-         * of the framebuffer object.
+         * Sets the time code of the frame to render.
          *
-         * @param fbo Pointer to the framebuffer object to be used; Must not
-         *            be NULL. The caller must ensure that the object remains
-         *            valid as long as the pointer is set.
+         * @param time The time code of the frame to render.
          */
-        inline void SetOutputBuffer(
-                vislib::graphics::gl::FramebufferObject *fbo) {
-            this->SetOutputBuffer(fbo, 0, NULL, 0, 0,
-                fbo->GetWidth(), fbo->GetHeight());
+        inline void SetTime(float time) {
+            this->time = time;
         }
 
         /**
-         * Sets the output buffer to an framebuffer object. If the framebuffer
-         * object is not NULL, it is used, otherwise the opengl built-in output
-         * buffer is used. The viewport to be used will be set to the full size
-         * of the framebuffer object.
+         * Sets the number of time frames of the data the callee can render.
+         * This is to be set by the callee as answer to 'GetExtents'.
          *
-         * @param fbo Pointer to the framebuffer object to be used; Must not
-         *            be NULL. The caller must ensure that the object remains
-         *            valid as long as the pointer is set.
-         * @param target The buffer to bind
+         * @param The number of time frames of the data the callee can render.
+         *        Must not be zero.
          */
-        inline void SetOutputBuffer(
-                vislib::graphics::gl::FramebufferObject *fbo, UINT target) {
-            this->SetOutputBuffer(fbo, 1, &target, 0, 0,
-                fbo->GetWidth(), fbo->GetHeight());
+        inline void SetTimeFramesCount(unsigned int cnt) {
+            ASSERT(cnt > 0);
+            this->cntTimeFrames = cnt;
         }
 
         /**
-         * Sets the output buffer to an framebuffer object. If the framebuffer
-         * object is not NULL, it is used, otherwise the opengl built-in output
-         * buffer is used. The viewport to be used will be set to the full size
-         * of the framebuffer object.
+         * Gets the time code of the frame requested to render.
          *
-         * @param fbo Pointer to the framebuffer object to be used; Must not
-         *            be NULL. The caller must ensure that the object remains
-         *            valid as long as the pointer is set.
-         * @param cntTargets The number of targets 'targets' points to
-         * @param targets Pointer to the target identifiers to bind, or NULL if
-         *                the default targets should be bound
+         * @return The time frame code of the frame to render.
          */
-        inline void SetOutputBuffer(
-                vislib::graphics::gl::FramebufferObject *fbo, UINT cntTargets,
-                UINT* targets) {
-            this->SetOutputBuffer(fbo, cntTargets, targets, 0, 0,
-                fbo->GetWidth(), fbo->GetHeight());
-        }
-
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
-        /**
-         * Sets the opengl built-in output buffer to use. This also sets the
-         * framebuffer object to NULL.
-         *
-         * @param buffer The opengl built-in output buffer to be used
-         * @param viewport The viewport on the output buffer to be used
-         */
-        inline void SetOutputBuffer(GLenum buffer,
-                const vislib::math::Rectangle<int>& viewport) {
-            this->SetOutputBuffer(buffer, viewport.Left(), viewport.Bottom(),
-                viewport.Width(), viewport.Height());
+        inline float Time(void) const {
+            return time;
         }
 
         /**
-         * Sets the output buffer to an framebuffer object. If the framebuffer
-         * object is not NULL, it is used, otherwise the opengl built-in output
-         * buffer is used.
+         * Gets the number of time frames of the data the callee can render.
          *
-         * @param fbo Pointer to the framebuffer object to be used; Must not
-         *            be NULL. The caller must ensure that the object remains
-         *            valid as long as the pointer is set.
-         * @param viewport The viewport on the output buffer to be used
+         * @return The number of time frames of the data the callee can render.
          */
-        inline void SetOutputBuffer(
-                vislib::graphics::gl::FramebufferObject *fbo,
-                const vislib::math::Rectangle<int>& viewport) {
-            this->SetOutputBuffer(fbo, 0, NULL, viewport.Left(),
-                viewport.Bottom(), viewport.Width(), viewport.Height());
+        inline unsigned int TimeFramesCount(void) const {
+            return this->cntTimeFrames;
         }
-
-        /**
-         * Sets the output buffer to an framebuffer object. If the framebuffer
-         * object is not NULL, it is used, otherwise the opengl built-in output
-         * buffer is used.
-         *
-         * @param fbo Pointer to the framebuffer object to be used; Must not
-         *            be NULL. The caller must ensure that the object remains
-         *            valid as long as the pointer is set.
-         * @param target The buffer to bind
-         * @param viewport The viewport on the output buffer to be used
-         */
-        inline void SetOutputBuffer(
-                vislib::graphics::gl::FramebufferObject *fbo, UINT target,
-                const vislib::math::Rectangle<int>& viewport) {
-            this->SetOutputBuffer(fbo, 1, &target, viewport.Left(),
-                viewport.Bottom(), viewport.Width(), viewport.Height());
-        }
-
-        /**
-         * Sets the output buffer to an framebuffer object. If the framebuffer
-         * object is not NULL, it is used, otherwise the opengl built-in output
-         * buffer is used.
-         *
-         * @param fbo Pointer to the framebuffer object to be used; Must not
-         *            be NULL. The caller must ensure that the object remains
-         *            valid as long as the pointer is set.
-         * @param cntTargets The number of targets 'targets' points to
-         * @param targets Pointer to the target identifiers to bind, or NULL if
-         *                the default targets should be bound
-         * @param viewport The viewport on the output buffer to be used
-         */
-        inline void SetOutputBuffer(
-                vislib::graphics::gl::FramebufferObject *fbo, UINT cntTargets,
-                UINT* targets, const vislib::math::Rectangle<int>& viewport) {
-            this->SetOutputBuffer(fbo, cntTargets, targets, viewport.Left(),
-                viewport.Bottom(), viewport.Width(), viewport.Height());
-        }
-
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
-
-        /**
-         * Sets the opengl built-in output buffer to use. This also sets the
-         * framebuffer object to NULL.
-         *
-         * @param buffer The opengl built-in output buffer to be used
-         * @param w The width of the viewport on the output buffer to be used
-         * @param h The height of the viewport on the output buffer to be used
-         */
-        inline void SetOutputBuffer(GLenum buffer, int w, int h) {
-            this->SetOutputBuffer(buffer, 0, 0, w, h);
-        }
-
-        /**
-         * Sets the output buffer to an framebuffer object. If the framebuffer
-         * object is not NULL, it is used, otherwise the opengl built-in output
-         * buffer is used.
-         *
-         * @param fbo Pointer to the framebuffer object to be used; Must not
-         *            be NULL. The caller must ensure that the object remains
-         *            valid as long as the pointer is set.
-         * @param w The width of the viewport on the output buffer to be used
-         * @param h The height of the viewport on the output buffer to be used
-         */
-        inline void SetOutputBuffer(
-                vislib::graphics::gl::FramebufferObject *fbo, int w, int h) {
-            this->SetOutputBuffer(fbo, 0, NULL, 0, 0, w, h);
-        }
-
-        /**
-         * Sets the output buffer to an framebuffer object. If the framebuffer
-         * object is not NULL, it is used, otherwise the opengl built-in output
-         * buffer is used.
-         *
-         * @param fbo Pointer to the framebuffer object to be used; Must not
-         *            be NULL. The caller must ensure that the object remains
-         *            valid as long as the pointer is set.
-         * @param target The buffer to bind
-         * @param w The width of the viewport on the output buffer to be used
-         * @param h The height of the viewport on the output buffer to be used
-         */
-        inline void SetOutputBuffer(
-                vislib::graphics::gl::FramebufferObject *fbo, UINT target,
-                int w, int h) {
-            this->SetOutputBuffer(fbo, 1, &target, 0, 0, w, h);
-        }
-
-        /**
-         * Sets the output buffer to an framebuffer object. If the framebuffer
-         * object is not NULL, it is used, otherwise the opengl built-in output
-         * buffer is used.
-         *
-         * @param fbo Pointer to the framebuffer object to be used; Must not
-         *            be NULL. The caller must ensure that the object remains
-         *            valid as long as the pointer is set.
-         * @param cntTargets The number of targets 'targets' points to
-         * @param targets Pointer to the target identifiers to bind, or NULL if
-         *                the default targets should be bound
-         * @param w The width of the viewport on the output buffer to be used
-         * @param h The height of the viewport on the output buffer to be used
-         */
-        inline void SetOutputBuffer(
-                vislib::graphics::gl::FramebufferObject *fbo, UINT cntTargets,
-                UINT* targets, int w, int h) {
-            this->SetOutputBuffer(fbo, cntTargets, targets, 0, 0, w, h);
-        }
-
-        /**
-         * Sets the opengl built-in output buffer to use. This also sets the
-         * framebuffer object to NULL.
-         *
-         * @param buffer The opengl built-in output buffer to be used
-         * @param x The x coordinate of the viewport on the output buffer to
-         *          be used.
-         * @param y The y coordinate of the viewport on the output buffer to
-         *          be used.
-         * @param w The width of the viewport on the output buffer to be used
-         * @param h The height of the viewport on the output buffer to be used
-         */
-        void SetOutputBuffer(GLenum buffer, int x, int y, int w, int h);
-
-        /**
-         * Sets the output buffer to an framebuffer object. If the framebuffer
-         * object is not NULL, it is used, otherwise the opengl built-in output
-         * buffer is used.
-         *
-         * @param fbo Pointer to the framebuffer object to be used; Must not
-         *            be NULL. The caller must ensure that the object remains
-         *            valid as long as the pointer is set.
-         * @param x The x coordinate of the viewport on the output buffer to
-         *          be used.
-         * @param y The y coordinate of the viewport on the output buffer to
-         *          be used.
-         * @param w The width of the viewport on the output buffer to be used
-         * @param h The height of the viewport on the output buffer to be used
-         */
-        inline void SetOutputBuffer(
-                vislib::graphics::gl::FramebufferObject *fbo, int x, int y,
-                int w, int h) {
-            this->SetOutputBuffer(fbo, 0, NULL, x, y, w, h);
-        }
-
-        /**
-         * Sets the output buffer to an framebuffer object. If the framebuffer
-         * object is not NULL, it is used, otherwise the opengl built-in output
-         * buffer is used.
-         *
-         * @param fbo Pointer to the framebuffer object to be used; Must not
-         *            be NULL. The caller must ensure that the object remains
-         *            valid as long as the pointer is set.
-         * @param target The buffer to bind
-         * @param x The x coordinate of the viewport on the output buffer to
-         *          be used.
-         * @param y The y coordinate of the viewport on the output buffer to
-         *          be used.
-         * @param w The width of the viewport on the output buffer to be used
-         * @param h The height of the viewport on the output buffer to be used
-         */
-        inline void SetOutputBuffer(
-                vislib::graphics::gl::FramebufferObject *fbo, UINT target,
-                int x, int y, int w, int h) {
-            this->SetOutputBuffer(fbo, 1, &target, x, y, w, h);
-        }
-
-        /**
-         * Sets the output buffer to an framebuffer object. If the framebuffer
-         * object is not NULL, it is used, otherwise the opengl built-in output
-         * buffer is used.
-         *
-         * @param fbo Pointer to the framebuffer object to be used; Must not
-         *            be NULL. The caller must ensure that the object remains
-         *            valid as long as the pointer is set.
-         * @param cntTargets The number of targets 'targets' points to
-         * @param targets Pointer to the target identifiers to bind, or NULL if
-         *                the default targets should be bound
-         * @param x The x coordinate of the viewport on the output buffer to
-         *          be used.
-         * @param y The y coordinate of the viewport on the output buffer to
-         *          be used.
-         * @param w The width of the viewport on the output buffer to be used
-         * @param h The height of the viewport on the output buffer to be used
-         */
-        void SetOutputBuffer(vislib::graphics::gl::FramebufferObject *fbo,
-            UINT cntTargets, UINT* targets, int x, int y, int w, int h);
 
         /**
          * Assignment operator
@@ -391,23 +109,14 @@ namespace view {
 
     private:
 
-        /** The OpenGL output buffer */
-        GLenum outputBuffer;
+        /** The number of time frames available to render */
+        unsigned int cntTimeFrames;
 
-        /** The framebuffer object the callee should render to */
-        vislib::graphics::gl::FramebufferObject *outputFBO;
+        /** The time code requested to render */
+        float time;
 
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
-        /** The ids of the framebuffer object targets to be enabled */
-        vislib::Array<UINT> outputFBOTargets;
-
-        /** The viewport on the buffer (mutable for lazy evaluation) */
-        mutable vislib::math::Rectangle<int> outputViewport;
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
+        /** The instance time code */
+        float instTime;
 
     };
 

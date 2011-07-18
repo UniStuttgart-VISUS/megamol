@@ -17,6 +17,7 @@
 #include "vislib/types.h"
 #include "view/AbstractCallRender.h"
 #include "view/MouseFlags.h"
+#include "view/RenderOutput.h"
 
 
 namespace megamol {
@@ -24,6 +25,9 @@ namespace core {
 namespace view {
 
 
+#ifdef _WIN32
+#pragma warning(disable: 4250)  // I know what I am doing ...
+#endif /* _WIN32 */
     /**
      * Call for rendering 2d images
      *
@@ -36,7 +40,7 @@ namespace view {
      * call (bounding boxes).
      * The renderer should not draw anything outside the bounding box
      */
-    class MEGAMOLCORE_API CallRender2D : public AbstractCallRender {
+    class MEGAMOLCORE_API CallRender2D : public AbstractCallRender, public RenderOutput {
     public:
 
         /**
@@ -244,6 +248,9 @@ namespace view {
         MouseFlags mouseFlags;
 
     };
+#ifdef _WIN32
+#pragma warning(default: 4250)
+#endif /* _WIN32 */
 
 
     /** Description class typedef */

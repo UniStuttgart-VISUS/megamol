@@ -24,6 +24,7 @@
 #include "view/CallGetTransferFunction.h"
 #include "view/CallRender2D.h"
 #include "view/CallRender3D.h"
+#include "view/CallRenderDeferred3D.h"
 #include "view/CallRenderView.h"
 
 using namespace megamol::core;
@@ -53,6 +54,7 @@ CallDescriptionManager::Instance() {
         instance->registerAutoDescription<view::CallGetTransferFunction>();
         instance->registerAutoDescription<view::CallRender2D>();
         instance->registerAutoDescription<view::CallRender3D>();
+        instance->registerAutoDescription<view::CallRenderDeferred3D>();
         instance->registerAutoDescription<view::CallRenderView>();
         instance->registerAutoDescription<DataWriterCtrlCall>();
     }

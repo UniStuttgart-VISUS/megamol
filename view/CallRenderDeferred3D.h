@@ -1,12 +1,12 @@
 /*
- * CallRender3D.h
+ * CallRenderDeferred3D.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2011 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CALLRENDER3D_H_INCLUDED
-#define MEGAMOLCORE_CALLRENDER3D_H_INCLUDED
+#ifndef MEGAMOLCORE_CALLRENDERDEFERRED3D_H_INCLUDED
+#define MEGAMOLCORE_CALLRENDERDEFERRED3D_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -14,7 +14,7 @@
 #include "api/MegaMolCore.std.h"
 #include "CallAutoDescription.h"
 #include "view/AbstractCallRender3D.h"
-#include "view/RenderOutput.h"
+#include "view/RenderDeferredOutput.h"
 
 
 namespace megamol {
@@ -37,7 +37,7 @@ namespace view {
      * Function "GetCapabilities" asks the callee to set the capabilities
      * flags of the call.
      */
-    class MEGAMOLCORE_API CallRender3D : public AbstractCallRender3D, public RenderOutput {
+    class MEGAMOLCORE_API CallRenderDeferred3D : public AbstractCallRender3D, public RenderDeferredOutput {
     public:
 
         /**
@@ -46,7 +46,7 @@ namespace view {
          * @return The name of the objects of this description.
          */
         static const char *ClassName(void) {
-            return "CallRender3D";
+            return "CallRenderDeferred3D";
         }
 
         /**
@@ -55,7 +55,7 @@ namespace view {
          * @return A human readable description of the module.
          */
         static const char *Description(void) {
-            return "Call for rendering a frame";
+            return "Call for rendering a frame with deferred shading";
         }
 
         /**
@@ -84,10 +84,10 @@ namespace view {
         }
 
         /** Ctor. */
-        CallRender3D(void);
+        CallRenderDeferred3D(void);
 
         /** Dtor. */
-        virtual ~CallRender3D(void);
+        virtual ~CallRenderDeferred3D(void);
 
         /**
          * Assignment operator
@@ -96,7 +96,7 @@ namespace view {
          *
          * @return A reference to this
          */
-        CallRender3D& operator=(const CallRender3D& rhs);
+        CallRenderDeferred3D& operator=(const CallRenderDeferred3D& rhs);
 
     };
 #ifdef _WIN32
@@ -105,11 +105,11 @@ namespace view {
 
 
     /** Description class typedef */
-    typedef CallAutoDescription<CallRender3D> CallRender3DDescription;
+    typedef CallAutoDescription<CallRenderDeferred3D> CallRenderDeferred3DDescription;
 
 
 } /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_CALLRENDER3D_H_INCLUDED */
+#endif /* MEGAMOLCORE_CALLRENDERDEFERRED3D_H_INCLUDED */

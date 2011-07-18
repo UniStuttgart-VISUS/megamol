@@ -618,6 +618,21 @@
     <ClCompile Include="cluster\SimpleClusterView.cpp">
       <Filter>cluster\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="view\RenderOutput.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="view\AbstractRenderOutput.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="view\AbstractCallRender3D.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="view\RenderDeferredOutput.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="view\CallRenderDeferred3D.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1114,6 +1129,21 @@
     </ClInclude>
     <ClInclude Include="cluster\SimpleClusterView.h">
       <Filter>cluster\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\RenderOutput.h">
+      <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\AbstractRenderOutput.h">
+      <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\AbstractCallRender3D.h">
+      <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\RenderDeferredOutput.h">
+      <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\CallRenderDeferred3D.h">
+      <Filter>view\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

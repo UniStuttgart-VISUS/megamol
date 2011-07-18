@@ -350,8 +350,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="view\AbstractCallRender.cpp" />
+    <ClCompile Include="view\AbstractCallRender3D.cpp" />
     <ClCompile Include="view\AbstractOverrideView.cpp" />
     <ClCompile Include="view\AbstractRenderingView.cpp" />
+    <ClCompile Include="view\AbstractRenderOutput.cpp" />
     <ClCompile Include="view\AbstractTileView.cpp" />
     <ClCompile Include="view\AbstractView.cpp" />
     <ClCompile Include="view\AbstractView3D.cpp" />
@@ -360,6 +362,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="view\CallGetTransferFunction.cpp" />
     <ClCompile Include="view\CallRender2D.cpp" />
     <ClCompile Include="view\CallRender3D.cpp" />
+    <ClCompile Include="view\CallRenderDeferred3D.cpp" />
     <ClCompile Include="view\CallRenderView.cpp" />
     <ClCompile Include="view\CameraParamOverride.cpp" />
     <ClCompile Include="view\ClipPlane.cpp" />
@@ -368,8 +371,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="view\LinearTransferFunction.cpp" />
     <ClCompile Include="view\MouseFlags.cpp" />
     <ClCompile Include="view\MuxRenderer3D.cpp" />
+    <ClCompile Include="view\RenderDeferredOutput.cpp" />
     <ClCompile Include="view\Renderer2DModule.cpp" />
     <ClCompile Include="view\Renderer3DModule.cpp" />
+    <ClCompile Include="view\RenderOutput.cpp" />
     <ClCompile Include="view\SwitchRenderer3D.cpp" />
     <ClCompile Include="view\TileView.cpp" />
     <ClCompile Include="view\View2D.cpp" />
@@ -534,8 +539,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="special\AnaglyphStereoDisplay.h" />
     <ClInclude Include="special\ColStereoDisplay.h" />
     <ClInclude Include="view\AbstractCallRender.h" />
+    <ClInclude Include="view\AbstractCallRender3D.h" />
     <ClInclude Include="view\AbstractOverrideView.h" />
     <ClInclude Include="view\AbstractRenderingView.h" />
+    <ClInclude Include="view\AbstractRenderOutput.h" />
     <ClInclude Include="view\AbstractTileView.h" />
     <ClInclude Include="view\AbstractView.h" />
     <ClInclude Include="view\AbstractView3D.h" />
@@ -544,6 +551,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="view\CallGetTransferFunction.h" />
     <ClInclude Include="view\CallRender2D.h" />
     <ClInclude Include="view\CallRender3D.h" />
+    <ClInclude Include="view\CallRenderDeferred3D.h" />
     <ClInclude Include="view\CallRenderView.h" />
     <ClInclude Include="view\CameraParamOverride.h" />
     <ClInclude Include="view\ClipPlane.h" />
@@ -552,8 +560,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="view\LinearTransferFunction.h" />
     <ClInclude Include="view\MouseFlags.h" />
     <ClInclude Include="view\MuxRenderer3D.h" />
+    <ClInclude Include="view\RenderDeferredOutput.h" />
     <ClInclude Include="view\Renderer2DModule.h" />
     <ClInclude Include="view\Renderer3DModule.h" />
+    <ClInclude Include="view\RenderOutput.h" />
     <ClInclude Include="view\SwitchRenderer3D.h" />
     <ClInclude Include="view\TileView.h" />
     <ClInclude Include="view\View2D.h" />

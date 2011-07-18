@@ -14,6 +14,7 @@
 #include "api/MegaMolCore.h"
 #include "CallAutoDescription.h"
 #include "view/AbstractCallRender.h"
+#include "view/RenderOutput.h"
 #include "vislib/CameraParameters.h"
 #include "vislib/graphicstypes.h"
 
@@ -22,10 +23,13 @@ namespace megamol {
 namespace core {
 namespace view {
 
+#ifdef _WIN32
+#pragma warning(disable: 4250)  // I know what I am doing ...
+#endif /* _WIN32 */
     /**
      * Call for registering a module at the cluster display
      */
-    class CallRenderView : public AbstractCallRender {
+    class CallRenderView : public AbstractCallRender, public RenderOutput {
     public:
 
         /**
@@ -482,6 +486,9 @@ namespace view {
         mmcInputModifier mod;
 
     };
+#ifdef _WIN32
+#pragma warning(default: 4250)
+#endif /* _WIN32 */
 
 
     /** Description class typedef */
