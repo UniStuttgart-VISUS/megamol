@@ -160,5 +160,36 @@ namespace Vislib.Interop {
             return SimpleMessagePacker.Pack(new SimpleMessageHeader(att.ID, 
                 (UInt32) Marshal.SizeOf(body.GetType())), body);
         }
+
+        /// <summary>
+        /// Unpacks the message header.
+        /// </summary>
+        /// <remarks>
+        /// To just convert the begin of the message into a 
+        /// <see cref="SimpleMessageHeader"/>, call the appropriate ctor. This 
+        /// will skip any sanity check performed by this method.
+        /// </remarks>
+        /// <param name="msg">The complete message containing header and body.
+        /// </param>
+        /// <param name="bodyOffset">Receives the offset of the message body in
+        /// bytes.</param>
+        /// <returns>The message header contained in <paramref name="msg"/>.
+        /// </returns>
+        public static SimpleMessageHeader Unpack(byte[] msg, 
+                out int bodyOffset) {
+            bodyOffset = SimpleMessageHeader.Size;
+            if (msg.Length < bodyOffset) {
+                throw new ArgumentException("The message is too short to "
+                    + "contain even the message header.", "msg");
+            }
+
+            SimpleMessageHeader retval = new SimpleMessageHeader(msg);
+            if (msg.Length < retval.BodySize + bodyOffset) {
+                throw new ArgumentException("The message does not contain "
+                    + "enough body bytes according to the header.", "msg");
+            }
+
+            return retval;
+        }
     }
 }
