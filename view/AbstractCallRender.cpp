@@ -28,6 +28,7 @@ view::AbstractCallRender& view::AbstractCallRender::operator=(
     this->cntTimeFrames = rhs.cntTimeFrames;
     this->time = rhs.time;
     this->instTime = rhs.instTime;
+    this->isInSituTime = rhs.isInSituTime;
     return *this;
 }
 
@@ -36,6 +37,6 @@ view::AbstractCallRender& view::AbstractCallRender::operator=(
  * view::AbstractCallRender::AbstractCallRender
  */
 view::AbstractCallRender::AbstractCallRender(void) : Call(), cntTimeFrames(1),
-        time(0.0f), instTime(0.0f) {
+        time(0.0f), instTime(0.0f), isInSituTime(false) {
     // intentionally empty
 }

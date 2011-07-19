@@ -46,12 +46,34 @@ namespace view {
         }
 
         /**
+         * Answer the flag for in situ timing.
+         * If true 'TimeFramesCount' returns the number of the data frame
+         * currently available from the in situ source.
+         *
+         * @return The flag for in situ timing
+         */
+        inline bool IsInSituTime(void) const {
+            return this->isInSituTime;
+        }
+
+        /**
          * Sets the instance time code
          *
          * @param time The time code of the frame to render
          */
         inline void SetInstanceTime(float time) {
             this->instTime = time;
+        }
+
+        /**
+         * Sets the flag for in situ timing.
+         * If set to true 'TimeFramesCount' returns the number of the data
+         * frame currently available from the in situ source.
+         *
+         * @param v The new value for the flag for in situ timing
+         */
+        inline void SetIsInSituTime(bool v) {
+            this->isInSituTime = v;
         }
 
         /**
@@ -117,6 +139,12 @@ namespace view {
 
         /** The instance time code */
         float instTime;
+
+        /**
+         * Flag marking that 'cntTimeFrames' store the number of the currently
+         * available time frame when doing in situ visualization
+         */
+        bool isInSituTime;
 
     };
 
