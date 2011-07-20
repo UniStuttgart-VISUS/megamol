@@ -58,6 +58,13 @@ namespace protein {
         virtual ~View3DSpaceMouse(void);
 
         /**
+         * Resets the view. This normally sets the camera parameters to
+         * default values.
+         * This also resets the object center for the relative cursor
+         */
+        virtual void ResetView(void);
+
+        /**
          * Callback function for 3d mouse motion input.
          *
          * @param tx The translation vector x component.
@@ -111,6 +118,16 @@ namespace protein {
          */
         virtual bool updateModes(megamol::core::param::ParamSlot& p);
 
+        /**
+         * Changes the camera control mode to the one specified by the
+         * param slot.
+         *
+         * @param p The parameter slot that triggered the callback.
+         *
+         * @return Always true.
+         */
+        virtual bool updateCameraModes(megamol::core::param::ParamSlot& p);
+
         // private variables //
 
         /** the relative 3d cursor of this view */
@@ -135,6 +152,12 @@ namespace protein {
 
         /** Slot used to toggle 3d mouse rotation */
         megamol::core::param::ParamSlot rotateToggleSlot;
+
+        /** Slot used to toggle on/off single (dominant) axis mode */
+        megamol::core::param::ParamSlot singleAxisToggleSlot;
+
+        /** Slot used to change between the different camera control modes */
+        megamol::core::param::ParamSlot cameraControlModeSlot;
 
     };
 

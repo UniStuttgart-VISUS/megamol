@@ -1,8 +1,10 @@
 #include "stdafx.h"
 #include "View3DSpaceMouse.h"
 #include "vislib/Log.h"
+#include "vislib/Cuboid.h"
 #include "param/FloatParam.h"
 #include "param/BoolParam.h"
+#include "param/EnumParam.h"
 
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -14,10 +16,11 @@ View3DSpaceMouse::View3DSpaceMouse(void) : view::View3D(),
     translateSpeed3DSlot("translateSpeed3D", "Integer parameter controlling 3D mouse translation speed scalar"),
     rotateSpeed3DSlot("rotateSpeed3D", "Integer parameter controlling 3D mouse rotation speed scalar"),
     translateToggleSlot("translateToggle", "True to allow 3d mouse to translate view"),
-    rotateToggleSlot("rotateToggle", "True to allow 3d mouse to rotate view")
+    rotateToggleSlot("rotateToggle", "True to allow 3d mouse to rotate view"),
+    singleAxisToggleSlot("singleAxisToggle", "True to cause 3d mouse to only use largest translation/rotation value"),
+    cameraControlModeSlot("cameraControlMode", "Sets the way in whcih to space mouse manipulates the camera")
 {
 
-#ifdef _WIN32
     this->translateSpeed3DSlot << new param::FloatParam(10.0f, 1.0f, 100.0f);
     this->translateSpeed3DSlot.SetUpdateCallback(&View3DSpaceMouse::update3DSpeed);
     this->MakeSlotAvailable(&this->translateSpeed3DSlot);
@@ -33,8 +36,18 @@ View3DSpaceMouse::View3DSpaceMouse(void) : view::View3D(),
     this->rotateToggleSlot << new param::BoolParam(true);
     this->rotateToggleSlot.SetUpdateCallback(&View3DSpaceMouse::updateModes);
     this->MakeSlotAvailable(&this->rotateToggleSlot);
-#endif // _WIN32
 
+    this->singleAxisToggleSlot << new param::BoolParam(false);
+    this->singleAxisToggleSlot.SetUpdateCallback(&View3DSpaceMouse::updateModes);
+    this->MakeSlotAvailable(&this->singleAxisToggleSlot);
+
+    param::EnumParam *cm = new param::EnumParam(int(vislib::graphics::CameraAdjust3D::CAMERA_MODE));
+    cm->SetTypePair( vislib::graphics::CameraAdjust3D::CAMERA_MODE, "Camera Mode");
+    cm->SetTypePair( vislib::graphics::CameraAdjust3D::OBJECT_MODE, "Object Mode");
+    cm->SetTypePair( vislib::graphics::CameraAdjust3D::TARGET_CAMERA_MODE, "Target Camera Mode");
+    this->cameraControlModeSlot << cm;
+    this->cameraControlModeSlot.SetUpdateCallback(&View3DSpaceMouse::updateCameraModes);
+    this->MakeSlotAvailable( &this->cameraControlModeSlot);
 }
 
 /*
@@ -42,6 +55,16 @@ View3DSpaceMouse::View3DSpaceMouse(void) : view::View3D(),
  */
 View3DSpaceMouse::~View3DSpaceMouse(void) {
     this->Release();
+}
+
+/*
+ * View3DSpaceMouse::ResetView
+ */
+void View3DSpaceMouse::ResetView(void) {
+    view::View3D::ResetView(); // parent function call
+
+    this->adjustor.SetObjectCenter(); // set object center as lookat point (which is also the center of the bbox)
+
 }
 
 /*
@@ -158,16 +181,17 @@ void View3DSpaceMouse::On3DMouseButton(unsigned long keyState) {
     }
 }
 
-#ifdef _WIN32
-
 /*
  * View3DSpaceMouse::update3DSpeed
  */
 bool View3DSpaceMouse::update3DSpeed(param::ParamSlot& p) {
+#ifdef _WIN32
     this->rawInput.SetTranslationSpeed(this->translateSpeed3DSlot.Param<param::FloatParam>()->Value());
     this->rawInput.SetRotationSpeed(this->rotateSpeed3DSlot.Param<param::FloatParam>()->Value());
     return true;
+#endif // _WIN32
 }
+
 
 
 /*
@@ -176,10 +200,32 @@ bool View3DSpaceMouse::update3DSpeed(param::ParamSlot& p) {
 bool View3DSpaceMouse::updateModes(param::ParamSlot& p) {
     this->adjustor.SetNoTranslationMode(!this->translateToggleSlot.Param<param::BoolParam>()->Value());
     this->adjustor.SetNoRotationMode(!this->rotateToggleSlot.Param<param::BoolParam>()->Value());
+    this->adjustor.SetSingleAxisMode(this->singleAxisToggleSlot.Param<param::BoolParam>()->Value());
     return true;
 }
 
-#endif // _WIN32
+/*
+ * View3DSpaceMouse::updateCameraModes
+ */
+bool View3DSpaceMouse::updateCameraModes(param::ParamSlot& p) {
+    if ( this->cameraControlModeSlot.Param<param::EnumParam>()->Value() ==
+        vislib::graphics::CameraAdjust3D::CAMERA_MODE) {
+
+        this->adjustor.SetCameraControlMode();
+    } else if (this->cameraControlModeSlot.Param<param::EnumParam>()->Value() ==
+        vislib::graphics::CameraAdjust3D::OBJECT_MODE) {
+
+        this->adjustor.SetObjectControlMode();
+        // Make sure the object center is set as the center of the bbox.
+        this->adjustor.SetObjectCenter( this->bboxs.WorldSpaceBBox().CalcCenter());
+    } else {
+        this->adjustor.SetTargetCameraControlMode();
+        // Make sure the object center is set as the center of the bbox.
+        this->adjustor.SetObjectCenter( this->bboxs.WorldSpaceBBox().CalcCenter());
+    }
+    return true;
+}
+
 
 /*
  * View3DSpaceMouse::create
@@ -197,7 +243,7 @@ bool View3DSpaceMouse::create(void) {
         vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
     this->adjustor.SetModifierTest(1,
         vislib::graphics::InputModifiers::MODIFIER_ALT, false);
-
+    
 #ifdef _WIN32 
     this->rawInput.Initialize(); // create a raw input class to get input from 3d mouse
     // set callback functions for motion and button events from the raw input device

@@ -687,6 +687,7 @@ void HapticsMoleculeRenderer::RenderSpacefilling( const MolecularDataCall *mol, 
     hlBeginShape(HL_SHAPE_DEPTH_BUFFER, this->shaderID);
     glDrawArrays( GL_POINTS, 0, mol->AtomCount());
     hlEndShape();
+
     // disable sphere shader
     this->sphereShader.Disable();
 }
