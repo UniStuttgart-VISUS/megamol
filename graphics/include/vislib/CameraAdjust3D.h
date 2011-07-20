@@ -39,6 +39,13 @@ namespace graphics {
         public AbstractCameraController {
     public:
 
+        /** Sets the manner in which the adjustor affects the camera */
+        enum CameraControlMode {
+            CAMERA_MODE,
+            OBJECT_MODE,
+            TARGET_CAMERA_MODE
+        };
+
         /** 
          * Ctor.
          *
@@ -189,11 +196,86 @@ namespace graphics {
             return this->invertZ;
         }
 
-    private:
+        /** 
+         * Causes the adjustor to use camera mode control.
+         * In this mode, the adjustor directly modifies the camera according
+         * to the input (i.e. the camera is rotated and translated).
+         * The camera is rotated around the look-at point it has, not its
+         * internal axes.
+         */
+        inline void SetCameraControlMode(void) {
+            this->controlMode = CAMERA_MODE;
+        }
 
         /**
+         * Causes the adjustor to use object mode control.
+         * In this mode, the adjustor appears to manipulate the object position
+         * according to the input. That is, the "object" is translated and
+         * rotated. If the object is not at the origin, the SetObjectCenter
+         * should be called to provide the object center for this mode.
+         * This will only work with a single object. Alternatively, this will
+         * treat the entire scene as a single object that can be manipulated
+         * with the input.
+         */
+        inline void SetObjectControlMode(void) {
+            this->controlMode = OBJECT_MODE;
+        }
+
+        /**
+         * Causes the adjustor to use target camera mode control.
+         * This mode is similar to object mode, but the directions are all
+         * reversed. This mode moves the camera but causes it to always pivot
+         * around the object position. Thus, SetObjectCenter should be called
+         * prior to using this mode if the object is not located at the origin.
+         * This mode would make more sense if a visible "pivot point" was
+         * rendered, and if this point was set as the new "object center" as it
+         * moved around. This point could be attached to a point on the object
+         * that is closest to the center of camera, which would allow the user
+         * refine his or her movements as the object was zoomed in on.
+         */
+        inline void SetTargetCameraControlMode(void) {
+            this->controlMode = TARGET_CAMERA_MODE;
+        }
+
+        /**
+         * Saves the current look at point as the local object center variable.
+         * This variable is used for the object and target camera modes.
+         * If the object is not at the origin (the default), failure to set this
+         * will result in bizarre effects while using the object or target
+         * camera modes.
+         */
+        inline void SetObjectCenter(void) {
+            this->objectCenter = this->CameraParams()->LookAt();
+        }
+
+        /** 
+         * Saves the object center as the point provided.
+         * This variable is used for the object and target camera modes.
+         * If the object is not at the origin (the default), failure to set this
+         * will result in bizarre effects while using the object or target
+         * camera modes.
+         *
+         * @param object A vislib point representing the object center.
+         */
+        inline void SetObjectCenter(
+                vislib::math::Point<SceneSpaceType, 3> object) {
+            this->objectCenter = object;
+        }
+
+    private:
+
+        /** The current camera control mode */
+        CameraControlMode controlMode;
+
+        /** 
+         * The object center, which is used as the focal point for object and
+         * target camera control modes.
+         */
+        math::Point<SceneSpaceType, 3> objectCenter;
+
+        /** 
          * Switches axes so that the plane of the table is corresponds to the
-         * plane of the screen
+         * plane of the screen.
          */
         bool switchYZ;
 
