@@ -224,6 +224,9 @@ namespace view {
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
 
+        /** The complete scene bounding box */
+        BoundingBoxes bboxs;
+
     private:
 
         /**
@@ -403,9 +406,6 @@ namespace view {
 
         /** flag whether or not the light is a camera relative light */
         bool isCamLight;
-
-        /** The complete scene bounding box */
-        BoundingBoxes bboxs;
 
         /** Bool parameter to play/stop the animation */
         param::ParamSlot animPlaySlot;
