@@ -214,6 +214,13 @@ namespace volumetrics {
          */
         VoxelizerFloat *volumes;
 
+		/**
+		 * Pointer to the memory holding numTriangles unsigned chars containing the
+		 * respective corner the tet was anchored on. Can be used for growing the
+		 * trivial neighbors.
+		 */
+		unsigned char *corners;
+
         /** Number of triangles contained in this FatVoxel */
         unsigned char numTriangles;
 
