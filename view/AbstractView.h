@@ -297,6 +297,12 @@ namespace view {
          */
         virtual void unpackMouseCoordinates(float &x, float &y);
 
+        /** The value overriding rendering time */
+        float *overrideTime;
+
+        /** The value overriding instance time */
+        float *overrideInstTime;
+
     private:
 
         /**

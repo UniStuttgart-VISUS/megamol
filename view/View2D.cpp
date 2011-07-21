@@ -419,9 +419,15 @@ bool view::View2D::OnRenderView(Call& call) {
         overBC[2] = static_cast<float>(crv->BackgroundBlue()) / 255.0f;
         this->overrideBkgndCol = overBC; // hurk
     }
+    float time = 0.0f;
+    float instTime = crv->InstanceTime();
+    this->overrideTime = &time; // HAZARD: unklar
+    this->overrideInstTime = &instTime;
 
     this->Render();
 
+    this->overrideTime = NULL;
+    this->overrideInstTime = NULL;
     this->overrideBkgndCol = NULL;
     this->overrideViewport = NULL;
     this->overrideViewTile = NULL;
