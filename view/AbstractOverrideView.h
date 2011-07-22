@@ -36,6 +36,13 @@ namespace view {
         virtual ~AbstractOverrideView(void);
 
         /**
+         * Answer the default time for this view
+         *
+         * @return The default time
+         */
+        virtual float DefaultTime(double instTime) const;
+
+        /**
          * Answer the camera synchronization number.
          *
          * @return The camera synchronization number
@@ -55,22 +62,6 @@ namespace view {
          * @param serialiser Deserialises the camera of the view
          */
         virtual void DeserialiseCamera(vislib::Serialiser& serialiser);
-
-        /**
-         * Gets the time of the frame to be rendered
-         *
-         * @return The time of the frame to be rendered
-         */
-        virtual float GetFrameTime(void) const;
-
-        /**
-         * Sets the time of the frame to be rendered
-         *
-         * @param time The time of the frame to be rendered
-         */
-        virtual void SetFrameTime(float time) {
-            // TODO: Implement
-        }
 
         /**
          * Resets the view. This normally sets the camera parameters to

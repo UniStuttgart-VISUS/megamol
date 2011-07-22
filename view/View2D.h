@@ -15,6 +15,7 @@
 #include "param/ParamSlot.h"
 #include "view/AbstractRenderingView.h"
 #include "view/MouseFlags.h"
+#include "view/TimeControl.h"
 
 
 namespace megamol {
@@ -67,6 +68,17 @@ namespace view {
         virtual ~View2D(void);
 
         /**
+         * Answer the default time for this view
+         *
+         * @param instTime the current instance time
+         *
+         * @return The default time
+         */
+        virtual float DefaultTime(double instTime) const {
+            return this->timeCtrl.Time(instTime);
+        }
+
+        /**
          * Answer the camera synchronization number.
          *
          * @return The camera synchronization number
@@ -88,27 +100,12 @@ namespace view {
         virtual void DeserialiseCamera(vislib::Serialiser& serialiser);
 
         /**
-         * Gets the time of the frame to be rendered
-         *
-         * @return The time of the frame to be rendered
-         */
-        virtual float GetFrameTime(void) const {
-            return 0.0f;
-        }
-
-        /**
-         * Sets the time of the frame to be rendered
-         *
-         * @param time The time of the frame to be rendered
-         */
-        virtual void SetFrameTime(float time) {
-            // intentionally empty ATM
-        }
-
-        /**
          * Renders this AbstractView3D in the currently active OpenGL context.
+         *
+         * @param time The time code of the frame to be displayed
+         * @param instTime The instance time code
          */
-        virtual void Render(void);
+        virtual void Render(float time, double instTime);
 
         /**
          * Resets the view. This normally sets the camera parameters to
@@ -255,6 +252,9 @@ namespace view {
          *   tileX, tileY, tileW, tileH, fullW, fullH
          */
         float *overrideViewTile;
+
+        /** The time control */
+        TimeControl timeCtrl;
 
     };
 

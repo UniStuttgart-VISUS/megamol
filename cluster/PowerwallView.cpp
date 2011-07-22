@@ -23,14 +23,8 @@ using namespace megamol::core;
  * cluster::PowerwallView::PowerwallView
  */
 cluster::PowerwallView::PowerwallView(void) : AbstractClusterView(),
-        pauseView(false), pauseFbo(NULL),
-        netVSyncSlot("netVSync", "Activates or deactivates the network v-sync"),
-        netVSyncBarrier(NULL) {
-
-    this->netVSyncSlot << new param::BoolParam(false);
-    this->netVSyncSlot.SetUpdateCallback(&PowerwallView::onNetVSyncChanged);
-    this->MakeSlotAvailable(&this->netVSyncSlot);
-
+        pauseView(false), pauseFbo(NULL) {
+    // intentionally empty ATM
 }
 
 
@@ -40,19 +34,14 @@ cluster::PowerwallView::PowerwallView(void) : AbstractClusterView(),
 cluster::PowerwallView::~PowerwallView(void) {
     this->Release();
     ASSERT(this->pauseFbo == NULL);
-    ASSERT(this->netVSyncBarrier == NULL);
 }
 
 
 /*
  * cluster::PowerwallView::Render
  */
-void cluster::PowerwallView::Render(void) {
+void cluster::PowerwallView::Render(float time, double instTime) {
     view::CallRenderView *crv = this->getCallRenderView();
-
-    if (this->netVSyncBarrier != NULL) {
-        this->netVSyncBarrier->Cross(1);
-    }
 
     this->commPing();
 
@@ -91,8 +80,7 @@ void cluster::PowerwallView::Render(void) {
         ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         float a = ::sin(vislib::math::AngleDeg2Rad(
-            static_cast<float>(this->GetCoreInstance()->GetInstanceTime())
-            * 90.0f));
+            static_cast<vislib::math::AngleDeg>(instTime * 90.0)) );
         a = 0.125f + 0.25f * a * a;
         ::glColor4f(1.0f, 1.0f, 1.0f, a);
         ::glTranslatef(-0.75f, -0.75f, 0.0f);
@@ -132,6 +120,8 @@ void cluster::PowerwallView::Render(void) {
                     this->getTileX(), this->getTileY(), this->getTileW(), this->getTileH());
             }
             crv->SetOutputBuffer(this->pauseFbo);
+            crv->SetTime(time);
+            crv->SetInstanceTime(instTime);
 
             GLint vp[4];
             ::glGetIntegerv(GL_VIEWPORT, vp);
@@ -201,20 +191,8 @@ void cluster::PowerwallView::Render(void) {
                 this->getTileX(), this->getTileY(), this->getTileW(), this->getTileH());
         }
         crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight());
-
-        if ((this->netVSyncBarrier != NULL) && (this->netVSyncBarrier->GetDataSize() > 0)) {
-            //printf("Barrier with %u bytes data\n", this->netVSyncBarrier->GetDataSize());
-            view::AbstractView *view = NULL;
-            if (crv->PeekCalleeSlot() != NULL) view = dynamic_cast<view::AbstractView*>(
-                const_cast<AbstractNamedObject*>(crv->PeekCalleeSlot()->Parent()));
-            if (view != NULL){
-                vislib::RawStorageSerialiser camera(
-                    this->netVSyncBarrier->GetData() + 4,
-                    this->netVSyncBarrier->GetDataSize() - 4);
-                view->DeserialiseCamera(camera);
-                view->SetFrameTime(*reinterpret_cast<const float*>(this->netVSyncBarrier->GetData()));
-            }
-        }
+        crv->SetTime(time);
+        crv->SetInstanceTime(instTime);
 
         if (!(*crv)(view::CallRenderView::CALL_RENDER)) {
             this->renderFallbackView();
@@ -223,11 +201,6 @@ void cluster::PowerwallView::Render(void) {
     } else {
         this->renderFallbackView();
 
-    }
-
-    if (this->netVSyncBarrier != NULL) {
-        ::glFlush();
-        this->netVSyncBarrier->Cross(2);
     }
 
 }
@@ -251,12 +224,6 @@ void cluster::PowerwallView::release(void) {
         this->pauseFbo->Release();
         SAFE_DELETE(this->pauseFbo);
         this->pauseView = false;
-    }
-    if (this->netVSyncBarrier != NULL) {
-        NetVSyncBarrier *b = this->netVSyncBarrier;
-        this->netVSyncBarrier = NULL;
-        b->Disconnect();
-        delete b;
     }
 }
 
@@ -319,84 +286,17 @@ void cluster::PowerwallView::OnCommChannelMessage(cluster::CommChannel& sender,
         } break;
 
         case cluster::netmessages::MSG_FORCENETVSYNC: {
-            ASSERT(msg.GetHeader().GetBodySize() == 1);
-            this->netVSyncSlot.Param<param::BoolParam>()->SetValue(
-                (msg.GetBodyAs<char>()[0] != 0));
         } break;
 
         case cluster::netmessages::MSG_NETVSYNC_JOIN: {
-            vislib::StringA vsyncServerAddress(msg.GetBodyAs<char>());
-            if (this->netVSyncBarrier == NULL) {
-                NetVSyncBarrier *b = new NetVSyncBarrier();
-                try {
-                    if (b->Connect(vsyncServerAddress)) {
-                        this->netVSyncBarrier = b;
-                    } else {
-                        delete b;
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                            "Unable to connect to network v-sync server \"%s\"\n",
-                            vsyncServerAddress.PeekBuffer());
-                    }
-                } catch(vislib::Exception ex) {
-                } catch(...) {
-                }
-            } else {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                    "Already connected to network v-sync server\n");
-            }
         } break;
 
         case cluster::netmessages::MSG_SET_CLUSTERVIEW: {
             cluster::AbstractClusterView::OnCommChannelMessage(sender, msg);
-            if (this->netVSyncSlot.Param<param::BoolParam>()->Value()) {
-                outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_NETVSYNC_JOIN);
-                outMsg.GetHeader().SetBodySize(0);
-                outMsg.AssertBodySize();
-                sender.SendMessage(outMsg);
-            }
         } break;
 
         default:
             cluster::AbstractClusterView::OnCommChannelMessage(sender, msg);
             break;
     }
-}
-
-
-/*
- * cluster::PowerwallView::onNetVSyncChanged
- */
-bool cluster::PowerwallView::onNetVSyncChanged(param::ParamSlot& slot) {
-    using vislib::sys::Log;
-    ASSERT(&this->netVSyncSlot == &slot);
-    bool v = this->netVSyncSlot.Param<param::BoolParam>()->Value();
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Network V-Sync requested %s\n", v ? "on" : "off");
-
-    if (v) {
-        // use v-sync barrier
-        if (this->netVSyncBarrier == NULL) {
-            vislib::net::SimpleMessage msg;
-            msg.GetHeader().SetMessageID(cluster::netmessages::MSG_NETVSYNC_JOIN);
-            msg.GetHeader().SetBodySize(0);
-            msg.AssertBodySize();
-            this->ctrlChannel.SendMessage(msg);
-
-        } else {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Network V-Sync barrier already on");
-        }
-
-    } else {
-        // stop using v-sync barrier
-        if (this->netVSyncBarrier != NULL) {
-            NetVSyncBarrier *b = this->netVSyncBarrier;
-            this->netVSyncBarrier = NULL;
-            b->Disconnect();
-            delete b;
-
-        } else {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Network V-Sync barrier already off");
-        }
-    }
-
-    return true;
 }

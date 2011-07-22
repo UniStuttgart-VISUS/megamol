@@ -58,7 +58,7 @@ bool view::special::ChronoGraph::Render(view::CallRender2D& call) {
     ::glEnable(GL_BLEND);
     ::glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-    float time = static_cast<float>(this->GetCoreInstance()->GetInstanceTime());
+    float time = static_cast<float>(call.InstanceTime());
 
     this->renderInfoGrid(time,
         call.GetBoundingBox().Left(),

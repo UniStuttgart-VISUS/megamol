@@ -81,7 +81,7 @@ namespace intern {
 /*
  * cluster::SimpleClusterView::Render
  */
-void cluster::SimpleClusterView::Render(void) {
+void cluster::SimpleClusterView::Render(float time, double instTime) {
     if (this->firstFrame) {
         this->firstFrame = false;
         this->initTileViewParameters();
@@ -156,9 +156,8 @@ void cluster::SimpleClusterView::Render(void) {
     view::CallRenderView *crv = this->getCallRenderView();
     this->checkParameters();
 
-    /* *HAZARD* problem here !!! */
     if (!this->frozen) {
-        this->frozenTime = this->instance()->GetInstanceTime();
+        this->frozenTime = instTime;
     }
 
     if (crv != NULL) {
@@ -301,7 +300,7 @@ void cluster::SimpleClusterView::renderFallbackView(void) {
  */
 void cluster::SimpleClusterView::UpdateFreeze(bool freeze) {
     this->frozen = freeze;
-    this->frozenTime = this->instance()->GetInstanceTime();
+    this->frozenTime = this->instance()->GetCoreInstanceTime(); // HAZARD
 }
 
 

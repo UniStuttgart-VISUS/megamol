@@ -103,7 +103,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     this->config.instanceLog = &this->log;
 
     // Normalize timer with time offset to something less crappy shitty hateworthy
-    this->timeOffset = -this->GetInstanceTime();
+    this->timeOffset = -this->GetCoreInstanceTime();
 
 #ifdef _DEBUG
     // Use a randomized time offset to debug the offset synchronization
@@ -997,7 +997,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
 /*
  * megamol::core::CoreInstance::GetInstanceTime
  */
-double megamol::core::CoreInstance::GetInstanceTime(void) const {
+double megamol::core::CoreInstance::GetCoreInstanceTime(void) const {
 //#ifdef _WIN32 // not a good idea when running more than one megamol on one machine
 //    ::SetThreadAffinityMask(::GetCurrentThread(), 0x00000001);
 //#endif /* _WIN32 */

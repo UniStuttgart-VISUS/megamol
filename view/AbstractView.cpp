@@ -24,7 +24,7 @@ using vislib::sys::Log;
 /*
  * view::AbstractView::AbstractView
  */
-view::AbstractView::AbstractView(void) : Module(), overrideInstTime(NULL), overrideTime(NULL),
+view::AbstractView::AbstractView(void) : Module(),
         renderSlot("render", "Connects modules requesting renderings"),
         hooks() {
 
@@ -58,8 +58,6 @@ view::AbstractView::AbstractView(void) : Module(), overrideInstTime(NULL), overr
  */
 view::AbstractView::~AbstractView(void) {
     this->hooks.Clear(); // DO NOT DELETE OBJECTS
-    this->overrideTime = NULL; // DO NOT DELETE
-    this->overrideInstTime = NULL; // DO NOT DELETE
 }
 
 

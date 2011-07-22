@@ -65,7 +65,7 @@ bool view::AbstractRenderingView::EmptyTitleRenderer::Create(void) {
  */
 void view::AbstractRenderingView::EmptyTitleRenderer::Render(
         float tileX, float tileY, float tileW, float tileH,
-        float virtW, float virtH, bool stereo, bool leftEye,
+        float virtW, float virtH, bool stereo, bool leftEye, double instTime,
         class ::megamol::core::CoreInstance *core) {
     ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     ::glClear(GL_COLOR_BUFFER_BIT);
@@ -182,7 +182,7 @@ bool view::AbstractRenderingView::showSoftCursor(void) const {
  */
 void view::AbstractRenderingView::renderTitle(
         float tileX, float tileY, float tileW, float tileH,
-        float virtW, float virtH, bool stereo, bool leftEye) const {
+        float virtW, float virtH, bool stereo, bool leftEye, double instTime) const {
     if (!this->titleRenderer) {
         this->titleRenderer = new special::TitleRenderer();
         if (!this->titleRenderer->Create()) {
@@ -193,7 +193,7 @@ void view::AbstractRenderingView::renderTitle(
     }
 
     this->titleRenderer->Render(tileX, tileY, tileW, tileH,
-        virtW, virtH, stereo, leftEye, this->GetCoreInstance());
+        virtW, virtH, stereo, leftEye, instTime, this->GetCoreInstance());
 
 }
 

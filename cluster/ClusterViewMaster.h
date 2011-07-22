@@ -14,7 +14,6 @@
 #include "CallerSlot.h"
 #include "cluster/ClusterControllerClient.h"
 #include "cluster/CommChannelServer.h"
-#include "cluster/NetVSyncBarrierServer.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
 #include "param/ParamUpdateListener.h"
@@ -257,12 +256,6 @@ namespace cluster {
 
         /** The slot to force the network v-sync off */
         param::ParamSlot forceNetVSyncOffSlot;
-
-        /** The network v-sync barrier server */
-        NetVSyncBarrierServer *netVSyncBarrier;
-
-        /** The network v-sync barrier address slot */
-        param::ParamSlot netVSyncBarrierAddressSlot;
 
     };
 

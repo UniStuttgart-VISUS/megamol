@@ -49,9 +49,7 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
         pauseRemoteViewSlot("RemoteView::Pause", "Enters remote view pause mode"),
         resumeRemoteViewSlot("RemoteView::Resume", "Resumes from remote view pause mode"),
         forceNetVSyncOnSlot("RemoteView::NetVSyncOn", "Forces network v-sync on"),
-        forceNetVSyncOffSlot("RemoteView::NetVSyncOff", "Forces network v-sync off"),
-        netVSyncBarrier(NULL),
-        netVSyncBarrierAddressSlot("RemoteView::NetVSyncAddress", "The local end-point address used for the server of the network v-sync") {
+        forceNetVSyncOffSlot("RemoteView::NetVSyncOff", "Forces network v-sync off") {
 
     this->ccc.AddListener(this);
     this->MakeSlotAvailable(&this->ccc.RegisterSlot());
@@ -89,9 +87,6 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
     this->forceNetVSyncOffSlot.SetUpdateCallback(&ClusterViewMaster::onForceNetVSyncOffClicked);
     this->MakeSlotAvailable(&this->forceNetVSyncOffSlot);
 
-    this->netVSyncBarrierAddressSlot << new param::StringParam("");
-    this->MakeSlotAvailable(&this->netVSyncBarrierAddressSlot);
-
     // TODO: Implement
 
 }
@@ -110,7 +105,6 @@ cluster::ClusterViewMaster::~ClusterViewMaster(void) {
         this->camUpdateThread.Join();
     }
     this->Release();
-    ASSERT(this->netVSyncBarrier == NULL);
 
     // TODO: Implement
 
@@ -123,7 +117,6 @@ cluster::ClusterViewMaster::~ClusterViewMaster(void) {
 bool cluster::ClusterViewMaster::create(void) {
     this->serverAddressSlot.Param<param::StringParam>()->SetValue(this->defaultServerAddress());
     this->GetCoreInstance()->RegisterParamUpdateListener(this);
-    this->netVSyncBarrierAddressSlot.Param<param::StringParam>()->SetValue(this->defaultVSyncServerAddress());
 
     // TODO: Implement
 
@@ -142,10 +135,6 @@ void cluster::ClusterViewMaster::release(void) {
         this->viewSlot.ConnectCall(NULL);
         this->UnlockModuleGraph();
         this->camUpdateThread.Join();
-    }
-    if (this->netVSyncBarrier != NULL) {
-        this->netVSyncBarrier->Stop();
-        SAFE_DELETE(this->netVSyncBarrier);
     }
 
     // TODO: Implement
@@ -253,10 +242,6 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
     msg.AssertBodySize();
     this->ctrlServer.MultiSendMessage(msg);
 
-    if (this->netVSyncBarrier != NULL) {
-        this->netVSyncBarrier->SetViewName(viewName);
-    }
-
     return true;
 }
 
@@ -299,7 +284,7 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
             outMsg.GetHeader().SetBodySize(sizeof(cluster::netmessages::TimeSyncData));
             outMsg.AssertBodySize();
             ::memset(outMsg.GetBody(), 0, sizeof(cluster::netmessages::TimeSyncData));
-            outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->srvrTimes[0] = this->GetCoreInstance()->GetInstanceTime();
+            outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->srvrTimes[0] = this->GetCoreInstance()->GetCoreInstanceTime();
             channel.SendMessage(outMsg);
             break;
 
@@ -312,7 +297,7 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
             {
                 UINT32 &trip = outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->trip;
                 trip++;
-                outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->srvrTimes[trip] = this->GetCoreInstance()->GetInstanceTime();
+                outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->srvrTimes[trip] = this->GetCoreInstance()->GetCoreInstanceTime();
                 if (trip == cluster::netmessages::MAX_TIME_SYNC_PING) {
                     outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_DONE_TIMESYNC);
                 }
@@ -339,7 +324,7 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
             ASSERT(msg.GetHeader().GetBodySize() == sizeof(double));
             {
                 double remoteTime = *msg.GetBodyAs<double>();
-                double localTime = this->GetCoreInstance()->GetInstanceTime();
+                double localTime = this->GetCoreInstance()->GetCoreInstanceTime();
                 double diff = vislib::math::Abs(localTime - remoteTime);
                 UINT level = Log::LEVEL_INFO;
                 if (diff > 0.1) level = Log::LEVEL_ERROR;
@@ -412,32 +397,6 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
         } break;
 
         case cluster::netmessages::MSG_NETVSYNC_JOIN: {
-            vislib::StringA nvsyncAddress(this->netVSyncBarrierAddressSlot.Param<param::StringParam>()->Value());
-            if (this->netVSyncBarrier == NULL) {
-                this->netVSyncBarrier = new cluster::NetVSyncBarrierServer(this);
-                this->netVSyncBarrier->SetViewName(vislib::StringA(
-                    this->viewNameSlot.Param<param::StringParam>()->Value()));
-                try {
-                    if (!this->netVSyncBarrier->Start(nvsyncAddress)) {
-                        throw vislib::Exception("'Start' returned false", __FILE__, __LINE__);
-                    }
-                } catch(vislib::Exception ex) {
-                    SAFE_DELETE(this->netVSyncBarrier);
-                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to start network v-sync barrier server: %s\n",
-                        ex.GetMsgA());
-                } catch(...) {
-                    SAFE_DELETE(this->netVSyncBarrier);
-                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to start network v-sync barrier server: \n");
-                }
-            }
-
-            if (this->netVSyncBarrier != NULL) {
-                outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_NETVSYNC_JOIN);
-                outMsg.GetHeader().SetBodySize(nvsyncAddress.Length() + 1);
-                outMsg.AssertBodySize();
-                ::memcpy(outMsg.GetBody(), nvsyncAddress.PeekBuffer(), nvsyncAddress.Length() + 1);
-                channel.SendMessage(outMsg);
-            }
         } break;
 
         default:

@@ -17,6 +17,7 @@
 #include "api/MegaMolCore.std.h"
 #include "view/AbstractCallRender.h"
 #include "view/AbstractView3D.h"
+#include "view/TimeControl.h"
 #include "CalleeSlot.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
@@ -81,6 +82,17 @@ namespace view {
         virtual ~View3D(void);
 
         /**
+         * Answer the default time for this view
+         *
+         * @param instTime the current instance time
+         *
+         * @return The default time
+         */
+        virtual float DefaultTime(double instTime) const {
+            return this->timeCtrl.Time(instTime);
+        }
+
+        /**
          * Answer the camera synchronization number.
          *
          * @return The camera synchronization number
@@ -102,28 +114,12 @@ namespace view {
         virtual void DeserialiseCamera(vislib::Serialiser& serialiser);
 
         /**
-         * Gets the time of the frame to be rendered
-         *
-         * @return The time of the frame to be rendered
-         */
-        virtual float GetFrameTime(void) const {
-            return this->timeFrame;
-        }
-
-        /**
-         * Sets the time of the frame to be rendered
-         *
-         * @param time The time of the frame to be rendered
-         */
-        virtual void SetFrameTime(float time) {
-            this->timeFrame = time;
-            this->timeFrameForced = true;
-        }
-
-        /**
          * Renders this AbstractView3D in the currently active OpenGL context.
+         *
+         * @param time The time code of the frame to be displayed
+         * @param instTime The instance time code
          */
-        virtual void Render(void);
+        virtual void Render(float time, double instTime);
 
         /**
          * Resets the view. This normally sets the camera parameters to
@@ -320,27 +316,7 @@ namespace view {
 
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 
-        /**
-         * Event animation started/stopped
-         *
-         * @param p Must be animPlaySlot
-         *
-         * @return true
-         */
-        bool onAnimPlayChanged(param::ParamSlot& p);
-
-        /**
-         * Event animation speed changed
-         *
-         * @param p Must be animSpeedSlot
-         *
-         * @return true
-         */
-        bool onAnimSpeedChanged(param::ParamSlot& p);
-
         bool onToggleButton(param::ParamSlot& p);
-
-        bool onAnimSpeedStep(param::ParamSlot& p);
 
         /**
          * Renders the view cube
@@ -406,24 +382,6 @@ namespace view {
 
         /** flag whether or not the light is a camera relative light */
         bool isCamLight;
-
-        /** Bool parameter to play/stop the animation */
-        param::ParamSlot animPlaySlot;
-
-        /** Float parameter of animation speed in time frames per second */
-        param::ParamSlot animSpeedSlot;
-
-        /** The slot holding the current time */
-        param::ParamSlot animTimeSlot;
-
-        /** Slot used to synchronize the animation offset */
-        param::ParamSlot animOffsetSlot;
-
-        /** The current time to display */
-        float timeFrame;
-
-        /** The time frame value is forced for the next frame */
-        bool timeFrameForced;
 
         /** Bool flag showing the bounding box */
         param::ParamSlot showBBox;
@@ -541,14 +499,6 @@ namespace view {
 
         param::ParamSlot toggleSoftCursorSlot;
 
-        param::ParamSlot toggleAnimPlaySlot;
-
-        /** Speeds up the animation */
-        param::ParamSlot animSpeedUpSlot;
-
-        /** Slows down the animation */
-        param::ParamSlot animSpeedDownSlot;
-
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
@@ -563,6 +513,9 @@ namespace view {
 
         /** Shows the view cube helper */
         param::ParamSlot showViewCubeSlot;
+
+        /** The time control */
+        TimeControl timeCtrl;
 
     };
 

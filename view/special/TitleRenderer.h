@@ -60,7 +60,7 @@ namespace special {
          * @param core The core
          */
         virtual void Render(float tileX, float tileY, float tileW, float tileH,
-            float virtW, float virtH, bool stereo, bool leftEye,
+            float virtW, float virtH, bool stereo, bool leftEye, double instTime,
             class ::megamol::core::CoreInstance *core);
 
         /**

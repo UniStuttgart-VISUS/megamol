@@ -72,6 +72,15 @@ namespace view {
         virtual ~AbstractView(void);
 
         /**
+         * Answer the default time for this view
+         *
+         * @return The default time
+         */
+        virtual float DefaultTime(double instTime) const = 0; /* {
+            return 0.0f;
+        }
+
+        /**
          * Answers whether the given parameter is relevant for this view.
          *
          * @param param The parameter to test.
@@ -102,23 +111,12 @@ namespace view {
         virtual void DeserialiseCamera(vislib::Serialiser& serialiser) = 0;
 
         /**
-         * Gets the time of the frame to be rendered
-         *
-         * @return The time of the frame to be rendered
-         */
-        virtual float GetFrameTime(void) const = 0;
-
-        /**
-         * Sets the time of the frame to be rendered
-         *
-         * @param time The time of the frame to be rendered
-         */
-        virtual void SetFrameTime(float time) = 0;
-
-        /**
          * Renders this AbstractView3D in the currently active OpenGL context.
+         *
+         * @param time The time code of the frame to be displayed
+         * @param instTime The instance time code
          */
-        virtual void Render(void) = 0;
+        virtual void Render(float time, double instTime) = 0;
 
         /**
          * Resets the view. This normally sets the camera parameters to
@@ -296,12 +294,6 @@ namespace view {
          * @param y The y coordinate of the mouse position
          */
         virtual void unpackMouseCoordinates(float &x, float &y);
-
-        /** The value overriding rendering time */
-        float *overrideTime;
-
-        /** The value overriding instance time */
-        float *overrideInstTime;
 
     private:
 

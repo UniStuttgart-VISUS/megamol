@@ -33,9 +33,11 @@ view::special::QuadBufferStereoView::~QuadBufferStereoView(void) {
 /*
  * view::special::QuadBufferStereoView::Render
  */
-void view::special::QuadBufferStereoView::Render(void) {
+void view::special::QuadBufferStereoView::Render(float time, double instTime) {
     CallRenderView *crv = this->getCallRenderView();
     if (crv == NULL) return;
+    crv->SetTime(time);
+    crv->SetInstanceTime(instTime);
 
     if (this->hasQuadBuffer) {
         vislib::graphics::CameraParameters::ProjectionType proj = this->getProjectionType();

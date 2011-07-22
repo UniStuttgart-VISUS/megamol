@@ -70,7 +70,7 @@ namespace view {
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          */
-        virtual void Render(void);
+        virtual void Render(float time, double instTime);
 
     protected:
 

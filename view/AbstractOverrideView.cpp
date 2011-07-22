@@ -35,6 +35,22 @@ view::AbstractOverrideView::~AbstractOverrideView(void) {
 
 
 /*
+ * view::AbstractOverrideView::DefaultTime
+ */
+float view::AbstractOverrideView::DefaultTime(double instTime) const {
+    view::CallRenderView *call = const_cast<view::AbstractOverrideView*>(this)->renderViewSlot.CallAs<view::CallRenderView>();
+    if (call == NULL) return 0.0f;
+    const CalleeSlot *s = call->PeekCalleeSlot();
+    if (s == NULL) return 0.0f;
+    const Module *m = static_cast<const Module*>(s->Owner());
+    if (m == NULL) return 0.0f;
+    const AbstractView *v = dynamic_cast<const AbstractView *>(m);
+    if (v == NULL) return 0.0f;
+    return v->DefaultTime(instTime);
+}
+
+
+/*
  * view::AbstractOverrideView::GetCameraSyncNumber
  */
 unsigned int view::AbstractOverrideView::GetCameraSyncNumber(void) const {
@@ -55,15 +71,6 @@ void view::AbstractOverrideView::SerialiseCamera(vislib::Serialiser& serialiser)
  */
 void view::AbstractOverrideView::DeserialiseCamera(vislib::Serialiser& serialiser) {
     // TODO: Implement
-}
-
-
-/*
- * view::AbstractOverrideView::GetFrameTime
- */
-float view::AbstractOverrideView::GetFrameTime(void) const {
-    // TODO: Implement
-    return 0.0f;
 }
 
 

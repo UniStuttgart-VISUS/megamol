@@ -299,7 +299,7 @@ void cluster::AbstractClusterView::OnCommChannelMessage(cluster::CommChannel& se
             ::memcpy(outMsg.GetBody(), msg.GetBody(), sizeof(cluster::netmessages::TimeSyncData));
             outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()
                 ->clntTimes[outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->trip]
-                = this->GetCoreInstance()->GetInstanceTime();
+                = this->GetCoreInstance()->GetCoreInstanceTime();
             sender.SendMessage(outMsg);
             break;
 
@@ -350,7 +350,7 @@ void cluster::AbstractClusterView::OnCommChannelMessage(cluster::CommChannel& se
             outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_TIME_SANITYCHECK);
             outMsg.GetHeader().SetBodySize(sizeof(double));
             outMsg.AssertBodySize();
-            *outMsg.GetBodyAs<double>() = this->GetCoreInstance()->GetInstanceTime();
+            *outMsg.GetBodyAs<double>() = this->GetCoreInstance()->GetCoreInstanceTime();
             sender.SendMessage(outMsg);
             break;
 

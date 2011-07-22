@@ -31,13 +31,15 @@ view::TileView::~TileView(void) {
 /*
  * view::TileView::Render
  */
-void view::TileView::Render(void) {
+void view::TileView::Render(float time, double instTime) {
     view::CallRenderView *crv = this->getCallRenderView();
     if (crv == NULL) return; // false ?
 
     this->checkParameters();
 
     crv->ResetAll();
+    crv->SetTime(time);
+    crv->SetInstanceTime(instTime);
     crv->SetProjection(this->getProjType(), this->getEye());
     if ((this->getVirtWidth() != 0) && (this->getVirtHeight() != 0)
             && (this->getTileW() != 0) && (this->getTileH() != 0)) {

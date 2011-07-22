@@ -58,10 +58,11 @@ namespace view {
              * @param virtH The virtual view height
              * @param stereo Flag if stereo rendering is to be performed
              * @param leftEye Flag if the stereo rendering is done for the left eye view
+             * @param instTime The instance time code
              * @param core The core
              */
             virtual void Render(float tileX, float tileY, float tileW, float tileH,
-                float virtW, float virtH, bool stereo, bool leftEye,
+                float virtW, float virtH, bool stereo, bool leftEye, double instTime,
                 class ::megamol::core::CoreInstance *core) = 0;
 
             /**
@@ -123,9 +124,10 @@ namespace view {
          * @param virtH The virtual view height
          * @param stereo Flag if stereo rendering is to be performed
          * @param leftEye Flag if the stereo rendering is done for the left eye view
+             * @param instTime The instance time code
          */
         void renderTitle(float tileX, float tileY, float tileW, float tileH,
-            float virtW, float virtH, bool stereo, bool leftEye) const;
+            float virtW, float virtH, bool stereo, bool leftEye, double instTime) const;
 
         /**
          * Removes the title renderer
@@ -175,10 +177,11 @@ namespace view {
              * @param virtH The virtual view height
              * @param stereo Flag if stereo rendering is to be performed
              * @param leftEye Flag if the stereo rendering is done for the left eye view
+             * @param instTime The instance time code
              * @param core The core
              */
             virtual void Render(float tileX, float tileY, float tileW, float tileH,
-                float virtW, float virtH, bool stereo, bool leftEye,
+                float virtW, float virtH, bool stereo, bool leftEye, double instTime,
                 class ::megamol::core::CoreInstance *core);
 
             /**

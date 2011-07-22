@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "cluster/AbstractClusterView.h"
-#include "cluster/NetVSyncBarrier.h"
 #include "param/ParamSlot.h"
 #include "vislib/FramebufferObject.h"
 
@@ -72,8 +71,11 @@ namespace cluster {
 
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
+         *
+         * @param time The rendering time code
+         * @param instTime The instance time code
          */
-        virtual void Render(void);
+        virtual void Render(float time, double instTime);
 
     protected:
 
@@ -109,26 +111,11 @@ namespace cluster {
 
     private:
 
-        /**
-         * OnChanged event handler for the netVSync parameter slot
-         *
-         * @param slot Must be netVSyncSlot
-         *
-         * @return true
-         */
-        bool onNetVSyncChanged(param::ParamSlot& slot);
-
         /** The pause flag for the view */
         bool pauseView;
 
         /** The fbo shown if the remote rendering is paused */
         vislib::graphics::gl::FramebufferObject *pauseFbo;
-
-        /** Flag whether or not to use network VSync */
-        param::ParamSlot netVSyncSlot;
-
-        /** The network v-sync barrier */
-        NetVSyncBarrier *netVSyncBarrier;
 
     };
 

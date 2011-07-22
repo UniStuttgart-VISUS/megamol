@@ -594,12 +594,6 @@
     <ClCompile Include="cluster\NetMessages.cpp">
       <Filter>cluster\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cluster\NetVSyncBarrier.cpp">
-      <Filter>cluster\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cluster\NetVSyncBarrierServer.cpp">
-      <Filter>cluster\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="cluster\PowerwallView.cpp">
       <Filter>cluster\Source Files</Filter>
     </ClCompile>
@@ -635,6 +629,9 @@
     </ClCompile>
     <ClCompile Include="misc\TestSpheresDataSource.cpp">
       <Filter>misc\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="view\TimeControl.cpp">
+      <Filter>view\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1109,12 +1106,6 @@
     <ClInclude Include="cluster\NetMessages.h">
       <Filter>cluster\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cluster\NetVSyncBarrier.h">
-      <Filter>cluster\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cluster\NetVSyncBarrierServer.h">
-      <Filter>cluster\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="cluster\PowerwallView.h">
       <Filter>cluster\Header Files</Filter>
     </ClInclude>
@@ -1150,6 +1141,9 @@
     </ClInclude>
     <ClInclude Include="misc\TestSpheresDataSource.h">
       <Filter>misc\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\TimeControl.h">
+      <Filter>view\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

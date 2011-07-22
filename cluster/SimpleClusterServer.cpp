@@ -137,7 +137,7 @@ bool cluster::SimpleClusterServer::Client::OnMessageReceived(
             answer = msg;
             TimeSyncData *tsd = answer.GetBodyAs<TimeSyncData>();
             if (tsd->cnt < TIMESYNCDATACOUNT) {
-                tsd->time[tsd->cnt++] = this->parent.GetCoreInstance()->GetInstanceTime();
+                tsd->time[tsd->cnt++] = this->parent.GetCoreInstance()->GetCoreInstanceTime();
             }
             this->send(answer);
         } break;

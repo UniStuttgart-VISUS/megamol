@@ -41,7 +41,7 @@ namespace view {
          *
          * @return The instance time code
          */
-        inline float InstanceTime(void) const {
+        inline double InstanceTime(void) const {
             return this->instTime;
         }
 
@@ -61,7 +61,7 @@ namespace view {
          *
          * @param time The time code of the frame to render
          */
-        inline void SetInstanceTime(float time) {
+        inline void SetInstanceTime(double time) {
             this->instTime = time;
         }
 
@@ -138,7 +138,7 @@ namespace view {
         float time;
 
         /** The instance time code */
-        float instTime;
+        double instTime;
 
         /**
          * Flag marking that 'cntTimeFrames' store the number of the currently

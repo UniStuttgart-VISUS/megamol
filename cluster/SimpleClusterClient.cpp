@@ -231,10 +231,10 @@ bool cluster::SimpleClusterClient::OnMessageReceived(vislib::net::SimpleMessageD
                     lat += (tsd->time[i] - tsd->time[i - 1]) * 0.5;
                 }
                 lat /= static_cast<double>(TIMESYNCDATACOUNT - 1);
-                double lcit = this->GetCoreInstance()->GetInstanceTime();
+                double lcit = this->GetCoreInstance()->GetCoreInstanceTime();
                 double rcit = tsd->time[TIMESYNCDATACOUNT - 1] + lat;
                 this->GetCoreInstance()->OffsetInstanceTime(rcit - lcit);
-                double bclcit = this->GetCoreInstance()->GetInstanceTime();
+                double bclcit = this->GetCoreInstance()->GetCoreInstanceTime();
                 Log::DefaultLog.WriteInfo("Instancetime offsetted from %f to %f based on remote time %f\n", lcit, bclcit, rcit);
 
                 Log::DefaultLog.WriteInfo("Cleaning up module graph\n");

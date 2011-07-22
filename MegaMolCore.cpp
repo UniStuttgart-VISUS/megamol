@@ -582,7 +582,8 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
     if (view != NULL) {
         view->LockModuleGraph(false);
         if (view->View() != NULL) {
-            view->View()->Render();
+            double it = view->View()->GetCoreInstance()->GetCoreInstanceTime();
+            view->View()->Render(view->View()->DefaultTime(it), it);
             if (contRedraw != NULL) {
                 *contRedraw = true; // TODO: Implement the real thing
             }

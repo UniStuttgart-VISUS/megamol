@@ -31,7 +31,7 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
         resetViewSlot("resetView", "Triggers the reset of the view"),
         showBBoxSlot("showBBox", "Shows/hides the bounding box"),
         viewX(0.0f), viewY(0.0f), viewZoom(1.0f), viewUpdateCnt(0),
-        width(1.0f), incomingCall(NULL), overrideViewTile(NULL) {
+        width(1.0f), incomingCall(NULL), overrideViewTile(NULL), timeCtrl() {
 
     this->rendererSlot.SetCompatibleCall<CallRender2DDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
@@ -42,6 +42,10 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
 
     this->showBBoxSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->showBBoxSlot);
+
+    for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != NULL; i++) {
+        this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
+    }
 
     this->ResetView();
 }
@@ -87,7 +91,7 @@ void view::View2D::DeserialiseCamera(vislib::Serialiser& serialiser) {
 /*
  * view::View2D::Render
  */
-void view::View2D::Render(void) {
+void view::View2D::Render(float time, double instTime) {
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
@@ -121,7 +125,7 @@ void view::View2D::Render(void) {
 
     if (cr2d == NULL) {
         this->renderTitle(0.0f, 0.0f, this->width, this->height,
-            this->width, this->height, false, false);
+            this->width, this->height, false, false, instTime);
             AbstractRenderingView::endFrame(true);
         return;
     } else {
@@ -135,7 +139,14 @@ void view::View2D::Render(void) {
     vislib::math::Rectangle<float> bbox(-1.0f, -1.0f, 1.0f, 1.0f);
     if ((*cr2d)(1)) {
         bbox = cr2d->GetBoundingBox();
+        this->timeCtrl.SetTimeExtend(cr2d->TimeFramesCount(), cr2d->IsInSituTime());
+        if (time > static_cast<float>(cr2d->TimeFramesCount())) {
+            time = static_cast<float>(cr2d->TimeFramesCount());
+        }
     }
+
+    cr2d->SetTime(time);
+    cr2d->SetInstanceTime(instTime);
 
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
@@ -419,15 +430,9 @@ bool view::View2D::OnRenderView(Call& call) {
         overBC[2] = static_cast<float>(crv->BackgroundBlue()) / 255.0f;
         this->overrideBkgndCol = overBC; // hurk
     }
-    float time = 0.0f;
-    float instTime = crv->InstanceTime();
-    this->overrideTime = &time; // HAZARD: unklar
-    this->overrideInstTime = &instTime;
 
-    this->Render();
+    this->Render(crv->Time(), crv->InstanceTime());
 
-    this->overrideTime = NULL;
-    this->overrideInstTime = NULL;
     this->overrideBkgndCol = NULL;
     this->overrideViewport = NULL;
     this->overrideViewTile = NULL;

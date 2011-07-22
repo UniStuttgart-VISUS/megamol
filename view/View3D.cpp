@@ -49,11 +49,6 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         rotator2(), zoomer1(), zoomer2(), mover(), lookAtDist(),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         lightDir(0.5f, -1.0f, -1.0f), isCamLight(true), bboxs(),
-        animPlaySlot("anim::play", "Bool parameter to play/stop the animation"),
-        animSpeedSlot("anim::speed", "Float parameter of animation speed in time frames per second"),
-        animTimeSlot("anim::time", "The slot holding the current time to display"),
-        animOffsetSlot("anim::offset", "Slot used to synchronize the animation offset"),
-        timeFrame(0.0f), timeFrameForced(false),
         showBBox("showBBox", "Bool parameter to show/hide the bounding box"),
         showLookAt("showLookAt", "Flag showing the look at point"),
         cameraSettingsSlot("camsettings", "The stored camera settings"),
@@ -87,12 +82,10 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
         toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box"),
         toggleSoftCursorSlot("toggleSoftCursor", "Button to toggle the soft cursor"),
-        toggleAnimPlaySlot("toggleAnimPlay", "Button to toggle animation"),
-        animSpeedUpSlot("anim::SpeedUp", "Speeds up the animation"),
-        animSpeedDownSlot("anim::SpeedDown", "Slows down the animation"),
         bboxCol(192, 192, 192, 255),
         bboxColSlot("bboxCol", "Sets the colour for the bounding box"),
-        showViewCubeSlot("viewcube::show", "Shows the view cube helper") {
+        showViewCubeSlot("viewcube::show", "Shows the view cube helper"),
+        timeCtrl() {
     using vislib::sys::KeyCode;
 
     this->camParams = this->cam.Parameters();
@@ -112,25 +105,6 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
 
     // empty bounding box will trigger initialisation
     this->bboxs.Clear();
-
-    // simple animation time controlling (TODO: replace)
-    this->animPlaySlot << new param::BoolParam(false);
-    this->animPlaySlot.SetUpdateCallback(&View3D::onAnimPlayChanged);
-    this->MakeSlotAvailable(&this->animPlaySlot);
-    this->animSpeedSlot << new param::FloatParam(4.0f, 0.01f, 100.0f);
-    this->animSpeedSlot.SetUpdateCallback(&View3D::onAnimSpeedChanged);
-    this->MakeSlotAvailable(&this->animSpeedSlot);
-    this->animTimeSlot << new param::FloatParam(this->timeFrame, 0.0f);
-    this->MakeSlotAvailable(&this->animTimeSlot);
-    this->animOffsetSlot << new param::FloatParam(0.0f);
-    this->MakeSlotAvailable(&this->animOffsetSlot);
-
-    this->animSpeedUpSlot << new param::ButtonParam('m');
-    this->animSpeedUpSlot.SetUpdateCallback(&View3D::onAnimSpeedStep);
-    this->MakeSlotAvailable(&this->animSpeedUpSlot);
-    this->animSpeedDownSlot << new param::ButtonParam('n');
-    this->animSpeedDownSlot.SetUpdateCallback(&View3D::onAnimSpeedStep);
-    this->MakeSlotAvailable(&this->animSpeedDownSlot);
 
     this->showBBox << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->showBBox);
@@ -246,10 +220,6 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
     this->MakeSlotAvailable(&this->viewKeyMoveDownSlot);
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 
-    this->toggleAnimPlaySlot << new param::ButtonParam(' ');
-    this->toggleAnimPlaySlot.SetUpdateCallback(&View3D::onToggleButton);
-    this->MakeSlotAvailable(&this->toggleAnimPlaySlot);
-
     this->toggleSoftCursorSlot << new param::ButtonParam('i' | KeyCode::KEY_MOD_CTRL);
     this->toggleSoftCursorSlot.SetUpdateCallback(&View3D::onToggleButton);
     this->MakeSlotAvailable(&this->toggleSoftCursorSlot);
@@ -267,6 +237,10 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
 
     this->showViewCubeSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->showViewCubeSlot);
+
+    for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != NULL; i++) {
+        this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
+    }
 
 }
 
@@ -308,7 +282,7 @@ void view::View3D::DeserialiseCamera(vislib::Serialiser& serialiser) {
 /*
  * view::View3D::Render
  */
-void view::View3D::Render(void) {
+void view::View3D::Render(float time, double instTime) {
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
@@ -347,7 +321,8 @@ void view::View3D::Render(void) {
             this->cam.Parameters()->VirtualViewSize().Height(),
             (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_ORTHOGRAPHIC)
                 && (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
-            this->cam.Parameters()->Eye() == vislib::graphics::CameraParameters::LEFT_EYE);
+            this->cam.Parameters()->Eye() == vislib::graphics::CameraParameters::LEFT_EYE,
+            instTime);
         this->endFrame(true);
         return; // empty enought
     } else {
@@ -388,35 +363,12 @@ void view::View3D::Render(void) {
             }
         }
 
-        if (this->timeFrameForced) {
-            this->timeFrameForced = false;
-            
-            // for now truncate frame time (?)
-            
-        } else {
-            unsigned int frameCnt = cr3d->TimeFramesCount();
-            if (this->animPlaySlot.Param<param::BoolParam>()->Value()) {
-                double time = this->GetCoreInstance()->GetInstanceTime()
-                    * static_cast<double>(this->animSpeedSlot.Param<param::FloatParam>()->Value())
-                    + static_cast<double>(this->animOffsetSlot.Param<param::FloatParam>()->Value());
-
-                while (time < 0.0) { time += static_cast<double>(frameCnt); }
-                while (static_cast<unsigned int>(time) >= frameCnt) { time -= static_cast<double>(frameCnt); }
-
-                this->timeFrame = static_cast<float>(time);
-                this->animTimeSlot.Param<param::FloatParam>()->SetValue(this->timeFrame);
-
-            } else if (this->animTimeSlot.IsDirty()) {
-                this->animTimeSlot.ResetDirty();
-                this->timeFrame = this->animTimeSlot.Param<param::FloatParam>()->Value();
-                if (static_cast<unsigned int>(this->timeFrame) >= frameCnt) {
-                    this->timeFrame = static_cast<float>(frameCnt - 1);
-                    this->animTimeSlot.Param<param::FloatParam>()->SetValue(this->timeFrame);
-                }
-            }
+        this->timeCtrl.SetTimeExtend(cr3d->TimeFramesCount(), cr3d->IsInSituTime());
+        if (time > static_cast<float>(cr3d->TimeFramesCount())) {
+            time = static_cast<float>(cr3d->TimeFramesCount());
         }
 
-        cr3d->SetTime(this->frozenValues ? this->frozenValues->time : this->timeFrame);
+        cr3d->SetTime(this->frozenValues ? this->frozenValues->time : time);
         cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
         cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
     }
@@ -624,7 +576,7 @@ bool view::View3D::OnRenderView(Call& call) {
 
     this->overrideCall = dynamic_cast<AbstractCallRender*>(&call);
 
-    this->Render();
+    this->Render(crv->Time(), crv->InstanceTime());
 
     this->overrideCall = NULL;
 
@@ -651,7 +603,7 @@ void view::View3D::UpdateFreeze(bool freeze) {
             this->cam.SetParameters(this->frozenValues->camParams);
         }
         *(this->frozenValues->camParams) = *this->camParams;
-        this->frozenValues->time = this->timeFrame;
+        this->frozenValues->time = 0.0f;
     } else {
         this->camOverrides.DynamicCast<CameraParamOverride>()
             ->SetParametersBase(this->camParams);
@@ -1195,49 +1147,12 @@ bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
 
 
 /*
- * view::View3D::onAnimPlayChanged
- */
-bool view::View3D::onAnimPlayChanged(param::ParamSlot& p) {
-    ASSERT(&p == &this->animPlaySlot);
-
-    if (this->animPlaySlot.Param<param::BoolParam>()->Value()) {
-        double speed = static_cast<double>(this->animSpeedSlot.Param<param::FloatParam>()->Value());
-        double offset = static_cast<double>(this->timeFrame)
-            - this->GetCoreInstance()->GetInstanceTime() * speed;
-        this->animOffsetSlot.Param<param::FloatParam>()->SetValue(static_cast<float>(offset));
-    }
-
-    return true;
-}
-
-
-/*
- * view::View3D::onAnimSpeedChanged
- */
-bool view::View3D::onAnimSpeedChanged(param::ParamSlot& p) {
-    ASSERT(&p == &this->animSpeedSlot);
-
-    if (this->animPlaySlot.Param<param::BoolParam>()->Value()) {
-        // assuming 'this->timeFrame' is up-to-date
-        double speed = static_cast<double>(this->animSpeedSlot.Param<param::FloatParam>()->Value());
-        double offset = static_cast<double>(this->timeFrame)
-            - this->GetCoreInstance()->GetInstanceTime() * speed;
-        this->animOffsetSlot.Param<param::FloatParam>()->SetValue(static_cast<float>(offset));
-    }
-
-    return true;
-}
-
-
-/*
  * view::View3D::onToggleButton
  */
 bool view::View3D::onToggleButton(param::ParamSlot& p) {
     param::BoolParam *bp = NULL;
 
-    if (&p == &this->toggleAnimPlaySlot) {
-        bp = this->animPlaySlot.Param<param::BoolParam>();
-    } else if (&p == &this->toggleSoftCursorSlot) {
+    if (&p == &this->toggleSoftCursorSlot) {
         this->toggleSoftCurse();
         return true;
     } else if (&p == &this->toggleBBoxSlot) {
@@ -1246,37 +1161,6 @@ bool view::View3D::onToggleButton(param::ParamSlot& p) {
 
     if (bp != NULL) {
         bp->SetValue(!bp->Value());
-    }
-    return true;
-}
-
-
-/*
- * view::View3D::onAnimSpeedStep
- */
-bool view::View3D::onAnimSpeedStep(param::ParamSlot& p) {
-    float spd = this->animSpeedSlot.Param<param::FloatParam>()->Value();
-    bool spdset = false;
-    if (&p == &this->animSpeedUpSlot) {
-        if (spd >= 1.0f && spd < 100.0f) {
-            spd += 0.25f;
-        } else {
-            spd += 0.01f;
-            if (spd > 0.999999f) spd = 1.0f;
-        }
-        spdset = true;
-
-    } else if (&p == &this->animSpeedDownSlot) {
-        if (spd > 1.0f) {
-            spd -= 0.25f;
-        } else {
-            if (spd > 0.01f) spd -= 0.01f;
-        }
-        spdset = true;
-
-    }
-    if (spdset) {
-        this->animSpeedSlot.Param<param::FloatParam>()->SetValue(spd);
     }
     return true;
 }

@@ -75,9 +75,11 @@ void view::special::AnaglyphStereoView::Resize(unsigned int width, unsigned int 
 /*
  * view::special::AnaglyphStereoView::Render
  */
-void view::special::AnaglyphStereoView::Render(void) {
+void view::special::AnaglyphStereoView::Render(float time, double instTime) {
     CallRenderView *crv = this->getCallRenderView();
     if (crv == NULL) return;
+    crv->SetTime(time);
+    crv->SetInstanceTime(instTime);
 
     if (this->colourPresetsSlot.IsDirty()) {
         this->colourPresetsSlot.ResetDirty();

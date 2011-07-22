@@ -292,9 +292,12 @@ namespace core {
         /**
          * Answer the time of this instance in seconds.
          *
+         * DO NOT USE THIS FUNCTION in Renderer Modules.
+         * Use 'instTime' parameter in method 'Render' instead.
+         *
          * @return The time of this instance.
          */
-        double GetInstanceTime(void) const;
+        double GetCoreInstanceTime(void) const;
 
         /**
          * Adds an offset to the instance time.

@@ -375,7 +375,7 @@ bool view::special::TitleRenderer::Create(void) {
  */
 void view::special::TitleRenderer::Render(
         float tileX, float tileY, float tileW, float tileH,
-        float virtW, float virtH, bool stereo, bool leftEye,
+        float virtW, float virtH, bool stereo, bool leftEye, double instTime,
         CoreInstance *core) {
     if (this->icon == NULL) {
         this->icon = new GPURaycastIcon(core);
@@ -425,7 +425,7 @@ void view::special::TitleRenderer::Render(
     ::glTranslatef(((this->titleWidth * titleScale) + titleGap) * 0.5f, 0.0f, 0.0f);
 
     double angle;
-    angle = 15.0 * core->GetInstanceTime(); // will be synchronized over ClusterClient Heartbeat
+    angle = 15.0 * instTime;
 
 // not synchronized at all
 //#ifdef _WIN32
