@@ -29,6 +29,7 @@
 #include "misc/ImageViewer.h"
 #include "misc/LinesRenderer.h"
 #include "misc/SiffCSplineFitter.h"
+#include "misc/TestSpheresDataSource.h"
 #include "moldyn/AddParticleColours.h"
 #include "moldyn/ArrowRenderer.h"
 #include "moldyn/DataFileSequence.h"
@@ -96,6 +97,7 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<misc::ImageViewer>();
         instance->registerAutoDescription<misc::LinesRenderer>();
         instance->registerAutoDescription<misc::SiffCSplineFitter>();
+        instance->registerAutoDescription<misc::TestSpheresDataSource>();
         instance->registerAutoDescription<moldyn::AddParticleColours>();
         instance->registerAutoDescription<moldyn::ArrowRenderer>();
         instance->registerAutoDescription<moldyn::DataFileSequence>();
