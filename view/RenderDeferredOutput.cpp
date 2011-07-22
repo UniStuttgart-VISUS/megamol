@@ -27,7 +27,7 @@ void view::RenderDeferredOutput::DisableOutputBuffer(void) {
  */
 void view::RenderDeferredOutput::EnableOutputBuffer(void) {
     if (this->outputFBO) {
-        this->outputFBO->EnableMultiple(GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT);
+        this->outputFBO->EnableMultiple(2, GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT);
     }
 }
 
