@@ -470,6 +470,36 @@ void view::special::TitleRenderer::Render(
     ::glEnd();
 
     ::glPopMatrix();
+    ::glPushMatrix();
+
+    double d = (1.0 - (instTime * 0.25 - static_cast<double>(static_cast<int>(instTime * 0.25)))) * 4.0 * 12.0;
+    ::glTranslated(0.0, -1.5, 2.0);
+    ::glScaled(0.125, 0.05, 1.0);
+    ::glTranslated(d, 0.0, 0.0);
+
+    for (unsigned int j = 0; j < 5; j++) {
+        for (unsigned int i = 0; i < 2; i++) {
+            ::glBegin(GL_TRIANGLE_FAN);
+            ::glColor4ub(255, 255, 255, 192);
+            ::glVertex2d(0.0, 0.0);
+            ::glColor4ub(255, 255, 255, 0);
+            ::glVertex2d(2.0, 0.0);
+            ::glVertex2d(1.3, 0.8);
+            ::glVertex2d(0.0, 1.0);
+            ::glVertex2d(-1.3, 0.8);
+            ::glVertex2d(-2.0, 0.0);
+            ::glVertex2d(-1.3, -0.8);
+            ::glVertex2d(0.0, -1.0);
+            ::glVertex2d(1.3, -0.8);
+            ::glVertex2d(2.0, 0.0);
+            ::glEnd();
+            ::glTranslated(-2.0 * d, 0.0, 0.0);
+        }
+        ::glTranslated(4.0 * d, -1.0, -1.0);
+    }
+
+    ::glPopMatrix();
+
     ::glClear(GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_LIGHTING);
