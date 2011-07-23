@@ -377,6 +377,10 @@ void view::special::TitleRenderer::Render(
         float tileX, float tileY, float tileW, float tileH,
         float virtW, float virtH, bool stereo, bool leftEye, double instTime,
         CoreInstance *core) {
+
+    double angle;
+    angle = 15.0 * instTime;
+
     if (this->icon == NULL) {
         this->icon = new GPURaycastIcon(core);
         this->icon->Create();
@@ -412,7 +416,62 @@ void view::special::TitleRenderer::Render(
 
     this->camera.glSetMatrices();
 
+    glDisable(GL_LIGHTING);
     glEnable(GL_COLOR_MATERIAL);
+    ::glEnable(GL_BLEND);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    ::glPushMatrix();
+    ::glTranslatef(
+        this->camera.Parameters()->EyePosition().X(),
+        this->camera.Parameters()->EyePosition().Y(),
+        this->camera.Parameters()->EyePosition().Z());
+    ::glRotated(angle * 0.1, 0.0, -1.0, 0.0);
+    const unsigned int steps = 150;
+
+    ::glColor4ub(0, 0, 0, 192);
+    ::glBegin(GL_TRIANGLE_FAN);
+    ::glVertex3d(0.0, -10.0, 0.0);
+    for (unsigned int i = 0; i <= steps; i++) {
+        double a = M_PI * static_cast<double>(2 * i) / static_cast<double>(steps);
+        ::glVertex3d(cos(a) * 10.0, -10.0, sin(a) * 10.0);
+    }
+    ::glEnd();
+    ::glBegin(GL_TRIANGLE_STRIP);
+    for (unsigned int i = 0; i <= steps; i++) {
+        double a = M_PI * static_cast<double>(2 * i) / static_cast<double>(steps);
+        ::glVertex3d(cos(a) * 10.0, -10.0, sin(a) * 10.0);
+        ::glVertex3d(cos(a) * 10.0, -6.0, sin(a) * 10.0);
+    }
+    ::glEnd();
+    ::glBegin(GL_QUADS);
+    for (unsigned int i = 0; i <= steps; i++) {
+        const double more = 0.06;
+        double a11 = M_PI * static_cast<double>(2 * i) / static_cast<double>(steps);
+        double a12 = M_PI * static_cast<double>(2 * i + 2) / static_cast<double>(steps);
+        double a21 = M_PI * (more + static_cast<double>(2 * i) / static_cast<double>(steps));
+        double a22 = M_PI * (more + static_cast<double>(2 * i + 2) / static_cast<double>(steps));
+        double a31 = M_PI * (2.0 * more + static_cast<double>(2 * i) / static_cast<double>(steps));
+        double a32 = M_PI * (2.0 * more + static_cast<double>(2 * i + 2) / static_cast<double>(steps));
+        ::glColor4ub(0, 0, 0, 192);
+        ::glVertex3d(cos(a11) * 10.0, -6.0, sin(a11) * 10.0);
+        ::glVertex3d(cos(a12) * 10.0, -6.0, sin(a12) * 10.0);
+        if (i % 2) ::glColor4ub(150, 150, 0, 192);
+            else ::glColor4ub(24, 24, 24, 192);
+        ::glVertex3d(cos(a22) * 10.0, -3.5, sin(a22) * 10.0);
+        ::glVertex3d(cos(a21) * 10.0, -3.5, sin(a21) * 10.0);
+        ::glVertex3d(cos(a21) * 10.0, -3.5, sin(a21) * 10.0);
+        ::glVertex3d(cos(a22) * 10.0, -3.5, sin(a22) * 10.0);
+        if (i % 2) ::glColor4ub(150, 150, 0, 0);
+            else ::glColor4ub(24, 24, 24, 0);
+        ::glVertex3d(cos(a32) * 10.0, -1.0, sin(a32) * 10.0);
+        ::glVertex3d(cos(a31) * 10.0, -1.0, sin(a31) * 10.0);
+    }
+    ::glEnd();
+
+    ::glPopMatrix();
+    ::glClear(GL_DEPTH_BUFFER_BIT);
+
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     const float lp[4] = {1.0f, 1.0f, -1.0f, 0.0f};
@@ -423,9 +482,6 @@ void view::special::TitleRenderer::Render(
     ::glLightfv(GL_LIGHT0, GL_DIFFUSE, ld);
 
     ::glTranslatef(((this->titleWidth * titleScale) + titleGap) * 0.5f, 0.0f, 0.0f);
-
-    double angle;
-    angle = 15.0 * instTime;
 
 // not synchronized at all
 //#ifdef _WIN32

@@ -13,6 +13,7 @@
 #include "view/CallRenderView.h"
 #include "vislib/Log.h"
 #include "vislib/Trace.h"
+#include "glh/glh_extensions.h"
 
 using namespace megamol::core;
 
@@ -221,6 +222,11 @@ bool view::special::AnaglyphStereoView::create(void) {
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to initialize graphic extensions for glsl shader objects");
+        return false;
+    }
+    if (glh_init_extensions("GL_ARB_multitexture") != GL_TRUE) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to activate GL_ARB_multitexture");
         return false;
     }
 
