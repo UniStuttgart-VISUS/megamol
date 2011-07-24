@@ -12,6 +12,7 @@
 #include "vislib/SocketException.h"
 #include "vislib/IPEndPoint.h"
 #include "vislib/DNS.h"
+#include "vislib/Thread.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -109,7 +110,7 @@ DWORD MDDriverConnector::Run(void *config) {
                 }
             }
         } else if (this->paused == true && terminateRequested == false) {
-            Sleep(50); // if MDDriver is paused, don't allow the thread to eat up so much CPU time
+            vislib::sys::Thread::Sleep(50); // if MDDriver is paused, don't allow the thread to eat up so much CPU time
         }
 
         // Terminate connection request
