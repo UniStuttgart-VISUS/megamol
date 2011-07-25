@@ -696,6 +696,7 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
 
     // =============== Refresh all parameters ===============
     this->ParameterRefresh( cr3d);
+    this->posInter = 0;
     
     // get the call time
     this->callTime = cr3d->Time();
@@ -755,7 +756,7 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
         memcpy( pos0, mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
         // check if the atom positions have to be interpolated
         bool interpolate = this->interpolParam.Param<param::BoolParam>()->Value();
-        float *pos1;
+        float *pos1 = 0;
         if( interpolate ) {
             // set next frame ID and get positions of the second frame
             if( ( static_cast<int>( callTime) + 1) < int(mol->FrameCount()) ) 
@@ -769,7 +770,7 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
             pos1 = new float[mol->AtomCount() * 3];
             memcpy( pos1, mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
             // interpolate atom positions between frames
-            posInter = new float[mol->AtomCount() * 3];
+            this->posInter = new float[mol->AtomCount() * 3];
             float inter = callTime - static_cast<float>(static_cast<int>( callTime));
             float threshold = vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Width(),
                 vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
@@ -779,21 +780,27 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
                 if( std::sqrt( std::pow( pos0[3*cnt+0] - pos1[3*cnt+0], 2) +
                         std::pow( pos0[3*cnt+1] - pos1[3*cnt+1], 2) +
                         std::pow( pos0[3*cnt+2] - pos1[3*cnt+2], 2) ) < threshold ) {
-                    posInter[3*cnt+0] = (1.0f - inter) * pos0[3*cnt+0] + inter * pos1[3*cnt+0];
-                    posInter[3*cnt+1] = (1.0f - inter) * pos0[3*cnt+1] + inter * pos1[3*cnt+1];
-                    posInter[3*cnt+2] = (1.0f - inter) * pos0[3*cnt+2] + inter * pos1[3*cnt+2];
+                    this->posInter[3*cnt+0] = (1.0f - inter) * pos0[3*cnt+0] + inter * pos1[3*cnt+0];
+                    this->posInter[3*cnt+1] = (1.0f - inter) * pos0[3*cnt+1] + inter * pos1[3*cnt+1];
+                    this->posInter[3*cnt+2] = (1.0f - inter) * pos0[3*cnt+2] + inter * pos1[3*cnt+2];
                 } else if( inter < 0.5f ) {
-                    posInter[3*cnt+0] = pos0[3*cnt+0];
-                    posInter[3*cnt+1] = pos0[3*cnt+1];
-                    posInter[3*cnt+2] = pos0[3*cnt+2];
+                    this->posInter[3*cnt+0] = pos0[3*cnt+0];
+                    this->posInter[3*cnt+1] = pos0[3*cnt+1];
+                    this->posInter[3*cnt+2] = pos0[3*cnt+2];
                 } else {
-                    posInter[3*cnt+0] = pos1[3*cnt+0];
-                    posInter[3*cnt+1] = pos1[3*cnt+1];
-                    posInter[3*cnt+2] = pos1[3*cnt+2];
+                    this->posInter[3*cnt+0] = pos1[3*cnt+0];
+                    this->posInter[3*cnt+1] = pos1[3*cnt+1];
+                    this->posInter[3*cnt+2] = pos1[3*cnt+2];
                 }
             }
+
+            // delete temporary arrays
+            if( pos0 )
+                delete[] pos0;
+            if( pos1 )
+                delete[] pos1;
         } else {
-            posInter = pos0;
+            this->posInter = pos0;
         }
 
         Color::MakeColorTable( mol, 
@@ -805,6 +812,7 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
             this->midGradColorParam.Param<param::StringParam>()->Value(),
             this->maxGradColorParam.Param<param::StringParam>()->Value(),
             true);
+
     }
 
 
@@ -852,6 +860,9 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
     // unlock the current frame
     if( mol )
         mol->Unlock();
+
+    if( this->posInter )
+        delete[] this->posInter;
 
     return retval;
 }
