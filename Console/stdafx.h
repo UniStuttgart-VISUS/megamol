@@ -14,6 +14,16 @@
 #ifdef _WIN32
 /* Windows includes */
 
+//
+// Uses these to hunt down memory leaks
+//
+//#if defined(DEBUG) || defined(_DEBUG)
+//#define _CRTDBG_MAP_ALLOC
+//#include <stdlib.h>
+//#include <crtdbg.h>
+////#define MY_CRTDBG_BREAK_AT_ALLOC 4345
+//#endif /* DEBUG || _DEBUG */
+
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 
 #else /* _WIN32 */
