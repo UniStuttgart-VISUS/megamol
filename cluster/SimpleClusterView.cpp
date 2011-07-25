@@ -162,6 +162,8 @@ void cluster::SimpleClusterView::Render(float time, double instTime) {
 
     if (crv != NULL) {
         crv->ResetAll();
+        crv->SetTime(time);
+        crv->SetInstanceTime(instTime);
         crv->SetProjection(this->getProjType(), this->getEye());
         if ((this->getVirtWidth() != 0) && (this->getVirtHeight() != 0)
                 && (this->getTileW() != 0) && (this->getTileH() != 0)) {

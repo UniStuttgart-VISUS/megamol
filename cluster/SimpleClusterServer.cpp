@@ -49,9 +49,10 @@ using namespace megamol::core;
 cluster::SimpleClusterServer::Client::Client(SimpleClusterServer& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> channel)
         : vislib::net::SimpleMessageDispatchListener(), parent(parent), dispatcher(), terminationImminent(false) {
     this->dispatcher.AddListener(this);
-    /* *HAZARD* This has to be exactly this cast! */
-    vislib::net::AbstractCommChannel *cc = dynamic_cast<vislib::net::AbstractCommChannel *>(channel.operator ->());
-    this->dispatcher.Start(cc);
+    ///* *HAZARD* This has to be exactly this cast! */
+    //vislib::net::AbstractCommChannel *cc = dynamic_cast<vislib::net::AbstractCommChannel *>(channel.operator ->());
+    vislib::net::SimpleMessageDispatcher::Configuration cfg(channel);
+    this->dispatcher.Start(&cfg);
 }
 
 
@@ -203,8 +204,7 @@ bool cluster::SimpleClusterServer::Client::OnMessageReceived(
 void cluster::SimpleClusterServer::Client::send(const vislib::net::AbstractSimpleMessage& msg) {
     using vislib::sys::Log;
     try {
-        this->dispatcher.GetChannel().DynamicCast<vislib::net::AbstractCommChannel>()->
-            Send(msg, msg.GetMessageSize(), vislib::net::AbstractCommChannel::TIMEOUT_INFINITE, true);
+        this->dispatcher.GetChannel()->Send(msg, msg.GetMessageSize(), vislib::net::AbstractCommChannel::TIMEOUT_INFINITE, true);
     } catch(vislib::Exception ex) {
         Log::DefaultLog.WriteError("Failed to send simple TCP message: %s\n", ex.GetMsgA());
     } catch(...) {

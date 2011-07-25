@@ -190,7 +190,7 @@ void cluster::SimpleClusterClient::release(void) {
     }
     if (this->tcpChan != NULL) {
         this->tcpChan->Close();
-        this->tcpChan->Release();
+        //this->tcpChan->Release();
         this->tcpChan = NULL;
     }
     if (this->tcpSan.IsRunning()) {
@@ -334,7 +334,7 @@ void cluster::SimpleClusterClient::OnDispatcherExited(vislib::net::SimpleMessage
  * cluster::SimpleClusterClient::udpReceiverLoop
  */
 DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
-    SimpleClusterClient *that = reinterpret_cast<SimpleClusterClient *>(ctxt);
+    SimpleClusterClient *that = static_cast<SimpleClusterClient *>(ctxt);
     SimpleClusterDatagram datagram;
     vislib::sys::Log::DefaultLog.WriteInfo("UDP Receiver started\n");
     vislib::net::Socket::Startup();
@@ -343,7 +343,9 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
         vislib::sys::Thread::Sleep(10);
         while (that->udpInSocket.IsValid()) {
             //vislib::net::IPEndPoint fromEP;
-            that->udpInSocket.Receive(/*fromEP, */&datagram, sizeof(datagram));
+            if (that->udpInSocket.Receive(/*fromEP, */&datagram, sizeof(datagram)) != sizeof(datagram)) {
+                throw new vislib::Exception("Udp socket closed", __FILE__, __LINE__);
+            }
 
             vislib::sys::Log::DefaultLog.WriteInfo(200, "UDP receive answered ...");
 
@@ -378,7 +380,7 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                             vislib::sys::Log::DefaultLog.WriteInfo("Trying connect to new server \"%s\"", srv.PeekBuffer());
                             if (that->tcpChan != NULL) {
                                 that->tcpChan->Close();
-                                that->tcpChan->Release();
+                                //that->tcpChan->Release();
                                 that->tcpChan = NULL;
                             }
                             if (that->tcpSan.IsRunning()) {
@@ -420,7 +422,7 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                             } catch(vislib::Exception ex) {
                                 vislib::sys::Log::DefaultLog.WriteError("Failed to connect: %s\n", ex.GetMsgA());
                                 that->tcpChan->Close();
-                                that->tcpChan->Release();
+                                //that->tcpChan->Release();
                                 that->tcpChan = NULL;
                                 if (that->tcpSan.IsRunning()) {
                                     that->tcpSan.Terminate();
@@ -429,7 +431,7 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                             } catch(...) {
                                 vislib::sys::Log::DefaultLog.WriteError("Failed to connect: unexpected exception\n");
                                 that->tcpChan->Close();
-                                that->tcpChan->Release();
+                                //that->tcpChan->Release();
                                 that->tcpChan = NULL;
                                 if (that->tcpSan.IsRunning()) {
                                     that->tcpSan.Terminate();
@@ -507,7 +509,7 @@ bool cluster::SimpleClusterClient::onUdpPortChanged(param::ParamSlot& slot) {
         Log::DefaultLog.WriteInfo(200, "Starting UDP receiver on endpoint %s",
             udpEndPoint.ToStringA().PeekBuffer());
         this->udpInSocket.Bind(udpEndPoint);
-        this->udpReceiver.Start(reinterpret_cast<void*>(this));
+        this->udpReceiver.Start(static_cast<void*>(this));
 
     } catch(vislib::Exception ex) {
         Log::DefaultLog.WriteError("Failed to start UDP: %s\n", ex.GetMsgA());
