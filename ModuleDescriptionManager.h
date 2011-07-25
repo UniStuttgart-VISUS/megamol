@@ -14,6 +14,7 @@
 
 #include "ObjectDescriptionManager.h"
 #include "ModuleDescription.h"
+#include "vislib/SmartPtr.h"
 
 
 namespace megamol {
@@ -32,15 +33,30 @@ namespace core {
          *
          * @return The only instance of this class.
          */
-        static ModuleDescriptionManager * Instance();
+        static ModuleDescriptionManager * Instance(void);
 
-    private:
-
-        /** Private ctor. */
-        ModuleDescriptionManager(void);
+        /**
+         * Shuts the one and only instance
+         */
+        static void ShutdownInstance(void);
 
         /** Private dtor. */
         virtual ~ModuleDescriptionManager(void);
+
+    private:
+
+        /** The one an only instance */
+        static vislib::SmartPtr<ModuleDescriptionManager> inst;
+
+        /**
+         * Registers object in the one and only instance
+         *
+         * @param instance The one an only instance
+         */
+        static void registerObjects(ModuleDescriptionManager *instance);
+
+        /** Private ctor. */
+        ModuleDescriptionManager(void);
 
         /**
          * Registers a module (if available) description. Template parameter

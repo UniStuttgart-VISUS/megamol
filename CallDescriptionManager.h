@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-
 #include "ObjectDescriptionManager.h"
 #include "CallDescription.h"
+#include "vislib/SmartPtr.h"
 
 
 namespace megamol {
@@ -38,6 +38,11 @@ namespace core {
         static CallDescriptionManager * Instance();
 
         /**
+         * Shuts the one and only instance
+         */
+        static void ShutdownInstance(void);
+
+        /**
          * Assignment crowbar
          *
          * @param tar The targeted object
@@ -45,13 +50,23 @@ namespace core {
          */
         void AssignmentCrowbar(Call *tar, Call *src);
 
+        /** Private dtor. */
+        virtual ~CallDescriptionManager(void);
+
     private:
+
+        /** The one an only instance */
+        static vislib::SmartPtr<CallDescriptionManager> inst;
+
+        /**
+         * Registers object in the one and only instance
+         *
+         * @param instance The one an only instance
+         */
+        static void registerObjects(CallDescriptionManager *instance);
 
         /** Private ctor. */
         CallDescriptionManager(void);
-
-        /** Private dtor. */
-        virtual ~CallDescriptionManager(void);
 
         /**
          * Registers a call description. Template parameter Cp is the call

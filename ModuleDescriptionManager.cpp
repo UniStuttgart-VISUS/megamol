@@ -67,14 +67,30 @@
 using namespace megamol::core;
 
 
+vislib::SmartPtr<ModuleDescriptionManager> ModuleDescriptionManager::inst;
+
+
 /*
  * ModuleDescriptionManager::Instance
  */
-ModuleDescriptionManager *
-ModuleDescriptionManager::Instance() {
-    static ModuleDescriptionManager *instance = NULL;
-    if (instance == NULL) {
-        instance = new ModuleDescriptionManager();
+ModuleDescriptionManager * ModuleDescriptionManager::Instance() {
+    if (inst.IsNull()) {
+        inst = new ModuleDescriptionManager();
+        registerObjects(inst.operator->());
+    }
+    return inst.operator->();
+}
+
+
+void ModuleDescriptionManager::ShutdownInstance() {
+    inst = NULL;
+}
+
+
+void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instance) {
+    //static ModuleDescriptionManager *instance = NULL;
+    //if (instance == NULL) {
+        //instance = new ModuleDescriptionManager();
 
         //////////////////////////////////////////////////////////////////////
         // Register all rendering graph module descriptions here
@@ -135,8 +151,8 @@ ModuleDescriptionManager::Instance() {
         //instance->registerAutoDescription<vismol2::Mol20DataSource>();
         instance->registerAutoDescription<job::DataWriterJob>();
         instance->registerAutoDescription<job::JobThread>();
-    }
-    return instance;
+    //}
+    //return instance;
 }
 
 

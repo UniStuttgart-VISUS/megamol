@@ -30,14 +30,30 @@
 using namespace megamol::core;
 
 
+vislib::SmartPtr<CallDescriptionManager> CallDescriptionManager::inst;
+
+
 /*
  * CallDescriptionManager::Instance
  */
-CallDescriptionManager *
-CallDescriptionManager::Instance() {
-    static CallDescriptionManager *instance = NULL;
-    if (instance == NULL) {
-        instance = new CallDescriptionManager();
+CallDescriptionManager * CallDescriptionManager::Instance() {
+    if (inst.IsNull()) {
+        inst = new CallDescriptionManager();
+        registerObjects(inst.operator->());
+    }
+    return inst.operator->();
+}
+
+
+void CallDescriptionManager::ShutdownInstance() {
+    inst = NULL;
+}
+
+
+void CallDescriptionManager::registerObjects(CallDescriptionManager *instance) {
+    //static CallDescriptionManager *instance = NULL;
+    //if (instance == NULL) {
+        //instance = new CallDescriptionManager();
 
         //////////////////////////////////////////////////////////////////////
         // Register all rendering graph call descriptions here
@@ -57,8 +73,8 @@ CallDescriptionManager::Instance() {
         instance->registerAutoDescription<view::CallRenderDeferred3D>();
         instance->registerAutoDescription<view::CallRenderView>();
         instance->registerAutoDescription<DataWriterCtrlCall>();
-    }
-    return instance;
+    //}
+    //return instance;
 }
 
 

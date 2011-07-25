@@ -266,6 +266,9 @@ megamol::core::CoreInstance::~CoreInstance(void) {
     }
     this->namespaceRoot.UnlockModuleGraph();
 
+    ModuleDescriptionManager::ShutdownInstance();
+    CallDescriptionManager::ShutdownInstance();
+
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Cleanup();
 #endif /* ULTRA_SOCKET_STARTUP */
