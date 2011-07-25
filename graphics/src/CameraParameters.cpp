@@ -131,7 +131,7 @@ void vislib::graphics::CameraParameters::Deserialise(
     this->SetVirtualViewSize(f4, f5);
     this->SetTileRect(vislib::math::Rectangle<ImageSpaceType>(f0, f1, f2, f3));
     serialiser.Deserialise(f0, "AutoFocusOffset"); // last because it's new
-    this->SetApertureAngle(f0);
+    this->SetAutoFocusOffset(f0);
 }
 
 
