@@ -48,7 +48,7 @@ using namespace megamol::core;
  */
 cluster::SimpleClusterServer::Client::Client(SimpleClusterServer& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> channel)
         : vislib::net::SimpleMessageDispatchListener(), parent(parent), dispatcher(), terminationImminent(false),
-        wantCamUpdates(false) {
+        wantCamUpdates(false), lastTCSyncNumber(0) {
     this->dispatcher.AddListener(this);
     ///* *HAZARD* This has to be exactly this cast! */
     //vislib::net::AbstractCommChannel *cc = dynamic_cast<vislib::net::AbstractCommChannel *>(channel.operator ->());
@@ -196,6 +196,45 @@ bool cluster::SimpleClusterServer::Client::OnMessageReceived(
             Log::DefaultLog.WriteInfo("Client %s %s camera updates", this->name.PeekBuffer(),
                 (this->wantCamUpdates ? "requests" : "declines"));
         } break;
+
+        case MSG_REQUESTTCUPDATE: {
+
+            double instTime = this->parent.GetCoreInstance()->GetCoreInstanceTime();
+            float time = 0.0f;
+            const view::AbstractView *av = NULL;
+            vislib::RawStorage mem;
+            mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData) + sizeof(double) + sizeof(float));
+            vislib::RawStorageSerialiser serialiser(&mem, sizeof(vislib::net::SimpleMessageHeaderData));
+            vislib::net::ShallowSimpleMessage msg(mem);
+
+            this->parent.LockModuleGraph(false);
+            Call *call = this->parent.viewSlot.CallAs<Call>();
+            if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
+                av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
+            }
+            this->parent.UnlockModuleGraph();
+
+            if (av != NULL) {
+                if (((this->lastTCSyncNumber == 0) || (av->GetCameraSyncNumber() != this->lastTCSyncNumber))) {
+                    serialiser.SetOffset(sizeof(vislib::net::SimpleMessageHeaderData) + sizeof(double) + sizeof(float));
+                    this->lastTCSyncNumber = av->GetCameraSyncNumber();
+                    av->SerialiseCamera(serialiser);
+                }
+                time = av->DefaultTime(instTime);
+            }
+
+            *mem.AsAt<double>(sizeof(vislib::net::SimpleMessageHeaderData)) = instTime;
+            *mem.AsAt<float>(sizeof(vislib::net::SimpleMessageHeaderData) + sizeof(double)) = time;
+
+            msg.SetStorage(mem, mem.GetSize());
+            msg.GetHeader().SetMessageID(MSG_TCUPDATE);
+            msg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(
+                mem.GetSize() - sizeof(vislib::net::SimpleMessageHeaderData)));
+
+            this->send(msg);
+
+        } break;
+
         default:
             Log::DefaultLog.WriteInfo("Server: TCP Message %d received\n", static_cast<int>(msg.GetHeader().GetMessageID()));
             break;

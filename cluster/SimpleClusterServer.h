@@ -296,6 +296,9 @@ namespace cluster {
             /** Flag whether or not this client wants camera updates */
             bool wantCamUpdates;
 
+            /** The camera sync number of the camera information last transmitted */
+            unsigned int lastTCSyncNumber;
+
         };
 
         /**

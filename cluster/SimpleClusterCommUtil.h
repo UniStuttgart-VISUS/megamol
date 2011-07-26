@@ -58,6 +58,8 @@ namespace cluster {
 #define MSG_PARAMUPDATE 8
 #define MSG_CAMERAUPDATE 9
 #define MSG_WANTCAMERAUPDATE 10
+#define MSG_REQUESTTCUPDATE 11
+#define MSG_TCUPDATE 12
 
     /**
      * Struct layout a simple cluster datagram

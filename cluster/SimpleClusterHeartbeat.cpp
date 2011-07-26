@@ -11,12 +11,13 @@
 #include "cluster/SimpleClusterClient.h"
 //#include "cluster/SimpleClusterCommUtil.h"
 //#include "param/BoolParam.h"
-//#include "param/IntParam.h"
+#include "param/IntParam.h"
 //#include "param/StringParam.h"
 //#include "AbstractNamedObject.h"
-//#include "CoreInstance.h"
+#include "CoreInstance.h"
 //#include <GL/gl.h>
 #include "vislib/assert.h"
+#include "vislib/AutoLock.h"
 #include "vislib/Log.h"
 //#include "vislib/DNS.h"
 //#include "vislib/IPHostEntry.h"
@@ -33,20 +34,21 @@ using namespace megamol::core;
  */
 cluster::SimpleClusterHeartbeat::SimpleClusterHeartbeat(void)
         : job::AbstractThreadedJob(), Module(),
-        registerSlot("register", "The slot registering this view"), client(NULL), run(false)
+        registerSlot("register", "The slot registering this view"), client(NULL), run(false), mainlock(),
+        heartBeatPortSlot("heartbeat::port", "The port the heartbeat server communicates on"),
+        /* tcBuf, */ tcBufIdx(0)
     /* : view::AbstractTileView(),
         firstFrame(false), frozen(false), frozenTime(0.0), frozenCam(NULL), initMsg(NULL),
-        heartBeatPortSlot("heartbeat::port", "The port the heartbeat server communicates on"),
         heartBeatServerSlot("heartbeat::server", "The machine the heartbeat server runs on"),
         directCamSyncSlot("directCamSyn", "Flag controlling whether or not this view directly syncs it's camera without using the heartbeat server. It is not recommended to change this setting!")*/
 {
 
     this->registerSlot.SetCompatibleCall<SimpleClusterClientViewRegistrationDescription>();
     this->MakeSlotAvailable(&this->registerSlot);
-/*
+
     this->heartBeatPortSlot << new param::IntParam(0, 0, USHRT_MAX);
     this->MakeSlotAvailable(&this->heartBeatPortSlot);
-
+/*
     this->heartBeatServerSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->heartBeatServerSlot);
     this->heartBeatServerSlot.ForceSetDirty();
@@ -73,6 +75,7 @@ cluster::SimpleClusterHeartbeat::~SimpleClusterHeartbeat(void) {
  */
 bool cluster::SimpleClusterHeartbeat::Terminate(void) {
     this->run = false;
+    this->mainlock.Set();
     return true; // will terminate as soon as possible
 }
 
@@ -91,10 +94,77 @@ void cluster::SimpleClusterHeartbeat::Unregister(cluster::SimpleClusterClient *c
 
 
 /*
+ * cluster::SimpleClusterHeartbeat::SetTCData
+ */
+void cluster::SimpleClusterHeartbeat::SetTCData(const void *data, SIZE_T size) {
+    const unsigned char *dat = static_cast<const unsigned char*>(data);
+
+    double instTime = this->GetCoreInstance()->GetCoreInstanceTime();
+    float time = 0.0f;
+
+    if (size >= sizeof(double)) {
+        instTime = *static_cast<const double*>(data);
+        dat += sizeof(double);
+        size -= sizeof(double);
+        data = dat;
+
+        if (size >= sizeof(float)) {
+            time = *static_cast<const float*>(data);
+            dat += sizeof(float);
+            size -= sizeof(float);
+            data = dat;
+
+        } else {
+            size = 0;
+        }
+
+        this->GetCoreInstance()->OffsetInstanceTime(instTime - this->GetCoreInstance()->GetCoreInstanceTime());
+
+    } else {
+        size = 0;
+    }
+
+    // remaining data is camera serialization data
+
+    unsigned int bi = this->tcBufIdx;
+    TCBuffer& abuf = this->tcBuf[bi];
+    TCBuffer& buf = this->tcBuf[1 - bi];
+    {
+        vislib::sys::AutoLock(buf.lock);
+        if (size > 0) {
+            buf.camera.EnforceSize(size);
+            ::memcpy(buf.camera, data, size);
+        } else {
+            buf.camera = abuf.camera;
+        }
+        buf.instTime = instTime;
+        buf.time = time;
+    }
+    this->tcBufIdx = 1 - this->tcBufIdx;
+    this->mainlock.Set();
+}
+
+
+/*
  * cluster::SimpleClusterHeartbeat::SimpleClusterHeartbeat
  */
 bool cluster::SimpleClusterHeartbeat::create(void) {
-    // TODO: Implement
+
+    if (this->GetCoreInstance()->Configuration().IsConfigValueSet("scv-heartbeat-port")) {
+        try {
+            this->heartBeatPortSlot.Param<param::IntParam>()->SetValue(
+                vislib::CharTraitsW::ParseInt(
+                    this->GetCoreInstance()->Configuration().ConfigValue("scv-heartbeat-port")));
+        } catch(vislib::Exception e) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Failed to load heartbeat port configuration: %s [%s, %d]\n",
+                e.GetMsgA(), e.GetFile(), e.GetLine());
+        } catch(...) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Failed to load heartbeat port configuration: Unknown exception\n");
+        }
+    }
+
     return true;
 }
 
@@ -107,6 +177,7 @@ void cluster::SimpleClusterHeartbeat::release(void) {
         this->client->Unregister(this);
         this->client = NULL;
     }
+    this->mainlock.Set();
     // TODO: Implement
 }
 
@@ -132,15 +203,35 @@ DWORD cluster::SimpleClusterHeartbeat::Run(void *userData) {
             }
         }
     }
-
+    this->mainlock.Set();
 
     while (this->run) {
-        vislib::sys::Thread::Sleep(10);
+        if (this->client == NULL) break;
 
-        // TODO: Implement
+        if (this->heartBeatPortSlot.IsDirty()) {
+            this->heartBeatPortSlot.ResetDirty();
+
+            // TODO: Implement server restart
+
+        }
+
+        if (!this->client->RequestTCUpdate()) {
+            // no connection yet
+            this->mainlock.Wait(1000 / 4); // retry 4 times a second
+            continue;
+        }
+
+        // request was successful
+        if (!this->mainlock.Wait(100)) {
+            // timed out ... re-request?
+            continue;
+        }
+
+        // new data or parameter changed
+
+        vislib::sys::Thread::Reschedule();
 
     }
-
 
     if (this->client != NULL) {
         this->client->Unregister(this);

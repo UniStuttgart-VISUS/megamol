@@ -134,6 +134,20 @@ void cluster::SimpleClusterClient::SetDirectCamSync(bool yes) {
 }
 
 
+/*
+ * cluster::SimpleClusterClient::RequestTCUpdate
+ */
+bool cluster::SimpleClusterClient::RequestTCUpdate(void) {
+    if (this->tcpChan == NULL) return false;
+    vislib::net::SimpleMessage msg;
+    msg.GetHeader().SetMessageID(MSG_REQUESTTCUPDATE);
+    msg.GetHeader().SetBodySize(0);
+    msg.AssertBodySize();
+    this->send(msg);
+    return true;
+}
+
+
 /**
  * Selects adapters capable of UDP broadcast
  *
@@ -331,9 +345,17 @@ bool cluster::SimpleClusterClient::OnMessageReceived(vislib::net::SimpleMessageD
             if (!this->views.IsEmpty()) {
                 vislib::RawStorageSerialiser ser(msg.GetBodyAs<BYTE>(), msg.GetHeader().GetBodySize());
                 ser.SetOffset(0);
+                // it is sufficient to only inform view[0] because all other views reference the same ConnectedView!
                 view::AbstractView *v = this->views[0]->GetConnectedView();
                 if (v != NULL) {
                     v->DeserialiseCamera(ser);
+                }
+            }
+            break;
+        case MSG_TCUPDATE:
+            if (!this->heartbeats.IsEmpty()) {
+                for (SIZE_T i = 0; i < this->heartbeats.Count(); i++) {
+                    this->heartbeats[i]->SetTCData(msg.GetBody(), msg.GetHeader().GetBodySize());
                 }
             }
             break;
@@ -420,8 +442,8 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                                 that->tcpSan.Join();
                             }
 
-                            that->tcpChan = vislib::net::TcpCommChannel::Create(vislib::net::TcpCommChannel::FLAG_NODELAY);
                             try {
+                                vislib::SmartRef<vislib::net::TcpCommChannel> c = vislib::net::TcpCommChannel::Create(vislib::net::TcpCommChannel::FLAG_NODELAY);
 
                                 DWORD sleepTime = 100 + static_cast<DWORD>(500.0f
                                         * static_cast<float>(::rand())
@@ -435,11 +457,11 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                                 float epw = vislib::net::NetworkInformation::GuessRemoteEndPoint(ep, srv);
                                 vislib::sys::Log::DefaultLog.WriteInfo("Guessed remote end point %s with wildness %f\n",
                                     ep.ToStringA().PeekBuffer(), epw);
-                                that->tcpChan->Connect(vislib::net::IPCommEndPoint::Create(ep));
+                                c->Connect(vislib::net::IPCommEndPoint::Create(ep));
                                 vislib::sys::Log::DefaultLog.WriteInfo(200,
                                     "TCP connection to %s established",
                                     srv.PeekBuffer());
-                                vislib::net::SimpleMessageDispatcher::Configuration cfg(that->tcpChan);
+                                vislib::net::SimpleMessageDispatcher::Configuration cfg(c);
                                 that->tcpSan.Start(&cfg);
                                 vislib::sys::Thread::Sleep(500);
                                 vislib::sys::Log::DefaultLog.WriteInfo("TCP Connection started to \"%s\"", srv.PeekBuffer());
@@ -449,7 +471,9 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                                 vislib::net::SimpleMessage sm;
                                 sm.GetHeader().SetMessageID(MSG_HANDSHAKE_INIT);
                                 sm.SetBody(compName.PeekBuffer(), compName.Length() + 1);
-                                that->tcpChan->Send(sm, sm.GetMessageSize());
+                                c->Send(sm, sm.GetMessageSize());
+
+                                that->tcpChan = c;
 
                             } catch(vislib::Exception ex) {
                                 vislib::sys::Log::DefaultLog.WriteError("Failed to connect: %s\n", ex.GetMsgA());
@@ -569,7 +593,9 @@ void cluster::SimpleClusterClient::send(const vislib::net::AbstractSimpleMessage
         }
     } catch(vislib::Exception ex) {
         Log::DefaultLog.WriteError("Failed to send simple TCP message: %s\n", ex.GetMsgA());
+        this->tcpChan.Release();
     } catch(...) {
         Log::DefaultLog.WriteError("Failed to send simple TCP message: unexpected exception\n");
+        this->tcpChan.Release();
     }
 }

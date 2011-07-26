@@ -14,9 +14,11 @@
 #include "job/AbstractThreadedJob.h"
 #include "Module.h"
 #include "CallerSlot.h"
+#include "param/ParamSlot.h"
+#include "vislib/CriticalSection.h"
+#include "vislib/Event.h"
 
 //#include "view/AbstractTileView.h"
-//#include "param/ParamSlot.h"
 //#include "vislib/AbstractSimpleMessage.h"
 //#include "vislib/Serialiser.h"
 //#include "vislib/String.h"
@@ -94,6 +96,14 @@ namespace cluster {
          */
         void Unregister(class SimpleClusterClient *client);
 
+        /**
+         * Sets incoming timeCamera data
+         *
+         * @param data The incoming data
+         * @param size The size of the incoming data in bytes
+         */
+        void SetTCData(const void *data, SIZE_T size);
+
     protected:
 
         /**
@@ -109,6 +119,23 @@ namespace cluster {
         virtual void release(void);
 
     private:
+
+        /** The timeCamera buffer type */
+        typedef struct _tc_buffer_t {
+
+            /** The instance time */
+            double instTime;
+
+            /** The time */
+            float time;
+
+            /** The camera setting */
+            vislib::RawStorage camera;
+
+            /** The lock for synchronisation */
+            vislib::sys::CriticalSection lock;
+
+        } TCBuffer;
 
         /**
          * Perform the work of a thread.
@@ -129,6 +156,18 @@ namespace cluster {
 
         /** Flag letting the thread run */
         bool run;
+
+        /** The lock for the main thread */
+        vislib::sys::Event mainlock;
+
+        /** The port of the heartbeat server */
+        param::ParamSlot heartBeatPortSlot;
+
+        /** The timeCamera double buffer */
+        TCBuffer tcBuf[2];
+
+        /** The index of the current timeCamera buffer */
+        unsigned int tcBufIdx;
 
         ///**
         // * Renders this AbstractView3D in the currently active OpenGL context.
@@ -233,9 +272,6 @@ namespace cluster {
 
         ///** The initialization message */
         //vislib::net::AbstractSimpleMessage *initMsg;
-
-        ///** The port of the heartbeat server */
-        //param::ParamSlot heartBeatPortSlot;
 
         ///** The address of the heartbeat server */
         //param::ParamSlot heartBeatServerSlot;

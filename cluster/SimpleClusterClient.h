@@ -106,6 +106,13 @@ namespace cluster {
          */
         void SetDirectCamSync(bool yes);
 
+        /**
+         * Requests a "TimeCameraUpdate"
+         *
+         * @return true If the request was sent, false if the client does not seem to be connected to a server
+         */
+        bool RequestTCUpdate(void);
+
     protected:
 
         /**
