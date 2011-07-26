@@ -132,17 +132,23 @@ void cluster::SimpleClusterView::Render(float time, double instTime) {
     }
 
     if (this->heartBeatPortSlot.IsDirty() || this->heartBeatServerSlot.IsDirty()) {
+        this->heartBeatPortSlot.ResetDirty();
+        this->heartBeatServerSlot.ResetDirty();
+
         try {
-            vislib::net::TIPHostEntry he;
-            vislib::net::DNS::GetHostEntry(he, this->heartBeatServerSlot.Param<param::StringParam>()->Value());
-            vislib::net::NetworkInformation::AdapterList adapters;
-            vislib::net::NetworkInformation::GetAdaptersForPredicate(adapters,
-                intern::iamSelectAdapterCallback,
-                static_cast<void*>(&he));
-            if (!adapters.IsEmpty()) {
-                // TODO: Implement Server
-            }
-            // TODO: Implement Client
+
+            //vislib::net::TIPHostEntry he;
+            //vislib::net::DNS::GetHostEntry(he, this->heartBeatServerSlot.Param<param::StringParam>()->Value());
+            //vislib::net::NetworkInformation::AdapterList adapters;
+            //vislib::net::NetworkInformation::GetAdaptersForPredicate(adapters,
+            //    intern::iamSelectAdapterCallback,
+            //    static_cast<void*>(&he));
+
+            //if (!adapters.IsEmpty()) {
+            //    // TODO: Implement Server
+            //}
+            //// TODO: Implement Client
+
         } catch(vislib::Exception e) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Failed to configure heartbeat: %s [%s, %d]\n",
