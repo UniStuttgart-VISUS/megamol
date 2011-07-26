@@ -272,6 +272,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="CallDescriptionManager.cpp" />
     <ClCompile Include="CalleeSlot.cpp" />
     <ClCompile Include="CallerSlot.cpp" />
+    <ClCompile Include="cluster\SimpleClusterHeartbeat.cpp" />
     <ClCompile Include="CoreInstance.cpp" />
     <ClCompile Include="DataFileSequencer.cpp" />
     <ClCompile Include="DataWriterCtrlCall.cpp" />
@@ -498,6 +499,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CallDescriptionManager.h" />
     <ClInclude Include="CalleeSlot.h" />
     <ClInclude Include="CallerSlot.h" />
+    <ClInclude Include="cluster\SimpleClusterHeartbeat.h" />
     <ClInclude Include="CoreInstance.h" />
     <ClInclude Include="DataFileSequencer.h" />
     <ClInclude Include="DataWriterCtrlCall.h" />

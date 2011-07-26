@@ -156,6 +156,15 @@ namespace cluster {
          */
         bool loadConfiguration(const vislib::StringA& name);
 
+        /**
+         * Event callback when the value of 'directCamSyncSlot' changes
+         *
+         * @param slot directCamSyncSlot
+         *
+         * @return true
+         */
+        bool directCamSyncUpdated(param::ParamSlot& slot);
+
         /** Flag to identify the first frame */
         bool firstFrame;
 
@@ -177,8 +186,14 @@ namespace cluster {
         /** The initialization message */
         vislib::net::AbstractSimpleMessage *initMsg;
 
+        /** The port of the heartbeat server */
         param::ParamSlot heartBeatPortSlot;
+
+        /** The address of the heartbeat server */
         param::ParamSlot heartBeatServerSlot;
+
+        /** Flag controlling whether or not this view directly syncs it's camera without using the heartbeat server */
+        param::ParamSlot directCamSyncSlot;
 
     };
 

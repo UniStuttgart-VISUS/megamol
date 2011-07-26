@@ -265,6 +265,13 @@ namespace cluster {
                 this->send(msg);
             }
 
+            /**
+             * Gets the flag whether or not this client wants camera updates
+             */
+            inline bool WantCameraUpdates(void) const {
+                return this->wantCamUpdates;
+            }
+
         private:
 
             /**
@@ -285,6 +292,9 @@ namespace cluster {
 
             /** The name of the computer connected */
             vislib::StringA name;
+
+            /** Flag whether or not this client wants camera updates */
+            bool wantCamUpdates;
 
         };
 

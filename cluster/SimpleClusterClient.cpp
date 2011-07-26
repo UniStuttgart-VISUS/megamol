@@ -9,6 +9,7 @@
 #include "cluster/SimpleClusterClient.h"
 #include "cluster/SimpleClusterClientViewRegistration.h"
 #include "cluster/SimpleClusterCommUtil.h"
+#include "cluster/SimpleClusterHeartbeat.h"
 #include "cluster/SimpleClusterView.h"
 #include "CoreInstance.h"
 #include "param/IntParam.h"
@@ -38,7 +39,7 @@ using namespace megamol::core;
  */
 cluster::SimpleClusterClient::SimpleClusterClient(void) : Module(),
         registerViewSlot("registerView", "The slot views may register at"),
-        views(),
+        views(), heartbeats(),
         udpPortSlot("udpport", "The port used for udp communication"),
         udpInSocket(), udpReceiver(&SimpleClusterClient::udpReceiverLoop),
         clusterNameSlot("clusterName", "The name of the cluster"),
@@ -80,6 +81,18 @@ cluster::SimpleClusterClient::~SimpleClusterClient(void) {
 /*
  * cluster::SimpleClusterClient::Unregister
  */
+void cluster::SimpleClusterClient::Unregister(cluster::SimpleClusterHeartbeat *heartbeat) {
+    if (heartbeat == NULL) return;
+    if (this->heartbeats.Contains(heartbeat)) {
+        this->heartbeats.RemoveAll(heartbeat);
+        heartbeat->Unregister(this);
+    }
+}
+
+
+/*
+ * cluster::SimpleClusterClient::Unregister
+ */
 void cluster::SimpleClusterClient::Unregister(cluster::SimpleClusterView *view) {
     if (view == NULL) return;
     if (this->views.Contains(view)) {
@@ -108,6 +121,19 @@ void cluster::SimpleClusterClient::ContinueSetup(int i) {
 }
 
 
+/*
+ * cluster::SimpleClusterClient::SetDirectCamSync
+ */
+void cluster::SimpleClusterClient::SetDirectCamSync(bool yes) {
+    vislib::net::SimpleMessage msg;
+    msg.GetHeader().SetMessageID(MSG_WANTCAMERAUPDATE);
+    msg.GetHeader().SetBodySize(1);
+    msg.AssertBodySize();
+    *msg.GetBodyAs<unsigned char>() = yes ? 1 : 0;
+    this->send(msg);
+}
+
+
 /**
  * Selects adapters capable of UDP broadcast
  *
@@ -116,7 +142,7 @@ void cluster::SimpleClusterClient::ContinueSetup(int i) {
  *
  * @return True if the adapter is capable of UDP broadcast
  */
-bool udpBroadcastAdapters(const vislib::net::NetworkInformation::Adapter& adapter, void *userContext) {
+static bool udpBroadcastAdapters(const vislib::net::NetworkInformation::Adapter& adapter, void *userContext) {
     vislib::net::NetworkInformation::Confidence conf;
     vislib::net::NetworkInformation::Adapter::OperStatus opStat = adapter.GetStatus(&conf);
     if (conf != vislib::net::NetworkInformation::INVALID) {
@@ -184,6 +210,12 @@ void cluster::SimpleClusterClient::release(void) {
     for (unsigned int i = 0; i < scv.Count(); i++) {
         scv[i]->Unregister(this);
     }
+    vislib::Array<SimpleClusterHeartbeat*> schb(this->heartbeats);
+    this->heartbeats.Clear();
+    for (unsigned int i = 0; i < schb.Count(); i++) {
+        schb[i]->Unregister(this);
+    }
+
     this->udpInSocket.Close();
     if (this->udpReceiver.IsRunning()) {
         this->udpReceiver.Join();
@@ -482,8 +514,14 @@ bool cluster::SimpleClusterClient::onViewRegisters(Call& call) {
     SimpleClusterClientViewRegistration *sccvr = dynamic_cast<SimpleClusterClientViewRegistration*>(&call);
     if (sccvr == NULL) return false;
     sccvr->SetClient(this);
-    if (!this->views.Contains(sccvr->GetView())) {
-        this->views.Add(sccvr->GetView());
+    if (sccvr->GetView() != NULL) {
+        if (!this->views.Contains(sccvr->GetView())) {
+            this->views.Add(sccvr->GetView());
+        }
+    } else if (sccvr->GetHeartbeat() != NULL) { // else is used for legacy compatibility
+        if (!this->heartbeats.Contains(sccvr->GetHeartbeat())) {
+            this->heartbeats.Add(sccvr->GetHeartbeat());
+        }
     }
     return true;
 }
@@ -526,7 +564,9 @@ bool cluster::SimpleClusterClient::onUdpPortChanged(param::ParamSlot& slot) {
 void cluster::SimpleClusterClient::send(const vislib::net::AbstractSimpleMessage& msg) {
     using vislib::sys::Log;
     try {
-        this->tcpChan->Send(msg, msg.GetMessageSize());
+        if (this->tcpChan != NULL) {
+            this->tcpChan->Send(msg, msg.GetMessageSize());
+        }
     } catch(vislib::Exception ex) {
         Log::DefaultLog.WriteError("Failed to send simple TCP message: %s\n", ex.GetMsgA());
     } catch(...) {

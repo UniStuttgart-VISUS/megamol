@@ -47,7 +47,8 @@ using namespace megamol::core;
  * cluster::SimpleClusterServer::Client::Client
  */
 cluster::SimpleClusterServer::Client::Client(SimpleClusterServer& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> channel)
-        : vislib::net::SimpleMessageDispatchListener(), parent(parent), dispatcher(), terminationImminent(false) {
+        : vislib::net::SimpleMessageDispatchListener(), parent(parent), dispatcher(), terminationImminent(false),
+        wantCamUpdates(false) {
     this->dispatcher.AddListener(this);
     ///* *HAZARD* This has to be exactly this cast! */
     //vislib::net::AbstractCommChannel *cc = dynamic_cast<vislib::net::AbstractCommChannel *>(channel.operator ->());
@@ -188,6 +189,13 @@ bool cluster::SimpleClusterServer::Client::OnMessageReceived(
         case MSG_CAMERAUPDATE:
             this->parent.camUpdateThreadForce = true;
             break;
+        case MSG_WANTCAMERAUPDATE: {
+            if (msg.GetHeader().GetBodySize() < 1) break;
+            this->wantCamUpdates = (msg.GetBodyAs<unsigned char>()[0] != 0);
+            this->parent.camUpdateThreadForce |= this->wantCamUpdates;
+            Log::DefaultLog.WriteInfo("Client %s %s camera updates", this->name.PeekBuffer(),
+                (this->wantCamUpdates ? "requests" : "declines"));
+        } break;
         default:
             Log::DefaultLog.WriteInfo("Server: TCP Message %d received\n", static_cast<int>(msg.GetHeader().GetMessageID()));
             break;
@@ -721,7 +729,7 @@ DWORD cluster::SimpleClusterServer::cameraUpdateThread(void *userData) {
             // Better use another server
             This->clientsLock.Lock();
             for (SIZE_T i = 0; i < This->clients.Count(); i++) {
-                if (This->clients[i]->IsRunning()) {
+                if (This->clients[i]->IsRunning() && This->clients[i]->WantCameraUpdates()) {
                     This->clients[i]->Send(msg);
                 }
             }

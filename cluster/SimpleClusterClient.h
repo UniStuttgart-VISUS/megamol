@@ -79,6 +79,13 @@ namespace cluster {
         virtual ~SimpleClusterClient(void);
 
         /**
+         * Unregisters a heartbeat job
+         *
+         * @param view The heartbeat job to unregister
+         */
+        void Unregister(class SimpleClusterHeartbeat *heartbeat);
+
+        /**
          * Unregisters a view
          *
          * @param view The view to unregister
@@ -91,6 +98,13 @@ namespace cluster {
          * @param i The setup continuation index
          */
         void ContinueSetup(int i = 0);
+
+        /**
+         * Informs the server that this client wants (no) direct camera updates
+         *
+         * @param yes True if this client wants direct camera updates
+         */
+        void SetDirectCamSync(bool yes);
 
     protected:
 
@@ -180,6 +194,9 @@ namespace cluster {
 
         /** registered views */
         vislib::Array<class SimpleClusterView *> views;
+
+        /** registered heartbeat jobs */
+        vislib::Array<class SimpleClusterHeartbeat *> heartbeats;
 
         /** The port used for udp communication */
         param::ParamSlot udpPortSlot;

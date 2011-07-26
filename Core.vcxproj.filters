@@ -633,6 +633,9 @@
     <ClCompile Include="view\TimeControl.cpp">
       <Filter>view\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cluster\SimpleClusterHeartbeat.cpp">
+      <Filter>cluster\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1144,6 +1147,9 @@
     </ClInclude>
     <ClInclude Include="view\TimeControl.h">
       <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cluster\SimpleClusterHeartbeat.h">
+      <Filter>cluster\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

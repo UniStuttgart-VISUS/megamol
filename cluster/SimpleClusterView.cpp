@@ -10,6 +10,7 @@
 #include "cluster/SimpleClusterClientViewRegistration.h"
 #include "cluster/SimpleClusterClient.h"
 #include "cluster/SimpleClusterCommUtil.h"
+#include "param/BoolParam.h"
 #include "param/IntParam.h"
 #include "param/StringParam.h"
 #include "AbstractNamedObject.h"
@@ -33,7 +34,8 @@ cluster::SimpleClusterView::SimpleClusterView(void) : view::AbstractTileView(),
         firstFrame(false), frozen(false), frozenTime(0.0), frozenCam(NULL),
         registerSlot("register", "The slot registering this view"), client(NULL), initMsg(NULL),
         heartBeatPortSlot("heartbeat::port", "The port the heartbeat server communicates on"),
-        heartBeatServerSlot("heartbeat::server", "The machine the heartbeat server runs on") {
+        heartBeatServerSlot("heartbeat::server", "The machine the heartbeat server runs on"),
+        directCamSyncSlot("directCamSyn", "Flag controlling whether or not this view directly syncs it's camera without using the heartbeat server. It is not recommended to change this setting!") {
 
     this->registerSlot.SetCompatibleCall<SimpleClusterClientViewRegistrationDescription>();
     this->MakeSlotAvailable(&this->registerSlot);
@@ -44,6 +46,10 @@ cluster::SimpleClusterView::SimpleClusterView(void) : view::AbstractTileView(),
     this->heartBeatServerSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->heartBeatServerSlot);
     this->heartBeatServerSlot.ForceSetDirty();
+
+    this->directCamSyncSlot << new param::BoolParam(true);
+    this->directCamSyncSlot.SetUpdateCallback(&SimpleClusterView::directCamSyncUpdated);
+    this->MakeSlotAvailable(&this->directCamSyncSlot);
 
 }
 
@@ -114,8 +120,11 @@ void cluster::SimpleClusterView::Render(float time, double instTime) {
         if (this->initMsg->GetHeader().GetMessageID() == MSG_MODULGRAPH) {
             this->GetCoreInstance()->SetupGraphFromNetwork(this->initMsg);
             this->client->ContinueSetup();
-        } else if (this->initMsg->GetHeader().GetMessageID() == MSG_CAMERAUPDATE) {
-            this->client->ContinueSetup(2);
+        } else {
+            this->directCamSyncUpdated(this->directCamSyncSlot);
+            if (this->initMsg->GetHeader().GetMessageID() == MSG_CAMERAUPDATE) {
+                this->client->ContinueSetup(2);
+            }
         }
         SAFE_DELETE(this->initMsg);
     }
@@ -322,4 +331,16 @@ bool cluster::SimpleClusterView::loadConfiguration(const vislib::StringA& name) 
         return this->setTile(this->instance()->Configuration().ConfigValue(vname));
     }
     return false;
+}
+
+
+/*
+ * cluster::SimpleClusterView::directCamSyncUpdated
+ */
+bool cluster::SimpleClusterView::directCamSyncUpdated(param::ParamSlot& slot) {
+    ASSERT(&slot == &this->directCamSyncSlot);
+    if (this->client != NULL) {
+        this->client->SetDirectCamSync(this->directCamSyncSlot.Param<param::BoolParam>()->Value());
+    }
+    return true;
 }

@@ -93,6 +93,24 @@ namespace cluster {
         }
 
         /**
+         * Get the heartbeat end point
+         *
+         * @return The heartbeat end point
+         */
+        inline class SimpleClusterHeartbeat * GetHeartbeat(void) {
+            return this->heartbeat;
+        }
+
+        /**
+         * Get the heartbeat end point
+         *
+         * @return The heartbeat end point
+         */
+        inline const class SimpleClusterHeartbeat * GetHeartbeat(void) const {
+            return this->heartbeat;
+        }
+
+        /**
          * Get the view end point
          *
          * @return The view end point
@@ -120,6 +138,15 @@ namespace cluster {
         }
 
         /**
+         * Set the heartbeat end point
+         *
+         * @param heartbeat The heartbeat end point
+         */
+        inline void SetHeartbeat(class SimpleClusterHeartbeat *heartbeat) {
+            this->heartbeat = heartbeat;
+        }
+
+        /**
          * Set the view end point
          *
          * @param view The view end point
@@ -135,6 +162,8 @@ namespace cluster {
 
         /** The view end */
         class SimpleClusterView *view;
+
+        class SimpleClusterHeartbeat *heartbeat;
 
     };
 

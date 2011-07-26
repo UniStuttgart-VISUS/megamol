@@ -212,6 +212,14 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     jd->SetJobModuleID("::cctrl");
     this->builtinJobDescs.Register(jd);
 
+    // job for the cluster display client heartbeat server
+    jd = new JobDescription("heartbeat");
+    jd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterClient"), "::scc");
+    jd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterHeartbeat"), "scheartbeat");
+    jd->AddCall(CallDescriptionManager::Instance()->Find("SimpleClusterClientViewRegistration"), "scheartbeat::register", "::scc::registerView");
+    jd->SetJobModuleID("scheartbeatthread");
+    this->builtinJobDescs.Register(jd);
+
     // view for fusionex-hack (server side)
     jd = new JobDescription("simpleclusterserver");
     jd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterServer"), "::scs");
