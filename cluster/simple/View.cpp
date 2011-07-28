@@ -35,7 +35,8 @@ cluster::simple::View::View(void) : view::AbstractTileView(),
         registerSlot("register", "The slot registering this view"), client(NULL), initMsg(NULL),
         heartBeatPortSlot("heartbeat::port", "The port the heartbeat server communicates on"),
         heartBeatServerSlot("heartbeat::server", "The machine the heartbeat server runs on"),
-        directCamSyncSlot("directCamSyn", "Flag controlling whether or not this view directly syncs it's camera without using the heartbeat server. It is not recommended to change this setting!") {
+        directCamSyncSlot("directCamSyn", "Flag controlling whether or not this view directly syncs it's camera without using the heartbeat server. It is not recommended to change this setting!"),
+        heartbeat(), heartbeatPayload() {
 
     this->registerSlot.SetCompatibleCall<ClientViewRegistrationDescription>();
     this->MakeSlotAvailable(&this->registerSlot);
@@ -61,26 +62,6 @@ cluster::simple::View::~View(void) {
     this->Release();
     this->frozenCam = NULL; // DO NOT DELETE
     ASSERT(this->client == NULL);
-}
-
-
-namespace intern {
-
-    /**
-     * Selects adapters which match this predicate
-     */
-    bool iamSelectAdapterCallback(const vislib::net::NetworkInformation::Adapter& adapter, void *userContext) {
-        vislib::net::TIPHostEntry *he = static_cast<vislib::net::TIPHostEntry*>(userContext);
-        vislib::Array<vislib::net::IPAgnosticAddress> a1 = he->GetAddresses();
-        vislib::net::NetworkInformation::UnicastAddressList a2 = adapter.GetUnicastAddresses();
-        for (SIZE_T i2 = 0; i2 < a2.Count(); i2++) {
-            if (a1.Contains(a2[i2].GetAddress())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 }
 
 
@@ -144,18 +125,9 @@ void cluster::simple::View::Render(float time, double instTime) {
         this->heartBeatServerSlot.ResetDirty();
 
         try {
-
-            //vislib::net::TIPHostEntry he;
-            //vislib::net::DNS::GetHostEntry(he, this->heartBeatServerSlot.Param<param::StringParam>()->Value());
-            //vislib::net::NetworkInformation::AdapterList adapters;
-            //vislib::net::NetworkInformation::GetAdaptersForPredicate(adapters,
-            //    intern::iamSelectAdapterCallback,
-            //    static_cast<void*>(&he));
-
-            //if (!adapters.IsEmpty()) {
-            //    // TODO: Implement Server
-            //}
-            //// TODO: Implement Client
+            this->heartbeat.Connect(
+                this->heartBeatServerSlot.Param<param::StringParam>()->Value(),
+                static_cast<unsigned int>(this->heartBeatPortSlot.Param<param::IntParam>()->Value()));
 
         } catch(vislib::Exception e) {
             vislib::sys::Log::DefaultLog.WriteError(
@@ -165,6 +137,19 @@ void cluster::simple::View::Render(float time, double instTime) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Failed to configure heartbeat: Unknown exception\n");
         }
+    }
+
+    bool heartbeatOn = false;
+    try {
+        heartbeatOn = this->heartbeat.Sync(this->heartbeatPayload);
+    } catch(...) {
+        heartbeatOn = false;
+    }
+    if (heartbeatOn) {
+        // TODO: Implement
+        //  instTime [double]
+        //  time [float]
+        //  camera [raw]
     }
 
     view::CallRenderView *crv = this->getCallRenderView();
@@ -282,6 +267,7 @@ bool cluster::simple::View::create(void) {
  */
 void cluster::simple::View::release(void) {
     this->frozenCam = NULL; // DO NOT DELETE
+    this->heartbeat.Shutdown();
     if (this->client != NULL) {
         this->client->Unregister(this);
         this->client = NULL;

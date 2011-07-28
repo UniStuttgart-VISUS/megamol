@@ -280,6 +280,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="cluster\simple\ClientViewRegistration.cpp" />
     <ClCompile Include="cluster\simple\CommUtil.cpp" />
     <ClCompile Include="cluster\simple\Heartbeat.cpp" />
+    <ClCompile Include="cluster\simple\HeartbeatClient.cpp" />
     <ClCompile Include="cluster\simple\Server.cpp" />
     <ClCompile Include="cluster\simple\View.cpp" />
     <ClCompile Include="CoreInstance.cpp" />
@@ -507,6 +508,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="cluster\simple\ClientViewRegistration.h" />
     <ClInclude Include="cluster\simple\CommUtil.h" />
     <ClInclude Include="cluster\simple\Heartbeat.h" />
+    <ClInclude Include="cluster\simple\HeartbeatClient.h" />
     <ClInclude Include="cluster\simple\Server.h" />
     <ClInclude Include="cluster\simple\View.h" />
     <ClInclude Include="CoreInstance.h" />

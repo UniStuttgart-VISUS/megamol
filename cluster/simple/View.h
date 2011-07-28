@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "view/AbstractTileView.h"
+#include "cluster/simple/HeartbeatClient.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
 #include "vislib/AbstractSimpleMessage.h"
@@ -195,6 +196,12 @@ namespace simple {
 
         /** Flag controlling whether or not this view directly syncs it's camera without using the heartbeat server */
         param::ParamSlot directCamSyncSlot;
+
+        /** The heartbeat client connection */
+        HeartbeatClient heartbeat;
+
+        /** The heartbeat payload */
+        vislib::RawStorage heartbeatPayload;
 
     };
 

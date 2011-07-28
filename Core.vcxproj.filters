@@ -645,6 +645,9 @@
     <ClCompile Include="cluster\simple\View.cpp">
       <Filter>cluster\simple\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cluster\simple\HeartbeatClient.cpp">
+      <Filter>cluster\simple\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1158,6 +1161,9 @@
       <Filter>cluster\simple\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cluster\simple\View.h">
+      <Filter>cluster\simple\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cluster\simple\HeartbeatClient.h">
       <Filter>cluster\simple\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
