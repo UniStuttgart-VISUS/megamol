@@ -1022,6 +1022,7 @@ double megamol::core::CoreInstance::GetCoreInstanceTime(void) const {
  */
 void megamol::core::CoreInstance::OffsetInstanceTime(double offset) {
     this->timeOffset += offset;
+//    printf("------------------------------------------------------------ %f\n", this->timeOffset);
 }
 
 

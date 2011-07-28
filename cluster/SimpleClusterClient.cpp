@@ -477,18 +477,20 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
 
                             } catch(vislib::Exception ex) {
                                 vislib::sys::Log::DefaultLog.WriteError("Failed to connect: %s\n", ex.GetMsgA());
-                                that->tcpChan->Close();
-                                //that->tcpChan->Release();
-                                that->tcpChan = NULL;
+                                if (that->tcpChan != NULL) {
+                                    that->tcpChan->Close();
+                                    that->tcpChan = NULL;
+                                }
                                 if (that->tcpSan.IsRunning()) {
                                     that->tcpSan.Terminate();
                                     that->tcpSan.Join();
                                 }
                             } catch(...) {
                                 vislib::sys::Log::DefaultLog.WriteError("Failed to connect: unexpected exception\n");
-                                that->tcpChan->Close();
-                                //that->tcpChan->Release();
-                                that->tcpChan = NULL;
+                                if (that->tcpChan != NULL) {
+                                    that->tcpChan->Close();
+                                    that->tcpChan = NULL;
+                                }
                                 if (that->tcpSan.IsRunning()) {
                                     that->tcpSan.Terminate();
                                     that->tcpSan.Join();
