@@ -1,16 +1,16 @@
 /*
- * SimpleClusterClient.cpp
+ * Client.cpp
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "cluster/SimpleClusterClient.h"
-#include "cluster/SimpleClusterClientViewRegistration.h"
-#include "cluster/SimpleClusterCommUtil.h"
-#include "cluster/SimpleClusterHeartbeat.h"
-#include "cluster/SimpleClusterView.h"
+#include "cluster/simple/Client.h"
+#include "cluster/simple/ClientViewRegistration.h"
+#include "cluster/simple/CommUtil.h"
+#include "cluster/simple/Heartbeat.h"
+#include "cluster/simple/View.h"
 #include "CoreInstance.h"
 #include "param/IntParam.h"
 #include "param/StringParam.h"
@@ -35,13 +35,13 @@ using namespace megamol::core;
 
 
 /*
- * cluster::SimpleClusterClient::SimpleClusterClient
+ * cluster::simple::Client::Client
  */
-cluster::SimpleClusterClient::SimpleClusterClient(void) : Module(),
+cluster::simple::Client::Client(void) : Module(),
         registerViewSlot("registerView", "The slot views may register at"),
         views(), heartbeats(),
         udpPortSlot("udpport", "The port used for udp communication"),
-        udpInSocket(), udpReceiver(&SimpleClusterClient::udpReceiverLoop),
+        udpInSocket(), udpReceiver(&Client::udpReceiverLoop),
         clusterNameSlot("clusterName", "The name of the cluster"),
         udpEchoBAddrSlot("udpechoaddr", "The address to echo broadcast udp messages"),
         tcpChan(NULL), tcpSan(), conServerAddr("") {
@@ -51,13 +51,13 @@ cluster::SimpleClusterClient::SimpleClusterClient(void) : Module(),
     this->MakeSlotAvailable(&this->clusterNameSlot);
 
     this->registerViewSlot.SetCallback(
-        SimpleClusterClientViewRegistration::ClassName(),
-        SimpleClusterClientViewRegistration::FunctionName(0),
-        &SimpleClusterClient::onViewRegisters);
+        ClientViewRegistration::ClassName(),
+        ClientViewRegistration::FunctionName(0),
+        &Client::onViewRegisters);
     this->MakeSlotAvailable(&this->registerViewSlot);
 
     this->udpPortSlot << new param::IntParam(GetDatagramPort(), 1 /* 49152 */, 65535);
-    this->udpPortSlot.SetUpdateCallback(&SimpleClusterClient::onUdpPortChanged);
+    this->udpPortSlot.SetUpdateCallback(&Client::onUdpPortChanged);
     this->MakeSlotAvailable(&this->udpPortSlot);
 
     this->udpEchoBAddrSlot << new param::StringParam("");
@@ -69,9 +69,9 @@ cluster::SimpleClusterClient::SimpleClusterClient(void) : Module(),
 
 
 /*
- * cluster::SimpleClusterClient::~SimpleClusterClient
+ * cluster::simple::Client::~Client
  */
-cluster::SimpleClusterClient::~SimpleClusterClient(void) {
+cluster::simple::Client::~Client(void) {
     this->Release();
     ASSERT(!this->udpReceiver.IsRunning());
     vislib::net::Socket::Cleanup();
@@ -79,9 +79,9 @@ cluster::SimpleClusterClient::~SimpleClusterClient(void) {
 
 
 /*
- * cluster::SimpleClusterClient::Unregister
+ * cluster::simple::Client::Unregister
  */
-void cluster::SimpleClusterClient::Unregister(cluster::SimpleClusterHeartbeat *heartbeat) {
+void cluster::simple::Client::Unregister(cluster::simple::Heartbeat *heartbeat) {
     if (heartbeat == NULL) return;
     if (this->heartbeats.Contains(heartbeat)) {
         this->heartbeats.RemoveAll(heartbeat);
@@ -91,9 +91,9 @@ void cluster::SimpleClusterClient::Unregister(cluster::SimpleClusterHeartbeat *h
 
 
 /*
- * cluster::SimpleClusterClient::Unregister
+ * cluster::simple::Client::Unregister
  */
-void cluster::SimpleClusterClient::Unregister(cluster::SimpleClusterView *view) {
+void cluster::simple::Client::Unregister(cluster::simple::View *view) {
     if (view == NULL) return;
     if (this->views.Contains(view)) {
         this->views.RemoveAll(view);
@@ -103,9 +103,9 @@ void cluster::SimpleClusterClient::Unregister(cluster::SimpleClusterView *view) 
 
 
 /*
- * cluster::SimpleClusterClient::ContinueSetup
+ * cluster::simple::Client::ContinueSetup
  */
-void cluster::SimpleClusterClient::ContinueSetup(int i) {
+void cluster::simple::Client::ContinueSetup(int i) {
     switch(i) {
         case 0: {
             vislib::net::SimpleMessage msg;
@@ -122,9 +122,9 @@ void cluster::SimpleClusterClient::ContinueSetup(int i) {
 
 
 /*
- * cluster::SimpleClusterClient::SetDirectCamSync
+ * cluster::simple::Client::SetDirectCamSync
  */
-void cluster::SimpleClusterClient::SetDirectCamSync(bool yes) {
+void cluster::simple::Client::SetDirectCamSync(bool yes) {
     vislib::net::SimpleMessage msg;
     msg.GetHeader().SetMessageID(MSG_WANTCAMERAUPDATE);
     msg.GetHeader().SetBodySize(1);
@@ -135,9 +135,9 @@ void cluster::SimpleClusterClient::SetDirectCamSync(bool yes) {
 
 
 /*
- * cluster::SimpleClusterClient::RequestTCUpdate
+ * cluster::simple::Client::RequestTCUpdate
  */
-bool cluster::SimpleClusterClient::RequestTCUpdate(void) {
+bool cluster::simple::Client::RequestTCUpdate(void) {
     if (this->tcpChan == NULL) return false;
     vislib::net::SimpleMessage msg;
     msg.GetHeader().SetMessageID(MSG_REQUESTTCUPDATE);
@@ -170,9 +170,9 @@ static bool udpBroadcastAdapters(const vislib::net::NetworkInformation::Adapter&
 
 
 /*
- * cluster::SimpleClusterClient::create
+ * cluster::simple::Client::create
  */
-bool cluster::SimpleClusterClient::create(void) {
+bool cluster::simple::Client::create(void) {
     if (this->instance()->Configuration().IsConfigValueSet("scname")) {
         this->clusterNameSlot.Param<param::StringParam>()->SetValue(
             this->instance()->Configuration().ConfigValue("scname"));
@@ -216,15 +216,15 @@ bool cluster::SimpleClusterClient::create(void) {
 
 
 /*
- * cluster::SimpleClusterClient::release
+ * cluster::simple::Client::release
  */
-void cluster::SimpleClusterClient::release(void) {
-    vislib::Array<SimpleClusterView*> scv(this->views);
+void cluster::simple::Client::release(void) {
+    vislib::Array<View*> scv(this->views);
     this->views.Clear();
     for (unsigned int i = 0; i < scv.Count(); i++) {
         scv[i]->Unregister(this);
     }
-    vislib::Array<SimpleClusterHeartbeat*> schb(this->heartbeats);
+    vislib::Array<Heartbeat*> schb(this->heartbeats);
     this->heartbeats.Clear();
     for (unsigned int i = 0; i < schb.Count(); i++) {
         schb[i]->Unregister(this);
@@ -248,9 +248,9 @@ void cluster::SimpleClusterClient::release(void) {
 
 
 /*
- * cluster::SimpleClusterClient::OnMessageReceived
+ * cluster::simple::Client::OnMessageReceived
  */
-bool cluster::SimpleClusterClient::OnMessageReceived(vislib::net::SimpleMessageDispatcher& src,
+bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispatcher& src,
         const vislib::net::AbstractSimpleMessage& msg) throw() {
     using vislib::sys::Log;
     vislib::net::SimpleMessage answer;
@@ -367,9 +367,9 @@ bool cluster::SimpleClusterClient::OnMessageReceived(vislib::net::SimpleMessageD
 }
 
 /*
- * cluster::SimpleClusterClient::OnCommunicationError
+ * cluster::simple::Client::OnCommunicationError
  */
-bool cluster::SimpleClusterClient::OnCommunicationError(vislib::net::SimpleMessageDispatcher& src,
+bool cluster::simple::Client::OnCommunicationError(vislib::net::SimpleMessageDispatcher& src,
             const vislib::Exception& exception) throw() {
     vislib::sys::Log::DefaultLog.WriteWarn("Client: Receiver failed: %s\n", exception.GetMsgA());
     return false;
@@ -377,19 +377,19 @@ bool cluster::SimpleClusterClient::OnCommunicationError(vislib::net::SimpleMessa
 
 
 /*
- * cluster::SimpleClusterClient::OnDispatcherExited
+ * cluster::simple::Client::OnDispatcherExited
  */
-void cluster::SimpleClusterClient::OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw() {
+void cluster::simple::Client::OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw() {
     this->conServerAddr.Clear();
 }
 
 
 /*
- * cluster::SimpleClusterClient::udpReceiverLoop
+ * cluster::simple::Client::udpReceiverLoop
  */
-DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
-    SimpleClusterClient *that = static_cast<SimpleClusterClient *>(ctxt);
-    SimpleClusterDatagram datagram;
+DWORD cluster::simple::Client::udpReceiverLoop(void *ctxt) {
+    cluster::simple::Client *that = static_cast<cluster::simple::Client *>(ctxt);
+    Datagram datagram;
     vislib::sys::Log::DefaultLog.WriteInfo("UDP Receiver started\n");
     vislib::net::Socket::Startup();
     try {
@@ -534,10 +534,10 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
 
 
 /*
- * cluster::SimpleClusterClient::onViewRegisters
+ * cluster::simple::Client::onViewRegisters
  */
-bool cluster::SimpleClusterClient::onViewRegisters(Call& call) {
-    SimpleClusterClientViewRegistration *sccvr = dynamic_cast<SimpleClusterClientViewRegistration*>(&call);
+bool cluster::simple::Client::onViewRegisters(Call& call) {
+    ClientViewRegistration *sccvr = dynamic_cast<ClientViewRegistration*>(&call);
     if (sccvr == NULL) return false;
     sccvr->SetClient(this);
     if (sccvr->GetView() != NULL) {
@@ -554,9 +554,9 @@ bool cluster::SimpleClusterClient::onViewRegisters(Call& call) {
 
 
 /*
- * cluster::SimpleClusterClient::onUdpPortChanged
+ * cluster::simple::Client::onUdpPortChanged
  */
-bool cluster::SimpleClusterClient::onUdpPortChanged(param::ParamSlot& slot) {
+bool cluster::simple::Client::onUdpPortChanged(param::ParamSlot& slot) {
     using vislib::sys::Log;
     ASSERT(&slot == &this->udpPortSlot);
     try {
@@ -585,9 +585,9 @@ bool cluster::SimpleClusterClient::onUdpPortChanged(param::ParamSlot& slot) {
 
 
 /*
- * cluster::SimpleClusterClient::send
+ * cluster::simple::Client::send
  */
-void cluster::SimpleClusterClient::send(const vislib::net::AbstractSimpleMessage& msg) {
+void cluster::simple::Client::send(const vislib::net::AbstractSimpleMessage& msg) {
     using vislib::sys::Log;
     try {
         if (this->tcpChan != NULL) {

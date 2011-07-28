@@ -15,10 +15,10 @@
 #include "cluster/ClusterController.h"
 #include "cluster/ClusterViewMaster.h"
 #include "cluster/PowerwallView.h"
-#include "cluster/SimpleClusterClient.h"
-#include "cluster/SimpleClusterHeartbeat.h"
-#include "cluster/SimpleClusterServer.h"
-#include "cluster/SimpleClusterView.h"
+#include "cluster/simple/Client.h"
+#include "cluster/simple/Heartbeat.h"
+#include "cluster/simple/Server.h"
+#include "cluster/simple/View.h"
 #include "DataFileSequencer.h"
 #include "misc/BezierControlLines.h"
 #include "misc/BezierDataSource.h"
@@ -100,10 +100,10 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<cluster::ClusterController>();
         instance->registerAutoDescription<cluster::ClusterViewMaster>();
         instance->registerAutoDescription<cluster::PowerwallView>();
-        instance->registerAutoDescription<cluster::SimpleClusterClient>();
-        instance->registerAutoDescription<cluster::SimpleClusterHeartbeat>();
-        instance->registerAutoDescription<cluster::SimpleClusterServer>();
-        instance->registerAutoDescription<cluster::SimpleClusterView>();
+        instance->registerAutoDescription<cluster::simple::Client>();
+        instance->registerAutoDescription<cluster::simple::Heartbeat>();
+        instance->registerAutoDescription<cluster::simple::Server>();
+        instance->registerAutoDescription<cluster::simple::View>();
         instance->registerAutoDescription<DataFileSequencer>();
         instance->registerAutoDescription<misc::BezierControlLines>();
         instance->registerAutoDescription<misc::BezierDataSource>();

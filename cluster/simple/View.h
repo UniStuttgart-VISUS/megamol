@@ -1,12 +1,12 @@
 /*
- * SimpleClusterView.h
+ * View.h
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SIMPLECLUSTERVIEW_H_INCLUDED
-#define MEGAMOLCORE_SIMPLECLUSTERVIEW_H_INCLUDED
+#ifndef MEGAMOLCORE_CLUSTER_SIMPLE_VIEW_H_INCLUDED
+#define MEGAMOLCORE_CLUSTER_SIMPLE_VIEW_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -22,12 +22,13 @@
 namespace megamol {
 namespace core {
 namespace cluster {
+namespace simple {
 
 
     /**
      * Abstract base class of override rendering views
      */
-    class SimpleClusterView : public view::AbstractTileView {
+    class View : public view::AbstractTileView {
     public:
 
         /**
@@ -67,10 +68,10 @@ namespace cluster {
         }
 
         /** Ctor. */
-        SimpleClusterView(void);
+        View(void);
 
         /** Dtor. */
-        virtual ~SimpleClusterView(void);
+        virtual ~View(void);
 
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
@@ -82,7 +83,7 @@ namespace cluster {
          *
          * @param client The client to unregister from
          */
-        void Unregister(class SimpleClusterClient *client);
+        void Unregister(class Client *client);
 
         /**
          * Disconnect the view call
@@ -181,7 +182,7 @@ namespace cluster {
         CallerSlot registerSlot;
 
         /** The client end */
-        class SimpleClusterClient *client;
+        class Client *client;
 
         /** The initialization message */
         vislib::net::AbstractSimpleMessage *initMsg;
@@ -198,8 +199,9 @@ namespace cluster {
     };
 
 
+} /* end namespace simple */
 } /* end namespace cluster */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_SIMPLECLUSTERVIEW_H_INCLUDED */
+#endif /* MEGAMOLCORE_CLUSTER_SIMPLE_VIEW_H_INCLUDED */

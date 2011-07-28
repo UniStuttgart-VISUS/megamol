@@ -26,7 +26,7 @@
 #include "CallDescriptionManager.h"
 #include "cluster/ClusterController.h"
 #include "cluster/ClusterViewMaster.h"
-#include "cluster/SimpleClusterServer.h"
+#include "cluster/simple/Server.h"
 #include "Module.h"
 #include "ModuleDescription.h"
 #include "ModuleDescriptionManager.h"
@@ -1107,7 +1107,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
 
             if (modClass.Equals(cluster::ClusterViewMaster::ClassName())
                     || modClass.Equals(cluster::ClusterController::ClassName())
-                    || modClass.Equals(cluster::SimpleClusterServer::ClassName())) {
+                    || modClass.Equals(cluster::simple::Server::ClassName())) {
                 // these are infra structure modules and not to be synced
                 continue;
             }

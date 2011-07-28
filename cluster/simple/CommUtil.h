@@ -1,12 +1,12 @@
 /*
- * SimpleClusterCommUtil.h
+ * CommUtil.h
  *
  * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SIMPLECLUSTERDATAGRAM_H_INCLUDED
-#define MEGAMOLCORE_SIMPLECLUSTERDATAGRAM_H_INCLUDED
+#ifndef MEGAMOLCORE_CLUSTER_SIMPLE_DATAGRAM_H_INCLUDED
+#define MEGAMOLCORE_CLUSTER_SIMPLE_DATAGRAM_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -17,6 +17,7 @@
 namespace megamol {
 namespace core {
 namespace cluster {
+namespace simple {
 
 
     /**
@@ -64,7 +65,7 @@ namespace cluster {
     /**
      * Struct layout a simple cluster datagram
      */
-    typedef struct _simpleclusterdatagram_t {
+    typedef struct _datagram_t {
 
         /** The datagram message */
         unsigned short msg;
@@ -97,11 +98,12 @@ namespace cluster {
 
         } payload;
 
-    } SimpleClusterDatagram;
+    } Datagram;
 
 
+} /* end namespace simple */
 } /* end namespace cluster */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_SIMPLECLUSTERDATAGRAM_H_INCLUDED */
+#endif /* MEGAMOLCORE_CLUSTER_SIMPLE_DATAGRAM_H_INCLUDED */

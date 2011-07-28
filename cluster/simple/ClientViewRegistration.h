@@ -1,12 +1,12 @@
 /*
- * SimpleClusterClientViewRegistration.h
+ * ClientViewRegistration.h
  *
  * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SIMPLECLUSTERCLIENTVIEWREGISTRATION_H_INCLUDED
-#define MEGAMOLCORE_SIMPLECLUSTERCLIENTVIEWREGISTRATION_H_INCLUDED
+#ifndef MEGAMOLCORE_CLUSTER_SIMPLE_CLIENTVIEWREGISTRATION_H_INCLUDED
+#define MEGAMOLCORE_CLUSTER_SIMPLE_CLIENTVIEWREGISTRATION_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -18,12 +18,13 @@
 namespace megamol {
 namespace core {
 namespace cluster {
+namespace simple {
 
 
     /**
      * Call for registering a module at the cluster controller
      */
-    class SimpleClusterClientViewRegistration : public Call {
+    class ClientViewRegistration : public Call {
     public:
 
         /**
@@ -67,19 +68,19 @@ namespace cluster {
         /**
          * Ctor.
          */
-        SimpleClusterClientViewRegistration(void);
+        ClientViewRegistration(void);
 
         /**
          * ~Dtor.
          */
-        virtual ~SimpleClusterClientViewRegistration(void);
+        virtual ~ClientViewRegistration(void);
 
         /**
          * Get the client end point
          *
          * @return The client end point
          */
-        inline class SimpleClusterClient * GetClient(void) {
+        inline class Client * GetClient(void) {
             return this->client;
         }
 
@@ -88,7 +89,7 @@ namespace cluster {
          *
          * @return The client end point
          */
-        inline const class SimpleClusterClient * GetClient(void) const {
+        inline const class Client * GetClient(void) const {
             return this->client;
         }
 
@@ -97,7 +98,7 @@ namespace cluster {
          *
          * @return The heartbeat end point
          */
-        inline class SimpleClusterHeartbeat * GetHeartbeat(void) {
+        inline class Heartbeat * GetHeartbeat(void) {
             return this->heartbeat;
         }
 
@@ -106,7 +107,7 @@ namespace cluster {
          *
          * @return The heartbeat end point
          */
-        inline const class SimpleClusterHeartbeat * GetHeartbeat(void) const {
+        inline const class Heartbeat * GetHeartbeat(void) const {
             return this->heartbeat;
         }
 
@@ -115,7 +116,7 @@ namespace cluster {
          *
          * @return The view end point
          */
-        inline class SimpleClusterView * GetView(void) {
+        inline class View * GetView(void) {
             return this->view;
         }
 
@@ -124,7 +125,7 @@ namespace cluster {
          *
          * @return The view end point
          */
-        inline const class SimpleClusterView * GetView(void) const {
+        inline const class View * GetView(void) const {
             return this->view;
         }
 
@@ -133,7 +134,7 @@ namespace cluster {
          *
          * @param client The client end point
          */
-        inline void SetClient(class SimpleClusterClient *client) {
+        inline void SetClient(class Client *client) {
             this->client = client;
         }
 
@@ -142,7 +143,7 @@ namespace cluster {
          *
          * @param heartbeat The heartbeat end point
          */
-        inline void SetHeartbeat(class SimpleClusterHeartbeat *heartbeat) {
+        inline void SetHeartbeat(class Heartbeat *heartbeat) {
             this->heartbeat = heartbeat;
         }
 
@@ -151,30 +152,32 @@ namespace cluster {
          *
          * @param view The view end point
          */
-        inline void SetView(class SimpleClusterView *view) {
+        inline void SetView(class View *view) {
             this->view = view;
         }
 
     private:
 
         /** The client end */
-        class SimpleClusterClient *client;
+        class Client *client;
 
         /** The view end */
-        class SimpleClusterView *view;
+        class View *view;
 
-        class SimpleClusterHeartbeat *heartbeat;
+        /** The heartbeat end */
+        class Heartbeat *heartbeat;
 
     };
 
 
     /** Description class typedef */
-    typedef CallAutoDescription<SimpleClusterClientViewRegistration>
-        SimpleClusterClientViewRegistrationDescription;
+    typedef CallAutoDescription<ClientViewRegistration>
+        ClientViewRegistrationDescription;
 
 
+} /* end namespace simple */
 } /* end namespace cluster */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_SIMPLECLUSTERCLIENTVIEWREGISTRATION_H_INCLUDED */
+#endif /* MEGAMOLCORE_CLUSTER_SIMPLE_CLIENTVIEWREGISTRATION_H_INCLUDED */

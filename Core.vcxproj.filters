@@ -139,6 +139,15 @@
     <Filter Include="cluster\Source Files">
       <UniqueIdentifier>{5b79562d-76c8-4d01-8d80-1b4e93f316b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="cluster\simple">
+      <UniqueIdentifier>{c0139493-df89-4b20-b987-b4e5147b6944}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cluster\simple\Header Files">
+      <UniqueIdentifier>{d78148c8-d188-4ae4-ae9d-fd68b8caffa6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cluster\simple\Source Files">
+      <UniqueIdentifier>{c4059213-91b2-4969-b741-bc772424e71a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AbstractDataWriter.cpp">
@@ -597,21 +606,6 @@
     <ClCompile Include="cluster\PowerwallView.cpp">
       <Filter>cluster\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cluster\SimpleClusterClient.cpp">
-      <Filter>cluster\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cluster\SimpleClusterClientViewRegistration.cpp">
-      <Filter>cluster\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cluster\SimpleClusterCommUtil.cpp">
-      <Filter>cluster\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cluster\SimpleClusterServer.cpp">
-      <Filter>cluster\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cluster\SimpleClusterView.cpp">
-      <Filter>cluster\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="view\RenderOutput.cpp">
       <Filter>view\Source Files</Filter>
     </ClCompile>
@@ -633,8 +627,23 @@
     <ClCompile Include="view\TimeControl.cpp">
       <Filter>view\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cluster\SimpleClusterHeartbeat.cpp">
-      <Filter>cluster\Source Files</Filter>
+    <ClCompile Include="cluster\simple\Client.cpp">
+      <Filter>cluster\simple\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cluster\simple\ClientViewRegistration.cpp">
+      <Filter>cluster\simple\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cluster\simple\CommUtil.cpp">
+      <Filter>cluster\simple\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cluster\simple\Heartbeat.cpp">
+      <Filter>cluster\simple\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cluster\simple\Server.cpp">
+      <Filter>cluster\simple\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cluster\simple\View.cpp">
+      <Filter>cluster\simple\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1112,21 +1121,6 @@
     <ClInclude Include="cluster\PowerwallView.h">
       <Filter>cluster\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cluster\SimpleClusterClient.h">
-      <Filter>cluster\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cluster\SimpleClusterClientViewRegistration.h">
-      <Filter>cluster\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cluster\SimpleClusterCommUtil.h">
-      <Filter>cluster\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cluster\SimpleClusterServer.h">
-      <Filter>cluster\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cluster\SimpleClusterView.h">
-      <Filter>cluster\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="view\RenderOutput.h">
       <Filter>view\Header Files</Filter>
     </ClInclude>
@@ -1148,8 +1142,23 @@
     <ClInclude Include="view\TimeControl.h">
       <Filter>view\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cluster\SimpleClusterHeartbeat.h">
-      <Filter>cluster\Header Files</Filter>
+    <ClInclude Include="cluster\simple\Client.h">
+      <Filter>cluster\simple\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cluster\simple\ClientViewRegistration.h">
+      <Filter>cluster\simple\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cluster\simple\CommUtil.h">
+      <Filter>cluster\simple\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cluster\simple\Heartbeat.h">
+      <Filter>cluster\simple\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cluster\simple\Server.h">
+      <Filter>cluster\simple\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cluster\simple\View.h">
+      <Filter>cluster\simple\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,12 +1,12 @@
 /*
- * SimpleClusterHeartbeat.h
+ * Heartbeat.h
  *
  * Copyright (C) 2011 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SIMPLECLUSTERHEARTBEAT_H_INCLUDED
-#define MEGAMOLCORE_SIMPLECLUSTERHEARTBEAT_H_INCLUDED
+#ifndef MEGAMOLCORE_CLUSTER_SIMPLE_HEARTBEAT_H_INCLUDED
+#define MEGAMOLCORE_CLUSTER_SIMPLE_HEARTBEAT_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -27,16 +27,17 @@
 namespace megamol {
 namespace core {
 namespace cluster {
+namespace simple {
 
 
     /** forward declaration */
-    class SimpelClusterClient;
+    class Client;
 
 
     /**
      * Abstract base class of override rendering views
      */
-    class SimpleClusterHeartbeat : public job::AbstractThreadedJob, public Module {
+    class Heartbeat : public job::AbstractThreadedJob, public Module {
     public:
 
         /**
@@ -76,10 +77,10 @@ namespace cluster {
         }
 
         /** Ctor. */
-        SimpleClusterHeartbeat(void);
+        Heartbeat(void);
 
         /** Dtor. */
-        virtual ~SimpleClusterHeartbeat(void);
+        virtual ~Heartbeat(void);
 
         /**
          * Terminates the job thread.
@@ -94,7 +95,7 @@ namespace cluster {
          *
          * @param client The client to unregister from
          */
-        void Unregister(class SimpleClusterClient *client);
+        void Unregister(class Client *client);
 
         /**
          * Sets incoming timeCamera data
@@ -152,7 +153,7 @@ namespace cluster {
         CallerSlot registerSlot;
 
         /** The client end */
-        class SimpleClusterClient *client;
+        class Client *client;
 
         /** Flag letting the thread run */
         bool run;
@@ -282,8 +283,9 @@ namespace cluster {
     };
 
 
+} /* end namespace simple */
 } /* end namespace cluster */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_SIMPLECLUSTERHEARTBEAT_H_INCLUDED */
+#endif /* MEGAMOLCORE_CLUSTER_SIMPLE_HEARTBEAT_H_INCLUDED */

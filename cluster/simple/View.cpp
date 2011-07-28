@@ -1,15 +1,15 @@
 /*
- * SimpleClusterView.cpp
+ * View.cpp
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "cluster/SimpleClusterView.h"
-#include "cluster/SimpleClusterClientViewRegistration.h"
-#include "cluster/SimpleClusterClient.h"
-#include "cluster/SimpleClusterCommUtil.h"
+#include "cluster/simple/View.h"
+#include "cluster/simple/ClientViewRegistration.h"
+#include "cluster/simple/Client.h"
+#include "cluster/simple/CommUtil.h"
 #include "param/BoolParam.h"
 #include "param/IntParam.h"
 #include "param/StringParam.h"
@@ -28,16 +28,16 @@ using namespace megamol::core;
 
 
 /*
- * cluster::SimpleClusterView::SimpleClusterView
+ * cluster::simple::View::View
  */
-cluster::SimpleClusterView::SimpleClusterView(void) : view::AbstractTileView(),
+cluster::simple::View::View(void) : view::AbstractTileView(),
         firstFrame(false), frozen(false), frozenTime(0.0), frozenCam(NULL),
         registerSlot("register", "The slot registering this view"), client(NULL), initMsg(NULL),
         heartBeatPortSlot("heartbeat::port", "The port the heartbeat server communicates on"),
         heartBeatServerSlot("heartbeat::server", "The machine the heartbeat server runs on"),
         directCamSyncSlot("directCamSyn", "Flag controlling whether or not this view directly syncs it's camera without using the heartbeat server. It is not recommended to change this setting!") {
 
-    this->registerSlot.SetCompatibleCall<SimpleClusterClientViewRegistrationDescription>();
+    this->registerSlot.SetCompatibleCall<ClientViewRegistrationDescription>();
     this->MakeSlotAvailable(&this->registerSlot);
 
     this->heartBeatPortSlot << new param::IntParam(0, 0, USHRT_MAX);
@@ -48,16 +48,16 @@ cluster::SimpleClusterView::SimpleClusterView(void) : view::AbstractTileView(),
     this->heartBeatServerSlot.ForceSetDirty();
 
     this->directCamSyncSlot << new param::BoolParam(true);
-    this->directCamSyncSlot.SetUpdateCallback(&SimpleClusterView::directCamSyncUpdated);
+    this->directCamSyncSlot.SetUpdateCallback(&View::directCamSyncUpdated);
     this->MakeSlotAvailable(&this->directCamSyncSlot);
 
 }
 
 
 /*
- * cluster::SimpleClusterView::~SimpleClusterView
+ * cluster::simple::View::~View
  */
-cluster::SimpleClusterView::~SimpleClusterView(void) {
+cluster::simple::View::~View(void) {
     this->Release();
     this->frozenCam = NULL; // DO NOT DELETE
     ASSERT(this->client == NULL);
@@ -85,9 +85,9 @@ namespace intern {
 
 
 /*
- * cluster::SimpleClusterView::Render
+ * cluster::simple::View::Render
  */
-void cluster::SimpleClusterView::Render(float time, double instTime) {
+void cluster::simple::View::Render(float time, double instTime) {
     if (this->firstFrame) {
         this->firstFrame = false;
         this->initTileViewParameters();
@@ -130,8 +130,7 @@ void cluster::SimpleClusterView::Render(float time, double instTime) {
     }
 
     if (this->client == NULL) {
-        SimpleClusterClientViewRegistration *sccvr
-            = this->registerSlot.CallAs<SimpleClusterClientViewRegistration>();
+        ClientViewRegistration *sccvr = this->registerSlot.CallAs<ClientViewRegistration>();
         if (sccvr != NULL) {
             sccvr->SetView(this);
             if ((*sccvr)()) {
@@ -216,9 +215,9 @@ void cluster::SimpleClusterView::Render(float time, double instTime) {
 
 
 /*
- * cluster::SimpleClusterView::Unregister
+ * cluster::simple::View::Unregister
  */
-void cluster::SimpleClusterView::Unregister(cluster::SimpleClusterClient *client) {
+void cluster::simple::View::Unregister(cluster::simple::Client *client) {
     if (this->client == client) {
         if (this->client != NULL) {
             this->client->Unregister(this);
@@ -229,17 +228,17 @@ void cluster::SimpleClusterView::Unregister(cluster::SimpleClusterClient *client
 
 
 /*
- * cluster::SimpleClusterView::DisconnectViewCall
+ * cluster::simple::View::DisconnectViewCall
  */
-void cluster::SimpleClusterView::DisconnectViewCall(void) {
+void cluster::simple::View::DisconnectViewCall(void) {
     this->disconnectOutgoingRenderCall();
 }
 
 
 /*
- * cluster::SimpleClusterView::SetSetupMessage
+ * cluster::simple::View::SetSetupMessage
  */
-void cluster::SimpleClusterView::SetSetupMessage(const vislib::net::AbstractSimpleMessage& msg) {
+void cluster::simple::View::SetSetupMessage(const vislib::net::AbstractSimpleMessage& msg) {
     if (this->initMsg != NULL) {
         SAFE_DELETE(this->initMsg);
     }
@@ -248,9 +247,9 @@ void cluster::SimpleClusterView::SetSetupMessage(const vislib::net::AbstractSimp
 
 
 /*
- * cluster::SimpleClusterView::SetCamIniMessage
+ * cluster::simple::View::SetCamIniMessage
  */
-void cluster::SimpleClusterView::SetCamIniMessage(void) {
+void cluster::simple::View::SetCamIniMessage(void) {
     if (this->initMsg != NULL) {
         SAFE_DELETE(this->initMsg);
     }
@@ -261,27 +260,27 @@ void cluster::SimpleClusterView::SetCamIniMessage(void) {
 
 
 /*
- * cluster::SimpleClusterView::ConnectView
+ * cluster::simple::View::ConnectView
  */
-void cluster::SimpleClusterView::ConnectView(const vislib::StringA toName) {
+void cluster::simple::View::ConnectView(const vislib::StringA toName) {
     this->GetCoreInstance()->InstantiateCall(this->FullName() + "::renderView", toName,
         CallDescriptionManager::Instance()->Find("CallRenderView"));
 }
 
 
 /*
- * cluster::SimpleClusterView::create
+ * cluster::simple::View::create
  */
-bool cluster::SimpleClusterView::create(void) {
+bool cluster::simple::View::create(void) {
     this->firstFrame = true;
     return true;
 }
 
 
 /*
- * cluster::SimpleClusterView::release
+ * cluster::simple::View::release
  */
-void cluster::SimpleClusterView::release(void) {
+void cluster::simple::View::release(void) {
     this->frozenCam = NULL; // DO NOT DELETE
     if (this->client != NULL) {
         this->client->Unregister(this);
@@ -294,9 +293,9 @@ void cluster::SimpleClusterView::release(void) {
 
 
 /*
- * cluster::SimpleClusterView::renderFallbackView
+ * cluster::simple::View::renderFallbackView
  */
-void cluster::SimpleClusterView::renderFallbackView(void) {
+void cluster::simple::View::renderFallbackView(void) {
     ::glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
     ::glClear(GL_COLOR_BUFFER_BIT);
     ::glMatrixMode(GL_PROJECTION);
@@ -313,18 +312,18 @@ void cluster::SimpleClusterView::renderFallbackView(void) {
 
 
 /*
- * cluster::SimpleClusterView::UpdateFreeze
+ * cluster::simple::View::UpdateFreeze
  */
-void cluster::SimpleClusterView::UpdateFreeze(bool freeze) {
+void cluster::simple::View::UpdateFreeze(bool freeze) {
     this->frozen = freeze;
     this->frozenTime = this->instance()->GetCoreInstanceTime(); // HAZARD
 }
 
 
 /*
- * cluster::SimpleClusterView::loadConfiguration
+ * cluster::simple::View::loadConfiguration
  */
-bool cluster::SimpleClusterView::loadConfiguration(const vislib::StringA& name) {
+bool cluster::simple::View::loadConfiguration(const vislib::StringA& name) {
     vislib::StringA vname(name);
     vname.Append("-tvtile");
     if (this->instance()->Configuration().IsConfigValueSet(vname)) {
@@ -335,9 +334,9 @@ bool cluster::SimpleClusterView::loadConfiguration(const vislib::StringA& name) 
 
 
 /*
- * cluster::SimpleClusterView::directCamSyncUpdated
+ * cluster::simple::View::directCamSyncUpdated
  */
-bool cluster::SimpleClusterView::directCamSyncUpdated(param::ParamSlot& slot) {
+bool cluster::simple::View::directCamSyncUpdated(param::ParamSlot& slot) {
     ASSERT(&slot == &this->directCamSyncSlot);
     if (this->client != NULL) {
         this->client->SetDirectCamSync(this->directCamSyncSlot.Param<param::BoolParam>()->Value());

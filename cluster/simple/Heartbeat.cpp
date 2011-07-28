@@ -1,15 +1,15 @@
 /*
- * SimpleClusterHeartbeat.cpp
+ * Heartbeat.cpp
  *
  * Copyright (C) 2011 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "cluster/SimpleClusterHeartbeat.h"
-#include "cluster/SimpleClusterClientViewRegistration.h"
-#include "cluster/SimpleClusterClient.h"
-//#include "cluster/SimpleClusterCommUtil.h"
+#include "cluster/simple/Heartbeat.h"
+#include "cluster/simple/ClientViewRegistration.h"
+#include "cluster/simple/Client.h"
+//#include "cluster/simple/CommUtil.h"
 //#include "param/BoolParam.h"
 #include "param/IntParam.h"
 //#include "param/StringParam.h"
@@ -30,9 +30,9 @@ using namespace megamol::core;
 
 
 /*
- * cluster::SimpleClusterHeartbeat::SimpleClusterHeartbeat
+ * cluster::simple::Heartbeat::Heartbeat
  */
-cluster::SimpleClusterHeartbeat::SimpleClusterHeartbeat(void)
+cluster::simple::Heartbeat::Heartbeat(void)
         : job::AbstractThreadedJob(), Module(),
         registerSlot("register", "The slot registering this view"), client(NULL), run(false), mainlock(),
         heartBeatPortSlot("heartbeat::port", "The port the heartbeat server communicates on"),
@@ -43,7 +43,7 @@ cluster::SimpleClusterHeartbeat::SimpleClusterHeartbeat(void)
         directCamSyncSlot("directCamSyn", "Flag controlling whether or not this view directly syncs it's camera without using the heartbeat server. It is not recommended to change this setting!")*/
 {
 
-    this->registerSlot.SetCompatibleCall<SimpleClusterClientViewRegistrationDescription>();
+    this->registerSlot.SetCompatibleCall<ClientViewRegistrationDescription>();
     this->MakeSlotAvailable(&this->registerSlot);
 
     this->heartBeatPortSlot << new param::IntParam(0, 0, USHRT_MAX);
@@ -61,9 +61,9 @@ cluster::SimpleClusterHeartbeat::SimpleClusterHeartbeat(void)
 
 
 /*
- * cluster::SimpleClusterHeartbeat::~SimpleClusterHeartbeat
+ * cluster::simple::Heartbeat::~Heartbeat
  */
-cluster::SimpleClusterHeartbeat::~SimpleClusterHeartbeat(void) {
+cluster::simple::Heartbeat::~Heartbeat(void) {
     this->Release();
     //this->frozenCam = NULL; // DO NOT DELETE
     //ASSERT(this->client == NULL);
@@ -71,9 +71,9 @@ cluster::SimpleClusterHeartbeat::~SimpleClusterHeartbeat(void) {
 
 
 /*
- * cluster::SimpleClusterHeartbeat::SimpleClusterHeartbeat
+ * cluster::simple::Heartbeat::Terminate
  */
-bool cluster::SimpleClusterHeartbeat::Terminate(void) {
+bool cluster::simple::Heartbeat::Terminate(void) {
     this->run = false;
     this->mainlock.Set();
     return true; // will terminate as soon as possible
@@ -81,9 +81,9 @@ bool cluster::SimpleClusterHeartbeat::Terminate(void) {
 
 
 /*
- * cluster::SimpleClusterHeartbeat::Unregister
+ * cluster::simple::Heartbeat::Unregister
  */
-void cluster::SimpleClusterHeartbeat::Unregister(cluster::SimpleClusterClient *client) {
+void cluster::simple::Heartbeat::Unregister(cluster::simple::Client *client) {
     if (this->client == client) {
         if (this->client != NULL) {
             this->client->Unregister(this);
@@ -94,9 +94,9 @@ void cluster::SimpleClusterHeartbeat::Unregister(cluster::SimpleClusterClient *c
 
 
 /*
- * cluster::SimpleClusterHeartbeat::SetTCData
+ * cluster::simple::Heartbeat::SetTCData
  */
-void cluster::SimpleClusterHeartbeat::SetTCData(const void *data, SIZE_T size) {
+void cluster::simple::Heartbeat::SetTCData(const void *data, SIZE_T size) {
     const unsigned char *dat = static_cast<const unsigned char*>(data);
 
     double instTime = this->GetCoreInstance()->GetCoreInstanceTime();
@@ -146,9 +146,9 @@ void cluster::SimpleClusterHeartbeat::SetTCData(const void *data, SIZE_T size) {
 
 
 /*
- * cluster::SimpleClusterHeartbeat::SimpleClusterHeartbeat
+ * cluster::simple::Heartbeat::create
  */
-bool cluster::SimpleClusterHeartbeat::create(void) {
+bool cluster::simple::Heartbeat::create(void) {
 
     if (this->GetCoreInstance()->Configuration().IsConfigValueSet("scv-heartbeat-port")) {
         try {
@@ -170,9 +170,9 @@ bool cluster::SimpleClusterHeartbeat::create(void) {
 
 
 /*
- * cluster::SimpleClusterHeartbeat::SimpleClusterHeartbeat
+ * cluster::simple::Heartbeat::release
  */
-void cluster::SimpleClusterHeartbeat::release(void) {
+void cluster::simple::Heartbeat::release(void) {
     if (this->client != NULL) {
         this->client->Unregister(this);
         this->client = NULL;
@@ -183,15 +183,14 @@ void cluster::SimpleClusterHeartbeat::release(void) {
 
 
 /*
- * cluster::SimpleClusterHeartbeat::SimpleClusterHeartbeat
+ * cluster::simple::Heartbeat::Run
  */
-DWORD cluster::SimpleClusterHeartbeat::Run(void *userData) {
+DWORD cluster::simple::Heartbeat::Run(void *userData) {
     using vislib::sys::Log;
     this->run = true;
 
     if (this->client == NULL) {
-        SimpleClusterClientViewRegistration *sccvr
-            = this->registerSlot.CallAs<SimpleClusterClientViewRegistration>();
+        ClientViewRegistration *sccvr = this->registerSlot.CallAs<ClientViewRegistration>();
         if (sccvr != NULL) {
             sccvr->SetView(NULL);
             sccvr->SetHeartbeat(this);
@@ -263,9 +262,9 @@ DWORD cluster::SimpleClusterHeartbeat::Run(void *userData) {
 //
 //
 ///*
-// * cluster::SimpleClusterView::Render
+// * cluster::simple::View::Render
 // */
-//void cluster::SimpleClusterView::Render(float time, double instTime) {
+//void cluster::simple::View::Render(float time, double instTime) {
 //    if (this->firstFrame) {
 //        this->firstFrame = false;
 //        this->initTileViewParameters();
@@ -394,17 +393,17 @@ DWORD cluster::SimpleClusterHeartbeat::Run(void *userData) {
 //
 //
 ///*
-// * cluster::SimpleClusterView::DisconnectViewCall
+// * cluster::simple::View::DisconnectViewCall
 // */
-//void cluster::SimpleClusterView::DisconnectViewCall(void) {
+//void cluster::simple::View::DisconnectViewCall(void) {
 //    this->disconnectOutgoingRenderCall();
 //}
 //
 //
 ///*
-// * cluster::SimpleClusterView::SetSetupMessage
+// * cluster::simple::View::SetSetupMessage
 // */
-//void cluster::SimpleClusterView::SetSetupMessage(const vislib::net::AbstractSimpleMessage& msg) {
+//void cluster::simple::View::SetSetupMessage(const vislib::net::AbstractSimpleMessage& msg) {
 //    if (this->initMsg != NULL) {
 //        SAFE_DELETE(this->initMsg);
 //    }
@@ -413,9 +412,9 @@ DWORD cluster::SimpleClusterHeartbeat::Run(void *userData) {
 //
 //
 ///*
-// * cluster::SimpleClusterView::SetCamIniMessage
+// * cluster::simple::View::SetCamIniMessage
 // */
-//void cluster::SimpleClusterView::SetCamIniMessage(void) {
+//void cluster::simple::View::SetCamIniMessage(void) {
 //    if (this->initMsg != NULL) {
 //        SAFE_DELETE(this->initMsg);
 //    }
@@ -426,27 +425,27 @@ DWORD cluster::SimpleClusterHeartbeat::Run(void *userData) {
 //
 //
 ///*
-// * cluster::SimpleClusterView::ConnectView
+// * cluster::simple::View::ConnectView
 // */
-//void cluster::SimpleClusterView::ConnectView(const vislib::StringA toName) {
+//void cluster::simple::View::ConnectView(const vislib::StringA toName) {
 //    this->GetCoreInstance()->InstantiateCall(this->FullName() + "::renderView", toName,
 //        CallDescriptionManager::Instance()->Find("CallRenderView"));
 //}
 //
 //
 ///*
-// * cluster::SimpleClusterView::create
+// * cluster::simple::View::create
 // */
-//bool cluster::SimpleClusterView::create(void) {
+//bool cluster::simple::View::create(void) {
 //    this->firstFrame = true;
 //    return true;
 //}
 //
 //
 ///*
-// * cluster::SimpleClusterView::release
+// * cluster::simple::View::release
 // */
-//void cluster::SimpleClusterView::release(void) {
+//void cluster::simple::View::release(void) {
 //    this->frozenCam = NULL; // DO NOT DELETE
 //    if (this->client != NULL) {
 //        this->client->Unregister(this);
@@ -459,9 +458,9 @@ DWORD cluster::SimpleClusterHeartbeat::Run(void *userData) {
 //
 //
 ///*
-// * cluster::SimpleClusterView::renderFallbackView
+// * cluster::simple::View::renderFallbackView
 // */
-//void cluster::SimpleClusterView::renderFallbackView(void) {
+//void cluster::simple::View::renderFallbackView(void) {
 //    ::glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 //    ::glClear(GL_COLOR_BUFFER_BIT);
 //    ::glMatrixMode(GL_PROJECTION);
@@ -478,18 +477,18 @@ DWORD cluster::SimpleClusterHeartbeat::Run(void *userData) {
 //
 //
 ///*
-// * cluster::SimpleClusterView::UpdateFreeze
+// * cluster::simple::View::UpdateFreeze
 // */
-//void cluster::SimpleClusterView::UpdateFreeze(bool freeze) {
+//void cluster::simple::View::UpdateFreeze(bool freeze) {
 //    this->frozen = freeze;
 //    this->frozenTime = this->instance()->GetCoreInstanceTime(); // HAZARD
 //}
 //
 //
 ///*
-// * cluster::SimpleClusterView::loadConfiguration
+// * cluster::simple::View::loadConfiguration
 // */
-//bool cluster::SimpleClusterView::loadConfiguration(const vislib::StringA& name) {
+//bool cluster::simple::View::loadConfiguration(const vislib::StringA& name) {
 //    vislib::StringA vname(name);
 //    vname.Append("-tvtile");
 //    if (this->instance()->Configuration().IsConfigValueSet(vname)) {
@@ -500,9 +499,9 @@ DWORD cluster::SimpleClusterHeartbeat::Run(void *userData) {
 //
 //
 ///*
-// * cluster::SimpleClusterView::directCamSyncUpdated
+// * cluster::simple::View::directCamSyncUpdated
 // */
-//bool cluster::SimpleClusterView::directCamSyncUpdated(param::ParamSlot& slot) {
+//bool cluster::simple::View::directCamSyncUpdated(param::ParamSlot& slot) {
 //    ASSERT(&slot == &this->directCamSyncSlot);
 //    if (this->client != NULL) {
 //        this->client->SetDirectCamSync(this->directCamSyncSlot.Param<param::BoolParam>()->Value());

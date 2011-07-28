@@ -117,6 +117,7 @@
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ObjectFileName>$(IntDir)%(RelativeDir)%(Filename).o</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -158,6 +159,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ObjectFileName>$(IntDir)%(RelativeDir)%(Filename).o</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -193,6 +195,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ObjectFileName>$(IntDir)%(RelativeDir)%(Filename).o</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -233,6 +236,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ObjectFileName>$(IntDir)%(RelativeDir)%(Filename).o</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -272,7 +276,12 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="CallDescriptionManager.cpp" />
     <ClCompile Include="CalleeSlot.cpp" />
     <ClCompile Include="CallerSlot.cpp" />
-    <ClCompile Include="cluster\SimpleClusterHeartbeat.cpp" />
+    <ClCompile Include="cluster\simple\Client.cpp" />
+    <ClCompile Include="cluster\simple\ClientViewRegistration.cpp" />
+    <ClCompile Include="cluster\simple\CommUtil.cpp" />
+    <ClCompile Include="cluster\simple\Heartbeat.cpp" />
+    <ClCompile Include="cluster\simple\Server.cpp" />
+    <ClCompile Include="cluster\simple\View.cpp" />
     <ClCompile Include="CoreInstance.cpp" />
     <ClCompile Include="DataFileSequencer.cpp" />
     <ClCompile Include="DataWriterCtrlCall.cpp" />
@@ -478,11 +487,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="cluster\InfoIconRenderer.cpp" />
     <ClCompile Include="cluster\NetMessages.cpp" />
     <ClCompile Include="cluster\PowerwallView.cpp" />
-    <ClCompile Include="cluster\SimpleClusterClient.cpp" />
-    <ClCompile Include="cluster\SimpleClusterClientViewRegistration.cpp" />
-    <ClCompile Include="cluster\SimpleClusterCommUtil.cpp" />
-    <ClCompile Include="cluster\SimpleClusterServer.cpp" />
-    <ClCompile Include="cluster\SimpleClusterView.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h" />
@@ -499,7 +503,12 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CallDescriptionManager.h" />
     <ClInclude Include="CalleeSlot.h" />
     <ClInclude Include="CallerSlot.h" />
-    <ClInclude Include="cluster\SimpleClusterHeartbeat.h" />
+    <ClInclude Include="cluster\simple\Client.h" />
+    <ClInclude Include="cluster\simple\ClientViewRegistration.h" />
+    <ClInclude Include="cluster\simple\CommUtil.h" />
+    <ClInclude Include="cluster\simple\Heartbeat.h" />
+    <ClInclude Include="cluster\simple\Server.h" />
+    <ClInclude Include="cluster\simple\View.h" />
     <ClInclude Include="CoreInstance.h" />
     <ClInclude Include="DataFileSequencer.h" />
     <ClInclude Include="DataWriterCtrlCall.h" />
@@ -651,11 +660,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="cluster\InfoIconRenderer.h" />
     <ClInclude Include="cluster\NetMessages.h" />
     <ClInclude Include="cluster\PowerwallView.h" />
-    <ClInclude Include="cluster\SimpleClusterClient.h" />
-    <ClInclude Include="cluster\SimpleClusterClientViewRegistration.h" />
-    <ClInclude Include="cluster\SimpleClusterCommUtil.h" />
-    <ClInclude Include="cluster\SimpleClusterServer.h" />
-    <ClInclude Include="cluster\SimpleClusterView.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icons.rc" />

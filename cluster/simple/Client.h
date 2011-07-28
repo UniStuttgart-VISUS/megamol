@@ -1,12 +1,12 @@
 /*
- * SimpleClusterClient.h
+ * Client.h
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SIMPLECLUSTERCLIENT_H_INCLUDED
-#define MEGAMOLCORE_SIMPLECLUSTERCLIENT_H_INCLUDED
+#ifndef MEGAMOLCORE_CLUSTER_SIMPLE_CLIENT_H_INCLUDED
+#define MEGAMOLCORE_CLUSTER_SIMPLE_CLIENT_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -28,12 +28,13 @@
 namespace megamol {
 namespace core {
 namespace cluster {
+namespace simple {
 
 
     /**
      * Abstract base class of override rendering views
      */
-    class SimpleClusterClient : public Module, public vislib::net::SimpleMessageDispatchListener {
+    class Client : public Module, public vislib::net::SimpleMessageDispatchListener {
     public:
 
         /**
@@ -73,24 +74,24 @@ namespace cluster {
         }
 
         /** Ctor. */
-        SimpleClusterClient(void);
+        Client(void);
 
         /** Dtor. */
-        virtual ~SimpleClusterClient(void);
+        virtual ~Client(void);
 
         /**
          * Unregisters a heartbeat job
          *
          * @param view The heartbeat job to unregister
          */
-        void Unregister(class SimpleClusterHeartbeat *heartbeat);
+        void Unregister(class Heartbeat *heartbeat);
 
         /**
          * Unregisters a view
          *
          * @param view The view to unregister
          */
-        void Unregister(class SimpleClusterView *view);
+        void Unregister(class View *view);
 
         /**
          * Continue setup
@@ -200,10 +201,10 @@ namespace cluster {
         CalleeSlot registerViewSlot;
 
         /** registered views */
-        vislib::Array<class SimpleClusterView *> views;
+        vislib::Array<class View *> views;
 
         /** registered heartbeat jobs */
-        vislib::Array<class SimpleClusterHeartbeat *> heartbeats;
+        vislib::Array<class Heartbeat *> heartbeats;
 
         /** The port used for udp communication */
         param::ParamSlot udpPortSlot;
@@ -232,8 +233,9 @@ namespace cluster {
     };
 
 
+} /* end namespace simple */
 } /* end namespace cluster */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_SIMPLECLUSTERCLIENT_H_INCLUDED */
+#endif /* MEGAMOLCORE_CLUSTER_SIMPLE_CLIENT_H_INCLUDED */

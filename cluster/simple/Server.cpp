@@ -1,15 +1,15 @@
 /*
- * SimpleClusterServer.cpp
+ * Server.cpp
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "cluster/SimpleClusterServer.h"
-//#include "cluster/SimpleClusterClientViewRegistration.h"
-#include "cluster/SimpleClusterCommUtil.h"
-//#include "cluster/SimpleClusterView.h"
+#include "cluster/simple/Server.h"
+//#include "cluster/simple/ClientViewRegistration.h"
+#include "cluster/simple/CommUtil.h"
+//#include "cluster/simple/View.h"
 #include "CallDescriptionManager.h"
 #include "CoreInstance.h"
 #include "param/BoolParam.h"
@@ -44,9 +44,9 @@ using namespace megamol::core;
 //============================================================================
 
 /*
- * cluster::SimpleClusterServer::Client::Client
+ * cluster::simple::Server::Client::Client
  */
-cluster::SimpleClusterServer::Client::Client(SimpleClusterServer& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> channel)
+cluster::simple::Server::Client::Client(Server& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> channel)
         : vislib::net::SimpleMessageDispatchListener(), parent(parent), dispatcher(), terminationImminent(false),
         wantCamUpdates(false), lastTCSyncNumber(0) {
     this->dispatcher.AddListener(this);
@@ -58,9 +58,9 @@ cluster::SimpleClusterServer::Client::Client(SimpleClusterServer& parent, vislib
 
 
 /*
- * cluster::SimpleClusterServer::Client::~Client
+ * cluster::simple::Server::Client::~Client
  */
-cluster::SimpleClusterServer::Client::~Client(void) {
+cluster::simple::Server::Client::~Client(void) {
     if (this->dispatcher.IsRunning()) {
         this->terminationImminent = true;
         this->dispatcher.Terminate();
@@ -70,9 +70,9 @@ cluster::SimpleClusterServer::Client::~Client(void) {
 
 
 /*
- * cluster::SimpleClusterServer::Client::Close
+ * cluster::simple::Server::Client::Close
  */
-void cluster::SimpleClusterServer::Client::Close(void) {
+void cluster::simple::Server::Client::Close(void) {
     if (this->dispatcher.IsRunning()) {
         this->terminationImminent = true;
         this->dispatcher.Terminate();
@@ -82,9 +82,9 @@ void cluster::SimpleClusterServer::Client::Close(void) {
 
 
 /*
- * cluster::SimpleClusterServer::Client::OnCommunicationError
+ * cluster::simple::Server::Client::OnCommunicationError
  */
-bool cluster::SimpleClusterServer::Client::OnCommunicationError(
+bool cluster::simple::Server::Client::OnCommunicationError(
         vislib::net::SimpleMessageDispatcher& src, const vislib::Exception& exception) throw() {
     if (!this->terminationImminent) {
         vislib::sys::Log::DefaultLog.WriteWarn("Server: Communication error: %s", exception.GetMsgA());
@@ -94,9 +94,9 @@ bool cluster::SimpleClusterServer::Client::OnCommunicationError(
 
 
 /*
- * cluster::SimpleClusterServer::Client::OnDispatcherExited
+ * cluster::simple::Server::Client::OnDispatcherExited
  */
-void cluster::SimpleClusterServer::Client::OnDispatcherExited(
+void cluster::simple::Server::Client::OnDispatcherExited(
         vislib::net::SimpleMessageDispatcher& src) throw() {
     vislib::sys::Log::DefaultLog.WriteInfo("Server: Client Connection %s", this->terminationImminent ? "closed" : "lost");
     // parent.clients will be updated as sfx as soon as the receiver thread terminates
@@ -107,18 +107,18 @@ void cluster::SimpleClusterServer::Client::OnDispatcherExited(
 
 
 /*
- * cluster::SimpleClusterServer::Client::OnDispatcherStarted
+ * cluster::simple::Server::Client::OnDispatcherStarted
  */
-void cluster::SimpleClusterServer::Client::OnDispatcherStarted(
+void cluster::simple::Server::Client::OnDispatcherStarted(
         vislib::net::SimpleMessageDispatcher& src) throw() {
     vislib::sys::Log::DefaultLog.WriteInfo("Server: Client Connection Accepted; Receiver Thread started.");
 }
 
 
 /*
- * cluster::SimpleClusterServer::Client::OnMessageReceived
+ * cluster::simple::Server::Client::OnMessageReceived
  */
-bool cluster::SimpleClusterServer::Client::OnMessageReceived(
+bool cluster::simple::Server::Client::OnMessageReceived(
         vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw() {
     using vislib::sys::Log;
     vislib::net::SimpleMessage answer;
@@ -246,9 +246,9 @@ bool cluster::SimpleClusterServer::Client::OnMessageReceived(
 
 
 /*
- * cluster::SimpleClusterServer::Client::send
+ * cluster::simple::Server::Client::send
  */
-void cluster::SimpleClusterServer::Client::send(const vislib::net::AbstractSimpleMessage& msg) {
+void cluster::simple::Server::Client::send(const vislib::net::AbstractSimpleMessage& msg) {
     using vislib::sys::Log;
     try {
         this->dispatcher.GetChannel()->Send(msg, msg.GetMessageSize(), vislib::net::AbstractCommChannel::TIMEOUT_INFINITE, true);
@@ -262,9 +262,9 @@ void cluster::SimpleClusterServer::Client::send(const vislib::net::AbstractSimpl
 //============================================================================
 
 /*
- * cluster::SimpleClusterServer::SimpleClusterServer
+ * cluster::simple::Server::Server
  */
-cluster::SimpleClusterServer::SimpleClusterServer(void) : Module(),
+cluster::simple::Server::Server(void) : Module(),
         viewnameSlot("viewname", "The parameter slot holding the name of the view module to be use"),
         viewConStatus(0), viewSlot("view", "The view to be used"),
         udpTargetSlot("udptarget", "The udp target"),
@@ -280,7 +280,7 @@ cluster::SimpleClusterServer::SimpleClusterServer(void) : Module(),
         serverRestartSlot("server::Restart", "Restarts the TCP server"),
         serverNameSlot("server::Name", "The name for this server"),
         serverThread(), clientsLock(), clients(),
-        camUpdateThread(&SimpleClusterServer::cameraUpdateThread), camUpdateThreadForce(false) {
+        camUpdateThread(&Server::cameraUpdateThread), camUpdateThreadForce(false) {
     vislib::net::Socket::Startup();
     this->udpTarget.SetPort(0); // marks illegal endpoint
 
@@ -288,46 +288,46 @@ cluster::SimpleClusterServer::SimpleClusterServer(void) : Module(),
     this->MakeSlotAvailable(&this->clusterNameSlot);
 
     this->viewnameSlot << new param::StringParam("");
-    this->viewnameSlot.SetUpdateCallback(&SimpleClusterServer::onViewNameUpdated);
+    this->viewnameSlot.SetUpdateCallback(&Server::onViewNameUpdated);
     this->MakeSlotAvailable(&this->viewnameSlot);
 
     this->viewSlot.SetCompatibleCall<view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->viewSlot);
 
     this->udpTargetSlot << new param::StringParam("");
-    this->udpTargetSlot.SetUpdateCallback(&SimpleClusterServer::onUdpTargetUpdated);
+    this->udpTargetSlot.SetUpdateCallback(&Server::onUdpTargetUpdated);
     this->MakeSlotAvailable(&this->udpTargetSlot);
 
     this->udpTargetPortSlot << new param::IntParam(GetDatagramPort(), 1 /* 49152 */, 65535);
-    this->udpTargetPortSlot.SetUpdateCallback(&SimpleClusterServer::onUdpTargetUpdated);
+    this->udpTargetPortSlot.SetUpdateCallback(&Server::onUdpTargetUpdated);
     this->MakeSlotAvailable(&this->udpTargetPortSlot);
 
     this->clusterShutdownBtnSlot << new param::ButtonParam();
-    this->clusterShutdownBtnSlot.SetUpdateCallback(&SimpleClusterServer::onShutdownClusterClicked);
+    this->clusterShutdownBtnSlot.SetUpdateCallback(&Server::onShutdownClusterClicked);
     this->MakeSlotAvailable(&this->clusterShutdownBtnSlot);
 
     this->serverRunningSlot << new param::BoolParam(false);
-    this->serverRunningSlot.SetUpdateCallback(&SimpleClusterServer::onServerRunningChanged);
+    this->serverRunningSlot.SetUpdateCallback(&Server::onServerRunningChanged);
     this->MakeSlotAvailable(&this->serverRunningSlot);
 
     this->serverPortSlot << new param::IntParam(GetStreamPort(), 1 /* 49152 */, 65535);
-    this->serverPortSlot.SetUpdateCallback(&SimpleClusterServer::onServerEndPointChanged);
+    this->serverPortSlot.SetUpdateCallback(&Server::onServerEndPointChanged);
     this->MakeSlotAvailable(&this->serverPortSlot);
 
     this->serverReconnectSlot << new param::ButtonParam();
-    this->serverReconnectSlot.SetUpdateCallback(&SimpleClusterServer::onServerReconnectClicked);
+    this->serverReconnectSlot.SetUpdateCallback(&Server::onServerReconnectClicked);
     this->MakeSlotAvailable(&this->serverReconnectSlot);
 
     this->serverRestartSlot << new param::ButtonParam();
-    this->serverRestartSlot.SetUpdateCallback(&SimpleClusterServer::onServerRestartClicked);
+    this->serverRestartSlot.SetUpdateCallback(&Server::onServerRestartClicked);
     this->MakeSlotAvailable(&this->serverRestartSlot);
 
     this->serverStartSlot << new param::ButtonParam();
-    this->serverStartSlot.SetUpdateCallback(&SimpleClusterServer::onServerStartStopClicked);
+    this->serverStartSlot.SetUpdateCallback(&Server::onServerStartStopClicked);
     this->MakeSlotAvailable(&this->serverStartSlot);
 
     this->serverStopSlot << new param::ButtonParam();
-    this->serverStopSlot.SetUpdateCallback(&SimpleClusterServer::onServerStartStopClicked);
+    this->serverStopSlot.SetUpdateCallback(&Server::onServerStartStopClicked);
     this->MakeSlotAvailable(&this->serverStopSlot);
 
     this->serverNameSlot << new param::StringParam("");
@@ -338,9 +338,9 @@ cluster::SimpleClusterServer::SimpleClusterServer(void) : Module(),
 
 
 /*
- * cluster::SimpleClusterServer::~SimpleClusterServer
+ * cluster::simple::Server::~Server
  */
-cluster::SimpleClusterServer::~SimpleClusterServer(void) {
+cluster::simple::Server::~Server(void) {
     this->Release();
     ASSERT(this->clients.IsEmpty());
     vislib::net::Socket::Cleanup();
@@ -348,9 +348,9 @@ cluster::SimpleClusterServer::~SimpleClusterServer(void) {
 
 
 /*
- * cluster::SimpleClusterServer::create
+ * cluster::simple::Server::create
  */
-bool cluster::SimpleClusterServer::create(void) {
+bool cluster::simple::Server::create(void) {
     ASSERT(this->instance() != NULL);
 
     if (this->instance()->Configuration().IsConfigValueSet("scname")) {
@@ -391,9 +391,9 @@ bool cluster::SimpleClusterServer::create(void) {
 
 
 /*
- * cluster::SimpleClusterServer::release
+ * cluster::simple::Server::release
  */
-void cluster::SimpleClusterServer::release(void) {
+void cluster::simple::Server::release(void) {
     this->GetCoreInstance()->UnregisterParamUpdateListener(this);
     this->disconnectView();
     if (this->camUpdateThread.IsRunning()) {
@@ -405,25 +405,25 @@ void cluster::SimpleClusterServer::release(void) {
 
 
 /*
- * cluster::SimpleClusterServer::IsRunning
+ * cluster::simple::Server::IsRunning
  */
-bool cluster::SimpleClusterServer::IsRunning(void) const {
+bool cluster::simple::Server::IsRunning(void) const {
     return (this->viewConStatus >= 0);
 }
 
 
 /*
- * cluster::SimpleClusterServer::Start
+ * cluster::simple::Server::Start
  */
-bool cluster::SimpleClusterServer::Start(void) {
+bool cluster::simple::Server::Start(void) {
     return true;
 }
 
 
 /*
- * cluster::SimpleClusterServer::Terminate
+ * cluster::simple::Server::Terminate
  */
-bool cluster::SimpleClusterServer::Terminate(void) {
+bool cluster::simple::Server::Terminate(void) {
     this->disconnectView();
     this->stopServer(); // also disconnects clients
     return true;
@@ -431,9 +431,9 @@ bool cluster::SimpleClusterServer::Terminate(void) {
 
 
 /*
- * cluster::SimpleClusterServer::OnNewConnection
+ * cluster::simple::Server::OnNewConnection
  */
-bool cluster::SimpleClusterServer::OnNewConnection(const vislib::net::CommServer& src,
+bool cluster::simple::Server::OnNewConnection(const vislib::net::CommServer& src,
         vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw() {
     vislib::sys::Log::DefaultLog.WriteInfo("Incoming TCP connection");
     vislib::sys::AutoLock(this->clientsLock);
@@ -443,9 +443,9 @@ bool cluster::SimpleClusterServer::OnNewConnection(const vislib::net::CommServer
 
 
 /*
- * cluster::SimpleClusterServer::ParamUpdated
+ * cluster::simple::Server::ParamUpdated
  */
-void cluster::SimpleClusterServer::ParamUpdated(param::ParamSlot& slot) {
+void cluster::simple::Server::ParamUpdated(param::ParamSlot& slot) {
     vislib::net::SimpleMessage msg;
     msg.GetHeader().SetMessageID(MSG_PARAMUPDATE);
     vislib::StringA name = slot.FullName();
@@ -462,11 +462,11 @@ void cluster::SimpleClusterServer::ParamUpdated(param::ParamSlot& slot) {
 
 
 /*
- * cluster::SimpleClusterServer::onShutdownClusterClicked
+ * cluster::simple::Server::onShutdownClusterClicked
  */
-bool cluster::SimpleClusterServer::onShutdownClusterClicked(param::ParamSlot& slot) {
+bool cluster::simple::Server::onShutdownClusterClicked(param::ParamSlot& slot) {
     ASSERT(&slot == &this->clusterShutdownBtnSlot);
-    SimpleClusterDatagram datagram;
+    Datagram datagram;
     datagram.msg = MSG_SHUTDOWN;
     vislib::StringA cn(this->clusterNameSlot.Param<param::StringParam>()->Value());
     if (cn.Length() > 127) cn.Truncate(127);
@@ -478,9 +478,9 @@ bool cluster::SimpleClusterServer::onShutdownClusterClicked(param::ParamSlot& sl
 
 
 /*
- * cluster::SimpleClusterServer::onUdpTargetUpdated
+ * cluster::simple::Server::onUdpTargetUpdated
  */
-bool cluster::SimpleClusterServer::onUdpTargetUpdated(param::ParamSlot& slot) {
+bool cluster::simple::Server::onUdpTargetUpdated(param::ParamSlot& slot) {
     ASSERT((&slot == &this->udpTargetSlot) || (&slot == &this->udpTargetPortSlot));
     this->udpSocket.Close(); // will be lazy initialized the next time required
 
@@ -510,9 +510,9 @@ bool cluster::SimpleClusterServer::onUdpTargetUpdated(param::ParamSlot& slot) {
 
 
 /*
- * cluster::SimpleClusterServer::onViewNameUpdated
+ * cluster::simple::Server::onViewNameUpdated
  */
-bool cluster::SimpleClusterServer::onViewNameUpdated(param::ParamSlot& slot) {
+bool cluster::simple::Server::onViewNameUpdated(param::ParamSlot& slot) {
     ASSERT(&slot == &this->viewnameSlot);
     this->disconnectView();
     vislib::StringA viewmodname(this->viewnameSlot.Param<param::StringParam>()->Value());
@@ -538,9 +538,9 @@ bool cluster::SimpleClusterServer::onViewNameUpdated(param::ParamSlot& slot) {
 
 
 /*
- * cluster::SimpleClusterServer::disconnectView
+ * cluster::simple::Server::disconnectView
  */
-void cluster::SimpleClusterServer::disconnectView(void) {
+void cluster::simple::Server::disconnectView(void) {
     if (this->viewConStatus == 1) {
         this->viewSlot.DisconnectCalls();
         this->viewSlot.ConnectCall(NULL);
@@ -555,9 +555,9 @@ void cluster::SimpleClusterServer::disconnectView(void) {
 
 
 /*
- * cluster::SimpleClusterServer::newViewConnected
+ * cluster::simple::Server::newViewConnected
  */
-void cluster::SimpleClusterServer::newViewConnected(void) {
+void cluster::simple::Server::newViewConnected(void) {
     ASSERT(this->viewConStatus != 1);
     ASSERT(this->viewSlot.CallAs<view::CallRenderView>() != NULL);
     ASSERT(this->viewSlot.CallAs<view::CallRenderView>()->PeekCalleeSlot() != NULL);
@@ -571,9 +571,9 @@ void cluster::SimpleClusterServer::newViewConnected(void) {
 
 
 /*
- * cluster::SimpleClusterServer::sendUDPDiagram
+ * cluster::simple::Server::sendUDPDiagram
  */
-void cluster::SimpleClusterServer::sendUDPDiagram(cluster::SimpleClusterDatagram& datagram) {
+void cluster::simple::Server::sendUDPDiagram(cluster::simple::Datagram& datagram) {
     try {
         if (!this->udpSocket.IsValid()) {
             this->udpSocket.Create(vislib::net::Socket::FAMILY_INET, vislib::net::Socket::TYPE_DGRAM, vislib::net::Socket::PROTOCOL_UDP);
@@ -583,7 +583,7 @@ void cluster::SimpleClusterServer::sendUDPDiagram(cluster::SimpleClusterDatagram
             datagram.cntEchoed++;
         }
         if (this->udpTarget.GetPort() != 0) {
-            this->udpSocket.Send(this->udpTarget, &datagram, sizeof(cluster::SimpleClusterDatagram));
+            this->udpSocket.Send(this->udpTarget, &datagram, sizeof(cluster::simple::Datagram));
             VLTRACE(VISLIB_TRCELVL_INFO, "Server >>> UDP Datagram sent to %s\n", this->udpTarget.ToStringA().PeekBuffer());
         } else {
             vislib::sys::Log::DefaultLog.WriteWarn("Not udp target set to send the message");
@@ -598,9 +598,9 @@ void cluster::SimpleClusterServer::sendUDPDiagram(cluster::SimpleClusterDatagram
 
 
 /*
- * cluster::SimpleClusterServer::stopServer
+ * cluster::simple::Server::stopServer
  */
-void cluster::SimpleClusterServer::stopServer(void) {
+void cluster::simple::Server::stopServer(void) {
     if (this->serverThread.IsRunning()) {
         vislib::sys::Thread::Sleep(2000); // *HAZARD* Terminating a server which has not reached listen state results in undefined behaviour
         this->serverThread.Terminate();
@@ -625,9 +625,9 @@ void cluster::SimpleClusterServer::stopServer(void) {
 
 
 /*
- * cluster::SimpleClusterServer::onServerRunningChanged
+ * cluster::simple::Server::onServerRunningChanged
  */
-bool cluster::SimpleClusterServer::onServerRunningChanged(param::ParamSlot& slot) {
+bool cluster::simple::Server::onServerRunningChanged(param::ParamSlot& slot) {
     bool tarVal = this->serverRunningSlot.Param<param::BoolParam>()->Value();
     if (this->serverThread.IsRunning() != tarVal) {
         if (tarVal) {
@@ -641,9 +641,9 @@ bool cluster::SimpleClusterServer::onServerRunningChanged(param::ParamSlot& slot
 
 
 /*
- * cluster::SimpleClusterServer::onServerEndPointChanged
+ * cluster::simple::Server::onServerEndPointChanged
  */
-bool cluster::SimpleClusterServer::onServerEndPointChanged(param::ParamSlot& slot) {
+bool cluster::simple::Server::onServerEndPointChanged(param::ParamSlot& slot) {
     this->stopServer();
     this->onServerRestartClicked(slot);
     return true;
@@ -651,9 +651,9 @@ bool cluster::SimpleClusterServer::onServerEndPointChanged(param::ParamSlot& slo
 
 
 /*
- * cluster::SimpleClusterServer::onServerReconnectClicked
+ * cluster::simple::Server::onServerReconnectClicked
  */
-bool cluster::SimpleClusterServer::onServerReconnectClicked(param::ParamSlot& slot) {
+bool cluster::simple::Server::onServerReconnectClicked(param::ParamSlot& slot) {
     if (!this->serverThread.IsRunning()) {
         if (&slot == &this->serverReconnectSlot) vislib::sys::Log::DefaultLog.WriteWarn("TCP-Server is not running");
         return true;
@@ -662,7 +662,7 @@ bool cluster::SimpleClusterServer::onServerReconnectClicked(param::ParamSlot& sl
         if (&slot == &this->serverReconnectSlot) vislib::sys::Log::DefaultLog.WriteWarn("No view connected");
         return true;
     }
-    SimpleClusterDatagram datagram;
+    Datagram datagram;
     datagram.msg = MSG_CONNECTTOSERVER;
 
     vislib::StringA cn(this->clusterNameSlot.Param<param::StringParam>()->Value());
@@ -689,9 +689,9 @@ bool cluster::SimpleClusterServer::onServerReconnectClicked(param::ParamSlot& sl
 
 
 /*
- * cluster::SimpleClusterServer::onServerRestartClicked
+ * cluster::simple::Server::onServerRestartClicked
  */
-bool cluster::SimpleClusterServer::onServerRestartClicked(param::ParamSlot& slot) {
+bool cluster::simple::Server::onServerRestartClicked(param::ParamSlot& slot) {
     using vislib::sys::Log;
     this->stopServer();
 
@@ -720,9 +720,9 @@ bool cluster::SimpleClusterServer::onServerRestartClicked(param::ParamSlot& slot
 
 
 /*
- * cluster::SimpleClusterServer::onServerStartStopClicked
+ * cluster::simple::Server::onServerStartStopClicked
  */
-bool cluster::SimpleClusterServer::onServerStartStopClicked(param::ParamSlot& slot) {
+bool cluster::simple::Server::onServerStartStopClicked(param::ParamSlot& slot) {
     this->serverRunningSlot.Param<param::BoolParam>()->SetValue(&slot == &this->serverStartSlot);
     //this->onServerRunningChanged(slot);
     return true;
@@ -730,11 +730,11 @@ bool cluster::SimpleClusterServer::onServerStartStopClicked(param::ParamSlot& sl
 
 
 /*
- * cluster::SimpleClusterServer::cameraUpdateThread
+ * cluster::simple::Server::cameraUpdateThread
  */
-DWORD cluster::SimpleClusterServer::cameraUpdateThread(void *userData) {
+DWORD cluster::simple::Server::cameraUpdateThread(void *userData) {
     const view::AbstractView *av = NULL;
-    SimpleClusterServer *This = static_cast<SimpleClusterServer *>(userData);
+    Server *This = static_cast<Server *>(userData);
     unsigned int syncnumber = static_cast<unsigned int>(-1);
     Call *call = NULL;
     unsigned int csn = 0;

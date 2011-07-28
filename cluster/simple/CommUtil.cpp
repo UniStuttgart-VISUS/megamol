@@ -1,21 +1,21 @@
 /*
- * SimpleClusterCommUtil.cpp
+ * CommUtil.cpp
  *
  * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "cluster/SimpleClusterCommUtil.h"
+#include "cluster/simple/CommUtil.h"
 #include "vislib/CharTraits.h"
 
 using namespace megamol::core;
 
 
 /*
- * cluster::GetDatagramPort
+ * cluster::simple::GetDatagramPort
  */
-unsigned int cluster::GetDatagramPort(const utility::Configuration *cfg) {
+unsigned int cluster::simple::GetDatagramPort(const utility::Configuration *cfg) {
     if (cfg != NULL) {
         if (cfg->IsConfigValueSet("scudp")) {
             try {
@@ -32,9 +32,9 @@ unsigned int cluster::GetDatagramPort(const utility::Configuration *cfg) {
 
 
 /*
- * cluster::GetStreamPort
+ * cluster::simple::GetStreamPort
  */
-unsigned int cluster::GetStreamPort(const utility::Configuration *cfg) {
+unsigned int cluster::simple::GetStreamPort(const utility::Configuration *cfg) {
     if (cfg != NULL) {
         if (cfg->IsConfigValueSet("sctcpport")) {
             try {
