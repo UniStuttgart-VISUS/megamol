@@ -12,7 +12,10 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/RawStorage.h"
+#include "vislib/SmartRef.h"
 #include "vislib/String.h"
+#include "vislib/TcpCommChannel.h"
+#include "vislib/Thread.h"
 
 
 namespace megamol {
@@ -59,6 +62,27 @@ namespace simple {
         bool Sync(vislib::RawStorage& outPayload);
 
     private:
+
+        /**
+         * Connection thread
+         *
+         * @param userData Pointer to this object
+         *
+         * @return 0
+         */
+        static DWORD connector(void *userData);
+
+        /** The communication channel */
+        vislib::SmartRef<vislib::net::TcpCommChannel> chan;
+
+        /** The connection thread */
+        vislib::sys::Thread conn;
+
+        /* The port of the heartbeat to connect to */
+        unsigned int port;
+
+        /* The server of the heartbeat to connect to */
+        vislib::StringW server;
 
     };
 

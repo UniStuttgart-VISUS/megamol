@@ -15,8 +15,11 @@
 #include "Module.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
+#include "vislib/CommServer.h"
+#include "vislib/CommServerListener.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/Event.h"
+#include "vislib/RunnableThread.h"
 
 //#include "view/AbstractTileView.h"
 //#include "vislib/AbstractSimpleMessage.h"
@@ -37,7 +40,7 @@ namespace simple {
     /**
      * Abstract base class of override rendering views
      */
-    class Heartbeat : public job::AbstractThreadedJob, public Module {
+    class Heartbeat : public job::AbstractThreadedJob, public Module, public vislib::net::CommServerListener {
     public:
 
         /**
@@ -105,6 +108,57 @@ namespace simple {
          */
         void SetTCData(const void *data, SIZE_T size);
 
+        /**
+         * This method is called once a network error occurs.
+         *
+         * This method should return very quickly and should not perform
+         * excessive work as it is executed in the server thread.
+         *
+         * @param src       The CommServer which caught the communication error.
+         * @param exception The exception that was caught (this exception
+         *                  represents the error that occurred).
+         *
+         * @return true in order to make the CommServer continue listening, 
+         *         false will cause the server to exit.
+         */
+        virtual bool OnServerError(const vislib::net::CommServer& src,
+            const vislib::Exception& exception) throw();
+
+        /**
+         * The server will call this method when a new client connected. The
+         * listener can decide whether it wants to take ownership of the
+         * communication channel 'channel' by returning true. If no listener 
+         * accepts the new connection, the server will terminate the new 
+         * connection by closing it.
+         *
+         * @param src     The server that made the new channel.
+         * @param channel The new communication channel.
+         * 
+         * @return true if the listener takes ownership of 'channel'. The 
+         *         server will not use the channel again. If the method 
+         *         returns false, the listener should not use the socket, 
+         *         because the server remains its owner.
+         */
+        virtual bool OnNewConnection(const vislib::net::CommServer& src,
+            vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw();
+
+        /**
+         * The server will call this method when it left the server loop and
+         * is about to exit.
+         *
+         * @param serv The server that exited.
+         */
+        virtual void OnServerExited(const vislib::net::CommServer& src) throw();
+
+        /**
+         * The server will call this method immediately before entering the 
+         * server loop, but after the communication channel was put into
+         * listening state.
+         *
+         * @param serv The server that started.
+         */
+        virtual void OnServerStarted(const vislib::net::CommServer& src) throw();
+
     protected:
 
         /**
@@ -169,6 +223,9 @@ namespace simple {
 
         /** The index of the current timeCamera buffer */
         unsigned int tcBufIdx;
+
+        /** The heartbeat server */
+        vislib::sys::RunnableThread<vislib::net::CommServer> server;
 
         ///**
         // * Renders this AbstractView3D in the currently active OpenGL context.

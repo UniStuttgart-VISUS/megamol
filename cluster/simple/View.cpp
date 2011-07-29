@@ -20,6 +20,7 @@
 #include "vislib/DNS.h"
 #include "vislib/IPHostEntry.h"
 #include "vislib/NetworkInformation.h"
+#include "vislib/RawStorageSerialiser.h"
 #include "vislib/Thread.h"
 #include <climits>
 
@@ -146,10 +147,14 @@ void cluster::simple::View::Render(float time, double instTime) {
         heartbeatOn = false;
     }
     if (heartbeatOn) {
-        // TODO: Implement
-        //  instTime [double]
-        //  time [float]
-        //  camera [raw]
+        ASSERT(this->heartbeatPayload.GetSize() >= 12);
+        instTime = *this->heartbeatPayload.As<double>();
+        time = *this->heartbeatPayload.AsAt<float>(sizeof(double));
+        view::AbstractView *view = this->GetConnectedView();
+        if ((this->heartbeatPayload.GetSize() > 12) && (view != NULL)) {
+            vislib::RawStorageSerialiser ser(&this->heartbeatPayload, sizeof(double) + sizeof(float));
+            view->DeserialiseCamera(ser);
+        }
     }
 
     view::CallRenderView *crv = this->getCallRenderView();
