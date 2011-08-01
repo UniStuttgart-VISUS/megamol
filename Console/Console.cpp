@@ -637,10 +637,6 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     }
 
     try { // initialise core
-        MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore,
-            MMC_INITVAL_LOGECHOFUNC, MMC_TYPE_VOIDP,
-            function_cast<void*>(writeLogEchoToConsole)));
-
         //MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, // is now deprecated
         //    MMC_INITVAL_INCOMINGLOG, MMC_TYPE_VOIDP, 
         //    static_cast<void*>(&Log::DefaultLog)));
@@ -652,6 +648,10 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(corelog, Log::LEVEL_ALL));
             Log::DefaultLog.EchoOfflineMessages(true);
         }
+
+        MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore,
+            MMC_INITVAL_LOGECHOFUNC, MMC_TYPE_VOIDP,
+            function_cast<void*>(writeLogEchoToConsole)));
 
         if (parser->IsConfigFileSpecified()) {
             MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, 

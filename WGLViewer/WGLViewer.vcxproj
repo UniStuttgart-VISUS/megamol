@@ -1,0 +1,277 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F0091DFC-0FBE-466A-9BA4-59B214662774}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>WGLViewer</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\vislibVSProps\TargetDebug32.props" />
+    <Import Project="..\common.props" />
+    <Import Project="..\ExtLibs.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\vislibVSProps\TargetDebug64.props" />
+    <Import Project="..\common.props" />
+    <Import Project="..\ExtLibs.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\vislibVSProps\TargetRelease32.props" />
+    <Import Project="..\common.props" />
+    <Import Project="..\ExtLibs.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\vislibVSProps\TargetRelease64.props" />
+    <Import Project="..\common.props" />
+    <Import Project="..\ExtLibs.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>Win$(Bits)\$(Configuration)\</OutDir>
+    <IntDir>Win$(Bits)\$(Configuration)\</IntDir>
+    <TargetName>MegaMolWGL$(BitsD)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>Win$(Bits)\$(Configuration)\</OutDir>
+    <IntDir>Win$(Bits)\$(Configuration)\</IntDir>
+    <TargetName>MegaMolWGL$(BitsD)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>Win$(Bits)\$(Configuration)\</OutDir>
+    <IntDir>Win$(Bits)\$(Configuration)\</IntDir>
+    <TargetName>MegaMolWGL$(BitsD)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>Win$(Bits)\$(Configuration)\</OutDir>
+    <IntDir>Win$(Bits)\$(Configuration)\</IntDir>
+    <TargetName>MegaMolWGL$(BitsD)</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC;_DEBUG;_WINDOWS;_USRDLL;WGLVIEWER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(VisGlutPath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PreBuildEvent>
+      <Message>Generating version.gen.h ...</Message>
+      <Command>cd "$(ProjectDir)."
+perl "$(ProjectDir)VersionInfo.pl" "$(ProjectDir)."
+</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>if not exist "$(ProjectDir)lib" mkdir "$(ProjectDir)lib"
+if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
+xcopy "$(TargetDir)$(TargetName).dll" "$(ProjectDir)lib" /Y /F /V /G /K
+xcopy "$(TargetDir)$(TargetName).lib" "$(ProjectDir)lib" /Y /F /V /G /K
+xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC;_DEBUG;_WINDOWS;_USRDLL;WGLVIEWER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(VisGlutPath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PreBuildEvent>
+      <Message>Generating version.gen.h ...</Message>
+      <Command>cd "$(ProjectDir)."
+perl "$(ProjectDir)VersionInfo.pl" "$(ProjectDir)."
+</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>if not exist "$(ProjectDir)lib" mkdir "$(ProjectDir)lib"
+if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
+xcopy "$(TargetDir)$(TargetName).dll" "$(ProjectDir)lib" /Y /F /V /G /K
+xcopy "$(TargetDir)$(TargetName).lib" "$(ProjectDir)lib" /Y /F /V /G /K
+xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC;NDEBUG;_WINDOWS;_USRDLL;WGLVIEWER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(VisGlutPath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PreBuildEvent>
+      <Message>Generating version.gen.h ...</Message>
+      <Command>cd "$(ProjectDir)."
+perl "$(ProjectDir)VersionInfo.pl" "$(ProjectDir)."
+</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>if not exist "$(ProjectDir)lib" mkdir "$(ProjectDir)lib"
+if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
+xcopy "$(TargetDir)$(TargetName).dll" "$(ProjectDir)lib" /Y /F /V /G /K
+xcopy "$(TargetDir)$(TargetName).lib" "$(ProjectDir)lib" /Y /F /V /G /K
+xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC;NDEBUG;_WINDOWS;_USRDLL;WGLVIEWER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(VisGlutPath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PreBuildEvent>
+      <Message>Generating version.gen.h ...</Message>
+      <Command>cd "$(ProjectDir)."
+perl "$(ProjectDir)VersionInfo.pl" "$(ProjectDir)."
+</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>if not exist "$(ProjectDir)lib" mkdir "$(ProjectDir)lib"
+if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
+xcopy "$(TargetDir)$(TargetName).dll" "$(ProjectDir)lib" /Y /F /V /G /K
+xcopy "$(TargetDir)$(TargetName).lib" "$(ProjectDir)lib" /Y /F /V /G /K
+xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ApiHandle.cpp" />
+    <ClCompile Include="Instance.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ApiHandle.h" />
+    <ClInclude Include="Instance.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="version.gen.h" />
+    <ClInclude Include="version.template.h" />
+    <ClInclude Include="versioninfo.h" />
+    <ClInclude Include="Window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="VersionInfo.pl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="icons.rc">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Viewer\include\;$(MegaMolCorepath)api\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Viewer\include\;$(MegaMolCorepath)api\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)Viewer\include\;$(MegaMolCorepath)api\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)Viewer\include\;$(MegaMolCorepath)api\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
