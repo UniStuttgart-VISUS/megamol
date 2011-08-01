@@ -422,7 +422,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
                     && (logSettings->echoLevelValid)) {
                 this->config.instanceLog->SetEchoLevel(
                     logSettings->echoLevelValue);
-                this->config.instanceLog->EchoOfflineMessages(false);
+                //this->config.instanceLog->EchoOfflineMessages(true);
             }
             if ((!megamol::core::utility::Configuration::logLevelLocked)
                     && (logSettings->logLevelValid)) {

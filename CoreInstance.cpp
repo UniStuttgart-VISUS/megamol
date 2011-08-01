@@ -297,7 +297,7 @@ void megamol::core::CoreInstance::Initialise(void) {
         this->log.SetEchoLevel(this->preInit->GetLogEchoLevel());
         this->config.logEchoLevelLocked = true;
         if (this->preInit->GetLogEchoLevel() != 0) {
-            this->log.EchoOfflineMessages(false);
+            this->log.EchoOfflineMessages(true);
         }
     }
     if (this->preInit->IsLogLevelSet()) {
