@@ -52,7 +52,6 @@ void cluster::simple::HeartbeatClient::Shutdown(void) {
             this->conn.Join();
         }
     }
-    // TODO: Implement
 }
 
 
@@ -60,7 +59,29 @@ void cluster::simple::HeartbeatClient::Shutdown(void) {
  * cluster::simple::HeartbeatClient::Sync
  */
 bool cluster::simple::HeartbeatClient::Sync(vislib::RawStorage& outPayload) {
-    // TODO: Implement
+    const char outData[] = "MMHB";
+    unsigned int inSize;
+
+    try {
+        if (!this->chan.IsNull()) {
+            if (this->chan->Send(outData, 4) != 4) throw vislib::Exception("heart attack", __FILE__, __LINE__);
+            if (this->chan->Receive(&inSize, 4) != 4) throw vislib::Exception("heart attack", __FILE__, __LINE__);
+
+            outPayload.EnforceSize(inSize);
+            if (inSize > 0) {
+                if (this->chan->Receive(outPayload, inSize) != inSize) throw vislib::Exception("heart attack", __FILE__, __LINE__);
+            }
+
+            return true;
+        }
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteError("HeartbeatClient: %s [%s, %u]\n",
+            ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteError("HeartbeatClient: Unexpected Exception\n");
+    }
+
     return false;
 }
 
@@ -82,12 +103,16 @@ DWORD cluster::simple::HeartbeatClient::connector(void *userData) {
         server.PeekBuffer(), port);
 
     try {
-        that->chan = vislib::net::TcpCommChannel::Create(vislib::net::TcpCommChannel::FLAG_NODELAY);
+        vislib::SmartRef<vislib::net::TcpCommChannel> c = vislib::net::TcpCommChannel::Create(vislib::net::TcpCommChannel::FLAG_NODELAY);
         vislib::SmartRef<vislib::net::AbstractCommEndPoint> endPoint
             = vislib::net::IPCommEndPoint::Create(vislib::net::IPCommEndPoint::IPV4, server, port);
-        that->chan->Connect(endPoint);
+
+        vislib::sys::Thread::Sleep(100 + ::rand() % 2000);
+
+        c->Connect(endPoint);
 
         Log::DefaultLog.WriteInfo("Connection to heartbeat server established\n");
+        that->chan = c;
 
     } catch(vislib::Exception ex) {
         Log::DefaultLog.WriteError("Failed to connect to heartbeat server: %s [%s; %d]\n",

@@ -14,11 +14,96 @@
 #include "vislib/assert.h"
 #include "vislib/AutoLock.h"
 #include "vislib/Log.h"
+#include "vislib/IPCommEndPoint.h"
+#include "vislib/TcpCommChannel.h"
+#include "vislib/Trace.h"
 #include <climits>
 
 
 using namespace megamol::core;
 
+
+/****************************************************************************/
+
+/*
+ * cluster::simple::Heartbeat::Connection::Connection
+ */
+cluster::simple::Heartbeat::Connection::Connection(cluster::simple::Heartbeat& parent,
+        vislib::SmartRef<vislib::net::AbstractCommChannel> chan) : parent(parent), chan(chan),
+        waiting(false), kun(&Connection::receive), wait(), data() {
+    this->kun.Start(static_cast<void*>(this));
+    vislib::sys::Thread::Sleep(10);
+}
+
+
+/*
+ * cluster::simple::Heartbeat::Connection::Close
+ */
+void cluster::simple::Heartbeat::Connection::Close(void) {
+    if (!this->chan.IsNull()) {
+        vislib::SmartRef<vislib::net::AbstractCommChannel> c = this->chan;
+        this->chan = NULL;
+        c->Close();
+    }
+    if (this->kun.IsRunning()) {
+        this->kun.Join();
+    }
+}
+
+
+/*
+ * cluster::simple::Heartbeat::Connection::receive
+ */
+DWORD cluster::simple::Heartbeat::Connection::receive(void *userData) {
+    Connection *that = static_cast<Connection *>(userData);
+    vislib::SmartRef<vislib::net::AbstractCommChannel> chan = that->chan;
+    Heartbeat& parent = that->parent;
+    bool& waiting = that->waiting;
+    vislib::sys::Event& wait = that->wait;
+    vislib::RawStorage& data = that->data;
+
+    const SIZE_T inDataSize = 4;
+    char inData[inDataSize];
+
+    waiting = false;
+
+    try {
+        SIZE_T size = inDataSize;
+        while (size == inDataSize) {
+            size = chan->Receive(inData, inDataSize,
+                vislib::net::TcpCommChannel::TIMEOUT_INFINITE, true);
+
+            if (::memcmp(inData, "MMHB", 4) != 0) {
+                throw vislib::Exception("cardiac seizure", __FILE__, __LINE__);
+            }
+
+            waiting = true;
+            parent.connWaiting(that);
+
+            wait.Wait();
+            waiting = false;
+
+            unsigned int len = static_cast<unsigned int>(data.GetSize());
+            chan->Send(&len, 4,
+                vislib::net::TcpCommChannel::TIMEOUT_INFINITE, true);
+            chan->Send(data, len,
+                vislib::net::TcpCommChannel::TIMEOUT_INFINITE, true);
+
+        }
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteError("Heartbeat Connection: %s [%s, %d]",
+            ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteError("Heartbeat Connection: Unexpected Exception");
+    }
+
+    parent.removeConn(that); // HAZARD: might already delete this object ... thread object may behave strange
+
+    return 0;
+}
+
+
+/****************************************************************************/
 
 /*
  * cluster::simple::Heartbeat::Heartbeat
@@ -27,7 +112,7 @@ cluster::simple::Heartbeat::Heartbeat(void)
         : job::AbstractThreadedJob(), Module(),
         registerSlot("register", "The slot registering this view"), client(NULL), run(false), mainlock(),
         heartBeatPortSlot("heartbeat::port", "The port the heartbeat server communicates on"),
-        tcBuf(), tcBufIdx(0), server() {
+        tcBuf(), tcBufIdx(0), server(), connLock(), connList() {
     vislib::net::Socket::Startup();
 
     this->registerSlot.SetCompatibleCall<ClientViewRegistrationDescription>();
@@ -35,6 +120,11 @@ cluster::simple::Heartbeat::Heartbeat(void)
 
     this->heartBeatPortSlot << new param::IntParam(0, 0, USHRT_MAX);
     this->MakeSlotAvailable(&this->heartBeatPortSlot);
+
+    this->server.AddListener(this);
+
+    this->tcBuf[0].isValid = false;
+    this->tcBuf[1].isValid = false;
 
 }
 
@@ -121,6 +211,7 @@ void cluster::simple::Heartbeat::SetTCData(const void *data, SIZE_T size) {
         }
         buf.instTime = instTime;
         buf.time = time;
+        buf.isValid = true;
     }
     this->tcBufIdx = 1 - this->tcBufIdx;
     this->mainlock.Set();
@@ -143,9 +234,10 @@ bool cluster::simple::Heartbeat::OnServerError(const vislib::net::CommServer& sr
 bool cluster::simple::Heartbeat::OnNewConnection(const vislib::net::CommServer& src, vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw() {
     vislib::sys::Log::DefaultLog.WriteInfo("New heartbeat connection");
 
-    // TODO: Implement
+    vislib::SmartPtr<Connection> con = new Connection(*this, channel);
+    this->addConn(con);
 
-    return false;
+    return true;
 }
 
 
@@ -203,6 +295,18 @@ void cluster::simple::Heartbeat::release(void) {
         this->client = NULL;
     }
 
+    vislib::Array<vislib::SmartPtr<Connection> > c;
+    {
+        vislib::sys::AutoLock lock(this->connLock);
+        vislib::SingleLinkedList<vislib::SmartPtr<Connection> >::Iterator iter = this->connList.GetIterator();
+        while (iter.HasNext()) {
+            c.Add(iter.Next());
+        }
+    }
+    for (SIZE_T i = 0; i < c.Count(); i++) {
+        c[i]->Close();
+    }
+
     this->mainlock.Set();
     // TODO: Implement
 }
@@ -241,10 +345,17 @@ DWORD cluster::simple::Heartbeat::Run(void *userData) {
                 this->server.Join();
             }
 
-            //vislib::net::CommServer::Configuration cfg(
-            //this->server
+            vislib::net::IPEndPoint ep;
+            ep.SetIPAddress(vislib::net::IPAddress::ANY);
+            ep.SetPort(this->heartBeatPortSlot.Param<param::IntParam>()->Value());
 
-            // TODO: Implement server restart
+            vislib::net::CommServer::Configuration cfg(
+                vislib::net::TcpCommChannel::Create(
+                    vislib::net::TcpCommChannel::FLAG_NODELAY
+                    | vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS),
+                vislib::net::IPCommEndPoint::Create(ep));
+            this->server.Start(&cfg);
+            vislib::sys::Thread::Sleep(100);
 
         }
 
@@ -272,4 +383,85 @@ DWORD cluster::simple::Heartbeat::Run(void *userData) {
     }
 
     return 0;
+}
+
+
+/*
+ * cluster::simple::Heartbeat::addConn
+ */
+void cluster::simple::Heartbeat::addConn(vislib::SmartPtr<Connection> con) {
+    vislib::sys::AutoLock lock(this->connLock);
+
+    if (this->connList.Contains(con)) return;
+
+    this->connList.Add(con);
+    this->connWaiting(NULL);
+
+}
+
+
+/*
+ * cluster::simple::Heartbeat::removeConn
+ */
+void cluster::simple::Heartbeat::removeConn(Connection *con) {
+    vislib::sys::AutoLock lock(this->connLock);
+
+    vislib::SingleLinkedList<vislib::SmartPtr<Connection> >::Iterator iter = this->connList.GetIterator();
+    while (iter.HasNext()) {
+        vislib::SmartPtr<Connection> c = iter.Next();
+        if (c.operator->() == con) {
+            this->connList.Remove(c);
+            break;
+        }
+    }
+    this->connWaiting(NULL);
+
+}
+
+
+/*
+ * cluster::simple::Heartbeat::connWaiting
+ */
+void cluster::simple::Heartbeat::connWaiting(Connection *con) {
+    vislib::sys::AutoLock lock(this->connLock);
+    SIZE_T w = 0, a = 0;
+
+    vislib::SingleLinkedList<vislib::SmartPtr<Connection> >::Iterator iter = this->connList.GetIterator();
+    while (iter.HasNext()) {
+        a++;
+        if (iter.Next()->IsWaiting()) w++;
+    }
+
+    VLTRACE(VISLIB_TRCELVL_INFO, "Heartbeat connections waiting: %u/%u\n", w, a);
+
+    if ((w >= a) && (a > 0)) {
+        iter = this->connList.GetIterator();
+
+        {
+            TCBuffer& buf = this->tcBuf[this->tcBufIdx];
+            vislib::sys::AutoLock(buf.lock);
+
+            while (iter.HasNext()) {
+                vislib::RawStorage& data = iter.Next()->Data();
+                if (buf.isValid) {
+                    data.AssertSize(sizeof(double) + sizeof(float) + buf.camera.GetSize());
+                    *data.As<double>() = buf.instTime;
+                    *data.AsAt<float>(sizeof(double)) = buf.time;
+                    ::memcpy(data.At(sizeof(double) + sizeof(float)), buf.camera, buf.camera.GetSize());
+                } else {
+                    data.AssertSize(sizeof(double) + sizeof(float));
+                    *data.As<double>() = this->GetCoreInstance()->GetCoreInstanceTime();
+                    *data.AsAt<float>(sizeof(double)) = 0.0f;
+                }
+            }
+
+        }
+
+        iter = this->connList.GetIterator();
+        while (iter.HasNext()) {
+            iter.Next()->Continue();
+        }
+
+    }
+
 }

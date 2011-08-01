@@ -105,7 +105,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     // Normalize timer with time offset to something less crappy shitty hateworthy
     this->timeOffset = -this->GetCoreInstanceTime();
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
     // Use a randomized time offset to debug the offset synchronization
     { // use a guid to initialize the pseudo-random generator
         vislib::GUID guid;
@@ -113,7 +113,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         ::srand(guid.HashCode());
     }
     this->timeOffset += 100.0 * static_cast<double>(::rand()) / static_cast<double>(RAND_MAX);
-#endif
+//#endif
 
     // redirect default log to instance log of last instance
     //  not perfect, but better than nothing.

@@ -19,7 +19,10 @@
 #include "vislib/CommServerListener.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/Event.h"
+#include "vislib/RawStorage.h"
 #include "vislib/RunnableThread.h"
+#include "vislib/SingleLinkedList.h"
+#include "vislib/Thread.h"
 
 //#include "view/AbstractTileView.h"
 //#include "vislib/AbstractSimpleMessage.h"
@@ -175,6 +178,85 @@ namespace simple {
 
     private:
 
+        /**
+         * An established heartbeat connection
+         */
+        class Connection {
+        public:
+
+            /**
+             * Ctor
+             *
+             * @param parent The owning heartbeat server
+             * @param chan The communication channel
+             */
+            Connection(Heartbeat& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> chan);
+
+            /**
+             * Closes the connection
+             * It is safe to close a closed connection.
+             */
+            void Close();
+
+            /**
+             * Continues
+             */
+            inline void Continue(void) {
+                this->wait.Set();
+            }
+
+            /**
+             * Gets the data to be sent to the client
+             *
+             * @return The data to be sent
+             */
+            inline vislib::RawStorage& Data(void) {
+                return this->data;
+            }
+
+            /**
+             * Gets the flag if this thread is waiting
+             *
+             * @return True if this thread is waiting
+             */
+            inline bool IsWaiting(void) const {
+                return this->waiting;
+            }
+
+        private:
+
+            /**
+             * The receiver thread
+             *
+             * @param userData Points to this object
+             *
+             * return 0
+             */
+            static DWORD receive(void *userData);
+
+            /** The owning heartbeat server */
+            Heartbeat& parent;
+
+            /** The communication channel */
+            vislib::SmartRef<vislib::net::AbstractCommChannel> chan;
+
+            /** Flag whether or not this thread is waiting */
+            bool waiting;
+
+            /** The communication thread */
+            vislib::sys::Thread kun;
+
+            /** The waiting event */
+            vislib::sys::Event wait;
+
+            /** The outgoing data */
+            vislib::RawStorage data;
+
+        };
+
+        /** Connections may manipulate the list of connections */
+        friend class Connection;
+
         /** The timeCamera buffer type */
         typedef struct _tc_buffer_t {
 
@@ -190,6 +272,9 @@ namespace simple {
             /** The lock for synchronisation */
             vislib::sys::CriticalSection lock;
 
+            /** Flag whether or not the buffer data is valid */
+            bool isValid;
+
         } TCBuffer;
 
         /**
@@ -202,6 +287,27 @@ namespace simple {
          *         must not be STILL_ACTIVE (259).
          */
         virtual DWORD Run(void *userData);
+
+        /**
+         * Adds a connection to the list of open connections
+         *
+         * @param con The connection opened
+         */
+        void addConn(vislib::SmartPtr<Connection> con);
+
+        /**
+         * Removes a connection from the list of open connections
+         *
+         * @param con The connection to be removed
+         */
+        void removeConn(Connection *con);
+
+        /**
+         * Signals that a connection is now waiting
+         *
+         * @param con The connection now waiting
+         */
+        void connWaiting(Connection *con);
 
         /** The slot registering this view */
         CallerSlot registerSlot;
@@ -226,6 +332,13 @@ namespace simple {
 
         /** The heartbeat server */
         vislib::sys::RunnableThread<vislib::net::CommServer> server;
+
+        /** The lock for the connections data */
+        vislib::sys::CriticalSection connLock;
+
+        /** The connections */
+        vislib::SingleLinkedList<vislib::SmartPtr<Connection> > connList;
+
 
         ///**
         // * Renders this AbstractView3D in the currently active OpenGL context.

@@ -201,6 +201,28 @@ void cluster::simple::View::Render(float time, double instTime) {
     }
 
     ::glFlush();
+
+#if 0 // TODO: activate with something else
+    // HAZARD: requires a second message to ensure all nodes synchronize at the same point!!!
+    // sync with second heartbeat ping 
+    heartbeatOn = false;
+    try {
+        heartbeatOn = this->heartbeat.Sync(this->heartbeatPayload);
+    } catch(...) {
+        heartbeatOn = false;
+    }
+    if (heartbeatOn) {
+        ASSERT(this->heartbeatPayload.GetSize() >= 12);
+        instTime = *this->heartbeatPayload.As<double>();
+        time = *this->heartbeatPayload.AsAt<float>(sizeof(double));
+        view::AbstractView *view = this->GetConnectedView();
+        if ((this->heartbeatPayload.GetSize() > 12) && (view != NULL)) {
+            vislib::RawStorageSerialiser ser(&this->heartbeatPayload, sizeof(double) + sizeof(float));
+            view->DeserialiseCamera(ser);
+        }
+    }
+#endif
+
 }
 
 
