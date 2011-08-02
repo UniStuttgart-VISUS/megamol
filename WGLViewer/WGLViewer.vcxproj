@@ -239,6 +239,7 @@ if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
     <ClCompile Include="CallbackSlot.cpp" />
     <ClCompile Include="Instance.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="NVSwapGroup.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -251,6 +252,7 @@ if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
     <ClInclude Include="ApiHandle.h" />
     <ClInclude Include="CallbackSlot.h" />
     <ClInclude Include="Instance.h" />
+    <ClInclude Include="NVSwapGroup.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="version.gen.h" />
     <ClInclude Include="version.template.h" />
