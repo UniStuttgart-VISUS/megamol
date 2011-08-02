@@ -112,7 +112,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(VisGlutPath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;opengl32.lib;glu32.lib;dwmapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Message>Generating version.gen.h ...</Message>
@@ -144,7 +144,7 @@ if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(VisGlutPath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;opengl32.lib;glu32.lib;dwmapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Message>Generating version.gen.h ...</Message>
@@ -180,7 +180,7 @@ if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(VisGlutPath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;opengl32.lib;glu32.lib;dwmapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Message>Generating version.gen.h ...</Message>
@@ -216,7 +216,7 @@ if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(VisGlutPath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;opengl32.lib;glu32.lib;dwmapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Message>Generating version.gen.h ...</Message>
@@ -236,6 +236,7 @@ if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ApiHandle.cpp" />
+    <ClCompile Include="CallbackSlot.cpp" />
     <ClCompile Include="Instance.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -248,6 +249,7 @@ if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ApiHandle.h" />
+    <ClInclude Include="CallbackSlot.h" />
     <ClInclude Include="Instance.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="version.gen.h" />

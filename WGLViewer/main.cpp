@@ -6,6 +6,7 @@
  */
 
 #include "stdafx.h"
+#define GLH_EXT_SINGLE_FILE
 #include "MegaMolViewer.h"
 #include "ApiHandle.h"
 #include "Instance.h"
@@ -14,6 +15,9 @@
 #include "vislib/memutils.h"
 #include "vislib/String.h"
 #include "vislib/ThreadSafeStackTrace.h"
+#pragma warning(disable: 4996)
+#include "glh/glh_extensions.h"
+#pragma warning(default: 4996)
 
 
 #ifdef _WIN32
@@ -207,12 +211,14 @@ MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvCreateViewerHandle)(void *hView, un
     if (viewer == NULL) {
         return false; // out of memory or initialisation failed.
     }
+    if (!viewer->Init(::GetModuleHandle(NULL))) {
+        delete viewer;
+        return false;
+    }
 
-    // TODO: Implement
-    //if (!viewer->Initialise(hints)) {
-    //    delete viewer;
-    //    return false; // initialisation failed.
-    //}
+    if (hints != MMV_VIEWHINT_NONE) {
+        fprintf(stderr, "Viewer Hints not supported\n");
+    }
 
     return megamol::wgl::ApiHandle::CreateHandle(hView, viewer);
 }
@@ -238,9 +244,7 @@ MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvProcessEvents)(void *hView) {
     megamol::wgl::Instance *inst = megamol::wgl::ApiHandle::InterpretHandle<megamol::wgl::Instance>(hView);
     if (inst == NULL) return false;
 
-    // TODO: Implement
-    //return viewer->ProcessEvents();
-    return false;
+    return inst->ProcessEvents();
 }
 
 
@@ -256,14 +260,12 @@ MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvCreateWindow)(void *hView,
 
     megamol::wgl::Window *win = new megamol::wgl::Window(*inst);
     if (win == NULL) return false;
-
-    if (megamol::wgl::ApiHandle::CreateHandle(hWnd, win)) {
-    // TODO: Implement
-    //    viewer->OwnWindow(win);
-        return true;
+    if (!win->IsValid()) {
+        delete win;
+        return false;
     }
-    // DO NOT DELET win. Has already be deleted by 'CreateHandle' as sfx
-    return false;
+
+    return megamol::wgl::ApiHandle::CreateHandle(hWnd, win);
 }
 
 
@@ -302,11 +304,10 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvRegisterWindowCallback)(
     megamol::wgl::Window *win = megamol::wgl::ApiHandle::InterpretHandle<megamol::wgl::Window>(hWnd);
     if (win == NULL) return;
 
-    // TODO: Implement
-    //megamol::viewer::CallbackSlot *cbs = win->Callback(slot);
-    //if (cbs != NULL) {
-    //    cbs->Register(function);
-    //}
+    megamol::wgl::CallbackSlot *cbs = win->Callback(slot);
+    if (cbs != NULL) {
+        cbs->Register(function);
+    }
 }
 
 
@@ -320,11 +321,10 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvUnregisterWindowCallback)(
     megamol::wgl::Window *win = megamol::wgl::ApiHandle::InterpretHandle<megamol::wgl::Window>(hWnd);
     if (win == NULL) return;
 
-    // TODO: Implement
-    //megamol::viewer::CallbackSlot *cbs = win->Callback(slot);
-    //if (cbs != NULL) {
-    //    cbs->Unregister(function);
-    //}
+    megamol::wgl::CallbackSlot *cbs = win->Callback(slot);
+    if (cbs != NULL) {
+        cbs->Unregister(function);
+    }
 }
 
 
@@ -462,10 +462,13 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowSize)(void *hWnd,
     megamol::wgl::Window *win = megamol::wgl::ApiHandle::InterpretHandle<megamol::wgl::Window>(hWnd);
     if (win == NULL) return;
 
-    // TODO: Implement
-    //if (width <= 0) width = 1;
-    //if (height <= 0) height = 1;
-    //win->ResizeWindow(width, height);
+    RECT r1, r2;
+    ::GetWindowRect(win->Handle(), &r1);
+    ::GetClientRect(win->Handle(), &r2);
+    width += (r2.right - r2.left) - (r1.right - r1.left);
+    height += (r2.bottom - r2.top) - (r1.bottom - r1.top);
+
+    ::SetWindowPos(win->Handle(), NULL, 0, 0, width, height, SWP_NOZORDER | SWP_NOMOVE);
 }
 
 
@@ -479,8 +482,7 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowTitleA)(void *hWnd,
     megamol::wgl::Window *win = megamol::wgl::ApiHandle::InterpretHandle<megamol::wgl::Window>(hWnd);
     if (win == NULL) return;
 
-    // TODO: Implement
-    //if (win != NULL) win->SetTitle(title);
+    ::SetWindowTextA(win->Handle(), title);
 }
 
 
@@ -494,8 +496,7 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowTitleW)(void *hWnd,
     megamol::wgl::Window *win = megamol::wgl::ApiHandle::InterpretHandle<megamol::wgl::Window>(hWnd);
     if (win == NULL) return;
 
-    // TODO: Implement
-    //if (win != NULL) win->SetTitle(title);
+    ::SetWindowTextW(win->Handle(), title);
 }
 
 
@@ -509,8 +510,7 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowPosition)(void *hWnd,
     megamol::wgl::Window *win = megamol::wgl::ApiHandle::InterpretHandle<megamol::wgl::Window>(hWnd);
     if (win == NULL) return;
 
-    // TODO: Implement
-    //win->MoveWindowTo(x, y);
+    ::SetWindowPos(win->Handle(), NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 }
 
 
@@ -534,12 +534,15 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowHints)(void *hWnd,
     megamol::wgl::Window *win = megamol::wgl::ApiHandle::InterpretHandle<megamol::wgl::Window>(hWnd);
     if (win == NULL) return;
 
-    // TODO: Implement
-    //if ((mask & MMV_WINHINT_NODECORATIONS) != 0) win->ShowDecorations((hints & MMV_WINHINT_NODECORATIONS) == 0);
-    //if ((mask & MMV_WINHINT_HIDECURSOR) != 0) win->SetCursorVisibility((hints & MMV_WINHINT_HIDECURSOR) == 0);
-    //if ((mask & MMV_WINHINT_STAYONTOP) != 0) win->StayOnTop((hints & MMV_WINHINT_STAYONTOP) != 0);
-    //if ((mask & MMV_WINHINT_PRESENTATION) != 0) win->SetPresentationMode((hints & MMV_WINHINT_PRESENTATION) != 0);
-    //if ((mask & MMV_WINHINT_VSYNC) != 0) win->SetVSync((hints & MMV_WINHINT_VSYNC) != 0);
-    //if ((mask & MMV_WINHINT_PARAMGUI) != 0) win->ShowParameterGUI((hints & MMV_WINHINT_PARAMGUI) != 0);
+    if ((mask & MMV_WINHINT_NODECORATIONS) != 0) win->SetHint(MMV_WINHINT_NODECORATIONS, (hints & MMV_WINHINT_NODECORATIONS) != 0);
+    if ((mask & MMV_WINHINT_HIDECURSOR) != 0) win->SetHint(MMV_WINHINT_HIDECURSOR, (hints & MMV_WINHINT_HIDECURSOR) != 0);
+    if ((mask & MMV_WINHINT_STAYONTOP) != 0) win->SetHint(MMV_WINHINT_STAYONTOP, (hints & MMV_WINHINT_STAYONTOP) != 0);
+    if ((mask & MMV_WINHINT_PRESENTATION) != 0) {
+        fprintf(stderr, "MMV_WINHINT_PRESENTATION not supported");
+    }
+    if ((mask & MMV_WINHINT_VSYNC) != 0) win->SetHint(MMV_WINHINT_VSYNC, (hints & MMV_WINHINT_VSYNC) != 0);
+    if ((mask & MMV_WINHINT_PARAMGUI) != 0) {
+        fprintf(stderr, "MMV_WINHINT_PARAMGUI not supported");
+    }
 
 }
