@@ -906,6 +906,12 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
     // thomasbm: final step: find volumes of unique surface id's that contain each other
     for (unsigned int uidIdx = 0; uidIdx < uniqueIDs.Count(); uidIdx++) {
         unsigned int gid = uniqueIDs[uidIdx];
+
+#ifndef PARALLEL_BBOX_COLLECT
+        //if (globaIdSurfaces[uidIdx].Count() == 0)
+        //    continue;
+#endif
+
         for (unsigned int uidIdx2 = uidIdx+1; uidIdx2 < uniqueIDs.Count(); uidIdx2++) {
             unsigned int gid2 = uniqueIDs[uidIdx2];
             if (/*uidIdx2==uidIdx*/gid==gid2)
@@ -914,8 +920,12 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
             BoundingBox<unsigned int>& box = globalIdBoxes[gid];
             BoundingBox<unsigned int>& box2 = globalIdBoxes[gid2];
 #else
+            //if (globaIdSurfaces[uidIdx2].Count() == 0)
+            //    continue;
             BoundingBox<unsigned int>& box = globalIdBoxes[uidIdx];
             BoundingBox<unsigned int>& box2 = globalIdBoxes[uidIdx2];
+            if (!box.IsInitialized() ||!box2.IsInitialized())
+                continue;
 #endif
             BoundingBox<unsigned int>::CLASSIFY_STATUS cls = box.Classify(box2);
             int enclosedIdx, enclosingIdx;
