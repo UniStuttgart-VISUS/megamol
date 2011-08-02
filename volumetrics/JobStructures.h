@@ -280,9 +280,10 @@ namespace volumetrics {
             } else
                 box.Union(other.box);
         }
-        inline bool operator==(const BoundingBox<T>& o) {
+        inline bool operator==(const BoundingBox<T>& o) const {
             return (initialized == o.initialized) && (box==o.box);
         }
+        inline bool IsInitialized(void) const {return this->initialized; }
 
         enum CLASSIFY_STATUS {
             CONTAINS_OTHER,
@@ -301,7 +302,6 @@ namespace volumetrics {
                 return IS_CONTAINED_BY_OTHER;
             return UNSPECIFIED;
         }
-
     };
 
     /**
