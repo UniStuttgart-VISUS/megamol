@@ -462,11 +462,11 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowSize)(void *hWnd,
     megamol::wgl::Window *win = megamol::wgl::ApiHandle::InterpretHandle<megamol::wgl::Window>(hWnd);
     if (win == NULL) return;
 
-    RECT r1, r2;
-    ::GetWindowRect(win->Handle(), &r1);
-    ::GetClientRect(win->Handle(), &r2);
-    width += (r2.right - r2.left) - (r1.right - r1.left);
-    height += (r2.bottom - r2.top) - (r1.bottom - r1.top);
+    //RECT r1, r2;
+    //::GetClientRect(win->Handle(), &r1);
+    //::GetWindowRect(win->Handle(), &r2);
+    //width += (r2.right - r2.left) - (r1.right - r1.left);
+    //height += (r2.bottom - r2.top) - (r1.bottom - r1.top);
 
     ::SetWindowPos(win->Handle(), NULL, 0, 0, width, height, SWP_NOZORDER | SWP_NOMOVE);
 }
