@@ -227,17 +227,29 @@ bool view::BlinnPhongRendererDeferred::Render(Call& call) {
 	this->fbo.BindColourTexture(1);
 	glActiveTexture(GL_TEXTURE0);
     this->fbo.BindDepthTexture();
+    
+    vislib::math::Vector<float, 3> ray(crIn->GetCameraParameters()->Front());
+    vislib::math::Vector<float, 3> up(crIn->GetCameraParameters()->Up());
+    vislib::math::Vector<float, 3> right(crIn->GetCameraParameters()->Right());
 
     // Draw
     glColor4f( 1.0f,  1.0f,  1.0f,  1.0f);
     glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2f(0.0f, 0.0f);
-    glTexCoord2f(1, 0); glVertex2f(1.0f, 0.0f);
-    glTexCoord2f(1, 1); glVertex2f(1.0f, 1.0f);
-    glTexCoord2f(0, 1); glVertex2f(0.0f, 1.0f);
+    glNormal3fv((ray - right - up).PeekComponents());
+    glTexCoord2f(0, 0); 
+    glVertex2f(0.0f, 0.0f);
+    glNormal3fv((ray + right - up).PeekComponents());
+    glTexCoord2f(1, 0); 
+    glVertex2f(1.0f, 0.0f);
+    glNormal3fv((ray + right + up).PeekComponents());
+    glTexCoord2f(1, 1); 
+    glVertex2f(1.0f, 1.0f);
+    glNormal3fv((ray - right + up).PeekComponents());
+    glTexCoord2f(0, 1); 
+    glVertex2f(0.0f, 1.0f);
     glEnd();
     glBindTexture(GL_TEXTURE_2D, 0);
-
+    
 	glDisable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
