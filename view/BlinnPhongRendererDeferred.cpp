@@ -228,9 +228,16 @@ bool view::BlinnPhongRendererDeferred::Render(Call& call) {
 	glActiveTexture(GL_TEXTURE0);
     this->fbo.BindDepthTexture();
     
-    vislib::math::Vector<float, 3> ray(crIn->GetCameraParameters()->Front());
-    vislib::math::Vector<float, 3> up(crIn->GetCameraParameters()->Up());
-    vislib::math::Vector<float, 3> right(crIn->GetCameraParameters()->Right());
+    //vislib::math::Vector<float, 3> ray(crIn->GetCameraParameters()->Front());
+    //vislib::math::Vector<float, 3> up(crIn->GetCameraParameters()->Up());
+    //vislib::math::Vector<float, 3> right(crIn->GetCameraParameters()->Right());
+    vislib::math::Vector<float, 3> ray(0, 0,-1);
+    vislib::math::Vector<float, 3> up(0, 1, 0);
+    vislib::math::Vector<float, 3> right(1, 0, 0);
+    
+    up *= sinf(crIn->GetCameraParameters()->HalfApertureAngle());
+    right *= sinf(crIn->GetCameraParameters()->HalfApertureAngle())
+        * static_cast<float>(curVP[2]) / static_cast<float>(curVP[3]);
 
     // Draw
     glColor4f( 1.0f,  1.0f,  1.0f,  1.0f);
