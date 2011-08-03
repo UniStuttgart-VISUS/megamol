@@ -10,7 +10,7 @@
 #include <tchar.h>
 #include <cstdio>
 #include <gl/GL.h>
-#include "NVSwapGroup.h"
+//#include "NVSwapGroup.h"
 #pragma warning(disable: 4996)
 #include "glh/glh_extensions.h"
 #pragma warning(default: 4996)
@@ -280,15 +280,15 @@ DWORD Window::renderThread(void *userData) {
     // The context must not be bound until ALL windows have been created
     ::wglMakeCurrent(that->hDC, that->hRC);
 
-    if (NVSwapGroup::Instance().JoinSwapGroup(1) == GL_TRUE) {
-        if (NVSwapGroup::Instance().BindSwapBarrier(1, 1) == GL_TRUE) {
-            printf("NVSwapGroup set up (1, 1)\n");
-        } else {
-            fprintf(stderr, "Failed to bind NVSwapBarrier\n");
-        }
-    } else {
-        fprintf(stderr, "Failed to join NVSwapGroup\n");
-    }
+    //if (NVSwapGroup::Instance().JoinSwapGroup(1) == GL_TRUE) {
+    //    if (NVSwapGroup::Instance().BindSwapBarrier(1, 1) == GL_TRUE) {
+    //        printf("NVSwapGroup set up (1, 1)\n");
+    //    } else {
+    //        fprintf(stderr, "Failed to bind NVSwapBarrier\n");
+    //    }
+    //} else {
+    //    fprintf(stderr, "Failed to join NVSwapGroup\n");
+    //}
 
     while (that->hRC) {
         ::glViewport(0, 0, that->w, that->h);
