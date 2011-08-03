@@ -60,6 +60,7 @@
 #include "view/TileView.h"
 #include "view/View2D.h"
 #include "view/View3D.h"
+#include "view/BlinnPhongRendererDeferred.h"
 #include "job/DataWriterJob.h"
 #include "job/JobThread.h"
 //#include "vismol2/Mol20DataSource.h"
@@ -149,6 +150,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<view::TileView>();
         instance->registerAutoDescription<view::View2D>();
         instance->registerAutoDescription<view::View3D>();
+        instance->registerAutoDescription<view::BlinnPhongRendererDeferred>();
         //instance->registerAutoDescription<vismol2::Mol20Renderer>();
         //instance->registerAutoDescription<vismol2::Mol20DataSource>();
         instance->registerAutoDescription<job::DataWriterJob>();

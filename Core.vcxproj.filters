@@ -648,6 +648,15 @@
     <ClCompile Include="cluster\simple\HeartbeatClient.cpp">
       <Filter>cluster\simple\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="view\AbstractRendererDeferred3D.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="view\BlinnPhongRendererDeferred.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="view\Renderer3DModuleDS.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1166,6 +1175,15 @@
     <ClInclude Include="cluster\simple\HeartbeatClient.h">
       <Filter>cluster\simple\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="view\AbstractRendererDeferred3D.h">
+      <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\BlinnPhongRendererDeferred.h">
+      <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\Renderer3DModuleDS.h">
+      <Filter>view\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icons.rc">
@@ -1298,6 +1316,9 @@
     </None>
     <None Include="ExtLibs.props.input">
       <Filter>Build Files</Filter>
+    </None>
+    <None Include="Shaders\deferred.btf">
+      <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

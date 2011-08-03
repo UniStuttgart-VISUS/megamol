@@ -11,7 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "AbstractRendererDeferred3D.h"
+#include <view/AbstractRendererDeferred3D.h>
+#include <vislib/FramebufferObject.h>
+#include <vislib/GLSLShader.h>
 
 namespace megamol {
 namespace core {
@@ -56,6 +58,14 @@ namespace view {
 
         /** Dtor. */
         virtual ~BlinnPhongRendererDeferred(void);
+
+        /** Possible rendering modes */
+        enum renderMode {
+             BLINN_PHONG,
+             COLOR,
+             NORMAL, 
+             DEPTH
+        };
 
     protected:
 
@@ -103,6 +113,32 @@ namespace view {
 
     private:
 
+        /**
+         * Initialize the frame buffer object.
+         *
+         * @param width The width of the buffer.
+         * @param width The height of the buffer.
+         *
+         * @return True if the fbo could be created.
+         */
+        bool createFBO(UINT width, UINT height);
+
+        /** Parameter slot for the render mode */
+        megamol::core::param::ParamSlot renderModeParam;
+
+        /** The renderers frame buffer object */
+        vislib::graphics::gl::FramebufferObject fbo;
+
+        /** The bling phong shader */
+        vislib::graphics::gl::GLSLShader blinnPhongShader;
+
+        /// DDEBUG /////////////////////////////////////////////////////////////
+        // Render targets
+        GLuint deferredFBO;
+        GLuint deferredColorBuffer;
+        GLuint deferredNormalBuffer;
+        GLuint deferredDepthBuffer;
+        ////////////////////////////////////////////////////////////////////////
 
     };
 

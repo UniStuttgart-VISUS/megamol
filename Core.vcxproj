@@ -364,12 +364,14 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="view\AbstractCallRender.cpp" />
     <ClCompile Include="view\AbstractCallRender3D.cpp" />
     <ClCompile Include="view\AbstractOverrideView.cpp" />
+    <ClCompile Include="view\AbstractRendererDeferred3D.cpp" />
     <ClCompile Include="view\AbstractRenderingView.cpp" />
     <ClCompile Include="view\AbstractRenderOutput.cpp" />
     <ClCompile Include="view\AbstractTileView.cpp" />
     <ClCompile Include="view\AbstractView.cpp" />
     <ClCompile Include="view\AbstractView3D.cpp" />
     <ClCompile Include="view\AnimDataModule.cpp" />
+    <ClCompile Include="view\BlinnPhongRendererDeferred.cpp" />
     <ClCompile Include="view\CallClipPlane.cpp" />
     <ClCompile Include="view\CallGetTransferFunction.cpp" />
     <ClCompile Include="view\CallRender2D.cpp" />
@@ -386,6 +388,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="view\RenderDeferredOutput.cpp" />
     <ClCompile Include="view\Renderer2DModule.cpp" />
     <ClCompile Include="view\Renderer3DModule.cpp" />
+    <ClCompile Include="view\Renderer3DModuleDS.cpp" />
     <ClCompile Include="view\RenderOutput.cpp" />
     <ClCompile Include="view\SwitchRenderer3D.cpp" />
     <ClCompile Include="view\TileView.cpp" />
@@ -555,12 +558,14 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="view\AbstractCallRender.h" />
     <ClInclude Include="view\AbstractCallRender3D.h" />
     <ClInclude Include="view\AbstractOverrideView.h" />
+    <ClInclude Include="view\AbstractRendererDeferred3D.h" />
     <ClInclude Include="view\AbstractRenderingView.h" />
     <ClInclude Include="view\AbstractRenderOutput.h" />
     <ClInclude Include="view\AbstractTileView.h" />
     <ClInclude Include="view\AbstractView.h" />
     <ClInclude Include="view\AbstractView3D.h" />
     <ClInclude Include="view\AnimDataModule.h" />
+    <ClInclude Include="view\BlinnPhongRendererDeferred.h" />
     <ClInclude Include="view\CallClipPlane.h" />
     <ClInclude Include="view\CallGetTransferFunction.h" />
     <ClInclude Include="view\CallRender2D.h" />
@@ -577,6 +582,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="view\RenderDeferredOutput.h" />
     <ClInclude Include="view\Renderer2DModule.h" />
     <ClInclude Include="view\Renderer3DModule.h" />
+    <ClInclude Include="view\Renderer3DModuleDS.h" />
     <ClInclude Include="view\RenderOutput.h" />
     <ClInclude Include="view\SwitchRenderer3D.h" />
     <ClInclude Include="view\TileView.h" />
@@ -668,6 +674,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   </ItemGroup>
   <ItemGroup>
     <None Include="ExtLibs.props.input" />
+    <None Include="Shaders\deferred.btf">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="view\special\MegaMolLogoData.inl" />
     <CustomBuildStep Include="config.bat">
       <FileType>Document</FileType>
