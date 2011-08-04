@@ -211,7 +211,7 @@ bool view::BlinnPhongRendererDeferred::Render(Call& call) {
 	glPushMatrix();
 	glLoadIdentity();
     
-    glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+    //glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
 
 	glEnable(GL_TEXTURE_2D);
 	glDisable(GL_DEPTH_TEST);
@@ -243,17 +243,20 @@ bool view::BlinnPhongRendererDeferred::Render(Call& call) {
     glColor4f( 1.0f,  1.0f,  1.0f,  1.0f);
     glBegin(GL_QUADS);
     glNormal3fv((ray - right - up).PeekComponents());
-    glTexCoord2f(0, 0); 
-    glVertex2f(0.0f, 0.0f);
+    glTexCoord2f(0, 0);
+    //glVertex2f(0.0f, 0.0f);
+    glVertex2f(-1.0f,-1.0f);
     glNormal3fv((ray + right - up).PeekComponents());
     glTexCoord2f(1, 0); 
-    glVertex2f(1.0f, 0.0f);
+    //glVertex2f(1.0f, 0.0f);
+    glVertex2f(1.0f,-1.0f);
     glNormal3fv((ray + right + up).PeekComponents());
     glTexCoord2f(1, 1); 
     glVertex2f(1.0f, 1.0f);
     glNormal3fv((ray - right + up).PeekComponents());
     glTexCoord2f(0, 1); 
-    glVertex2f(0.0f, 1.0f);
+    //glVertex2f(0.0f, 1.0f);
+    glVertex2f(-1.0f, 1.0f);
     glEnd();
     glBindTexture(GL_TEXTURE_2D, 0);
     
