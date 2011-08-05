@@ -339,6 +339,9 @@ namespace simple {
         /** The connections */
         vislib::SingleLinkedList<vislib::SmartPtr<Connection> > connList;
 
+        /** The current synchronization tier */
+        unsigned char tier;
+
 
         ///**
         // * Renders this AbstractView3D in the currently active OpenGL context.

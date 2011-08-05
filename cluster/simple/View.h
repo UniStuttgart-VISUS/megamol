@@ -16,6 +16,7 @@
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
 #include "vislib/AbstractSimpleMessage.h"
+#include "vislib/CriticalSection.h"
 #include "vislib/Serialiser.h"
 #include "vislib/String.h"
 
@@ -148,6 +149,9 @@ namespace simple {
         virtual void UpdateFreeze(bool freeze);
 
     private:
+
+        /** The lock for rendering */
+        static vislib::sys::CriticalSection renderLock;
 
         /**
          * Loads the configuration

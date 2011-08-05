@@ -17,6 +17,7 @@
 #include "CoreInstance.h"
 #include <GL/gl.h>
 #include "vislib/assert.h"
+#include "vislib/AutoLock.h"
 #include "vislib/DNS.h"
 #include "vislib/IPHostEntry.h"
 #include "vislib/NetworkInformation.h"
@@ -141,20 +142,26 @@ void cluster::simple::View::Render(float time, double instTime) {
     }
 
     bool heartbeatOn = false;
+    bool doSecondHeartbeat = false;
     try {
-        heartbeatOn = this->heartbeat.Sync(this->heartbeatPayload);
+        heartbeatOn = this->heartbeat.Sync(1, this->heartbeatPayload);
     } catch(...) {
         heartbeatOn = false;
+        doSecondHeartbeat = true;
     }
     if (heartbeatOn) {
-        ASSERT(this->heartbeatPayload.GetSize() >= 12);
-        instTime = *this->heartbeatPayload.As<double>();
-        time = *this->heartbeatPayload.AsAt<float>(sizeof(double));
+        ASSERT(this->heartbeatPayload.GetSize() >= 13);
+        unsigned char c = *this->heartbeatPayload.As<unsigned char>();
+        doSecondHeartbeat = ((c & 0x01) == 0x01);
+        instTime = *this->heartbeatPayload.AsAt<double>(1);
+        time = *this->heartbeatPayload.AsAt<float>(1 + sizeof(double));
         view::AbstractView *view = this->GetConnectedView();
-        if ((this->heartbeatPayload.GetSize() > 12) && (view != NULL)) {
-            vislib::RawStorageSerialiser ser(&this->heartbeatPayload, sizeof(double) + sizeof(float));
+        if ((this->heartbeatPayload.GetSize() > 13) && (view != NULL)) {
+            vislib::RawStorageSerialiser ser(&this->heartbeatPayload, 1 + sizeof(double) + sizeof(float));
             view->DeserialiseCamera(ser);
         }
+    } else {
+        doSecondHeartbeat = true;
     }
 
     view::CallRenderView *crv = this->getCallRenderView();
@@ -191,8 +198,13 @@ void cluster::simple::View::Render(float time, double instTime) {
             //view->SetFrameTime(static_cast<float>(this->frozenTime));
         }
 
-        if (!(*crv)(view::CallRenderView::CALL_RENDER)) {
-            this->renderFallbackView();
+        {
+            vislib::sys::AutoLock lock(renderLock);
+
+            if (!(*crv)(view::CallRenderView::CALL_RENDER)) {
+                this->renderFallbackView();
+            }
+
         }
 
     } else {
@@ -201,6 +213,13 @@ void cluster::simple::View::Render(float time, double instTime) {
     }
 
     ::glFlush();
+
+    if (doSecondHeartbeat) {
+        try {
+            this->heartbeat.Sync(2, this->heartbeatPayload);
+        } catch(...) {
+        }
+    }
 
 #if 0 // TODO: activate with something else
     // HAZARD: requires a second message to ensure all nodes synchronize at the same point!!!
@@ -331,6 +350,12 @@ void cluster::simple::View::UpdateFreeze(bool freeze) {
     this->frozen = freeze;
     this->frozenTime = this->instance()->GetCoreInstanceTime(); // HAZARD
 }
+
+
+/*
+ * cluster::simple::View::renderLock
+ */
+vislib::sys::CriticalSection cluster::simple::View::renderLock;
 
 
 /*

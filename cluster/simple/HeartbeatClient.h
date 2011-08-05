@@ -54,12 +54,16 @@ namespace simple {
         /**
          * Synchronises to the heartbeat
          *
-         * @param outPayload The data received from the heartbeat server as payload
+         * @param tier The synchronization tier
+         * @param outPayload The data received from the heartbeat server as
+         *                   payload
          *
          * @return True if the client is connected and the payload is valid.
-         *         False if the client is not connected. The payload should be ignored then.
+         *         False if the client is not connected or the synchronization
+         *         is currently waiting for another tier. The payload should
+         *         be ignored then.
          */
-        bool Sync(vislib::RawStorage& outPayload);
+        bool Sync(unsigned char tier, vislib::RawStorage& outPayload);
 
     private:
 

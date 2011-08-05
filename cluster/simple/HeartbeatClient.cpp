@@ -10,6 +10,7 @@
 #include "vislib/assert.h"
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/Log.h"
+#include "vislib/Socket.h"
 
 using namespace megamol::core;
 
@@ -19,7 +20,7 @@ using namespace megamol::core;
  */
 cluster::simple::HeartbeatClient::HeartbeatClient(void) : chan(),
         conn(&HeartbeatClient::connector), port(0), server() {
-    // Intentionally empty
+    vislib::net::Socket::Startup();
 }
 
 
@@ -28,6 +29,7 @@ cluster::simple::HeartbeatClient::HeartbeatClient(void) : chan(),
  */
 cluster::simple::HeartbeatClient::~HeartbeatClient(void) {
     this->Shutdown();
+    vislib::net::Socket::Cleanup();
 }
 
 
@@ -58,18 +60,25 @@ void cluster::simple::HeartbeatClient::Shutdown(void) {
 /*
  * cluster::simple::HeartbeatClient::Sync
  */
-bool cluster::simple::HeartbeatClient::Sync(vislib::RawStorage& outPayload) {
-    const char outData[] = "MMHB";
+bool cluster::simple::HeartbeatClient::Sync(unsigned char tier, vislib::RawStorage& outPayload) {
+    const char outData[] = "MMBx";
     unsigned int inSize;
+    const_cast<char *>(outData)[3] = static_cast<char>(tier);
 
     try {
         if (!this->chan.IsNull()) {
+
             if (this->chan->Send(outData, 4) != 4) throw vislib::Exception("heart attack", __FILE__, __LINE__);
             if (this->chan->Receive(&inSize, 4) != 4) throw vislib::Exception("heart attack", __FILE__, __LINE__);
 
             outPayload.EnforceSize(inSize);
             if (inSize > 0) {
                 if (this->chan->Receive(outPayload, inSize) != inSize) throw vislib::Exception("heart attack", __FILE__, __LINE__);
+            }
+
+            if (inSize <= 12) {
+                return false; // wrong tier reject received
+
             }
 
             return true;

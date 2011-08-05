@@ -117,7 +117,7 @@ view::AbstractRenderingView::~AbstractRenderingView(void) {
  * view::AbstractRenderingView::beginFrame
  */
 void view::AbstractRenderingView::beginFrame(void) {
-    this->fpsCounter.FrameBegin();
+    //this->fpsCounter.FrameBegin(); // TODO: Enable multi-thread
 }
 
 
@@ -139,7 +139,7 @@ void view::AbstractRenderingView::endFrame(bool abort) {
             fflush(stdout); // grr
         }
     }
-    this->fpsCounter.FrameEnd();
+    //this->fpsCounter.FrameEnd(); // TODO: Enable multi-thread
 }
 
 

@@ -61,6 +61,10 @@ DWORD cluster::simple::Heartbeat::Connection::receive(void *userData) {
     bool& waiting = that->waiting;
     vislib::sys::Event& wait = that->wait;
     vislib::RawStorage& data = that->data;
+    unsigned char& serverTier = parent.tier;
+
+    unsigned char clientTier;
+    unsigned int len;
 
     const SIZE_T inDataSize = 4;
     char inData[inDataSize];
@@ -70,11 +74,27 @@ DWORD cluster::simple::Heartbeat::Connection::receive(void *userData) {
     try {
         SIZE_T size = inDataSize;
         while (size == inDataSize) {
+
             size = chan->Receive(inData, inDataSize,
                 vislib::net::TcpCommChannel::TIMEOUT_INFINITE, true);
 
-            if (::memcmp(inData, "MMHB", 4) != 0) {
+            if (::memcmp(inData, "MMB", 3) != 0) {
                 throw vislib::Exception("cardiac seizure", __FILE__, __LINE__);
+            }
+            clientTier = static_cast<unsigned char>(inData[3]);
+
+            if (clientTier != serverTier) {
+                // wrong tier fall through!
+
+                printf("Client %u rejected because I am waiting on %u\n", clientTier, serverTier);
+
+                len = 1;
+                inData[0] = static_cast<char>(0x0f);
+                chan->Send(&len, 4,
+                    vislib::net::TcpCommChannel::TIMEOUT_INFINITE, true);
+                chan->Send(inData, 1,
+                    vislib::net::TcpCommChannel::TIMEOUT_INFINITE, true);
+                continue;
             }
 
             waiting = true;
@@ -83,13 +103,14 @@ DWORD cluster::simple::Heartbeat::Connection::receive(void *userData) {
             wait.Wait();
             waiting = false;
 
-            unsigned int len = static_cast<unsigned int>(data.GetSize());
+            len = static_cast<unsigned int>(data.GetSize());
             chan->Send(&len, 4,
                 vislib::net::TcpCommChannel::TIMEOUT_INFINITE, true);
             chan->Send(data, len,
                 vislib::net::TcpCommChannel::TIMEOUT_INFINITE, true);
 
         }
+
     } catch(vislib::Exception ex) {
         vislib::sys::Log::DefaultLog.WriteError("Heartbeat Connection: %s [%s, %d]",
             ex.GetMsgA(), ex.GetFile(), ex.GetLine());
@@ -112,7 +133,7 @@ cluster::simple::Heartbeat::Heartbeat(void)
         : job::AbstractThreadedJob(), Module(),
         registerSlot("register", "The slot registering this view"), client(NULL), run(false), mainlock(),
         heartBeatPortSlot("heartbeat::port", "The port the heartbeat server communicates on"),
-        tcBuf(), tcBufIdx(0), server(), connLock(), connList() {
+        tcBuf(), tcBufIdx(0), server(), connLock(), connList(), tier(1) {
     vislib::net::Socket::Startup();
 
     this->registerSlot.SetCompatibleCall<ClientViewRegistrationDescription>();
@@ -435,6 +456,10 @@ void cluster::simple::Heartbeat::connWaiting(Connection *con) {
     VLTRACE(VISLIB_TRCELVL_INFO, "Heartbeat connections waiting: %u/%u\n", w, a);
 
     if ((w >= a) && (a > 0)) {
+
+        // two-tier sync
+        this->tier = 3 - this->tier;
+
         iter = this->connList.GetIterator();
 
         {
@@ -444,14 +469,16 @@ void cluster::simple::Heartbeat::connWaiting(Connection *con) {
             while (iter.HasNext()) {
                 vislib::RawStorage& data = iter.Next()->Data();
                 if (buf.isValid) {
-                    data.AssertSize(sizeof(double) + sizeof(float) + buf.camera.GetSize());
-                    *data.As<double>() = buf.instTime;
-                    *data.AsAt<float>(sizeof(double)) = buf.time;
-                    ::memcpy(data.At(sizeof(double) + sizeof(float)), buf.camera, buf.camera.GetSize());
+                    data.AssertSize(1 + sizeof(double) + sizeof(float) + buf.camera.GetSize());
+                    *data.As<unsigned char>() = 1; // Do a two-tier sync
+                    *data.AsAt<double>(1) = buf.instTime;
+                    *data.AsAt<float>(1 + sizeof(double)) = buf.time;
+                    ::memcpy(data.At(1 + sizeof(double) + sizeof(float)), buf.camera, buf.camera.GetSize());
                 } else {
-                    data.AssertSize(sizeof(double) + sizeof(float));
-                    *data.As<double>() = this->GetCoreInstance()->GetCoreInstanceTime();
-                    *data.AsAt<float>(sizeof(double)) = 0.0f;
+                    data.AssertSize(1 + sizeof(double) + sizeof(float));
+                    *data.As<unsigned char>() = 1; // Do a two-tier sync
+                    *data.AsAt<double>(1) = this->GetCoreInstance()->GetCoreInstanceTime();
+                    *data.AsAt<float>(1 + sizeof(double)) = 0.0f;
                 }
             }
 

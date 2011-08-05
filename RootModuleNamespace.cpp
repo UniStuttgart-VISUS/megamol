@@ -122,7 +122,7 @@ void RootModuleNamespace::LockModuleGraph(bool write) {
 //    vislib::StackTrace::GetStackString(stack.AllocateBuffer(size), size);
 //    VLTRACE(VISLIB_TRCELVL_INFO, "LockModuleGraph:\n%s\n", stack.PeekBuffer());
 //#endif
-    this->lock.Lock();
+    //this->lock.Lock(); // HAZARD! TODO: Lock required!
     // TODO: multi-read-exclusive-write-lock
 }
 
@@ -139,7 +139,7 @@ void RootModuleNamespace::UnlockModuleGraph(void) {
 //    vislib::StackTrace::GetStackString(stack.AllocateBuffer(size), size);
 //    VLTRACE(VISLIB_TRCELVL_INFO, "UnlockModuleGraph:\n%s\n", stack.PeekBuffer());
 //#endif
-    this->lock.Unlock();
+    //this->lock.Unlock(); // HAZARD! TODO: Lock required!
 }
 
 
