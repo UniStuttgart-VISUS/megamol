@@ -164,13 +164,13 @@ bool view::BlinnPhongRendererDeferred::Render(Call& call) {
     glGetFloatv(GL_VIEWPORT, curVP);
 
     if(!this->fbo.IsValid()) {
-        if(!this->createFBO(curVP[2], curVP[3]))
+        if(!this->createFBO((UINT)curVP[2], (UINT)curVP[3]))
             return false;
     }
     else {
         if((curVP[2] != this->fbo.GetWidth()) || (curVP[3] != this->fbo.GetHeight())) {
             this->fbo.Release();
-            if(!this->createFBO(curVP[2], curVP[3]))
+            if(!this->createFBO((UINT)curVP[2],(UINT)curVP[3]))
                 return false;
         }
     }
@@ -203,29 +203,29 @@ bool view::BlinnPhongRendererDeferred::Render(Call& call) {
     glUniform1i(this->blinnPhongShader.ParameterLocation("renderMode"), 
         this->renderModeParam.Param<core::param::EnumParam>()->Value());
 
-	// Orthogonal projection for rendering the screen quad
+    // Orthogonal projection for rendering the screen quad
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
     
     //glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
 
-	glEnable(GL_TEXTURE_2D);
-	glDisable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
 
-	// Preserve the current framebuffer content (e.g. back of the bounding box)
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // Preserve the current framebuffer content (e.g. back of the bounding box)
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Bind textures
-	glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE1);
     this->fbo.BindColourTexture(0);
-	glActiveTexture(GL_TEXTURE2);
-	this->fbo.BindColourTexture(1);
-	glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE2);
+    this->fbo.BindColourTexture(1);
+    glActiveTexture(GL_TEXTURE0);
     this->fbo.BindDepthTexture();
     
     //vislib::math::Vector<float, 3> ray(crIn->GetCameraParameters()->Front());
@@ -260,26 +260,17 @@ bool view::BlinnPhongRendererDeferred::Render(Call& call) {
     glEnd();
     glBindTexture(GL_TEXTURE_2D, 0);
     
-	glDisable(GL_TEXTURE_2D);
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
 
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
 
     this->blinnPhongShader.Disable();
 
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
-
-
-    glBegin(GL_LINES);
-        glVertex3f(crIn->GetCameraParameters()->Position().GetX(),
-            crIn->GetCameraParameters()->Position().GetY(),
-            crIn->GetCameraParameters()->Position().GetZ());
-        //glVertex3f(1.0, 1.0, 1.0);
-        glVertex3f(0.0, 0.0, 0.0);
-    glEnd();
 
     return true;
 }

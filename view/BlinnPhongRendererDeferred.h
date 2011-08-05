@@ -126,22 +126,21 @@ namespace view {
         /** Parameter slot for the render mode */
         megamol::core::param::ParamSlot renderModeParam;
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
+
         /** The renderers frame buffer object */
         vislib::graphics::gl::FramebufferObject fbo;
 
         /** The bling phong shader */
         vislib::graphics::gl::GLSLShader blinnPhongShader;
 
-        /// DDEBUG /////////////////////////////////////////////////////////////
-        // Render targets
-        GLuint deferredFBO;
-        GLuint deferredColorBuffer;
-        GLuint deferredNormalBuffer;
-        GLuint deferredDepthBuffer;
-        ////////////////////////////////////////////////////////////////////////
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
     };
-
 
 } /* end namespace view */
 } /* end namespace core */
