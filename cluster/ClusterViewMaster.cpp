@@ -101,7 +101,7 @@ cluster::ClusterViewMaster::~ClusterViewMaster(void) {
     if (this->camUpdateThread.IsRunning()) {
         this->LockModuleGraph(true);
         this->viewSlot.ConnectCall(NULL);
-        this->UnlockModuleGraph();
+        this->UnlockModuleGraph(true);
         this->camUpdateThread.Join();
     }
     this->Release();
@@ -133,7 +133,7 @@ void cluster::ClusterViewMaster::release(void) {
     if (this->camUpdateThread.IsRunning()) {
         this->LockModuleGraph(true);
         this->viewSlot.ConnectCall(NULL);
-        this->UnlockModuleGraph();
+        this->UnlockModuleGraph(true);
         this->camUpdateThread.Join();
     }
 
@@ -153,7 +153,7 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
             "Unable to disconnect call from slot \"%s\"\n",
             this->viewSlot.FullName().PeekBuffer());
     }
-    this->UnlockModuleGraph();
+    this->UnlockModuleGraph(true);
     if (this->camUpdateThread.IsRunning()) {
         this->camUpdateThread.Join();
     }
@@ -190,7 +190,7 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
     if (av != NULL) {
         viewModSlot = dynamic_cast<CalleeSlot*>(av->FindSlot("render"));
     }
-    this->UnlockModuleGraph();
+    this->UnlockModuleGraph(false);
 
     if (viewModSlot == NULL) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -344,7 +344,7 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
             } catch(...) {
                 mem.EnforceSize(0);
             }
-            this->UnlockModuleGraph();
+            this->UnlockModuleGraph(false);
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Sending module graph setup (%d Bytes)", static_cast<int>(mem.GetSize()));
             outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_GRAPHSETUP);
             outMsg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(mem.GetSize()));
@@ -377,7 +377,7 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
             if ((call != NULL) && (call->PeekCalleeSlot() != NULL)) {
                 av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
             }
-            this->UnlockModuleGraph();
+            this->UnlockModuleGraph(false);
             if (av != NULL) {
                 vislib::RawStorage mem;
                 mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData));
@@ -454,7 +454,7 @@ DWORD cluster::ClusterViewMaster::cameraUpdateThread(void *userData) {
         if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
             av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
         }
-        This->UnlockModuleGraph();
+        This->UnlockModuleGraph(false);
         if (av == NULL) break;
 
         csn = av->GetCameraSyncNumber();

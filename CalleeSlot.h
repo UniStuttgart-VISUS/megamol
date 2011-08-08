@@ -57,7 +57,7 @@ namespace core {
             this->Parent()->LockModuleGraph(true);
             if (call == NULL) {
                 this->SetStatusDisconnected(); // TODO: This is wrong! Reference counting!
-                this->Parent()->UnlockModuleGraph();
+                this->Parent()->UnlockModuleGraph(true);
                 return true;
             }
 
@@ -69,7 +69,7 @@ namespace core {
                 desc = NULL;
             }
             if (desc == NULL) {
-                this->Parent()->UnlockModuleGraph();
+                this->Parent()->UnlockModuleGraph(true);
                 return false;
             }
 
@@ -87,7 +87,7 @@ namespace core {
             }
             call->callee = this;
             this->SetStatusConnected();
-            this->Parent()->UnlockModuleGraph();
+            this->Parent()->UnlockModuleGraph(true);
             return true;
         }
 

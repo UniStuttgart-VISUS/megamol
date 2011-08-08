@@ -82,7 +82,7 @@ namespace core {
                     this->call = NULL;
                     delete c;
                 }
-                if (this->Parent()) this->Parent()->UnlockModuleGraph();
+                if (this->Parent()) this->Parent()->UnlockModuleGraph(true);
                 return true;
             }
 
@@ -93,12 +93,12 @@ namespace core {
                     this->call = call;
                     this->call->caller = this;
                     this->SetStatusConnected();
-                    if (this->Parent()) this->Parent()->UnlockModuleGraph();
+                    if (this->Parent()) this->Parent()->UnlockModuleGraph(true);
                     return true;
                 }
             }
 
-            if (this->Parent()) this->Parent()->UnlockModuleGraph();
+            if (this->Parent()) this->Parent()->UnlockModuleGraph(true);
             return false;
         }
 

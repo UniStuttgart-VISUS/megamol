@@ -868,7 +868,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
                     Log::DefaultLog.WriteError("Unable to make animation screen shots");
                     this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
                 }
-				// this is not a good idea because the animation module interferes with the "anim::time" parameter in "play" mode ...
+                // this is not a good idea because the animation module interferes with the "anim::time" parameter in "play" mode ...
                 //param::ParamSlot *playSlot = dynamic_cast<param::ParamSlot*>(vi->View()->FindNamedObject("anim::play"));
                 //if (playSlot != NULL)
                 //    playSlot->Param<param::BoolParam>()->SetValue(true);
@@ -884,7 +884,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
             "Unable to find view \"%s\" for ScreenShot",
             mvn.PeekBuffer());
     }
-    this->UnlockModuleGraph();
+    this->UnlockModuleGraph(false);
 
     return true;
 }

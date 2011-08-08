@@ -588,7 +588,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
                 *contRedraw = true; // TODO: Implement the real thing
             }
         }
-        view->UnlockModuleGraph();
+        view->UnlockModuleGraph(false);
     }
 }
 

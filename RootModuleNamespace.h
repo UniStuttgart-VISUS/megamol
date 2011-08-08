@@ -14,8 +14,12 @@
 #include "api/MegaMolCore.std.h"
 #include "ModuleNamespace.h"
 #include "vislib/Array.h"
-#include "vislib/CriticalSection.h"
 #include "vislib/RawStorage.h"
+#include "vislib/SlimReaderWriterLock.h"
+#if defined(DEBUG) || defined(_DEBUG)
+#include "vislib/CriticalSection.h"
+#include "vislib/SingleLinkedList.h"
+#endif
 
 
 namespace megamol {
@@ -64,14 +68,16 @@ namespace core {
         /**
          * Locks the module namespace
          *
-         * @param write If 'true' locks the namespace for writing, if 'false' locks only for reading.
+         * @param write If 'true' locks the namespace for writing, if 'false' locks only for reading
          */
         virtual void LockModuleGraph(bool write);
 
         /**
          * Unlocks the module namespace
+         *
+         * @param write If 'true' the namesapce was locked for writing, if 'false' only for reading
          */
-        virtual void UnlockModuleGraph(void);
+        virtual void UnlockModuleGraph(bool write);
 
         /**
          * Serializes the whole module graph into raw memory.
@@ -88,8 +94,21 @@ namespace core {
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
+
+#if defined(DEBUG) || defined(_DEBUG)
+        /** Lock for the list of locked threads */
+        static vislib::sys::CriticalSection lockedThreadLock;
+
+        /** List of threads that locked the namespace */
+        static vislib::SingleLinkedList<unsigned int> lockedRThread;
+
+        /** List of threads that locked the namespace */
+        static vislib::SingleLinkedList<unsigned int> lockedWThread;
+#endif
+
         /** The graph access synchronization object */
-        vislib::sys::CriticalSection lock;
+        vislib::sys::SlimReaderWriterLock lock;
+
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */

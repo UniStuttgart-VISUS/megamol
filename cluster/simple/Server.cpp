@@ -148,7 +148,7 @@ bool cluster::simple::Server::Client::OnMessageReceived(
             RootModuleNamespace *rmns = dynamic_cast<RootModuleNamespace*>(this->parent.RootModule());
             rmns->LockModuleGraph(false);
             rmns->SerializeGraph(mem);
-            rmns->UnlockModuleGraph();
+            rmns->UnlockModuleGraph(false);
             answer.GetHeader().SetMessageID(MSG_MODULGRAPH);
             answer.SetBody(mem, mem.GetSize());
             this->send(answer);
@@ -212,7 +212,7 @@ bool cluster::simple::Server::Client::OnMessageReceived(
             if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
                 av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
             }
-            this->parent.UnlockModuleGraph();
+            this->parent.UnlockModuleGraph(false);
 
             if (av != NULL) {
                 if (((this->lastTCSyncNumber == 0) || (av->GetCameraSyncNumber() != this->lastTCSyncNumber))) {
@@ -518,7 +518,7 @@ bool cluster::simple::Server::onViewNameUpdated(param::ParamSlot& slot) {
     vislib::StringA viewmodname(this->viewnameSlot.Param<param::StringParam>()->Value());
     this->LockModuleGraph(false);
     megamol::core::view::AbstractView *av = dynamic_cast<megamol::core::view::AbstractView *>(this->FindNamedObject(viewmodname, true));
-    this->UnlockModuleGraph();
+    this->UnlockModuleGraph(false);
     if (av != NULL) {
         if (this->instance()->InstantiateCall(this->viewSlot.FullName(), av->FullName() + "::render", 
                 CallDescriptionManager::Instance()->Find(view::CallRenderView::ClassName())) != NULL) {
@@ -750,7 +750,7 @@ DWORD cluster::simple::Server::cameraUpdateThread(void *userData) {
         if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
             av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
         }
-        This->UnlockModuleGraph();
+        This->UnlockModuleGraph(false);
         if (av == NULL) break;
 
         csn = av->GetCameraSyncNumber();

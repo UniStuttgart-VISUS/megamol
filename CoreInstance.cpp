@@ -272,7 +272,7 @@ megamol::core::CoreInstance::~CoreInstance(void) {
         ModuleNamespace *child = dynamic_cast<ModuleNamespace*>(iter.Next());
         this->closeViewJob(child);
     }
-    this->namespaceRoot.UnlockModuleGraph();
+    this->namespaceRoot.UnlockModuleGraph(true);
 
     ModuleDescriptionManager::ShutdownInstance();
     CallDescriptionManager::ShutdownInstance();
@@ -1209,7 +1209,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
     } catch(...) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to setup module graph from network message: unexpected exception\n");
     }
-    this->namespaceRoot.UnlockModuleGraph();
+    this->namespaceRoot.UnlockModuleGraph(true);
 }
 
 

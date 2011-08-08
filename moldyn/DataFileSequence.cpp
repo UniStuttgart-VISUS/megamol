@@ -446,7 +446,7 @@ bool moldyn::DataFileSequence::onFileNameSlotNameChanged(param::ParamSlot& slot)
             vislib::StringA(P->Value()).PeekBuffer());
         P->SetValue("", false);
     }
-    this->UnlockModuleGraph();
+    this->UnlockModuleGraph(false);
     this->needDataUpdate = true;
     return true;
 }

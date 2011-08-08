@@ -75,7 +75,7 @@ bool CalleeSlot::IsParamRelevant(
     const AbstractNamedObjectContainer *anoc
         = dynamic_cast<const AbstractNamedObjectContainer*>(ano);
     if (anoc == NULL) {
-        this->UnlockModuleGraph();
+        this->UnlockModuleGraph(false);
         return false;
     }
 
@@ -98,13 +98,13 @@ bool CalleeSlot::IsParamRelevant(
             cs = dynamic_cast<const CallerSlot*>(ano);
             if ((cs != NULL) && cs->IsConnectedTo(this) && (ano->Parent() != NULL)) {
                 if (ano->Parent()->IsParamRelevant(searched, param)) {
-                    this->UnlockModuleGraph();
+                    this->UnlockModuleGraph(false);
                     return true;
                 }
             }
         }
     }
 
-    this->UnlockModuleGraph();
+    this->UnlockModuleGraph(false);
     return false;
 }

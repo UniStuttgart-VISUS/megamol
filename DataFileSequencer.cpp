@@ -75,7 +75,7 @@ megamol::core::param::ParamSlot * megamol::core::DataFileSequencer::findFilename
         anoc = dynamic_cast<AbstractNamedObjectContainer*>(anoc->Parent());
     }
 
-    this->UnlockModuleGraph();
+    this->UnlockModuleGraph(false);
 
     return dynamic_cast<param::ParamSlot*>(ano);
 }

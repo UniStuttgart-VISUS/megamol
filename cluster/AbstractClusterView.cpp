@@ -383,7 +383,7 @@ void cluster::AbstractClusterView::OnCommChannelMessage(cluster::CommChannel& se
             if (this->graphInitData == NULL) {
                 this->LockModuleGraph(true);
                 this->disconnectOutgoingRenderCall(); // this will result in rendering the fallback view at least once
-                this->UnlockModuleGraph();
+                this->UnlockModuleGraph(true);
                 this->GetCoreInstance()->CleanupModuleGraph();
 
                 this->graphInitData = new vislib::net::SimpleMessage(msg);

@@ -50,7 +50,7 @@ void AbstractNamedObject::GraphLocker::Lock(void) {
  */
 void AbstractNamedObject::GraphLocker::Unlock(void) {
     VLSTACKTRACE("GraphLocker::Unlock", __FILE__, __LINE__);
-    this->root->UnlockModuleGraph();
+    this->root->UnlockModuleGraph(this->writelock);
 }
 
 /****************************************************************************/
@@ -147,9 +147,9 @@ void AbstractNamedObject::LockModuleGraph(bool write) {
 /*
  * AbstractNamedObject::UnlockModuleGraph
  */
-void AbstractNamedObject::UnlockModuleGraph(void) {
+void AbstractNamedObject::UnlockModuleGraph(bool write) {
     if (this->parent != NULL) {
-        this->RootModule()->UnlockModuleGraph();
+        this->RootModule()->UnlockModuleGraph(write);
     }
 }
 
@@ -165,8 +165,8 @@ void AbstractNamedObject::LockModuleGraph(bool write) const {
 /*
  * AbstractNamedObject::UnlockModuleGraph
  */
-void AbstractNamedObject::UnlockModuleGraph(void) const {
-    const_cast<AbstractNamedObject*>(this->RootModule())->UnlockModuleGraph();
+void AbstractNamedObject::UnlockModuleGraph(bool write) const {
+    const_cast<AbstractNamedObject*>(this->RootModule())->UnlockModuleGraph(write);
 }
 
 

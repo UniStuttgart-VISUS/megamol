@@ -211,7 +211,7 @@ namespace core {
         /**
          * Unlocks the module namespace
          */
-        virtual void UnlockModuleGraph(void);
+        virtual void UnlockModuleGraph(bool write);
 
         /**
          * Locks the module namespace
@@ -223,7 +223,7 @@ namespace core {
         /**
          * Unlocks the module namespace
          */
-        virtual void UnlockModuleGraph(void) const;
+        virtual void UnlockModuleGraph(bool write) const;
 
     protected:
 
