@@ -19,8 +19,8 @@ namespace sys {
 
     /**
      * This superclass defines the interface for all synchronisation objects. 
-	 * Such a facade class allows the implementation of an autolock mechanism
-	 * that releases a lock when the active block is left.
+     * Such a facade class allows the implementation of an autolock mechanism
+     * that releases a lock when the active block is left.
      *
      * @author Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de)
      */
@@ -47,27 +47,27 @@ namespace sys {
 
     protected:
 
-		/** Ctor. */
-		inline SyncObject(void) {}
+        /** Ctor. */
+        inline SyncObject(void) {}
 
         /**
          * Create a clone of 'rhs'.
          *
          * @param rhs The object to be cloned.
          */
-		inline SyncObject(const SyncObject& rhs) {}
+        inline SyncObject(const SyncObject& rhs) {}
 
-		/**
-		 * Assignment operator.
-		 *
-		 * @param rhs The right hand side operand.
-		 *
-		 * @return *this.
-		 */
-		inline SyncObject& operator =(const SyncObject& rhs) {
-			return *this;
-		}
-	};
+        /**
+         * Assignment operator.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         */
+        inline SyncObject& operator =(const SyncObject& rhs) {
+            return *this;
+        }
+    };
 
 } /* end namespace sys */
 } /* end namespace vislib */

@@ -454,6 +454,7 @@
     <ClCompile Include="src\RunnableThread.cpp" />
     <ClCompile Include="src\Semaphore.cpp" />
     <ClCompile Include="src\SharedMemory.cpp" />
+    <ClCompile Include="src\SlimReaderWriterLock.cpp" />
     <ClCompile Include="src\SynchronisedArray.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">true</ExcludedFromBuild>
@@ -499,6 +500,7 @@
     <ClInclude Include="include\vislib\DirectoryIterator.h" />
     <ClInclude Include="include\vislib\MemoryFile.h" />
     <ClInclude Include="include\vislib\RegistryKey.h" />
+    <ClInclude Include="include\vislib\SlimReaderWriterLock.h" />
     <ClInclude Include="src\DynamicFunctionPointer.h" />
     <ClInclude Include="include\vislib\DynamicLinkLibrary.h" />
     <ClInclude Include="include\vislib\Environment.h" />
