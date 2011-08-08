@@ -125,6 +125,9 @@ namespace wgl {
         /** The main rendering context */
         static HGLRC mainCtxt;
 
+        /** The main device context */
+        static HDC mainDC;
+
         /** The library instance */
         Instance& inst;
 

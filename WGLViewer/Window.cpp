@@ -27,6 +27,8 @@ Window::Window(Instance& inst) : ApiHandle(), inst(inst), hWnd(NULL), hDC(NULL),
     DWORD style = WS_OVERLAPPEDWINDOW;
     DWORD styleEx = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
 
+    ::wglMakeCurrent(NULL, NULL); // paranoia
+
     this->hWnd = ::CreateWindowEx(styleEx, Instance::WindowClassName,
         _T("MegaMol™"), style | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
@@ -77,17 +79,24 @@ Window::Window(Instance& inst) : ApiHandle(), inst(inst), hWnd(NULL), hDC(NULL),
 
     // Context sharing!
     if (Window::mainCtxt == NULL) {
-        Window::mainCtxt = this->hRC;
-    } else {
-        DWORD le = ::GetLastError();
-        GLenum ge = ::glGetError();
 
-        if (::wglShareLists(Window::mainCtxt, this->hRC) != TRUE) {
-            le = ::GetLastError();
-            ge = ::glGetError();
-            fprintf(stderr, "Unable to share contexts between two contexts (GLE: %u; GGE: %u)\n",
-                static_cast<unsigned int>(le), static_cast<unsigned int>(ge));
+        Window::mainDC = this->hDC; // DuplicateHandle?
+        Window::mainCtxt = ::wglCreateContext(Window::mainDC);
+        if (Window::mainCtxt == NULL) {
+            this->Close();
+            fprintf(stderr, "Failed to create main rendering context\n");
+            return;
         }
+    }
+
+    DWORD le = ::GetLastError();
+    GLenum ge = ::glGetError();
+
+    if (::wglShareLists(Window::mainCtxt, this->hRC) != TRUE) {
+        le = ::GetLastError();
+        ge = ::glGetError();
+        fprintf(stderr, "Unable to share contexts between two contexts (GLE: %u; GGE: %u)\n",
+            static_cast<unsigned int>(le), static_cast<unsigned int>(ge));
     }
 
     ::ShowWindow(this->hWnd, SW_SHOW);
@@ -98,6 +107,8 @@ Window::Window(Instance& inst) : ApiHandle(), inst(inst), hWnd(NULL), hDC(NULL),
     this->Resized(r.right - r.left, r.bottom - r.top);
 
     this->renderer.Start(this);
+
+    ::wglMakeCurrent(Window::mainDC, Window::mainCtxt);
 
 }
 
@@ -202,6 +213,12 @@ void Window::SetHint(unsigned int hint, bool f) {
  * Window::mainCtxt
  */
 HGLRC Window::mainCtxt = NULL;
+
+
+/*
+ * Window::mainDC
+ */
+HDC Window::mainDC = NULL;
 
 
 /*
