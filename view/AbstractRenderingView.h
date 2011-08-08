@@ -14,6 +14,7 @@
 #include "api/MegaMolCore.std.h"
 #include "param/ParamSlot.h"
 #include "view/AbstractView.h"
+#include "vislib/CriticalSection.h"
 #include "vislib/FpsCounter.h"
 
 
@@ -211,9 +212,15 @@ namespace view {
 #endif /* _WIN32 */
         /** The frames per second counter */
         vislib::graphics::FpsCounter fpsCounter;
+
+        /** Sync object for fps counter */
+        vislib::sys::CriticalSection fpsLock;
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
+
+        /** The ID of the thread currently */
+        DWORD fpsThreadID;
 
         /** A timer managing the fps output */
         unsigned int fpsOutputTimer;

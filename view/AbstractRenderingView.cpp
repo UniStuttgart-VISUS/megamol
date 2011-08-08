@@ -14,7 +14,9 @@
 #include "param/StringParam.h"
 #include "utility/ColourParser.h"
 #include "view/special/TitleRenderer.h"
+#include "vislib/AutoLock.h"
 #include "vislib/sysfunctions.h"
+#include "vislib/Thread.h"
 
 using namespace megamol::core;
 
@@ -87,7 +89,7 @@ view::AbstractRenderingView::AbstractRenderingView(void) : AbstractView(),
         overrideBkgndCol(NULL), overrideViewport(NULL),
         bkgndColSlot("backCol", "The views background colour"),
         softCursor(false), softCursorSlot("softCursor", "Bool flag to activate software cursor rendering"),
-        titleRenderer(NULL), fpsCounter(10), fpsOutputTimer(0) {
+        titleRenderer(NULL), fpsCounter(10), fpsThreadID(0), fpsOutputTimer(0) {
 
     this->bkgndCol[0] = 0.0f;
     this->bkgndCol[1] = 0.0f;
@@ -117,7 +119,17 @@ view::AbstractRenderingView::~AbstractRenderingView(void) {
  * view::AbstractRenderingView::beginFrame
  */
 void view::AbstractRenderingView::beginFrame(void) {
-    //this->fpsCounter.FrameBegin(); // TODO: Enable multi-thread
+    vislib::sys::AutoLock(this->fpsLock);
+
+    // The first thread that ever draws with this view will count the FPS
+    if (this->fpsThreadID == 0) {
+        this->fpsThreadID = vislib::sys::Thread::CurrentID();
+    }
+
+    if (this->fpsThreadID == vislib::sys::Thread::CurrentID()) {
+        this->fpsCounter.FrameBegin();
+    }
+
 }
 
 
@@ -125,6 +137,8 @@ void view::AbstractRenderingView::beginFrame(void) {
  * view::AbstractRenderingView::endFrame
  */
 void view::AbstractRenderingView::endFrame(bool abort) {
+    vislib::sys::AutoLock(this->fpsLock);
+
     if (!abort) {
         unsigned int ticks = vislib::sys::GetTicksOfDay();
         if ((ticks < this->fpsOutputTimer) || (ticks >= this->fpsOutputTimer + 1000)) {
@@ -139,7 +153,11 @@ void view::AbstractRenderingView::endFrame(bool abort) {
             fflush(stdout); // grr
         }
     }
-    //this->fpsCounter.FrameEnd(); // TODO: Enable multi-thread
+
+    if (this->fpsThreadID == vislib::sys::Thread::CurrentID()) {
+        this->fpsCounter.FrameEnd();
+    }
+
 }
 
 
