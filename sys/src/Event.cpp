@@ -40,7 +40,8 @@ vislib::sys::Event::Event(const bool isManualReset,
 #endif /* _WIN32 */
 {
 #ifdef _WIN32
-    this->handle = ::CreateEventA(NULL, isManualReset ? TRUE : FALSE, FALSE, 
+    this->handle = ::CreateEventA(NULL, isManualReset ? TRUE : FALSE,
+        isInitiallySignaled ? TRUE : FALSE, 
         NULL);
     ASSERT(this->handle != NULL);
 #endif /* _WIN32 */
@@ -65,7 +66,8 @@ vislib::sys::Event::Event(const char *name, const bool isManualReset,
     /* Try to open existing event first. */
     if ((this->handle = ::OpenEventA(SYNCHRONIZE | EVENT_MODIFY_STATE,
             FALSE, name)) == NULL) {
-        this->handle = ::CreateEventA(NULL, isManualReset ? TRUE : FALSE, FALSE,
+        this->handle = ::CreateEventA(NULL, isManualReset ? TRUE : FALSE,
+            isInitiallySignaled ? TRUE : FALSE,
             name);
         if (outIsNew != NULL) {
             *outIsNew = true;
@@ -94,7 +96,8 @@ vislib::sys::Event::Event(const wchar_t *name, const bool isManualReset,
     /* Try to open existing event first. */
     if ((this->handle = ::OpenEventW(SYNCHRONIZE | EVENT_MODIFY_STATE,
             FALSE, name)) == NULL) {
-        this->handle = ::CreateEventW(NULL, isManualReset ? TRUE : FALSE, FALSE,
+        this->handle = ::CreateEventW(NULL, isManualReset ? TRUE : FALSE,
+            isInitiallySignaled ? TRUE : FALSE,
             name);
         if (outIsNew != NULL) {
             *outIsNew = true;
