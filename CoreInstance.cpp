@@ -575,6 +575,14 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
         return NULL;
     }
 
+    { // glh "fix"
+        vislib::Array<vislib::StringA> exts(vislib::StringTokeniserA::Split(
+            vislib::StringA(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS))), ' ', true));
+        for (SIZE_T i = 0; i < exts.Count(); i++) {
+            glh_init_extension(exts[i]);
+        }
+    }
+
     // instantiate modules
     for (unsigned int idx = 0; idx < request.Description()->ModuleCount(); idx++) {
         const ViewDescription::ModuleInstanceRequest &mir = request.Description()->Module(idx);
