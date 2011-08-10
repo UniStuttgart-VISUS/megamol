@@ -15,7 +15,7 @@
 #include "ModuleNamespace.h"
 #include "vislib/Array.h"
 #include "vislib/RawStorage.h"
-#include "vislib/SlimReaderWriterLock.h"
+#include "vislib/FatReaderWriterLock.h"
 #if defined(DEBUG) || defined(_DEBUG)
 #include "vislib/CriticalSection.h"
 #include "vislib/SingleLinkedList.h"
@@ -66,18 +66,18 @@ namespace core {
             bool createMissing, bool quiet = false);
 
         /**
-         * Locks the module namespace
+         * Answer the reader-writer lock to lock the module graph
          *
-         * @param write If 'true' locks the namespace for writing, if 'false' locks only for reading
+         * @return The reader-writer lock to lock the module graph
          */
-        virtual void LockModuleGraph(bool write);
+        virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void);
 
         /**
-         * Unlocks the module namespace
+         * Answer the reader-writer lock to lock the module graph
          *
-         * @param write If 'true' the namesapce was locked for writing, if 'false' only for reading
+         * @return The reader-writer lock to lock the module graph
          */
-        virtual void UnlockModuleGraph(bool write);
+        virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void) const;
 
         /**
          * Serializes the whole module graph into raw memory.
@@ -95,19 +95,8 @@ namespace core {
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
 
-#if defined(DEBUG) || defined(_DEBUG)
-        /** Lock for the list of locked threads */
-        static vislib::sys::CriticalSection lockedThreadLock;
-
-        /** List of threads that locked the namespace */
-        static vislib::SingleLinkedList<unsigned int> lockedRThread;
-
-        /** List of threads that locked the namespace */
-        static vislib::SingleLinkedList<unsigned int> lockedWThread;
-#endif
-
         /** The graph access synchronization object */
-        vislib::sys::SlimReaderWriterLock lock;
+        mutable vislib::sys::FatReaderWriterLock lock;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)

@@ -33,28 +33,6 @@
 using namespace megamol::core;
 
 
-#if defined(DEBUG) || defined(_DEBUG)
-
-/*
- * RootModuleNamespace::lockedThreadLock
- */
-vislib::sys::CriticalSection RootModuleNamespace::lockedThreadLock;
-
-
-/*
- * RootModuleNamespace::lockedThread
- */
-vislib::SingleLinkedList<unsigned int> RootModuleNamespace::lockedRThread;
-
-
-/*
- * RootModuleNamespace::lockedThread
- */
-vislib::SingleLinkedList<unsigned int> RootModuleNamespace::lockedWThread;
-
-#endif
-
-
 /*
  * RootModuleNamespace::RootModuleNamespace
  */
@@ -137,72 +115,18 @@ ModuleNamespace * RootModuleNamespace::FindNamespace(
 
 
 /*
- * RootModuleNamespace::LockModuleGraph
+ * RootModuleNamespace::ModuleGraphLock
  */
-void RootModuleNamespace::LockModuleGraph(bool write) {
-    VLSTACKTRACE("LockModuleGraph", __FILE__, __LINE__);
-#if defined(DEBUG) || defined(_DEBUG)
-    unsigned int size;
-    vislib::StringA stack;
-    vislib::StackTrace::GetStackString(static_cast<char*>(NULL), size);
-    vislib::StackTrace::GetStackString(stack.AllocateBuffer(size), size);
-    VLTRACE(vislib::Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
-        "LockModuleGraph(%u;%s):\n%s\n",
-        vislib::sys::Thread::CurrentID(),
-        write ? "exclusive" : "shared",
-        stack.PeekBuffer());
-
-    vislib::sys::AutoLock lock(RootModuleNamespace::lockedThreadLock);
-    ASSERT(!RootModuleNamespace::lockedRThread.Contains(vislib::sys::Thread::CurrentID())
-        && !RootModuleNamespace::lockedWThread.Contains(vislib::sys::Thread::CurrentID()));
-#endif
-    if (write) {
-        this->lock.LockExclusive();
-#if defined(DEBUG) || defined(_DEBUG)
-        RootModuleNamespace::lockedWThread.Add(vislib::sys::Thread::CurrentID());
-#endif
-    } else {
-        this->lock.LockShared();
-#if defined(DEBUG) || defined(_DEBUG)
-        RootModuleNamespace::lockedRThread.Add(vislib::sys::Thread::CurrentID());
-#endif
-    }
-
+vislib::sys::AbstractReaderWriterLock& RootModuleNamespace::ModuleGraphLock(void) {
+    return this->lock;
 }
 
 
 /*
- * RootModuleNamespace::UnlockModuleGraph
+ * RootModuleNamespace::ModuleGraphLock
  */
-void RootModuleNamespace::UnlockModuleGraph(bool write) {
-    VLSTACKTRACE("UnlockModuleGraph", __FILE__, __LINE__);
-#if defined(DEBUG) || defined(_DEBUG)
-    unsigned int size;
-    vislib::StringA stack;
-    vislib::StackTrace::GetStackString(static_cast<char*>(NULL), size);
-    vislib::StackTrace::GetStackString(stack.AllocateBuffer(size), size);
-    VLTRACE(vislib::Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
-        "UnlockModuleGraph(%u;%s):\n%s\n",
-        vislib::sys::Thread::CurrentID(),
-        write ? "exclusive" : "shared",
-        stack.PeekBuffer());
-
-    vislib::sys::AutoLock lock(RootModuleNamespace::lockedThreadLock);
-#endif
-    if (write) {
-        this->lock.UnlockExclusive();
-#if defined(DEBUG) || defined(_DEBUG)
-        ASSERT(RootModuleNamespace::lockedWThread.Contains(vislib::sys::Thread::CurrentID()));
-        RootModuleNamespace::lockedWThread.RemoveAll(vislib::sys::Thread::CurrentID());
-#endif
-    } else {
-        this->lock.UnlockShared();
-#if defined(DEBUG) || defined(_DEBUG)
-        ASSERT(RootModuleNamespace::lockedRThread.Contains(vislib::sys::Thread::CurrentID()));
-        RootModuleNamespace::lockedRThread.RemoveAll(vislib::sys::Thread::CurrentID());
-#endif
-    }
-
+vislib::sys::AbstractReaderWriterLock& RootModuleNamespace::ModuleGraphLock(void) const {
+    return this->lock;
 }
 
 

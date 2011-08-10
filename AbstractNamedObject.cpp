@@ -41,7 +41,11 @@ AbstractNamedObject::GraphLocker::~GraphLocker(void) {
  */
 void AbstractNamedObject::GraphLocker::Lock(void) {
     VLSTACKTRACE("GraphLocker::Lock", __FILE__, __LINE__);
-    this->root->LockModuleGraph(this->writelock);
+    if (this->writelock) {
+        this->root->ModuleGraphLock().LockExclusive();
+    } else {
+        this->root->ModuleGraphLock().LockShared();
+    }
 }
 
 
@@ -50,7 +54,11 @@ void AbstractNamedObject::GraphLocker::Lock(void) {
  */
 void AbstractNamedObject::GraphLocker::Unlock(void) {
     VLSTACKTRACE("GraphLocker::Unlock", __FILE__, __LINE__);
-    this->root->UnlockModuleGraph(this->writelock);
+    if (this->writelock) {
+        this->root->ModuleGraphLock().UnlockExclusive();
+    } else {
+        this->root->ModuleGraphLock().UnlockShared();
+    }
 }
 
 /****************************************************************************/
@@ -135,38 +143,20 @@ bool AbstractNamedObject::IsParamRelevant(
 
 
 /*
- * AbstractNamedObject::LockModuleGraph
+ * AbstractNamedObject::ModuleGraphLock
  */
-void AbstractNamedObject::LockModuleGraph(bool write) {
-    if (this->parent != NULL) {
-        this->RootModule()->LockModuleGraph(write);
-    }
+vislib::sys::AbstractReaderWriterLock& AbstractNamedObject::ModuleGraphLock(void) {
+    ASSERT(this->parent != NULL); // HAZARD: better return a dummy object
+    return this->RootModule()->ModuleGraphLock();
 }
 
 
 /*
- * AbstractNamedObject::UnlockModuleGraph
+ * AbstractNamedObject::ModuleGraphLock
  */
-void AbstractNamedObject::UnlockModuleGraph(bool write) {
-    if (this->parent != NULL) {
-        this->RootModule()->UnlockModuleGraph(write);
-    }
-}
-
-
-/*
- * AbstractNamedObject::LockModuleGraph
- */
-void AbstractNamedObject::LockModuleGraph(bool write) const {
-    const_cast<AbstractNamedObject*>(this->RootModule())->LockModuleGraph(write);
-}
-
-
-/*
- * AbstractNamedObject::UnlockModuleGraph
- */
-void AbstractNamedObject::UnlockModuleGraph(bool write) const {
-    const_cast<AbstractNamedObject*>(this->RootModule())->UnlockModuleGraph(write);
+vislib::sys::AbstractReaderWriterLock& AbstractNamedObject::ModuleGraphLock(void) const {
+    ASSERT(this->parent != NULL); // HAZARD: better return a dummy object
+    return this->RootModule()->ModuleGraphLock();
 }
 
 

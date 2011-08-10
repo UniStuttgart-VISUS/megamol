@@ -580,7 +580,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
     if (view != NULL) {
-        view->LockModuleGraph(false);
+        view->ModuleGraphLock().LockShared();
         if (view->View() != NULL) {
             double it = view->View()->GetCoreInstance()->GetCoreInstanceTime();
             view->View()->Render(view->View()->DefaultTime(it), it);
@@ -588,7 +588,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
                 *contRedraw = true; // TODO: Implement the real thing
             }
         }
-        view->UnlockModuleGraph(false);
+        view->ModuleGraphLock().UnlockShared();
     }
 }
 

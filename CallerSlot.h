@@ -73,7 +73,11 @@ namespace core {
          * @return 'true' on success, 'false' on failure
          */
         bool ConnectCall(megamol::core::Call *call) {
-            if (this->Parent()) this->Parent()->LockModuleGraph(true);
+            vislib::sys::AbstractReaderWriterLock *lock = NULL;
+            if (this->Parent()) {
+                lock = &this->Parent()->ModuleGraphLock();
+                lock->LockExclusive();
+            }
 
             if (call == NULL) {
                 if (this->call != NULL) {
@@ -82,7 +86,7 @@ namespace core {
                     this->call = NULL;
                     delete c;
                 }
-                if (this->Parent()) this->Parent()->UnlockModuleGraph(true);
+                if (lock != NULL) lock->UnlockExclusive();
                 return true;
             }
 
@@ -93,12 +97,12 @@ namespace core {
                     this->call = call;
                     this->call->caller = this;
                     this->SetStatusConnected();
-                    if (this->Parent()) this->Parent()->UnlockModuleGraph(true);
+                    if (lock != NULL) lock->UnlockExclusive();
                     return true;
                 }
             }
 
-            if (this->Parent()) this->Parent()->UnlockModuleGraph(true);
+            if (lock != NULL) lock->UnlockExclusive();
             return false;
         }
 

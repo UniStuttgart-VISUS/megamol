@@ -66,7 +66,7 @@ megamol::core::param::ParamSlot * megamol::core::DataFileSequencer::findFilename
     vislib::StringA name(this->filenameSlotNameSlot.Param<param::StringParam>()->Value());
     if (name.IsEmpty()) return NULL;
 
-    this->LockModuleGraph(false);
+    this->ModuleGraphLock().LockShared();
 
     AbstractNamedObjectContainer *anoc = this;
     AbstractNamedObject *ano = NULL;
@@ -75,7 +75,7 @@ megamol::core::param::ParamSlot * megamol::core::DataFileSequencer::findFilename
         anoc = dynamic_cast<AbstractNamedObjectContainer*>(anoc->Parent());
     }
 
-    this->UnlockModuleGraph(false);
+    this->ModuleGraphLock().UnlockShared();
 
     return dynamic_cast<param::ParamSlot*>(ano);
 }

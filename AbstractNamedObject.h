@@ -14,6 +14,7 @@
 #include "api/MegaMolCore.std.h"
 #include "vislib/String.h"
 #include "param/AbstractParam.h"
+#include "vislib/AbstractReaderWriterLock.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SyncObject.h"
@@ -202,28 +203,18 @@ namespace core {
             const vislib::SmartPtr<param::AbstractParam>& param) const;
 
         /**
-         * Locks the module namespace
+         * Answer the reader-writer lock to lock the module graph
          *
-         * @param write If 'true' locks the namespace for writing, if 'false' locks only for reading.
+         * @return The reader-writer lock to lock the module graph
          */
-        virtual void LockModuleGraph(bool write);
+        virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void);
 
         /**
-         * Unlocks the module namespace
-         */
-        virtual void UnlockModuleGraph(bool write);
-
-        /**
-         * Locks the module namespace
+         * Answer the reader-writer lock to lock the module graph
          *
-         * @param write If 'true' locks the namespace for writing, if 'false' locks only for reading.
+         * @return The reader-writer lock to lock the module graph
          */
-        virtual void LockModuleGraph(bool write) const;
-
-        /**
-         * Unlocks the module namespace
-         */
-        virtual void UnlockModuleGraph(bool write) const;
+        virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void) const;
 
     protected:
 

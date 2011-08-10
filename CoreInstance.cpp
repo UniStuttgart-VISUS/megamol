@@ -255,7 +255,7 @@ megamol::core::CoreInstance::~CoreInstance(void) {
         "Core Instance destroyed");
 
     // Shutdown all views and jobs, which might still run
-    this->namespaceRoot.LockModuleGraph(true);
+    this->namespaceRoot.ModuleGraphLock().LockExclusive();
     AbstractNamedObjectContainer::ChildList remoov;
     AbstractNamedObjectContainer::ChildList::Iterator iter
         = this->namespaceRoot.GetChildIterator();
@@ -272,7 +272,7 @@ megamol::core::CoreInstance::~CoreInstance(void) {
         ModuleNamespace *child = dynamic_cast<ModuleNamespace*>(iter.Next());
         this->closeViewJob(child);
     }
-    this->namespaceRoot.UnlockModuleGraph(true);
+    this->namespaceRoot.ModuleGraphLock().UnlockExclusive();
 
     ModuleDescriptionManager::ShutdownInstance();
     CallDescriptionManager::ShutdownInstance();
@@ -1098,7 +1098,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
         = static_cast<const AbstractSimpleMessage *>(data);
     const AbstractSimpleMessage &dat = *dataPtr;
 
-    this->namespaceRoot.LockModuleGraph(true);
+    this->namespaceRoot.ModuleGraphLock().LockExclusive();
     try {
 
         UINT64 cntMods = *dat.GetBodyAs<UINT64>();
@@ -1217,7 +1217,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
     } catch(...) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to setup module graph from network message: unexpected exception\n");
     }
-    this->namespaceRoot.UnlockModuleGraph(true);
+    this->namespaceRoot.ModuleGraphLock().UnlockExclusive();
 }
 
 

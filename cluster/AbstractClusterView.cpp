@@ -381,9 +381,9 @@ void cluster::AbstractClusterView::OnCommChannelMessage(cluster::CommChannel& se
                 break; // setup step order screwed up
             }
             if (this->graphInitData == NULL) {
-                this->LockModuleGraph(true);
+                this->ModuleGraphLock().LockExclusive();
                 this->disconnectOutgoingRenderCall(); // this will result in rendering the fallback view at least once
-                this->UnlockModuleGraph(true);
+                this->ModuleGraphLock().UnlockExclusive();
                 this->GetCoreInstance()->CleanupModuleGraph();
 
                 this->graphInitData = new vislib::net::SimpleMessage(msg);
