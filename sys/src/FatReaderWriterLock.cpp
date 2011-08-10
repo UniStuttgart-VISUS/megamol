@@ -84,14 +84,14 @@ void vislib::sys::FatReaderWriterLock::LockExclusive(void) {
 void vislib::sys::FatReaderWriterLock::LockShared(void) {
 
     this->exclusiveLock.Lock(); // for down-grade this is reentrant
-    this->sharedCntLock.Lock();
+    this->sharedLock.Lock();
 
     if ((this->shThreads.IsEmpty()) && (this->exThread != Thread::CurrentID())) {
         this->exclusiveWait.Reset();
     }
-    this->shThreads.Add(Thread:::CurrentID());
+    this->shThreads.Add(Thread::CurrentID());
 
-    this->sharedCntLock.Unlock();
+    this->sharedLock.Unlock();
     this->exclusiveLock.Unlock();
 
 }

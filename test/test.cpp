@@ -60,6 +60,7 @@
 #include "testquaternion.h"
 #include "testtriangle.h"
 #include "testBitmapImage.h"
+#include "testReaderWriterLock.h"
 #ifdef _WIN32
 #include "testwinreg.h"
 #endif /* _WIN32 */
@@ -149,6 +150,7 @@ VislibTest tests[] = {
     {_T("VIPCStrTabGet"), ::TestVIPCStrTabGet, "Tests the getter functions of vislib::sys::VolatileIPCStringTable"},
     {_T("VIPCStrTabSet"), ::TestVIPCStrTabSet, "Tests the setter functions of vislib::sys::VolatileIPCStringTable"},
     {_T("PerfCounter"), ::TestPerformanceCounter, "Tests the performance counter"},
+    {_T("FatRWLock"), ::TestFatReaderWriterLock, "Tests the FatReaderWriterLock"},
 #ifdef _WIN32
     {_T("WinReg"), ::TestWinReg, "Tests the windows RegistryKey class"},
 #endif /* _WIN32 */
@@ -296,7 +298,7 @@ int main(int argc, char **argv) {
 
 #if defined(_WIN32) && defined(_DEBUG) // VC Debugger Halt on Stop Crowbar
 #pragma warning(disable: 4996)
-    if (getenv("_ACP_LIB") != NULL) system("pause");
+    if (getenv("_MSVC_STOP_AFTER_DEBUG_") != NULL) system("pause");
 #pragma warning(default: 4996)
 #endif
     return 0;

@@ -248,6 +248,7 @@
     <ClCompile Include="testpoolallocator.cpp" />
     <ClCompile Include="testprocess.cpp" />
     <ClCompile Include="testquaternion.cpp" />
+    <ClCompile Include="testReaderWriterLock.cpp" />
     <ClCompile Include="testrefcount.cpp" />
     <ClCompile Include="testserialiser.cpp" />
     <ClCompile Include="testsockets.cpp" />
@@ -300,6 +301,7 @@
     <ClInclude Include="testpoolallocator.h" />
     <ClInclude Include="testprocess.h" />
     <ClInclude Include="testquaternion.h" />
+    <ClInclude Include="testReaderWriterLock.h" />
     <ClInclude Include="testrefcount.h" />
     <ClInclude Include="testserialiser.h" />
     <ClInclude Include="testsockets.h" />
