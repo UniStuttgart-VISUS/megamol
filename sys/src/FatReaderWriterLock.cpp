@@ -6,6 +6,7 @@
  */
 
 #include "vislib/FatReaderWriterLock.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/Thread.h"
 #include "vislib/UnsupportedOperationException.h"
 
@@ -14,9 +15,8 @@
  * vislib::sys::FatReaderWriterLock::FatReaderWriterLock
  */
 vislib::sys::FatReaderWriterLock::FatReaderWriterLock(void)
-        : AbstractReaderWriterLock()/*, exThread(0), exThreadCnt(0),
-        exThreadWait(true, true), lock(), shThreads,
-        shThreadWait(true, true)*/ {
+        : AbstractReaderWriterLock(), exclusiveLock(), exThread(0),
+        exThreadCnt(0), exclusiveWait(true, true), sharedLock(), shThreads() {
     // Intentionally empty
 }
 
@@ -25,8 +25,7 @@ vislib::sys::FatReaderWriterLock::FatReaderWriterLock(void)
  * vislib::sys::FatReaderWriterLock::~FatReaderWriterLock
  */
 vislib::sys::FatReaderWriterLock::~FatReaderWriterLock(void) {
-    // Make sure nothing is locked any more!
-    // TODO: Implement
+    this->exclusiveWait.Wait();
 }
 
 
@@ -34,10 +33,7 @@ vislib::sys::FatReaderWriterLock::~FatReaderWriterLock(void) {
  * vislib::sys::FatReaderWriterLock::HasExclusiveLock
  */
 bool vislib::sys::FatReaderWriterLock::HasExclusiveLock(void) {
-
-    // TODO: Implement
-
-    return false;
+    return (this->exThread == Thread::CurrentID());
 }
 
 
@@ -45,10 +41,16 @@ bool vislib::sys::FatReaderWriterLock::HasExclusiveLock(void) {
  * vislib::sys::FatReaderWriterLock::HasSharedLock
  */
 bool vislib::sys::FatReaderWriterLock::HasSharedLock(void) {
+    bool rv = false;
 
-    // TODO: Implement
+    this->sharedLock.Lock();
+    rv = this->shThreads.Contains(Thread::CurrentID());
+    this->sharedLock.Unlock();
 
-    return false;
+    // value of rv cannot change, because it only could be changed by the
+    // current thread
+
+    return rv;
 }
 
 
@@ -57,7 +59,21 @@ bool vislib::sys::FatReaderWriterLock::HasSharedLock(void) {
  */
 void vislib::sys::FatReaderWriterLock::LockExclusive(void) {
 
-    // TODO: Implement
+    this->exclusiveLock.Lock();
+
+    for (SIZE_T i = 0; i < this->shThreads.Count(); i++) {
+        if (this->shThreads[i] == Thread::CurrentID()) {
+            this->exclusiveLock.Unlock();
+            throw IllegalStateException("LockExclusive Upgrade not allowed",
+                __FILE__, __LINE__);
+        }
+    }
+
+    this->exclusiveWait.Wait();
+
+    if (++this->exThreadCnt == 1) {
+        this->exThread = Thread::CurrentID();
+    }
 
 }
 
@@ -67,7 +83,16 @@ void vislib::sys::FatReaderWriterLock::LockExclusive(void) {
  */
 void vislib::sys::FatReaderWriterLock::LockShared(void) {
 
-    // TODO: Implement
+    this->exclusiveLock.Lock(); // for down-grade this is reentrant
+    this->sharedCntLock.Lock();
+
+    if ((this->shThreads.IsEmpty()) && (this->exThread != Thread::CurrentID())) {
+        this->exclusiveWait.Reset();
+    }
+    this->shThreads.Add(Thread:::CurrentID());
+
+    this->sharedCntLock.Unlock();
+    this->exclusiveLock.Unlock();
 
 }
 
@@ -77,7 +102,23 @@ void vislib::sys::FatReaderWriterLock::LockShared(void) {
  */
 void vislib::sys::FatReaderWriterLock::UnlockExclusive(void) {
 
-    // TODO: Implement
+    if (this->exThread != Thread::CurrentID()) {
+        throw IllegalStateException("UnlockExclusive illegal", __FILE__, __LINE__);
+    }
+
+    if (--this->exThreadCnt == 0) {
+        this->exThread = 0;
+
+        this->sharedLock.Lock();
+        if (!this->shThreads.IsEmpty()) {
+            // last exclusive lock closed
+            // disallow new exclusives because this would be an upgrade
+            this->exclusiveWait.Reset();
+        }
+        this->sharedLock.Unlock();
+    }
+
+    this->exclusiveLock.Unlock();
 
 }
 
@@ -87,7 +128,25 @@ void vislib::sys::FatReaderWriterLock::UnlockExclusive(void) {
  */
 void vislib::sys::FatReaderWriterLock::UnlockShared(void) {
 
-    // TODO: Implement
+    this->exclusiveLock.Lock(); // reentrant for down-graded locks
+    this->sharedLock.Lock();
+
+    INT_PTR pos = this->shThreads.IndexOf(Thread::CurrentID());
+
+    if (pos == Array<DWORD>::INVALID_POS) {
+        this->sharedLock.Unlock();
+        this->exclusiveLock.Unlock();
+        throw IllegalStateException("UnlockShared illegal", __FILE__, __LINE__);
+    }
+
+    this->shThreads.RemoveAt(pos);
+
+    if (this->shThreads.IsEmpty()) {
+        this->exclusiveWait.Set();
+    }
+
+    this->sharedLock.Unlock();
+    this->exclusiveLock.Unlock();
 
 }
 

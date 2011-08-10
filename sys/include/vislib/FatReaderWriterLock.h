@@ -93,7 +93,8 @@ namespace sys {
          * thread can aquire any further shared locks, unless that thread
          * currently holds the exclusive lock.
          *
-         * @throws InvalidOperation if the calling thread holds a shared lock
+         * @throws IllegalStateException if the calling thread holds a shared
+         *                               lock
          */
         virtual void LockExclusive(void);
 
@@ -115,8 +116,8 @@ namespace sys {
          * This method must be called for each time 'LockExclusive' was called
          * to release the exclusive lock.
          *
-         * @throws InvalidOperation if the current thread does not hold the
-         *                          exclusive lock
+         * @throws IllegalStateException if the current thread does not hold
+         *                               the exclusive lock
          */
         virtual void UnlockExclusive(void);
 
@@ -126,8 +127,8 @@ namespace sys {
          * This method must be called for each time 'LockShared' was called to
          * release all shared locks.
          *
-         * @throws InvalidOperation if the current thread does not hold any
-         *                          shared lock
+         * @throws IllegalStateException if the current thread does not hold
+         *                               any shared lock
          */
         virtual void UnlockShared(void);
 
@@ -139,23 +140,26 @@ namespace sys {
         /** Forbidden assignment operator */
         FatReaderWriterLock& operator=(const FatReaderWriterLock& rhs);
 
-        ///** ID of the thread currently locked exclusively */
-        //DWORD exThread;
+        /** The lock used for exclusive locking */
+        vislib::sys::CriticalSection exclusiveLock;
 
-        ///** Number of exclusive locks aquired by the thread 'exThread' */
-        //unsigned long exThreadCnt;
+        /** ID of the thread currently locked exclusively */
+        DWORD exThread;
 
-        ///** Event to block aquiration of the exclusive lock */
-        //Event exThreadWait;
+        /** Number of exclusive locks issued */
+        unsigned int exThreadCnt;
 
-        ///** The main lock for all data fields */
-        //CriticalSection lock;
+        /**
+         * Event to make the exclusive lock wait until all shared locks have
+         * returned
+         */
+        vislib::sys::Event exclusiveWait;
 
-        ///** List of IDs of the threads that have aquired shared locks */
-        //Array<DWORD> shThreads;
+        /** The lock for the counter of shared locks */
+        vislib::sys::CriticalSection sharedLock;
 
-        ///** Event to block aquiration of the shared lock */
-        //Event shThreadWait;
+        /** List of IDs of the threads that have aquired shared locks */
+        Array<DWORD> shThreads;
 
     };
     
