@@ -164,6 +164,30 @@ namespace math {
 
 
     /**
+     * Answer whether 'n' is in the interval of 'minVal' to 'maxVal'.
+     *
+     * @param n          A number.
+     * @param minVal     The lower border of the interval. The caller must 
+     *                   ensure that 'minVal' <= 'maxVal'.
+     * @param maxVal     The upper border of the interval. The caller must 
+     *                   ensure that 'minVal' <= 'maxVal'.
+     * @param includeMin If true, the lower border is considered part of 
+     *                   the interval.
+     * @param includeMax If true, the upper border is considered part of 
+     *                   the interval.
+     *
+     * @return true if 'n' is within the interval, false otherwise.
+     */
+    template<class T> inline bool IsWithin(const T n, const T minVal, 
+            const T maxVal, const bool includeMin = false, 
+            const bool includeMax = false) {
+        ASSERT(minVal <= maxVal);
+        return (((minVal < n) || (includeMin && (minVal == n)))
+            && ((n < maxVal) || (includeMax && (maxVal == n))));
+    }
+
+
+    /**
      * Answer the maximum of 'n' and 'm'.
      *
      * @param n An number.
