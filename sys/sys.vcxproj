@@ -409,6 +409,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\AbstractAsyncContext.cpp" />
+    <ClCompile Include="src\AbstractReaderWriterLock.cpp" />
     <ClCompile Include="src\ASCIIFileBuffer.cpp" />
     <ClCompile Include="src\AutoHandle.cpp" />
     <ClCompile Include="src\AutoLock.cpp" />
@@ -427,6 +428,7 @@
     <ClCompile Include="src\Environment.cpp" />
     <ClCompile Include="src\error.cpp" />
     <ClCompile Include="src\Event.cpp" />
+    <ClCompile Include="src\FatReaderWriterLock.cpp" />
     <ClCompile Include="src\File.cpp" />
     <ClCompile Include="src\FileNameSequence.cpp" />
     <ClCompile Include="src\ImpersonationContext.cpp" />
@@ -485,6 +487,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\AbstractAsyncContext.h" />
+    <ClInclude Include="include\vislib\AbstractReaderWriterLock.h" />
     <ClInclude Include="include\vislib\ASCIIFileBuffer.h" />
     <ClInclude Include="include\vislib\AutoHandle.h" />
     <ClInclude Include="include\vislib\AutoLock.h" />
@@ -498,6 +501,7 @@
     <ClInclude Include="include\vislib\DateTimeSpan.h" />
     <ClInclude Include="include\vislib\DirectoryEntry.h" />
     <ClInclude Include="include\vislib\DirectoryIterator.h" />
+    <ClInclude Include="include\vislib\FatReaderWriterLock.h" />
     <ClInclude Include="include\vislib\MemoryFile.h" />
     <ClInclude Include="include\vislib\RegistryKey.h" />
     <ClInclude Include="include\vislib\SlimReaderWriterLock.h" />

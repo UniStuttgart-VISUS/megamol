@@ -14,7 +14,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/SyncObject.h"
+#include "vislib/AbstractReaderWriterLock.h"
 //#ifdef _WIN32
 //#if 0
 //#else
@@ -44,7 +44,7 @@ namespace sys {
      * Enumlation implementation by Glenn Slayden (glenn@glennslayden.com)
      * http://www.glennslayden.com/code/win32/reader-writer-lock
      */
-    class SlimReaderWriterLock : public SyncObject {
+    class SlimReaderWriterLock : public AbstractReaderWriterLock {
 
     public:
 
@@ -55,34 +55,24 @@ namespace sys {
         virtual ~SlimReaderWriterLock(void);
 
         /**
-         * Acquire an exclusive lock.
-         */
-        virtual void Lock(void);
-
-        /**
          * Aquires an exclusive lock
          */
-        void LockExclusive(void);
+        virtual void LockExclusive(void);
 
         /**
          * Aquires a shared lock
          */
-        void LockShared(void);
+        virtual void LockShared(void);
 
         /**
          * Release an exclusive lock
          */
-        virtual void Unlock(void);
-
-        /**
-         * Release an exclusive lock
-         */
-        void UnlockExclusive(void);
+        virtual void UnlockExclusive(void);
 
         /**
          * Release a shared lock
          */
-        void UnlockShared(void);
+        virtual void UnlockShared(void);
 
     private:
 

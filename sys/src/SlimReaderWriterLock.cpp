@@ -12,7 +12,8 @@
 /*
  * vislib::sys::SlimReaderWriterLock::SlimReaderWriterLock
  */
-vislib::sys::SlimReaderWriterLock::SlimReaderWriterLock(void) : SyncObject(),
+vislib::sys::SlimReaderWriterLock::SlimReaderWriterLock(void)
+        : AbstractReaderWriterLock(),
 //#ifdef _WIN32
 //#if 0
 //#else
@@ -36,14 +37,6 @@ vislib::sys::SlimReaderWriterLock::~SlimReaderWriterLock(void) {
 //#endif
 //#else /* _WIN32 */
 //#endif /* _WIN32 */
-}
-
-
-/*
- * vislib::sys::SlimReaderWriterLock::Lock
- */
-void vislib::sys::SlimReaderWriterLock::Lock(void) {
-    this->LockExclusive();
 }
 
 
@@ -79,14 +72,6 @@ void vislib::sys::SlimReaderWriterLock::LockShared(void) {
 //#endif
 //#else /* _WIN32 */
 //#endif /* _WIN32 */
-}
-
-
-/*
- * vislib::sys::SlimReaderWriterLock::Unlock
- */
-void vislib::sys::SlimReaderWriterLock::Unlock(void) {
-    this->UnlockExclusive();
 }
 
 
