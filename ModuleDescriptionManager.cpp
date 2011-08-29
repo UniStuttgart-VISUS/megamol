@@ -45,6 +45,7 @@
 #include "moldyn/OracleSphereRenderer.h"
 #include "moldyn/SIFFDataSource.h"
 #include "moldyn/SimpleSphereRenderer.h"
+#include "moldyn/SphereOutlineRenderer.h"
 #include "moldyn/VIMDataSource.h"
 #include "moldyn/VisIttDataSource.h"
 //#include "special/ColStereoDisplay.h"
@@ -130,6 +131,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<moldyn::MMPLDWriter>();
         instance->registerAutoDescription<moldyn::SIFFDataSource>();
         instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
+        instance->registerAutoDescription<moldyn::SphereOutlineRenderer>();
         instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
         instance->registerAutoDescription<moldyn::VIMDataSource>();
         instance->registerAutoDescription<moldyn::VisIttDataSource>();

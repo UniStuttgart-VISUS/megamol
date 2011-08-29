@@ -309,6 +309,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="ModuleDescription.cpp" />
     <ClCompile Include="ModuleDescriptionManager.cpp" />
     <ClCompile Include="ModuleNamespace.cpp" />
+    <ClCompile Include="moldyn\SphereOutlineRenderer.cpp" />
     <ClCompile Include="ObjectDescription.cpp" />
     <ClCompile Include="ObjectDescriptionManager.cpp" />
     <ClCompile Include="ParamValueSetRequest.cpp" />
@@ -529,6 +530,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="ModuleDescription.h" />
     <ClInclude Include="ModuleDescriptionManager.h" />
     <ClInclude Include="ModuleNamespace.h" />
+    <ClInclude Include="moldyn\SphereOutlineRenderer.h" />
     <ClInclude Include="ObjectDescription.h" />
     <ClInclude Include="ObjectDescriptionManager.h" />
     <ClInclude Include="ParamValueSetRequest.h" />
