@@ -52,12 +52,14 @@ namespace moldyn {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
+#ifdef _WIN32
 #if defined(DEBUG) || defined(_DEBUG)
             HDC dc = ::wglGetCurrentDC();
             HGLRC rc = ::wglGetCurrentContext();
             ASSERT(dc != NULL);
             ASSERT(rc != NULL);
 #endif // DEBUG || _DEBUG
+#endif // _WIN32
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
         }
 
