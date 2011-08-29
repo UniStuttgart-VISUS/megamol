@@ -30,7 +30,7 @@ using namespace megamol::core;
 // minimum number of frames in the cache (2 for interpolation; 1 for loading)
 #define CACHE_SIZE_MIN 3
 // maximum number of frames in the cache (just a nice number)
-#define CACHE_SIZE_MAX 1000
+#define CACHE_SIZE_MAX 100000
 // factor multiplied to the frame size for estimating the overhead to the pure data.
 #define CACHE_FRAME_FACTOR 1.15f
 
@@ -540,7 +540,8 @@ bool moldyn::VIMDataSource::filenameChanged(param::ParamSlot& slot) {
     this->datahash++;
 
     if (this->file == NULL) {
-        this->file = new vislib::sys::MemmappedFile();
+        //this->file = new vislib::sys::MemmappedFile();
+        this->file = new vislib::sys::File();
     } else {
         this->file->Close();
     }
@@ -548,9 +549,11 @@ bool moldyn::VIMDataSource::filenameChanged(param::ParamSlot& slot) {
 
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+        vislib::sys::SystemMessage err(::GetLastError());
         this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to open VIM-File \"%s\".", vislib::StringA(
-            this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
+            "Unable to open VIM-File \"%s\": %s", vislib::StringA(
+            this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer(),
+            static_cast<const char*>(err));
 
         SAFE_DELETE(this->file);
         this->setFrameCount(1);
