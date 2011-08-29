@@ -6,12 +6,19 @@
  */
 
 #include "stdafx.h"
+#define USE_MATH_DEFINES
 #include "SphereOutlineRenderer.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
 #include "view/CallRender3D.h"
 #include <GL/gl.h>
 #include "vislib/assert.h"
+#include "vislib/mathfunctions.h"
+#include "vislib/Vector.h"
+#include "vislib/Quaternion.h"
+#include "vislib/ShallowPoint.h"
+#include "vislib/ShallowVector.h"
+#include <cmath>
 
 using namespace megamol::core;
 
@@ -129,104 +136,93 @@ bool moldyn::SphereOutlineRenderer::Render(Call& call) {
         return false;
     }
 
-    glScalef(scaling, scaling, scaling);
+    glScalef(scaling, scaling, scaling); // ... unklar ob problematisch, aber eigentlich nicht
 
-    // TODO: Implement
+    vislib::math::Vector<float, 3> &camDir = cr->GetCameraParameters()->EyeDirection();
+    vislib::math::Vector<float, 3> &camX = cr->GetCameraParameters()->EyeRightVector();
+    vislib::math::Vector<float, 3> &camY = cr->GetCameraParameters()->EyeUpVector();
 
-/*
+    const unsigned int segCnt = 100;
+    const int angleOffsetSteps = 3;
+    const float angleOffsetStepSize = 0.125f;
+    const float colR = 1.0f;
+    const float colG = 1.0f;
+    const float colB = 1.0f;
+
+    vislib::math::Vector<float, 3> *vec = new vislib::math::Vector<float, 3>[segCnt];
+    float *ang = new float[segCnt];
+    for (unsigned int i = 0; i < segCnt; i++) {
+        float a = static_cast<float>(M_PI) * static_cast<float>(2 * i) / static_cast<float>(segCnt);
+
+        vec[i] = camX * cos(a) + camY * sin(a);
+        vec[i].Normalise();
+        ang[i] = static_cast<float>(M_PI) * 0.5f;
+    }
+
+    ::glDisable(GL_LIGHTING);
+    ::glEnable(GL_BLEND);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    ::glDisable(GL_LINE_SMOOTH);
+    ::glLineWidth(1.0f);
+
+    vislib::math::Vector<float, 3> v;
+
     if (c2 != NULL) {
-        unsigned int cial = glGetAttribLocationARB(this->sphereShader, "colIdx");
-
         for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
             MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
-            float minC = 0.0f, maxC = 0.0f;
-            unsigned int colTabSize = 0;
+            float rad = parts.GetGlobalRadius();
+            bool loadRad = parts.GetVertexDataType() == MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR;
+            const float *posData = static_cast<const float*>(parts.GetVertexData());
+            if ((parts.GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
+                && (parts.GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ)) continue;
+            unsigned int stride = vislib::math::Max<unsigned int>((loadRad ? 4 : 3) * sizeof(float), parts.GetVertexDataStride());
+            // colour ignored (for now)
+            for (UINT64 j = 0; j < parts.GetCount(); j++) {
+                vislib::math::ShallowVector<float, 3> pos(const_cast<float*>(posData));
+                if (loadRad) rad = posData[3];
+                vislib::math::Point<float, 3> posP(const_cast<float*>(posData));
+                posP.Set(posP.X() * scaling, posP.Y() * scaling, posP.Z() * scaling);
 
-            // colour
-            switch (parts.GetColourDataType()) {
-                case MultiParticleDataCall::Particles::COLDATA_NONE:
-                    glColor3ubv(parts.GetGlobalColour());
-                    break;
-                case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-                    glEnableClientState(GL_COLOR_ARRAY);
-                    glColorPointer(3, GL_UNSIGNED_BYTE,
-                        parts.GetColourDataStride(), parts.GetColourData());
-                    break;
-                case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-                    glEnableClientState(GL_COLOR_ARRAY);
-                    glColorPointer(4, GL_UNSIGNED_BYTE,
-                        parts.GetColourDataStride(), parts.GetColourData());
-                    break;
-                case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-                    glEnableClientState(GL_COLOR_ARRAY);
-                    glColorPointer(3, GL_FLOAT,
-                        parts.GetColourDataStride(), parts.GetColourData());
-                    break;
-                case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-                    glEnableClientState(GL_COLOR_ARRAY);
-                    glColorPointer(4, GL_FLOAT,
-                        parts.GetColourDataStride(), parts.GetColourData());
-                    break;
-                case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-                    glEnableVertexAttribArrayARB(cial);
-                    glVertexAttribPointerARB(cial, 1, GL_FLOAT, GL_FALSE,
-                        parts.GetColourDataStride(), parts.GetColourData());
+                // Calculate outline angles
+                float d = cr->GetCameraParameters()->EyePosition().Distance(posP);
+                float p = (rad * rad * scaling * scaling) / d;
+                float q = d - p;
+                float h = ::sqrt(p * q);
+                float a = ::atan2(h, -p);
+                for (unsigned int s = 0; s < segCnt; s++) {
+                    ang[s] = a;
+                }
 
-                    glEnable(GL_TEXTURE_1D);
+                // Draw "sphere" outline
+                for (int angOffStep = -angleOffsetSteps; angOffStep <= angleOffsetSteps; angOffStep++) {
+                    float angOff = static_cast<float>(angOffStep) * angleOffsetStepSize;
 
-                    view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-                    if ((cgtf != NULL) && ((*cgtf)())) {
-                        glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-                        colTabSize = cgtf->TextureSize();
-                    } else {
-                        glBindTexture(GL_TEXTURE_1D, this->greyTF);
-                        colTabSize = 2;
+                    float colA = 1.0f;
+                    if (angleOffsetSteps > 0) {
+                        colA -= static_cast<float>(vislib::math::Abs(angOffStep)) / static_cast<float>(angleOffsetSteps * 2);
+                        if (angOffStep < 0) colA *= 0.5f;
                     }
 
-                    glUniform1iARB(this->sphereShader.ParameterLocation("colTab"), 0);
-                    minC = parts.GetMinColourIndexValue();
-                    maxC = parts.GetMaxColourIndexValue();
-                    glColor3ub(127, 127, 127);
-                } break;
-                default:
-                    glColor3ub(127, 127, 127);
-                    break;
+                    ::glColor4f(colR, colG, colB, colA);
+                    ::glBegin(GL_LINE_LOOP);
+                    for (unsigned int s = 0; s < segCnt; s++) {
+                        float sa = sin(ang[s] + angOff);
+                        float ca = cos(ang[s] + angOff);
+                        v = pos + (vec[s] * sa + camDir * ca) * rad;
+
+                        ::glVertex3fv(v.PeekComponents());
+                    }
+                    ::glEnd();
+                }
+
+
+                posData = reinterpret_cast<const float*>(reinterpret_cast<const char*>(posData) + stride);
             }
-
-            // radius and position
-            switch (parts.GetVertexDataType()) {
-                case MultiParticleDataCall::Particles::VERTDATA_NONE:
-                    continue;
-                case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-                    glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4fARB(this->sphereShader.ParameterLocation("inConsts1"),
-                        parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
-                    glVertexPointer(3, GL_FLOAT,
-                        parts.GetVertexDataStride(), parts.GetVertexData());
-                    break;
-                case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-                    glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4fARB(this->sphereShader.ParameterLocation("inConsts1"),
-                        -1.0f, minC, maxC, float(colTabSize));
-                    glVertexPointer(4, GL_FLOAT,
-                        parts.GetVertexDataStride(), parts.GetVertexData());
-                    break;
-                default:
-                    continue;
-            }
-
-            glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
-
-            glDisableClientState(GL_COLOR_ARRAY);
-            glDisableClientState(GL_VERTEX_ARRAY);
-            glDisableVertexAttribArrayARB(cial);
-            glDisable(GL_TEXTURE_1D);
         }
-
-        c2->Unlock();
-
     }
-*/
+
+    delete[] ang;
+    delete[] vec;
 
     return true;
 }
