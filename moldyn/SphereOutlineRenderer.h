@@ -109,6 +109,18 @@ namespace moldyn {
         /** The call for data */
         CallerSlot getDataSlot;
 
+        /** The base colour for the sphere outline */
+        param::ParamSlot colourSlot;
+
+        /** The number of line segments to construct the circle */
+        param::ParamSlot circleSegSlot;
+
+        /** The (half) number of additional outlines */
+        param::ParamSlot multiOutlineCntSlot;
+
+        /** The distance of the additional outlines as angles in radians */
+        param::ParamSlot multiOutLineDistSlot;
+
     };
 
 } /* end namespace moldyn */

@@ -10,6 +10,9 @@
 #include "SphereOutlineRenderer.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
+#include "param/StringParam.h"
+#include "param/IntParam.h"
+#include "param/FloatParam.h"
 #include "view/CallRender3D.h"
 #include <GL/gl.h>
 #include "vislib/assert.h"
@@ -18,6 +21,7 @@
 #include "vislib/Quaternion.h"
 #include "vislib/ShallowPoint.h"
 #include "vislib/ShallowVector.h"
+#include "vislib/ColourParser.h"
 #include <cmath>
 
 using namespace megamol::core;
@@ -27,10 +31,26 @@ using namespace megamol::core;
  * moldyn::SphereOutlineRenderer::SphereOutlineRenderer
  */
 moldyn::SphereOutlineRenderer::SphereOutlineRenderer(void) : Renderer3DModule(),
-        getDataSlot("getdata", "Connects to the data source") {
+        getDataSlot("getdata", "Connects to the data source"),
+        colourSlot("col", "The base colour for the sphere outline"),
+        circleSegSlot("seg", "The number of line segments to construct the circle"),
+        multiOutlineCntSlot("multiOutline::count", "The (half) number of additional outlines"),
+        multiOutLineDistSlot("multiOutline::dist", "The distance of the additional outlines as angles in radians") {
 
     this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
+
+    this->colourSlot << new param::StringParam("white");
+    this->MakeSlotAvailable(&this->colourSlot);
+
+    this->circleSegSlot << new param::IntParam(100, 8);
+    this->MakeSlotAvailable(&this->circleSegSlot);
+
+    this->multiOutlineCntSlot << new param::IntParam(3, 0);
+    this->MakeSlotAvailable(&this->multiOutlineCntSlot);
+
+    this->multiOutLineDistSlot << new param::FloatParam(0.1f, 0.0f);
+    this->MakeSlotAvailable(&this->multiOutLineDistSlot);
 
 }
 
@@ -47,9 +67,7 @@ moldyn::SphereOutlineRenderer::~SphereOutlineRenderer(void) {
  * moldyn::SphereOutlineRenderer::create
  */
 bool moldyn::SphereOutlineRenderer::create(void) {
-
-    // TODO: Implement
-
+    // intentionally empty
     return true;
 }
 
@@ -103,9 +121,7 @@ bool moldyn::SphereOutlineRenderer::GetExtents(Call& call) {
  * moldyn::SphereOutlineRenderer::release
  */
 void moldyn::SphereOutlineRenderer::release(void) {
-
-    // TODO: Implement
-
+    // intentionally empty
 }
 
 
@@ -142,12 +158,18 @@ bool moldyn::SphereOutlineRenderer::Render(Call& call) {
     vislib::math::Vector<float, 3> &camX = cr->GetCameraParameters()->EyeRightVector();
     vislib::math::Vector<float, 3> &camY = cr->GetCameraParameters()->EyeUpVector();
 
-    const unsigned int segCnt = 100;
-    const int angleOffsetSteps = 3;
-    const float angleOffsetStepSize = 0.125f;
-    const float colR = 1.0f;
-    const float colG = 1.0f;
-    const float colB = 1.0f;
+    const unsigned int segCnt = this->circleSegSlot.Param<param::IntParam>()->Value();
+    const int angleOffsetSteps = this->multiOutlineCntSlot.Param<param::IntParam>()->Value();
+    const float angleOffsetStepSize = this->multiOutLineDistSlot.Param<param::FloatParam>()->Value();
+    float colR = 1.0f;
+    float colG = 1.0f;
+    float colB = 1.0f;
+    try {
+        vislib::graphics::ColourParser::FromString(
+            T2A(this->colourSlot.Param<param::StringParam>()->Value()),
+            colR, colG, colB);
+    } catch(...) {
+    }
 
     vislib::math::Vector<float, 3> *vec = new vislib::math::Vector<float, 3>[segCnt];
     float *ang = new float[segCnt];
