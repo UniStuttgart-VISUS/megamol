@@ -295,6 +295,8 @@ namespace view {
     template<unsigned int T>
     bool MuxRenderer3D<T>::Render(Call& call) {
         CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
+        vislib::SmartPtr<vislib::graphics::CameraParameters> camParams
+            = new vislib::graphics::CameraParamsStore();
         if (cr3d == NULL) return false;
 
         if (this->frameCnt == 0) {
@@ -325,6 +327,18 @@ namespace view {
             oc->SetTime(cr3d->Time()
                 * (float)(oc->TimeFramesCount() - 1)
                 / (float)(vislib::math::Max(1U, this->frameCnt - 1)));
+            camParams->CopyFrom(cr3d->GetCameraParameters());
+            oc->SetCameraParameters(camParams);
+            vislib::math::Point<float, 3> p = camParams->Position();
+            vislib::math::Point<float, 3> l = camParams->LookAt();
+            p.Set((p.X() / this->scale - tx) / sx,
+                  (p.Y() / this->scale - ty) / sy,
+                  (p.Z() / this->scale - tz) / sz);
+            l.Set((l.X() / this->scale - tx) / sx,
+                  (l.Y() / this->scale - ty) / sy,
+                  (l.Z() / this->scale - tz) / sz);
+
+            camParams->SetView(p, l, camParams->Up());
 
             ::glMatrixMode(GL_MODELVIEW);
             ::glPushMatrix();
