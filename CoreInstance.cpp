@@ -564,6 +564,7 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
             return NULL;
         }
     } else {
+        // thomasbm: das hier erzeugt memory leaks! Wem soll das neue 'ModuleNamespace' gehoeren bzw. wer ist fuers deleten zustaendig?
         preViewInst = new ModuleNamespace(request.Name());
         this->namespaceRoot.AddChild(preViewInst);
     }
@@ -2065,6 +2066,7 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
         "Plugin \"%s\" loaded: %d Modules, %d Calls registered\n",
         vislib::StringA(filename).PeekBuffer(), modCntVal, callCntVal);
 
+    this->plugins.Add(plugin);
 }
 
 
