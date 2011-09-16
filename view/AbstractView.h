@@ -78,7 +78,7 @@ namespace view {
          */
         virtual float DefaultTime(double instTime) const = 0; /* {
             return 0.0f;
-        }
+        }*/
 
         /**
          * Answers whether the given parameter is relevant for this view.

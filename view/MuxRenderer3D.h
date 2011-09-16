@@ -17,6 +17,8 @@
 #include "param/BoolParam.h"
 #include "param/ParamSlot.h"
 #include "Renderer3DModule.h"
+#include "vislib/CameraParameters.h"
+#include "vislib/CameraParamsStore.h"
 #include "vislib/Cuboid.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/memutils.h"
