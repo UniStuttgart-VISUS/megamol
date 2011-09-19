@@ -154,9 +154,9 @@ bool moldyn::SphereOutlineRenderer::Render(Call& call) {
 
     glScalef(scaling, scaling, scaling); // ... unklar ob problematisch, aber eigentlich nicht
 
-    vislib::math::Vector<float, 3> &camDir = cr->GetCameraParameters()->EyeDirection();
-    vislib::math::Vector<float, 3> &camX = cr->GetCameraParameters()->EyeRightVector();
-    vislib::math::Vector<float, 3> &camY = cr->GetCameraParameters()->EyeUpVector();
+    vislib::math::Vector<float, 3> camDir = cr->GetCameraParameters()->EyeDirection();
+    vislib::math::Vector<float, 3> camX = cr->GetCameraParameters()->EyeRightVector();
+    vislib::math::Vector<float, 3> camY = cr->GetCameraParameters()->EyeUpVector();
 
     const unsigned int segCnt = this->circleSegSlot.Param<param::IntParam>()->Value();
     const int angleOffsetSteps = this->multiOutlineCntSlot.Param<param::IntParam>()->Value();
