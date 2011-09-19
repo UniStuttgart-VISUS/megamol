@@ -11,6 +11,7 @@
 #include "param/StringParam.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
+#include "vislib/error.h"
 #include "vislib/Log.h"
 #include "vislib/Path.h"
 #include "vislib/PtrArray.h"
