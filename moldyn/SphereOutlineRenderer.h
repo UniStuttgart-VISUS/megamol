@@ -112,7 +112,10 @@ namespace moldyn {
         /** The base colour for the sphere outline */
         param::ParamSlot colourSlot;
 
-        /** The number of line segments to construct the circle */
+        /** The representation type */
+        param::ParamSlot repSlot;
+
+        /** The number of line segments to construct the circle/sphere */
         param::ParamSlot circleSegSlot;
 
         /** The (half) number of additional outlines */
@@ -120,6 +123,9 @@ namespace moldyn {
 
         /** The distance of the additional outlines as angles in radians */
         param::ParamSlot multiOutLineDistSlot;
+
+        /** The sphere quadric */
+        void *sphereQuadric;
 
     };
 
