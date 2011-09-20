@@ -14,14 +14,14 @@ include ExtLibs.mk
 TargetName := TriSoup
 # subdirectories below $(InputRootDir)
 InputRootDir := $(InputDir)
-InputDirs := .
+InputDirs := . volumetrics
 IncludeDir := $(IncludeDir) $(mmcorepath)
 VISlibs := gl graphics sys math base
 
 
 # Additional compiler flags
 CompilerFlags := $(CompilerFlags) -fPIC
-ExcludeFromBuild += ./dllmain.cpp
+ExcludeFromBuild += ./dllmain.cpp volumetrics/Voxelizer.cpp
 
 
 # Libraries

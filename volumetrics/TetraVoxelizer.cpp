@@ -6,6 +6,8 @@
 #include "MarchingCubeTables.h"
 #include "vislib/Vector.h"
 #include "VoluMetricJob.h"
+#include <climits>
+#include <cfloat>
 
 using namespace megamol;
 using namespace megamol::trisoup;

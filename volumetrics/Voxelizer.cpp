@@ -4,6 +4,8 @@
 #include "vislib/Log.h"
 #include "vislib/ShallowPoint.h"
 #include "MarchingCubeTables.h"
+#include <climits>
+#include <cfloat>
 
 using namespace megamol;
 using namespace megamol::trisoup;

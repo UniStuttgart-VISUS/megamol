@@ -15,12 +15,15 @@
 #include "vislib/ShallowShallowTriangle.h"
 #include "vislib/Vector.h"
 #include "vislib/NamedColours.h"
-#include "vislib/threadpool.h"
+#include "vislib/Thread.h"
+#include "vislib/ThreadPool.h"
 #include "MarchingCubeTables.h"
 #include "TetraVoxelizer.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/ConsoleProgressBar.h"
 #include "vislib/SystemInformation.h"
+#include <climits>
+#include <cfloat>
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -354,7 +357,7 @@ DWORD VoluMetricJob::Run(void *userData) {
         pool.Terminate(true);
 
         while(! this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->Value()) {
-            Sleep(500);
+            vislib::sys::Thread::Sleep(500);
         }
         if (this->resetContinueSlot.Param<megamol::core::param::BoolParam>()->Value()) {
             this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->SetValue(false);
@@ -797,7 +800,7 @@ bool hitTriangleMesh(const vislib::Array<VoxelizerFloat>& mesh, const vislib::ma
 /**
  * TODO: sinnvolle erklaerung
  */
-bool VoluMetricJob::testFullEnclosing(int enclosingIdx, int enclosedIdx, vislib::Array<vislib::Array<Surface*>>& globaIdSurfaces) {
+bool VoluMetricJob::testFullEnclosing(int enclosingIdx, int enclosedIdx, vislib::Array<vislib::Array<Surface*> >& globaIdSurfaces) {
     // find a random enlosed surface and ise its first triangle as starting point
     Surface *enclosedSeed = 0;
 /*  for(int sjdIdx = 0; sjdIdx < SubJobDataList.Count(); sjdIdx++) {
@@ -889,7 +892,7 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
     // thomasbm: testing ...
 #ifndef PARALLEL_BBOX_COLLECT
     globalIdBoxes.SetCount(uniqueIDs.Count());
-    vislib::Array<vislib::Array<Surface*>> globaIdSurfaces/*(uniqueIDs.Count(), vislib::Array<Surface*>(10)?)*/;
+    vislib::Array<vislib::Array<Surface*> > globaIdSurfaces/*(uniqueIDs.Count(), vislib::Array<Surface*>(10)?)*/;
     globaIdSurfaces.SetCount(uniqueIDs.Count());
     for(unsigned int sjdIdx = 0; sjdIdx < SubJobDataList.Count(); sjdIdx++) {
         SubJobData *subJob = SubJobDataList[sjdIdx];
