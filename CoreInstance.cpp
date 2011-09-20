@@ -1940,10 +1940,11 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
 
     // load module
     if (!plugin->Load(filename)) {
-        delete plugin;
         this->log.WriteMsg(loadFailedLevel,
-            "Unable to load Plugin \"%s\": Cannot load plugin\n",
-            vislib::StringA(filename).PeekBuffer());
+            "Unable to load Plugin \"%s\": Cannot load plugin \"%s\"\n",
+            vislib::StringA(filename).PeekBuffer(),
+            plugin->LastLoadErrorMessage().PeekBuffer());
+        delete plugin;
         return;
     }
 
