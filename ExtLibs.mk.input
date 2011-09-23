@@ -21,3 +21,9 @@ ifeq (%withNETCDF%$1$0$, 1)
 	DebugLinkerFlags += -L$(netcdfpath)/lib$(BITS)d 
 	ReleaseLinkerFlags += -L$(netcdfpath)/lib$(BITS)
 endif
+
+ifeq (%withCUDA%$1$0$, 1)
+	CompilerFlags += -DWITH_CUDA
+	CudaInstallPath   := %cudaPath%
+	CudaSdkPath       := %cudaSdkPath%
+endif
