@@ -40,21 +40,16 @@ C_D_OBS          := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.c, %.o,
 C_DEPS           := $(addprefix $(IntDir)/$(CDebugDir)/, $(patsubst %.c, %.d, $(C_SRCS)))\
                     $(addprefix $(IntDir)/$(CReleaseDir)/, $(patsubst %.c, %.d, $(C_SRCS)))
 
-
 # cuda
-CudaInstallPath   := /opt/cuda
-CudaSdkPath       := /opt/cuda/sdk/
 NVCC              := $(CudaInstallPath)/bin/nvcc
+LinkerFlags       := $(LinkerFlags) -L$(CudaInstallPath)/lib64 -L$(CudaSdkPath)/C/common/lib/linux    
 CudaReleaseDir    := $(ReleaseDir)/Cuda
 CudaDebugDir      := $(DebugDir)/Cuda
-
 # note: not the dependencies (i.e. particle_kernel.cu)!
 CU_SOURCES        := particleSystem.cu filter_cuda.cu
-
 CU_R_OBS          := $(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
 CU_D_OBS          := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
-LIBS              := $(LIBS) cudart cudpp_x86_64
-LinkerFlags       := $(LinkerFlags) -L$(CudaInstallPath)/lib64 -L$(CudaSdkPath)/C/common/lib/linux
+LIBS              := $(LIBS) cudart
 
 
 # Collect Files

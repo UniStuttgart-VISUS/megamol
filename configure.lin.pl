@@ -76,7 +76,7 @@ $a = PathParameter->new();
     $a->dependencyDisabledValue("");
     push @pps, $a;
 $a = PathParameter->new();
-    $a->id("cuda");
+    $a->id("cudasdk");
     $a->description("Path to the NVIDIA GPU Computing SDK directory");
     $a->placeholder("%cudaSdkPath%");
     $a->autoDetect(0);
