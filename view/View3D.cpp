@@ -353,8 +353,9 @@ void view::View3D::Render(float time, double instTime) {
         if (!(cr3d->AccessBoundingBoxes() == this->bboxs)) {
             this->bboxs = cr3d->AccessBoundingBoxes();
 
+            this->ResetView(); // thomasbm: always reset view when bbox has changed ... (?!)
             if (this->firstImg) {
-                this->ResetView();
+                //this->ResetView();
                 this->firstImg = false;
                 if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
                     this->onRestoreCamera(this->restoreCameraSettingsSlot);
