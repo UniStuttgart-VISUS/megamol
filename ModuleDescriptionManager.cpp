@@ -42,6 +42,7 @@
 #include "moldyn/MMPGDWriter.h"
 #include "moldyn/MMPLDDataSource.h"
 #include "moldyn/MMPLDWriter.h"
+#include "moldyn/MMSPDDataSource.h"
 #include "moldyn/OracleSphereRenderer.h"
 #include "moldyn/SIFFDataSource.h"
 #include "moldyn/SimpleSphereRenderer.h"
@@ -129,6 +130,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<moldyn::MMPGDWriter>();
         instance->registerAutoDescription<moldyn::MMPLDDataSource>();
         instance->registerAutoDescription<moldyn::MMPLDWriter>();
+        instance->registerAutoDescription<moldyn::MMSPDDataSource>();
         instance->registerAutoDescription<moldyn::SIFFDataSource>();
         instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
         instance->registerAutoDescription<moldyn::SphereOutlineRenderer>();
