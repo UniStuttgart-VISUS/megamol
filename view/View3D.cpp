@@ -350,7 +350,12 @@ void view::View3D::Render(float time, double instTime) {
     }
     if (cr3d != NULL) {
         (*cr3d)(1); // GetExtents
-        if (!(cr3d->AccessBoundingBoxes() == this->bboxs)) {
+        if (this->firstImg || (!(cr3d->AccessBoundingBoxes() == this->bboxs)
+            && !(!cr3d->AccessBoundingBoxes().IsAnyValid()
+                && !this->bboxs.IsObjectSpaceBBoxValid() 
+                && !this->bboxs.IsObjectSpaceClipBoxValid() 
+                && this->bboxs.IsWorldSpaceBBoxValid() 
+                && !this->bboxs.IsWorldSpaceClipBoxValid()))) {
             this->bboxs = cr3d->AccessBoundingBoxes();
 
             this->ResetView(); // thomasbm: always reset view when bbox has changed ... (?!)

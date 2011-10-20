@@ -93,6 +93,17 @@ namespace core {
         }
 
         /**
+         * Answer whether any of the boxes is valid
+         *
+         * @return True if any of the boxes is valid
+         */
+        inline bool IsAnyValid(void) const {
+            return this->clipBoxValid || this->osBBoxValid
+                || this->osClipBoxValid || this->wsBBoxValid
+                || this->wsClipBoxValid;
+        }
+
+        /**
          * Answer whether or not the object space bounding box is valid.
          *
          * @return True if the object space bounding box is valid
