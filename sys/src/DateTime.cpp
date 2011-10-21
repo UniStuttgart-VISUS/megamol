@@ -527,7 +527,8 @@ vislib::sys::DateTime::operator struct tm(void) const {
  * vislib::sys::DateTime::operator time_t
  */
 vislib::sys::DateTime::operator time_t(void) const {
-    return ::mktime(&static_cast<struct tm>(*this));
+    struct tm tmp = static_cast<struct tm>(*this);
+    return ::mktime(&tmp);
 }
 
 
