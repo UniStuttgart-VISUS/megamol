@@ -1,7 +1,7 @@
 /*
  * MMSPDDataSource.cpp
  *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2011 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -11,20 +11,21 @@
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
 //#include "vislib/Log.h"
-//#include "vislib/MemmappedFile.h"
+#include "vislib/File.h"
 //#include "vislib/String.h"
 //#include "vislib/SystemInformation.h"
+#include "vislib/mathfunctions.h"
 
 using namespace megamol::core;
 
 
-///* defines for the frame cache size */
-//// minimum number of frames in the cache (2 for interpolation; 1 for loading)
-//#define CACHE_SIZE_MIN 3
-//// maximum number of frames in the cache (just a nice number)
-//#define CACHE_SIZE_MAX 1000
-//// factor multiplied to the frame size for estimating the overhead to the pure data.
-//#define CACHE_FRAME_FACTOR 1.15f
+/* defines for the frame cache size */
+// minimum number of frames in the cache (2 for interpolation; 1 for loading)
+#define CACHE_SIZE_MIN 3
+// maximum number of frames in the cache (just a nice number)
+#define CACHE_SIZE_MAX 1000
+// factor multiplied to the frame size for estimating the overhead to the pure data.
+#define CACHE_FRAME_FACTOR 1.2f
 
 /*****************************************************************************/
 
@@ -32,7 +33,7 @@ using namespace megamol::core;
  * moldyn::MMSPDDataSource::Frame::Frame
  */
 moldyn::MMSPDDataSource::Frame::Frame(view::AnimDataModule& owner)
-        : view::AnimDataModule::Frame(owner)/*, dat()*/ {
+        : moldyn::MMSPDFrameData(), view::AnimDataModule::Frame(owner) {
     // intentionally empty
 }
 
@@ -41,10 +42,10 @@ moldyn::MMSPDDataSource::Frame::Frame(view::AnimDataModule& owner)
  * moldyn::MMSPDDataSource::Frame::~Frame
  */
 moldyn::MMSPDDataSource::Frame::~Frame() {
-//    this->dat.EnforceSize(0);
+    // intentionally empty
 }
 
-//
+
 ///*
 // * moldyn::MMPLDDataSource::Frame::LoadFrame
 // */
@@ -141,7 +142,7 @@ moldyn::MMSPDDataSource::Frame::~Frame() {
 moldyn::MMSPDDataSource::MMSPDDataSource(void) : view::AnimDataModule(),
         filename("filename", "The path to the MMSPD file to load."),
         getData("getdata", "Slot to request data from this data source."),
-        /*file(NULL), frameIdx(NULL), */bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
+        dataHeader(), file(NULL), frameIdx(NULL),
         clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f) {
 
     this->filename.SetParameter(new param::FilePathParam(""));
@@ -190,13 +191,13 @@ void moldyn::MMSPDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
     using vislib::sys::Log;
     Frame *f = dynamic_cast<Frame*>(frame);
     if (f == NULL) return;
-    //if (this->file == NULL) {
-    //    f->Clear();
-    //    return;
-    //}
+    if (this->file == NULL) {
+        //f->Clear();
+        return;
+    }
     //printf("Requesting frame %u of %u frames\n", idx, this->FrameCount());
-    //ASSERT(idx < this->FrameCount());
-    //this->file->Seek(this->frameIdx[idx]);
+    ASSERT(idx < this->FrameCount());
+    this->file->Seek(this->frameIdx[idx]);
     //if (!f->LoadFrame(this->file, idx, this->frameIdx[idx + 1] - this->frameIdx[idx])) {
     //    // failed
     //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from MMPLD file\n", idx);
@@ -209,13 +210,13 @@ void moldyn::MMSPDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
  */
 void moldyn::MMSPDDataSource::release(void) {
     this->resetFrameCache();
-    //if (this->file != NULL) {
-    //    vislib::sys::File *f = this->file;
-    //    this->file = NULL;
-    //    f->Close();
-    //    delete f;
-    //}
-    //ARY_SAFE_DELETE(this->frameIdx);
+    if (this->file != NULL) {
+        vislib::sys::File *f = this->file;
+        this->file = NULL;
+        f->Close();
+        delete f;
+    }
+    ARY_SAFE_DELETE(this->frameIdx);
 }
 
 
@@ -227,18 +228,20 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
     using vislib::sys::Log;
     using vislib::sys::File;
     this->resetFrameCache();
-    this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-    this->clipbox = this->bbox;
-/*
+    this->dataHeader.SetParticleCount(0);
+    this->dataHeader.SetTimeCount(1);
+    this->dataHeader.BoundingBox().Set(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0);
+    this->clipbox = this->dataHeader.GetBoundingBox();
+
     if (this->file == NULL) {
-        this->file = new vislib::sys::MemmappedFile();
+        this->file = new vislib::sys::File();
     } else {
         this->file->Close();
     }
     ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
 
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        this->GetCoreInstance()->Log().WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".", vislib::StringA(
+        this->GetCoreInstance()->Log().WriteMsg(Log::LEVEL_ERROR, "Unable to open MMSPD-File \"%s\".", vislib::StringA(
             this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
 
         SAFE_DELETE(this->file);
@@ -252,12 +255,39 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
         SAFE_DELETE(this->file); \
         this->setFrameCount(1); \
         this->initFrameCache(1); \
-        this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f); \
-        this->clipbox = this->bbox; \
+        this->dataHeader.SetParticleCount(0); \
+        this->dataHeader.SetTimeCount(1); \
+        this->dataHeader.BoundingBox().Set(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0); \
+        this->clipbox = this->dataHeader.GetBoundingBox(); \
         return true;
 #define _ASSERT_READFILE(BUFFER, BUFFERSIZE) if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
-        _ERROR_OUT("Unable to read MMPLD file header"); \
+        _ERROR_OUT("Unable to read MMSPD file: seems truncated"); \
     }
+
+    // reading format marker
+    BYTE headerID[9];
+    _ASSERT_READFILE(headerID, 9);
+    bool jmpBk, text, unicode;
+    if ((text = (::memcmp(headerID, "MMSPDb", 6) != 0))
+            && (unicode = (::memcmp(headerID, "MMSPDa", 6) != 0))
+            && (::memcmp(headerID, "MMSPDu", 6) != 0)
+            && (jmpBk = (::memcmp(headerID, "\xEF\xBB\xBFMMSPDu", 9) != 0))) {
+        _ERROR_OUT("MMSPD format marker not found");
+    }
+    if (jmpBk) {
+        this->file->Seek(-3, vislib::sys::File::CURRENT);
+    }
+    // TODO: Version number
+
+    // reading header line
+
+    // reading particle types
+
+    // reading frames
+    //  index generation and size estimation
+
+
+/*
 
     char magicid[6];
     _ASSERT_READFILE(magicid, 6);
@@ -312,9 +342,10 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
 
     this->setFrameCount(frmCnt);
     this->initFrameCache(cacheSize);
+    */
 
 #undef _ASSERT_READFILE
-#undef _ERROR_OUT*/
+#undef _ERROR_OUT
 
     return true;
 }
@@ -347,13 +378,14 @@ bool moldyn::MMSPDDataSource::getDataCallback(Call& caller) {
 bool moldyn::MMSPDDataSource::getExtentCallback(Call& caller) {
     MultiParticleDataCall *c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
 
-    //if (c2 != NULL) {
-    //    c2->SetFrameCount(this->FrameCount());
-    //    c2->AccessBoundingBoxes().Clear();
-    //    c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-    //    c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->clipbox);
-    //    return true;
-    //}
+    if (c2 != NULL) {
+        c2->SetFrameCount(vislib::math::Max(1u, this->dataHeader.GetTimeCount()));
+        c2->AccessBoundingBoxes().Clear();
+        c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->dataHeader.GetBoundingBox());
+        c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->clipbox);
+        c2->SetUnlocker(NULL);
+        return true;
+    }
 
     return false;
 }

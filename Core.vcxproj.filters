@@ -663,6 +663,12 @@
     <ClCompile Include="moldyn\MMSPDDataSource.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="moldyn\MMSPDHeader.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="moldyn\MMSPDFrameData.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1194,6 +1200,12 @@
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="moldyn\MMSPDDataSource.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\MMSPDHeader.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\MMSPDFrameData.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

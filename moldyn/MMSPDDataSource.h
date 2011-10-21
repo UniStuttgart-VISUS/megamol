@@ -1,7 +1,7 @@
 /*
  * MMSPDDataSource.h
  *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2011 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -16,9 +16,11 @@
 #include "CalleeSlot.h"
 #include "moldyn/MultiParticleDataCall.h"
 #include "vislib/Cuboid.h"
-//#include "vislib/File.h"
-//#include "vislib/RawStorage.h"
-//#include "vislib/types.h"
+#include "moldyn/MMSPDFrameData.h"
+#include "moldyn/MMSPDHeader.h"
+#include "vislib/File.h"
+#include "vislib/RawStorage.h"
+#include "vislib/types.h"
 
 
 namespace megamol {
@@ -102,7 +104,7 @@ namespace moldyn {
     private:
 
         /** Nested class of frame data */
-        class Frame : public view::AnimDataModule::Frame {
+        class Frame : public MMSPDFrameData, public view::AnimDataModule::Frame {
         public:
 
             /**
@@ -219,14 +221,14 @@ namespace moldyn {
         /** The slot for requesting data */
         CalleeSlot getData;
 
-        ///** The opened data file */
-        //vislib::sys::File *file;
+        /** The data header */
+        MMSPDHeader dataHeader;
 
-        ///** The frame index table */
-        //UINT64 *frameIdx;
+        /** The opened data file */
+        vislib::sys::File *file;
 
-        /** The data set bounding box */
-        vislib::math::Cuboid<float> bbox;
+        /** The frame index table */
+        UINT64 *frameIdx;
 
         /** The data set clipping box */
         vislib::math::Cuboid<float> clipbox;
