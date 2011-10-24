@@ -514,6 +514,9 @@ namespace view {
         /** Shows the view cube helper */
         param::ParamSlot showViewCubeSlot;
 
+        /** whether to reset the view when the object bounding box changes */
+        param::ParamSlot resetViewOnBBoxChangeSlot;
+
         /** The time control */
         TimeControl timeCtrl;
 

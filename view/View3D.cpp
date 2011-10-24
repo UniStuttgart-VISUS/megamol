@@ -85,6 +85,7 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         bboxCol(192, 192, 192, 255),
         bboxColSlot("bboxCol", "Sets the colour for the bounding box"),
         showViewCubeSlot("viewcube::show", "Shows the view cube helper"),
+        resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change"),
         timeCtrl() {
     using vislib::sys::KeyCode;
 
@@ -228,6 +229,9 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
     this->toggleBBoxSlot.SetUpdateCallback(&View3D::onToggleButton);
     this->MakeSlotAvailable(&this->toggleBBoxSlot);
 
+    this->resetViewOnBBoxChangeSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
+
     this->bboxColSlot << new param::StringParam(
         utility::ColourParser::ToString(
             static_cast<float>(this->bboxCol.R()) / 255.0f,
@@ -358,15 +362,14 @@ void view::View3D::Render(float time, double instTime) {
                 && !this->bboxs.IsWorldSpaceClipBoxValid()))) {
             this->bboxs = cr3d->AccessBoundingBoxes();
 
-            this->ResetView(); // thomasbm: always reset view when bbox has changed ... (?!)
             if (this->firstImg) {
-                //this->ResetView();
+                this->ResetView();
                 this->firstImg = false;
                 if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
                     this->onRestoreCamera(this->restoreCameraSettingsSlot);
                 }
-
-            }
+            } else if (resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value())
+                this->ResetView();
         }
 
         this->timeCtrl.SetTimeExtend(cr3d->TimeFramesCount(), cr3d->IsInSituTime());
