@@ -135,6 +135,18 @@ moldyn::MMSPDDataSource::Frame::~Frame() {
 
 /*****************************************************************************/
 
+/*
+ * moldyn::MMSPDDataSource::FileFormatAutoDetect
+ */
+float moldyn::MMSPDDataSource::FileFormatAutoDetect(const unsigned char* data, SIZE_T dataSize) {
+    return (((dataSize >= 6)
+        && ((::memcmp(data, "MMSPDb", 6) == 0)
+            || (::memcmp(data, "MMSPDa", 6) == 0)
+            || (::memcmp(data, "MMSPDu", 6) == 0)))
+        || ((dataSize >= 9)
+        && (::memcmp(data, "\xEF\xBB\xBFMMSPDu", 9) == 0))) ? 1.0f : 0.0f;
+}
+
 
 /*
  * moldyn::MMSPDDataSource::MMSPDDataSource

@@ -130,7 +130,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<moldyn::MMPGDWriter>();
         instance->registerAutoDescription<moldyn::MMPLDDataSource>();
         instance->registerAutoDescription<moldyn::MMPLDWriter>();
-        instance->registerAutoDescription<moldyn::MMSPDDataSource>();
+        instance->registerDescription<LoaderADModuleAutoDescription<moldyn::MMSPDDataSource> >();
         instance->registerAutoDescription<moldyn::SIFFDataSource>();
         instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
         instance->registerAutoDescription<moldyn::SphereOutlineRenderer>();

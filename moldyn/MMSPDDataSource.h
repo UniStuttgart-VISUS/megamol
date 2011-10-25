@@ -62,6 +62,43 @@ namespace moldyn {
             return true;
         }
 
+        /**
+         * Tests if a file can be loaded with this module
+         *
+         * @param data The data to test
+         * @param dataSize The size of the data to test
+         *
+         * @return The loading confidence value
+         */
+        static float FileFormatAutoDetect(const unsigned char* data, SIZE_T dataSize);
+
+        /**
+         * Answer the file name extensions often used
+         *
+         * @return The file name extensions
+         */
+        static const char *FilenameExtensions() {
+            return ".mmspd";
+        }
+
+        /**
+         * Answer the file name slot name
+         *
+         * @return The file name slot name
+         */
+        static const char *FilenameSlotName(void) {
+            return "filename";
+        }
+
+        /**
+         * Answer the file type name (e. g. "Particle Data")
+         *
+         * @return The file type name
+         */
+        static const char *FileTypeName(void) {
+            return "MegaMol Simple Particle Data";
+        }
+
         /** Ctor. */
         MMSPDDataSource(void);
 
