@@ -105,7 +105,7 @@ namespace moldyn {
         /**
          * Class for const particle definition data fields
          */
-        class ConstField : public Field{
+        class ConstField : public Field {
         public:
 
             /** Ctor */

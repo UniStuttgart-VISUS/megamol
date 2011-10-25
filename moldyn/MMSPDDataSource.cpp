@@ -15,6 +15,7 @@
 //#include "vislib/String.h"
 //#include "vislib/SystemInformation.h"
 #include "vislib/mathfunctions.h"
+#include "vislib/VersionNumber.h"
 
 using namespace megamol::core;
 
@@ -154,7 +155,7 @@ float moldyn::MMSPDDataSource::FileFormatAutoDetect(const unsigned char* data, S
 moldyn::MMSPDDataSource::MMSPDDataSource(void) : view::AnimDataModule(),
         filename("filename", "The path to the MMSPD file to load."),
         getData("getdata", "Slot to request data from this data source."),
-        dataHeader(), file(NULL), frameIdx(NULL),
+        dataHeader(), file(NULL), frameIdx(NULL), framePartCnts(NULL),
         clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f) {
 
     this->filename.SetParameter(new param::FilePathParam(""));
@@ -229,6 +230,7 @@ void moldyn::MMSPDDataSource::release(void) {
         delete f;
     }
     ARY_SAFE_DELETE(this->frameIdx);
+    ARY_SAFE_DELETE(this->framePartCnts);
 }
 
 
@@ -243,7 +245,10 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
     this->dataHeader.SetParticleCount(0);
     this->dataHeader.SetTimeCount(1);
     this->dataHeader.BoundingBox().Set(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0);
+    this->dataHeader.Types().Clear();
     this->clipbox = this->dataHeader.GetBoundingBox();
+    ARY_SAFE_DELETE(this->frameIdx);
+    ARY_SAFE_DELETE(this->framePartCnts);
 
     if (this->file == NULL) {
         this->file = new vislib::sys::File();
@@ -263,23 +268,27 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
         return true;
     }
 
-#define _ERROR_OUT(MSG) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
+#define _ERROR_OUT(MSG) { Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
         SAFE_DELETE(this->file); \
         this->setFrameCount(1); \
         this->initFrameCache(1); \
         this->dataHeader.SetParticleCount(0); \
         this->dataHeader.SetTimeCount(1); \
         this->dataHeader.BoundingBox().Set(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0); \
+        this->dataHeader.Types().Clear(); \
         this->clipbox = this->dataHeader.GetBoundingBox(); \
-        return true;
-#define _ASSERT_READFILE(BUFFER, BUFFERSIZE) if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
+        ARY_SAFE_DELETE(this->frameIdx); \
+        ARY_SAFE_DELETE(this->framePartCnts); \
+        return true; }
+#define _ASSERT_READFILE(BUFFER, BUFFERSIZE) { if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
         _ERROR_OUT("Unable to read MMSPD file: seems truncated"); \
-    }
+    } }
+#define _ASSERT_READSTRINGBINARY(STRING) { (STRING).Clear(); while(true) { char c; _ASSERT_READFILE(&c, 1) if (c == 0) break; (STRING).Append(c); } }
 
     // reading format marker
     BYTE headerID[9];
     _ASSERT_READFILE(headerID, 9);
-    bool jmpBk, text, unicode;
+    bool jmpBk, text, unicode, bigEndian;
     if ((text = (::memcmp(headerID, "MMSPDb", 6) != 0))
             && (unicode = (::memcmp(headerID, "MMSPDa", 6) != 0))
             && (::memcmp(headerID, "MMSPDu", 6) != 0)
@@ -289,28 +298,206 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
     if (jmpBk) {
         this->file->Seek(-3, vislib::sys::File::CURRENT);
     }
-    // TODO: Version number
 
-    // reading header line
+    // read format version information
+    vislib::VersionNumber version;
+    if (text) {
+        // the is ultimatively slow, but, it is okey here
+        char c;
+        vislib::StringA verStr;
+        do {
+            _ASSERT_READFILE(&c, 1);
+            verStr.Append(c);
+        } while (c != 0x0A);
+        verStr.TrimSpaces();
+        version.Parse(verStr);
 
-    // reading particle types
+        if (version != vislib::VersionNumber(1, 0)) {
+            vislib::StringA msg;
+            msg.Format("Version %s found. Supporting only version 1.0", version.ToStringA().PeekBuffer());
+            _ERROR_OUT(msg);
+        }
+
+    } else {
+        unsigned char buf[14];
+        _ASSERT_READFILE(&buf, 14);
+        if ((buf[0] != 0x00) || (buf[1] != 0xFF)) {
+            _ERROR_OUT("MMSPD file format marker sequence broken @1");
+        }
+        unsigned int endianessTest;
+        ::memcpy(&endianessTest, &buf[2], 4);
+        if (endianessTest == 0x78563412) { // which is 2018915346u as specified
+            bigEndian = false;
+        } else if (endianessTest == 0x12345678) {
+            bigEndian = true;
+        } else {
+            _ERROR_OUT("MMSPD file format marker sequence broken @2");
+        }
+        unsigned short majorVer, minorVer;
+        if (bigEndian) {
+            vislib::Swap(buf[6], buf[7]);
+            vislib::Swap(buf[8], buf[9]);
+        }
+        ::memcpy(&majorVer, &buf[6], 2);
+        ::memcpy(&minorVer, &buf[8], 2);
+        if ((majorVer != 1) && (minorVer != 0)) {
+            vislib::StringA msg;
+            msg.Format("Version %d.%d found. Supporting only version 1.0", static_cast<int>(majorVer), static_cast<int>(minorVer));
+            _ERROR_OUT(msg);
+        }
+        version.Set(majorVer, minorVer);
+        for (int i = 10; i < 14; i++) {
+            if (buf[i] < 128) {
+                vislib::sys::Log::DefaultLog.WriteWarn("MMSPD file format marker binary guard byte %d illegal", (i - 9));
+            }
+        }
+
+    }
+    // file format marker successfully read
+    // file pointer is a the start of the next line/data block
+
+    // reading header line and particle types definitions
+    if (text) {
+        // reading header line
+        
+    // TODO: Implement
+
+        // reading particle types
+        // Note: This is the only place where 'unicode' is relevant!
+
+    // TODO: Implement
+
+    } else {
+        // reading header line
+        unsigned char hasIDs;
+        double minX, minY, minZ, maxX, maxY, maxZ;
+        UINT32 timeCount;
+        UINT32 typeCount;
+        UINT64 partCount;
+
+        _ASSERT_READFILE(&hasIDs, 1);
+        _ASSERT_READFILE(&minX, 8);
+        _ASSERT_READFILE(&minY, 8);
+        _ASSERT_READFILE(&minZ, 8);
+        _ASSERT_READFILE(&maxX, 8);
+        _ASSERT_READFILE(&maxY, 8);
+        _ASSERT_READFILE(&maxZ, 8);
+        _ASSERT_READFILE(&timeCount, 4);
+        _ASSERT_READFILE(&typeCount, 4);
+        _ASSERT_READFILE(&partCount, 8);
+
+        // now I am confident enough to start setting data
+        this->dataHeader.BoundingBox().Set(minX, minY, minZ, maxX, maxY, maxZ);
+        this->dataHeader.SetHasIDs(hasIDs != 0);
+        this->dataHeader.SetParticleCount(partCount);
+        this->dataHeader.SetTimeCount(timeCount);
+        this->dataHeader.Types().SetCount(typeCount);
+
+        // reading particle types
+        for (UINT32 typeIdx = 0; typeIdx < typeCount; typeIdx++) {
+            MMSPDHeader::TypeDefinition &type = this->dataHeader.Types()[typeIdx];
+            vislib::StringA str;
+            UINT32 constFieldCnt, fieldCnt;
+
+            _ASSERT_READSTRINGBINARY(str);
+            _ASSERT_READFILE(&constFieldCnt, 4);
+            if (bigEndian) {
+                unsigned char *fac = reinterpret_cast<unsigned char*>(&constFieldCnt);
+                vislib::Swap(fac[0], fac[3]);
+                vislib::Swap(fac[1], fac[2]);
+            }
+            _ASSERT_READFILE(&fieldCnt, 4);
+            if (bigEndian) {
+                unsigned char *fac = reinterpret_cast<unsigned char*>(&fieldCnt);
+                vislib::Swap(fac[0], fac[3]);
+                vislib::Swap(fac[1], fac[2]);
+            }
+
+            type.SetBaseType(str);
+            type.ConstFields().SetCount(constFieldCnt);
+            type.Fields().SetCount(fieldCnt);
+
+            for (UINT32 fieldIdx = 0; fieldIdx < constFieldCnt; fieldIdx++) {
+                vislib::StringA typeStr;
+                MMSPDHeader::ConstField &field = type.ConstFields()[fieldIdx];
+
+                _ASSERT_READSTRINGBINARY(str);
+                if (str.Equals("id")) _ERROR_OUT("Field \"id\" is reserved for internal use and must not be used!");
+                if (str.Equals("type")) _ERROR_OUT("Field \"type\" is reserved for internal use and must not be used!");
+                _ASSERT_READSTRINGBINARY(typeStr);
+                if (typeStr.Equals("b") || typeStr.Equals("byte", false)) field.SetType(MMSPDHeader::Field::TYPE_BYTE);
+                else if (typeStr.Equals("f") || typeStr.Equals("float", false)) field.SetType(MMSPDHeader::Field::TYPE_FLOAT);
+                else if (typeStr.Equals("d") || typeStr.Equals("double", false)) field.SetType(MMSPDHeader::Field::TYPE_DOUBLE);
+                else {
+                    str.Format("Type \"%s\" of field \"%d\" of type definition \"%d\" is unknown",
+                        typeStr.PeekBuffer(), static_cast<int>(fieldIdx), static_cast<int>(typeIdx));
+                   _ERROR_OUT(str);
+                }
+                field.SetName(str);
+                switch (field.GetType()) {
+                    case MMSPDHeader::Field::TYPE_BYTE: {
+                        unsigned char b;
+                        _ASSERT_READFILE(&b, 1);
+                        field.SetByte(b);
+                    } break;
+                    case MMSPDHeader::Field::TYPE_FLOAT: {
+                        float f;
+                        _ASSERT_READFILE(&f, 4);
+                        if (bigEndian) {
+                            unsigned char *fac = reinterpret_cast<unsigned char*>(&f);
+                            vislib::Swap(fac[0], fac[3]);
+                            vislib::Swap(fac[1], fac[2]);
+                        }
+                        field.SetFloat(f);
+                    } break;
+                    case MMSPDHeader::Field::TYPE_DOUBLE: {
+                        double d;
+                        _ASSERT_READFILE(&d, 8);
+                        if (bigEndian) {
+                            unsigned char *fac = reinterpret_cast<unsigned char*>(&d);
+                            vislib::Swap(fac[0], fac[7]);
+                            vislib::Swap(fac[1], fac[6]);
+                            vislib::Swap(fac[2], fac[5]);
+                            vislib::Swap(fac[3], fac[4]);
+                        }
+                        field.SetDouble(d);
+                    } break;
+                    default: _ERROR_OUT("Internal Error!");
+                }
+            }
+
+            for (UINT32 fieldIdx = 0; fieldIdx < fieldCnt; fieldIdx++) {
+                vislib::StringA typeStr;
+                MMSPDHeader::Field &field = type.Fields()[fieldIdx];
+
+                _ASSERT_READSTRINGBINARY(str);
+                if (str.Equals("id")) _ERROR_OUT("Field \"id\" is reserved for internal use and must not be used!");
+                if (str.Equals("type")) _ERROR_OUT("Field \"type\" is reserved for internal use and must not be used!");
+                _ASSERT_READSTRINGBINARY(typeStr);
+                if (typeStr.Equals("b") || typeStr.Equals("byte", false)) field.SetType(MMSPDHeader::Field::TYPE_BYTE);
+                else if (typeStr.Equals("f") || typeStr.Equals("float", false)) field.SetType(MMSPDHeader::Field::TYPE_FLOAT);
+                else if (typeStr.Equals("d") || typeStr.Equals("double", false)) field.SetType(MMSPDHeader::Field::TYPE_DOUBLE);
+                else {
+                    str.Format("Type \"%s\" of field \"%d\" of type definition \"%d\" is unknown",
+                        typeStr.PeekBuffer(), static_cast<int>(fieldIdx), static_cast<int>(typeIdx));
+                   _ERROR_OUT(str);
+                }
+                field.SetName(str);
+            }
+
+        }
+
+    }
 
     // reading frames
     //  index generation and size estimation
+    this->frameIdx = new UINT64[this->dataHeader.GetTimeCount() + 1];
+    this->framePartCnts = new UINT64[this->dataHeader.GetTimeCount()];
+    this->frameIdx[0] = static_cast<UINT64>(this->file->Tell());
 
+    // TODO: Implement
 
 /*
-
-    char magicid[6];
-    _ASSERT_READFILE(magicid, 6);
-    if (::memcmp(magicid, "MMPLD", 6) != 0) {
-        _ERROR_OUT("MMPLD file header id wrong");
-    }
-    unsigned short ver;
-    _ASSERT_READFILE(&ver, 2);
-    if (ver != 100) {
-        _ERROR_OUT("MMPLD file header version wrong");
-    }
 
     UINT32 frmCnt = 0;
     _ASSERT_READFILE(&frmCnt, 4);
@@ -356,6 +543,7 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
     this->initFrameCache(cacheSize);
     */
 
+#undef _ASSERT_READSTRINGBINARY
 #undef _ASSERT_READFILE
 #undef _ERROR_OUT
 

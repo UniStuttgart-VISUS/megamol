@@ -264,8 +264,19 @@ namespace moldyn {
         /** The opened data file */
         vislib::sys::File *file;
 
-        /** The frame index table */
+        /**
+         * The frame index table, that is the seek positions within the file
+         * pointing to the position of the first particle of a frame (directly
+         * following the Time Frame Marker).
+         * This array is #frames + 1 long to also store the end of the last frame.
+         */
         UINT64 *frameIdx;
+
+        /** 
+         * The table with the specified number of particles per frame
+         * This array is #frame long
+         */
+        UINT64 *framePartCnts;
 
         /** The data set clipping box */
         vislib::math::Cuboid<float> clipbox;
