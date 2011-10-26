@@ -12,7 +12,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/Array.h"
+//#include "vislib/Cuboid.h"
 #include "vislib/RawStorage.h"
+#include "vislib/memutils.h"
 #include "vislib/types.h"
 
 
@@ -44,6 +46,17 @@ namespace moldyn {
             ~Particles(void);
 
             /**
+             * Allocates the field map overwriting any previously stored field map
+             *
+             * @param size The size of the new field map in entries
+             */
+            inline void AllocateFieldMap(SIZE_T size) {
+                delete[] this->fieldMap;
+                this->fieldMap = new unsigned int[size];
+                ZeroMemory(this->fieldMap, sizeof(unsigned int) * size);
+            }
+
+            /**
              * Gets the number of particles
              *
              * @return The number of particles
@@ -59,6 +72,24 @@ namespace moldyn {
              */
             inline vislib::RawStorage& Data(void) {
                 return this->data;
+            }
+
+            /**
+             * Accesses the field map of the particle data
+             *
+             * @return The field map of the particle data
+             */
+            inline unsigned int * FieldMap(void) {
+                return this->fieldMap;
+            }
+
+            /**
+             * Answer the field map of the particle data
+             *
+             * @return The field map of the particle data
+             */
+            inline const unsigned int * const FieldMap(void) const {
+                return this->fieldMap;
             }
 
             /**
@@ -100,6 +131,14 @@ namespace moldyn {
              * the particle type. (never storing the type id field!)
              */
             vislib::RawStorage data;
+
+            /**
+             * Mapping field indices of the header to storage positions.
+             *
+             * This is used to reorder the fields to group fields in memory
+             * for optimal use for visualizaion.
+             */
+            unsigned int *fieldMap;
 
         };
 

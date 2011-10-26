@@ -174,11 +174,12 @@ namespace moldyn {
              * @param size The size of the frame data in bytes
              * @param header The data set header
              * @param isBinary Flag whether or not the data set is binary
+             * @param isBigEndian Flag whether or not the binary data set is big endian
              *
              * @return True on success
              */
             bool LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size,
-                MMSPDHeader& header, bool isBinary);
+                MMSPDHeader& header, bool isBinary, bool isBigEndian);
 
             ///**
             // * Sets the data into the call
@@ -188,6 +189,42 @@ namespace moldyn {
             //void SetData(MultiParticleDataCall& call);
 
         private:
+
+            /**
+             * Loads a frame from 'buffer' into this object assuming that
+             * 'buffer' holds the data in 7-Bit ASCII form.
+             *
+             * @param buffer The frame data in main memory
+             * @param size The size of 'buffer'
+             * @param header The data set header
+             *
+             * @throws vislib::Exception on any error
+             */
+            void loadFrameText(char *buffer, UINT64 size, MMSPDHeader& header);
+
+            /**
+             * Loads a frame from 'buffer' into this object assuming that
+             * 'buffer' holds the data in binary form.
+             *
+             * @param buffer The frame data in main memory
+             * @param size The size of 'buffer'
+             * @param header The data set header
+             *
+             * @throws vislib::Exception on any error
+             */
+            void loadFrameBinary(char *buffer, UINT64 size, MMSPDHeader& header);
+
+            /**
+             * Loads a frame from 'buffer' into this object assuming that
+             * 'buffer' holds the data in binary (big endian) form.
+             *
+             * @param buffer The frame data in main memory
+             * @param size The size of 'buffer'
+             * @param header The data set header
+             *
+             * @throws vislib::Exception on any error
+             */
+            void loadFrameBinaryBE(char *buffer, UINT64 size, MMSPDHeader& header);
 
         };
 

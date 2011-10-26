@@ -57,14 +57,32 @@ moldyn::MMSPDDataSource::Frame::~Frame() {
  */
 bool moldyn::MMSPDDataSource::Frame::LoadFrame(
         vislib::sys::File *file, unsigned int idx, UINT64 size,
-        moldyn::MMSPDHeader& header, bool isBinary) {
+        moldyn::MMSPDHeader& header, bool isBinary, bool isBigEndian) {
     this->frame = idx;
+    char *buf = new char[size];
+    try {
+        if (file->Read(buf, size) != size) {
+            throw vislib::Exception("Frame data truncated", __FILE__, __LINE__);
+        }
 
-    // TODO: Implement
-    throw vislib::MissingImplementationException("Frame::LoadFrame", __FILE__, __LINE__);
+        if (isBinary) {
+            if (!isBigEndian) {
+                this->loadFrameBinary(buf, size, header);
+            } else {
+                this->loadFrameBinaryBE(buf, size, header);
+            }
+        } else {
+            this->loadFrameText(buf, size, header);
+        }
 
-    //this->dat.EnforceSize(static_cast<SIZE_T>(size));
-    //return (file->Read(this->dat, size) == size);
+    } catch (...) {
+        delete[] buf;
+        throw;
+
+        //return false;
+    }
+
+    delete[] buf;
     return true;
 }
 
@@ -145,6 +163,33 @@ bool moldyn::MMSPDDataSource::Frame::LoadFrame(
 //    }
 //
 //}
+
+
+/*
+ * moldyn::MMSPDDataSource::Frame::loadFrameText
+ */
+void moldyn::MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, MMSPDHeader& header) {
+    // We don't have to brother with unicode here, because there is no string data allowed.
+    // All characters must be white space, line breaks, '>' and characters forming numbers (digits, dots, plus, minus, 'e').
+
+    throw vislib::MissingImplementationException("Frame::loadFrameText", __FILE__, __LINE__);
+}
+
+
+/*
+ * moldyn::MMSPDDataSource::Frame::loadFrameBinary
+ */
+void moldyn::MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, MMSPDHeader& header) {
+    throw vislib::MissingImplementationException("Frame::loadFrameBinary", __FILE__, __LINE__);
+}
+
+
+/*
+ * moldyn::MMSPDDataSource::Frame::loadFrameBinaryBE
+ */
+void moldyn::MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, MMSPDHeader& header) {
+    throw vislib::MissingImplementationException("Frame::loadFrameBinaryBE", __FILE__, __LINE__);
+}
 
 /*****************************************************************************/
 
@@ -229,7 +274,7 @@ void moldyn::MMSPDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
     // ask frame index for seek positions
     UINT64 firstSeek = 1, fromSeek = 0, toSeek = 0;
 
-    while ((fromSeek == 0) && (toSeek == 0)) {
+    while ((fromSeek == 0) || (toSeek == 0)) {
 
         this->frameIdxLock.Lock();
         firstSeek = this->frameIdx[0];
@@ -255,7 +300,8 @@ void moldyn::MMSPDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
     bool res = false;
     vislib::StringA errMsg;
     try {
-        res = f->LoadFrame(this->file, idx, toSeek - fromSeek, this->dataHeader, this->isBinaryFile);
+        res = f->LoadFrame(this->file, idx, toSeek - fromSeek,
+            this->dataHeader, this->isBinaryFile, this->isBigEndian);
         if (!res) errMsg = "Unknown error";
     } catch(vislib::Exception e) {
         errMsg.Format("%s [%s:%d]", e.GetMsgA(), e.GetFile(), e.GetLine());
@@ -306,7 +352,7 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
     f.Seek(that->frameIdx[0]); // lock not required, because i know the main thread is currently waiting to load the first frame
     vislib::sys::Log::DefaultLog.WriteInfo(50, "Frame index generation started.");
 
-    const SIZE_T MAX_BUFFER_SIZE = /*21; //*/ 1024 * 1024;
+    const SIZE_T MAX_BUFFER_SIZE = 1024 * 1024;
     char *buffer = new char[MAX_BUFFER_SIZE];
     unsigned int frameCount = that->dataHeader.GetTimeCount();
     unsigned int frame = 0;
@@ -1038,6 +1084,7 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
     } else {
         this->setFrameCount(this->dataHeader.GetTimeCount());
         this->frameIdxThread.Start(static_cast<void*>(this));
+        // this->frameIdxThread.Join(); // Use this pause the main thread for debugging
 
         SIZE_T dataSize[3];
         for (unsigned int i = 0; i < 3; i++) {
@@ -1053,9 +1100,14 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
             }
             this->frameIdxLock.Unlock();
 
-            dataSize[3] = frm->GetIndexReconstructionData().GetSize();
-            for (SIZE_T i = 0; i < frm->GetData().Count(); i++) {
-                dataSize[3] += frm->GetData()[i].GetData().GetSize();
+            dataSize[i] = frm->GetIndexReconstructionData().GetSize();
+            for (SIZE_T j = 0; j < frm->GetData().Count(); j++) {
+                dataSize[i] += frm->GetData()[j].GetData().GetSize();
+            }
+
+            if (dataSize[i] == 0) {
+                for (int j = 0; j < 3; j++) dataSize[j] = 0;
+                break;
             }
 
             // TODO: Calculate clipping box!

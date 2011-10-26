@@ -16,7 +16,7 @@ using namespace megamol::core;
 /*
  * moldyn::MMSPDFrameData::Particles::Particles
  */
-moldyn::MMSPDFrameData::Particles::Particles(void) : count(0), data() {
+moldyn::MMSPDFrameData::Particles::Particles(void) : count(0), data(), fieldMap(NULL) {
     // Intentionally empty
 }
 
@@ -25,7 +25,8 @@ moldyn::MMSPDFrameData::Particles::Particles(void) : count(0), data() {
  * moldyn::MMSPDFrameData::Particles::~Particles
  */
 moldyn::MMSPDFrameData::Particles::~Particles(void) {
-    // Intentionally empty
+    delete[] this->fieldMap;
+    this->fieldMap = NULL;
 }
 
 
@@ -34,8 +35,8 @@ moldyn::MMSPDFrameData::Particles::~Particles(void) {
  */
 bool moldyn::MMSPDFrameData::Particles::operator==(const moldyn::MMSPDFrameData::Particles& rhs) {
     return (this->count == rhs.count)
-        && (this->data.GetSize() == rhs.data.GetSize())
-        && (this->data == rhs.data); // EXPENSIVE! deep memcmp
+        && (&this->data == &rhs.data) // sufficient
+        && (this->fieldMap == rhs.fieldMap); // sufficient
 }
 
 
