@@ -243,6 +243,25 @@ namespace moldyn {
             }
 
             /**
+             * Answer the size of the variable data fields of particles of this size.
+             * Add 8 if hasIDs is true.
+             * Add 4 if typeCount is larger than 1.
+             *
+             * @return The size of the variable data fields
+             */
+            inline unsigned int GetDataSize(void) const {
+                unsigned int s = 0;
+                for (SIZE_T i = 0; i < this->fields.Count(); i++) {
+                    switch (this->fields[i].GetType()) {
+                    case Field::TYPE_BYTE: s += 1; break;
+                    case Field::TYPE_FLOAT: s += 4; break;
+                    case Field::TYPE_DOUBLE: s += 8; break;
+                    }
+                }
+                return s;
+            }
+
+            /**
              * Gets the array of fields
              *
              * @return The array of fields

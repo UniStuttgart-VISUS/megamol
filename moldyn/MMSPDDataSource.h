@@ -15,11 +15,14 @@
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
 #include "moldyn/MultiParticleDataCall.h"
-#include "vislib/Cuboid.h"
 #include "moldyn/MMSPDFrameData.h"
 #include "moldyn/MMSPDHeader.h"
+#include "vislib/CriticalSection.h"
+#include "vislib/Cuboid.h"
+#include "vislib/Event.h"
 #include "vislib/File.h"
 #include "vislib/RawStorage.h"
+#include "vislib/Thread.h"
 #include "vislib/types.h"
 
 
@@ -154,24 +157,28 @@ namespace moldyn {
             /** Dtor. */
             virtual ~Frame(void);
 
-            ///**
-            // * Clears the loaded data
-            // */
-            //inline void Clear(void) {
-            //    this->dat.EnforceSize(0);
-            //}
+            /**
+             * Clears the loaded data
+             */
+            inline void Clear(void) {
+                this->Data().Clear();
+                this->IndexReconstructionData().EnforceSize(0);
+            }
 
-            ///**
-            // * Loads a frame from 'file' into this object
-            // *
-            // * @param file The file stream to load from. The stream is assumed
-            // *             to be at the correct location
-            // * @param idx The zero-based index of the frame
-            // * @param size The size of the frame data in bytes
-            // *
-            // * @return True on success
-            // */
-            //bool LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size);
+            /**
+             * Loads a frame from 'file' into this object
+             *
+             * @param file The file stream to load from. The stream is assumed
+             *             to be at the correct location
+             * @param idx The zero-based index of the frame
+             * @param size The size of the frame data in bytes
+             * @param header The data set header
+             * @param isBinary Flag whether or not the data set is binary
+             *
+             * @return True on success
+             */
+            bool LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size,
+                MMSPDHeader& header, bool isBinary);
 
             ///**
             // * Sets the data into the call
@@ -181,9 +188,6 @@ namespace moldyn {
             //void SetData(MultiParticleDataCall& call);
 
         private:
-
-            ///** position data per type */
-            //vislib::RawStorage dat;
 
         };
 
@@ -224,6 +228,20 @@ namespace moldyn {
             Frame *frame;
 
         };
+
+        /**
+         * Builds the data file frame index
+         *
+         * @param userdata Pointer to the calling object
+         *
+         * @return 0
+         */
+        static DWORD buildFrameIndex(void *userdata);
+
+        /**
+         * Clears the data
+         */
+        void clearData(void);
 
         /**
          * Callback receiving the update of the file name parameter.
@@ -272,14 +290,26 @@ namespace moldyn {
          */
         UINT64 *frameIdx;
 
-        /** 
-         * The table with the specified number of particles per frame
-         * This array is #frame long
-         */
-        UINT64 *framePartCnts;
-
         /** The data set clipping box */
         vislib::math::Cuboid<float> clipbox;
+
+        /** Flag whether or not the data set is a binary file */
+        bool isBinaryFile;
+
+        /** Flag whether or not the binary data file uses big endian */
+        bool isBigEndian;
+
+        /** The lock for building up the frame index */
+        vislib::sys::CriticalSection frameIdxLock;
+
+        /** The event set whenever a new entry gets valid in the frame index */
+        vislib::sys::Event frameIdxEvent;
+
+        /** The thread constructing the frame index */
+        vislib::sys::Thread frameIdxThread;
+
+        /** The data set data hash */
+        SIZE_T dataHash;
 
     };
 

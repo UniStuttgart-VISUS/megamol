@@ -10,12 +10,15 @@
 #include "param/FilePathParam.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
-//#include "vislib/Log.h"
+#include "vislib/AutoLock.h"
+#include "vislib/Log.h"
 #include "vislib/File.h"
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
-//#include "vislib/SystemInformation.h"
+#include "vislib/SystemInformation.h"
 #include "vislib/mathfunctions.h"
+#include "vislib/memutils.h"
+#include "vislib/MissingImplementationException.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/VersionNumber.h"
 
@@ -49,16 +52,23 @@ moldyn::MMSPDDataSource::Frame::~Frame() {
 }
 
 
-///*
-// * moldyn::MMPLDDataSource::Frame::LoadFrame
-// */
-//bool moldyn::MMPLDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size) {
-//    this->frame = idx;
-//    this->dat.EnforceSize(static_cast<SIZE_T>(size));
-//    return (file->Read(this->dat, size) == size);
-//}
-//
-//
+/*
+ * moldyn::MMSPDDataSource::Frame::LoadFrame
+ */
+bool moldyn::MMSPDDataSource::Frame::LoadFrame(
+        vislib::sys::File *file, unsigned int idx, UINT64 size,
+        moldyn::MMSPDHeader& header, bool isBinary) {
+    this->frame = idx;
+
+    // TODO: Implement
+    throw vislib::MissingImplementationException("Frame::LoadFrame", __FILE__, __LINE__);
+
+    //this->dat.EnforceSize(static_cast<SIZE_T>(size));
+    //return (file->Read(this->dat, size) == size);
+    return true;
+}
+
+
 ///*
 // * moldyn::MMPLDDataSource::Frame::SetData
 // */
@@ -157,8 +167,11 @@ float moldyn::MMSPDDataSource::FileFormatAutoDetect(const unsigned char* data, S
 moldyn::MMSPDDataSource::MMSPDDataSource(void) : view::AnimDataModule(),
         filename("filename", "The path to the MMSPD file to load."),
         getData("getdata", "Slot to request data from this data source."),
-        dataHeader(), file(NULL), frameIdx(NULL), framePartCnts(NULL),
-        clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f) {
+        dataHeader(), file(NULL), frameIdx(NULL),
+        clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), isBinaryFile(true),
+        isBigEndian(false), frameIdxLock(), frameIdxEvent(true),
+        frameIdxThread(&MMSPDDataSource::buildFrameIndex),
+        dataHash(0) {
 
     this->filename.SetParameter(new param::FilePathParam(""));
     this->filename.SetUpdateCallback(&MMSPDDataSource::filenameChanged);
@@ -212,11 +225,50 @@ void moldyn::MMSPDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
     }
     //printf("Requesting frame %u of %u frames\n", idx, this->FrameCount());
     ASSERT(idx < this->FrameCount());
-    this->file->Seek(this->frameIdx[idx]);
-    //if (!f->LoadFrame(this->file, idx, this->frameIdx[idx + 1] - this->frameIdx[idx])) {
-    //    // failed
-    //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from MMPLD file\n", idx);
-    //}
+
+    // ask frame index for seek positions
+    UINT64 firstSeek = 1, fromSeek = 0, toSeek = 0;
+
+    while ((fromSeek == 0) && (toSeek == 0)) {
+
+        this->frameIdxLock.Lock();
+        firstSeek = this->frameIdx[0];
+        fromSeek = this->frameIdx[idx];
+        toSeek = this->frameIdx[idx + 1];
+        if ((firstSeek != 0) && ((fromSeek == 0) || (toSeek == 0))) {
+            this->frameIdxEvent.Reset();
+        }
+        this->frameIdxLock.Unlock();
+
+        if (firstSeek == 0) {
+            // frame index generation failed
+            f->Clear();
+            return;
+        }
+        if ((fromSeek == 0) || (toSeek == 0)) {
+            this->frameIdxEvent.Wait();
+        }
+
+    }
+
+    this->file->Seek(fromSeek);
+    bool res = false;
+    vislib::StringA errMsg;
+    try {
+        res = f->LoadFrame(this->file, idx, toSeek - fromSeek, this->dataHeader, this->isBinaryFile);
+        if (!res) errMsg = "Unknown error";
+    } catch(vislib::Exception e) {
+        errMsg.Format("%s [%s:%d]", e.GetMsgA(), e.GetFile(), e.GetLine());
+        res = false;
+    } catch(...) {
+        errMsg = "Unknown exception";
+        res = false;
+    }
+    if (!res) {
+        // failed
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from MMSPD file: %s",
+            idx, errMsg.PeekBuffer());
+    }
 }
 
 
@@ -224,6 +276,7 @@ void moldyn::MMSPDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
  * moldyn::MMSPDDataSource::release
  */
 void moldyn::MMSPDDataSource::release(void) {
+    this->clearData();
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File *f = this->file;
@@ -232,9 +285,283 @@ void moldyn::MMSPDDataSource::release(void) {
         delete f;
     }
     ARY_SAFE_DELETE(this->frameIdx);
-    ARY_SAFE_DELETE(this->framePartCnts);
 }
 
+
+/*
+ *moldyn::MMSPDDataSource::buildFrameIndex
+ */
+DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
+    MMSPDDataSource *that = static_cast<MMSPDDataSource *>(userdata);
+    vislib::sys::File f;
+    if (!f.Open(that->filename.Param<param::FilePathParam>()->Value(),
+            vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+        that->frameIdxLock.Lock();
+        that->frameIdx[0] = 0;
+        vislib::sys::Log::DefaultLog.WriteError("Unable to open data file a second time for frame index generation");
+        that->frameIdxLock.Unlock();
+        that->frameIdxEvent.Set();
+        return 0;
+    }
+    f.Seek(that->frameIdx[0]); // lock not required, because i know the main thread is currently waiting to load the first frame
+    vislib::sys::Log::DefaultLog.WriteInfo(50, "Frame index generation started.");
+
+    const SIZE_T MAX_BUFFER_SIZE = /*21; //*/ 1024 * 1024;
+    char *buffer = new char[MAX_BUFFER_SIZE];
+    unsigned int frameCount = that->dataHeader.GetTimeCount();
+    unsigned int frame = 0;
+
+    // sizes of a particle in binary files
+    unsigned int *typeSizes = new unsigned int[that->dataHeader.GetTypes().Count()];
+    for (int i = 0; i < that->dataHeader.GetTypes().Count(); i++) {
+        typeSizes[i] = that->dataHeader.GetTypes()[i].GetDataSize();
+        if (that->dataHeader.HasIDs()) typeSizes[i] += 8;
+        if (that->dataHeader.GetTypes().Count() > 1) typeSizes[i] += 4;
+    }
+
+    try {
+
+        if (that->isBinaryFile && (that->dataHeader.GetTypes().Count() == 1)) {
+            // binary, but only one type! This is perfect
+            UINT64 partCnt;
+
+            for (frame = 0; frame < frameCount; frame++) {
+                that->frameIdxLock.Lock();
+                if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+                that->frameIdx[frame] = static_cast<UINT64>(f.Tell());
+                that->frameIdxEvent.Set();
+                that->frameIdxLock.Unlock();
+                if (f.Read(&partCnt, 8) != 8) {
+                    // here we could just skip the broken frames, but this is ok for now
+                    throw new vislib::Exception("File truncated", __FILE__, __LINE__);
+                }
+                if (that->isBigEndian) {
+                    unsigned char *fac = reinterpret_cast<unsigned char*>(&partCnt);
+                    vislib::Swap(fac[0], fac[7]);
+                    vislib::Swap(fac[1], fac[6]);
+                    vislib::Swap(fac[2], fac[5]);
+                    vislib::Swap(fac[3], fac[4]);
+                }
+
+                if ((partCnt != that->dataHeader.GetParticleCount()) && (that->dataHeader.GetParticleCount() != 0)) {
+                    throw new vislib::Exception("Particle count changed between frames even the header already defined the count", __FILE__, __LINE__);
+                }
+
+                // now skip the actual data
+                f.Seek(partCnt * typeSizes[0], vislib::sys::File::CURRENT);
+
+            }
+
+            that->frameIdxLock.Lock();
+            if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+            that->frameIdx[frame] = static_cast<UINT64>(f.Tell());
+            that->frameIdxEvent.Set();
+            that->frameIdxLock.Unlock();
+
+        } else {
+            unsigned int parserState = 0;
+            UINT64 framePartCnt;
+            UINT64 partIdx;
+
+            while (!f.IsEOF()) {
+                UINT64 bufPos = f.Tell();
+                SIZE_T bufSize = f.Read(buffer, MAX_BUFFER_SIZE);
+                SIZE_T bufIdx = 0;
+
+                if (that->isBinaryFile) {
+                    // binary, but with several types
+                    bool loadNext = false;
+
+                    while (!loadNext) {
+                        switch (parserState) {
+                        case 0: { // reading particle count
+                            if ((bufSize - bufIdx) < 8) { // insufficient data in buffer
+                                if (f.IsEOF()) {
+                                    throw vislib::Exception("Data file truncated", __FILE__, __LINE__);
+                                }
+                                f.Seek(bufIdx - bufSize, vislib::sys::File::CURRENT); // step a bit back
+                                loadNext = true;
+                                continue; // reload the buffer
+                            }
+
+                            that->frameIdxLock.Lock();
+                            if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+                            that->frameIdx[frame++] = bufPos + bufIdx;
+                            that->frameIdxEvent.Set();
+                            that->frameIdxLock.Unlock();
+
+                            framePartCnt = *reinterpret_cast<UINT64*>(&buffer[bufIdx]);
+                            if (that->isBigEndian) {
+                                unsigned char *fac = reinterpret_cast<unsigned char*>(&framePartCnt);
+                                vislib::Swap(fac[0], fac[7]);
+                                vislib::Swap(fac[1], fac[6]);
+                                vislib::Swap(fac[2], fac[5]);
+                                vislib::Swap(fac[3], fac[4]);
+                            }
+                            bufIdx += 8;
+                            if ((framePartCnt != that->dataHeader.GetParticleCount()) && (that->dataHeader.GetParticleCount() != 0)) {
+                                throw new vislib::Exception("Particle count changed between frames even the header already defined the count", __FILE__, __LINE__);
+                            }
+                            partIdx = 0;
+                            parserState = that->dataHeader.HasIDs() ? 1 : 2;
+
+                        } break;
+
+                        case 1: { // reading a particle ID
+                            if ((bufSize - bufIdx) < 8) { // insufficient data in buffer
+                                if (f.IsEOF()) {
+                                    throw vislib::Exception("Data file truncated", __FILE__, __LINE__);
+                                }
+                                f.Seek(bufIdx - bufSize, vislib::sys::File::CURRENT); // step a bit back
+                                loadNext = true;
+                                continue; // reload the buffer
+                            }
+                            bufIdx += 8;
+                            parserState = 2;
+
+                        } break;
+
+                        case 2: { // reading a particle type
+                            if ((bufSize - bufIdx) < 4) { // insufficient data in buffer
+                                if (f.IsEOF()) {
+                                    throw vislib::Exception("Data file truncated", __FILE__, __LINE__);
+                                }
+                                f.Seek(bufIdx - bufSize, vislib::sys::File::CURRENT); // step a bit back
+                                loadNext = true;
+                                continue; // reload the buffer
+                            }
+                            unsigned int type = *reinterpret_cast<UINT32*>(&buffer[bufIdx]);
+                            if (that->isBigEndian) {
+                                unsigned char *fac = reinterpret_cast<unsigned char*>(&type);
+                                vislib::Swap(fac[0], fac[3]);
+                                vislib::Swap(fac[1], fac[2]);
+                            }
+                            if (type >= that->dataHeader.GetTypes().Count()) {
+                                vislib::StringA msg;
+                                msg.Format("Illegal type value %u/%u read", type, static_cast<unsigned int>(that->dataHeader.GetTypes().Count()));
+                                throw vislib::Exception(msg.PeekBuffer(), __FILE__, __LINE__);
+                            }
+                            bufIdx += 4;
+
+                            unsigned int size = typeSizes[type] - 4; // -4 for the type
+                            if (that->dataHeader.HasIDs()) size -= 8;
+
+                            // now skip 'size' bytes
+                            if ((bufIdx + size) < bufSize) {
+                                bufIdx += size;
+                            } else {
+                                size -= static_cast<unsigned int>(bufSize - bufIdx);
+                                f.Seek(size, vislib::sys::File::CURRENT);
+                                bufPos = f.Tell();
+                                bufIdx = 0;
+                                loadNext = true;
+                            }
+                            partIdx++;
+                            if (partIdx == framePartCnt) {
+                                if (frame == frameCount) {
+                                    that->frameIdxLock.Lock();
+                                    if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+                                    that->frameIdx[frame++] = bufPos + bufIdx;
+                                    that->frameIdxEvent.Set();
+                                    that->frameIdxLock.Unlock();
+                                    loadNext = true;
+                                }
+                                parserState = 0;
+                            } else if (that->dataHeader.HasIDs()) {
+                                parserState = 1;
+                            }
+
+                        } break;
+
+                        }
+                    }
+
+                    if (frame > frameCount) {
+                        break;
+                    }
+
+                } else {
+                    // text, everything is lost
+                    throw vislib::MissingImplementationException("buildFrameIndex", __FILE__, __LINE__);
+
+                }
+
+            }
+
+        }
+
+        that->frameIdxLock.Lock();
+        if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+        UINT64 begin = that->frameIdx[0];
+        UINT64 end = that->frameIdx[frameCount];
+        that->frameIdxLock.Unlock();
+        if ((begin == 0) || (end == 0)) {
+            throw vislib::Exception("Frame index incomplete", __FILE__, __LINE__);
+        } else {
+            vislib::sys::Log::DefaultLog.WriteInfo(50, "Frame index of %u frames completed with ~%u bytes per frame",
+                static_cast<unsigned int>(frameCount),
+                static_cast<unsigned int>((end - begin) / frameCount));
+
+#if defined(DEBUG) || defined(_DEBUG)
+            that->frameIdxLock.Lock();
+            if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+            for (unsigned int i = 0; i <= frameCount; i++) {
+                vislib::sys::Log::DefaultLog.WriteInfo(250, "    frame %u: %lu", i, that->frameIdx[i]);
+            }
+            that->frameIdxLock.Unlock();
+#endif /* DEBUG || _DEBUG */
+
+        }
+
+    } catch(vislib::Exception e) {
+        // sort of failed ...
+        that->frameIdxLock.Lock();
+        if (that->frameIdx == NULL) that->frameIdx[0] = 0;
+        vislib::sys::Log::DefaultLog.WriteError("Failed to generated frame index: %s [%s:%d]",
+            e.GetMsgA(), e.GetFile(), e.GetLine());
+        that->frameIdxLock.Unlock();
+        that->frameIdxEvent.Set();
+
+    } catch(...) {
+        // sort of failed ...
+        that->frameIdxLock.Lock();
+        if (that->frameIdx == NULL) that->frameIdx[0] = 0;
+        vislib::sys::Log::DefaultLog.WriteError("Failed to generated frame index: unexpected exception");
+        that->frameIdxLock.Unlock();
+        that->frameIdxEvent.Set();
+    }
+
+    delete[] typeSizes;
+    delete[] buffer;
+    f.Close();
+
+    return 0;
+}
+
+
+/*
+ * moldyn::MMSPDDataSource::clearData
+ */
+void moldyn::MMSPDDataSource::clearData(void) {
+    if (this->frameIdxThread.IsRunning()) {
+        this->frameIdxLock.Lock();
+        ARY_SAFE_DELETE(this->frameIdx);
+        this->frameIdxLock.Unlock();
+        this->frameIdxThread.Join();
+    }
+
+    this->frameIdxLock.Lock();
+    this->resetFrameCache();
+    this->dataHeader.SetParticleCount(0);
+    this->dataHeader.SetTimeCount(1);
+    this->dataHeader.BoundingBox().Set(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0);
+    this->dataHeader.Types().Clear();
+    this->clipbox = this->dataHeader.GetBoundingBox();
+    ARY_SAFE_DELETE(this->frameIdx);
+    this->setFrameCount(1);
+    this->initFrameCache(1);
+    this->frameIdxLock.Unlock();
+}
 
 
 /*
@@ -243,14 +570,8 @@ void moldyn::MMSPDDataSource::release(void) {
 bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
     using vislib::sys::Log;
     using vislib::sys::File;
+    this->clearData();
     this->resetFrameCache();
-    this->dataHeader.SetParticleCount(0);
-    this->dataHeader.SetTimeCount(1);
-    this->dataHeader.BoundingBox().Set(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0);
-    this->dataHeader.Types().Clear();
-    this->clipbox = this->dataHeader.GetBoundingBox();
-    ARY_SAFE_DELETE(this->frameIdx);
-    ARY_SAFE_DELETE(this->framePartCnts);
 
     if (this->file == NULL) {
         this->file = new vislib::sys::File();
@@ -272,15 +593,7 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
 
 #define _ERROR_OUT(MSG) { Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
         SAFE_DELETE(this->file); \
-        this->setFrameCount(1); \
-        this->initFrameCache(1); \
-        this->dataHeader.SetParticleCount(0); \
-        this->dataHeader.SetTimeCount(1); \
-        this->dataHeader.BoundingBox().Set(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0); \
-        this->dataHeader.Types().Clear(); \
-        this->clipbox = this->dataHeader.GetBoundingBox(); \
-        ARY_SAFE_DELETE(this->frameIdx); \
-        ARY_SAFE_DELETE(this->framePartCnts); \
+        this->clearData(); \
         return true; }
 #define _ASSERT_READFILE(BUFFER, BUFFERSIZE) { if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
         _ERROR_OUT("Unable to read MMSPD file: seems truncated"); \
@@ -647,60 +960,72 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
         }
 
     }
+    this->isBinaryFile = !text;
+    this->isBigEndian = bigEndian;
+    if (this->dataHeader.GetTimeCount() == 0) {
+        _ERROR_OUT("The data file seems to contain no data (no time frames)");
+    }
 
     // reading frames
     //  index generation and size estimation
     this->frameIdx = new UINT64[this->dataHeader.GetTimeCount() + 1];
-    this->framePartCnts = new UINT64[this->dataHeader.GetTimeCount()];
+    ZeroMemory(this->frameIdx, sizeof(UINT64) * (this->dataHeader.GetTimeCount() + 1));
     this->frameIdx[0] = static_cast<UINT64>(this->file->Tell());
 
-    // TODO: Implement
-
-/*
-
-    UINT32 frmCnt = 0;
-    _ASSERT_READFILE(&frmCnt, 4);
-    if (frmCnt == 0) {
-        _ERROR_OUT("MMPLD file does not contain any frame information");
-    }
-
-    float box[6];
-    _ASSERT_READFILE(box, 4 * 6);
-    this->bbox.Set(box[0], box[1], box[2], box[3], box[4], box[5]);
-    _ASSERT_READFILE(box, 4 * 6);
-    this->clipbox.Set(box[0], box[1], box[2], box[3], box[4], box[5]);
-
-    delete[] this->frameIdx;
-    this->frameIdx = new UINT64[frmCnt + 1];
-    _ASSERT_READFILE(this->frameIdx, 8 * (frmCnt + 1));
-    double size = 0.0;
-    for (UINT32 i = 0; i < frmCnt; i++) {
-        size += static_cast<double>(this->frameIdx[i + 1] - this->frameIdx[i]);
-    }
-    size /= static_cast<double>(frmCnt);
-    size *= CACHE_FRAME_FACTOR;
-
-    UINT64 mem = vislib::sys::SystemInformation::AvailableMemorySize();
-    unsigned int cacheSize = static_cast<unsigned int>(mem / size);
-
-    if (cacheSize > CACHE_SIZE_MAX) {
-        cacheSize = CACHE_SIZE_MAX;
-    }
-    if (cacheSize < CACHE_SIZE_MIN) {
-        vislib::StringA msg;
-        msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
-            CACHE_SIZE_MIN, cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
-        cacheSize = CACHE_SIZE_MIN;
+    if (this->dataHeader.GetTimeCount() == 1) {
+        this->frameIdx[1] = static_cast<UINT64>(this->file->GetSize());
+        this->setFrameCount(1);
+        this->initFrameCache(1);
     } else {
-        vislib::StringA msg;
-        msg.Format("Frame cache size set to %i.\n", cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
+        this->setFrameCount(this->dataHeader.GetTimeCount());
+        this->frameIdxThread.Start(static_cast<void*>(this));
+
+        Frame *frm = new Frame(*this);
+        this->loadFrame(frm, 0);
+
+        this->frameIdxLock.Lock();
+        if (this->frameIdx[0] == 0) {
+            this->frameIdxLock.Unlock();
+            // aborted with error
+            _ERROR_OUT("Unable to load first frame (Frame index generation aborted)");
+        }
+        this->frameIdxLock.Unlock();
+
+        SIZE_T dataSize = frm->GetIndexReconstructionData().GetSize();
+        for (SIZE_T i = 0; i < frm->GetData().Count(); i++) {
+            dataSize += frm->GetData()[i].GetData().GetSize();
+        }
+
+        if ((dataSize == 0) || (frm->GetData().Count() == 0)) {
+            _ERROR_OUT("Unable to load first frame (no data)");
+        }
+
+        // TODO: Calculate clipping box!
+
+        dataSize += static_cast<UINT64>(static_cast<double>(dataSize)
+            * (static_cast<double>(CACHE_FRAME_FACTOR) - 1.0));
+
+        UINT64 mem = vislib::sys::SystemInformation::AvailableMemorySize();
+        unsigned int cacheSize = static_cast<unsigned int>(mem / dataSize);
+
+        if (cacheSize > CACHE_SIZE_MAX) {
+            vislib::sys::Log::DefaultLog.WriteInfo("Frame cache size %u requested limited to %d",
+                cacheSize, static_cast<int>(CACHE_SIZE_MAX));
+            cacheSize = CACHE_SIZE_MAX;
+        }
+        if (cacheSize < CACHE_SIZE_MIN) {
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "Frame cache size forced to %d. Calculated size was %u.\n",
+                static_cast<int>(CACHE_SIZE_MIN), cacheSize);
+            cacheSize = CACHE_SIZE_MIN;
+        } else {
+            vislib::sys::Log::DefaultLog.WriteInfo("Frame cache size set to %u.\n",
+                cacheSize);
+        }
+        this->initFrameCache(cacheSize);
     }
 
-    this->setFrameCount(frmCnt);
-    this->initFrameCache(cacheSize);
-    */
+    this->dataHash++;
 
 #undef _ASSERT_READLINE
 #undef _ASSERT_READSTRINGBINARY
@@ -717,6 +1042,8 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
 bool moldyn::MMSPDDataSource::getDataCallback(Call& caller) {
     MultiParticleDataCall *c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
     /*if (c2 == NULL)*/ return false;
+
+    // TODO: Assign data
 
     //Frame *f = NULL;
     //if (c2 != NULL) {
@@ -743,6 +1070,7 @@ bool moldyn::MMSPDDataSource::getExtentCallback(Call& caller) {
         c2->AccessBoundingBoxes().Clear();
         c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->dataHeader.GetBoundingBox());
         c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->clipbox);
+        c2->SetDataHash((this->CacheSize() > 0) ? this->dataHash : 0);
         c2->SetUnlocker(NULL);
         return true;
     }
