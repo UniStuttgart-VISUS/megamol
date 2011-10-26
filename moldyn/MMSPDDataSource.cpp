@@ -12,9 +12,11 @@
 #include "CoreInstance.h"
 //#include "vislib/Log.h"
 #include "vislib/File.h"
-//#include "vislib/String.h"
+#include "vislib/String.h"
+#include "vislib/StringTokeniser.h"
 //#include "vislib/SystemInformation.h"
 #include "vislib/mathfunctions.h"
+#include "vislib/UTF8Encoder.h"
 #include "vislib/VersionNumber.h"
 
 using namespace megamol::core;
@@ -284,6 +286,7 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
         _ERROR_OUT("Unable to read MMSPD file: seems truncated"); \
     } }
 #define _ASSERT_READSTRINGBINARY(STRING) { (STRING).Clear(); while(true) { char c; _ASSERT_READFILE(&c, 1) if (c == 0) break; (STRING).Append(c); } }
+#define _ASSERT_READLINE(STRING) { (STRING).Clear(); while(true) { char c; _ASSERT_READFILE(&c, 1) (STRING).Append(c); if (c == 0x0A) break; } }
 
     // reading format marker
     BYTE headerID[9];
@@ -359,13 +362,169 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
     // reading header line and particle types definitions
     if (text) {
         // reading header line
-        
-    // TODO: Implement
+        vislib::StringA line;
+        _ASSERT_READLINE(line);
+        if (unicode) {
+            vislib::StringW uniLine;
+            if (!vislib::UTF8Encoder::Decode(uniLine, line)) {
+                _ERROR_OUT("Failed to decode UTF8 header line");
+            }
+            line = uniLine;
+        }
+        line.TrimSpaces();
+        vislib::Array<vislib::StringA> tokens(vislib::StringTokeniserA::Split(line, ' ', true));
+        if (tokens.Count() < 10) {
+            _ERROR_OUT("Header line incomplete");
+        } else if (tokens.Count() > 10) {
+            vislib::sys::Log::DefaultLog.WriteWarn("Trailing information on header line will be ignored");
+        }
+
+        const char *fieldName = "unknown";
+        try {
+            fieldName = "hasIDs";
+            bool hasIDs = vislib::CharTraitsA::ParseBool(tokens[0]);
+            fieldName = "minX";
+            double minX = vislib::CharTraitsA::ParseDouble(tokens[1]);
+            fieldName = "minY";
+            double minY = vislib::CharTraitsA::ParseDouble(tokens[2]);
+            fieldName = "minZ";
+            double minZ = vislib::CharTraitsA::ParseDouble(tokens[3]);
+            fieldName = "maxX";
+            double maxX = vislib::CharTraitsA::ParseDouble(tokens[4]);
+            fieldName = "maxY";
+            double maxY = vislib::CharTraitsA::ParseDouble(tokens[5]);
+            fieldName = "maxZ";
+            double maxZ = vislib::CharTraitsA::ParseDouble(tokens[6]);
+            fieldName = "timeCount";
+            UINT32 timeCount = static_cast<UINT32>(vislib::CharTraitsA::ParseUInt64(tokens[7]));
+            fieldName = "typeCount";
+            UINT32 typeCount = static_cast<UINT32>(vislib::CharTraitsA::ParseUInt64(tokens[8]));
+            fieldName = "partCount";
+            UINT64 partCount = vislib::CharTraitsA::ParseUInt64(tokens[9]);
+
+            this->dataHeader.BoundingBox().Set(minX, minY, minZ, maxX, maxY, maxZ);
+            this->dataHeader.SetHasIDs(hasIDs);
+            this->dataHeader.SetParticleCount(partCount);
+            this->dataHeader.SetTimeCount(timeCount);
+            this->dataHeader.Types().SetCount(typeCount);
+
+        } catch(...) {
+            vislib::StringA msg;
+            msg.Format("Failed to parse header line file \"%s\"", fieldName);
+            _ERROR_OUT(fieldName);
+        }
 
         // reading particle types
-        // Note: This is the only place where 'unicode' is relevant!
+        // Note: This is the only place where 'unicode' is really relevant!
+        for (UINT32 typeIdx = 0; typeIdx < this->dataHeader.Types().Count(); typeIdx++) {
+            MMSPDHeader::TypeDefinition &type = this->dataHeader.Types()[typeIdx];
+            UINT32 constFieldCnt, fieldCnt;
+            vislib::StringA str;
 
-    // TODO: Implement
+            _ASSERT_READLINE(line);
+            if (unicode) {
+                vislib::StringW uniLine;
+                if (!vislib::UTF8Encoder::Decode(uniLine, line)) {
+                    vislib::StringA msg;
+                    msg.Format("Failed to decode UTF8 particle line %d", static_cast<int>(typeIdx));
+                    _ERROR_OUT(msg);
+                }
+                line = uniLine;
+            }
+            line.TrimSpaces();
+            tokens = vislib::StringTokeniserA::Split(line, ' ', true);
+            if (tokens.Count() < 3) {
+                vislib::StringA msg;
+                msg.Format("Particle line %d incomplete", static_cast<int>(typeIdx));
+                _ERROR_OUT(msg);
+            }
+
+            try {
+                constFieldCnt = static_cast<UINT32>(vislib::CharTraitsA::ParseUInt64(tokens[1]));
+            } catch(...) {
+                vislib::StringA msg;
+                msg.Format("Failed to parse fixFieldCount of particle line %d", static_cast<int>(typeIdx));
+                _ERROR_OUT(msg);
+            }
+
+            try {
+                fieldCnt = static_cast<UINT32>(vislib::CharTraitsA::ParseUInt64(tokens[2]));
+            } catch(...) {
+                vislib::StringA msg;
+                msg.Format("Failed to parse varFieldCount of particle line %d", static_cast<int>(typeIdx));
+                _ERROR_OUT(msg);
+            }
+
+            if (tokens.Count() < 3 + constFieldCnt * 3 + fieldCnt * 2) {
+                vislib::StringA msg;
+                msg.Format("Particle line %d incomplete", static_cast<int>(typeIdx));
+                _ERROR_OUT(msg);
+            } else if (tokens.Count() > 3 + constFieldCnt * 3 + fieldCnt * 2) {
+                vislib::sys::Log::DefaultLog.WriteWarn("Trailing information on particle line %d will be ignored", static_cast<int>(typeIdx));
+            }
+
+            type.SetBaseType(tokens[0]);
+            type.ConstFields().SetCount(constFieldCnt);
+            type.Fields().SetCount(fieldCnt);
+            int pos = 3;
+            
+            for (UINT32 fieldIdx = 0; fieldIdx < constFieldCnt; fieldIdx++, pos += 3) {
+                MMSPDHeader::ConstField &field = type.ConstFields()[fieldIdx];
+
+                if (tokens[pos].Equals("id")) _ERROR_OUT("Field \"id\" is reserved for internal use and must not be used!");
+                if (tokens[pos].Equals("type")) _ERROR_OUT("Field \"type\" is reserved for internal use and must not be used!");
+                if (tokens[pos + 1].Equals("b") || tokens[pos + 1].Equals("byte", false)) field.SetType(MMSPDHeader::Field::TYPE_BYTE);
+                else if (tokens[pos + 1].Equals("f") || tokens[pos + 1].Equals("float", false)) field.SetType(MMSPDHeader::Field::TYPE_FLOAT);
+                else if (tokens[pos + 1].Equals("d") || tokens[pos + 1].Equals("double", false)) field.SetType(MMSPDHeader::Field::TYPE_DOUBLE);
+                else {
+                    str.Format("Type \"%s\" of field \"%d\" of type definition \"%d\" is unknown",
+                        tokens[pos + 1].PeekBuffer(), static_cast<int>(fieldIdx), static_cast<int>(typeIdx));
+                   _ERROR_OUT(str);
+                }
+                field.SetName(tokens[pos]);
+                try {
+                    switch (field.GetType()) {
+                        case MMSPDHeader::Field::TYPE_BYTE: {
+                            int i = vislib::CharTraitsA::ParseInt(tokens[pos + 2]);
+                            if ((i < 0) || (i > 255)) {
+                                str.Format("Byte value of field \"%s\" of type %d out of range\n",
+                                    tokens[pos].PeekBuffer(), static_cast<int>(typeIdx));
+                               _ERROR_OUT(str);
+                            }
+                            field.SetByte(static_cast<unsigned char>(i));
+                        } break;
+                        case MMSPDHeader::Field::TYPE_FLOAT: {
+                            field.SetFloat(static_cast<float>(vislib::CharTraitsA::ParseDouble(tokens[pos + 2])));
+                        } break;
+                        case MMSPDHeader::Field::TYPE_DOUBLE: {
+                            field.SetDouble(vislib::CharTraitsA::ParseDouble(tokens[pos + 2]));
+                        } break;
+                        default: _ERROR_OUT("Internal Error!");
+                    }
+                } catch(...) {
+                    str.Format("Failed to parse value for field \"%s\" of type %d\n",
+                        tokens[pos].PeekBuffer(), static_cast<int>(typeIdx));
+                   _ERROR_OUT(str);
+                }
+            }
+
+            for (UINT32 fieldIdx = 0; fieldIdx < fieldCnt; fieldIdx++, pos += 2) {
+                MMSPDHeader::Field &field = type.Fields()[fieldIdx];
+
+                if (tokens[pos].Equals("id")) _ERROR_OUT("Field \"id\" is reserved for internal use and must not be used!");
+                if (tokens[pos].Equals("type")) _ERROR_OUT("Field \"type\" is reserved for internal use and must not be used!");
+                if (tokens[pos + 1].Equals("b") || tokens[pos + 1].Equals("byte", false)) field.SetType(MMSPDHeader::Field::TYPE_BYTE);
+                else if (tokens[pos + 1].Equals("f") || tokens[pos + 1].Equals("float", false)) field.SetType(MMSPDHeader::Field::TYPE_FLOAT);
+                else if (tokens[pos + 1].Equals("d") || tokens[pos + 1].Equals("double", false)) field.SetType(MMSPDHeader::Field::TYPE_DOUBLE);
+                else {
+                    str.Format("Type \"%s\" of field \"%d\" of type definition \"%d\" is unknown",
+                        tokens[pos + 1].PeekBuffer(), static_cast<int>(fieldIdx), static_cast<int>(typeIdx));
+                   _ERROR_OUT(str);
+                }
+                field.SetName(str);
+            }
+
+        }
 
     } else {
         // reading header line
@@ -543,6 +702,7 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
     this->initFrameCache(cacheSize);
     */
 
+#undef _ASSERT_READLINE
 #undef _ASSERT_READSTRINGBINARY
 #undef _ASSERT_READFILE
 #undef _ERROR_OUT
