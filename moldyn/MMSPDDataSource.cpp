@@ -310,6 +310,7 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
     char *buffer = new char[MAX_BUFFER_SIZE];
     unsigned int frameCount = that->dataHeader.GetTimeCount();
     unsigned int frame = 0;
+    vislib::StringA token;
 
     // sizes of a particle in binary files
     unsigned int *typeSizes = new unsigned int[that->dataHeader.GetTypes().Count()];
@@ -403,7 +404,9 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
                                 throw new vislib::Exception("Particle count changed between frames even the header already defined the count", __FILE__, __LINE__);
                             }
                             partIdx = 0;
-                            parserState = that->dataHeader.HasIDs() ? 1 : 2;
+                            if (framePartCnt > 0) {
+                                parserState = that->dataHeader.HasIDs() ? 1 : 2;
+                            }
 
                         } break;
 
@@ -482,8 +485,64 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
 
                 } else {
                     // text, everything is lost
-                    throw vislib::MissingImplementationException("buildFrameIndex", __FILE__, __LINE__);
+                    for (; bufIdx < bufSize; bufIdx++) {
+                        switch(parserState) {
+                        case 0: { // seeking '>'
+                            if (buffer[bufIdx] == '>') {
 
+                                that->frameIdxLock.Lock();
+                                if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+                                that->frameIdx[frame++] = bufPos + bufIdx;
+                                that->frameIdxEvent.Set();
+                                that->frameIdxLock.Unlock();
+
+                                parserState = 1;
+                            }
+                        } break;
+                        case 1: { // whitespaces before particle number
+                            if (!vislib::CharTraitsA::IsSpace(buffer[bufIdx])) {
+                                *token.AllocateBuffer(1) = buffer[bufIdx];
+                                parserState = 2;
+                            }
+                        } break;
+                        case 2: { // particle number
+                            if (!vislib::CharTraitsA::IsDigit(buffer[bufIdx])) {
+                                framePartCnt = vislib::CharTraitsA::ParseUInt64(token);
+                                if ((framePartCnt != that->dataHeader.GetParticleCount()) && (that->dataHeader.GetParticleCount() != 0)) {
+                                    throw new vislib::Exception("Particle count changed between frames even the header already defined the count", __FILE__, __LINE__);
+                                }
+                                partIdx = 0;
+                                parserState = (framePartCnt > 0) ? 3 : 0;
+                            } else {
+                                token.Append(buffer[bufIdx]);
+                            }
+                        } break;
+                        case 3: { // linebreak after particle number
+                            if (buffer[bufIdx] == 0x0A) parserState = 4;
+                            token.Clear();
+                        } break;
+                        case 4: { // particle line
+                            if (buffer[bufIdx] == 0x0A) {
+                                partIdx++;
+                                if (partIdx == framePartCnt) {
+                                    parserState = 0;
+                                }
+                            }
+                            token.Clear();
+                        } break;
+                        }
+                    }
+                    if (f.IsEOF()) {
+                        if (frame == that->dataHeader.GetTimeCount()) {
+                            that->frameIdxLock.Lock();
+                            if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+                            that->frameIdx[frame] = f.Tell();
+                            that->frameIdxEvent.Set();
+                            that->frameIdxLock.Unlock();
+                        } else {
+                            throw vislib::Exception("Data file truncated", __FILE__, __LINE__);
+                        }
+                    }
                 }
 
             }
@@ -503,12 +562,12 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
                 static_cast<unsigned int>((end - begin) / frameCount));
 
 #if defined(DEBUG) || defined(_DEBUG)
-            that->frameIdxLock.Lock();
-            if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
-            for (unsigned int i = 0; i <= frameCount; i++) {
-                vislib::sys::Log::DefaultLog.WriteInfo(250, "    frame %u: %lu", i, that->frameIdx[i]);
-            }
-            that->frameIdxLock.Unlock();
+            //that->frameIdxLock.Lock();
+            //if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+            //for (unsigned int i = 0; i <= frameCount; i++) {
+            //    vislib::sys::Log::DefaultLog.WriteInfo(250, "    frame %u: %lu", i, that->frameIdx[i]);
+            //}
+            //that->frameIdxLock.Unlock();
 #endif /* DEBUG || _DEBUG */
 
         }
@@ -516,7 +575,7 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
     } catch(vislib::Exception e) {
         // sort of failed ...
         that->frameIdxLock.Lock();
-        if (that->frameIdx == NULL) that->frameIdx[0] = 0;
+        if (that->frameIdx != NULL) that->frameIdx[0] = 0;
         vislib::sys::Log::DefaultLog.WriteError("Failed to generated frame index: %s [%s:%d]",
             e.GetMsgA(), e.GetFile(), e.GetLine());
         that->frameIdxLock.Unlock();
@@ -525,7 +584,7 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
     } catch(...) {
         // sort of failed ...
         that->frameIdxLock.Lock();
-        if (that->frameIdx == NULL) that->frameIdx[0] = 0;
+        if (that->frameIdx != NULL) that->frameIdx[0] = 0;
         vislib::sys::Log::DefaultLog.WriteError("Failed to generated frame index: unexpected exception");
         that->frameIdxLock.Unlock();
         that->frameIdxEvent.Set();
@@ -980,33 +1039,42 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
         this->setFrameCount(this->dataHeader.GetTimeCount());
         this->frameIdxThread.Start(static_cast<void*>(this));
 
-        Frame *frm = new Frame(*this);
-        this->loadFrame(frm, 0);
+        SIZE_T dataSize[3];
+        for (unsigned int i = 0; i < 3; i++) {
 
-        this->frameIdxLock.Lock();
-        if (this->frameIdx[0] == 0) {
+            Frame *frm = new Frame(*this);
+            this->loadFrame(frm, i);
+
+            this->frameIdxLock.Lock();
+            if (this->frameIdx[0] == 0) {
+                this->frameIdxLock.Unlock();
+                // aborted with error
+                _ERROR_OUT("Unable to load first frame (Frame index generation aborted)");
+            }
             this->frameIdxLock.Unlock();
-            // aborted with error
-            _ERROR_OUT("Unable to load first frame (Frame index generation aborted)");
-        }
-        this->frameIdxLock.Unlock();
 
-        SIZE_T dataSize = frm->GetIndexReconstructionData().GetSize();
-        for (SIZE_T i = 0; i < frm->GetData().Count(); i++) {
-            dataSize += frm->GetData()[i].GetData().GetSize();
+            dataSize[3] = frm->GetIndexReconstructionData().GetSize();
+            for (SIZE_T i = 0; i < frm->GetData().Count(); i++) {
+                dataSize[3] += frm->GetData()[i].GetData().GetSize();
+            }
+
+            // TODO: Calculate clipping box!
+
         }
 
-        if ((dataSize == 0) || (frm->GetData().Count() == 0)) {
+        // TODO: better estimation by extrapolation?
+        dataSize[0] = vislib::math::Max(dataSize[0], dataSize[1]);
+        dataSize[0] = vislib::math::Max(dataSize[0], dataSize[2]);
+
+        if (dataSize[0] == 0) {
             _ERROR_OUT("Unable to load first frame (no data)");
         }
 
-        // TODO: Calculate clipping box!
-
-        dataSize += static_cast<UINT64>(static_cast<double>(dataSize)
+        dataSize[0] += static_cast<UINT64>(static_cast<double>(dataSize[0])
             * (static_cast<double>(CACHE_FRAME_FACTOR) - 1.0));
 
         UINT64 mem = vislib::sys::SystemInformation::AvailableMemorySize();
-        unsigned int cacheSize = static_cast<unsigned int>(mem / dataSize);
+        unsigned int cacheSize = static_cast<unsigned int>(mem / dataSize[0]);
 
         if (cacheSize > CACHE_SIZE_MAX) {
             vislib::sys::Log::DefaultLog.WriteInfo("Frame cache size %u requested limited to %d",
@@ -1041,21 +1109,22 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
  */
 bool moldyn::MMSPDDataSource::getDataCallback(Call& caller) {
     MultiParticleDataCall *c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
-    /*if (c2 == NULL)*/ return false;
+    if (c2 == NULL) return false;
 
-    // TODO: Assign data
+    Frame *f = NULL;
+    if (c2 != NULL) {
+        f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
+        if (f == NULL) return false;
+        c2->SetUnlocker(new Unlocker(*f));
+        c2->SetFrameID(f->FrameNumber());
+        c2->SetDataHash(this->dataHash);
 
-    //Frame *f = NULL;
-    //if (c2 != NULL) {
-    //    f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
-    //    if (f == NULL) return false;
-    //    c2->SetUnlocker(new Unlocker(*f));
-    //    c2->SetFrameID(f->FrameNumber());
-    //    c2->SetDataHash(0);
-    //    f->SetData(*c2);
-    //}
+        // TODO: Assign data
+        //    f->SetData(*c2);
 
-    //return true;
+    }
+
+    return true;
 }
 
 
