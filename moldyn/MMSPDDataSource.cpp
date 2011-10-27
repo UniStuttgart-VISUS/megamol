@@ -11,6 +11,7 @@
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
 #include "vislib/ArrayAllocator.h"
+#include "vislib/ASCIIFileBuffer.h"
 #include "vislib/AutoLock.h"
 #include "vislib/Log.h"
 #include "vislib/File.h"
@@ -21,6 +22,7 @@
 #include "vislib/StringTokeniser.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/mathfunctions.h"
+#include "vislib/MemoryFile.h"
 #include "vislib/memutils.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/UTF8Encoder.h"
@@ -290,8 +292,65 @@ void moldyn::MMSPDDataSource::Frame::SetData(MultiParticleDataCall& call,
 void moldyn::MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, const MMSPDHeader& header) {
     // We don't have to brother with unicode here, because there is no string data allowed.
     // All characters must be white space, line breaks, '>' and characters forming numbers (digits, dots, plus, minus, 'e').
+    vislib::sys::MemoryFile mem;
+    mem.Open(static_cast<void*>(buffer), static_cast<SIZE_T>(size), vislib::sys::File::READ_ONLY);
+    vislib::sys::ASCIIFileBuffer txt(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
+    if (!txt.LoadFile(mem)) throw vislib::Exception(__FILE__, __LINE__);
 
-    throw vislib::MissingImplementationException("Frame::loadFrameText", __FILE__, __LINE__);
+    if (txt.Count() <= 0) throw vislib::Exception("Unable to load frame data", __FILE__, __LINE__);
+    if (txt.Line(0).Count() < 2) throw vislib::Exception("Illegal time frame marker", __FILE__, __LINE__);
+    UINT64 partCnt = vislib::CharTraitsA::ParseUInt64(txt.Line(0).Word(1));
+    if (txt.Count() < partCnt + 1) throw vislib::Exception("Data frame truncated", __FILE__, __LINE__);
+
+    SIZE_T typeCnt = header.GetTypes().Count();
+    vislib::PtrArray<vislib::RawStorageWriter> typeData;
+    typeData.SetCount(typeCnt);
+    for (SIZE_T i = 0; i < typeCnt; i++) {
+        typeData[i] = new vislib::RawStorageWriter(this->Data()[i].Data());
+    }
+    vislib::RawStorageWriter idxRecDat(this->IndexReconstructionData());
+    UINT32 irdLastType = static_cast<UINT32>(typeCnt);
+    UINT64 irdLastCount;
+
+    SIZE_T type = 0;
+    for (UINT64 pi = 0; pi < partCnt; pi++) {
+        const vislib::sys::ASCIIFileBuffer::LineBuffer &line = txt.Line(1 + pi);
+        unsigned int off = 0;
+        if (typeCnt > 1) {
+            if (header.HasIDs()) {
+                if (line.Count() < 2) throw vislib::Exception("line truncated", __FILE__, __LINE__);
+                type = static_cast<SIZE_T>(vislib::CharTraitsA::ParseInt(line.Word(1)));
+                if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
+                typeData[type]->Write(vislib::CharTraitsA::ParseUInt64(line.Word(0)));
+                off = 2;
+            } else {
+                if (line.Count() < 1) throw vislib::Exception("line truncated", __FILE__, __LINE__);
+                type = static_cast<SIZE_T>(vislib::CharTraitsA::ParseInt(line.Word(0)));
+                if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
+                off = 1;
+            }
+        }
+
+        this->addIndexForReconstruction(static_cast<UINT32>(type), idxRecDat,
+            this->IndexReconstructionData(), irdLastType, irdLastCount);
+
+        SIZE_T fieldCnt = header.GetTypes()[type].GetFields().Count();
+        if (line.Count() < fieldCnt + off) throw vislib::Exception("line truncated", __FILE__, __LINE__);
+
+        for (SIZE_T fi = 0; fi < fieldCnt; fi++) {
+            float val = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(off + this->GetData()[type].FieldMap()[fi])));
+            if (header.GetTypes()[type].GetFields()[this->GetData()[type].FieldMap()[fi]].GetType() == MMSPDHeader::Field::TYPE_BYTE) {
+                val /= 255.0f;
+            }
+            typeData[type]->Write(val);
+        }
+
+    }
+
+    for (SIZE_T i = 0; i < typeCnt; i++) {
+        this->Data()[i].Data().EnforceSize(typeData[i]->End(), true);
+    }
+    this->IndexReconstructionData().EnforceSize(idxRecDat.End(), true);
 }
 
 
@@ -321,13 +380,12 @@ void moldyn::MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, 
 
         if (typeCnt > 1) {
             type = *reinterpret_cast<UINT32*>(&buffer[pos]);
+            if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
             if (header.HasIDs()) {
                 typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
             }
             pos += 4;
         }
-
-        if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
 
         this->addIndexForReconstruction(static_cast<UINT32>(type), idxRecDat,
             this->IndexReconstructionData(), irdLastType, irdLastCount);
@@ -372,7 +430,83 @@ void moldyn::MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, 
  * moldyn::MMSPDDataSource::Frame::loadFrameBinaryBE
  */
 void moldyn::MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, const MMSPDHeader& header) {
-    throw vislib::MissingImplementationException("Frame::loadFrameBinaryBE", __FILE__, __LINE__);
+    UINT64 &partCnt = *reinterpret_cast<UINT64*>(&buffer[0]);
+    SIZE_T pos = 8;
+    SIZE_T typeCnt = header.GetTypes().Count();
+    vislib::PtrArray<vislib::RawStorageWriter> typeData;
+    typeData.SetCount(typeCnt);
+    SIZE_T valuesCount = 0;
+    for (SIZE_T i = 0; i < typeCnt; i++) {
+        typeData[i] = new vislib::RawStorageWriter(this->Data()[i].Data());
+        valuesCount = vislib::math::Max(valuesCount, header.GetTypes()[i].GetFields().Count());
+    }
+    vislib::SmartPtr<float, vislib::ArrayAllocator<float> > values = new float[valuesCount];
+    vislib::RawStorageWriter idxRecDat(this->IndexReconstructionData());
+    UINT32 irdLastType = static_cast<UINT32>(typeCnt);
+    UINT64 irdLastCount;
+
+    SIZE_T type = 0;
+    for (UINT64 pi = 0; pi < partCnt; pi++) {
+
+        if (header.HasIDs()) pos += 8;
+
+        if (typeCnt > 1) {
+            vislib::Swap(buffer[pos + 0], buffer[pos + 3]);
+            vislib::Swap(buffer[pos + 1], buffer[pos + 2]);
+            type = *reinterpret_cast<UINT32*>(&buffer[pos]);
+            if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
+            if (header.HasIDs()) {
+                vislib::Swap(buffer[pos - 8 + 0], buffer[pos - 8 + 7]);
+                vislib::Swap(buffer[pos - 8 + 1], buffer[pos - 8 + 6]);
+                vislib::Swap(buffer[pos - 8 + 2], buffer[pos - 8 + 5]);
+                vislib::Swap(buffer[pos - 8 + 3], buffer[pos - 8 + 4]);
+                typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
+            }
+            pos += 4;
+        }
+
+        this->addIndexForReconstruction(static_cast<UINT32>(type), idxRecDat,
+            this->IndexReconstructionData(), irdLastType, irdLastCount);
+
+        SIZE_T fieldCnt = header.GetTypes()[type].GetFields().Count();
+
+        for (SIZE_T fi = 0; fi < fieldCnt; fi++) {
+            MMSPDHeader::Field::TypeID typeID = header.GetTypes()[type].GetFields()[fi].GetType();
+            switch (typeID) {
+            case MMSPDHeader::Field::TYPE_BYTE:
+                values.operator->()[fi] = static_cast<float>(
+                    *reinterpret_cast<unsigned char*>(&buffer[pos])) / 255.0f;
+                pos += 1;
+                break;
+            case MMSPDHeader::Field::TYPE_FLOAT:
+                vislib::Swap(buffer[pos + 0], buffer[pos + 3]);
+                vislib::Swap(buffer[pos + 1], buffer[pos + 2]);
+                values.operator->()[fi] = *reinterpret_cast<float*>(&buffer[pos]);
+                pos += 4;
+                break;
+            case MMSPDHeader::Field::TYPE_DOUBLE:
+                vislib::Swap(buffer[pos + 0], buffer[pos + 7]);
+                vislib::Swap(buffer[pos + 1], buffer[pos + 6]);
+                vislib::Swap(buffer[pos + 2], buffer[pos + 5]);
+                vislib::Swap(buffer[pos + 3], buffer[pos + 4]);
+                values.operator->()[fi] = static_cast<float>(
+                    *reinterpret_cast<double*>(&buffer[pos]));
+                pos += 8;
+                break;
+            }
+        }
+
+        for (SIZE_T fi = 0; fi < fieldCnt; fi++) {
+            typeData[type]->Write(values.operator->()[this->GetData()[type].FieldMap()[fi]]);
+        }
+
+    }
+
+    for (SIZE_T i = 0; i < typeCnt; i++) {
+        this->Data()[i].Data().EnforceSize(typeData[i]->End(), true);
+    }
+    this->IndexReconstructionData().EnforceSize(idxRecDat.End(), true);
+
 }
 
 
@@ -1158,7 +1292,7 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
                         tokens[pos + 1].PeekBuffer(), static_cast<int>(fieldIdx), static_cast<int>(typeIdx));
                    _ERROR_OUT(str);
                 }
-                field.SetName(str);
+                field.SetName(tokens[pos]);
             }
 
         }
