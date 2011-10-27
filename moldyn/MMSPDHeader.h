@@ -115,6 +115,20 @@ namespace moldyn {
             ~ConstField(void);
 
             /**
+             * Gets the value of the field casted as float
+             *
+             * @return the value of the field casted as float
+             */
+            inline float GetAsFloat(void) const {
+                switch (this->GetType()) {
+                case TYPE_BYTE: return static_cast<float>(this->data.valByte) / 255.0f;
+                case TYPE_FLOAT: return this->data.valFloat;
+                case TYPE_DOUBLE: return static_cast<float>(this->data.valDouble);
+                }
+                return 0.0f;
+            }
+
+            /**
              * Gets the value of the field as byte.
              * The caller must ensure the compatibility of the field type setting.
              *

@@ -10,9 +10,13 @@
 #include "param/FilePathParam.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
+#include "vislib/ArrayAllocator.h"
 #include "vislib/AutoLock.h"
 #include "vislib/Log.h"
 #include "vislib/File.h"
+#include "vislib/PtrArray.h"
+#include "vislib/RawStorageWriter.h"
+#include "vislib/SmartPtr.h"
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/SystemInformation.h"
@@ -20,6 +24,7 @@
 #include "vislib/memutils.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/UTF8Encoder.h"
+#include "vislib/utils.h"
 #include "vislib/VersionNumber.h"
 
 using namespace megamol::core;
@@ -57,7 +62,7 @@ moldyn::MMSPDDataSource::Frame::~Frame() {
  */
 bool moldyn::MMSPDDataSource::Frame::LoadFrame(
         vislib::sys::File *file, unsigned int idx, UINT64 size,
-        moldyn::MMSPDHeader& header, bool isBinary, bool isBigEndian) {
+        const moldyn::MMSPDHeader& header, bool isBinary, bool isBigEndian) {
     this->frame = idx;
     char *buf = new char[size];
     try {
@@ -65,6 +70,118 @@ bool moldyn::MMSPDDataSource::Frame::LoadFrame(
             throw vislib::Exception("Frame data truncated", __FILE__, __LINE__);
         }
 
+        // prepare the frame object
+        this->Clear();
+        SIZE_T typeCnt = header.GetTypes().Count();
+        this->Data().SetCount(typeCnt);
+        this->IndexReconstructionData().EnforceSize(0);
+        for (SIZE_T ti = 0; ti < typeCnt; ti++) {
+            MMSPDFrameData::Particles& parts = this->Data()[ti];
+            const MMSPDHeader::TypeDefinition& type = header.GetTypes()[ti];
+
+            parts.SetCount(0);
+            parts.Data().EnforceSize(0);
+            SIZE_T fieldCnt = type.GetFields().Count();
+            SIZE_T remFields = 0;
+            parts.AllocateFieldMap(fieldCnt);
+
+            // build up field map
+            bool isDot = (type.GetBaseType().Equals("d", false) || type.GetBaseType().Equals("dot", false));
+            bool isSphere = (type.GetBaseType().Equals("s", false) || type.GetBaseType().Equals("sphere", false));
+            bool isEllipsoid = (type.GetBaseType().Equals("e", false) || type.GetBaseType().Equals("ellipsoid", false));
+            bool isCylinder = (type.GetBaseType().Equals("c", false) || type.GetBaseType().Equals("cylinder", false));
+
+            if (isDot || isSphere || isEllipsoid || isCylinder) {
+                int idx[17];
+                for (int i = 0; i < 17; i++) idx[i] = -1;
+
+                for (SIZE_T fi = 0; fi < fieldCnt; fi++) {
+                    if (type.GetFields()[fi].GetName().Equals("x"))  idx[0] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("y"))  idx[1] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("z"))  idx[2] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("cr")) idx[3] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("cg")) idx[4] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("cb")) idx[5] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("r"))  idx[6] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("rx")) idx[7] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("ry")) idx[8] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("rz")) idx[9] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("dx")) idx[10] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("dy")) idx[11] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("dz")) idx[12] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("qr")) idx[13] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("qi")) idx[14] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("qj")) idx[15] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("qk")) idx[16] = static_cast<int>(fi);
+                }
+
+                if ((idx[0] >= 0) && (idx[1] >= 0) && (idx[2] >= 0)) {
+                    // position found!
+                    parts.FieldMap()[0] = idx[0];
+                    parts.FieldMap()[1] = idx[1];
+                    parts.FieldMap()[2] = idx[2];
+                    remFields = 3;
+                }
+
+                if (isEllipsoid && (idx[7] >= 0) && (idx[8] >= 0) && (idx[9] >= 0)) {
+                    // rx, ry, rz found for ellipsoid
+                    parts.FieldMap()[remFields + 0] = idx[7];
+                    parts.FieldMap()[remFields + 1] = idx[8];
+                    parts.FieldMap()[remFields + 2] = idx[9];
+                    remFields += 3;
+                }
+
+                if ((isSphere || isCylinder || (isEllipsoid && ((idx[7] < 0) || (idx[8] < 0) || (idx[9] < 0)))) && (idx[6] >= 0)) {
+                    // r found
+                    parts.FieldMap()[remFields] = idx[6];
+                    remFields += 1;
+                }
+
+                if (isCylinder && (idx[10] >= 0) && (idx[11] >= 0) && (idx[12] >= 0)) {
+                    // dx, dy, dz found for cylinders
+                    parts.FieldMap()[remFields + 0] = idx[10];
+                    parts.FieldMap()[remFields + 1] = idx[11];
+                    parts.FieldMap()[remFields + 2] = idx[12];
+                    remFields += 3;
+                }
+
+                if ((idx[13] >= 0) && (idx[14] >= 0) && (idx[15] >= 0) && (idx[16] >= 0)) {
+                    // quaternion found
+                    parts.FieldMap()[remFields + 0] = idx[13];
+                    parts.FieldMap()[remFields + 1] = idx[14];
+                    parts.FieldMap()[remFields + 2] = idx[15];
+                    parts.FieldMap()[remFields + 3] = idx[16];
+                    remFields += 4;
+                }
+
+                if ((idx[3] >= 0) && (idx[4] >= 0) && (idx[5] >= 0)) {
+                    // colour found!
+                    parts.FieldMap()[remFields + 0] = idx[3];
+                    parts.FieldMap()[remFields + 1] = idx[4];
+                    parts.FieldMap()[remFields + 2] = idx[5];
+                    remFields += 3;
+                }
+
+            }
+
+            if (remFields < fieldCnt) {
+                for (SIZE_T fi = 0; fi < fieldCnt; fi++) { // 1:1 map
+                    bool found = false;
+                    for (SIZE_T i = 0; i < remFields; i++) {
+                        if (parts.FieldMap()[i] == fi) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) continue; // field already stored
+                    parts.FieldMap()[remFields] = static_cast<unsigned int>(fi);
+                    remFields++;
+                }
+            }
+
+        }
+
+        // now actually load the data
         if (isBinary) {
             if (!isBigEndian) {
                 this->loadFrameBinary(buf, size, header);
@@ -75,10 +192,18 @@ bool moldyn::MMSPDDataSource::Frame::LoadFrame(
             this->loadFrameText(buf, size, header);
         }
 
+        for (SIZE_T ti = 0; ti < typeCnt; ti++) {
+            MMSPDFrameData::Particles& parts = this->Data()[ti];
+            SIZE_T ps = header.GetTypes()[ti].GetFields().Count() * sizeof(float);
+            if (header.HasIDs()) ps += 8;
+            ASSERT((parts.GetData().GetSize() % ps) == 0);
+            parts.SetCount(parts.GetData().GetSize() / ps);
+        }
+
     } catch (...) {
         delete[] buf;
+        this->Clear();
         throw;
-
         //return false;
     }
 
@@ -87,88 +212,82 @@ bool moldyn::MMSPDDataSource::Frame::LoadFrame(
 }
 
 
-///*
-// * moldyn::MMPLDDataSource::Frame::SetData
-// */
-//void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
-//    if (this->dat.IsEmpty()) {
-//        call.SetParticleListCount(0);
-//        return;
-//    }
-//
-//    SIZE_T p = sizeof(UINT32);
-//    UINT32 plc = *this->dat.As<UINT32>();
-//    call.SetParticleListCount(plc);
-//    for (UINT32 i = 0; i < plc; i++) {
-//        MultiParticleDataCall::Particles &pts = call.AccessParticles(i);
-//
-//        UINT8 vrtType = *this->dat.AsAt<UINT8>(p); p += 1;
-//        UINT8 colType = *this->dat.AsAt<UINT8>(p); p += 1;
-//        MultiParticleDataCall::Particles::VertexDataType vrtDatType;
-//        MultiParticleDataCall::Particles::ColourDataType colDatType;
-//        SIZE_T vrtSize = 0;
-//        SIZE_T colSize = 0;
-//
-//        switch (vrtType) {
-//            case 0: vrtSize = 0; vrtDatType = MultiParticleDataCall::Particles::VERTDATA_NONE; break;
-//            case 1: vrtSize = 12; vrtDatType = MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ; break;
-//            case 2: vrtSize = 16; vrtDatType = MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR; break;
-//            case 3: vrtSize = 6; vrtDatType = MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ; break;
-//            default: vrtSize = 0; vrtDatType = MultiParticleDataCall::Particles::VERTDATA_NONE; break;
-//        }
-//        if (vrtType != 0) {
-//            switch (colType) {
-//                case 0: colSize = 0; colDatType = MultiParticleDataCall::Particles::COLDATA_NONE; break;
-//                case 1: colSize = 3; colDatType = MultiParticleDataCall::Particles::COLDATA_UINT8_RGB; break;
-//                case 2: colSize = 4; colDatType = MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA; break;
-//                case 3: colSize = 4; colDatType = MultiParticleDataCall::Particles::COLDATA_FLOAT_I; break;
-//                case 4: colSize = 12; colDatType = MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB; break;
-//                case 5: colSize = 16; colDatType = MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA; break;
-//                default: colSize = 0; colDatType = MultiParticleDataCall::Particles::COLDATA_NONE; break;
-//            }
-//        } else {
-//            colDatType = MultiParticleDataCall::Particles::COLDATA_NONE;
-//            colSize = 0;
-//        }
-//        unsigned int stride = static_cast<unsigned int>(vrtSize + colSize);
-//
-//        if ((vrtType == 1) || (vrtType == 3)) {
-//            pts.SetGlobalRadius(*this->dat.AsAt<float>(p)); p += 4;
-//        } else {
-//            pts.SetGlobalRadius(0.05f);
-//        }
-//
-//        if (colType == 0) {
-//            pts.SetGlobalColour(*this->dat.AsAt<UINT8>(p),
-//                *this->dat.AsAt<UINT8>(p + 1),
-//                *this->dat.AsAt<UINT8>(p + 2));
-//            p += 4;
-//        } else {
-//            pts.SetGlobalColour(192, 192, 192);
-//            if (colType == 3) {
-//                pts.SetColourMapIndexValues(
-//                    *this->dat.AsAt<float>(p),
-//                    *this->dat.AsAt<float>(p + 4));
-//                p += 8;
-//            } else {
-//                pts.SetColourMapIndexValues(0.0f, 1.0f);
-//            }
-//        }
-//
-//        pts.SetCount(*this->dat.AsAt<UINT64>(p)); p += 8;
-//
-//        pts.SetVertexData(vrtDatType, this->dat.At(p), stride);
-//        pts.SetColourData(colDatType, this->dat.At(p + vrtSize), stride);
-//
-//    }
-//
-//}
+/*
+ * moldyn::MMSPDDataSource::Frame::SetData
+ */
+void moldyn::MMSPDDataSource::Frame::SetData(MultiParticleDataCall& call,
+        const moldyn::MMSPDHeader& header) {
+    call.SetParticleListCount(static_cast<unsigned int>(this->Data().Count()));
+    for (SIZE_T pi = 0; pi < this->Data().Count(); pi++) {
+        MultiParticleDataCall::Particles &pts = call.AccessParticles(static_cast<unsigned int>(pi));
+        const MMSPDHeader::TypeDefinition &typeDef = header.GetTypes()[pi];
+        MMSPDFrameData::Particles &parts = this->Data()[pi];
+
+        bool hasX = false, hasY = false, hasZ = false, hasR = false, hasCR = false, hasCG = false, hasCB = false;
+        unsigned int rIdx = -1, cIdx = -1;
+        for (SIZE_T fi = 0; fi < typeDef.GetFields().Count(); fi++) {
+            const vislib::StringA& fn = typeDef.GetFields()[fi].GetName();
+            if (fn.Equals("x")) hasX = true;
+            if (fn.Equals("y")) hasY = true;
+            if (fn.Equals("z")) hasZ = true;
+            if (fn.Equals("r")) { hasR = true; rIdx = static_cast<unsigned int>(fi); }
+            if (fn.Equals("cr")) { hasCR = true; cIdx = static_cast<unsigned int>(fi); }
+            if (fn.Equals("cg")) hasCG = true;
+            if (fn.Equals("cb")) hasCB = true;
+        }
+
+        if (hasR && (parts.FieldMap()[rIdx] != 3)) {
+            // radius vector stored. ... crap
+            hasR = false;
+        }
+
+        pts.SetGlobalColour(191, 191, 191);
+        pts.SetGlobalRadius(0.5f);
+        unsigned int cr = 191, cg = 191, cb = 191;
+        for (SIZE_T fi = 0; fi < typeDef.GetConstFields().Count(); fi++) {
+            const MMSPDHeader::ConstField &f = typeDef.GetConstFields()[fi];
+            if (f.GetName().Equals("r")) pts.SetGlobalRadius(f.GetAsFloat());
+            if (f.GetName().Equals("cr")) pts.SetGlobalColour(cr = static_cast<unsigned int>(f.GetAsFloat() * 255.0f), cg, cb);
+            if (f.GetName().Equals("cg")) pts.SetGlobalColour(cr, cg = static_cast<unsigned int>(f.GetAsFloat() * 255.0f), cb);
+            if (f.GetName().Equals("cb")) pts.SetGlobalColour(cr, cg, cb = static_cast<unsigned int>(f.GetAsFloat() * 255.0f));
+        }
+
+        // now use some because-I-know-magic:
+        unsigned int off = 0;
+        if (header.HasIDs()) off += 8;
+        if (!hasX || !hasY || !hasZ) {
+            // too empty
+            pts.SetCount(0);
+            continue;
+
+        } else {
+            pts.SetCount(parts.Count());
+            pts.SetVertexData(hasR ? MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR
+                : MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                parts.Data().At(off),
+                static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
+            //printf("%lu\n", parts.Count());
+            //printf("%f %f %f\n", parts.Data().AsAt<float>(off)[0], parts.Data().AsAt<float>(off)[1], parts.Data().AsAt<float>(off)[2]);
+
+            if (hasCR && hasCG && hasCB) {
+                pts.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
+                    parts.Data().At(off + parts.FieldMap()[cIdx] * sizeof(float)),
+                    static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
+            } else {
+                pts.SetColourData(MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+            }
+
+        }
+
+    }
+
+}
 
 
 /*
  * moldyn::MMSPDDataSource::Frame::loadFrameText
  */
-void moldyn::MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, MMSPDHeader& header) {
+void moldyn::MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, const MMSPDHeader& header) {
     // We don't have to brother with unicode here, because there is no string data allowed.
     // All characters must be white space, line breaks, '>' and characters forming numbers (digits, dots, plus, minus, 'e').
 
@@ -179,16 +298,112 @@ void moldyn::MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, MM
 /*
  * moldyn::MMSPDDataSource::Frame::loadFrameBinary
  */
-void moldyn::MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, MMSPDHeader& header) {
-    throw vislib::MissingImplementationException("Frame::loadFrameBinary", __FILE__, __LINE__);
+void moldyn::MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, const MMSPDHeader& header) {
+    UINT64 &partCnt = *reinterpret_cast<UINT64*>(&buffer[0]);
+    SIZE_T pos = 8;
+    SIZE_T typeCnt = header.GetTypes().Count();
+    vislib::PtrArray<vislib::RawStorageWriter> typeData;
+    typeData.SetCount(typeCnt);
+    SIZE_T valuesCount = 0;
+    for (SIZE_T i = 0; i < typeCnt; i++) {
+        typeData[i] = new vislib::RawStorageWriter(this->Data()[i].Data());
+        valuesCount = vislib::math::Max(valuesCount, header.GetTypes()[i].GetFields().Count());
+    }
+    vislib::SmartPtr<float, vislib::ArrayAllocator<float> > values = new float[valuesCount];
+    vislib::RawStorageWriter idxRecDat(this->IndexReconstructionData());
+    UINT32 irdLastType = static_cast<UINT32>(typeCnt);
+    UINT64 irdLastCount;
+
+    SIZE_T type = 0;
+    for (UINT64 pi = 0; pi < partCnt; pi++) {
+
+        if (header.HasIDs()) pos += 8;
+
+        if (typeCnt > 1) {
+            type = *reinterpret_cast<UINT32*>(&buffer[pos]);
+            if (header.HasIDs()) {
+                typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
+            }
+            pos += 4;
+        }
+
+        if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
+
+        this->addIndexForReconstruction(static_cast<UINT32>(type), idxRecDat,
+            this->IndexReconstructionData(), irdLastType, irdLastCount);
+
+        SIZE_T fieldCnt = header.GetTypes()[type].GetFields().Count();
+
+        for (SIZE_T fi = 0; fi < fieldCnt; fi++) {
+            MMSPDHeader::Field::TypeID typeID = header.GetTypes()[type].GetFields()[fi].GetType();
+            switch (typeID) {
+            case MMSPDHeader::Field::TYPE_BYTE:
+                values.operator->()[fi] = static_cast<float>(
+                    *reinterpret_cast<unsigned char*>(&buffer[pos])) / 255.0f;
+                pos += 1;
+                break;
+            case MMSPDHeader::Field::TYPE_FLOAT:
+                values.operator->()[fi] = *reinterpret_cast<float*>(&buffer[pos]);
+                pos += 4;
+                break;
+            case MMSPDHeader::Field::TYPE_DOUBLE:
+                values.operator->()[fi] = static_cast<float>(
+                    *reinterpret_cast<double*>(&buffer[pos]));
+                pos += 8;
+                break;
+            }
+        }
+
+        for (SIZE_T fi = 0; fi < fieldCnt; fi++) {
+            typeData[type]->Write(values.operator->()[this->GetData()[type].FieldMap()[fi]]);
+        }
+
+    }
+
+    for (SIZE_T i = 0; i < typeCnt; i++) {
+        this->Data()[i].Data().EnforceSize(typeData[i]->End(), true);
+    }
+    this->IndexReconstructionData().EnforceSize(idxRecDat.End(), true);
+
 }
 
 
 /*
  * moldyn::MMSPDDataSource::Frame::loadFrameBinaryBE
  */
-void moldyn::MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, MMSPDHeader& header) {
+void moldyn::MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, const MMSPDHeader& header) {
     throw vislib::MissingImplementationException("Frame::loadFrameBinaryBE", __FILE__, __LINE__);
+}
+
+
+/*
+ * moldyn::MMSPDDataSource::Frame::addIndexForReconstruction
+ */
+void moldyn::MMSPDDataSource::Frame::addIndexForReconstruction(UINT32 type,
+        class vislib::RawStorageWriter& wrtr, class vislib::RawStorage& data,
+        UINT32 &lastType, UINT64 &lastCount) {
+    unsigned char dat[10];
+    unsigned int datLen;
+
+    if (type != lastType) {
+        lastType = type;
+        lastCount = 1;
+        datLen = 10;
+        if (!vislib::UIntRLEEncode(dat, datLen, type)) throw vislib::Exception(__FILE__, __LINE__);
+        wrtr.Write(dat, datLen);
+        datLen = 10;
+        if (!vislib::UIntRLEEncode(dat, datLen, lastCount)) throw vislib::Exception(__FILE__, __LINE__);
+        wrtr.Write(dat, datLen);
+
+    } else {
+        wrtr.SetPosition(wrtr.Position() - vislib::UIntRLELength(lastCount));
+        datLen = 10;
+        lastCount++;
+        if (!vislib::UIntRLEEncode(dat, datLen, lastCount)) throw vislib::Exception(__FILE__, __LINE__);
+        wrtr.Write(dat, datLen);
+
+    }
+
 }
 
 /*****************************************************************************/
@@ -277,9 +492,13 @@ void moldyn::MMSPDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
     while ((fromSeek == 0) || (toSeek == 0)) {
 
         this->frameIdxLock.Lock();
-        firstSeek = this->frameIdx[0];
-        fromSeek = this->frameIdx[idx];
-        toSeek = this->frameIdx[idx + 1];
+        if (this->frameIdx == NULL) {
+            firstSeek = 0;
+        } else {
+            firstSeek = this->frameIdx[0];
+            fromSeek = this->frameIdx[idx];
+            toSeek = this->frameIdx[idx + 1];
+        }
         if ((firstSeek != 0) && ((fromSeek == 0) || (toSeek == 0))) {
             this->frameIdxEvent.Reset();
         }
@@ -1127,6 +1346,9 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
 
         UINT64 mem = vislib::sys::SystemInformation::AvailableMemorySize();
         unsigned int cacheSize = static_cast<unsigned int>(mem / dataSize[0]);
+        if (cacheSize > this->dataHeader.GetTimeCount()) {
+            cacheSize = this->dataHeader.GetTimeCount();
+        }
 
         if (cacheSize > CACHE_SIZE_MAX) {
             vislib::sys::Log::DefaultLog.WriteInfo("Frame cache size %u requested limited to %d",
@@ -1170,10 +1392,7 @@ bool moldyn::MMSPDDataSource::getDataCallback(Call& caller) {
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());
         c2->SetDataHash(this->dataHash);
-
-        // TODO: Assign data
-        //    f->SetData(*c2);
-
+        f->SetData(*c2, this->dataHeader);
     }
 
     return true;
@@ -1190,7 +1409,8 @@ bool moldyn::MMSPDDataSource::getExtentCallback(Call& caller) {
         c2->SetFrameCount(vislib::math::Max(1u, this->dataHeader.GetTimeCount()));
         c2->AccessBoundingBoxes().Clear();
         c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->dataHeader.GetBoundingBox());
-        c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->clipbox);
+        //c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->clipbox);
+        c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->dataHeader.GetBoundingBox());
         c2->SetDataHash((this->CacheSize() > 0) ? this->dataHash : 0);
         c2->SetUnlocker(NULL);
         return true;

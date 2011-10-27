@@ -31,6 +31,8 @@ namespace moldyn {
 
         /**
          * Class holding all particles of one type
+         *
+         * NOTE: NO Double supported! Doubles will be converted to floats!
          */
         class Particles {
         public:
@@ -61,7 +63,7 @@ namespace moldyn {
              *
              * @return The number of particles
              */
-            inline UINT64 Count(void) {
+            inline UINT64 Count(void) const {
                 return this->count;
             }
 
@@ -129,6 +131,8 @@ namespace moldyn {
              *
              * This is the raw data following the variable fields defined by
              * the particle type. (never storing the type id field!)
+             *
+             * NOTE: NO Double supported! Doubles will be converted to floats!
              */
             vislib::RawStorage data;
 

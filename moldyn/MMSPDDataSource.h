@@ -26,6 +26,12 @@
 #include "vislib/types.h"
 
 
+namespace vislib {
+    /* forward declarations */
+    class RawStorage;
+    class RawStorageWriter;
+};
+
 namespace megamol {
 namespace core {
 namespace moldyn {
@@ -179,14 +185,15 @@ namespace moldyn {
              * @return True on success
              */
             bool LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size,
-                MMSPDHeader& header, bool isBinary, bool isBigEndian);
+                const MMSPDHeader& header, bool isBinary, bool isBigEndian);
 
-            ///**
-            // * Sets the data into the call
-            // *
-            // * @param call The call to receive the data
-            // */
-            //void SetData(MultiParticleDataCall& call);
+            /**
+             * Sets the data into the call
+             *
+             * @param call The call to receive the data
+             * @param header The data set header
+             */
+            void SetData(MultiParticleDataCall& call, const MMSPDHeader& header);
 
         private:
 
@@ -200,7 +207,7 @@ namespace moldyn {
              *
              * @throws vislib::Exception on any error
              */
-            void loadFrameText(char *buffer, UINT64 size, MMSPDHeader& header);
+            void loadFrameText(char *buffer, UINT64 size, const MMSPDHeader& header);
 
             /**
              * Loads a frame from 'buffer' into this object assuming that
@@ -212,7 +219,7 @@ namespace moldyn {
              *
              * @throws vislib::Exception on any error
              */
-            void loadFrameBinary(char *buffer, UINT64 size, MMSPDHeader& header);
+            void loadFrameBinary(char *buffer, UINT64 size, const MMSPDHeader& header);
 
             /**
              * Loads a frame from 'buffer' into this object assuming that
@@ -224,7 +231,19 @@ namespace moldyn {
              *
              * @throws vislib::Exception on any error
              */
-            void loadFrameBinaryBE(char *buffer, UINT64 size, MMSPDHeader& header);
+            void loadFrameBinaryBE(char *buffer, UINT64 size, const MMSPDHeader& header);
+
+            /**
+             * Appends a particle of type 'type' to the index-reconstruction data
+             *
+             * @param type The type of the particle
+             * @param wrtr The index data writer
+             * @param data The index data store
+             * @param lastType The type of the last particle added
+             * @param lastCount The number of the last particles of 'lastType' added
+             */
+            void addIndexForReconstruction(UINT32 type, class vislib::RawStorageWriter& wrtr, class vislib::RawStorage& data,
+                UINT32 &lastType, UINT64 &lastCount);
 
         };
 
