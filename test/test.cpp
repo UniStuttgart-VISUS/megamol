@@ -96,6 +96,7 @@ VislibTest tests[] = {
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
     {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
+    {_T("RLEUINT"), ::TestRLEUInt, "Tests UINT RLE Encoding"},
     // graphics
     {_T("BitmapCodecSimple"), ::TestBitmapCodecSimple, "Performs very simple tests of vislib::graphics::*BitmapCodec"},
     {_T("NamedColours"), ::TestNamedColours, "Tests NamedColours"},
