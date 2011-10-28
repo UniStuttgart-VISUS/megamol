@@ -330,10 +330,11 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
     data.tileWidth = static_cast<UINT>(vislib::math::Max(0, this->tileWidthSlot.Param<param::IntParam>()->Value()));
     data.tileHeight = static_cast<UINT>(vislib::math::Max(0, this->tileHeightSlot.Param<param::IntParam>()->Value()));
     vislib::TString filename = this->imageFilenameSlot.Param<param::FilePathParam>()->Value();
+    float frameTime = 0.0f;
     if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
         param::ParamSlot* time = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time"));
         if (time != NULL) {
-            float frameTime = time->Param<param::FloatParam>()->Value();
+            frameTime = time->Param<param::FloatParam>()->Value();
             if (frameTime == this->animLastFrameTime) {
                 this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
                 Log::DefaultLog.WriteInfo("Animation screen shooting aborted: time code did not change");
@@ -346,17 +347,17 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
                     filename.Truncate(filename.Length() - 4);
                 }
 
-				if (this->animAddTime2FrameSlot.Param<param::BoolParam>()->Value()) {
-					int intPart = static_cast<int>(floor(this->animLastFrameTime));
-					float fractPart = this->animLastFrameTime-(float)intPart;
-					ext.Format(_T(".%.5d.%03d.png"), intPart, (int)(fractPart*1000.0f));
-				} else {
-	                ext.Format(_T(".%.5u.png"), this->outputCounter);
-				}
+                if (this->animAddTime2FrameSlot.Param<param::BoolParam>()->Value()) {
+                    int intPart = static_cast<int>(floor(this->animLastFrameTime));
+                    float fractPart = this->animLastFrameTime-(float)intPart;
+                    ext.Format(_T(".%.5d.%03d.png"), intPart, (int)(fractPart*1000.0f));
+                } else {
+                    ext.Format(_T(".%.5u.png"), this->outputCounter);
+                }
 
-				outputCounter++;
+                outputCounter++;
 
-				filename += ext;
+                filename += ext;
             }
         } else {
             this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
@@ -464,6 +465,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
             crv.SetOutputBuffer(&fbo, vislib::math::Rectangle<int>(0, 0, data.imgWidth, data.imgHeight));
             crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
                 0.0f, 0.0f, static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
+            crv.SetTime(frameTime);
             view->OnRenderView(crv); // glClear by SFX
             glFlush();
             fbo.Disable();
@@ -543,6 +545,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
                         vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
                     if (overlayfbo->Enable() == GL_NO_ERROR) {
                         crv.ResetAll();
+                        crv.SetTime(frameTime);
                         view->OnRenderView(crv); // glClear by SFX
                         glFlush();
                         overlayfbo->Disable();
@@ -665,6 +668,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
                     crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
                         static_cast<float>(tileX), static_cast<float>(tileY),
                         static_cast<float>(tileW), static_cast<float>(tileH));
+                    crv.SetTime(frameTime);
                     view->OnRenderView(crv); // glClear by SFX
                     glFlush();
                     fbo.Disable();
@@ -815,7 +819,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
             //param::ParamSlot *playSlot = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::play"));
             //if (playSlot != NULL)
             //    playSlot->Param<param::BoolParam>()->SetValue(false);
-			this->outputCounter = 0;
+            this->outputCounter = 0;
         } else {
             param::ParamSlot* time = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time"));
             if (time != NULL) {
