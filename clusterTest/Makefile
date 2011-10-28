@@ -42,7 +42,7 @@ CompilerFlagsDebug := -ggdb
 CompilerFlagsRelease := -O3 -g0
 
 # Additional linker flags
-LinkerFlags := -L/usr/X11R6/lib -lm -lpthread -lGLU -lGL -lglut -lncurses
+LinkerFlags := -lX11 -lXext -lm -lpthread -lGLU -lGL -lglut -lncurses
 LinkerFlagsDebug :=
 LinkerFlagsRelease :=
 

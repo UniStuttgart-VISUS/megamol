@@ -100,7 +100,7 @@ ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 
 # Common linker flags
-LinkerFlags := -L/usr/X11R6/lib -lm 
+LinkerFlags := -lX11 -lXext -lm 
 ifneq ($(VISLIB_ICC), 0)
 	# Katrin says this is required ...
 	LinkerFlags += -lstdc++
