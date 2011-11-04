@@ -21,6 +21,7 @@
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/SystemInformation.h"
+#include "vislib/sysfunctions.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/MemoryFile.h"
 #include "vislib/memutils.h"
@@ -307,8 +308,12 @@ void moldyn::MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, co
     typeData.SetCount(typeCnt);
     for (SIZE_T i = 0; i < typeCnt; i++) {
         typeData[i] = new vislib::RawStorageWriter(this->Data()[i].Data());
+        typeData[i]->SetIncrement(vislib::math::Max<SIZE_T>(
+            (header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt)
+            / (2 * typeCnt), 1024 * 1024));
     }
     vislib::RawStorageWriter idxRecDat(this->IndexReconstructionData());
+    if (typeCnt > 1) idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(partCnt / 10, 10 * 1024));
     UINT32 irdLastType = static_cast<UINT32>(typeCnt);
     UINT64 irdLastCount;
 
@@ -367,9 +372,13 @@ void moldyn::MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, 
     for (SIZE_T i = 0; i < typeCnt; i++) {
         typeData[i] = new vislib::RawStorageWriter(this->Data()[i].Data());
         valuesCount = vislib::math::Max(valuesCount, header.GetTypes()[i].GetFields().Count());
+        typeData[i]->SetIncrement(vislib::math::Max<SIZE_T>(
+            (header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt)
+            / (2 * typeCnt), 1024 * 1024));
     }
     vislib::SmartPtr<float, vislib::ArrayAllocator<float> > values = new float[valuesCount];
     vislib::RawStorageWriter idxRecDat(this->IndexReconstructionData());
+    if (typeCnt > 1) idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(partCnt / 10, 10 * 1024));
     UINT32 irdLastType = static_cast<UINT32>(typeCnt);
     UINT64 irdLastCount;
 
@@ -439,9 +448,13 @@ void moldyn::MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size
     for (SIZE_T i = 0; i < typeCnt; i++) {
         typeData[i] = new vislib::RawStorageWriter(this->Data()[i].Data());
         valuesCount = vislib::math::Max(valuesCount, header.GetTypes()[i].GetFields().Count());
+        typeData[i]->SetIncrement(vislib::math::Max<SIZE_T>(
+            (header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt)
+            / (2 * typeCnt), 1024 * 1024));
     }
     vislib::SmartPtr<float, vislib::ArrayAllocator<float> > values = new float[valuesCount];
     vislib::RawStorageWriter idxRecDat(this->IndexReconstructionData());
+    if (typeCnt > 1) idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(partCnt / 10, 10 * 1024));
     UINT32 irdLastType = static_cast<UINT32>(typeCnt);
     UINT64 irdLastCount;
 
@@ -1439,47 +1452,99 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
         this->frameIdxThread.Start(static_cast<void*>(this));
         // this->frameIdxThread.Join(); // Use this pause the main thread for debugging
 
-        SIZE_T dataSize[3];
-        for (unsigned int i = 0; i < 3; i++) {
+        // estimate data set frame memory foot print
+        SIZE_T dataSizeInMem = 1024 * 1024 * 10;
+        double maxTypeGrowth = 0.0;
+        SIZE_T maxFields = 0;
 
-            Frame *frm = new Frame(*this);
-            this->loadFrame(frm, i);
+        for (SIZE_T i = 0; i < this->dataHeader.GetTypes().Count(); i++) {
+            SIZE_T fs = 0;
+            SIZE_T ms = 0;
+            const MMSPDHeader::TypeDefinition &type = this->dataHeader.GetTypes()[i];
+            if (maxFields < type.GetFields().Count()) {
+                maxFields = type.GetFields().Count();
+            }
+            for (SIZE_T j = 0; j < type.GetFields().Count(); j++) {
+                ms += sizeof(float);
+                switch (type.GetFields()[j].GetType()) {
+                case MMSPDHeader::Field::TYPE_BYTE: fs += 1; break;
+                case MMSPDHeader::Field::TYPE_FLOAT: fs += 4; break;
+                case MMSPDHeader::Field::TYPE_DOUBLE: fs += 8; break;
+                default: fs += 0; break;
+                }
+            }
+            double typeGrowth = static_cast<double>(ms) / static_cast<double>(fs);
+            if (typeGrowth > maxTypeGrowth) {
+                maxTypeGrowth = typeGrowth;
+            }
+        }
+        if (maxTypeGrowth < 0.4) {
+            // I really don't think so!
+            maxTypeGrowth = 0.4;
+        }
 
+        maxTypeGrowth *= static_cast<double>(CACHE_FRAME_FACTOR);
+
+        UINT64 fLs[4];
+        do {
             this->frameIdxLock.Lock();
-            if (this->frameIdx[0] == 0) {
-                this->frameIdxLock.Unlock();
+            fLs[0] = this->frameIdx[0];
+            fLs[1] = this->frameIdx[1];
+            fLs[2] = this->frameIdx[2];
+            if (this->dataHeader.GetTimeCount() > 2) fLs[3] = this->frameIdx[3]; else fLs[3] = fLs[2];
+            this->frameIdxLock.Unlock();
+
+            if (fLs[0] == 0) {
                 // aborted with error
                 _ERROR_OUT("Unable to load first frame (Frame index generation aborted)");
             }
-            this->frameIdxLock.Unlock();
-
-            dataSize[i] = frm->GetIndexReconstructionData().GetSize();
-            for (SIZE_T j = 0; j < frm->GetData().Count(); j++) {
-                dataSize[i] += frm->GetData()[j].GetData().GetSize();
+            if ((fLs[1] == 0) || (fLs[2] == 0) || (fLs[3] == 0)) {
+                this->frameIdxEvent.Reset();
+                this->frameIdxEvent.Wait();
             }
 
-            if (dataSize[i] == 0) {
-                for (int j = 0; j < 3; j++) dataSize[j] = 0;
-                break;
+        } while ((fLs[1] == 0) || (fLs[2] == 0) || (fLs[3] == 0));
+
+        if (this->isBinaryFile) {
+            double maxFrameSize = static_cast<double>(vislib::math::Max(
+                vislib::math::Max(fLs[1] - fLs[0], fLs[2] - fLs[1]), fLs[3] - fLs[2]));
+            dataSizeInMem = static_cast<SIZE_T>(maxFrameSize * maxTypeGrowth);
+
+        } else {
+            UINT64 pcnt = this->dataHeader.GetParticleCount();
+
+            for (int fidx = 0; fidx < ((fLs[3] == fLs[2]) ? 2 : 3); fidx++) {
+                this->file->Seek(static_cast<vislib::sys::File::FileOffset>(fLs[fidx]));
+                vislib::StringA ln = vislib::sys::ReadLineFromFileA(*this->file);
+                if (ln.IsEmpty()) {
+                    _ERROR_OUT("Frame table broken (1)");
+                }
+                if (ln[0] != '>') {
+                    _ERROR_OUT("Frame table broken (2)");
+                }
+                ln = ln.Substring(1);
+                ln.TrimSpacesBegin();
+                try {
+                    UINT64 pc = vislib::CharTraitsA::ParseUInt64(ln);
+                    pcnt = vislib::math::Max(pcnt, pc);
+                } catch(...) {
+                    _ERROR_OUT("Frame marker error");
+                }
             }
 
-            // TODO: Calculate clipping box!
+            dataSizeInMem = pcnt * maxFields * sizeof(float);
 
         }
 
-        // TODO: better estimation by extrapolation?
-        dataSize[0] = vislib::math::Max(dataSize[0], dataSize[1]);
-        dataSize[0] = vislib::math::Max(dataSize[0], dataSize[2]);
-
-        if (dataSize[0] == 0) {
+        if (dataSizeInMem == 0) {
             _ERROR_OUT("Unable to load first frame (no data)");
         }
 
-        dataSize[0] += static_cast<UINT64>(static_cast<double>(dataSize[0])
-            * (static_cast<double>(CACHE_FRAME_FACTOR) - 1.0));
+        //dataSizeInMem += static_cast<UINT64>(static_cast<double>(dataSizeInMem)
+        //    * (static_cast<double>(CACHE_FRAME_FACTOR) - 1.0));
 
         UINT64 mem = vislib::sys::SystemInformation::AvailableMemorySize();
-        unsigned int cacheSize = static_cast<unsigned int>(mem / dataSize[0]);
+        unsigned int cacheSize = static_cast<unsigned int>(mem / dataSizeInMem);
         if (cacheSize > this->dataHeader.GetTimeCount()) {
             cacheSize = this->dataHeader.GetTimeCount();
         }
