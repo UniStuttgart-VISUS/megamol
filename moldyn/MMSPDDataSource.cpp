@@ -334,6 +334,11 @@ void moldyn::MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, co
                 if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
                 off = 1;
             }
+        } else if (header.HasIDs()) {
+            // type remains 0
+            if (line.Count() < 1) throw vislib::Exception("line truncated", __FILE__, __LINE__);
+            typeData[type]->Write(vislib::CharTraitsA::ParseUInt64(line.Word(0)));
+            off = 1;
         }
 
         this->addIndexForReconstruction(static_cast<UINT32>(type), idxRecDat,
@@ -745,8 +750,15 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
                 that->frameIdxEvent.Set();
                 that->frameIdxLock.Unlock();
                 if (f.Read(&partCnt, 8) != 8) {
-                    // here we could just skip the broken frames, but this is ok for now
-                    throw new vislib::Exception("File truncated", __FILE__, __LINE__);
+                    // file truncated, so mark these frames as to be empty
+                    that->frameIdxLock.Lock();
+                    for (; frame <= frameCount; frame++) {
+                        that->frameIdx[frame] = ULLONG_MAX;
+                    }
+                    that->frameIdxEvent.Set();
+                    that->frameIdxLock.Unlock();
+                    break;
+
                 }
                 if (that->isBigEndian) {
                     unsigned char *fac = reinterpret_cast<unsigned char*>(&partCnt);
@@ -790,7 +802,13 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
                         case 0: { // reading particle count
                             if ((bufSize - bufIdx) < 8) { // insufficient data in buffer
                                 if (f.IsEOF()) {
-                                    throw vislib::Exception("Data file truncated", __FILE__, __LINE__);
+                                    that->frameIdxLock.Lock();
+                                    for (; frame <= frameCount; frame++) {
+                                        that->frameIdx[frame] = ULLONG_MAX;
+                                    }
+                                    that->frameIdxEvent.Set();
+                                    that->frameIdxLock.Unlock();
+                                    break;
                                 }
                                 f.Seek(bufIdx - bufSize, vislib::sys::File::CURRENT); // step a bit back
                                 loadNext = true;
@@ -825,7 +843,13 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
                         case 1: { // reading a particle ID
                             if ((bufSize - bufIdx) < 8) { // insufficient data in buffer
                                 if (f.IsEOF()) {
-                                    throw vislib::Exception("Data file truncated", __FILE__, __LINE__);
+                                    that->frameIdxLock.Lock();
+                                    for (; frame <= frameCount; frame++) {
+                                        that->frameIdx[frame] = ULLONG_MAX;
+                                    }
+                                    that->frameIdxEvent.Set();
+                                    that->frameIdxLock.Unlock();
+                                    break;
                                 }
                                 f.Seek(bufIdx - bufSize, vislib::sys::File::CURRENT); // step a bit back
                                 loadNext = true;
@@ -839,7 +863,13 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
                         case 2: { // reading a particle type
                             if ((bufSize - bufIdx) < 4) { // insufficient data in buffer
                                 if (f.IsEOF()) {
-                                    throw vislib::Exception("Data file truncated", __FILE__, __LINE__);
+                                    that->frameIdxLock.Lock();
+                                    for (; frame <= frameCount; frame++) {
+                                        that->frameIdx[frame] = ULLONG_MAX;
+                                    }
+                                    that->frameIdxEvent.Set();
+                                    that->frameIdxLock.Unlock();
+                                    break;
                                 }
                                 f.Seek(bufIdx - bufSize, vislib::sys::File::CURRENT); // step a bit back
                                 loadNext = true;
@@ -924,14 +954,15 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
                                     throw new vislib::Exception("Particle count changed between frames even the header already defined the count", __FILE__, __LINE__);
                                 }
                                 partIdx = 0;
-                                parserState = (framePartCnt > 0) ? 3 : 0;
+                                parserState = (framePartCnt > 0) ? 
+                                    ((buffer[bufIdx] == 0x0A) ? 4 : 3)
+                                    : 0;
                             } else {
                                 token.Append(buffer[bufIdx]);
                             }
                         } break;
                         case 3: { // linebreak after particle number
                             if (buffer[bufIdx] == 0x0A) parserState = 4;
-                            token.Clear();
                         } break;
                         case 4: { // particle line
                             if (buffer[bufIdx] == 0x0A) {
@@ -940,7 +971,6 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
                                     parserState = 0;
                                 }
                             }
-                            token.Clear();
                         } break;
                         }
                     }
@@ -952,7 +982,13 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
                             that->frameIdxEvent.Set();
                             that->frameIdxLock.Unlock();
                         } else {
-                            throw vislib::Exception("Data file truncated", __FILE__, __LINE__);
+                            that->frameIdxLock.Lock();
+                            for (; frame <= frameCount; frame++) {
+                                that->frameIdx[frame] = ULLONG_MAX;
+                            }
+                            that->frameIdxEvent.Set();
+                            that->frameIdxLock.Unlock();
+                            break;
                         }
                     }
                 }
