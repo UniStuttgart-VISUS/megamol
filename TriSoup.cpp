@@ -15,6 +15,7 @@
 #include "vislib/ThreadSafeStackTrace.h"
 #include "TriSoupRenderer.h"
 #include "CallTriMeshData.h"
+#include "CallVolumetricData.h"
 #include "TriSoupDataSource.h"
 #include "WavefrontObjDataSource.h"
 #include "BlockVolumeMesh.h"
@@ -93,7 +94,7 @@ TRISOUP_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 TRISOUP_API int mmplgCallCount(void) {
-    return 2;
+    return 3;
 }
 
 
@@ -104,6 +105,7 @@ TRISOUP_API void* mmplgCallDescription(int idx) {
     switch (idx) {
         case 0: return new megamol::trisoup::CallTriMeshDataDescription();
         case 1: return new megamol::trisoup::CallBinaryVolumeDataDescription();
+        case 2: return new megamol::core::CallAutoDescription<megamol::trisoup::CallVolumetricData>();
     }
     return NULL;
 }

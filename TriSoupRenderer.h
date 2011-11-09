@@ -112,6 +112,9 @@ namespace trisoup {
         /** The slot to fetch the data */
         core::CallerSlot getDataSlot;
 
+        /** The slot to fetch the volume data */
+        core::CallerSlot getVolDataSlot;
+
         /** Flag whether or not to show vertices */
         core::param::ParamSlot showVertices;
 

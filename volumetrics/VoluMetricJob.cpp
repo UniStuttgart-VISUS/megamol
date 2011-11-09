@@ -46,6 +46,7 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
         resetContinueSlot("resetContinueSlot", "reset the continueToNextFrameSlot to false automatically"),
         outLineDataSlot("outLineData", "Slot that outputs debug line geometry"),
         outTriDataSlot("outTriData", "Slot that outputs debug triangle geometry"),
+        outVolDataSlot("outVolData", "Slot that outputs debug volume data"),
         cellSizeRatioSlot("cellSizeRatioSlot", "Fraction of the minimal particle radius that is used as cell size"),
         subVolumeResolutionSlot("subVolumeResolutionSlot", "maximum edge length of a subvolume processed as a separate job"),
         MaxRad(0), backBufferIndex(0), meshBackBufferIndex(0), hash(0) {
@@ -88,7 +89,11 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
     this->outTriDataSlot.SetCallback("CallTriMeshData", "GetExtent", &VoluMetricJob::getLineExtentCallback);
     this->MakeSlotAvailable(&this->outTriDataSlot);
 
-    globalIdBoxes.SetCapacityIncrement(100); // thomasmbm
+    this->outVolDataSlot.SetCallback("CallVolumetricData", "GetData", &VoluMetricJob::getVolDataCallback);
+    this->outVolDataSlot.SetCallback("CallVolumetricData", "GetExtent", &VoluMetricJob::getLineExtentCallback);
+    this->MakeSlotAvailable(&this->outVolDataSlot);
+
+    this->globalIdBoxes.SetCapacityIncrement(100); // thomasmbm
 }
 
 
@@ -260,6 +265,8 @@ DWORD VoluMetricJob::Run(void *userData) {
 
         bool storeMesh = 
             (this->outTriDataSlot.GetStatus() == megamol::core::AbstractSlot::STATUS_CONNECTED);
+        bool storeVolume = //storeMesh; // debug for now ...
+            (this->outVolDataSlot.GetStatus() == megamol::core::AbstractSlot::STATUS_CONNECTED);
 
         vislib::sys::ConsoleProgressBar pb;
         pb.Start("Computing Frame", divX * divY * divZ);
@@ -305,6 +312,7 @@ DWORD VoluMetricJob::Run(void *userData) {
                     sjd->RadMult = RadMult;
                     sjd->MaxRad = MaxRad / RadMult;
                     sjd->storeMesh = storeMesh;
+                    sjd->storeVolume = storeVolume;
                     SubJobDataList.Add(sjd);
                     TetraVoxelizer *v = new TetraVoxelizer();
                     voxelizerList.Add(v);
@@ -341,17 +349,19 @@ DWORD VoluMetricJob::Run(void *userData) {
                 pb.Set(static_cast<vislib::sys::ConsoleProgressBar::Size>(
                     divX * divY * divZ - pool.CountUserWorkItems()));
                 generateStatistics(uniqueIDs, countPerID, surfPerID, volPerID, voidVolPerID);
-                if (storeMesh) {
+                if (storeMesh)
                     copyMeshesToBackbuffer(uniqueIDs);
-                }
+                if (storeVolume)
+                    copyVolumesToBackBuffer();
                 lastCount = pool.CountUserWorkItems();
             }
         }
         generateStatistics(uniqueIDs, countPerID, surfPerID, volPerID, voidVolPerID);
         outputStatistics(frameI, uniqueIDs, countPerID, surfPerID, volPerID, voidVolPerID);
-        if (storeMesh) {
+        if (storeMesh)
             copyMeshesToBackbuffer(uniqueIDs);
-        }
+        if (storeVolume)
+            copyVolumesToBackBuffer();
         pb.Stop();
         Log::DefaultLog.WriteInfo("Done marching.");
         pool.Terminate(true);
@@ -406,6 +416,25 @@ bool VoluMetricJob::getTriDataCallback(core::Call &caller) {
             mdc->SetObjects(0, NULL);
         }
         mdc->SetDataHash(this->hash);
+    }
+
+    return true;
+}
+
+bool VoluMetricJob::getVolDataCallback(core::Call &caller) {
+    CallVolumetricData *dataCall = dynamic_cast<CallVolumetricData*>(&caller);
+    if (dataCall == NULL) return false;
+
+    if (this->hash == 0) {
+        dataCall->SetVolumes(this->debugVolumes);
+        dataCall->SetDataHash(0);
+    } else {
+        if (this->showSurfaceGeometrySlot.Param<megamol::core::param::BoolParam>()->Value()) {
+            dataCall->SetVolumes(this->debugVolumes);
+        } else {
+            dataCall->SetVolumes(this->debugVolumes);
+        }
+        dataCall->SetDataHash(this->hash);
     }
 
     return true;
@@ -737,6 +766,10 @@ bool rayTriangleIntersect(ShallowShallowTriangle<VoxelizerFloat,3>& triangle, ) 
     return true;
 }
 */
+
+/**
+ * returns true if the line starting from 'seedPoint' in direction 'direction' hits the triangle-mesch 'mesh' and the hit point is returned by startPoint+direction*hitfactor.
+ */
 bool hitTriangleMesh(const vislib::Array<VoxelizerFloat>& mesh, const vislib::math::ShallowPoint<VoxelizerFloat, 3>& seedPoint,
     const vislib::math::Vector<VoxelizerFloat, 3>& direction, VoxelizerFloat *hitFactor) {
 
@@ -752,7 +785,7 @@ bool hitTriangleMesh(const vislib::Array<VoxelizerFloat>& mesh, const vislib::ma
 
         VoxelizerFloat normDirDot = normal.Dot(direction);
 
-        if (normDirDot < 0.9) // invalid/deformed triangle?
+        if (normDirDot < 0.9) // direction from "behind"? invalid/deformed triangle?
             continue;
 
         VoxelizerFloat normW0Dot = normal.Dot(w0);
@@ -763,7 +796,6 @@ bool hitTriangleMesh(const vislib::Array<VoxelizerFloat>& mesh, const vislib::ma
 
         // intersect point of ray with triangle plane
         vislib::math::Point<VoxelizerFloat,3> projectPoint = seedPoint + direction*intersectFactor;
-
 
         // test if the projected point on the triangle plane lies inside the triangle
         vislib::math::Vector<VoxelizerFloat,3> u(triangle[1]-triangle[0]);
@@ -822,8 +854,9 @@ bool VoluMetricJob::testFullEnclosing(int enclosingIdx, int enclosedIdx, vislib:
 
     vislib::math::ShallowPoint<VoxelizerFloat, 3> seedPoint(/*enclosedSeed->mesh.PeekElements()*/&enclosedSeed->mesh[0]);
     // some random direction ...
-    VoxelizerFloat tmpVal(static_cast<VoxelizerFloat>(1.0 / sqrt(3.0)));
-    vislib::math::Vector<VoxelizerFloat, 3> direction(tmpVal, tmpVal, tmpVal);
+    VoxelizerFloat tmpVal(/*static_cast<VoxelizerFloat>(1.0 / sqrt(3.0))*/0.34524356);
+    vislib::math::Vector<VoxelizerFloat, 3> direction(tmpVal, 1.2*tmpVal, -0.86*tmpVal);
+    direction.Normalise();
 
     int hitCount = 0;
 
@@ -941,10 +974,17 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
             } else
                 continue;
 
+#if 0 // thomasbm: das kann solange nicht funktionieren, wie die Dreiecke nicht richtig orientiert sind (innen/aussen)
             // full, triangle based test here ... (meshes need to be stored to do so)
             if(SubJobDataList[0]->storeMesh && !testFullEnclosing(enclosingIdx, enclosedIdx, globaIdSurfaces)) {
                 continue;
             }
+#endif
+
+#ifdef _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("surface %d enclosed by %d:\n\tenclosed-volume: %f, enclosed-voidVol: %f, enclosed-sum: %f\n\tenclosing-volume: %f, enclosing-voidVol: %f",
+            gid2, gid, volPerID[enclosedIdx], voidVolPerID[enclosedIdx], volPerID[enclosedIdx] + voidVolPerID[enclosedIdx], volPerID[enclosingIdx], voidVolPerID[enclosingIdx]);
+#endif
 
             //countPerID[enclosingIdx] += countPerID[enclosedIdx];
             //surfPerID[enclosingIdx] += surfPerID[enclosedIdx];
@@ -967,6 +1007,20 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
     }
 }
 
+void VoluMetricJob::copyVolumesToBackBuffer(void) {
+    if (this->debugVolumes.Count() < SubJobDataList.Count()) {
+        this->debugVolumes.SetCount(SubJobDataList.Count());
+        memset( &this->debugVolumes[0], 0, sizeof(this->debugVolumes[0])*this->debugVolumes.Count());
+    }
+
+    for (SIZE_T i = 0; i < SubJobDataList.Count(); i++) {
+        if (SubJobDataList[i]->storeVolume && SubJobDataList[i]->Result.done) {
+            this->debugVolumes[i] = SubJobDataList[i]->Result.debugVolume;
+            SubJobDataList[i]->Result.debugVolume.volumeData = 0;
+        }
+    }
+    this->hash++;
+}
 
 void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<unsigned int> &uniqueIDs) {
     // copy finished meshes to output

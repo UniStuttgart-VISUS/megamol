@@ -16,6 +16,7 @@
 #include "moldyn/MultiParticleDataCall.h"
 #include "misc/LinesDataCall.h"
 #include "CallTriMeshData.h"
+#include "CallVolumetricData.h"
 #include "CallerSlot.h"
 #include "CalleeSlot.h"
 #include "param/ParamSlot.h"
@@ -153,6 +154,15 @@ namespace volumetrics {
         bool getTriDataCallback(core::Call &caller);
 
         /**
+         * Provide the collected volume data
+         *
+         * @param caller the call where the data is inserted
+         *
+         * @return true if successful
+         */
+        bool getVolDataCallback(core::Call &caller);
+
+        /**
          * Convenience method for generating the corner vertices of a cuboid and
          * appending them to data. offset is increased accordingly by 8 * 3 * sizeof(VoxelizerFloat).
          *
@@ -182,6 +192,11 @@ namespace volumetrics {
          * @param subJobDataList the submitted jobs
          */
         void copyMeshesToBackbuffer(vislib::Array<unsigned int> &uniqueIDs);
+
+        /**
+         * Connects the volumes calculated in the subjobs to the volume backbuffer - fpr debug purposes only ...
+         */
+        void copyVolumesToBackBuffer(void);
 
         void generateStatistics(vislib::Array<unsigned int> &uniqueIDs,
             vislib::Array<SIZE_T> &countPerID,
@@ -227,6 +242,8 @@ namespace volumetrics {
 
         core::CalleeSlot outTriDataSlot;
 
+        core::CalleeSlot outVolDataSlot;
+
         VoxelizerFloat MaxRad;
 
         VoxelizerFloat MinRad;
@@ -259,6 +276,8 @@ namespace volumetrics {
         vislib::RawStorage bboxVertData[2];
 
         vislib::RawStorage bboxIdxData[2];
+
+        vislib::Array<CallVolumetricData::Volume> debugVolumes;
     };
 
 } /* end namespace volumetrics */

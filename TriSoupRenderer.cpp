@@ -9,6 +9,7 @@
 #include "stdafx.h"
 #include "TriSoupRenderer.h"
 #include "CallTriMeshData.h"
+#include "CallVolumetricData.h"
 #include "param/BoolParam.h"
 #include "param/EnumParam.h"
 #include "view/CallRender3D.h"
@@ -38,6 +39,7 @@ using namespace megamol::core;
  */
 TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
         getDataSlot("getData", "The slot to fetch the tri-mesh data"),
+        getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)"),
         showVertices("showVertices", "Flag whether to show the verices of the object"),
         lighting("lighting", "Flag whether or not use lighting for the surface"),
         surFrontStyle("frontstyle", "The rendering style for the front surface"),
@@ -46,6 +48,9 @@ TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
 
     this->getDataSlot.SetCompatibleCall<CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
+
+    this->getVolDataSlot.SetCompatibleCall<core::CallAutoDescription<CallVolumetricData> >();
+    this->MakeSlotAvailable(&this->getVolDataSlot);
 
     this->showVertices.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showVertices);
@@ -391,6 +396,42 @@ bool TriSoupRenderer::Render(Call& call) {
     ::glDisableClientState(GL_VERTEX_ARRAY);
     ::glDisable(GL_POINT_SIZE);
     ::glEnable(GL_BLEND);
+
+
+    CallVolumetricData *cvd = this->getVolDataSlot.CallAs<CallVolumetricData>();
+    if (cvd != NULL && (*cvd)(0)) {
+        vislib::Array<CallVolumetricData::Volume>& volumes = cvd->GetVolumes();
+        ::glEnable(GL_POINT_SIZE);
+        ::glDisable(GL_BLEND);
+        ::glDisable(GL_LIGHTING);
+        ::glPointSize(2);
+        ::glBegin(GL_POINTS);
+        for(int i = 0; i < volumes.Count(); i++) {
+            CallVolumetricData::Volume& v = volumes[i];
+            if (!v.volumeData)
+                continue;
+            for(int x = 0; x < v.size[0]; x++) {
+                for(int y = 0; y < v.size[1]; y++) {
+                    //int yOffs = y*v.size[0];
+                    for(int z = 0; z < v.size[2]; z++) {
+                        int index = x + v.size[0]*(y + z*v.size[1]);
+                        double position[3] = {v.origin[0] + (x+0.5)*v.scaling[0], v.origin[1] + (y+0.5)*v.scaling[1], v.origin[2] + (z+0.5)*v.scaling[2]};
+                        CallVolumetricData::VoxelType voxel = v.volumeData[index];
+                        if (voxel != 0) {
+                            if (voxel > 0)
+                                ::glColor4f(0, 1, 1, 1);
+                            else
+                                ::glColor4d(1, 0, 0, 1);
+                        } else
+                            ::glColor4f(1, 1, 1, 1);
+                       ::glVertex3dv(position);
+                     }
+                }
+            }
+            break;
+        }
+        ::glEnd();
+    }
 
     return true;
 }

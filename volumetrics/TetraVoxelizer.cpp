@@ -216,11 +216,11 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, Surface &surf,
         FatVoxel &cell = theVolume[sjd->cellIndex(p)];
 
         if (!emptyVolume) {
-            ASSERT(cell.mcCase == 255 && cell.consumedTriangles < 2);
+            ASSERT(cell.mcCase == 255 && vislib::math::Abs(cell.consumedTriangles) < 2);
             // nach dem assert kann man sich das if sparen ...
             /*if (cell.mcCase != 255 || cell.consumedTriangles >= 2) continue; */
         } else {
-            ASSERT(cell.mcCase == 0 && cell.consumedTriangles < 2);
+            ASSERT(cell.mcCase == 0 && vislib::math::Abs(cell.consumedTriangles) < 2);
             /*if (cell.mcCase != 0 || cell.consumedTriangles >= 2) continue; */
         }
 
@@ -241,7 +241,8 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, Surface &surf,
                     surf.fullFaces |= 8;
                 if (p.Z() == sjd->resZ - 2)
                     surf.fullFaces |= 32;
-            }
+            } else
+                cell.consumedTriangles = -2;
 
 #ifdef ULTRADEBUG
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
@@ -259,7 +260,7 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, Surface &surf,
 
                     if (!emptyVolume) {
                         if (neighbCell.mcCase == 255 && neighbCell.consumedTriangles == 0) {
-                            neighbCell.consumedTriangles = 1;
+                            neighbCell.consumedTriangles = -1; /* empty - negative*/
                             queue.Add(neighbCrd); // recursion ...
                         }
                     } else {
@@ -286,6 +287,10 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, Surface &surf,
     return cells * sjd->CellSize * sjd->CellSize * sjd->CellSize;
 }
 
+#define __STR2__(x) #x
+#define __STR1__(x) __STR2__(x)
+#define __LOC__ __FILE__ "("__STR1__(__LINE__)") : Warning Msg: "
+
 /**
  * TODO: sinnvoller Kommentar! bissle erklaeren!
  */
@@ -300,6 +305,7 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
     // thomasbm: now we grow full and empty neighbours (volume and voidVolume) ...
     for (unsigned int cornerIdx = 0; cornerIdx < 8; cornerIdx++) {
         //if (!(cell.mcCase & (1 << cornerIdx))) continue;
+//#pragma message(__LOC__"Guido's Code  mit cell.corners wurde hier auskommentiert - liegt der Bug wirklich daran?!")
         int fullNeighb = cell.mcCase & (1 << cornerIdx) & cell.corners[seedTriIndex];
 
         for (unsigned int cornerNeighbIdx = 0; cornerNeighbIdx < 7; cornerNeighbIdx++) {
@@ -1147,6 +1153,34 @@ DWORD TetraVoxelizer::Run(void *userData) {
         // thomasbm: collect enclosed surfaces ...
         //DetectEncapsulatedSurfs();
     }
+
+    if (sjd->storeVolume) {
+        CallVolumetricData::Volume& v = sjd->Result.debugVolume;
+        v.volumeData = new CallVolumetricData::VoxelType[(sjd->resX)*(sjd->resY)*(sjd->resZ)];
+        memset(v.volumeData, 0, sizeof(CallVolumetricData::VoxelType)*(sjd->resX-1)*(sjd->resY-1)*(sjd->resZ-1));
+
+        v.size[0] = sjd->resX, v.size[1] = sjd->resY, v.size[2] = sjd->resZ; 
+        v.origin[0] = sjd->Bounds.Left(), v.origin[1] = sjd->Bounds.Bottom(), v.origin[2] = sjd->Bounds.Back();
+        v.scaling[0] = sjd->CellSize, v.scaling[1] = sjd->CellSize, v.scaling[2] = sjd->CellSize;
+/*            // reference corner of this cell
+    vislib::math::Point<VoxelizerFloat, 3> p(sjd->Bounds.Left() + x * sjd->CellSize,
+        sjd->Bounds.Bottom() + y * sjd->CellSize,
+        sjd->Bounds.Back() + z * sjd->CellSize);
+        */
+        for (int x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
+            for (int y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
+                for (int z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
+                    unsigned int index = sjd->cellIndex(x, y, z);
+                    FatVoxel& fv = volume[index];
+                    if (fv.mcCase == 255 || fv.mcCase == 0) {
+                        // if (fv.consumedTriangles != 0) asm { int 3 };
+                        v.volumeData[index] = fv.consumedTriangles;
+                    } // else __asm int 3;
+                }
+            }
+        }
+    }
+
     // dealloc stuff in volume
     // dealloc volume as a whole etc.
     for (int x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {

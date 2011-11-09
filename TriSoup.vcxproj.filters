@@ -150,6 +150,9 @@
     <ClInclude Include="volumetrics\VoluMetricJob.h">
       <Filter>volumetrics\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CallVolumetricData.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="common.mk">

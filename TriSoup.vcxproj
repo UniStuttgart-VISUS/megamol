@@ -264,6 +264,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="BlockVolumeMesh.h" />
     <ClInclude Include="CallBinaryVolumeData.h" />
     <ClInclude Include="CallTriMeshData.h" />
+    <ClInclude Include="CallVolumetricData.h" />
     <ClInclude Include="CoordSysMarker.h" />
     <ClInclude Include="OSCBFix.h" />
     <ClInclude Include="stdafx.h" />

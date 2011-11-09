@@ -15,13 +15,14 @@
 #include "vislib/Array.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/CriticalSection.h"
+#include "CallVolumetricData.h"
 
 namespace megamol {
 namespace trisoup {
 namespace volumetrics {
 
     /** typdef steering the arithmetic precision of the voxelizer. */
-    typedef float VoxelizerFloat;
+    typedef /*float*/double VoxelizerFloat;
 
     /** forward declaration */
     class BorderVoxel;
@@ -234,7 +235,7 @@ namespace volumetrics {
          * bit field to remember the triangles already collected when stitching
          * surfaces.
          */
-        unsigned short consumedTriangles;
+        /*unsigned*/ short consumedTriangles;
 
         /**
          * BorderVoxel containing a copy of the geometry for those FatVoxels that
@@ -369,6 +370,11 @@ namespace volumetrics {
         /** Array of the surfaces resulting from the Voxelization */
         vislib::Array<Surface> surfaces;
 
+//#ifdef _DEBUG
+        /* for debug purposes only - volume density values - dimension are given by sjd->resXYZ*/
+        CallVolumetricData::Volume debugVolume;
+//#endif
+
         /** whether this job has completed runnning */
         bool done;
 
@@ -426,7 +432,7 @@ namespace volumetrics {
         SubJobResult Result;
 
         /** whether to persist the geometry computation takes place on (in result.mesh) */
-        bool storeMesh;
+        bool storeMesh, storeVolume;
 
         VoluMetricJob *parent;
 
