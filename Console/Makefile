@@ -53,14 +53,14 @@ $(TargetName)Release: $(IntDir)/$(ReleaseDir)/$(TargetName)
 
 # Rules for intermediate binary:
 $(IntDir)/$(DebugDir)/$(TargetName): Makefile version.gen.h $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
-	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/$(TargetName): "
+	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(DebugDir)/$(TargetName): "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS)))) \
 	$(DebugLinkerFlags) -lMegaMolCore$(BITS)d \
 	$(addprefix -l,$(LIBS)) -o $(IntDir)/$(DebugDir)/$(TargetName)
 
 $(IntDir)/$(ReleaseDir)/$(TargetName): Makefile version.gen.h $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
-	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/$(TargetName): "
+	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(ReleaseDir)/$(TargetName): "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS)))) \
 	$(ReleaseLinkerFlags) -lMegaMolCore$(BITS) \
@@ -70,14 +70,14 @@ $(IntDir)/$(ReleaseDir)/$(TargetName): Makefile version.gen.h $(addprefix $(IntD
 # Rules for dependencies:
 $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile version.gen.h
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $< >> $@
 
 $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile version.gen.h
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $< >> $@
@@ -93,13 +93,13 @@ endif
 # Rules for object files: 
 $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@: "
 	@tput sgr0
 	$(Q)$(CPP) -c $(CPPFLAGS) $(DebugCompilerFlags) -o $@ $<
 
 $(IntDir)/$(ReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@: "
 	@tput sgr0
 	$(Q)$(CPP) -c $(CPPFLAGS) $(ReleaseCompilerFlags) -o $@ $<
 
@@ -107,13 +107,13 @@ $(IntDir)/$(ReleaseDir)/%.o:
 # Rules for generated files:
 VersionInfo: version.template.h VersionInfo.pl Makefile
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"version.gen.h: "
+	@echo -e $(COLORACTION)"GEN "$(COLORINFO)"version.gen.h: "
 	@tput sgr0
 	$(Q)perl VersionInfo.pl .
 
 version.gen.h: version.template.h VersionInfo.pl Makefile
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"version.gen.h: "
+	@echo -e $(COLORACTION)"GEN "$(COLORINFO)"version.gen.h: "
 	@tput sgr0
 	$(Q)perl VersionInfo.pl .
 
