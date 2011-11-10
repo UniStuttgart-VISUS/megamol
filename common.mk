@@ -37,6 +37,18 @@ else
 endif
 
 
+# check whether we have the terminal for color outout
+ifeq ($(TERM), xterm)
+        COLORACTION = '\E[1;32;40m'
+        COLORINFO =  '\E[0;32;40m'
+        CLEARTERMCMD = tput sgr0
+else
+        COLORACTION =
+        COLORINFO =
+        CLEARTERMCMD = true
+endif
+
+
 # The default input directory
 InputDir := .
 
@@ -88,7 +100,7 @@ ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 
 # Common linker flags
-LinkerFlags := -L/usr/X11R6/lib
+LinkerFlags := -lX11 -lXext
 
 
 # Additional linker flags for special configurations
