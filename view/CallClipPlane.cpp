@@ -18,6 +18,7 @@ view::CallClipPlane::CallClipPlane(void) : Call(), plane() {
     this->col[0] = 192;
     this->col[1] = 192;
     this->col[2] = 192;
+    this->col[3] = 255;
 }
 
 

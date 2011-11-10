@@ -105,7 +105,7 @@ namespace view {
         /**
          * Gets the colour of the clipping plane
          *
-         * @return Pointer to 3 bytes holding the colour of the clipping plane
+         * @return Pointer to 4 bytes holding the colour of the clipping plane
          */
         inline const unsigned char * GetColour(void) const {
             return this->col;
@@ -124,13 +124,15 @@ namespace view {
          * Sets the colour of the clipping plane
          *
          * @param r The red colour component
-         * @param g The red colour component
-         * @param b The red colour component
+         * @param g The green colour component
+         * @param b The blue colour component
+         * @param a The alpha component
          */
-        inline void SetColour(unsigned char r, unsigned char g, unsigned char b) {
+        inline void SetColour(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255) {
             this->col[0] = r;
             this->col[1] = g;
             this->col[2] = b;
+            this->col[3] = a;
         }
 
         /**
@@ -152,7 +154,7 @@ namespace view {
 #endif /* _WIN32 */
 
         /** The colour of the plane */
-        unsigned char col[3];
+        unsigned char col[4];
 
     };
 

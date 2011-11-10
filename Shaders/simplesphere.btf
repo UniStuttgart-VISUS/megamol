@@ -218,7 +218,7 @@ uniform float hitsideFlag;
 
 // clipping plane attributes
 uniform vec4 clipDat;
-uniform vec3 clipCol;
+uniform vec4 clipCol;
 
 uniform vec4 viewAttr;
 
@@ -294,7 +294,7 @@ void main(void) {
                 if (length(planeintersect) < rad) {
                     sphereintersection = planeintersect;
                     normal = planeNormal;
-                    color = vec4(clipCol, 1.0);
+                    color = mix(color, vec4(clipCol.rgb, 1.0), clipCol.a);
                 } else {
                     discard;
                 }

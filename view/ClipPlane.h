@@ -93,7 +93,7 @@ namespace view {
         vislib::math::Plane<float> plane;
 
         /** The colour of the plane */
-        unsigned char col[3];
+        unsigned char col[4];
 
         /** Disables or enables the clipping plane */
         param::ParamSlot enableSlot;

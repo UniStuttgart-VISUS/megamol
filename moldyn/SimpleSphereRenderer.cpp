@@ -192,7 +192,7 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
 
     view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
     float clipDat[4];
-    float clipCol[3];
+    float clipCol[4];
     if ((ccp != NULL) && (*ccp)()) {
         clipDat[0] = ccp->GetPlane().Normal().X();
         clipDat[1] = ccp->GetPlane().Normal().Y();
@@ -202,10 +202,12 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
         clipCol[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
         clipCol[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
         clipCol[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
+        clipCol[3] = static_cast<float>(ccp->GetColour()[3]) / 255.0f;
 
     } else {
         clipDat[0] = clipDat[1] = clipDat[2] = clipDat[3] = 0.0f;
         clipCol[0] = clipCol[1] = clipCol[2] = 0.75f;
+        clipCol[3] = 1.0f;
     }
 
     glDisable(GL_BLEND);
@@ -232,7 +234,7 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
         1, cr->GetCameraParameters()->Up().PeekComponents());
 
     glUniform4fvARB(this->sphereShader.ParameterLocation("clipDat"), 1, clipDat);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("clipCol"), 1, clipCol);
+    glUniform4fvARB(this->sphereShader.ParameterLocation("clipCol"), 1, clipCol);
 
     glScalef(scaling, scaling, scaling);
 
