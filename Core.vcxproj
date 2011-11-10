@@ -312,6 +312,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="ModuleDescription.cpp" />
     <ClCompile Include="ModuleDescriptionManager.cpp" />
     <ClCompile Include="ModuleNamespace.cpp" />
+    <ClCompile Include="moldyn\DirPartVolume.cpp" />
     <ClCompile Include="moldyn\MMSPDDataSource.cpp" />
     <ClCompile Include="moldyn\MMSPDFrameData.cpp" />
     <ClCompile Include="moldyn\MMSPDHeader.cpp" />
@@ -539,6 +540,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="ModuleDescription.h" />
     <ClInclude Include="ModuleDescriptionManager.h" />
     <ClInclude Include="ModuleNamespace.h" />
+    <ClInclude Include="moldyn\DirPartVolume.h" />
     <ClInclude Include="moldyn\MMSPDDataSource.h" />
     <ClInclude Include="moldyn\MMSPDFrameData.h" />
     <ClInclude Include="moldyn\MMSPDHeader.h" />
