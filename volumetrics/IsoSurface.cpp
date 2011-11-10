@@ -147,8 +147,8 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
             this->normal.EnforceSize(n.End(), true);
 
             this->mesh.SetMaterial(NULL);
-            this->mesh.SetVertexData(this->vertex.GetSize() / static_cast<unsigned int>(3 * sizeof(float)), this->vertex.As<float>(), this->normal.As<float>(), NULL, NULL, false);
-            this->mesh.SetTriangleData(this->index.GetSize() / static_cast<unsigned int>(3 * sizeof(unsigned int)), this->index.As<unsigned int>(), false);
+            this->mesh.SetVertexData(static_cast<unsigned int>(this->vertex.GetSize() / (3 * sizeof(float))), this->vertex.As<float>(), this->normal.As<float>(), NULL, NULL, false);
+            this->mesh.SetTriangleData(static_cast<unsigned int>(this->index.GetSize() / (3 * sizeof(unsigned int))), this->index.As<unsigned int>(), false);
 
             this->dataHash = cvd->DataHash();
             this->frameIdx = cvd->FrameID();
