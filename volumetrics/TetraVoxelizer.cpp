@@ -1174,7 +1174,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
                     FatVoxel& fv = volume[index];
                     if (fv.mcCase == 255 || fv.mcCase == 0) {
                         // if (fv.consumedTriangles != 0) asm { int 3 };
-                        v.volumeData[index] = fv.consumedTriangles;
+                        v.volumeData[index] = static_cast<megamol::trisoup::CallVolumetricData::VoxelType>(fv.consumedTriangles);
                     } // else __asm int 3;
                 }
             }

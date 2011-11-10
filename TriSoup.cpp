@@ -24,7 +24,7 @@
 #include "OSCBFix.h"
 #include "CoordSysMarker.h"
 #include "TrackerRendererTransform.h"
-
+#include "volumetrics/IsoSurface.h"
 
 
 /*
@@ -68,7 +68,7 @@ TRISOUP_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 TRISOUP_API int mmplgModuleCount(void) {
-    return 8;
+    return 9;
 }
 
 
@@ -85,6 +85,7 @@ TRISOUP_API void* mmplgModuleDescription(int idx) {
         case 5: return new megamol::core::ModuleAutoDescription<megamol::quartz::OSCBFix>();
         case 6: return new megamol::core::ModuleAutoDescription<megamol::trisoup::CoordSysMarker>();
         case 7: return new megamol::core::ModuleAutoDescription<megamol::trisoup::TrackerRendererTransform>();
+        case 8: return new megamol::core::ModuleAutoDescription<megamol::trisoup::volumetrics::IsoSurface>();
     }
     return NULL;
 }

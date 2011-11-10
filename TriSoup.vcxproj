@@ -251,6 +251,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="TriSoup.cpp" />
     <ClCompile Include="TriSoupDataSource.cpp" />
     <ClCompile Include="TriSoupRenderer.cpp" />
+    <ClCompile Include="volumetrics\IsoSurface.cpp" />
     <ClCompile Include="WavefrontObjDataSource.cpp" />
     <ClCompile Include="volumetrics\MarchingCubeTables.cpp" />
     <ClCompile Include="volumetrics\MarchingSquareTables.cpp" />
@@ -273,6 +274,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="TriSoup.h" />
     <ClInclude Include="TriSoupDataSource.h" />
     <ClInclude Include="TriSoupRenderer.h" />
+    <ClInclude Include="volumetrics\IsoSurface.h" />
     <ClInclude Include="WavefrontObjDataSource.h" />
     <ClInclude Include="volumetrics\JobStructures.h" />
     <ClInclude Include="volumetrics\MarchingCubeTables.h" />

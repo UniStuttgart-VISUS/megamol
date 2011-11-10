@@ -88,6 +88,9 @@
     <ClCompile Include="volumetrics\VoluMetricJob.cpp">
       <Filter>volumetrics\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="volumetrics\IsoSurface.cpp">
+      <Filter>volumetrics\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractTriMeshDataSource.h">
@@ -152,6 +155,9 @@
     </ClInclude>
     <ClInclude Include="CallVolumetricData.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="volumetrics\IsoSurface.h">
+      <Filter>volumetrics\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
