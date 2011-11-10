@@ -64,13 +64,13 @@ $(TargetName): $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg
 # Rules for intermediate plugins:
 $(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: Makefile $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) $(DebugLinkerFlags) \
 	-o $(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg
 
 $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: Makefile $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) $(ReleaseLinkerFlags) \
 	-o $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg
 
@@ -79,14 +79,14 @@ $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: Makefile $(addpre
 $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $< >> $@
 
 $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $< >> $@
 
@@ -102,13 +102,13 @@ endif
 $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) $(DebugCompilerFlags) -o $@ $<
 
 $(IntDir)/$(ReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) $(ReleaseCompilerFlags) -o $@ $<
 
 
