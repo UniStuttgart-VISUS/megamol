@@ -25,13 +25,13 @@ all: VersionInfo $(InputDir)/include/MegaMolViewerDynamic.h
 $(InputDir)/include/MegaMolViewerDynamic.h: VersionInfo genDynIncl.pl $(InputDir)/include/MegaMolViewerStatic.h Makefile
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"GEN "$(COLORINFO)"$@: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	$(Q)perl genDynIncl.pl $(InputDir)/include/MegaMolViewerStatic.h
 
 VersionInfo: version.template.h VersionInfo.pl Makefile
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"GEN "$(COLORINFO)"include/MegaMolViewer.version.gen.h: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	$(Q)perl VersionInfo.pl .
 
 

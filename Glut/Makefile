@@ -70,7 +70,7 @@ $(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
 # Rules for intermediate shared objects:
 $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile version.gen.h $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(DebugDir)/lib$(TargetName).so: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) \
 	$(DebugLinkerFlags) -lvisglut$(BITS)d \
 	-o $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
@@ -80,7 +80,7 @@ $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile version.gen.h $(addp
 
 $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile version.gen.h $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(ReleaseDir)/lib$(TargetName).so: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) \
 	$(ReleaseLinkerFlags) -lvisglut$(BITS) \
 	-o $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
@@ -93,14 +93,14 @@ $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile version.gen.h $(add
 $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile version.gen.h
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $< >> $@
 
 $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile version.gen.h
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $< >> $@
 
@@ -116,13 +116,13 @@ endif
 $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) $(DebugCompilerFlags) -o $@ $<
 
 $(IntDir)/$(ReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) $(ReleaseCompilerFlags) -o $@ $<
 
 
@@ -130,13 +130,13 @@ $(IntDir)/$(ReleaseDir)/%.o:
 VersionInfo: version.template.h VersionInfo.pl Makefile
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"GEN "$(COLORINFO)"version.gen.h: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	$(Q)perl VersionInfo.pl .
 
 version.gen.h: version.template.h VersionInfo.pl Makefile
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"GEN "$(COLORINFO)"version.gen.h: "
-	@tput sgr0
+	@$(CLEARTERMCMD)
 	$(Q)perl VersionInfo.pl .
 
 
