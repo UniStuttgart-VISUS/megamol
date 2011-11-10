@@ -68,35 +68,35 @@ $(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
 
 # Rules for special intermediate files
 api/MegaMolCore.inl: api/MegaMolCore.h api/geninl.pl
-	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"api/MegaMolCore.inl: "
-	@tput sgr0
+	@echo -e  $(COLORACTION)"GEN "$(COLORINFO)"api/MegaMolCore.inl: "
+	@$(CLEARTERMCMD)
 	$(Q)perl api/geninl.pl api/MegaMolCore.h api/MegaMolCore.inl
 
 productversion.gen.h: productversion.template.h
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"VersionInfo: productversion.gen.h"
-	@tput sgr0
+	@echo -e $(COLORACTION)"GEN "$(COLORINFO)"VersionInfo: productversion.gen.h"
+	@$(CLEARTERMCMD)
 	$(Q)perl VersionInfo.pl .
 
 api/MegaMolCore.std.h: api/MegaMolCore.std.template.h
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"VersionInfo: api/MegaMolCore.std.h"
-	@tput sgr0
+	@echo -e $(COLORACTION)"GEN "$(COLORINFO)"VersionInfo: api/MegaMolCore.std.h"
+	@$(CLEARTERMCMD)
 	$(Q)perl VersionInfo.pl .
 
 
 # Phony target to force rebuild of the version info files
 VersionInfo:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"VersionInfo: productversion.gen.h api/MegaMolCore.std.h"
-	@tput sgr0
+	@echo -e $(COLORACTION)"GEN "$(COLORINFO)"VersionInfo: productversion.gen.h api/MegaMolCore.std.h"
+	@$(CLEARTERMCMD)
 	$(Q)perl VersionInfo.pl .
 
 
 # Rules for intermediate shared objects:
 $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
-	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/lib$(TargetName).so: "
-	@tput sgr0
+	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(DebugDir)/lib$(TargetName).so: "
+	@$(CLEARTERMCMD)
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) $(DebugLinkerFlags) \
 	-o $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 
@@ -104,8 +104,8 @@ $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile productversion.gen.h
 #	-o $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 
 $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
-	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/lib$(TargetName).so: "
-	@tput sgr0
+	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(ReleaseDir)/lib$(TargetName).so: "
+	@$(CLEARTERMCMD)
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) $(ReleaseLinkerFlags) \
 	-o $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
 
@@ -116,15 +116,15 @@ $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile productversion.gen.
 # Rules for dependencies:
 $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
-	@tput sgr0
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
+	@$(CLEARTERMCMD)
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) -I$(<D) $(DebugCompilerFlags) $< >> $@
 
 $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
-	@tput sgr0
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
+	@$(CLEARTERMCMD)
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) -I$(<D) $(ReleaseCompilerFlags) $< >> $@
 
@@ -139,14 +139,14 @@ endif
 # Rules for object files:
 $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
-	@tput sgr0
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@: "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) -I$(<D) $(DebugCompilerFlags) -o $@ $<
 
 $(IntDir)/$(ReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
-	@tput sgr0
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@: "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) -I$(<D) $(ReleaseCompilerFlags) -o $@ $<
 
 
