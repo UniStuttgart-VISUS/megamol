@@ -67,6 +67,8 @@
 #include "job/JobThread.h"
 //#include "vismol2/Mol20DataSource.h"
 //#include "vismol2/Mol20Renderer.h"
+#include "BuckyBall.h"
+#include "GridBalls.h"
 
 using namespace megamol::core;
 
@@ -159,6 +161,8 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         //instance->registerAutoDescription<vismol2::Mol20DataSource>();
         instance->registerAutoDescription<job::DataWriterJob>();
         instance->registerAutoDescription<job::JobThread>();
+        instance->registerAutoDescription<BuckyBall>();
+        instance->registerAutoDescription<GridBalls>();
     //}
     //return instance;
 }

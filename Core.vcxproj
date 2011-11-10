@@ -270,12 +270,14 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="AbstractSlot.cpp" />
     <ClCompile Include="ApiHandle.cpp" />
     <ClCompile Include="BoundingBoxes.cpp" />
+    <ClCompile Include="BuckyBall.cpp" />
     <ClCompile Include="Call.cpp" />
     <ClCompile Include="CallAutoDescription.cpp" />
     <ClCompile Include="CallDescription.cpp" />
     <ClCompile Include="CallDescriptionManager.cpp" />
     <ClCompile Include="CalleeSlot.cpp" />
     <ClCompile Include="CallerSlot.cpp" />
+    <ClCompile Include="CallVolumeData.cpp" />
     <ClCompile Include="cluster\simple\Client.cpp" />
     <ClCompile Include="cluster\simple\ClientViewRegistration.cpp" />
     <ClCompile Include="cluster\simple\CommUtil.cpp" />
@@ -286,6 +288,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="CoreInstance.cpp" />
     <ClCompile Include="DataFileSequencer.cpp" />
     <ClCompile Include="DataWriterCtrlCall.cpp" />
+    <ClCompile Include="GridBalls.cpp" />
     <ClCompile Include="InstanceDescription.cpp" />
     <ClCompile Include="InstanceRequest.cpp" />
     <ClCompile Include="JobDescription.cpp" />
@@ -505,12 +508,14 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="AbstractSlot.h" />
     <ClInclude Include="ApiHandle.h" />
     <ClInclude Include="BoundingBoxes.h" />
+    <ClInclude Include="BuckyBall.h" />
     <ClInclude Include="Call.h" />
     <ClInclude Include="CallAutoDescription.h" />
     <ClInclude Include="CallDescription.h" />
     <ClInclude Include="CallDescriptionManager.h" />
     <ClInclude Include="CalleeSlot.h" />
     <ClInclude Include="CallerSlot.h" />
+    <ClInclude Include="CallVolumeData.h" />
     <ClInclude Include="cluster\simple\Client.h" />
     <ClInclude Include="cluster\simple\ClientViewRegistration.h" />
     <ClInclude Include="cluster\simple\CommUtil.h" />
@@ -521,6 +526,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CoreInstance.h" />
     <ClInclude Include="DataFileSequencer.h" />
     <ClInclude Include="DataWriterCtrlCall.h" />
+    <ClInclude Include="GridBalls.h" />
     <ClInclude Include="InstanceDescription.h" />
     <ClInclude Include="InstanceRequest.h" />
     <ClInclude Include="JobDescription.h" />

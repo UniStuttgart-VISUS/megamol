@@ -26,6 +26,7 @@
 #include "view/CallRender3D.h"
 #include "view/CallRenderDeferred3D.h"
 #include "view/CallRenderView.h"
+#include "CallVolumeData.h"
 
 using namespace megamol::core;
 
@@ -73,6 +74,7 @@ void CallDescriptionManager::registerObjects(CallDescriptionManager *instance) {
         instance->registerAutoDescription<view::CallRenderDeferred3D>();
         instance->registerAutoDescription<view::CallRenderView>();
         instance->registerAutoDescription<DataWriterCtrlCall>();
+        instance->registerAutoDescription<CallVolumeData>();
     //}
     //return instance;
 }
