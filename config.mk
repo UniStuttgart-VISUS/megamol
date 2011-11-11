@@ -46,9 +46,9 @@ endif
 
 # check whether we have the terminal for color outout
 ifeq ($(TERM), xterm)
-        COLORACTION = $(COLORACTION)
-        COLORINFO =  $(COLORINFO)
-        CLEARTERMCMD = $(CLEARTERMCMD)
+        COLORACTION = '\E[1;32;40m'
+        COLORINFO =  '\E[0;32;40m'
+        CLEARTERMCMD = tput sgr0
 else
         COLORACTION =
         COLORINFO =
