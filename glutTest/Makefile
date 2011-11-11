@@ -21,7 +21,7 @@ CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -Wall -ansi -O3 -gg
 # removed: -pedantic 
 
 # Linker flags:
-LDFLAGS := -L/usr/X11R6/lib -L../lib -lm -lpthread -lGLU -lGL
+LDFLAGS := -lX11 -lXext -L../lib -lm -lpthread -lGLU -lGL
 
 ifneq ($(MAKECMDGOALS), clean)
 ifneq ($(MAKECMDGOALS), sweep)
@@ -59,14 +59,14 @@ $(OutDir)/$(OutName): $(IntDir)/$(OutName)
 	@cp $(IntDir)/$(OutName) $(OutDir)/
 	
 $(IntDir)/$(OutName): $(CPP_OBJS) 
-	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'" $@: "
-	@tput sgr0
+	@echo -e $(COLORACTION)"LNK "$(COLORINFO)" $@: "
+	@$(CLEARTERMCMD)
 	$(Q)$(LINK) -o $@ $^ $(LDFLAGS)
 
 $(IntDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(IntDir)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
-	@tput sgr0
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -MM $(CPPFLAGS) $< | sed -e 's/..*\.o\s*[:]/$(IntDir)\/\0/g' > $@
 
 
@@ -79,8 +79,8 @@ endif
 	
 $(IntDir)/%.o:
 	@mkdir -p $(IntDir)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
-	@tput sgr0
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@: "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) -o $@ $<
 
 

@@ -20,8 +20,8 @@ VISlibs := graphics math net sys base
 CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O0 -ggdb
 
 # Linker flags:
-#LDFLAGS := -L$(VISlibDir) -lX11 -lm -lpthread -lpam -lpam_misc -ldl -lncurses 
-LDFLAGS := -L$(VISlibDir) -lX11 -lm -lpthread -ldl -lncurses  -lrt -lcrypt
+#LDFLAGS := -L$(VISlibDir) -lX11 -lXext -lm -lpthread -lpam -lpam_misc -ldl -lncurses 
+LDFLAGS := -L$(VISlibDir) -lX11 -lXext -lm -lpthread -ldl -lncurses  -lrt -lcrypt
 
 
 ###############################################################################
@@ -30,11 +30,11 @@ IntDir := Lin$(BITSEX)
 ifeq ($(PLATFORM), x64)
 	OutDir := ../Lin64
 	CPPFLAGS += -D_LIN64
-	LDFLAGS += -L/usr/X11R6/lib64
+#	LDFLAGS += -L/usr/X11R6/lib64
 	VISlibs := $(addsuffix 64d, $(addprefix vislib, $(VISlibs)))
 else
 	OutDir := ../Lin32
-	LDFLAGS += -L/usr/X11R6/lib
+#	LDFLAGS += -L/usr/X11R6/lib
 	VISlibs := $(addsuffix 32d, $(addprefix vislib, $(VISlibs)))
 endif
 
@@ -59,14 +59,14 @@ $(OutDir)/$(TargetName): $(IntDir)/$(TargetName)
 	@cp $^ $(OutDir)/
 	
 $(IntDir)/$(TargetName): $(CPP_OBJS) $(addsuffix .a, $(addprefix $(VISlibDir)/lib, $(VISlibs)))
-	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'" $@: "
-	@tput sgr0
+	@echo -e $(COLORACTION)"LNK "$(COLORINFO)" $@: "
+	@$(CLEARTERMCMD)
 	$(Q)$(LINK) -o $@ $^ $(LDFLAGS)
 
 $(IntDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(IntDir)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
-	@tput sgr0
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -MM $(CPPFLAGS) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/\0/g' > $@
 
 
@@ -79,8 +79,8 @@ endif
 	
 $(IntDir)/%.o:
 	@mkdir -p $(IntDir)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
-	@tput sgr0
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@: "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) -o $@ $<
 	
 #tags:
