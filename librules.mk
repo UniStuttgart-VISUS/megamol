@@ -64,71 +64,71 @@ $(TargetName)e: $(IntDir)/$(ReleaseDir)Export/lib$(TargetName).a
 
 # Rules for intermediate archives:
 $(IntDir)/$(DebugDir)/lib$(TargetName).a: $(OBJS_DEBUG)
-	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"AR "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(AR) $(ARFLAGS) $@ $^
 
 $(IntDir)/$(ReleaseDir)/lib$(TargetName).a: $(OBJS_RELEASE)
-	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"AR "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(AR) $(ARFLAGS) $@ $^
 
 $(IntDir)/$(DebugDir)Import/lib$(TargetName).a: $(OBJS_DEBUG_IMPORT)
-	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"AR "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(AR) $(ARFLAGS) $@ $^
 
 $(IntDir)/$(ReleaseDir)Import/lib$(TargetName).a: $(OBJS_RELEASE_IMPORT)
-	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"AR "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(AR) $(ARFLAGS) $@ $^
 
 $(IntDir)/$(DebugDir)Export/lib$(TargetName).a: $(OBJS_DEBUG_EXPORT)
-	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"AR "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(AR) $(ARFLAGS) $@ $^
 
 $(IntDir)/$(ReleaseDir)Export/lib$(TargetName).a: $(OBJS_RELEASE_EXPORT)
-	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"AR "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(AR) $(ARFLAGS) $@ $^
 
 
 # Rules for dependencies:
 $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $(filter %.cpp, $^) | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(DebugDir)\/\1.d $(IntDir)\/$(DebugDir)\/\1.o:/g' > $@
 
 $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $(filter %.cpp, $^) | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(ReleaseDir)\/\1.d $(IntDir)\/$(ReleaseDir)\/\1.o:/g' > $@
 
 $(IntDir)/$(DebugDir)Export/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $(EXPORTCOMPILEFLAGS) $(filter %.cpp, $^) | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(DebugDir)Export\/\1.d $(IntDir)\/$(DebugDir)Export\/\1.o:/g' > $@
 
 $(IntDir)/$(ReleaseDir)Export/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $(EXPORTCOMPILEFLAGS) $(filter %.cpp, $^) | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(ReleaseDir)Export\/\1.d $(IntDir)\/$(ReleaseDir)Export\/\1.o:/g' > $@
 
 $(IntDir)/$(DebugDir)Import/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $(IMPORTCOMPILEFLAGS) $(filter %.cpp, $^) | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(DebugDir)Import\/\1.d $(IntDir)\/$(DebugDir)Import\/\1.o:/g' > $@
 
 $(IntDir)/$(ReleaseDir)Import/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $(IMPORTCOMPILEFLAGS) $(filter %.cpp, $^) | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(ReleaseDir)Import\/\1.d $(IntDir)\/$(ReleaseDir)Import\/\1.o:/g' > $@
 
 
@@ -142,38 +142,38 @@ endif
 # Rules for object files:
 $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) $(DebugCompilerFlags) -o $@ $<
 
 $(IntDir)/$(ReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) $(ReleaseCompilerFlags) -o $@ $<
 
 $(IntDir)/$(DebugDir)Export/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) $(DebugCompilerFlags) $(EXPORTCOMPILEFLAGS) -o $@ $<
 
 $(IntDir)/$(ReleaseDir)Export/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) $(ReleaseCompilerFlags) $(EXPORTCOMPILEFLAGS) -o $@ $<
 
 $(IntDir)/$(DebugDir)Import/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) $(DebugCompilerFlags) $(IMPORTCOMPILEFLAGS) -o $@ $<
 
 $(IntDir)/$(ReleaseDir)Import/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@ "
-	@tput sgr0
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@ "
+	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) $(ReleaseCompilerFlags) $(IMPORTCOMPILEFLAGS) -o $@ $<
 
 

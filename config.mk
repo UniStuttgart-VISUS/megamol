@@ -44,6 +44,18 @@ else
 endif
 
 
+# check whether we have the terminal for color outout
+ifeq ($(TERM), xterm)
+        COLORACTION = $(COLORACTION)
+        COLORINFO =  $(COLORINFO)
+        CLEARTERMCMD = $(CLEARTERMCMD)
+else
+        COLORACTION =
+        COLORINFO =
+        CLEARTERMCMD = true
+endif
+
+
 # Add clib version to the bits field for binary compatibility
 CLIBVER := $(shell /lib/libc.so.6 | sed -n 's/^.*C.*Library.*version[[:space:]]\+\([[:digit:]\.]\+\)[[:space:]].*$ /\1/I p' | sed -n 's/\./_/g p')
 BITSEX := $(BITS)_clib$(CLIBVER)
