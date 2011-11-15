@@ -168,7 +168,7 @@ namespace protein {
          * @param atomPos    Pointer to the interpolated atom positions.
          */
         void RenderSAS( const MolecularDataCall *mol, const float *atomPos);
-        
+
         /**
          * Test the filter module.
          *
@@ -192,7 +192,7 @@ namespace protein {
          * @param atomPos    Pointer to the interpolated atom positions.
          */
         void RenderStickFilter( const MolecularDataCall *mol, const float *atomPos);
-        
+
         /**
          * Render the molecular data in spacefilling mode.
          *
@@ -222,7 +222,11 @@ namespace protein {
         /** parameter slot for color table filename */
         megamol::core::param::ParamSlot colorTableFileParam;
         /** parameter slot for coloring mode */
-        megamol::core::param::ParamSlot coloringModeParam;
+        megamol::core::param::ParamSlot coloringModeParam0;
+        /** parameter slot for coloring mode */
+        megamol::core::param::ParamSlot coloringModeParam1;
+        /** parameter slot for coloring mode weighting*/
+        megamol::core::param::ParamSlot cmWeightParam;
         /** parameter slot for rendering mode */
         megamol::core::param::ParamSlot renderModeParam;
         /** parameter slot for stick radius */
@@ -259,7 +263,8 @@ namespace protein {
         GLint attribLocConFilter;
 
         /** The current coloring mode */
-        Color::ColoringMode currentColoringMode;
+        Color::ColoringMode currentColoringMode0;
+        Color::ColoringMode currentColoringMode1;
 
         /** The color lookup table (for chains, amino acids,...) */
         vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
