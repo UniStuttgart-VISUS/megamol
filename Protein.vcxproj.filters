@@ -229,6 +229,9 @@
     <ClCompile Include="GROLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SSAORendererDeferred.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimDataTimer.h">
@@ -442,6 +445,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GROLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SSAORendererDeferred.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
