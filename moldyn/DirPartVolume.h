@@ -113,6 +113,9 @@ namespace moldyn {
         /** Radius of the influence range of each particle in object space */
         param::ParamSlot sampleRadiusSlot;
 
+        /** Button to force a rebuild */
+        param::ParamSlot rebuildSlot;
+
         /** The data hash */
         SIZE_T dataHash;
 

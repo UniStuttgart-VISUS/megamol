@@ -70,6 +70,7 @@
 #include "BuckyBall.h"
 #include "GridBalls.h"
 #include "moldyn/DirPartVolume.h"
+#include "misc/VolumeCache.h"
 
 using namespace megamol::core;
 
@@ -165,6 +166,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<BuckyBall>();
         instance->registerAutoDescription<GridBalls>();
         instance->registerAutoDescription<moldyn::DirPartVolume>();
+        instance->registerAutoDescription<misc::VolumeCache>();
     //}
     //return instance;
 }

@@ -23,3 +23,17 @@ megamol::core::CallVolumeData::CallVolumeData(void) : xSize(0), ySize(0), zSize(
 megamol::core::CallVolumeData::~CallVolumeData(void) {
     this->attributes.Clear(true); // paranoia
 }
+
+
+/*
+ * megamol::core::CallVolumeData::operator=
+ */
+megamol::core::CallVolumeData& megamol::core::CallVolumeData::operator=(const megamol::core::CallVolumeData& rhs) {
+    AbstractGetData3DCall::operator=(rhs);
+    this->xSize = rhs.xSize;
+    this->ySize = rhs.ySize;
+    this->zSize = rhs.zSize;
+    this->attributes = rhs.attributes;
+
+    return *this;
+}

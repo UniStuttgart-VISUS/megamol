@@ -302,6 +302,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="MegaMolCore.cpp" />
     <ClCompile Include="misc\TestSpheresDataSource.cpp" />
+    <ClCompile Include="misc\VolumeCache.cpp" />
     <ClCompile Include="Module.cpp" />
     <ClCompile Include="ModuleAutoDescription.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -535,6 +536,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="JobInstanceRequest.h" />
     <ClInclude Include="LoaderADModuleAutoDescription.h" />
     <ClInclude Include="misc\TestSpheresDataSource.h" />
+    <ClInclude Include="misc\VolumeCache.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="ModuleAutoDescription.h" />
     <ClInclude Include="ModuleDescription.h" />

@@ -10,6 +10,7 @@
 #include "DirPartVolume.h"
 #include "CallVolumeData.h"
 #include "moldyn/DirectionalParticleDataCall.h"
+#include "param/ButtonParam.h"
 #include "param/IntParam.h"
 #include "param/FloatParam.h"
 #include "vislib/Vector.h"
@@ -303,6 +304,7 @@ moldyn::DirPartVolume::DirPartVolume(void) : Module(),
         yResSlot("resY", "Number of sample points in y direction"),
         zResSlot("resZ", "Number of sample points in z direction"),
         sampleRadiusSlot("radius", "Radius of the influence range of each particle in object space"),
+        rebuildSlot("rebuild", "Force a rebuild of the volume"),
         dataHash(0), frameID(0), bbox(), data(NULL) {
 
     this->inDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
@@ -323,6 +325,9 @@ moldyn::DirPartVolume::DirPartVolume(void) : Module(),
 
     this->sampleRadiusSlot << new param::FloatParam(2.0f, 0.0f);
     this->MakeSlotAvailable(&this->sampleRadiusSlot);
+
+    this->rebuildSlot << new param::ButtonParam();
+    this->MakeSlotAvailable(&this->rebuildSlot);
 
 }
 
@@ -405,6 +410,10 @@ bool moldyn::DirPartVolume::outData(Call& caller) {
     // We have data!
 
     bool rebuild = false;
+    if (this->rebuildSlot.IsDirty()) {
+        this->rebuildSlot.ResetDirty();
+        rebuild = true;
+    }
     if (this->xResSlot.IsDirty()) {
         this->xResSlot.ResetDirty();
         rebuild = true;

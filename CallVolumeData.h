@@ -330,6 +330,15 @@ namespace core {
             return this->zSize;
         }
 
+        /**
+         * Assignment operator
+         *
+         * @param rhs The right-hand side operand
+         *
+         * @return A reference to this
+         */
+        CallVolumeData& operator=(const CallVolumeData& rhs);
+
     private:
 
         /** The number of samples in x direction */
