@@ -242,6 +242,11 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
  * mmplgConnectStatics
  */
 PROTEIN_API bool mmplgConnectStatics(int which, void* value) {
+#if defined(DEBUG) || defined(_DEBUG)
+    // only trace non-vislib messages
+    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
+#endif /* DEBUG || _DEBUG */
+
     switch (which) {
         case 1: // vislib::log
             vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
