@@ -93,7 +93,7 @@ $(TargetName): $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg
 $(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: Makefile $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))\
 	$(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))\
 	$(addprefix $(IntDir)/$(CDebugDir)/, $(patsubst %.c, %.o, $(C_SRCS)))
-	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: "
+	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(CU_D_OBS) $(C_D_OBJS) $(addprefix -l,$(LIBS)) $(DebugLinkerFlags) \
 	-o $(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg
@@ -101,7 +101,7 @@ $(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: Makefile $(addpref
 $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: Makefile $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))\
 	$(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))\
 	$(addprefix $(IntDir)/$(CReleaseDir)/, $(patsubst %.c, %.o, $(C_SRCS)))
-	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: "
+	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(CU_R_OBS) $(C_R_OBJS) $(addprefix -l,$(LIBS)) $(ReleaseLinkerFlags) \
 	-o $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg
@@ -110,7 +110,7 @@ $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: Makefile $(addpre
 
 $(IntDir)/$(CudaDebugDir)/%.d: $(InputDir)/%.cu Makefile
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
 	$(Q)$(NVCC) -M -g -G $(NVCCFLAGS) $< >> $@
@@ -119,35 +119,35 @@ $(IntDir)/$(CudaDebugDir)/%.d: $(InputDir)/%.cu Makefile
 
 $(IntDir)/$(CudaReleaseDir)/%.d: $(InputDir)/%.cu Makefile
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
 	$(Q)$(NVCC) -M $(NVCCFLAGS) $< >> $@
 
 $(IntDir)/$(CDebugDir)/%.d: $(InputDir)/%.c Makefile
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
 	$(Q)$(CC) -MM $(CPPFLAGS) $(DebugCompilerFlags) $< >> $@
 
 $(IntDir)/$(CReleaseDir)/%.d: $(InputDir)/%.c Makefile
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
 	$(Q)$(CC) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $< >> $@
     
 $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $< >> $@
 
 $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $< >> $@
@@ -164,37 +164,37 @@ endif
 
 $(IntDir)/$(CudaDebugDir)/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"NVCC "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"NVCC "$(COLORINFO)"$@: "
 	@tput sgr0
 	$(Q)$(NVCC) -g -G -c $(NVCCFLAGS) $< -o $@
 
 $(IntDir)/$(CudaReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"NVCC "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"NVCC "$(COLORINFO)"$@: "
 	@tput sgr0
 	$(Q)$(NVCC) -c $(NVCCFLAGS) $< -o $@
 
 $(IntDir)/$(CDebugDir)/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CC "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"CC "$(COLORINFO)"$@: "
 	@tput sgr0
 	$(Q)$(CC) -c $(CPPFLAGS) $(DebugCompilerFlags) -o $@ $<
 
 $(IntDir)/$(CReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CC "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"CC "$(COLORINFO)"$@: "
 	@tput sgr0
 	$(Q)$(CC) -c $(CPPFLAGS) $(ReleaseCompilerFlags) -o $@ $<
 
 $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@: "
 	@tput sgr0
 	$(Q)$(CPP) -c $(CPPFLAGS) $(DebugCompilerFlags) -o $@ $<
 
 $(IntDir)/$(ReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
+	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@: "
 	@tput sgr0
 	$(Q)$(CPP) -c $(CPPFLAGS) $(ReleaseCompilerFlags) -o $@ $<
 

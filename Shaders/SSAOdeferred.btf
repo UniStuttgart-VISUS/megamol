@@ -402,35 +402,41 @@ void main(void) {
         vec3 normal = normalize(texture2D(normalBuff, gl_TexCoord[0].st).xyz);
         gl_FragColor = vec4(LocalLighting(V, normal, L, color.rgb)*ssaoFiltered, color.a);
     }
-    // SSAO
+    // SSAO + Color
     else if(renderMode == 1) { 
+        float val = texture2D(ssaoBuff, gl_TexCoord[0].st).r; 
+        val = pow(val, scale); // Amplify
+        gl_FragColor = vec4(vec3(val)*color.rgb, color.a);
+    }
+    // SSAO
+    else if(renderMode == 2) { 
         float val = texture2D(ssaoBuff, gl_TexCoord[0].st).r; 
         val = pow(val, scale); // Amplify
         gl_FragColor = vec4(vec3(val), color.a);
     }
     // Light
-    else if(renderMode == 2) { 
+    else if(renderMode == 3) { 
         vec3 L = normalize(vec3(gl_LightSource[0].position));
         vec3 V = normalize(posES.xyz);
         vec3 normal = normalize(texture2D(normalBuff, gl_TexCoord[0].st).xyz);
         gl_FragColor = vec4(LocalLighting( V, normal, L, color.rgb), color.a);
     }
     // Depth
-    else if(renderMode == 3) { 
+    else if(renderMode == 4) { 
         gl_FragColor = texelFetch2D(depthBuff, 
             ivec2(gl_FragCoord.xy / pow(2.0, float(depthLodLvl))), depthLodLvl);
     }
     // Normal
-    else if(renderMode == 4) { 
+    else if(renderMode == 5) { 
         vec3 normal = normalize(texture2D(normalBuff, gl_TexCoord[0].st).xyz);
         gl_FragColor = vec4(normal, color.a);
     }
     // Color
-    else if(renderMode == 5) { 
+    else if(renderMode == 6) { 
         gl_FragColor = color;
     }
     // Edges
-    else if(renderMode == 6) { 
+    else if(renderMode == 7) { 
         gl_FragColor = vec4(vec3(0.0,texture2D(discBuff, gl_TexCoord[0].st).rg), 1.0);
     }        
 }

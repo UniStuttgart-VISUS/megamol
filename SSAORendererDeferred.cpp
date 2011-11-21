@@ -41,16 +41,17 @@ SSAORendererDeferred::SSAORendererDeferred(void)
     megamol::core::param::EnumParam *rm =
         new megamol::core::param::EnumParam(0);
     rm->SetTypePair(0, "SSAO+Light");
-    rm->SetTypePair(1, "SSAO");
-    rm->SetTypePair(2, "Light");
-    rm->SetTypePair(3, "Depth");
-    rm->SetTypePair(4, "Normal");
-    rm->SetTypePair(5, "Color");
-    rm->SetTypePair(6, "Edges");
+    rm->SetTypePair(1, "SSAO+Color");
+    rm->SetTypePair(2, "SSAO");
+    rm->SetTypePair(3, "Light");
+    rm->SetTypePair(4, "Depth");
+    rm->SetTypePair(5, "Normal");
+    rm->SetTypePair(6, "Color");
+    rm->SetTypePair(7, "Edges");
     this->renderModeParam << rm;
     this->MakeSlotAvailable(&renderModeParam);
 
-    this->aoRadiusParam << new megamol::core::param::FloatParam(5.0, 0.3);
+    this->aoRadiusParam << new megamol::core::param::FloatParam(5.0, 0.0);
     this->MakeSlotAvailable(&this->aoRadiusParam);
 
     this->depthThresholdParam << new megamol::core::param::FloatParam(0.14, 0.0);

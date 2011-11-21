@@ -42,7 +42,7 @@ using namespace megamol::protein;
 /*
  * MoleculeSESRenderer::MoleculeSESRenderer
  */
-MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModule (),
+MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleDS (),
     molDataCallerSlot ( "getData", "Connects the protein SES rendering with protein data storage" ),
     postprocessingParam( "postProcessingMode", "Enable Postprocessing Mode: "),
     rendermodeParam( "renderingMode", "Choose Render Mode: "),
@@ -58,18 +58,19 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModule (),
     drawSASParam( "drawSAS", "Draw the SAS: "),
     fogstartParam( "fogStart", "Fog Start: "),
     molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"),
-    colorTableFileParam( "colorTableFilename", "The filename of the color table.")
+    colorTableFileParam( "colorTableFilename", "The filename of the color table."),
+    offscreenRenderingParam( "offscreenRendering", "Toggle offscreen rendering.")
 {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable ( &this->molDataCallerSlot );
-    
+
     // set epsilon value for float-comparison
     this->epsilon = vislib::math::FLOAT_EPSILON;
     // set probe radius
     this->probeRadius = 1.4f;
     // set transparency
     this->transparency = 0.5f;
-    
+
     // ----- en-/disable postprocessing -----
     this->postprocessing = NONE;
     //this->postprocessing = AMBIENT_OCCLUSION;
@@ -81,7 +82,7 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModule (),
     ppm->SetTypePair( SILHOUETTE, "Silhouette");
     ppm->SetTypePair( TRANSPARENCY, "Transparency");
     this->postprocessingParam << ppm;
-    
+
     // ----- choose current render mode -----
     this->currentRendermode = GPU_RAYCASTING;
     //this->currentRendermode = POLYGONAL;
@@ -91,22 +92,22 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModule (),
     param::EnumParam *rm = new param::EnumParam ( int ( this->currentRendermode ) );
     rm->SetTypePair( GPU_RAYCASTING, "GPU Ray Casting");
     this->rendermodeParam << rm;
-    
+
     // ----- set the default color for the silhouette -----
     this->SetSilhouetteColor( 1.0f, 1.0f, 1.0f);
     param::IntParam *sc = new param::IntParam( this->codedSilhouetteColor, 0, 255255255 );
     this->silhouettecolorParam << sc;
-    
+
     // ----- set sigma for screen space ambient occlusion (SSAO) -----
     this->sigma = 5.0f;
     param::FloatParam *ssaos = new param::FloatParam( this->sigma );
     this->sigmaParam << ssaos;
-    
+
     // ----- set lambda for screen space ambient occlusion (SSAO) -----
     this->lambda = 10.0f;
     param::FloatParam *ssaol = new param::FloatParam( this->lambda );
     this->lambdaParam << ssaol;
-    
+
     // ----- set start value for fogging -----
     this->fogStart = 0.5f;
     param::FloatParam *fs = new param::FloatParam( this->fogStart, 0.0f );
@@ -154,6 +155,11 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModule (),
     param::BoolParam *saspm = new param::BoolParam( this->drawSAS );
     this->drawSASParam << saspm;
 
+    // ----- ofsfcreen rendering param -----
+    this->offscreenRendering = false;
+    param::BoolParam *orpm = new param::BoolParam( this->offscreenRendering );
+    this->offscreenRenderingParam << orpm;
+
     // ----- molecular indices list param -----
     this->molIdxList.Add( "0");
     this->molIdxListParam.SetParameter(new param::StringParam( "0"));
@@ -199,6 +205,7 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModule (),
     this->MakeSlotAvailable( &this->debugParam );
     this->MakeSlotAvailable( &this->drawSESParam );
     this->MakeSlotAvailable( &this->drawSASParam );
+    this->MakeSlotAvailable( &this->offscreenRenderingParam );
 
 }
 
@@ -303,6 +310,24 @@ bool MoleculeSESRenderer::create( void ) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA() );
         return false;
     }
+    // Sphere shader for offscreen rendering
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphereFragmentOR", fragSrc ) )
+    {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName() );
+        return false;
+    }
+    try
+    {
+        if( !this->sphereShaderOR.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) )
+        {
+            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
+        }
+    }
+    catch( vislib::Exception e )
+    {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create offscreen rendering sphere shader: %s\n", this->ClassName(), e.GetMsgA() );
+        return false;
+    }
 
     ///////////////////////////////////////////////////
     // load the shader source for the torus renderer //
@@ -329,6 +354,24 @@ bool MoleculeSESRenderer::create( void ) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create torus shader: %s\n", this->ClassName(), e.GetMsgA() );
         return false;
     }
+    // Tirus shader for offscreen rendering
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::torusFragmentOR", fragSrc ) )
+    {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName() );
+        return false;
+    }
+    try
+    {
+        if( !this->torusShaderOR.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) )
+        {
+            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
+        }
+    }
+    catch( vislib::Exception e )
+    {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create offscreenrendering torus shader: %s\n", this->ClassName(), e.GetMsgA() );
+        return false;
+    }
 
     ////////////////////////////////////////////////////////////////
     // load the shader source for the spherical triangle renderer //
@@ -346,6 +389,25 @@ bool MoleculeSESRenderer::create( void ) {
     try
     {
         if( !this->sphericalTriangleShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) )
+        {
+            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
+        }
+    }
+    catch( vislib::Exception e )
+    {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create spherical triangle shader: %s\n", this->ClassName(), e.GetMsgA() );
+        return false;
+    }
+
+    // Spherical triangle shader for offscreenrendering
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphericaltriangleFragmentOR", fragSrc ) )
+    {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName() );
+        return false;
+    }
+    try
+    {
+        if( !this->sphericalTriangleShaderOR.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) )
         {
             throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
         }
@@ -539,13 +601,13 @@ fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
  * MoleculeSESRenderer::GetCapabilities
  */
 bool MoleculeSESRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
     cr3d->SetCapabilities(
-        view::CallRender3D::CAP_RENDER |
-        view::CallRender3D::CAP_LIGHTING |
-        view::CallRender3D::CAP_ANIMATION );
+        view::AbstractCallRender3D::CAP_RENDER |
+        view::AbstractCallRender3D::CAP_LIGHTING |
+        view::AbstractCallRender3D::CAP_ANIMATION );
 
     return true;
 }
@@ -556,7 +618,7 @@ bool MoleculeSESRenderer::GetCapabilities(Call& call) {
  */
 bool MoleculeSESRenderer::GetExtents(Call& call) {
 
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if( cr3d == NULL ) return false;
 
     MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
@@ -615,7 +677,7 @@ bool MoleculeSESRenderer::Render( Call& call ) {
     unsigned int cntRS = 0;
 
     // cast the call to Render3D
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if( cr3d == NULL ) return false;
 
     // get camera information
@@ -658,7 +720,7 @@ bool MoleculeSESRenderer::Render( Call& call ) {
                         }
             }
             int framecounter, molcounter;
-    
+
             for( framecounter = 0; framecounter < this->reducedSurfaceAllFrames.size(); ++framecounter ) {
                 // compute RS
                 for( unsigned int molcounter = 0; molcounter < this->reducedSurfaceAllFrames[framecounter].size(); ++molcounter ) {
@@ -674,9 +736,9 @@ bool MoleculeSESRenderer::Render( Call& call ) {
         }
         this->ComputeRaycastingArrays();
         */
-    
+
         // ----------------------------------------------------------------------------
-    
+
         // init the reduced surfaces
         if( this->reducedSurface.empty() ) {
             time_t t = clock();
@@ -702,7 +764,7 @@ bool MoleculeSESRenderer::Render( Call& call ) {
         Color::MakeColorTable(mol,
           this->currentColoringMode,
           this->atomColorTable, this->colorLookupTable,
-          this->rainbowColors, 
+          this->rainbowColors,
           this->minGradColorParam.Param<param::StringParam>()->Value(),
           this->midGradColorParam.Param<param::StringParam>()->Value(),
           this->maxGradColorParam.Param<param::StringParam>()->Value(),
@@ -828,7 +890,7 @@ void MoleculeSESRenderer::UpdateParameters( const MolecularDataCall *mol) {
     }
     if( this->coloringmodeParam.IsDirty() ) {
         this->currentColoringMode = static_cast<Color::ColoringMode>(  this->coloringmodeParam.Param<param::EnumParam>()->Value() );
-        
+
         Color::MakeColorTable( mol,
           this->currentColoringMode,
           this->atomColorTable, this->colorLookupTable,
@@ -836,7 +898,7 @@ void MoleculeSESRenderer::UpdateParameters( const MolecularDataCall *mol) {
           this->minGradColorParam.Param<param::StringParam>()->Value(),
           this->midGradColorParam.Param<param::StringParam>()->Value(),
           this->maxGradColorParam.Param<param::StringParam>()->Value());
-          
+
         this->preComputationDone = false;
         this->coloringmodeParam.ResetDirty();
     }
@@ -869,7 +931,12 @@ void MoleculeSESRenderer::UpdateParameters( const MolecularDataCall *mol) {
         this->drawSASParam.ResetDirty();
         this->preComputationDone = false;
     }
+    if( this->offscreenRenderingParam.IsDirty() ) {
+        this->offscreenRendering =
+            this->offscreenRenderingParam.Param<param::BoolParam>()->Value();
+        this->offscreenRenderingParam.ResetDirty();
 
+    }
     if( this->molIdxListParam.IsDirty() ) {
         vislib::StringA tmpStr( this->molIdxListParam.Param<param::StringParam>()->Value());
         this->molIdxList = vislib::StringTokeniser<vislib::CharTraitsA>::Split( tmpStr, ';', true);
@@ -1209,23 +1276,49 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
         //////////////////////////////////
         // ray cast the tori on the GPU //
         //////////////////////////////////
+        GLuint attribInParams;
+        GLuint attribQuatC;
+        GLuint attribInSphere;
+        GLuint attribInColors;
+        GLuint attribInCuttingPlane;
+
         if( this->drawSES ) {
             // enable torus shader
-            this->torusShader.Enable();
-            // set shader variables
-            glUniform4fvARB( this->torusShader.ParameterLocation( "viewAttr"), 1, viewportStuff);
-            glUniform3fvARB( this->torusShader.ParameterLocation( "camIn"), 1, this->cameraInfo->Front().PeekComponents());
-            glUniform3fvARB( this->torusShader.ParameterLocation( "camRight"), 1, this->cameraInfo->Right().PeekComponents());
-            glUniform3fvARB( this->torusShader.ParameterLocation( "camUp"), 1, this->cameraInfo->Up().PeekComponents());
-            glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
-            glUniform3fARB( this->torusShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-            glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), this->transparency);
-            // get attribute locations
-            GLuint attribInParams = glGetAttribLocationARB( this->torusShader, "inParams");
-            GLuint attribQuatC = glGetAttribLocationARB( this->torusShader, "quatC");
-            GLuint attribInSphere = glGetAttribLocationARB( this->torusShader, "inSphere");
-            GLuint attribInColors = glGetAttribLocationARB( this->torusShader, "inColors");
-            GLuint attribInCuttingPlane = glGetAttribLocationARB( this->torusShader, "inCuttingPlane");
+            if(offscreenRendering) {
+                this->torusShaderOR.Enable();
+                // set shader variables
+                glUniform4fvARB( this->torusShaderOR.ParameterLocation( "viewAttr"), 1, viewportStuff);
+                glUniform3fvARB( this->torusShaderOR.ParameterLocation( "camIn"), 1, this->cameraInfo->Front().PeekComponents());
+                glUniform3fvARB( this->torusShaderOR.ParameterLocation( "camRight"), 1, this->cameraInfo->Right().PeekComponents());
+                glUniform3fvARB( this->torusShaderOR.ParameterLocation( "camUp"), 1, this->cameraInfo->Up().PeekComponents());
+                glUniform3fARB( this->torusShaderOR.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+                glUniform3fARB( this->torusShaderOR.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
+                glUniform1fARB( this->torusShaderOR.ParameterLocation( "alpha"), this->transparency);
+                // get attribute locations
+                attribInParams = glGetAttribLocationARB( this->torusShaderOR, "inParams");
+                attribQuatC = glGetAttribLocationARB( this->torusShaderOR, "quatC");
+                attribInSphere = glGetAttribLocationARB( this->torusShaderOR, "inSphere");
+                attribInColors = glGetAttribLocationARB( this->torusShaderOR, "inColors");
+                attribInCuttingPlane = glGetAttribLocationARB( this->torusShaderOR, "inCuttingPlane");
+            }
+            else {
+                this->torusShader.Enable();
+                // set shader variables
+                glUniform4fvARB( this->torusShader.ParameterLocation( "viewAttr"), 1, viewportStuff);
+                glUniform3fvARB( this->torusShader.ParameterLocation( "camIn"), 1, this->cameraInfo->Front().PeekComponents());
+                glUniform3fvARB( this->torusShader.ParameterLocation( "camRight"), 1, this->cameraInfo->Right().PeekComponents());
+                glUniform3fvARB( this->torusShader.ParameterLocation( "camUp"), 1, this->cameraInfo->Up().PeekComponents());
+                glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+                glUniform3fARB( this->torusShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
+                glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), this->transparency);
+                // get attribute locations
+                attribInParams = glGetAttribLocationARB( this->torusShader, "inParams");
+                attribQuatC = glGetAttribLocationARB( this->torusShader, "quatC");
+                attribInSphere = glGetAttribLocationARB( this->torusShader, "inSphere");
+                attribInColors = glGetAttribLocationARB( this->torusShader, "inColors");
+                attribInCuttingPlane = glGetAttribLocationARB( this->torusShader, "inCuttingPlane");
+            }
+
             // set color to orange
             glColor3f( 1.0f, 0.75f, 0.0f);
             glEnableClientState( GL_VERTEX_ARRAY);
@@ -1251,33 +1344,70 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
             glDisableVertexAttribArrayARB( attribInCuttingPlane);
             glDisableClientState(GL_VERTEX_ARRAY);
             // enable torus shader
-            this->torusShader.Disable();
+            if(offscreenRendering) {
+                this->torusShaderOR.Disable();
+            }
+            else {
+                this->torusShader.Disable();
+            }
 
             /////////////////////////////////////////////////
             // ray cast the spherical triangles on the GPU //
             /////////////////////////////////////////////////
+            GLuint attribVec1;
+            GLuint attribVec2;
+            GLuint attribVec3;
+            GLuint attribTexCoord1;
+            GLuint attribTexCoord2;
+            GLuint attribTexCoord3;
+            GLuint attribColors;
+
             // bind texture
             glBindTexture( GL_TEXTURE_2D, singularityTexture[cntRS]);
             // enable spherical triangle shader
-            this->sphericalTriangleShader.Enable();
-            // set shader variables
-            glUniform4fvARB( this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-            glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-            glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-            glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
-            glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
-            glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-            glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"),
-                                                     1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
-            glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alpha"), this->transparency);
-            // get attribute locations
-            GLuint attribVec1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec1");
-            GLuint attribVec2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec2");
-            GLuint attribVec3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec3");
-            GLuint attribTexCoord1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord1");
-            GLuint attribTexCoord2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord2");
-            GLuint attribTexCoord3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord3");
-            GLuint attribColors = glGetAttribLocationARB( this->sphericalTriangleShader, "attribColors");
+            if(offscreenRendering) {
+                this->sphericalTriangleShaderOR.Enable();
+                // set shader variables
+                glUniform4fvARB( this->sphericalTriangleShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
+                glUniform3fvARB( this->sphericalTriangleShaderOR.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
+                glUniform3fvARB( this->sphericalTriangleShaderOR.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
+                glUniform3fvARB( this->sphericalTriangleShaderOR.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
+                glUniform3fARB( this->sphericalTriangleShaderOR.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+                glUniform3fARB( this->sphericalTriangleShaderOR.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
+                glUniform2fARB( this->sphericalTriangleShaderOR.ParameterLocation( "texOffset"),
+                                                         1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
+                glUniform1fARB( this->sphericalTriangleShaderOR.ParameterLocation( "alpha"), this->transparency);
+                // get attribute locations
+                attribVec1 = glGetAttribLocationARB( this->sphericalTriangleShaderOR, "attribVec1");
+                attribVec2 = glGetAttribLocationARB( this->sphericalTriangleShaderOR, "attribVec2");
+                attribVec3 = glGetAttribLocationARB( this->sphericalTriangleShaderOR, "attribVec3");
+                attribTexCoord1 = glGetAttribLocationARB( this->sphericalTriangleShaderOR, "attribTexCoord1");
+                attribTexCoord2 = glGetAttribLocationARB( this->sphericalTriangleShaderOR, "attribTexCoord2");
+                attribTexCoord3 = glGetAttribLocationARB( this->sphericalTriangleShaderOR, "attribTexCoord3");
+                attribColors = glGetAttribLocationARB( this->sphericalTriangleShaderOR, "attribColors");
+            }
+            else {
+                this->sphericalTriangleShader.Enable();
+                // set shader variables
+                glUniform4fvARB( this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+                glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
+                glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
+                glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
+                glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+                glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
+                glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"),
+                                                         1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
+                glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alpha"), this->transparency);
+                // get attribute locations
+                attribVec1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec1");
+                attribVec2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec2");
+                attribVec3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec3");
+                attribTexCoord1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord1");
+                attribTexCoord2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord2");
+                attribTexCoord3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord3");
+                attribColors = glGetAttribLocationARB( this->sphericalTriangleShader, "attribColors");
+            }
+
             // set color to turquoise
             glColor3f( 0.0f, 0.75f, 1.0f);
             glEnableClientState( GL_VERTEX_ARRAY);
@@ -1309,7 +1439,12 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
             glDisableVertexAttribArrayARB( attribColors);
             glDisableClientState(GL_VERTEX_ARRAY);
             // disable spherical triangle shader
-            this->sphericalTriangleShader.Disable();
+            if(offscreenRendering) {
+                this->sphericalTriangleShaderOR.Disable();
+            }
+            else {
+                this->sphericalTriangleShader.Disable();
+            }
             // unbind texture
             glBindTexture( GL_TEXTURE_2D, 0);
         }
@@ -1318,20 +1453,35 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
         // ray cast the spheres on the GPU //
         /////////////////////////////////////
         // enable sphere shader
-        if( this->currentRendermode == GPU_RAYCASTING )
-            this->sphereShader.Enable();
-        else // GPU_RAYCASTING_INTERIOR_CLIPPING
+        if( this->currentRendermode == GPU_RAYCASTING ) {
+            if(offscreenRendering) {
+                this->sphereShaderOR.Enable();
+                // set shader variables
+                glUniform4fvARB( this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
+                glUniform3fvARB( this->sphereShaderOR.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
+                glUniform3fvARB( this->sphereShaderOR.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
+                glUniform3fvARB( this->sphereShaderOR.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
+                glUniform3fARB( this->sphereShaderOR.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+                glUniform3fARB( this->sphereShaderOR.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
+                glUniform1fARB( this->sphereShaderOR.ParameterLocation( "alpha"), this->transparency);
+            }
+            else {
+                this->sphereShader.Enable();
+                // set shader variables
+                glUniform4fvARB( this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+                glUniform3fvARB( this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
+                glUniform3fvARB( this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
+                glUniform3fvARB( this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
+                glUniform3fARB( this->sphereShader.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+                glUniform3fARB( this->sphereShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
+                glUniform1fARB( this->sphereShader.ParameterLocation( "alpha"), this->transparency);
+            }
+        }
+        else { // GPU_RAYCASTING_INTERIOR_CLIPPING
             this->sphereClipInteriorShader.Enable();
+        }
         glEnableClientState( GL_VERTEX_ARRAY);
         glEnableClientState( GL_COLOR_ARRAY);
-        // set shader variables
-        glUniform4fvARB( this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB( this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-        glUniform3fvARB( this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-        glUniform3fvARB( this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
-        glUniform3fARB( this->sphereShader.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
-        glUniform3fARB( this->sphereShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-        glUniform1fARB( this->sphereShader.ParameterLocation( "alpha"), this->transparency);
         // set vertex and color pointers and draw them
         glColorPointer( 3, GL_FLOAT, 0, this->sphereColors[cntRS].PeekElements());
         glVertexPointer( 4, GL_FLOAT, 0, this->sphereVertexArray[cntRS].PeekElements());
@@ -1340,10 +1490,17 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
         glDisableClientState( GL_COLOR_ARRAY);
         glDisableClientState( GL_VERTEX_ARRAY);
         // disable sphere shader
-        if( this->currentRendermode == GPU_RAYCASTING )
-            this->sphereShader.Disable();
-        else // GPU_RAYCASTING_INTERIOR_CLIPPING
+        if( this->currentRendermode == GPU_RAYCASTING ) {
+            if(offscreenRendering) {
+                this->sphereShaderOR.Disable();
+            }
+            else {
+                this->sphereShader.Disable();
+            }
+        }
+        else { // GPU_RAYCASTING_INTERIOR_CLIPPING
             this->sphereClipInteriorShader.Disable();
+        }
     }
 
     // delete pointers

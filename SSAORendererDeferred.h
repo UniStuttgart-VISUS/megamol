@@ -209,8 +209,8 @@ namespace protein {
     };
 
 
-} // end namespace mdao
+} // end namespace protein
 } // end namespace megamol
 
-#endif // MEGAMOLCORE_SSAORENDERERDEFERRED_H_INCLUDED
+#endif // MMPROTEINPLUGIN_SSAORENDERERDEFERRED_H_INCLUDED
 
