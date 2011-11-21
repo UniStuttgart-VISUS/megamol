@@ -15,7 +15,7 @@
 #include "CallerSlot.h"
 #include "CallFrame.h"
 #include "Color.h"
-#include "view/Renderer3DModule.h"
+#include "view/Renderer3DModuleDS.h"
 #include "view/CallRender3D.h"
 #include "vislib/SimpleFont.h"
 #include "ReducedSurface.h"
@@ -36,7 +36,7 @@ namespace protein {
      * Molecular Surface Renderer class.
      * Computes and renders the solvent excluded (Connolly) surface.
      */
-    class MoleculeSESRenderer : public megamol::core::view::Renderer3DModule {
+    class MoleculeSESRenderer : public megamol::core::view::Renderer3DModuleDS {
     public:
 
         /** postprocessing modi */
@@ -312,10 +312,13 @@ namespace protein {
         megamol::core::param::ParamSlot molIdxListParam;
         /** parameter slot for color table filename */
         megamol::core::param::ParamSlot colorTableFileParam;
+        /** Parameter to toggle offscreen rendering */
+        megamol::core::param::ParamSlot offscreenRenderingParam;
 
         bool drawRS;
         bool drawSES;
         bool drawSAS;
+        bool offscreenRendering;
 
         /** the reduced surface(s) */
         std::vector<std::vector<ReducedSurface*> > reducedSurfaceAllFrames;
@@ -326,12 +329,15 @@ namespace protein {
         vislib::graphics::gl::GLSLShader cylinderShader;
         // shader for the spheres (raycasting view)
         vislib::graphics::gl::GLSLShader sphereShader;
+        vislib::graphics::gl::GLSLShader sphereShaderOR;
         // shader for the spheres with clipped interior (raycasting view)
         vislib::graphics::gl::GLSLShader sphereClipInteriorShader;
         // shader for the spherical triangles (raycasting view)
         vislib::graphics::gl::GLSLShader sphericalTriangleShader;
+        vislib::graphics::gl::GLSLShader sphericalTriangleShaderOR;
         // shader for torus (raycasting view)
         vislib::graphics::gl::GLSLShader torusShader;
+        vislib::graphics::gl::GLSLShader torusShaderOR;
         // shader for per pixel lighting (polygonal view)
         vislib::graphics::gl::GLSLShader lightShader;
         // shader for 1D gaussian filtering (postprocessing)
