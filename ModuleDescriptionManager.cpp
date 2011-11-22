@@ -49,6 +49,7 @@
 #include "moldyn/SphereOutlineRenderer.h"
 #include "moldyn/VIMDataSource.h"
 #include "moldyn/VisIttDataSource.h"
+#include "moldyn/DirPartColModulate.h"
 //#include "special/ColStereoDisplay.h"
 #include "view/ClipPlane.h"
 #include "view/LinearTransferFunction.h"
@@ -141,6 +142,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
         instance->registerAutoDescription<moldyn::VIMDataSource>();
         instance->registerAutoDescription<moldyn::VisIttDataSource>();
+        instance->registerAutoDescription<moldyn::DirPartColModulate>();
         //instance->registerAutoDescription<special::ColStereoDisplay>();
         instance->registerAutoDescription<view::ClipPlane>();
         instance->registerAutoDescription<view::LinearTransferFunction>();

@@ -684,6 +684,9 @@
     <ClCompile Include="misc\VolumeCache.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="moldyn\DirPartColModulate.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1237,6 +1240,9 @@
     </ClInclude>
     <ClInclude Include="misc\VolumeCache.h">
       <Filter>misc\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\DirPartColModulate.h">
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
