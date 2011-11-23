@@ -21,6 +21,8 @@
 #include "vislib/Point.h"
 
 
+// #define WITH_COLOUR_DATA
+
 namespace vislib {
     class RawStorageWriter;
 }
@@ -91,6 +93,11 @@ namespace volumetrics {
         static float getOffset(float fValue1, float fValue2, float fValueDesired);
 
         /**
+         * TODO: Document this! Reina!!11
+         */
+        static vislib::math::Point<float, 3> interpolate(vislib::math::Point<float, 3>* pts, float *cv, float val, unsigned int idx0, unsigned int idx1);
+
+        /**
          * Magic table #5
          */
         static const unsigned int tets[6][4];
@@ -128,6 +135,9 @@ namespace volumetrics {
         void buildMesh(
             vislib::RawStorageWriter& i,
             vislib::RawStorageWriter& v,
+#ifdef WITH_COLOUR_DATA
+            vislib::RawStorageWriter& c,
+#endif /* WITH_COLOUR_DATA */
             vislib::RawStorageWriter& n,
             float val,
             const float *vol,
@@ -146,6 +156,22 @@ namespace volumetrics {
             float v1,
             float v2,
             float v3,
+            float val,
+            vislib::RawStorageWriter& idxWrtr,
+            vislib::RawStorageWriter& vrtWrtr,
+            vislib::RawStorageWriter& nrlWrtr);
+
+        /**
+         * Magic Method #13
+         *
+         * TODO: Reina must document this
+         *
+         * @param pts All eight voxel positions
+         */
+        void makeTet(unsigned int triIdx,
+            unsigned int tetIdx,
+            vislib::math::Point<float, 3>* pts,
+            float *cv,
             float val,
             vislib::RawStorageWriter& idxWrtr,
             vislib::RawStorageWriter& vrtWrtr,
@@ -177,6 +203,11 @@ namespace volumetrics {
 
         /** Raw storage holding the vertex array */
         vislib::RawStorage vertex;
+
+#ifdef WITH_COLOUR_DATA
+        /** Raw storage holding the colour array */
+        vislib::RawStorage colour;
+#endif /* WITH_COLOUR_DATA */
 
         /** Raw storage holding the normal array */
         vislib::RawStorage normal;
