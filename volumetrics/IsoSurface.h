@@ -18,6 +18,7 @@
 #include "vislib/Cuboid.h"
 #include "vislib/RawStorage.h"
 #include "CallTriMeshData.h"
+#include "vislib/Point.h"
 
 
 namespace vislib {
@@ -85,6 +86,16 @@ namespace volumetrics {
     private:
 
         /**
+         * TODO: Reina must also document this ... or better make this a more nicely vislib-function (yoda)
+         */
+        static float getOffset(float fValue1, float fValue2, float fValueDesired);
+
+        /**
+         * Magic table #5
+         */
+        static const unsigned int tets[6][4];
+
+        /**
          * Gets the data from the source.
          *
          * @param caller The calling call.
@@ -123,6 +134,22 @@ namespace volumetrics {
             unsigned int sx,
             unsigned int sy,
             unsigned int sz);
+
+        /**
+         * Magic Method #12
+         *
+         * TODO: Reina must document this
+         */
+        void makeTet(unsigned int triIdx,
+            vislib::math::Point<float, 3>* pts,
+            float v0,
+            float v1,
+            float v2,
+            float v3,
+            float val,
+            vislib::RawStorageWriter& idxWrtr,
+            vislib::RawStorageWriter& vrtWrtr,
+            vislib::RawStorageWriter& nrlWrtr);
 
         /** The slot for requesting input data */
         core::CallerSlot inDataSlot;
