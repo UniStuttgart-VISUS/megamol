@@ -16,7 +16,7 @@
 /*
  * megamol::core::BuckyBall::BuckyBall
  */
-megamol::core::BuckyBall::BuckyBall(void) : getDataSlot("getData", "Gets the data"), volRes(128), vol(NULL) {
+megamol::core::BuckyBall::BuckyBall(void) : getDataSlot("getData", "Gets the data"), volRes(64), vol(NULL) {
     this->getDataSlot.SetCallback("CallVolumeData", "GetData", &BuckyBall::getDataCallback);
     this->getDataSlot.SetCallback("CallVolumeData", "GetExtent", &BuckyBall::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
