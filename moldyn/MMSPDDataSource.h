@@ -30,7 +30,7 @@ namespace vislib {
     /* forward declarations */
     class RawStorage;
     class RawStorageWriter;
-};
+}
 
 namespace megamol {
 namespace core {

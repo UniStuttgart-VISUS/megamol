@@ -350,12 +350,16 @@ namespace core {
         /** The number of samples in z direction */
         unsigned int zSize;
 
+#ifdef _WIN32
 #pragma warning(disable:4251)
+#endif /* _WIN32 */
 
         /** The array of attributes */
         vislib::Array<Data> attributes;
 
+#ifdef _WIN32
 #pragma warning(default:4251)
+#endif /* _WIN32 */
 
     };
 
