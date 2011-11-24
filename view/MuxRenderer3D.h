@@ -326,9 +326,9 @@ namespace view {
             tz = ocWS.Back() * sz - ocOS.Back();
 
             *oc = *cr3d;
-            oc->SetTime(cr3d->Time()
+            oc->SetTime(cr3d->Time()/* This is problematic for modules which return a wrong TFCnt
                 * (float)(oc->TimeFramesCount() - 1)
-                / (float)(vislib::math::Max(1U, this->frameCnt - 1)));
+                / (float)(vislib::math::Max(1U, this->frameCnt - 1))*/);
             camParams->CopyFrom(cr3d->GetCameraParameters());
             oc->SetCameraParameters(camParams);
             vislib::math::Point<float, 3> p = camParams->Position();
