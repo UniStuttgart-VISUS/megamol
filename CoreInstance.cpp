@@ -1538,11 +1538,11 @@ void debugDumpSlots(megamol::core::AbstractNamedObjectContainer *c) {
         ParamSlot *param = dynamic_cast<ParamSlot *>(ano);
 
         if (callee != NULL) {
-            Log::DefaultLog.WriteInfo(150, "Callee Slot: %s", callee->FullName());
+            Log::DefaultLog.WriteInfo(150, "Callee Slot: %s", callee->FullName().PeekBuffer());
         } else if (caller != NULL) {
-            Log::DefaultLog.WriteInfo(150, "Caller Slot: %s", caller->FullName());
+            Log::DefaultLog.WriteInfo(150, "Caller Slot: %s", caller->FullName().PeekBuffer());
         } else if (param != NULL) {
-            Log::DefaultLog.WriteInfo(150, "Param Slot: %s", param->FullName());
+            Log::DefaultLog.WriteInfo(150, "Param Slot: %s", param->FullName().PeekBuffer());
         } else if (anoc != NULL) {
             debugDumpSlots(anoc);
         }
