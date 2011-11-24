@@ -1145,6 +1145,7 @@ void moldyn::IMDAtomDataSource::assertData(void) {
 
     vislib::sys::MemmappedFile file;
     vislib::TString filename = this->filenameSlot.Param<param::FilePathParam>()->Value();
+    Log::DefaultLog.WriteInfo(50, _T("Loading \"%s\""), filename.PeekBuffer());
     //this->datahash = static_cast<SIZE_T>(filename.HashCode());
     if (!file.Open(filename, vislib::sys::File::READ_ONLY,
             vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {

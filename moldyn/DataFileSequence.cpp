@@ -197,7 +197,7 @@ bool moldyn::DataFileSequence::getExtentCallback(Call& caller) {
             this->datahash++;
         }
 
-        ggdc->SetFrameID(0);
+        ggdc->SetFrameID(pgdc->FrameID(), pgdc->IsFrameForced());
         if (!(*ggdc)(1)) {
             return false; // unable to get data
         }

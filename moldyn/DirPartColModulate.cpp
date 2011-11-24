@@ -136,10 +136,12 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
         rebuildColour = true;
     }
 
+    inCvd->SetFrameID(outDpdc->FrameID(), outDpdc->IsFrameForced());
     if (!(*inCvd)(1)) { // just poke for update
         return false;
     }
     vislib::math::Cuboid<float> volBB(inCvd->AccessBoundingBoxes().ObjectSpaceBBox());
+    inCvd->SetFrameID(outDpdc->FrameID(), outDpdc->IsFrameForced());
     if (!(*inCvd)(0)) { // just poke for update
         return false;
     }

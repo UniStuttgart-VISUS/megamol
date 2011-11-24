@@ -240,6 +240,7 @@ bool moldyn::DirPartVolume::outExtend(Call& caller) {
 
     cvd->AccessBoundingBoxes().Clear();
     DirectionalParticleDataCall *dpd = this->inDataSlot.CallAs<DirectionalParticleDataCall>();
+    dpd->SetFrameID(cvd->FrameID(), cvd->IsFrameForced());
     if ((dpd == NULL) || (!(*dpd)(1))) {
         // no input data
         cvd->SetDataHash(0);
