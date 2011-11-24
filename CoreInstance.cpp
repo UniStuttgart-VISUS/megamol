@@ -1517,6 +1517,41 @@ void megamol::core::CoreInstance::addProject(
 }
 
 
+#if defined(DEBUG) || defined(_DEBUG)
+
+/*
+ * debugDumpSlots
+ */
+void debugDumpSlots(megamol::core::AbstractNamedObjectContainer *c) {
+    using vislib::sys::Log;
+    using megamol::core::AbstractNamedObject;
+    using megamol::core::AbstractNamedObjectContainer;
+    using megamol::core::CalleeSlot;
+    using megamol::core::CallerSlot;
+    using megamol::core::param::ParamSlot;
+    vislib::SingleLinkedList<megamol::core::AbstractNamedObject*>::Iterator iter = c->GetChildIterator();
+    while (iter.HasNext()) {
+        AbstractNamedObject *ano = iter.Next();
+        AbstractNamedObjectContainer *anoc = dynamic_cast<AbstractNamedObjectContainer *>(ano);
+        CalleeSlot *callee = dynamic_cast<CalleeSlot *>(ano);
+        CallerSlot *caller = dynamic_cast<CallerSlot *>(ano);
+        ParamSlot *param = dynamic_cast<ParamSlot *>(ano);
+
+        if (callee != NULL) {
+            Log::DefaultLog.WriteInfo(150, "Callee Slot: %s", callee->FullName());
+        } else if (caller != NULL) {
+            Log::DefaultLog.WriteInfo(150, "Caller Slot: %s", caller->FullName());
+        } else if (param != NULL) {
+            Log::DefaultLog.WriteInfo(150, "Param Slot: %s", param->FullName());
+        } else if (anoc != NULL) {
+            debugDumpSlots(anoc);
+        }
+    }
+}
+
+#endif /* DEBUG || _DEBUG */
+
+
 /*
  * megamol::core::CoreInstance::instantiateModule
  */
@@ -1577,6 +1612,10 @@ megamol::core::Module* megamol::core::CoreInstance::instantiateModule(
             "Created module \"%s\" (%s)",
             desc->ClassName(), path.PeekBuffer());
         cns->AddChild(mod);
+#if defined(DEBUG) || defined(_DEBUG)
+        debugDumpSlots(mod);
+#endif /* DEBUG || _DEBUG */
+
     }
 
     return mod;
