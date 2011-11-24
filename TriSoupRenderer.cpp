@@ -120,6 +120,7 @@ bool TriSoupRenderer::GetExtents(Call& call) {
     if (cr == NULL) return false;
     CallTriMeshData *ctmd = this->getDataSlot.CallAs<CallTriMeshData>();
     if (ctmd == NULL) return false;
+    ctmd->SetFrameID(static_cast<int>(cr->Time()));
     if (!(*ctmd)(1)) return false;
 
     cr->SetTimeFramesCount(1);
@@ -145,14 +146,18 @@ void TriSoupRenderer::release(void) {
  * TriSoupRenderer::Render
  */
 bool TriSoupRenderer::Render(Call& call) {
+    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+    if (cr == NULL) return false;
     CallTriMeshData *ctmd = this->getDataSlot.CallAs<CallTriMeshData>();
     if (ctmd == NULL) return false;
 
+    ctmd->SetFrameID(static_cast<int>(cr->Time()));
     if (!(*ctmd)(1)) return false;
     float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
     if (scale > 0.0f) scale = 2.0f / scale;
     ::glScalef(scale, scale, scale);
 
+    ctmd->SetFrameID(static_cast<int>(cr->Time()));
     if (!(*ctmd)(0)) return false;
 
     bool normals = false;

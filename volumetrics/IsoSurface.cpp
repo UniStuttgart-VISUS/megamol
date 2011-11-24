@@ -209,6 +209,7 @@ bool IsoSurface::outExtentCallback(megamol::core::Call& caller) {
 
     tmd->AccessBoundingBoxes().Clear();
     core::CallVolumeData *cvd = this->inDataSlot.CallAs<core::CallVolumeData>();
+    cvd->SetFrameID(tmd->FrameID(), tmd->IsFrameForced());
     if ((cvd == NULL) || (!(*cvd)(1))) {
         // no input data
         tmd->SetDataHash(0);
