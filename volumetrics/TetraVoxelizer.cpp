@@ -951,11 +951,19 @@ DWORD TetraVoxelizer::Run(void *userData) {
     vislib::math::Point<unsigned int, 3> pStart, pEnd;
     vislib::math::Point<VoxelizerFloat, 3> p;
     sjd = static_cast<SubJobData*>(userData);
-    SIZE_T numNeg = 0, numZero = 0, numPos = 0;
+    SIZE_T numNeg = 0, numZero = 0, numPos = 0, numPartSkipped = 0, numPartAdded = 0;
+
+// my hacky breakpoint to catch a specific thread ^^ ;-)
+//#ifdef _DEBUG
+//        if ( sjd->resX == 5 && sjd->resY == 5 && sjd->resZ == 5) {
+//            sjd->resX = sjd->resY;
+//        }
+//#endif
 
     unsigned int fifoEnd = 0, fifoCur = 0;
     FatVoxel *volume = new FatVoxel[sjd->resX * sjd->resY * sjd->resZ];
-    // we can do that when using structs ... memset(volume, 0, sizeof(FatVoxel)*sjd->resX * sjd->resY * sjd->resZ]);
+    // we can do that when using structs ... - its safer doing memzero (in case new members get added to the FatVoxel struct)
+    memset(volume, 0, sizeof(FatVoxel)*(sjd->resX * sjd->resY * sjd->resZ));
     for (SIZE_T i = 0; i < static_cast<SIZE_T>(sjd->resX * sjd->resY * sjd->resZ); i++) {
         volume[i].distField = FLT_MAX;
         volume[i].borderVoxel = NULL;
@@ -1024,8 +1032,11 @@ DWORD TetraVoxelizer::Run(void *userData) {
                 currRad = (float)vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
                 currRad *= sjd->RadMult;
             }
-            if (Centroid.Distance(sp) > currRad + distOffset)
+            if (Centroid.Distance(sp) > currRad + distOffset) {
+                numPartSkipped++;
                 continue;
+            }
+            numPartAdded++;
 
             int x, y, z;
             x = static_cast<int>((sp.X() - currRad - sjd->Bounds.Left()) / sjd->CellSize) - 1;
@@ -1065,8 +1076,9 @@ DWORD TetraVoxelizer::Run(void *userData) {
                         //} else {
                         //    volume[i].distField = 10000000;
                         //}
+                            // thomasmbm: i think the 'numNeg'/'numPos' using to determinate full/empty volumes is i not correct, since particle-spheres may overlap!
                             if (volume[i].distField < 0.0) {
-                                numNeg++;
+                                numNeg++; 
                             } else {
                                 if (volume[i].distField > 0.0) {
                                     numPos++;
@@ -1123,7 +1135,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
                 * sjd->CellSize * sjd->CellSize * sjd->CellSize;
         s.voidVolume = 0;
         sjd->Result.surfaces.Append(s);
-    } else if (numPos == (sjd->resX) * (sjd->resY) * (sjd->resZ)) {
+    } else if (numPartAdded == 0 || numPos == (sjd->resX) * (sjd->resY) * (sjd->resZ)) {
         // totally empty
         Surface s;
         s.surface = 0.0;
@@ -1157,10 +1169,14 @@ DWORD TetraVoxelizer::Run(void *userData) {
     if (sjd->storeVolume) {
         CallVolumetricData::Volume& v = sjd->Result.debugVolume;
         v.volumeData = new CallVolumetricData::VoxelType[(sjd->resX)*(sjd->resY)*(sjd->resZ)];
-        memset(v.volumeData, 0, sizeof(CallVolumetricData::VoxelType)*(sjd->resX-1)*(sjd->resY-1)*(sjd->resZ-1));
+        memset(v.volumeData, 0, sizeof(CallVolumetricData::VoxelType)*(sjd->resX)*(sjd->resY)*(sjd->resZ));
 
-        v.size[0] = sjd->resX, v.size[1] = sjd->resY, v.size[2] = sjd->resZ; 
-        v.origin[0] = sjd->Bounds.Left(), v.origin[1] = sjd->Bounds.Bottom(), v.origin[2] = sjd->Bounds.Back();
+        v.resX = sjd->resX;
+        v.resY = sjd->resY;
+        v.resZ = sjd->resZ; 
+        v.origin[0] = sjd->Bounds.Left();
+        v.origin[1] = sjd->Bounds.Bottom();
+        v.origin[2] = sjd->Bounds.Back();
         v.scaling[0] = sjd->CellSize, v.scaling[1] = sjd->CellSize, v.scaling[2] = sjd->CellSize;
 /*            // reference corner of this cell
     vislib::math::Point<VoxelizerFloat, 3> p(sjd->Bounds.Left() + x * sjd->CellSize,

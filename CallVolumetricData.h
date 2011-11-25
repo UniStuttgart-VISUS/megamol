@@ -79,12 +79,18 @@ namespace trisoup {
             Volume() : volumeData(0) {}
 
             VoxelType *volumeData;
-            int size[3];
+            int resX, resY, resZ;
             double origin[3], scaling[3];
             // dirty hack
             inline int operator == (const Volume& v) {
                 return v.volumeData == this->volumeData;
             }
+            VISLIB_FORCEINLINE unsigned cellIndex(unsigned x, unsigned y, unsigned z) { return (z * this->resY + y) * this->resX + x; }
+        /*    VISLIB_FORCEINLINE bool isBorder(unsigned x, unsigned y, unsigned z) {
+                return (x == 0) || (x == this->resX - 2)
+                    || (y == 0) || (y == this->resY - 2)
+                    || (z == 0) || (z == this->resZ - 2);
+            }*/
         };
 
         void SetVolumes(vislib::Array<Volume>& volumes) { this->subVolumes = volumes; }

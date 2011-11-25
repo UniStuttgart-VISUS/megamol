@@ -407,21 +407,32 @@ bool TriSoupRenderer::Render(Call& call) {
     if (cvd != NULL && (*cvd)(0)) {
         vislib::Array<CallVolumetricData::Volume>& volumes = cvd->GetVolumes();
         ::glEnable(GL_POINT_SIZE);
+        ::glEnable(GL_DEPTH_TEST);
         ::glDisable(GL_BLEND);
         ::glDisable(GL_LIGHTING);
-        ::glPointSize(2);
+        ::glPointSize(3);
         ::glBegin(GL_POINTS);
-        for(int i = 0; i < volumes.Count(); i++) {
-            CallVolumetricData::Volume& v = volumes[i];
+        double offset = 0.5;
+        for(int volIdx = 0; volIdx < volumes.Count(); volIdx++) {
+            CallVolumetricData::Volume& v = volumes[volIdx];
             if (!v.volumeData)
                 continue;
-            for(int x = 0; x < v.size[0]; x++) {
-                for(int y = 0; y < v.size[1]; y++) {
-                    //int yOffs = y*v.size[0];
-                    for(int z = 0; z < v.size[2]; z++) {
-                        int index = x + v.size[0]*(y + z*v.size[1]);
-                        double position[3] = {v.origin[0] + (x+0.5)*v.scaling[0], v.origin[1] + (y+0.5)*v.scaling[1], v.origin[2] + (z+0.5)*v.scaling[2]};
+//#define COLOR_BY_VOLID
+#ifdef COLOR_BY_VOLID
+            float col[4] = {0,0,0,1};
+            col[volIdx%3] = 1;
+            ::glColor4fv(col);
+#endif // COLOR_BY_VOLID
+            /* resolution is always off-by-1 ?! */
+            for(int x = 0; x < v.resX-1; x++) {
+                for(int y = 0; y < v.resY-1; y++) {
+                    for(int z = 0; z < v.resZ-1; z++) {
+                        int index = v.cellIndex(x, y, z);
+                        double position[3] = {v.origin[0] + (x+offset)*v.scaling[0],
+                                              v.origin[1] + (y+offset)*v.scaling[1],
+                                              v.origin[2] + (z+offset)*v.scaling[2]};
                         CallVolumetricData::VoxelType voxel = v.volumeData[index];
+#ifndef COLOR_BY_VOLID
                         if (voxel != 0) {
                             if (voxel > 0)
                                 ::glColor4f(0, 1, 1, 1);
@@ -429,11 +440,11 @@ bool TriSoupRenderer::Render(Call& call) {
                                 ::glColor4d(1, 0, 0, 1);
                         } else
                             ::glColor4f(1, 1, 1, 1);
+#endif // !COLOR_BY_VOLID
                        ::glVertex3dv(position);
                      }
                 }
             }
-            break;
         }
         ::glEnd();
     }
