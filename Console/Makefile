@@ -22,7 +22,7 @@ CompilerFlags := $(CompilerFlags)
 LinkerFlags := $(LinkerFlags)
 
 # Libraries
-LIBS := $(LIBS) m pthread pam pam_misc dl ncurses GL rt
+LIBS := $(LIBS) m pthread pam pam_misc uuid dl ncurses GL rt X11
 
 
 # Collect Files
