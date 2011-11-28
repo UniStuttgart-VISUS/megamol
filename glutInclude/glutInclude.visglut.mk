@@ -12,3 +12,6 @@ ifeq ($(BITS), 64)
 else
 	LDFLAGS += -L%visglutPath%/freeglut/lib/lin32d -lfreeglut
 endif
+
+IncludeDir += %visglutPath%/include \
+              %visglutPath%/freeglut/include
