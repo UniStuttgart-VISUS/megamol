@@ -16,7 +16,7 @@ OutDir := lib
 InputRootDir := $(InputDir)
 InputDir := .
 IncludeDir := . .. ../Viewer/include $(mmcorepath)/api
-IncludeDir := $(IncludeDir) $(visglutpath)/include
+IncludeDir := $(IncludeDir) $(visglutpath)/include $(visglutpath)/freeglut/include
 VISlibs := gl graphics sys math base
 
 
