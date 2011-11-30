@@ -45,7 +45,8 @@ namespace protein {
          * @return The name of the objects of this description.
          */
         static const char *ClassName(void) {
-            return "CallVolumeData";
+            // a call named 'CallVolumeData' already exists in the megamol-core -> name conflict ...
+            return "CallProteinVolumeData";
         }
 
         /**
