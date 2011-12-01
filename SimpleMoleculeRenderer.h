@@ -15,8 +15,8 @@
 #include "Color.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
-#include "view/Renderer3DModule.h"
-#include "view/CallRender3D.h"
+#include "view/Renderer3DModuleDS.h"
+#include "view/AbstractCallRender3D.h"
 #include "vislib/GLSLShader.h"
 
 
@@ -28,7 +28,7 @@ namespace protein {
      * Simple Molecular Renderer class
      */
 
-    class SimpleMoleculeRenderer : public megamol::core::view::Renderer3DModule
+    class SimpleMoleculeRenderer : public megamol::core::view::Renderer3DModuleDS
     {
     public:
 
@@ -245,11 +245,15 @@ namespace protein {
         megamol::core::param::ParamSlot specialColorParam;
         /** parameter slot for positional interpolation */
         megamol::core::param::ParamSlot interpolParam;
+		/** Toggle offscreen rendering */
+        megamol::core::param::ParamSlot offscreenRenderingParam;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;
+		vislib::graphics::gl::GLSLShader sphereShaderOR;
         /** shader for the cylinders (raycasting view) */
         vislib::graphics::gl::GLSLShader cylinderShader;
+		vislib::graphics::gl::GLSLShader cylinderShaderOR;
 		/** Shader for the spheres that uses filter information */
         vislib::graphics::gl::GLSLShader filterSphereShader;
         vislib::graphics::gl::GLSLShader filterCylinderShader;
