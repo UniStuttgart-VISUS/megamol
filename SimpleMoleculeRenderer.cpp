@@ -42,7 +42,7 @@ using namespace megamol::protein;
 /*
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
  */
-SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModule (),
+SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModuleDS (),
     molDataCallerSlot( "getData", "Connects the molecule rendering with molecule data storage"),
     colorTableFileParam( "color::colorTableFilename", "The filename of the color table."),
     coloringModeParam0( "color::coloringMode0", "The first coloring mode."),
@@ -56,7 +56,8 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModule (),
     maxGradColorParam( "color::maxGradColor", "The color for the maximum value for gradient coloring" ),
     molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"),
     specialColorParam( "color::specialColor", "The color for the specified molecules" ),
-    interpolParam( "posInterpolation", "Enable positional interpolation between frames" )
+    interpolParam( "posInterpolation", "Enable positional interpolation between frames" ),
+	offscreenRenderingParam( "offscreenRendering", "Toggle offscreenRendering" )
 {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable( &this->molDataCallerSlot);
@@ -154,6 +155,10 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModule (),
 
     // make the rainbow color table
     Color::MakeRainbowColorTable( 100, this->rainbowColors);
+
+	// Toggle offscreen rendering
+    this->offscreenRenderingParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable( &this->offscreenRenderingParam);
 }
 
 
@@ -177,12 +182,11 @@ void SimpleMoleculeRenderer::release(void) {
  * protein::SimpleMoleculeRenderer::create
  */
 bool SimpleMoleculeRenderer::create(void) {
-    if (glh_init_extensions("GL_ARB_vertex_program") == 0) {
+	if( !glh_init_extensions( "GL_ARB_vertex_program GL_VERSION_2_0") )
         return false;
-    }
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+
+    if ( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
         return false;
-    }
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -203,6 +207,20 @@ bool SimpleMoleculeRenderer::create(void) {
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
+        return false;
+    }
+    try {
+        if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+        }
+    } catch(vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create sphere shader: %s\n", e.GetMsgA());
+        return false;
+    }
+
+	// Load sphere shader for offscreen rendering
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentOR", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for offscreen rendering sphere shader");
         return false;
     }
     try {
@@ -250,8 +268,22 @@ bool SimpleMoleculeRenderer::create(void) {
         return false;
     }
 
+	// Load cylinder shader for offscreen rendering
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragmentOR", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
+        return false;
+    }
+    try {
+        if (!this->cylinderShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+        }
+    } catch(vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create cylinder shader: %s\n", e.GetMsgA());
+        return false;
+    }
+
     // Load filter cylinder shader
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::filterCylinderVertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::filterCylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for filter cylinder shader");
         return false;
     }
@@ -276,12 +308,12 @@ bool SimpleMoleculeRenderer::create(void) {
  * protein::SimpleMoleculeRenderer::GetCapabilities
  */
 bool SimpleMoleculeRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    cr3d->SetCapabilities(view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_LIGHTING
-        | view::CallRender3D::CAP_ANIMATION );
+    cr3d->SetCapabilities(view::AbstractCallRender3D::CAP_RENDER
+        | view::AbstractCallRender3D::CAP_LIGHTING
+        | view::AbstractCallRender3D::CAP_ANIMATION );
 
     return true;
 }
@@ -291,7 +323,7 @@ bool SimpleMoleculeRenderer::GetCapabilities(Call& call) {
  * protein::SimpleMoleculeRenderer::GetExtents
  */
 bool SimpleMoleculeRenderer::GetExtents(Call& call) {
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if( cr3d == NULL ) return false;
 
     MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
@@ -323,7 +355,7 @@ bool SimpleMoleculeRenderer::GetExtents(Call& call) {
 bool SimpleMoleculeRenderer::Render(Call& call) {
 
     // cast the call to Render3D
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if( cr3d == NULL ) return false;
 
     // get camera information
@@ -622,6 +654,7 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
     glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
     glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
     glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+	glUniform2fARB(this->sphereShader.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
     glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
@@ -637,6 +670,7 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
     glUniform3fvARB( this->cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
     glUniform3fvARB( this->cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
     glUniform3fvARB( this->cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+	glUniform2fARB( this->cylinderShader.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
     // get the attribute locations
     attribLocInParams = glGetAttribLocationARB( this->cylinderShader, "inParams");
     attribLocQuatC = glGetAttribLocationARB( this->cylinderShader, "quatC");
