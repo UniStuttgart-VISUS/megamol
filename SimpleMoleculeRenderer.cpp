@@ -224,7 +224,7 @@ bool SimpleMoleculeRenderer::create(void) {
         return false;
     }
     try {
-        if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+        if (!this->sphereShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch(vislib::Exception e) {
@@ -274,7 +274,7 @@ bool SimpleMoleculeRenderer::create(void) {
         return false;
     }
     try {
-        if (!this->cylinderShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+        if (!this->cylinderShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch(vislib::Exception e) {
