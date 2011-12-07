@@ -42,7 +42,7 @@ CompilerFlagsDebug := -ggdb
 CompilerFlagsRelease := -O3 -g0
 
 # Additional linker flags
-LinkerFlags := -lX11 -lXext -lm -lpthread -lGLU -lGL -lglut -lncurses
+LinkerFlags := -lX11 -lXext -lXxf86vm -lm -lpthread -lGLU -lGL -lncurses
 LinkerFlagsDebug :=
 LinkerFlagsRelease :=
 
@@ -60,6 +60,9 @@ IncludeDirs += ../glutInclude
 ifneq ($(MAKECMDGOALS), clean)
 ifneq ($(MAKECMDGOALS), sweep)
 include ../glutInclude/vislibGlutInclude.mk
+# why a different naming convention than in '../config.mk' ?
+IncludeDirs += $(IncludeDir)
+LinkerFlags += $(LDFLAGS)
 endif
 endif
 
