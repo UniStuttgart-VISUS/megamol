@@ -254,9 +254,11 @@ namespace protein {
         /** shader for the cylinders (raycasting view) */
         vislib::graphics::gl::GLSLShader cylinderShader;
 		vislib::graphics::gl::GLSLShader cylinderShaderOR;
-		/** Shader for the spheres that uses filter information */
+		/** Shader that uses filter information */
         vislib::graphics::gl::GLSLShader filterSphereShader;
+        vislib::graphics::gl::GLSLShader filterSphereShaderOR;
         vislib::graphics::gl::GLSLShader filterCylinderShader;
+        vislib::graphics::gl::GLSLShader filterCylinderShaderOR;
 
         // attribute locations for GLSL-Shader
         GLint attribLocInParams;
