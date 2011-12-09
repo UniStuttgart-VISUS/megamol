@@ -284,6 +284,9 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
 
     crOut->SetCameraParameters(crIn->GetCameraParameters());
 
+    // Set call time
+    crOut->SetTime(crIn->Time());
+
     float curVP[4];
     glGetFloatv(GL_VIEWPORT, curVP);
 
