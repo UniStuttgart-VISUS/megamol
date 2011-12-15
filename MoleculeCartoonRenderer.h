@@ -17,8 +17,9 @@
 #include "BSpline.h"
 #include "CallerSlot.h"
 #include "Color.h"
-#include "view/Renderer3DModule.h"
+#include "view/Renderer3DModuleDS.h"
 #include "view/CallRender3D.h"
+#include "view/CallRenderDeferred3D.h"
 #include "vislib/GLSLShader.h"
 #include "vislib/GLSLGeometryShader.h"
 #include "vislib/SimpleFont.h"
@@ -38,7 +39,7 @@ namespace protein {
      * - add RenderMode CARTOON_GPU
      */
 
-    class MoleculeCartoonRenderer : public megamol::core::view::Renderer3DModule {
+    class MoleculeCartoonRenderer : public megamol::core::view::Renderer3DModuleDS {
     public:
         /**
          * Answer the name of this module.
@@ -228,6 +229,8 @@ namespace protein {
         megamol::core::CallerSlot molDataCallerSlot;
         // caller slot
         megamol::core::CallerSlot molRendererCallerSlot;
+		// caller slot for offscreen rendering
+        megamol::core::CallerSlot molRendererORCallerSlot;
 
         // label with id of current loaded frame
         vislib::graphics::AbstractFont *frameLabel;
@@ -249,6 +252,8 @@ namespace protein {
         megamol::core::param::ParamSlot maxGradColorParam;
         /** parameter slot for stick radius */
         megamol::core::param::ParamSlot stickRadiusParam;
+		/** parameter slot for offscreen rendering */
+        megamol::core::param::ParamSlot offscreenRenderingParam;
 
         // shader for per pixel lighting (polygonal view)
         vislib::graphics::gl::GLSLShader lightShader;
@@ -263,6 +268,9 @@ namespace protein {
         vislib::graphics::gl::GLSLGeometryShader tubeSplineShader;
         vislib::graphics::gl::GLSLGeometryShader arrowSplineShader;
         vislib::graphics::gl::GLSLGeometryShader helixSplineShader;
+		vislib::graphics::gl::GLSLGeometryShader tubeORShader;
+        vislib::graphics::gl::GLSLGeometryShader arrowORShader;
+        vislib::graphics::gl::GLSLGeometryShader helixORShader;
 
         vislib::graphics::gl::GLSLShader sphereShader;
         vislib::graphics::gl::GLSLShader cylinderShader;

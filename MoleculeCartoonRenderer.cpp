@@ -42,9 +42,10 @@ using namespace megamol::protein;
 /*
  * protein::MoleculeCartoonRenderer::MoleculeCartoonRenderer (CTOR)
  */
-protein::MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModule (),
+protein::MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
         molDataCallerSlot("getdata", "Connects the protein rendering with protein data storage"),
         molRendererCallerSlot( "renderMolecule", "Connects the cartoon rendering with another molecule renderer" ),
+		molRendererORCallerSlot( "renderMoleculeOR", "Connects the cartoon rendering with another molecule renderer" ),
         renderingModeParam("renderingMode", "Rendering Mode"),
         coloringModeParam("coloringMode", "Coloring Mode"),
         stickColoringModeParam("stickColoringMode", "Stick Coloring Mode"),
@@ -54,12 +55,16 @@ protein::MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DMod
         midGradColorParam( "midGradColor", "The color for the middle value for gradient coloring" ),
         maxGradColorParam( "maxGradColor", "The color for the maximum value for gradient coloring" ),
         stickRadiusParam( "stickRadius", "The radius for stick rendering"),
+		offscreenRenderingParam( "offscreenRendering", "Toggle offscreen rendering"),
         currentFrameId( 0), atomCount( 0) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
 
     this->molRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
     this->MakeSlotAvailable( &this->molRendererCallerSlot);
+
+	this->molRendererORCallerSlot.SetCompatibleCall<view::CallRenderDeferred3DDescription>();
+    this->MakeSlotAvailable( &this->molRendererORCallerSlot);
 
     // check if geom-shader is supported
     if( this->cartoonShader.AreExtensionsAvailable())
@@ -141,6 +146,10 @@ protein::MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DMod
     // fill color table with default values and set the filename param
     this->stickRadiusParam.SetParameter(new param::FloatParam( 0.3f, 0.0f));
     this->MakeSlotAvailable( &this->stickRadiusParam);
+
+	// Toggle offscreen rendering
+    this->offscreenRenderingParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable( &this->offscreenRenderingParam);
 
     // --- set the radius for the cartoon rednering mode ---
     this->radiusCartoon = 0.2f;
@@ -270,6 +279,17 @@ bool protein::MoleculeCartoonRenderer::create(void) {
     this->tubeShader.SetProgramParameter( GL_GEOMETRY_VERTICES_OUT_EXT, 200);
     this->tubeShader.Link();
 
+	// Load tube shader for offscreen rendering
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::cartoon::fragmentOR", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
+        return false;
+    }
+	this->tubeORShader.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+    this->tubeORShader.SetProgramParameter( GL_GEOMETRY_INPUT_TYPE_EXT , GL_TRIANGLES_ADJACENCY_EXT);
+    this->tubeORShader.SetProgramParameter( GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+    this->tubeORShader.SetProgramParameter( GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+    this->tubeORShader.Link();
+
     //////////////////////////////////////////////////
     // load the shader sources for the arrow shader //
     //////////////////////////////////////////////////
@@ -291,6 +311,17 @@ bool protein::MoleculeCartoonRenderer::create(void) {
     this->arrowShader.SetProgramParameter( GL_GEOMETRY_VERTICES_OUT_EXT, 200);
     this->arrowShader.Link();
 
+	// Load arrow shader for offscreen rendering
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::cartoon::fragmentOR", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
+        return false;
+    }
+    this->arrowORShader.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+    this->arrowORShader.SetProgramParameter( GL_GEOMETRY_INPUT_TYPE_EXT , GL_TRIANGLES_ADJACENCY_EXT);
+    this->arrowORShader.SetProgramParameter( GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+    this->arrowORShader.SetProgramParameter( GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+    this->arrowORShader.Link();
+
     /////////////////////////////////////////////////
     // load the shader sources for the helix shader //
     /////////////////////////////////////////////////
@@ -311,6 +342,17 @@ bool protein::MoleculeCartoonRenderer::create(void) {
     this->helixShader.SetProgramParameter( GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
     this->helixShader.SetProgramParameter( GL_GEOMETRY_VERTICES_OUT_EXT, 200);
     this->helixShader.Link();
+
+	// Load helix shader for offscreen rendering
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::cartoon::fragmentOR", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
+        return false;
+    }
+    this->helixORShader.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+    this->helixORShader.SetProgramParameter( GL_GEOMETRY_INPUT_TYPE_EXT , GL_TRIANGLES_ADJACENCY_EXT);
+    this->helixORShader.SetProgramParameter( GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+    this->helixORShader.SetProgramParameter( GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+    this->helixORShader.Link();
 
     /////////////////////////////////////////////////
     // load the shader sources for the tube shader //
@@ -525,12 +567,12 @@ bool protein::MoleculeCartoonRenderer::create(void) {
  * protein::MoleculeCartoonRenderer::GetCapabilities
  */
 bool protein::MoleculeCartoonRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    cr3d->SetCapabilities( view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_LIGHTING
-        | view::CallRender3D::CAP_ANIMATION );
+    cr3d->SetCapabilities( view::AbstractCallRender3D::CAP_RENDER
+        | view::AbstractCallRender3D::CAP_LIGHTING
+        | view::AbstractCallRender3D::CAP_ANIMATION );
 
     return true;
 }
@@ -540,7 +582,7 @@ bool protein::MoleculeCartoonRenderer::GetCapabilities(Call& call) {
  * protein::MoleculeCartoonRenderer::GetExtents
  */
 bool protein::MoleculeCartoonRenderer::GetExtents(Call& call) {
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
     MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
@@ -558,11 +600,24 @@ bool protein::MoleculeCartoonRenderer::GetExtents(Call& call) {
     cr3d->AccessBoundingBoxes().MakeScaledWorld( scale);
     cr3d->SetTimeFramesCount( mol->FrameCount());
 
-    // get the pointer to CallRender3D (protein renderer)
-    view::CallRender3D *molrencr3d = this->molRendererCallerSlot.CallAs<view::CallRender3D>();
-    if( molrencr3d ) {
-        (*molrencr3d)(1); // GetExtents
-    }
+    // Get the pointer to CallRender3D (protein renderer) or CallRenderDeferred3D 
+	// if offscreen rendering is enabled
+    
+	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+		view::CallRender3D *molrencr3d
+			= this->molRendererCallerSlot.CallAs<view::CallRender3D>();
+		if( molrencr3d ) {
+			(*molrencr3d)(1); // GetExtents
+		}
+	}
+	else {
+		view::CallRenderDeferred3D *molrencr3d
+			= this->molRendererORCallerSlot.CallAs<view::CallRenderDeferred3D>();
+		if( molrencr3d ) {
+			(*molrencr3d)(1); // GetExtents
+		}
+	}
+
 
     /*
     protein::CallProteinData *protein = this->molDataCallerSlot.CallAs<protein::CallProteinData>();
@@ -618,23 +673,24 @@ bool protein::MoleculeCartoonRenderer::GetExtents(Call& call) {
  */
 bool protein::MoleculeCartoonRenderer::Render(Call& call) {
     // cast the call to Render3D
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if( cr3d == NULL ) return false;
 
-    // get the pointer to CallRender3D (molecule renderer)
-    view::CallRender3D *molrencr3d = this->molRendererCallerSlot.CallAs<view::CallRender3D>();
+	// get the pointer to AbstractCallRender3D (molecule renderer) 
+	view::AbstractCallRender3D *molrencr3d = 
+			this->molRendererCallerSlot.CallAs<view::AbstractCallRender3D>();
+	
+	// =============== Protein Rendering ===============
+	if( molrencr3d ) {
+		// setup and call molecule renderer
+		glPushMatrix();
+		*molrencr3d = *cr3d;
+		(*molrencr3d)();
+		glPopMatrix();
+	}
 
     // get camera information
     this->cameraInfo = cr3d->GetCameraParameters();
-
-    // =============== Protein Rendering ===============
-    if( molrencr3d ) {
-        // setup and call molecule renderer
-        glPushMatrix();
-        *molrencr3d = *cr3d;
-        (*molrencr3d)();
-        glPopMatrix();
-        }
 
     float callTime = cr3d->Time();
 
@@ -1240,49 +1296,95 @@ void protein::MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataC
     glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
     glEnable( GL_COLOR_MATERIAL);
 
+	// Get current window size
+	float curVP[4];
+    glGetFloatv(GL_VIEWPORT, curVP);
+
     // enable tube shader
-    if( this->currentRenderMode == CARTOON )
-        this->tubeShader.Enable();
-    else
-        this->tubeSimpleShader.Enable();
+	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+		if( this->currentRenderMode == CARTOON )
+			this->tubeShader.Enable();
+		else
+			this->tubeSimpleShader.Enable();
+	}
+	else {
+		this->tubeORShader.Enable();
+		glUniform2fARB(this->tubeORShader.ParameterLocation("zValues"), 
+			cameraInfo->NearClip(), cameraInfo->FarClip());
+		glUniform2fARB(this->tubeORShader.ParameterLocation("winSize"), 
+			curVP[2], curVP[3]);
+	}
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glVertexPointer( 3, GL_FLOAT, 0, this->vertTube);
     glColorPointer( 3, GL_FLOAT, 0, this->colorsParamsTube);
     glDrawArrays( GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountTube*6);
     // disable tube shader
-    if( this->currentRenderMode == CARTOON )
-        this->tubeShader.Disable();
-    else
-        this->tubeSimpleShader.Disable();
+	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+		if( this->currentRenderMode == CARTOON )
+			this->tubeShader.Disable();
+		else
+			this->tubeSimpleShader.Disable();
+	}
+	else {
+		this->tubeORShader.Disable();
+	}
 
     // enable arrow shader
-    if( this->currentRenderMode == CARTOON )
-        this->arrowShader.Enable();
-    else
-        this->arrowSimpleShader.Enable();
+	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+		if( this->currentRenderMode == CARTOON )
+			this->arrowShader.Enable();
+		else
+			this->arrowSimpleShader.Enable();
+	}
+	else {
+		this->arrowORShader.Enable();
+		glUniform2fARB(this->arrowORShader.ParameterLocation("zValues"), 
+			cameraInfo->NearClip(), cameraInfo->FarClip());
+		glUniform2fARB(this->arrowORShader.ParameterLocation("winSize"), 
+			curVP[2], curVP[3]);
+	}
     glVertexPointer( 3, GL_FLOAT, 0, this->vertArrow);
     glColorPointer( 3, GL_FLOAT, 0, this->colorsParamsArrow);
     glDrawArrays( GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountArrow*6);
     // disable arrow shader
-    if( this->currentRenderMode == CARTOON )
-        this->arrowShader.Disable();
-    else
-        this->arrowSimpleShader.Disable();
+	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+		if( this->currentRenderMode == CARTOON )
+			this->arrowShader.Disable();
+		else
+			this->arrowSimpleShader.Disable();
+	}
+	else {
+		this->arrowORShader.Disable();
+	}
 
     // enable helix shader
-    if( this->currentRenderMode == CARTOON )
-        this->helixShader.Enable();
-    else
-        this->helixSimpleShader.Enable();
+	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+		if( this->currentRenderMode == CARTOON )
+			this->helixShader.Enable();
+		else
+			this->helixSimpleShader.Enable();
+	}
+	else {
+		this->helixORShader.Enable();
+		glUniform2fARB(this->helixORShader.ParameterLocation("zValues"), 
+			cameraInfo->NearClip(), cameraInfo->FarClip());
+		glUniform2fARB(this->helixORShader.ParameterLocation("winSize"), 
+			curVP[2], curVP[3]);
+	}
     glVertexPointer( 3, GL_FLOAT, 0, this->vertHelix);
     glColorPointer( 3, GL_FLOAT, 0, this->colorsParamsHelix);
     glDrawArrays( GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountHelix*6);
     // disable helix shader
-    if( this->currentRenderMode == CARTOON )
-        this->helixShader.Disable();
-    else
-        this->helixSimpleShader.Disable();
+	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+		if( this->currentRenderMode == CARTOON )
+			this->helixShader.Disable();
+		else
+			this->helixSimpleShader.Disable();
+	}
+	else {
+		this->helixORShader.Disable();
+	}
 
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
