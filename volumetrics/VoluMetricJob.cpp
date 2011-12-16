@@ -236,6 +236,8 @@ DWORD VoluMetricJob::Run(void *userData) {
             b = datacall->AccessBoundingBoxes().ObjectSpaceBBox();
         }
 
+        int subVolCells = this->subVolumeResolutionSlot.Param<megamol::core::param::IntParam>()->Value();
+#if 1 // ndef _DEBUG
         int resX = (int) ((VoxelizerFloat)b.Width() / cellSize) + 2;
         int resY = (int) ((VoxelizerFloat)b.Height() / cellSize) + 2;
         int resZ = (int) ((VoxelizerFloat)b.Depth() / cellSize) + 2;
@@ -249,7 +251,6 @@ DWORD VoluMetricJob::Run(void *userData) {
         divX = 1;
         divY = 1;
         divZ = 1;
-        int subVolCells = this->subVolumeResolutionSlot.Param<megamol::core::param::IntParam>()->Value();
 
         while (divX == 1 && divY == 1 && divZ ==1) {
             subVolCells /= 2;
@@ -257,6 +258,16 @@ DWORD VoluMetricJob::Run(void *userData) {
             divY = (int) ceil((VoxelizerFloat)resY / subVolCells);
             divZ = (int) ceil((VoxelizerFloat)resZ / subVolCells);
         }
+#else
+        divX = 1;
+        divY = 1;
+        divZ = 1;
+
+        int resX = subVolCells + 2;
+        int resY = subVolCells + 2;
+        int resZ = subVolCells + 2;
+        cellSize = (VoxelizerFloat)b.Width() / subVolCells/*resX*/ ;
+#endif
 
         vertSize += bboxBytes * divX * divY * divZ;
         idxSize += bboxIdxes * divX * divY * divZ;
@@ -998,8 +1009,8 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
     //SIZE_T numTriangles = 0;
     for (unsigned int i = 0; i < uniqueIDs.Count(); i++) {
         //numTriangles += countPerID[i];
-        vislib::sys::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f, volume %f", uniqueIDs[i],
-            countPerID[i], surfPerID[i], volPerID[i]);
+        vislib::sys::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f, volume %f, voidVol %f, entire volume %f", uniqueIDs[i],
+            countPerID[i], surfPerID[i], volPerID[i], voidVolPerID[i], volPerID[i] + voidVolPerID[i]);
         if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
             vislib::sys::WriteFormattedLineToFile(this->statisticsFile, "%u\t%u\t%u\t%f\t%f\n",
                 frameNumber, uniqueIDs[i], countPerID[i], surfPerID[i], volPerID[i]);
@@ -1008,13 +1019,15 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
 }
 
 void VoluMetricJob::copyVolumesToBackBuffer(void) {
-    if (this->debugVolumes.Count() < SubJobDataList.Count()) {
+    int prevCount = this->debugVolumes.Count();
+
+    if (prevCount < SubJobDataList.Count()) {
         this->debugVolumes.SetCount(SubJobDataList.Count());
-        memset( &this->debugVolumes[0], 0, sizeof(this->debugVolumes[0])*this->debugVolumes.Count());
+        memset( &this->debugVolumes[prevCount], 0, sizeof(this->debugVolumes[0])*(this->debugVolumes.Count()-prevCount));
     }
 
     for (SIZE_T i = 0; i < SubJobDataList.Count(); i++) {
-        if (SubJobDataList[i]->storeVolume && SubJobDataList[i]->Result.done) {
+        if (SubJobDataList[i]->storeVolume && SubJobDataList[i]->Result.done && !this->debugVolumes[i].volumeData) {
             this->debugVolumes[i] = SubJobDataList[i]->Result.debugVolume;
             SubJobDataList[i]->Result.debugVolume.volumeData = 0;
         }
