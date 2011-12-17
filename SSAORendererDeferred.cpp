@@ -270,6 +270,7 @@ bool SSAORendererDeferred::GetExtents(megamol::core::Call& call) {
 /*
  * SSAORendererDeferred::Render
  */
+// TODO Write 'real' depth to depth buffer
 bool SSAORendererDeferred::Render(megamol::core::Call& call) {
 
     if(!updateParams()) return false;
@@ -682,6 +683,7 @@ bool SSAORendererDeferred::createRandomRotSampler() {
 /*
  * SSAORendererDeferred::createRandomKernel
  */
+// TODO enforce lower boundary to prevent numerical problems leading to artifacts
 bool SSAORendererDeferred::createRandomKernel(UINT size) {
 
     float *kernel;

@@ -600,9 +600,9 @@ bool protein::MoleculeCartoonRenderer::GetExtents(Call& call) {
     cr3d->AccessBoundingBoxes().MakeScaledWorld( scale);
     cr3d->SetTimeFramesCount( mol->FrameCount());
 
-    // Get the pointer to CallRender3D (protein renderer) or CallRenderDeferred3D 
+    // Get the pointer to CallRender3D (protein renderer) or CallRenderDeferred3D
 	// if offscreen rendering is enabled
-    
+
 	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
 		view::CallRender3D *molrencr3d
 			= this->molRendererCallerSlot.CallAs<view::CallRender3D>();
@@ -676,10 +676,18 @@ bool protein::MoleculeCartoonRenderer::Render(Call& call) {
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if( cr3d == NULL ) return false;
 
-	// get the pointer to AbstractCallRender3D (molecule renderer) 
-	view::AbstractCallRender3D *molrencr3d = 
-			this->molRendererCallerSlot.CallAs<view::AbstractCallRender3D>();
-	
+	// get the pointer to AbstractCallRender3D (molecule renderer)
+	view::AbstractCallRender3D *molrencr3d;
+	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+	    molrencr3d = this->molRendererCallerSlot.CallAs<view::AbstractCallRender3D>();
+	}
+	else {
+	    molrencr3d = this->molRendererORCallerSlot.CallAs<view::AbstractCallRender3D>();
+	}
+
+    // get camera information
+    this->cameraInfo = cr3d->GetCameraParameters();
+
 	// =============== Protein Rendering ===============
 	if( molrencr3d ) {
 		// setup and call molecule renderer
@@ -688,9 +696,6 @@ bool protein::MoleculeCartoonRenderer::Render(Call& call) {
 		(*molrencr3d)();
 		glPopMatrix();
 	}
-
-    // get camera information
-    this->cameraInfo = cr3d->GetCameraParameters();
 
     float callTime = cr3d->Time();
 
@@ -1019,13 +1024,13 @@ void protein::MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataC
                     vecCA.SetZ( atomPos[idx*3+2]);
                     // add the C-alpha coords to the list of control points
                     controlPoints.push_back( vecCA);
-        
+
                     // add the color of the C-alpha atom to the color vector
 					colorVec.SetX( this->atomColorTable[3*idx]);
 					colorVec.SetY( this->atomColorTable[3*idx+1]);
 					colorVec.SetZ( this->atomColorTable[3*idx+2]);
                     cartoonColor[cntChain].push_back( colorVec);
-        
+
                     // get the index of the C atom
                     idx = aminoacid->CCarbIndex();
                     // get the coordinates of the C-alpha atom
@@ -1035,7 +1040,7 @@ void protein::MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataC
                     vecC.SetX( atomPos[idx*3+0]);
                     vecC.SetY( atomPos[idx*3+1]);
                     vecC.SetZ( atomPos[idx*3+2]);
-        
+
                     // get the index of the O atom
                     idx = aminoacid->OIndex();
                     // get the coordinates of the C-alpha atom
@@ -1045,7 +1050,7 @@ void protein::MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataC
                     vecO.SetX( atomPos[idx*3+0]);
                     vecO.SetY( atomPos[idx*3+1]);
                     vecO.SetZ( atomPos[idx*3+2]);
-        
+
                     // compute control point of the second b-spline
                     vecTmp = vecO - vecC;
                     vecTmp.Normalise();
@@ -1063,7 +1068,7 @@ void protein::MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataC
                     bSpline.getResult( bSplineCoords[cntChain]);
             else
                 continue; // --> return if spline could not be computed
-        
+
             // set the control points, compute the second spline and fetch the result
             bSpline.setBackbone( controlPointsDir);
             if( bSpline.computeSpline() )
@@ -1309,9 +1314,9 @@ void protein::MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataC
 	}
 	else {
 		this->tubeORShader.Enable();
-		glUniform2fARB(this->tubeORShader.ParameterLocation("zValues"), 
+		glUniform2fARB(this->tubeORShader.ParameterLocation("zValues"),
 			cameraInfo->NearClip(), cameraInfo->FarClip());
-		glUniform2fARB(this->tubeORShader.ParameterLocation("winSize"), 
+		glUniform2fARB(this->tubeORShader.ParameterLocation("winSize"),
 			curVP[2], curVP[3]);
 	}
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -1339,9 +1344,9 @@ void protein::MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataC
 	}
 	else {
 		this->arrowORShader.Enable();
-		glUniform2fARB(this->arrowORShader.ParameterLocation("zValues"), 
+		glUniform2fARB(this->arrowORShader.ParameterLocation("zValues"),
 			cameraInfo->NearClip(), cameraInfo->FarClip());
-		glUniform2fARB(this->arrowORShader.ParameterLocation("winSize"), 
+		glUniform2fARB(this->arrowORShader.ParameterLocation("winSize"),
 			curVP[2], curVP[3]);
 	}
     glVertexPointer( 3, GL_FLOAT, 0, this->vertArrow);
@@ -1367,9 +1372,9 @@ void protein::MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataC
 	}
 	else {
 		this->helixORShader.Enable();
-		glUniform2fARB(this->helixORShader.ParameterLocation("zValues"), 
+		glUniform2fARB(this->helixORShader.ParameterLocation("zValues"),
 			cameraInfo->NearClip(), cameraInfo->FarClip());
-		glUniform2fARB(this->helixORShader.ParameterLocation("winSize"), 
+		glUniform2fARB(this->helixORShader.ParameterLocation("winSize"),
 			curVP[2], curVP[3]);
 	}
     glVertexPointer( 3, GL_FLOAT, 0, this->vertHelix);
