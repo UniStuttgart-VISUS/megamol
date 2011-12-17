@@ -673,11 +673,28 @@ void main(void) {
     
     // calculate depth
 #ifdef DEPTH
-    vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
+    
+    /*vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
     float depth = -dot(gl_ModelViewMatrixTranspose[2], Ding);
     //float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding); 
     // Map near ... far to 0 ... 1
-    gl_FragDepth = (depth - zValues.x) / (zValues.y - zValues.x);
+    gl_FragDepth = (depth - zValues.x) / (zValues.y - zValues.x);*/
+    
+    vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
+    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    float d = ((depth / depthW) + 1.0) * 0.5;
+    
+    float n = zValues.x;
+    float f = zValues.y;
+    float depthES;
+
+    // Unproject depth and switch sign -> positive eye space depth
+    depthES = 2.0*n*f/(f+n-d*(f-n));
+    // Map near ... far to 0 ... 1
+    depthES = (depthES - n)/(f-n);
+    
+    gl_FragDepth = depthES;
     
 #ifndef CLIP
     gl_FragDepth = (radicand < 0.0) ? 1.0 : (depth - zValues.y) / (zValues.z - zValues.y);
@@ -1850,7 +1867,6 @@ void main(void) {
     //gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
     gl_FragData[0] = vec4(color, 1.0);
 
-
     // calculate depth
 #ifdef DEPTH
     tmp = intersection;
@@ -1860,9 +1876,25 @@ void main(void) {
 
     intersection += objPos.xyz;
 
-    vec4 Ding = vec4(intersection, 1.0);
+    /*vec4 Ding = vec4(intersection, 1.0);
     float depth = -dot(gl_ModelViewMatrixTranspose[2], Ding);
-    gl_FragDepth = (depth - zValues.x) / (zValues.y - zValues.x);
+    gl_FragDepth = (depth - zValues.x) / (zValues.y - zValues.x);*/
+    
+    vec4 Ding = vec4(intersection, 1.0);
+    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    float d = ((depth / depthW) + 1.0) * 0.5;
+    
+    float n = zValues.x;
+    float f = zValues.y;
+    float depthES;
+
+    // Unproject depth and switch sign -> positive eye space depth
+    depthES = 2.0*n*f/(f+n-d*(f-n));
+    // Map near ... far to 0 ... 1
+    depthES = (depthES - n)/(f-n);
+    
+    gl_FragDepth = depthES;
   
 #ifndef CLIP
     if (radicand < 0.0) { 
@@ -1871,7 +1903,8 @@ void main(void) {
         //depthW = 1.0;
     }
 #endif // CLIP
-    gl_FragDepth = (depth - zValues.x) / (zValues.y - zValues.x);;
+    //gl_FragDepth = (depth - zValues.x) / (zValues.y - zValues.x);;
+    gl_FragDepth = depthES;
 #endif // DEPTH
 
 #ifdef RETICLE
@@ -3776,7 +3809,7 @@ void main(void)
 -->
                 </snippet>
             </shader>
-			<shader name="fragmentOR">
+            <shader name="fragmentOR">
                 <snippet type="string">
                     <!--
 /*
@@ -3787,80 +3820,25 @@ void main(void)
 
 uniform vec2 zValues;
 uniform vec2 winSize;
-
-varying vec4 diffuse,ambient;
-varying vec3 normal,lightDir,halfVector;
-
-/*#define ZNEAR zValues.x
-#define ZFAR zValues.y
-
-#define A (ZNEAR + ZFAR)
-#define B (ZNEAR - ZFAR)
-#define C (2.0 * ZNEAR * ZFAR)
-#define D (ndcPos.z * B)
-#define ZEYE -(C / (A + D))*/
-
-float getDepthES() {
-
-vec2 xy = gl_FragCoord.xy / winSize; //in [0,1] range
-vec4 v_screen = vec4(xy, gl_FragCoord.z, 1.0 );
-vec4 v_view =  gl_ProjectionMatrixInverse * vec4((2.0*(v_screen.z-vec3(0.5))), 1.0);
-float view_depth = v_view.z / v_view.w; //transfer from homogeneous coordinates
-    
-    /*vec3 ndcPos; 
-    ndcPos.xy = (gl_FragCoord.xy / winSize) - 0.5;
-	ndcPos.z = gl_FragCoord.z;
-    ndcPos = (ndcPos - 0.5)*2.0;                        // Transform to clip space
-    
-    vec4 clipPos; 
-    clipPos.w = -ZEYE;
-    clipPos.xyz = ndcPos * clipPos.w;
-    
-    //vec4 eyePos = gl_ProjectionMatrixInverse * clipPos;
-    //return eyePos;
-	return clipPos;*/
-	
-	return -view_depth;
-	
-}
+varying vec4 diffuse;
+varying vec3 normal;
 
 void main(void)
-{    
-    //gl_FragColor = gl_Color;
-
-    vec3 n,halfV;
-    float NdotL,NdotHV;
-    
-    // store the ambient term
-    // vec4 color = ambient;
-    
-    // store the normalized interpolated normal
-    n = normalize(normal);
-    
-    // compute the dot product between normal and ldir
-    /*NdotL = max(dot(n,lightDir),0.0);
-    if (NdotL > 0.0) {
-        color += diffuse * NdotL;
-        halfV = normalize(halfVector);
-        NdotHV = max(dot(n,halfV),0.0);
-        color += gl_FrontMaterial.specular * gl_LightSource[0].specular * 
-                pow(NdotHV, gl_FrontMaterial.shininess);
-    }*/
-
+{
     gl_FragData[0] =  vec4(diffuse.rgb, 1.0);
-	gl_FragData[1].rgb = n; // Normal is transformed to eye space in geometry shader
-	gl_FragDepth = (getDepthES() - zValues.x) - (zValues.y - zValues.x);
-	
+    // Normal is transformed to eye space in geometry shader
+    gl_FragData[1].rgb = normalize(normal); 
     
-    /*
-    vec3 fogCol = vec3( 1.0, 1.0, 1.0);
-    const float LOG2 = 1.442695;
-    float fogDensity = 0.35;
-    float z = gl_FragCoord.z / gl_FragCoord.w;
-    float fogFactor = exp2( - fogDensity * fogDensity * z * z * LOG2 );
-    fogFactor = clamp(fogFactor, 0.0, 1.0);
-    gl_FragColor.rgb = mix( fogCol, gl_FragColor.rgb, fogFactor );
-    */
+    float n = zValues.x;
+    float f = zValues.y;
+    float depthES;
+    
+    // Unproject depth and switch sign -> positive eye space depth
+    depthES = 2.0*n*f/(f+n-gl_FragCoord.z*(f-n));
+    // Map near ... far to 0 ... 1
+    depthES = (depthES - n)/(f-n);
+    
+    gl_FragDepth = depthES;
 }
 -->
                 </snippet>
