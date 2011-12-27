@@ -1,10 +1,10 @@
 <html dir="LTR">
 <head>
-    <title>'Visual C++ 2005 Project with VISlib support'</title>
+    <title>'Visual C++ 2010 Project with VISlib support'</title>
     <meta name="vs_targetSchema" content="http://schemas.microsoft.com/intellisense/ie5">
     <link id="LINKURL" rel="stylesheet" href="../../1033/NewStyles.css">
     
-    <symbol name='WIZARD_DIALOG_TITLE' type="text" value='Visual C++ 2005 Project with VISlib support'></symbol>
+    <symbol name='WIZARD_DIALOG_TITLE' type="text" value='Visual C++ 2010 Project with VISlib support'></symbol>
     
     <symbol name='CURRENT_DATE' type='text' value='' />
     <!--<symbol name='VISLIB_BASE' type='checkbox' value='true' />-->
@@ -16,7 +16,7 @@
     <symbol name='VISLIB_D3D' type='checkbox' value='false' />
     <symbol name='VISLIB_CLUSTER' type='checkbox' value='false' />
     
-    <symbol name='PROPS_FILENAME' type="text" value='ExtLibs.vsprops'></symbol>
+    <symbol name='PROPS_FILENAME' type="text" value='extlibs.props'></symbol>
     <symbol name='ADDITIONAL_LIBRARIES' type='text' value='' />
     
     <symbol name='LINUX_MAKEFILE' type='checkbox' value='false' />
@@ -49,7 +49,7 @@
                         </td>
                         <td class="IMAGE" valign="BOTTOM" width="110" rowspan="2">
                             <div class="SMALLA" id="Layer0">
-                                <img class="SMALLEST" src="..\..\Images\VISlibVS2005Project.gif" width="63" height="63" alt=""
+                                <img class="SMALLEST" src="..\..\Images\VISlibVS2010Project.gif" width="63" height="63" alt=""
                                     border="0">
                             </div>
                         </td>
@@ -63,7 +63,7 @@
                         </td>
                         <td valign="TOP" height="65">
                             <h4 class="HEAD" id="HEAD">
-                                Welcome to 'Visual C++ 2005 Project with VISlib support'</h4>
+                                Welcome to 'Visual C++ 2010 Project with VISlib support'</h4>
                             <p class="SUBHEAD" id="SUBHEAD">
                                 'TODO: Wizard Description.'.</p>
                         </td>
@@ -207,7 +207,7 @@
                                             <label for="LIN_PROPS_FILENAME" title="Name of property file" id="Label3">
                                                 Name of property <u>f</u>ile:</label>
                                             <input id="LIN_PROPS_FILENAME" type="text" size="40" title="Name of property file"
-                                                text="ExtLibs.vsprops" accesskey="P" disabled="disabled">
+                                                text="extlibs.props" accesskey="P" disabled="disabled">
                                         <p class="ElementSpacer">
                                             &nbsp;</p>
                                         <span class="itemText">
@@ -310,97 +310,93 @@
 
 <script language="JSCRIPT">
 
-var tab_array = new Array();
-tab_array[0] = Default;
-tab_array[1] = linux;
+    var tab_array = new Array();
+    tab_array[0] = Default;
+    tab_array[1] = linux;
 
-// This is an example of a function which initializes the page
-//
-function InitDocument(document)
-{
-    setDirection();
-    
-    if (window.external.FindSymbol('DOCUMENT_FIRST_LOAD'))
-    {
-        // This function sets the default symbols based 
-        // on the values specified in the SYMBOL tags above
-        //
-        window.external.SetDefaults(document);
-    }
-
-    // Load the document and initialize the controls 
-    // with the appropriate symbol values
+    // This is an example of a function which initializes the page
     //
-    window.external.Load(document);
-    
-    OnLinuxChanged();   // Control disable hack
-}
+    function InitDocument(document) {
+        setDirection();
 
-// If the wizard has more than 1 page, this 
-// function will browse to the page specified
-//
-function Next(document, linkto)
-{
-    window.external.Next(document, linkto);
-}
+        if (window.external.FindSymbol('DOCUMENT_FIRST_LOAD')) {
+            // This function sets the default symbols based 
+            // on the values specified in the SYMBOL tags above
+            //
+            window.external.SetDefaults(document);
+        }
 
-// This is an example of a function which
-// gets called when the user clicks on 'Finish'
-//
-function OnFinish(document)
-{
-    OnWizFinish(document);
-}
+        // Load the document and initialize the controls 
+        // with the appropriate symbol values
+        //
+        window.external.Load(document);
 
-
-
-/*
- * Functions for checking inter-vislib dependencies:
- */
-function OnClusterChanged() {
-    if (VISLIB_CLUSTER.checked && !VISLIB_D3D.checked) {
-        VISLIB_D3D.checked = true;
-    }       
-    if (VISLIB_CLUSTER.checked && !VISLIB_GL.checked) {
-        VISLIB_GL.checked = true;
-    }   
-}
-
-function OnD3DChanged() {
-    if (VISLIB_D3D.checked && !VISLIB_GRAPHICS.checked) {
-        VISLIB_GRAPHICS.checked = true;
-    }
-}
-
-function OnGraphicsChanged() {
-    if (VISLIB_GRAPHICS.checked && !VISLIB_MATH.checked) {
-        VISLIB_MATH.checked = true;
+        OnLinuxChanged();   // Control disable hack
     }
 
-    //VISLIB_MATH.disabled = VISLIB_GRAPHICS.checked;
-}
-
-function OnGlChanged() {
-    if (VISLIB_GL.checked && !VISLIB_GRAPHICS.checked) {
-        VISLIB_GRAPHICS.checked = true;
+    // If the wizard has more than 1 page, this 
+    // function will browse to the page specified
+    //
+    function Next(document, linkto) {
+        window.external.Next(document, linkto);
     }
 
-    //VISLIB_GRAPHICS.disabled = VISLIB_GL.checked;
-}
-
-function OnNetChanged() {
-    if (VISLIB_NET.checked && !VISLIB_SYS.checked) {
-        VISLIB_SYS.checked = true;
+    // This is an example of a function which
+    // gets called when the user clicks on 'Finish'
+    //
+    function OnFinish(document) {
+        OnWizFinish(document);
     }
 
-    //VISLIB_SYS.disabled = VISLIB_NET.checked;
-}
 
-function OnLinuxChanged() {
-    LIN_VISLIB_DIR.disabled = !LINUX_MAKEFILE.checked;
-    LIN_PROPS_FILENAME.disabled = !LINUX_MAKEFILE.checked;
-    LIN_USE_GLOBBING.disabled = !LINUX_MAKEFILE.checked;
-}
+
+    /*
+    * Functions for checking inter-vislib dependencies:
+    */
+    function OnClusterChanged() {
+        if (VISLIB_CLUSTER.checked && !VISLIB_D3D.checked) {
+            VISLIB_D3D.checked = true;
+        }
+        if (VISLIB_CLUSTER.checked && !VISLIB_GL.checked) {
+            VISLIB_GL.checked = true;
+        }
+    }
+
+    function OnD3DChanged() {
+        if (VISLIB_D3D.checked && !VISLIB_GRAPHICS.checked) {
+            VISLIB_GRAPHICS.checked = true;
+        }
+    }
+
+    function OnGraphicsChanged() {
+        if (VISLIB_GRAPHICS.checked && !VISLIB_MATH.checked) {
+            VISLIB_MATH.checked = true;
+        }
+
+        //VISLIB_MATH.disabled = VISLIB_GRAPHICS.checked;
+    }
+
+    function OnGlChanged() {
+        if (VISLIB_GL.checked && !VISLIB_GRAPHICS.checked) {
+            VISLIB_GRAPHICS.checked = true;
+        }
+
+        //VISLIB_GRAPHICS.disabled = VISLIB_GL.checked;
+    }
+
+    function OnNetChanged() {
+        if (VISLIB_NET.checked && !VISLIB_SYS.checked) {
+            VISLIB_SYS.checked = true;
+        }
+
+        //VISLIB_SYS.disabled = VISLIB_NET.checked;
+    }
+
+    function OnLinuxChanged() {
+        LIN_VISLIB_DIR.disabled = !LINUX_MAKEFILE.checked;
+        LIN_PROPS_FILENAME.disabled = !LINUX_MAKEFILE.checked;
+        LIN_USE_GLOBBING.disabled = !LINUX_MAKEFILE.checked;
+    }
 </script>
 
 <script id="INCLUDE_SCRIPT" language="JSCRIPT"></script>

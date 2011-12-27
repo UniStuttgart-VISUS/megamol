@@ -1,0 +1,8 @@
+readme.txt
+configure.ps1
+extlibs.props
+main.cpp
+[!if LINUX_MAKEFILE]
+Makefile
+configure.sh
+[!endif]
