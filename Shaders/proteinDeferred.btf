@@ -4,7 +4,6 @@
     <include file="common" />
     
     <namespace name="contour">
-        <namespace name="final">
         <shader name="vertex">
             <snippet type="version">110</snippet>
             <snippet name="main" type="string">
@@ -23,48 +22,90 @@ void main(void) {
             <snippet name="::common::lighting::simple" />
             <snippet type="string">
             <!--
+// TODO Write 'real' depth to depth buffer
+
 #extension GL_EXT_gpu_shader4 : enable
 
 uniform sampler2D depthBuff;
 uniform sampler2D colorBuff;
 uniform sampler2D normalBuff;
 uniform int renderMode;
+uniform float threshold;
 
 uniform vec2 clip;
 uniform vec2 winSize;
 
 varying vec3 posES;
 
+float sobel() {
+    float a,b,c,d,e,f,g,h,x;
+    a = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, 1), 0).r;
+    b = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(0, 1), 0).r;
+    c = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(1, 1), 0).r;
+    d = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, 0), 0).r;
+    e = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(1, 0), 0).r;
+    f = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, -1), 0).r;
+    g = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(0, -1), 0).r;
+    h = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(1, -1), 0).r;
+    float sobelX = -a+c-2.0*d+2.0*e-f+h;
+    float sobelY = -a-2.0*b-c+f+2.0*g+h;
+    return sqrt(sobelX*sobelX+sobelY*sobelY);
+}
+
+vec3 sobelNormal() {
+    vec3 a,b,c,d,e,f,g,h,x;
+    a = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, 1), 0).rgb;
+    b = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(0, 1), 0).rgb;
+    c = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(1, 1), 0).rgb;
+    d = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, 0), 0).rgb;
+    e = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(1, 0), 0).rgb;
+    f = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, -1), 0).rgb;
+    g = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(0, -1), 0).rgb;
+    h = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(1, -1), 0).rgb;
+    vec3 sobelX = -a+c-2.0*d+2.0*e-f+h;
+    vec3 sobelY = -a-2.0*b-c+f+2.0*g+h;
+    return sqrt(sobelX*sobelX+sobelY*sobelY);
+}
+
 void main(void) {
+    float grad = sobel();
+    vec3 gradNorm = sobelNormal();
     vec4 color  = texture2D(colorBuff, gl_TexCoord[0].st);
-    // Edges + colour
+    
+    // Contour + colour
     if(renderMode == 0) { 
-        // TODO
-        gl_FragColor = color;
+        if(grad>=threshold)
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        else
+            gl_FragColor = color;
+        gl_FragColor = vec4(gradNorm, color.a);
     }
-    // Edges
-    else if(renderMode == 1) { 
-        // TODO
-        gl_FragColor = color;
+    
+    // Contour (Depthmap)
+    else if(renderMode == 1) {
+        gl_FragColor = vec4(1.0-grad, 1.0-grad, 1.0-grad, color.a);
+    }
+    // Contour (Normalmap)
+    else if(renderMode == 2) {
+        gl_FragColor = vec4(gradNorm, color.a);
     }
     // Depth
-    else if(renderMode == 2) { 
+    else if(renderMode == 3) { 
         gl_FragColor = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy), 0);
     }
     // Normal
-    else if(renderMode == 3) { 
+    else if(renderMode == 4) { 
         vec3 normal = normalize(texture2D(normalBuff, gl_TexCoord[0].st).xyz);
         gl_FragColor = vec4(normal, color.a);
     }
     // Color
-    else if(renderMode == 4) { 
+    else if(renderMode == 5) { 
         gl_FragColor = color;
     }
 }
             -->
             </snippet>
         </shader>
-        </namespace>
     </namespace>
     
 </btf>
