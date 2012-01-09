@@ -232,6 +232,9 @@
     <ClCompile Include="SSAORendererDeferred.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ContourRendererDeferred.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimDataTimer.h">
@@ -450,6 +453,9 @@
     <ClInclude Include="SSAORendererDeferred.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ContourRendererDeferred.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="common.mk">
@@ -487,6 +493,9 @@
     </None>
     <None Include="particles_kernel.cu">
       <Filter>CUDA Files</Filter>
+    </None>
+    <None Include="Shaders\proteinDeferred.btf">
+      <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

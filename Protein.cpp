@@ -37,6 +37,7 @@
 #include "MoleculeCBCudaRenderer.h"
 #include "HapticsMoleculeRenderer.h"
 #include "SSAORendererDeferred.h"
+#include "ContourRendererDeferred.h"
 
 // 2D renderers
 #include "VolumeSliceRenderer.h"
@@ -121,7 +122,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-	int moduleCount = 32;
+	int moduleCount = 33;
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
     moduleCount++;
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
@@ -175,23 +176,24 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case 29: return new megamol::core::ModuleAutoDescription<megamol::protein::View3DSpaceMouse>();
         case 30: return new megamol::core::ModuleAutoDescription<megamol::protein::GROLoader>();
         case 31: return new megamol::core::ModuleAutoDescription<megamol::protein::SSAORendererDeferred>();
+        case 32: return new megamol::core::ModuleAutoDescription<megamol::protein::ContourRendererDeferred>();
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
-        case 32: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
+        case 33: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
 		#define NETCDF_OFFSET 1
 #else
 		#define NETCDF_OFFSET 0
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
 #if (defined(WITH_OPENCL) && (WITH_OPENCL))
-		case 32 + NETCDF_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBOpenCL>();
+		case 33 + NETCDF_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBOpenCL>();
 		#define OPENCL_OFFSET 1
 #else
 		#define OPENCL_OFFSET 0
 #endif /* (defined(WITH_OPENCL) && (WITH_OPENCL)) */
 #if (defined(WITH_CUDA) && (WITH_CUDA))
-		case 32 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBCUDA>();
-        case 33 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererSESGPUCuda>();
-        case 34 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCudaSESRenderer>();
-		case 35 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCBCudaRenderer>();
+		case 33 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBCUDA>();
+        case 34 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererSESGPUCuda>();
+        case 35 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCudaSESRenderer>();
+		case 36 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCBCudaRenderer>();
 		#define CUDA_OFFSET 4
 #else
 		#define CUDA_OFFSET 0

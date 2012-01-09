@@ -510,6 +510,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="CCP4VolumeData.cpp" />
     <ClCompile Include="CoarseGrainDataLoader.cpp" />
     <ClCompile Include="Color.cpp" />
+    <ClCompile Include="ContourRendererDeferred.cpp" />
     <ClCompile Include="Diagram2DCall.cpp" />
     <ClCompile Include="Diagram2DRenderer.cpp" />
     <ClCompile Include="dllmain.cpp">
@@ -632,6 +633,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CCP4VolumeData.h" />
     <ClInclude Include="CoarseGrainDataLoader.h" />
     <ClInclude Include="Color.h" />
+    <ClInclude Include="ContourRendererDeferred.h" />
     <ClInclude Include="Diagram2DCall.h" />
     <ClInclude Include="Diagram2DRenderer.h" />
     <ClInclude Include="ElectrostaticsRenderer.h" />
@@ -770,6 +772,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="particleSystem.cuh">
       <FileType>Document</FileType>
     </None>
+    <None Include="Shaders\proteinDeferred.btf" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="filter_cuda.cu">
