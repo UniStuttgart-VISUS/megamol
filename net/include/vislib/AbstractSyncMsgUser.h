@@ -405,7 +405,7 @@ namespace net {
          *
          * @throws Exception Or derived in case of a communication error.
          */
-	    template<class T> 
+        template<class T> 
         inline void sendViaMsgBuffer(SmartRef<AbstractCommChannel> channel,
                 const SimpleMessageID msgID, 
                 const T& body) {
@@ -432,7 +432,7 @@ namespace net {
          *
          * @throws Exception Or derived in case of a communication error.
          */
-	    template<class T> 
+        template<class T> 
         inline void sendViaMsgBuffer(SmartRef<TcpCommChannel> channel,
                 const SimpleMessageID msgID, 
                 const T& body) {

@@ -15,6 +15,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include "AbstractSimpleMessageHeader.h"
+
+
 /* Forward declarations. */
 namespace vislib {
     class Exception;
@@ -92,6 +95,106 @@ namespace net {
          * @param src The SimpleMessageDispatcher that exited.
          */
         virtual void OnDispatcherStarted(SimpleMessageDispatcher& src) throw();
+
+        ///**
+        // * TODO: Documentation
+        // */
+        //virtual bool OnMessageBodyReceived(
+        //    const AbstractSimpleMessageHeader& header,
+        //    const void *body) throw();
+
+        ///**
+        // * TODO: Documentation
+        // * 
+        // *
+        // * |------------------------------------------------------------|
+        // * | Message Header                                             |
+        // * |------------------------------------------------------------|
+        // * |                                                            |
+        // * | A: 'outOffset' bytes                                       |
+        // * |                                                            |
+        // * |------------------------------------------------------------|
+        // * |                                                            |
+        // * |                                                            |
+        // * | B: 'outDstSize' bytes                                      |
+        // * |                                                            |
+        // * |                                                            |
+        // * |------------------------------------------------------------|
+        // *
+        // * The dispatcher will call OnMessageReceived and dispatch body part A. 
+        // * The message header will be updated to reflect the body size actually
+        // * contained in the message part delivered, i. e. 'offset' bytes.
+        // * Afterwards the dispatcher will call OnMessageBodyReceived and 
+        // * dispatch body part B using the buffer 'outDst'. The message header 
+        // * will be updated to reflect the size of the single-copy buffer, i. e. 
+        // * 'dstSize' bytes.
+        // *
+        // * |------------------------------------------------------------|
+        // * | Message Header                                             |
+        // * |------------------------------------------------------------|
+        // * |                                                            |
+        // * |                                                            |
+        // * | A: 'outDstSize' bytes                                      |
+        // * |                                                            |
+        // * |                                                            |
+        // * |------------------------------------------------------------|
+        // * | B: header.GetBodySize() - 'outDstSize' bytes               |
+        // * |                                                            |
+        // * |------------------------------------------------------------|
+        // *
+        // * The dispatcher will call OnMessageBodyReceived to deliver body 
+        // * part A. The message header will be updated to reflect the body size
+        // * actually delivered, i. e. 'dstSize' bytes. Afterwards the dispatcher
+        // * will call OnMessageReceived to deliver body parts B. The message 
+        // * header will be updated in order to reflect the actual size of the
+        // * message part.
+        // *
+        // * |------------------------------------------------------------|
+        // * | Message Header                                             |
+        // * |------------------------------------------------------------|
+        // * |                                                            |
+        // * | A: 'outOffset' bytes                                       |
+        // * |                                                            |
+        // * |------------------------------------------------------------|
+        // * |                                                            |
+        // * |                                                            |
+        // * | B: 'outDstSize' bytes                                      |
+        // * |                                                            |
+        // * |                                                            |
+        // * |------------------------------------------------------------|
+        // * | C: header.GetBodySize() - 'outOffset' - 'outDstSize' bytes |
+        // * |                                                            |
+        // * |------------------------------------------------------------|
+        // * 
+        // * This situation occurs if the 'outDst' buffer is too small to receive 
+        // * the whole message after 'outOffset'.
+        // TODO
+        // * 
+        // * @param outDst     This variable receives a pointer to the single-copy
+        // *                   buffer to which the received message body should be
+        // *                   copied. Returning NULL here disables the 
+        // *                   single-copy receive operation and will cause the 
+        // *                   message to be delivered via OnMessageReceived as a 
+        // *                   whole.
+        // * @param outDstSize The size of the memory block returned in 'outDst'. A
+        // *                   value of 0 for this parameter has the same effect as
+        // *                   returning NULL for 'outDst'.
+        // * @param outOffset  An offset in bytes for body data which should be 
+        // *                   delivered via the standard OnMessageReceived
+        // *                   mechanism. Only data after this offset will be 
+        // *                   copied to 'outDst'.
+        // *                   This parameter has no effect if the single-copy 
+        // *                   delivery has been disabled via the value of 
+        // *                   'outDst' or 'outDstSize'.
+        // * @header           The header that has been received. This header will
+        // *                   also be contained in the message delivered to 
+        // *                   OnMessageReceived and/or OnMessageBodyReceived. The
+        // *                   body size, however, might vary (read above).
+        // */
+        //virtual void OnMessageHeaderReceived(void *& outDst, 
+        //    SimpleMessageSize& outDstSize,
+        //    SimpleMessageSize& outOffset,
+        //    const AbstractSimpleMessageHeader& header) throw();
 
         /**
          * This method is called every time a message is received.

@@ -11,6 +11,7 @@
 #include "vislib/Exception.h"
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/memutils.h"
+#include "vislib/MissingImplementationException.h"
 
 
 /*
@@ -77,6 +78,7 @@ vislib::net::ib::IbvCommChannel::Accept(void) {
 
     ::WaitForSingleObject(overlapped.hEvent, INFINITE);
 
+    return vislib::SmartRef<vislib::net::AbstractCommChannel>(NULL);
 }
 
 
@@ -117,6 +119,47 @@ void vislib::net::ib::IbvCommChannel::Bind(
 
 
 /*
+ * vislib::net::ib::IbvCommChannel::Close
+ */
+void vislib::net::ib::IbvCommChannel::Close(void) {
+    VLSTACKTRACE("IbvCommChannel::Close", __FILE__, __LINE__);
+    // TODO
+}
+
+
+/*
+ * vislib::net::ib::IbvCommChannel::Connect
+ */
+void vislib::net::ib::IbvCommChannel::Connect(
+        SmartRef<AbstractCommEndPoint> endPoint) {
+    VLSTACKTRACE("IbvCommChannel::Connect", __FILE__, __LINE__);
+    // TODO
+}
+
+
+/*
+ * vislib::net::ib::IbvCommChannel::GetLocalEndPoint
+ */
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::ib::IbvCommChannel::GetLocalEndPoint(void) const {
+    VLSTACKTRACE("IbvCommChannel::GetLocalEndPoint", __FILE__, __LINE__);
+    // TODO
+    throw vislib::MissingImplementationException("GetLocalEndPoint", __FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::net::ib::IbvCommChannel::GetRemoteEndPoint
+ */
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::ib::IbvCommChannel::GetRemoteEndPoint(void) const {
+    VLSTACKTRACE("IbvCommChannel::GetRemoteEndPoint", __FILE__, __LINE__);
+    // TODO
+    throw vislib::MissingImplementationException("GetLocalEndPoint", __FILE__, __LINE__);
+}
+
+
+/*
  * vislib::net::ib::IbvCommChannel::Listen
  */
 void vislib::net::ib::IbvCommChannel::Listen(const int backlog) {
@@ -148,6 +191,26 @@ void vislib::net::ib::IbvCommChannel::Listen(const int backlog) {
     if (FAILED(this->connectEndPoint->Listen(backlog))) {
         throw Exception("TODO: Listen failed", __FILE__, __LINE__);
     }
+}
+
+
+/* 
+ * vislib::net::ib::IbvCommChannel::Receive
+ */
+SIZE_T vislib::net::ib::IbvCommChannel::Receive(void *outData, 
+        const SIZE_T cntBytes, const UINT timeout,  const bool forceReceive) {
+    // TODO
+    return 0;
+}
+
+
+/* 
+ * vislib::net::ib::IbvCommChannel::Receive
+ */
+SIZE_T vislib::net::ib::IbvCommChannel::Send(const void *data, 
+        const SIZE_T cntBytes, const UINT timeout, const bool forceSend) {
+    // TODO
+    return 0;
 }
 
 

@@ -30,37 +30,40 @@ namespace ib {
     /**
      * TODO: comment class
      */
-    class IbvCommChannel : AbstractCommServerChannel {
+    class IbvCommChannel : public AbstractCommServerChannel {
 
     public:
 
         /**
-         * Permit incoming connection attempt on the communication channel.
+         * Create a new channel.
          *
-         * @return The client connection.
-         *
-         * @throws SocketException In case the operation fails.
+         * @param flags The flags for the channel.
          */
+        static inline SmartRef<IbvCommChannel> Create(void) {
+            return SmartRef<IbvCommChannel>(new IbvCommChannel(), false);
+        }
+
         virtual SmartRef<AbstractCommChannel> Accept(void);
 
-        /**
-         * Binds the server to a specified end point address.
-         *
-         * @param endPoint The end point address to bind to.
-         *
-         * @throws Exception Or derived in case the operation fails.
-         */
         virtual void Bind(SmartRef<AbstractCommEndPoint> endPoint);
 
-        /**
-         * Place the communication channel in a state in which it is listening
-         * for an incoming connection.
-         *
-         * @param backlog Maximum length of the queue of pending connections.
-         *
-         * @throws SocketException In case the operation fails.
-         */
+        virtual void Close(void);
+
+        virtual void Connect(SmartRef<AbstractCommEndPoint> endPoint);
+
+        virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const;
+
+        virtual SmartRef<AbstractCommEndPoint> GetRemoteEndPoint(void) const;
+
         virtual void Listen(const int backlog = SOMAXCONN);
+
+        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
+            const UINT timeout = TIMEOUT_INFINITE, 
+            const bool forceReceive = true);
+
+        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes,
+            const UINT timeout = TIMEOUT_INFINITE, 
+            const bool forceSend = true);
 
     protected:
 

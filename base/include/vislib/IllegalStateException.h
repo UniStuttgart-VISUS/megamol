@@ -67,7 +67,7 @@ namespace vislib {
          * @return *this.
          */
         virtual IllegalStateException& operator =(
-			const IllegalStateException& rhs);
+            const IllegalStateException& rhs);
     };
 }
 
