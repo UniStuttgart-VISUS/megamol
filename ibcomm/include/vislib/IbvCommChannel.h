@@ -80,6 +80,12 @@ namespace ib {
 
         IWVConnectEndpoint *connectEndPoint;
 
+        IWVDevice *device;
+
+        IWVProtectionDomain *protectionDomain;
+
+        IWVConnectQueuePair *queuePair;
+
         IWVProvider *wvProvider;
 
     };

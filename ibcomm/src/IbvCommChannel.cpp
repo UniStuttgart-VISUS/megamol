@@ -12,6 +12,7 @@
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/memutils.h"
 #include "vislib/MissingImplementationException.h"
+#include "vislib/Trace.h"
 
 
 /*
@@ -30,16 +31,18 @@ vislib::net::ib::IbvCommChannel::Accept(void) {
     ::ZeroMemory(&connAttribs, sizeof(connAttribs));
     this->connectEndPoint->Query(&connAttribs);
 
-    IWVDevice *device = NULL;
-    this->wvProvider->OpenDevice(connAttribs.Device.DeviceGuid, &device);
+    ASSERT(this->device == NULL);
+    this->wvProvider->OpenDevice(connAttribs.Device.DeviceGuid, 
+        &this->device);
 
-    IWVProtectionDomain *protectionDomain = NULL;
-    device->AllocateProtectionDomain(&protectionDomain);
+    ASSERT(this->protectionDomain == NULL);
+    this->device->AllocateProtectionDomain(&this->protectionDomain);
 
     WV_QP_CREATE qpCreate;
     ::ZeroMemory(&qpCreate, sizeof(qpCreate));
 
     qpCreate.QpType = WvQpTypeRc;
+
 
     //qp_attr->send_cq = s_ctx->cq;
     //qp_attr->recv_cq = s_ctx->cq;
@@ -64,8 +67,8 @@ vislib::net::ib::IbvCommChannel::Accept(void) {
     //create.QpType = (WV_QP_TYPE) qp_init_attr->qp_type;
     //create.QpFlags = qp_init_attr->sq_sig_all ? WV_QP_SIGNAL_SENDS : 0;
 
-    IWVConnectQueuePair *qp;
-    protectionDomain->CreateConnectQueuePair(&qpCreate, &qp);
+    ASSERT(this->queuePair == NULL);
+    protectionDomain->CreateConnectQueuePair(&qpCreate, &this->queuePair);
 
     WV_CONNECT_PARAM conParam;
     ::ZeroMemory(&conParam, sizeof(conParam));
@@ -73,8 +76,8 @@ vislib::net::ib::IbvCommChannel::Accept(void) {
     OVERLAPPED overlapped;
     ::ZeroMemory(&overlapped, sizeof(overlapped));
     overlapped.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-    
-    this->connectEndPoint->Accept(qp, &conParam, &overlapped);
+
+    this->connectEndPoint->Accept(this->queuePair, &conParam, &overlapped);
 
     ::WaitForSingleObject(overlapped.hEvent, INFINITE);
 
@@ -107,14 +110,16 @@ void vislib::net::ib::IbvCommChannel::Bind(
     //    throw Exception("TODO: Binding server address failed", __FILE__, __LINE__);
     //}
 
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Creating IB end point...\n");
     if (FAILED(this->wvProvider->CreateConnectEndpoint(&this->connectEndPoint))) {
         throw Exception("TODO: CreateConnectEndpoint failed", __FILE__, __LINE__);
     }
 
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Binding IB end point to %s...\n",
+        ep.ToStringA().PeekBuffer());
     if (FAILED(this->connectEndPoint->BindAddress(static_cast<struct sockaddr *>(ep)))) {
         throw Exception("TODO: BindAddress failed", __FILE__, __LINE__);
     }
-
 }
 
 
@@ -188,6 +193,9 @@ void vislib::net::ib::IbvCommChannel::Listen(const int backlog) {
     //    }
     //}
 
+
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Setting IB end point into "
+        "listening state...\n");
     if (FAILED(this->connectEndPoint->Listen(backlog))) {
         throw Exception("TODO: Listen failed", __FILE__, __LINE__);
     }
@@ -218,7 +226,8 @@ SIZE_T vislib::net::ib::IbvCommChannel::Send(const void *data,
  * vislib::net::ib::IbvCommChannel::IbvCommChannel
  */
 vislib::net::ib::IbvCommChannel::IbvCommChannel(void) 
-        : connectEndPoint(NULL),  wvProvider(NULL) {
+        : connectEndPoint(NULL),  device(NULL), protectionDomain(NULL),
+        queuePair(NULL), wvProvider(NULL) {
     VLSTACKTRACE("IbvCommChannel::IbvCommChannel", __FILE__, __LINE__);
 
     if (FAILED(::WvGetObject(IID_IWVProvider, reinterpret_cast<void **>(&this->wvProvider)))) {
