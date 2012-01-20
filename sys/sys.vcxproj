@@ -416,6 +416,7 @@
     <ClCompile Include="src\BufferedFile.cpp" />
     <ClCompile Include="src\CmdLineParser.cpp" />
     <ClCompile Include="src\CmdLineProvider.cpp" />
+    <ClCompile Include="src\COMException.cpp" />
     <ClCompile Include="src\Console.cpp" />
     <ClCompile Include="src\ConsoleProgressBar.cpp" />
     <ClCompile Include="src\CriticalSection.cpp" />
@@ -494,6 +495,7 @@
     <ClInclude Include="include\vislib\BufferedFile.h" />
     <ClInclude Include="include\vislib\CmdLineParser.h" />
     <ClInclude Include="include\vislib\CmdLineProvider.h" />
+    <ClInclude Include="include\vislib\COMException.h" />
     <ClInclude Include="include\vislib\Console.h" />
     <ClInclude Include="include\vislib\ConsoleProgressBar.h" />
     <ClInclude Include="include\vislib\CriticalSection.h" />

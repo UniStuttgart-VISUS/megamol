@@ -6,6 +6,53 @@
 
 #include "vislib/utils.h"
 
+#include "vislib/assert.h"
+#include "vislib/StackTrace.h"
+
+
+/*
+ * vislib::BytesToHexStringA
+ */
+vislib::StringA vislib::BytesToHexStringA(const BYTE *bytes, SIZE_T cntBytes) {
+    VLSTACKTRACE("vislib::BytesToHexStringA", __FILE__, __LINE__);
+    StringA::Char *out = NULL;
+    StringA retval;
+    StringA tmp(' ', 2);
+
+    out = retval.AllocateBuffer(2 * static_cast<StringA::Size>(cntBytes));
+    ASSERT(out[2 * cntBytes] == 0);
+
+    for (SIZE_T i = 0; i < cntBytes; i++) {
+        tmp.Format("%02x", bytes[i]);
+        *out++ = tmp[0];
+        *out++ = tmp[1];
+    }
+
+    return retval;
+}
+
+
+/*
+ * vislib::BytesToHexStringW
+ */
+vislib::StringW vislib::BytesToHexStringW(const BYTE *bytes, SIZE_T cntBytes) {
+    VLSTACKTRACE("vislib::BytesToHexStringW", __FILE__, __LINE__);
+    StringW::Char *out = NULL;
+    StringW retval;
+    StringW tmp(' ', 2);
+
+    out = retval.AllocateBuffer(2 * static_cast<StringW::Size>(cntBytes));
+    ASSERT(out[2 * cntBytes] == 0);
+
+    for (SIZE_T i = 0; i < cntBytes; i++) {
+        tmp.Format(L"%02x", bytes[i]);
+        *out++ = tmp[0];
+        *out++ = tmp[1];
+    }
+
+    return retval;
+}
+
 
 /*
  * vislib::UIntRLEEncode

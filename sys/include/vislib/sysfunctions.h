@@ -25,6 +25,7 @@
 
 #include "vislib/CharTraits.h"
 #include "vislib/File.h"
+#include "vislib/sysfunctions.h"
 #include "vislib/RawStorage.h"
 #include "vislib/String.h"
 #include "vislib/SystemException.h"
@@ -418,6 +419,19 @@ namespace sys {
      * @return The name without kernel namespace prefix.
      */
     vislib::StringW RemoveKernelNamespace(const wchar_t *name);
+
+    /**
+     * Release the COM pointer 'ptr' and set it NULL if not yet NULL.
+     *
+     * @param ptr A pointer to a COM object (or any other object implementing
+     *            reference counting via a Release() method.
+     */
+    template<class T> void SafeRelease(T*& ptr) {
+        if (ptr != NULL) {
+            ptr->Release();        
+            ptr = NULL;    
+        }
+    }
 
     /**
      * Take a Windows IPC resource name and construct a POSIX name for Linux 

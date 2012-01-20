@@ -52,9 +52,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\IbvCommChannel.h" />
+    <ClInclude Include="include\vislib\IbvInformation.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\IbvCommChannel.cpp" />
+    <ClCompile Include="src\IbvInformation.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{59DEB5CE-352F-43B4-B250-60BD6D19201C}</ProjectGuid>

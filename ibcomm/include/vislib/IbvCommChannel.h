@@ -17,6 +17,7 @@
 
 #include "vislib/Socket.h"                      // Must be first!
 #include "vislib/AbstractCommServerChannel.h"
+#include "vislib/COMException.h"
 
 #include "rdma/rdma_cma.h"
 #include "rdma/winverbs.h"
@@ -75,6 +76,10 @@ namespace ib {
 
         /** Dtor. */
         virtual ~IbvCommChannel(void);
+
+        void createQueuePair(void);
+
+        void initialise(void);
 
     private:
 

@@ -1882,7 +1882,7 @@ namespace vislib {
                     dist[VL_LVS_ARY_IDX(i - 1, j - 1)] 
                     + ((this->data[i - 1] == rhs[j - 1]) ? 0 : costChange),
                     dist[VL_LVS_ARY_IDX(i, j - 1)] + costAdd,
-	                dist[VL_LVS_ARY_IDX(i - 1, j)] + costDelete);
+                    dist[VL_LVS_ARY_IDX(i - 1, j)] + costDelete);
             }
         }
 

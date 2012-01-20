@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <winsock2.h>
+#include <iostream>
 
 
 #if defined(_WIN32) && defined(_MANAGED)

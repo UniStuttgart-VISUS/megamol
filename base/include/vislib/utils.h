@@ -13,10 +13,31 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#include "vislib/String.h"
 #include "vislib/types.h"
 
 
 namespace vislib {
+
+    /**
+     * Convert an array of bytes to a hex string.
+     *
+     * @param bytes    The byte array to be converted.
+     * @param cntBytes The size of 'bytes' in bytes.
+     *
+     * @return A string representing the content of 'bytes.
+     */
+    StringA BytesToHexStringA(const BYTE *bytes, SIZE_T cntBytes);
+
+    /**
+     * Convert an array of bytes to a hex string.
+     *
+     * @param bytes    The byte array to be converted.
+     * @param cntBytes The size of 'bytes' in bytes.
+     *
+     * @return A string representing the content of 'bytes.
+     */
+    StringW BytesToHexStringW(const BYTE *bytes, SIZE_T cntBytes);
 
     /**
      * Swaps the values of left and right.
