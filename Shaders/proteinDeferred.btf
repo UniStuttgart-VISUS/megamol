@@ -30,7 +30,9 @@ uniform sampler2D depthBuff;
 uniform sampler2D colorBuff;
 uniform sampler2D normalBuff;
 uniform int renderMode;
+uniform int conMode;
 uniform float threshold;
+uniform float scale;
 
 uniform vec2 clip;
 uniform vec2 winSize;
@@ -67,39 +69,71 @@ vec3 sobelNormal() {
     return sqrt(sobelX*sobelX+sobelY*sobelY);
 }
 
+float getScaleFactor(float val) {
+    float s = scale*0.1;
+    float t = threshold;
+    vec4 x = vec4(0.0, (t/4.0)*(1.0+2.0*s), t*0.5, 1.0);
+    
+    float p00 = 0.0;
+    float p11 = (t/4.0)*(1.0-2.0*s);
+    float p22 = t*0.5;
+    float p33 = 1.0;
+    
+    // Use Neville-Aitken algorithm to interpolate
+    
+    float p01 = ((x[1]-val)*p00+(val-x[0])*p11)/(x[1]-x[0]);
+    float p12 = ((x[2]-val)*p11+(val-x[1])*p22)/(x[2]-x[1]);
+    float p23 = ((x[3]-val)*p22+(val-x[2])*p33)/(x[3]-x[2]);
+    
+    float p02 = ((x[2]-val)*p01+(val-x[0])*p12)/(x[2]-x[0]);
+    float p13 = ((x[3]-val)*p12+(val-x[1])*p23)/(x[3]-x[1]);
+    
+    float p03 = ((x[3]-val)*p02+(val-x[0])*p13)/(x[3]-x[0]);
+
+    return p03;
+}
+
 void main(void) {
-    float grad = sobel();
-    vec3 gradNorm = sobelNormal();
+    
     vec4 color  = texture2D(colorBuff, gl_TexCoord[0].st);
     
-    // Contour + colour
-    if(renderMode == 0) { 
-        if(grad>=threshold)
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    vec4 contour;
+    if(conMode == 0) { // Use depth map for contour
+        float grad = clamp(sobel(), 0.0, 1.0);
+        //if(grad > threshold*0.1) grad = 1.0;
+        //else grad = 0.0;
+        float val = grad*getScaleFactor(grad);
+        contour = vec4(1.0-val, 1.0-val, 1.0-val, color.a);
+    }
+    else if(conMode == 1){ // Use normal map for contour
+        vec3 gradNorm = sobelNormal();
+        float max = max(gradNorm.x, max(gradNorm.y, gradNorm.z));
+        if(max > 0.9) {
+            contour = vec4(vec3(0.0, 0.0, 0.0), color.a);
+        }
         else
-            gl_FragColor = color;
-        gl_FragColor = vec4(gradNorm, color.a);
-    }
+            contour = vec4(vec3(1.0, 1.0, 1.0), color.a);
+    }   
     
-    // Contour (Depthmap)
-    else if(renderMode == 1) {
-        gl_FragColor = vec4(1.0-grad, 1.0-grad, 1.0-grad, color.a);
+    // Contour + color
+    if(renderMode == 0) { 
+        gl_FragColor = color*contour;
     }
-    // Contour (Normalmap)
-    else if(renderMode == 2) {
-        gl_FragColor = vec4(gradNorm, color.a);
+    // Contour
+    else if(renderMode == 1) {
+        gl_FragColor = contour;
     }
     // Depth
-    else if(renderMode == 3) { 
+    else if(renderMode == 2) { 
         gl_FragColor = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy), 0);
     }
     // Normal
-    else if(renderMode == 4) { 
+    else if(renderMode == 3) { 
         vec3 normal = normalize(texture2D(normalBuff, gl_TexCoord[0].st).xyz);
         gl_FragColor = vec4(normal, color.a);
     }
     // Color
-    else if(renderMode == 5) { 
+    else if(renderMode == 4) { 
         gl_FragColor = color;
     }
 }

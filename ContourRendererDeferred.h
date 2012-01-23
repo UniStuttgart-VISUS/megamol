@@ -126,6 +126,8 @@ namespace protein {
         /** Parameter slot for the render mode */
         megamol::core::param::ParamSlot renderModeParam;
         megamol::core::param::ParamSlot thresholdParam;
+        megamol::core::param::ParamSlot scaleParam;
+        megamol::core::param::ParamSlot conModeParam;
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)

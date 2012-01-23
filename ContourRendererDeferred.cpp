@@ -29,23 +29,36 @@ ContourRendererDeferred::ContourRendererDeferred(void)
     : megamol::core::view::AbstractRendererDeferred3D(),
     renderModeParam("renderMode", "The render mode to be used"),
     thresholdParam("threshold", "Threshold for the gradient"),
+    scaleParam("scale", "Scale for the gradient"),
+    conModeParam("conMode", "Choose the contour mode"),
     widthFBO(-1), heightFBO(-1) {
 
     // Render mode param
     megamol::core::param::EnumParam *rm =
         new megamol::core::param::EnumParam(0);
     rm->SetTypePair(0, "Contour + Color");
-    rm->SetTypePair(1, "Contour (Depthmap)");
-    rm->SetTypePair(2, "Contour (Normamap)");
-    rm->SetTypePair(3, "Depth");
-    rm->SetTypePair(4, "Normal");
-    rm->SetTypePair(5, "Color");
+    rm->SetTypePair(1, "Contour");
+    rm->SetTypePair(2, "Depth");
+    rm->SetTypePair(3, "Normal");
+    rm->SetTypePair(4, "Color");
     this->renderModeParam << rm;
     this->MakeSlotAvailable(&renderModeParam);
 
+    // Contour mode param
+    megamol::core::param::EnumParam *cm =
+        new megamol::core::param::EnumParam(0);
+    cm->SetTypePair(0, "DepthMap");
+    cm->SetTypePair(1, "NormalMap");
+    this->conModeParam << cm;
+    this->MakeSlotAvailable(&conModeParam);
+
     // Threshold param
-    this->thresholdParam << new megamol::core::param::FloatParam(0.6, 0.0);
+    this->thresholdParam << new megamol::core::param::FloatParam(0.6, 0.0, 1.0);
     this->MakeSlotAvailable(&this->thresholdParam);
+
+    // Scale param
+    this->scaleParam << new megamol::core::param::FloatParam(0.6, 0.0, 1.0);
+    this->MakeSlotAvailable(&this->scaleParam);
 }
 
 
@@ -254,6 +267,11 @@ bool ContourRendererDeferred::Render(megamol::core::Call& call) {
         this->renderModeParam.Param<core::param::EnumParam>()->Value());
     glUniform1f(this->contourShader.ParameterLocation("threshold"),
         this->thresholdParam.Param<core::param::FloatParam>()->Value());
+    glUniform1f(this->contourShader.ParameterLocation("scale"),
+        this->scaleParam.Param<core::param::FloatParam>()->Value());
+    glUniform1i(this->contourShader.ParameterLocation("conMode"),
+        this->conModeParam.Param<core::param::EnumParam>()->Value());
+
 
     // Preserve the current framebuffer content (e.g. back of the bounding box)
     glEnable(GL_BLEND);
