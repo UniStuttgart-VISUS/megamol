@@ -21,6 +21,7 @@
 #include <tchar.h>
 #include <winsock2.h>
 #include <iostream>
+#include <conio.h>
 
 
 #if defined(_WIN32) && defined(_MANAGED)

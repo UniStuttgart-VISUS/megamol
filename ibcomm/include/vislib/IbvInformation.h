@@ -16,6 +16,7 @@
 
 #include "vislib/Socket.h"      // Must be first!
 #include "vislib/Array.h"
+#include "vislib/CriticalSection.h"
 #include "vislib/StackTrace.h"
 
 #include "rdma/winverbs.h"
@@ -62,6 +63,104 @@ namespace ib {
             }
 
             /**
+             * Get the port GUID and prefix GID.
+             *
+             * @return The port GUID and prefix GID.
+             */
+            inline const WV_GID& GetGid(void) const {
+                VLSTACKTRACE("Port::GetGid", __FILE__, __LINE__);
+                return this->gid;
+            }
+
+            /**
+             * Gets the physical state of the port.
+             *
+             * You can use GetPhysicalStateA() or GetPhysicalStateW() to 
+             * obtain a more comprehensible description of the state.
+             *
+             * @return A numeric value identifying the current state of the 
+             *         port.
+             */
+            inline UINT8 GetPhysicalState(void) const {
+                VLSTACKTRACE("Port::GetPhysicalState", __FILE__, __LINE__);
+                return this->attributes.PhysicalState;
+            }
+
+            /**
+             * Gets a human-readable description of the physical port state.
+             *
+             * @return A description of the physical port state.
+             */
+            inline StringA GetPhysicalStateA(void) const {
+                VLSTACKTRACE("Port::GetPhysicalStateA", __FILE__, __LINE__);
+                return PHYSICAL_STATES[this->attributes.PhysicalState];
+            }
+
+            /**
+             * Gets a human-readable description of the physical port state.
+             *
+             * @return A description of the physical port state.
+             */
+            inline StringW GetPhysicalStateW(void) const {
+                VLSTACKTRACE("Port::GetPhysicalStateW", __FILE__, __LINE__);
+                return StringW(PHYSICAL_STATES[this->attributes.PhysicalState]);
+            }
+
+            /**
+             * Get the port GUID.
+             *
+             * @return The port GUID.
+             */
+            inline NET64 GetPortGuid(void) const {
+                VLSTACKTRACE("Port::GetPortGuid", __FILE__, __LINE__);
+                return *(reinterpret_cast<const NET64 *>(&this->gid) + 1);
+            }
+
+            /**
+             * Get a hex-string representation of the port GUID.
+             *
+             * @return The port GUID as hex-string.
+             */
+            StringA GetPortGuidA(void) const;
+
+            /**
+             * Get a hex-string representation of the port GUID.
+             *
+             * @return The port GUID as hex-string.
+             */
+            StringW GetPortGuidW(void) const;
+
+            /**
+             * Gets the current state of the port.
+             *
+             * @return The state of the port.
+             */
+            inline WV_PORT_STATE GetState(void) const {
+                VLSTACKTRACE("Port::GetState", __FILE__, __LINE__);
+                return this->attributes.State;
+            }
+
+            /**
+             * Get a human-readable description of the port state.
+             *
+             * @return The state of the port.
+             */
+            inline StringA GetStateA(void) const {
+                VLSTACKTRACE("Port::GetStateA", __FILE__, __LINE__);
+                return STATES[this->attributes.State];
+            }
+
+            /**
+             * Get a human-readable description of the port state.
+             *
+             * @return The state of the port.
+             */             
+            inline StringW GetStateW(void) const {
+                VLSTACKTRACE("Port::GetStateW", __FILE__, __LINE__);
+                return StringW(STATES[this->attributes.State]);
+            }
+
+            /**
              * Assignment.
              *
              * @param rhs The right hand side operand.
@@ -95,6 +194,22 @@ namespace ib {
 
         private:
 
+            /** 
+             * Human-readable descriptions of physical port states. 
+             *
+             * These strings are borrowed from the source code of "ibstat". They
+             * are indexed using the numerical value of the physical port state.
+             */
+            static const char *PHYSICAL_STATES[];
+
+            /** 
+             * Human-readable descriptions of port states. 
+             *
+             * These strings are borrowed from the source code of "ibstat". They
+             * are indexed using the numerical value of the port state 
+             * enumeration.
+             */
+            static const char *STATES[];
 
             /**
              * Initialise an empty instance.
@@ -113,6 +228,12 @@ namespace ib {
 
             /** Holds the attributes of the device port. */
             WV_PORT_ATTRIBUTES attributes;
+
+            /** 
+             * The port GUID (like in umad.cpp, we assume GID 0 contains port 
+             * GUID and gid prefix.
+             */
+            WV_GID gid;
 
             /** Allow outer class creating instances. */
             friend class ArrayElementDftCtor<Port>;
@@ -158,6 +279,20 @@ namespace ib {
 
             StringW GetNodeGuidW(void) const;
 
+            /**
+             * Gets the descriptor object for the 'idx'th port.
+             *
+             * @param idx The index of the port to retrieve; must be within
+             *            [0, this->GetPortCount[.
+             * 
+             * @return The descriptor object for the given port.
+             *
+             * @throws OufOfRangeException If 'idx' does not designate a valid
+             *                             port index within 
+             *                             [0, this->GetPortCount[.
+             */
+            const Port& GetPort(const SIZE_T idx) const;
+
             inline const PortList& GetPorts(void) const {
                 VLSTACKTRACE("Device::GetPorts", __FILE__, __LINE__);
                 return this->ports;
@@ -167,6 +302,15 @@ namespace ib {
                 VLSTACKTRACE("Device::GetPortCount", __FILE__, __LINE__);
                 return (int) this->attributes.PhysPortCount;
             }
+
+            inline NET64 GetSystemImageGuid(void) const {
+                VLSTACKTRACE("Device::GetSystemImageGuid", __FILE__, __LINE__);
+                return this->attributes.SystemImageGuid;
+            }
+
+            StringA GetSystemImageGuidA(void) const;
+
+            StringW GetSystemImageGuidW(void) const;
 
             /**
              * Assignment.
@@ -237,37 +381,89 @@ namespace ib {
         typedef Array<Device> DeviceList;
 
         /**
-         * Gets all available InfiniBand devices into 'outDevices'.
+         * Gets the only instance of the class.
          *
-         * The array will be erased before new devices are added.
-         *
-         * @param outDevices Receives the devices.
-         *
-         * @return The number of devices actually retrieved.
-         *
-         * @throws vislib::sys::COMException In case of an error.
+         * @return A reference to the only instance of IbvInformation.
          */
-        static SIZE_T GetDevices(DeviceList& outDevices);
-
-    private:
+        static IbvInformation& GetInstance(void);
 
         /**
-         * Get the (cached) WinVerbs root object.
+         * Answer whether the given GID is all-null.
          *
-         * @return An instance of IWVProvider.
+         * @param gid                The GID to be tested.
+         * @param ignoreSubnetPrefix If true, ignore the first 64 bits of the 
+         *                           GID, which contain the subnet prefix.
          *
+         * @return true if the GID is all-null, false otherwise.
+         */
+        static bool IsNullGid(const WV_GID& gid, 
+            const bool ignoreSubnetPrefix = false);
+
+        /**
+         * Discards all cached information and immediately re-reads them if
+         * requested.
+         *
+         * This method is thread-safe.
+         *
+         * @param reread If true, update the cached devices immediately.
+         *
+         * @throws std::bad_alloc In case of too few memory to store the data.
          * @throws vislib::sys::COMException In case of an error.
          */
-        static IWVProvider *getWvProvider(void);
+        void DiscardCache(const bool reread = false);
 
-        /** The WinVerbs root object required to get all information. */
-        static IWVProvider *wvProvider;
+        SIZE_T GetDevices(DeviceList& outDevices) const;
+
+    private:
 
         /** Disallow instances. */
         IbvInformation(void);
 
+        /**
+         * Disallow copies.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throws UnsupportedOperationException Unconditionally.
+         */
+        IbvInformation(const IbvInformation& rhs);
+
         /** Disallow instances. */
         ~IbvInformation(void);
+
+        /**
+         * Fill the 'devices' cache list if the cache list is empty. If the 
+         * cache list 'devices' is not empty, this method will do nothing.
+         *
+         * This method is NOT thread-safe!
+         *
+         * @return true If the cache list was filled, false if it was already
+         *         full before the method was called.
+         *
+         * @throws std::bad_alloc In case of too few memory to store the data.
+         * @throws vislib::sys::COMException In case of an error.
+         */
+        bool cacheDevices(void) const;
+
+        /**
+         * Disallow assignments.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @return *this.
+         *
+         * @throws IllegalParamException If (this != &rhs).
+         */
+        IbvInformation& operator =(const IbvInformation& rhs);
+
+        /** Cache for devices. */
+        mutable DeviceList devices;
+
+        /** Lock for cached data. */
+        mutable sys::CriticalSection lock;
+
+        /** The WinVerbs root object required to get all information. */
+        IWVProvider *wvProvider;
     };
     
 } /* end namespace ib */
