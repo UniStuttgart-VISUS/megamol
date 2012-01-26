@@ -6,6 +6,7 @@
  */
 
 #include "stdafx.h"
+#include <GL/GLU.h>
 
 #include <param/EnumParam.h>
 #include <param/BoolParam.h>
@@ -284,6 +285,7 @@ bool ContourRendererDeferred::Render(megamol::core::Call& call) {
     glBindTexture(GL_TEXTURE_2D, this->normalBuff); // Normal buffer
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->depthBuff); // Depth buffer
+	glGenerateMipmap(GL_TEXTURE_2D); // Regenerate mip map levels of the depth texture
 
     // Draw
     glBegin(GL_QUADS);
@@ -347,11 +349,14 @@ bool ContourRendererDeferred::createFBO(UINT width, UINT height) {
     glGenTextures(1, &this->depthBuff);
     glBindTexture(GL_TEXTURE_2D, this->depthBuff);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    //glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
+
 
     // Generate framebuffer
     glGenFramebuffers(1, &this->fbo);
