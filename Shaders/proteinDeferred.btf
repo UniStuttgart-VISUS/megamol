@@ -18,11 +18,12 @@ void main(void) {
             </snippet>
         </shader>
         <shader name="fragment">
-            <snippet type="version">110</snippet>
+            <snippet type="version">130</snippet>
             <snippet name="::common::lighting::simple" />
             <snippet type="string">
             <!--
 // TODO Write 'real' depth to depth buffer
+// TODO Transform threshold to eyespace
 
 #extension GL_EXT_gpu_shader4 : enable
 
@@ -52,6 +53,7 @@ float sobel() {
     float sobelX = -a+c-2.0*d+2.0*e-f+h;
     float sobelY = -a-2.0*b-c+f+2.0*g+h;
     return sqrt(sobelX*sobelX+sobelY*sobelY);
+	//appx: return abs(sobelX)+abs(sobelY);
 }
 
 vec3 sobelNormal() {
@@ -66,7 +68,8 @@ vec3 sobelNormal() {
     h = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(1, -1), 0).rgb;
     vec3 sobelX = -a+c-2.0*d+2.0*e-f+h;
     vec3 sobelY = -a-2.0*b-c+f+2.0*g+h;
-    return sqrt(sobelX*sobelX+sobelY*sobelY);
+    //return sqrt(sobelX*sobelX+sobelY*sobelY);
+	return abs(sobelX)+abs(sobelY);
 }
 
 float getScaleFactor(float val) {
@@ -96,23 +99,24 @@ float getScaleFactor(float val) {
 void main(void) {
     
     vec4 color  = texture2D(colorBuff, gl_TexCoord[0].st);
+	
+	float diff = 1.0 - (textureLod(depthBuff, gl_TexCoord[0].st, 3.0f).r - 
+		textureLod(depthBuff, gl_TexCoord[0].st, 0.0f).r);
     
     vec4 contour;
     if(conMode == 0) { // Use depth map for contour
         float grad = clamp(sobel(), 0.0, 1.0);
-        //if(grad > threshold*0.1) grad = 1.0;
-        //else grad = 0.0;
-        float val = grad*getScaleFactor(grad);
-        contour = vec4(1.0-val, 1.0-val, 1.0-val, color.a);
+		float val;
+		if(grad > threshold) {
+			val = pow(grad, scale);
+		}
+        //contour = vec4(vec3(1.0-val)*diff, color.a);
+		contour = vec4(vec3(1.0-val), color.a);
     }
     else if(conMode == 1){ // Use normal map for contour
         vec3 gradNorm = sobelNormal();
         float max = max(gradNorm.x, max(gradNorm.y, gradNorm.z));
-        if(max > 0.9) {
-            contour = vec4(vec3(0.0, 0.0, 0.0), color.a);
-        }
-        else
-            contour = vec4(vec3(1.0, 1.0, 1.0), color.a);
+		contour = vec4(vec3(1.0-max), 1.0);
     }   
     
     // Contour + color
@@ -124,8 +128,9 @@ void main(void) {
         gl_FragColor = contour;
     }
     // Depth
-    else if(renderMode == 2) { 
-        gl_FragColor = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy), 0);
+    else if(renderMode == 2) {
+        //gl_FragColor = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)/4, 2);
+		gl_FragColor = vec4(vec3(diff), 1.0);
     }
     // Normal
     else if(renderMode == 3) { 
