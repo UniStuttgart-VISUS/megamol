@@ -37,7 +37,7 @@
 #include "MoleculeCBCudaRenderer.h"
 #include "HapticsMoleculeRenderer.h"
 #include "SSAORendererDeferred.h"
-#include "ContourRendererDeferred.h"
+#include "ToonRendererDeferred.h"
 
 // 2D renderers
 #include "VolumeSliceRenderer.h"
@@ -176,7 +176,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case 29: return new megamol::core::ModuleAutoDescription<megamol::protein::View3DSpaceMouse>();
         case 30: return new megamol::core::ModuleAutoDescription<megamol::protein::GROLoader>();
         case 31: return new megamol::core::ModuleAutoDescription<megamol::protein::SSAORendererDeferred>();
-        case 32: return new megamol::core::ModuleAutoDescription<megamol::protein::ContourRendererDeferred>();
+        case 32: return new megamol::core::ModuleAutoDescription<megamol::protein::ToonRendererDeferred>();
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
         case 33: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
 		#define NETCDF_OFFSET 1

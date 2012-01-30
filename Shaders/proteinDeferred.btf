@@ -3,7 +3,170 @@
     
     <include file="common" />
     
-    <namespace name="contour">
+    
+    <namespace name="ssao">
+        <shader name="vertex">
+            <snippet type="version">110</snippet>
+            <snippet name="main" type="string">
+            <!--
+varying vec3 viewray;
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    viewray = gl_Normal;
+}
+            -->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet type="string">
+            <!--
+#extension GL_ARB_gpu_shader5 : enable
+
+uniform sampler2D depthBuff; // Note: near ... far =  0 ... 1
+uniform sampler2D normalBuff;
+uniform sampler2D rotSampler;
+uniform vec4 clip; // Near, far, top, right
+uniform vec2 winSize;
+uniform float ssaoRadius;
+
+vec3 randKernel[8] = vec3[](vec3(-1.0, -1.0, -1.0), 
+                      vec3(-1.0, -1.0, 1.0),
+                      vec3(-1.0, 1.0, -1.0),
+                      vec3(-1.0, 1.0, 1.0),
+                      vec3(1.0, -1.0, -1.0),
+                      vec3(1.0, -1.0, 1.0),
+                      vec3(1.0, 1.0, -1.0),
+                      vec3(1.0, 1.0, 1.0));
+
+varying vec3 viewray;
+
+void main(void) {
+
+    float aoFactor;
+    float Accessibility = 0.0;
+    
+    // Get rotation vector, rotation is tiled every 4 screen pixels
+    vec2 rotationTC;
+    rotationTC.s = gl_TexCoord[0].s * winSize.x / 4;
+    rotationTC.t = gl_TexCoord[0].t * winSize.y / 4;
+    vec3 vRotation = 2 * texture2D(rotSampler, rotationTC).rgb - 1;
+    
+    // Create rotation matrix from rotation vector
+    mat3 rotMat;
+    float h =  1 / (1 + vRotation.z);
+    rotMat[0][0] = h * vRotation.y * vRotation.y + vRotation.z;
+    rotMat[0][1] = - h * vRotation.y * vRotation.x;
+    rotMat[0][2] = -vRotation.x;
+    rotMat[1][0] = -h * vRotation.y * vRotation.x;
+    rotMat[1][1] = h * vRotation.x * vRotation.x + vRotation.z;
+    rotMat[1][2] = -vRotation.y;
+    rotMat[2][0] = vRotation.x;
+    rotMat[2][1] = vRotation.y;
+    rotMat[2][2] = vRotation.z;
+    
+    // Get linear depth value of the current pixel and convert to meters
+    float sceneDepthP = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy), 0).r * clip.y;
+    
+    // Parameters affecting offset points number and distribution
+    const int nSamples = 8;
+    
+    // Radius of the sphere containing the generated samples
+    float offsetScale = ssaoRadius*0.01; 
+    const float offsetScaleStep = 1 + 2.4/nSamples;
+       
+    // Sample area and accumulate accessibility
+    for(float i = 0.0; i < nSamples/8; i++)
+    for(float x = -1.0; x <= 1.0; x += 2.0)
+    for(float y = -1.0; y <= 1.0; y += 2.0)
+    for(float z = -1.0; z <= 1.0; z += 2.0) {
+    
+        // Generate offset vector (this code line is executed only at shader 
+        // compile stage) - here we use cube corners and give it different lengths
+        vec3 vOffset = normalize(vec3(x,y,z))*(offsetScale *=offsetScaleStep);
+        
+        // Rotate offset vector by rotation matrix
+        vec3 vRotatedOffset = rotMat * vOffset;
+        //vec3 vReflectedOffset = reflect(vOffset, vRotation);
+            
+        // Get center pixel 3d coords in screen space
+        vec3 vSamplePos = vec3(gl_TexCoord[0].st, sceneDepthP);
+        
+        // Shift coords by offset vector (range convert and width depth vector)
+        vSamplePos += vec3(vRotatedOffset.xy, vRotatedOffset.z * sceneDepthP * 2);
+        //vSamplePos += vec3(vReflectedOffset.xy, vReflectedOffset.z * sceneDepthP * 2);
+        
+        // Read scene depth at sampling point and convert to meters
+        float sceneDepthSample = texture2D(depthBuff, vSamplePos.xy).r * clip.y;
+        
+        // Check if depths of both pixels are close enough and the sampling point
+        // should affect our center pixel
+        float rangeIsValid = clamp((sceneDepthP - sceneDepthSample) / sceneDepthSample, 
+            0.0, 1.0);
+        
+        // Accumulate accessibility, use default value of 0.5 if right computations 
+        // are not possible
+        float val;
+        if(sceneDepthSample > vSamplePos.z)
+            val = 1.0;
+        else 
+            val = 0.0;
+            
+        Accessibility += mix(val, 0.5, rangeIsValid); // Linear interpolation
+    }
+    
+    // Get average value
+    Accessibility =  Accessibility / nSamples;
+    
+    // Amplify and saturate if necessary   
+    aoFactor = clamp(Accessibility*Accessibility + Accessibility, 0.0, 1.0);
+    gl_FragData[0].r = aoFactor;
+    
+}
+            -->
+            </snippet>
+        </shader>
+    </namespace>
+    
+    <namespace name="sobel">
+        <shader name="vertex">
+            <snippet type="version">110</snippet>
+            <snippet name="main" type="string">
+            <!--
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+}
+            -->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet type="string">
+            <!--
+#extension GL_EXT_gpu_shader4 : enable // Required for 'texelFetch2D' routine
+uniform sampler2D depthBuff;
+void main(void) {
+    float a,b,c,d,e,f,g,h,x;
+    a = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, 1), 0).r;
+    b = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(0, 1), 0).r;
+    c = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(1, 1), 0).r;
+    d = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, 0), 0).r;
+    e = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(1, 0), 0).r;
+    f = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, -1), 0).r;
+    g = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(0, -1), 0).r;
+    h = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(1, -1), 0).r;
+    float sobelX = -a+c-2.0*d+2.0*e-f+h;
+    float sobelY = -a-2.0*b-c+f+2.0*g+h;
+    gl_FragData[0].r = sqrt(sobelX*sobelX+sobelY*sobelY);
+}
+            -->
+            </snippet>
+        </shader>
+    </namespace>
+    
+    <namespace name="toon">
         <shader name="vertex">
             <snippet type="version">110</snippet>
             <snippet name="main" type="string">
@@ -23,124 +186,109 @@ void main(void) {
             <snippet type="string">
             <!--
 // TODO Write 'real' depth to depth buffer
-// TODO Transform threshold to eyespace
-
 #extension GL_EXT_gpu_shader4 : enable
 
-uniform sampler2D depthBuff;
-uniform sampler2D colorBuff;
-uniform sampler2D normalBuff;
-uniform int renderMode;
-uniform int conMode;
-uniform float threshold;
-uniform float scale;
+uniform sampler2D depthBuffer;
+uniform sampler2D colorBuffer;
+uniform sampler2D normalBuffer;
+uniform sampler2D gradientBuffer;
+uniform sampler2D ssaoBuffer;
+
+uniform float threshFine;
+uniform float threshCoarse;
+
+uniform bool ssao;
+uniform bool lighting;
+uniform bool withColor;
 
 uniform vec2 clip;
 uniform vec2 winSize;
 
 varying vec3 posES;
-
-float sobel() {
-    float a,b,c,d,e,f,g,h,x;
-    a = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, 1), 0).r;
-    b = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(0, 1), 0).r;
-    c = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(1, 1), 0).r;
-    d = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, 0), 0).r;
-    e = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(1, 0), 0).r;
-    f = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, -1), 0).r;
-    g = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(0, -1), 0).r;
-    h = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(1, -1), 0).r;
-    float sobelX = -a+c-2.0*d+2.0*e-f+h;
-    float sobelY = -a-2.0*b-c+f+2.0*g+h;
-    return sqrt(sobelX*sobelX+sobelY*sobelY);
-	//appx: return abs(sobelX)+abs(sobelY);
-}
-
-vec3 sobelNormal() {
-    vec3 a,b,c,d,e,f,g,h,x;
-    a = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, 1), 0).rgb;
-    b = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(0, 1), 0).rgb;
-    c = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(1, 1), 0).rgb;
-    d = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, 0), 0).rgb;
-    e = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(1, 0), 0).rgb;
-    f = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, -1), 0).rgb;
-    g = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(0, -1), 0).rgb;
-    h = texelFetch2D(normalBuff, ivec2(gl_FragCoord.xy)+ivec2(1, -1), 0).rgb;
-    vec3 sobelX = -a+c-2.0*d+2.0*e-f+h;
-    vec3 sobelY = -a-2.0*b-c+f+2.0*g+h;
-    //return sqrt(sobelX*sobelX+sobelY*sobelY);
-	return abs(sobelX)+abs(sobelY);
-}
-
-float getScaleFactor(float val) {
-    float s = scale*0.1;
-    float t = threshold;
-    vec4 x = vec4(0.0, (t/4.0)*(1.0+2.0*s), t*0.5, 1.0);
-    
-    float p00 = 0.0;
-    float p11 = (t/4.0)*(1.0-2.0*s);
-    float p22 = t*0.5;
-    float p33 = 1.0;
-    
-    // Use Neville-Aitken algorithm to interpolate
-    
-    float p01 = ((x[1]-val)*p00+(val-x[0])*p11)/(x[1]-x[0]);
-    float p12 = ((x[2]-val)*p11+(val-x[1])*p22)/(x[2]-x[1]);
-    float p23 = ((x[3]-val)*p22+(val-x[2])*p33)/(x[3]-x[2]);
-    
-    float p02 = ((x[2]-val)*p01+(val-x[0])*p12)/(x[2]-x[0]);
-    float p13 = ((x[3]-val)*p12+(val-x[1])*p23)/(x[3]-x[1]);
-    
-    float p03 = ((x[3]-val)*p02+(val-x[0])*p13)/(x[3]-x[0]);
-
-    return p03;
+                      
+float GetGradientDilation() {
+    float max = 0.0;
+    float vals[9];
+    vals[0] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(0, 1), 0).r;
+    vals[1] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(-1, 0), 0).r;
+    vals[2] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(1, 0), 0).r;
+    vals[3] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(0, -1), 0).r;
+    vals[4] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy), 0).r;
+    vals[5] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(-1, 1), 0).r;
+    vals[6] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(1, -1), 0).r;
+    vals[7] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(-1, -1), 0).r;
+    vals[8] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(1, 1), 0).r;
+    for(int i = 0; i < 9; i++) {
+        if(vals[i] > max) {
+            max = vals[i];
+        }
+    }
+    return max;    
 }
 
 void main(void) {
     
-    vec4 color  = texture2D(colorBuff, gl_TexCoord[0].st);
-	
-	float diff = 1.0 - (textureLod(depthBuff, gl_TexCoord[0].st, 3.0f).r - 
-		textureLod(depthBuff, gl_TexCoord[0].st, 0.0f).r);
+    vec4 color;
+    if(withColor) {
+        color = texture2D(colorBuffer, gl_TexCoord[0].st);
+    }
+    else {
+        color = vec4(vec3(1.0, 1.0, 1.0), texture2D(colorBuffer, gl_TexCoord[0].st).a);
+    }
     
-    vec4 contour;
-    if(conMode == 0) { // Use depth map for contour
-        float grad = clamp(sobel(), 0.0, 1.0);
-		float val;
-		if(grad > threshold) {
-			val = pow(grad, scale);
-		}
-        //contour = vec4(vec3(1.0-val)*diff, color.a);
-		contour = vec4(vec3(1.0-val), color.a);
-    }
-    else if(conMode == 1){ // Use normal map for contour
-        vec3 gradNorm = sobelNormal();
-        float max = max(gradNorm.x, max(gradNorm.y, gradNorm.z));
-		contour = vec4(vec3(1.0-max), 1.0);
-    }   
+    /// Calculate contour lines ///
+    vec4 colorLinesFine, colorLinesCoarse;
+    // Calculate coarse lines
+    if(clamp(GetGradientDilation(), 0.0, 1.0) > threshCoarse)
+        colorLinesCoarse = vec4(0.0, 0.0, 0.0, 1.0);
+    else
+        colorLinesCoarse = vec4(0.0, 0.0, 0.0, 0.0);
+    // Calcultae fine lines
+    if(clamp(texture2D(gradientBuffer, gl_TexCoord[0].st).r, 0.0, 1.0) > threshFine)
+        colorLinesFine = vec4(0.0, 0.0, 0.0, 1.0);
+    else
+        colorLinesFine = vec4(0.0, 0.0, 0.0, 0.0);
+    // Blend
+    vec3 colorLines = colorLinesFine.rgb*(1.0-colorLinesCoarse.a)
+        + colorLinesCoarse.rgb*colorLinesCoarse.a;
+    float alphaLines = colorLinesFine.a*(1.0-colorLinesCoarse.a)
+        + colorLinesCoarse.a*colorLinesCoarse.a;
     
-    // Contour + color
-    if(renderMode == 0) { 
-        gl_FragColor = color*contour;
+    /// Quantify local lighting if needed ///
+    if(lighting) {
+        float intensity;
+        vec3 normal = normalize(texture2D(normalBuffer, gl_TexCoord[0].st).xyz);
+        vec3 lightDir = normalize(vec3(gl_LightSource[0].position));
+        intensity = dot(lightDir, normal);
+        if (intensity > 0.95)
+            color = vec4(color.rgb+vec3(0.5, 0.5, 0.5), color.a);
+        else if (intensity > 0.5)
+            color = vec4(color.rgb*0.95, color.a);
+        else if (intensity > 0.25)
+            color = vec4(color.rgb*0.5, color.a);
+        else
+            color = vec4(color.rgb*0.3, color.a);
     }
-    // Contour
-    else if(renderMode == 1) {
-        gl_FragColor = contour;
+
+    /// Quantify ssao value if needed ///
+    if(ssao) { 
+        float ssaoVal = 0.0;
+        vec4 color_ssao = vec4(1.0, 1.0, 1.0, 1.0);
+        ssaoVal = textureLod(ssaoBuffer, gl_TexCoord[0].st, 2.0).r; 
+        if(ssaoVal > 0.75)
+            color_ssao = vec4(1.0, 1.0, 1.0, color.a);
+        else if(ssaoVal > 0.5)
+            color_ssao = vec4(0.75, 0.75, 0.75, color.a);
+        else if (ssaoVal > 0.25)
+            color_ssao = vec4(0.5, 0.5, 0.5, color.a);
+        else
+            color_ssao = vec4(0.25, 0.25, 0.25, color.a);
+        color.rgb = color.rgb*color_ssao.rgb;
     }
-    // Depth
-    else if(renderMode == 2) {
-        //gl_FragColor = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)/4, 2);
-		gl_FragColor = vec4(vec3(diff), 1.0);
-    }
-    // Normal
-    else if(renderMode == 3) { 
-        vec3 normal = normalize(texture2D(normalBuff, gl_TexCoord[0].st).xyz);
-        gl_FragColor = vec4(normal, color.a);
-    }
-    // Color
-    else if(renderMode == 4) { 
-        gl_FragColor = color;
-    }
+    
+    /// Blend it all together ///
+    gl_FragColor = vec4(color.rgb*(1-alphaLines)+ colorLines*alphaLines, 
+        alphaLines+color.a);
 }
             -->
             </snippet>

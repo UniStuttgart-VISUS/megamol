@@ -1,12 +1,12 @@
 /*
- * ContourRendererDeferred.h
+ * ToonRendererDeferred.h
  *
  * Copyright (C) 2011 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMPROTEINPLUGIN_CONTOURRENDERERDEFERRED_H_INCLUDED
-#define MMPROTEINPLUGIN_CONTOURRENDERERDEFERRED_H_INCLUDED
+#ifndef MMPROTEINPLUGIN_TOONRENDERERDEFERRED_H_INCLUDED
+#define MMPROTEINPLUGIN_TOONRENDERERDEFERRED_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -21,7 +21,7 @@ namespace protein {
     /**
      * Render module which implements screen space rendering of contour lines
      */
-    class ContourRendererDeferred : public megamol::core::view::AbstractRendererDeferred3D {
+    class ToonRendererDeferred : public megamol::core::view::AbstractRendererDeferred3D {
     public:
 
          /* Answer the name of this module.
@@ -29,7 +29,7 @@ namespace protein {
           * @return The name of this module.
           */
          static const char *ClassName(void) {
-             return "ContourRendererDeferred";
+             return "ToonRendererDeferred";
          }
 
          /**
@@ -57,10 +57,10 @@ namespace protein {
          }
 
         /** Ctor. */
-        ContourRendererDeferred(void);
+        ToonRendererDeferred(void);
 
         /** Dtor. */
-        virtual ~ContourRendererDeferred(void);
+        virtual ~ToonRendererDeferred(void);
 
     protected:
 
@@ -123,11 +123,25 @@ namespace protein {
          */
         bool updateParams();
 
-        /** Parameter slot for the render mode */
-        megamol::core::param::ParamSlot renderModeParam;
-        megamol::core::param::ParamSlot thresholdParam;
-        megamol::core::param::ParamSlot scaleParam;
-        megamol::core::param::ParamSlot conModeParam;
+        /**
+         * Create a random texture for the vector rotation.
+         */
+        bool createRandomRotSampler();
+
+        float getRandomFloat(float min, float max, unsigned int prec);
+        bool createRandomKernel(UINT size);
+
+        /** Threshold for fine lines */
+        megamol::core::param::ParamSlot threshFineLinesParam;
+        /** Threshold for coarse lines */
+        megamol::core::param::ParamSlot threshCoarseLinesParam;
+        /** SSAO params */
+        megamol::core::param::ParamSlot ssaoParam;
+        megamol::core::param::ParamSlot ssaoRadiusParam;
+        /** Param to toggle local lighting */
+        megamol::core::param::ParamSlot lightingParam;
+        /** Param to toggle coloring */
+        megamol::core::param::ParamSlot colorParam;
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)
@@ -135,14 +149,20 @@ namespace protein {
 
         /** The renderers frame buffer object */
         GLuint fbo;
-        GLuint colorBuff;
-        GLuint normalBuff;
-        GLuint depthBuff;
+        GLuint colorBuffer;
+        GLuint normalBuffer;
+        GLuint depthBuffer;
+        GLuint gradientBuffer;
+        GLuint ssaoBuffer;
+        GLuint rotationSampler;
+        GLuint randomKernel;
         int widthFBO;
         int heightFBO;
 
         /** The contour shader */
-        vislib::graphics::gl::GLSLShader contourShader;
+        vislib::graphics::gl::GLSLShader sobelShader;
+        vislib::graphics::gl::GLSLShader ssaoShader;
+        vislib::graphics::gl::GLSLShader toonShader;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)
@@ -153,5 +173,5 @@ namespace protein {
 } // end namespace protein
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_CONTOURRENDERERDEFERRED_H_INCLUDED
+#endif // MMPROTEINPLUGIN_TOONRENDERERDEFERRED_H_INCLUDED
 
