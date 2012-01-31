@@ -105,7 +105,7 @@ bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, SIZE_T si
         static_cast<vislib::CharTraitsA::Size>(p2 - p1)).PeekBuffer()));
 
     if ((cd[0] != 'p') && (cd[0] != 'P')) return false; // wrong magic number
-    if ((cd[1] != '3') && (cd[1] != '6')) return false; // wrong magic number
+    if ((cd[1] != '3') && (cd[1] != '6') && (cd[1] != 'F')) return false; // wrong magic number
     if (!vislib::CharTraitsA::IsSpace(cd[2])) return false;
         // magic number not terminated properly
 
@@ -139,6 +139,25 @@ bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, SIZE_T si
                         static_cast<float>(img.PeekDataAs<BYTE>()[i]) * f);
                 }
             }
+
+            return true;
+
+        } else if (cd[1] == 'F') {
+            // float
+            p2++;
+            if (p2 + w * h * 3 * sizeof(float) > size) return false; // out of data
+
+            img.CreateImage(w, h, 3, BitmapImage::CHANNELTYPE_FLOAT, NULL);
+            img.SetChannelLabel(0, BitmapImage::CHANNEL_RED);
+            img.SetChannelLabel(1, BitmapImage::CHANNEL_GREEN);
+            img.SetChannelLabel(2, BitmapImage::CHANNEL_BLUE);
+            float *fd = img.PeekDataAs<float>();
+            const float *buf = reinterpret_cast<const float*>(&cd[p2]);
+
+            memcpy(fd, buf, sizeof(float) * 3 * w * h);
+            //for (unsigned int i = 0; i < 3 * w * h; i++) {
+            //    fd[i] = buf[i]; // normalization seems unnecessary
+            //}
 
             return true;
 
