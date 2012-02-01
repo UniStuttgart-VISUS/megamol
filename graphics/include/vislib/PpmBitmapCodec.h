@@ -29,6 +29,12 @@ namespace graphics {
      * development purpose. This codec implements all functions, however, it is
      * not recommended to use this file format in production systems.
      *
+     * Includes experimental support for float PPMs (magic: PF/Pf). It is unclear
+     * how much of the float format can be seen as standardized, however
+     * floatmaps are assumed to only come in binary flavors (asBinary is ignored).
+     * Exceptions are thrown when trying to load/save floatmaps on systems
+     * with exotic byte order (e.g. middle endian).
+     *
      * This code might be used as reference when implementing additional
      * bitmap codec classes.
      */
@@ -135,7 +141,7 @@ namespace graphics {
         virtual bool loadFromMemory(const void *mem, SIZE_T size);
 
         /**
-         * Answer whether or not 'loadFromMemory' has been implement.
+         * Answer whether or not 'loadFromMemory' has been implemented.
          *
          * @return true
          */
@@ -145,7 +151,7 @@ namespace graphics {
          * Saves the image to a memory block.
          *
          * You must set 'Image' to a valid BitmapImage object before calling
-         * this method.
+         * this method. Floatmaps are always saved as binary.
          *
          * @param outmem The memory block to receive the image data. The image
          *               data will replace all data in the memory block.
@@ -155,7 +161,7 @@ namespace graphics {
         virtual bool saveToMemory(vislib::RawStorage& outmem) const;
 
         /**
-         * Answer whether or not 'saveToMemory' has been implement.
+         * Answer whether or not 'saveToMemory' has been implemented.
          *
          * @return true
          */

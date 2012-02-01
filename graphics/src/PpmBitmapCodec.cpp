@@ -11,6 +11,8 @@
 #include "vislib/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/mathfunctions.h"
+#include "vislib/SystemInformation.h"
+#include "vislib/MissingImplementationException.h"
 
 
 /*
@@ -38,7 +40,7 @@ int vislib::graphics::PpmBitmapCodec::AutoDetect(const void *mem,
     if (size < 3) return -1; // insufficient preview data
     const char *data = static_cast<const char*>(mem);
     if ((data[0] != 'p') && (data[0] != 'P')) return 0; // wrong magic number
-    if ((data[1] != '3') && (data[1] != '6')) return 0; // wrong magic number
+    if ((data[1] != '3') && (data[1] != '6') && (data[1] != 'F') && (data[1] != 'f')) return 0; // wrong magic number
     return vislib::CharTraitsA::IsSpace(data[2])
         ? 1 // correctly terminated magic number
         : 0; // magic number not terminated
@@ -57,7 +59,7 @@ bool vislib::graphics::PpmBitmapCodec::CanAutoDetect(void) const {
  * vislib::graphics::PpmBitmapCodec::FileNameExtsA
  */
 const char* vislib::graphics::PpmBitmapCodec::FileNameExtsA(void) const {
-    return ".ppm";
+    return ".ppm;.pfm";
 }
 
 
@@ -65,7 +67,7 @@ const char* vislib::graphics::PpmBitmapCodec::FileNameExtsA(void) const {
  * vislib::graphics::PpmBitmapCodec::FileNameExtsW
  */
 const wchar_t* vislib::graphics::PpmBitmapCodec::FileNameExtsW(void) const {
-    return L".ppm";
+    return L".ppm;.pfm";
 }
 
 
@@ -73,7 +75,7 @@ const wchar_t* vislib::graphics::PpmBitmapCodec::FileNameExtsW(void) const {
  * vislib::graphics::PpmBitmapCodec::NameA
  */
 const char * vislib::graphics::PpmBitmapCodec::NameA(void) const {
-    return "Portable Pixmap";
+    return "Portable Pixmap / Floatmap";
 }
 
 
@@ -81,7 +83,7 @@ const char * vislib::graphics::PpmBitmapCodec::NameA(void) const {
  * vislib::graphics::PpmBitmapCodec::NameW
  */
 const wchar_t * vislib::graphics::PpmBitmapCodec::NameW(void) const {
-    return L"Portable Pixmap";
+    return L"Portable Pixmap / Floatmap";
 }
 
 
@@ -105,7 +107,7 @@ bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, SIZE_T si
         static_cast<vislib::CharTraitsA::Size>(p2 - p1)).PeekBuffer()));
 
     if ((cd[0] != 'p') && (cd[0] != 'P')) return false; // wrong magic number
-    if ((cd[1] != '3') && (cd[1] != '6') && (cd[1] != 'F')) return false; // wrong magic number
+    if ((cd[1] != '3') && (cd[1] != '6') && (cd[1] != 'F') && (cd[1] != 'f')) return false; // wrong magic number
     if (!vislib::CharTraitsA::IsSpace(cd[2])) return false;
         // magic number not terminated properly
 
@@ -142,22 +144,61 @@ bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, SIZE_T si
 
             return true;
 
-        } else if (cd[1] == 'F') {
+        } else if (cd[1] == 'F' || cd[1] == 'f') {
             // float
-            p2++;
-            if (p2 + w * h * 3 * sizeof(float) > size) return false; // out of data
 
-            img.CreateImage(w, h, 3, BitmapImage::CHANNELTYPE_FLOAT, NULL);
-            img.SetChannelLabel(0, BitmapImage::CHANNEL_RED);
-            img.SetChannelLabel(1, BitmapImage::CHANNEL_GREEN);
-            img.SetChannelLabel(2, BitmapImage::CHANNEL_BLUE);
+            p2 = 2;
+            double endian;
+            _LOCAL_PPM_SIFT(w, unsigned int, ParseInt)
+            _LOCAL_PPM_SIFT(h, unsigned int, ParseInt)
+            _LOCAL_PPM_SIFT(endian, double, ParseDouble)
+
+            p2++;
+
+            if (cd[1] == 'F') {
+                if (p2 + w * h * 3 * sizeof(float) > size) return false; // out of data
+
+                img.CreateImage(w, h, 3, BitmapImage::CHANNELTYPE_FLOAT, NULL);
+                img.SetChannelLabel(0, BitmapImage::CHANNEL_RED);
+                img.SetChannelLabel(1, BitmapImage::CHANNEL_GREEN);
+                img.SetChannelLabel(2, BitmapImage::CHANNEL_BLUE);
+            } else {
+                if (p2 + w * h * sizeof(float) > size) return false; // out of data
+
+                img.CreateImage(w, h, 1, BitmapImage::CHANNELTYPE_FLOAT, NULL);
+                img.SetChannelLabel(0, BitmapImage::CHANNEL_GRAY);
+            }
             float *fd = img.PeekDataAs<float>();
             const float *buf = reinterpret_cast<const float*>(&cd[p2]);
 
-            memcpy(fd, buf, sizeof(float) * 3 * w * h);
-            //for (unsigned int i = 0; i < 3 * w * h; i++) {
-            //    fd[i] = buf[i]; // normalization seems unnecessary
-            //}
+            sys::SystemInformation::Endianness machineEnd =
+                sys::SystemInformation::SystemEndianness();
+            // endian <= 0.0f means little endian.
+            sys::SystemInformation::Endianness fileEnd = (endian <= 0.0f) 
+                ? sys::SystemInformation::ENDIANNESS_LITTLE_ENDIAN
+                : sys::SystemInformation::ENDIANNESS_BIG_ENDIAN;
+            
+            if (machineEnd != sys::SystemInformation::ENDIANNESS_LITTLE_ENDIAN
+                && machineEnd != sys::SystemInformation::ENDIANNESS_BIG_ENDIAN) {
+                    throw new vislib::MissingImplementationException(
+                        "Your machine is too exotic for this implementation",
+                        __FILE__, __LINE__);
+            }
+            if (fileEnd == machineEnd) {
+                // endianness agrees with this machine
+                memcpy(fd, buf, sizeof(float) * img.GetChannelCount() * w * h);
+            } else {
+                const UINT8 *srcBytes;
+                UINT8 *destBytes;
+                for (unsigned int i = 0; i < img.GetChannelCount() * w * h; i++) {
+                    srcBytes = reinterpret_cast<const UINT8*>(&buf[i]);
+                    destBytes = reinterpret_cast<UINT8*>(&fd[i]);
+                    destBytes[0] = srcBytes[3];
+                    destBytes[1] = srcBytes[2];
+                    destBytes[2] = srcBytes[1];
+                    destBytes[3] = srcBytes[0];
+                }
+            }
 
             return true;
 
@@ -277,47 +318,33 @@ bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
         wd = img.PeekDataAs<WORD>();
 
     } else if (img.GetChannelType() == BitmapImage::CHANNELTYPE_FLOAT) {
-        // floats require a complete different implementation
-        maxVal = 65535; // store floats a words (not too good, but okey)
-        float maxFVal = 0.0f;
-        float fac;
-        const float *fd = img.PeekDataAs<float>();
+        // write a PFM
 
-        for (unsigned int i = 0; i < cc * imgSize; i++) {
-            if (fd[i] > maxFVal) maxFVal = fd[i];
+        sys::SystemInformation::Endianness machineEnd =
+            sys::SystemInformation::SystemEndianness();
+
+        if (img.GetChannelCount() != 1 && img.GetChannelCount() != 3) {
+            throw new vislib::MissingImplementationException(
+                "This implementation can only cope with RGB and greyscale images",
+                __FILE__, __LINE__);
+        }
+        if (machineEnd != sys::SystemInformation::ENDIANNESS_BIG_ENDIAN
+            && machineEnd != sys::SystemInformation::ENDIANNESS_LITTLE_ENDIAN) {
+                throw new vislib::MissingImplementationException(
+                    "Your machine is too exotic for this implementation",
+                    __FILE__, __LINE__);
         }
 
         vislib::StringA data;
         vislib::StringA tmp;
-        unsigned int ppl; // pixel per line
-        data.Format("P3\n%u %u\n%u\n", img.Width(), img.Height(), maxVal);
-        tmp.Format("%u %u %u ", maxVal, maxVal, maxVal);
-        ppl = 70 / tmp.Length();
-        if (ppl < 1) ppl = 1;
+        data.Format("P%c\n%u %u\n%f\n", img.GetChannelCount() == 1 ? 'f' : 'F', img.Width(), img.Height(), 
+            machineEnd == sys::SystemInformation::ENDIANNESS_BIG_ENDIAN ? 1.0f : -1.0f);
 
-        if (vislib::math::IsEqual(maxFVal, 0.0f)) {
-            for (unsigned int i = 0; i < imgSize; i++) {
-                tmp.Format("0 0 0%c", (((i + 1) % ppl) == 0) ? '\n' : ' ');
-                data += tmp; // slow!
-            }
-        } else {
-            fac = static_cast<float>(maxVal) / maxFVal;
-            for (unsigned int i = 0; i < imgSize; i++) {
-                tmp.Format("%u %u %u%c",
-                    (cr != UINT_MAX) ? static_cast<unsigned int>(
-                        vislib::math::Max(fd[i * cc + cr] * fac, 0.0f)) : 0,
-                    (cg != UINT_MAX) ? static_cast<unsigned int>(
-                        vislib::math::Max(fd[i * cc + cg] * fac, 0.0f)) : 0,
-                    (cb != UINT_MAX) ? static_cast<unsigned int>(
-                        vislib::math::Max(fd[i * cc + cb] * fac, 0.0f)) : 0,
-                    (((i + 1) % ppl) == 0) ? '\n' : ' ');
-                data += tmp; // slow!
-            }
-        }
-
-        SIZE_T bodyLen = data.Length();
+        SIZE_T imgLen = img.GetChannelCount() * img.Width() * img.Height() * sizeof(float);
+        SIZE_T bodyLen = data.Length() + imgLen;
         outmem.EnforceSize(bodyLen);
-        memcpy(outmem, data.PeekBuffer(), bodyLen);
+        memcpy(outmem, data.PeekBuffer(), data.Length());
+        memcpy(outmem.At(data.Length()), img.PeekDataAs<UINT8>(), imgLen);
 
         return true;
     }

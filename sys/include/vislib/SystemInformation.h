@@ -40,6 +40,14 @@ namespace sys {
             OSTYPE_LINUX
         };
 
+        /** possible values of machine byte order / endianness */
+        enum Endianness {
+            ENDIANNESS_BIG_ENDIAN,
+            ENDIANNESS_LITTLE_ENDIAN,
+            ENDIANNESS_MIDDLE_ENDIAN,
+            ENDIANNESS_UNKNOWN
+        };
+
         /** This dimension defines a monitor size. */
         typedef vislib::math::Rectangle<long> MonitorRect;
 
@@ -49,7 +57,7 @@ namespace sys {
         /**
          * Answer the the granularity of page protection and 
          * commitment. Until we know better on Linux this is equivalent
-		 * to PageSize()
+         * to PageSize()
          *
          * @return The allocation granularity in bytes.
          *
@@ -57,11 +65,11 @@ namespace sys {
          *                         (Linux only).
          */
 #ifdef _WIN32
-		static DWORD AllocationGranularity(void);
+        static DWORD AllocationGranularity(void);
 #else /* _WIN32 */
-		static inline DWORD AllocationGranularity(void) {
-			return PageSize();
-		}
+        static inline DWORD AllocationGranularity(void) {
+            return PageSize();
+        }
 #endif /* _WIN32 */
 
         /** 
@@ -195,6 +203,38 @@ namespace sys {
          * @return The word size of the current vislib application.
          */
         static unsigned int SelfWordSize(void);
+
+        /**
+         * Returns the endianness of the system running this vislib application.
+         *
+         * @return The endianness of the machine.
+         */
+        inline static Endianness SystemEndianness(void) {
+            UINT32 endianTestInt = 0x12345678;
+            UINT8 endianTestBytes[4];
+            ::memcpy(endianTestBytes, &endianTestInt, 4);
+            bool machineBigEndian = ((endianTestBytes[0] == 0x12)
+                && (endianTestBytes[1] == 0x34)
+                && (endianTestBytes[2] == 0x56)
+                && (endianTestBytes[3] == 0x78));
+            bool machineMiddleEndian = ((endianTestBytes[0] == 0x34)
+                && (endianTestBytes[1] == 0x12)
+                && (endianTestBytes[2] == 0x78)
+                && (endianTestBytes[3] == 0x56));
+            bool machineLittleEndian = ((endianTestBytes[0] == 0x78)
+                && (endianTestBytes[1] == 0x56)
+                && (endianTestBytes[2] == 0x34)
+                && (endianTestBytes[3] == 0x12));
+            if (machineBigEndian) {
+                return ENDIANNESS_BIG_ENDIAN;
+            } else if (machineLittleEndian) {
+                return ENDIANNESS_LITTLE_ENDIAN;
+            } else if (machineMiddleEndian) {
+                return ENDIANNESS_MIDDLE_ENDIAN;
+            } else {
+                return ENDIANNESS_UNKNOWN;
+            }
+        }
 
         /**
          * Returns the type of the operating system currently running this 
