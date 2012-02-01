@@ -1172,7 +1172,7 @@ void moldyn::IMDAtomDataSource::assertData(void) {
     UINT32 endianTestInt = 0x12345678;
     UINT8 endianTestBytes[4];
     ::memcpy(endianTestBytes, &endianTestInt, 4);
-    bool machineBigEndian = ((endianTestBytes[0] == 0x78)
+    bool machineLittleEndian = ((endianTestBytes[0] == 0x78)
         && (endianTestBytes[1] == 0x56)
         && (endianTestBytes[2] == 0x34)
         && (endianTestBytes[3] == 0x12));
@@ -1196,22 +1196,22 @@ void moldyn::IMDAtomDataSource::assertData(void) {
             retval = this->readData<imdinternal::AtomReaderASCII>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir);
             break;
         case 'B': // binary, big endian, double
-            retval = (machineBigEndian)
+            retval = (machineLittleEndian)
                 ? this->readData<imdinternal::AtomReaderDoubleSwitched>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir)
                 : this->readData<imdinternal::AtomReaderDouble>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir);
             break;
         case 'b': // binary, big endian, float
-            retval = (machineBigEndian)
+            retval = (machineLittleEndian)
                 ? this->readData<imdinternal::AtomReaderFloatSwitched>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir)
                 : this->readData<imdinternal::AtomReaderFloat>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir);
             break;
         case 'L': // binary, little endian, double
-            retval = (machineBigEndian)
+            retval = (machineLittleEndian)
                 ? this->readData<imdinternal::AtomReaderDouble>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir)
                 : this->readData<imdinternal::AtomReaderDoubleSwitched>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir);
             break;
         case 'l': // binary, little endian float
-            retval = (machineBigEndian)
+            retval = (machineLittleEndian)
                 ? this->readData<imdinternal::AtomReaderFloat>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir)
                 : this->readData<imdinternal::AtomReaderFloatSwitched>(file, header, posWriter, colWriter, dirWriter, loadDir, splitLoadDir);
             break;
