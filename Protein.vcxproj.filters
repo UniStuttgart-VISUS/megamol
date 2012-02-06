@@ -232,7 +232,7 @@
     <ClCompile Include="SSAORendererDeferred.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ContourRendererDeferred.cpp">
+    <ClCompile Include="ToonRendererDeferred.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -453,7 +453,7 @@
     <ClInclude Include="SSAORendererDeferred.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ContourRendererDeferred.h">
+    <ClInclude Include="ToonRendererDeferred.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
