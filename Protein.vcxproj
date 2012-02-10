@@ -77,8 +77,9 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.0.props')">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.0.props" />
+  <ImportGroup Label="ExtensionSettings" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.0.props')" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.1.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -210,7 +211,7 @@
       <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <IgnoreSpecificDefaultLibraries>glut32.lib</IgnoreSpecificDefaultLibraries>
     </Link>
@@ -250,7 +251,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
       <IgnoreSpecificDefaultLibraries>glut32.lib</IgnoreSpecificDefaultLibraries>
     </Link>
@@ -286,7 +287,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
@@ -326,7 +327,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX64</TargetMachine>
@@ -364,7 +365,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <IgnoreSpecificDefaultLibraries>glut32.lib</IgnoreSpecificDefaultLibraries>
     </Link>
@@ -404,7 +405,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
       <IgnoreSpecificDefaultLibraries>glut32.lib</IgnoreSpecificDefaultLibraries>
     </Link>
@@ -442,7 +443,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
@@ -482,7 +483,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX64</TargetMachine>
@@ -806,7 +807,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </CudaCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.0.targets')">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.0.targets" />
+  <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.0.targets')" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.1.targets" />
   </ImportGroup>
 </Project>
