@@ -138,8 +138,8 @@ namespace protein {
         /** SSAO params */
         megamol::core::param::ParamSlot ssaoParam;
         megamol::core::param::ParamSlot ssaoRadiusParam;
-        /** Param to toggle local lighting */
-        megamol::core::param::ParamSlot lightingParam;
+        /** Param to change local illumination */
+        megamol::core::param::ParamSlot illuminationParam;
         /** Param to toggle coloring */
         megamol::core::param::ParamSlot colorParam;
 
