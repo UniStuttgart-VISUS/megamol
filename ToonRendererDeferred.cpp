@@ -31,7 +31,7 @@ ToonRendererDeferred::ToonRendererDeferred(void)
     threshCoarseLinesParam("linesCoarse", "Threshold for coarse silhouette."),
     ssaoParam("toggleSSAO", "Toggle Screen Space Ambient Occlusion."),
     ssaoRadiusParam("ssaoRadius", "Radius for SSAO samples."),
-    lightingParam("toggleLocalLighting", "Toggle local lighting."),
+    illuminationParam("illumination", "Change local lighting."),
     colorParam("toggleColor", "Toggle coloring."),
     widthFBO(-1), heightFBO(-1) {
 
@@ -48,8 +48,13 @@ ToonRendererDeferred::ToonRendererDeferred(void)
     this->MakeSlotAvailable(&this->ssaoParam);
 
     // Toggle local lighting
-    this->lightingParam << new megamol::core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->lightingParam);
+    megamol::core::param::EnumParam *illuParam =
+        new megamol::core::param::EnumParam(0);
+    illuParam->SetTypePair(0, "None");
+    illuParam->SetTypePair(1, "Phong-Shading");
+    illuParam->SetTypePair(2, "Toon-Shading");
+    this->illuminationParam << illuParam;
+    this->MakeSlotAvailable(&illuminationParam);
 
     // Toggle coloring
     this->colorParam << new megamol::core::param::BoolParam(false);
@@ -404,7 +409,7 @@ bool ToonRendererDeferred::Render(megamol::core::Call& call) {
     glUniform1i(this->toonShader.ParameterLocation("ssao"),
         this->ssaoParam.Param<core::param::BoolParam>()->Value());
     glUniform1i(this->toonShader.ParameterLocation("lighting"),
-        this->lightingParam.Param<core::param::BoolParam>()->Value());
+        this->illuminationParam.Param<core::param::EnumParam>()->Value());
     glUniform1i(this->toonShader.ParameterLocation("withColor"),
         this->colorParam.Param<core::param::BoolParam>()->Value());
 
