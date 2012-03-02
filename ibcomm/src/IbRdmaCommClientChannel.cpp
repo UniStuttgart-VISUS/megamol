@@ -16,6 +16,19 @@
 
 
 
+/*
+ * vislib::net::ib::IbRdmaCommClientChannel::Create
+ */
+vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
+vislib::net::ib::IbRdmaCommClientChannel::Create(void) {
+    SmartRef<IbRdmaCommClientChannel> retval(new IbRdmaCommClientChannel(), 
+        false);
+
+    retval->createBuffers(1024, 1024);
+
+    return retval;
+}
+        
 
 /*
  * vislib::net::ib::IbRdmaCommClientChannel::Close
@@ -137,7 +150,42 @@ vislib::net::ib::IbRdmaCommClientChannel::GetRemoteEndPoint(void) const {
 SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData, 
         const SIZE_T cntBytes, const UINT timeout, const bool forceReceive) {
     VLSTACKTRACE("IbRdmaCommClientChannel::Receive", __FILE__, __LINE__);
-    throw 1;    // TODO
+
+    int result = 0;                     // RDMA API results.
+    struct ibv_wc wc;                   // Receives the completion parameters.
+    BYTE *out = static_cast<BYTE *>(outData);   // Cursor through output while copying.
+    SIZE_T totalReceived = 0;           // # of bytes totally received.
+    SIZE_T lastReceived = 0;            // # of bytes received in last op.
+
+    do {
+        lastReceived = (cntBytes < this->cntBufRecv) 
+            ? cntBytes : this->cntBufRecv;
+            
+        result = ::rdma_post_recv(this->id, NULL, this->bufRecv, 
+            lastReceived, this->mrRecv);
+        if (result != 0) {
+            throw IbRdmaException("rdma_post_recv", errno, __FILE__, __LINE__);
+        }
+
+        result = ::rdma_get_recv_comp(this->id, &wc);
+        if (result != 0) {
+            throw IbRdmaException("rdma_get_recv_comp", errno, __FILE__, __LINE__);
+        }
+
+        ::memcpy(out, this->bufRecv, lastReceived);
+
+        totalReceived += lastReceived;
+        out += lastReceived;
+
+    } while (forceReceive && (totalReceived < cntBytes) && (lastReceived > 0));
+
+    // TODO: Kann das das IB auch?!
+    //throw PeerDisconnectedException(
+    //    PeerDisconnectedException::FormatMessageForLocalEndpoint(
+    //    this->socket.GetLocalEndPoint().ToStringW().PeekBuffer()), 
+    //    __FILE__, __LINE__);
+
+    return totalReceived;
 }
 
 
@@ -148,7 +196,35 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
 SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data, 
         const SIZE_T cntBytes, const UINT timeout,  const bool forceSend) {
     VLSTACKTRACE("IbRdmaCommClientChannel::Send", __FILE__, __LINE__);
-    throw 1;    // TODO
+
+    int result = 0;                     // RDMA API results.
+    struct ibv_wc wc;                   // Receives the completion parameters.
+    const BYTE *in = static_cast<const BYTE *>(data); // Cursor through input while copying.
+    SIZE_T totalSent = 0;               // # of bytes totally received.
+    SIZE_T lastSent = 0;                // # of bytes received in last op.
+
+    do {
+        lastSent = (cntBytes < this->cntBufSend) 
+            ? cntBytes : this->cntBufSend;
+
+        ::memcpy(this->bufSend, in, lastSent);
+
+        result = ::ö(this->id, NULL, this->bufSend, 
+            lastSent, this->mrSend, 0);
+        if (result != 0) {
+            throw IbRdmaException("rdma_post_send", errno, __FILE__, __LINE__);
+        }
+
+        result = ::rdma_get_send_comp(this->id, &wc);
+        if (result != 0) {
+            throw IbRdmaException("rdma_get_send_comp", errno, __FILE__, __LINE__);
+        }
+
+        totalSent += lastSent;
+        in += lastSent;
+
+    } while (forceSend && (totalSent < cntBytes));
+
 }
 
 
@@ -158,12 +234,8 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
 vislib::net::ib::IbRdmaCommClientChannel::IbRdmaCommClientChannel(void) 
         : bufRecv(NULL), bufSend(NULL), cntBufRecv(0), cntBufSend(0), id(NULL), 
         mrRecv(NULL), mrSend(NULL) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::IbRdmaCommClientChannel", __FILE__, __LINE__);
-
-    this->cntBufRecv = this->cntBufSend = 1024; // TODO
-
-    this->bufRecv = new BYTE[this->cntBufRecv];
-    this->bufSend = new BYTE[this->cntBufSend];
+    VLSTACKTRACE("IbRdmaCommClientChannel::IbRdmaCommClientChannel", 
+        __FILE__, __LINE__);
 }
 
 
@@ -171,5 +243,24 @@ vislib::net::ib::IbRdmaCommClientChannel::IbRdmaCommClientChannel(void)
  * vislib::net::ib::IbRdmaCommClientChannel::~IbRdmaCommClientChannel
  */
 vislib::net::ib::IbRdmaCommClientChannel::~IbRdmaCommClientChannel(void) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::~IbRdmaCommClientChannel", __FILE__, __LINE__);
+    VLSTACKTRACE("IbRdmaCommClientChannel::~IbRdmaCommClientChannel", 
+        __FILE__, __LINE__);
+    ARY_SAFE_DELETE(this->bufRecv);
+    ARY_SAFE_DELETE(this->bufSend);
 }
+
+
+/*
+ * vislib::net::ib::IbRdmaCommClientChannel::createBuffers
+ */
+void vislib::net::ib::IbRdmaCommClientChannel::createBuffers(
+        const SIZE_T cntBufRecv, const SIZE_T cntBufSend) {
+    VLSTACKTRACE("IbRdmaCommClientChannel::createBuffers", __FILE__, __LINE__);
+    
+    this->cntBufRecv = cntBufRecv;
+    this->cntBufSend = cntBufSend;
+
+    this->bufRecv = new BYTE[this->cntBufRecv];
+    this->bufSend = new BYTE[this->cntBufSend];
+}
+

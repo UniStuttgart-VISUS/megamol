@@ -124,7 +124,8 @@ namespace net {
          *                   underlying layer in case of an error.
          */
         virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
-            const UINT timeout, const bool forceReceive) = 0;
+            const UINT timeout = TIMEOUT_INFINITE, 
+            const bool forceReceive = true) = 0;
 
         /**
          * Sends 'cntBytes' from the location designated by 'data' over the
@@ -148,7 +149,8 @@ namespace net {
          *                   underlying layer in case of an error.
          */
         virtual SIZE_T Send(const void *data, const SIZE_T cntBytes,
-            const UINT timeout, const bool forceSend) = 0;
+            const UINT timeout = TIMEOUT_INFINITE, 
+            const bool forceSend = true) = 0;
 
     protected:
 

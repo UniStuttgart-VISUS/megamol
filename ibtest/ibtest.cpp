@@ -25,6 +25,8 @@ typedef vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> IbChannel;
 typedef vislib::SmartRef<vislib::net::ib::IbRdmaCommServerChannel> IbServerChannel;
 
 
+const char *REFERENCE_DATA = "Hier spricht der Hugo!";
+
 vislib::sys::Event evtServerReady;
 
 
@@ -54,8 +56,13 @@ DWORD Server::Run(void *userData) {
         ::evtServerReady.Set();
 
         std::cout << "Accept..." << std::endl;
-        channel->Accept();
+        SmartRef<AbstractCommClientChannel> client = channel->Accept();
+        //channel->Close();
 
+        char *data = new char[sizeof(REFERENCE_DATA)];
+        client->Receive(data, sizeof(REFERENCE_DATA));
+        std::cout << "Received \"" << data << "\"" << std::endl;
+        delete[] data;
 
         std::cout << "Server leaving..." << std::endl;
         return 0;
@@ -89,6 +96,8 @@ DWORD Client::Run(void *userData) {
 
         std::cout << "Connect..." << std::endl;
         channel->Connect(ep);
+
+        channel->Send(REFERENCE_DATA, sizeof(REFERENCE_DATA));
 
 
         std::cout << "Client leaving..." << std::endl;

@@ -36,9 +36,7 @@ namespace ib {
 
     public:
 
-        static inline SmartRef<IbRdmaCommClientChannel> Create(void) {
-            return SmartRef<IbRdmaCommClientChannel>(new IbRdmaCommClientChannel(), false);
-        }
+        static SmartRef<IbRdmaCommClientChannel> Create(void);
 
         virtual void Close(void);
 
@@ -67,13 +65,16 @@ namespace ib {
         /** Dtor. */
         ~IbRdmaCommClientChannel(void);
 
+        void createBuffers(const SIZE_T cntBufRecv, const SIZE_T cntBufSend);
 
         BYTE *bufRecv;
 
         BYTE *bufSend;
 
+        /** Size of 'bufRecv' in bytes. */
         SIZE_T cntBufRecv;
 
+        /** Size of 'bufSend' in bytes. */
         SIZE_T cntBufSend;
 
         struct rdma_cm_id *id;
@@ -81,8 +82,6 @@ namespace ib {
         struct ibv_mr *mrRecv;
 
         struct ibv_mr *mrSend;
-
-        struct ibv_wc wc;
 
         /** 
          * The server channel must be able to initialise a client channel 

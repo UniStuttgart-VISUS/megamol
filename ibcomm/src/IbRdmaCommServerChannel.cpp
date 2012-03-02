@@ -42,6 +42,8 @@ vislib::net::ib::IbRdmaCommServerChannel::Accept(void) {
         throw IbRdmaException("rdma_get_request", errno, __FILE__, __LINE__);
     }
 
+    retval->createBuffers(1024, 1024);  // TODO
+
     retval->mrRecv = ::rdma_reg_msgs(retval->id, retval->bufRecv, 
         retval->cntBufRecv);
     if (retval->mrRecv == NULL) {
@@ -54,21 +56,21 @@ vislib::net::ib::IbRdmaCommServerChannel::Accept(void) {
         throw IbRdmaException("rdma_reg_msgs", errno, __FILE__, __LINE__);
     }
 
-    result = ::rdma_post_recv(retval->id, NULL, retval->bufRecv, 
-        retval->cntBufRecv, retval->mrRecv);
-    if (result != 0) {
-        throw Exception("TODO rdma_post_recv", __FILE__, __LINE__);
-    }
+    //result = ::rdma_post_recv(retval->id, NULL, retval->bufRecv, 
+    //    retval->cntBufRecv, retval->mrRecv);
+    //if (result != 0) {
+    //    throw Exception("TODO rdma_post_recv", __FILE__, __LINE__);
+    //}
 
     result = ::rdma_accept(retval->id, NULL);
     if (result != 0) {
         throw Exception("TODO rdma_accept", __FILE__, __LINE__);
     }
 
-    result = ::rdma_get_recv_comp(retval->id, &retval->wc);
-    if (result != 0) {
-        throw Exception("TODO rdma_get_recv_comp", __FILE__, __LINE__);
-    }
+    //result = ::rdma_get_recv_comp(retval->id, &retval->wc);
+    //if (result != 0) {
+    //    throw Exception("TODO rdma_get_recv_comp", __FILE__, __LINE__);
+    //}
 
     return retval.DynamicCast<AbstractCommClientChannel>();
 }
