@@ -87,7 +87,7 @@ namespace net {
          * @throws Exception Or derived in case of a communication error.
          */
         inline const SimpleMessage& requestViaMsgBuffer(
-                SmartRef<AbstractCommChannel> channel,
+                SmartRef<AbstractCommClientChannel> channel,
                 const SimpleMessageID requestMsgID, 
                 const void *requestBody, 
                 const unsigned int requestBodySize,
@@ -132,7 +132,7 @@ namespace net {
             VLSTACKTRACE("AbstractSyncMsgUser::requestViaMsgBuffer", __FILE__,
                 __LINE__);
             return this->requestViaMsgBuffer(
-                channel.DynamicCast<vislib::net::AbstractCommChannel>(), 
+                channel.DynamicCast<vislib::net::AbstractCommClientChannel>(), 
                 requestMsgID, requestBody, requestBodySize, timeout);
         }
 
@@ -309,8 +309,31 @@ namespace net {
          *
          * @throws Exception Or derived in case of a communication error.
          */
+        inline const SimpleMessage& receiveViaMsgBuffer(
+                SmartRef<AbstractCommChannel> channel,
+                const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
+            VLSTACKTRACE("AbstractSyncMsgUser::receiveViaMsgBuffer", __FILE__,
+                __LINE__);
+            return this->receiveViaMsgBuffer(
+                channel.DynamicCast<AbstractCommClientChannel>(), timeout);
+        }
+
+        /**
+         * Receive a SimpleMessage into the local message buffer from the given 
+         * 'channel'.
+         *
+         * @param channel The channel to receive the message from
+         * @param timeout A timeout for receiving the message. If the message
+         *                cannot be received in time, the operation will fail
+         *                with an exception.
+         *
+         * @return A reference to the message received. This will be valid 
+         *         until the next message is sent or received.
+         *
+         * @throws Exception Or derived in case of a communication error.
+         */
         const SimpleMessage& receiveViaMsgBuffer(
-            SmartRef<AbstractCommChannel> channel,
+            SmartRef<AbstractCommClientChannel> channel,
             const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE);
 
         /**
@@ -333,7 +356,7 @@ namespace net {
             VLSTACKTRACE("AbstractSyncMsgUser::receiveViaMsgBuffer", __FILE__,
                 __LINE__);
             return this->receiveViaMsgBuffer(
-                channel.DynamicCast<AbstractCommChannel>(), timeout);
+                channel.DynamicCast<AbstractCommClientChannel>(), timeout);
         }
 
         /**
@@ -351,7 +374,34 @@ namespace net {
          *
          * @throws Exception Or derived in case of a communication error.
          */
-        void sendViaMsgBuffer(SmartRef<AbstractCommChannel> channel,
+        inline void sendViaMsgBuffer(SmartRef<AbstractCommChannel> channel,
+                const SimpleMessageID msgID, 
+                const void *body, 
+                const unsigned int bodySize,
+                const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
+            VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, 
+                __LINE__);
+            this->sendViaMsgBuffer(
+                channel.DynamicCast<AbstractCommClientChannel>(),
+                msgID, body, bodySize, timeout);
+        }
+
+        /**
+         * Pack a message with the given ID and body data into the local message
+         * buffer and send it via the given 'channel'.
+         *
+         * @param channel  The communication channel to use for sending.
+         * @param msgID    The ID of the message that will be added in the 
+         *                 message header.
+         * @param body     Pointer to 'bodySize' bytes of message body data.
+         * @param bodySize Size of the body in bytes.
+         * @param timeout  A timeout for sending the message. If the message
+         *                 cannot be send in time, the operation will fail
+         *                 with an exception.
+         *
+         * @throws Exception Or derived in case of a communication error.
+         */
+        void sendViaMsgBuffer(SmartRef<AbstractCommClientChannel> channel,
             const SimpleMessageID msgID, 
             const void *body, 
             const unsigned int bodySize,

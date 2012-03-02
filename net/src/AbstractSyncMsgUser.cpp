@@ -35,7 +35,7 @@ vislib::net::AbstractSyncMsgUser::AbstractSyncMsgUser(void) {
  */
 const vislib::net::SimpleMessage& 
 vislib::net::AbstractSyncMsgUser::receiveViaMsgBuffer(
-        SmartRef<AbstractCommChannel> channel,
+        SmartRef<AbstractCommClientChannel> channel,
         const UINT timeout) {
     VLSTACKTRACE("AbstractSyncMsgUser::receiveViaMsgBuffer", __FILE__, 
         __LINE__);
@@ -57,7 +57,7 @@ vislib::net::AbstractSyncMsgUser::receiveViaMsgBuffer(
  * vislib::net::AbstractSyncMsgUser::sendViaMsgBuffer
  */
 void vislib::net::AbstractSyncMsgUser::sendViaMsgBuffer(
-        SmartRef<AbstractCommChannel> channel,
+        SmartRef<AbstractCommClientChannel> channel,
         const SimpleMessageID msgID, 
         const void *body, 
         const unsigned int bodySize,

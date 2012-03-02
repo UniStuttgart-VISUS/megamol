@@ -9,6 +9,9 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(OfedSdkDir)Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(OfedSdkDir)lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <BuildMacro Include="OfedSdkDir">
