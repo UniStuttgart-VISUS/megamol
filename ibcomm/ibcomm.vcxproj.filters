@@ -21,12 +21,42 @@
     <ClInclude Include="include\vislib\IbvInformation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\vislib\IbvShared.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\IbvCommServerChannel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\IbRdmaCommServerChannel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\IbRdmaCommClientChannel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\IbRdmaException.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\IbvCommChannel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\IbvInformation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IbvShared.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IbvCommServerChannel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IbRdmaCommServerChannel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IbRdmaCommClientChannel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IbRdmaException.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -23,7 +23,7 @@ namespace vislib {
 
     /**
      * Superclass for all exceptions. The class provides basic functionality for
-	 * exception messages.
+     * exception messages.
      *
      * @author Christoph Mueller
      */
@@ -165,7 +165,7 @@ namespace vislib {
          * Set a new detail message.
          *
          * @param fmt The format string like in printf.
-		 * @param ... Additional parameters.
+         * @param ... Additional parameters.
          */
         void formatMsg(const char *fmt, ...);
 
@@ -173,7 +173,7 @@ namespace vislib {
          * Set a new detail message.
          *
          * @param fmt The format string like in printf.
-		 * @param ... Additional parameters.
+         * @param ... Additional parameters.
          */
         void formatMsg(const wchar_t *fmt, ...);
 

@@ -16,13 +16,14 @@
  * vislib::net::AbstractCommChannel::TIMEOUT_INFINITE
  */
 const UINT vislib::net::AbstractCommChannel::TIMEOUT_INFINITE 
-    = vislib::net::Socket::TIMEOUT_INFINITE;
+    = vislib::net::AbstractCommClientChannel::TIMEOUT_INFINITE;
 
 
 /*
  * vislib::net::AbstractCommChannel::AbstractCommChannel
  */
-vislib::net::AbstractCommChannel::AbstractCommChannel(void) : Super() {
+vislib::net::AbstractCommChannel::AbstractCommChannel(void) 
+        : AbstractCommClientChannel(), AbstractCommServerChannel() {
     VLSTACKTRACE("AbstractCommChannel::AbstractCommChannel", __FILE__, 
         __LINE__);
 }
@@ -35,6 +36,6 @@ vislib::net::AbstractCommChannel::~AbstractCommChannel(void) {
     VLSTACKTRACE("AbstractCommChannel::~AbstractCommChannel", __FILE__, 
         __LINE__);
     // Note: Calling Close() here to ensure correct cleanup of all child classes
-    // will not work. The child class that has the actual implementaiton of
+    // will not work. The child class that has the actual implementation of
     // Close() must do that.
 }

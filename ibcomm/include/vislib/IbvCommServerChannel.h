@@ -1,12 +1,12 @@
 ///*
-// * IbvCommChannel.h
+// * IbvCommServerChannel.h
 // *
-// * Copyright (C) 2006 - 2011 by Visualisierungsinstitut Universitaet Stuttgart. 
+// * Copyright (C) 2006 - 2012 by Visualisierungsinstitut Universitaet Stuttgart. 
 // * Alle Rechte vorbehalten.
 // */
 //
-//#ifndef VISLIB_IBVCOMMCHANNEL_H_INCLUDED
-//#define VISLIB_IBVCOMMCHANNEL_H_INCLUDED
+//#ifndef VISLIB_IBVCOMMSERVERCHANNEL_H_INCLUDED
+//#define VISLIB_IBVCOMMSERVERCHANNEL_H_INCLUDED
 //#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 //#pragma once
 //#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -18,6 +18,9 @@
 //#include "vislib/Socket.h"                      // Must be first!
 //#include "vislib/AbstractCommServerChannel.h"
 //#include "vislib/COMException.h"
+//#include "vislib/Event.h"
+//#include "vislib/StackTrace.h"
+//#include "vislib/Thread.h"
 //
 //#include "rdma/rdma_cma.h"
 //#include "rdma/winverbs.h"
@@ -31,17 +34,14 @@
 //    /**
 //     * TODO: comment class
 //     */
-//    class IbvCommChannel : public AbstractCommServerChannel {
+//    class IbvCommServerChannel : public AbstractCommServerChannel {
 //
 //    public:
 //
-//        /**
-//         * Create a new channel.
-//         *
-//         * @param flags The flags for the channel.
-//         */
-//        static inline SmartRef<IbvCommChannel> Create(void) {
-//            return SmartRef<IbvCommChannel>(new IbvCommChannel(), false);
+//        static inline SmartRef<IbvCommServerChannel> Create(void) {
+//            VLSTACKTRACE("IbvCommServerChannel::Create", __FILE__, __LINE__);
+//            return SmartRef<IbvCommServerChannel>(new IbvCommServerChannel(), 
+//                false);
 //        }
 //
 //        virtual SmartRef<AbstractCommChannel> Accept(void);
@@ -53,17 +53,6 @@
 //        virtual void Connect(SmartRef<AbstractCommEndPoint> endPoint);
 //
 //        virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const;
-//
-//        /**
-//         * Answer the WinVerbs provider used by the channel. 
-//         *
-//         * You should call AddRef() - and later Release() - if you intend to 
-//         * store this instance in order to ensure a correct life time handling
-//         * of the object.
-//         *
-//         * @return The WinVerbs provides used by the channel.
-//         */
-//        IWVProvider *GetProvider(void);
 //
 //        virtual SmartRef<AbstractCommEndPoint> GetRemoteEndPoint(void) const;
 //
@@ -82,46 +71,25 @@
 //        /** Superclass typedef. */
 //        typedef AbstractCommServerChannel Super;
 //
-//        /** Ctor. */
-//        IbvCommChannel(IWVProvider *wvProvider = NULL);
-//
-//        /** Dtor. */
-//        virtual ~IbvCommChannel(void);
-//
-//        void createQueuePair(void);
-//
-//        void initialise(void);
-//
-//        void releaseQueuePair(void);
-//
 //    private:
 //
-//        IWVConnectEndpoint *connectEndPoint;
+//        static DWORD messagePump(void *userData); 
 //
-//        IWVDevice *device;
+//        /** Ctor. */
+//        IbvCommServerChannel(void);
 //
-//        IWVProtectionDomain *protectionDomain;
+//        /** Dtor. */
+//        virtual ~IbvCommServerChannel(void);
 //
-//        IWVConnectQueuePair *queuePair;
+//        int onConnectRequest(struct rdma_cm_event& evt);
+//        
+//        struct rdma_event_channel *channel;
+//        struct rdma_cm_event *evt;
+//        struct rdma_cm_id *id;
 //
-//        IWVCompletionQueue *recvComplQueue;
+//        sys::Event evtAccept;
+//        sys::Thread msgThread;
 //
-//        WV_MEMORY_KEYS recvKeys;
-//
-//        void *recvRegion;
-//
-//        /** Size of 'recvRegion' in bytes. */
-//        SIZE_T recvRegionSize;
-//
-//        IWVCompletionQueue *sendComplQueue;
-//
-//        WV_MEMORY_KEYS sendKeys;
-//
-//        void *sendRegion;
-//
-//        SIZE_T sendRegionSize;
-//
-//        IWVProvider *wvProvider;
 //
 //    };
 //    
@@ -132,5 +100,5 @@
 //#if defined(_WIN32) && defined(_MANAGED)
 //#pragma managed(pop)
 //#endif /* defined(_WIN32) && defined(_MANAGED) */
-//#endif /* VISLIB_IBVCOMMCHANNEL_H_INCLUDED */
+//#endif /* VISLIB_IBVCOMMSERVERCHANNEL_H_INCLUDED */
 //

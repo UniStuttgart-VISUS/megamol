@@ -15,7 +15,11 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/AbstractCommChannel.h"
+#include "vislib/AbstractCommClientChannel.h"
+#include "vislib/AbstractCommEndPoint.h"
+#include "vislib/ReferenceCounted.h"
+#include "vislib/SmartRef.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -23,10 +27,25 @@ namespace net {
 
 
     /**
-     * This class is a specialisation of the AbstractCommChannel, which adds
-     * methods for server behaviour to the interface.
+     * This class defines the interface for server end points in the VISlib
+     * communication channel abstraction layer.
+     *
+     * Note for implementors: Subclasses should provide static Create() 
+     * methods which create objects on the heap that must have been created 
+     * with C++ new. The Release() method of this class assumes creation 
+     * with C++ new and releases the object be calling delete once the last 
+     * reference was released.
+     *
+     * Rationale: Due to the design-inherent polymorphism of this abstraction 
+     * layer, we use reference counting for managing the objects. This is 
+     * because some classes in the layer must return objects on the heap. Users
+     * of AbstractCommChannel should use SmartRef for handling the reference
+     * counting.
+     *
+     * Note for implementors: Subclasses that provide the server and the client
+     * interface in one class should inherit from AbstractCommChannel.
      */
-    class AbstractCommServerChannel : public AbstractCommChannel {
+    class AbstractCommServerChannel : public virtual ReferenceCounted {
 
     public:
 
@@ -37,7 +56,7 @@ namespace net {
          *
          * @throws Exception Or derived in case the operation fails.
          */
-        virtual SmartRef<AbstractCommChannel> Accept(void) = 0;
+        virtual SmartRef<AbstractCommClientChannel> Accept(void) = 0;
 
         /**
          * Binds the server to a specified end point address.
@@ -47,6 +66,28 @@ namespace net {
          * @throws Exception Or derived in case the operation fails.
          */
         virtual void Bind(SmartRef<AbstractCommEndPoint> endPoint) = 0;
+
+        /**
+         * Terminate the open connection if any and reset the communication
+         * channel to initialisation state.
+         *
+         * @throws Exception Or derived class in case of an error.
+         */
+        virtual void Close(void) = 0;
+
+        /**
+         * Answer the address the channel is using locally.
+         *
+         * The object returned needs not necessarily to be identical with the
+         * address and end point that the channel has been bound to. Subclasses 
+         * must, however, guarantee that the returned end point is equal wrt. 
+         * to the operator ==() of the end point object.
+         *
+         * @return The address of the local end point.
+         *
+         * @throws Exception Or derived in case the operation fails.
+         */
+        virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const = 0;
 
         /**
          * Bring the communication channel in a state in which it is listening
@@ -62,7 +103,7 @@ namespace net {
     protected:
 
         /** Superclass typedef. */
-        typedef AbstractCommChannel Super;
+        typedef ReferenceCounted Super;
 
         /** Ctor. */
         AbstractCommServerChannel(void);

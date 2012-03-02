@@ -34,14 +34,14 @@ const UINT64 vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS = 0x00000002;
 /*
  * vislib::net::TcpCommChannel::Accept
  */
-vislib::SmartRef<vislib::net::AbstractCommChannel> 
+vislib::SmartRef<vislib::net::AbstractCommClientChannel> 
 vislib::net::TcpCommChannel::Accept(void) {
     VLSTACKTRACE("TcpCommChannel::Accept", __FILE__, __LINE__);
     Socket socket = this->socket.Accept();
     socket.SetNoDelay(this->IsSetNoDelay());
     socket.SetReuseAddr(this->IsSetReuseAddress());
 
-    return SmartRef<AbstractCommChannel>(
+    return SmartRef<AbstractCommClientChannel>(
         new TcpCommChannel(socket, this->flags), false);
 }
 

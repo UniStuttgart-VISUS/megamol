@@ -35,7 +35,7 @@ namespace sys {
         /**
          * Ctor.
          *
-		 * @param errorCode A system dependent error code.
+         * @param errorCode A system dependent error code.
          * @param file      The file the exception was thrown in.
          * @param line      The line the exception was thrown in.
          */
@@ -61,15 +61,15 @@ namespace sys {
         /** Dtor. */
         virtual ~SystemException(void);
 
-		/**
-		 * Answer the system dependent error code associated with this 
-		 * exception.
-		 *
-		 * @return The system error code.
-		 */
-		inline DWORD GetErrorCode(void) const {
-			return this->sysMsg.GetErrorCode();
-		}
+        /**
+         * Answer the system dependent error code associated with this 
+         * exception.
+         *
+         * @return The system error code.
+         */
+        inline DWORD GetErrorCode(void) const {
+            return this->sysMsg.GetErrorCode();
+        }
 
         /**
          * Answer the file the exception description text. Behaves like
@@ -96,7 +96,7 @@ namespace sys {
          */
         SystemException& operator =(const SystemException& rhs);
 
-	private:
+    private:
 
         /** 
          * The system message for the error code. This member is used instead

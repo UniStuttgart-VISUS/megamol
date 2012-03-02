@@ -51,12 +51,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\vislib\IbRdmaCommClientChannel.h" />
+    <ClInclude Include="include\vislib\IbRdmaCommServerChannel.h" />
+    <ClInclude Include="include\vislib\IbRdmaException.h" />
     <ClInclude Include="include\vislib\IbvCommChannel.h" />
+    <ClInclude Include="include\vislib\IbvCommServerChannel.h" />
     <ClInclude Include="include\vislib\IbvInformation.h" />
+    <ClInclude Include="include\vislib\IbvShared.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\IbRdmaCommClientChannel.cpp" />
+    <ClCompile Include="src\IbRdmaCommServerChannel.cpp" />
+    <ClCompile Include="src\IbRdmaException.cpp" />
     <ClCompile Include="src\IbvCommChannel.cpp" />
+    <ClCompile Include="src\IbvCommServerChannel.cpp" />
     <ClCompile Include="src\IbvInformation.cpp" />
+    <ClCompile Include="src\IbvShared.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{59DEB5CE-352F-43B4-B250-60BD6D19201C}</ProjectGuid>

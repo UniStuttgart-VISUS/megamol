@@ -84,7 +84,7 @@ namespace sys {
          */
         virtual bool Terminate(void);
 
-	};
+    };
 
 } /* end namespace sys */
 } /* end namespace vislib */

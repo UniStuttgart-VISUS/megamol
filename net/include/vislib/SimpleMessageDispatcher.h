@@ -51,13 +51,13 @@ namespace net {
          */
         typedef struct Configuration_t {
             inline Configuration_t(void) {}
-            inline Configuration_t(SmartRef<AbstractCommChannel> channel) 
+            inline Configuration_t(SmartRef<AbstractCommClientChannel> channel) 
                 : Channel(channel) {}
             inline Configuration_t(SmartRef<TcpCommChannel> channel)
-                : Channel(channel.DynamicCast<AbstractCommChannel>()) {}
+                : Channel(channel.DynamicCast<AbstractCommClientChannel>()) {}
 
             /** Channel to be used by the dispatcher. */
-            SmartRef<AbstractCommChannel> Channel;
+            SmartRef<AbstractCommClientChannel> Channel;
         } Configuration;
 
         /** Ctor. */
@@ -89,7 +89,7 @@ namespace net {
          * @return The channel used for receiving data. DO NOT RECEIVE DATA ON
          *         THIS CHANNEL OR MANIPULATE THE SETTINGS OF THE CHANNEL!
          */
-        inline SmartRef<AbstractCommChannel> GetChannel(void) {
+        inline SmartRef<AbstractCommClientChannel> GetChannel(void) {
             return this->configuration.Channel;
         }
 

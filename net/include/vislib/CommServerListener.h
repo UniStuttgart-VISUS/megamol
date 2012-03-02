@@ -14,9 +14,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
-#include "vislib/AbstractCommChannel.h"
-#include "vislib/SmartRef.h"
+#include "vislib/AbstractCommClientChannel.h"
 
 
 /* Forward declarations. */
@@ -91,7 +89,7 @@ namespace net {
          *         because the server remains its owner.
          */
         virtual bool OnNewConnection(const CommServer& src,
-            SmartRef<AbstractCommChannel> channel) throw() = 0;
+            SmartRef<AbstractCommClientChannel> channel) throw() = 0;
 
         /**
          * The server will call this method when it left the server loop and

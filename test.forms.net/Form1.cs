@@ -37,8 +37,7 @@ namespace test.forms.net {
 
             try { // hack required for unknown reason
                 this.oglbox = new vislib.gl.OpenGLBox();
-            } catch(Exception ex) {
-            }
+            } catch(Exception) { }
             if (this.oglbox == null) {
                 this.oglbox = new vislib.gl.OpenGLBox();
             }

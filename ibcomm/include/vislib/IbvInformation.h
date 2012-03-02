@@ -14,6 +14,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+
 #include "vislib/Socket.h"      // Must be first!
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
@@ -35,6 +36,9 @@ namespace ib {
 
     public:
 
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma region Port
+#endif
         /**
          * This class repesents an InfiniBand port.
          */
@@ -239,10 +243,16 @@ namespace ib {
             friend class ArrayElementDftCtor<Port>;
             friend class IbvInformation;
         };
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma endregion Port
+#endif
 
         /** A list of InfiniBand ports. */
         typedef Array<Port> PortList;
 
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma region Device
+#endif
         /**
          * This class represents an InfiniBand device.
          */
@@ -270,13 +280,28 @@ namespace ib {
                 return this->attributes;
             }
 
+            /**
+             * Get the GUID of the node (device).
+             *
+             * @return The node GUID.
+             */
             inline NET64 GetNodeGuid(void) const {
                 VLSTACKTRACE("Device::GetNodeGuid", __FILE__, __LINE__);
                 return this->attributes.NodeGuid;
             }
 
+            /**
+             * Get a hex-string representation of the node GUID.
+             *
+             * @return The node GUID.
+             */
             StringA GetNodeGuidA(void) const;
 
+            /**
+             * Get a hex-string representation of the node GUID.
+             *
+             * @return The node GUID.
+             */
             StringW GetNodeGuidW(void) const;
 
             /**
@@ -293,23 +318,48 @@ namespace ib {
              */
             const Port& GetPort(const SIZE_T idx) const;
 
+            /**
+             * Get the list of port descriptors.
+             *
+             * @return Lost of ports.
+             */
             inline const PortList& GetPorts(void) const {
                 VLSTACKTRACE("Device::GetPorts", __FILE__, __LINE__);
                 return this->ports;
             }
 
+            /**
+             * Get the number of ports the device has.
+             *
+             * @return The number of ports the device has.
+             */
             inline int GetPortCount(void) const {
                 VLSTACKTRACE("Device::GetPortCount", __FILE__, __LINE__);
                 return (int) this->attributes.PhysPortCount;
             }
 
+            /**
+             * Get the system image GUID.
+             *
+             * @return The system image GUID.
+             */
             inline NET64 GetSystemImageGuid(void) const {
                 VLSTACKTRACE("Device::GetSystemImageGuid", __FILE__, __LINE__);
                 return this->attributes.SystemImageGuid;
             }
 
+            /**
+             * Get a hex-string representation of system image GUID.
+             *
+             * @return The system image GUID.
+             */
             StringA GetSystemImageGuidA(void) const;
 
+            /**
+             * Get a hex-string representation of system image GUID.
+             *
+             * @return The system image GUID.
+             */
             StringW GetSystemImageGuidW(void) const;
 
             /**
@@ -376,6 +426,9 @@ namespace ib {
             friend class ArrayElementDftCtor<Device>;
             friend class IbvInformation;
         };
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma endregion Device
+#endif
 
         /** A list of InfiniBand devices. */
         typedef Array<Device> DeviceList;

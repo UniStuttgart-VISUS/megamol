@@ -136,7 +136,7 @@ DWORD vislib::net::CommServer::Run(void *config) {
 
         try {
             while (doServe) {
-                SmartRef<AbstractCommChannel> channel 
+                SmartRef<AbstractCommClientChannel> channel 
                     = this->configuration.Channel->Accept();
                 VLTRACE(Trace::LEVEL_VL_INFO, "CommServer accepted new "
                     "connection.\n");
@@ -209,7 +209,7 @@ bool vislib::net::CommServer::Terminate(void) {
  * vislib::net::CommServer::fireNewConnection
  */
 bool vislib::net::CommServer::fireNewConnection(
-        SmartRef<AbstractCommChannel>& channel) {
+        SmartRef<AbstractCommClientChannel>& channel) {
     VLSTACKTRACE("CommServer::fireNewConnection", __FILE__, __LINE__);
     bool retval = false;
 

@@ -409,6 +409,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\AbstractCommChannel.cpp" />
+    <ClCompile Include="src\AbstractCommClientChannel.cpp" />
     <ClCompile Include="src\AbstractCommEndPoint.cpp" />
     <ClCompile Include="src\AbstractCommServerChannel.cpp" />
     <ClCompile Include="src\AbstractSimpleMessage.cpp" />
@@ -459,6 +460,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\AbstractCommChannel.h" />
+    <ClInclude Include="include\vislib\AbstractCommClientChannel.h" />
     <ClInclude Include="include\vislib\AbstractCommEndPoint.h" />
     <ClInclude Include="include\vislib\AbstractCommServerChannel.h" />
     <ClInclude Include="include\vislib\AbstractSimpleMessage.h" />

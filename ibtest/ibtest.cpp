@@ -7,13 +7,98 @@
 
 #include "stdafx.h"
 
+#include "vislib/COMException.h"
+#include "vislib/Event.h"
 #include "vislib/IbvCommChannel.h"
-#include "vislib/IPCommEndPoint.h"
+#include "vislib/IbvCommServerChannel.h"
+#include "vislib/IbRdmaCommClientChannel.h"
+#include "vislib/IbRdmaCommServerChannel.h"
+#include "vislib/IbRdmaException.h"
 #include "vislib/IbvInformation.h"
+#include "vislib/IPCommEndPoint.h"
+#include "vislib/RunnableThread.h"
 #include "vislib/Trace.h"
 
 
-typedef vislib::SmartRef<vislib::net::ib::IbvCommChannel> IbChannel;
+typedef vislib::SmartRef<vislib::net::AbstractCommEndPoint> IbEndPoint;
+typedef vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> IbChannel;
+typedef vislib::SmartRef<vislib::net::ib::IbRdmaCommServerChannel> IbServerChannel;
+
+
+vislib::sys::Event evtServerReady;
+
+
+class Server : public vislib::sys::Runnable {
+public:
+    inline Server(void) { }
+    virtual DWORD Run(void *userData);
+};
+
+DWORD Server::Run(void *userData) {
+    using namespace vislib;
+    using namespace vislib::net;
+    using namespace vislib::net::ib;
+
+    try {
+        IbServerChannel channel = IbRdmaCommServerChannel::Create();
+
+        IbEndPoint ep = IPCommEndPoint::Create(IPEndPoint::FAMILY_INET,
+            "192.168.219.250", 12345);
+
+        std::cout << "Bind..." << std::endl;
+        channel->Bind(ep);
+
+        std::cout << "Listen..." << std::endl;
+        channel->Listen();
+
+        ::evtServerReady.Set();
+
+        std::cout << "Accept..." << std::endl;
+        channel->Accept();
+
+
+        std::cout << "Server leaving..." << std::endl;
+        return 0;
+
+    } catch (IbRdmaException e) {
+        std::cerr << "IB server failed: " << e.GetMsgA() << std::endl;
+        return static_cast<DWORD>(e.GetErrorCode());
+    }
+}
+
+
+class Client : public vislib::sys::Runnable {
+public:
+    inline Client(void) { }
+    virtual DWORD Run(void *userData);
+};
+
+DWORD Client::Run(void *userData) {
+    using namespace vislib;
+    using namespace vislib::net;
+    using namespace vislib::net::ib;
+
+    try {
+        IbChannel channel = IbRdmaCommClientChannel::Create();
+
+        IbEndPoint ep = IPCommEndPoint::Create(IPEndPoint::FAMILY_INET,
+            "192.168.219.250", 12345);
+
+        std::cout << "Waiting for server to become available..." << std::endl;
+        ::evtServerReady.Wait();
+
+        std::cout << "Connect..." << std::endl;
+        channel->Connect(ep);
+
+
+        std::cout << "Client leaving..." << std::endl;
+        return 0;
+    } catch (IbRdmaException e) {
+        std::cerr << "IB client failed: " << e.GetMsgA() << std::endl;
+        return static_cast<DWORD>(e.GetErrorCode());
+    }
+}
+
 
 
 int _tmain(int argc, _TCHAR **argv) {
@@ -59,20 +144,47 @@ int _tmain(int argc, _TCHAR **argv) {
             }
         }
 
-    } catch (COMException e) {
+    } catch (IbRdmaException e) {
         std::cerr << "Retrieving IB devices failed: " << e.GetMsgA() 
             << std::endl;
     }
 
+    RunnableThread<Client> clientThread;
+    RunnableThread<Server> serverThread;
+
+    serverThread.Start();
+    clientThread.Start();
+
+    clientThread.Join();
+    serverThread.Join();
 
     try {
-        IbChannel channel = IbvCommChannel::Create();
+        //IbChannel channel = IbvCommChannel::Create();
+        //IbChannel channel2 = IbvCommChannel::Create();
+        //IbServerChannel sChannel = IbvCommServerChannel::Create();
 
-        SmartRef<AbstractCommEndPoint> ep = IPCommEndPoint::Create(IPEndPoint::FAMILY_INET, 12345);
-        //SmartRef<AbstractCommEndPoint> ep = IPCommEndPoint::Create(IPEndPoint::FAMILY_INET, "169.254.197.153", 12345);
 
-        channel->Bind(ep);
-        channel->Listen();
+        ////SmartRef<AbstractCommEndPoint> ep = IPCommEndPoint::Create(IPEndPoint::FAMILY_INET, 12345);
+        //SmartRef<AbstractCommEndPoint> ep = IPCommEndPoint::Create(IPEndPoint::FAMILY_INET, "192.168.219.250", 12345);
+
+        ////channel2->Connect(ep);
+
+        //sChannel->Bind(ep);
+
+        //clientThread.Start(NULL);
+
+        //sChannel->Listen();
+        //sChannel->Accept();
+        
+
+        //WV_DEVICE_ADDRESS dev;
+        //IPCommEndPoint *e1 = ep.DynamicPeek<IPCommEndPoint>();
+        //IPEndPoint& e2 = static_cast<IPEndPoint&>(*e1);
+        //HRESULT hr = channel->GetProvider()->TranslateAddress(static_cast<struct sockaddr *>(e2), &dev);
+
+        //channel->Bind(ep);
+        //channel->Listen();
+        //channel->Accept();
     } catch (COMException e) {
         std::cerr << "Starting IB server failed: " << e.GetMsgA() 
             << std::endl;

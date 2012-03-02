@@ -16,7 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/Socket.h"                      // Must be first!
-#include "vislib/AbstractCommServerChannel.h"
+#include "vislib/AbstractCommChannel.h"
 
 
 namespace vislib {
@@ -27,7 +27,7 @@ namespace net {
      * This class implements a communication channel based on TCP/IP sockets.
      * The TCP/IP version supports client as well as server end point behaviour.
      */
-    class TcpCommChannel : public AbstractCommServerChannel {
+    class TcpCommChannel : public AbstractCommChannel {
 
     public:
 
@@ -62,7 +62,7 @@ namespace net {
          *
          * @throws SocketException In case the operation fails.
          */
-        virtual SmartRef<AbstractCommChannel> Accept(void);
+        virtual SmartRef<AbstractCommClientChannel> Accept(void);
 
         /**
          * Binds the server to a specified end point address.
@@ -212,7 +212,7 @@ namespace net {
     private:
 
         /** Superclass typedef. */
-        typedef AbstractCommServerChannel Super;
+        typedef AbstractCommChannel Super;
 
         /**
          * Ctor.

@@ -150,7 +150,7 @@ namespace net {
          *
          * @return true if the connection was accepted, false otherwise.
          */
-        bool fireNewConnection(SmartRef<AbstractCommChannel>& channel);
+        bool fireNewConnection(SmartRef<AbstractCommClientChannel>& channel);
 
         /**
          * Inform all registered listener about an exception that was caught.

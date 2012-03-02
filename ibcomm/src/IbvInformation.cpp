@@ -20,7 +20,7 @@
 
 
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma region Nested Class Port
+#pragma region Port
 #endif
 
 /*
@@ -167,12 +167,12 @@ vislib::net::ib::IbvInformation::Port::Port(IWVDevice *device,
 }
  
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma endregion Nested Class Port
+#pragma endregion Port
 #endif
 
 
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma region Nested Class Device
+#pragma region Device
 #endif
 
 /*
@@ -321,13 +321,6 @@ vislib::net::ib::IbvInformation::Device::Device(IWVProvider *wvProvider,
         throw sys::COMException(hr, __FILE__, __LINE__);
     }
 
-    // TODO: Test
-    WV_PORT_ATTRIBUTES pa;
-    if (FAILED(hr = this->device->QueryPort(0, &pa))) {
-        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "%d\n", hr);
-    }
-
-
     VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying device attributes...\n");
     if (FAILED(hr = this->device->Query(&this->attributes))) {
         VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying device attributes "
@@ -336,7 +329,6 @@ vislib::net::ib::IbvInformation::Device::Device(IWVProvider *wvProvider,
         throw sys::COMException(hr, __FILE__, __LINE__);
     }
 
-    //this->ports = new WV_PORT_ATTRIBUTES[this->attributes.PhysPortCount];
     for (UINT8 i = 0; i < this->attributes.PhysPortCount; i++) {
         try {
             this->ports.Add(Port(this->device, i + 1));
@@ -348,7 +340,7 @@ vislib::net::ib::IbvInformation::Device::Device(IWVProvider *wvProvider,
 }
 
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma endregion Nested Class Device
+#pragma endregion Device
 #endif
 
 
