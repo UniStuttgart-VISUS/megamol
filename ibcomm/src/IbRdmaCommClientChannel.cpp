@@ -163,6 +163,8 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
         // the in-flight receive and post the next one. 'forceReceive' is not
         // allowed in this operation mode.
 
+        VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for RDMA receive "
+            "operation to complete...\n");
         while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
 
         // TODO: Currently, we can only receive to the begin of the buffer.
@@ -182,6 +184,8 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
         do {
             // Complete the current in-flight receive operation. This will block
             // until the data becomes available.
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for RDMA "
+                "receive operation to complete...\n");
             while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
 
             // TODO: The following code does not work. The hack above was found at
@@ -259,6 +263,8 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
         }
 
         /* Send the data. */
+        VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Posting RDMA send "
+            "of %d bytes starting at %p...\n", totalSent, inPtr);
         result = ::rdma_post_send(this->id, NULL, const_cast<BYTE *>(inPtr), 
             totalSent, this->mrSend, 0);
         if (result != 0) {
@@ -266,7 +272,11 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
         }
 
         /* Wait for completion of send operation. */
+        VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for RDMA send "
+            "operation to complete...\n");
         while (!::ibv_poll_cq(this->id->send_cq, 1, &wc));
+        VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "RDMA send operation "
+            "completed.\n");
 
     } else {
         do {
@@ -275,18 +285,24 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
 
             ::memcpy(this->bufSend, inPtr, lastSent);
 
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Posting RDMA send "
+                "of %d bytes starting at %p...\n", lastSent, this->bufSend);
             result = ::rdma_post_send(this->id, NULL, this->bufSend, 
                 lastSent, this->mrSend, 0);
             if (result != 0) {
                 throw IbRdmaException("rdma_post_send", errno, __FILE__, __LINE__);
             }
 
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for RDMA send "
+                "operation to complete...\n");
             while (!::ibv_poll_cq(this->id->send_cq, 1, &wc));
             // TODO: The following does not work for some reason (same as for Receive()):
             //result = ::rdma_get_send_comp(this->id, &wc);
             //if (result != 0) {
             //    throw IbRdmaException("rdma_get_send_comp", errno, __FILE__, __LINE__);
             //}
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "RDMA send operation "
+                "completed.\n");
 
             totalSent += lastSent;
             inPtr += lastSent;
@@ -331,6 +347,8 @@ vislib::net::ib::IbRdmaCommClientChannel::~IbRdmaCommClientChannel(void) {
  */
 void vislib::net::ib::IbRdmaCommClientChannel::postReceive(void) {
     VLSTACKTRACE("IbRdmaCommClientChannel::postReceive", __FILE__, __LINE__);
+    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Posting RDMA receive of %d "
+        "bytes into %p...\n", this->cntBufRecv, this->bufRecv);
     int result = ::rdma_post_recv(this->id, NULL, this->bufRecv, 
         this->cntBufRecv, this->mrRecv);
     if (result != 0) {
