@@ -41,11 +41,11 @@ AbstractNamedObject::GraphLocker::~GraphLocker(void) {
  */
 void AbstractNamedObject::GraphLocker::Lock(void) {
     VLSTACKTRACE("GraphLocker::Lock", __FILE__, __LINE__);
-    if (this->writelock) {
+    //if (this->writelock) {
         this->root->ModuleGraphLock().LockExclusive();
-    } else {
-        this->root->ModuleGraphLock().LockShared();
-    }
+    //} else {
+    //    this->root->ModuleGraphLock().LockExclusive();
+    //}
 }
 
 
@@ -54,11 +54,11 @@ void AbstractNamedObject::GraphLocker::Lock(void) {
  */
 void AbstractNamedObject::GraphLocker::Unlock(void) {
     VLSTACKTRACE("GraphLocker::Unlock", __FILE__, __LINE__);
-    if (this->writelock) {
+    //if (this->writelock) {
         this->root->ModuleGraphLock().UnlockExclusive();
-    } else {
-        this->root->ModuleGraphLock().UnlockShared();
-    }
+    //} else {
+    //    this->root->ModuleGraphLock().UnlockExclusive();
+    //}
 }
 
 /****************************************************************************/

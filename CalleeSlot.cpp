@@ -70,13 +70,13 @@ bool CalleeSlot::IsParamRelevant(
     }
 
     vislib::sys::AbstractReaderWriterLock& lock = this->ModuleGraphLock();
-    lock.LockShared();
+    lock.LockExclusive();
 
     const AbstractNamedObject *ano = this->RootModule();
     const AbstractNamedObjectContainer *anoc
         = dynamic_cast<const AbstractNamedObjectContainer*>(ano);
     if (anoc == NULL) {
-        lock.UnlockShared();
+        lock.UnlockExclusive();
         return false;
     }
 
@@ -99,13 +99,13 @@ bool CalleeSlot::IsParamRelevant(
             cs = dynamic_cast<const CallerSlot*>(ano);
             if ((cs != NULL) && cs->IsConnectedTo(this) && (ano->Parent() != NULL)) {
                 if (ano->Parent()->IsParamRelevant(searched, param)) {
-                    lock.UnlockShared();
+                    lock.UnlockExclusive();
                     return true;
                 }
             }
         }
     }
 
-    lock.UnlockShared();
+    lock.UnlockExclusive();
     return false;
 }

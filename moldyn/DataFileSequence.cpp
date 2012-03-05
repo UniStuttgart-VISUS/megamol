@@ -438,7 +438,7 @@ bool moldyn::DataFileSequence::onFileNameTemplateChanged(param::ParamSlot& slot)
  */
 bool moldyn::DataFileSequence::onFileNameSlotNameChanged(param::ParamSlot& slot) {
     ASSERT(&slot == &this->fileNameSlotNameSlot);
-    this->ModuleGraphLock().LockShared();
+    this->ModuleGraphLock().LockExclusive();
     param::StringParam *P = this->fileNameSlotNameSlot.Param<param::StringParam>();
     if ((P != NULL) && (this->findFileNameSlot() == NULL)) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
@@ -446,7 +446,7 @@ bool moldyn::DataFileSequence::onFileNameSlotNameChanged(param::ParamSlot& slot)
             vislib::StringA(P->Value()).PeekBuffer());
         P->SetValue("", false);
     }
-    this->ModuleGraphLock().UnlockShared();
+    this->ModuleGraphLock().UnlockExclusive();
     this->needDataUpdate = true;
     return true;
 }

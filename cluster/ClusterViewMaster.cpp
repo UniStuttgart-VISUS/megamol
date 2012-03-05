@@ -165,7 +165,7 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
         return true;
     }
 
-    this->ModuleGraphLock().LockShared();
+    this->ModuleGraphLock().LockExclusive();
     AbstractNamedObject *ano = this->FindNamedObject(viewName);
     view::AbstractView *av = dynamic_cast<view::AbstractView*>(ano);
     if (av == NULL) {
@@ -190,7 +190,7 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
     if (av != NULL) {
         viewModSlot = dynamic_cast<CalleeSlot*>(av->FindSlot("render"));
     }
-    this->ModuleGraphLock().UnlockShared();
+    this->ModuleGraphLock().UnlockExclusive();
 
     if (viewModSlot == NULL) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -335,7 +335,7 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
 
         case cluster::netmessages::MSG_REQUEST_GRAPHSETUP: {
             vislib::RawStorage mem;
-            this->ModuleGraphLock().LockShared();
+            this->ModuleGraphLock().LockExclusive();
             try {
                 RootModuleNamespace *root = dynamic_cast<RootModuleNamespace*>(this->RootModule());
                 if (root != NULL) {
@@ -344,7 +344,7 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
             } catch(...) {
                 mem.EnforceSize(0);
             }
-            this->ModuleGraphLock().UnlockShared();
+            this->ModuleGraphLock().UnlockExclusive();
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Sending module graph setup (%d Bytes)", static_cast<int>(mem.GetSize()));
             outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_GRAPHSETUP);
             outMsg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(mem.GetSize()));
@@ -372,12 +372,12 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
 
         case cluster::netmessages::MSG_REQUEST_CAMERAVALUES: {
             Call *call = this->viewSlot.CallAs<Call>();
-            this->ModuleGraphLock().LockShared();
+            this->ModuleGraphLock().LockExclusive();
             const view::AbstractView *av = NULL;
             if ((call != NULL) && (call->PeekCalleeSlot() != NULL)) {
                 av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
             }
-            this->ModuleGraphLock().UnlockShared();
+            this->ModuleGraphLock().UnlockExclusive();
             if (av != NULL) {
                 vislib::RawStorage mem;
                 mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData));
@@ -448,13 +448,13 @@ DWORD cluster::ClusterViewMaster::cameraUpdateThread(void *userData) {
     vislib::net::ShallowSimpleMessage msg(mem);
 
     while (true) {
-        This->ModuleGraphLock().LockShared();
+        This->ModuleGraphLock().LockExclusive();
         av = NULL;
         call = This->viewSlot.CallAs<Call>();
         if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
             av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
         }
-        This->ModuleGraphLock().UnlockShared();
+        This->ModuleGraphLock().UnlockExclusive();
         if (av == NULL) break;
 
         csn = av->GetCameraSyncNumber();

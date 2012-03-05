@@ -857,7 +857,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100,
         "ScreenShot of \"%s\" requested", mvn.PeekBuffer());
 
-    this->ModuleGraphLock().LockShared();
+    this->ModuleGraphLock().LockExclusive();
     AbstractNamedObjectContainer *anoc = dynamic_cast<AbstractNamedObjectContainer*>(this->RootModule());
     AbstractNamedObject *ano = anoc->FindChild(mvn);
     ViewInstance *vi = dynamic_cast<ViewInstance *>(ano);
@@ -888,7 +888,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
             "Unable to find view \"%s\" for ScreenShot",
             mvn.PeekBuffer());
     }
-    this->ModuleGraphLock().UnlockShared();
+    this->ModuleGraphLock().UnlockExclusive();
 
     return true;
 }
