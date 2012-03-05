@@ -193,10 +193,10 @@ vislib::net::ib::IbRdmaCommServerChannel::IbRdmaCommServerChannel(
 vislib::net::ib::IbRdmaCommServerChannel::~IbRdmaCommServerChannel(void) {
     VLSTACKTRACE("IbRdmaCommServerChannel::~IbRdmaCommServerChannel", 
         __FILE__, __LINE__);
-    try {
-        this->Close();
-    } catch (...) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "An exception was caught when closing "
-            "a IbRdmaCommServerChannel in its destructor.\n");
-    }
+    //try {
+    //    this->Close();
+    //} catch (...) {
+    //    VLTRACE(Trace::LEVEL_VL_WARN, "An exception was caught when closing "
+    //        "a IbRdmaCommServerChannel in its destructor.\n");
+    //}
 }

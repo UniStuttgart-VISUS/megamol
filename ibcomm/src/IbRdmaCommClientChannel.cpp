@@ -151,8 +151,9 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
     int result = 0;                     // RDMA API results.
     struct ibv_wc wc;                   // Receives the completion parameters.
     BYTE *out = static_cast<BYTE *>(outData);   // Cursor through output while copying.
-    SIZE_T totalReceived = 0;           // # of bytes totally received.
     SIZE_T lastReceived = 0;            // # of bytes received in last op.
+    SIZE_T totalReceived = 0;           // # of bytes totally received.
+    
 
     do {
         while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
@@ -161,8 +162,8 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
         //    throw IbRdmaException("rdma_get_recv_comp", errno, __FILE__, __LINE__);
         //}
 
-        lastReceived = (cntBytes < this->cntBufRecv) 
-            ? cntBytes : this->cntBufRecv;
+        lastReceived = ((cntBytes - totalReceived) < this->cntBufRecv) 
+            ? (cntBytes - totalReceived) : this->cntBufRecv;
 
         ::memcpy(out, this->bufRecv, lastReceived);
 
@@ -241,12 +242,12 @@ vislib::net::ib::IbRdmaCommClientChannel::IbRdmaCommClientChannel(void)
 vislib::net::ib::IbRdmaCommClientChannel::~IbRdmaCommClientChannel(void) {
     VLSTACKTRACE("IbRdmaCommClientChannel::~IbRdmaCommClientChannel", 
         __FILE__, __LINE__);
-    try {
-        this->Close();
-    } catch (...) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "An exception was caught when closing "
-            "a IbRdmaCommClientChannel in its destructor.\n");
-    }
+    //try {
+    //    this->Close();
+    //} catch (...) {
+    //    VLTRACE(Trace::LEVEL_VL_WARN, "An exception was caught when closing "
+    //        "a IbRdmaCommClientChannel in its destructor.\n");
+    //}
 
     this->setBuffers(NULL, 0, NULL, 0);
 }
