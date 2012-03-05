@@ -126,8 +126,9 @@ void vislib::net::ib::IbRdmaCommClientChannel::Connect(
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::ib::IbRdmaCommClientChannel::GetLocalEndPoint(void) const {
     VLSTACKTRACE("IbRdmaCommClientChannel::GetLocalEndPoint", __FILE__, __LINE__);
-
-    throw 1;    // TODO
+    WV_CONNECT_ATTRIBUTES attribs;
+    this->id->ep.connect->Query(&attribs);
+    return IPCommEndPoint::Create(attribs.LocalAddress.Sin);
 }
 
 
@@ -137,7 +138,9 @@ vislib::net::ib::IbRdmaCommClientChannel::GetLocalEndPoint(void) const {
 vislib::SmartRef<vislib::net::AbstractCommEndPoint>
 vislib::net::ib::IbRdmaCommClientChannel::GetRemoteEndPoint(void) const {
     VLSTACKTRACE("IbRdmaCommClientChannel::GetRemoteEndPoint", __FILE__, __LINE__);
-    throw 1;    // TODO
+    WV_CONNECT_ATTRIBUTES attribs;
+    this->id->ep.connect->Query(&attribs);
+    return IPCommEndPoint::Create(attribs.PeerAddress.Sin);
 }
 
 
@@ -150,29 +153,63 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
 
     int result = 0;                     // RDMA API results.
     struct ibv_wc wc;                   // Receives the completion parameters.
-    BYTE *out = static_cast<BYTE *>(outData);   // Cursor through output while copying.
+    BYTE *outPtr = static_cast<BYTE *>(outData);    // Cursor through 'outData'.
     SIZE_T lastReceived = 0;            // # of bytes received in last op.
     SIZE_T totalReceived = 0;           // # of bytes totally received.
     
 
-    do {
+    if (this->IsZeroCopyReceive()) {
+        // The user has specified the DMA memory area directly, so complete
+        // the in-flight receive and post the next one. 'forceReceive' is not
+        // allowed in this operation mode.
+
         while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
-        //result = ::rdma_get_recv_comp(this->id, &wc);
-        //if (result != 0) {
-        //    throw IbRdmaException("rdma_get_recv_comp", errno, __FILE__, __LINE__);
-        //}
 
-        lastReceived = ((cntBytes - totalReceived) < this->cntBufRecv) 
-            ? (cntBytes - totalReceived) : this->cntBufRecv;
+        // TODO: Currently, we can only receive to the begin of the buffer.
+        ASSERT((outData == NULL) || (outData == this->bufRecv));
+        //outPtr = this->bufRecv;
 
-        ::memcpy(out, this->bufRecv, lastReceived);
+        if (cntBytes > this->cntBufRecv) {
+            // User tries to receive more than the supplied memory range.
+            throw IllegalParamException("cntBytes", __FILE__, __LINE__);
+        }
 
-        totalReceived += lastReceived;
-        out += lastReceived;
-            
         this->postReceive();
 
-    } while (forceReceive && (totalReceived < cntBytes) && (lastReceived > 0));
+        totalReceived = cntBytes;
+
+    } else {
+        do {
+            // Complete the current in-flight receive operation. This will block
+            // until the data becomes available.
+            while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
+
+            // TODO: The following code does not work. The hack above was found at
+            // http://www.spinics.net/lists/linux-rdma/msg04795.html
+            //result = ::rdma_get_recv_comp(this->id, &wc);
+            //if (result != 0) {
+            //    throw IbRdmaException("rdma_get_recv_comp", errno, __FILE__, __LINE__);
+            //}
+
+            // Determine how much we can copy from the receive buffer to the 
+            // user-supplied destination buffer.
+            lastReceived = cntBytes - totalReceived;
+            if (lastReceived > this->cntBufRecv) {
+                lastReceived = this->cntBufRecv;
+            }
+
+            // Copy receive data to user buffer.
+            ::memcpy(outPtr, this->bufRecv, lastReceived);
+
+            // Update cursor variables.
+            totalReceived += lastReceived;
+            outPtr += lastReceived;
+            
+            // Post receive for next iteration or next call to Receive().
+            this->postReceive();
+
+        } while (forceReceive && (totalReceived < cntBytes) && (lastReceived > 0));
+    }
 
     // TODO: Kann das das IB auch?!
     //throw PeerDisconnectedException(
@@ -194,32 +231,68 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
 
     int result = 0;                     // RDMA API results.
     struct ibv_wc wc;                   // Receives the completion parameters.
-    const BYTE *in = static_cast<const BYTE *>(data); // Cursor through input while copying.
+    const BYTE *inPtr = static_cast<const BYTE *>(data);    // Cursor in 'data'.
     SIZE_T totalSent = 0;               // # of bytes totally received.
     SIZE_T lastSent = 0;                // # of bytes received in last op.
 
-    do {
-        lastSent = (cntBytes < this->cntBufSend) 
-            ? cntBytes : this->cntBufSend;
+    if (this->IsZeroCopySend()) {
+        ASSERT(this->bufSendEnd != NULL);
 
-        ::memcpy(this->bufSend, in, lastSent);
+        /* 
+         * If no specific location to send from is specified, assume the begin
+         * of the registered DMA memory and fix the cursor automagically.
+         */
+        if (inPtr == NULL) {
+            inPtr = this->bufSend;
+        }
 
-        result = ::rdma_post_send(this->id, NULL, this->bufSend, 
-            lastSent, this->mrSend, 0);
+        /* 
+         * The send from user-specified DMA memory must succeed as a whole, 
+         * i. e. the data cannot be sent incrementally. In turn, 'totalSent'
+         * (the method return value) and 'cntBytes' must be the same.
+         */
+        totalSent = cntBytes;
+
+        /* Sanity check for data range being sent. */
+        if ((inPtr + totalSent) > this->bufSendEnd) {
+            throw IllegalParamException("cntBytes", __FILE__, __LINE__);
+        }
+
+        /* Send the data. */
+        result = ::rdma_post_send(this->id, NULL, const_cast<BYTE *>(inPtr), 
+            totalSent, this->mrSend, 0);
         if (result != 0) {
             throw IbRdmaException("rdma_post_send", errno, __FILE__, __LINE__);
         }
 
-        //result = ::rdma_get_send_comp(this->id, &wc);
-        //if (result != 0) {
-        //    throw IbRdmaException("rdma_get_send_comp", errno, __FILE__, __LINE__);
-        //}
+        /* Wait for completion of send operation. */
         while (!::ibv_poll_cq(this->id->send_cq, 1, &wc));
 
-        totalSent += lastSent;
-        in += lastSent;
+    } else {
+        do {
+            lastSent = (cntBytes < this->cntBufSend) 
+                ? cntBytes : this->cntBufSend;
 
-    } while (forceSend && (totalSent < cntBytes));
+            ::memcpy(this->bufSend, inPtr, lastSent);
+
+            result = ::rdma_post_send(this->id, NULL, this->bufSend, 
+                lastSent, this->mrSend, 0);
+            if (result != 0) {
+                throw IbRdmaException("rdma_post_send", errno, __FILE__, __LINE__);
+            }
+
+            while (!::ibv_poll_cq(this->id->send_cq, 1, &wc));
+            // TODO: The following does not work for some reason (same as for Receive()):
+            //result = ::rdma_get_send_comp(this->id, &wc);
+            //if (result != 0) {
+            //    throw IbRdmaException("rdma_get_send_comp", errno, __FILE__, __LINE__);
+            //}
+
+            totalSent += lastSent;
+            inPtr += lastSent;
+
+        } while (forceSend && (totalSent < cntBytes));
+    }
 
     return totalSent;
 }
@@ -300,19 +373,14 @@ void vislib::net::ib::IbRdmaCommClientChannel::setBuffers(BYTE *bufRecv,
     VLSTACKTRACE("IbRdmaCommClientChannel::setBuffers", __FILE__, __LINE__);
     
     /* If there is a current buffer and if it is owned by us, delete it. */
-    if (this->bufRecvEnd == NULL) {
-        // Note: This is not wrong! 'bufRecvEnd' is indicator for ownership of
-        // 'bufRecv'.
+    if (!this->IsZeroCopyReceive()) {
         ARY_SAFE_DELETE(this->bufRecv);
-
     } else {
         this->bufRecvEnd = NULL;
     }
 
-    if (this->bufSendEnd == NULL) {
-        // Note: This is not wrong! Same as above...
+    if (!this->IsZeroCopySend()) {
         ARY_SAFE_DELETE(this->bufSend);
-
     } else {
         this->bufRecvEnd = NULL;
     }

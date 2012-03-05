@@ -156,7 +156,9 @@ void vislib::net::ib::IbRdmaCommServerChannel::Close(void) {
 vislib::SmartRef<vislib::net::AbstractCommEndPoint>
 vislib::net::ib::IbRdmaCommServerChannel::GetLocalEndPoint(void) const {
     VLSTACKTRACE("IbRdmaCommServerChannel::GetLocalEndPoint", __FILE__, __LINE__);
-    throw 1;    // TODO
+    WV_CONNECT_ATTRIBUTES attribs;
+    this->id->ep.connect->Query(&attribs);
+    return IPCommEndPoint::Create(attribs.LocalAddress.Sin);
 }
 
 

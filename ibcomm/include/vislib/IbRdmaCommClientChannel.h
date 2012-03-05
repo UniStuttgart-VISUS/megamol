@@ -107,6 +107,30 @@ namespace ib {
 
         virtual SmartRef<AbstractCommEndPoint> GetRemoteEndPoint(void) const;
 
+        /**
+         * Answer whether the channel directly receives into a user-supplied
+         * memory area.
+         *
+         * @return
+         */
+        inline bool IsZeroCopyReceive(void) const {
+            VLSTACKTRACE("IbRdmaCommClientChannel::IsZeroCopyReceive",
+                __FILE__, __LINE__);
+            return (this->bufRecvEnd != NULL);
+        }
+
+        /**
+         * Answer whether the channel directly sends from a user-supplied
+         * memory area.
+         *
+         * @return
+         */
+        inline bool IsZeroCopySend(void) const {
+            VLSTACKTRACE("IbRdmaCommClientChannel::IsZeroCopySend", 
+                __FILE__, __LINE__);
+            return (this->bufSendEnd != NULL);
+        }
+
         virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
             const UINT timeout = TIMEOUT_INFINITE, 
             const bool forceReceive = true);
@@ -173,6 +197,10 @@ namespace ib {
          */
         BYTE *bufRecv;
 
+        /** 
+         * Pointer to the end of the receive buffer in case of a zero-copy
+         * operation. Otherwise, the pointer is NULL.
+         */
         BYTE *bufRecvEnd;
 
         /**
@@ -182,6 +210,10 @@ namespace ib {
          */
         BYTE *bufSend;
 
+        /** 
+         * Pointer to the end of the send buffer in case of a zero-copy
+         * operation. Otherwise, the pointer is NULL.
+         */
         BYTE *bufSendEnd;
 
         /** Size of 'bufRecv' in bytes. */

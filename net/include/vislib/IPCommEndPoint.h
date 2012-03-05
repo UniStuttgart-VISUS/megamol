@@ -605,6 +605,31 @@ namespace net {
         static SmartRef<AbstractCommEndPoint> Create(const wchar_t *str);
 
         /**
+         * Create a new IPCommEndPoint from an OS IP-agnostic address structure.
+         *
+         * @param address The address storage.
+         */
+        static SmartRef<AbstractCommEndPoint> Create(
+            const struct sockaddr_storage& address);
+        
+        /**
+         * Create a new IPCommEndPoint from an OS IPv4 structure.
+         *
+         * @param address The IPv4 address to set.
+         */
+        static SmartRef<AbstractCommEndPoint> Create(
+            const struct sockaddr_in& address);
+
+        /**
+         * Create a new IPCommEndPoint from an OS IPv6 structure.
+         *
+         * @param address The IPv6 address to set.
+         */
+        static SmartRef<AbstractCommEndPoint> Create(
+            const struct sockaddr_in6& address);
+
+
+        /**
          * Get the IP address part of the end point address.
          *
          * @return The IP address part of the end point address.

@@ -59,6 +59,10 @@ DWORD Server::Run(void *userData) {
         SmartRef<AbstractCommClientChannel> client = channel->Accept();
         //channel->Close();
 
+        std::cout << "Server is bound to " 
+            << channel->GetLocalEndPoint()->ToStringA().PeekBuffer() 
+            << std::endl;
+
         char *data = new char[sizeof(REFERENCE_DATA)];
         client->Receive(data, sizeof(REFERENCE_DATA));
         std::cout << "Received \"" << data << "\"" << std::endl;
@@ -96,6 +100,12 @@ DWORD Client::Run(void *userData) {
 
         std::cout << "Connect..." << std::endl;
         channel->Connect(ep);
+
+        std::cout << "Client is connected to " 
+            << channel->GetRemoteEndPoint()->ToStringA().PeekBuffer() 
+            << " using the local end point " 
+            << channel->GetLocalEndPoint()->ToStringA().PeekBuffer() 
+            << std::endl;
 
         channel->Send(REFERENCE_DATA, sizeof(REFERENCE_DATA));
 

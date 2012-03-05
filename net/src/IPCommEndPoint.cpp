@@ -153,6 +153,39 @@ vislib::net::IPCommEndPoint::Create(
 
 
 /*
+ * vislib::net::IPCommEndPoint::Create
+ */
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::IPCommEndPoint::Create(const struct sockaddr_storage& address) {
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+    IPEndPoint ep(address);
+    return SmartRef<AbstractCommEndPoint>(new IPCommEndPoint(ep), false);
+}
+
+
+/*
+ * vislib::net::IPCommEndPoint::Create
+ */
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::IPCommEndPoint::Create(const struct sockaddr_in& address) {
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+    IPEndPoint ep(address);
+    return SmartRef<AbstractCommEndPoint>(new IPCommEndPoint(ep), false);
+}
+
+
+/*
+ * vislib::net::IPCommEndPoint::Create
+ */
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::IPCommEndPoint::Create(const struct sockaddr_in6& address) {
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+    IPEndPoint ep(address);
+    return SmartRef<AbstractCommEndPoint>(new IPCommEndPoint(ep), false);
+}
+
+
+/*
  * vislib::net::IPCommEndPoint::Parse
  */
 void vislib::net::IPCommEndPoint::Parse(const StringA& str) {
