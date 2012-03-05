@@ -20,13 +20,23 @@
  * vislib::net::ib::IbRdmaCommClientChannel::Create
  */
 vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
-vislib::net::ib::IbRdmaCommClientChannel::Create(void) {
+vislib::net::ib::IbRdmaCommClientChannel::Create(const SIZE_T cntBufRecv, 
+        const SIZE_T cntBufSend) {
+    VLSTACKTRACE("IbRdmaCommClientChannel::Create", __FILE__, __LINE__);
     SmartRef<IbRdmaCommClientChannel> retval(new IbRdmaCommClientChannel(), 
         false);
-
-    retval->createBuffers(1024, 1024);
-
+    retval->setBuffers(NULL, cntBufRecv, NULL, cntBufSend);
     return retval;
+}
+
+
+/*
+ * vislib::net::ib::IbRdmaCommClientChannel::Create
+ */
+vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
+vislib::net::ib::IbRdmaCommClientChannel::Create(const SIZE_T cntBuf) {
+    VLSTACKTRACE("IbRdmaCommClientChannel::Create", __FILE__, __LINE__);
+    return IbRdmaCommClientChannel::Create(cntBuf, cntBuf);
 }
         
 
@@ -158,24 +168,25 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
     SIZE_T lastReceived = 0;            // # of bytes received in last op.
 
     do {
+        while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
+        //result = ::rdma_get_recv_comp(this->id, &wc);
+        //if (result != 0) {
+        //    throw IbRdmaException("rdma_get_recv_comp", errno, __FILE__, __LINE__);
+        //}
+
         lastReceived = (cntBytes < this->cntBufRecv) 
             ? cntBytes : this->cntBufRecv;
-            
-        result = ::rdma_post_recv(this->id, NULL, this->bufRecv, 
-            lastReceived, this->mrRecv);
-        if (result != 0) {
-            throw IbRdmaException("rdma_post_recv", errno, __FILE__, __LINE__);
-        }
-
-        result = ::rdma_get_recv_comp(this->id, &wc);
-        if (result != 0) {
-            throw IbRdmaException("rdma_get_recv_comp", errno, __FILE__, __LINE__);
-        }
 
         ::memcpy(out, this->bufRecv, lastReceived);
 
         totalReceived += lastReceived;
         out += lastReceived;
+            
+        result = ::rdma_post_recv(this->id, NULL, this->bufRecv, 
+            this->cntBufRecv, this->mrRecv);
+        if (result != 0) {
+            throw IbRdmaException("rdma_post_recv", errno, __FILE__, __LINE__);
+        }
 
     } while (forceReceive && (totalReceived < cntBytes) && (lastReceived > 0));
 
@@ -209,22 +220,24 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
 
         ::memcpy(this->bufSend, in, lastSent);
 
-        result = ::ö(this->id, NULL, this->bufSend, 
+        result = ::rdma_post_send(this->id, NULL, this->bufSend, 
             lastSent, this->mrSend, 0);
         if (result != 0) {
             throw IbRdmaException("rdma_post_send", errno, __FILE__, __LINE__);
         }
 
-        result = ::rdma_get_send_comp(this->id, &wc);
-        if (result != 0) {
-            throw IbRdmaException("rdma_get_send_comp", errno, __FILE__, __LINE__);
-        }
+        //result = ::rdma_get_send_comp(this->id, &wc);
+        //if (result != 0) {
+        //    throw IbRdmaException("rdma_get_send_comp", errno, __FILE__, __LINE__);
+        //}
+        while (!::ibv_poll_cq(this->id->send_cq, 1, &wc));
 
         totalSent += lastSent;
         in += lastSent;
 
     } while (forceSend && (totalSent < cntBytes));
 
+    return totalSent;
 }
 
 
@@ -232,8 +245,8 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
  * vislib::net::ib::IbRdmaCommClientChannel::IbRdmaCommClientChannel
  */
 vislib::net::ib::IbRdmaCommClientChannel::IbRdmaCommClientChannel(void) 
-        : bufRecv(NULL), bufSend(NULL), cntBufRecv(0), cntBufSend(0), id(NULL), 
-        mrRecv(NULL), mrSend(NULL) {
+        : bufRecv(NULL), bufRecvEnd(NULL), bufSend(NULL), bufSendEnd(NULL), 
+        cntBufRecv(0), cntBufSend(0), id(NULL), mrRecv(NULL), mrSend(NULL) {
     VLSTACKTRACE("IbRdmaCommClientChannel::IbRdmaCommClientChannel", 
         __FILE__, __LINE__);
 }
@@ -245,22 +258,67 @@ vislib::net::ib::IbRdmaCommClientChannel::IbRdmaCommClientChannel(void)
 vislib::net::ib::IbRdmaCommClientChannel::~IbRdmaCommClientChannel(void) {
     VLSTACKTRACE("IbRdmaCommClientChannel::~IbRdmaCommClientChannel", 
         __FILE__, __LINE__);
-    ARY_SAFE_DELETE(this->bufRecv);
-    ARY_SAFE_DELETE(this->bufSend);
+    this->setBuffers(NULL, 0, NULL, 0);
 }
 
 
 /*
- * vislib::net::ib::IbRdmaCommClientChannel::createBuffers
+ * vislib::net::ib::IbRdmaCommClientChannel::setBuffers
  */
-void vislib::net::ib::IbRdmaCommClientChannel::createBuffers(
-        const SIZE_T cntBufRecv, const SIZE_T cntBufSend) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::createBuffers", __FILE__, __LINE__);
+void vislib::net::ib::IbRdmaCommClientChannel::setBuffers(BYTE *bufRecv, 
+        const SIZE_T cntBufRecv, BYTE *bufSend, const SIZE_T cntBufSend) {
+    VLSTACKTRACE("IbRdmaCommClientChannel::setBuffers", __FILE__, __LINE__);
     
+    /* If there is a current buffer and if it is owned by us, delete it. */
+    if (this->bufRecvEnd == NULL) {
+        // Note: This is not wrong! 'bufRecvEnd' is indicator for ownership of
+        // 'bufRecv'.
+        ARY_SAFE_DELETE(this->bufRecv);
+
+    } else {
+        this->bufRecvEnd = NULL;
+    }
+
+    if (this->bufSendEnd == NULL) {
+        // Note: This is not wrong! Same as above...
+        ARY_SAFE_DELETE(this->bufSend);
+
+    } else {
+        this->bufRecvEnd = NULL;
+    }
+
+    ASSERT(this->bufRecv == NULL);
+    ASSERT(this->bufRecvEnd == NULL);
+    ASSERT(this->bufSend == NULL);
+    ASSERT(this->bufSendEnd == NULL);
+
+    /* Remember the buffer size. */
     this->cntBufRecv = cntBufRecv;
     this->cntBufSend = cntBufSend;
 
-    this->bufRecv = new BYTE[this->cntBufRecv];
-    this->bufSend = new BYTE[this->cntBufSend];
+    /* Allocate own buffers or set user buffers including indicator. */
+    if (this->cntBufRecv > 0) {
+        if (bufRecv == NULL) {
+            // Memory is not user-provided, allocate it.
+            this->bufRecv = new BYTE[this->cntBufRecv];
+            this->bufRecvEnd = NULL;
+
+        } else {
+            this->bufRecv = bufRecv;
+            this->bufRecvEnd = this->bufRecv + this->cntBufRecv;
+        }
+    }
+
+    if (this->cntBufSend > 0) {
+        if (bufSend == NULL) {
+            // Memory is not user-provided, allocate it.
+            this->bufSend = new BYTE[this->cntBufSend];
+            this->bufSendEnd = NULL;
+
+        } else {
+            this->bufSend = bufSend;
+            this->bufSendEnd = this->bufSend + this->cntBufSend;
+        }
+    }
 }
 

@@ -36,7 +36,19 @@ namespace ib {
 
     public:
 
-        static SmartRef<IbRdmaCommClientChannel> Create(void);
+        /**
+         * Create a new instance with receive and send buffers of the specified
+         * size. The buffers will be allocated by the object.
+         *
+         * @param cntBufRecv The size of the receive buffer in bytes.
+         * @param cntBufSend The size of the send buffer in bytes.
+         *
+         * @return
+         */
+        static SmartRef<IbRdmaCommClientChannel> Create(
+            const SIZE_T cntBufRecv, const SIZE_T cntBufSend);
+
+        static SmartRef<IbRdmaCommClientChannel> Create(const SIZE_T cntBuf);
 
         virtual void Close(void);
 
@@ -65,11 +77,26 @@ namespace ib {
         /** Dtor. */
         ~IbRdmaCommClientChannel(void);
 
-        void createBuffers(const SIZE_T cntBufRecv, const SIZE_T cntBufSend);
+        void setBuffers(BYTE *bufRecv, const SIZE_T cntBufRecv, 
+            BYTE *bufSend, const SIZE_T cntBufSend);
 
+        /**
+         * Buffer for receiving data from the network. This can either be a 
+         * buffer owned by the channel or a user-provided memory range (for
+         * zero-copy operations). This pointer is registered via 'mrRecv'.
+         */
         BYTE *bufRecv;
 
+        BYTE *bufRecvEnd;
+
+        /**
+         * Buffer for sending data from the network. This can either be a 
+         * buffer owned by the channel or a user-provided memory range (for
+         * zero-copy operations). This pointer is registered via 'mrSend'.
+         */
         BYTE *bufSend;
+
+        BYTE *bufSendEnd;
 
         /** Size of 'bufRecv' in bytes. */
         SIZE_T cntBufRecv;

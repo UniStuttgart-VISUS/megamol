@@ -19,10 +19,22 @@
  * vislib::net::ib::IbRdmaCommServerChannel::Create
  */
 vislib::SmartRef<vislib::net::ib::IbRdmaCommServerChannel> 
-vislib::net::ib::IbRdmaCommServerChannel::Create(void) {
+vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBufRecv,
+        const SIZE_T cntBufSend) {
     VLSTACKTRACE("IbRdmaCommServerChannel::Create", __FILE__, __LINE__);
-    return SmartRef<IbRdmaCommServerChannel>(new IbRdmaCommServerChannel(), 
-        false);
+    return SmartRef<IbRdmaCommServerChannel>(new IbRdmaCommServerChannel(
+        cntBufRecv, cntBufSend), false);
+}
+
+
+/*
+ * vislib::net::ib::IbRdmaCommServerChannel::Create
+ */
+vislib::SmartRef<vislib::net::ib::IbRdmaCommServerChannel>  
+vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBuf) {
+    VLSTACKTRACE("IbRdmaCommServerChannel::Create", __FILE__, __LINE__);
+    return SmartRef<IbRdmaCommServerChannel>(new IbRdmaCommServerChannel(
+        cntBuf, cntBuf), false);
 }
 
 
@@ -33,16 +45,14 @@ vislib::SmartRef<vislib::net::AbstractCommClientChannel>
 vislib::net::ib::IbRdmaCommServerChannel::Accept(void) {
     VLSTACKTRACE("IbRdmaCommClientChannel::Accept", __FILE__, __LINE__);
 
-    int result = 0;                     // RDMA API results.
-    SmartRef<IbRdmaCommClientChannel> retval(new IbRdmaCommClientChannel(), 
-        false);                         // Client channel.
+    int result = 0;                             // RDMA API results.
+    SmartRef<IbRdmaCommClientChannel> retval    // Client channel.
+        = IbRdmaCommClientChannel::Create(this->cntBufRecv, this->cntBufSend);
 
     result = ::rdma_get_request(this->id, &retval->id);
     if (result != 0) {
         throw IbRdmaException("rdma_get_request", errno, __FILE__, __LINE__);
     }
-
-    retval->createBuffers(1024, 1024);  // TODO
 
     retval->mrRecv = ::rdma_reg_msgs(retval->id, retval->bufRecv, 
         retval->cntBufRecv);
@@ -56,15 +66,18 @@ vislib::net::ib::IbRdmaCommServerChannel::Accept(void) {
         throw IbRdmaException("rdma_reg_msgs", errno, __FILE__, __LINE__);
     }
 
-    //result = ::rdma_post_recv(retval->id, NULL, retval->bufRecv, 
-    //    retval->cntBufRecv, retval->mrRecv);
-    //if (result != 0) {
-    //    throw Exception("TODO rdma_post_recv", __FILE__, __LINE__);
-    //}
+    // Post an initial receive before acceping the connection. This will ensure 
+    // that the peer can directly start sending. We always keep an receive 
+    // request in-flight.
+    result = ::rdma_post_recv(retval->id, NULL, retval->bufRecv, 
+        retval->cntBufRecv, retval->mrRecv);
+    if (result != 0) {
+        throw IbRdmaException("rdma_post_recv", errno, __FILE__, __LINE__);
+    }
 
     result = ::rdma_accept(retval->id, NULL);
     if (result != 0) {
-        throw Exception("TODO rdma_accept", __FILE__, __LINE__);
+        throw IbRdmaException("rdma_accept", errno, __FILE__, __LINE__);
     }
 
     //result = ::rdma_get_recv_comp(retval->id, &retval->wc);
@@ -176,8 +189,9 @@ void vislib::net::ib::IbRdmaCommServerChannel::Listen(const int backlog) {
 /*
  * vislib::net::ib::IbRdmaCommServerChannel::IbRdmaCommServerChannel
  */
-vislib::net::ib::IbRdmaCommServerChannel::IbRdmaCommServerChannel(void) 
-        : Super(), id(NULL) {
+vislib::net::ib::IbRdmaCommServerChannel::IbRdmaCommServerChannel(
+        const SIZE_T cntBufRecv, const SIZE_T cntBufSend) 
+        : Super(), cntBufRecv(cntBufRecv), cntBufSend(cntBufSend), id(NULL) {
     VLSTACKTRACE("IbRdmaCommServerChannel::IbRdmaCommServerChannel", 
         __FILE__, __LINE__);
 }

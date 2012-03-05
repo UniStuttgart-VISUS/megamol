@@ -35,7 +35,10 @@ namespace ib {
 
     public:
 
-        static SmartRef<IbRdmaCommServerChannel> Create(void);
+        static SmartRef<IbRdmaCommServerChannel> Create(const SIZE_T cntBufRecv,
+            const SIZE_T cntBufSend);
+
+        static SmartRef<IbRdmaCommServerChannel> Create(const SIZE_T cntBuf);
 
         virtual SmartRef<AbstractCommClientChannel> Accept(void);
 
@@ -53,10 +56,17 @@ namespace ib {
         typedef AbstractCommServerChannel Super;
 
         /** Ctor. */
-        IbRdmaCommServerChannel(void);
+        IbRdmaCommServerChannel(const SIZE_T cntBufRecv, 
+            const SIZE_T cntBufSend);
 
         /** Dtor. */
         ~IbRdmaCommServerChannel(void);
+
+        /** Size of receive buffers created for client channels in bytes. */
+        SIZE_T cntBufRecv;
+
+        /** Size of send buffers created for client channels in bytes. */
+        SIZE_T cntBufSend;
 
         struct rdma_cm_id *id;
 

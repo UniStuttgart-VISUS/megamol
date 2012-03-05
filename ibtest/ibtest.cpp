@@ -25,7 +25,7 @@ typedef vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> IbChannel;
 typedef vislib::SmartRef<vislib::net::ib::IbRdmaCommServerChannel> IbServerChannel;
 
 
-const char *REFERENCE_DATA = "Hier spricht der Hugo!";
+const char REFERENCE_DATA[] = { "Hier spricht der Hugo!" };
 
 vislib::sys::Event evtServerReady;
 
@@ -42,7 +42,7 @@ DWORD Server::Run(void *userData) {
     using namespace vislib::net::ib;
 
     try {
-        IbServerChannel channel = IbRdmaCommServerChannel::Create();
+        IbServerChannel channel = IbRdmaCommServerChannel::Create(512);
 
         IbEndPoint ep = IPCommEndPoint::Create(IPEndPoint::FAMILY_INET,
             "192.168.219.250", 12345);
@@ -86,7 +86,7 @@ DWORD Client::Run(void *userData) {
     using namespace vislib::net::ib;
 
     try {
-        IbChannel channel = IbRdmaCommClientChannel::Create();
+        IbChannel channel = IbRdmaCommClientChannel::Create(512);
 
         IbEndPoint ep = IPCommEndPoint::Create(IPEndPoint::FAMILY_INET,
             "192.168.219.250", 12345);
