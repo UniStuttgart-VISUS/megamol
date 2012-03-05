@@ -192,7 +192,7 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
                 this->cntRemRecv -= lastReceived;
 
                 // Copy receive data to user buffer.
-                ::memcpy(outPtr, this->bufRecv, lastReceived);
+                ::memcpy(outPtr, this->remRecv, lastReceived);
 
                 // Update cursor variables.
                 totalReceived += lastReceived;
