@@ -185,8 +185,15 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
     } else {
         do {
             if (this->cntRemRecv > 0) {
-                lastReceived = cntBytes - this->cntRemRecv;
+                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Using %d bytes of "
+                    "RDMA data left from last receive operation.\n", cntRemRecv);
+                if (cntBytes > this->cntRemRecv) {
+                    lastReceived = this->cntRemRecv;
+                } else {
+                    lastReceived = cntBytes;
+                }
                 if (lastReceived > this->cntBufRecv) {
+                    ASSERT(false);
                     lastReceived = this->cntBufRecv;
                 }
                 this->cntRemRecv -= lastReceived;
@@ -205,6 +212,9 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
                 VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for RDMA "
                     "receive operation to complete...\n");
                 while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
+                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Received %d bytes "
+                    "via RDMA.\n", wc.byte_len);
+
 
                 // TODO: The following code does not work. The hack above was found at
                 // http://www.spinics.net/lists/linux-rdma/msg04795.html
@@ -233,7 +243,7 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
             
             if (this->cntRemRecv > 0) {
                 // Remember where we stopped for next call to Receive().
-                this->remRecv = this->bufRecv + this->cntRemRecv;
+                this->remRecv = this->bufRecv + lastReceived;
             } else {
                 // Post receive for next iteration or next call to Receive().
                 this->postReceive();
@@ -397,9 +407,8 @@ void vislib::net::ib::IbRdmaCommClientChannel::registerBuffers(void) {
     ASSERT(this->mrSend == NULL);
     ASSERT(this->bufSend != NULL);
 
-    // HACK: Use 2 times memory for swapping curBufRecv
     this->mrRecv = ::rdma_reg_msgs(this->id, this->bufRecv, 
-        2 * this->cntBufRecv);
+        this->cntBufRecv);
     if (this->mrRecv == NULL) {
         throw IbRdmaException("rdma_reg_msgs", errno, __FILE__, __LINE__);
     }
