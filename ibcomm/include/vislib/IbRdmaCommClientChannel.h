@@ -18,6 +18,7 @@
 #include "vislib/Socket.h"                      // Must be first!
 #include "vislib/AbstractCommClientChannel.h"
 #include "vislib/IbRdmaException.h"
+ #include "vislib/StackTrace.h"
 
 #include "rdma/rdma_cma.h"
 #include "rdma/rdma_verbs.h"
@@ -30,7 +31,12 @@ namespace ib {
 
 
     /**
-     * TODO: comment class
+     * This class implements the client channel interface of the VISlib comm 
+     * channel infrastructure using the RDMA API for InfiniBand.
+     *
+     * Objects of this class should either be used for establishing a connection
+     * to an InfiniBand RDMA server or are returned by the InfiniBand RDMA
+     * server in its Accept() method.
      */
     class IbRdmaCommClientChannel : public AbstractCommClientChannel {
 
@@ -45,10 +51,53 @@ namespace ib {
          *
          * @return
          */
-        static SmartRef<IbRdmaCommClientChannel> Create(
-            const SIZE_T cntBufRecv, const SIZE_T cntBufSend);
+        inline static SmartRef<IbRdmaCommClientChannel> Create(
+                const SIZE_T cntBufRecv, const SIZE_T cntBufSend) {
+            VLSTACKTRACE("IbRdmaCommClientChannel::Create", __FILE__, __LINE__);
+            return IbRdmaCommClientChannel::Create(NULL, cntBufRecv, NULL, 
+                cntBufSend);
+        }
+        
+        /**
+         * Create a new instance with receive and send buffers of the specified
+         * size. The buffers will be allocated by the object.
+         *
+         * @param cntBuf The size of the receive and send buffer in bytes.
+         *
+         * @return
+         */
+        inline static SmartRef<IbRdmaCommClientChannel> Create(
+                const SIZE_T cntBuf) {
+            VLSTACKTRACE("IbRdmaCommClientChannel::Create", __FILE__, __LINE__);
+            return IbRdmaCommClientChannel::Create(NULL, cntBuf, NULL, cntBuf);
+        }
 
-        static SmartRef<IbRdmaCommClientChannel> Create(const SIZE_T cntBuf);
+        /**
+         * Create a new instance using the specified buffers for DMA.
+         *
+         * @param bufRecv    A pointer to the receive buffer. If NULL, the 
+         *                   method will allocate 'cntBufRecv' bytes for the
+         *                   buffer. Otherwise, the memory provided will be 
+         *                   used. In this case, the caller remains owner of
+         *                   the memory and must ensure that it is available
+         *                   as long as the new object exists.
+         * @param cntBufRecv The size of 'bufRecv' in bytes if specified or the
+         *                   number of bytes to be allocaated if 'bufRecv' is
+         *                   NULL.
+         * @param bufSend    A pointer to the send buffer. If NULL, the 
+         *                   method will allocate 'cntBufSend' bytes for the
+         *                   buffer. Otherwise, the memory provided will be 
+         *                   used. In this case, the caller remains owner of
+         *                   the memory and must ensure that it is available
+         *                   as long as the new object exists.
+         * @param cntBufSend The size of 'bufSend' in bytes if specified or the
+         *                   number of bytes to be allocaated if 'bufSend' is
+         *                   NULL.
+         *
+         * @return
+         */
+        static SmartRef<IbRdmaCommClientChannel> Create(BYTE *bufRecv, 
+            const SIZE_T cntBufRecv, BYTE *bufSend, const SIZE_T cntBufSend);
 
         virtual void Close(void);
 
@@ -77,6 +126,43 @@ namespace ib {
         /** Dtor. */
         ~IbRdmaCommClientChannel(void);
 
+        /**
+         * Post a receive of the full receive buffer size to the completion
+         * queue.
+         *
+         * @throws IbRdmaException If the operation failed.
+         */
+        void postReceive(void);
+
+        /**
+         * Register the receive and the send buffer with the RMDA ID. It is
+         * required that the RDMA ID and all buffers have been allocated before.
+         * No buffers must have been registered before the method is called.
+         */
+        void registerBuffers(void);
+
+        /**
+         * Changes the send and receive buffers.
+         *
+         * @param bufRecv    A pointer to the receive buffer. If NULL, the 
+         *                   method will allocate 'cntBufRecv' bytes for the
+         *                   buffer. Otherwise, the memory provided will be 
+         *                   used. In this case, the caller remains owner of
+         *                   the memory and must ensure that it is available
+         *                   as long as the new object exists.
+         * @param cntBufRecv The size of 'bufRecv' in bytes if specified or the
+         *                   number of bytes to be allocaated if 'bufRecv' is
+         *                   NULL.
+         * @param bufSend    A pointer to the send buffer. If NULL, the 
+         *                   method will allocate 'cntBufSend' bytes for the
+         *                   buffer. Otherwise, the memory provided will be 
+         *                   used. In this case, the caller remains owner of
+         *                   the memory and must ensure that it is available
+         *                   as long as the new object exists.
+         * @param cntBufSend The size of 'bufSend' in bytes if specified or the
+         *                   number of bytes to be allocaated if 'bufSend' is
+         *                   NULL.
+         */
         void setBuffers(BYTE *bufRecv, const SIZE_T cntBufRecv, 
             BYTE *bufSend, const SIZE_T cntBufSend);
 
@@ -106,8 +192,10 @@ namespace ib {
 
         struct rdma_cm_id *id;
 
+        /** Registered memory structure for 'bufRecv'. */
         struct ibv_mr *mrRecv;
 
+        /** Registered memory structure for 'bufSend'. */
         struct ibv_mr *mrSend;
 
         /** 
@@ -126,4 +214,3 @@ namespace ib {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_IBRDMACOMMCLIENTCHANNEL_H_INCLUDED */
-

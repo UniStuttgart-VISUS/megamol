@@ -17,7 +17,9 @@
 
 #include "vislib/Socket.h"                      // Must be first!
 #include "vislib/AbstractCommServerChannel.h"
+#include "vislib/IbRdmaCommClientChannel.h"
 #include "vislib/IbRdmaException.h"
+#include "vislib/StackTrace.h"
 
 #include "rdma/rdma_cma.h"
 #include "rdma/rdma_verbs.h"
@@ -38,9 +40,18 @@ namespace ib {
         static SmartRef<IbRdmaCommServerChannel> Create(const SIZE_T cntBufRecv,
             const SIZE_T cntBufSend);
 
-        static SmartRef<IbRdmaCommServerChannel> Create(const SIZE_T cntBuf);
+        inline static SmartRef<IbRdmaCommServerChannel> Create(
+                const SIZE_T cntBuf) {
+            VLSTACKTRACE("IbRdmaCommServerChannel::Create", __FILE__, __LINE__);
+            return SmartRef<IbRdmaCommServerChannel>(new IbRdmaCommServerChannel(
+                cntBuf, cntBuf), false);
+        }
 
         virtual SmartRef<AbstractCommClientChannel> Accept(void);
+
+        SmartRef<IbRdmaCommClientChannel> Accept(
+                BYTE *bufRecv, const SIZE_T cntBufRecv, 
+                BYTE *bufSend, const SIZE_T cntBufSend);
 
         virtual void Bind(SmartRef<AbstractCommEndPoint> endPoint);
 

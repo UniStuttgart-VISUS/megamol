@@ -12,7 +12,7 @@
 #include "vislib/IbRdmaCommClientChannel.h"
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/memutils.h"
-#include "vislib/StackTrace.h"
+#include "vislib/Trace.h"
 
 
 /*
@@ -28,52 +28,44 @@ vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBufRecv,
 
 
 /*
- * vislib::net::ib::IbRdmaCommServerChannel::Create
- */
-vislib::SmartRef<vislib::net::ib::IbRdmaCommServerChannel>  
-vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBuf) {
-    VLSTACKTRACE("IbRdmaCommServerChannel::Create", __FILE__, __LINE__);
-    return SmartRef<IbRdmaCommServerChannel>(new IbRdmaCommServerChannel(
-        cntBuf, cntBuf), false);
-}
-
-
-/*
  * vislib::net::ib::IbRdmaCommServerChannel::Accept
  */
 vislib::SmartRef<vislib::net::AbstractCommClientChannel> 
 vislib::net::ib::IbRdmaCommServerChannel::Accept(void) {
     VLSTACKTRACE("IbRdmaCommClientChannel::Accept", __FILE__, __LINE__);
 
+    SmartRef<IbRdmaCommClientChannel> retval = this->Accept(
+        NULL, this->cntBufRecv, NULL, this->cntBufSend);
+    return retval.DynamicCast<AbstractCommClientChannel>();
+}
+
+
+/*
+ * vislib::net::ib::IbRdmaCommServerChannel::Accept
+ */
+vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
+vislib::net::ib::IbRdmaCommServerChannel::Accept(BYTE *bufRecv, 
+        const SIZE_T cntBufRecv, BYTE *bufSend, const SIZE_T cntBufSend) {
+    VLSTACKTRACE("IbRdmaCommClientChannel::Accept", __FILE__, __LINE__);
+
     int result = 0;                             // RDMA API results.
-    SmartRef<IbRdmaCommClientChannel> retval    // Client channel.
-        = IbRdmaCommClientChannel::Create(this->cntBufRecv, this->cntBufSend);
+    SmartRef<IbRdmaCommClientChannel> retval;   // Client channel.
+
+    // Allocate return value.
+    retval = IbRdmaCommClientChannel::Create(bufRecv, cntBufRecv, 
+        bufSend, cntBufSend);
 
     result = ::rdma_get_request(this->id, &retval->id);
     if (result != 0) {
         throw IbRdmaException("rdma_get_request", errno, __FILE__, __LINE__);
     }
 
-    retval->mrRecv = ::rdma_reg_msgs(retval->id, retval->bufRecv, 
-        retval->cntBufRecv);
-    if (retval->mrRecv == NULL) {
-        throw IbRdmaException("rdma_reg_msgs", errno, __FILE__, __LINE__);
-    }
-
-    retval->mrSend = ::rdma_reg_msgs(retval->id, retval->bufSend, 
-        retval->cntBufSend);
-    if (retval->mrSend == NULL) {
-        throw IbRdmaException("rdma_reg_msgs", errno, __FILE__, __LINE__);
-    }
+    retval->registerBuffers();
 
     // Post an initial receive before acceping the connection. This will ensure 
     // that the peer can directly start sending. We always keep an receive 
     // request in-flight.
-    result = ::rdma_post_recv(retval->id, NULL, retval->bufRecv, 
-        retval->cntBufRecv, retval->mrRecv);
-    if (result != 0) {
-        throw IbRdmaException("rdma_post_recv", errno, __FILE__, __LINE__);
-    }
+    retval->postReceive();
 
     result = ::rdma_accept(retval->id, NULL);
     if (result != 0) {
@@ -85,9 +77,8 @@ vislib::net::ib::IbRdmaCommServerChannel::Accept(void) {
     //    throw Exception("TODO rdma_get_recv_comp", __FILE__, __LINE__);
     //}
 
-    return retval.DynamicCast<AbstractCommClientChannel>();
+    return retval;
 }
-
 
 
 /*
@@ -153,9 +144,8 @@ void vislib::net::ib::IbRdmaCommServerChannel::Close(void) {
     if (result != 0) {
         throw IbRdmaException("rdma_disconnect", errno, __FILE__, __LINE__);
     }
+    // TODO: This is really evil, isn't it?
 
-    // TODO
-//    ::rdma_dereg_mr(this->mr);
     ::rdma_destroy_ep(this->id);
 }
 
@@ -203,4 +193,10 @@ vislib::net::ib::IbRdmaCommServerChannel::IbRdmaCommServerChannel(
 vislib::net::ib::IbRdmaCommServerChannel::~IbRdmaCommServerChannel(void) {
     VLSTACKTRACE("IbRdmaCommServerChannel::~IbRdmaCommServerChannel", 
         __FILE__, __LINE__);
+    try {
+        this->Close();
+    } catch (...) {
+        VLTRACE(Trace::LEVEL_VL_WARN, "An exception was caught when closing "
+            "a IbRdmaCommServerChannel in its destructor.\n");
+    }
 }
