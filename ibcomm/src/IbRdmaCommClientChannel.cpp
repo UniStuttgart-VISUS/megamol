@@ -163,54 +163,81 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
         // the in-flight receive and post the next one. 'forceReceive' is not
         // allowed in this operation mode.
 
-        VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for RDMA receive "
-            "operation to complete...\n");
-        while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
+        ASSERT(false);  // TODO: This currently does not work.
 
-        // TODO: Currently, we can only receive to the begin of the buffer.
-        ASSERT((outData == NULL) || (outData == this->bufRecv));
-        //outPtr = this->bufRecv;
+        //VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for RDMA receive "
+        //    "operation to complete...\n");
+        //while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
 
-        if (cntBytes > this->cntBufRecv) {
-            // User tries to receive more than the supplied memory range.
-            throw IllegalParamException("cntBytes", __FILE__, __LINE__);
-        }
+        //// TODO: Currently, we can only receive to the begin of the buffer.
+        //ASSERT((outData == NULL) || (outData == this->bufRecv));
+        ////outPtr = this->bufRecv;
 
-        this->postReceive();
+        //if (cntBytes > this->cntBufRecv) {
+        //    // User tries to receive more than the supplied memory range.
+        //    throw IllegalParamException("cntBytes", __FILE__, __LINE__);
+        //}
 
-        totalReceived = cntBytes;
+        //this->postReceive();
+
+        //totalReceived = cntBytes;
 
     } else {
         do {
-            // Complete the current in-flight receive operation. This will block
-            // until the data becomes available.
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for RDMA "
-                "receive operation to complete...\n");
-            while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
+            if (this->cntRemRecv > 0) {
+                lastReceived = cntBytes - this->cntRemRecv;
+                if (lastReceived > this->cntBufRecv) {
+                    lastReceived = this->cntBufRecv;
+                }
+                this->cntRemRecv -= lastReceived;
 
-            // TODO: The following code does not work. The hack above was found at
-            // http://www.spinics.net/lists/linux-rdma/msg04795.html
-            //result = ::rdma_get_recv_comp(this->id, &wc);
-            //if (result != 0) {
-            //    throw IbRdmaException("rdma_get_recv_comp", errno, __FILE__, __LINE__);
-            //}
+                // Copy receive data to user buffer.
+                ::memcpy(outPtr, this->bufRecv, lastReceived);
 
-            // Determine how much we can copy from the receive buffer to the 
-            // user-supplied destination buffer.
-            lastReceived = cntBytes - totalReceived;
-            if (lastReceived > this->cntBufRecv) {
-                lastReceived = this->cntBufRecv;
+                // Update cursor variables.
+                totalReceived += lastReceived;
+                outPtr += lastReceived;
+
+            } else {
+
+                // Complete the current in-flight receive operation. This will block
+                // until the data becomes available.
+                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for RDMA "
+                    "receive operation to complete...\n");
+                while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
+
+                // TODO: The following code does not work. The hack above was found at
+                // http://www.spinics.net/lists/linux-rdma/msg04795.html
+                //result = ::rdma_get_recv_comp(this->id, &wc);
+                //if (result != 0) {
+                //    throw IbRdmaException("rdma_get_recv_comp", errno, __FILE__, __LINE__);
+                //}
+
+                // Determine how much we can copy from the receive buffer to the 
+                // user-supplied destination buffer.
+                this->cntRemRecv = wc.byte_len;
+                lastReceived = cntBytes - totalReceived;
+                if (lastReceived > this->cntBufRecv) {
+                    lastReceived = this->cntBufRecv;
+                }
+                this->cntRemRecv -= lastReceived;
+
+                // Copy receive data to user buffer.
+                ::memcpy(outPtr, this->bufRecv, lastReceived);
+
+                // Update cursor variables.
+                totalReceived += lastReceived;
+                outPtr += lastReceived;
             }
 
-            // Copy receive data to user buffer.
-            ::memcpy(outPtr, this->bufRecv, lastReceived);
-
-            // Update cursor variables.
-            totalReceived += lastReceived;
-            outPtr += lastReceived;
             
-            // Post receive for next iteration or next call to Receive().
-            this->postReceive();
+            if (this->cntRemRecv > 0) {
+                // Remember where we stopped for next call to Receive().
+                this->remRecv = this->bufRecv + this->cntRemRecv;
+            } else {
+                // Post receive for next iteration or next call to Receive().
+                this->postReceive();
+            }
 
         } while (forceReceive && (totalReceived < cntBytes) && (lastReceived > 0));
     }
@@ -319,7 +346,8 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
  */
 vislib::net::ib::IbRdmaCommClientChannel::IbRdmaCommClientChannel(void) 
         : bufRecv(NULL), bufRecvEnd(NULL), bufSend(NULL), bufSendEnd(NULL), 
-        cntBufRecv(0), cntBufSend(0), id(NULL), mrRecv(NULL), mrSend(NULL) {
+        cntBufRecv(0), cntBufSend(0), cntRemRecv(0), id(NULL), 
+        mrRecv(NULL), mrSend(NULL), remRecv(NULL) {
     VLSTACKTRACE("IbRdmaCommClientChannel::IbRdmaCommClientChannel", 
         __FILE__, __LINE__);
 }
@@ -369,8 +397,9 @@ void vislib::net::ib::IbRdmaCommClientChannel::registerBuffers(void) {
     ASSERT(this->mrSend == NULL);
     ASSERT(this->bufSend != NULL);
 
+    // HACK: Use 2 times memory for swapping curBufRecv
     this->mrRecv = ::rdma_reg_msgs(this->id, this->bufRecv, 
-        this->cntBufRecv);
+        2 * this->cntBufRecv);
     if (this->mrRecv == NULL) {
         throw IbRdmaException("rdma_reg_msgs", errno, __FILE__, __LINE__);
     }
@@ -417,7 +446,7 @@ void vislib::net::ib::IbRdmaCommClientChannel::setBuffers(BYTE *bufRecv,
         if (bufRecv == NULL) {
             VLTRACE(Trace::LEVEL_VL_VERBOSE, "Allocating RDMA receive "
                 "buffer of %d bytes...\n", this->cntBufRecv);
-            this->bufRecv = new BYTE[this->cntBufRecv];
+            this->bufRecv = new BYTE[this->cntBufRecv]; 
             this->bufRecvEnd = NULL;
 
         } else {

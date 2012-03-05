@@ -222,6 +222,8 @@ namespace ib {
         /** Size of 'bufSend' in bytes. */
         SIZE_T cntBufSend;
 
+        SIZE_T cntRemRecv;
+
         struct rdma_cm_id *id;
 
         /** Registered memory structure for 'bufRecv'. */
@@ -229,6 +231,8 @@ namespace ib {
 
         /** Registered memory structure for 'bufSend'. */
         struct ibv_mr *mrSend;
+
+        BYTE *remRecv;
 
         /** 
          * The server channel must be able to initialise a client channel 
