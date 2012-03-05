@@ -120,7 +120,7 @@ namespace cluster {
          *
          * @param channel The channel to be used
          */
-        void Open(vislib::SmartRef<vislib::net::AbstractCommChannel> channel);
+        void Open(vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel);
 
         /**
          * Sends a message to all nodes in the cluster.
@@ -231,7 +231,7 @@ namespace cluster {
     private:
 
         /** The communication channel */
-        vislib::SmartRef<vislib::net::AbstractCommChannel> channel;
+        vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel;
 
         /** The receiver thread */
         vislib::sys::RunnableThread<vislib::net::SimpleMessageDispatcher> receiver;

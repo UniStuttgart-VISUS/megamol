@@ -29,7 +29,7 @@ using namespace megamol::core;
  * cluster::simple::Heartbeat::Connection::Connection
  */
 cluster::simple::Heartbeat::Connection::Connection(cluster::simple::Heartbeat& parent,
-        vislib::SmartRef<vislib::net::AbstractCommChannel> chan) : parent(parent), chan(chan),
+        vislib::SmartRef<vislib::net::AbstractCommClientChannel> chan) : parent(parent), chan(chan),
         waiting(false), kun(&Connection::receive), wait(), data() {
     this->kun.Start(static_cast<void*>(this));
     vislib::sys::Thread::Sleep(10);
@@ -41,7 +41,7 @@ cluster::simple::Heartbeat::Connection::Connection(cluster::simple::Heartbeat& p
  */
 void cluster::simple::Heartbeat::Connection::Close(void) {
     if (!this->chan.IsNull()) {
-        vislib::SmartRef<vislib::net::AbstractCommChannel> c = this->chan;
+        vislib::SmartRef<vislib::net::AbstractCommClientChannel> c = this->chan;
         this->chan = NULL;
         c->Close();
     }
@@ -56,7 +56,7 @@ void cluster::simple::Heartbeat::Connection::Close(void) {
  */
 DWORD cluster::simple::Heartbeat::Connection::receive(void *userData) {
     Connection *that = static_cast<Connection *>(userData);
-    vislib::SmartRef<vislib::net::AbstractCommChannel> chan = that->chan;
+    vislib::SmartRef<vislib::net::AbstractCommClientChannel> chan = that->chan;
     Heartbeat& parent = that->parent;
     bool& waiting = that->waiting;
     vislib::sys::Event& wait = that->wait;
@@ -252,7 +252,7 @@ bool cluster::simple::Heartbeat::OnServerError(const vislib::net::CommServer& sr
 /*
  * cluster::simple::Heartbeat::OnNewConnection
  */
-bool cluster::simple::Heartbeat::OnNewConnection(const vislib::net::CommServer& src, vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw() {
+bool cluster::simple::Heartbeat::OnNewConnection(const vislib::net::CommServer& src, vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel) throw() {
     vislib::sys::Log::DefaultLog.WriteInfo("New heartbeat connection");
 
     vislib::SmartPtr<Connection> con = new Connection(*this, channel);

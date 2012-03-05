@@ -76,7 +76,7 @@ bool cluster::CommChannel::IsOpen(void) const {
 /*
  * cluster::CommChannel::Open
  */
-void cluster::CommChannel::Open(vislib::SmartRef<vislib::net::AbstractCommChannel> channel) {
+void cluster::CommChannel::Open(vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel) {
     this->Close();
     this->channel = channel;
     vislib::net::SimpleMessageDispatcher::Configuration cfg(channel);

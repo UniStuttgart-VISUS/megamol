@@ -146,7 +146,7 @@ namespace simple {
          *         because the server remains its owner.
          */
         virtual bool OnNewConnection(const vislib::net::CommServer& src,
-            vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw();
+            vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel) throw();
 
         /**
          * Callback called when a parameter is updated
@@ -169,7 +169,7 @@ namespace simple {
              * @param parent The parent server
              * @param channel The communication channel
              */
-            Client(Server& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> channel);
+            Client(Server& parent, vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel);
 
             /** Dtor */
             virtual ~Client(void);

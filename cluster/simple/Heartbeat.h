@@ -143,7 +143,7 @@ namespace simple {
          *         because the server remains its owner.
          */
         virtual bool OnNewConnection(const vislib::net::CommServer& src,
-            vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw();
+            vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel) throw();
 
         /**
          * The server will call this method when it left the server loop and
@@ -190,7 +190,7 @@ namespace simple {
              * @param parent The owning heartbeat server
              * @param chan The communication channel
              */
-            Connection(Heartbeat& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> chan);
+            Connection(Heartbeat& parent, vislib::SmartRef<vislib::net::AbstractCommClientChannel> chan);
 
             /**
              * Closes the connection
@@ -238,7 +238,7 @@ namespace simple {
             Heartbeat& parent;
 
             /** The communication channel */
-            vislib::SmartRef<vislib::net::AbstractCommChannel> chan;
+            vislib::SmartRef<vislib::net::AbstractCommClientChannel> chan;
 
             /** Flag whether or not this thread is waiting */
             bool waiting;

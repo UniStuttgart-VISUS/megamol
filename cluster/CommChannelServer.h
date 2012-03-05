@@ -190,7 +190,7 @@ namespace cluster {
          *         returns false, the listener should not use the socket, 
          *         because the server remains its owner.
          */
-        virtual bool OnNewConnection(const vislib::net::CommServer& src, vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw();
+        virtual bool OnNewConnection(const vislib::net::CommServer& src, vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel) throw();
 
         /**
          * The server will call this method when it left the server loop and

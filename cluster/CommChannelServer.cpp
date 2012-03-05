@@ -153,8 +153,8 @@ bool cluster::CommChannelServer::OnServerError(const vislib::net::CommServer& sr
 /*
  * cluster::CommChannelServer::OnNewConnection
  */
-bool cluster::CommChannelServer::OnNewConnection(const vislib::net::CommServer& src, vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw() {
-    vislib::SmartRef<vislib::net::AbstractCommChannel> bidiChannel = channel;//.DynamicCast<vislib::net::AbstractCommChannel>();
+bool cluster::CommChannelServer::OnNewConnection(const vislib::net::CommServer& src, vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel) throw() {
+    vislib::SmartRef<vislib::net::AbstractCommClientChannel> bidiChannel = channel;//.DynamicCast<vislib::net::AbstractCommChannel>();
     ASSERT(!bidiChannel.IsNull()); // internal error like problem (should never happen)
     try {
         vislib::sys::AutoLock(this->clientsLock);

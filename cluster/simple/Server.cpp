@@ -46,7 +46,7 @@ using namespace megamol::core;
 /*
  * cluster::simple::Server::Client::Client
  */
-cluster::simple::Server::Client::Client(Server& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> channel)
+cluster::simple::Server::Client::Client(Server& parent, vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel)
         : vislib::net::SimpleMessageDispatchListener(), parent(parent), dispatcher(), terminationImminent(false),
         wantCamUpdates(false), lastTCSyncNumber(0) {
     this->dispatcher.AddListener(this);
@@ -434,7 +434,7 @@ bool cluster::simple::Server::Terminate(void) {
  * cluster::simple::Server::OnNewConnection
  */
 bool cluster::simple::Server::OnNewConnection(const vislib::net::CommServer& src,
-        vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw() {
+        vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel) throw() {
     vislib::sys::Log::DefaultLog.WriteInfo("Incoming TCP connection");
     vislib::sys::AutoLock(this->clientsLock);
     this->clients.Add(new Client(*this, channel));

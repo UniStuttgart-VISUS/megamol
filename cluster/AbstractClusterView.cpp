@@ -488,7 +488,7 @@ bool cluster::AbstractClusterView::onServerAddressChanged(param::ParamSlot& slot
 
     try {
         channel->Connect(vislib::net::IPCommEndPoint::Create(ep));
-        this->ctrlChannel.Open(channel.DynamicCast<vislib::net::AbstractCommChannel>());
+        this->ctrlChannel.Open(channel.DynamicCast<vislib::net::AbstractCommClientChannel>());
     } catch(vislib::Exception ex) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to connect to server: %s\n", ex.GetMsgA());
