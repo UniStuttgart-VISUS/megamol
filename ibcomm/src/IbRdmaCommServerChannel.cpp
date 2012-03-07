@@ -60,6 +60,25 @@ vislib::net::ib::IbRdmaCommServerChannel::Accept(BYTE *bufRecv,
         throw IbRdmaException("rdma_get_request", errno, __FILE__, __LINE__);
     }
 
+    // HACK: There is a known bug in the RDMA library, which prevents 
+    // rdma_get_request from creating the send and receive CQ for other than
+    // the first client channels. See 
+    // http://permalink.gmane.org/gmane.linux.drivers.rdma/6188 for more 
+    // details. We circumvent this by re-creating the queue pair with our
+    // saved initialisation attributes for any end point that does not have
+    // a send or receive CQ.
+    if ((retval->id->send_cq == NULL) || (retval->id->recv_cq == NULL)) {
+        ASSERT(retval->id != NULL);
+        ::rdma_destroy_qp(retval->id);
+
+        struct ibv_qp_init_attr attr;
+        ::memcpy(&attr, &this->qpAttr, sizeof(attr));
+        result = ::rdma_create_qp(retval->id, NULL, &attr);
+        if (result != 0) {
+            throw IbRdmaException("rdma_create_qp", errno, __FILE__, __LINE__);
+        }
+    }
+
     retval->registerBuffers();
 
     // Post an initial receive before acceping the connection. This will ensure 
@@ -114,15 +133,16 @@ void vislib::net::ib::IbRdmaCommServerChannel::Bind(
     }
 
     /* Create the end point. */
-    ::ZeroMemory(&attr, sizeof(attr));
-    attr.cap.max_send_wr = 1;
-    attr.cap.max_recv_wr = 1;
-    attr.cap.max_send_sge = 1;
-    attr.cap.max_recv_sge = 1;
-    attr.cap.max_inline_data = 16;  // TODO
-    attr.sq_sig_all = 1;
+    //::ZeroMemory(&attr, sizeof(attr));
+    //attr.cap.max_send_wr = 1;
+    //attr.cap.max_recv_wr = 1;
+    //attr.cap.max_send_sge = 1;
+    //attr.cap.max_recv_sge = 1;
+    //attr.cap.max_inline_data = 16;  // TODO
+    //attr.sq_sig_all = 1;
 
     //attr.qp_context = this->id;
+    ::memcpy(&attr, &this->qpAttr, sizeof(attr));
 
     result = ::rdma_create_ep(&this->id, addrInfo, NULL, &attr);
     ::rdma_freeaddrinfo(addrInfo);
@@ -146,7 +166,10 @@ void vislib::net::ib::IbRdmaCommServerChannel::Close(void) {
     }
     // TODO: This is really evil, isn't it?
 
-    ::rdma_destroy_ep(this->id);
+    if (this->id != NULL) {
+        ::rdma_destroy_ep(this->id);
+        this->id = NULL;
+    }
 }
 
 
@@ -186,6 +209,15 @@ vislib::net::ib::IbRdmaCommServerChannel::IbRdmaCommServerChannel(
         : Super(), cntBufRecv(cntBufRecv), cntBufSend(cntBufSend), id(NULL) {
     VLSTACKTRACE("IbRdmaCommServerChannel::IbRdmaCommServerChannel", 
         __FILE__, __LINE__);
+
+    // TODO: Move this?
+    ::ZeroMemory(&this->qpAttr, sizeof(this->qpAttr));
+    this->qpAttr.cap.max_send_wr = 1;
+    this->qpAttr.cap.max_recv_wr = 1;
+    this->qpAttr.cap.max_send_sge = 1;
+    this->qpAttr.cap.max_recv_sge = 1;
+    this->qpAttr.cap.max_inline_data = 16;  // TODO
+    this->qpAttr.sq_sig_all = 1;
 }
 
 

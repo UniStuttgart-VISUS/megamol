@@ -81,6 +81,8 @@ namespace ib {
 
         struct rdma_cm_id *id;
 
+        struct ibv_qp_init_attr qpAttr;
+
     };
     
 } /* end namespace ib */

@@ -25,9 +25,11 @@ typedef vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> IbChannel;
 typedef vislib::SmartRef<vislib::net::ib::IbRdmaCommServerChannel> IbServerChannel;
 
 
-const char REFERENCE_DATA[] = { "Hier spricht der Hugo!" };
+static const char REFERENCE_DATA[] = { "Hier spricht der Hugo!" };
 
-vislib::sys::Event evtServerReady;
+static vislib::sys::Event evtServerReady(true);
+
+static const int CNT_CLIENTS = 2;
 
 
 class Server : public vislib::sys::Runnable {
@@ -55,19 +57,20 @@ DWORD Server::Run(void *userData) {
 
         ::evtServerReady.Set();
 
-        std::cout << "Accept..." << std::endl;
-        SmartRef<AbstractCommClientChannel> client = channel->Accept();
-        //channel->Close();
-
         std::cout << "Server is bound to " 
             << channel->GetLocalEndPoint()->ToStringA().PeekBuffer() 
             << std::endl;
 
         char *data = new char[sizeof(REFERENCE_DATA)];
-        client->Receive(data, sizeof(REFERENCE_DATA));
-        std::cout << "Received \"" << data << "\"" << std::endl;
+        for (int i = 0; i < CNT_CLIENTS; i++) {
+            std::cout << "Accept..." << std::endl;
+            SmartRef<AbstractCommClientChannel> client = channel->Accept();
+            client->Receive(data, sizeof(REFERENCE_DATA));
+            std::cout << "Received \"" << data << "\"" << std::endl;
+        }
         delete[] data;
 
+        //channel->Close();
         std::cout << "Server leaving..." << std::endl;
         return 0;
 
@@ -169,13 +172,16 @@ int _tmain(int argc, _TCHAR **argv) {
     }
 
     RunnableThread<Client> clientThread;
+    RunnableThread<Client> clientThread2;
     RunnableThread<Server> serverThread;
 
     serverThread.Start();
     clientThread.Start();
+    clientThread2.Start();
 
     clientThread.Join();
     serverThread.Join();
+    clientThread2.Join();
 
     try {
         //IbChannel channel = IbvCommChannel::Create();

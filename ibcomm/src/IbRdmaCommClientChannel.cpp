@@ -53,7 +53,10 @@ void vislib::net::ib::IbRdmaCommClientChannel::Close(void) {
         this->mrSend = NULL;
     }
 
-    ::rdma_destroy_ep(this->id);
+    if (this->id != NULL) {
+        ::rdma_destroy_ep(this->id);
+        this->id = NULL;
+    }
 }
 
 
