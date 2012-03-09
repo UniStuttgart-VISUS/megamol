@@ -19,7 +19,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>%withNETCDF%!$(NETCDFPath)lib$(BitsD);!!%withOPENCL%!$(OPENCLPath)OpenCL/common/lib/$(PlatformName);!!%withCUDA%!$(CUDAPath)C/common/lib/$(PlatformName);$(CUDAPath)shared/lib/$(PlatformName);!!%withHAPTICS%!$(HAPTICSPath)\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\utilities\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\lib\$(Platform);!!%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>%withNETCDF%!netcdf$(Bits).lib !!%withOPENCL%!OpenCL.lib !!%withCUDA%!cudart.lib;cutil$(BitsD).lib;!!%withHAPTICS%!hl.lib;hlu.lib;hd.lib;hdu.lib;!!%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%withNETCDF%!netcdf$(Bits).lib;!!%withOPENCL%!OpenCL.lib;!!%withCUDA%!cudart.lib;cutil$(BitsD).lib;!!%withHAPTICS%!hl.lib;hlu.lib;hd.lib;hdu.lib;!!%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
