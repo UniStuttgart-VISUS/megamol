@@ -11,6 +11,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(OfedSdkDir)lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
