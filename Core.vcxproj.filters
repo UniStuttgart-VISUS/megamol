@@ -687,6 +687,9 @@
     <ClCompile Include="moldyn\DirPartColModulate.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RenderVolumeSlice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1243,6 +1246,9 @@
     </ClInclude>
     <ClInclude Include="moldyn\DirPartColModulate.h">
       <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderVolumeSlice.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

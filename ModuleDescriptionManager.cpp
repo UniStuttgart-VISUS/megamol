@@ -72,6 +72,7 @@
 #include "GridBalls.h"
 #include "moldyn/DirPartVolume.h"
 #include "misc/VolumeCache.h"
+#include "RenderVolumeSlice.h"
 
 using namespace megamol::core;
 
@@ -169,6 +170,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<GridBalls>();
         instance->registerAutoDescription<moldyn::DirPartVolume>();
         instance->registerAutoDescription<misc::VolumeCache>();
+        instance->registerAutoDescription<RenderVolumeSlice>();
     //}
     //return instance;
 }

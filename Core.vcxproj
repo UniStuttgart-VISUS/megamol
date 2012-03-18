@@ -322,6 +322,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="ObjectDescription.cpp" />
     <ClCompile Include="ObjectDescriptionManager.cpp" />
     <ClCompile Include="ParamValueSetRequest.cpp" />
+    <ClCompile Include="RenderVolumeSlice.cpp" />
     <ClCompile Include="RootModuleNamespace.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -555,6 +556,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="productversion.gen.h" />
     <ClInclude Include="productversion.h" />
     <ClInclude Include="productversion.template.h" />
+    <ClInclude Include="RenderVolumeSlice.h" />
     <ClInclude Include="RootModuleNamespace.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="versioninfo.h" />
