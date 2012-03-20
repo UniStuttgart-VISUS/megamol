@@ -280,11 +280,33 @@ bool RenderVolumeSlice::Render(Call& call) {
     ::glColor3ub(255, 255, 255);
     ::glTexCoord1f(0.0f);
 
+    int idx[4];
     for (int ix = minXi; ix < maxXi; ix++) {
-        ::glBegin(GL_TRIANGLE_STRIP);
+        //::glBegin(GL_QUAD_STRIP);
         for (int iy = minYi; iy < maxYi; iy++) {
-            int idx = (ix - minXi) + w * (iy - minYi);
-            for (int ii = 0; ii < 4; ii++) {
+            idx[0] = (ix - minXi) + w * (iy - minYi);
+            idx[1] = idx[0] + 1;
+            idx[2] = idx[1] + w;
+            idx[3] = idx[0] + w;
+
+            float vf = (val[idx[0]] + val[idx[1]] + val[idx[2]] + val[idx[3]]) * 0.25f;
+            v = pos[idx[0]];
+            v += pos[idx[1]];
+            v += pos[idx[2]];
+            v += pos[idx[3]];
+            v *= 0.25f;
+
+            ::glBegin(GL_TRIANGLE_FAN);
+            if (cgtf == NULL) ::glColor3f(vf, vf, vf); else ::glTexCoord1f(vf);
+            ::glVertex3fv(v.PeekComponents());
+            for (int ii = 0; ii <= 4; ii++) {
+                vf = val[idx[ii % 4]];
+                if (cgtf == NULL) ::glColor3f(vf, vf, vf); else ::glTexCoord1f(vf);
+                ::glVertex3fv(pos[idx[ii % 4]].PeekComponents());
+            }
+            ::glEnd();
+
+/*            for (int ii = 0; ii < 4; ii++) {
                 if (cgtf == NULL) {
                     ::glColor3f(val[idx], val[idx], val[idx]);
                 } else {
@@ -296,9 +318,9 @@ bool RenderVolumeSlice::Render(Call& call) {
                 } else {
                     idx++;
                 }
-            }
+            }*/
         }
-        ::glEnd();
+        //::glEnd();
     }
 
     delete[] pos;
