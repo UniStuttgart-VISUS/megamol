@@ -14,7 +14,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/TcpCommChannel.h"      // Must be first!
+
+#include "vislib/Socket.h"              // Must be first!
 #include "vislib/AbstractCommChannel.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/Runnable.h"
@@ -22,6 +23,8 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartRef.h"
 #include "vislib/StackTrace.h"
+#include "vislib/TcpCommChannel.h"
+#include "vislib/UdpCommChannel.h"
 
 
 namespace vislib {
@@ -54,6 +57,8 @@ namespace net {
             inline Configuration_t(SmartRef<AbstractCommClientChannel> channel) 
                 : Channel(channel) {}
             inline Configuration_t(SmartRef<TcpCommChannel> channel)
+                : Channel(channel.DynamicCast<AbstractCommClientChannel>()) {}
+            inline Configuration_t(SmartRef<UdpCommChannel> channel)
                 : Channel(channel.DynamicCast<AbstractCommClientChannel>()) {}
 
             /** Channel to be used by the dispatcher. */

@@ -393,7 +393,7 @@ DWORD vislib::net::ClusterDiscoveryService::Sender::Run(void *discSvc) {
 
     while (this->isRunning) {
         try {
-			/* Broadcast request. */
+            /* Broadcast request. */
             cds->prepareRequest();
             socket.Send(cds->bcastAddr, &request, sizeof(Message));
             VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
@@ -414,7 +414,7 @@ DWORD vislib::net::ClusterDiscoveryService::Sender::Run(void *discSvc) {
 
     /* Clean up. */
     try {
-  		/* Now inform all other nodes, that we are out. */
+        /* Now inform all other nodes, that we are out. */
         request.msgType = MSG_TYPE_SAYONARA;
         socket.Send(cds->bcastAddr, &request, sizeof(Message));
         VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service sent MSG_TYPE_SAYONARA to "

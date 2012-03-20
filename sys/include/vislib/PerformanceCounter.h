@@ -223,8 +223,8 @@ namespace sys {
          * mark was set.
          */
         UINT64 mark;
-		
-	};
+        
+    };
 
 } /* end namespace sys */
 } /* end namespace vislib */

@@ -456,6 +456,7 @@
     <ClCompile Include="src\SocketException.cpp" />
     <ClCompile Include="src\TcpCommChannel.cpp" />
     <ClCompile Include="src\TcpServer.cpp" />
+    <ClCompile Include="src\UdpCommChannel.cpp" />
     <ClCompile Include="src\UnexpectedMessageException.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -494,6 +495,7 @@
     <ClInclude Include="include\vislib\SocketException.h" />
     <ClInclude Include="include\vislib\TcpCommChannel.h" />
     <ClInclude Include="include\vislib\TcpServer.h" />
+    <ClInclude Include="include\vislib\UdpCommChannel.h" />
     <ClInclude Include="include\vislib\UnexpectedMessageException.h" />
   </ItemGroup>
   <ItemGroup>

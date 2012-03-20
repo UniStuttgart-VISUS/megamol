@@ -122,7 +122,7 @@ void vislib::net::ib::IbRdmaCommServerChannel::Bind(
 
     /* Initialise our request. */
     ::ZeroMemory(&hints, sizeof(hints));
-    hints.ai_port_space = RDMA_PS_TCP;
+    hints.ai_port_space = RDMA_PS_TCP;  // RDMA_PS_UDP
     hints.ai_flags = RAI_PASSIVE;
 
     /* Get the result. */
@@ -132,18 +132,8 @@ void vislib::net::ib::IbRdmaCommServerChannel::Bind(
         throw IbRdmaException("rdma_getaddrinfo", errno, __FILE__, __LINE__);
     }
 
-    /* Create the end point. */
-    //::ZeroMemory(&attr, sizeof(attr));
-    //attr.cap.max_send_wr = 1;
-    //attr.cap.max_recv_wr = 1;
-    //attr.cap.max_send_sge = 1;
-    //attr.cap.max_recv_sge = 1;
-    //attr.cap.max_inline_data = 16;  // TODO
-    //attr.sq_sig_all = 1;
-
-    //attr.qp_context = this->id;
+    // This copy is part of the hack in IbRdmaCommServerChannel::Accept().
     ::memcpy(&attr, &this->qpAttr, sizeof(attr));
-
     result = ::rdma_create_ep(&this->id, addrInfo, NULL, &attr);
     ::rdma_freeaddrinfo(addrInfo);
     if (result != 0) {
@@ -162,9 +152,9 @@ void vislib::net::ib::IbRdmaCommServerChannel::Close(void) {
 
     result = ::rdma_disconnect(this->id);
     if (result != 0) {
-        throw IbRdmaException("rdma_disconnect", errno, __FILE__, __LINE__);
+        VLTRACE(Trace::LEVEL_VL_WARN, "rdma_disconnect failed with error "
+            "code %d when closing the channel.\n", errno);
     }
-    // TODO: This is really evil, isn't it?
 
     if (this->id != NULL) {
         ::rdma_destroy_ep(this->id);
@@ -216,7 +206,7 @@ vislib::net::ib::IbRdmaCommServerChannel::IbRdmaCommServerChannel(
     this->qpAttr.cap.max_recv_wr = 1;
     this->qpAttr.cap.max_send_sge = 1;
     this->qpAttr.cap.max_recv_sge = 1;
-    this->qpAttr.cap.max_inline_data = 16;  // TODO
+    this->qpAttr.cap.max_inline_data = 0;  // TODO
     this->qpAttr.sq_sig_all = 1;
 }
 

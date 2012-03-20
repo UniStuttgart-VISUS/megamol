@@ -79,8 +79,13 @@ namespace ib {
         /** Size of send buffers created for client channels in bytes. */
         SIZE_T cntBufSend;
 
+        /** The root handle of the RMDA objects used by this channel. */
         struct rdma_cm_id *id;
 
+        /** 
+         * Stores the initialisation parameters for a queue pair. We need this
+         * member for a hack implemented in IbRdmaCommServerChannel::Accept().
+         */
         struct ibv_qp_init_attr qpAttr;
 
     };

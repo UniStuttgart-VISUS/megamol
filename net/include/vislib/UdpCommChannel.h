@@ -1,13 +1,12 @@
 /*
- * TcpCommChannel.h
+ * UdpCommChannel.h
  *
- * Copyright (C) 2010 by Christoph Müller. Alle Rechte vorbehalten.
- * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2006 - 2012 by Visualisierungsinstitut Universitaet Stuttgart. 
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_TCPCOMMCHANNEL_H_INCLUDED
-#define VISLIB_TCPCOMMCHANNEL_H_INCLUDED
+#ifndef VISLIB_UDPCOMMCHANNEL_H_INCLUDED
+#define VISLIB_UDPCOMMCHANNEL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -26,10 +25,10 @@ namespace net {
 
 
     /**
-     * This class implements a communication channel based on TCP/IP sockets.
-     * The TCP/IP version supports client as well as server end point behaviour.
+     * This class implements a datagram communication channel based on a UDP
+     * socket. 
      */
-    class TcpCommChannel : public AbstractCommChannel {
+    class UdpCommChannel : public AbstractCommChannel {
 
     public:
 
@@ -38,18 +37,16 @@ namespace net {
          *
          * @param flags The flags for the channel.
          */
-        static inline SmartRef<TcpCommChannel> Create(const UINT64 flags = 0) {
-            VLSTACKTRACE("TcpCommChannel::Create", __FILE__, __LINE__);
-            return SmartRef<TcpCommChannel>(new TcpCommChannel(flags), false);
+        static inline SmartRef<UdpCommChannel> Create(const UINT64 flags = 0) {
+            VLSTACKTRACE("UdpCommChannel::Create", __FILE__, __LINE__);
+            return SmartRef<UdpCommChannel>(new UdpCommChannel(flags), false);
         }
 
-         /**
-          * This behaviour flag disables the Nagle algorithm for send 
-          * coalescing. Setting the flag has an effect on the communication
-          * channel itself as well as on the child channels created in server
-          * mode.
-          */
-        static const UINT64 FLAG_NODELAY;
+        /**
+         * This flag enables transmission and receipt of broadcast messages 
+         * using the channel
+         */
+        static const UINT64 FLAG_BROADCAST;
 
         /**
          * This flag enables or disables the reuse of addresses already bound.
@@ -60,6 +57,9 @@ namespace net {
 
         /**
          * Permit incoming connection attempt on the communication channel.
+         *
+         * IMPORTANT NOTE: This operation is not supported on datagram sockets
+         * and will therefore always fail!
          *
          * @return The client connection.
          *
@@ -80,16 +80,16 @@ namespace net {
         virtual void Bind(SmartRef<AbstractCommEndPoint> endPoint);
 
         /**
-         * Terminate the open connection if any and reset the communication
-         * channel to initialisation state.
+         * Close the underlying socket and reset the communication channel to
+         * its initialisation state.
          *
          * @throws SocketException In case the operation fails.
          */
         virtual void Close(void);
 
         /**
-         * Connects the channel to the peer node at the specified end 
-         * point address.
+         * Sets the default target address which to all datagram packets are 
+         * sent if no explicit target address is specified.
          *
          * @param endPoint The remote end point to connect to.
          *
@@ -103,7 +103,7 @@ namespace net {
          * @return The underlying socket.
          */
         inline Socket& GetSocket(void) {
-            VLSTACKTRACE("TcpCommChannel::GetSocket", __FILE__, __LINE__);
+            VLSTACKTRACE("UdpCommChannel::GetSocket", __FILE__, __LINE__);
             return this->socket;
         }
 
@@ -136,13 +136,13 @@ namespace net {
         virtual SmartRef<AbstractCommEndPoint> GetRemoteEndPoint(void) const;
 
         /**
-         * Answer whether the Nagle algorihm is disabled on the socket.
+         * Answer whether the channel is enabled for broadcast use.
          *
-         * @return true if the Nagle algorithm is disabled, false otherwise.
+         * @return true if broadcast is enabled, false otherwise.
          */
-        inline bool IsSetNoDelay(void) const {
-            VLSTACKTRACE("TcpCommChannel::IsSetNoDelay", __FILE__, __LINE__);
-            return ((this->flags & FLAG_NODELAY) != 0);
+        inline bool IsSetBroadcast(void) const {
+            VLSTACKTRACE("UdpCommChannel::IsSetBroadcast", __FILE__, __LINE__);
+            return ((this->flags & FLAG_BROADCAST) != 0);
         }
 
         /**
@@ -151,7 +151,7 @@ namespace net {
          * @return true if address reuse is enabled, false otherwise.
          */
         inline bool IsSetReuseAddress(void) const {
-            VLSTACKTRACE("TcpCommChannel::IsSetReuseAddress", __FILE__, 
+            VLSTACKTRACE("UdpCommChannel::IsSetReuseAddress", __FILE__, 
                 __LINE__);
             return ((this->flags & FLAG_REUSE_ADDRESS) != 0);
         }
@@ -159,6 +159,9 @@ namespace net {
         /**
          * Place the communication channel in a state in which it is listening 
          * for an incoming connection.
+         *
+         * IMPORTANT NOTE: This operation is not supported on datagram sockets
+         * and will therefore always fail!
          *
          * @param backlog Maximum length of the queue of pending connections.
          *
@@ -170,6 +173,9 @@ namespace net {
          * Receives 'cntBytes' over the communication channel and saves them to 
          * the memory designated by 'outData'. 'outData' must be large enough to 
          * receive at least 'cntBytes'.
+         *
+         * IMPORTANT NOTE: You must set the default peer address using Connect()
+         * before you can use this method.
          *
          * @param outData      The buffer to receive the data. The caller must
          *                     allocate this memory and remains owner.
@@ -195,6 +201,9 @@ namespace net {
         /**
          * Send 'cntBytes' from the location designated by 'data' over the
          * communication channel.
+         *
+         * IMPORTANT NOTE: You must set the default peer address using Connect()
+         * before you can use this method.
          *
          * @param data      The data to be sent. The caller remains owner of the
          *                  memory.
@@ -226,26 +235,17 @@ namespace net {
          *
          * @param flags The flags for the channel.
          */
-        explicit TcpCommChannel(const UINT64 flags);
+        explicit UdpCommChannel(const UINT64 flags);
 
         /**
          * Create a communication channel from an existing socket.
          *
          * @param socket The socket to be used.
          */
-        TcpCommChannel(Socket& socket, const UINT64 flags);
-
-        /**
-         * Disallow copies as we want to handle that via reference counting.
-         *
-         * @param rhs The object to be cloned.
-         *
-         * @throws UnsupportedOperationException Unconditionally.
-         */
-        TcpCommChannel(const TcpCommChannel& rhs);
+        UdpCommChannel(Socket& socket, const UINT64 flags);
 
         /** Dtor. */
-        virtual ~TcpCommChannel(void);
+        virtual ~UdpCommChannel(void);
 
         /**
          * Creates or re-creates the underlying socket.
@@ -268,11 +268,11 @@ namespace net {
         Socket socket;
 
     };
-
+    
 } /* end namespace net */
 } /* end namespace vislib */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_TCPCOMMCHANNEL_H_INCLUDED */
+#endif /* VISLIB_UDPCOMMCHANNEL_H_INCLUDED */

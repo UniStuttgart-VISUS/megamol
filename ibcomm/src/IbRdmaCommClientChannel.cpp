@@ -39,13 +39,13 @@ void vislib::net::ib::IbRdmaCommClientChannel::Close(void) {
 
     result = ::rdma_disconnect(this->id);
     if (result != 0) {
-        throw IbRdmaException("rdma_disconnect", errno, __FILE__, __LINE__);
+        VLTRACE(Trace::LEVEL_VL_WARN, "rdma_disconnect failed with error "
+            "code %d when closing the channel.\n", errno);
     }
-    // TODO: This is really evil, isn't it?
 
-    if (this->mrRecv != NULL) {
-        ::rdma_dereg_mr(this->mrRecv);
-        this->mrRecv = NULL;
+    if (this->id != NULL) {
+        ::rdma_destroy_ep(this->id);
+        this->id = NULL;
     }
 
     if (this->mrSend != NULL) {
@@ -97,7 +97,7 @@ void vislib::net::ib::IbRdmaCommClientChannel::Connect(
     attr.cap.max_recv_wr = 1;
     attr.cap.max_send_sge = 1;
     attr.cap.max_recv_sge = 1;
-    attr.cap.max_inline_data = 16;  // TODO
+    attr.cap.max_inline_data = 0;  // TODO
     attr.sq_sig_all = 1;
 
     attr.qp_context = this->id;

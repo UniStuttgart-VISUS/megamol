@@ -687,7 +687,7 @@ namespace net {
          * least 'cntBytes'.
          *
          * Note that the timeout is specified for each receive call. When
-         * setting the forceReceive flag multiple calls might be needed to get
+         * setting the 'forceReceive' flag, multiple calls might be needed to get
          * all requested data and thus the overall timeout will be a multiple
          * of the specified timeout.
          *
@@ -715,7 +715,7 @@ namespace net {
          * 'outData' must be large enough to receive at least 'cntBytes'. 
          *
          * Note that the timeout is specified for each receive call. When
-         * setting the forceReceive flag multiple calls might be needed to get
+         * setting the 'forceReceive' flag, multiple calls might be needed to get
          * all requested data and thus the overall timeout will be a multiple
          * of the specified timeout.
          *
@@ -748,7 +748,7 @@ namespace net {
          * 'outData' must be large enough to receive at least 'cntBytes'. 
          *
          * Note that the timeout is specified for each receive call. When
-         * setting the forceReceive flag multiple calls might be needed to get
+         * setting the 'forceReceive' flag, multiple calls might be needed to get
          * all requested data and thus the overall timeout will be a multiple
          * of the specified timeout.
          *
@@ -801,8 +801,8 @@ namespace net {
          * Send 'cntBytes' from the location designated by 'data' using this 
          * socket.
          *
-         * Note that the timeout is specified for each receive call. When
-         * setting the forceReceive flag multiple calls might be needed to get
+         * Note that the timeout is specified for each send call. When
+         * setting the 'forceSend' flag, multiple calls might be needed to get
          * all requested data and thus the overall timeout will be a multiple
          * of the specified timeout.
          *
@@ -830,8 +830,8 @@ namespace net {
          * Send a datagram of 'cntBytes' bytes from the location designated by 
          * 'data' using this socket to the socket 'toAddr'.
          *
-         * Note that the timeout is specified for each receive call. When
-         * setting the forceReceive flag multiple calls might be needed to get
+         * Note that the timeout is specified for each send call. When
+         * setting the 'forceSend' flag, multiple calls might be needed to get
          * all requested data and thus the overall timeout will be a multiple
          * of the specified timeout.
          *
@@ -862,8 +862,8 @@ namespace net {
          * Send a datagram of 'cntBytes' bytes from the location designated by 
          * 'data' using this socket to the socket 'toAddr'.
          *
-         * Note that the timeout is specified for each receive call. When
-         * setting the forceReceive flag multiple calls might be needed to get
+         * Note that the timeout is specified for each send call. When
+         * setting the 'forceSend' flag, multiple calls might be needed to get
          * all requested data and thus the overall timeout will be a multiple
          * of the specified timeout.
          *

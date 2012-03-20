@@ -1,12 +1,11 @@
 /*
- * TcpCommChannel.cpp
+ * UdpCommChannel.cpp
  *
- * Copyright (C) 2010 by Christoph Müller. Alle Rechte vorbehalten.
- * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart.
+ * Copyright (C) 2006 - 2012 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/TcpCommChannel.h"
+#include "vislib/UdpCommChannel.h"
 
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
@@ -18,37 +17,39 @@
 
 
 /*
- * vislib::net::TcpCommChannel::FLAG_NODELAY
+ * vislib::net::UdpCommChannel::FLAG_BROADCAST
  */
-const UINT64 vislib::net::TcpCommChannel::FLAG_NODELAY = 0x00000001;
+const UINT64 vislib::net::UdpCommChannel::FLAG_BROADCAST = 0x00000004;
 
 
 /*
- * vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS
+ * vislib::net::UdpCommChannel::FLAG_REUSE_ADDRESS
  */
-const UINT64 vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS = 0x00000002;
+const UINT64 vislib::net::UdpCommChannel::FLAG_REUSE_ADDRESS = 0x00000002;
+// Implementation note: Trying to assign flags of different channels with the 
+// same name the same value (see TcpCommChannel::FLAG_REUSE_ADDRESS).
 
 
 /*
- * vislib::net::TcpCommChannel::Accept
+ * vislib::net::UdpCommChannel::Accept
  */
 vislib::SmartRef<vislib::net::AbstractCommClientChannel> 
-vislib::net::TcpCommChannel::Accept(void) {
+vislib::net::UdpCommChannel::Accept(void) {
     VLSTACKTRACE("TcpCommChannel::Accept", __FILE__, __LINE__);
     Socket socket = this->socket.Accept();
-    // Ctor of TcpCommChannel will assign flags to actual socket.
+    // Ctor of UdpCommChannel will assign flags to actual socket.
 
     return SmartRef<AbstractCommClientChannel>(
-        new TcpCommChannel(socket, this->flags), false);
+        new UdpCommChannel(socket, this->flags), false);
 }
 
 
 /*
- * vislib::net::TcpCommChannel::Bind
+ * vislib::net::UdpCommChannel::Bind
  */
-void vislib::net::TcpCommChannel::Bind(
+void vislib::net::UdpCommChannel::Bind(
         SmartRef<AbstractCommEndPoint> endPoint) {
-    VLSTACKTRACE("TcpCommChannel::Bind", __FILE__, __LINE__);
+    VLSTACKTRACE("UdpCommChannel::Bind", __FILE__, __LINE__);
     SmartRef<IPCommEndPoint> ep = endPoint.DynamicCast<IPCommEndPoint>();
 
     if (ep.IsNull()) {
@@ -61,9 +62,9 @@ void vislib::net::TcpCommChannel::Bind(
 
 
 /*
- * vislib::net::TcpCommChannel::Close
+ * vislib::net::UdpCommChannel::Close
  */
-void vislib::net::TcpCommChannel::Close(void) {
+void vislib::net::UdpCommChannel::Close(void) {
     // TODO: Find out how shutdown can be safely used.
     //try {
     //    this->socket.Shutdown();
@@ -75,18 +76,18 @@ void vislib::net::TcpCommChannel::Close(void) {
         this->socket.Close();
     } catch (SocketException e) {
         VLTRACE(Trace::LEVEL_VL_WARN, "SocketException when closing socket "
-            "in TcpCommChannel::Close: %s\n", e.GetMsgA());
+            "in UdpCommChannel::Close: %s\n", e.GetMsgA());
         throw e;
     }
 }
 
 
 /*
- * vislib::net::TcpCommChannel::Connect
+ * vislib::net::UdpCommChannel::Connect
  */
-void vislib::net::TcpCommChannel::Connect(
+void vislib::net::UdpCommChannel::Connect(
         SmartRef<AbstractCommEndPoint> endPoint) {
-    VLSTACKTRACE("TcpCommChannel::Connect", __FILE__, __LINE__);
+    VLSTACKTRACE("UdpCommChannel::Connect", __FILE__, __LINE__);
     SmartRef<IPCommEndPoint> ep = endPoint.DynamicCast<IPCommEndPoint>();
 
     if (ep.IsNull()) {
@@ -99,40 +100,40 @@ void vislib::net::TcpCommChannel::Connect(
 
 
 /*
- * vislib::net::TcpCommChannel::GetLocalEndPoint
+ * vislib::net::UdpCommChannel::GetLocalEndPoint
  */
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
-vislib::net::TcpCommChannel::GetLocalEndPoint(void) const {
-    VLSTACKTRACE("TcpCommChannel::GetLocalEndPoint", __FILE__, __LINE__);
+vislib::net::UdpCommChannel::GetLocalEndPoint(void) const {
+    VLSTACKTRACE("UdpCommChannel::GetLocalEndPoint", __FILE__, __LINE__);
     return IPCommEndPoint::Create(this->socket.GetLocalEndPoint());
 }
 
 
 /*
- * vislib::net::TcpCommChannel::GetRemoteEndPoint
+ * vislib::net::UdpCommChannel::GetRemoteEndPoint
  */
 vislib::SmartRef<vislib::net::AbstractCommEndPoint>
-vislib::net::TcpCommChannel::GetRemoteEndPoint(void) const {
-    VLSTACKTRACE("TcpCommChannel::GetRemoteEndPoint", __FILE__, __LINE__);
+vislib::net::UdpCommChannel::GetRemoteEndPoint(void) const {
+    VLSTACKTRACE("UdpCommChannel::GetRemoteEndPoint", __FILE__, __LINE__);
     return IPCommEndPoint::Create(this->socket.GetPeerEndPoint());
 }
 
 
 /*
- * vislib::net::TcpCommChannel::Listen
+ * vislib::net::UdpCommChannel::Listen
  */
-void vislib::net::TcpCommChannel::Listen(const int backlog) {
-    VLSTACKTRACE("TcpCommChannel::Listen", __FILE__, __LINE__);
+void vislib::net::UdpCommChannel::Listen(const int backlog) {
+    VLSTACKTRACE("UdpCommChannel::Listen", __FILE__, __LINE__);
     this->socket.Listen(backlog);
 }
 
 
 /*
- * vislib::net::TcpCommChannel::Receive
+ * vislib::net::UdpCommChannel::Receive
  */
-SIZE_T vislib::net::TcpCommChannel::Receive(void *outData, 
+SIZE_T vislib::net::UdpCommChannel::Receive(void *outData, 
         const SIZE_T cntBytes, const UINT timeout, const bool forceReceive) {
-    VLSTACKTRACE("TcpCommChannel::Receive", __FILE__, __LINE__);
+    VLSTACKTRACE("UdpCommChannel::Receive", __FILE__, __LINE__);
     SIZE_T retval = this->socket.Receive(outData, cntBytes, timeout, 0, 
         forceReceive);
 
@@ -148,54 +149,44 @@ SIZE_T vislib::net::TcpCommChannel::Receive(void *outData,
 
 
 /*
- * vislib::net::TcpCommChannel::Send
+ * vislib::net::UdpCommChannel::Send
  */
-SIZE_T vislib::net::TcpCommChannel::Send(const void *data, 
+SIZE_T vislib::net::UdpCommChannel::Send(const void *data, 
         const SIZE_T cntBytes, const UINT timeout, const bool forceSend) {
-    VLSTACKTRACE("TcpCommChannel::Send", __FILE__, __LINE__);
+    VLSTACKTRACE("UdpCommChannel::Send", __FILE__, __LINE__);
     return this->socket.Send(data, cntBytes, timeout, 0, forceSend);
 }
 
 
 /*
- * vislib::net::TcpCommChannel::TcpCommChannel
+ * vislib::net::UdpCommChannel::UdpCommChannel
  */
-vislib::net::TcpCommChannel::TcpCommChannel(const UINT64 flags) 
-        : Super(), flags(flags) {
-     VLSTACKTRACE("TcpCommChannel::TcpCommChannel", __FILE__, __LINE__);
+vislib::net::UdpCommChannel::UdpCommChannel(const UINT64 flags) : flags(flags) {
+    VLSTACKTRACE("UdpCommChannel::UdpCommChannel", __FILE__, __LINE__);
 }
 
 
 /*
- * vislib::net::TcpCommChannel::TcpCommChannel
+ * vislib::net::UdpCommChannel::UdpCommChannel
  */
-vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket, const UINT64 flags) 
+vislib::net::UdpCommChannel::UdpCommChannel(Socket& socket, const UINT64 flags) 
         : Super(), socket(socket), flags(flags) {
-    VLSTACKTRACE("TcpCommChannel::TcpCommChannel", __FILE__, __LINE__);
-    socket.SetNoDelay(this->IsSetNoDelay());
+    VLSTACKTRACE("UdpCommChannel::UdpCommChannel", __FILE__, __LINE__);
     socket.SetReuseAddr(this->IsSetReuseAddress());
+    socket.SetBroadcast(this->IsSetBroadcast());
 }
 
 
 /*
- * vislib::net::TcpCommChannel::TcpCommChannel
+ * vislib::net::UdpCommChannel::~UdpCommChannel
  */
-vislib::net::TcpCommChannel::TcpCommChannel(const TcpCommChannel& rhs) {
-    throw UnsupportedOperationException("TcpCommChannel::TcpCommChannel", 
-        __FILE__, __LINE__);
-}
-
-
-/*
- * vislib::net::TcpCommChannel::~TcpCommChannel
- */
-vislib::net::TcpCommChannel::~TcpCommChannel(void) {
-    VLSTACKTRACE("TcpCommChannel::~TcpCommChannel", __FILE__, __LINE__);
+vislib::net::UdpCommChannel::~UdpCommChannel(void) {
+    VLSTACKTRACE("UdpCommChannel::~UdpCommChannel", __FILE__, __LINE__);
 
     /* Ensure that the socket is closed. */
     try {
         // Note: Must force use of correct implementation in dtor.
-        TcpCommChannel::Close();
+        UdpCommChannel::Close();
     } catch (...) {
         // Can be ignored. We expect the operation to fail as the user should
         // have closed the connection before.
@@ -204,16 +195,16 @@ vislib::net::TcpCommChannel::~TcpCommChannel(void) {
 
 
 /*
- * vislib::net::TcpCommChannel::createSocket
+ * vislib::net::UdpCommChannel::createSocket
  */
-void vislib::net::TcpCommChannel::createSocket(const IPEndPoint& endPoint) {
-    VLSTACKTRACE("TcpCommChannel::createSocket", __FILE__, __LINE__);
+void vislib::net::UdpCommChannel::createSocket(const IPEndPoint& endPoint) {
+    VLSTACKTRACE("UdpCommChannel::createSocket", __FILE__, __LINE__);
 
     /* Destroy old instance. */
     if (this->socket.IsValid()) {
         this->socket.Close();
     }
-    this->socket.Create(endPoint, Socket::TYPE_STREAM, Socket::PROTOCOL_TCP);
-    this->socket.SetNoDelay(this->IsSetNoDelay());
+    this->socket.Create(endPoint, Socket::TYPE_DGRAM, Socket::PROTOCOL_UDP);
     this->socket.SetReuseAddr(this->IsSetReuseAddress());
+    this->socket.SetBroadcast(this->IsSetBroadcast());
 }
