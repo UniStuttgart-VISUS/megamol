@@ -77,8 +77,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.1.props')" />
-  <ImportGroup Label="ExtensionSettings">
+  <ImportGroup Label="ExtensionSettings" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.1.props')">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.1.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'" Label="PropertySheets">
@@ -816,8 +815,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </CudaCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.1.targets')" />
-  <ImportGroup Label="ExtensionTargets">
+  <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.1.targets')">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.1.targets" />
   </ImportGroup>
 </Project>
