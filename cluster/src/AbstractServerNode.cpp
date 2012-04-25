@@ -192,6 +192,8 @@ void vislib::net::cluster::AbstractServerNode::disconnectPeer(
     // We assure the user that erasing non-existent peers will silently fail, 
     // so catch all exception that we expect to occur here.
     try {
+        socket.SetNoDelay(true);
+
         PeerNode& peerNode = *this->peers[idx];
         peerNode.Socket.Close();
         SAFE_DELETE(peerNode.Receiver);

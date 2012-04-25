@@ -119,6 +119,7 @@ void vislib::net::cluster::AbstractClientNode::connect(
         this->serverAddress.ToStringA().PeekBuffer());
     this->socket.Create(Socket::FAMILY_INET, Socket::TYPE_STREAM,
         Socket::PROTOCOL_TCP);
+    this->socket.SetNoDelay(true);
     this->socket.Connect(this->serverAddress);
 
     /* Start the message receiver. */
