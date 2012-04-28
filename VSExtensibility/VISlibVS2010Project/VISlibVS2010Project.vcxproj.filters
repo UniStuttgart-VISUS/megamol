@@ -70,6 +70,9 @@
     <None Include="Templates\1033\extlibs.props">
       <Filter>Template Files</Filter>
     </None>
+    <None Include="Templates\1033\extlibs.props.template">
+      <Filter>Template Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Templates\1033\main.cpp">

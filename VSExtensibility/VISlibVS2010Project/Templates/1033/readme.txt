@@ -2,7 +2,7 @@
 
 The wizard has created a Visual Studio property sheet "[!output PROPS_FILENAME]" configuring the parts of VISlib you decided to use and included it into the project.
 
-The wizard has included the Visual Studio property sheets, which configure the VISlib targets, from the VISlib directory "[!output VISLIB_DIR]\VSProps". If these property sheets could not be found, e.g. if the path "[!output VISLIB_DIR]" you specified is not a valid VISlib base directory, you must add "TargetDebug32.vsprops" and "TargetRelease32.vsprops" manually.
+BUG: THE WIZARD HAS NOT ADDED "[!output PROPS_FILENAME]", YOU MUST DO THAT MANUALLY. THIS IS A LIE: The wizard has included the Visual Studio property sheets, which configure the VISlib targets, from the VISlib directory "[!output VISLIB_DIR]\VSProps". If these property sheets could not be found, e.g. if the path "[!output VISLIB_DIR]" you specified is not a valid VISlib base directory, you must add "TargetDebug32.vsprops" and "TargetRelease32.vsprops" manually.
 
 The wizard additonally created a Windows Powershell script "configure.ps1" to recreate the property sheet "[!output PROPS_FILENAME]". You can use this script to relocate your local copy of the VISlib or to move the project to a different machine. Remember that you must also adjust the "TargetDebug32.vsprops" and "TargetRelease32.vsprops" property sheets if you relocate the VISlib.
 

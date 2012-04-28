@@ -47,7 +47,7 @@ None. This script does not generate any pipeline outputs.
 C:\PS> .\configure.ps1
 #>
 
-param([string] $TemplatePath,
+param([string] $TemplatePath[!if PROPS_TEMPLATE] = '[!output PROPS_TEMPLATE_FILENAME]'[!endif],
       [string] $DestinationPath,
       [hashtable] $Replacements = @{},
       [string] $CopyCacheFrom,

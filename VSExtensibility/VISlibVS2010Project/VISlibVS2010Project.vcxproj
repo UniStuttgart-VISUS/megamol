@@ -54,6 +54,7 @@
     <None Include="Templates\1033\configure.ps1" />
     <None Include="Templates\1033\configure.sh" />
     <None Include="Templates\1033\extlibs.props" />
+    <None Include="Templates\1033\extlibs.props.template" />
     <None Include="Templates\1033\Makefile" />
     <None Include="Templates\1033\readme.txt" />
     <None Include="Templates\1033\Templates.inf" />

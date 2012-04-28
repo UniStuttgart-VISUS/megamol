@@ -27,6 +27,8 @@ function OnFinish(selProj, selObj)
                 || (wizard.FindSymbol('PROPS_FILENAME') == '')) {
             wizard.AddSymbol('PROPS_FILENAME', 'extlibs.props');
         }
+
+        wizard.AddSymbol('PROPS_TEMPLATE_FILENAME', wizard.FindSymbol('PROPS_FILENAME') + '.template');
         // END CUSTOMISATION
 
         var strProjectPath = wizard.FindSymbol('PROJECT_PATH');
@@ -233,6 +235,9 @@ function GetTargetName(strName, strProjectName)
         }
         if (strName == 'main.cpp') {
             strTarget = strProjectName + ".cpp";
+        }
+        if (strName == 'extlibs.props.template') {
+            strTarget = wizard.FindSymbol('PROPS_TEMPLATE_FILENAME');
         }
         // END CUSTOMISATION
 
