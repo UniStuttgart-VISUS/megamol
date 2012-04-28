@@ -75,6 +75,8 @@ void vislib::net::cluster::AbstractServerNode::Initialise(
 bool vislib::net::cluster::AbstractServerNode::OnNewConnection(Socket& socket,
         const IPEndPoint& addr) throw() {
     try {
+        socket.SetNoDelay(true);
+
         PeerNode *peerNode = new PeerNode;
         peerNode->Socket = socket;
         peerNode->Receiver = new sys::Thread(ReceiveMessages);
@@ -192,8 +194,6 @@ void vislib::net::cluster::AbstractServerNode::disconnectPeer(
     // We assure the user that erasing non-existent peers will silently fail, 
     // so catch all exception that we expect to occur here.
     try {
-        socket.SetNoDelay(true);
-
         PeerNode& peerNode = *this->peers[idx];
         peerNode.Socket.Close();
         SAFE_DELETE(peerNode.Receiver);

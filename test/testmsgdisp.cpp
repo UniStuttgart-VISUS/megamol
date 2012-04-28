@@ -108,6 +108,7 @@ void TestUdpDisp(void) {
     AssertEqual("Received the expected number of messages using UdpCommChannel", CNT_MSGS, cntReceived);
 }
 
+
 void TestMsgDisp(void) {
     vislib::net::Socket::Startup();
     ::TestTcpDisp();

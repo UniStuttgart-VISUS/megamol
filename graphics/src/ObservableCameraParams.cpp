@@ -732,7 +732,7 @@ void vislib::graphics::ObservableCameraParams::fireChanged(
 #define IMPLEMENT_FIRE_EX(name, flag, value)                                   \
             if (((which & (flag)) != 0)                                        \
                     || (andAllDirty && ((this->dirtyFields & (flag)) != 0))) { \
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Firing On" #name    \
+                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Firing On" #name  \
                     "Changed ...\n");                                          \
                 observer->On##name##Changed(value);                            \
             } 
