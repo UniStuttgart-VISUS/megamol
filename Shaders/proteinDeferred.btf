@@ -345,7 +345,6 @@ void main(void)
                 <snippet type="string">
 <!--
 uniform sampler2D sourceTex;
-uniform sampler2D lowResTex;
 
 uniform vec2 screenResInv;
 uniform float maxCoC;
@@ -844,16 +843,15 @@ float reconstructDepth(float z)
 }
 
 
-
-
 void main(void)
 {
     vec4 cOut = vec4(0.0);
 
     // fetch center tap
-    float depthOrig = texture2D(sourceTex, gl_TexCoord[0].xy).a;
+    //float depthOrig = texture2D(sourceTex, gl_TexCoord[0].xy).a;
     // save its depth
-    float depth = reconstructDepth(depthOrig);
+    //float depth = reconstructDepth(depthOrig);
+    float depth = texture2D(sourceTex, gl_TexCoord[0].xy).a;
 
     float x = d_focus / depth;
 
@@ -894,7 +892,8 @@ void main(void)
 
         // apply leaking reduction: lower weight for taps that are
         // closer than the center tap and in focus
-        float tapDepth = reconstructDepth(tap.a);
+        //float tapDepth = reconstructDepth(tap.a);
+        float tapDepth = tap.a;
 
         //float origTapDepth = texture2DLod(sourceTex, coord, 0).a;
         //tapDepth = reconstructDepth(origTapDepth);
@@ -1101,7 +1100,8 @@ void main(void)
     vec2 maxcoc = vec2(5.0, 10.0);
 
     cOut = texture2D(sourceTex, gl_TexCoord[0].xy); // fetch center tap
-    float depth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x);
+    //float depth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x); //
+    float depth = texture2D(depthTex, gl_TexCoord[0].xy).x;
 
     float centerDepth = computeDepthBlur(depth);
 
@@ -1142,7 +1142,9 @@ void main(void)
                            discRadius);
         vec4 tapHigh = texture2D(sourceTex, coordHigh);
 
-        depth = reconstructDepth(texture2D(depthTex, coordHigh).x);
+        //depth = reconstructDepth(texture2D(depthTex, coordHigh).x); // TODO
+        depth = texture2D(depthTex, coordHigh).x;
+        
         tapHigh.a = computeDepthBlur(depth);
 
         // put tap blurriness into [0, 1] range

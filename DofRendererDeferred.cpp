@@ -732,7 +732,7 @@ void DofRendererDeferred::filterMipmap() {
             this->gaussianHoriz.Enable();
             glUniform1i(this->gaussianHoriz.ParameterLocation("sourceTex"), 0);
 
-            screenResInv = this->gaussianHoriz.ParameterLocation("screenResInv"); // TODO stimmt das?
+            screenResInv = this->gaussianHoriz.ParameterLocation("screenResInv");
             targetTex = this->fboMipMapTexId[1];
 
         }
@@ -874,7 +874,7 @@ void DofRendererDeferred::createReducedTexShaderX() {
     //glViewport(0, 0, this->fboWidth/4, this->fboWidth/4);
     glViewport(0, 0, this->width/4, this->height/4);
 
-    // Enable rednering to framebuffer
+    // Enable rendering to framebuffer
     //glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D, this->fboLowResTexId[0], 0);
@@ -1011,16 +1011,9 @@ void DofRendererDeferred::drawBlurShaderX() {
  */
 void DofRendererDeferred::drawBlurMipmap() {
 
-    //UNUSED(colorTex);
-    //UNUSED(depthTex);
-
     // compute circle of confusion slope
     float cocSlope = calcCocSlope(this->focalDist, this->aperture,
             this->focalLength);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, this->fboLowResTexId[0]);
-    //glBindTexture(GL_TEXTURE_2D, this->sourceBuffer);
 
     glActiveTexture(GL_TEXTURE0);
     // rgb channels contain original color tex, alpha contains depth
@@ -1033,8 +1026,6 @@ void DofRendererDeferred::drawBlurMipmap() {
     this->blurMipMap.Enable();
 
     glUniform1i(this->blurMipMap.ParameterLocation("sourceTex"), 0);
-    glUniform1i(this->blurMipMap.ParameterLocation("lowResTex"), 1);
-    //glUniform1i(_shader->paramsCdofBlurMipmap.depthTex, 1);
     glUniform2f(this->blurMipMap.ParameterLocation("screenResInv"),
             this->widthInv, this->heightInv);
     glUniform1f(this->blurMipMap.ParameterLocation("maxCoC"), this->maxCoC);
