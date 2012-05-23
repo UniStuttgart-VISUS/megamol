@@ -162,7 +162,7 @@ namespace net {
          * @throws Exception Or derived in case of a communication error.
          */
         template<class T> inline const SimpleMessage& requestViaMsgBuffer(
-                SmartRef<AbstractCommChannel> channel,
+                SmartRef<AbstractCommClientChannel> channel,
                 const SimpleMessageID requestMsgID, 
                 const T& requestBody,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
@@ -243,7 +243,7 @@ namespace net {
          *                                    not have the message ID 'Oid'.
          */
         template<class I, SimpleMessageID Iid, class O, SimpleMessageID Oid>
-        const O *requestViaMsgBuffer(SmartRef<AbstractCommChannel> channel,
+        const O *requestViaMsgBuffer(SmartRef<AbstractCommClientChannel> channel,
             const I& requestBody,
             SIZE_T *outAdditionalBytes = NULL,
             const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE);
@@ -291,7 +291,7 @@ namespace net {
             VLSTACKTRACE("AbstractSyncMsgUser::requestViaMsgBuffer", __FILE__, 
                 __LINE__);
             return this->requestViaMsgBuffer<I, Iid, O, Oid>(
-                channel.DynamicCast<AbstractCommChannel>(), 
+                channel.DynamicCast<AbstractCommClientChannel>(), 
                 requestBody, outAdditionalBytes, timeout);
         }
 
@@ -309,7 +309,8 @@ namespace net {
          *
          * @throws Exception Or derived in case of a communication error.
          */
-        inline const SimpleMessage& receiveViaMsgBuffer(
+        // TODO: WHO NEEDS THIS? PLEASE REPORT TO MUELLER...
+        VLDEPRECATED inline const SimpleMessage& receiveViaMsgBuffer(
                 SmartRef<AbstractCommChannel> channel,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             VLSTACKTRACE("AbstractSyncMsgUser::receiveViaMsgBuffer", __FILE__,
@@ -374,7 +375,8 @@ namespace net {
          *
          * @throws Exception Or derived in case of a communication error.
          */
-        inline void sendViaMsgBuffer(SmartRef<AbstractCommChannel> channel,
+        // TODO: WHO NEEDS THIS? PLEASE REPORT TO MUELLER...
+        VLDEPRECATED inline void sendViaMsgBuffer(SmartRef<AbstractCommChannel> channel,
                 const SimpleMessageID msgID, 
                 const void *body, 
                 const unsigned int bodySize,
@@ -430,7 +432,7 @@ namespace net {
             VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, 
                 __LINE__);
             this->sendViaMsgBuffer(
-                channel.DynamicCast<AbstractCommChannel>(),
+                channel.DynamicCast<AbstractCommClientChannel>(),
                 msgID, 
                 body, 
                 bodySize,
@@ -456,7 +458,8 @@ namespace net {
          * @throws Exception Or derived in case of a communication error.
          */
         template<class T> 
-        inline void sendViaMsgBuffer(SmartRef<AbstractCommChannel> channel,
+        inline void sendViaMsgBuffer(
+                SmartRef<AbstractCommClientChannel> channel,
                 const SimpleMessageID msgID, 
                 const T& body) {
             VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, 
@@ -524,7 +527,7 @@ namespace net {
      */
     template<class I, SimpleMessageID Iid, class O, SimpleMessageID Oid> 
     const O *AbstractSyncMsgUser::requestViaMsgBuffer(
-            SmartRef<AbstractCommChannel> channel,
+            SmartRef<AbstractCommClientChannel> channel,
             const I& requestBody,
             SIZE_T *outAdditionalBytes,
             const UINT timeout) {
