@@ -5,7 +5,6 @@
  * All rights reserved.
  */
 
-
 #include "stdafx.h"
 #include "XYZLoader.h"
 #include "ParticleDataCall.h"
