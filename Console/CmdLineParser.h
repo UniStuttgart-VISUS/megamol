@@ -378,6 +378,13 @@ namespace utility {
          */
         void GetQuickstartRegistrations(vislib::SingleLinkedList<vislib::TString>& outQuickstartRegs) const;
 
+        /**
+         * Gets the list of hot fixes to be enabled
+         *
+         * @param hotFixes List of hot fixes to be enabled
+         */
+        void GetHotFixes(vislib::SingleLinkedList<vislib::StringA>& hotfixes) const;
+
     private:
 
         /** the default value of the flag of the cmd line echo */
@@ -484,6 +491,9 @@ namespace utility {
 
         /** Registers data sets for quickstart */
         ParserOption quickstartRegistry;
+
+        /** Enables hot fixes */
+        ParserOption enableHotFix;
 
     };
 

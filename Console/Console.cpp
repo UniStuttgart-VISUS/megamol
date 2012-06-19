@@ -566,6 +566,55 @@ void signalCtrlC(int) {
 }
 
 
+extern "C" {
+
+/**
+ * Searching for file name parameters
+ *
+ * @param str The parameter name
+ * @param data not used
+ */
+void MEGAMOLCORE_CALLBACK fixFileNameEnum(const char *str, void *data) {
+    VLSTACKTRACE("fixFileName", __FILE__, __LINE__);
+    vislib::StringA n(str);
+    n.ToLowerCase();
+    if (n.EndsWith("filename")) {
+        megamol::console::CoreHandle hParam;
+
+        if (!::mmcGetParameterA(hCore, str, hParam)) {
+            fprintf(stderr, "Failed to get handle for parameter %s\n", str);
+            return;
+        }
+
+        vislib::StringA fn(::mmcGetParameterValueA(hParam));
+
+        if (!vislib::sys::File::Exists(fn)) {
+            // we need to search for a better file
+
+            // try 1: remove last char:
+            vislib::StringA tfn = fn.Substring(0, fn.Length() - 1);
+            if (vislib::sys::File::Exists(tfn)) {
+                ::mmcSetParameterValueA(hParam, tfn);
+                return;
+            }
+
+        }
+
+    }
+}
+
+}
+
+
+/**
+ * Fixing the file names
+ */
+static void fixFileName(void) {
+    VLSTACKTRACE("fixFileName", __FILE__, __LINE__);
+    ::mmcEnumParametersA(hCore, fixFileNameEnum, NULL);
+}
+
+
 /**
  * runNormal
  *
@@ -591,6 +640,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     bool showGUI = false;
     bool hideGUI = false;
     bool useQuadBuffers = false;
+    vislib::SingleLinkedList<vislib::StringA> hotFixes;
 
 #ifndef _WIN32
     oldSignl =
@@ -605,6 +655,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     showGUI = parser->ShowGUI();
     hideGUI = parser->HideGUI();
     useQuadBuffers = parser->RequestOpenGLQuadBuffer();
+    parser->GetHotFixes(hotFixes);
 
     // run the application!
 #ifdef _WIN32
@@ -1007,9 +1058,11 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             if (::mmcDesiredViewWindowConfig(win->HView(),
                     &wndX, &wndY, &wndW, &wndH, &wndND)) {
                 if (wndND) {
-                    ::mmvSetWindowHints(win->HWnd(), 
-                        MMV_WINHINT_NODECORATIONS | MMV_WINHINT_HIDECURSOR | MMV_WINHINT_STAYONTOP,
-                        MMV_WINHINT_NODECORATIONS | MMV_WINHINT_HIDECURSOR | MMV_WINHINT_STAYONTOP);
+                    unsigned int flags = MMV_WINHINT_NODECORATIONS | MMV_WINHINT_STAYONTOP;
+                    if (!hotFixes.Contains("DontHideCursor")) {
+                        flags |= MMV_WINHINT_HIDECURSOR;
+                    }
+                    ::mmvSetWindowHints(win->HWnd(), flags, flags);
 
                     // TODO: Support parameters
                     ::mmvSetWindowHints(win->HWnd(), MMV_WINHINT_PRESENTATION, MMV_WINHINT_PRESENTATION);
@@ -1024,6 +1077,14 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             }
 
             win->RegisterHotKeys(hCore);
+            if (hotFixes.Contains("EnableFileNameFix")) {
+                win->RegisterHotKeyAction(
+                    vislib::sys::KeyCode(
+                    (WORD)vislib::sys::KeyCode::KEY_MOD_CTRL
+                    | (WORD)vislib::sys::KeyCode::KEY_MOD_SHIFT
+                    | (WORD)'f'), new megamol::console::HotKeyCallback(::fixFileName),
+                    "FileNameFix");
+            }
 #ifdef WITH_TWEAKBAR
             win->InitGUI(hCore);
             if (showGUI) {

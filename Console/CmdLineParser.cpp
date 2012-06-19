@@ -68,7 +68,9 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
     quickstart(_T('q'), _T("quickstart"), _T("Performs a quickstart for the specified data set"), ParserOption::FLAG_NULL,
         ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("file"), _T("Path to the data file to quickstart"))),
     quickstartRegistry(0, _T("quickstartreg"), _T("Registers data file types for quickstart is supported by the OS"), ParserOption::FLAG_NULL,
-        ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("options"), _T("The quickstart registration options")))
+        ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("options"), _T("The quickstart registration options"))),
+    enableHotFix(0, _T("hotfix"), _T("Enables a hot fix"), ParserOption::FLAG_NULL,
+        ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("name"), _T("The name of the hot fix to enable")))
 {
 
     this->parser.AddOption(&this->help);
@@ -103,6 +105,8 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
 
     this->parser.AddOption(&this->quickstart);
     this->parser.AddOption(&this->quickstartRegistry);
+
+    this->parser.AddOption(&this->enableHotFix);
 
 }
 
@@ -364,6 +368,28 @@ void megamol::console::utility::CmdLineParser::GetQuickstartRegistrations(
         i++;
         outQuickstartRegs.Add(arg->GetValueString());
     }
+}
+
+
+/*
+ * megamol::console::utility::CmdLineParser::GetHotFixes
+ */
+void megamol::console::utility::CmdLineParser::GetHotFixes(
+        vislib::SingleLinkedList<vislib::StringA>& hotfixes) const {
+    hotfixes.Clear();
+
+    for (unsigned int i = 0; i < this->parser.ArgumentCount(); i++) {
+        ParserArgument *arg = this->parser.GetArgument(i);
+        if (((arg->GetType() != ParserArgument::TYPE_OPTION_LONGNAME)
+            && (arg->GetType() != ParserArgument::TYPE_OPTION_SHORTNAMES)) 
+            || (arg->GetOption() != &this->enableHotFix)) {
+            continue;
+        }
+        arg = this->parser.NextArgument(arg);
+        i++;
+        hotfixes.Add(T2A(arg->GetValueString()));
+    }
+
 }
 
 
