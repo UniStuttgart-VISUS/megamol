@@ -347,6 +347,7 @@ void main(void) {
     //color.b = intersection.x / CYL_LEN;
 
     // phong lighting with directional light
+	//gl_FragColor = vec4(color.rgb, 1.0);
     gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
     gl_FragColor.rgb = (0.75 * gl_FragColor.rgb) + (0.25 * color);
 

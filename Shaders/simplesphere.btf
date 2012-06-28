@@ -348,7 +348,7 @@ void main(void) {
     depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
     depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
-#else // DISCARD_COLOR_MARKER
+#endif // DISCARD_COLOR_MARKER
 
 #endif // DEPTH
 ]]>
