@@ -87,7 +87,9 @@ megamol::viewer::Window::~Window(void) {
         ::glutSetWindowData(NULL);
         ::glutHideWindow();
         ::glutDestroyWindow(id);
-        if (oldWin != 0) ::glutSetWindow(oldWin);
+        if ((oldWin != 0) && (oldWin != id)) {
+			::glutSetWindow(oldWin);
+		}
     }
 }
 

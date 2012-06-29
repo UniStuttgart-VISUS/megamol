@@ -31,7 +31,18 @@ megamol::viewer::Viewer::~Viewer(void) {
     iter = helper.GetIterator();
     while (iter.HasNext()) { delete iter.Next(); }
     try {
-        ::glutExit();
+		this->ProcessEvents();
+    } catch(...) {
+    }
+    try {
+	    ::glutMainLoopEvent();
+    } catch(...) {
+    }
+    try {
+		// It's a freeglut bug which makes this method explode for what reason ever.
+		// Perhaps because I cleaned up my windows (with menus) before ...
+		// To Debug: run the application (outside VS) and then attach the debugger
+        //::glutExit();
     } catch(...) {
     }
 }
