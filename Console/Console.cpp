@@ -1080,9 +1080,9 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             if (hotFixes.Contains("EnableFileNameFix")) {
                 win->RegisterHotKeyAction(
                     vislib::sys::KeyCode(
-                    (WORD)vislib::sys::KeyCode::KEY_MOD_CTRL
+                    /*(WORD)vislib::sys::KeyCode::KEY_MOD_CTRL
                     | (WORD)vislib::sys::KeyCode::KEY_MOD_SHIFT
-                    | (WORD)'f'), new megamol::console::HotKeyCallback(::fixFileName),
+                    | */(WORD)'f'), new megamol::console::HotKeyCallback(::fixFileName),
                     "FileNameFix");
             }
 #ifdef WITH_TWEAKBAR
