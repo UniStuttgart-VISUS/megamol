@@ -15,308 +15,324 @@
 #include <vislib/FramebufferObject.h>
 #include <vislib/GLSLShader.h>
 
+
 namespace megamol {
 namespace protein {
 
-    /**
-     * TODO
-     */
-    class DofRendererDeferred : public megamol::core::view::AbstractRendererDeferred3D {
-    public:
+/**
+ * Class providing screen space depth of field effect.
+ */
+class DofRendererDeferred :
+	public megamol::core::view::AbstractRendererDeferred3D {
 
-         /* Answer the name of this module.
-          *
-          * @return The name of this module.
-          */
-         static const char *ClassName(void) {
-             return "DofRendererDeferred";
-         }
+public:
 
-         /**
-          * Answer a human readable description of this module.
-          *
-          * @return A human readable description of this module.
-          */
-         static const char *Description(void) {
-             return "Offers application of screen space depth of field effect.";
-         }
+	/* Answer the name of this module.
+	 *
+	 * @return The name of this module.
+	 */
+	static const char *ClassName(void) {
+		return "DofRendererDeferred";
+	}
 
-         /**
-          * Answers whether this module is available on the current system.
-          *
-          * @return 'true' if the module is available, 'false' otherwise.
-          */
-         static bool IsAvailable(void) {
-             if(!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable())
-                 return false;
-             if(!vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable())
-                 return false;
-             if(!glh_extension_supported("GL_ARB_texture_rectangle"))
-                 return false;
-             return true;
-         }
+	/**
+	 * Answer a human readable description of this module.
+	 *
+	 * @return A human readable description of this module.
+	 */
+	static const char *Description(void) {
+		return "Offers application of screen space depth of field effect.";
+	}
 
-        /** Ctor. */
-        DofRendererDeferred(void);
+	/**
+	 * Answers whether this module is available on the current system.
+	 *
+	 * @return 'true' if the module is available, 'false' otherwise.
+	 */
+	static bool IsAvailable(void) {
+		if(!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable())
+			return false;
+		if(!vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable())
+			return false;
+		if(!glh_extension_supported("GL_ARB_texture_rectangle"))
+			return false;
+		return true;
+	}
 
-        /** Dtor. */
-        virtual ~DofRendererDeferred(void);
+	/** Ctor. */
+	DofRendererDeferred(void);
 
-    protected:
+	/** Dtor. */
+	virtual ~DofRendererDeferred(void);
 
-        enum DepthOfFieldMode {
-            DOF_SHADERX,
-            DOF_MIPMAP,
-            DOF_LEE
-        } dofMode;
+protected:
 
-        /**
-         * Implementation of 'create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        bool create(void);
+	/** The depth of field modes */
+	enum DepthOfFieldMode {DOF_SHADERX, DOF_MIPMAP, DOF_LEE};
 
-        /**
-         * Implementation of 'release'.
-         */
-        void release(void);
+	/**
+	 * Implementation of 'create'.
+	 *
+	 * @return 'true' on success, 'false' otherwise.
+	 */
+	bool create(void);
 
-        /**
-         * The get capabilities callback. The module should set the members
-         * of 'call' to tell the caller its capabilities.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetCapabilities(megamol::core::Call& call);
+	/**
+	 * Implementation of 'release'.
+	 */
+	void release(void);
 
-        /**
-         * The get extents callback. The module should set the members of
-         * 'call' to tell the caller the extents of its data (bounding boxes
-         * and times).
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetExtents(megamol::core::Call& call);
+	/**
+	 * The get capabilities callback. The module should set the members
+	 * of 'call' to tell the caller its capabilities.
+	 *
+	 * @param call The calling call.
+	 *
+	 * @return The return value of the function.
+	 */
+	virtual bool GetCapabilities(megamol::core::Call& call);
 
-        /**
-         * The render callback.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool Render(megamol::core::Call& call);
+	/**
+	 * The get extents callback. The module should set the members of
+	 * 'call' to tell the caller the extents of its data (bounding boxes
+	 * and times).
+	 *
+	 * @param call The calling call.
+	 *
+	 * @return The return value of the function.
+	 */
+	virtual bool GetExtents(megamol::core::Call& call);
 
-    private:
+	/**
+	 * The render callback.
+	 *
+	 * @param call The calling call.
+	 *
+	 * @return The return value of the function.
+	 */
+	virtual bool Render(megamol::core::Call& call);
 
-        /**
-         * TODO
-         *
-         * @param d_focus d_focus
-         * @param a a
-         * @param f f
-         * @return something
-         */
-        float calcCocSlope(float d_focus, float a, float f);
+	/**
+	 * Display render call back for the glut parameter window.
+	 */
+	static void glutParamWinDisplayFunc(void);
 
-        /**
-         * Initialize the frame buffer object.
-         *
-         * @param width The width of the buffer.
-         * @param height The height of the buffer.
-         *
-         * @return True if the fbo could be created.
-         */
-        bool createFbo(UINT width, UINT height);
+	/**
+	 * Reshape call back for the glut parameter window.
+	 *
+	 * @param w The new width of the window
+	 * @param h The new height of the window
+	 */
+	static void glutParamWinReshapeFunc(int w, int h);
 
-        /**
-         * TODO
-         */
-        void createReducedTexMipmap();
+private:
 
-        /**
-         * Create a an averaged version of the source texture with a smaller
-         * resolution.
-         */
-        void createReducedTexShaderX();
+	/**
+	 * TODO
+	 *
+	 * @param d_focus d_focus
+	 * @param a a
+	 * @param f f
+	 * @return something
+	 */
+	float calcCocSlope(float d_focus, float a, float f);
 
-        /**
-         * TODO
-         */
-        void drawBlurMipmap();
+	/**
+	 * Initialize the frame buffer object.
+	 *
+	 * @param width The width of the buffer.
+	 * @param height The height of the buffer.
+	 *
+	 * @return 'True' on success, 'false' otherwise
+	 */
+	bool createFbo(UINT width, UINT height);
 
-        /**
-         * Drawe a blurred picture according to shader x algorithm.
-         */
-        void drawBlurShaderX();
+	/**
+	 * Create a an averaged version of the source texture with a smaller
+	 * resolution using mip maps.
+	 */
+	void createReducedTexMipmap();
 
-        /**
-         * TODO
-         */
-        void filterLee();
+	/**
+	 * Create a an averaged version of the source texture with a smaller
+	 * resolution.
+	 */
+	void createReducedTexShaderX();
 
-        /**
-         * TODO
-         */
-        void filterMipmap();
+	/**
+	 * TODO
+	 */
+	void drawBlurMipmap();
 
-        /**
-         * Apply gaussian filter to the current framebuffer content
-         */
-        void filterShaderX();
+	/**
+	 * Drawe a blurred picture according to shader x algorithm.
+	 */
+	void drawBlurShaderX();
 
-        /**
-         * Recalculate parameters for the shader x algorithm
-         */
-        void recalcShaderXParams();
+	/**
+	 * TODO
+	 */
+	void filterLee();
 
-        /**
-         * Update parameters if necessary
-         */
-        bool updateParams();
+	/**
+	 * TODO
+	 */
+	void filterMipmap();
+
+	/**
+	 * Apply gaussian filter to the current framebuffer content
+	 */
+	void filterShaderX();
+
+	/**
+	 * Recalculate parameters for the shader x algorithm
+	 */
+	void recalcShaderXParams();
+
+	/**
+	 * Render orthogonal view of the scene.
+	 *
+	 * @param crOut The outgoing render call
+	 * @param crIn The incoming render call
+	 *
+	 * @return 'True' on success, 'false' otherwise
+	 */
+	bool renderOrthoView(megamol::core::view::CallRenderDeferred3D *crOut,
+			core::view::CallRender3D *crIn);
+
+	/**
+	 * Update parameters if necessary.
+	 *
+	 * @return 'True' on success, 'false' otherwise
+	 */
+	bool updateParams();
 
 
-        /// Parameter slots ///
+	/// Param to determine the depth of field algorithm
+	megamol::core::param::ParamSlot dofModeParam;
+	DepthOfFieldMode dofMode;
 
-        /** Param to determine the depth of field algorithm */
-        megamol::core::param::ParamSlot dofModeParam;
+	/// Param to toggle gaussian filtering
+	megamol::core::param::ParamSlot toggleGaussianParam;
+	bool useGaussian;
 
-        /** Param to toggle gaussian filtering */
-        megamol::core::param::ParamSlot toggleGaussianParam;
+	/// Param for focal distance
+	megamol::core::param::ParamSlot focalDistParam;
+	float focalDist;
 
-        /** Param for focal distance */
-        megamol::core::param::ParamSlot focalDistParam;
-
-        /** Param for aperture */
-        megamol::core::param::ParamSlot apertureParam;
-
-
-        /// Fbo stuff ///
+	/// Param for aperture
+	megamol::core::param::ParamSlot apertureParam;
+	float aperture;
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
 
-        /** The renderers frame buffer object */
-        GLuint fbo;
+	/// The renderers frame buffer object
+	GLuint fbo;
 
-        /** The color buffer */
-        GLuint colorBuffer;
+	/// The color buffer
+	GLuint colorBuffer;
 
-        /** The normal buffer */
-        GLuint normalBuffer;
+	/// The normal buffer
+	GLuint normalBuffer;
 
-        /** The depth buffer */
-        GLuint depthBuffer;
+	/// The depth buffer
+	GLuint depthBuffer;
 
-        /** The source buffer */
-        GLuint sourceBuffer;
+	/// The source buffer
+	GLuint sourceBuffer;
 
-        /* Low res textures (used for mipmap implementation) */
-        GLuint fboMipMapTexId[2]; // two necessary for filtering
+	/// Low res textures (used for mipmap implementation)
+	GLuint fboMipMapTexId[2]; // two necessary for filtering
 
-        /* Low res textures (used for shaderX implementation) */
-        GLuint fboLowResTexId[2]; // two necessary for filtering
+	/// Low res textures (used for shaderX implementation)
+	GLuint fboLowResTexId[2]; // two necessary for filtering
 
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
 
-        /** The fbos width */
-        int width;
+	/// The fbos width
+	int width;
 
-        /** The fbos height */
-        int height;
+	/// The fbos height
+	int height;
 
-        /** The inverse of the fbos width (= pixelsize in texcoords) */
-        float widthInv;
+	/// The inverse of the fbos width (= pixelsize in texcoords)
+	float widthInv;
 
-        /** The inverse of the fbos height (= pixelsize in texcoords) */
-        float heightInv;
+	/// The inverse of the fbos height (= pixelsize in texcoords)
+	float heightInv;
 
+	/// dNear
+	float dNear;
 
+	/// dFar
+	float dFar;
 
-        /// Depth of field Parameters ///
+	/// clampFar
+	float clampFar;
 
-         /** Flags whether a gaussian filter is to be used */
-         bool useGaussian;
+	/// nearClip
+	float nearClip;
 
-         /** The focal distance */
-         float focalDist;
+	/// farClip
+	float farClip;
 
-         /** dNear */
-         float dNear;
+	/// The focal length
+	float focalLength;
 
-         /** dFar */
-         float dFar;
+	/// filmWidth
+	float filmWidth;
 
-         /** clampFar */
-         float clampFar;
+	/// maxCoc
+	float maxCoC;
 
-         /** nearClip */
-         float nearClip;
+	/// cocRadiusScale
+	float cocRadiusScale;
 
-         /** farClip */
-         float farClip;
+	/// Something ...
+	bool originalCoC;
 
-         /** The focal length */
-         float focalLength;
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
 
-         /** filmWidth */
-         float filmWidth;
+	/// Depth of field shader (reduce, mipmap)
+	vislib::graphics::gl::GLSLShader reduceMipMap;
 
-         /** aperture */
-         float aperture;
+	/// Depth of field shader (blur, mipmap)
+	vislib::graphics::gl::GLSLShader blurMipMap;
 
-         /** maxCoc */
-         float maxCoC;
+	/// Depth of field shader (reduce, shaderX)
+	vislib::graphics::gl::GLSLShader reduceShaderX;
 
-         /** cocRadiusScale */
-         float cocRadiusScale;
+	/// Depth of field shader (blur, shaderX)
+	vislib::graphics::gl::GLSLShader blurShaderX;
 
-         /** Something ... */
-         bool originalCoC;
+	/// Shader for horizontal gaussian filter
+	vislib::graphics::gl::GLSLShader gaussianHoriz;
 
+	/// Shader for vertical gaussian filter
+	vislib::graphics::gl::GLSLShader gaussianVert;
 
-         /// Shaders ///
+	/// Shader for gaussian filter (lee)
+	vislib::graphics::gl::GLSLShader gaussianLee;
 
- #ifdef _WIN32
- #pragma warning (disable: 4251)
- #endif /* _WIN32 */
+	/// Shader for blinn phong illumination
+	vislib::graphics::gl::GLSLShader blinnPhongShader;
 
-         /** Depth of field shader (reduce, mipmap) */
-         vislib::graphics::gl::GLSLShader reduceMipMap;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
-         /** Depth of field shader (blur, mipmap) */
-         vislib::graphics::gl::GLSLShader blurMipMap;
+	/// Glut window id for parameter visualization
+	int glutParamWinID;
 
-         /** Depth of field shader (reduce, shaderX) */
-         vislib::graphics::gl::GLSLShader reduceShaderX;
-
-         /** Depth of field shader (blur, shaderX) */
-         vislib::graphics::gl::GLSLShader blurShaderX;
-
-         /** Shader for horizontal gaussian filter */
-         vislib::graphics::gl::GLSLShader gaussianHoriz;
-
-         /** Shader for vertical gaussian filter */
-         vislib::graphics::gl::GLSLShader gaussianVert;
-
-         /** Shader for gaussian filter (lee) */
-         vislib::graphics::gl::GLSLShader gaussianLee;
-
-         /** Shader for blinn phong illumination */
-         vislib::graphics::gl::GLSLShader blinnPhongShader;
-
- #ifdef _WIN32
- #pragma warning (default: 4251)
- #endif /* _WIN32 */
-    };
+	/// Glut window id for the main window
+	int glutMainWinID;
+};
 
 
 } // end namespace protein
