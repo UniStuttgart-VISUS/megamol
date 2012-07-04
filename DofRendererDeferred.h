@@ -70,6 +70,9 @@ protected:
 	/** The depth of field modes */
 	enum DepthOfFieldMode {DOF_SHADERX, DOF_MIPMAP, DOF_LEE};
 
+	/** The renderers render modes */
+	enum RenderMode {DOF, FOCAL_DIST};
+
 	/**
 	 * Implementation of 'create'.
 	 *
@@ -207,6 +210,9 @@ private:
 	 */
 	bool updateParams();
 
+	/// Param for the renderers rendermode
+	megamol::core::param::ParamSlot rModeParam;
+	RenderMode rMode;
 
 	/// Param to determine the depth of field algorithm
 	megamol::core::param::ParamSlot dofModeParam;
@@ -332,6 +338,9 @@ private:
 
 	/// Glut window id for the main window
 	int glutMainWinID;
+
+	/// Camera information
+	vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
 };
 
 

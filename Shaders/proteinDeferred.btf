@@ -344,6 +344,18 @@ void main(void)
                 <snippet type="version">120</snippet>
                 <snippet type="string">
 <!--
+//
+// Copyright (c) 2008  Institute for Visualization and Interactive
+// Systems, University of Stuttgart, Germany
+//
+// This source code is distributed as part of the output sensitive
+// 3D LIC project. Details about this project can be found on the
+// project web page at http://www.vis.uni-stuttgart.de/texflowvis .
+// This file may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original
+// form. Commercial use is strictly prohibited.
+//
+
 uniform sampler2D sourceTex;
 uniform sampler2D depthTex;
 
@@ -356,6 +368,8 @@ uniform float d_focus;    // focal plane distance
 uniform float cocSlope;
 
 uniform vec2 zNearFar; // contains near and far clip values
+
+uniform int renderMode;
 
 
 #if 0
@@ -840,19 +854,21 @@ float reconstructDepth(float z)
     float Zf = zNearFar.y;
 
     //  Z = Zn*Zf / (Zf - z*(Zf - Zn))
-    return Zn*Zf / (Zf - z*(Zf - Zn));
+    //return Zn*Zf / (Zf - z*(Zf - Zn));
+    
+    // Map to near ... far
+    return z*(Zf - Zn) + Zn;
+    
 }
-
 
 void main(void)
 {
     vec4 cOut = vec4(0.0);
 
     // fetch center tap
-    //float depthOrig = texture2D(sourceTex, gl_TexCoord[0].xy).a;
+    float depthOrig = texture2D(sourceTex, gl_TexCoord[0].xy).a;
     // save its depth
-    //float depth = reconstructDepth(depthOrig);
-    float depth = texture2D(sourceTex, gl_TexCoord[0].xy).a;
+    float depth = reconstructDepth(depthOrig);
 
     float x = d_focus / depth;
 
@@ -893,8 +909,7 @@ void main(void)
 
         // apply leaking reduction: lower weight for taps that are
         // closer than the center tap and in focus
-        //float tapDepth = reconstructDepth(tap.a);
-        float tapDepth = tap.a;
+        float tapDepth = reconstructDepth(tap.a);
 
         //float origTapDepth = texture2DLod(sourceTex, coord, 0).a;
         //tapDepth = reconstructDepth(origTapDepth);
@@ -930,11 +945,19 @@ void main(void)
 
     //gl_FragColor = vec4(vec3(depth), 1.0);
     
+    float realDepth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x);
+    if (renderMode == 1) {
+        if(realDepth < d_focus)
+            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        else
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+    
     /// Write fragment depth to the depth buffer 
     
+
     // Map to near ... far
-    float realDepth = texture2D(depthTex, gl_TexCoord[0].xy).x;
-    realDepth = realDepth * (zNearFar.y - zNearFar.x) + zNearFar.x;
+    //realDepth = realDepth * (zNearFar.y - zNearFar.x) + zNearFar.x;
     // Switch sign
     //realDepth *= -1.0f;
     // Transform to window coordinates
@@ -945,7 +968,7 @@ void main(void)
     //    + (zNearFar.y+zNearFar.x)/(zNearFar.y-zNearFar.x);
         
     // Map back to 0 ... 1
-    realDepth = (realDepth - zNearFar.x)/(zNearFar.y-zNearFar.x);
+    realDepth = (realDepth-zNearFar.x)/(zNearFar.y-zNearFar.x);
     gl_FragDepth = realDepth;        
         
     // depthES = 2.0*n*f/(f+n-d*(f-n));
@@ -1054,16 +1077,17 @@ uniform vec2 zNearFar; // contains near and far clip values
 
 uniform float cocSlope; // if < 0, then the original function of ShaderX is used
 
+uniform int renderMode;
 
 
 vec2 poissonTable[8] = vec2[8]( vec2( 0.0,      0.0),
-                                      vec2( 0.527837,-0.085868),
-                                      vec2(-0.040088, 0.536087),
-                                      vec2(-0.670445,-0.179949),
-                                      vec2(-0.419418,-0.616039),
-                                      vec2( 0.440453,-0.639399),
-                                      vec2(-0.757088, 0.349334),
-                                      vec2( 0.574619, 0.685879));
+                                vec2( 0.527837,-0.085868),
+                                vec2(-0.040088, 0.536087),
+                                vec2(-0.670445,-0.179949),
+                                vec2(-0.419418,-0.616039),
+                                vec2( 0.440453,-0.639399),
+                                vec2(-0.757088, 0.349334),
+                                vec2( 0.574619, 0.685879));
 
 
 float reconstructDepth(float z)
@@ -1072,7 +1096,11 @@ float reconstructDepth(float z)
     float Zf = zNearFar.y;
 
     //  Z = Zn*Zf / (Zf - z*(Zf - Zn))
-    return Zn*Zf / (Zf - z*(Zf - Zn));
+    //return Zn*Zf / (Zf - z*(Zf - Zn));
+    
+    // Map to near ... far
+    return z*(Zf - Zn) + Zn;
+    
 }
 
 
@@ -1123,13 +1151,9 @@ void main(void)
     vec2 maxcoc = vec2(5.0, 10.0);
 
     cOut = texture2D(sourceTex, gl_TexCoord[0].xy); // fetch center tap
-    //float depth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x); //
-    float depth = texture2D(depthTex, gl_TexCoord[0].xy).x;
-
+    float depth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x); // TODO
 
     float centerDepth = computeDepthBlur(depth);
-    //float realDepth = centerDepth; // TODO
-    float realDepth = depth; // TODO
 
     if (cocSlope>0)
     {
@@ -1159,8 +1183,7 @@ void main(void)
                           discRadiusLow);
         vec4 tapLow = texture2D(sourceTexLow, coordLow);
 
-        //depth = reconstructDepth(tapLow.a); // TODO
-        depth = texture2D(sourceTexLow, coordLow).a;
+        depth = reconstructDepth(tapLow.a);
         
         tapLow.a = computeDepthBlur(depth);
         //tapLow.a = tapLow.a * 2.0 - 1.0;
@@ -1170,8 +1193,7 @@ void main(void)
                            discRadius);
         vec4 tapHigh = texture2D(sourceTex, coordHigh);
 
-        //depth = reconstructDepth(texture2D(depthTex, coordHigh).x); // TODO
-        depth = texture2D(depthTex, coordHigh).x;
+        depth = reconstructDepth(texture2D(depthTex, coordHigh).x);
         
         tapHigh.a = computeDepthBlur(depth);
 
@@ -1213,10 +1235,19 @@ void main(void)
     //gl_FragColor = vec4(vec3(texture2D(depthTex, gl_TexCoord[0].xy).x), 1.0);
     
     
+    float realDepth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x);
+    if (renderMode == 1) {
+        if(realDepth < d_focus)
+            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        else
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+    
     /// Write fragment depth to the depth buffer 
     
+
     // Map to near ... far
-    realDepth = realDepth * (zNearFar.y - zNearFar.x) + zNearFar.x;
+    //realDepth = realDepth * (zNearFar.y - zNearFar.x) + zNearFar.x;
     // Switch sign
     //realDepth *= -1.0f;
     // Transform to window coordinates
@@ -1233,6 +1264,8 @@ void main(void)
     // depthES = 2.0*n*f/(f+n-d*(f-n));
     // Map near ... far to 0 ... 1
     // depthES = (depthES - n)/(f-n);
+    
+
 }
 -->
                 </snippet>
