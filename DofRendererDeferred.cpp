@@ -32,27 +32,36 @@ using namespace vislib;
  */
 protein::DofRendererDeferred::DofRendererDeferred(void)
 	: core::view::AbstractRendererDeferred3D(),
-  dofModeParam("dofMode", "The depth of field mode"),
-  toggleGaussianParam("gaussian", "Toggle gaussian filtering"),
-  focalDistParam("focalDist", "Change the focal distance"),
-  apertureParam("aperture", "Change the aperture"),
-  width(-1), height(-1), nearClip(0.1f), farClip(10.0f), focalLength(0.035f),
-  filmWidth(0.035f), maxCoC(2.0f), cocRadiusScale(0.4f), originalCoC(false) {
+	  rModeParam("rMode", "The render mode"),
+	  dofModeParam("dofMode", "The depth of field mode"),
+	  toggleGaussianParam("gaussian", "Toggle gaussian filtering"),
+	  focalDistParam("focalDist", "Change the focal distance"),
+	  apertureParam("aperture", "Change the aperture"),
+	  width(-1), height(-1), nearClip(0.1f), farClip(10.0f), focalLength(0.035f),
+	  filmWidth(0.035f), maxCoC(2.0f), cocRadiusScale(0.4f), originalCoC(false) {
+
+	// Param for depth of field mode
+	this->rMode = DOF;
+	core::param::EnumParam *rm = new core::param::EnumParam(this->rMode);
+	rm->SetTypePair(DOF, "depth of field");
+	rm->SetTypePair(FOCAL_DIST, "focal distance");
+	this->rModeParam << rm;
+	this->MakeSlotAvailable(&this->rModeParam);
+
+	// Param for depth of field mode
+	this->dofMode = DOF_SHADERX;
+	core::param::EnumParam *dofModeParam = new core::param::EnumParam(this->dofMode);
+	dofModeParam->SetTypePair(DOF_SHADERX, "ShaderX");
+	dofModeParam->SetTypePair(DOF_MIPMAP,  "MipMap");
+	dofModeParam->SetTypePair(DOF_LEE,     "Lee");
+	this->dofModeParam << dofModeParam;
+	this->MakeSlotAvailable(&this->dofModeParam);
 
 	// Toggle gaussian filter
 	this->useGaussian = false;
 	this->toggleGaussianParam << new core::param::BoolParam(this->useGaussian);
 	this->MakeSlotAvailable(&this->toggleGaussianParam);
 
-	// Param for depth of field mode
-	this->dofMode = DOF_SHADERX;
-	core::param::EnumParam *dofModeParam =
-			new core::param::EnumParam(this->dofMode);
-	dofModeParam->SetTypePair(DOF_SHADERX, "ShaderX");
-	dofModeParam->SetTypePair(DOF_MIPMAP,  "MipMap");
-	dofModeParam->SetTypePair(DOF_LEE,     "Lee");
-	this->dofModeParam << dofModeParam;
-	this->MakeSlotAvailable(&this->dofModeParam);
 
 	// Param for the focal distance
 	this->focalDist = 0.3f;
@@ -364,6 +373,9 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 
 	// Set call time
 	crOut->SetTime(crIn->Time());
+
+    // Get camera information
+    this->cameraInfo =  crIn->GetCameraParameters();
 
 	int curVP[4];
 	glGetIntegerv(GL_VIEWPORT, curVP);
@@ -978,7 +990,6 @@ void protein::DofRendererDeferred::drawBlurShaderX() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, this->sourceBuffer);
 
-
 	this->blurShaderX.Enable();
 	glUniform1i(this->blurShaderX.ParameterLocation("sourceTex"), 0);
 	glUniform1i(this->blurShaderX.ParameterLocation("depthTex"), 1);
@@ -986,16 +997,18 @@ void protein::DofRendererDeferred::drawBlurShaderX() {
 	glUniform2f(this->blurShaderX.ParameterLocation("screenResInv"),
 			this->widthInv, this->heightInv);
 	glUniform1f(this->blurShaderX.ParameterLocation("maxCoC"), this->maxCoC);
-	glUniform1f(this->blurShaderX.ParameterLocation("radiusScale"),
-			this->cocRadiusScale);
-	glUniform1f(this->blurShaderX.ParameterLocation("d_focus"),
-			this->focalDist);
+	glUniform1f(this->blurShaderX.ParameterLocation("radiusScale"), this->cocRadiusScale);
+	glUniform1f(this->blurShaderX.ParameterLocation("d_focus"), this->focalDist);
 	glUniform1f(this->blurShaderX.ParameterLocation("d_near"), this->dNear);
 	glUniform1f(this->blurShaderX.ParameterLocation("d_far"), this->dFar);
-	glUniform1f(this->blurShaderX.ParameterLocation("clamp_far"),
-			this->clampFar);
-	glUniform2f(this->blurShaderX.ParameterLocation("zNearFar"), this->nearClip,
-			this->farClip);
+	glUniform1f(this->blurShaderX.ParameterLocation("clamp_far"), this->clampFar);
+	glUniform2f(this->blurShaderX.ParameterLocation("zNearFar"),
+			this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+	glUniform1i(this->blurShaderX.ParameterLocation("renderMode"), this->rMode);
+
+	printf("==== near %f, far %f\n",
+			this->cameraInfo->NearClip(),
+			this->cameraInfo->FarClip()); // DEBUG
 
 	if(this->originalCoC)
 		glUniform1f(this->blurShaderX.ParameterLocation("cocSlope"), -cocSlope);
@@ -1046,8 +1059,13 @@ void protein::DofRendererDeferred::drawBlurMipmap() {
 	glUniform1f(this->blurMipMap.ParameterLocation("maxCoCInv"), 1.0f/this->maxCoC);
 	glUniform1f(this->blurMipMap.ParameterLocation("d_focus"), this->focalDist);
 	glUniform1f(this->blurMipMap.ParameterLocation("cocSlope"), cocSlope);
-	glUniform2f(this->blurMipMap.ParameterLocation("zNearFar"), this->nearClip,
-			this->farClip);
+	glUniform2f(this->blurMipMap.ParameterLocation("zNearFar"),
+			this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+	glUniform1i(this->blurShaderX.ParameterLocation("renderMode"), this->rMode);
+
+	printf("==== near %f, far %f\n",
+			this->cameraInfo->NearClip(),
+			this->cameraInfo->FarClip()); // DEBUG
 
 	// Draw quad
 	glBegin(GL_QUADS);
@@ -1199,6 +1217,11 @@ bool protein::DofRendererDeferred::renderOrthoView(megamol::core::view::CallRend
  */
 bool protein::DofRendererDeferred::updateParams() {
 
+	// Render mode
+	if (this->rModeParam.IsDirty()) {
+		this->rModeParam.ResetDirty();
+		this->rMode = static_cast<RenderMode>(this->rModeParam.Param<core::param::EnumParam>()->Value());
+	}
 	// Depth of field mode
 	if (this->dofModeParam.IsDirty()) {
 		this->dofModeParam.ResetDirty();
@@ -1209,10 +1232,9 @@ bool protein::DofRendererDeferred::updateParams() {
 		this->useGaussian = this->toggleGaussianParam.Param<core::param::BoolParam>()->Value();
 		this->toggleGaussianParam.ResetDirty();
 	}
-	// Focal distance
+	// Focal distance (note: scaled x10 for greater accuracy)
 	if (this->focalDistParam.IsDirty()) {
-		this->focalDist = this->focalDistParam.Param<core::param::FloatParam>()->Value();
-		this->focalDistParam.ResetDirty();
+		this->focalDist = this->focalDistParam.Param<core::param::FloatParam>()->Value()/10.0f;
 		this->recalcShaderXParams();
 	}
 	// Aperture
