@@ -37,8 +37,13 @@ protein::DofRendererDeferred::DofRendererDeferred(void)
 	  toggleGaussianParam("gaussian", "Toggle gaussian filtering"),
 	  focalDistParam("focalDist", "Change the focal distance"),
 	  apertureParam("aperture", "Change the aperture"),
-	  width(-1), height(-1), nearClip(0.1f), farClip(10.0f), focalLength(0.035f),
-	  filmWidth(0.035f), maxCoC(2.0f), cocRadiusScale(0.4f), originalCoC(false) {
+	  width(-1),
+	  height(-1),
+	  focalLength(0.035f),
+	  filmWidth(0.035f),
+	  maxCoC(2.0f),
+	  cocRadiusScale(0.4f),
+	  originalCoC(false) {
 
 	// Param for depth of field mode
 	this->rMode = DOF;
@@ -64,7 +69,7 @@ protein::DofRendererDeferred::DofRendererDeferred(void)
 
 
 	// Param for the focal distance
-	this->focalDist = 0.3f;
+	this->focalDist = 1.0f;
 	this->focalDistParam << new core::param::FloatParam(this->focalDist, 0.0f, 1000.0f);
 	this->MakeSlotAvailable(&this->focalDistParam);
 
@@ -112,7 +117,7 @@ bool protein::DofRendererDeferred::create(void) {
 		if(!this->reduceMipMap.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
 			throw Exception("Generic creation failure", __FILE__, __LINE__);
 	}
-	catch(vislib::Exception e){
+	catch(Exception e){
 		sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
 				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
 		return false;
@@ -175,7 +180,7 @@ bool protein::DofRendererDeferred::create(void) {
 		if(!this->blurShaderX.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
 			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
 	}
-	catch(vislib::Exception e){
+	catch(Exception e){
 		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
 				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
 		return false;
@@ -238,7 +243,7 @@ bool protein::DofRendererDeferred::create(void) {
 		if(!this->gaussianLee.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
 			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
 	}
-	catch(vislib::Exception e){
+	catch(Exception e){
 		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
 				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
 		return false;
@@ -499,10 +504,7 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-
-	//glDepthMask(GL_TRUE); // Enable writing to depth buffer
-
-	// Apply depth of field
+	// 3. Apply depth of field
 
 	switch(this->dofMode) {
 	case DOF_SHADERX: this->createReducedTexShaderX(); break;
@@ -919,6 +921,8 @@ void protein::DofRendererDeferred::createReducedTexShaderX() {
         this->widthInv, this->heightInv);
     glUniform1i(this->reduceShaderX.ParameterLocation("sourceTex"), 0);
     glUniform1i(this->reduceShaderX.ParameterLocation("depthTex"), 1);
+	glUniform2f(this->reduceShaderX.ParameterLocation("zNearFar"),
+			this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
 
     glClear(GL_COLOR_BUFFER_BIT);
     glRecti(-1, -1, 1, 1); // Draw screen quad
@@ -963,7 +967,7 @@ void protein::DofRendererDeferred::createReducedTexMipmap() {
 	glUniform1f(this->reduceMipMap.ParameterLocation("clamp_far"),
 			this->clampFar);
 	glUniform2f(this->reduceMipMap.ParameterLocation("zNearFar"),
-			this->nearClip, this->farClip);
+			this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
 
 	glRecti(-1, -1, 1, 1); // Draw screen quad
 
@@ -1006,9 +1010,10 @@ void protein::DofRendererDeferred::drawBlurShaderX() {
 			this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
 	glUniform1i(this->blurShaderX.ParameterLocation("renderMode"), this->rMode);
 
-	printf("==== near %f, far %f\n",
+	printf("==== near %f, far %f, focalDist %f\n",
 			this->cameraInfo->NearClip(),
-			this->cameraInfo->FarClip()); // DEBUG
+			this->cameraInfo->FarClip(),
+			this->focalDist); // DEBUG
 
 	if(this->originalCoC)
 		glUniform1f(this->blurShaderX.ParameterLocation("cocSlope"), -cocSlope);
@@ -1061,11 +1066,12 @@ void protein::DofRendererDeferred::drawBlurMipmap() {
 	glUniform1f(this->blurMipMap.ParameterLocation("cocSlope"), cocSlope);
 	glUniform2f(this->blurMipMap.ParameterLocation("zNearFar"),
 			this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
-	glUniform1i(this->blurShaderX.ParameterLocation("renderMode"), this->rMode);
+	glUniform1i(this->blurMipMap.ParameterLocation("renderMode"), this->rMode);
 
-	printf("==== near %f, far %f\n",
+	printf("==== near %f, far %f, focalDist %f\n",
 			this->cameraInfo->NearClip(),
-			this->cameraInfo->FarClip()); // DEBUG
+			this->cameraInfo->FarClip(),
+			this->focalDist); // DEBUG
 
 	// Draw quad
 	glBegin(GL_QUADS);

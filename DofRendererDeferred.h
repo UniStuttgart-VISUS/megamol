@@ -280,12 +280,6 @@ private:
 	/// clampFar
 	float clampFar;
 
-	/// nearClip
-	float nearClip;
-
-	/// farClip
-	float farClip;
-
 	/// The focal length
 	float focalLength;
 

@@ -854,10 +854,10 @@ float reconstructDepth(float z)
     float Zf = zNearFar.y;
 
     //  Z = Zn*Zf / (Zf - z*(Zf - Zn))
-    //return Zn*Zf / (Zf - z*(Zf - Zn));
+    return Zn*Zf / (Zf - z*(Zf - Zn));
     
     // Map to near ... far
-    return z*(Zf - Zn) + Zn;
+    //return z*(Zf - Zn) + Zn;
     
 }
 
@@ -947,10 +947,8 @@ void main(void)
     
     float realDepth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x);
     if (renderMode == 1) {
-        if(realDepth < d_focus)
-            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-        else
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        if(abs(realDepth - d_focus) < 0.01)
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
     }
     
     /// Write fragment depth to the depth buffer 
@@ -1042,6 +1040,15 @@ void main(void)
 
     gl_FragColor = cOut;
     //gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0); // DEBUG
+
+    // Mapto near ... far
+    cOut.a = cOut.a * (zNearFar.y - zNearFar.x) + zNearFar.x;
+    // Transform to window coordinates
+    gl_FragDepth = (zNearFar.y + zNearFar.x)/2.0f + (2.0f*zNearFar.y*zNearFar.x)/
+        (cOut.a*(zNearFar.y - zNearFar.x));        
+    // Map back to 0 ... 1
+    cOut.a = (cOut.a - zNearFar.x)/(zNearFar.y-zNearFar.x);
+    gl_FragColor = cOut; 
 }
 -->
                 </snippet>
@@ -1096,10 +1103,10 @@ float reconstructDepth(float z)
     float Zf = zNearFar.y;
 
     //  Z = Zn*Zf / (Zf - z*(Zf - Zn))
-    //return Zn*Zf / (Zf - z*(Zf - Zn));
+    return Zn*Zf / (Zf - z*(Zf - Zn));
     
     // Map to near ... far
-    return z*(Zf - Zn) + Zn;
+    //return z*(Zf - Zn) + Zn;
     
 }
 
@@ -1110,7 +1117,7 @@ float computeDepthBlur(float d)
 
     if (d < d_focus)
     {
-        // scale depth value betwwen near blur distance
+        // scale depth value between near blur distance
         // and focal distance to [-1,0]
         f = (d - d_focus) / (d_focus - d_near);
 
@@ -1237,10 +1244,8 @@ void main(void)
     
     float realDepth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x);
     if (renderMode == 1) {
-        if(realDepth < d_focus)
-            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-        else
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        if(abs(realDepth - d_focus) < 0.01)
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
     }
     
     /// Write fragment depth to the depth buffer 
@@ -1265,28 +1270,26 @@ void main(void)
     // Map near ... far to 0 ... 1
     // depthES = (depthES - n)/(f-n);
     
-
+    
+    //gl_FragColor = texture2D(sourceTexLow, gl_TexCoord[0].xy).rgba; // DEBUG
 }
 -->
                 </snippet>
             </shader>
             <shader name ="reduceFragment">
-                <snippet type="version">110</snippet>
+                <snippet type="version">120</snippet>
                     <snippet type="string">
 <!--
 uniform vec2 screenResInv;
 uniform sampler2D sourceTex;
 uniform sampler2D depthTex;
+uniform vec2 zNearFar; // contains near and far clip values
 
 void main(void)
 {
 
     vec2 texCoordSample = vec2(0.0);
     vec4 cOut;
-
-    /*cOut.rgb = texture2D(sourceTex, gl_TexCoord[0].st).rgb;
-    cOut.a = texture2D(depthTex, gl_TexCoord[0].st).r;*/
-
     vec2 pixelSize = screenResInv;
 
     // it would be more efficient if the texture coordinates
@@ -1311,8 +1314,16 @@ void main(void)
     cOut.rgb += texture2D(sourceTex, texCoordSample).xyz;
     cOut.a += texture2D(depthTex, texCoordSample).x;
 
-    gl_FragColor = cOut * 0.25;
-    //gl_FragColor = cOut/5.0;
+    cOut *= 0.25;
+    
+    // Mapto near ... far
+    cOut.a = cOut.a * (zNearFar.y - zNearFar.x) + zNearFar.x;
+    // Transform to window coordinates
+    gl_FragDepth = (zNearFar.y + zNearFar.x)/2.0f + (2.0f*zNearFar.y*zNearFar.x)/
+        (cOut.a*(zNearFar.y - zNearFar.x));        
+    // Map back to 0 ... 1
+    cOut.a = (cOut.a - zNearFar.x)/(zNearFar.y-zNearFar.x);
+    gl_FragColor = cOut;  
 }
 -->
                 </snippet>
