@@ -968,6 +968,7 @@ void main(void)
     // Map back to 0 ... 1
     realDepth = (realDepth-zNearFar.x)/(zNearFar.y-zNearFar.x);
     gl_FragDepth = realDepth;        
+    gl_FragDepth = 0.0f;        
         
     // depthES = 2.0*n*f/(f+n-d*(f-n));
     // Map near ... far to 0 ... 1
@@ -1044,7 +1045,7 @@ void main(void)
     // Mapto near ... far
     cOut.a = cOut.a * (zNearFar.y - zNearFar.x) + zNearFar.x;
     // Transform to window coordinates
-    gl_FragDepth = (zNearFar.y + zNearFar.x)/2.0f + (2.0f*zNearFar.y*zNearFar.x)/
+    cOut.a = (zNearFar.y + zNearFar.x)/2.0f + (2.0f*zNearFar.y*zNearFar.x)/
         (cOut.a*(zNearFar.y - zNearFar.x));        
     // Map back to 0 ... 1
     cOut.a = (cOut.a - zNearFar.x)/(zNearFar.y-zNearFar.x);
