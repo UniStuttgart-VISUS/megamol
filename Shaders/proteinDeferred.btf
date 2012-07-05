@@ -1533,4 +1533,32 @@ void main(void)
             </snippet>
         </shader>
     </namespace>
+    
+        <!-- Sobel operator -->
+    <namespace name="nonLinDepth">
+        <shader name="vertex">
+            <snippet type="version">110</snippet>
+            <snippet name="main" type="string">
+            <!--
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+}
+            -->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet type="string">
+            <!--
+
+uniform sampler2D depthBuff;
+uniform vec2 zNearFar;
+void main(void) {
+    gl_FragColor.a = texture2D(depthBuff, gl_TexCoord[0].st).x;
+}
+            -->
+            </snippet>
+        </shader>
+    </namespace>
 </btf>

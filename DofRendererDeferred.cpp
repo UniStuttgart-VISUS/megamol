@@ -270,6 +270,27 @@ bool protein::DofRendererDeferred::create(void) {
 		return false;
 	}
 
+	// Try  to load shader for non linear depth
+	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::nonLinDepth::vertex", vertSrc)) {
+		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+				"%s: Unable to load vertex shader source: non linear depth", this->ClassName());
+		return false;
+	}
+	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::nonLinDepth::fragment", fragSrc)) {
+		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+				"%s: Unable to load fragment shader source: non linear depth", this->ClassName());
+		return false;
+	}
+	try {
+		if(!this->nonLinDepthShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+			throw Exception("Generic creation failure", __FILE__, __LINE__);
+	}
+	catch(Exception e){
+		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
+				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
+		return false;
+	}
+
 	/*this->glutMainWinID = glutGetWindow();
 	this->glutParamWinID = glutCreateWindow("DOF Parameters");
 	glutSetWindow(this->glutParamWinID);
@@ -301,6 +322,7 @@ void protein::DofRendererDeferred::release(void) {
 	glDeleteTextures(1, &this->fboLowResTexId[0]);
 	glDeleteTextures(1, &this->fboLowResTexId[1]);
 	glDeleteFramebuffers(1, &this->fbo);
+	this->nonLinDepthShader.Release();
 }
 
 
@@ -504,6 +526,47 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+
+	// 3. Calc non linear depth
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D,
+			this->nonLinDepthBuffer, 0);
+	glDrawBuffers(1, mrt2);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, this->depthBuffer);
+
+	this->nonLinDepthShader.Enable();
+	glUniform1i(this->nonLinDepthShader.ParameterLocation("depthBuff"), 0);
+	glUniform2f(this->nonLinDepthShader.ParameterLocation("zNearFar"),
+			this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+
+
+	up *= sinf(crIn->GetCameraParameters()->HalfApertureAngle());
+	right *= sinf(crIn->GetCameraParameters()->HalfApertureAngle())
+        		* static_cast<float>(curVP[2]) / static_cast<float>(curVP[3]);
+
+	// Draw quad
+	glColor4f( 1.0f,  1.0f,  1.0f,  1.0f);
+	glBegin(GL_QUADS);
+	glNormal3fv((ray - right - up).PeekComponents());
+	glTexCoord2f(0, 0);
+	glVertex2f(-1.0f,-1.0f);
+	glNormal3fv((ray + right - up).PeekComponents());
+	glTexCoord2f(1, 0);
+	glVertex2f(1.0f,-1.0f);
+	glNormal3fv((ray + right + up).PeekComponents());
+	glTexCoord2f(1, 1);
+	glVertex2f(1.0f, 1.0f);
+	glNormal3fv((ray - right + up).PeekComponents());
+	glTexCoord2f(0, 1);
+	glVertex2f(-1.0f, 1.0f);
+	glEnd();
+
+	this->nonLinDepthShader.Disable();
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 	// 3. Apply depth of field
 
 	switch(this->dofMode) {
@@ -625,6 +688,17 @@ bool protein::DofRendererDeferred::createFbo(GLuint width, GLuint height) {
 	glBindTexture(GL_TEXTURE_2D, this->depthBuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, width, height, 0,
 			GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Non linear depth buffer
+	glGenTextures(1, &this->nonLinDepthBuffer);
+	glBindTexture(GL_TEXTURE_2D, this->nonLinDepthBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0,
+			GL_ALPHA, GL_FLOAT, 0);
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

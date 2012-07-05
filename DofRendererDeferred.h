@@ -246,6 +246,9 @@ private:
 	/// The depth buffer
 	GLuint depthBuffer;
 
+	/// The non linear depth buffer
+	GLuint nonLinDepthBuffer;
+
 	/// The source buffer
 	GLuint sourceBuffer;
 
@@ -322,6 +325,9 @@ private:
 
 	/// Shader for blinn phong illumination
 	vislib::graphics::gl::GLSLShader blinnPhongShader;
+
+	/// Shader for non linear depth
+	vislib::graphics::gl::GLSLShader nonLinDepthShader;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)
