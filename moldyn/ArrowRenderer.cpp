@@ -27,7 +27,7 @@ moldyn::ArrowRenderer::ArrowRenderer(void) : Renderer3DModule(),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         //getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
         greyTF(0),
-        lengthScaleSlot("lengthScale", "") {
+        lengthScaleSlot("lengthScale", ""), lengthFilterSlot("lengthFilter", "Filters the arrows by length") {
 
     this->getDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -37,9 +37,12 @@ moldyn::ArrowRenderer::ArrowRenderer(void) : Renderer3DModule(),
 
     //this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
     //this->MakeSlotAvailable(&this->getClipPlaneSlot);
-
+    
     this->lengthScaleSlot << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->lengthScaleSlot);
+
+    this->lengthFilterSlot << new param::FloatParam( 0.0f, 0.0);
+    this->MakeSlotAvailable(&this->lengthFilterSlot);
 }
 
 
@@ -189,8 +192,9 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     } else {
         return false;
     }
-
+    
     float lengthScale = this->lengthScaleSlot.Param<param::FloatParam>()->Value();
+    float lengthFilter = this->lengthFilterSlot.Param<param::FloatParam>()->Value();
 
     //view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
     //float clipDat[4];
@@ -229,6 +233,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     glUniform3fvARB(this->arrowShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
     glUniform3fvARB(this->arrowShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
     this->arrowShader.SetParameter("lengthScale", lengthScale);
+    this->arrowShader.SetParameter("lengthFilter", lengthFilter);
 
     //glUniform4fvARB(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);
     //glUniform3fvARB(this->arrowShader.ParameterLocation("clipCol"), 1, clipCol);

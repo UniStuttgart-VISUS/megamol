@@ -121,9 +121,12 @@ namespace moldyn {
 
         /** A simple black-to-white transfer function texture as fallback */
         unsigned int greyTF;
-
+        
         /** Scaling factor for arrow lengths */
         param::ParamSlot lengthScaleSlot;
+
+        /** Length filter for arrow lengths */
+        param::ParamSlot lengthFilterSlot;
 
     };
 

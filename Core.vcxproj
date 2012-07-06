@@ -805,7 +805,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="Shaders\mipdepth3.btf" />
     <None Include="Shaders\mipdepth4.btf" />
     <None Include="Shaders\mipdepth5.btf" />
-    <None Include="Shaders\mipdepth6.btf" />
+    <None Include="Shaders\mipdepth6.btf">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Shaders\oraclesphere.btf" />
     <None Include="Shaders\perpixellight.glfp" />
     <None Include="Shaders\perpixellight.glvp" />
