@@ -443,6 +443,7 @@
     <ClCompile Include="src\AbstractCursorEvent.cpp" />
     <ClCompile Include="src\AbstractFont.cpp" />
     <ClCompile Include="src\AbstractVISLogo.cpp" />
+    <ClCompile Include="src\AbstractWindow.cpp" />
     <ClCompile Include="src\BitmapCodecCollection.cpp" />
     <ClCompile Include="src\BitmapImage.cpp" />
     <ClCompile Include="src\BitmapPainter.cpp" />
@@ -501,6 +502,7 @@
     <ClInclude Include="include\vislib\AbstractCursorEvent.h" />
     <ClInclude Include="include\vislib\AbstractFont.h" />
     <ClInclude Include="include\vislib\AbstractVISLogo.h" />
+    <ClInclude Include="include\vislib\AbstractWindow.h" />
     <ClInclude Include="include\vislib\BitmapCodecCollection.h" />
     <ClInclude Include="include\vislib\BitmapImage.h" />
     <ClInclude Include="include\vislib\BitmapPainter.h" />

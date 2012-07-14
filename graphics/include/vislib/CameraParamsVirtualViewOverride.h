@@ -88,6 +88,13 @@ namespace graphics {
     private:
 
         /**
+         * Indicates that a new base object is about to be set.
+         *
+         * @param params The new base object to be set.
+         */
+        virtual void preBaseSet(const SmartPtr<CameraParameters>& params);
+
+        /**
          * Resets the override to the base value.
          */
         virtual void resetOverride(void);

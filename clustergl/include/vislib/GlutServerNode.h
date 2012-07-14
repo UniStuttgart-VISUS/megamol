@@ -43,6 +43,10 @@ namespace cluster {
      * this class. However, this only works for a limited set of 
      * rapid-prototyping as you may not have sufficient control over the system
      * functionality.
+     *
+     * NOTE FOR IMPLEMENTORS: Your class must inherit from 
+     * GlutServerNode<YOURCLASS> and it must include the friend declataion
+     * friend class vislib::net::cluster::GlutClusterNode<YOURCLASS>.
      */
     template<class T> class GlutServerNode 
             : public GlutClusterNode<T>, public AbstractServerNode,

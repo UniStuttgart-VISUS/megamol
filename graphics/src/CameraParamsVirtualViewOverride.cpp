@@ -92,6 +92,15 @@ bool vislib::graphics::CameraParamsVirtualViewOverride::operator ==(
 
 
 /*
+ *  vislib::graphics::CameraParamsEyeOverride::preBaseSet
+ */
+void vislib::graphics::CameraParamsVirtualViewOverride::preBaseSet(
+        const SmartPtr<CameraParameters>& params) {
+    // TODO: Should probably do Sebastian's black magic I don't know
+}
+
+
+/*
  *  vislib::graphics::CameraParamsVirtualViewOverride::resetOverride
  */
 void vislib::graphics::CameraParamsVirtualViewOverride::resetOverride(void) {

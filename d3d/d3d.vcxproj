@@ -444,6 +444,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\AbstractD3D11Window.cpp" />
     <ClCompile Include="src\AbstractD3DAdapterInformation.cpp" />
     <ClCompile Include="src\D3D9AdapterInformation.cpp" />
     <ClCompile Include="src\D3DCamera.cpp" />
@@ -454,8 +455,10 @@
     <ClCompile Include="src\D3DVector3D.cpp" />
     <ClCompile Include="src\d3dverify.cpp" />
     <ClCompile Include="src\D3DVISLogo.cpp" />
+    <ClCompile Include="src\D3DWindowFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\vislib\AbstractD3D11Window.h" />
     <ClInclude Include="include\vislib\AbstractD3DAdapterInformation.h" />
     <ClInclude Include="include\vislib\D3D9AdapterInformation.h" />
     <ClInclude Include="include\vislib\D3DCamera.h" />
@@ -466,6 +469,7 @@
     <ClInclude Include="include\vislib\D3DVector3D.h" />
     <ClInclude Include="include\vislib\d3dverify.h" />
     <ClInclude Include="include\vislib\D3DVISLogo.h" />
+    <ClInclude Include="include\vislib\D3DWindowFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\base\base.vcxproj">

@@ -144,6 +144,9 @@
     <ClCompile Include="src\CameraAdjust3D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\AbstractWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\AbstractBitmapCodec.h">
@@ -276,6 +279,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\CameraAdjust3D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\AbstractWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
