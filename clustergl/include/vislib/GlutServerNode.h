@@ -149,6 +149,12 @@ namespace cluster {
             graphics::InputModifiers& inOutInputModifiers);
 
         /**
+         * This method is called after the OpenGL context and the window have
+         * been created, but before the message loop is entered.
+         */
+        virtual void onInitialise(void);
+
+        /**
          * This method is called when data have been received and a valid 
          * message has been found in the packet.
          *
@@ -324,12 +330,8 @@ namespace cluster {
             AbstractControllerNode(new graphics::ObservableCameraParams()),
             rotateController(NULL), zoomController(NULL) {
         this->camera.SetParameters(this->getParameters());
-        // TODO: This (below) does not work as intended and must be fixed. 
-        // Move to Initialise or onInitialise
-        this->initialiseCursor(this->cursor);
-        this->initialiseInputModifiers(this->inputModifiers);
-        this->initialiseController(this->rotateController,
-            this->zoomController);
+        // Cannot initialise controller etc. here because of vtable not being
+        // available in ctor.
     }
 
 
@@ -433,6 +435,18 @@ namespace cluster {
             graphics::InputModifiers& inOutInputModifiers) {
         this->inputModifiers.SetModifierCount(3);
         this->inputModifiers.RegisterObserver(&this->cursor);
+    }
+
+
+    /*
+     * vislib::net::cluster::GlutServerNode<T>::onInitialise
+     */
+    template<class T> void GlutServerNode<T>::onInitialise(void) {
+        GlutClusterNode<T>::onInitialise();
+        this->initialiseCursor(this->cursor);
+        this->initialiseInputModifiers(this->inputModifiers);
+        this->initialiseController(this->rotateController,
+            this->zoomController);
     }
 
 

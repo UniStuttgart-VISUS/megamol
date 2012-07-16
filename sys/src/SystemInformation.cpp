@@ -583,6 +583,71 @@ void vislib::sys::SystemInformation::UserName(vislib::StringW &outName) {
 }
 
 
+/*
+ * vislib::sys::SystemInformation::VirtualScreen
+ */
+vislib::sys::SystemInformation::MonitorRect 
+vislib::sys::SystemInformation::VirtualScreen(void) {
+    MonitorRect retval(LONG_MAX, LONG_MIN, LONG_MIN, LONG_MAX);
+
+#ifdef _WIN32
+    if (!::EnumDisplayMonitors(NULL, NULL, 
+            SystemInformation::calcVirtualScreenProc, 
+            reinterpret_cast<LPARAM>(&retval))) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+#else /* _WIN32 */
+    MonitorRectArray monitors;
+    SystemInformation::MonitorRects(monitors);
+
+    for (SIZE_T i = 0; i < monitors.Count(); i++) {
+        const MonitorRect& monitor = monitors[i];
+        if (monitor.Left() < retval.Left()) {
+            retval.SetLeft(monitor.Left());
+        }
+        if (monitor.Bottom() > retval.Bottom()) {
+            retval.SetBottom(monitor.Bottom());
+        }
+        if (monitor.Right() > retval.Right()) {
+            retval.SetRight(monitor.Right());
+        }
+        if (monitor.Top() < retval.Top()) {
+            retval.SetTop(monitor.Top());
+        }
+    }
+#endif /* _WIN32 */
+
+    return retval;
+}
+
+
+#ifdef _WIN32
+/*
+ * vislib::sys::SystemInformation::calcVirtualScreenProc
+ */
+BOOL CALLBACK vislib::sys::SystemInformation::calcVirtualScreenProc(
+        HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
+    MonitorRect *vs = reinterpret_cast<MonitorRect *>(dwData);    
+
+    if (lprcMonitor->left < vs->Left()) {
+        vs->SetLeft(lprcMonitor->left);
+    }
+    if (lprcMonitor->bottom > vs->Bottom()) {
+        vs->SetBottom(lprcMonitor->bottom);
+    }
+    if (lprcMonitor->right > vs->Right()) {
+        vs->SetRight(lprcMonitor->right);
+    }
+    if (lprcMonitor->top < vs->Top()) {
+        vs->SetTop(lprcMonitor->top);
+    }
+
+    return TRUE;
+}
+#endif /* _WIN32 */
+
+
 #ifndef _WIN32
 /*
  * vislib:sys::SystemInformation::getRootWndRect

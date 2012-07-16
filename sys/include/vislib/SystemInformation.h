@@ -315,7 +315,36 @@ namespace sys {
             return retval;
         }
 
+        /**
+         * Computes the extents of the whole virtual screen formed by all
+         * monitors attached to the system. 
+         *
+         * Please note that the screen must not fill the whole rectangle 
+         * returned, but there might be holes in the screen. The returned
+         * rectangle is the bounding rectangle of the virtual screen.
+         *
+         * @return The bounding rectangle of the virtual screen.
+         */
+        static MonitorRect VirtualScreen(void);
+
     private:
+
+#ifdef _WIN32
+        /** 
+         * Callback method for computing the total virtual screen size on
+         * Windows.
+         *
+         * @param hMonitor    Handle to display monitor.
+         * @param hdcMonitor  Handle to monitor DC.
+         * @param lprcMonitor Monitor intersection rectangle.
+         * @param dwData      Pointer to a MonitorRect to store the dimension 
+         *                    to.
+         *
+         * @return TRUE if the enumeration should be continued, FALSE otherwise.
+         */
+        static BOOL CALLBACK calcVirtualScreenProc(HMONITOR hMonitor, 
+            HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData);
+#endif /* _WIN32 */
 
 #ifndef _WIN32
         /**
