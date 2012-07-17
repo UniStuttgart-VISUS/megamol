@@ -90,13 +90,13 @@ namespace math {
         /**
          * Answer whether the point 'point' lies within the cuboid.
          *
-         * @param point         The point to be tested.
+         * @param point       The point to be tested.
          * @param includeFace An arbitrary combination of the FACE_LEFT, 
-         *                      FACE_BOTTOM, FACE_BACK, FACE_RIGHT, FACE_TOP 
-         *                      and FACE_FRONT bitmasks. If the face bit is set,
-         *                      points lying on the respective face are regarded as in the
-         *                      rectangle, otherwise they are out. Defaults to
-         *                      zero, i. e. no face is included.
+         *                    FACE_BOTTOM, FACE_BACK, FACE_RIGHT, FACE_TOP 
+         *                    and FACE_FRONT bitmasks. If the face bit is set,
+         *                    points lying on the respective face are regarded as in the
+         *                    cuboid, otherwise they are out. Defaults to
+         *                    zero, i. e. no face is included.
          *
          * @return True if the point lies within the cuboid, false otherwise.
          */
@@ -721,8 +721,10 @@ namespace math {
     const UINT32 AbstractCuboid<T, S>::FACE_ALL
         = AbstractCuboid<T, S>::FACE_LEFT
         | AbstractCuboid<T, S>::FACE_BOTTOM
+        | AbstractCuboid<T, S>::FACE_BACK
         | AbstractCuboid<T, S>::FACE_RIGHT
-        | AbstractCuboid<T, S>::FACE_TOP;
+        | AbstractCuboid<T, S>::FACE_TOP
+        | AbstractCuboid<T, S>::FACE_FRONT;
 
 
     /*
