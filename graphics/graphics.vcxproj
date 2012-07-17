@@ -470,6 +470,7 @@
     <ClCompile Include="src\CameraParameters.cpp" />
     <ClCompile Include="src\CameraParamsEyeOverride.cpp" />
     <ClCompile Include="src\CameraParamsOverride.cpp" />
+    <ClCompile Include="src\CameraParamsProjectionOverride.cpp" />
     <ClCompile Include="src\CameraParamsStore.cpp" />
     <ClCompile Include="src\CameraParamsTileRectOverride.cpp" />
     <ClCompile Include="src\CameraParamsVirtualViewOverride.cpp" />
@@ -529,6 +530,7 @@
     <ClInclude Include="include\vislib\CameraParameters.h" />
     <ClInclude Include="include\vislib\CameraParamsEyeOverride.h" />
     <ClInclude Include="include\vislib\CameraParamsOverride.h" />
+    <ClInclude Include="include\vislib\CameraParamsProjectionOverride.h" />
     <ClInclude Include="include\vislib\CameraParamsStore.h" />
     <ClInclude Include="include\vislib\CameraParamsTileRectOverride.h" />
     <ClInclude Include="include\vislib\CameraParamsVirtualViewOverride.h" />

@@ -147,6 +147,9 @@
     <ClCompile Include="src\AbstractWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\CameraParamsProjectionOverride.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\AbstractBitmapCodec.h">
@@ -282,6 +285,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\AbstractWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\CameraParamsProjectionOverride.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
