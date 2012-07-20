@@ -85,6 +85,12 @@ static bool echoedImportant;
 static vislib::TString applicationExecutablePath;
 
 
+/**
+ * Flag to serialize an deserialize relative file names
+ */
+static bool useRelativeFileNames;
+
+
 extern "C" {
 
 /**
@@ -243,6 +249,45 @@ bool forceViewerLib(void) {
 }
 
 
+template<class T>
+static bool stringFSEqual(const T& lhs, const T& rhs) {
+#ifdef _WIN32
+    return lhs.Equals(rhs, false);
+#else /* _WIN32 */
+    return lhs.Equals(rhs, true);
+#endif /* _WIN32 */
+}
+
+
+static vislib::TString relativePathTo(const vislib::TString& path,
+        const vislib::TString& base) {
+    TCHAR pathSep = vislib::TString(vislib::sys::Path::SEPARATOR_A, 1)[0];
+    vislib::Array<vislib::TString> pa = vislib::TStringTokeniser::Split(path,
+        pathSep, false);
+    vislib::Array<vislib::TString> ba = vislib::TStringTokeniser::Split(base,
+        pathSep, false);
+
+    if ((pa.Count() <= 0) || (ba.Count() <= 0)) return path;
+    if (!stringFSEqual(pa[0], ba[0])) return path;
+
+    int i = 1;
+    while ((i < pa.Count()) && (i < ba.Count())
+        && stringFSEqual(pa[i], ba[i])) ++i; // number of similar levels.
+
+    vislib::TString result;
+    for (int j = 0; j < ba.Count() - i; ++j) {
+        if (j > 0) result += pathSep;
+        result += _T("..");
+    }
+    for (; i < pa.Count(); ++i) {
+        result += pathSep;
+        result += pa[i];
+    }
+
+    return result;
+}
+
+
 extern "C" {
 
 /**
@@ -270,6 +315,30 @@ void MEGAMOLCORE_CALLBACK writeParameterFileParameter(const char* str,
     if ((len >= 6) && (::memcmp(buf, "MMBUTN", 6) == 0)) {
         pfile->Write("# ", 2);
     }
+
+    if (useRelativeFileNames && (len >= 6) && (
+               (::memcmp(buf, "MMSTRW", 6) == 0)
+            || (::memcmp(buf, "MMSTRA", 6) == 0)
+            || (::memcmp(buf, "MMFILW", 6) == 0)
+            || (::memcmp(buf, "MMFILA", 6) == 0) )) {
+        ARY_SAFE_DELETE(buf);
+        // fetch value
+        vislib::TString v = ::mmcGetParameterValue(hParam);
+
+        if (vislib::sys::Path::IsAbsolute(v)) {
+            // value seems like a legal path
+            vislib::TString paramFileDir
+                = vislib::sys::Path::GetDirectoryName(parameterFile);
+
+            // make value relative to param file
+            v = relativePathTo(v, paramFileDir);
+            vislib::sys::WriteFormattedLineToFile(*pfile,
+                "%s=%s\n", str, vislib::StringA(v).PeekBuffer());
+            return;
+
+        }
+    }
+
     delete[] buf;
 
     vislib::sys::WriteFormattedLineToFile(*pfile,
@@ -337,6 +406,16 @@ void readParameterFile(void) {
         {
             ::megamol::console::CoreHandle hParam;
             if (::mmcGetParameterA(hCore, name, hParam)) {
+
+                if (useRelativeFileNames && !value.IsEmpty()) {
+                    // resolve potential relative paths :-/
+                    vislib::StringA fullPath = vislib::sys::Path::Resolve(value, 
+                        vislib::StringA(vislib::sys::Path::GetDirectoryName(parameterFile)));
+                    if (vislib::sys::File::Exists(fullPath)) {
+                        value = fullPath;
+                    }
+                }
+
                 ::mmcSetParameterValueA(hParam, value);
             } else {
                 vislib::sys::Log::DefaultLog.WriteMsg(
@@ -647,7 +726,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 #endif /* !_WIN32 */
     signal(SIGINT, signalCtrlC);
 
-    parameterFile = parser->ParameterFile();
+    parameterFile = vislib::sys::Path::Resolve(parser->ParameterFile());
     initParameterFile = parser->InitParameterFile();
     initOnlyParameterFile = parser->InitOnlyParameterFile();
     setVSync = parser->SetVSync();
@@ -656,6 +735,10 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     hideGUI = parser->HideGUI();
     useQuadBuffers = parser->RequestOpenGLQuadBuffer();
     parser->GetHotFixes(hotFixes);
+    
+    if (hotFixes.Contains("relFileNames")) {
+        useRelativeFileNames = true;
+    }
 
     // run the application!
 #ifdef _WIN32
