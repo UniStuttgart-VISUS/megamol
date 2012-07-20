@@ -577,6 +577,15 @@ void ConfigurationParser::Completed(void) {
 
     } else if (this->xmlVersion < vislib::VersionNumber(1, 3)) {
 
+        // make app path absolute
+        if (vislib::sys::Path::IsRelative(this->config.appDir)) {
+            this->config.appDir = vislib::sys::Path::Resolve(this->config.appDir,
+                vislib::sys::Path::GetDirectoryName(this->config.cfgFileLocations.First()));
+
+            vislib::sys::Log::DefaultLog.WriteWarn("AppDir resolved to \"%s\"",
+                vislib::StringA(this->config.appDir).PeekBuffer());
+        }
+
         // make plugin paths absolute
         vislib::SingleLinkedList<Configuration::PluginLoadInfo>::Iterator iter
             = this->config.pluginLoadInfos.GetIterator();
