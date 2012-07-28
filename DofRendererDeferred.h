@@ -115,19 +115,6 @@ protected:
 	 */
 	virtual bool Render(megamol::core::Call& call);
 
-	/**
-	 * Display render call back for the glut parameter window.
-	 */
-	static void glutParamWinDisplayFunc(void);
-
-	/**
-	 * Reshape call back for the glut parameter window.
-	 *
-	 * @param w The new width of the window
-	 * @param h The new height of the window
-	 */
-	static void glutParamWinReshapeFunc(int w, int h);
-
 private:
 
 	/**

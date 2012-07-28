@@ -7,7 +7,6 @@
 
 #include "stdafx.h"
 #include <GL/glu.h>
-#include <GL/freeglut.h>
 
 #include <param/EnumParam.h>
 #include <param/BoolParam.h>
@@ -1324,54 +1323,6 @@ bool protein::DofRendererDeferred::updateParams() {
 		this->recalcShaderXParams();
 	}
 	return true;
-}
-
-
-/*
- * protein::DofRendererDeferred::glutParamWinDisplayFunc
- */
-void protein::DofRendererDeferred::glutParamWinDisplayFunc() {
-	printf("==== PARAM WIN display callback\n");
-	glClearColor(1.0, 0.0, 0.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glDisable(GL_LIGHTING);
-	glDisable(GL_BLEND);
-	glColor3f(1.0, 0.0, 0.0);
-	glRecti(-1, -1, 1, 1);
-	glutSwapBuffers();
-}
-
-
-/*
- * protein::DofRendererDeferred::glutParamWinReshapeFunc
- *
- * s. http://www.lighthouse3d.com/tutorials/glut-tutorial/preparing-the-window-for-a-reshape/
- */
-void protein::DofRendererDeferred::glutParamWinReshapeFunc(int w, int h) {
-
-	printf("==== PARAM WIN reshape callback\n");
-	// Prevent a divide by zero, when window is too short
-	// (you cant make a window of zero width).
-	if(h == 0)
-		h = 1;
-	float ratio = 1.0* w / h;
-
-	// Use the Projection Matrix
-	glMatrixMode(GL_PROJECTION);
-
-	// Reset Matrix
-	glLoadIdentity();
-
-	// Set the viewport to be the entire window
-	glViewport(0, 0, w, h);
-
-	// Set the correct perspective.
-	gluPerspective(45,ratio,1,1000);
-
-	// Get Back to the Modelview
-	glMatrixMode(GL_MODELVIEW);
 }
 
 
