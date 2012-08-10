@@ -10,6 +10,7 @@
 
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
+#include "vislib/Interlocked.h"
 #include "vislib/SocketException.h"
 #include "vislib/SystemException.h"
 #include "vislib/TcpCommChannel.h"
@@ -60,6 +61,8 @@ void vislib::net::CommServer::OnThreadStarting(void *config) {
 
     ASSERT(!c->EndPoint.IsNull());
     this->configuration.EndPoint = c->EndPoint;
+
+    this->doServe = 1;
 }
 
 
@@ -79,7 +82,6 @@ void vislib::net::CommServer::RemoveListener(CommServerListener *listener) {
 DWORD vislib::net::CommServer::Run(void *config) {
     VLSTACKTRACE("CommServer::Run", __FILE__, __LINE__);
     DWORD retval = 0;
-    bool doServe = true;
 
     /* Prepare the socket subsystem. */
     try {
@@ -134,8 +136,8 @@ DWORD vislib::net::CommServer::Run(void *config) {
             "loop ...\n");
         this->fireServerStarted();
 
-        try {
-            while (doServe) {
+        while (doServe != 0) {
+            try {
                 SmartRef<AbstractCommClientChannel> channel 
                     = this->configuration.Channel->Accept();
                 VLTRACE(Trace::LEVEL_VL_INFO, "CommServer accepted new "
@@ -153,17 +155,21 @@ DWORD vislib::net::CommServer::Run(void *config) {
                             "connection caused an error: %s\n", e.GetMsgA());
                     }
                 }
+           } catch (sys::SystemException e) {
+                VLTRACE(VISLIB_TRCELVL_WARN, "Communication error in "
+                    "CommServer: %s\n", e.GetMsgA());
+                retval = e.GetErrorCode();
+                INT32 ds = this->fireServerError(e); 
+                vislib::sys::Interlocked::CompareExchange(&this->doServe, ds, 
+                    static_cast<INT32>(1));
+            } catch (Exception e) {
+                VLTRACE(VISLIB_TRCELVL_WARN, "Communication error in "
+                    "CommServer: %s\n", e.GetMsgA());
+                retval = -1;
+                INT32 ds = this->fireServerError(e);
+                vislib::sys::Interlocked::CompareExchange(&this->doServe, ds, 
+                    static_cast<INT32>(1));
             }
-        } catch (sys::SystemException se) {
-            VLTRACE(VISLIB_TRCELVL_WARN, "Communication error in CommServer: "
-                "%s\n", se.GetMsgA());
-            retval = se.GetErrorCode();
-            doServe = this->fireServerError(se);
-        } catch (Exception e) {
-            VLTRACE(VISLIB_TRCELVL_WARN, "Communication error in CommServer: "
-                "%s\n", e.GetMsgA());
-            retval = -1;
-            doServe = this->fireServerError(e);
         }
     }
     VLTRACE(Trace::LEVEL_VL_VERBOSE, "CommServer has left the server "
@@ -194,6 +200,8 @@ DWORD vislib::net::CommServer::Run(void *config) {
 bool vislib::net::CommServer::Terminate(void) {
     VLSTACKTRACE("CommServer::Terminate", __FILE__, __LINE__);
     try {
+        vislib::sys::Interlocked::Exchange(&this->doServe, 
+            static_cast<INT32>(0));
         if (!this->configuration.Channel.IsNull()) {
             this->configuration.Channel->Close();
         }
@@ -247,7 +255,7 @@ bool vislib::net::CommServer::fireServerError(
 
     VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "CommServer "
         "received exit request from registered error listener: %s\n", 
-        retval ? "yes" : "no");
+        !retval ? "yes" : "no");
     return retval;
 }
 

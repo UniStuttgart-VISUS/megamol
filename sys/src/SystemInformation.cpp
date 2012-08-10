@@ -15,6 +15,8 @@
 
 #include "vislib/MissingImplementationException.h"
 
+#include <climits>
+
 #ifdef _WIN32
 #include <windows.h>
 #include <Lmcons.h>

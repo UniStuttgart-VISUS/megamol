@@ -180,6 +180,12 @@ namespace net {
         /** The configuration of the server. */
         Configuration configuration;
 
+        /** 
+         * Flag indicating that the server should proceed with accepting 
+         * clients.
+         */
+        INT32 doServe;
+
         /** The list of listeners. */
         ListenerList listeners;
 
