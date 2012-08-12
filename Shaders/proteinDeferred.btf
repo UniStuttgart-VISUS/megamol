@@ -305,11 +305,6 @@ void main(void)
 
     gl_TexCoord[0].xy = 0.5 * pos + 0.5;
     //gl_TexCoord[0].y = 1.0 - gl_TexCoord[0].y;
-
-    // DEBUG
-    // gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
-    // gl_TexCoord[0] = gl_MultiTexCoord0;
-    // DEBUG
 }
 -->
             </snippet>
@@ -951,28 +946,8 @@ void main(void)
             gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
     }
     
-    /// Write fragment depth to the depth buffer 
-    
-
-    // Map to near ... far
-    //realDepth = realDepth * (zNearFar.y - zNearFar.x) + zNearFar.x;
-    // Switch sign
-    //realDepth *= -1.0f;
-    // Transform to window coordinates
-    gl_FragDepth = (zNearFar.y + zNearFar.x)/2.0f + (2.0f*zNearFar.y*zNearFar.x)/
-        (realDepth*(zNearFar.y - zNearFar.x));
-    
-    //realDepth = (-2.0*zNearFar.y*zNearFar.x)/realDepth*(zNearFar.y-zNearFar.x)
-    //    + (zNearFar.y+zNearFar.x)/(zNearFar.y-zNearFar.x);
-        
-    // Map back to 0 ... 1
-    realDepth = (realDepth-zNearFar.x)/(zNearFar.y-zNearFar.x);
-    gl_FragDepth = realDepth;        
-    gl_FragDepth = 0.0f;        
-        
-    // depthES = 2.0*n*f/(f+n-d*(f-n));
-    // Map near ... far to 0 ... 1
-    // depthES = (depthES - n)/(f-n);
+    // Write fragment depth to the depth buffer 
+    gl_FragDepth = texture2D(depthTex, gl_TexCoord[0].xy).x;
 }
 -->
                 </snippet>
@@ -1033,23 +1008,9 @@ float computeDepthBlur(float d)
 void main(void)
 {
     vec4 cOut;
-
     cOut.rgb = texture2D(sourceTex, gl_TexCoord[0].xy).xyz;
-
-    //cOut.rgba = texture2D(depthTex, gl_TexCoord[0].xy).xxxx;
     cOut.a = texture2D(depthTex, gl_TexCoord[0].xy).x;
-
     gl_FragColor = cOut;
-    //gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0); // DEBUG
-
-    // Mapto near ... far
-    cOut.a = cOut.a * (zNearFar.y - zNearFar.x) + zNearFar.x;
-    // Transform to window coordinates
-    cOut.a = (zNearFar.y + zNearFar.x)/2.0f + (2.0f*zNearFar.y*zNearFar.x)/
-        (cOut.a*(zNearFar.y - zNearFar.x));        
-    // Map back to 0 ... 1
-    cOut.a = (cOut.a - zNearFar.x)/(zNearFar.y-zNearFar.x);
-    gl_FragColor = cOut; 
 }
 -->
                 </snippet>
@@ -1061,15 +1022,12 @@ void main(void)
                 <snippet type="string">
 <!--
 #ifndef NUM_TAPS
-#  define NUM_TAPS      8
+#  define NUM_TAPS     8
 #endif // NUM_TAPS
-
 
 uniform sampler2D sourceTex;
 uniform sampler2D sourceTexLow;
 uniform sampler2D depthTex;
-
-
 
 uniform vec2 screenResInv;
 
@@ -1087,7 +1045,6 @@ uniform float cocSlope; // if < 0, then the original function of ShaderX is used
 
 uniform int renderMode;
 
-
 vec2 poissonTable[8] = vec2[8]( vec2( 0.0,      0.0),
                                 vec2( 0.527837,-0.085868),
                                 vec2(-0.040088, 0.536087),
@@ -1097,18 +1054,12 @@ vec2 poissonTable[8] = vec2[8]( vec2( 0.0,      0.0),
                                 vec2(-0.757088, 0.349334),
                                 vec2( 0.574619, 0.685879));
 
-
 float reconstructDepth(float z)
 {
     float Zn = zNearFar.x;
     float Zf = zNearFar.y;
 
-    //  Z = Zn*Zf / (Zf - z*(Zf - Zn))
-    return Zn*Zf / (Zf - z*(Zf - Zn));
-    
-    // Map to near ... far
-    //return z*(Zf - Zn) + Zn;
-    
+    return Zn*Zf / (Zf - z*(Zf - Zn)); 
 }
 
 
@@ -1159,7 +1110,7 @@ void main(void)
     vec2 maxcoc = vec2(5.0, 10.0);
 
     cOut = texture2D(sourceTex, gl_TexCoord[0].xy); // fetch center tap
-    float depth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x); // TODO
+    float depth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x);
 
     float centerDepth = computeDepthBlur(depth);
 
@@ -1226,53 +1177,16 @@ void main(void)
 #endif
     }
 
-    // normalize and return result
-    //vec4 color = vec4((cOut / cOut.a).rgb, texture2D(sourceTex, gl_TexCoord[0].xy).a);
-    gl_FragColor = (cOut / cOut.a);
-    //gl_FragColor =  vec4(cOut.rgb/cOut.a, 1.0);
-
-    //vec4 testColor = texture2D(sourceTex, gl_TexCoord[0].xy); // DEBUG
-    //gl_FragColor = testColor; // DEBUG
-
-    //gl_FragColor = texture2D(depthTex, gl_TexCoord[0].xy);
-    //gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-
-    //gl_FragColor = 1.0 - vec4(vec3(abs(centerDepth)), 0.0);
-    //gl_FragColor = vec4(vec3(abs(depthBlur*2.0-1.0)), 1.0);
-    //gl_FragColor = vec4(gl_FragCoord.xy*screenResInv, 0.0, 1.0);
-    //gl_FragColor = vec4(vec3(texture2D(depthTex, gl_TexCoord[0].xy).x), 1.0);
-    
+    gl_FragColor = (cOut / cOut.a);    
     
     float realDepth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x);
     if (renderMode == 1) {
-        if(abs(realDepth - d_focus) < 0.01)
+        if(abs(realDepth - d_focus) < 0.1)
             gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
     }
     
-    /// Write fragment depth to the depth buffer 
-    
-
-    // Map to near ... far
-    //realDepth = realDepth * (zNearFar.y - zNearFar.x) + zNearFar.x;
-    // Switch sign
-    //realDepth *= -1.0f;
-    // Transform to window coordinates
-    gl_FragDepth = (zNearFar.y + zNearFar.x)/2.0f + (2.0f*zNearFar.y*zNearFar.x)/
-        (realDepth*(zNearFar.y - zNearFar.x));
-    
-    //realDepth = (-2.0*zNearFar.y*zNearFar.x)/realDepth*(zNearFar.y-zNearFar.x)
-    //    + (zNearFar.y+zNearFar.x)/(zNearFar.y-zNearFar.x);
-        
-    // Map back to 0 ... 1
-    realDepth = (realDepth - zNearFar.x)/(zNearFar.y-zNearFar.x);
-    gl_FragDepth = realDepth;        
-        
-    // depthES = 2.0*n*f/(f+n-d*(f-n));
-    // Map near ... far to 0 ... 1
-    // depthES = (depthES - n)/(f-n);
-    
-    
-    //gl_FragColor = texture2D(sourceTexLow, gl_TexCoord[0].xy).rgba; // DEBUG
+    // Write fragment depth to the depth buffer 
+    gl_FragDepth = texture2D(depthTex, gl_TexCoord[0].xy).x;
 }
 -->
                 </snippet>
@@ -1315,16 +1229,7 @@ void main(void)
     cOut.rgb += texture2D(sourceTex, texCoordSample).xyz;
     cOut.a += texture2D(depthTex, texCoordSample).x;
 
-    cOut *= 0.25;
-    
-    // Mapto near ... far
-    cOut.a = cOut.a * (zNearFar.y - zNearFar.x) + zNearFar.x;
-    // Transform to window coordinates
-    gl_FragDepth = (zNearFar.y + zNearFar.x)/2.0f + (2.0f*zNearFar.y*zNearFar.x)/
-        (cOut.a*(zNearFar.y - zNearFar.x));        
-    // Map back to 0 ... 1
-    cOut.a = (cOut.a - zNearFar.x)/(zNearFar.y-zNearFar.x);
-    gl_FragColor = cOut;  
+    gl_FragColor = cOut * 0.25;  
 }
 -->
                 </snippet>
@@ -1533,32 +1438,5 @@ void main(void)
             </snippet>
         </shader>
     </namespace>
-    
-        <!-- Sobel operator -->
-    <namespace name="nonLinDepth">
-        <shader name="vertex">
-            <snippet type="version">110</snippet>
-            <snippet name="main" type="string">
-            <!--
-void main(void) {
-    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
-    gl_TexCoord[0] = gl_MultiTexCoord0;
-}
-            -->
-            </snippet>
-        </shader>
-        <shader name="fragment">
-            <snippet type="version">130</snippet>
-            <snippet type="string">
-            <!--
-
-uniform sampler2D depthBuff;
-uniform vec2 zNearFar;
-void main(void) {
-    gl_FragColor.a = texture2D(depthBuff, gl_TexCoord[0].st).x;
-}
-            -->
-            </snippet>
-        </shader>
-    </namespace>
+   
 </btf>

@@ -11,9 +11,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <view/AbstractRendererDeferred3D.h>
+#include <view/Renderer3DModuleDS.h>
 #include <vislib/FramebufferObject.h>
 #include <vislib/GLSLShader.h>
+#include <CallerSlot.h>
 
 
 namespace megamol {
@@ -23,7 +24,7 @@ namespace protein {
  * Class providing screen space depth of field effect.
  */
 class DofRendererDeferred :
-	public megamol::core::view::AbstractRendererDeferred3D {
+	public megamol::core::view::Renderer3DModuleDS {
 
 public:
 
@@ -68,7 +69,7 @@ public:
 protected:
 
 	/** The depth of field modes */
-	enum DepthOfFieldMode {DOF_SHADERX, DOF_MIPMAP, DOF_LEE};
+	enum DepthOfFieldMode {NONE, DOF_SHADERX, DOF_MIPMAP, DOF_LEE};
 
 	/** The renderers render modes */
 	enum RenderMode {DOF, FOCAL_DIST};
@@ -180,22 +181,14 @@ private:
 	void recalcShaderXParams();
 
 	/**
-	 * Render orthogonal view of the scene.
-	 *
-	 * @param crOut The outgoing render call
-	 * @param crIn The incoming render call
-	 *
-	 * @return 'True' on success, 'false' otherwise
-	 */
-	bool renderOrthoView(megamol::core::view::CallRenderDeferred3D *crOut,
-			core::view::CallRender3D *crIn);
-
-	/**
 	 * Update parameters if necessary.
 	 *
 	 * @return 'True' on success, 'false' otherwise
 	 */
 	bool updateParams();
+
+	/// Caller slot
+	megamol::core::CallerSlot rendererSlot;
 
 	/// Param for the renderers rendermode
 	megamol::core::param::ParamSlot rModeParam;
@@ -217,6 +210,14 @@ private:
 	megamol::core::param::ParamSlot apertureParam;
 	float aperture;
 
+	/// Param to scale coc radius
+	megamol::core::param::ParamSlot cocRadiusScaleParam;
+	float cocRadiusScale;
+
+	/// Param to change focal length
+	megamol::core::param::ParamSlot focalLengthParam;
+	float focalLength;
+
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
@@ -224,17 +225,8 @@ private:
 	/// The renderers frame buffer object
 	GLuint fbo;
 
-	/// The color buffer
-	GLuint colorBuffer;
-
-	/// The normal buffer
-	GLuint normalBuffer;
-
 	/// The depth buffer
 	GLuint depthBuffer;
-
-	/// The non linear depth buffer
-	GLuint nonLinDepthBuffer;
 
 	/// The source buffer
 	GLuint sourceBuffer;
@@ -270,17 +262,11 @@ private:
 	/// clampFar
 	float clampFar;
 
-	/// The focal length
-	float focalLength;
-
 	/// filmWidth
 	float filmWidth;
 
 	/// maxCoc
 	float maxCoC;
-
-	/// cocRadiusScale
-	float cocRadiusScale;
 
 	/// Something ...
 	bool originalCoC;
@@ -310,21 +296,9 @@ private:
 	/// Shader for gaussian filter (lee)
 	vislib::graphics::gl::GLSLShader gaussianLee;
 
-	/// Shader for blinn phong illumination
-	vislib::graphics::gl::GLSLShader blinnPhongShader;
-
-	/// Shader for non linear depth
-	vislib::graphics::gl::GLSLShader nonLinDepthShader;
-
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
-
-	/// Glut window id for parameter visualization
-	int glutParamWinID;
-
-	/// Glut window id for the main window
-	int glutMainWinID;
 
 	/// Camera information
 	vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
