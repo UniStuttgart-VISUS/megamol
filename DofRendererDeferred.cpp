@@ -13,7 +13,6 @@
 #include <param/IntParam.h>
 #include <param/FloatParam.h>
 #include <view/CallRender3D.h>
-#include <view/CallRenderDeferred3D.h>
 #include <CoreInstance.h>
 
 #include <vislib/ShaderSource.h>
@@ -30,19 +29,23 @@ using namespace vislib;
  * protein::DofRendererDeferred::protein::DofRendererDeferred
  */
 protein::DofRendererDeferred::DofRendererDeferred(void)
-	: core::view::AbstractRendererDeferred3D(),
+	: core::view::Renderer3DModuleDS(),
+	  rendererSlot("renderer", "..."),
 	  rModeParam("rMode", "The render mode"),
 	  dofModeParam("dofMode", "The depth of field mode"),
 	  toggleGaussianParam("gaussian", "Toggle gaussian filtering"),
 	  focalDistParam("focalDist", "Change the focal distance"),
 	  apertureParam("aperture", "Change the aperture"),
+	  cocRadiusScaleParam("cocRadScl", "Change the radius of the circle of consfusion."),
+	  focalLengthParam("focalLength", "Change the focal length."),
 	  width(-1),
 	  height(-1),
-	  focalLength(0.035f),
 	  filmWidth(0.035f),
 	  maxCoC(2.0f),
-	  cocRadiusScale(0.4f),
 	  originalCoC(false) {
+
+    this->rendererSlot.SetCompatibleCall<core::view::CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->rendererSlot);
 
 	// Param for depth of field mode
 	this->rMode = DOF;
@@ -69,13 +72,23 @@ protein::DofRendererDeferred::DofRendererDeferred(void)
 
 	// Param for the focal distance
 	this->focalDist = 1.0f;
-	this->focalDistParam << new core::param::FloatParam(this->focalDist, 0.0f, 1000.0f);
+	this->focalDistParam << new core::param::FloatParam(this->focalDist, 0.0f);
 	this->MakeSlotAvailable(&this->focalDistParam);
 
 	// Param for aperture
-	this->aperture = 5.6f;
-	this->apertureParam << new core::param::FloatParam(this->aperture, 0.5f, 128.0f);
+	this->aperture = 1.0f;
+	this->apertureParam << new core::param::FloatParam(this->aperture, 0.0f);
 	this->MakeSlotAvailable(&this->apertureParam);
+
+	// Param for coc radius scaling
+	this->cocRadiusScale = 1.0f;
+	this->cocRadiusScaleParam << new core::param::FloatParam(this->cocRadiusScale, 0.0f);
+	this->MakeSlotAvailable(&this->cocRadiusScaleParam);
+
+	// Param for focal length
+	this->focalLength = 0.035f;
+	this->focalLengthParam << new core::param::FloatParam(this->focalLength*100.0f, 0.0f);
+	this->MakeSlotAvailable(&this->focalLengthParam);
 }
 
 
@@ -248,62 +261,6 @@ bool protein::DofRendererDeferred::create(void) {
 		return false;
 	}
 
-	// Try  to load shader for blinn phong illumination
-	if(!ci->ShaderSourceFactory().MakeShaderSource("deferred::vertex", vertSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
-				"%s: Unable to load vertex shader source: gaussian filter (lee)", this->ClassName());
-		return false;
-	}
-	if(!ci->ShaderSourceFactory().MakeShaderSource("deferred::blinnPhongFrag", fragSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
-				"%s: Unable to load fragment shader source: gaussian filter (lee)", this->ClassName());
-		return false;
-	}
-	try {
-		if(!this->blinnPhongShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-			throw Exception("Generic creation failure", __FILE__, __LINE__);
-	}
-	catch(Exception e){
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
-				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
-		return false;
-	}
-
-	// Try  to load shader for non linear depth
-	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::nonLinDepth::vertex", vertSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
-				"%s: Unable to load vertex shader source: non linear depth", this->ClassName());
-		return false;
-	}
-	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::nonLinDepth::fragment", fragSrc)) {
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
-				"%s: Unable to load fragment shader source: non linear depth", this->ClassName());
-		return false;
-	}
-	try {
-		if(!this->nonLinDepthShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-			throw Exception("Generic creation failure", __FILE__, __LINE__);
-	}
-	catch(Exception e){
-		sys::Log::DefaultLog.WriteMsg(sys::Log::LEVEL_ERROR,
-				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
-		return false;
-	}
-
-	/*this->glutMainWinID = glutGetWindow();
-	this->glutParamWinID = glutCreateWindow("DOF Parameters");
-	glutSetWindow(this->glutParamWinID);
-	glutSetOption(GLUT_RENDERING_CONTEXT, GLUT_CREATE_NEW_CONTEXT);
-	glutDisplayFunc(glutParamWinDisplayFunc);
-	glutReshapeFunc(glutParamWinReshapeFunc);
-	//glutKeyboardFunc(glutKeyboardCallback);
-	//glutSpecialFunc(glutSpecialCallback);
-	//glutMouseFunc(glutMouseCallback);
-	//glutMotionFunc(glutMotionCallback);
-	//glutPassiveMotionFunc(glutMotionCallback);
-	//glutCloseFunc(glutCloseCallback);
-	glutSetWindow(this->glutMainWinID);*/
-
 	return true;
 }
 
@@ -312,8 +269,6 @@ bool protein::DofRendererDeferred::create(void) {
  * protein::DofRendererDeferred::release
  */
 void protein::DofRendererDeferred::release(void) {
-	glDeleteTextures(1, &this->colorBuffer);
-	glDeleteTextures(1, &this->normalBuffer);
 	glDeleteTextures(1, &this->depthBuffer);
 	glDeleteTextures(1, &this->sourceBuffer);
 	glDeleteTextures(1, &this->fboMipMapTexId[0]);
@@ -321,7 +276,6 @@ void protein::DofRendererDeferred::release(void) {
 	glDeleteTextures(1, &this->fboLowResTexId[0]);
 	glDeleteTextures(1, &this->fboLowResTexId[1]);
 	glDeleteFramebuffers(1, &this->fbo);
-	this->nonLinDepthShader.Release();
 }
 
 
@@ -342,8 +296,8 @@ bool protein::DofRendererDeferred::GetCapabilities(megamol::core::Call& call) {
 			dynamic_cast< megamol::core::view::CallRender3D*>(&call);
 	if(crIn == NULL) return false;
 
-	megamol::core::view::CallRenderDeferred3D *crOut =
-			this->rendererSlot.CallAs< megamol::core::view::CallRenderDeferred3D>();
+	megamol::core::view::CallRender3D *crOut =
+			this->rendererSlot.CallAs< megamol::core::view::CallRender3D>();
 	if(crOut == NULL) return false;
 
 	// Call for getCapabilities
@@ -365,8 +319,8 @@ bool protein::DofRendererDeferred::GetExtents(megamol::core::Call& call) {
 			dynamic_cast< megamol::core::view::CallRender3D*>(&call);
 	if(crIn == NULL) return false;
 
-	megamol::core::view:: CallRenderDeferred3D *crOut =
-			this->rendererSlot.CallAs< megamol::core::view::CallRenderDeferred3D>();
+	megamol::core::view:: CallRender3D *crOut =
+			this->rendererSlot.CallAs< megamol::core::view::CallRender3D>();
 	if(crOut == NULL) return false;
 
 	// Call for getExtends
@@ -391,8 +345,8 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 			dynamic_cast< megamol::core::view::CallRender3D*>(&call);
 	if(crIn == NULL) return false;
 
-	megamol::core::view::CallRenderDeferred3D *crOut =
-			this->rendererSlot.CallAs< megamol::core::view::CallRenderDeferred3D>();
+	megamol::core::view::CallRender3D *crOut =
+			this->rendererSlot.CallAs< megamol::core::view::CallRender3D>();
 	if(crOut == NULL) return false;
 
 	crOut->SetCameraParameters(crIn->GetCameraParameters());
@@ -406,14 +360,6 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 	int curVP[4];
 	glGetIntegerv(GL_VIEWPORT, curVP);
 
-	vislib::math::Vector<float, 3> ray(0, 0,-1);
-	vislib::math::Vector<float, 3> up(0, 1, 0);
-	vislib::math::Vector<float, 3> right(1, 0, 0);
-
-	up *= sinf(crIn->GetCameraParameters()->HalfApertureAngle());
-	right *= sinf(crIn->GetCameraParameters()->HalfApertureAngle())
-        		* curVP[2] / curVP[3];
-
 	// Recreate FBO if necessary
 	if((curVP[2] != this->width) || (curVP[3] != this->height)) {
 		if(!this->createFbo(static_cast<GLuint>(curVP[2]),
@@ -426,20 +372,14 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 		this->heightInv = 1.0/curVP[3];
 	}
 
+	// 1. Render scene
 
-	// 1. Offscreen rendering
-
-	// Enable rendering to FBO
+	// Setup rendering to FBO
 	glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
-
-	// Enable rendering to color attachents 0 and 1
-	GLenum mrt[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-	glDrawBuffers(2, mrt);
-
+	GLenum mrt[] = {GL_COLOR_ATTACHMENT0};
+	glDrawBuffers(1, mrt);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-			GL_TEXTURE_2D, this->colorBuffer, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
-			GL_TEXTURE_2D, this->normalBuffer, 0);
+			GL_TEXTURE_2D, this->sourceBuffer, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
 			GL_TEXTURE_2D, this->depthBuffer, 0);
 
@@ -449,12 +389,10 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 	(*crOut)(0);
 
 	// Detach texture that are not needed anymore
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-			GL_TEXTURE_2D, 0, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
-			GL_TEXTURE_2D, 0, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-			GL_TEXTURE_2D, 0, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+
+	// 2. Apply depth of field
 
 	// Prepare rendering screen quad
 	glMatrixMode(GL_MODELVIEW);
@@ -464,117 +402,15 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 	glPushMatrix();
 	glLoadIdentity();
 
-	glEnable(GL_TEXTURE_2D);
-	glDisable(GL_DEPTH_TEST);
-
-
-	// 2. Local lighting
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D,
-			this->sourceBuffer, 0);
-	GLenum mrt2[] = {GL_COLOR_ATTACHMENT0};
-	glDrawBuffers(1, mrt2);
-
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, this->normalBuffer);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, this->colorBuffer);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, this->depthBuffer);
-
-	this->blinnPhongShader.Enable();
-	glUniform3fv(this->blinnPhongShader.ParameterLocation("camWS"), 1,
-			crIn->GetCameraParameters()->Position().PeekCoordinates());
-	glUniform2f(this->blinnPhongShader.ParameterLocation("clipPlanes"),
-			crIn->GetCameraParameters()->NearClip(),
-			crIn->GetCameraParameters()->FarClip());
-	glUniform2f(this->blinnPhongShader.ParameterLocation("winSize"),
-			curVP[2] - curVP[0], curVP[3] - curVP[1]);
-	glUniform1i(this->blinnPhongShader.ParameterLocation("depthBuff"), 0);
-	glUniform1i(this->blinnPhongShader.ParameterLocation("colorBuff"), 1);
-	glUniform1i(this->blinnPhongShader.ParameterLocation("normalBuff"), 2);
-
-	// --> Enable BLinn phong illumination
-	glUniform1i(this->blinnPhongShader.ParameterLocation("renderMode"), 0);
-
-
-	up *= sinf(crIn->GetCameraParameters()->HalfApertureAngle());
-	right *= sinf(crIn->GetCameraParameters()->HalfApertureAngle())
-        		* static_cast<float>(curVP[2]) / static_cast<float>(curVP[3]);
-
-	// Draw quad
-	glColor4f( 1.0f,  1.0f,  1.0f,  1.0f);
-	glBegin(GL_QUADS);
-	glNormal3fv((ray - right - up).PeekComponents());
-	glTexCoord2f(0, 0);
-	glVertex2f(-1.0f,-1.0f);
-	glNormal3fv((ray + right - up).PeekComponents());
-	glTexCoord2f(1, 0);
-	glVertex2f(1.0f,-1.0f);
-	glNormal3fv((ray + right + up).PeekComponents());
-	glTexCoord2f(1, 1);
-	glVertex2f(1.0f, 1.0f);
-	glNormal3fv((ray - right + up).PeekComponents());
-	glTexCoord2f(0, 1);
-	glVertex2f(-1.0f, 1.0f);
-	glEnd();
-
-	this->blinnPhongShader.Disable();
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-
-	// 3. Calc non linear depth
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D,
-			this->nonLinDepthBuffer, 0);
-	glDrawBuffers(1, mrt2);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, this->depthBuffer);
-
-	this->nonLinDepthShader.Enable();
-	glUniform1i(this->nonLinDepthShader.ParameterLocation("depthBuff"), 0);
-	glUniform2f(this->nonLinDepthShader.ParameterLocation("zNearFar"),
-			this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
-
-
-	up *= sinf(crIn->GetCameraParameters()->HalfApertureAngle());
-	right *= sinf(crIn->GetCameraParameters()->HalfApertureAngle())
-        		* static_cast<float>(curVP[2]) / static_cast<float>(curVP[3]);
-
-	// Draw quad
-	glColor4f( 1.0f,  1.0f,  1.0f,  1.0f);
-	glBegin(GL_QUADS);
-	glNormal3fv((ray - right - up).PeekComponents());
-	glTexCoord2f(0, 0);
-	glVertex2f(-1.0f,-1.0f);
-	glNormal3fv((ray + right - up).PeekComponents());
-	glTexCoord2f(1, 0);
-	glVertex2f(1.0f,-1.0f);
-	glNormal3fv((ray + right + up).PeekComponents());
-	glTexCoord2f(1, 1);
-	glVertex2f(1.0f, 1.0f);
-	glNormal3fv((ray - right + up).PeekComponents());
-	glTexCoord2f(0, 1);
-	glVertex2f(-1.0f, 1.0f);
-	glEnd();
-
-	this->nonLinDepthShader.Disable();
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	// 3. Apply depth of field
-
+	// Create reduced texture of the scene
 	switch(this->dofMode) {
-	case DOF_SHADERX: this->createReducedTexShaderX(); break;
-	case DOF_LEE:     // TODO ?
-	case DOF_MIPMAP:  this->createReducedTexMipmap(); break;
-	default: break;
+		case DOF_SHADERX: this->createReducedTexShaderX(); break;
+		case DOF_LEE:     // TODO ?
+		case DOF_MIPMAP:  this->createReducedTexMipmap(); break;
+		default: break;
 	}
 
+	// Blur reduced texture
 	if(this->useGaussian) {
 		switch(this->dofMode) {
 		case DOF_SHADERX: this->filterShaderX(); break;
@@ -584,33 +420,26 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 		}
 	}
 
-	// Disable rednering to framebuffer
+	// Disable rendering to framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// Restore viewport
 	glViewport(0, 0, this->width, this->height);
 
-	// Preserve the current framebuffer content (e.g. back of the bounding box)
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_DEPTH_TEST);
-
+	// Draw scene with depth of field effec
 	switch(this->dofMode) {
-	case DOF_SHADERX: this->drawBlurShaderX(); break;
-	case DOF_LEE: // TODO ?
-	case DOF_MIPMAP:  this->drawBlurMipmap(); break;
-	default: break;
+		case DOF_SHADERX: this->drawBlurShaderX(); break;
+		case DOF_LEE: // TODO ?
+		case DOF_MIPMAP:  this->drawBlurMipmap(); break;
+		default: break;
 	}
 
 	glDisable(GL_TEXTURE_2D);
-	//glDisable(GL_BLEND);
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
-
-	//this->renderOrthoView(crOut, crIn);
 
 	GLenum err;
 	err = glGetError();
@@ -648,8 +477,6 @@ bool protein::DofRendererDeferred::createFbo(GLuint width, GLuint height) {
 
 	// Delete textures + fbo if necessary
 	if(glIsFramebuffer(this->fbo)) {
-		glDeleteTextures(1, &this->colorBuffer);
-		glDeleteTextures(1, &this->normalBuffer);
 		glDeleteTextures(1, &this->depthBuffer);
 		glDeleteTextures(1, &this->sourceBuffer);
 		glDeleteTextures(1, &this->fboMipMapTexId[0]);
@@ -661,43 +488,11 @@ bool protein::DofRendererDeferred::createFbo(GLuint width, GLuint height) {
 
 	glEnable(GL_TEXTURE_2D);
 
-	glGenTextures(1, &this->colorBuffer);
-	glBindTexture(GL_TEXTURE_2D, this->colorBuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA,
-			GL_UNSIGNED_BYTE, 0);
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	// Normal buffer
-	glGenTextures(1, &this->normalBuffer);
-	glBindTexture(GL_TEXTURE_2D, this->normalBuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA,
-			GL_UNSIGNED_BYTE, 0);
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
 	// Depth buffer
 	glGenTextures(1, &this->depthBuffer);
 	glBindTexture(GL_TEXTURE_2D, this->depthBuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, width, height, 0,
 			GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	// Non linear depth buffer
-	glGenTextures(1, &this->nonLinDepthBuffer);
-	glBindTexture(GL_TEXTURE_2D, this->nonLinDepthBuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0,
-			GL_ALPHA, GL_FLOAT, 0);
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -935,15 +730,11 @@ void protein::DofRendererDeferred::recalcShaderXParams() {
 	const float coc_max = 10.0f; // 10 pixel coc_max (diameter) in shaderX
 	const float focalLen = this->focalLength/this->filmWidth*this->width;
 	const float d_focus = this->focalDist/this->filmWidth*this->width;
-	//const float h = Squared(this->focalLength)/(this->aperture*coc_max);
-
-	const float h = (this->focalLength*this->focalLength)/
-			(this->aperture*coc_max); // TODO squared?
-
-	const float coc_inf = (focalLen*focalLen) // TODO Squared?
-        		/ (this->aperture * (this->focalDist - focalLen));
+	const float h = (this->focalLength*this->focalLength)/(this->aperture*coc_max);
+	const float coc_inf = (focalLen*focalLen)/(this->aperture * (this->focalDist - focalLen));
 
 	this->dNear  = h * this->focalDist / (h + (this->focalDist - focalLen));
+	printf("near %f\n", this->dNear);
 
 	if(coc_max <= coc_inf) {
 		const float d_far90_max = coc_inf * d_focus / (coc_inf - 0.9f*coc_max);
@@ -958,6 +749,8 @@ void protein::DofRendererDeferred::recalcShaderXParams() {
 
 	this->dNear *= filmWidth * this->widthInv;
 	this->dFar *= filmWidth * this->widthInv;
+
+	printf("near blur plane: %f, far blur plane: %f\n", this->dNear, this->dFar);
 }
 
 
@@ -1071,22 +864,16 @@ void protein::DofRendererDeferred::drawBlurShaderX() {
 	glUniform1i(this->blurShaderX.ParameterLocation("sourceTex"), 0);
 	glUniform1i(this->blurShaderX.ParameterLocation("depthTex"), 1);
 	glUniform1i(this->blurShaderX.ParameterLocation("sourceTexLow"), 2);
-	glUniform2f(this->blurShaderX.ParameterLocation("screenResInv"),
-			this->widthInv, this->heightInv);
+	glUniform2f(this->blurShaderX.ParameterLocation("screenResInv"), this->widthInv, this->heightInv);
 	glUniform1f(this->blurShaderX.ParameterLocation("maxCoC"), this->maxCoC);
 	glUniform1f(this->blurShaderX.ParameterLocation("radiusScale"), this->cocRadiusScale);
 	glUniform1f(this->blurShaderX.ParameterLocation("d_focus"), this->focalDist);
 	glUniform1f(this->blurShaderX.ParameterLocation("d_near"), this->dNear);
 	glUniform1f(this->blurShaderX.ParameterLocation("d_far"), this->dFar);
 	glUniform1f(this->blurShaderX.ParameterLocation("clamp_far"), this->clampFar);
-	glUniform2f(this->blurShaderX.ParameterLocation("zNearFar"),
-			this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+	glUniform2f(this->blurShaderX.ParameterLocation("zNearFar"), this->cameraInfo->NearClip(),
+			this->cameraInfo->FarClip());
 	glUniform1i(this->blurShaderX.ParameterLocation("renderMode"), this->rMode);
-
-	printf("==== near %f, far %f, focalDist %f\n",
-			this->cameraInfo->NearClip(),
-			this->cameraInfo->FarClip(),
-			this->focalDist); // DEBUG
 
 	if(this->originalCoC)
 		glUniform1f(this->blurShaderX.ParameterLocation("cocSlope"), -cocSlope);
@@ -1141,11 +928,6 @@ void protein::DofRendererDeferred::drawBlurMipmap() {
 			this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
 	glUniform1i(this->blurMipMap.ParameterLocation("renderMode"), this->rMode);
 
-	printf("==== near %f, far %f, focalDist %f\n",
-			this->cameraInfo->NearClip(),
-			this->cameraInfo->FarClip(),
-			this->focalDist); // DEBUG
-
 	// Draw quad
 	glBegin(GL_QUADS);
 	glTexCoord2f(0, 0); glVertex2f(-1.0f, -1.0f);
@@ -1161,137 +943,6 @@ void protein::DofRendererDeferred::drawBlurMipmap() {
 
 
 /*
- * protein::DofRendererDeferred::renderOrthoView
- */
-bool protein::DofRendererDeferred::renderOrthoView(megamol::core::view::CallRenderDeferred3D *crOut,
-		core::view::CallRender3D *crIn) {
-
-
-	vislib::math::Vector<float, 3> ray(0, 0,-1);
-	vislib::math::Vector<float, 3> up(0, 1, 0);
-	vislib::math::Vector<float, 3> right(1, 0, 0);
-
-	glDisable(GL_BLEND);
-	glDisable(GL_LIGHTING);
-
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-
-	// Enable rendering to FBO
-	glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
-
-	// Enable rendering to color attachents 0 and 1
-	GLenum mrt[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-	glDrawBuffers(2, mrt);
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->colorBuffer, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this->normalBuffer, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->depthBuffer, 0);
-
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// Call for render
-	(*crOut)(0);
-
-	// Detach texture that are not needed anymore
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, 0, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-
-	glEnable(GL_TEXTURE_2D);
-	glDisable(GL_DEPTH_TEST);
-
-	/// 2. Local lighting ///
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->sourceBuffer, 0);
-	// Enable rendering to color attachment 0
-	GLenum mrt2[] = {GL_COLOR_ATTACHMENT0};
-	glDrawBuffers(1, mrt2);
-
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, this->normalBuffer);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, this->colorBuffer);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, this->depthBuffer);
-
-	this->blinnPhongShader.Enable();
-	glUniform3fv(this->blinnPhongShader.ParameterLocation("camWS"), 1,
-			crIn->GetCameraParameters()->Position().PeekCoordinates());
-	glUniform2f(this->blinnPhongShader.ParameterLocation("clipPlanes"), crIn->GetCameraParameters()->NearClip(), crIn->GetCameraParameters()->FarClip());
-	glUniform2f(this->blinnPhongShader.ParameterLocation("winSize"), this->width, this->height);
-	glUniform1i(this->blinnPhongShader.ParameterLocation("depthBuff"), 0);
-	glUniform1i(this->blinnPhongShader.ParameterLocation("colorBuff"), 1);
-	glUniform1i(this->blinnPhongShader.ParameterLocation("normalBuff"), 2);
-
-	// --> Enable BLinn phong illumination
-	glUniform1i(this->blinnPhongShader.ParameterLocation("renderMode"), 0);
-
-
-	up *= sinf(crIn->GetCameraParameters()->HalfApertureAngle());
-	right *= sinf(crIn->GetCameraParameters()->HalfApertureAngle())
-        		 * static_cast<float>(this->width) / static_cast<float>(this->height);
-
-	// Draw quad
-	glColor4f( 1.0f,  1.0f,  1.0f,  1.0f);
-	glBegin(GL_QUADS);
-	glNormal3fv((ray - right - up).PeekComponents());
-	glTexCoord2f(0, 0);
-	glVertex2f(-1.0f,-1.0f);
-	glNormal3fv((ray + right - up).PeekComponents());
-	glTexCoord2f(1, 0);
-	glVertex2f(1.0f,-1.0f);
-	glNormal3fv((ray + right + up).PeekComponents());
-	glTexCoord2f(1, 1);
-	glVertex2f(1.0f, 1.0f);
-	glNormal3fv((ray - right + up).PeekComponents());
-	glTexCoord2f(0, 1);
-	glVertex2f(-1.0f, 1.0f);
-	glEnd();
-
-	this->blinnPhongShader.Disable();
-	// Enable rendering to FBO
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-	// Render to screen
-
-	// Set viewport
-	glViewport(this->width-200, 0, this->width, 100);
-	//glOrtho(-100.0f, 100.0f, -100.0f, 100.0f, 1.0f, 100.0f);
-
-	glBindTexture(GL_TEXTURE_2D, this->sourceBuffer);
-
-	// Draw quad
-	glColor4f( 1.0f,  1.0f,  1.0f,  1.0f);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0, 0); glVertex2f(-1.0f,-1.0f);
-	glTexCoord2f(1, 0); glVertex2f(1.0f,-1.0f);
-	glTexCoord2f(1, 1); glVertex2f(1.0f, 1.0f);
-	glTexCoord2f(0, 1); glVertex2f(-1.0f, 1.0f);
-	glEnd();
-
-
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
-
-	// Restore viewport
-	glViewport(0, 0, this->width, this->height);
-
-	return true;
-}
-
-
-/*
  * protein::DofRendererDeferred::updateParams
  */
 bool protein::DofRendererDeferred::updateParams() {
@@ -1301,27 +952,52 @@ bool protein::DofRendererDeferred::updateParams() {
 		this->rModeParam.ResetDirty();
 		this->rMode = static_cast<RenderMode>(this->rModeParam.Param<core::param::EnumParam>()->Value());
 	}
+
 	// Depth of field mode
 	if (this->dofModeParam.IsDirty()) {
 		this->dofModeParam.ResetDirty();
 		this->dofMode = static_cast<DepthOfFieldMode> (this->dofModeParam.Param<core::param::EnumParam>()->Value());
 	}
+
 	// Toggle gaussian filter
 	if (this->toggleGaussianParam.IsDirty()) {
 		this->useGaussian = this->toggleGaussianParam.Param<core::param::BoolParam>()->Value();
 		this->toggleGaussianParam.ResetDirty();
 	}
-	// Focal distance (note: scaled x10 for greater accuracy)
+
+	// Focal distance (note: scaled x10 for better accuracy)
 	if (this->focalDistParam.IsDirty()) {
-		this->focalDist = this->focalDistParam.Param<core::param::FloatParam>()->Value()/10.0f;
+		this->focalDist = this->focalDistParam.Param<core::param::FloatParam>()->Value();
+		this->focalDistParam.ResetDirty();
 		this->recalcShaderXParams();
+		if(!this->cameraInfo.IsNull()) {
+			printf("==== near %f, far %f, focalDist %f\n",
+					this->cameraInfo->NearClip(),
+					this->cameraInfo->FarClip(),
+					this->focalDist); // DEBUG
+		}
 	}
+
 	// Aperture
 	if (this->apertureParam.IsDirty()) {
 		this->aperture = this->apertureParam.Param<core::param::FloatParam>()->Value();
 		this->apertureParam.ResetDirty();
 		this->recalcShaderXParams();
 	}
+
+	// Coc radius scaling
+	if (this->cocRadiusScaleParam.IsDirty()) {
+		this->cocRadiusScale = this->cocRadiusScaleParam.Param<core::param::FloatParam>()->Value();
+		this->cocRadiusScaleParam.ResetDirty();
+	}
+
+	// Focal length
+	if (this->focalLengthParam.IsDirty()) {
+		this->focalLength = this->focalLengthParam.Param<core::param::FloatParam>()->Value()/100.0f;
+		this->focalLengthParam.ResetDirty();
+		printf("new focal length %f\n", this->focalLength);
+	}
+
 	return true;
 }
 
