@@ -8,6 +8,7 @@
 #include <cstdlib>
 
 #ifndef _WIN32
+#include <poll.h>
 #include <unistd.h>
 #include <net/if.h>
 
@@ -83,10 +84,12 @@ vislib::net::Socket vislib::net::Socket::Accept(IPEndPoint *outConnAddr) {
 #else /* _WIN32 */
     unsigned int addrLen = static_cast<unsigned int>(sizeof(connAddr));
 
-    if ((newSocket = ::accept(this->handle, 
+    while ((newSocket = ::accept(this->handle, 
             reinterpret_cast<sockaddr *>(&connAddr), &addrLen))
             == SOCKET_ERROR) {
-        throw SocketException(__FILE__, __LINE__);
+        if (errno != EINTR) {
+            throw SocketException(__FILE__, __LINE__);
+        }
     }
 
 #endif /* _WIN32 */
@@ -195,13 +198,13 @@ void vislib::net::Socket::Connect(const IPEndPoint& address) {
     if (::connect(this->handle, sa, sal) == SOCKET_ERROR) {
         struct pollfd linuxReallySucks;
         int someMoreJunk = 0;
-        socklen_t yetMoreUselessJunk = sizeof(someMoreJunk);
+        SIZE_T yetMoreUselessJunk = sizeof(someMoreJunk);
 
         if (errno != EINTR /* && errno != EINPROGRESS */) {
             throw SocketException(__FILE__, __LINE__);
         }
     
-        linuxReallySucks.fd = fd;
+        linuxReallySucks.fd = this->handle;
         linuxReallySucks.events = POLLOUT;
         while (::poll(&linuxReallySucks, 1, -1) == -1) {
             if (errno != EINTR) {
