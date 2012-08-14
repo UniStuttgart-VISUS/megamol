@@ -188,6 +188,10 @@ namespace net {
         /**
          * Permit incoming connection attempt on the socket.
          *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
+         *
          * @param outConnAddr Optional pointer to an IPEndPoint that receives 
          *                    the address of the connecting entity, as known to 
          *                    the communications layer. The exact format of the 
@@ -207,6 +211,10 @@ namespace net {
          * This operation is only allowed on IPv4 sockets. It is recommended 
          * to use an IPEndPoint instead of a SocketAddress in order to support
          * both, IPv4 and IPv6 addresses.
+         *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
          *
          * @param outConnAddr Optional pointer to a SocketAddress that receives 
          *                    the address of the connecting entity, as known to 
@@ -262,6 +270,10 @@ namespace net {
         /**
          * Connect to the specified socket address using this socket.
          *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
+         *
          * @param address The address to connect to.
          *
          * @throws SocketException If the operation fails.
@@ -273,6 +285,10 @@ namespace net {
          *
          * This method is only allowed on IPv4 sockets. Use the version with the
          * IP-agnostic IPEndPoint on IPv6 sockets.
+         *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
          *
          * @param address The address to connect to.
          *
@@ -691,6 +707,10 @@ namespace net {
          * all requested data and thus the overall timeout will be a multiple
          * of the specified timeout.
          *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
+         *
          * @param outData      The buffer to receive the data. The caller must
          *                     allocate this memory and remains owner.
          * @param cntBytes     The number of bytes to receive.
@@ -720,6 +740,10 @@ namespace net {
          * of the specified timeout.
          *
          * This method can only be used on datagram sockets.
+         *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
          *
          * @param outFromAddr  The socket address the datagram was received 
          *                     from. This variable is only valid upon successful
@@ -757,6 +781,10 @@ namespace net {
          * This method is for backward compatibility and is only supported on 
          * IPv4 sockets. Use IPEndPoint instead of SocketAddress for IPv6 
          * support and better performance.
+         *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
          *
          * @param outFromAddr  The socket address the datagram was received 
          *                     from. This variable is only valid upon successful
@@ -806,6 +834,10 @@ namespace net {
          * all requested data and thus the overall timeout will be a multiple
          * of the specified timeout.
          *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
+         *
          * @param data      The data to be sent. The caller remains owner of the
          *                  memory.
          * @param cntBytes  The number of bytes to be sent. 'data' must contain
@@ -836,6 +868,10 @@ namespace net {
          * of the specified timeout.
          *
          * This method can only be used on datagram sockets.
+         *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
          *
          * @param toAddr    Socket address of the destination host.
          * @param data      The data to be sent. The caller remains owner of the
@@ -872,6 +908,10 @@ namespace net {
          * This method is for backward compatibilty and is only supported on 
          * IPv4 sockets. Use IPEndPoint instead of SocketAddress for IPv6 
          * support and better performance.
+         *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
          *
          * @param toAddr    Socket address of the destination host.
          * @param data      The data to be sent. The caller remains owner of the
@@ -1246,6 +1286,10 @@ namespace net {
          *
          * This is a blocking call!
          *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
+         *
          * @param outData      The buffer to receive the data. The caller must
          *                     allocate this memory and remains owner.
          * @param cntBytes     The number of bytes to receive.
@@ -1266,6 +1310,10 @@ namespace net {
          * 'outData' must be large enough to receive at least 'cntBytes'. 
          *
          * This is a blocking call!
+         *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
          *
          * @param outFromAddr  The socket address the datagram was received 
          *                     from. This variable is only valid upon successful
@@ -1289,7 +1337,11 @@ namespace net {
          * Send 'cntBytes' from the location designated by 'data' using this 
          * socket.
          *
-         * This is a blocking call
+         * This is a blocking call!
+         *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
          *
          * @param data      The data to be sent. The caller remains owner of the
          *                  memory.
@@ -1312,6 +1364,10 @@ namespace net {
          * 'data' using this socket to the socket 'toAddr'.
          *
          * This is a blocking call!
+         *
+         * Note for Linux: The implementation handles EINTR by itself and 
+         * retries the operation until it succeeds or fails with another
+         * error.
          *
          * @param toAddr    Socket address of the destination host.
          * @param data      The data to be sent. The caller remains owner of the
