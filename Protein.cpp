@@ -12,6 +12,7 @@
 
 // views
 #include "View3DSpaceMouse.h"
+#include "View3DMouse.h"
 
 // 3D renderers
 #include "ProteinRendererCartoon.h"
@@ -39,6 +40,7 @@
 #include "SSAORendererDeferred.h"
 #include "ToonRendererDeferred.h"
 #include "DofRendererDeferred.h"
+#include "SphereRendererMouse.h"
 
 // 2D renderers
 #include "VolumeSliceRenderer.h"
@@ -71,6 +73,7 @@
 #include "Diagram2DCall.h"
 #include "ParticleDataCall.h"
 #include "ForceDataCall.h"
+#include "CallMouseInput.h"
 
 #include "CallAutoDescription.h"
 #include "ModuleAutoDescription.h"
@@ -123,7 +126,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-	int moduleCount = 34;
+	int moduleCount = 36;
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
     moduleCount++;
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
@@ -179,29 +182,31 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case 31: return new megamol::core::ModuleAutoDescription<megamol::protein::SSAORendererDeferred>();
         case 32: return new megamol::core::ModuleAutoDescription<megamol::protein::ToonRendererDeferred>();
         case 33: return new megamol::core::ModuleAutoDescription<megamol::protein::DofRendererDeferred>();
+        case 34: return new megamol::core::ModuleAutoDescription<megamol::protein::SphereRendererMouse>();
+        case 35: return new megamol::core::ModuleAutoDescription<megamol::protein::View3DMouse>();
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
-        case 34: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
+        case 36: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
 		#define NETCDF_OFFSET 1
 #else
 		#define NETCDF_OFFSET 0
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
 #if (defined(WITH_OPENCL) && (WITH_OPENCL))
-		case 34 + NETCDF_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBOpenCL>();
+		case 36 + NETCDF_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBOpenCL>();
 		#define OPENCL_OFFSET 1
 #else
 		#define OPENCL_OFFSET 0
 #endif /* (defined(WITH_OPENCL) && (WITH_OPENCL)) */
 #if (defined(WITH_CUDA) && (WITH_CUDA))
-		case 34 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBCUDA>();
-        case 35 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererSESGPUCuda>();
-        case 36 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCudaSESRenderer>();
-		case 37 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCBCudaRenderer>();
+		case 36 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBCUDA>();
+        case 37 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererSESGPUCuda>();
+        case 38 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCudaSESRenderer>();
+		case 39 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCBCudaRenderer>();
 		#define CUDA_OFFSET 4
 #else
 		#define CUDA_OFFSET 0
 #endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */
 #ifdef WITH_OPENHAPTICS
-        case 34 + NETCDF_OFFSET + OPENCL_OFFSET + CUDA_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::HapticsMoleculeRenderer>();
+        case 36 + NETCDF_OFFSET + OPENCL_OFFSET + CUDA_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::HapticsMoleculeRenderer>();
 		#define HAPTICS_OFFSET 1
 #else
 		#define HAPTICS_OFFSET 0
@@ -216,7 +221,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 PROTEIN_API int mmplgCallCount(void) {
-    return 11;
+    return 12;
 }
 
 
@@ -236,6 +241,7 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
         case 8: return new megamol::core::CallAutoDescription<megamol::protein::Diagram2DCall>();
         case 9: return new megamol::core::CallAutoDescription<megamol::protein::ParticleDataCall>();
         case 10: return new megamol::core::CallAutoDescription<megamol::protein::ForceDataCall>();
+        case 11: return new megamol::core::CallAutoDescription<megamol::protein::CallMouseInput>();
         default: return NULL;
     }
     return NULL;
