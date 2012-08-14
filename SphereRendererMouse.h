@@ -16,6 +16,10 @@
 #include "Renderer3DModuleMouse.h"
 #include "Call.h"
 #include "view/MouseFlags.h"
+#include "vislib/GLSLShader.h"
+#include "vislib/CameraParameters.h"
+#include "MolecularDataCall.h"
+#include "CallerSlot.h"
 
 namespace megamol {
 namespace protein {
@@ -125,8 +129,17 @@ protected:
 
 private:
 
-	/// The mouse coordinates
+    /// The data caller slot
+    megamol::core::CallerSlot molDataCallerSlot;
+
+	/// The current mouse coordinates
 	int mouseX, mouseY;
+
+	/// Camera information
+	vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+
+	/// The shader for raycasting spheres
+	vislib::graphics::gl::GLSLShader sphereShader;
 };
 
 } // end namespace protein
