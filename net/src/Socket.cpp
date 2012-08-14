@@ -183,12 +183,39 @@ void vislib::net::Socket::Connect(const IPEndPoint& address) {
     if (::WSAConnect(this->handle, static_cast<const struct sockaddr *>(
             address), sizeof(struct sockaddr_storage), NULL, NULL, NULL, NULL)
             == SOCKET_ERROR) {
-#else /* _WIN32 */
-    if (::connect(this->handle, static_cast<const struct sockaddr *>(address),
-            sizeof(struct sockaddr_storage)) == SOCKET_ERROR) {
-#endif /* _Win32 */
         throw SocketException(__FILE__, __LINE__);
     }
+
+#else /* _WIN32 */
+    // mueller: Linux of kaukerdl showed behaviour as described in 
+    // http://www.madore.org/~david/computers/connect-intr.html. I took the
+    // fix from there, including the inspiration for the variable naming...
+    const struct sockaddr *sa = static_cast<const struct sockaddr *>(address);
+    const size_t sal = sizeof(struct sockaddr_storage);
+    if (::connect(this->handle, sa, sal) == SOCKET_ERROR) {
+        struct pollfd linuxReallySucks;
+        int someMoreJunk = 0;
+        socklen_t yetMoreUselessJunk = sizeof(someMoreJunk);
+
+        if (errno != EINTR /* && errno != EINPROGRESS */) {
+            throw SocketException(__FILE__, __LINE__);
+        }
+    
+        linuxReallySucks.fd = fd;
+        linuxReallySucks.events = POLLOUT;
+        while (::poll(&linuxReallySucks, 1, -1) == -1) {
+            if (errno != EINTR) {
+                throw SocketException(__FILE__, __LINE__);
+            }
+        }
+
+        this->GetOption(SOL_SOCKET, SO_ERROR, &someMoreJunk, 
+            yetMoreUselessJunk);
+        if (someMoreJunk != 0) {
+            throw SocketException(someMoreJunk, __FILE__, __LINE__);
+        }
+    } /* end if (::connect(this->handle, sa, sal) == SOCKET_ERROR) */
+#endif /* _Win32 */
 }
 
 
