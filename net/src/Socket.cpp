@@ -7,7 +7,10 @@
 
 #include <cstdlib>
 
-#ifndef _WIN32
+#ifdef _WIN32
+#define TEMP_FAILURE_RETRY(e) e
+
+#else /* _WIN32 */
 #include <poll.h>
 #include <unistd.h>
 #include <net/if.h>
@@ -84,12 +87,10 @@ vislib::net::Socket vislib::net::Socket::Accept(IPEndPoint *outConnAddr) {
 #else /* _WIN32 */
     unsigned int addrLen = static_cast<unsigned int>(sizeof(connAddr));
 
-    while ((newSocket = ::accept(this->handle, 
-            reinterpret_cast<sockaddr *>(&connAddr), &addrLen))
-            == SOCKET_ERROR) {
-        if (errno != EINTR) {
-            throw SocketException(__FILE__, __LINE__);
-        }
+    TEMP_FAILURE_RETRY(newSocket = ::accept(this->handle, 
+        reinterpret_cast<sockaddr *>(&connAddr), &addrLen));
+    if (newSocket == SOCKET_ERROR) {
+        throw SocketException(__FILE__, __LINE__);
     }
 
 #endif /* _WIN32 */
@@ -121,8 +122,9 @@ vislib::net::Socket vislib::net::Socket::Accept(SocketAddress *outConnAddr) {
  * vislib::net::Socket::Bind
  */
 void vislib::net::Socket::Bind(const IPEndPoint& address) {
-    if (::bind(this->handle, static_cast<const struct sockaddr *>(address),
-            sizeof(struct sockaddr_storage)) == SOCKET_ERROR) {
+    if (TEMP_FAILURE_RETRY(::bind(this->handle, 
+            static_cast<const struct sockaddr *>(address),
+            sizeof(struct sockaddr_storage))) == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
 }
@@ -132,8 +134,9 @@ void vislib::net::Socket::Bind(const IPEndPoint& address) {
  * vislib::net::Socket::Bind
  */
 void vislib::net::Socket::Bind(const SocketAddress& address) {
-    if (::bind(this->handle, static_cast<const struct sockaddr *>(address),
-            sizeof(struct sockaddr_in)) == SOCKET_ERROR) {
+    if (TEMP_FAILURE_RETRY(::bind(this->handle, 
+            static_cast<const struct sockaddr *>(address),
+            sizeof(struct sockaddr_in))) == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
 }
@@ -167,7 +170,7 @@ void vislib::net::Socket::Close(void) {
 #ifdef _WIN32
         if (::closesocket(this->handle) == SOCKET_ERROR) {
 #else /* _WIN32 */
-        if (::close(this->handle) == SOCKET_ERROR) {
+        if (TEMP_FAILURE_RETRY(::close(this->handle)) == SOCKET_ERROR) {
 #endif /* _WIN32 */
             throw SocketException(__FILE__, __LINE__);
         }
@@ -462,7 +465,7 @@ void vislib::net::Socket::LeaveMulticastGroup(const IPAddress6& group,
  * vislib::net::Socket::Listen
  */
 void vislib::net::Socket::Listen(const INT backlog) {
-    if (::listen(this->handle, backlog) == SOCKET_ERROR) {
+    if (TEMP_FAILURE_RETRY(::listen(this->handle, backlog)) == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
 }
@@ -523,7 +526,8 @@ SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
 #ifndef _WIN32
     n = this->handle + 1;   // Windows does not need 'n' and will ignore it.
 #endif /* !_WIN32 */
-    if (::select(n, &readSet, NULL, NULL, &timeOut) == -1) {
+    if (TEMP_FAILURE_RETRY(::select(n, &readSet, NULL, NULL, &timeOut)) 
+            == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
 
@@ -575,7 +579,8 @@ SIZE_T vislib::net::Socket::Receive(IPEndPoint& outFromAddr, void *outData,
 #ifndef _WIN32
     n = this->handle + 1;   // Windows does not need 'n' and will ignore it.
 #endif /* !_WIN32 */
-    if (::select(n, &readSet, NULL, NULL, &timeOut) == -1) {
+    if (TEMP_FAILURE_RETRY(::select(n, &readSet, NULL, NULL, &timeOut)) 
+            == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
 
@@ -640,7 +645,8 @@ SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes,
 #ifndef _WIN32
     n = this->handle + 1;   // Windows does not need 'n' and will ignore it.
 #endif /* !_WIN32 */
-    if (::select(n, NULL, &writeSet, NULL, &timeOut) == -1) {
+    if (TEMP_FAILURE_RETRY(::select(n, NULL, &writeSet, NULL, &timeOut)) 
+            == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
 
@@ -691,7 +697,8 @@ SIZE_T vislib::net::Socket::Send(const IPEndPoint& toAddr, const void *data,
 #ifndef _WIN32
     n = this->handle + 1;   // Windows does not need 'n' and will ignore it.
 #endif /* !_WIN32 */
-    if (::select(n, NULL, &writeSet, NULL, &timeOut) == -1) {
+    if (TEMP_FAILURE_RETRY(::select(n, NULL, &writeSet, NULL, &timeOut)) 
+            == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
 
@@ -779,7 +786,7 @@ void vislib::net::Socket::SetRcvAll(const bool enable) {
  * vislib::net::Socket::Shutdown
  */
 void vislib::net::Socket::Shutdown(const ShutdownManifest how) {
-    if (::shutdown(this->handle, how) == SOCKET_ERROR) {
+    if (TEMP_FAILURE_RETRY(::shutdown(this->handle, how)) == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
 }
@@ -848,27 +855,18 @@ SIZE_T vislib::net::Socket::receive(void *outData, const SIZE_T cntBytes,
         wsaBuf.len -= lastReceived;
 
 #else /* _WIN32 */
-        bool isRetry = false;
+        TEMP_FAILURE_RETRY(lastReceived = ::recv(this->handle, 
+            static_cast<char *>(outData) + totalReceived, 
+            static_cast<int>(cntBytes - totalReceived), flags));
 
-        do {
-            lastReceived = ::recv(this->handle, static_cast<char *>(outData)
-                + totalReceived, static_cast<int>(cntBytes - totalReceived), 
-                flags);
+        if ((lastReceived >= 0) && (lastReceived != SOCKET_ERROR)) {
+            /* Successfully received new package. */
+            totalReceived += static_cast<SIZE_T>(lastReceived);
 
-            if ((lastReceived >= 0) && (lastReceived != SOCKET_ERROR)) {
-                /* Successfully received new package. */
-                totalReceived += static_cast<SIZE_T>(lastReceived);
-
-            } else if (errno == EINTR) {
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Retrying "
-                    "interrupted socket I/O.\n");
-                isRetry = true;
-
-            } else {
-                /* Communication failed. */
-                throw SocketException(__FILE__, __LINE__);
-            }
-        } while (isRetry);
+        } else {
+            /* Communication failed. */
+            throw SocketException(__FILE__, __LINE__);
+        }
 
 #endif /* _WIN32 */
     } while (forceReceive && (totalReceived < cntBytes) && (lastReceived > 0));
@@ -933,27 +931,19 @@ SIZE_T vislib::net::Socket::receiveFrom(IPEndPoint& outFromAddr,
         wsaBuf.len -= lastReceived;
 
 #else /* _WIN32 */
-        bool isRetry = false;
+        TEMP_FAILURE_RETRY(lastReceived = ::recvfrom(this->handle, 
+            static_cast<char *>(outData) + totalReceived, 
+            static_cast<int>(cntBytes - totalReceived), 
+            flags, static_cast<sockaddr *>(outFromAddr), &fromLen));
 
-        do {
-            lastReceived = ::recvfrom(this->handle, static_cast<char *>(outData)
-                + totalReceived, static_cast<int>(cntBytes - totalReceived), 
-                flags, static_cast<sockaddr *>(outFromAddr), &fromLen);
+        if ((lastReceived >= 0) && (lastReceived != SOCKET_ERROR)) {
+            /* Successfully received new package. */
+            totalReceived += static_cast<SIZE_T>(lastReceived);
 
-            if ((lastReceived >= 0) && (lastReceived != SOCKET_ERROR)) {
-                /* Successfully received new package. */
-                totalReceived += static_cast<SIZE_T>(lastReceived);
-
-            } else if (errno == EINTR) {
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Retrying "
-                    "interrupted socket I/O.\n");
-                isRetry = true;
-
-            } else {
-                /* Communication failed. */
-                throw SocketException(__FILE__, __LINE__);
-            }
-        } while (isRetry);
+        } else {
+            /* Communication failed. */
+            throw SocketException(__FILE__, __LINE__);
+        }
 
 #endif /* _WIN32 */
 
@@ -1012,24 +1002,16 @@ SIZE_T vislib::net::Socket::send(const void *data, const SIZE_T cntBytes,
         wsaBuf.len -= lastSent;
 
 #else /* _WIN32 */
-        bool isRetry = false;
+        TEMP_FAILURE_RETRY(lastSent = ::send(this->handle, 
+            static_cast<const char *>(data), 
+            static_cast<int>(cntBytes - totalSent), flags));
 
-        do {
-            lastSent = ::send(this->handle, static_cast<const char *>(data), 
-                static_cast<int>(cntBytes - totalSent), flags);
+        if ((lastSent >= 0) && (lastSent != SOCKET_ERROR)) {
+            totalSent += static_cast<SIZE_T>(lastSent);
 
-            if ((lastSent >= 0) && (lastSent != SOCKET_ERROR)) {
-                totalSent += static_cast<SIZE_T>(lastSent);
-
-            } else if (errno == EINTR) {
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Retrying "
-                    "interrupted socket I/O.\n");
-                isRetry = true;
-
-            } else {
-                throw SocketException(__FILE__, __LINE__);
-            }
-        } while (isRetry);
+        } else {
+            throw SocketException(__FILE__, __LINE__);
+        }
 #endif /* _WIN32 */
 
     } while (forceSend && (totalSent < cntBytes));
@@ -1089,24 +1071,16 @@ SIZE_T vislib::net::Socket::sendTo(const IPEndPoint& toAddr,
         wsaBuf.len -= lastSent;
 
 #else /* _WIN32 */
-        bool isRetry = false;
+        TEMP_FAILURE_RETRY(::sendto(this->handle, 
+            static_cast<const char *>(data),
+            static_cast<int>(cntBytes - totalSent), flags, to, toLen));
 
-        do {
-            lastSent = ::sendto(this->handle, static_cast<const char *>(data),
-                static_cast<int>(cntBytes - totalSent), flags, to, toLen);
+        if ((lastSent >= 0) && (lastSent != SOCKET_ERROR)) {
+            totalSent += static_cast<SIZE_T>(lastSent);
 
-            if ((lastSent >= 0) && (lastSent != SOCKET_ERROR)) {
-                totalSent += static_cast<SIZE_T>(lastSent);
-
-            } else if (errno == EINTR) {
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Retrying "
-                    "interrupted socket I/O.\n");
-                isRetry = true;
-
-            } else {
-                throw SocketException(__FILE__, __LINE__);
-            }
-        } while (isRetry);
+        } else {
+            throw SocketException(__FILE__, __LINE__);
+        }
 #endif /* _WIN32 */
 
     } while (forceSend && (totalSent < cntBytes));
