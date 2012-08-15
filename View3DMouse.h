@@ -64,9 +64,17 @@ public:
      */
     virtual void SetCursor2DPosition(float x, float y);
 
+    /**
+     * TODO
+     */
+    bool OnButtonEvent(core::param::ParamSlot& p);
+
 
     /// Slot to send a mouse event to the renderer
     core::CallerSlot mouseSlot;
+
+    /// Enable selecting mode of mouse (disables camera movement)
+    core::param::ParamSlot enableSelectingSlot;
 
     /// The mouse x coordinate
     float mouseX;
@@ -76,6 +84,9 @@ public:
 
     /// The mouse flags
     core::view::MouseFlags mouseFlags;
+
+    /// Flag whether mouse control is to be handed over to the renderer
+    bool toggleSelect;
 
 };
 
