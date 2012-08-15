@@ -20,6 +20,8 @@
 #include "vislib/CameraParameters.h"
 #include "MolecularDataCall.h"
 #include "CallerSlot.h"
+#include "param/ParamSlot.h"
+#include "vislib/Vector.h"
 
 namespace megamol {
 namespace protein {
@@ -130,7 +132,10 @@ protected:
 private:
 
     /// The data caller slot
-    megamol::core::CallerSlot molDataCallerSlot;
+    core::CallerSlot molDataCallerSlot;
+
+    /// Parameter slot for the sphere radius
+    core::param::ParamSlot sphereRadSclParam;
 
 	/// The current mouse coordinates
 	int mouseX, mouseY;
@@ -140,6 +145,36 @@ private:
 
 	/// The shader for raycasting spheres
 	vislib::graphics::gl::GLSLShader sphereShader;
+
+	/// Array to determine which atoms are selected
+	vislib::Array<bool> atomSelect;
+
+	/// Array with atom colors
+	vislib::Array<float> atomColor;
+
+	/// Starting point for the selecting rectangle
+	vislib::math::Vector<int, 2> startSelect;
+
+	/// End point for the selecting rectangle
+	vislib::math::Vector<int, 2> endSelect;
+
+	/// Toggle whether mouse is in drag mode
+	bool drag;
+
+	/// The current rectangle representing the selection (start)
+	vislib::math::Vector<int, 2> startSelectCurr;
+
+	/// The current rectangle representing the selection (end)
+	vislib::math::Vector<int, 2> endSelectCurr;
+
+	/// Starting point of the rectangle in object space
+	double startSelectCurrObj[3];
+
+	/// End point of the rectangle in object space
+	double endSelectCurrObj[3];
+
+	/// Flag whether filter has to be used
+	bool filter;
 };
 
 } // end namespace protein
