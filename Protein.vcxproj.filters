@@ -503,6 +503,9 @@
     <None Include="Shaders\proteinDeferred.btf">
       <Filter>Shader Files</Filter>
     </None>
+    <None Include="Shaders\SSAOdeferred.btf">
+      <Filter>Shader Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="Shaders\protein.btf">

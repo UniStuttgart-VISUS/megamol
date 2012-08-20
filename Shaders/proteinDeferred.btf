@@ -49,8 +49,10 @@ void main(void) {
     
     // Get rotation vector, rotation is tiled every 4 screen pixels
     vec2 rotationTC;
-    rotationTC.s = gl_TexCoord[0].s * winSize.x / 4;
-    rotationTC.t = gl_TexCoord[0].t * winSize.y / 4;
+    ////rotationTC.s = gl_TexCoord[0].s * winSize.x / 4;
+    ////rotationTC.t = gl_TexCoord[0].t * winSize.y / 4;
+    rotationTC.s = gl_FragCoord.x / 4.0;
+    rotationTC.t = gl_FragCoord.y / 4.0;
     vec3 vRotation = 2 * texture2D(rotSampler, rotationTC).rgb - 1;
     
     // Create rotation matrix from rotation vector
@@ -91,7 +93,8 @@ void main(void) {
         //vec3 vReflectedOffset = reflect(vOffset, vRotation);
             
         // Get center pixel 3d coords in screen space
-        vec3 vSamplePos = vec3(gl_TexCoord[0].st, sceneDepthP);
+        ////vec3 vSamplePos = vec3(gl_TexCoord[0].st, sceneDepthP);
+		vec3 vSamplePos = vec3(gl_FragCoord.x / winSize.x, gl_FragCoord.y / winSize.y, sceneDepthP);
         
         // Shift coords by offset vector (range convert and width depth vector)
         vSamplePos += vec3(vRotatedOffset.xy, vRotatedOffset.z * sceneDepthP * 2);
