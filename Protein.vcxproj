@@ -630,6 +630,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="Stride.cpp" />
     <ClCompile Include="ToonRendererDeferred.cpp" />
+    <ClCompile Include="View3DMouse.cpp" />
     <ClCompile Include="View3DSpaceMouse.cpp" />
     <ClCompile Include="VolumeSliceCall.cpp" />
     <ClCompile Include="VolumeSliceRenderer.cpp" />
@@ -706,6 +707,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="Stride.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ToonRendererDeferred.h" />
+    <ClInclude Include="View3DMouse.h" />
     <ClInclude Include="View3DSpaceMouse.h" />
     <ClInclude Include="VolumeSliceCall.h" />
     <ClInclude Include="VolumeSliceRenderer.h" />

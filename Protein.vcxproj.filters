@@ -238,6 +238,9 @@
     <ClCompile Include="DofRendererDeferred.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="View3DMouse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimDataTimer.h">
@@ -460,6 +463,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DofRendererDeferred.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="View3DMouse.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
