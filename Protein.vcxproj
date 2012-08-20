@@ -606,6 +606,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="Raw3DRelativeMouseInput.cpp" />
     <ClCompile Include="ReducedSurface.cpp" />
     <ClCompile Include="ReducedSurfaceSimplified.cpp" />
+    <ClCompile Include="Renderer3DModuleMouse.cpp" />
     <ClCompile Include="RMS.cpp" />
     <ClCompile Include="SimpleMoleculeRenderer.cpp" />
     <ClCompile Include="slicing.cpp" />
@@ -689,6 +690,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="Raw3DRelativeMouseInput.h" />
     <ClInclude Include="ReducedSurface.h" />
     <ClInclude Include="ReducedSurfaceSimplified.h" />
+    <ClInclude Include="Renderer3DModuleMouse.h" />
     <ClInclude Include="RMS.h" />
     <ClInclude Include="simple.h" />
     <ClInclude Include="SimpleMoleculeRenderer.h" />

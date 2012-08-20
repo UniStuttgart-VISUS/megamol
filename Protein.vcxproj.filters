@@ -241,6 +241,9 @@
     <ClCompile Include="View3DMouse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer3DModuleMouse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimDataTimer.h">
@@ -466,6 +469,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="View3DMouse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer3DModuleMouse.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
