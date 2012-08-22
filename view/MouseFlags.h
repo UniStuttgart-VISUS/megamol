@@ -89,7 +89,7 @@ namespace view {
      *
      * @param flags The mouse flags to be changed
      */
-    void MouseFlagsResetAllChanged(MouseFlags& flags);
+    void MEGAMOLCORE_API MouseFlagsResetAllChanged(MouseFlags& flags);
 
     /**
      * Sets the flag 'flag' in 'flags'. Also sets the corresponding changed
@@ -99,7 +99,7 @@ namespace view {
      * @param flag The flag to (re-)set
      * @param set The new state for the flag.
      */
-    void MouseFlagsSetFlag(MouseFlags& flags, MouseFlags flag, bool set = true);
+    void MEGAMOLCORE_API MouseFlagsSetFlag(MouseFlags& flags, MouseFlags flag, bool set = true);
 
     /**
      * Clears the flag 'flag' in 'flags'. Also sets the corresponding changed
