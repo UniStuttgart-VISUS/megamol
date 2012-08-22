@@ -316,6 +316,60 @@ namespace math {
         }
 
         /**
+         * Move the bottom side of the rectangle (keeping its size) to the
+         * specified location.
+         *
+         * @param bottom The new bottom border.
+         */
+        inline void MoveBottomTo(const T& bottom) {
+            this->Move(static_cast<T>(0), bottom - this->Bottom());
+        }
+
+        /**
+         * Move the left side of the rectangle (keeping its size) to the
+         * specified location.
+         *
+         * @param left The new left border.
+         */
+        inline void MoveLeftTo(const T& left) {
+            this->Move(left - this->Left(), static_cast<T>(0));
+        }
+
+        /**
+         * Move the right side of the rectangle (keeping its size) to the
+         * specified location.
+         *
+         * @param right The new right border.
+         */
+        inline void MoveRightTo(const T& right) {
+            this->Move(right - this->Right(), static_cast<T>(0));
+        }
+
+        /**
+         * Move the left/bottom side of the rectangle (keeping its size) to the 
+         * specified location.
+         *
+         * Implicitly calls 'EnforcePositiveSize'.
+         *
+         * @param left   The new left border.
+         * @param bottom The new bottom border.
+         */
+        inline void MoveTo(const T& left, const T& bottom) {
+            this->EnforcePositiveSize();
+            this->Move(left - this->Left(), bottom - this->Bottom());
+        }
+
+        /**
+         * Move the top side of the rectangle (keeping its size) to the
+         * specified location.
+         *
+         * @param top The new top border.
+         */
+        inline void MoveTopTo(const T& top) {
+            this->Move(static_cast<T>(0), top - this->Top());
+        }
+
+        /**
          * Directly access the internal bounds of the rectangle.
          *
          * @return A pointer to the rectangle bounds.
