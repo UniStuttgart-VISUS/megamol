@@ -696,6 +696,9 @@
     <ClCompile Include="misc\PngBitmapCodec.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="moldyn\SphereDataUnifier.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1261,6 +1264,9 @@
     </ClInclude>
     <ClInclude Include="misc\PngBitmapCodec.h">
       <Filter>misc\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\SphereDataUnifier.h">
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
