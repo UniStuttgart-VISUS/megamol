@@ -693,6 +693,9 @@
     <ClCompile Include="moldyn\DirPartFilter.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="misc\PngBitmapCodec.cpp">
+      <Filter>misc\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1255,6 +1258,9 @@
     </ClInclude>
     <ClInclude Include="moldyn\DirPartFilter.h">
       <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="misc\PngBitmapCodec.h">
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
