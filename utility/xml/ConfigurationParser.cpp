@@ -325,6 +325,26 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
             }
             return true;
         }
+        if (MMXML_STRING("resourcedir").Equals(name, false)) {
+            const MMXML_CHAR *path = NULL;
+            for (int i = 0; attrib[i]; i += 2) {
+                if (MMXML_STRING("path").Equals(attrib[i])) {
+                    path = attrib[i + 1];
+                } else {
+                    this->WarnUnexpectedAttribut(name, attrib[i]);
+                }
+            }
+            if (path != NULL) {
+                this->config.AddResourceDirectory(path);
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_INFO + 50, 
+                    "Path \"%s\" added as resource search path.", vislib::StringA(path).PeekBuffer());
+
+            } else {
+                this->Warning("\"resourcedir\" tag without \"path\" attribute ignored.\n");
+            }
+            return true;
+        }
     }
 
 
@@ -527,7 +547,8 @@ bool ConfigurationParser::EndTag(unsigned int num, unsigned int level,
         }
     } else if (this->xmlVersion < vislib::VersionNumber(1, 3)) {
         if (MMXML_STRING("appdir").Equals(name, false)
-                || MMXML_STRING("shaderdir").Equals(name, false)) {
+                || MMXML_STRING("shaderdir").Equals(name, false)
+                || MMXML_STRING("resourcedir").Equals(name, false)) {
             return true;
         }
     }
@@ -609,6 +630,23 @@ void ConfigurationParser::Completed(void) {
                     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
                         "Configured shader directory \"%s\" does not exist",
                         vislib::StringA(this->config.shaderDirs[i]).PeekBuffer());
+                }
+            }
+        }
+
+        // make resource paths absolute
+        if (this->config.resourceDirs.Count() == 0) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "No resource directories configured");
+
+        } else for (SIZE_T i = 0; i < this->config.resourceDirs.Count(); i++) {
+            if (vislib::sys::Path::IsRelative(this->config.resourceDirs[i])) {
+                this->config.resourceDirs[i]
+                    = vislib::sys::Path::Resolve(this->config.resourceDirs[i], this->config.appDir);
+                if (!vislib::sys::File::IsDirectory(this->config.resourceDirs[i])) {
+                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                        "Configured resource directory \"%s\" does not exist",
+                        vislib::StringA(this->config.resourceDirs[i]).PeekBuffer());
                 }
             }
         }

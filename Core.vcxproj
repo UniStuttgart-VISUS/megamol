@@ -334,6 +334,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="utility\ResourceWrapper.cpp" />
     <ClCompile Include="ViewDescription.cpp" />
     <ClCompile Include="ViewInstance.cpp" />
     <ClCompile Include="ViewInstanceRequest.cpp" />
@@ -565,6 +566,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="RenderVolumeSlice.h" />
     <ClInclude Include="RootModuleNamespace.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="utility\ResourceWrapper.h" />
     <ClInclude Include="versioninfo.h" />
     <ClInclude Include="ViewDescription.h" />
     <ClInclude Include="ViewInstance.h" />

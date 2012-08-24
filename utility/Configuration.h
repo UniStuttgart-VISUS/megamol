@@ -359,6 +359,29 @@ namespace xml {
             vislib::SingleLinkedList<vislib::TString> &plugins);
 
         /**
+         * Adds 'dir' as search path for resource files
+         *
+         * @param dir The resource path to be added
+         */
+        void AddResourceDirectory(const char *dir);
+
+        /**
+         * Adds 'dir' as search path for resource files
+         *
+         * @param dir The resource path to be added
+         */
+        void AddResourceDirectory(const wchar_t *dir);
+
+        /**
+         * Answer the array of resource search directories
+         *
+         * @return The array of resource search directories
+         */
+        inline const vislib::Array<vislib::StringW>& ResourceDirectories(void) const {
+            return this->resourceDirs;
+        }
+
+        /**
          * Adds 'dir' as search path for shader files
          *
          * @param dir The shader path to be added
@@ -650,6 +673,9 @@ namespace xml {
 
         /** the application directory */
         vislib::StringW appDir;
+
+        /** the shader sourcecode directories */
+        vislib::Array<vislib::StringW> resourceDirs;
 
         /** the shader sourcecode directories */
         vislib::Array<vislib::StringW> shaderDirs;

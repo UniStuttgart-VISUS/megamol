@@ -283,7 +283,7 @@ bool megamol::core::utility::Configuration::logFilenameLocked = false;
  */
 megamol::core::utility::Configuration::Configuration(void) 
         : cfgFileName(), criticalParserError(false), appDir(),
-        shaderDirs(), configSets(), configValues(), instanceRequests(),
+        shaderDirs(), resourceDirs(), configSets(), configValues(), instanceRequests(),
         pluginLoadInfos() {
     this->setDefaultValues();
 }
@@ -636,6 +636,7 @@ void megamol::core::utility::Configuration::setDefaultValues(void) {
     this->appDir = vislib::sys::Path::Resolve(
         vislib::sys::Path::GetCurrentDirectoryW());
     this->shaderDirs.Add(this->appDir);
+    this->resourceDirs.Add(this->appDir);
     this->configValues.Clear();
 
     // set default value for new configuration values here
@@ -881,6 +882,22 @@ void megamol::core::utility::Configuration::ListPluginsToLoad(
         }
     }
 
+}
+
+
+/*
+ * megamol::core::utility::Configuration::AddResourceDirectory
+ */
+void megamol::core::utility::Configuration::AddResourceDirectory(const char *dir) {
+    this->resourceDirs.Add(vislib::StringW(dir));
+}
+
+
+/*
+ * megamol::core::utility::Configuration::AddResourceDirectory
+ */
+void megamol::core::utility::Configuration::AddResourceDirectory(const wchar_t *dir) {
+    this->resourceDirs.Add(vislib::StringW(dir));
 }
 
 
