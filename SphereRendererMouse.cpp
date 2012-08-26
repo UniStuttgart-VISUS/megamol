@@ -5,18 +5,26 @@
 // All rights reserved.
 //
 
+#include <stdafx.h>
 
-#include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include <SphereRendererMouse.h>
+
+#include <math.h>
+
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include "math.h"
-#include "CoreInstance.h"
-#include "utility/ShaderSourceFactory.h"
-#include "MolecularDataCall.h"
-#include "view/AbstractCallRender3D.h"
-#include "param/FloatParam.h"
+
+#include <CoreInstance.h>
+#include <MolecularDataCall.h>
+#include <param/FloatParam.h>
+#include <param/StringParam.h>
+#include <utility/ShaderSourceFactory.h>
+#include <utility/ColourParser.h>
+#include <view/AbstractCallRender3D.h>
+
+#include <vislib/Matrix.h>
+#include <vislib/Vector.h>
 
 using namespace megamol;
 
@@ -26,6 +34,9 @@ using namespace megamol;
 protein::SphereRendererMouse::SphereRendererMouse() : Renderer3DModuleMouse(),
 	    molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage."),
 	    sphereRadSclParam("sphereRadScl", "Scale factor for the sphere radius."),
+	    atomColParam("atomColor", "The color of unselected atoms." ),
+	    atomColHoverParam("atomColorHover", "The color for atoms which are hovered." ),
+	    atomColSelParam("atomColorSel", "The color for currently selected atoms." ),
         mouseX(0.0f), mouseY(0.0f), startSelect(-1, -1), endSelect(-1, -1),
         drag(false),
         startSelectCurr(-1, -1), endSelectCurr(-1, -1), filter(false) {
@@ -37,6 +48,18 @@ protein::SphereRendererMouse::SphereRendererMouse() : Renderer3DModuleMouse(),
     // Param slot for sphere radius
     this->sphereRadSclParam << new core::param::FloatParam(1.0f, 0.0);
     this->MakeSlotAvailable(&this->sphereRadSclParam);
+
+    // General atom color
+    this->atomColParam.SetParameter(new core::param::StringParam("#0000FF"));
+    this->MakeSlotAvailable(&this->atomColParam);
+
+    // Hover atom color
+    this->atomColHoverParam.SetParameter(new core::param::StringParam("#FFFFFF"));
+    this->MakeSlotAvailable( &this->atomColHoverParam);
+
+    // Atom color for selected atoms
+    this->atomColSelParam.SetParameter(new core::param::StringParam("#FF0000"));
+    this->MakeSlotAvailable(&this->atomColSelParam);
 }
 
 
@@ -139,6 +162,8 @@ bool protein::SphereRendererMouse::GetExtents(core::Call& call) {
  * protein::SphereRendererMouse::Render
  */
 bool protein::SphereRendererMouse::Render(core::Call& call) {
+	using namespace vislib::math;
+
 	// cast the call to Render3D
 	core::view::AbstractCallRender3D *cr3d =
 			dynamic_cast<core::view::AbstractCallRender3D *>(&call);
@@ -247,48 +272,132 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
     			this->startSelectCurr.X(), this->startSelectCurr.Y(),
     			this->endSelectCurr.X(), this->endSelectCurr.Y());
 
-		// Calculate screen space positions of the atoms
-		GLdouble modelMatrix[16];
-		glGetDoublev(GL_MODELVIEW_MATRIX, modelMatrix);
-		GLdouble projMatrix[16];
-		glGetDoublev(GL_PROJECTION_MATRIX, projMatrix);
+		// Apply positional filter to all atoms
+
+		// Get GL_MODELVIEW matrix
+		GLdouble modelMatrix_column[16];
+		glGetDoublev(GL_MODELVIEW_MATRIX, modelMatrix_column);
+		Matrix<GLdouble, 4, ROW_MAJOR> modelMatrix(&modelMatrix_column[0]);
+		modelMatrix.Transpose(); // Since OpenGl matrices are stored column major mode ...
+
+		// Get GL_PROJECTION matrix
+		GLdouble projMatrix_column[16];
+		glGetDoublev(GL_PROJECTION_MATRIX, projMatrix_column);
+		Matrix<GLdouble, 4, ROW_MAJOR> projMatrix(&projMatrix_column[0]);
+		projMatrix.Transpose(); // Since OpenGl matrices are stored column major mode ...
+
+		Matrix<GLdouble, 4, ROW_MAJOR> modelProjMatrix = projMatrix*modelMatrix;
+
+		// Get GL_VIEWPORT
 		int viewport[4];
 		glGetIntegerv(GL_VIEWPORT, viewport);
-#pragma omp parallel for
-		for(int at = 0; at < static_cast<int>(mol->AtomCount()); at++) {
-			this->atomSelect[at] = false;
+
+		// Compute NDC coordinates of the rectangle
+		float rectNDC[4];
+		rectNDC[0] = static_cast<float>(this->startSelectCurr.X())/static_cast<float>(viewport[2]);
+		rectNDC[0] -= 0.5f;
+		rectNDC[0] *= 2.0f;
+
+		rectNDC[1] = static_cast<float>(this->endSelectCurr.X())/static_cast<float>(viewport[2]);
+		rectNDC[1] -= 0.5f;
+		rectNDC[1] *= 2.0f;
+
+		rectNDC[2] = 1.0f - static_cast<float>(this->startSelectCurr.Y())/static_cast<float>(viewport[3]);
+		rectNDC[2] -= 0.5f;
+		rectNDC[2] *= 2.0f;
+
+		rectNDC[3] = 1.0f - static_cast<float>(this->endSelectCurr.Y())/static_cast<float>(viewport[3]);
+		rectNDC[3] -= 0.5f;
+		rectNDC[3] *= 2.0f;
+
+		// Sort coordinates
+		float swap;
+		if(rectNDC[0] > rectNDC[1]) {
+			swap = rectNDC[1];
+			rectNDC[1] = rectNDC[0];
+			rectNDC[0] = swap;
+		}
+		if(rectNDC[2] > rectNDC[3]) {
+			swap = rectNDC[2];
+			rectNDC[2] = rectNDC[3];
+			rectNDC[3] = swap;
 		}
 
-		// Determine which atoms are selected
-#pragma omp parallel for
+		printf("Filter RECT NDC (%f %f) (%f %f)\n", rectNDC[0], rectNDC[2], rectNDC[1], rectNDC[3]);
+
+
+/*#pragma omp parallel for
 		for(int at = 0; at < static_cast<int>(mol->AtomCount()); at++) {
 			this->atomSelect[at] = false;
+		}*/
+
+#pragma omp parallel for
+		for(int at = 0; at < static_cast<int>(mol->AtomCount()); at++) {
+
+			this->atomSelect[at] = false;
+
+			// Get atom (object space) position
+			Vector<double, 4> posOS;
+			posOS.SetX(mol->AtomPositions()[at*3+0]);
+			posOS.SetY(mol->AtomPositions()[at*3+1]);
+			posOS.SetZ(mol->AtomPositions()[at*3+2]);
+			posOS.SetW(1.0f);
+
+			// Compute eye space position
+			Vector<double, 4> posES;
+			posES = modelProjMatrix*posOS;
+
+			// Compute normalized device coordinates
+			Vector<double, 3> posNDC;
+			posNDC.SetX(posES.X()/posES.W());
+			posNDC.SetY(posES.Y()/posES.W());
+			posNDC.SetZ(posES.Z()/posES.W());
+
+			//printf("#%i PosNDC (%f %f %f)\n", at, posNDC.X(), posNDC.Y(), posNDC.Z());
+
+			if(posNDC.X() < rectNDC[0]) continue;
+			if(posNDC.X() > rectNDC[1]) continue;
+			if(posNDC.Y() < rectNDC[2]) continue;
+			if(posNDC.Y() > rectNDC[3]) continue;
+
+			this->atomSelect[at] = true;
 		}
 		this->filter = false;
 	}
-	else {
+	/*else {
 #pragma omp parallel for
 		for(int at = 0; at < static_cast<int>(mol->AtomCount()); at++) {
 			this->atomSelect[at] = false;
 		}
-	}
+	}*/
+
+	unsigned int atomSelCnt = 0;
 
 	// Set color
 	this->atomColor.SetCount(mol->AtomCount()*3);
 #pragma omp parallel for
 	for(int at = 0; at < static_cast<int>(mol->AtomCount()); at++) {
 		if(this->atomSelect[at] == false) { // Atom is not selected
-			this->atomColor[3*at+0] = 0.0f;
-			this->atomColor[3*at+1] = 1.0f;
-			this->atomColor[3*at+2] = 0.0f;
+			float r, g, b;
+            core::utility::ColourParser::FromString(
+            		this->atomColParam.Param<core::param::StringParam>()->Value(), r, g, b);
+			this->atomColor[3*at+0] = r;
+			this->atomColor[3*at+1] = g;
+			this->atomColor[3*at+2] = b;
 		}
 		else { // Atom is selected
-			this->atomColor[3*at+0] = 0.0f;
-			this->atomColor[3*at+1] = 0.0f;
-			this->atomColor[3*at+2] = 1.0f;
+			float r, g, b;
+            core::utility::ColourParser::FromString(
+            		this->atomColSelParam.Param<core::param::StringParam>()->Value(), r, g, b);
+			this->atomColor[3*at+0] = r;
+			this->atomColor[3*at+1] = g;
+			this->atomColor[3*at+2] = b;
+			atomSelCnt++;
 		}
 	}
-	//glColor3f(0.0f, 1.0f, 0.0f);
+
+	if(atomSelCnt > 0)
+	//printf("Number of selected atoms: %u\n", atomSelCnt);
 
 	// Enable sphere shader
 	this->sphereShader.Enable();
