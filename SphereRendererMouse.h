@@ -137,6 +137,15 @@ private:
     /// Parameter slot for the sphere radius
     core::param::ParamSlot sphereRadSclParam;
 
+    /// Parameter slot for the color of unselected atoms
+    core::param::ParamSlot atomColParam;
+
+    /// Parameter slot for the mouse over/hover color for atoms
+    core::param::ParamSlot atomColHoverParam;
+
+    /// Parameter slot for the color of currently selected atoms
+    core::param::ParamSlot atomColSelParam;
+
 	/// The current mouse coordinates
 	int mouseX, mouseY;
 

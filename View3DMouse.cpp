@@ -34,10 +34,10 @@ protein::View3DMouse::View3DMouse(void) : core::view::View3D(),
 
 void protein::View3DMouse::SetCursor2DButtonState(unsigned int btn, bool down) {
 
-	if(!this->toggleSelect) {
+	//if(!this->toggleSelect) {
 		View3D::SetCursor2DButtonState(btn, down); // Keep camera movement functional
-	}
-	else {
+	//}
+		//else {
 
 		switch (btn) {
 		case 0 : // left
@@ -53,7 +53,7 @@ void protein::View3DMouse::SetCursor2DButtonState(unsigned int btn, bool down) {
 					core::view::MOUSEFLAG_BUTTON_MIDDLE_DOWN, down);
 			break;
 		}
-	}
+		//}
 }
 
 
@@ -61,6 +61,7 @@ void protein::View3DMouse::SetCursor2DPosition(float x, float y) {
 
 	if(!this->toggleSelect) {
 		View3D::SetCursor2DPosition(x, y); // Keep camera movement functional
+		core::view::MouseFlagsResetAllChanged(this->mouseFlags);
 	}
 	else {
 
