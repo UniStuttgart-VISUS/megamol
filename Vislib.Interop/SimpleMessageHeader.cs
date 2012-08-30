@@ -62,8 +62,7 @@ namespace Vislib.Interop {
         /// <param name="data">Byte representation of the header data
         /// structure.</param>
         public SimpleMessageHeader(byte[] data) {
-            this.data = StructureConverter.BytesToStructure<
-                SimpleMessageHeaderData>(data);
+            this.UpdateData(data);
         }
 
         /// <summary>
@@ -110,6 +109,16 @@ namespace Vislib.Interop {
             set {
                 this.data = value;
             }
+        }
+
+        /// <summary>
+        /// Update the header data from the given byte array.
+        /// </summary>
+        /// <param name="data">Byte representation of the header data
+        /// structure.</param>
+        public void UpdateData(byte[] data) {
+            this.data = StructureConverter.BytesToStructure<
+                SimpleMessageHeaderData>(data);
         }
 
         /// <summary>
