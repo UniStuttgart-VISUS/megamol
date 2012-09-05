@@ -19,6 +19,7 @@
 #include <MolecularDataCall.h>
 #include <param/FloatParam.h>
 #include <param/StringParam.h>
+#include <param/BoolParam.h>
 #include <utility/ShaderSourceFactory.h>
 #include <utility/ColourParser.h>
 #include <view/AbstractCallRender3D.h>
@@ -37,9 +38,12 @@ protein::SphereRendererMouse::SphereRendererMouse() : Renderer3DModuleMouse(),
 	    atomColParam("atomColor", "The color of unselected atoms." ),
 	    atomColHoverParam("atomColorHover", "The color for atoms which are hovered." ),
 	    atomColSelParam("atomColorSel", "The color for currently selected atoms." ),
-        mouseX(0.0f), mouseY(0.0f), startSelect(-1, -1), endSelect(-1, -1),
-        drag(false),
-        startSelectCurr(-1, -1), endSelectCurr(-1, -1), filter(false) {
+	    useGeomShaderParam("useGeomShader", "Use geometry shader for glyph ray casting." ),
+	    atomCnt(0),
+        mouseX(-1), mouseY(-1),
+        startSelect(-1, -1), endSelect(-1, -1),
+        startRect(-1, -1), endRect(-1, -1),
+        drag(false), resetSelection(true) {
 
 	// Data caller slot
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -50,7 +54,7 @@ protein::SphereRendererMouse::SphereRendererMouse() : Renderer3DModuleMouse(),
     this->MakeSlotAvailable(&this->sphereRadSclParam);
 
     // General atom color
-    this->atomColParam.SetParameter(new core::param::StringParam("#0000FF"));
+    this->atomColParam.SetParameter(new core::param::StringParam("#6095c6"));
     this->MakeSlotAvailable(&this->atomColParam);
 
     // Hover atom color
@@ -58,8 +62,13 @@ protein::SphereRendererMouse::SphereRendererMouse() : Renderer3DModuleMouse(),
     this->MakeSlotAvailable( &this->atomColHoverParam);
 
     // Atom color for selected atoms
-    this->atomColSelParam.SetParameter(new core::param::StringParam("#FF0000"));
+    this->atomColSelParam.SetParameter(new core::param::StringParam("#21c949"));
     this->MakeSlotAvailable(&this->atomColSelParam);
+
+    // Param slot for sphere radius
+    this->useGeomShader = false;
+    this->useGeomShaderParam << new core::param::BoolParam(this->useGeomShader);
+    this->MakeSlotAvailable(&this->useGeomShaderParam);
 }
 
 
@@ -75,9 +84,9 @@ protein::SphereRendererMouse::~SphereRendererMouse() {
  * protein::SphereRendererMouse::create
  */
 bool protein::SphereRendererMouse::create(void) {
-	if(glh_init_extensions("GL_ARB_vertex_program") == 0) {
-		return false;
-	}
+	glh_init_extensions( "GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 GL_EXT_bindable_uniform");
+	glh_init_extensions( "GL_VERSION_2_0");
+	glh_init_extensions( "GL_ARB_vertex_shader GL_ARB_vertex_program GL_ARB_shader_objects");
 	if(!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
 		return false;
 	}
@@ -91,8 +100,7 @@ bool protein::SphereRendererMouse::create(void) {
 	using namespace vislib::sys;
 	using namespace vislib::graphics::gl;
 
-	ShaderSource vertSrc;
-	ShaderSource fragSrc;
+	ShaderSource vertSrc, geomSrc, fragSrc;
 
 	// Load sphere shader
 	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
@@ -112,6 +120,25 @@ bool protein::SphereRendererMouse::create(void) {
 		return false;
 	}
 
+	// Load alternative sphere shader (uses geometry shader)
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
+		return false;
+	}
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereGeom", geomSrc)) {
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
+		return false;
+	}
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentNew", fragSrc)) {
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for sphere shader");
+		return false;
+	}
+	this->sphereShaderGeo.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+	this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT , GL_POINTS);
+	this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_POINTS);
+	this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200); // TODO ?
+	this->sphereShaderGeo.Link();
+
 	return true;
 }
 
@@ -123,7 +150,8 @@ bool protein::SphereRendererMouse::GetCapabilities(core::Call& call) {
     core::view::AbstractCallRender3D *cr3d = dynamic_cast<core::view::AbstractCallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    cr3d->SetCapabilities(core::view::AbstractCallRender3D::CAP_RENDER
+    cr3d->SetCapabilities(
+    	  core::view::AbstractCallRender3D::CAP_RENDER
         | core::view::AbstractCallRender3D::CAP_LIGHTING
         | core::view::AbstractCallRender3D::CAP_ANIMATION );
 
@@ -154,6 +182,8 @@ bool protein::SphereRendererMouse::GetExtents(core::Call& call) {
     cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
     cr3d->SetTimeFramesCount(mol->FrameCount());
 
+    this->atomCnt = mol->AtomCount();
+
     return true;
 }
 
@@ -163,6 +193,11 @@ bool protein::SphereRendererMouse::GetExtents(core::Call& call) {
  */
 bool protein::SphereRendererMouse::Render(core::Call& call) {
 	using namespace vislib::math;
+
+    // Update parameters
+    if(this->useGeomShaderParam.IsDirty() ) {
+    	this->useGeomShader = this->useGeomShaderParam.Param<core::param::BoolParam>()->Value();
+    }
 
 	// cast the call to Render3D
 	core::view::AbstractCallRender3D *cr3d =
@@ -191,11 +226,6 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 
 	// Check if atom count is zero
 	if( mol->AtomCount() == 0 ) return true;
-
-	// Init selection array if necessary
-	if(this->atomSelect.Count() != mol->AtomCount()) {
-		this->atomSelect.SetCount(mol->AtomCount());
-	}
 
 	// get positions of the first frame
 	float *pos0 = new float[mol->AtomCount() * 3];
@@ -267,12 +297,20 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 	glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-	if(this->filter) {
-		printf("Filter RECT (%i %i) (%i %i)\n",
-    			this->startSelectCurr.X(), this->startSelectCurr.Y(),
-    			this->endSelectCurr.X(), this->endSelectCurr.Y());
 
-		// Apply positional filter to all atoms
+	if(this->resetSelection) {
+		// Reset selections
+		this->atomSelect.SetCount(mol->AtomCount());
+#pragma omp parallel for
+		for(int at = 0; at < static_cast<int>(mol->AtomCount()); at++) {
+			this->atomSelect[at] = false;
+		}
+		this->resetSelection = false;
+	}
+
+
+	// Apply positional filter to all atoms if dragging is enabled
+	if(this->drag) {
 
 		// Get GL_MODELVIEW matrix
 		GLdouble modelMatrix_column[16];
@@ -294,19 +332,19 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 
 		// Compute NDC coordinates of the rectangle
 		float rectNDC[4];
-		rectNDC[0] = static_cast<float>(this->startSelectCurr.X())/static_cast<float>(viewport[2]);
+		rectNDC[0] = static_cast<float>(this->startSelect.X())/static_cast<float>(viewport[2]);
 		rectNDC[0] -= 0.5f;
 		rectNDC[0] *= 2.0f;
 
-		rectNDC[1] = static_cast<float>(this->endSelectCurr.X())/static_cast<float>(viewport[2]);
+		rectNDC[1] = static_cast<float>(this->endSelect.X())/static_cast<float>(viewport[2]);
 		rectNDC[1] -= 0.5f;
 		rectNDC[1] *= 2.0f;
 
-		rectNDC[2] = 1.0f - static_cast<float>(this->startSelectCurr.Y())/static_cast<float>(viewport[3]);
+		rectNDC[2] = 1.0f - static_cast<float>(this->startSelect.Y())/static_cast<float>(viewport[3]);
 		rectNDC[2] -= 0.5f;
 		rectNDC[2] *= 2.0f;
 
-		rectNDC[3] = 1.0f - static_cast<float>(this->endSelectCurr.Y())/static_cast<float>(viewport[3]);
+		rectNDC[3] = 1.0f - static_cast<float>(this->endSelect.Y())/static_cast<float>(viewport[3]);
 		rectNDC[3] -= 0.5f;
 		rectNDC[3] *= 2.0f;
 
@@ -322,14 +360,10 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 			rectNDC[2] = rectNDC[3];
 			rectNDC[3] = swap;
 		}
+		/*printf("RECT (%i %i) (%i %i) | (%f %f) (%f %f)\n", this->startSelect.X(), this->startSelect.Y(),
+				this->endSelect.X(), this->endSelect.Y(), rectNDC[0], rectNDC[2],
+				rectNDC[1], rectNDC[3]);*/
 
-		printf("Filter RECT NDC (%f %f) (%f %f)\n", rectNDC[0], rectNDC[2], rectNDC[1], rectNDC[3]);
-
-
-/*#pragma omp parallel for
-		for(int at = 0; at < static_cast<int>(mol->AtomCount()); at++) {
-			this->atomSelect[at] = false;
-		}*/
 
 #pragma omp parallel for
 		for(int at = 0; at < static_cast<int>(mol->AtomCount()); at++) {
@@ -362,14 +396,8 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 
 			this->atomSelect[at] = true;
 		}
-		this->filter = false;
+
 	}
-	/*else {
-#pragma omp parallel for
-		for(int at = 0; at < static_cast<int>(mol->AtomCount()); at++) {
-			this->atomSelect[at] = false;
-		}
-	}*/
 
 	unsigned int atomSelCnt = 0;
 
@@ -392,33 +420,53 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 			this->atomColor[3*at+0] = r;
 			this->atomColor[3*at+1] = g;
 			this->atomColor[3*at+2] = b;
-			atomSelCnt++;
 		}
 	}
 
-	if(atomSelCnt > 0)
-	//printf("Number of selected atoms: %u\n", atomSelCnt);
+	if(this->useGeomShader) { // Use geometry shader
+		// Enable sphere shader
+		this->sphereShaderGeo.Enable();
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
 
-	// Enable sphere shader
-	this->sphereShader.Enable();
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
+		// set shader variables
+		glUniform4fvARB(this->sphereShaderGeo.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fvARB(this->sphereShaderGeo.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+		glUniform3fvARB(this->sphereShaderGeo.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+		glUniform3fvARB(this->sphereShaderGeo.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 
-	// set shader variables
-	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+		// Draw points
+		glVertexPointer(4, GL_FLOAT, 0, posInter);
+		glColorPointer(3, GL_FLOAT, 0, this->atomColor.PeekElements());
+		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
 
-	// Draw points
-	glVertexPointer(4, GL_FLOAT, 0, posInter);
-	glColorPointer(3, GL_FLOAT, 0, this->atomColor.PeekElements());
-	glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+		// disable sphere shader
+		glDisableClientState(GL_COLOR_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		this->sphereShaderGeo.Disable();
+	}
+	else { // Use point sprites
+		// Enable sphere shader
+		this->sphereShader.Enable();
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
 
-	// disable sphere shader
-	glDisableClientState(GL_COLOR_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	this->sphereShader.Disable();
+		// set shader variables
+		glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+		glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+		glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+
+		// Draw points
+		glVertexPointer(4, GL_FLOAT, 0, posInter);
+		glColorPointer(3, GL_FLOAT, 0, this->atomColor.PeekElements());
+		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+
+		// disable sphere shader
+		glDisableClientState(GL_COLOR_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		this->sphereShader.Disable();
+	}
 
 	delete[] pos0;
 	delete[] pos1;
@@ -432,9 +480,8 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
     float curVP[4];
     glGetFloatv(GL_VIEWPORT, curVP);
 
-    // Draw rectangle if there is a valid end point
-    // TODO Find better criterion?
-    if(this->endSelect.X() != -1) {
+    // Draw rectangle if draging is enabled
+    if(this->drag) {
 
     	glDisable(GL_DEPTH_TEST);
     	glDisable(GL_LIGHTING);
@@ -504,27 +551,23 @@ bool protein::SphereRendererMouse::MouseEvent(int x, int y, core::view::MouseFla
     this->mouseX = x;
     this->mouseY = y;
 
-    printf("POS (%i %i)\n", this->mouseX, this->mouseY);
+    //printf("POS (%i %i)\n", this->mouseX, this->mouseY); // DEBUG
 
     if ((flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) != 0) {
-    	if(!this->drag) {
+    	if(!this->drag) { // Start draging
+    		this->startSelect.Set(-1, -1);
+    		this->endSelect.Set(-1, -1);
     		this->startSelect.Set(this->mouseX, this->mouseY);
-    		this->startSelectCurr.Set(-1, -1);
-    		this->endSelectCurr.Set(-1, -1);
     		this->drag = true;
+    		this->resetSelection = true;
     	}
     	else {
     		this->endSelect.Set(this->mouseX, this->mouseY);
     	}
     }
     else {
-    	if(this->endSelect.X() != -1) {
-    		this->startSelectCurr.Set(this->startSelect.X(), this->startSelect.Y());
-    		this->endSelectCurr.Set(this->endSelect.X(), this->endSelect.Y());
-    		this->filter = true;
-    	}
-		this->startSelect.Set(-1, -1);
-		this->endSelect.Set(-1, -1);
+		this->startRect.Set(this->startSelect.X(), this->startSelect.Y());
+		this->endRect.Set(this->endSelect.X(), this->endSelect.Y());
     	this->drag = false;
     }
     return true;
