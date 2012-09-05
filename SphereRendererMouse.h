@@ -17,6 +17,7 @@
 #include "Call.h"
 #include "view/MouseFlags.h"
 #include "vislib/GLSLShader.h"
+#include "vislib/GLSLGeometryShader.h"
 #include "vislib/CameraParameters.h"
 #include "MolecularDataCall.h"
 #include "CallerSlot.h"
@@ -146,14 +147,21 @@ private:
     /// Parameter slot for the color of currently selected atoms
     core::param::ParamSlot atomColSelParam;
 
-	/// The current mouse coordinates
-	int mouseX, mouseY;
+    /// Parameter slot to toggle the use of the geometry shader
+    core::param::ParamSlot useGeomShaderParam;
+    bool useGeomShader;
 
 	/// Camera information
 	vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
 
+	/// Atom count
+	unsigned int atomCnt;
+
 	/// The shader for raycasting spheres
 	vislib::graphics::gl::GLSLShader sphereShader;
+
+	/// The shader for raycasting spheres (uses geometry shader instead of point sprites)
+	vislib::graphics::gl::GLSLGeometryShader sphereShaderGeo;
 
 	/// Array to determine which atoms are selected
 	vislib::Array<bool> atomSelect;
@@ -161,29 +169,26 @@ private:
 	/// Array with atom colors
 	vislib::Array<float> atomColor;
 
+	/// The current mouse coordinates
+	int mouseX, mouseY;
+
 	/// Starting point for the selecting rectangle
 	vislib::math::Vector<int, 2> startSelect;
 
 	/// End point for the selecting rectangle
 	vislib::math::Vector<int, 2> endSelect;
 
+	/// The current rectangle starting point
+	vislib::math::Vector<int, 2> startRect;
+
+	/// The current rectangle end point
+	vislib::math::Vector<int, 2> endRect;
+
 	/// Toggle whether mouse is in drag mode
 	bool drag;
 
-	/// The current rectangle representing the selection (start)
-	vislib::math::Vector<int, 2> startSelectCurr;
-
-	/// The current rectangle representing the selection (end)
-	vislib::math::Vector<int, 2> endSelectCurr;
-
-	/// Starting point of the rectangle in object space
-	double startSelectCurrObj[3];
-
-	/// End point of the rectangle in object space
-	double endSelectCurrObj[3];
-
-	/// Flag whether filter has to be used
-	bool filter;
+	/// Flag whether the selection has to be reset
+	bool resetSelection;
 };
 
 } // end namespace protein
