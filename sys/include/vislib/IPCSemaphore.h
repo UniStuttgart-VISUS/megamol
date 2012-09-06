@@ -103,7 +103,7 @@ namespace sys {
             const long maxCount = 1);
 
         /** Dtor. */
-        ~IPCSemaphore(void);
+        virtual ~IPCSemaphore(void);
 
 #ifndef _WIN32
 

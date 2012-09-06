@@ -30,15 +30,15 @@ namespace sys {
 
     /**
      * A platform independent mutex wrapper.
-	 *
-	 * Implementation notes: On Windows systems, this mutex can be used for
-	 * inter-process synchronisation tasks. If you just need to synchronise 
-	 * threads of a single process, consider using the critical section as it
-	 * is faster.
+     *
+     * Implementation notes: On Windows systems, this mutex can be used for
+     * inter-process synchronisation tasks. If you just need to synchronise 
+     * threads of a single process, consider using the critical section as it
+     * is faster.
      *
      * @author Christoph Mueller
      */
-	class Mutex : public SyncObject {
+    class Mutex : public SyncObject {
 
     public:
 
@@ -48,7 +48,7 @@ namespace sys {
         Mutex(void);
 
         /** Dtor. */
-        ~Mutex(void);
+        virtual ~Mutex(void);
 
         /**
          * Acquire a lock on the mutex for the calling thread. The method blocks
@@ -80,25 +80,25 @@ namespace sys {
 
     private:
 
-		/**
-		 * Forbidden copy ctor.
-		 *
-		 * @param rhs The object to be cloned.
-		 *
-		 * @throws UnsupportedOperationException Unconditionally.
-		 */
-		Mutex(const Mutex& rhs);
+        /**
+         * Forbidden copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throws UnsupportedOperationException Unconditionally.
+         */
+        Mutex(const Mutex& rhs);
 
-		/**
-		 * Forbidden assignment.
-		 *
-		 * @param rhs The right hand side operand.
-		 *
-		 * @return *this.
-		 *
-		 * @throws IllegalParamException If (this != &rhs).
-		 */
-		Mutex& operator =(const Mutex& rhs);
+        /**
+         * Forbidden assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         *
+         * @throws IllegalParamException If (this != &rhs).
+         */
+        Mutex& operator =(const Mutex& rhs);
 
 #ifdef _WIN32
 
@@ -113,7 +113,7 @@ namespace sys {
         pthread_mutex_t mutex;
 
 #endif /* _WIN32 */
-	};
+    };
 
 
     /** name typedef for Lockable with this SyncObject */

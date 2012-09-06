@@ -107,7 +107,7 @@ namespace sys {
             bool *outIsNew = NULL);
 
         /** Dtor. */
-        ~Semaphore(void);
+        virtual ~Semaphore(void);
 
         /**
          * Acquire a lock on the semaphore. This method blocks until the lock is

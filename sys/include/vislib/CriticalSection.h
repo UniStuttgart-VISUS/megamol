@@ -30,23 +30,23 @@ namespace sys {
 
     /**
      * Implements a critical section.
-	 *
-	 * Implementation notes: On Windows, the implementation uses a critical 
-	 * section, which cannot be used for inter-process synchronisation. Only
-	 * threads of a single process can be synchronised using this class. Use
-	 * Mutex or Semaphore, if you need inter-process synchronisation or a
-	 * TryLock() method on systems less than Windows NT 4. Note, 
-	 * that critical sections are faster than Mutexes or Semaphores.
-	 *
-	 * You must compile your program with _WIN32_WINNT defined as 0x0400 or 
-	 * later to use TryLock on the critical section. TryLock() will always fail
-	 * otherwise.
-	 *
-	 * On Linux systems, the critical section is emulated using a system mutex.
+     *
+     * Implementation notes: On Windows, the implementation uses a critical 
+     * section, which cannot be used for inter-process synchronisation. Only
+     * threads of a single process can be synchronised using this class. Use
+     * Mutex or Semaphore, if you need inter-process synchronisation or a
+     * TryLock() method on systems less than Windows NT 4. Note, 
+     * that critical sections are faster than Mutexes or Semaphores.
+     *
+     * You must compile your program with _WIN32_WINNT defined as 0x0400 or 
+     * later to use TryLock on the critical section. TryLock() will always fail
+     * otherwise.
+     *
+     * On Linux systems, the critical section is emulated using a system mutex.
      *
      * @author Christoph Mueller
      */
-	class CriticalSection : public SyncObject {
+    class CriticalSection : public SyncObject {
 
     public:
 
@@ -56,11 +56,11 @@ namespace sys {
         CriticalSection(void);
 
         /** Dtor. */
-        ~CriticalSection(void);
+        virtual ~CriticalSection(void);
 
         /**
          * Enter the crititcal section for the calling thread. The method blocks
-		 * until the lock is acquired. 
+         * until the lock is acquired. 
          *
          * @throws SystemException If the lock could not be acquired.
          */
@@ -68,12 +68,12 @@ namespace sys {
 
         /**
          * Try to enter the critical section. If another thread is already in 
-		 * the critical section, the method will return immediately and the r
-		 * eturn value is false. The method is therefore non-blocking.
-		 *
-		 * NOTE: This method will always return fail on Windows systems prior
-		 * to Windows NT 4. Only programs that are compiled with _WIN32_WINNT 
-		 * defined as 0x0400 support this method.
+         * the critical section, the method will return immediately and the r
+         * eturn value is false. The method is therefore non-blocking.
+         *
+         * NOTE: This method will always return fail on Windows systems prior
+         * to Windows NT 4. Only programs that are compiled with _WIN32_WINNT 
+         * defined as 0x0400 support this method.
          *
          * @return true, if the lock was acquired, false, if not.
          *
@@ -94,25 +94,25 @@ namespace sys {
 
     private:
 
-		/**
-		 * Forbidden copy ctor.
-		 *
-		 * @param rhs The object to be cloned.
-		 *
-		 * @throws UnsupportedOperationException Unconditionally.
-		 */
-		CriticalSection(const CriticalSection& rhs);
+        /**
+         * Forbidden copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throws UnsupportedOperationException Unconditionally.
+         */
+        CriticalSection(const CriticalSection& rhs);
 
-		/**
-		 * Forbidden assignment.
-		 *
-		 * @param rhs The right hand side operand.
-		 *
-		 * @return *this.
-		 *
-		 * @throws IllegalParamException If (this != &rhs).
-		 */
-		CriticalSection& operator =(const CriticalSection& rhs);
+        /**
+         * Forbidden assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         *
+         * @throws IllegalParamException If (this != &rhs).
+         */
+        CriticalSection& operator =(const CriticalSection& rhs);
 
 #ifdef _WIN32
 
@@ -121,11 +121,11 @@ namespace sys {
 
 #else /* _WIN32 */
 
-		/** The mutex used for protecting the critical section. */
+        /** The mutex used for protecting the critical section. */
         Mutex mutex;
 
 #endif /* _WIN32 */
-	};
+    };
 
 
     /** name typedef for Lockable with this SyncObject */
