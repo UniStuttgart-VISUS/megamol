@@ -121,7 +121,7 @@ bool protein::SphereRendererMouse::create(void) {
 	}
 
 	// Load alternative sphere shader (uses geometry shader)
-	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertexGeom", vertSrc)) {
 		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
 		return false;
 	}
@@ -129,13 +129,13 @@ bool protein::SphereRendererMouse::create(void) {
 		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
 		return false;
 	}
-	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentNew", fragSrc)) {
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentGeom", fragSrc)) {
 		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for sphere shader");
 		return false;
 	}
 	this->sphereShaderGeo.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
 	this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT , GL_POINTS);
-	this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_POINTS);
+	this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
 	this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200); // TODO ?
 	this->sphereShaderGeo.Link();
 
