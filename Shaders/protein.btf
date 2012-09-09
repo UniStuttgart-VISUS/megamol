@@ -437,40 +437,36 @@ void main(void) {
         </shader>
         
     <shader name="sphereVertexGeom">
-            <snippet type="version">120</snippet>
+            <snippet type="version">150</snippet>
             <snippet type="string">
                 <!--
-                
-#undef HALO
-//#define HALO
-#undef HALO_RAD
-#define HALO_RAD  0.1
+uniform mat4 modelview;
+uniform mat4 proj;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-varying float squarRad;
-varying float rad;
+in vec4 vertex;
+in vec4 color;
 
-#ifdef RETICLE
-varying vec2 centerFragment;
-#endif // RETICLE
+out vec4 inColor;
 
 void main(void) {
-    gl_Position = gl_Vertex;
+    gl_Position = vertex;
+    inColor = color;
 }
 -->
              </snippet>
         </shader>
         
         <shader name="sphereGeom">
-            <snippet type="version">120</snippet>
+            <snippet type="version">150</snippet>
             <snippet type="string">
                 <!--
-#extension GL_EXT_geometry_shader4 : enable
-#extension GL_EXT_gpu_shader4 : enable
+layout (points) in;
+layout (triangle_strip, max_vertices = 4) out;
 
+uniform mat4 modelview;
+uniform mat4 proj;
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
+uniform vec3 lightPos;
 
 #ifndef CALC_CAM_SYS
 uniform vec3 camIn;
@@ -478,40 +474,40 @@ uniform vec3 camUp;
 uniform vec3 camRight;
 #endif // CALC_CAM_SYS
 
-varying in vec4 objPos[1];
-varying in vec4 camPos[1];
-varying in vec4 lightPos[1];
-varying in float squarRad[1];
-varying in float rad[1];
+in vec4 inColor[1];
 
-varying out vec4 objPosOut;
-varying out vec4 camPosOut;
-varying out vec4 lightPosOut;
-varying out float squarRadOut;
-varying out float radOut;
+out vec4 color;
+out vec4 objPos;
+out vec4 camPos;
+out vec4 light;
+out float rad;
+out float squareRad;
+
+mat4 modelviewproj = proj*modelview; // TODO Move this to the CPU?
+mat4 modelviewInv = inverse(modelview);
 
 void main(void) {
+
+
     
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_Position;
-    radOut = inPos.w;
-    squarRadOut = radOut * radOut;
+    vec4 inPos = gl_in[0].gl_Position;
+    rad = inPos.w;
+    squareRad = rad*rad;
     inPos.w = 1.0;
 
     // object pivot point in object space    
-    objPosOut = inPos; // no w-div needed, because w is 1.0 (Because I know)
+    objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
-    camPosOut = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
-    camPosOut.xyz -= objPosOut.xyz; // cam pos to glyph space
+    camPos = modelviewInv[3]; // (C) by Christoph
+    camPos.xyz -= objPos.xyz; // cam pos to glyph space
     
     // calculate light position in glyph space
     // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    //lightPos = modelviewInv * gl_LightSource[0].position - objPos;
     // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    lightPosOut = gl_ModelViewMatrixInverse * normalize(gl_LightSource[0].position);
-    // send color to fragment shader
-//    gl_FrontColor = gl_Color;
+    light = modelviewInv*normalize(vec4(lightPos, 1.0));
 
     // Sphere-Touch-Plane-Approach™
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
@@ -521,22 +517,12 @@ void main(void) {
     // get camera orthonormal coordinate system
     vec4 tmp;
 
-#ifdef CALC_CAM_SYS
-    // camera coordinate system in object space
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
-    vec3 camIn = normalize(tmp.xyz);
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
-    vec3 camUp = tmp.xyz;
-    vec3 camRight = normalize(cross(camIn, camUp));
-    camUp = cross(camIn, camRight);
-#endif // CALC_CAM_SYS
-
-    vec2 mins, maxs;
-    vec3 testPos;
+	vec3 testPos;
     vec4 projPos;
+    vec2 mins, maxs;
     
     // projected camera vector
-    vec3 c2 = vec3(dot(camPosOut.xyz, camRight), dot(camPosOut.xyz, camUp), dot(camPosOut.xyz, camIn));
+    vec3 c2 = vec3(dot(camPos.xyz, camRight), dot(camPos.xyz, camUp), dot(camPos.xyz, camIn));
 
     vec3 cpj1 = camIn * c2.z + camRight * c2.x;
     vec3 cpm1 = camIn * c2.x - camRight * c2.z;
@@ -549,9 +535,9 @@ void main(void) {
 
     dd = vec2(1.0) / d;
 
-    p = squarRadOut * dd;
+    p = squareRad*dd;
     q = d - p;
-    h = sqrt(p * q);
+    h = sqrt(p*q);
     //h = vec2(0.0);
     
     p *= dd;
@@ -562,31 +548,42 @@ void main(void) {
     cpj2 *= p.y;
     cpm2 *= h.y;
 
-    // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
-    testPos = objPosOut.xyz + cpj1 + cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    color = inColor[0];
+
+    testPos = objPos.xyz + cpj1 + cpm1;
+    projPos = modelviewproj * vec4(testPos, 1.0);
     projPos /= projPos.w;
-    gl_Position = projPos;
-    EmitVertex();
+    mins = projPos.xy;
+    maxs = projPos.xy;
 
     testPos -= 2.0 * cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = modelviewproj * vec4(testPos, 1.0);
     projPos /= projPos.w;
-    gl_Position = projPos;
-    EmitVertex();
+    mins = min(mins, projPos.xy);
+    maxs = max(maxs, projPos.xy);
 
-    testPos = objPosOut.xyz + cpj2 + cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    testPos = objPos.xyz + cpj2 + cpm2;
+    projPos = modelviewproj * vec4(testPos, 1.0);
     projPos /= projPos.w;
-    gl_Position = projPos;
-    EmitVertex();
+    mins = min(mins, projPos.xy);
+    maxs = max(maxs, projPos.xy);
 
     testPos -= 2.0 * cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = modelviewproj * vec4(testPos, 1.0);
     projPos /= projPos.w;
-    gl_Position = projPos;
+    mins = min(mins, projPos.xy);
+    maxs = max(maxs, projPos.xy);
+
+    float sprite_size = max((maxs.x - mins.x) * winHalf.x, (maxs.y - mins.y) * winHalf.y) * 0.5;
+
+    gl_Position = modelviewproj * vec4(objPos.xyz - camRight*rad - camUp*rad, 1.0);
     EmitVertex();
-        
+    gl_Position = modelviewproj * vec4(objPos.xyz + camRight*rad - camUp*rad, 1.0);
+    EmitVertex();
+    gl_Position = modelviewproj * vec4(objPos.xyz - camRight*rad + camUp*rad, 1.0);
+    EmitVertex();
+    gl_Position = modelviewproj * vec4(objPos.xyz + camRight*rad + camUp*rad, 1.0);
+    EmitVertex();
     EndPrimitive();
 }
 -->
@@ -719,7 +716,7 @@ void main(void) {
     }
 #endif // RETICLE
 
-//    gl_FragColor.rgb = normal;
+    //gl_FragColor.rgb = normal;
 }
 -->
             </snippet>
@@ -881,34 +878,38 @@ void main(void) {
         </shader>
         
         <shader name="sphereFragmentGeom"> 
-            <snippet type="version">110</snippet>
+            <snippet type="version">150</snippet>
             <snippet name="commondefines"/>
             <snippet name="::common::lighting::simple"/>
             <snippet type="string">
                <!--
+uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
+uniform mat4 modelview;
+uniform mat4 proj;
 
-#undef HALO
-//#define HALO
-#undef HALO_RAD
-#define HALO_RAD  0.1
+in vec4 color;
+in vec4 objPos;
+in vec4 camPos;
+in vec4 light;
+in float rad;
+in float squareRad;
 
-uniform vec4 viewAttr;
+/*#ifndef CALC_CAM_SYS
+uniform vec3 camIn;
+uniform vec3 camUp;
+uniform vec3 camRight;
+#endif // CALC_CAM_SYS
+*/
 
-varying in vec4 objPosOut;
-varying in vec4 camPosOut;
-varying in vec4 lightPosOut;
-varying in float squarRadOut;
-varying in float radOut;
-
-#ifdef RETICLE
-varying in vec2 centerFragmentOut;
-#endif // RETICLE
+mat4 modelviewproj = proj*modelview; // TODO Move this to the CPU?
+mat4 modelviewprojInv = inverse(modelviewproj);
+mat4 modelviewprojTrans = transpose(modelviewproj);
 
 void main(void) {
-/*    vec4 coord;
+    /*vec4 coord;
     vec3 ray;
     float lambda;
-    vec3 color;
+    vec3 colOut;
     vec3 sphereintersection = vec3( 0.0);
     vec3 normal;
 
@@ -917,80 +918,49 @@ void main(void) {
         * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
         + vec4(-1.0, -1.0, -1.0, 1.0);
     
-
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord = modelviewprojInv * coord;
     coord /= coord.w;
-    coord -= objPosOut; // ... and to glyph space
+    coord -= objPos; // ... and to glyph space
     
-
     // calc the viewing ray
-    ray = normalize(coord.xyz - camPosOut.xyz);
-
+    ray = normalize(coord.xyz - camPos.xyz);
 
     // calculate the geometry-ray-intersection
-    float d1 = -dot(camPosOut.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
-    float d2s = dot(camPosOut.xyz, camPosOut.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
-    float radicand = squarRadOut - d2s;                        // square of difference of projected length and lambda
+    float d1 = -dot(camPos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
+    float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
+    float radicand = squareRad - d2s;                        // square of difference of projected length and lambda
 #ifdef CLIP
     lambda = d1 - sqrt(radicand);                           // lambda
 
     float radicand2 = 0.0;
-#ifdef HALO
-    radicand2 = (rad+HALO_RAD)*(rad+HALO_RAD) - d2s;
-    if( radicand2 < 0.0 ) {
-        discard;
-    }
-    else if( radicand < 0.0 ) {
-        // idea for halo from Tarini et al. (tvcg 2006)
-        color = vec3(0.1);
-        normal = vec3(0.0, 1.0, 0.0);
-    }
-#else
     if( radicand < 0.0 ) {
         discard;
     }
-#endif // HALO
     else {
         // chose color for lighting
-        color = gl_Color.rgb;
-        sphereintersection = lambda * ray + camPosOut.xyz;    // intersection point
+        colOut = color.rgb;
+        sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         // "calc" normal at intersection point
-        normal = sphereintersection / radOut;
+        normal = sphereintersection / rad;
     }
     
 #endif // CLIP
 
-#ifdef SMALL_SPRITE_LIGHTING
-    normal = mix(-ray, normal, lightPosOut.w);
-#endif // SMALL_SPRITE_LIGHTING
-
-#ifdef AXISHINTS
-    // debug-axis-hints
-    float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
-    if (mc < 0.05)            { color = vec3(0.5); }
-    if (abs(normal.x) > 0.98) { color = vec3(1.0, 0.0, 0.0); }
-    if (abs(normal.y) > 0.98) { color = vec3(0.0, 1.0, 0.0); }
-    if (abs(normal.z) > 0.98) { color = vec3(0.0, 0.0, 1.0); }
-    if (normal.x < -0.99)     { color = vec3(0.5); }
-    if (normal.y < -0.99)     { color = vec3(0.5); }
-    if (normal.z < -0.99)     { color = vec3(0.5); }
-#endif // AXISHINTS
-
     // phong lighting with directional light
     //gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
-    gl_FragColor = vec4(LocalLighting(ray, normal, lightPosOut.xyz, color), gl_Color.w);
+    gl_FragColor = vec4(LocalLighting(ray, normal, light.xyz, colOut), color.w);
     
     // calculate depth
 #ifdef DEPTH
-    vec4 Ding = vec4( sphereintersection + objPosOut.xyz, 1.0);
-    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
+    float depth = dot(modelviewprojTrans[2], Ding);
+    float depthW = dot(modelviewprojTrans[3], Ding);
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
     
 #ifndef CLIP
     gl_FragDepth = (radicand < 0.0) ? 1.0 : ((depth / depthW) + 1.0) * 0.5;
-    gl_FragColor.rgb = (radicand < 0.0) ? gl_Color.rgb : gl_FragColor.rgb;
+    gl_FragColor.rgb = (radicand < 0.0) ? color.rgb : gl_FragColor.rgb;
 #endif // CLIP
 
 #endif // DEPTH
@@ -1004,10 +974,10 @@ void main(void) {
         //gl_FragColor.rgb = vec3(1.0, 1.0, 0.5);
         gl_FragColor.rgb += vec3(0.3, 0.3, 0.5);
     }
-#endif // RETICLE
+#endif // RETICLE*/
 
-//    gl_FragColor.rgb = normal;*/
-gl_FragColor.rgba = vec4(1.0, 0.0, 0.0, 1.0);
+//gl_FragColor.rgb = normal; // DEBUG
+gl_FragColor = color; // DEBUG
 }
 -->
             </snippet>

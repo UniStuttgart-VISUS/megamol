@@ -134,9 +134,9 @@ bool protein::SphereRendererMouse::create(void) {
 		return false;
 	}
 	this->sphereShaderGeo.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-	this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT , GL_POINTS);
-	this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-	this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200); // TODO ?
+	//this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT , GL_POINTS);
+	//this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+	//this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200); // TODO ?
 	this->sphereShaderGeo.Link();
 
 	return true;
@@ -308,23 +308,26 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 		this->resetSelection = false;
 	}
 
+	// Get GL_MODELVIEW matrix
+	GLfloat modelMatrix_column[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+	Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+
+	// Get GL_PROJECTION matrix
+	GLfloat projMatrix_column[16];
+	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+	Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+
+	// Compute modelviewprojection matrix
+	Matrix<GLfloat, 4, ROW_MAJOR> modelProjMatrix = projMatrix*modelMatrix;
+
+	// Get light position
+	GLfloat lightPos[3];
+	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+
 
 	// Apply positional filter to all atoms if dragging is enabled
 	if(this->drag) {
-
-		// Get GL_MODELVIEW matrix
-		GLdouble modelMatrix_column[16];
-		glGetDoublev(GL_MODELVIEW_MATRIX, modelMatrix_column);
-		Matrix<GLdouble, 4, ROW_MAJOR> modelMatrix(&modelMatrix_column[0]);
-		modelMatrix.Transpose(); // Since OpenGl matrices are stored column major mode ...
-
-		// Get GL_PROJECTION matrix
-		GLdouble projMatrix_column[16];
-		glGetDoublev(GL_PROJECTION_MATRIX, projMatrix_column);
-		Matrix<GLdouble, 4, ROW_MAJOR> projMatrix(&projMatrix_column[0]);
-		projMatrix.Transpose(); // Since OpenGl matrices are stored column major mode ...
-
-		Matrix<GLdouble, 4, ROW_MAJOR> modelProjMatrix = projMatrix*modelMatrix;
 
 		// Get GL_VIEWPORT
 		int viewport[4];
@@ -371,18 +374,18 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 			this->atomSelect[at] = false;
 
 			// Get atom (object space) position
-			Vector<double, 4> posOS;
+			Vector<float, 4> posOS;
 			posOS.SetX(mol->AtomPositions()[at*3+0]);
 			posOS.SetY(mol->AtomPositions()[at*3+1]);
 			posOS.SetZ(mol->AtomPositions()[at*3+2]);
 			posOS.SetW(1.0f);
 
 			// Compute eye space position
-			Vector<double, 4> posES;
+			Vector<float, 4> posES;
 			posES = modelProjMatrix*posOS;
 
 			// Compute normalized device coordinates
-			Vector<double, 3> posNDC;
+			Vector<float, 3> posNDC;
 			posNDC.SetX(posES.X()/posES.W());
 			posNDC.SetY(posES.Y()/posES.W());
 			posNDC.SetZ(posES.Z()/posES.W());
@@ -426,26 +429,41 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 	if(this->useGeomShader) { // Use geometry shader
 		// Enable sphere shader
 		this->sphereShaderGeo.Enable();
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_COLOR_ARRAY);
 
-		// set shader variables
+		// Set shader variables
 		glUniform4fvARB(this->sphereShaderGeo.ParameterLocation("viewAttr"), 1, viewportStuff);
 		glUniform3fvARB(this->sphereShaderGeo.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
 		glUniform3fvARB(this->sphereShaderGeo.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
 		glUniform3fvARB(this->sphereShaderGeo.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 
-		// Draw points
-		glVertexPointer(4, GL_FLOAT, 0, posInter);
-		glColorPointer(3, GL_FLOAT, 0, this->atomColor.PeekElements());
-		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+		glUniformMatrix4fvARB(this->sphereShaderGeo.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+		glUniformMatrix4fvARB(this->sphereShaderGeo.ParameterLocation("proj"), 1, false, projMatrix_column);
+		glUniform3fvARB(this->sphereShaderGeo.ParameterLocation("lightPos"), 1, lightPos);
 
-		// disable sphere shader
-		glDisableClientState(GL_COLOR_ARRAY);
-		glDisableClientState(GL_VERTEX_ARRAY);
+		// Vertex attributes
+		GLint vertexPos = glGetAttribLocation(this->sphereShaderGeo, "vertex");
+		GLint vertexColor = glGetAttribLocation(this->sphereShaderGeo, "color");
+
+		// Enable arrays for attributes
+		glEnableVertexAttribArray(vertexPos);
+		glEnableVertexAttribArray(vertexColor);
+
+		// Set attribute pointers
+		glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, posInter);
+		glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColor.PeekElements());
+
+		// Draw points
+		//glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+		glDrawArrays(GL_POINTS, 0, 1);
+
+		// Disable arrays for attributes
+		glDisableVertexAttribArray(vertexPos);
+		glDisableVertexAttribArray(vertexColor);
+
+		// Disable sphere shader
 		this->sphereShaderGeo.Disable();
 	}
-	else { // Use point sprites
+	//else { // Use point sprites
 		// Enable sphere shader
 		this->sphereShader.Enable();
 		glEnableClientState(GL_VERTEX_ARRAY);
@@ -460,13 +478,14 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 		// Draw points
 		glVertexPointer(4, GL_FLOAT, 0, posInter);
 		glColorPointer(3, GL_FLOAT, 0, this->atomColor.PeekElements());
-		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+		//glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+		glDrawArrays(GL_POINTS, 0, 1);
 
 		// disable sphere shader
 		glDisableClientState(GL_COLOR_ARRAY);
 		glDisableClientState(GL_VERTEX_ARRAY);
 		this->sphereShader.Disable();
-	}
+	//}
 
 	delete[] pos0;
 	delete[] pos1;
