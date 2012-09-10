@@ -696,42 +696,42 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
     viewportStuff[3] = 2.0f / viewportStuff[3];
    
     // Don't use geometry shader 
-    if(!this->toggleGeomShaderParam.Param<param::BoolParam>()->Value()) {
+    if(this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
-    // enable sphere shader
-    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->sphereShader.Enable();
-        // set shader variables
-        glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-        glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-        glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    }
-    else {
-        this->sphereShaderOR.Enable();
-        // set shader variables
-        glUniform4fvARB(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-        glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-        glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-        glUniform2fARB(this->sphereShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
-    }
+        // enable sphere shader
+        if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+            this->sphereShader.Enable();
+            // set shader variables
+            glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+            glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+            glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+        }
+        else {
+            this->sphereShaderOR.Enable();
+            // set shader variables
+            glUniform4fvARB(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+            glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+            glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+            glUniform2fARB(this->sphereShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
+        }
 
-    // set vertex and color pointers and draw them
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
-    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
-    glDrawArrays( GL_POINTS, 0, mol->AtomCount());
+        // set vertex and color pointers and draw them
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
+        glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
+        glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+        glDrawArrays( GL_POINTS, 0, mol->AtomCount());
 
-
-    // disable sphere shader
-    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->sphereShader.Disable();
-    }
-    else {
-        this->sphereShaderOR.Disable();
-    }
+    
+        // disable sphere shader
+        if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+            this->sphereShader.Disable();
+        }
+        else {
+            this->sphereShaderOR.Disable();
+        }
     }
     else { // Draw spheres using geometry shader support
     
@@ -783,8 +783,7 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
 		glDisableVertexAttribArray(vertexColor);
 
 		// Disable sphere shader
-		this->sphereShaderGeom.Disable();
-		
+		this->sphereShaderGeom.Disable();	
     }
 
     // enable cylinder shader
@@ -938,38 +937,96 @@ void SimpleMoleculeRenderer::RenderBallAndStick( const MolecularDataCall *mol, c
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    // enable sphere shader
-    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->sphereShader.Enable();
-        // set shader variables
-        glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-        glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-        glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    }
-    else {
-        this->sphereShaderOR.Enable();
-        // set shader variables
-        glUniform4fvARB(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-        glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-        glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-        glUniform2fARB(this->sphereShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
-    }
+    // Don't use geometry shader 
+    if(this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    // set vertex and color pointers and draw them
-    glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
-    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
-    glDrawArrays( GL_POINTS, 0, mol->AtomCount());
-    // disable sphere shader
-     if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-         this->sphereShader.Disable();
-     }
-     else {
-         this->sphereShaderOR.Disable();
-     }
+        // enable sphere shader
+        if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+            this->sphereShader.Enable();
+            // set shader variables
+            glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+            glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+            glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+        }
+        else {
+            this->sphereShaderOR.Enable();
+            // set shader variables
+            glUniform4fvARB(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+            glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+            glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+            glUniform2fARB(this->sphereShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
+        }
+
+        // set vertex and color pointers and draw them
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
+        glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
+        glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+        glDrawArrays( GL_POINTS, 0, mol->AtomCount());
+
+    
+        // disable sphere shader
+        if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+            this->sphereShader.Disable();
+        }
+        else {
+            this->sphereShaderOR.Disable();
+        }
+    }
+    else { // Draw spheres using geometry shader support
+    
+        using namespace vislib::math;
+    
+        // TODO: Make these class members and retrieve only once per frame
+    	// Get GL_MODELVIEW matrix
+    	GLfloat modelMatrix_column[16];
+    	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+	    Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+    	// Get GL_PROJECTION matrix
+	    GLfloat projMatrix_column[16];
+    	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    	Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+    	// Get light position
+	    GLfloat lightPos[4];
+    	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+    
+  		// Enable sphere shader
+		this->sphereShaderGeom.Enable();
+
+		// Set shader variables
+		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
+		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
+
+		// Vertex attributes
+		GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
+		GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
+
+		// Enable arrays for attributes
+		glEnableVertexAttribArray(vertexPos);
+		glEnableVertexAttribArray(vertexColor);
+
+		// Set attribute pointers
+		glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
+		glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
+
+		// Draw points
+		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+		//glDrawArrays(GL_POINTS, 0, 1);
+
+		// Disable arrays for attributes
+		glDisableVertexAttribArray(vertexPos);
+		glDisableVertexAttribArray(vertexColor);
+
+		// Disable sphere shader
+		this->sphereShaderGeom.Disable();	
+    }
 
      // enable cylinder shader
      if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
@@ -1061,37 +1118,95 @@ void SimpleMoleculeRenderer::RenderSpacefilling( const MolecularDataCall *mol, c
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    // enable sphere shader
-    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->sphereShader.Enable();
-        // set shader variables
-        glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-        glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-        glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    }
-    else {
-        this->sphereShaderOR.Enable();
-        // set shader variables
-        glUniform4fvARB(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-        glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-        glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-        glUniform2fARB(this->sphereShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
-    }
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    // set vertex and color pointers and draw them
-    glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
-    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
-    glDrawArrays( GL_POINTS, 0, mol->AtomCount());
+    // Don't use geometry shader 
+    if(this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
-    // disable sphere shader
-    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->sphereShader.Disable();
+        // enable sphere shader
+        if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+            this->sphereShader.Enable();
+            // set shader variables
+            glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+            glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+            glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+        }
+        else {
+            this->sphereShaderOR.Enable();
+            // set shader variables
+            glUniform4fvARB(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+            glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+            glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+            glUniform2fARB(this->sphereShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
+        }
+
+        // set vertex and color pointers and draw them
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
+        glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
+        glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+        glDrawArrays( GL_POINTS, 0, mol->AtomCount());
+
+    
+        // disable sphere shader
+        if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+            this->sphereShader.Disable();
+        }
+        else {
+            this->sphereShaderOR.Disable();
+        }
     }
-    else {
-        this->sphereShaderOR.Disable();
+    else { // Draw spheres using geometry shader support
+    
+        using namespace vislib::math;
+    
+        // TODO: Make these class members and retrieve only once per frame
+    	// Get GL_MODELVIEW matrix
+    	GLfloat modelMatrix_column[16];
+    	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+	    Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+    	// Get GL_PROJECTION matrix
+	    GLfloat projMatrix_column[16];
+    	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    	Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+    	// Get light position
+	    GLfloat lightPos[4];
+    	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+    
+  		// Enable sphere shader
+		this->sphereShaderGeom.Enable();
+
+		// Set shader variables
+		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
+		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
+
+		// Vertex attributes
+		GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
+		GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
+
+		// Enable arrays for attributes
+		glEnableVertexAttribArray(vertexPos);
+		glEnableVertexAttribArray(vertexColor);
+
+		// Set attribute pointers
+		glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
+		glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
+
+		// Draw points
+		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+		//glDrawArrays(GL_POINTS, 0, 1);
+
+		// Disable arrays for attributes
+		glDisableVertexAttribArray(vertexPos);
+		glDisableVertexAttribArray(vertexColor);
+
+		// Disable sphere shader
+		this->sphereShaderGeom.Disable();	
     }
 }
 
@@ -1130,37 +1245,95 @@ void SimpleMoleculeRenderer::RenderSAS( const MolecularDataCall *mol, const floa
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    // enable sphere shader
-      if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-          this->sphereShader.Enable();
-          // set shader variables
-          glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-          glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-          glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-          glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-      }
-      else {
-          this->sphereShaderOR.Enable();
-          // set shader variables
-          glUniform4fvARB(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-          glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-          glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-          glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-          glUniform2fARB(this->sphereShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
-      }
+    // Don't use geometry shader 
+    if(this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    // set vertex and color pointers and draw them
-    glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
-    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
-    glDrawArrays( GL_POINTS, 0, mol->AtomCount());
-    // disable sphere shader
-    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->sphereShader.Disable();
+        // enable sphere shader
+        if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+            this->sphereShader.Enable();
+            // set shader variables
+            glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+            glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+            glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+        }
+        else {
+            this->sphereShaderOR.Enable();
+            // set shader variables
+            glUniform4fvARB(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+            glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+            glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+            glUniform2fARB(this->sphereShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
+        }
+
+        // set vertex and color pointers and draw them
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
+        glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
+        glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+        glDrawArrays( GL_POINTS, 0, mol->AtomCount());
+
+    
+        // disable sphere shader
+        if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+            this->sphereShader.Disable();
+        }
+        else {
+            this->sphereShaderOR.Disable();
+        }
     }
-    else {
-        this->sphereShaderOR.Disable();
+    else { // Draw spheres using geometry shader support
+    
+        using namespace vislib::math;
+    
+        // TODO: Make these class members and retrieve only once per frame
+    	// Get GL_MODELVIEW matrix
+    	GLfloat modelMatrix_column[16];
+    	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+	    Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+    	// Get GL_PROJECTION matrix
+	    GLfloat projMatrix_column[16];
+    	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    	Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+    	// Get light position
+	    GLfloat lightPos[4];
+    	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+    
+  		// Enable sphere shader
+		this->sphereShaderGeom.Enable();
+
+		// Set shader variables
+		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
+		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
+
+		// Vertex attributes
+		GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
+		GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
+
+		// Enable arrays for attributes
+		glEnableVertexAttribArray(vertexPos);
+		glEnableVertexAttribArray(vertexColor);
+
+		// Set attribute pointers
+		glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
+		glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
+
+		// Draw points
+		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+		//glDrawArrays(GL_POINTS, 0, 1);
+
+		// Disable arrays for attributes
+		glDisableVertexAttribArray(vertexPos);
+		glDisableVertexAttribArray(vertexColor);
+
+		// Disable sphere shader
+		this->sphereShaderGeom.Disable();	
     }
 }
 
