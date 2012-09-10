@@ -27,6 +27,7 @@
 #include "vislib/AbstractOpenGLShader.h"
 #include "vislib/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
+#include <vislib/Matrix.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <glh/glh_genext.h>
@@ -57,7 +58,8 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModuleDS (),
     molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"),
     specialColorParam( "color::specialColor", "The color for the specified molecules" ),
     interpolParam( "posInterpolation", "Enable positional interpolation between frames" ),
-    offscreenRenderingParam( "offscreenRendering", "Toggle offscreenRendering" )
+    offscreenRenderingParam( "offscreenRendering", "Toggle offscreenRendering" ),
+    toggleGeomShaderParam("geomShader", "Toggle the use of geometry shaders for glyph ray casting")
 {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable( &this->molDataCallerSlot);
@@ -159,6 +161,10 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModuleDS (),
     // Toggle offscreen rendering
     this->offscreenRenderingParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable( &this->offscreenRenderingParam);
+    
+    // Toggle geometry shader
+    this->toggleGeomShaderParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable( &this->toggleGeomShaderParam);
 }
 
 
@@ -199,6 +205,7 @@ bool SimpleMoleculeRenderer::create(void) {
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
+    ShaderSource geomSrc;
 
     // Load sphere shader
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
@@ -262,6 +269,22 @@ bool SimpleMoleculeRenderer::create(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create filter sphere shader (OR): %s\n", e.GetMsgA());
         return false;
     }
+    
+    	// Load alternative sphere shader (uses geometry shader)
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertexGeom", vertSrc)) {
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
+		return false;
+	}
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereGeom", geomSrc)) {
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
+		return false;
+	}
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentGeom", fragSrc)) {
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for sphere shader");
+		return false;
+	}
+	this->sphereShaderGeom.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+	this->sphereShaderGeom.Link();
 
     // Load cylinder shader
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
@@ -671,6 +694,9 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
+   
+    // Don't use geometry shader 
+    if(!this->toggleGeomShaderParam.Param<param::BoolParam>()->Value()) {
 
     // enable sphere shader
     if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
@@ -705,6 +731,60 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
     }
     else {
         this->sphereShaderOR.Disable();
+    }
+    }
+    else { // Draw spheres using geometry shader support
+    
+        using namespace vislib::math;
+    
+        // TODO: Make these class members and retrieve only once per frame
+    	// Get GL_MODELVIEW matrix
+    	GLfloat modelMatrix_column[16];
+    	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+	    Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+    	// Get GL_PROJECTION matrix
+	    GLfloat projMatrix_column[16];
+    	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    	Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+    	// Get light position
+	    GLfloat lightPos[4];
+    	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+    
+  		// Enable sphere shader
+		this->sphereShaderGeom.Enable();
+
+		// Set shader variables
+		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
+		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
+
+		// Vertex attributes
+		GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
+		GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
+
+		// Enable arrays for attributes
+		glEnableVertexAttribArray(vertexPos);
+		glEnableVertexAttribArray(vertexColor);
+
+		// Set attribute pointers
+		glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
+		glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
+
+		// Draw points
+		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+		//glDrawArrays(GL_POINTS, 0, 1);
+
+		// Disable arrays for attributes
+		glDisableVertexAttribArray(vertexPos);
+		glDisableVertexAttribArray(vertexColor);
+
+		// Disable sphere shader
+		this->sphereShaderGeom.Disable();
+		
     }
 
     // enable cylinder shader
