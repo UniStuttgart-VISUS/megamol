@@ -12,6 +12,7 @@
 #include "CallAutoDescription.h"
 #include "CallMouseInput.h"
 #include "param/ButtonParam.h"
+#include "view/MouseFlags.h"
 
 using namespace megamol;
 
@@ -37,23 +38,23 @@ void protein::View3DMouse::SetCursor2DButtonState(unsigned int btn, bool down) {
 	//if(!this->toggleSelect) {
 		View3D::SetCursor2DButtonState(btn, down); // Keep camera movement functional
 	//}
-		//else {
+	/*	//else {
 
 		switch (btn) {
 		case 0 : // left
-			core::view::MouseFlagsSetFlag(this->mouseFlags,
+			megamol::core::view::MouseFlagsSetFlag(this->mouseFlags,
 					core::view::MOUSEFLAG_BUTTON_LEFT_DOWN, down);
 			break;
 		case 1 : // right
-			core::view::MouseFlagsSetFlag(this->mouseFlags,
+			megamol::core::view::MouseFlagsSetFlag(this->mouseFlags,
 					core::view::MOUSEFLAG_BUTTON_RIGHT_DOWN, down);
 			break;
 		case 2 : // middle
-			core::view::MouseFlagsSetFlag(this->mouseFlags,
+			megamol::core::view::MouseFlagsSetFlag(this->mouseFlags,
 					core::view::MOUSEFLAG_BUTTON_MIDDLE_DOWN, down);
 			break;
 		}
-		//}
+		//}*/
 }
 
 
@@ -61,9 +62,9 @@ void protein::View3DMouse::SetCursor2DPosition(float x, float y) {
 
 	if(!this->toggleSelect) {
 		View3D::SetCursor2DPosition(x, y); // Keep camera movement functional
-		core::view::MouseFlagsResetAllChanged(this->mouseFlags);
+		//core::view::MouseFlagsResetAllChanged(this->mouseFlags);
 	}
-	else {
+	/*else {
 
 		CallMouseInput *cm = this->mouseSlot.CallAs<CallMouseInput>();
 		if (cm) {
@@ -71,13 +72,13 @@ void protein::View3DMouse::SetCursor2DPosition(float x, float y) {
 			if ((*cm)(0)) {
 				this->mouseX = static_cast<int>(x);
 				this->mouseY = static_cast<int>(y);
-				core::view::MouseFlagsResetAllChanged(this->mouseFlags);
+				megamol::core::view::MouseFlagsResetAllChanged(this->mouseFlags);
 				// mouse event consumed
 				return;
 			}
-			core::view::MouseFlagsResetAllChanged(this->mouseFlags);
+			megamol::core::view::MouseFlagsResetAllChanged(this->mouseFlags);
 		}
-	}
+	}*/
 }
 
 

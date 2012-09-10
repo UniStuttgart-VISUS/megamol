@@ -515,6 +515,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="AnimDataTimer.cpp" />
     <ClCompile Include="BSpline.cpp" />
     <ClCompile Include="CallFrame.cpp" />
+    <ClCompile Include="CallMouseInput.cpp" />
     <ClCompile Include="CallProteinData.cpp" />
     <ClCompile Include="CallProteinMovementData.cpp" />
     <ClCompile Include="CallVolumeData.cpp" />
@@ -618,6 +619,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="SolventVolumeRenderer.cpp" />
     <ClCompile Include="SphereDataCall.cpp" />
     <ClCompile Include="SphereRenderer.cpp" />
+    <ClCompile Include="SphereRendererMouse.cpp" />
     <ClCompile Include="SSAORendererDeferred.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">Create</PrecompiledHeader>
@@ -641,6 +643,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="AnimDataTimer.h" />
     <ClInclude Include="BSpline.h" />
     <ClInclude Include="CallFrame.h" />
+    <ClInclude Include="CallMouseInput.h" />
     <ClInclude Include="CallProteinData.h" />
     <ClInclude Include="CallProteinMovementData.h" />
     <ClInclude Include="CallVolumeData.h" />
@@ -703,6 +706,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="SolventVolumeRenderer.h" />
     <ClInclude Include="SphereDataCall.h" />
     <ClInclude Include="SphereRenderer.h" />
+    <ClInclude Include="SphereRendererMouse.h" />
     <ClInclude Include="SSAORendererDeferred.h" />
     <ClInclude Include="state.h" />
     <ClInclude Include="stdafx.h" />
