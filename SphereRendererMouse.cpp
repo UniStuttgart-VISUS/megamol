@@ -322,7 +322,7 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 	Matrix<GLfloat, 4, ROW_MAJOR> modelProjMatrix = projMatrix*modelMatrix;
 
 	// Get light position
-	GLfloat lightPos[3];
+	GLfloat lightPos[4];
 	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
 
@@ -438,7 +438,7 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 
 		glUniformMatrix4fvARB(this->sphereShaderGeo.ParameterLocation("modelview"), 1, false, modelMatrix_column);
 		glUniformMatrix4fvARB(this->sphereShaderGeo.ParameterLocation("proj"), 1, false, projMatrix_column);
-		glUniform3fvARB(this->sphereShaderGeo.ParameterLocation("lightPos"), 1, lightPos);
+		glUniform4fvARB(this->sphereShaderGeo.ParameterLocation("lightPos"), 1, lightPos);
 
 		// Vertex attributes
 		GLint vertexPos = glGetAttribLocation(this->sphereShaderGeo, "vertex");
@@ -453,8 +453,8 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 		glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColor.PeekElements());
 
 		// Draw points
-		//glDrawArrays(GL_POINTS, 0, mol->AtomCount());
-		glDrawArrays(GL_POINTS, 0, 1);
+		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+		//glDrawArrays(GL_POINTS, 0, 1);
 
 		// Disable arrays for attributes
 		glDisableVertexAttribArray(vertexPos);
@@ -463,7 +463,7 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 		// Disable sphere shader
 		this->sphereShaderGeo.Disable();
 	}
-	//else { // Use point sprites
+	else { // Use point sprites
 		// Enable sphere shader
 		this->sphereShader.Enable();
 		glEnableClientState(GL_VERTEX_ARRAY);
@@ -478,14 +478,14 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 		// Draw points
 		glVertexPointer(4, GL_FLOAT, 0, posInter);
 		glColorPointer(3, GL_FLOAT, 0, this->atomColor.PeekElements());
-		//glDrawArrays(GL_POINTS, 0, mol->AtomCount());
-		glDrawArrays(GL_POINTS, 0, 1);
+		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+		//glDrawArrays(GL_POINTS, 0, 1);
 
 		// disable sphere shader
 		glDisableClientState(GL_COLOR_ARRAY);
 		glDisableClientState(GL_VERTEX_ARRAY);
 		this->sphereShader.Disable();
-	//}
+	}
 
 	delete[] pos0;
 	delete[] pos1;
