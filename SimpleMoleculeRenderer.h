@@ -18,6 +18,7 @@
 #include "view/Renderer3DModuleDS.h"
 #include "view/AbstractCallRender3D.h"
 #include "vislib/GLSLShader.h"
+#include "vislib/GLSLGeometryShader.h"
 
 
 
@@ -247,10 +248,13 @@ namespace protein {
         megamol::core::param::ParamSlot interpolParam;
 		/** Toggle offscreen rendering */
         megamol::core::param::ParamSlot offscreenRenderingParam;
+   		/** Toggle the use of geometry shaders for glyph raycasting */
+        megamol::core::param::ParamSlot toggleGeomShaderParam;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;
 		vislib::graphics::gl::GLSLShader sphereShaderOR;
+    	vislib::graphics::gl::GLSLGeometryShader sphereShaderGeom; // (uses geometry shader)
         /** shader for the cylinders (raycasting view) */
         vislib::graphics::gl::GLSLShader cylinderShader;
 		vislib::graphics::gl::GLSLShader cylinderShaderOR;
