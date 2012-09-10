@@ -8,7 +8,7 @@
 #include <stdafx.h>
 
 #define _USE_MATH_DEFINES
-#include <SphereRendererMouse.h>
+#include "SphereRendererMouse.h"
 
 #include <math.h>
 
@@ -16,7 +16,7 @@
 #include <GL/glu.h>
 
 #include <CoreInstance.h>
-#include <MolecularDataCall.h>
+#include "MolecularDataCall.h"
 #include <param/FloatParam.h>
 #include <param/StringParam.h>
 #include <param/BoolParam.h>
