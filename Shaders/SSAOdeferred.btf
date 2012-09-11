@@ -130,7 +130,7 @@ void main(void) {
         // Ignore samples laying outside the viewport
         if((vSamplePosWinC.x < winSize.x)&&(vSamplePosWinC.y < winSize.y)
             &&(vSamplePosWinC.x > 0.0)&&(vSamplePosWinC.y > 0.0)) {
-	  
+      
         
             // Get scene depth of the sample
             float fSampleSceneDepthES = 

@@ -22,11 +22,11 @@ class View3DMouse : public core::view::View3D {
 
 public:
 
-	/** Ctor. */
-	View3DMouse();
+    /** Ctor. */
+    View3DMouse();
 
-	/** Dtor. */
-	~View3DMouse();
+    /** Dtor. */
+    ~View3DMouse();
 
     /**
      * Answer the name of this module.
