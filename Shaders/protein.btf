@@ -1941,7 +1941,7 @@ void main(void) {
     vec4 inPos = gl_in[0].gl_Position;
 
     radz.x = inParams[0].x;
-    radz.y = radz.x * radz.x;
+    radz.y = radz.x*radz.x;
     radz.z = inParams[0].y * 0.5;
 
     inPos.w = 1.0;
@@ -2040,19 +2040,23 @@ void main(void) {
     pos = pOP + pX;
     projPos = pos + pY + pZ;
     mins = maxs = projPos.xy / projPos.w;
+//    mins = maxs = projPos.xy;
 
     projPos = pos - pY + pZ;
     pp = projPos.xy / projPos.w;
+    //pp = projPos.xy;
     mins = min(mins, pp);
     maxs = max(maxs, pp);
 
     projPos = pos + pY - pZ;
     pp = projPos.xy / projPos.w;
+    //pp = projPos.xy;
     mins = min(mins, pp);
     maxs = max(maxs, pp);
 
     projPos = pos - pY - pZ;
     pp = projPos.xy / projPos.w;
+    //pp = projPos.xy;
     mins = min(mins, pp);
     maxs = max(maxs, pp);
 
@@ -2060,33 +2064,60 @@ void main(void) {
     pos = pOP - pX;
     projPos = pos + pY + pZ;
     pp = projPos.xy / projPos.w;
+    //pp = projPos.xy;
     mins = min(mins, pp);
     maxs = max(maxs, pp);
 
     projPos = pos - pY + pZ;
     pp = projPos.xy / projPos.w;
+    //pp = projPos.xy;
     mins = min(mins, pp);
     maxs = max(maxs, pp);
 
     projPos = pos + pY - pZ;
     pp = projPos.xy / projPos.w;
+    //pp = projPos.xy;
     mins = min(mins, pp);
     maxs = max(maxs, pp);
 
     projPos = pos - pY - pZ;
     pp = projPos.xy / projPos.w;
+    //pp = projPos.xy;
     mins = min(mins, pp);
     maxs = max(maxs, pp);
 
 
-    /*gl_Position = vec4((mins + maxs) * 0.5, 0.0, 1.0);
-    maxs = (maxs - mins) * 0.5 * winHalf;
-    gl_PointSize = max(maxs.x, maxs.y);*/
+    vec4 center = vec4((mins + maxs) * 0.5, 0.0, 1.0);
+    //maxs = (maxs - mins) * 0.5 * winHalf;
+    float point_size_cs = max((maxs*projPos.w - mins*projPos.w).x, (maxs*projPos.w - mins*projPos.w).y);
+    //maxs = vec2(max(maxs.x, maxs.y), max(maxs.x, maxs.y));
+    //mins = vec2(min(mins.x, mins.y), min(mins.x, mins.y));
     
-    gl_Position = vec4(mins.x, maxs.y, 0.0, inPos.w); EmitVertex();
-    gl_Position = vec4(mins.x, mins.y, 0.0, inPos.w); EmitVertex();
-    gl_Position = vec4(maxs.x, maxs.y, 0.0, inPos.w); EmitVertex();
-    gl_Position = vec4(maxs.x, mins.y, 0.0, inPos.w); EmitVertex();
+    //colOut1 = vec3(1.0, 0.0, 0.0);
+    gl_Position = vec4(mins.x, maxs.y, 0.0, 1.0); EmitVertex();
+//    vec4 posTest = pOP - pX + pY + pZ; 
+//    posTest.xyz /= posTest.w;
+//    gl_Position = vec4(posTest.xyz, 1.0); EmitVertex();
+//    gl_Position = modelviewproj*vec4(objPos.xyz-camRight*0.7+camUp*0.7, 1.0); EmitVertex();
+    //colOut1 = vec3(0.0, 1.0, 0.0);
+    gl_Position = vec4(mins.x, mins.y, 0.0, 1.0); EmitVertex();
+//    posTest = pOP - pX - pY + pZ; 
+//    posTest.xyz /= posTest.w;
+//    gl_Position = vec4(posTest.xyz, 1.0); EmitVertex();
+//    gl_Position = modelviewproj*vec4(objPos.xyz-camRight*0.7-camUp*0.7, 1.0); EmitVertex();
+    //colOut1 = vec3(0.0, 0.0, 1.0);
+    gl_Position = vec4(maxs.x, maxs.y, 0.0, 1.0); EmitVertex();
+//    posTest = pOP + pX + pY + pZ; 
+//    posTest.xyz /= posTest.w;
+//    gl_Position = vec4(posTest.xyz, 1.0); EmitVertex();
+//    gl_Position = modelviewproj*vec4(objPos.xyz+camRight*0.7+camUp*0.7, 1.0); EmitVertex();
+    //colOut1 = vec3(1.0, 1.0, 1.0);
+    gl_Position = vec4(maxs.x, mins.y, 0.0, 1.0); EmitVertex();
+//    posTest = pOP + pX - pY + pZ; 
+//    posTest.xyz /= posTest.w;
+//    gl_Position = vec4(posTest.xyz, 1.0); EmitVertex();
+//    gl_Position = modelviewproj*vec4(objPos.xyz+camRight*0.7-camUp*0.7, 1.0); EmitVertex();
+    
     EndPrimitive();    
 }
 -->
@@ -2157,7 +2188,7 @@ void main(void) {
     if (radicand < 0.0) { discard; }
 #endif // CLIP
 
-    float radix = sqrt(radicand);
+   float radix = sqrt(radicand);
     vec2 lambdas = vec2((-rDc - radix) / rDr, (-rDc + radix) / rDr);
 
     // calculations for cylinder caps
@@ -2249,6 +2280,7 @@ void main(void) {
         gl_FragColor.rgb += vec3(0.3, 0.3, 0.5);
     }
 #endif // RETICLE
+//    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
 -->
             </snippet>
@@ -2284,6 +2316,7 @@ in vec3 colOut1;
 in vec3 colOut2;
 
 mat4 modelviewproj = proj*modelview; // TODO Move this to the CPU?
+mat4 modelviewprojInv = inverse(modelviewproj);
 mat4 modelviewprojTrans = transpose(modelviewproj);
 
 void main(void) {
@@ -2298,7 +2331,7 @@ void main(void) {
     
 
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = modelviewprojTrans * coord;
+    coord = modelviewprojInv * coord;
     coord /= coord.w;
     coord -= objPos; // ... and move
 
@@ -2306,7 +2339,6 @@ void main(void) {
     // calc the viewing ray
     ray = rotMatT0 * coord.x + rotMatT1 * coord.y + rotMatT2 * coord.z;
     ray = normalize(ray - camPos.xyz);
-
 
     // calculate the geometry-ray-intersection
 
@@ -2320,9 +2352,9 @@ void main(void) {
 
     float radicand = (rDc * rDc) - (rDr * (dot(camPos.yz, camPos.yz) - CYL_RAD_SQ));
 
-/*#ifdef CLIP // TODO
+#ifdef CLIP
     if (radicand < 0.0) { discard; }
-#endif // CLIP*/
+#endif // CLIP
 
     float radix = sqrt(radicand);
     vec2 lambdas = vec2((-rDc - radix) / rDr, (-rDc + radix) / rDr);
@@ -2347,7 +2379,6 @@ void main(void) {
     lambdas.x = (cylPt1Valid || cylPt2Valid) ? lambdas.x : maxLambda;
 
 #ifdef CLIP
-//    if (lambdas.x >= maxLambda) { discard; } // TODO
 #else // CLIP
     if (lambdas.x >= maxLambda) { radicand = -1.0; }
 #endif // CLIP
@@ -2356,7 +2387,7 @@ void main(void) {
     lambdas.x = (cylPt1Valid) ? lambdas.x : lambdas.y;    
 
 #ifdef CLIP
-//    if ((!cylPt1Valid && !cylPt2Valid)) { discard; } // TODO
+    if ((!cylPt1Valid && !cylPt2Valid)) { discard; }
 #else // CLIP
     if ((!cylPt1Valid && !cylPt2Valid)) { radicand = -1.0; }
 #endif // CLIP
@@ -2367,13 +2398,11 @@ void main(void) {
     vec3 normal = (cylPt1Valid ? vec3(0.0, normalize(intersection.yz)) : (cylPt1Right ? vec3(1.0, 0.0, 0.0) : vec3(-1.0, 0.0, 0.0)));
 #else // RENDER_CAPS
     vec3 normal = vec3(0.0, normalize(intersection.yz));
-#endif // RENDER_CAPS*/
+#endif // RENDER_CAPS
 
 
-    // chose color for lighting // TODO
-//    vec3 color = gl_Color.rgb;
-    vec3 color = vec3(1.0, 0.0, 0.0);
-
+    // chose color for lighting
+    vec3 color;
     // set fragment color (kroneml)
     if( cylPt1.x > 0.0 )
     {
@@ -2402,8 +2431,8 @@ void main(void) {
     float depthW = dot(modelviewprojTrans[3], Ding);
 #ifndef CLIP
     if (radicand < 0.0) { 
-//        gl_FragColor = gl_SecondaryColor; // TODO
-        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+        gl_FragColor = vec4(colOut2, 1.0);
+//        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
         depth = 1.0;
         depthW = 1.0;
     }
@@ -2419,7 +2448,7 @@ void main(void) {
         gl_FragColor.rgb += vec3(0.3, 0.3, 0.5);
     }
 #endif // RETICLE
-//gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    //gl_FragColor = vec4(colOut1, 1.0);
 }
 -->
             </snippet>

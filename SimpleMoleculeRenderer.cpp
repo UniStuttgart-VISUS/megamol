@@ -894,10 +894,10 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
 
   		// Vertex attributes
   		GLint vertexPos = glGetAttribLocationARB(this->cylinderShaderGeom, "vertex");
-		this->attribLocInParams = glGetAttribLocationARB( this->cylinderShader, "params");
-		this->attribLocQuatC = glGetAttribLocationARB( this->cylinderShader, "quatC");
-		this->attribLocColor1 = glGetAttribLocationARB( this->cylinderShader, "color1");
-		this->attribLocColor2 = glGetAttribLocationARB( this->cylinderShader, "color2");
+		this->attribLocInParams = glGetAttribLocationARB(this->cylinderShaderGeom, "params");
+		this->attribLocQuatC = glGetAttribLocationARB(this->cylinderShaderGeom, "quatC");
+		this->attribLocColor1 = glGetAttribLocationARB(this->cylinderShaderGeom, "color1");
+		this->attribLocColor2 = glGetAttribLocationARB(this->cylinderShaderGeom, "color2");
 
   		// Enable arrays for attributes
   		glEnableVertexAttribArrayARB(vertexPos);
