@@ -137,7 +137,7 @@ namespace protein {
              * @param name The molecule index of the residue.
              */
             inline void SetMoleculeIndex(int moleculeIndex) { this->moleculeIndex = moleculeIndex;}
-			inline int MoleculeIndex(void) const { return moleculeIndex; }
+            inline int MoleculeIndex(void) const { return moleculeIndex; }
 
             /**
              * Set the bounding box of the residue.
@@ -540,7 +540,7 @@ namespace protein {
              *
              * @return The filter value.
              */
-			inline int ChainIndex(void) const { return this->chainIndex; }
+            inline int ChainIndex(void) const { return this->chainIndex; }
 
         private:
             /** the index of the first residue in the molecule */
@@ -1000,7 +1000,7 @@ namespace protein {
                 case 1:
                     return "GetExtend";
             }
-			return "";
+            return "";
         }
 
         /** Ctor. */
@@ -1068,13 +1068,13 @@ namespace protein {
          */
         const int* AtomHydrogenBondIndices(void) const { return atomHydrogenBondIdx; }
         void SetAtomHydrogenBondIndices(const int*indices) { atomHydrogenBondIdx = indices; }
-		float AtomHydrogenBondDistance(void) const { return atomHydrogenBondDistance; }
-		void SetAtomHydrogenBondDistance(float dist) { atomHydrogenBondDistance = dist; }
+        float AtomHydrogenBondDistance(void) const { return atomHydrogenBondDistance; }
+        void SetAtomHydrogenBondDistance(float dist) { atomHydrogenBondDistance = dist; }
         const unsigned int* AtomHydrogenBondStatistics(void) const { return atomHydrogenBondStatistics; }
         unsigned int AtomSolventResidueCount(void) const { return atomSolventResCount; }
         void SetAtomHydrogenBondStatistics(const unsigned int*statistics /*, int solventResCount*/) { atomHydrogenBondStatistics = statistics; /*atomSolventResCount=solventResCount;*/ }
-		void SetSolventResidueIndices(unsigned int count, const unsigned int *residueIndices) {this->solventResidueIdx = residueIndices; atomSolventResCount = count; }
-		const unsigned int* SolventResidueIndices(void) const { return solventResidueIdx; }
+        void SetSolventResidueIndices(unsigned int count, const unsigned int *residueIndices) {this->solventResidueIdx = residueIndices; atomSolventResCount = count; }
+        const unsigned int* SolventResidueIndices(void) const { return solventResidueIdx; }
 
         /**
          * Get the residue count.
@@ -1183,7 +1183,7 @@ namespace protein {
             const unsigned int* typeIdx, const float* pos, const AtomType* types, const int *residueIdx,
             const float* bfactor, const float* charge, const float* occupancy);
 
-		void SetAtomPositions(const float *atomPositions) { atomPos = atomPositions; }
+        void SetAtomPositions(const float *atomPositions) { atomPos = atomPositions; }
 
         /**
          * Set the residues.
@@ -1363,53 +1363,53 @@ namespace protein {
          */
         void SetFilter(const int* atomFilter);
 
-		inline MolecularDataCall& operator=(const MolecularDataCall& s) {
-			this->SetFrameID( s.FrameID() );
-			this->SetDataHash( s.DataHash() );
-			this->atomCount = s.atomCount;
-			this->atomPos = s.atomPos;
-			this->atomTypeCount = s.atomTypeCount;
-			this->atomTypeIdx = s.atomTypeIdx;
-			this->atomResidueIdx = s.atomResidueIdx;
-			this->atomHydrogenBondIdx = s.atomHydrogenBondIdx;
-			this->atomHydrogenBondDistance = s.atomHydrogenBondDistance;
-			this->atomHydrogenBondStatistics = s.atomHydrogenBondStatistics;
-			this->solventResidueIdx = s.solventResidueIdx;
-			this->atomSolventResCount = s.atomSolventResCount;
-			this->atomType = s.atomType;
-			this->atomBFactors = s.atomBFactors;
-			this->atomCharges = s.atomCharges;
-			this->atomOccupancies = s.atomOccupancies;
-			this->minBFactor = s.minBFactor;
-			this->maxBFactor = s.maxBFactor;
-			this->minCharge = s.minCharge;
-			this->maxCharge = s.maxCharge;
-			this->minOccupancy = s.minOccupancy;
-			this->maxOccupancy = s.maxOccupancy;
-			this->connectionCount = s.connectionCount;
-			this->connections = s.connections;
-			this->resCount = s.resCount;
-			this->residues = s.residues;
-			this->resTypeNameCnt = s.resTypeNameCnt;
-			this->resTypeNames = s.resTypeNames;
-			this->molCount = s.molCount;
-			this->molecules = s.molecules;
-			this->chainCount = s.chainCount;
-			this->chains = s.chains;
-			this->secStruct = s.secStruct; // TODO: besser zeiger und anzahl ?!
+        inline MolecularDataCall& operator=(const MolecularDataCall& s) {
+            this->SetFrameID( s.FrameID() );
+            this->SetDataHash( s.DataHash() );
+            this->atomCount = s.atomCount;
+            this->atomPos = s.atomPos;
+            this->atomTypeCount = s.atomTypeCount;
+            this->atomTypeIdx = s.atomTypeIdx;
+            this->atomResidueIdx = s.atomResidueIdx;
+            this->atomHydrogenBondIdx = s.atomHydrogenBondIdx;
+            this->atomHydrogenBondDistance = s.atomHydrogenBondDistance;
+            this->atomHydrogenBondStatistics = s.atomHydrogenBondStatistics;
+            this->solventResidueIdx = s.solventResidueIdx;
+            this->atomSolventResCount = s.atomSolventResCount;
+            this->atomType = s.atomType;
+            this->atomBFactors = s.atomBFactors;
+            this->atomCharges = s.atomCharges;
+            this->atomOccupancies = s.atomOccupancies;
+            this->minBFactor = s.minBFactor;
+            this->maxBFactor = s.maxBFactor;
+            this->minCharge = s.minCharge;
+            this->maxCharge = s.maxCharge;
+            this->minOccupancy = s.minOccupancy;
+            this->maxOccupancy = s.maxOccupancy;
+            this->connectionCount = s.connectionCount;
+            this->connections = s.connections;
+            this->resCount = s.resCount;
+            this->residues = s.residues;
+            this->resTypeNameCnt = s.resTypeNameCnt;
+            this->resTypeNames = s.resTypeNames;
+            this->molCount = s.molCount;
+            this->molecules = s.molecules;
+            this->chainCount = s.chainCount;
+            this->chains = s.chains;
+            this->secStruct = s.secStruct; // TODO: besser zeiger und anzahl ?!
             this->calltime = s.calltime;
-			return *this;
-		}
+            return *this;
+        }
 
-		/*
-		 */
-		inline bool IsSolvent(const Residue *res) {
-			// TODO: index tests here?
-			int idx = res->MoleculeIndex();
-			const Molecule& molecule = this->Molecules()[idx];
-			const Chain& chain = this->Chains()[molecule.ChainIndex()];
-			return chain.Type() == MolecularDataCall::Chain::SOLVENT;
-		}
+        /*
+         */
+        inline bool IsSolvent(const Residue *res) {
+            // TODO: index tests here?
+            int idx = res->MoleculeIndex();
+            const Molecule& molecule = this->Molecules()[idx];
+            const Chain& chain = this->Chains()[molecule.ChainIndex()];
+            return chain.Type() == MolecularDataCall::Chain::SOLVENT;
+        }
 
     private:
         // -------------------- variables --------------------
@@ -1422,13 +1422,13 @@ namespace protein {
         const unsigned int* atomTypeIdx;
         /** array of atom residue indices (may be undefined -> -1)*/
         const int *atomResidueIdx;
-		/** marks wether an atom has a hydrogen bond to another H-atom (-1 marks "no connection") */
-		const int *atomHydrogenBondIdx;
-		float atomHydrogenBondDistance;
-		const unsigned int *atomHydrogenBondStatistics;
+        /** marks wether an atom has a hydrogen bond to another H-atom (-1 marks "no connection") */
+        const int *atomHydrogenBondIdx;
+        float atomHydrogenBondDistance;
+        const unsigned int *atomHydrogenBondStatistics;
 
-		const unsigned int *solventResidueIdx;
-		unsigned int atomSolventResCount;
+        const unsigned int *solventResidueIdx;
+        unsigned int atomSolventResCount;
 
         /** The array of residues. */
         const Residue** residues;

@@ -178,7 +178,7 @@ namespace protein {
          */
         void RenderPointsFilter(const MolecularDataCall *mol, const float *atomPos);
 
-		/**
+        /**
          * Test the filter module.
          *
          * @param mol        Pointer to the data call.
@@ -246,20 +246,20 @@ namespace protein {
         megamol::core::param::ParamSlot specialColorParam;
         /** parameter slot for positional interpolation */
         megamol::core::param::ParamSlot interpolParam;
-		/** Toggle offscreen rendering */
+        /** Toggle offscreen rendering */
         megamol::core::param::ParamSlot offscreenRenderingParam;
-   		/** Toggle the use of geometry shaders for glyph raycasting */
+        /** Toggle the use of geometry shaders for glyph raycasting */
         megamol::core::param::ParamSlot toggleGeomShaderParam;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;
-		vislib::graphics::gl::GLSLShader sphereShaderOR;
-    	vislib::graphics::gl::GLSLGeometryShader sphereShaderGeom;
+        vislib::graphics::gl::GLSLShader sphereShaderOR;
+        vislib::graphics::gl::GLSLGeometryShader sphereShaderGeom;
         /** shader for the cylinders (raycasting view) */
         vislib::graphics::gl::GLSLShader cylinderShader;
-		vislib::graphics::gl::GLSLShader cylinderShaderOR;
-    	vislib::graphics::gl::GLSLGeometryShader cylinderShaderGeom; // (uses geometry shader)
-		/** Shader that uses filter information */
+        vislib::graphics::gl::GLSLShader cylinderShaderOR;
+        vislib::graphics::gl::GLSLGeometryShader cylinderShaderGeom; // (uses geometry shader)
+        /** Shader that uses filter information */
         vislib::graphics::gl::GLSLShader filterSphereShader;
         vislib::graphics::gl::GLSLShader filterSphereShaderOR;
         vislib::graphics::gl::GLSLShader filterCylinderShader;
