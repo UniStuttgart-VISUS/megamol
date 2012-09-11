@@ -1112,60 +1112,128 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall *mol, co
 		this->sphereShaderGeom.Disable();	
     }
 
-     // enable cylinder shader
-     if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-         this->cylinderShader.Enable();
-         // set shader variables
-         glUniform4fvARB( this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-         glUniform3fvARB( this->cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-         glUniform3fvARB( this->cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-         glUniform3fvARB( this->cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-         // get the attribute locations
-         attribLocInParams = glGetAttribLocationARB( this->cylinderShader, "inParams");
-         attribLocQuatC = glGetAttribLocationARB( this->cylinderShader, "quatC");
-         attribLocColor1 = glGetAttribLocationARB( this->cylinderShader, "color1");
-         attribLocColor2 = glGetAttribLocationARB( this->cylinderShader, "color2");
-     }
-     else {
-         this->cylinderShaderOR.Enable();
-         // set shader variables
-         glUniform4fvARB( this->cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-         glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-         glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-         glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-         glUniform2fARB( this->cylinderShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
-         // get the attribute locations
-         attribLocInParams = glGetAttribLocationARB( this->cylinderShaderOR, "inParams");
-         attribLocQuatC = glGetAttribLocationARB( this->cylinderShaderOR, "quatC");
-         attribLocColor1 = glGetAttribLocationARB( this->cylinderShaderOR, "color1");
-         attribLocColor2 = glGetAttribLocationARB( this->cylinderShaderOR, "color2");
-     }
+    // Don't use geometry shader
+    if(this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
-    // enable vertex attribute arrays for the attribute locations
-    glDisableClientState( GL_COLOR_ARRAY);
-    glEnableVertexAttribArrayARB( this->attribLocInParams);
-    glEnableVertexAttribArrayARB( this->attribLocQuatC);
-    glEnableVertexAttribArrayARB( this->attribLocColor1);
-    glEnableVertexAttribArrayARB( this->attribLocColor2);
-    // set vertex and attribute pointers and draw them
-    glVertexPointer( 4, GL_FLOAT, 0, this->vertCylinders.PeekElements());
-    glVertexAttribPointerARB( this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
-    glVertexAttribPointerARB( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
-    glVertexAttribPointerARB( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
-    glVertexAttribPointerARB( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
-    glDrawArrays( GL_POINTS, 0, mol->ConnectionCount());
-    // disable vertex attribute arrays for the attribute locations
-    glDisableVertexAttribArrayARB( this->attribLocInParams);
-    glDisableVertexAttribArrayARB( this->attribLocQuatC);
-    glDisableVertexAttribArrayARB( this->attribLocColor1);
-    glDisableVertexAttribArrayARB( this->attribLocColor2);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    // disable cylinder shader
-    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->cylinderShader.Disable();
+    	// enable cylinder shader
+    	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+    		this->cylinderShader.Enable();
+    		// set shader variables
+    		glUniform4fvARB( this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    		glUniform3fvARB( this->cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+    		glUniform3fvARB( this->cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+    		glUniform3fvARB( this->cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    		// get the attribute locations
+    		attribLocInParams = glGetAttribLocationARB( this->cylinderShader, "inParams");
+    		attribLocQuatC = glGetAttribLocationARB( this->cylinderShader, "quatC");
+    		attribLocColor1 = glGetAttribLocationARB( this->cylinderShader, "color1");
+    		attribLocColor2 = glGetAttribLocationARB( this->cylinderShader, "color2");
+    	}
+    	else {
+    		this->cylinderShaderOR.Enable();
+    		// set shader variables
+    		glUniform4fvARB( this->cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
+    		glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+    		glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+    		glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    		glUniform2fARB( this->cylinderShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
+    		// get the attribute locations
+    		attribLocInParams = glGetAttribLocationARB( this->cylinderShaderOR, "inParams");
+    		attribLocQuatC = glGetAttribLocationARB( this->cylinderShaderOR, "quatC");
+    		attribLocColor1 = glGetAttribLocationARB( this->cylinderShaderOR, "color1");
+    		attribLocColor2 = glGetAttribLocationARB( this->cylinderShaderOR, "color2");
+    	}
+
+    	// enable vertex attribute arrays for the attribute locations
+    	glDisableClientState( GL_COLOR_ARRAY);
+    	glEnableVertexAttribArrayARB( this->attribLocInParams);
+    	glEnableVertexAttribArrayARB( this->attribLocQuatC);
+    	glEnableVertexAttribArrayARB( this->attribLocColor1);
+    	glEnableVertexAttribArrayARB( this->attribLocColor2);
+    	// set vertex and attribute pointers and draw them
+    	glVertexPointer( 4, GL_FLOAT, 0, this->vertCylinders.PeekElements());
+    	glVertexAttribPointerARB( this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
+    	glVertexAttribPointerARB( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
+    	glVertexAttribPointerARB( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
+    	glVertexAttribPointerARB( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
+    	glDrawArrays( GL_POINTS, 0, mol->ConnectionCount());
+    	// disable vertex attribute arrays for the attribute locations
+    	glDisableVertexAttribArrayARB( this->attribLocInParams);
+    	glDisableVertexAttribArrayARB( this->attribLocQuatC);
+    	glDisableVertexAttribArrayARB( this->attribLocColor1);
+    	glDisableVertexAttribArrayARB( this->attribLocColor2);
+    	glDisableClientState(GL_VERTEX_ARRAY);
+
+    	// disable cylinder shader
+    	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+    		this->cylinderShader.Disable();
+    	}
+    	else {
+    		this->cylinderShaderOR.Disable();
+    	}
     }
-    else {
-        this->cylinderShaderOR.Disable();
+    else { // Use geometry shader for cylinder ray casting
+
+    	using namespace vislib::math;
+
+        // TODO: Make these class members and retrieve only once per frame
+      	// Get GL_MODELVIEW matrix
+      	GLfloat modelMatrix_column[16];
+      	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+  	    Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+      	// Get GL_PROJECTION matrix
+  	    GLfloat projMatrix_column[16];
+      	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+      	Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+      	// Get light position
+  	    GLfloat lightPos[4];
+      	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+
+    		// Enable sphere shader
+  		this->cylinderShaderGeom.Enable();
+
+  		// Set shader variables
+  		glUniform4fvARB(this->cylinderShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
+  		glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+  		glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+  		glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+  		glUniformMatrix4fvARB(this->cylinderShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+  		glUniformMatrix4fvARB(this->cylinderShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
+  		glUniform4fvARB(this->cylinderShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
+
+  		// Vertex attributes
+  		GLint vertexPos = glGetAttribLocationARB(this->cylinderShaderGeom, "vertex");
+		this->attribLocInParams = glGetAttribLocationARB(this->cylinderShaderGeom, "params");
+		this->attribLocQuatC = glGetAttribLocationARB(this->cylinderShaderGeom, "quatC");
+		this->attribLocColor1 = glGetAttribLocationARB(this->cylinderShaderGeom, "color1");
+		this->attribLocColor2 = glGetAttribLocationARB(this->cylinderShaderGeom, "color2");
+
+  		// Enable arrays for attributes
+  		glEnableVertexAttribArrayARB(vertexPos);
+    	glEnableVertexAttribArrayARB(this->attribLocInParams);
+    	glEnableVertexAttribArrayARB(this->attribLocQuatC);
+    	glEnableVertexAttribArrayARB(this->attribLocColor1);
+    	glEnableVertexAttribArrayARB(this->attribLocColor2);
+
+  		// Set attribute pointers
+  		glVertexAttribPointerARB(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertCylinders.PeekElements());
+  		glVertexAttribPointerARB(this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
+  		glVertexAttribPointerARB(this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
+  		glVertexAttribPointerARB(this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
+  		glVertexAttribPointerARB(this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
+
+  		// Draw points
+  		glDrawArrays(GL_POINTS, 0, mol->ConnectionCount());
+
+  		// Disable arrays for attributes
+  		glDisableVertexAttribArrayARB(vertexPos);
+    	glDisableVertexAttribArrayARB(this->attribLocInParams);
+    	glDisableVertexAttribArrayARB(this->attribLocQuatC);
+    	glDisableVertexAttribArrayARB(this->attribLocColor1);
+    	glDisableVertexAttribArrayARB(this->attribLocColor2);
+
+  		// Disable sphere shader
+  		this->cylinderShaderGeom.Disable();
     }
 }
 
