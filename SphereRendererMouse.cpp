@@ -39,10 +39,10 @@ protein::SphereRendererMouse::SphereRendererMouse() : Renderer3DModuleMouse(),
         atomColHoverParam("atomColorHover", "The color for atoms which are hovered." ),
         atomColSelParam("atomColorSel", "The color for currently selected atoms." ),
         useGeomShaderParam("useGeomShader", "Use geometry shader for glyph ray casting." ),
+        showSelRectParam("showSelRect", "Show rectangle when selecting." ),
         atomCnt(0),
         mouseX(-1), mouseY(-1),
         startSelect(-1, -1), endSelect(-1, -1),
-        startRect(-1, -1), endRect(-1, -1),
         drag(false), resetSelection(true) {
 
     // Data caller slot
@@ -69,6 +69,11 @@ protein::SphereRendererMouse::SphereRendererMouse() : Renderer3DModuleMouse(),
     this->useGeomShader = false;
     this->useGeomShaderParam << new core::param::BoolParam(this->useGeomShader);
     this->MakeSlotAvailable(&this->useGeomShaderParam);
+
+    // Param slot for selection rectangle
+    this->showSelRect = true;
+    this->showSelRectParam << new core::param::BoolParam(this->showSelRect);
+    this->MakeSlotAvailable(&this->showSelRectParam);
 }
 
 
@@ -115,7 +120,7 @@ bool protein::SphereRendererMouse::create(void) {
         if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
-    } catch(vislib::Exception e) {
+    } catch(vislib::Exception &e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create sphere shader: %s\n", e.GetMsgA());
         return false;
     }
@@ -133,11 +138,15 @@ bool protein::SphereRendererMouse::create(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for sphere shader");
         return false;
     }
-    this->sphereShaderGeo.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    //this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT , GL_POINTS);
-    //this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    //this->sphereShaderGeo.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200); // TODO ?
-    this->sphereShaderGeo.Link();
+    try {
+        this->sphereShaderGeo.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(),
+            geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+        this->sphereShaderGeo.Link();
+    }
+    catch(vislib::Exception &e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create sphere geometry shader: %s\n", e.GetMsgA());
+        return false;
+    }
 
     return true;
 }
@@ -197,6 +206,9 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
     // Update parameters
     if(this->useGeomShaderParam.IsDirty() ) {
         this->useGeomShader = this->useGeomShaderParam.Param<core::param::BoolParam>()->Value();
+    }
+    if(this->showSelRectParam.IsDirty() ) {
+        this->showSelRect = this->showSelRectParam.Param<core::param::BoolParam>()->Value();
     }
 
     // cast the call to Render3D
@@ -402,7 +414,7 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 
     }
 
-    unsigned int atomSelCnt = 0;
+    //unsigned int atomSelCnt = 0;
 
     // Set color
     this->atomColor.SetCount(mol->AtomCount()*3);
@@ -500,7 +512,7 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
     glGetFloatv(GL_VIEWPORT, curVP);
 
     // Draw rectangle if draging is enabled
-    if(this->drag) {
+    if((this->drag)&&(this->showSelRect)) {
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_LIGHTING);
@@ -540,17 +552,15 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
         glEnd();
 
         glPopMatrix();
-
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
 
         glEnable(GL_CULL_FACE);
         glDisable(GL_BLEND);
     }
 
-
     return true;
-
 }
 
 
@@ -573,20 +583,17 @@ bool protein::SphereRendererMouse::MouseEvent(int x, int y, core::view::MouseFla
     //printf("POS (%i %i)\n", this->mouseX, this->mouseY); // DEBUG
 
     if ((flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) != 0) {
-        if(!this->drag) { // Start draging
-            this->startSelect.Set(-1, -1);
-            this->endSelect.Set(-1, -1);
+        if(!this->drag) { // Start dragging
+            this->endSelect.Set(this->mouseX, this->mouseY);
             this->startSelect.Set(this->mouseX, this->mouseY);
-            this->drag = true;
             this->resetSelection = true;
+            this->drag = true;
         }
-        else {
+        else { // Dragging is now enabled
             this->endSelect.Set(this->mouseX, this->mouseY);
         }
     }
     else {
-        this->startRect.Set(this->startSelect.X(), this->startSelect.Y());
-        this->endRect.Set(this->endSelect.X(), this->endSelect.Y());
         this->drag = false;
     }
     return true;

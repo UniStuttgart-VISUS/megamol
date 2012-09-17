@@ -33,60 +33,60 @@ namespace protein {
 class SphereRendererMouse : public Renderer3DModuleMouse {
 public:
 
-	/**
-	 * The class name for the factory
-	 *
-	 * @return The class name
-	 */
-	static const char *ClassName(void) {
-		return "SphereRendererMouse";
-	}
+    /**
+     * The class name for the factory
+     *
+     * @return The class name
+     */
+    static const char *ClassName(void) {
+        return "SphereRendererMouse";
+    }
 
-	/**
-	 * A human-readable description string for the module
-	 *
-	 * @return The description string
-	 */
-	static const char *Description(void) {
-		return "3D renderer to test mouse functionality";
-	}
+    /**
+     * A human-readable description string for the module
+     *
+     * @return The description string
+     */
+    static const char *Description(void) {
+        return "3D renderer to test mouse functionality";
+    }
 
-	/**
-	 * Test if the module can be instanziated
-	 *
-	 * @return 'true'
-	 */
-	static bool IsAvailable(void) {
-		return true;
-	}
+    /**
+     * Test if the module can be instanziated
+     *
+     * @return 'true'
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-	/**
-	 * Disallow usage in quickstarts
-	 *
-	 * @return false
-	 */
-	static bool SupportQuickstart(void) {
-		return false;
-	}
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
-	/**
-	 * ctor
-	 */
-	SphereRendererMouse();
+    /**
+     * ctor
+     */
+    SphereRendererMouse();
 
-	/**
-	 * dtor
-	 */
-	virtual ~SphereRendererMouse();
+    /**
+     * dtor
+     */
+    virtual ~SphereRendererMouse();
 
 protected:
 
-	/**
-	 * Initializes the module directly after instanziation
-	 *
-	 * @return 'true' on success
-	 */
-	virtual bool create(void);
+    /**
+     * Initializes the module directly after instanziation
+     *
+     * @return 'true' on success
+     */
+    virtual bool create(void);
 
     /**
      * The get capabilities callback. The module should set the members
@@ -115,20 +115,20 @@ protected:
      */
     virtual bool Render(megamol::core::Call& call);
 
-	/**
-	 * Callback for mouse events (move, press, and release)
-	 *
-	 * @param[in] x The x coordinate of the mouse in screen space
-	 * @param[in] y The y coordinate of the mouse in screen space
-	 * @param[in] flags The mouse flags
-	 * @return 'true' on success
-	 */
-	virtual bool MouseEvent(int x, int y, core::view::MouseFlags flags);
+    /**
+     * Callback for mouse events (move, press, and release)
+     *
+     * @param[in] x The x coordinate of the mouse in screen space
+     * @param[in] y The y coordinate of the mouse in screen space
+     * @param[in] flags The mouse flags
+     * @return 'true' on success
+     */
+    virtual bool MouseEvent(int x, int y, core::view::MouseFlags flags);
 
-	/**
-	 * Releases all resources of the module
-	 */
-	virtual void release(void);
+    /**
+     * Releases all resources of the module
+     */
+    virtual void release(void);
 
 private:
 
@@ -151,44 +151,42 @@ private:
     core::param::ParamSlot useGeomShaderParam;
     bool useGeomShader;
 
-	/// Camera information
-	vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    /// Parameter slot to toggle the rendering of the selection rectangle
+    core::param::ParamSlot showSelRectParam;
+    bool showSelRect;
 
-	/// Atom count
-	unsigned int atomCnt;
+    /// Camera information
+    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
 
-	/// The shader for raycasting spheres
-	vislib::graphics::gl::GLSLShader sphereShader;
+    /// Atom count
+    unsigned int atomCnt;
 
-	/// The shader for raycasting spheres (uses geometry shader instead of point sprites)
-	vislib::graphics::gl::GLSLGeometryShader sphereShaderGeo;
+    /// The shader for raycasting spheres
+    vislib::graphics::gl::GLSLShader sphereShader;
 
-	/// Array to determine which atoms are selected
-	vislib::Array<bool> atomSelect;
+    /// The shader for raycasting spheres (uses geometry shader instead of point sprites)
+    vislib::graphics::gl::GLSLGeometryShader sphereShaderGeo;
 
-	/// Array with atom colors
-	vislib::Array<float> atomColor;
+    /// Array to determine which atoms are selected
+    vislib::Array<bool> atomSelect;
 
-	/// The current mouse coordinates
-	int mouseX, mouseY;
+    /// Array with atom colors
+    vislib::Array<float> atomColor;
 
-	/// Starting point for the selecting rectangle
-	vislib::math::Vector<int, 2> startSelect;
+    /// The current mouse coordinates
+    int mouseX, mouseY;
 
-	/// End point for the selecting rectangle
-	vislib::math::Vector<int, 2> endSelect;
+    /// Starting point for the selecting rectangle
+    vislib::math::Vector<int, 2> startSelect;
 
-	/// The current rectangle starting point
-	vislib::math::Vector<int, 2> startRect;
+    /// End point for the selecting rectangle
+    vislib::math::Vector<int, 2> endSelect;
 
-	/// The current rectangle end point
-	vislib::math::Vector<int, 2> endRect;
+    /// Toggle whether mouse is in drag mode
+    bool drag;
 
-	/// Toggle whether mouse is in drag mode
-	bool drag;
-
-	/// Flag whether the selection has to be reset
-	bool resetSelection;
+    /// Flag whether the selection has to be reset
+    bool resetSelection;
 };
 
 } // end namespace protein
