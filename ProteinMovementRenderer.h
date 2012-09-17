@@ -19,6 +19,7 @@
 #include "view/Renderer3DModule.h"
 #include "view/CallRender3D.h"
 #include "vislib/GLSLShader.h"
+#include "vislib/GLSLGeometryShader.h"
 #include "vislib/SimpleFont.h"
 #include <vector>
 
@@ -214,6 +215,9 @@ namespace protein {
         megamol::core::param::ParamSlot arrowScaleLogParam;
         megamol::core::param::ParamSlot arrowColoringModeParam;
         
+        /// Toggle the use of the geometry shader for arrow raycasting
+        megamol::core::param::ParamSlot toggleGeomShaderParam;
+
         // shader for the spheres (raycasting view)
         vislib::graphics::gl::GLSLShader sphereShader;
         // shader for the cylinders (raycasting view)
@@ -221,6 +225,9 @@ namespace protein {
         // shader for the arrows
         vislib::graphics::gl::GLSLShader arrowShader;
         
+        // Geometry shader for the arrow raycasting
+        vislib::graphics::gl::GLSLGeometryShader arrowShaderGeom;
+
         // current render mode
         RenderMode currentRenderMode;
         // current coloring mode

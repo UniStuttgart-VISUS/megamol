@@ -38,8 +38,7 @@ void protein::View3DMouse::SetCursor2DButtonState(unsigned int btn, bool down) {
     //if(!this->toggleSelect) {
         View3D::SetCursor2DButtonState(btn, down); // Keep camera movement functional
     //}
-    	//else {
-
+    //else {
         switch (btn) {
         case 0 : // left
             megamol::core::view::MouseFlagsSetFlag(this->mouseFlags,
@@ -65,7 +64,6 @@ void protein::View3DMouse::SetCursor2DPosition(float x, float y) {
         core::view::MouseFlagsResetAllChanged(this->mouseFlags);
     }
     else {
-
         CallMouseInput *cm = this->mouseSlot.CallAs<CallMouseInput>();
         if (cm) {
             cm->SetMouseInfo(static_cast<int>(x), static_cast<int>(y), this->mouseFlags);

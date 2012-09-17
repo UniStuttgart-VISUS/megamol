@@ -44,22 +44,22 @@ using namespace megamol::protein;
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
  */
 SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModuleDS (),
-    molDataCallerSlot( "getData", "Connects the molecule rendering with molecule data storage"),
-    colorTableFileParam( "color::colorTableFilename", "The filename of the color table."),
-    coloringModeParam0( "color::coloringMode0", "The first coloring mode."),
-    coloringModeParam1( "color::coloringMode1", "The second coloring mode."),
-    cmWeightParam( "color::colorWeighting", "The weighting of the two coloring modes."),
-    renderModeParam( "renderMode", "The rendering mode."),
-    stickRadiusParam( "stickRadius", "The radius for stick rendering"),
-    probeRadiusParam( "probeRadius", "The probe radius for SAS rendering"),
-    minGradColorParam( "color::minGradColor", "The color for the minimum value for gradient coloring" ),
-    midGradColorParam( "color::midGradColor", "The color for the middle value for gradient coloring" ),
-    maxGradColorParam( "color::maxGradColor", "The color for the maximum value for gradient coloring" ),
-    molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"),
-    specialColorParam( "color::specialColor", "The color for the specified molecules" ),
-    interpolParam( "posInterpolation", "Enable positional interpolation between frames" ),
-    offscreenRenderingParam( "offscreenRendering", "Toggle offscreenRendering" ),
-    toggleGeomShaderParam("geomShader", "Toggle the use of geometry shaders for glyph ray casting")
+        molDataCallerSlot( "getData", "Connects the molecule rendering with molecule data storage"),
+        colorTableFileParam( "color::colorTableFilename", "The filename of the color table."),
+        coloringModeParam0( "color::coloringMode0", "The first coloring mode."),
+        coloringModeParam1( "color::coloringMode1", "The second coloring mode."),
+        cmWeightParam( "color::colorWeighting", "The weighting of the two coloring modes."),
+        renderModeParam( "renderMode", "The rendering mode."),
+        stickRadiusParam( "stickRadius", "The radius for stick rendering"),
+        probeRadiusParam( "probeRadius", "The probe radius for SAS rendering"),
+        minGradColorParam( "color::minGradColor", "The color for the minimum value for gradient coloring" ),
+        midGradColorParam( "color::midGradColor", "The color for the middle value for gradient coloring" ),
+        maxGradColorParam( "color::maxGradColor", "The color for the maximum value for gradient coloring" ),
+        molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"),
+        specialColorParam( "color::specialColor", "The color for the specified molecules" ),
+        interpolParam( "posInterpolation", "Enable positional interpolation between frames" ),
+        offscreenRenderingParam( "offscreenRendering", "Toggle offscreenRendering" ),
+        toggleGeomShaderParam("geomShader", "Toggle the use of geometry shaders for glyph ray casting")
 {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable( &this->molDataCallerSlot);
@@ -161,7 +161,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModuleDS (),
     // Toggle offscreen rendering
     this->offscreenRenderingParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable( &this->offscreenRenderingParam);
-    
+
     // Toggle geometry shader
     this->toggleGeomShaderParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable( &this->toggleGeomShaderParam);
@@ -269,22 +269,22 @@ bool SimpleMoleculeRenderer::create(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create filter sphere shader (OR): %s\n", e.GetMsgA());
         return false;
     }
-    
-    	// Load alternative sphere shader (uses geometry shader)
-	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertexGeom", vertSrc)) {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
-		return false;
-	}
-	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereGeom", geomSrc)) {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
-		return false;
-	}
-	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentGeom", fragSrc)) {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for sphere shader");
-		return false;
-	}
-	this->sphereShaderGeom.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-	this->sphereShaderGeom.Link();
+
+    // Load alternative sphere shader (uses geometry shader)
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertexGeom", vertSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereGeom", geomSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentGeom", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for sphere shader");
+        return false;
+    }
+    this->sphereShaderGeom.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+    this->sphereShaderGeom.Link();
 
     // Load cylinder shader
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
@@ -350,22 +350,22 @@ bool SimpleMoleculeRenderer::create(void) {
     }
 
 
-  	// Load alternative cylinder shader (uses geometry shader)
-	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertexGeom", vertSrc)) {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
-		return false;
-	}
-	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderGeom", geomSrc)) {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
-		return false;
-	}
-	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragmentGeom", fragSrc)) {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cylinder shader");
-		return false;
-	}
-	this->cylinderShaderGeom.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-	this->cylinderShaderGeom.Link();
-	
+    // Load alternative cylinder shader (uses geometry shader)
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertexGeom", vertSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderGeom", geomSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragmentGeom", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cylinder shader");
+        return false;
+    }
+    this->cylinderShaderGeom.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+    this->cylinderShaderGeom.Link();
+
     return true;
 }
 
@@ -378,8 +378,8 @@ bool SimpleMoleculeRenderer::GetCapabilities(Call& call) {
     if (cr3d == NULL) return false;
 
     cr3d->SetCapabilities(view::AbstractCallRender3D::CAP_RENDER
-        | view::AbstractCallRender3D::CAP_LIGHTING
-        | view::AbstractCallRender3D::CAP_ANIMATION );
+            | view::AbstractCallRender3D::CAP_LIGHTING
+            | view::AbstractCallRender3D::CAP_ANIMATION );
 
     return true;
 }
@@ -448,7 +448,7 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     memcpy( pos0, mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
     // set next frame ID and get positions of the second frame
     if( ( ( static_cast<int>( callTime) + 1) < int( mol->FrameCount()) ) &&
-        this->interpolParam.Param<param::BoolParam>()->Value() )
+            this->interpolParam.Param<param::BoolParam>()->Value() )
         mol->SetFrameID(static_cast<int>( callTime) + 1);
     else
         mol->SetFrameID(static_cast<int>( callTime));
@@ -463,8 +463,8 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     float *posInter = new float[mol->AtomCount() * 3];
     float inter = callTime - static_cast<float>(static_cast<int>( callTime));
     float threshold = vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Width(),
-        vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
-        mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) * 0.75f;
+            vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
+                    mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) * 0.75f;
 #pragma omp parallel for
     for( cnt = 0; cnt < int( mol->AtomCount()); ++cnt ) {
         if( std::sqrt( std::pow( pos0[3*cnt+0] - pos1[3*cnt+0], 2) +
@@ -502,15 +502,15 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
 
         // Mix two coloring modes
         Color::MakeColorTable( mol,
-          this->currentColoringMode0,
-          this->currentColoringMode1,
-          cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-          1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-          this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-          this->minGradColorParam.Param<param::StringParam>()->Value(),
-          this->midGradColorParam.Param<param::StringParam>()->Value(),
-          this->maxGradColorParam.Param<param::StringParam>()->Value(),
-          true);
+                this->currentColoringMode0,
+                this->currentColoringMode1,
+                cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
+                1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+                this->atomColorTable, this->colorLookupTable, this->rainbowColors,
+                this->minGradColorParam.Param<param::StringParam>()->Value(),
+                this->midGradColorParam.Param<param::StringParam>()->Value(),
+                this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                true);
 
         // Use one coloring mode
         /*Color::MakeColorTable( mol,
@@ -640,7 +640,7 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
         this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
         this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
         this->vertSpheres[4*cnt+3] =
-            this->stickRadiusParam.Param<param::FloatParam>()->Value();
+                this->stickRadiusParam.Param<param::FloatParam>()->Value();
     }
 
     unsigned int idx0, idx1;
@@ -703,15 +703,15 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
 
     // get viewpoint parameters for raycasting
     float viewportStuff[4] = {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()};
+            cameraInfo->TileRect().Left(),
+            cameraInfo->TileRect().Bottom(),
+            cameraInfo->TileRect().Width(),
+            cameraInfo->TileRect().Height()};
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
-   
+
     // Don't use geometry shader 
     if(this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
@@ -741,7 +741,7 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
         glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
         glDrawArrays( GL_POINTS, 0, mol->AtomCount());
 
-    
+
         // disable sphere shader
         if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
             this->sphereShader.Disable();
@@ -751,180 +751,180 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
         }
     }
     else { // Draw spheres using geometry shader support
-    
+
         using namespace vislib::math;
-    
+
         // TODO: Make these class members and retrieve only once per frame
-    	// Get GL_MODELVIEW matrix
-    	GLfloat modelMatrix_column[16];
-    	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
-	    Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
-    	// Get GL_PROJECTION matrix
-	    GLfloat projMatrix_column[16];
-    	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    	Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-    	// Get light position
-	    GLfloat lightPos[4];
-    	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-    
-  		// Enable sphere shader
-		this->sphereShaderGeom.Enable();
+        // Get GL_MODELVIEW matrix
+        GLfloat modelMatrix_column[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+        // Get GL_PROJECTION matrix
+        GLfloat projMatrix_column[16];
+        glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+        // Get light position
+        GLfloat lightPos[4];
+        glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
-		// Set shader variables
-		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
-		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
-		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
-		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
+        // Enable sphere shader
+        this->sphereShaderGeom.Enable();
 
-		// Vertex attributes
-		GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
-		GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
+        // Set shader variables
+        glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
+        glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+        glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+        glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+        glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+        glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
+        glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
 
-		// Enable arrays for attributes
-		glEnableVertexAttribArray(vertexPos);
-		glEnableVertexAttribArray(vertexColor);
+        // Vertex attributes
+        GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
+        GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
 
-		// Set attribute pointers
-		glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
-		glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
+        // Enable arrays for attributes
+        glEnableVertexAttribArray(vertexPos);
+        glEnableVertexAttribArray(vertexColor);
 
-		// Draw points
-		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
-		//glDrawArrays(GL_POINTS, 0, 1);
+        // Set attribute pointers
+        glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
+        glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
 
-		// Disable arrays for attributes
-		glDisableVertexAttribArray(vertexPos);
-		glDisableVertexAttribArray(vertexColor);
+        // Draw points
+        glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+        //glDrawArrays(GL_POINTS, 0, 1);
 
-		// Disable sphere shader
-		this->sphereShaderGeom.Disable();	
+        // Disable arrays for attributes
+        glDisableVertexAttribArray(vertexPos);
+        glDisableVertexAttribArray(vertexColor);
+
+        // Disable sphere shader
+        this->sphereShaderGeom.Disable();
     }
-    
+
     // Don't use geometry shader 
     if(this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
-    	// enable cylinder shader
-    	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-    		this->cylinderShader.Enable();
-    		// set shader variables
-    		glUniform4fvARB( this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    		glUniform3fvARB( this->cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    		glUniform3fvARB( this->cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    		glUniform3fvARB( this->cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    		// get the attribute locations
-    		attribLocInParams = glGetAttribLocationARB( this->cylinderShader, "inParams");
-    		attribLocQuatC = glGetAttribLocationARB( this->cylinderShader, "quatC");
-    		attribLocColor1 = glGetAttribLocationARB( this->cylinderShader, "color1");
-    		attribLocColor2 = glGetAttribLocationARB( this->cylinderShader, "color2");
-    	}
-    	else {
-    		this->cylinderShaderOR.Enable();
-    		// set shader variables
-    		glUniform4fvARB( this->cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-    		glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    		glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    		glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    		glUniform2fARB( this->cylinderShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
-    		// get the attribute locations
-    		attribLocInParams = glGetAttribLocationARB( this->cylinderShaderOR, "inParams");
-    		attribLocQuatC = glGetAttribLocationARB( this->cylinderShaderOR, "quatC");
-    		attribLocColor1 = glGetAttribLocationARB( this->cylinderShaderOR, "color1");
-    		attribLocColor2 = glGetAttribLocationARB( this->cylinderShaderOR, "color2");
-    	}
+        // enable cylinder shader
+        if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+            this->cylinderShader.Enable();
+            // set shader variables
+            glUniform4fvARB( this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fvARB( this->cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+            glUniform3fvARB( this->cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+            glUniform3fvARB( this->cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+            // get the attribute locations
+            attribLocInParams = glGetAttribLocationARB( this->cylinderShader, "inParams");
+            attribLocQuatC = glGetAttribLocationARB( this->cylinderShader, "quatC");
+            attribLocColor1 = glGetAttribLocationARB( this->cylinderShader, "color1");
+            attribLocColor2 = glGetAttribLocationARB( this->cylinderShader, "color2");
+        }
+        else {
+            this->cylinderShaderOR.Enable();
+            // set shader variables
+            glUniform4fvARB( this->cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+            glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+            glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+            glUniform2fARB( this->cylinderShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
+            // get the attribute locations
+            attribLocInParams = glGetAttribLocationARB( this->cylinderShaderOR, "inParams");
+            attribLocQuatC = glGetAttribLocationARB( this->cylinderShaderOR, "quatC");
+            attribLocColor1 = glGetAttribLocationARB( this->cylinderShaderOR, "color1");
+            attribLocColor2 = glGetAttribLocationARB( this->cylinderShaderOR, "color2");
+        }
 
-    	// enable vertex attribute arrays for the attribute locations
-    	glDisableClientState( GL_COLOR_ARRAY);
-    	glEnableVertexAttribArrayARB( this->attribLocInParams);
-    	glEnableVertexAttribArrayARB( this->attribLocQuatC);
-    	glEnableVertexAttribArrayARB( this->attribLocColor1);
-    	glEnableVertexAttribArrayARB( this->attribLocColor2);
-    	// set vertex and attribute pointers and draw them
-    	glVertexPointer( 4, GL_FLOAT, 0, this->vertCylinders.PeekElements());
-    	glVertexAttribPointerARB( this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
-    	glVertexAttribPointerARB( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
-    	glVertexAttribPointerARB( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
-    	glVertexAttribPointerARB( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
-    	glDrawArrays( GL_POINTS, 0, mol->ConnectionCount());
-    	// disable vertex attribute arrays for the attribute locations
-    	glDisableVertexAttribArrayARB( this->attribLocInParams);
-    	glDisableVertexAttribArrayARB( this->attribLocQuatC);
-    	glDisableVertexAttribArrayARB( this->attribLocColor1);
-    	glDisableVertexAttribArrayARB( this->attribLocColor2);
-    	glDisableClientState(GL_VERTEX_ARRAY);
+        // enable vertex attribute arrays for the attribute locations
+        glDisableClientState( GL_COLOR_ARRAY);
+        glEnableVertexAttribArrayARB( this->attribLocInParams);
+        glEnableVertexAttribArrayARB( this->attribLocQuatC);
+        glEnableVertexAttribArrayARB( this->attribLocColor1);
+        glEnableVertexAttribArrayARB( this->attribLocColor2);
+        // set vertex and attribute pointers and draw them
+        glVertexPointer( 4, GL_FLOAT, 0, this->vertCylinders.PeekElements());
+        glVertexAttribPointerARB( this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
+        glVertexAttribPointerARB( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
+        glVertexAttribPointerARB( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
+        glVertexAttribPointerARB( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
+        glDrawArrays( GL_POINTS, 0, mol->ConnectionCount());
+        // disable vertex attribute arrays for the attribute locations
+        glDisableVertexAttribArrayARB( this->attribLocInParams);
+        glDisableVertexAttribArrayARB( this->attribLocQuatC);
+        glDisableVertexAttribArrayARB( this->attribLocColor1);
+        glDisableVertexAttribArrayARB( this->attribLocColor2);
+        glDisableClientState(GL_VERTEX_ARRAY);
 
-    	// disable cylinder shader
-    	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-    		this->cylinderShader.Disable();
-    	}
-    	else {
-    		this->cylinderShaderOR.Disable();
-    	}
+        // disable cylinder shader
+        if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+            this->cylinderShader.Disable();
+        }
+        else {
+            this->cylinderShaderOR.Disable();
+        }
     }
     else { // Use geometry shader for cylinder ray casting
 
-    	using namespace vislib::math;
+        using namespace vislib::math;
 
         // TODO: Make these class members and retrieve only once per frame
-      	// Get GL_MODELVIEW matrix
-      	GLfloat modelMatrix_column[16];
-      	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
-  	    Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
-      	// Get GL_PROJECTION matrix
-  	    GLfloat projMatrix_column[16];
-      	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-      	Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-      	// Get light position
-  	    GLfloat lightPos[4];
-      	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+        // Get GL_MODELVIEW matrix
+        GLfloat modelMatrix_column[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+        // Get GL_PROJECTION matrix
+        GLfloat projMatrix_column[16];
+        glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+        // Get light position
+        GLfloat lightPos[4];
+        glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
-    		// Enable sphere shader
-  		this->cylinderShaderGeom.Enable();
+        // Enable sphere shader
+        this->cylinderShaderGeom.Enable();
 
-  		// Set shader variables
-  		glUniform4fvARB(this->cylinderShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
-  		glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-  		glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-  		glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-  		glUniformMatrix4fvARB(this->cylinderShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
-  		glUniformMatrix4fvARB(this->cylinderShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
-  		glUniform4fvARB(this->cylinderShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
+        // Set shader variables
+        glUniform4fvARB(this->cylinderShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
+        glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+        glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+        glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+        glUniformMatrix4fvARB(this->cylinderShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+        glUniformMatrix4fvARB(this->cylinderShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
+        glUniform4fvARB(this->cylinderShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
 
-  		// Vertex attributes
-  		GLint vertexPos = glGetAttribLocationARB(this->cylinderShaderGeom, "vertex");
-		this->attribLocInParams = glGetAttribLocationARB(this->cylinderShaderGeom, "params");
-		this->attribLocQuatC = glGetAttribLocationARB(this->cylinderShaderGeom, "quatC");
-		this->attribLocColor1 = glGetAttribLocationARB(this->cylinderShaderGeom, "color1");
-		this->attribLocColor2 = glGetAttribLocationARB(this->cylinderShaderGeom, "color2");
+        // Vertex attributes
+        GLint vertexPos = glGetAttribLocationARB(this->cylinderShaderGeom, "vertex");
+        this->attribLocInParams = glGetAttribLocationARB(this->cylinderShaderGeom, "params");
+        this->attribLocQuatC = glGetAttribLocationARB(this->cylinderShaderGeom, "quatC");
+        this->attribLocColor1 = glGetAttribLocationARB(this->cylinderShaderGeom, "color1");
+        this->attribLocColor2 = glGetAttribLocationARB(this->cylinderShaderGeom, "color2");
 
-  		// Enable arrays for attributes
-  		glEnableVertexAttribArrayARB(vertexPos);
-    	glEnableVertexAttribArrayARB(this->attribLocInParams);
-    	glEnableVertexAttribArrayARB(this->attribLocQuatC);
-    	glEnableVertexAttribArrayARB(this->attribLocColor1);
-    	glEnableVertexAttribArrayARB(this->attribLocColor2);
+        // Enable arrays for attributes
+        glEnableVertexAttribArrayARB(vertexPos);
+        glEnableVertexAttribArrayARB(this->attribLocInParams);
+        glEnableVertexAttribArrayARB(this->attribLocQuatC);
+        glEnableVertexAttribArrayARB(this->attribLocColor1);
+        glEnableVertexAttribArrayARB(this->attribLocColor2);
 
-  		// Set attribute pointers
-  		glVertexAttribPointerARB(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertCylinders.PeekElements());
-  		glVertexAttribPointerARB(this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
-  		glVertexAttribPointerARB(this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
-  		glVertexAttribPointerARB(this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
-  		glVertexAttribPointerARB(this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
+        // Set attribute pointers
+        glVertexAttribPointerARB(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertCylinders.PeekElements());
+        glVertexAttribPointerARB(this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
+        glVertexAttribPointerARB(this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
+        glVertexAttribPointerARB(this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
+        glVertexAttribPointerARB(this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
 
-  		// Draw points
-  		glDrawArrays(GL_POINTS, 0, mol->ConnectionCount());
+        // Draw points
+        glDrawArrays(GL_POINTS, 0, mol->ConnectionCount());
 
-  		// Disable arrays for attributes
-  		glDisableVertexAttribArrayARB(vertexPos);
-    	glDisableVertexAttribArrayARB(this->attribLocInParams);
-    	glDisableVertexAttribArrayARB(this->attribLocQuatC);
-    	glDisableVertexAttribArrayARB(this->attribLocColor1);
-    	glDisableVertexAttribArrayARB(this->attribLocColor2);
+        // Disable arrays for attributes
+        glDisableVertexAttribArrayARB(vertexPos);
+        glDisableVertexAttribArrayARB(this->attribLocInParams);
+        glDisableVertexAttribArrayARB(this->attribLocQuatC);
+        glDisableVertexAttribArrayARB(this->attribLocColor1);
+        glDisableVertexAttribArrayARB(this->attribLocColor2);
 
-  		// Disable sphere shader
-  		this->cylinderShaderGeom.Disable();
+        // Disable sphere shader
+        this->cylinderShaderGeom.Disable();
     }
 }
 
@@ -949,7 +949,7 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall *mol, co
         this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
         this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
         this->vertSpheres[4*cnt+3] =
-            this->stickRadiusParam.Param<param::FloatParam>()->Value();
+                this->stickRadiusParam.Param<param::FloatParam>()->Value();
     }
 
     unsigned int idx0, idx1;
@@ -1012,10 +1012,10 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall *mol, co
 
     // get viewpoint parameters for raycasting
     float viewportStuff[4] = {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()};
+            cameraInfo->TileRect().Left(),
+            cameraInfo->TileRect().Bottom(),
+            cameraInfo->TileRect().Width(),
+            cameraInfo->TileRect().Height()};
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -1050,7 +1050,7 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall *mol, co
         glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
         glDrawArrays( GL_POINTS, 0, mol->AtomCount());
 
-    
+
         // disable sphere shader
         if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
             this->sphereShader.Disable();
@@ -1060,180 +1060,180 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall *mol, co
         }
     }
     else { // Draw spheres using geometry shader support
-    
+
         using namespace vislib::math;
-    
+
         // TODO: Make these class members and retrieve only once per frame
-    	// Get GL_MODELVIEW matrix
-    	GLfloat modelMatrix_column[16];
-    	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
-	    Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
-    	// Get GL_PROJECTION matrix
-	    GLfloat projMatrix_column[16];
-    	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    	Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-    	// Get light position
-	    GLfloat lightPos[4];
-    	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-    
-  		// Enable sphere shader
-		this->sphereShaderGeom.Enable();
+        // Get GL_MODELVIEW matrix
+        GLfloat modelMatrix_column[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+        // Get GL_PROJECTION matrix
+        GLfloat projMatrix_column[16];
+        glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+        // Get light position
+        GLfloat lightPos[4];
+        glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
-		// Set shader variables
-		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
-		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
-		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
-		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
+        // Enable sphere shader
+        this->sphereShaderGeom.Enable();
 
-		// Vertex attributes
-		GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
-		GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
+        // Set shader variables
+        glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
+        glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+        glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+        glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+        glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+        glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
+        glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
 
-		// Enable arrays for attributes
-		glEnableVertexAttribArray(vertexPos);
-		glEnableVertexAttribArray(vertexColor);
+        // Vertex attributes
+        GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
+        GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
 
-		// Set attribute pointers
-		glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
-		glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
+        // Enable arrays for attributes
+        glEnableVertexAttribArray(vertexPos);
+        glEnableVertexAttribArray(vertexColor);
 
-		// Draw points
-		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
-		//glDrawArrays(GL_POINTS, 0, 1);
+        // Set attribute pointers
+        glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
+        glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
 
-		// Disable arrays for attributes
-		glDisableVertexAttribArray(vertexPos);
-		glDisableVertexAttribArray(vertexColor);
+        // Draw points
+        glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+        //glDrawArrays(GL_POINTS, 0, 1);
 
-		// Disable sphere shader
-		this->sphereShaderGeom.Disable();	
+        // Disable arrays for attributes
+        glDisableVertexAttribArray(vertexPos);
+        glDisableVertexAttribArray(vertexColor);
+
+        // Disable sphere shader
+        this->sphereShaderGeom.Disable();
     }
 
     // Don't use geometry shader
     if(this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
-    	// enable cylinder shader
-    	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-    		this->cylinderShader.Enable();
-    		// set shader variables
-    		glUniform4fvARB( this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    		glUniform3fvARB( this->cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    		glUniform3fvARB( this->cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    		glUniform3fvARB( this->cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    		// get the attribute locations
-    		attribLocInParams = glGetAttribLocationARB( this->cylinderShader, "inParams");
-    		attribLocQuatC = glGetAttribLocationARB( this->cylinderShader, "quatC");
-    		attribLocColor1 = glGetAttribLocationARB( this->cylinderShader, "color1");
-    		attribLocColor2 = glGetAttribLocationARB( this->cylinderShader, "color2");
-    	}
-    	else {
-    		this->cylinderShaderOR.Enable();
-    		// set shader variables
-    		glUniform4fvARB( this->cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-    		glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    		glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    		glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    		glUniform2fARB( this->cylinderShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
-    		// get the attribute locations
-    		attribLocInParams = glGetAttribLocationARB( this->cylinderShaderOR, "inParams");
-    		attribLocQuatC = glGetAttribLocationARB( this->cylinderShaderOR, "quatC");
-    		attribLocColor1 = glGetAttribLocationARB( this->cylinderShaderOR, "color1");
-    		attribLocColor2 = glGetAttribLocationARB( this->cylinderShaderOR, "color2");
-    	}
+        // enable cylinder shader
+        if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+            this->cylinderShader.Enable();
+            // set shader variables
+            glUniform4fvARB( this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fvARB( this->cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+            glUniform3fvARB( this->cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+            glUniform3fvARB( this->cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+            // get the attribute locations
+            attribLocInParams = glGetAttribLocationARB( this->cylinderShader, "inParams");
+            attribLocQuatC = glGetAttribLocationARB( this->cylinderShader, "quatC");
+            attribLocColor1 = glGetAttribLocationARB( this->cylinderShader, "color1");
+            attribLocColor2 = glGetAttribLocationARB( this->cylinderShader, "color2");
+        }
+        else {
+            this->cylinderShaderOR.Enable();
+            // set shader variables
+            glUniform4fvARB( this->cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+            glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+            glUniform3fvARB( this->cylinderShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+            glUniform2fARB( this->cylinderShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
+            // get the attribute locations
+            attribLocInParams = glGetAttribLocationARB( this->cylinderShaderOR, "inParams");
+            attribLocQuatC = glGetAttribLocationARB( this->cylinderShaderOR, "quatC");
+            attribLocColor1 = glGetAttribLocationARB( this->cylinderShaderOR, "color1");
+            attribLocColor2 = glGetAttribLocationARB( this->cylinderShaderOR, "color2");
+        }
 
-    	// enable vertex attribute arrays for the attribute locations
-    	glDisableClientState( GL_COLOR_ARRAY);
-    	glEnableVertexAttribArrayARB( this->attribLocInParams);
-    	glEnableVertexAttribArrayARB( this->attribLocQuatC);
-    	glEnableVertexAttribArrayARB( this->attribLocColor1);
-    	glEnableVertexAttribArrayARB( this->attribLocColor2);
-    	// set vertex and attribute pointers and draw them
-    	glVertexPointer( 4, GL_FLOAT, 0, this->vertCylinders.PeekElements());
-    	glVertexAttribPointerARB( this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
-    	glVertexAttribPointerARB( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
-    	glVertexAttribPointerARB( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
-    	glVertexAttribPointerARB( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
-    	glDrawArrays( GL_POINTS, 0, mol->ConnectionCount());
-    	// disable vertex attribute arrays for the attribute locations
-    	glDisableVertexAttribArrayARB( this->attribLocInParams);
-    	glDisableVertexAttribArrayARB( this->attribLocQuatC);
-    	glDisableVertexAttribArrayARB( this->attribLocColor1);
-    	glDisableVertexAttribArrayARB( this->attribLocColor2);
-    	glDisableClientState(GL_VERTEX_ARRAY);
+        // enable vertex attribute arrays for the attribute locations
+        glDisableClientState( GL_COLOR_ARRAY);
+        glEnableVertexAttribArrayARB( this->attribLocInParams);
+        glEnableVertexAttribArrayARB( this->attribLocQuatC);
+        glEnableVertexAttribArrayARB( this->attribLocColor1);
+        glEnableVertexAttribArrayARB( this->attribLocColor2);
+        // set vertex and attribute pointers and draw them
+        glVertexPointer( 4, GL_FLOAT, 0, this->vertCylinders.PeekElements());
+        glVertexAttribPointerARB( this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
+        glVertexAttribPointerARB( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
+        glVertexAttribPointerARB( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
+        glVertexAttribPointerARB( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
+        glDrawArrays( GL_POINTS, 0, mol->ConnectionCount());
+        // disable vertex attribute arrays for the attribute locations
+        glDisableVertexAttribArrayARB( this->attribLocInParams);
+        glDisableVertexAttribArrayARB( this->attribLocQuatC);
+        glDisableVertexAttribArrayARB( this->attribLocColor1);
+        glDisableVertexAttribArrayARB( this->attribLocColor2);
+        glDisableClientState(GL_VERTEX_ARRAY);
 
-    	// disable cylinder shader
-    	if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-    		this->cylinderShader.Disable();
-    	}
-    	else {
-    		this->cylinderShaderOR.Disable();
-    	}
+        // disable cylinder shader
+        if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+            this->cylinderShader.Disable();
+        }
+        else {
+            this->cylinderShaderOR.Disable();
+        }
     }
     else { // Use geometry shader for cylinder ray casting
 
-    	using namespace vislib::math;
+        using namespace vislib::math;
 
         // TODO: Make these class members and retrieve only once per frame
-      	// Get GL_MODELVIEW matrix
-      	GLfloat modelMatrix_column[16];
-      	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
-  	    Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
-      	// Get GL_PROJECTION matrix
-  	    GLfloat projMatrix_column[16];
-      	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-      	Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-      	// Get light position
-  	    GLfloat lightPos[4];
-      	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+        // Get GL_MODELVIEW matrix
+        GLfloat modelMatrix_column[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+        // Get GL_PROJECTION matrix
+        GLfloat projMatrix_column[16];
+        glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+        // Get light position
+        GLfloat lightPos[4];
+        glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
-    		// Enable sphere shader
-  		this->cylinderShaderGeom.Enable();
+        // Enable sphere shader
+        this->cylinderShaderGeom.Enable();
 
-  		// Set shader variables
-  		glUniform4fvARB(this->cylinderShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
-  		glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-  		glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-  		glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-  		glUniformMatrix4fvARB(this->cylinderShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
-  		glUniformMatrix4fvARB(this->cylinderShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
-  		glUniform4fvARB(this->cylinderShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
+        // Set shader variables
+        glUniform4fvARB(this->cylinderShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
+        glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+        glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+        glUniform3fvARB(this->cylinderShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+        glUniformMatrix4fvARB(this->cylinderShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+        glUniformMatrix4fvARB(this->cylinderShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
+        glUniform4fvARB(this->cylinderShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
 
-  		// Vertex attributes
-  		GLint vertexPos = glGetAttribLocationARB(this->cylinderShaderGeom, "vertex");
-		this->attribLocInParams = glGetAttribLocationARB(this->cylinderShaderGeom, "params");
-		this->attribLocQuatC = glGetAttribLocationARB(this->cylinderShaderGeom, "quatC");
-		this->attribLocColor1 = glGetAttribLocationARB(this->cylinderShaderGeom, "color1");
-		this->attribLocColor2 = glGetAttribLocationARB(this->cylinderShaderGeom, "color2");
+        // Vertex attributes
+        GLint vertexPos = glGetAttribLocationARB(this->cylinderShaderGeom, "vertex");
+        this->attribLocInParams = glGetAttribLocationARB(this->cylinderShaderGeom, "params");
+        this->attribLocQuatC = glGetAttribLocationARB(this->cylinderShaderGeom, "quatC");
+        this->attribLocColor1 = glGetAttribLocationARB(this->cylinderShaderGeom, "color1");
+        this->attribLocColor2 = glGetAttribLocationARB(this->cylinderShaderGeom, "color2");
 
-  		// Enable arrays for attributes
-  		glEnableVertexAttribArrayARB(vertexPos);
-    	glEnableVertexAttribArrayARB(this->attribLocInParams);
-    	glEnableVertexAttribArrayARB(this->attribLocQuatC);
-    	glEnableVertexAttribArrayARB(this->attribLocColor1);
-    	glEnableVertexAttribArrayARB(this->attribLocColor2);
+        // Enable arrays for attributes
+        glEnableVertexAttribArrayARB(vertexPos);
+        glEnableVertexAttribArrayARB(this->attribLocInParams);
+        glEnableVertexAttribArrayARB(this->attribLocQuatC);
+        glEnableVertexAttribArrayARB(this->attribLocColor1);
+        glEnableVertexAttribArrayARB(this->attribLocColor2);
 
-  		// Set attribute pointers
-  		glVertexAttribPointerARB(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertCylinders.PeekElements());
-  		glVertexAttribPointerARB(this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
-  		glVertexAttribPointerARB(this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
-  		glVertexAttribPointerARB(this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
-  		glVertexAttribPointerARB(this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
+        // Set attribute pointers
+        glVertexAttribPointerARB(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertCylinders.PeekElements());
+        glVertexAttribPointerARB(this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
+        glVertexAttribPointerARB(this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
+        glVertexAttribPointerARB(this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
+        glVertexAttribPointerARB(this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
 
-  		// Draw points
-  		glDrawArrays(GL_POINTS, 0, mol->ConnectionCount());
+        // Draw points
+        glDrawArrays(GL_POINTS, 0, mol->ConnectionCount());
 
-  		// Disable arrays for attributes
-  		glDisableVertexAttribArrayARB(vertexPos);
-    	glDisableVertexAttribArrayARB(this->attribLocInParams);
-    	glDisableVertexAttribArrayARB(this->attribLocQuatC);
-    	glDisableVertexAttribArrayARB(this->attribLocColor1);
-    	glDisableVertexAttribArrayARB(this->attribLocColor2);
+        // Disable arrays for attributes
+        glDisableVertexAttribArrayARB(vertexPos);
+        glDisableVertexAttribArrayARB(this->attribLocInParams);
+        glDisableVertexAttribArrayARB(this->attribLocQuatC);
+        glDisableVertexAttribArrayARB(this->attribLocColor1);
+        glDisableVertexAttribArrayARB(this->attribLocColor2);
 
-  		// Disable sphere shader
-  		this->cylinderShaderGeom.Disable();
+        // Disable sphere shader
+        this->cylinderShaderGeom.Disable();
     }
 }
 
@@ -1254,17 +1254,17 @@ void SimpleMoleculeRenderer::RenderSpacefilling( const MolecularDataCall *mol, c
         this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
         this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
         this->vertSpheres[4*cnt+3] =
-            mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius();
+                mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius();
     }
 
     // ---------- actual rendering ----------
 
     // get viewpoint parameters for raycasting
     float viewportStuff[4] = {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()};
+            cameraInfo->TileRect().Left(),
+            cameraInfo->TileRect().Bottom(),
+            cameraInfo->TileRect().Width(),
+            cameraInfo->TileRect().Height()};
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -1299,7 +1299,7 @@ void SimpleMoleculeRenderer::RenderSpacefilling( const MolecularDataCall *mol, c
         glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
         glDrawArrays( GL_POINTS, 0, mol->AtomCount());
 
-    
+
         // disable sphere shader
         if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
             this->sphereShader.Disable();
@@ -1309,56 +1309,56 @@ void SimpleMoleculeRenderer::RenderSpacefilling( const MolecularDataCall *mol, c
         }
     }
     else { // Draw spheres using geometry shader support
-    
+
         using namespace vislib::math;
-    
+
         // TODO: Make these class members and retrieve only once per frame
-    	// Get GL_MODELVIEW matrix
-    	GLfloat modelMatrix_column[16];
-    	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
-	    Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
-    	// Get GL_PROJECTION matrix
-	    GLfloat projMatrix_column[16];
-    	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    	Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-    	// Get light position
-	    GLfloat lightPos[4];
-    	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-    
-  		// Enable sphere shader
-		this->sphereShaderGeom.Enable();
+        // Get GL_MODELVIEW matrix
+        GLfloat modelMatrix_column[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+        // Get GL_PROJECTION matrix
+        GLfloat projMatrix_column[16];
+        glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+        // Get light position
+        GLfloat lightPos[4];
+        glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
-		// Set shader variables
-		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
-		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
-		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
-		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
+        // Enable sphere shader
+        this->sphereShaderGeom.Enable();
 
-		// Vertex attributes
-		GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
-		GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
+        // Set shader variables
+        glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
+        glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+        glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+        glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+        glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+        glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
+        glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
 
-		// Enable arrays for attributes
-		glEnableVertexAttribArray(vertexPos);
-		glEnableVertexAttribArray(vertexColor);
+        // Vertex attributes
+        GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
+        GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
 
-		// Set attribute pointers
-		glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
-		glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
+        // Enable arrays for attributes
+        glEnableVertexAttribArray(vertexPos);
+        glEnableVertexAttribArray(vertexColor);
 
-		// Draw points
-		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
-		//glDrawArrays(GL_POINTS, 0, 1);
+        // Set attribute pointers
+        glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
+        glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
 
-		// Disable arrays for attributes
-		glDisableVertexAttribArray(vertexPos);
-		glDisableVertexAttribArray(vertexColor);
+        // Draw points
+        glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+        //glDrawArrays(GL_POINTS, 0, 1);
 
-		// Disable sphere shader
-		this->sphereShaderGeom.Disable();	
+        // Disable arrays for attributes
+        glDisableVertexAttribArray(vertexPos);
+        glDisableVertexAttribArray(vertexColor);
+
+        // Disable sphere shader
+        this->sphereShaderGeom.Disable();
     }
 }
 
@@ -1379,8 +1379,8 @@ void SimpleMoleculeRenderer::RenderSAS( const MolecularDataCall *mol, const floa
         this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
         this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
         this->vertSpheres[4*cnt+3] =
-            mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius() +
-            this->probeRadiusParam.Param<param::FloatParam>()->Value();
+                mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius() +
+                this->probeRadiusParam.Param<param::FloatParam>()->Value();
 
     }
 
@@ -1388,10 +1388,10 @@ void SimpleMoleculeRenderer::RenderSAS( const MolecularDataCall *mol, const floa
 
     // get viewpoint parameters for raycasting
     float viewportStuff[4] = {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()};
+            cameraInfo->TileRect().Left(),
+            cameraInfo->TileRect().Bottom(),
+            cameraInfo->TileRect().Width(),
+            cameraInfo->TileRect().Height()};
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -1426,7 +1426,7 @@ void SimpleMoleculeRenderer::RenderSAS( const MolecularDataCall *mol, const floa
         glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
         glDrawArrays( GL_POINTS, 0, mol->AtomCount());
 
-    
+
         // disable sphere shader
         if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
             this->sphereShader.Disable();
@@ -1436,56 +1436,56 @@ void SimpleMoleculeRenderer::RenderSAS( const MolecularDataCall *mol, const floa
         }
     }
     else { // Draw spheres using geometry shader support
-    
+
         using namespace vislib::math;
-    
+
         // TODO: Make these class members and retrieve only once per frame
-    	// Get GL_MODELVIEW matrix
-    	GLfloat modelMatrix_column[16];
-    	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
-	    Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
-    	// Get GL_PROJECTION matrix
-	    GLfloat projMatrix_column[16];
-    	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    	Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-    	// Get light position
-	    GLfloat lightPos[4];
-    	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-    
-  		// Enable sphere shader
-		this->sphereShaderGeom.Enable();
+        // Get GL_MODELVIEW matrix
+        GLfloat modelMatrix_column[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+        // Get GL_PROJECTION matrix
+        GLfloat projMatrix_column[16];
+        glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+        // Get light position
+        GLfloat lightPos[4];
+        glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
-		// Set shader variables
-		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
-		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-		glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
-		glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
-		glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
+        // Enable sphere shader
+        this->sphereShaderGeom.Enable();
 
-		// Vertex attributes
-		GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
-		GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
+        // Set shader variables
+        glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
+        glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+        glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+        glUniform3fvARB(this->sphereShaderGeom.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+        glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+        glUniformMatrix4fvARB(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
+        glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
 
-		// Enable arrays for attributes
-		glEnableVertexAttribArray(vertexPos);
-		glEnableVertexAttribArray(vertexColor);
+        // Vertex attributes
+        GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
+        GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
 
-		// Set attribute pointers
-		glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
-		glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
+        // Enable arrays for attributes
+        glEnableVertexAttribArray(vertexPos);
+        glEnableVertexAttribArray(vertexColor);
 
-		// Draw points
-		glDrawArrays(GL_POINTS, 0, mol->AtomCount());
-		//glDrawArrays(GL_POINTS, 0, 1);
+        // Set attribute pointers
+        glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
+        glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
 
-		// Disable arrays for attributes
-		glDisableVertexAttribArray(vertexPos);
-		glDisableVertexAttribArray(vertexColor);
+        // Draw points
+        glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+        //glDrawArrays(GL_POINTS, 0, 1);
 
-		// Disable sphere shader
-		this->sphereShaderGeom.Disable();	
+        // Disable arrays for attributes
+        glDisableVertexAttribArray(vertexPos);
+        glDisableVertexAttribArray(vertexColor);
+
+        // Disable sphere shader
+        this->sphereShaderGeom.Disable();
     }
 }
 
@@ -1496,7 +1496,7 @@ void SimpleMoleculeRenderer::RenderSAS( const MolecularDataCall *mol, const floa
  * Helper function to test the filter module.
  */
 void SimpleMoleculeRenderer::RenderPointsFilter(const MolecularDataCall *mol,
-    const float *atomPos) {
+        const float *atomPos) {
 
     vislib::Array<unsigned int> idx;
     unsigned int i, visAtmCnt = 0;
@@ -1530,7 +1530,7 @@ void SimpleMoleculeRenderer::RenderPointsFilter(const MolecularDataCall *mol,
  * Helper function to test the filter module.
  */
 void SimpleMoleculeRenderer::RenderLinesFilter(const MolecularDataCall *mol,
-    const float *atomPos) {
+        const float *atomPos) {
 
     vislib::Array<unsigned int> visAtmIdx;
     vislib::Array<unsigned int> visConIdx;
@@ -1542,7 +1542,7 @@ void SimpleMoleculeRenderer::RenderLinesFilter(const MolecularDataCall *mol,
     visAtmIdx.SetCapacityIncrement(2000);
     visConIdx.SetCapacityIncrement(2000);
 
-   // Loop through all molecules
+    // Loop through all molecules
     for(m = 0; m < mol->MoleculeCount(); m++) {
 
         // If the molecule is visible
@@ -1550,13 +1550,13 @@ void SimpleMoleculeRenderer::RenderLinesFilter(const MolecularDataCall *mol,
 
             // Get indices of all atoms in this molecule
             firstAtmIdx =
-                mol->Residues()[mol->Molecules()[m].FirstResidueIndex()]->FirstAtomIndex();
+                    mol->Residues()[mol->Molecules()[m].FirstResidueIndex()]->FirstAtomIndex();
 
             lastAtmIdx =
-                mol->Residues()[ mol->Molecules()[m].FirstResidueIndex() +
-                    mol->Molecules()[m].ResidueCount() - 1]->FirstAtomIndex()
-                + mol->Residues()[mol->Molecules()[m].FirstResidueIndex() +
-                    mol->Molecules()[m].ResidueCount() - 1]->AtomCount() - 1;
+                    mol->Residues()[ mol->Molecules()[m].FirstResidueIndex() +
+                                     mol->Molecules()[m].ResidueCount() - 1]->FirstAtomIndex()
+                                     + mol->Residues()[mol->Molecules()[m].FirstResidueIndex() +
+                                                       mol->Molecules()[m].ResidueCount() - 1]->AtomCount() - 1;
 
             for(at = firstAtmIdx; at <= lastAtmIdx; at++)  {
                 visAtmIdx.Add(at);
@@ -1568,11 +1568,11 @@ void SimpleMoleculeRenderer::RenderLinesFilter(const MolecularDataCall *mol,
             if(mol->Molecules()[m].ConnectionCount() > 0) {
 
                 firstConIdx =
-                    mol->Molecules()[m].FirstConnectionIndex();
+                        mol->Molecules()[m].FirstConnectionIndex();
 
                 lastConIdx =
-                    mol->Molecules()[m].FirstConnectionIndex()
-                    + (mol->Molecules()[m].ConnectionCount() - 1)*2;
+                        mol->Molecules()[m].FirstConnectionIndex()
+                        + (mol->Molecules()[m].ConnectionCount() - 1)*2;
 
                 for(c = firstConIdx; c <= lastConIdx; c += 2) {
 
@@ -1633,7 +1633,7 @@ void SimpleMoleculeRenderer::RenderStickFilter( const MolecularDataCall *mol, co
         this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
         this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
         this->vertSpheres[4*cnt+3] =
-            this->stickRadiusParam.Param<param::FloatParam>()->Value();
+                this->stickRadiusParam.Param<param::FloatParam>()->Value();
     }
 
     unsigned int idx0, idx1;
@@ -1676,7 +1676,7 @@ void SimpleMoleculeRenderer::RenderStickFilter( const MolecularDataCall *mol, co
 
         // thomasbm: hotfix for jumping molecules near bounding box
         if(this->inParaCylinders[2*cnt+1] > mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius()
-            + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius() ) {
+                + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius() ) {
             this->inParaCylinders[2*cnt+1] = 0;
         }
 
@@ -1727,16 +1727,16 @@ void SimpleMoleculeRenderer::RenderStickFilter( const MolecularDataCall *mol, co
             }
         }
     }
-    */
+     */
 
     // ---------- actual rendering ----------
 
     // get viewpoint parameters for raycasting
     float viewportStuff[4] = {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()};
+            cameraInfo->TileRect().Left(),
+            cameraInfo->TileRect().Bottom(),
+            cameraInfo->TileRect().Width(),
+            cameraInfo->TileRect().Height()};
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -1853,7 +1853,7 @@ void SimpleMoleculeRenderer::RenderStickFilter( const MolecularDataCall *mol, co
         this->filterCylinderShaderOR.Disable();
     }
 
-   /* GLenum errCode;
+    /* GLenum errCode;
     const GLubyte *errString;
 
     if ((errCode = glGetError()) != GL_NO_ERROR) {
@@ -1881,17 +1881,17 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter( const MolecularDataCall *
         this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
         this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
         this->vertSpheres[4*cnt+3] =
-            mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius();
+                mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius();
     }
 
     // ---------- actual rendering ----------
 
     // get viewpoint parameters for raycasting
     float viewportStuff[4] = {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()};
+            cameraInfo->TileRect().Left(),
+            cameraInfo->TileRect().Bottom(),
+            cameraInfo->TileRect().Width(),
+            cameraInfo->TileRect().Height()};
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -1948,8 +1948,8 @@ void SimpleMoleculeRenderer::UpdateParameters( const MolecularDataCall *mol) {
     // color table param
     if( this->colorTableFileParam.IsDirty() ) {
         Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::StringParam>()->Value(),
-            this->colorLookupTable);
+                this->colorTableFileParam.Param<param::StringParam>()->Value(),
+                this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
     }
     // Recompute color table
@@ -1958,22 +1958,22 @@ void SimpleMoleculeRenderer::UpdateParameters( const MolecularDataCall *mol) {
             ||(this->cmWeightParam.IsDirty())) {
 
         this->currentColoringMode0 = static_cast<Color::ColoringMode>(int(
-            this->coloringModeParam0.Param<param::EnumParam>()->Value()));
+                this->coloringModeParam0.Param<param::EnumParam>()->Value()));
 
         this->currentColoringMode1 = static_cast<Color::ColoringMode>(int(
-            this->coloringModeParam1.Param<param::EnumParam>()->Value()));
+                this->coloringModeParam1.Param<param::EnumParam>()->Value()));
 
         // Mix two coloring modes
         Color::MakeColorTable( mol,
-          this->currentColoringMode0,
-          this->currentColoringMode1,
-          cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-          1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-          this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-          this->minGradColorParam.Param<param::StringParam>()->Value(),
-          this->midGradColorParam.Param<param::StringParam>()->Value(),
-          this->maxGradColorParam.Param<param::StringParam>()->Value(),
-          true);
+                this->currentColoringMode0,
+                this->currentColoringMode1,
+                cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
+                1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+                this->atomColorTable, this->colorLookupTable, this->rainbowColors,
+                this->minGradColorParam.Param<param::StringParam>()->Value(),
+                this->midGradColorParam.Param<param::StringParam>()->Value(),
+                this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                true);
 
         // Use one coloring mode
         /*Color::MakeColorTable( mol,
@@ -1991,7 +1991,7 @@ void SimpleMoleculeRenderer::UpdateParameters( const MolecularDataCall *mol) {
     // rendering mode param
     if( this->renderModeParam.IsDirty() ) {
         this->currentRenderMode = static_cast<RenderMode>( int(
-            this->renderModeParam.Param<param::EnumParam>()->Value() ) );
+                this->renderModeParam.Param<param::EnumParam>()->Value() ) );
     }
     // get molecule lust
     if( this->molIdxListParam.IsDirty() ) {

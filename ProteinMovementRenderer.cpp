@@ -25,6 +25,8 @@
 #include "vislib/Trace.h"
 #include "vislib/ShaderSource.h"
 #include "vislib/AbstractOpenGLShader.h"
+#include "vislib/Array.h"
+#include "vislib/Matrix.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <glh/glh_genext.h>
@@ -49,6 +51,7 @@ protein::ProteinMovementRenderer::ProteinMovementRenderer ( void ) : Renderer3DM
         arrowScaleLogParam( "arrowScaleLog", "Scale factor for logarithmic component" ),
         arrowBaseLengthParam( "arrowBaseLength", "Base length of all arrows" ),
         arrowColoringModeParam( "arrowColoringMode", "Coloring Mode for movement arrows"),
+        toggleGeomShaderParam("useGeomShader", "..."),
         atomCount( 0 )
 {
     this->protDataCallerSlot.SetCompatibleCall<CallProteinMovementDataDescription>();
@@ -62,7 +65,7 @@ protein::ProteinMovementRenderer::ProteinMovementRenderer ( void ) : Renderer3DM
     //this->SetColoringMode(VALUE);
     //this->SetColoringMode(CHAIN_ID);
     //this->SetColoringMode(RAINBOW);
-	param::EnumParam *cm = new param::EnumParam ( int ( this->currentColoringMode ) );
+    param::EnumParam *cm = new param::EnumParam ( int ( this->currentColoringMode ) );
 
     cm->SetTypePair ( Color::ELEMENT, "Element" );
     cm->SetTypePair ( Color::AMINOACID, "AminoAcid" );
@@ -117,7 +120,7 @@ protein::ProteinMovementRenderer::ProteinMovementRenderer ( void ) : Renderer3DM
     // --- set the render mode ---
 
     this->arrowColorMode = UNIFORM_COLOR;
-	param::EnumParam *acm = new param::EnumParam ( int ( this->currentRenderMode ) );
+    param::EnumParam *acm = new param::EnumParam ( int ( this->currentRenderMode ) );
     acm->SetTypePair ( PROTEIN_COLOR, "ProteinColor" );
     acm->SetTypePair ( UNIFORM_COLOR, "UniformColor" );
     acm->SetTypePair ( DISTANCE, "Distance" );
@@ -147,12 +150,16 @@ protein::ProteinMovementRenderer::ProteinMovementRenderer ( void ) : Renderer3DM
     Color::MakeRainbowColorTable( 100, this->rainbowColors);
 
     // set minimum, maximum and middle value colors
-	colMax.Set( 255,   0,   0);
-	colMid.Set( 255, 255, 255);
-	colMin.Set(   0,   0, 255);
+    colMax.Set( 255,   0,   0);
+    colMid.Set( 255, 255, 255);
+    colMin.Set(   0,   0, 255);
 
     // draw dots for atoms when using LINES mode
     this->drawDotsWithLine = true;
+
+    // Toggle the use of the geometry shader
+    this->toggleGeomShaderParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->toggleGeomShaderParam);
 
 }
 
@@ -200,6 +207,7 @@ bool protein::ProteinMovementRenderer::create ( void )
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
+    ShaderSource geomSrc;
 
     // Load sphere shader
     if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::sphereVertex", vertSrc ) )
@@ -273,6 +281,22 @@ bool protein::ProteinMovementRenderer::create ( void )
         return false;
     }
 
+    // Load alternative arrow shader (uses geometry shader)
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::arrowVertexGeom", vertSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for arrow shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::arrowGeom", geomSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::arrowFragmentGeom", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for arrow shader");
+        return false;
+    }
+    this->arrowShaderGeom.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+    this->arrowShaderGeom.Link();
+
     return true;
 }
 
@@ -311,17 +335,17 @@ bool protein::ProteinMovementRenderer::GetExtents( Call& call) {
     yoff = -bbc.Y();
     zoff = -bbc.Z();
     scale = 2.0f / vislib::math::Max(vislib::math::Max( protein->BoundingBox().Width(),
-        protein->BoundingBox().Height()), protein->BoundingBox().Depth());
+            protein->BoundingBox().Height()), protein->BoundingBox().Depth());
 
     BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
     bbox.SetObjectSpaceBBox(protein->BoundingBox());
     bbox.SetWorldSpaceBBox(
-        (protein->BoundingBox().Left() + xoff) * scale,
-        (protein->BoundingBox().Bottom() + yoff) * scale,
-        (protein->BoundingBox().Back() + zoff) * scale,
-        (protein->BoundingBox().Right() + xoff) * scale,
-        (protein->BoundingBox().Top() + yoff) * scale,
-        (protein->BoundingBox().Front() + zoff) * scale);
+            (protein->BoundingBox().Left() + xoff) * scale,
+            (protein->BoundingBox().Bottom() + yoff) * scale,
+            (protein->BoundingBox().Back() + zoff) * scale,
+            (protein->BoundingBox().Right() + xoff) * scale,
+            (protein->BoundingBox().Top() + yoff) * scale,
+            (protein->BoundingBox().Front() + zoff) * scale);
     bbox.SetObjectSpaceClipBox( bbox.ObjectSpaceBBox());
     bbox.SetWorldSpaceClipBox( bbox.WorldSpaceBBox());
 
@@ -350,7 +374,7 @@ bool protein::ProteinMovementRenderer::Render ( megamol::core::Call& call )
     }
 
     // get camera information
-	this->cameraInfo = dynamic_cast<view::CallRender3D*> ( &call )->GetCameraParameters();
+    this->cameraInfo = dynamic_cast<view::CallRender3D*> ( &call )->GetCameraParameters();
 
     // parameter refresh
     if ( this->renderingModeParam.IsDirty() ) {
@@ -396,14 +420,14 @@ bool protein::ProteinMovementRenderer::Render ( megamol::core::Call& call )
 
     // make the atom color table if necessary
     Color::MakeColorTable ( protein,
-        this->currentColoringMode,
-        this->protAtomColorTable,
-        this->aminoAcidColorTable,
-        this->rainbowColors,
-        this->colMax,
-        this->colMid,
-        this->colMin,
-        this->col);
+            this->currentColoringMode,
+            this->protAtomColorTable,
+            this->aminoAcidColorTable,
+            this->rainbowColors,
+            this->colMax,
+            this->colMid,
+            this->colMin,
+            this->col);
 
     glEnable ( GL_DEPTH_TEST );
     glEnable ( GL_LIGHTING );
@@ -420,11 +444,11 @@ bool protein::ProteinMovementRenderer::Render ( megamol::core::Call& call )
 
     scale = 2.0f / vislib::math::Max ( vislib::math::Max ( protein->BoundingBox().Width(),
             protein->BoundingBox().Height() ), protein->BoundingBox().Depth() );
-    
+
     glScalef ( scale, scale, scale );
     glTranslatef ( xoff, yoff, zoff );
 
-    if ( currentRenderMode == LINES ) {
+    /*if ( currentRenderMode == LINES ) {
         // -----------------------------------------------------------------------
         // --- LINES                                                           ---
         // --- render the sceleton of the protein using GL_POINTS and GL_LINES ---
@@ -446,7 +470,7 @@ bool protein::ProteinMovementRenderer::Render ( megamol::core::Call& call )
         // --- render the protein using shaders / raycasting (glsl) ---
         // ------------------------------------------------------------
         this->RenderBallAndStick ( protein );
-    }
+    }*/
 
     // ----------------------------------------
     // --- render arrows to depict movement ---
@@ -456,73 +480,200 @@ bool protein::ProteinMovementRenderer::Render ( megamol::core::Call& call )
     float lenDiffVec;
 
     float viewportStuff[4] = {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()
+            cameraInfo->TileRect().Left(),
+            cameraInfo->TileRect().Bottom(),
+            cameraInfo->TileRect().Width(),
+            cameraInfo->TileRect().Height()
     };
     if ( viewportStuff[2] < 1.0f ) viewportStuff[2] = 1.0f;
     if ( viewportStuff[3] < 1.0f ) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    glDisable ( GL_BLEND );
+    glDisable (GL_BLEND);
 
-    // enable arrow shader
-    this->arrowShader.Enable();
-    // set shader variables
-    glUniform4fvARB ( this->arrowShader.ParameterLocation ( "viewAttr" ), 1, viewportStuff );
-    glUniform3fvARB ( this->arrowShader.ParameterLocation ( "camIn" ), 1, cameraInfo->Front().PeekComponents() );
-    glUniform3fvARB ( this->arrowShader.ParameterLocation ( "camRight" ), 1, cameraInfo->Right().PeekComponents() );
-    glUniform3fvARB ( this->arrowShader.ParameterLocation ( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
-    glUniform1fARB ( this->arrowShader.ParameterLocation ( "radScale" ), this->scaleRadiusArrow );
-    
-    glBegin( GL_POINTS);
-    for( cnt = 0; cnt < protein->ProteinAtomCount(); ++cnt ) {
-        tmpVec1.Set( protein->ProteinAtomPositions()[cnt*3+0],
-            protein->ProteinAtomPositions()[cnt*3+1],
-            protein->ProteinAtomPositions()[cnt*3+2]);
-        tmpVec2.Set( protein->ProteinAtomMovementPositions()[cnt*3+0],
-            protein->ProteinAtomMovementPositions()[cnt*3+1],
-            protein->ProteinAtomMovementPositions()[cnt*3+2]);
-        diffVec = tmpVec2 - tmpVec1;
-        lenDiffVec = diffVec.Normalise();
-        if( lenDiffVec < this->minLenArrow )
-            continue;
-        //tmpVec2 = tmpVec1 + diffVec * ( 1.0f + log10f( 1.0f + lenDiffVec)) * this->scaleArrow;
-        tmpVec2 = tmpVec1 + diffVec * ( this->baseLengthArrow +
-            1.0f / this->scaleLogArrow * log( lenDiffVec * this->scaleLogArrow + 1.0f ))
-            * this->scaleArrow;
-        if( this->arrowColorMode == UNIFORM_COLOR ) {
-            glColor3f( 0.0f, 1.0f, 1.0f);
-        } else if( this->arrowColorMode == PROTEIN_COLOR ) {
-            glColor3fv( this->GetProteinAtomColor( cnt));
-        } else {
-			float maxVal( protein->GetMaxMovementDistance() );
-			float mid( maxVal/2.0f );
+    // Do not use gemetry shader
+    if(this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
-            if( fabs( maxVal) < vislib::math::FLOAT_EPSILON ) {
-				col = colMid;
+        // enable arrow shader
+        this->arrowShader.Enable();
+        // set shader variables
+        glUniform4fvARB ( this->arrowShader.ParameterLocation ( "viewAttr" ), 1, viewportStuff );
+        glUniform3fvARB ( this->arrowShader.ParameterLocation ( "camIn" ), 1, cameraInfo->Front().PeekComponents() );
+        glUniform3fvARB ( this->arrowShader.ParameterLocation ( "camRight" ), 1, cameraInfo->Right().PeekComponents() );
+        glUniform3fvARB ( this->arrowShader.ParameterLocation ( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
+        glUniform1fARB ( this->arrowShader.ParameterLocation ( "radScale" ), this->scaleRadiusArrow );
+
+        glBegin( GL_POINTS);
+        for( cnt = 0; cnt < protein->ProteinAtomCount(); ++cnt ) {
+            tmpVec1.Set( protein->ProteinAtomPositions()[cnt*3+0],
+                    protein->ProteinAtomPositions()[cnt*3+1],
+                    protein->ProteinAtomPositions()[cnt*3+2]);
+            tmpVec2.Set( protein->ProteinAtomMovementPositions()[cnt*3+0],
+                    protein->ProteinAtomMovementPositions()[cnt*3+1],
+                    protein->ProteinAtomMovementPositions()[cnt*3+2]);
+            diffVec = tmpVec2 - tmpVec1;
+            lenDiffVec = diffVec.Normalise();
+            if( lenDiffVec < this->minLenArrow )
+                continue;
+            //tmpVec2 = tmpVec1 + diffVec * ( 1.0f + log10f( 1.0f + lenDiffVec)) * this->scaleArrow;
+            tmpVec2 = tmpVec1 + diffVec * ( this->baseLengthArrow +
+                    1.0f / this->scaleLogArrow * log( lenDiffVec * this->scaleLogArrow + 1.0f ))
+                    * this->scaleArrow;
+            if( this->arrowColorMode == UNIFORM_COLOR ) {
+                glColor3f( 0.0f, 1.0f, 1.0f);
+            } else if( this->arrowColorMode == PROTEIN_COLOR ) {
+                glColor3fv( this->GetProteinAtomColor( cnt));
             } else {
-			    if( lenDiffVec < mid )
-				    col = colMin + ( ( colMid - colMin ) * ( lenDiffVec / mid) );
-			    else if( lenDiffVec > mid )
-			        col = colMid + ( ( colMax - colMid ) * ( ( lenDiffVec - mid ) / ( maxVal - mid) ) );
-			    else
+                float maxVal( protein->GetMaxMovementDistance() );
+                float mid( maxVal/2.0f );
+
+                if( fabs( maxVal) < vislib::math::FLOAT_EPSILON ) {
                     col = colMid;
+                } else {
+                    if( lenDiffVec < mid )
+                        col = colMin + ( ( colMid - colMin ) * ( lenDiffVec / mid) );
+                    else if( lenDiffVec > mid )
+                        col = colMid + ( ( colMax - colMid ) * ( ( lenDiffVec - mid ) / ( maxVal - mid) ) );
+                    else
+                        col = colMid;
+                }
+                glColor3ub( col.GetX(), col.GetY(), col.GetZ());
             }
-            glColor3ub( col.GetX(), col.GetY(), col.GetZ());
+            glTexCoord3fv( tmpVec1.PeekComponents() );
+            glVertex4f( tmpVec2.GetX(), tmpVec2.GetY(), tmpVec2.GetZ(), this->radiusArrow);
         }
-        glTexCoord3fv( tmpVec1.PeekComponents() );
-        glVertex4f( tmpVec2.GetX(), tmpVec2.GetY(), tmpVec2.GetZ(), this->radiusArrow);
+        glEnd();
+        this->arrowShader.Disable();
+        glDisable ( GL_VERTEX_PROGRAM_POINT_SIZE );
     }
-    glEnd();
-    this->arrowShader.Disable();
+    else { // Use geometry shader
 
-    glDisable ( GL_VERTEX_PROGRAM_POINT_SIZE );
+        using namespace vislib;
+        using namespace vislib::math;
 
+        // TODO: Make these class members and retrieve only once per frame
+        // Get GL_MODELVIEW matrix
+        GLfloat modelMatrix_column[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
+        // Get GL_PROJECTION matrix
+        GLfloat projMatrix_column[16];
+        glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+        Matrix<GLfloat, 4, COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+        // Get light position
+        GLfloat lightPos[4];
+        glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+
+        // Get arrow attribute arrays
+        Array<float> pos0Arr, pos1Arr, colorArr;
+        pos0Arr.SetCount(protein->ProteinAtomCount()*4);
+        pos1Arr.SetCount(protein->ProteinAtomCount()*3);
+        colorArr.SetCount(protein->ProteinAtomCount()*3);
+        for(cnt = 0; cnt < protein->ProteinAtomCount(); ++cnt ) {
+
+            // Get first arrow position
+            tmpVec1.Set(protein->ProteinAtomPositions()[cnt*3+0],
+                    protein->ProteinAtomPositions()[cnt*3+1],
+                    protein->ProteinAtomPositions()[cnt*3+2]);
+
+            // Get second arrow position
+            tmpVec2.Set(protein->ProteinAtomMovementPositions()[cnt*3+0],
+                    protein->ProteinAtomMovementPositions()[cnt*3+1],
+                    protein->ProteinAtomMovementPositions()[cnt*3+2]);
+            diffVec = tmpVec2 - tmpVec1;
+            lenDiffVec = diffVec.Normalise();
+            if(lenDiffVec < this->minLenArrow )
+                continue;
+            //tmpVec2 = tmpVec1 + diffVec * ( 1.0f + log10f( 1.0f + lenDiffVec)) * this->scaleArrow;
+            tmpVec2 = tmpVec1 + diffVec * ( this->baseLengthArrow +
+                    1.0f / this->scaleLogArrow * log( lenDiffVec * this->scaleLogArrow + 1.0f ))
+                    * this->scaleArrow;
+
+            // Get color
+            if( this->arrowColorMode == UNIFORM_COLOR ) {
+                colorArr[3*cnt+0] = 0.0f;
+                colorArr[3*cnt+1] = 1.0f;
+                colorArr[3*cnt+2] = 1.0f;
+            } else if( this->arrowColorMode == PROTEIN_COLOR ) {
+                colorArr[3*cnt+0] = this->protAtomColorTable[cnt*3+0]/255.0f;
+                colorArr[3*cnt+1] = this->protAtomColorTable[cnt*3+1]/255.0f;
+                colorArr[3*cnt+2] = this->protAtomColorTable[cnt*3+2]/255.0f;
+                printf("col %f %f %f\n", colorArr[3*cnt+0], colorArr[3*cnt+1],
+                        colorArr[3*cnt+2]);
+            } else {
+                float maxVal( protein->GetMaxMovementDistance() );
+                float mid( maxVal/2.0f );
+                if( fabs( maxVal) < vislib::math::FLOAT_EPSILON ) {
+                    col = colMid;
+                } else {
+                    if( lenDiffVec < mid )
+                        col = colMin + ( ( colMid - colMin ) * ( lenDiffVec / mid) );
+                    else if( lenDiffVec > mid )
+                        col = colMid + ( ( colMax - colMid ) * ( ( lenDiffVec - mid ) / ( maxVal - mid) ) );
+                    else
+                        col = colMid;
+                }
+                colorArr[3*cnt+0] = static_cast<float>(col.GetX())/255.0f;
+                colorArr[3*cnt+1] = static_cast<float>(col.GetY())/255.0f;
+                colorArr[3*cnt+2] = static_cast<float>(col.GetZ())/255.0f;
+            }
+
+            pos0Arr[cnt*4+0] = tmpVec2.GetX();
+            pos0Arr[cnt*4+1] = tmpVec2.GetY();
+            pos0Arr[cnt*4+2] = tmpVec2.GetZ();
+            pos0Arr[cnt*4+3] = this->radiusArrow;
+
+            pos1Arr[cnt*3+0] = tmpVec1.GetX();
+            pos1Arr[cnt*3+1] = tmpVec1.GetY();
+            pos1Arr[cnt*3+2] = tmpVec1.GetZ();
+        }
+
+        // Enable geometry shader
+        this->arrowShaderGeom.Enable();
+        glUniform4fvARB(this->arrowShaderGeom.ParameterLocation("viewAttr"),
+                1, viewportStuff);
+        glUniform3fvARB(this->arrowShaderGeom.ParameterLocation("camIn"),
+                1, cameraInfo->Front().PeekComponents());
+        glUniform3fvARB(this->arrowShaderGeom.ParameterLocation("camRight"),
+                1, cameraInfo->Right().PeekComponents());
+        glUniform3fvARB(this->arrowShaderGeom.ParameterLocation("camUp" ),
+                1, cameraInfo->Up().PeekComponents());
+        glUniform1fARB(this->arrowShaderGeom.ParameterLocation("radScale"),
+                this->scaleRadiusArrow);
+        glUniformMatrix4fvARB(this->arrowShaderGeom.ParameterLocation("modelview"),
+                1, false, modelMatrix_column);
+        glUniformMatrix4fvARB(this->arrowShaderGeom.ParameterLocation("proj"),
+                1, false, projMatrix_column);
+        glUniform4fvARB(this->arrowShaderGeom.ParameterLocation("lightPos"),
+                1, lightPos);
+
+        // Get attribute locations
+        GLint attribPos0 = glGetAttribLocationARB(this->arrowShaderGeom, "pos0");
+        GLint attribPos1 = glGetAttribLocationARB(this->arrowShaderGeom, "pos1");
+        GLint attribColor = glGetAttribLocationARB(this->arrowShaderGeom, "color");
+
+        // Enable arrays for attributes
+        glEnableVertexAttribArrayARB(attribPos0);
+        glEnableVertexAttribArrayARB(attribPos1);
+        glEnableVertexAttribArrayARB(attribColor);
+
+        // Set attribute pointers
+        glVertexAttribPointerARB(attribPos0, 4, GL_FLOAT, GL_FALSE, 0, pos0Arr.PeekElements());
+        glVertexAttribPointerARB(attribPos1, 3, GL_FLOAT, GL_FALSE, 0, pos1Arr.PeekElements());
+        glVertexAttribPointerARB(attribColor, 3, GL_FLOAT, GL_FALSE, 0, colorArr.PeekElements());
+
+        // Draw points
+        glDrawArrays(GL_POINTS, 0, protein->ProteinAtomCount());
+
+        // Disable arrays for attributes
+        glDisableVertexAttribArrayARB(attribPos0);
+        glDisableVertexAttribArrayARB(attribPos1);
+        glDisableVertexAttribArrayARB(attribColor);
+
+        this->arrowShaderGeom.Disable();
+    }
     glPopMatrix();
-
     return true;
 }
 
@@ -591,8 +742,8 @@ void protein::ProteinMovementRenderer::RenderLines ( const CallProteinMovementDa
                 // try to make the connection between this amino acid and its predecessor
                 // --> only possible if the current amino acid is not the first in this chain
                 if ( currentAminoAcid > 0 &&
-                    chain.AminoAcid()[currentAminoAcid-1].NameIndex() != 0 &&
-                    chain.AminoAcid()[currentAminoAcid].NameIndex() != 0 ) {
+                        chain.AminoAcid()[currentAminoAcid-1].NameIndex() != 0 &&
+                        chain.AminoAcid()[currentAminoAcid].NameIndex() != 0 ) {
                     first = chain.AminoAcid() [currentAminoAcid-1].CCarbIndex();
                     first += chain.AminoAcid() [currentAminoAcid-1].FirstAtomIndex();
                     second = chain.AminoAcid() [currentAminoAcid].NIndex();
@@ -625,7 +776,7 @@ void protein::ProteinMovementRenderer::RenderLines ( const CallProteinMovementDa
  * protein::ProteinMovementRenderer::RenderStickRaycasting
  */
 void protein::ProteinMovementRenderer::RenderStickRaycasting (
-    const CallProteinMovementData *prot )
+        const CallProteinMovementData *prot )
 {
     if ( this->prepareStickRaycasting ) {
         unsigned int i1;
@@ -733,10 +884,10 @@ void protein::ProteinMovementRenderer::RenderStickRaycasting (
                 }
                 // try to make the connection between this amino acid and its predecessor
                 // --> only possible if the current amino acid is not the first in this chain
-                
+
                 if ( currentAminoAcid > 0 &&
-                    chain.AminoAcid()[currentAminoAcid-1].NameIndex() != 0 &&
-                    chain.AminoAcid()[currentAminoAcid].NameIndex() != 0 ) {
+                        chain.AminoAcid()[currentAminoAcid-1].NameIndex() != 0 &&
+                        chain.AminoAcid()[currentAminoAcid].NameIndex() != 0 ) {
                     first = chain.AminoAcid() [currentAminoAcid-1].CCarbIndex();
                     first += chain.AminoAcid() [currentAminoAcid-1].FirstAtomIndex();
                     second = chain.AminoAcid() [currentAminoAcid].NIndex();
@@ -765,7 +916,7 @@ void protein::ProteinMovementRenderer::RenderStickRaycasting (
                     // don't draw bonds that are too long
                     if ( fabs ( ( firstAtomPos-secondAtomPos ).Length() ) > 3.5f )
                         continue;
-                    
+
                     this->inParaCylStickRaycasting.Add ( radiusStick );
                     this->inParaCylStickRaycasting.Add ( fabs ( ( firstAtomPos-secondAtomPos ).Length() ) );
 
@@ -797,10 +948,10 @@ void protein::ProteinMovementRenderer::RenderStickRaycasting (
     // -- draw  --
     // -----------
     float viewportStuff[4] = {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()
+            cameraInfo->TileRect().Left(),
+            cameraInfo->TileRect().Bottom(),
+            cameraInfo->TileRect().Width(),
+            cameraInfo->TileRect().Height()
     };
     if ( viewportStuff[2] < 1.0f ) viewportStuff[2] = 1.0f;
     if ( viewportStuff[3] < 1.0f ) viewportStuff[3] = 1.0f;
@@ -866,7 +1017,7 @@ void protein::ProteinMovementRenderer::RenderStickRaycasting (
  * protein::ProteinMovementRenderer::RenderBallAndStick
  */
 void protein::ProteinMovementRenderer::RenderBallAndStick (
-    const CallProteinMovementData *prot )
+        const CallProteinMovementData *prot )
 {
     if ( this->prepareBallAndStick ) {
         unsigned int i1;
@@ -975,8 +1126,8 @@ void protein::ProteinMovementRenderer::RenderBallAndStick (
                 // try to make the connection between this amino acid and its predecessor
                 // --> only possible if the current amino acid is not the first in this chain
                 if ( currentAminoAcid > 0 &&
-                    chain.AminoAcid()[currentAminoAcid-1].NameIndex() != 0 &&
-                    chain.AminoAcid()[currentAminoAcid].NameIndex() != 0 ) {
+                        chain.AminoAcid()[currentAminoAcid-1].NameIndex() != 0 &&
+                        chain.AminoAcid()[currentAminoAcid].NameIndex() != 0 ) {
                     first = chain.AminoAcid() [currentAminoAcid-1].CCarbIndex();
                     first += chain.AminoAcid() [currentAminoAcid-1].FirstAtomIndex();
                     second = chain.AminoAcid() [currentAminoAcid].NIndex();
@@ -1036,10 +1187,10 @@ void protein::ProteinMovementRenderer::RenderBallAndStick (
     // -- draw  --
     // -----------
     float viewportStuff[4] = {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()
+            cameraInfo->TileRect().Left(),
+            cameraInfo->TileRect().Bottom(),
+            cameraInfo->TileRect().Width(),
+            cameraInfo->TileRect().Height()
     };
     if ( viewportStuff[2] < 1.0f ) viewportStuff[2] = 1.0f;
     if ( viewportStuff[3] < 1.0f ) viewportStuff[3] = 1.0f;
