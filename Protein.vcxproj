@@ -582,6 +582,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="HapticsMoleculeRenderer.cpp" />
     <ClCompile Include="MDDriverConnector.cpp" />
     <ClCompile Include="MolecularDataCall.cpp" />
+    <ClCompile Include="MoleculeBallifier.cpp" />
     <ClCompile Include="MoleculeCartoonRenderer.cpp" />
     <ClCompile Include="MoleculeCBCudaRenderer.cpp" />
     <ClCompile Include="MoleculeCudaSESRenderer.cpp" />
@@ -668,6 +669,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="HapticsMoleculeRenderer.h" />
     <ClInclude Include="MDDriverConnector.h" />
     <ClInclude Include="MolecularDataCall.h" />
+    <ClInclude Include="MoleculeBallifier.h" />
     <ClInclude Include="MoleculeCartoonRenderer.h" />
     <ClInclude Include="MoleculeCBCudaRenderer.h" />
     <ClInclude Include="MoleculeCudaSESRenderer.h" />
