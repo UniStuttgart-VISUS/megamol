@@ -314,6 +314,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="ModuleDescription.cpp" />
     <ClCompile Include="ModuleDescriptionManager.cpp" />
     <ClCompile Include="ModuleNamespace.cpp" />
+    <ClCompile Include="moldyn\AbstractSimpleParticleDataSource.cpp" />
+    <ClCompile Include="moldyn\AbstractSimpleStoringParticleDataSource.cpp" />
     <ClCompile Include="moldyn\DirPartColModulate.cpp" />
     <ClCompile Include="moldyn\DirPartFilter.cpp" />
     <ClCompile Include="moldyn\DirPartVolume.cpp" />
@@ -549,6 +551,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="ModuleDescription.h" />
     <ClInclude Include="ModuleDescriptionManager.h" />
     <ClInclude Include="ModuleNamespace.h" />
+    <ClInclude Include="moldyn\AbstractSimpleParticleDataSource.h" />
+    <ClInclude Include="moldyn\AbstractSimpleStoringParticleDataSource.h" />
     <ClInclude Include="moldyn\DirPartColModulate.h" />
     <ClInclude Include="moldyn\DirPartFilter.h" />
     <ClInclude Include="moldyn\DirPartVolume.h" />

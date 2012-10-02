@@ -702,6 +702,12 @@
     <ClCompile Include="moldyn\SphereDataUnifier.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="moldyn\AbstractSimpleParticleDataSource.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="moldyn\AbstractSimpleStoringParticleDataSource.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1272,6 +1278,12 @@
       <Filter>utility\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="moldyn\SphereDataUnifier.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\AbstractSimpleParticleDataSource.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\AbstractSimpleStoringParticleDataSource.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
