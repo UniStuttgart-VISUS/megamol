@@ -75,6 +75,8 @@
 #include "ForceDataCall.h"
 #include "CallMouseInput.h"
 
+#include "MoleculeBallifier.h"
+
 #include "CallAutoDescription.h"
 #include "ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
@@ -139,6 +141,7 @@ PROTEIN_API int mmplgModuleCount(void) {
 #ifdef WITH_OPENHAPTICS
     moduleCount++;
 #endif // WITH_OPENHAPTICS
+    moduleCount += 1;
     return moduleCount;
 }
 
@@ -211,6 +214,8 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
 #else
 		#define HAPTICS_OFFSET 0
 #endif // WITH_OPENHAPTICS
+        case 36 + NETCDF_OFFSET + OPENCL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET:
+            return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeBallifier>();
         default: return NULL;
     }
     return NULL;

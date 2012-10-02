@@ -250,6 +250,9 @@
     <ClCompile Include="CallMouseInput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MoleculeBallifier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimDataTimer.h">
@@ -484,6 +487,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CallMouseInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MoleculeBallifier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
