@@ -895,7 +895,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 
                 vislib::sys::SystemInformation::MonitorRectArray monitors;
                 vislib::sys::SystemInformation::MonitorRects(monitors);
-                moveConWin = vislib::math::Clamp<int>(moveConWin, 0, monitors.Count() - 1);
+                moveConWin = vislib::math::Clamp<int>(moveConWin, 0, static_cast<int>(monitors.Count() - 1));
 
                 COORD maxSize = ::GetLargestConsoleWindowSize(hCO);
 
