@@ -40,6 +40,9 @@
 #include "vislib/sysfunctions.h"
 #include "vislib/ThreadSafeStackTrace.h"
 #include "vislib/Trace.h"
+#ifdef _WIN32
+#include "vislib/SystemInformation.h"
+#endif /* _WIN32 */
 
 
 /**
@@ -869,6 +872,82 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
         parser->GetQuickstarts(quickstarts);
 
         SAFE_DELETE(parser);
+
+#ifdef _WIN32
+        {
+            int moveConWin = -1;
+            mmcValueType valType;
+            const void *val = ::mmcGetConfigurationValueA(hCore, MMC_CFGID_VARIABLE, "MoveConsoleWindow", &valType);
+            try {
+                switch (valType) {
+                case MMC_TYPE_CSTR:
+                    moveConWin = vislib::CharTraitsA::ParseInt(static_cast<const char*>(val));
+                    break;
+                case MMC_TYPE_WSTR:
+                    moveConWin = vislib::CharTraitsW::ParseInt(static_cast<const wchar_t*>(val));
+                    break;
+                }
+            } catch(...) {
+            }
+            if (moveConWin >= 0) {
+                HWND hWnd = ::GetConsoleWindow();
+                HANDLE hCO = ::GetStdHandle(STD_OUTPUT_HANDLE);
+
+                vislib::sys::SystemInformation::MonitorRectArray monitors;
+                vislib::sys::SystemInformation::MonitorRects(monitors);
+                moveConWin = vislib::math::Clamp<int>(moveConWin, 0, monitors.Count() - 1);
+
+                COORD maxSize = ::GetLargestConsoleWindowSize(hCO);
+
+                ::SetWindowPos(hWnd, NULL, monitors[moveConWin].Left(), monitors[moveConWin].Top(), 0, 0,
+                    SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+
+                RECT r;
+                ::GetWindowRect(hWnd, &r);
+                int h1 = r.bottom - r.top;
+
+                CONSOLE_SCREEN_BUFFER_INFO csbi;
+                ::GetConsoleScreenBufferInfo(hCO, &csbi);
+                csbi.srWindow.Bottom++;
+                ::SetConsoleWindowInfo(hCO, TRUE, &csbi.srWindow);
+                ::Sleep(10);
+
+                ::GetWindowRect(hWnd, &r);
+                int h2 = r.bottom - r.top;
+
+                if (h2 > h1) {
+                    POINT p;
+                    p.x = monitors[moveConWin].Left() + 1;
+                    p.y = monitors[moveConWin].Top() + 1;
+                    HMONITOR hMon = ::MonitorFromPoint(p, MONITOR_DEFAULTTONEAREST);
+                    MONITORINFO monInfo;
+                    monInfo.cbSize = sizeof(MONITORINFO);
+                    if (::GetMonitorInfo(hMon, &monInfo) == 0) {
+                        monInfo.rcWork.top = 0;
+                        monInfo.rcWork.bottom = monitors[moveConWin].Height();
+                    } else if (monInfo.rcWork.top != 0) {
+                        ::SetWindowPos(hWnd, NULL, monInfo.rcWork.left, monInfo.rcWork.top, 0, 0,
+                            SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+                    }
+
+                    h1 = static_cast<int>(floor(static_cast<double>(monInfo.rcWork.bottom - monInfo.rcWork.top - h2) / static_cast<double>(h2 - h1)));
+
+                    csbi.srWindow.Bottom += h1;
+
+                    if (::SetConsoleWindowInfo(hCO, TRUE, &csbi.srWindow) == 0) {
+                        csbi.srWindow.Bottom -= h1;
+                        while (h2 < (monInfo.rcWork.bottom - monInfo.rcWork.top)) {
+                            csbi.srWindow.Bottom++;
+                            if (::SetConsoleWindowInfo(hCO, TRUE, &csbi.srWindow) == 0) break;
+                            ::GetWindowRect(hWnd, &r);
+                            h2 = r.bottom - r.top;
+                        }
+                    }
+                }
+
+            }
+        }
+#endif /* _WIN32 */
 
     } catch(vislib::Exception ex) {
         fprintf(stderr, "Unable to initialise core instance: %s [%s:%i]\n",
