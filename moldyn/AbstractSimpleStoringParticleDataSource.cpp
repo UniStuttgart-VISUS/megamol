@@ -78,9 +78,9 @@ bool AbstractSimpleStoringParticleDataSource::getData(MultiParticleDataCall& cal
 
     SIZE_T size;
     switch (this->posDataType) {
-    case SimpleSphericalParticles::VERTDATA_FLOAT_XYZ: size = sizeof(float) * 3;
-    case SimpleSphericalParticles::VERTDATA_FLOAT_XYZR: size = sizeof(float) * 4;
-    case SimpleSphericalParticles::VERTDATA_SHORT_XYZ: size = sizeof(unsigned short) * 3;
+    case SimpleSphericalParticles::VERTDATA_FLOAT_XYZ: size = sizeof(float) * 3; break;
+    case SimpleSphericalParticles::VERTDATA_FLOAT_XYZR: size = sizeof(float) * 4; break;
+    case SimpleSphericalParticles::VERTDATA_SHORT_XYZ: size = sizeof(unsigned short) * 3; break;
     default: return false;
     }
 
