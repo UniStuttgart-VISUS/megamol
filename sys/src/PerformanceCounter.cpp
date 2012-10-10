@@ -25,7 +25,7 @@
  */
 UINT64 vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
 #ifdef _WIN32
-	LARGE_INTEGER timerCount;
+    LARGE_INTEGER timerCount;
 
     if (!::QueryPerformanceCounter(&timerCount)) {
         VLTRACE(Trace::LEVEL_ERROR, "QueryPerformanceCounter failed in "
@@ -36,7 +36,7 @@ UINT64 vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
     if (useFullPrecision) {
         return timerCount.QuadPart;
     } else {
-	    return (timerCount.QuadPart * 1000) / QueryFrequency();
+        return (timerCount.QuadPart * 1000) / QueryFrequency();
     }
 
 #else /* _WIN32 */
@@ -66,7 +66,7 @@ UINT64 vislib::sys::PerformanceCounter::QueryFrequency(void) {
         VLTRACE(Trace::LEVEL_ERROR, "QueryPerformanceFrequency failed in "
             "vislib::sys::PerformanceCounter::Query\n");
         throw SystemException(__FILE__, __LINE__);
-	}
+    }
 
     return timerFreq.QuadPart;
 

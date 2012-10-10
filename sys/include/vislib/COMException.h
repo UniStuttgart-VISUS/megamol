@@ -43,7 +43,7 @@ namespace sys {
          */
         COMException(const HRESULT hr, const char *file, const int line);
 # else /* _WIN32 */
-		COMException(const char *file, const int line);
+        COMException(const char *file, const int line);
 #endif /* _WIN32 */
 
         /**
@@ -58,14 +58,14 @@ namespace sys {
         virtual ~COMException(void);
 
 #ifdef _WIN32
-		/**
-		 * Gets the COM error code associated with the exception.
-		 *
-		 * @return The error code.
-		 */
-		inline HRESULT GetErrorCode(void) const {
-			return this->hr;
-		}
+        /**
+         * Gets the COM error code associated with the exception.
+         *
+         * @return The error code.
+         */
+        inline HRESULT GetErrorCode(void) const {
+            return this->hr;
+        }
 #endif /* _WIN32 */
 
         /**

@@ -40,10 +40,10 @@ vislib::sys::Mutex::~Mutex(void) {
     ::CloseHandle(this->handle);
 
 #else /* _WIN32 */
-	if (::pthread_mutex_destroy(&this->mutex) == EBUSY) {
-		this->Unlock();
-		::pthread_mutex_destroy(&this->mutex);
-	}
+    if (::pthread_mutex_destroy(&this->mutex) == EBUSY) {
+        this->Unlock();
+        ::pthread_mutex_destroy(&this->mutex);
+    }
 
     ::pthread_mutexattr_destroy(&attr);
 
@@ -86,9 +86,9 @@ void vislib::sys::Mutex::Lock(void) {
 /*
  * vislib::sys::Mutex::TryLock
  */
-bool vislib::sys::Mutex::TryLock(void) {
+bool vislib::sys::Mutex::TryLock(const DWORD timeout) {
 #ifdef _WIN32
-    switch (::WaitForSingleObject(this->handle, 0)) {
+    switch (::WaitForSingleObject(this->handle, timeout)) {
 
         case WAIT_OBJECT_0:
             /* falls through. */
@@ -103,6 +103,7 @@ bool vislib::sys::Mutex::TryLock(void) {
     }
 
 #else /* _WIN32 */
+    // TODO: Change implementation to use pthread_mutex_timedlock().
     int returncode = ::pthread_mutex_trylock(&this->mutex);
 
     switch (returncode) {

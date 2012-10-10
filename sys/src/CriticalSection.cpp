@@ -17,7 +17,7 @@
  */ 
 vislib::sys::CriticalSection::CriticalSection(void) {
 #ifdef _WIN32
-	::InitializeCriticalSection(&this->critSect);
+    ::InitializeCriticalSection(&this->critSect);
 
 #else /* _WIN32 */
     // Nothing to do.
@@ -31,10 +31,10 @@ vislib::sys::CriticalSection::CriticalSection(void) {
  */
 vislib::sys::CriticalSection::~CriticalSection(void) {
 #ifdef _WIN32
-	::DeleteCriticalSection(&this->critSect);
+    ::DeleteCriticalSection(&this->critSect);
 
 #else /* _WIN32 */
-	// Nothing to do.
+    // Nothing to do.
 
 #endif /* _WIN32 */
 }
@@ -45,7 +45,7 @@ vislib::sys::CriticalSection::~CriticalSection(void) {
  */
 void vislib::sys::CriticalSection::Lock(void) {
 #ifdef _WIN32
-	::EnterCriticalSection(&this->critSect);
+    ::EnterCriticalSection(&this->critSect);
 
 #else /* _WIN32 */
     this->mutex.Lock();
@@ -61,14 +61,14 @@ bool vislib::sys::CriticalSection::TryLock(void) {
 #ifdef _WIN32
 
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400))
-	return (::TryEnterCriticalSection(&this->critSect) != 0);
+    return (::TryEnterCriticalSection(&this->critSect) != 0);
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400)) */
     throw UnsupportedOperationException(
         "vislib::sys::CriticalSection::TryLock", __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400)) */
 
 #else /* _WIN32 */
-	return this->mutex.TryLock();
+    return this->mutex.TryLock();
 
 #endif /* _WIN32 */
 }
@@ -79,7 +79,7 @@ bool vislib::sys::CriticalSection::TryLock(void) {
  */
 void vislib::sys::CriticalSection::Unlock(void) {
 #ifdef _WIN32
-	::LeaveCriticalSection(&this->critSect);
+    ::LeaveCriticalSection(&this->critSect);
 
 #else /* _WIN32 */
     this->mutex.Unlock();

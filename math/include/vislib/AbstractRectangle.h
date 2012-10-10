@@ -284,6 +284,16 @@ namespace math {
         //}
 
         /**
+         * Answer whether this rectangle and 'rect' intersect.
+         *
+         * @param rect The rectangle to be tested.
+         *
+         * @return true fi there is an intersection, false otherwise.
+         */
+        template<class Sp> 
+        bool Intersects(const AbstractRectangle<T, Sp>& rect) const;
+
+        /**
          * Answer whether the rectangle has no area.
          *
          * @return true, if the rectangle has no area, false otherwise.
@@ -774,6 +784,22 @@ namespace math {
             this->Set(left, bottom, right, top);
             return true;
         }
+    }
+
+
+    /*
+     * vislib::math::AbstractRectangle<T, S>::Intersects
+     */
+    template<class T, class S>
+    template<class Sp>
+    bool AbstractRectangle<T, S>::Intersects(
+            const AbstractRectangle<T, Sp>& rect) const {
+        T bottom = Max(this->bounds[IDX_BOTTOM], rect.Bottom());
+        T left = Max(this->bounds[IDX_LEFT], rect.Left());
+        T right = Min(this->bounds[IDX_RIGHT], rect.Right());
+        T top = Min(this->bounds[IDX_TOP], rect.Top());
+        
+        return ((top >= bottom) && (right >= left));
     }
 
 

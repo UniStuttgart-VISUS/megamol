@@ -61,15 +61,19 @@ namespace sys {
         /**
          * Try to acquire a lock on the mutex for the calling thread. If the 
          * mutex is already locked by another thread, the method will return
-         * immediately and the return value is false. The method is therefore 
-         * non-blocking.
+         * after the specified timeout and the return value is false. The 
+         * method is non-blocking if the timeout is set zero.
+         *
+         * On Linux, the timeout is always zero.
+         *
+         * @param timeout The timeout for acquiring the mutex.
          *
          * @return true, if the lock was acquired, false, if not.
          *
          * @throws SystemException If an error occurred when trying to acquire
          *                         the lock.
          */
-        bool TryLock(void);
+        bool TryLock(const DWORD timeout = 0);
 
         /**
          * Release the mutex.
