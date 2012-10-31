@@ -223,7 +223,7 @@ namespace gl {
 
         /**
          * Disable the framebuffer object as render target and restore
-         * rendering to the normal window.
+         * rendering to the previous render target or to the on-screen view.
          *
          * It is always safe to call this method.
          *
