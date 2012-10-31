@@ -45,7 +45,7 @@ UINT vislib::graphics::gl::FramebufferObject::GetMaxColourAttachments(void) {
  */
 vislib::graphics::gl::FramebufferObject::FramebufferObject(void) 
         : attachmentColour(NULL), cntColourAttachments(0), idFb(UINT_MAX), 
-        height(0), oldDrawBuffer(0), oldReadBuffer(0), width(0) {
+        height(0), oldDrawBuffer(0), oldFb(0), oldReadBuffer(0), width(0) {
 
     this->attachmentOther[0].state = ATTACHMENT_DISABLED;
     this->attachmentOther[1].state = ATTACHMENT_DISABLED;
@@ -243,7 +243,8 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
 /*
  * vislib::graphics::gl::FramebufferObject::Disable
  */
-GLenum vislib::graphics::gl::FramebufferObject::Disable(void) {
+GLenum vislib::graphics::gl::FramebufferObject::Disable(
+        const bool forceOnScreenTarget) {
     USES_GL_VERIFY;
 
     if (::glBindFramebufferEXT == NULL) {
@@ -255,7 +256,12 @@ GLenum vislib::graphics::gl::FramebufferObject::Disable(void) {
         return GL_INVALID_OPERATION;
     }
 
-    GL_VERIFY_RETURN(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0));
+    if (forceOnScreenTarget) {
+        GL_VERIFY_RETURN(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0));
+    } else {
+        GL_VERIFY_RETURN(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 
+            this->oldFb));
+    }
 
     if (this->IsValid()) {
         // TODO: It would be better to store the enabled state of the FBO.
@@ -710,6 +716,9 @@ void vislib::graphics::gl::FramebufferObject::saveState(void) {
     USES_GL_VERIFY;
     GLint tmp;
 
+    GL_VERIFY_THROW(::glGetIntegerv(GL_FRAMEBUFFER_BINDING, &tmp));
+    this->oldFb = tmp;
+
     GL_VERIFY_THROW(::glGetIntegerv(GL_DRAW_BUFFER, &tmp));
     this->oldDrawBuffer = static_cast<GLenum>(tmp);
     
@@ -719,11 +728,12 @@ void vislib::graphics::gl::FramebufferObject::saveState(void) {
     GL_VERIFY_THROW(::glGetIntegerv(GL_VIEWPORT, this->oldVp));
 
     VLTRACE(Trace::LEVEL_VL_INFO, "FBO saved state:\n"
+        "\tGL_FRAMEBUFFER_BINDING = %d\n"
         "\tGL_DRAW_BUFFER = %d\n"
         "\tGL_READ_BUFFER = %d\n"
         "\tGL_VIEWPORT = %d %d %d %d\n",
-        this->oldDrawBuffer, this->oldReadBuffer, this->oldVp[0], 
-        this->oldVp[1], this->oldVp[2], this->oldVp[3]);
+        this->oldFb, this->oldDrawBuffer, this->oldReadBuffer, 
+        this->oldVp[0], this->oldVp[1], this->oldVp[2], this->oldVp[3]);
 }
 
 

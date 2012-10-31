@@ -227,9 +227,15 @@ namespace gl {
          *
          * It is always safe to call this method.
          *
+         * @param forceOnScreenTarget If true, force the new render target
+         *                            being the on-screen render target (0).
+         *                            Otherwise (this is the default), switch
+         *                            to the render target that was active
+         *                            before the FBO was enabled.
+         *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          */
-        GLenum Disable(void);
+        GLenum Disable(const bool forceOnScreenTarget = false);
 
         /**
          * Draw the 'colourAttachment'th colour attachment as screen-filling
@@ -590,6 +596,12 @@ namespace gl {
 
         /** The draw buffer to restore when disabling an FBO. */
         GLenum oldDrawBuffer;
+
+        /**
+         * Remembers the ID of the FB that was active before the FBO was 
+         * enabled. 
+         */
+        GLint oldFb;
 
         /** The read buffer to restore when disabling and FBO. */
         GLenum oldReadBuffer;
