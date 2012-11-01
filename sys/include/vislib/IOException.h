@@ -32,7 +32,7 @@ namespace sys {
         /**
          * Ctor.
          *
-		 * @param errorCode A system dependent error code.
+         * @param errorCode A system dependent error code.
          * @param file      The file the exception was thrown in.
          * @param line      The line the exception was thrown in.
          */
@@ -42,8 +42,8 @@ namespace sys {
         /**
          * Ctor.
          *
-		 * @param errorCode A system dependent error code.
-		 * @param msg       A detailed error message.
+         * @param errorCode A system dependent error code.
+         * @param msg       A detailed error message.
          * @param file      The file the exception was thrown in.
          * @param line      The line the exception was thrown in.
          */
@@ -53,8 +53,8 @@ namespace sys {
         /**
          * Ctor.
          *
-		 * @param errorCode A system dependent error code.
-		 * @param msg       A detailed error message.
+         * @param errorCode A system dependent error code.
+         * @param msg       A detailed error message.
          * @param file      The file the exception was thrown in.
          * @param line      The line the exception was thrown in.
          */
