@@ -221,7 +221,7 @@ vislib::graphics::AbstractWindow::AbstractWindow(void) {
 /*
  * vislib::graphics::AbstractWindow::onCreated
  */
-void vislib::graphics::AbstractWindow::onCreated(HWND hWnd) throw() {
+void vislib::graphics::AbstractWindow::onCreated(HWND hWnd) {
     VLSTACKTRACE("AbstractWindow::onCreated", __FILE__, __LINE__);
     // Nothing to do.
 }
@@ -256,7 +256,7 @@ LRESULT vislib::graphics::AbstractWindow::onMessage(bool& outHandled,
  * vislib::graphics::AbstractWindow::onResized
  */
 void vislib::graphics::AbstractWindow::onResized(const int width, 
-        const int height) throw() {
+        const int height) {
     VLSTACKTRACE("AbstractWindow::onResized", __FILE__, __LINE__);
     // Nothing to do.
 }
@@ -317,8 +317,9 @@ LRESULT CALLBACK vislib::graphics::AbstractWindow::wndProc(HWND hWnd, UINT msg,
             break;
 
         case WM_SIZE:
-            ASSERT(wnd != NULL);
-            wnd->onResized(LOWORD(lParam), HIWORD(lParam));
+            if (wnd != NULL) {
+                wnd->onResized(LOWORD(lParam), HIWORD(lParam));
+            }
             retval = 0;
             break;
 
@@ -334,10 +335,20 @@ LRESULT CALLBACK vislib::graphics::AbstractWindow::wndProc(HWND hWnd, UINT msg,
 #endif _WIN32
 
 
+/*
+ * vislib::graphics::AbstractWindow::AbstractWindow
+ */
+vislib::graphics::AbstractWindow::AbstractWindow(const AbstractWindow& rhs) {
+    VLSTACKTRACE("AbstractWindow::AbstractWindow", __FILE__, __LINE__);
+    throw UnsupportedOperationException("AbstractWindow::AbstractWindow",
+        __FILE__, __LINE__);
+}
+
+
 #ifdef _WIN32
 /*
-    * vislib::graphics::AbstractWindow::registerWindowClassW
-    */
+ * vislib::graphics::AbstractWindow::registerWindowClassW
+ */
 vislib::StringW vislib::graphics::AbstractWindow::registerWindowClassW(
         HINSTANCE hInstance) {
     VLSTACKTRACE("AbstractWindow::registerWindowClassW", __FILE__, __LINE__);
@@ -370,3 +381,16 @@ vislib::StringW vislib::graphics::AbstractWindow::registerWindowClassW(
     return retval;
 }
 #endif /* _WIN32 */
+
+
+/*
+ * vislib::graphics::AbstractWindow::operator =
+ */
+vislib::graphics::AbstractWindow& vislib::graphics::AbstractWindow::operator =(
+        const AbstractWindow& rhs) {
+    VLSTACKTRACE("AbstractWindow::operator =", __FILE__, __LINE__);
+    if (this != &rhs) {
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
+    }
+    return *this;
+}

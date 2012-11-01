@@ -53,7 +53,7 @@ namespace sys {
          *
          * @return A time span of one day.
          */
-        static inline DateTimeSpan OneDay(const bool isPositive) {
+        static inline DateTimeSpan OneDay(const bool isPositive = true) {
             return DateTimeSpan(isPositive ? TICKS_PER_DAY : -TICKS_PER_DAY);
         }
 
@@ -65,7 +65,7 @@ namespace sys {
          *
          * @return A time span of one hour.
          */
-        static inline DateTimeSpan OneHour(const bool isPositive) {
+        static inline DateTimeSpan OneHour(const bool isPositive = true) {
             return DateTimeSpan(isPositive ? TICKS_PER_HOUR : -TICKS_PER_HOUR);
         }
 
@@ -77,7 +77,8 @@ namespace sys {
          *
          * @return A time span of one millisecond.
          */
-        static inline DateTimeSpan OneMillisecond(const bool isPositive) {
+        static inline DateTimeSpan OneMillisecond(
+                const bool isPositive = true) {
             return DateTimeSpan(isPositive ? TICKS_PER_MILLISECOND
                 : -TICKS_PER_MILLISECOND);
         }
@@ -90,7 +91,7 @@ namespace sys {
          *
          * @return A time span of one minute.
          */
-        static inline DateTimeSpan OneMinute(const bool isPositive) {
+        static inline DateTimeSpan OneMinute(const bool isPositive = true) {
             return DateTimeSpan(isPositive ? TICKS_PER_MINUTE
                 : -TICKS_PER_MINUTE);
         }
@@ -103,7 +104,7 @@ namespace sys {
          *
          * @return A time span of one second.
          */
-        static inline DateTimeSpan OneSecond(const bool isPositive) {
+        static inline DateTimeSpan OneSecond(const bool isPositive = true) {
             return DateTimeSpan(isPositive ? TICKS_PER_SECOND
                 : -TICKS_PER_SECOND);
         }

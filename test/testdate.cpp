@@ -51,11 +51,11 @@ static void TestSpan(void) {
     ::AssertEqual("Value of MILLISECONDS_PER_HOUR.", DateTimeSpan::MILLISECONDS_PER_HOUR, (INT64) 60 * 60 * 1000);
     ::AssertEqual("Value of MILLISECONDS_PER_DAY.", DateTimeSpan::MILLISECONDS_PER_DAY, (INT64) 24 * 60 * 60 * 1000);
     ::AssertEqual("Empty time span is 0 millis.", (INT64) DateTimeSpan::EMPTY, (INT64) 0);
-    //::AssertEqual("Value of ONE_MILLISECOND.", (INT64) DateTimeSpan::ONE_MILLISECOND, (INT64) 1);
-    //::AssertEqual("Value of ONE_SECOND.", (INT64) DateTimeSpan::ONE_SECOND, (INT64) 1000);
-    //::AssertEqual("Value of ONE_MINUTE.", (INT64) DateTimeSpan::ONE_MINUTE, (INT64) 60 * 1000);
-    //::AssertEqual("Value of ONE_HOUR.", (INT64) DateTimeSpan::ONE_HOUR, (INT64) 60 * 60 * 1000);
-    //::AssertEqual("Value of ONE_DAY.", (INT64) DateTimeSpan::ONE_DAY, (INT64) 24 * 60 * 60 * 1000);
+    ::AssertEqual("Value of ONE_MILLISECOND.", (INT64) DateTimeSpan::OneMillisecond(), (INT64) 1 * DateTimeSpan::TICKS_PER_MILLISECOND);
+    ::AssertEqual("Value of ONE_SECOND.", (INT64) DateTimeSpan::OneSecond(), (INT64) 1000 * DateTimeSpan::TICKS_PER_MILLISECOND);
+    ::AssertEqual("Value of ONE_MINUTE.", (INT64) DateTimeSpan::OneMinute(), (INT64) 60 * 1000 * DateTimeSpan::TICKS_PER_MILLISECOND);
+    ::AssertEqual("Value of ONE_HOUR.", (INT64) DateTimeSpan::OneHour(), (INT64) 60 * 60 * 1000 * DateTimeSpan::TICKS_PER_MILLISECOND);
+    ::AssertEqual("Value of ONE_DAY.", (INT64) DateTimeSpan::OneDay(), (INT64) 24 * 60 * 60 * 1000 * DateTimeSpan::TICKS_PER_MILLISECOND);
 
     ::AssertEqual("Initialisation with default ctor.", (INT64) DateTimeSpan(), (INT64) 0);
     ::AssertEqual("Initialisation with millis.", (INT64) DateTimeSpan(10), (INT64) 10);
@@ -170,11 +170,17 @@ static void TestSpan(void) {
 
 
 static void TestTime(void) {
+// Convert milliseconds to ticks:
 #define MTT(millis) (static_cast<INT64>(millis) * DateTimeSpan::TICKS_PER_MILLISECOND)
+
+// Convert seconds to ticks:
+#define STT(secs) (MTT(secs) * 1000)
+
+// Convert days to ticks:
+#define DTT(days) (STT(days) * 24 * 60 * 60)
+
     using vislib::sys::DateTime;
     using vislib::sys::DateTimeSpan;
-    DateTime dateTime;
-    INT year, month, day, hour, minute, second, millis;
     time_t unixTimeStamp;
 
     ::AssertEqual("DateTime::EMPTY internal data.", DateTime::EMPTY.GetTotalTicks(), INT64(0));
@@ -187,10 +193,10 @@ static void TestTime(void) {
     ::DateValueTest(0, 1, 1, 0, 0, 0, 999, MTT(999));
     ::DateValueTest(0, 1, 1, 0, 0, 0, 1000, MTT(1000));
     ::DateValueTest(0, 1, 1, 0, 0, 0, 1001, MTT(1001));
-    ::DateValueTest(0, 1, 1, 0, 0, 1, 0, MTT(1000));
-    ::DateValueTest(0, 1, 1, 0, 1, 0, 0, MTT(60) * 1000);
-    ::DateValueTest(0, 1, 1, 1, 0, 0, 0, MTT(60) * 60 * 1000);
-    ::DateValueTest(0, 1, 2, 0, 0, 0, 0, MTT(24) * 60 * 60 * 1000);
+    ::DateValueTest(0, 1, 1, 0, 0, 1, 0, STT(1));
+    ::DateValueTest(0, 1, 1, 0, 1, 0, 0, STT(60));
+    ::DateValueTest(0, 1, 1, 1, 0, 0, 0, STT(60) * 60);
+    ::DateValueTest(0, 1, 2, 0, 0, 0, 0, STT(24) * 60 * 60);
 
     // 1.1.1 AD with correct input.
     ::DateValueTest(1, 1, 1, 0, 0, 0, 0, MTT(0));
@@ -207,9 +213,15 @@ static void TestTime(void) {
     ::DateValueTest(-1, 12, 31, 23, 59, 59, 1000, MTT(0));
     ::DateValueTest(-1, 12, 31, 23, 59, 59, 999, MTT(-1));
     ::DateValueTest(-1, 12, 31, 23, 59, 59, 0, MTT(-1000));
-    ::DateValueTest(-1, 12, 31, 23, 59, 0, 0, MTT(-60) * 1000);
-    ::DateValueTest(-1, 12, 31, 23, 0, 0, 0, MTT(-60) * 60 * 1000);
-    ::DateValueTest(-1, 12, 31, 0, 0, 0, 0, MTT(-24) * 60 * 60 * 1000);
+    ::DateValueTest(-1, 12, 31, 23, 59, 0, 0, STT(-60));
+    ::DateValueTest(-1, 12, 31, 23, 0, 0, 0, STT(-60) * 60);
+    ::DateValueTest(-1, 12, 31, 0, 0, 0, 0, STT(-24) * 60 * 60);
+    
+    // 30.12.1 BC
+    ::DateValueTest(-1, 12, 30, 23, 59, 59, 999, STT(-24) * 60 * 60 - MTT(1));
+    ::DateValueTest(-1, 12, 30, 0, 0, 0, 0, STT(-2 * 24) * 60 * 60);
+    ::DateValueTest(-1, 12, 30, 0, 0, 0, 1, STT(-2 * 24) * 60 * 60 + MTT(1));
+    ::DateValueTest(-1, 12, 30, 0, 0, 0, 1000, STT(-2 * 24) * 60 * 60 + STT(1));
 
     // Time on 31.1.1 AD
     ::DateValueTest(1, 1, 31, 0, 0, 0, 0, MTT(30) * 24 * 60 * 60 * 1000);
@@ -226,12 +238,28 @@ static void TestTime(void) {
     ::DateValueTest(1, 3, 1, 0, 0, 0, 0, MTT(59) * 24 * 60 * 60 * 1000);
     ::DateValueTest(1, 3, 2, 0, 0, 0, 0, MTT(60) * 24 * 60 * 60 * 1000);
 
-    // leap day 4 AD
+    // Non-leap day 1 BC
+    ::DateValueTest(-1, 1, 1, 0, 0, 0, 0, DTT(-365));
+    ::DateValueTest(-1, 2, 1, 0, 0, 0, 0, DTT(-365 + 31));
+    ::DateValueTest(-1, 2, 28, 0, 0, 0, 0, DTT(-365 + 58));
+    ::DateValueTest(-1, 2, 29, 0, 0, 0, 0, DTT(-365 + 59));
+    ::DateValueTest(-1, 3, 1, 0, 0, 0, 0, DTT(-365 + 59));
+    ::DateValueTest(-1, 3, 2, 0, 0, 0, 0, DTT(-365 + 60));
+
+    // Leap day 4 AD
     ::DateValueTest(4, 2, 1, 0, 0, 0, 0, MTT(31 + 3 * 365) * 24 * 60 * 60 * 1000);
     ::DateValueTest(4, 2, 28, 0, 0, 0, 0, MTT(58 + 3 * 365) * 24 * 60 * 60 * 1000);
     ::DateValueTest(4, 2, 29, 0, 0, 0, 0, MTT(59 + 3 * 365) * 24 * 60 * 60 * 1000);
     ::DateValueTest(4, 3, 1, 0, 0, 0, 0, MTT(60 + 3 * 365) * 24 * 60 * 60 * 1000);
     ::DateValueTest(4, 3, 2, 0, 0, 0, 0, MTT(61 + 3 * 365) * 24 * 60 * 60 * 1000);
+
+    // Leap day 4 BC
+    ::DateValueTest(-4, 1, 1, 0, 0, 0, 0, DTT(-366 - 3 * 365));
+    ::DateValueTest(-4, 2, 1, 0, 0, 0, 0, DTT(-366 - 3 * 365 + 31));
+    ::DateValueTest(-4, 2, 28, 0, 0, 0, 0, DTT(-366 - 3 * 365 + 58));
+    ::DateValueTest(-4, 2, 29, 0, 0, 0, 0, DTT(-366 - 3 * 365 + 59));
+    ::DateValueTest(-4, 3, 1, 0, 0, 0, 0, DTT(-366 - 3 * 365 + 60));
+    ::DateValueTest(-4, 3, 2, 0, 0, 0, 0, DTT(-366 - 3 * 365 + 61));
 
     // 1.1.1 AD - 1.1.5 AD
     ::DateValueTest(1, 1, 1, 0, 0, 0, 0, MTT(0) * 24 * 60 * 60 * 1000);
@@ -239,6 +267,14 @@ static void TestTime(void) {
     ::DateValueTest(3, 1, 1, 0, 0, 0, 0, MTT(2 * 365) * 24 * 60 * 60 * 1000);
     ::DateValueTest(4, 1, 1, 0, 0, 0, 0, MTT(3 * 365) * 24 * 60 * 60 * 1000);
     ::DateValueTest(5, 1, 1, 0, 0, 0, 0, MTT(3 * 365 + 366) * 24 * 60 * 60 * 1000);
+
+    // 1.1.1 AD - 1.1.5 BC
+    ::DateValueTest(1, 1, 1, 0, 0, 0, 0, DTT(0));
+    ::DateValueTest(-1, 1, 1, 0, 0, 0, 0, DTT(-1 * 365));
+    ::DateValueTest(-2, 1, 1, 0, 0, 0, 0, DTT(-2 * 365));
+    ::DateValueTest(-3, 1, 1, 0, 0, 0, 0, DTT(-3 * 365));
+    ::DateValueTest(-4, 1, 1, 0, 0, 0, 0, DTT(-3 * 365 - 366));
+    ::DateValueTest(-5, 1, 1, 0, 0, 0, 0, DTT(-4 * 365 - 366));
 
     // 100 AD is no leap year
     ::DateValueTest(100, 1, 1, 0, 0, 0, 0, MTT(99 * 365 + 24) * 24 * 60 * 60 * 1000);
@@ -342,46 +378,46 @@ static void TestTime(void) {
     ::DateConversionTest(2004, 2, 1, 5, 32, 35);
     ::DateConversionTest(2004, 3, 1, 5, 32, 35);
 
-    //::DateConversionTest(-1, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-1, 2, 1, 0, 0, 0);
-    //::DateConversionTest(-1, 3, 1, 0, 0, 0);
-    //::DateConversionTest(-1, 1, 1, 0, 0, 1);
-    //::DateConversionTest(-3, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-4, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-4, 1, 1, 0, 0, 1);
-    //::DateConversionTest(-4, 2, 29, 0, 0, 0);
-    //::DateConversionTest(-4, 3, 1, 0, 0, 0);
-    //::DateConversionTest(-5, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-99, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-100, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-101, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-399, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-400, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-401, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-404, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-405 , 1, 1, 0, 0, 0);
-    //::DateConversionTest(-799, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-800, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-800, 2, 28, 0, 0, 0);
-    //::DateConversionTest(-800, 2, 29, 0, 0, 0);
-    //::DateConversionTest(-800, 3, 1, 0, 0, 0);
-    //::DateConversionTest(-801, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-1700, 1, 1, 0, 0, 0);
-    //::DateConversionTest(-1700, 1, 1, 12, 34, 56);
-    //::DateConversionTest(-1704, 1, 1, 5, 32, 35);
-    //::DateConversionTest(-1704, 2, 1, 5, 1, 00);
-    //::DateConversionTest(-1704, 3, 1, 5, 00, 35);
-    //::DateConversionTest(-1704, 12, 31, 0, 0, 1);
-    //::DateConversionTest(-2004, 1, 1, 5, 32, 35);
-    //::DateConversionTest(-2004, 2, 1, 5, 1, 00);
-    //::DateConversionTest(-2004, 3, 1, 5, 00, 35);
-    //::DateConversionTest(-2004, 12, 31, 0, 0, 1);
-    //::DateConversionTest(-2005, 1, 1, 5, 32, 35);
-    //::DateConversionTest(-2005, 2, 1, 5, 1, 00);
-    //::DateConversionTest(-2005, 3, 1, 5, 00, 35);
-    //::DateConversionTest(-2005, 12, 31, 0, 0, 0);
-    //::DateConversionTest(-2005, 12, 31, 0, 0, 1);
-    //::DateConversionTest(-1, 12, 31, 23, 59, 59);
+    ::DateConversionTest(-1, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-1, 2, 1, 0, 0, 0);
+    ::DateConversionTest(-1, 3, 1, 0, 0, 0);
+    ::DateConversionTest(-1, 1, 1, 0, 0, 1);
+    ::DateConversionTest(-3, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-4, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-4, 1, 1, 0, 0, 1);
+    ::DateConversionTest(-4, 2, 29, 0, 0, 0);
+    ::DateConversionTest(-4, 3, 1, 0, 0, 0);
+    ::DateConversionTest(-5, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-99, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-100, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-101, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-399, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-400, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-401, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-404, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-405 , 1, 1, 0, 0, 0);
+    ::DateConversionTest(-799, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-800, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-800, 2, 28, 0, 0, 0);
+    ::DateConversionTest(-800, 2, 29, 0, 0, 0);
+    ::DateConversionTest(-800, 3, 1, 0, 0, 0);
+    ::DateConversionTest(-801, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-1700, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-1700, 1, 1, 12, 34, 56);
+    ::DateConversionTest(-1704, 1, 1, 5, 32, 35);
+    ::DateConversionTest(-1704, 2, 1, 5, 1, 00);
+    ::DateConversionTest(-1704, 3, 1, 5, 00, 35);
+    ::DateConversionTest(-1704, 12, 31, 0, 0, 1);
+    ::DateConversionTest(-2004, 1, 1, 5, 32, 35);
+    ::DateConversionTest(-2004, 2, 1, 5, 1, 00);
+    ::DateConversionTest(-2004, 3, 1, 5, 00, 35);
+    ::DateConversionTest(-2004, 12, 31, 0, 0, 1);
+    ::DateConversionTest(-2005, 1, 1, 5, 32, 35);
+    ::DateConversionTest(-2005, 2, 1, 5, 1, 00);
+    ::DateConversionTest(-2005, 3, 1, 5, 00, 35);
+    ::DateConversionTest(-2005, 12, 31, 0, 0, 0);
+    ::DateConversionTest(-2005, 12, 31, 0, 0, 1);
+    ::DateConversionTest(-1, 12, 31, 23, 59, 59);
 
 //    unixTimeStamp = ::time(NULL);
 //    vislib::sys::DateTime unixDateTime(unixTimeStamp);
@@ -508,13 +544,31 @@ static void TestTime(void) {
 //    //::AssertEqual("Minute remains 0", minute, 0);
 //    //::AssertEqual("Second remains 0", second, 0);
 
+
+}
+
+
+static void TestTimeArithmetics(void) {
+    using vislib::sys::DateTime;
+    using vislib::sys::DateTimeSpan;
+    DateTime dateTime;
+
     dateTime.Set(1, 1, 1, 0, 0, 0);
-    dateTime += DateTimeSpan(0, 0, 0, 0, 1);
+    dateTime += DateTimeSpan::OneMillisecond();
     ::AssertEqual("Add 1 ms", dateTime, DateTime(1, 1, 1, 0, 0, 0, 1));
 
     dateTime.Set(1, 1, 1, 0, 0, 0, 1);
-    dateTime -= DateTimeSpan(0, 0, 0, 0, 1);
+    dateTime += DateTimeSpan::OneMillisecond(false);
+    ::AssertEqual("Add -1 ms", dateTime, DateTime(1, 1, 1, 0, 0, 0, 0));
+
+    dateTime.Set(1, 1, 1, 0, 0, 0, 1);
+    dateTime -= DateTimeSpan::OneMillisecond();
     ::AssertEqual("Subtract 1 ms", dateTime, DateTime(1, 1, 1, 0, 0, 0, 0));
+
+    dateTime.Set(1, 1, 1, 0, 0, 0);
+    dateTime -= DateTimeSpan::OneMillisecond(false);
+    ::AssertEqual("Subtract -1 ms", dateTime, DateTime(1, 1, 1, 0, 0, 0, 1));
+
 }
 
 
@@ -525,4 +579,5 @@ void TestDateTime(void)  {
     ::EnableAssertSuccessOutput(false);
     ::TestSpan();
     ::TestTime();
+    ::TestTimeArithmetics();
 }

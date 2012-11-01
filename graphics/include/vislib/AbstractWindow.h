@@ -172,7 +172,7 @@ namespace graphics {
          *
          * @param hWnd The handle of the window that was just created.
          */
-        virtual void onCreated(HWND hWnd)  throw();
+        virtual void onCreated(HWND hWnd);
 
 #ifdef _WIN32
         /**
@@ -217,7 +217,7 @@ namespace graphics {
          * @param width
          * @param height
          */
-        virtual void onResized(const int width, const int height) throw();
+        virtual void onResized(const int width, const int height);
 
 #ifdef _WIN32
         /**
@@ -272,6 +272,14 @@ namespace graphics {
             LPARAM lParam);
 #endif /* _WIN32 */
 
+        /**
+         * Forbidden copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throws UnsupportedOperationException Unconditionally.
+         */
+        AbstractWindow(const AbstractWindow& rhs);
 
 #ifdef _WIN32
         ///**
@@ -315,6 +323,16 @@ namespace graphics {
         vislib::StringW registerWindowClassW(HINSTANCE hInstance);
 #endif /* _WIN32 */
 
+        /**
+         * Forbidden assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this
+         *
+         * @throws IllegalParamException if (this != &rhs).
+         */
+        AbstractWindow& operator =(const AbstractWindow& rhs);
     };
 
 } /* end namespace graphics */

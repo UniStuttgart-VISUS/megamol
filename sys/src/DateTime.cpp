@@ -624,6 +624,8 @@ INT64 vislib::sys::DateTime::get(const DatePart datePart) const {
     // This implementation is shamelessly inspired by the DateTime of
     // Singularity: https://singularity.svn.codeplex.com/svn/base/Applications/Runtime/Full/System/DateTime.cs
 
+    INT64 sign = (this->ticks < 0) ? -1 : 1;
+
     // n = number of days since 1/1/0001
     INT64 n = this->ticks / DateTimeSpan::TICKS_PER_DAY;
 
@@ -637,8 +639,8 @@ INT64 vislib::sys::DateTime::get(const DatePart datePart) const {
     INT64 y100 = n / DAYS_PER_100YEARS;
 
     // Last 100-year period has an extra day, so decrement result if 4
-    if (y100 == 4) {
-        y100 = 3;
+    if (math::Abs(y100) == 4) {
+        y100 = sign * 3;
     }
 
     // n = day number within 100-year period
@@ -657,10 +659,18 @@ INT64 vislib::sys::DateTime::get(const DatePart datePart) const {
     if (y1 == 4) {
         y1 = 3;
     }
+    else if (y1 == -4) {
+        ASSERT(0);
+        y1 = -3;
+    }
+
+    //if (sign == -1 && n - y1 * DAYS_PER_YEAR == 0 && math::Abs(y1) != 3) {
+    //    y1 = 0;
+    //}
 
     // If year was requested, compute and return it
     if (datePart == DATE_PART_YEAR) {
-        return y400 * 400 + y100 * 100 + y4 * 4 + y1 + 1;
+        return y400 * 400 + y100 * 100 + y4 * 4 + y1 + sign * 1;
     }
 
     // n = day number within year

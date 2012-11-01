@@ -700,10 +700,10 @@ namespace sys {
 
         /** Possible parts that our private getter can extract. */
         enum DatePart {
-            DATE_PART_YEAR = 1,
-            DATE_PART_DAY_OF_YEAR,
-            DATE_PART_MONTH,
-            DATE_PART_DAY
+            DATE_PART_YEAR = 0x00000001,
+            DATE_PART_DAY_OF_YEAR = 0x00000002,
+            DATE_PART_MONTH = 0x00000004,
+            DATE_PART_DAY = 0x00000008,
         };
 
         /**

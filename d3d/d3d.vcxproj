@@ -444,21 +444,9 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\AbstractD3D11Window.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugImport|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugImport|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="src\D3D11Window.cpp" />
     <ClCompile Include="src\AbstractD3DAdapterInformation.cpp" />
+    <ClCompile Include="src\AbstractD3D11WindowImpl.cpp" />
     <ClCompile Include="src\D3D9AdapterInformation.cpp" />
     <ClCompile Include="src\D3DCamera.cpp" />
     <ClCompile Include="src\D3DException.cpp" />
@@ -484,8 +472,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\vislib\AbstractD3D11Window.h" />
+    <ClInclude Include="include\vislib\D3D11Window.h" />
     <ClInclude Include="include\vislib\AbstractD3DAdapterInformation.h" />
+    <ClInclude Include="include\vislib\AbstractD3D11WindowImpl.h" />
     <ClInclude Include="include\vislib\D3D9AdapterInformation.h" />
     <ClInclude Include="include\vislib\D3DCamera.h" />
     <ClInclude Include="include\vislib\D3DException.h" />
