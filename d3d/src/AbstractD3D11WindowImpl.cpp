@@ -32,6 +32,62 @@ vislib::graphics::d3d::AbstractD3D11WindowImpl::~AbstractD3D11WindowImpl(void) {
 
 
 /*
+ * vislib::graphics::d3d::AbstractD3D11WindowImpl::ClearViews
+ */
+void vislib::graphics::d3d::AbstractD3D11WindowImpl::ClearViews(const float r, 
+        const float g, const float b, const float a, const float depth, 
+        const BYTE stencil) {
+    VLSTACKTRACE("AbstractD3D11WindowImpl::ClearViews", __FILE__, __LINE__);
+    ASSERT(this->deviceContext != NULL);
+    ASSERT(this->renderTargetView != NULL);
+    float colour[] = { r, g, b, a };
+
+    this->deviceContext->ClearRenderTargetView(this->renderTargetView, colour);
+    if (this->depthStencilView != NULL) {
+        this->deviceContext->ClearDepthStencilView(this->depthStencilView, 0, 
+            depth, stencil);
+    }
+}
+
+
+/*
+ * vislib::graphics::d3d::AbstractD3D11WindowImpl::GetDevice
+ */
+ID3D11Device *vislib::graphics::d3d::AbstractD3D11WindowImpl::GetDevice(void) {
+    VLSTACKTRACE("AbstractD3D11WindowImpl::GetDevice", __FILE__, 
+        __LINE__);
+    if (this->device != NULL) {
+        this->device->AddRef();
+    }
+    return this->device;
+}
+
+
+/*
+ * vislib::graphics::d3d::AbstractD3D11WindowImpl::GetDeviceContext
+ */
+ID3D11DeviceContext *
+vislib::graphics::d3d::AbstractD3D11WindowImpl::GetDeviceContext(void) {
+    VLSTACKTRACE("AbstractD3D11WindowImpl::GetDeviceContext", __FILE__, 
+        __LINE__);
+    if (this->deviceContext != NULL) {
+        this->deviceContext->AddRef();
+    }
+    return this->deviceContext;
+}
+
+
+/*
+ * vislib::graphics::d3d::AbstractD3D11WindowImpl::Present
+ */
+void vislib::graphics::d3d::AbstractD3D11WindowImpl::Present(void) {
+    VLSTACKTRACE("AbstractD3D11WindowImpl::Present", __FILE__, __LINE__);
+    ASSERT(this->swapChain != NULL);
+    this->swapChain->Present(0, 0);
+}
+
+
+/*
  * vislib::graphics::d3d::AbstractD3D11WindowImpl::AbstractD3D11WindowImpl
  */
 vislib::graphics::d3d::AbstractD3D11WindowImpl::AbstractD3D11WindowImpl(

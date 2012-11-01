@@ -38,6 +38,46 @@ namespace d3d {
         /** Dtor. */
         ~AbstractD3D11WindowImpl(void);
 
+        /**
+         * Clear the render target and depth-stencil views.
+         *
+         * @param r       The value to be set for the red channel.
+         * @param g       The value to be set for the green channel.
+         * @param b       The value to be set for the blue channel.
+         * @param a       The value to be set for the alpha channel.
+         * @param depth   The depth value to be set.
+         * @param stencil The stencil value to be set.
+         */
+        void ClearViews(const float r = 0.0f, const float g = 0.0f, 
+            const float b = 0.0f, const float a = 0.0f, const float depth = 0.0f, 
+            const BYTE stencil = 0);
+
+        /**
+         * Return the immediate that is used for rendering to the  window.
+         *
+         * The caller must release the resource returned once it is no longer
+         * used.
+         *
+         * @return The Direct3D device.
+         */
+        ID3D11Device *GetDevice(void);
+
+        /**
+         * Return the immediate context that is used for rendering to the 
+         * window.
+         *
+         * The caller must release the resource returned once it is no longer
+         * used.
+         *
+         * @return The immediate context.
+         */
+        ID3D11DeviceContext *GetDeviceContext(void);
+
+        /**
+         * Present the swap chain.
+         */
+        void Present(void);
+
     protected:
 
         /** 
@@ -115,6 +155,12 @@ namespace d3d {
             VLSTACKTRACE("AbstractD3D11WindowImpl::peekRenderTargetView",
                 __FILE__, __LINE__);
             return this->renderTargetView;
+        }
+
+        inline IDXGISwapChain *peekSwapChain(void) {
+            VLSTACKTRACE("AbstractD3D11WindowImpl::peekSwapChain",__FILE__, 
+                __LINE__);
+            return this->swapChain;
         }
 
         void resizeSwapChain(const int width, const int height);
