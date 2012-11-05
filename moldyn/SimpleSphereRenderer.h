@@ -11,10 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "view/Renderer3DModule.h"
-#include "Call.h"
-#include "CallerSlot.h"
-#include "param/ParamSlot.h"
+#include "moldyn/AbstractSimpleSphereRenderer.h"
 #include "vislib/GLSLShader.h"
 
 
@@ -25,7 +22,7 @@ namespace moldyn {
     /**
      * Renderer for simple sphere glyphs
      */
-    class SimpleSphereRenderer : public view::Renderer3DModule {
+    class SimpleSphereRenderer : public AbstractSimpleSphereRenderer {
     public:
 
         /**
@@ -79,27 +76,6 @@ namespace moldyn {
         virtual bool create(void);
 
         /**
-         * The get capabilities callback. The module should set the members
-         * of 'call' to tell the caller its capabilities.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetCapabilities(Call& call);
-
-        /**
-         * The get extents callback. The module should set the members of
-         * 'call' to tell the caller the extents of its data (bounding boxes
-         * and times).
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetExtents(Call& call);
-
-        /**
          * Implementation of 'Release'.
          */
         virtual void release(void);
@@ -117,18 +93,6 @@ namespace moldyn {
 
         /** The sphere shader */
         vislib::graphics::gl::GLSLShader sphereShader;
-
-        /** The call for data */
-        CallerSlot getDataSlot;
-
-        /** The call for Transfer function */
-        CallerSlot getTFSlot;
-
-        /** The call for clipping plane */
-        CallerSlot getClipPlaneSlot;
-
-        /** A simple black-to-white transfer function texture as fallback */
-        unsigned int greyTF;
 
     };
 
