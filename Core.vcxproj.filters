@@ -711,6 +711,9 @@
     <ClCompile Include="moldyn\AbstractSimpleSphereRenderer.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="moldyn\SimpleGeoSphereRenderer.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1292,6 +1295,9 @@
     <ClInclude Include="moldyn\AbstractSimpleSphereRenderer.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="moldyn\SimpleGeoSphereRenderer.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icons.rc">
@@ -1426,6 +1432,9 @@
       <Filter>Build Files</Filter>
     </None>
     <None Include="Shaders\deferred.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\simplegeosphere.btf">
       <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>

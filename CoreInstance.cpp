@@ -193,6 +193,16 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
+    // test view for sphere rendering
+    vd = new ViewDescription("testgeospheres");
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "view");
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleGeoSphereRenderer"), "rnd");
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("TestSpheresDataSource"), "dat");
+    vd->AddCall(CallDescriptionManager::Instance()->Find("CallRender3D"), "view::rendering", "rnd::rendering");
+    vd->AddCall(CallDescriptionManager::Instance()->Find("MultiParticleDataCall"), "rnd::getData", "dat::getData");
+    vd->SetViewModuleID("view");
+    this->builtinViewDescs.Register(vd);
+
     //////////////////////////////////////////////////////////////////////
     // job descriptions
     //////////////////////////////////////////////////////////////////////
