@@ -181,11 +181,12 @@ bool moldyn::SimpleGeoSphereRenderer::Render(Call& call) {
     glUniformMatrix4fvARB(this->sphereShader.ParameterLocation("proj"), 1, false, projMatrix_column);
     glUniform4fvARB(this->sphereShader.ParameterLocation("lightPos"), 1, lightPos);
 
+    glUniform4fvARB(this->sphereShader.ParameterLocation("clipDat"), 1, clipDat);
+    glUniform4fvARB(this->sphereShader.ParameterLocation("clipCol"), 1, clipCol);
+
     // Vertex attributes
     GLint vertexPos = glGetAttribLocation(this->sphereShader, "vertex");
     GLint vertexColor = glGetAttribLocation(this->sphereShader, "color");
-
-    // TODO: support for clipping plane and transfer function
 
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);

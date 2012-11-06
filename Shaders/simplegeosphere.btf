@@ -47,6 +47,10 @@ uniform mat4 proj;
 uniform vec4 inConsts1;
 uniform sampler1D colTab;
 
+// clipping plane attributes
+uniform vec4 clipDat;
+uniform vec4 clipCol;
+
 in vec4 vertex;
 in vec4 color;
 
@@ -59,9 +63,20 @@ out vec4 inColor;
 
 void main(void) {
     gl_Position = vertex;
+    float rad = vertex.w;
     if (CONSTRAD > -0.5) {
       gl_Position.w = CONSTRAD;
+      rad = CONSTRAD;
     }
+    
+    // clipping
+    if (any(notEqual(clipDat.xyz, vec3(0, 0, 0)))) {
+        float od = dot(vertex.xyz, clipDat.xyz) - rad;
+        if (od > clipDat.w) {
+          gl_Position = vec4(1.0, 1.0, 1.0, 0.0);
+        }
+    }   
+    
     if (COLTAB_SIZE > 0.0) {
       float cid = MAX_COLV - MIN_COLV;
       cid = (color.r - MIN_COLV) / cid;
@@ -263,6 +278,10 @@ uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not i
 uniform mat4 modelview;
 uniform mat4 proj;
 
+// clipping plane attributes
+uniform vec4 clipDat;
+uniform vec4 clipCol;
+
 in vec4 color;
 in vec4 objPos;
 in vec4 camPos;
@@ -311,16 +330,37 @@ void main(void) {
     float radicand2 = 0.0;
     if( radicand < 0.0 ) {
         discard;
-    }
-    else {
+    } else {
         // chose color for lighting
         colOut = color.rgb;
         sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         // "calc" normal at intersection point
         normal = sphereintersection / rad;
-    }
-    
+    }    
 #endif // CLIP
+
+    if (any(notEqual(clipDat.xyz, vec3(0, 0, 0)))) {
+        vec3 planeNormal = normalize(clipDat.xyz);
+        vec3 clipPlaneBase = planeNormal * clipDat.w;
+        float d = -dot(planeNormal, clipPlaneBase - objPos.xyz);
+        float dist1 = dot(sphereintersection, planeNormal) + d;
+        float dist2 = d;
+        float t = -(dot(planeNormal, camPos.xyz) + d) / dot(planeNormal, ray);
+        vec3 planeintersect = camPos.xyz + t * ray;
+        if (dist1 > 0.0) {
+            if (dist2 < rad) {
+                if (length(planeintersect) < rad) {
+                    sphereintersection = planeintersect;
+                    normal = planeNormal;
+                    colOut = mix(colOut, clipCol.rgb, clipCol.a);
+                } else {
+                    discard;
+                }
+            } else {
+                discard;
+            }
+        }
+    }
 
     // phong lighting with directional light
     //gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
