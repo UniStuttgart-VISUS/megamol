@@ -187,8 +187,6 @@ bool moldyn::SimpleGeoSphereRenderer::Render(Call& call) {
 
     // TODO: support for clipping plane and transfer function
 
-    //unsigned int cial = glGetAttribLocationARB(this->sphereShader, "colIdx");
-
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
         float minC = 0.0f, maxC = 0.0f;
@@ -221,25 +219,22 @@ bool moldyn::SimpleGeoSphereRenderer::Render(Call& call) {
                 break;
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                 ::glEnableVertexAttribArray(vertexColor);
-                ::glVertexAttribPointer(vertexColor, 1, GL_FLOAT, GL_TRUE, parts.GetColourDataStride(), parts.GetColourData());
-    //            glEnableVertexAttribArrayARB(cial);
-    //            glVertexAttribPointerARB(cial, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                ::glVertexAttribPointer(vertexColor, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
 
-    //            glEnable(GL_TEXTURE_1D);
+                glEnable(GL_TEXTURE_1D);
 
-    //            view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-    //            if ((cgtf != NULL) && ((*cgtf)())) {
-    //                glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-    //                colTabSize = cgtf->TextureSize();
-    //            } else {
-    //                glBindTexture(GL_TEXTURE_1D, this->greyTF);
-    //                colTabSize = 2;
-    //            }
+                view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+                if ((cgtf != NULL) && ((*cgtf)())) {
+                    glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
+                    colTabSize = cgtf->TextureSize();
+                } else {
+                    glBindTexture(GL_TEXTURE_1D, this->greyTF);
+                    colTabSize = 2;
+                }
 
-    //            glUniform1iARB(this->sphereShader.ParameterLocation("colTab"), 0);
-    //            minC = parts.GetMinColourIndexValue();
-    //            maxC = parts.GetMaxColourIndexValue();
-    //            glColor3ub(127, 127, 127);
+                glUniform1iARB(this->sphereShader.ParameterLocation("colTab"), 0);
+                minC = parts.GetMinColourIndexValue();
+                maxC = parts.GetMaxColourIndexValue();
             } break;
             default:
                 ::glVertexAttrib3f(vertexColor, 0.5f, 0.5f, 0.5f);
@@ -269,7 +264,7 @@ bool moldyn::SimpleGeoSphereRenderer::Render(Call& call) {
         ::glDisableVertexAttribArray(vertexPos);
         ::glDisableVertexAttribArray(vertexColor);
 
-    //    glDisable(GL_TEXTURE_1D);
+        glDisable(GL_TEXTURE_1D);
     }
 
     c2->Unlock();

@@ -45,6 +45,7 @@
 uniform mat4 modelview;
 uniform mat4 proj;
 uniform vec4 inConsts1;
+uniform sampler1D colTab;
 
 in vec4 vertex;
 in vec4 color;
@@ -52,16 +53,28 @@ in vec4 color;
 out vec4 inColor;
 
 #define CONSTRAD inConsts1.x
-//#define MIN_COLV inConsts1.y
-//#define MAX_COLV inConsts1.z
-//#define COLTAB_SIZE inConsts1.w
+#define MIN_COLV inConsts1.y
+#define MAX_COLV inConsts1.z
+#define COLTAB_SIZE inConsts1.w
 
 void main(void) {
     gl_Position = vertex;
     if (CONSTRAD > -0.5) {
       gl_Position.w = CONSTRAD;
     }
-    inColor = color;
+    if (COLTAB_SIZE > 0.0) {
+      float cid = MAX_COLV - MIN_COLV;
+      cid = (color.r - MIN_COLV) / cid;
+      cid = clamp(cid, 0.0, 1.0);
+        
+      cid *= (1.0 - 1.0 / COLTAB_SIZE);
+      cid += 0.5 / COLTAB_SIZE;
+        
+      inColor = texture(colTab, cid);
+      
+    } else {
+      inColor = color;
+    }
 }
 -->
     </snippet>
