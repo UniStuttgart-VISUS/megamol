@@ -274,6 +274,14 @@ namespace vislib {
 #endif /* defined(DEBUG) || defined(_DEBUG) */
 
 
+#if __GNUC__
+#define VLAUTOSTACKTRACE VLSTACKTRACE(__PRETTY_FUNCTION__, __FILE__, __LINE__)
+#else /* __GNUC__ */
+// Note: VC __FUNCTION__ is pretty by design...
+#define VLAUTOSTACKTRACE VLSTACKTRACE(__FUNCTION__, __FILE__, __LINE__)
+#endif /* __GNUC__ */
+
+
 /* Deprecated */
 #define VISLIB_STACKTRACE(FN, FILE, LINE) VLSTACKTRACE(#FN, FILE, LINE)
 

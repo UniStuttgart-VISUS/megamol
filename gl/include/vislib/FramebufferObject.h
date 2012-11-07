@@ -225,6 +225,14 @@ namespace gl {
          * Disable the framebuffer object as render target and restore
          * rendering to the previous render target or to the on-screen view.
          *
+         * This method has no effect if the FBO is not enabled and 
+         * 'forceOnScreenTarget' is not true.*
+         *
+         * If 'forceOnScreenTarget' is true, he method will reset the current 
+         * render target to the on-screen framebuffer under any condition
+         * except one: The request cannot be honoured if the FBO extension is
+         * unavailable.
+         *
          * It is always safe to call this method.
          *
          * @param forceOnScreenTarget If true, force the new render target
@@ -235,7 +243,7 @@ namespace gl {
          *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          */
-        GLenum Disable(const bool forceOnScreenTarget = false);
+        GLenum Disable(const bool forceOnScreenTarget = false) throw();
 
         /**
          * Draw the 'colourAttachment'th colour attachment as screen-filling
@@ -297,6 +305,10 @@ namespace gl {
          * Enable the framebuffer object for rendering to its textures. This
          * method can only be called, if the framebuffer object has been
          * successfully created.
+         *
+         * The method has no effect if the FBO is already the current render
+         * target, i.e. if IsEnabled() returns true. In this case, the method
+         * returns GL_NO_ERROR immediately.
          *
          * The method will also set an appropriate viewport from (0, 0) to
          * (this->GetWidth(), this->GetHeight()). The old viewport will be
@@ -442,6 +454,17 @@ namespace gl {
         inline UINT GetWidth(void) const {
             return static_cast<UINT>(this->width);
         }
+
+        /**
+         * Answer whether the FBO is the currently active render target.
+         *
+         * @return true if the FBO is the currently active render target, 
+         *         false otherwise.
+         *
+         * @throws OpenGLException If the information could not be retrieved
+         *                         from the state machine.
+         */
+        bool IsEnabled(void);
 
         /**
          * Answer whether this object has successfully created a valid
