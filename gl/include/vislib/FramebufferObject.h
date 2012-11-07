@@ -223,27 +223,28 @@ namespace gl {
 
         /**
          * Disable the framebuffer object as render target and restore
-         * rendering to the previous render target or to the on-screen view.
+         * the previous rendering target and viewport.
          *
-         * This method has no effect if the FBO is not enabled and 
-         * 'forceOnScreenTarget' is not true.*
+         * The FBO will restore its previous state regardless whether it is 
+         * actually enabled or not. This helps applications that raise 
+         * exceptions in a sequence of nested FBO activations like this:
          *
-         * If 'forceOnScreenTarget' is true, he method will reset the current 
-         * render target to the on-screen framebuffer under any condition
-         * except one: The request cannot be honoured if the FBO extension is
-         * unavailable.
+         * fbo1->Enable();
+         * try {
+         *     fbo2->Enable();
+         *     throw Exception(__FILE__, __LINE__);
+         *     fbo2->Disable();
+         * } catch(...) { }
+         * fbo1->Disable();
+         *
+         * The last call will restore the state before 'fbo1' was enabled
+         * although 'fbo1' is not enabled at this point ('fbo2' is).
          *
          * It is always safe to call this method.
          *
-         * @param forceOnScreenTarget If true, force the new render target
-         *                            being the on-screen render target (0).
-         *                            Otherwise (this is the default), switch
-         *                            to the render target that was active
-         *                            before the FBO was enabled.
-         *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          */
-        GLenum Disable(const bool forceOnScreenTarget = false) throw();
+        GLenum Disable(void) throw();
 
         /**
          * Draw the 'colourAttachment'th colour attachment as screen-filling

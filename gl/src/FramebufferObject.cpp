@@ -250,11 +250,9 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
 /*
  * vislib::graphics::gl::FramebufferObject::Disable
  */
-GLenum vislib::graphics::gl::FramebufferObject::Disable(
-        const bool forceOnScreenTarget) throw() {
+GLenum vislib::graphics::gl::FramebufferObject::Disable(void) throw() {
     VLAUTOSTACKTRACE;
     USES_GL_VERIFY;
-    bool isEnabled = false;
 
     if (::glBindFramebufferEXT == NULL) {
         /* 
@@ -265,29 +263,23 @@ GLenum vislib::graphics::gl::FramebufferObject::Disable(
         return GL_INVALID_OPERATION;
     }
 
-    /* 
-     * We guarantee that 'forceOnScreenTarget' is honoured under any 
-     * circumstance, so this must be the first thing we try.
-     */
-    if (forceOnScreenTarget) {
-        GL_VERIFY_RETURN(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0));
-    }
-
+#if (defined(DEBUG) || defined(_DEBUG)) 
     try {
-        isEnabled = this->IsEnabled();
-    } catch (OpenGLException e) {
-        return e.GetErrorCode();
-    }
-
-    /* 
-     * We must ensure that we do not overwrite the current render target with
-     * nonsense in case we have not stored a meaningful state.
-     */
-    if (isEnabled) {
-        if (!forceOnScreenTarget) {
-            GL_VERIFY_RETURN(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,
-                this->oldFb));
+        if (!this->IsEnabled()) {
+            VLTRACE(Trace::LEVEL_VL_WARN, "Trying to disable an FBO which is "
+                "not enabled. This might indicate a bug in the application.\n");
         }
+    } catch (OpenGLException e) { /* Ignore this. */ }
+#endif /* (defined(DEBUG) || defined(_DEBUG)) */
+
+    /*
+     * The FBO creates an initial state copy in the Create() method, i.e. 
+     * meaningful information is available if the FBO has been created and
+     * is valid.
+     */
+    if (this->IsValid()) {
+        GL_VERIFY_RETURN(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 
+            this->oldFb));
         GL_VERIFY_RETURN(::glViewport(this->oldVp[0], this->oldVp[1],
             this->oldVp[2], this->oldVp[3]));
         GL_VERIFY_RETURN(::glDrawBuffer(this->oldDrawBuffer));
