@@ -163,6 +163,7 @@ namespace graphics {
         /** Ctor. */
         AbstractWindow(void);
 
+#ifdef _WIN32
         /**
          * This method is called once the window was created. It allows 
          * subclasses to perform additional initialisation tasks, e.g. creating
@@ -173,6 +174,7 @@ namespace graphics {
          * @param hWnd The handle of the window that was just created.
          */
         virtual void onCreated(HWND hWnd);
+#endif /* _WIN32 */
 
 #ifdef _WIN32
         /**

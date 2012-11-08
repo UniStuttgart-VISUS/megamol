@@ -218,6 +218,7 @@ vislib::graphics::AbstractWindow::AbstractWindow(void) {
 }
 
 
+#ifdef _WIN32
 /*
  * vislib::graphics::AbstractWindow::onCreated
  */
@@ -225,6 +226,7 @@ void vislib::graphics::AbstractWindow::onCreated(HWND hWnd) {
     VLSTACKTRACE("AbstractWindow::onCreated", __FILE__, __LINE__);
     // Nothing to do.
 }
+#endif /* _WIN32 */
 
 
 #ifdef _WIN32
@@ -332,7 +334,7 @@ LRESULT CALLBACK vislib::graphics::AbstractWindow::wndProc(HWND hWnd, UINT msg,
 
     return retval;
 }
-#endif _WIN32
+#endif /* _WIN32 */
 
 
 /*
