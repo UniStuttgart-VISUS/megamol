@@ -21,8 +21,9 @@
 #include <pthread.h>
 #endif /* _WIN32 */
 
-#include "Lockable.h"
-#include "SyncObject.h"
+#include "vislib/Lockable.h"
+#include "vislib/SyncObject.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
