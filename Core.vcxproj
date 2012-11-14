@@ -397,6 +397,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="view\CallRender3D.cpp" />
     <ClCompile Include="view\CallRenderDeferred3D.cpp" />
     <ClCompile Include="view\CallRenderView.cpp" />
+    <ClCompile Include="view\CallTimeControl.cpp" />
     <ClCompile Include="view\CameraParamOverride.cpp" />
     <ClCompile Include="view\ClipPlane.cpp" />
     <ClCompile Include="view\DataSourceModule.cpp" />
@@ -610,6 +611,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="view\CallRender3D.h" />
     <ClInclude Include="view\CallRenderDeferred3D.h" />
     <ClInclude Include="view\CallRenderView.h" />
+    <ClInclude Include="view\CallTimeControl.h" />
     <ClInclude Include="view\CameraParamOverride.h" />
     <ClInclude Include="view\ClipPlane.h" />
     <ClInclude Include="view\DataSourceModule.h" />

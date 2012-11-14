@@ -170,6 +170,40 @@ namespace core {
         }
 
         /**
+         * Registers the member 'func' as callback function for call 'callName'
+         * function 'funcName'.
+         *
+         * @param callName The class name of the call.
+         * @param funcName The name of the function of the call to register
+         *                 this callback for.
+         * @param obj The object of 'func'
+         * @param func The member function pointer of the method to be used as
+         *             callback. Use the class of the method as template
+         *             parameter 'C'.
+         */
+        template<class C>
+        void SetCallback(const char *callName, const char *funcName,
+                C* obj, bool (C::*func)(Call&)) {
+            if (this->GetStatus() != AbstractSlot::STATUS_UNAVAILABLE) {
+                throw vislib::IllegalStateException("You may not register "
+                    "callbacks after the slot has been enabled.",
+                    __FILE__, __LINE__);
+            }
+
+            vislib::StringA cn(callName);
+            vislib::StringA fn(funcName);
+            for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
+                if (cn.Equals(this->callbacks[i]->CallName(), false)
+                        && fn.Equals(this->callbacks[i]->FuncName(), false)) {
+                    throw vislib::IllegalParamException("callName funcName",
+                        __FILE__, __LINE__);
+                }
+            }
+            Callback *cb = new CallbackParentImpl<C>(callName, funcName, obj, func);
+            this->callbacks.Add(cb);
+        }
+
+        /**
          * Answers whether the given parameter is relevant for this view.
          *
          * @param searched The already searched objects for cycle detection.
@@ -283,6 +317,49 @@ namespace core {
 
             /** The callback method */
             bool (C::*func)(Call&);
+
+        };
+
+        /**
+         * Nested class for callback storage
+         */
+        template<class C> class CallbackParentImpl : public Callback {
+        public:
+
+            /**
+             * Ctor
+             *
+             * @param func The callback member of 'C'
+             */
+            CallbackParentImpl(const char *callName, const char *funcName,
+                    C *parent, bool (C::*func)(Call&)) : Callback(callName, funcName),
+                    func(func), parent(parent) {
+                // intentionally empty
+            }
+
+            /** Dtor. */
+            virtual ~CallbackParentImpl(void) {
+                // intentionally empty
+            }
+
+            /**
+             * Call this callback.
+             *
+             * @param owner The owning object.
+             * @param call The calling call.
+             *
+             * @return The return value of the function.
+             */
+            virtual bool CallMe(Module *owner, Call& call) {
+                return (this->parent->*this->func)(call);
+            }
+
+        private:
+
+            /** The callback method */
+            bool (C::*func)(Call&);
+
+            C* parent;
 
         };
 

@@ -12,6 +12,7 @@
 #include "param/ButtonParam.h"
 #include "param/FloatParam.h"
 #include "vislib/mathfunctions.h"
+#include "view/CallTimeControl.h"
 
 using namespace megamol::core;
 
@@ -26,11 +27,13 @@ view::TimeControl::TimeControl(void) :
         toggleAnimPlaySlot("anim::togglePlay", "Button to toggle animation"),
         animSpeedUpSlot("anim::SpeedUp", "Speeds up the animation"),
         animSpeedDownSlot("anim::SpeedDown", "Slows down the animation"),
+        slaveSlot("timecontrolslave", "Slot used if this time control is slave"),
+        masterSlot("timecontrolmaster", "Slot used if this time control is master"),
         frames(1), isInSitu(false), instOffset(0.0) {
 
     this->animPlaySlot << new param::BoolParam(false);
 
-    this->animSpeedSlot << new param::FloatParam(4.0f, 0.01f, 100.0f);
+    this->animSpeedSlot << new param::FloatParam(4.0f, 0.01f, 500.0f);
 
     this->animTimeSlot << new param::FloatParam(0.0f, 0.0f);
 
@@ -42,6 +45,11 @@ view::TimeControl::TimeControl(void) :
 
     this->toggleAnimPlaySlot << new param::ButtonParam(' ');
     this->toggleAnimPlaySlot.SetUpdateCallback(this, &TimeControl::onAnimToggleButton);
+
+    this->slaveSlot.SetCompatibleCall<CallTimeControlDescription>();
+
+    this->masterSlot.SetCallback(CallTimeControl::ClassName(),
+        CallTimeControl::FunctionName(0), this, &TimeControl::masterCallback);
 
 }
 
@@ -58,31 +66,39 @@ view::TimeControl::~TimeControl(void) {
  * view::TimeControl::onAnimToggleButton
  */
 float view::TimeControl::Time(double instTime) const {
+    TimeControl *master = this->getMaster();
 
-    if (this->animPlaySlot.IsDirty() || this->animSpeedSlot.IsDirty() || this->animTimeSlot.IsDirty()) {
-        this->animPlaySlot.ResetDirty();
-        this->animSpeedSlot.ResetDirty();
+    if (master != NULL) {
+        return master->Time(instTime);
 
-        this->instOffset = instTime - 
-            (this->animTimeSlot.Param<param::FloatParam>()->Value()
-            / this->animSpeedSlot.Param<param::FloatParam>()->Value());
+    } else {
+        if (this->animPlaySlot.IsDirty() || this->animSpeedSlot.IsDirty() || this->animTimeSlot.IsDirty()) {
+            this->animPlaySlot.ResetDirty();
+            this->animSpeedSlot.ResetDirty();
 
+            this->instOffset = instTime - 
+                (this->animTimeSlot.Param<param::FloatParam>()->Value()
+                / this->animSpeedSlot.Param<param::FloatParam>()->Value());
+
+        }
+
+        if (this->isInSitu) {
+            return static_cast<float>(this->frames);
+
+        } else if (this->animPlaySlot.Param<param::BoolParam>()->Value()) {
+            float f = static_cast<float>(
+                (instTime - this->instOffset) * this->animSpeedSlot.Param<param::FloatParam>()->Value());
+            unsigned int rt = static_cast<unsigned int>(f / static_cast<float>(this->frames));
+            f -= static_cast<float>(rt * this->frames);
+            this->animTimeSlot.Param<param::FloatParam>()->SetValue(f, false);
+
+        }
+
+        this->animTimeSlot.ResetDirty();
+        return this->animTimeSlot.Param<param::FloatParam>()->Value();
     }
 
-    if (this->isInSitu) {
-        return static_cast<float>(this->frames);
-
-    } else if (this->animPlaySlot.Param<param::BoolParam>()->Value()) {
-        float f = static_cast<float>(
-            (instTime - this->instOffset) * this->animSpeedSlot.Param<param::FloatParam>()->Value());
-        unsigned int rt = static_cast<unsigned int>(f / static_cast<float>(this->frames));
-        f -= static_cast<float>(rt * this->frames);
-        this->animTimeSlot.Param<param::FloatParam>()->SetValue(f, false);
-
-    }
-
-    this->animTimeSlot.ResetDirty();
-    return this->animTimeSlot.Param<param::FloatParam>()->Value();
+    return 0.0f;
 }
 
 
@@ -90,9 +106,15 @@ float view::TimeControl::Time(double instTime) const {
  * view::TimeControl::onAnimToggleButton
  */
 void view::TimeControl::SetTimeExtend(unsigned int frames, bool isInSitu) {
-    this->frames = frames;
-    if (this->frames <= 0) this->frames = 1;
-    this->isInSitu = isInSitu;
+    TimeControl *master = this->getMaster();
+
+    if (master != NULL) {
+        master->SetTimeExtend(frames, isInSitu);
+    } else {
+        this->frames = frames;
+        if (this->frames <= 0) this->frames = 1;
+        this->isInSitu = isInSitu;
+    }
 }
 
 
@@ -101,7 +123,16 @@ void view::TimeControl::SetTimeExtend(unsigned int frames, bool isInSitu) {
  */
 bool view::TimeControl::onAnimToggleButton(param::ParamSlot& p) {
     ASSERT(&p == &this->toggleAnimPlaySlot);
-    param::BoolParam *bp = this->animPlaySlot.Param<param::BoolParam>();
+
+    TimeControl *master = this->getMaster();
+    param::BoolParam *bp = NULL;
+
+    if (master != NULL) {
+        bp = master->animPlaySlot.Param<param::BoolParam>();
+    } else {
+        bp = this->animPlaySlot.Param<param::BoolParam>();
+    }
+
     bp->SetValue(!bp->Value());
     return true;
 }
@@ -111,7 +142,17 @@ bool view::TimeControl::onAnimToggleButton(param::ParamSlot& p) {
  * view::TimeControl::onAnimSpeedStep
  */
 bool view::TimeControl::onAnimSpeedStep(param::ParamSlot& p) {
-    float spd = this->animSpeedSlot.Param<param::FloatParam>()->Value();
+
+    TimeControl *master = this->getMaster();
+    param::FloatParam *fp = NULL;
+
+    if (master != NULL) {
+        fp = master->animSpeedSlot.Param<param::FloatParam>();
+    } else {
+        fp = this->animSpeedSlot.Param<param::FloatParam>();
+    }
+
+    float spd = fp->Value();
     float ospd = spd;
     if (&p == &this->animSpeedUpSlot) {
         if (spd >= 1.0f && spd < 100.0f) {
@@ -129,8 +170,32 @@ bool view::TimeControl::onAnimSpeedStep(param::ParamSlot& p) {
         }
 
     }
+
     if (!vislib::math::IsEqual(ospd, spd)) {
-        this->animSpeedSlot.Param<param::FloatParam>()->SetValue(spd);
+        fp->SetValue(spd);
     }
     return true;
+}
+
+
+/*
+ * view::TimeControl::masterCallback
+ */
+bool view::TimeControl::masterCallback(Call& c) {
+    CallTimeControl *ctc = dynamic_cast<CallTimeControl*>(&c);
+    if (ctc == NULL) return false;
+    ctc->SetMaster(this);
+    return true;
+}
+
+
+/*
+ * view::TimeControl::getMaster
+ */
+view::TimeControl *view::TimeControl::getMaster(void) const {
+    CallTimeControl *ctc = this->slaveSlot.CallAs<CallTimeControl>();
+    if (ctc == NULL) return NULL;
+    if (!(*ctc)(0)) return NULL;
+    if (ctc->Master() == this) return NULL;
+    return ctc->Master();
 }

@@ -14,6 +14,8 @@
 #include "api/MegaMolCore.std.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
+#include "CallerSlot.h"
+#include "CalleeSlot.h"
 
 
 namespace megamol {
@@ -48,6 +50,8 @@ namespace view {
                 case 3: return &this->toggleAnimPlaySlot;
                 case 4: return &this->animSpeedUpSlot;
                 case 5: return &this->animSpeedDownSlot;
+                case 6: return &this->masterSlot;
+                case 7: return &this->slaveSlot;
             }
             return NULL;
         }
@@ -89,6 +93,22 @@ namespace view {
          */
         bool onAnimSpeedStep(param::ParamSlot& p);
 
+        /**
+         * Incoming call from a slave to this master
+         *
+         * @param c The incoming call
+         *
+         * @return Some return value
+         */
+        bool masterCallback(Call& c);
+
+        /**
+         * Gets the connected master
+         *
+         * @return The connected master or NULL
+         */
+        TimeControl *getMaster(void) const;
+
         /** Bool parameter to play/stop the animation */
         mutable param::ParamSlot animPlaySlot;
 
@@ -106,6 +126,12 @@ namespace view {
 
         /** Slows down the animation */
         param::ParamSlot animSpeedDownSlot;
+
+        /** Slot used if this time control is slave */
+        mutable CallerSlot slaveSlot;
+
+        /** Slot used if this time control is master */
+        CalleeSlot masterSlot;
 
         /** The number of data frames or the number of the frame currently available at an in-situ source */
         unsigned int frames;

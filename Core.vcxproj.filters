@@ -714,6 +714,9 @@
     <ClCompile Include="moldyn\SimpleGeoSphereRenderer.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="view\CallTimeControl.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1297,6 +1300,9 @@
     </ClInclude>
     <ClInclude Include="moldyn\SimpleGeoSphereRenderer.h">
       <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\CallTimeControl.h">
+      <Filter>view\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
