@@ -459,6 +459,8 @@ void view::View3D::Render(float time, double instTime) {
 
     if (this->overrideCall) {
         (*static_cast<AbstractCallRender*>(cr3d)) = *this->overrideCall;
+        cr3d->SetInstanceTime(instTime);
+        cr3d->SetTime(time);
     }
 
     // call for render
@@ -585,7 +587,9 @@ bool view::View3D::OnRenderView(Call& call) {
 
     this->overrideCall = dynamic_cast<AbstractCallRender*>(&call);
 
-    this->Render(crv->Time(), crv->InstanceTime());
+    float time = crv->Time();
+    if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
+    this->Render(time, crv->InstanceTime());
 
     this->overrideCall = NULL;
 

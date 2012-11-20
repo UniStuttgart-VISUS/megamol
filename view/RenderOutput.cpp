@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "RenderOutput.h"
 #include "vislib/assert.h"
+#include "vislib/Trace.h"
 
 using namespace megamol::core;
 
@@ -26,6 +27,10 @@ void view::RenderOutput::DisableOutputBuffer(void) {
  * view::RenderOutput::EnableOutputBuffer
  */
 void view::RenderOutput::EnableOutputBuffer(void) {
+#if defined(DEBUG) || defined(_DEBUG)
+    unsigned int otl = vislib::Trace::GetInstance().GetLevel();
+    vislib::Trace::GetInstance().SetLevel(0);
+#endif /* DEBUG || _DEBUG */
     if (this->outputFBO) {
         if (this->outputFBOTargets.Count() == 0) {
             this->outputFBO->Enable(); 
@@ -44,6 +49,9 @@ void view::RenderOutput::EnableOutputBuffer(void) {
         this->outputViewport.Bottom(),
         this->outputViewport.Width(),
         this->outputViewport.Height());
+#if defined(DEBUG) || defined(_DEBUG)
+    vislib::Trace::GetInstance().SetLevel(otl);
+#endif /* DEBUG || _DEBUG */
 }
 
 

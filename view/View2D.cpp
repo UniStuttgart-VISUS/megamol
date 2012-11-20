@@ -431,7 +431,9 @@ bool view::View2D::OnRenderView(Call& call) {
         this->overrideBkgndCol = overBC; // hurk
     }
 
-    this->Render(crv->Time(), crv->InstanceTime());
+    float time = crv->Time();
+    if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
+    this->Render(time, crv->InstanceTime());
 
     this->overrideBkgndCol = NULL;
     this->overrideViewport = NULL;

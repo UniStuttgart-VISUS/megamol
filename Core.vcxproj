@@ -410,6 +410,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="view\Renderer3DModule.cpp" />
     <ClCompile Include="view\Renderer3DModuleDS.cpp" />
     <ClCompile Include="view\RenderOutput.cpp" />
+    <ClCompile Include="view\SplitView.cpp" />
     <ClCompile Include="view\SwitchRenderer3D.cpp" />
     <ClCompile Include="view\TileView.cpp" />
     <ClCompile Include="view\TimeControl.cpp" />
@@ -624,6 +625,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="view\Renderer3DModule.h" />
     <ClInclude Include="view\Renderer3DModuleDS.h" />
     <ClInclude Include="view\RenderOutput.h" />
+    <ClInclude Include="view\SplitView.h" />
     <ClInclude Include="view\SwitchRenderer3D.h" />
     <ClInclude Include="view\TileView.h" />
     <ClInclude Include="view\TimeControl.h" />

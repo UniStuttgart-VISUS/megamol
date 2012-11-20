@@ -717,6 +717,9 @@
     <ClCompile Include="view\CallTimeControl.cpp">
       <Filter>view\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="view\SplitView.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1302,6 +1305,9 @@
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="view\CallTimeControl.h">
+      <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\SplitView.h">
       <Filter>view\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
