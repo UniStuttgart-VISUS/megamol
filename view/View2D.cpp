@@ -221,6 +221,20 @@ void view::View2D::Render(float time, double instTime) {
 
     (*cr2d)(0); // render
 
+    if (this->showSoftCursor()) {
+        ::glMatrixMode(GL_PROJECTION);
+        ::glLoadIdentity();
+        ::glTranslatef(-1.0f, 1.0f, 0.0f);
+        ::glScalef(2.0f / this->width, -2.0f / this->height, 1.0f);
+        ::glMatrixMode(GL_MODELVIEW);
+        ::glLoadIdentity();
+        ::glBegin(GL_LINES);
+        ::glColor4ub(255, 255, 0, 255);
+        ::glVertex2f(0.0f, 0.0f);
+        ::glVertex2f(this->mouseX, this->mouseY);
+        ::glEnd();
+    }
+
     AbstractRenderingView::endFrame();
 
 }
@@ -458,7 +472,9 @@ void view::View2D::UpdateFreeze(bool freeze) {
  * view::View2D::unpackMouseCoordinates
  */
 void view::View2D::unpackMouseCoordinates(float &x, float &y) {
-    x = y = 0.0f; // TODO: Fix mouse interaction
+    x *= this->width;
+    y *= this->height;
+    y -= 1.0f;
 }
 
 

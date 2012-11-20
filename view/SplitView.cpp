@@ -32,7 +32,8 @@ view::SplitView::SplitView(void) : AbstractView(),
         splitWidthSlot("split.width", "The split border width"),
         splitColourSlot("split.colour", "The split border colour"),
         splitColour(192, 192, 192, 255), overrideCall(NULL),
-        clientArea(), client1Area(), client2Area(), fbo1(), fbo2() {
+        clientArea(), client1Area(), client2Area(), fbo1(), fbo2(),
+        mouseFocus(-1), mouseBtnDown(0), mouseX(0.0f), mouseY(0.0f) {
 
     this->render1Slot.SetCompatibleCall<CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render1Slot);
@@ -348,9 +349,36 @@ void view::SplitView::Resize(unsigned int width, unsigned int height) {
  * view::SplitView::SetCursor2DButtonState
  */
 void view::SplitView::SetCursor2DButtonState(unsigned int btn, bool down) {
+    unsigned int mouseBtn = 1 << btn;
+    if (down) this->mouseBtnDown |= mouseBtn;
+    else this->mouseBtnDown &= ~mouseBtn;
 
-    // TODO: Implement
+    if ((this->mouseBtnDown != 0) && (this->mouseFocus < 0)) {
+        // take focus!
+        if (this->client1Area.Contains(vislib::math::Point<float, 2>(this->mouseX, this->mouseY))) {
+            this->mouseFocus = 1;
+        } else if (this->client1Area.Contains(vislib::math::Point<float, 2>(this->mouseX, this->mouseY))) {
+            this->mouseFocus = 2;
+        } else {
+            this->mouseFocus = 0;
+        }
+    }
 
+    CallRenderView *crv = NULL;
+    if (this->mouseFocus == 1) {
+        crv = this->render1();
+    } else {
+        crv = this->render2();
+    }
+    if (crv != NULL) {
+        crv->SetMouseButton(btn, down);
+        (*crv)(CallRenderView::CALL_SETCURSOR2DBUTTONSTATE);
+    }
+
+    if ((this->mouseBtnDown == 0) && (this->mouseFocus >= 0)) {
+        // release focus!
+        this->mouseFocus = -1;
+    }
 }
 
 
@@ -359,9 +387,23 @@ void view::SplitView::SetCursor2DButtonState(unsigned int btn, bool down) {
  */
 void view::SplitView::SetCursor2DPosition(float x, float y) {
     // x, y are coordinates in pixel
+    this->mouseX = x;
+    this->mouseY = y;
 
-    // TODO: Implement
-
+    CallRenderView *crv = this->render1();
+    if (crv != NULL) {
+        crv->SetMousePosition(
+            (x - this->client1Area.Left()) / this->client1Area.Width(),
+            (y - this->client1Area.Bottom()) / this->client1Area.Height());
+        (*crv)(CallRenderView::CALL_SETCURSOR2DPOSITION);
+    }
+    crv = this->render2();
+    if (crv != NULL) {
+        crv->SetMousePosition(
+            (x - this->client2Area.Left()) / this->client2Area.Width(),
+            (y - this->client2Area.Bottom()) / this->client2Area.Height());
+        (*crv)(CallRenderView::CALL_SETCURSOR2DPOSITION);
+    }
 }
 
 
@@ -426,6 +468,15 @@ void view::SplitView::release(void) {
     this->overrideCall = NULL; // do not delete
     if (this->fbo1.IsValid()) this->fbo1.Release();
     if (this->fbo2.IsValid()) this->fbo2.Release();
+}
+
+
+/*
+ * view::SplitView::unpackMouseCoordinates
+ */
+void view::SplitView::unpackMouseCoordinates(float &x, float &y) {
+    x *= this->clientArea.Width();
+    y *= this->clientArea.Height();
 }
 
 

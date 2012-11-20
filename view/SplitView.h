@@ -185,6 +185,15 @@ namespace view {
          */
         virtual void release(void);
 
+        /**
+         * Unpacks the mouse coordinates, which are relative to the virtual
+         * viewport size.
+         *
+         * @param x The x coordinate of the mouse position
+         * @param y The y coordinate of the mouse position
+         */
+        virtual void unpackMouseCoordinates(float &x, float &y);
+
     private:
 
         /**
@@ -252,6 +261,14 @@ namespace view {
         vislib::graphics::gl::FramebufferObject fbo1;
 
         vislib::graphics::gl::FramebufferObject fbo2;
+
+        int mouseFocus;
+
+        unsigned int mouseBtnDown;
+
+        float mouseX;
+
+        float mouseY;
 
     };
 
