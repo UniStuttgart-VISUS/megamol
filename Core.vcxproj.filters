@@ -720,6 +720,15 @@
     <ClCompile Include="view\SplitView.cpp">
       <Filter>view\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="moldyn\DirectVolumeRenderer.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="moldyn\slicing.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="moldyn\VolumeDataCall.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1309,6 +1318,15 @@
     </ClInclude>
     <ClInclude Include="view\SplitView.h">
       <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\slicing.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\DirectVolumeRenderer.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\VolumeDataCall.h">
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

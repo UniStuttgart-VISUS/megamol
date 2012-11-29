@@ -124,7 +124,7 @@
       <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -166,7 +166,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -202,7 +202,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -243,7 +243,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -317,6 +317,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\AbstractSimpleParticleDataSource.cpp" />
     <ClCompile Include="moldyn\AbstractSimpleSphereRenderer.cpp" />
     <ClCompile Include="moldyn\AbstractSimpleStoringParticleDataSource.cpp" />
+    <ClCompile Include="moldyn\DirectVolumeRenderer.cpp" />
     <ClCompile Include="moldyn\DirPartColModulate.cpp" />
     <ClCompile Include="moldyn\DirPartFilter.cpp" />
     <ClCompile Include="moldyn\DirPartVolume.cpp" />
@@ -324,8 +325,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\MMSPDFrameData.cpp" />
     <ClCompile Include="moldyn\MMSPDHeader.cpp" />
     <ClCompile Include="moldyn\SimpleGeoSphereRenderer.cpp" />
+    <ClCompile Include="moldyn\slicing.cpp" />
     <ClCompile Include="moldyn\SphereDataUnifier.cpp" />
     <ClCompile Include="moldyn\SphereOutlineRenderer.cpp" />
+    <ClCompile Include="moldyn\VolumeDataCall.cpp" />
     <ClCompile Include="ObjectDescription.cpp" />
     <ClCompile Include="ObjectDescriptionManager.cpp" />
     <ClCompile Include="ParamValueSetRequest.cpp" />
@@ -558,6 +561,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\AbstractSimpleParticleDataSource.h" />
     <ClInclude Include="moldyn\AbstractSimpleSphereRenderer.h" />
     <ClInclude Include="moldyn\AbstractSimpleStoringParticleDataSource.h" />
+    <ClInclude Include="moldyn\DirectVolumeRenderer.h" />
     <ClInclude Include="moldyn\DirPartColModulate.h" />
     <ClInclude Include="moldyn\DirPartFilter.h" />
     <ClInclude Include="moldyn\DirPartVolume.h" />
@@ -565,8 +569,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\MMSPDFrameData.h" />
     <ClInclude Include="moldyn\MMSPDHeader.h" />
     <ClInclude Include="moldyn\SimpleGeoSphereRenderer.h" />
+    <ClInclude Include="moldyn\slicing.h" />
     <ClInclude Include="moldyn\SphereDataUnifier.h" />
     <ClInclude Include="moldyn\SphereOutlineRenderer.h" />
+    <ClInclude Include="moldyn\VolumeDataCall.h" />
     <ClInclude Include="ObjectDescription.h" />
     <ClInclude Include="ObjectDescriptionManager.h" />
     <ClInclude Include="ParamValueSetRequest.h" />
