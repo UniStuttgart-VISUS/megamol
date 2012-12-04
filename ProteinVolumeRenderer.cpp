@@ -2061,6 +2061,13 @@ void protein::ProteinVolumeRenderer::RayParamTextures( vislib::math::Cuboid<floa
 
     glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
 
+    // save OpenGL state Clip planes
+    glPushAttrib(GL_ENABLE_BIT);
+    // NVIDIA sets number of clip planes to 6!
+    for (int i=0; i<6; ++i) {
+        glDisable(GL_CLIP_PLANE0 + i);
+    }
+
     // the shader transforms camera coords back to object space
     this->volRayStartEyeShader.Enable();
 
@@ -2077,6 +2084,9 @@ void protein::ProteinVolumeRenderer::RayParamTextures( vislib::math::Cuboid<floa
     CHECK_FOR_OGL_ERROR();
 
     this->volRayStartEyeShader.Disable();
+    
+    // restore OpenGL state Clip planes
+    glPopAttrib();
 
     glDrawBuffers( 1, db);
 

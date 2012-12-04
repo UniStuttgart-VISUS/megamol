@@ -142,7 +142,7 @@ void calcHash(uint*  gridParticleHash,
               float* pos, 
               int    numParticles) {
     uint numThreads, numBlocks;
-	computeGridSize(numParticles, 256, numBlocks, numThreads);
+    computeGridSize(numParticles, 256, numBlocks, numThreads);
 
     // execute the kernel
     calcHashD<<< numBlocks, numThreads >>>(gridParticleHash,
@@ -155,18 +155,18 @@ void calcHash(uint*  gridParticleHash,
 }
 
 void reorderDataAndFindCellStart(uint*  cellStart,
-							     uint*  cellEnd,
-							     float* sortedPos,
+                                 uint*  cellEnd,
+                                 float* sortedPos,
                                  uint*  gridParticleHash,
                                  uint*  gridParticleIndex,
-							     float* oldPos,
-							     uint   numParticles,
-							     uint   numCells) {
+                                 float* oldPos,
+                                 uint   numParticles,
+                                 uint   numCells) {
     uint numThreads, numBlocks;
     computeGridSize(numParticles, 256, numBlocks, numThreads);
 
     // set all cells to empty
-	cutilSafeCall(cudaMemset(cellStart, 0xffffffff, numCells*sizeof(uint)));
+    cutilSafeCall(cudaMemset(cellStart, 0xffffffff, numCells*sizeof(uint)));
 
     //cutilSafeCall(cudaBindTexture(0, oldPosTex, oldPos, numParticles*sizeof(float4)));
 
@@ -175,8 +175,8 @@ void reorderDataAndFindCellStart(uint*  cellStart,
         cellStart,
         cellEnd,
         (float4 *) sortedPos,
-		gridParticleHash,
-		gridParticleIndex,
+        gridParticleHash,
+        gridParticleIndex,
         (float4 *) oldPos,
         numParticles);
     cutilCheckMsg("Kernel execution failed: reorderDataAndFindCellStartD");
@@ -185,19 +185,19 @@ void reorderDataAndFindCellStart(uint*  cellStart,
 }
 
 void countNeighbors( uint*  neighborCount,
-					 uint*  neighbors,
-					 float* smallCircles,
-				     float* sortedPos,
-					 uint*  gridParticleIndex,
-					 uint*  cellStart,
-					 uint*  cellEnd,
-					 uint   numAtoms,
+                     uint*  neighbors,
+                     float* smallCircles,
+                     float* sortedPos,
+                     uint*  gridParticleIndex,
+                     uint*  cellStart,
+                     uint*  cellEnd,
+                     uint   numAtoms,
                      uint   numNeighbors,
-					 uint   numCells) {
+                     uint   numCells) {
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-	cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-	cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
     cutilSafeCall( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
     cutilSafeCall( cudaBindTexture( 0, cellEndTex, cellEnd, numCells*sizeof(uint)));
 
@@ -207,37 +207,37 @@ void countNeighbors( uint*  neighborCount,
 
     // execute the kernel
     countNeighbors<<< numBlocks, numThreads >>>( neighborCount,
-		                                         neighbors,
-												 (float4*)smallCircles,
+                                                 neighbors,
+                                                 (float4*)smallCircles,
                                                  (float4*)sortedPos,
                                                  gridParticleIndex,
-												 cellStart,
-												 cellEnd,
-												 numAtoms);
+                                                 cellStart,
+                                                 cellEnd,
+                                                 numAtoms);
 
     // check if kernel invocation generated an error
     cutilCheckMsg("Kernel execution failed");
 
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
-	cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-	cutilSafeCall( cudaUnbindTexture( neighborsTex));
-	cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
+    cutilSafeCall( cudaUnbindTexture( neighborCountTex));
+    cutilSafeCall( cudaUnbindTexture( neighborsTex));
+    cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
     cutilSafeCall( cudaUnbindTexture( cellStartTex));
     cutilSafeCall( cudaUnbindTexture( cellEndTex));
 }
 
 void countNeighbors2( uint*  neighborCount,
-					 uint*  neighbors,
-				     float* sortedPos,
-					 uint*  gridParticleIndex,
-					 uint*  cellStart,
-					 uint*  cellEnd,
-					 uint   numAtoms,
+                     uint*  neighbors,
+                     float* sortedPos,
+                     uint*  gridParticleIndex,
+                     uint*  cellStart,
+                     uint*  cellEnd,
+                     uint   numAtoms,
                      uint   numNeighbors,
-					 uint   numCells) {
+                     uint   numCells) {
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-	//cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-	//cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    //cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    //cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
     cutilSafeCall( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
     cutilSafeCall( cudaBindTexture( 0, cellEndTex, cellEnd, numCells*sizeof(uint)));
 
@@ -247,34 +247,34 @@ void countNeighbors2( uint*  neighborCount,
 
     // execute the kernel
     countNeighbors<<< numBlocks, numThreads >>>( neighborCount,
-		                                         neighbors,
+                                                 neighbors,
                                                  (float4*)sortedPos,
                                                  gridParticleIndex,
-												 cellStart,
-												 cellEnd,
-												 numAtoms);
+                                                 cellStart,
+                                                 cellEnd,
+                                                 numAtoms);
 
     // check if kernel invocation generated an error
     cutilCheckMsg("Kernel execution failed");
 
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
-	//cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-	//cutilSafeCall( cudaUnbindTexture( neighborsTex));
+    //cutilSafeCall( cudaUnbindTexture( neighborCountTex));
+    //cutilSafeCall( cudaUnbindTexture( neighborsTex));
     cutilSafeCall( cudaUnbindTexture( cellStartTex));
     cutilSafeCall( cudaUnbindTexture( cellEndTex));
 }
 
 void countProbeNeighbors( //uint*  probeNeighborCount,
                      float3* probeNeighborCount,
-					 //uint*  probeNeighbors,
+                     //uint*  probeNeighbors,
                      float3* probeNeighbors,
-				     float* sortedProbePos,
-					 uint*  gridParticleIndex,
-					 uint*  cellStart,
-					 uint*  cellEnd,
-					 uint   numProbes,
+                     float* sortedProbePos,
+                     uint*  gridParticleIndex,
+                     uint*  cellStart,
+                     uint*  cellEnd,
+                     uint   numProbes,
                      uint   numNeighbors,
-					 uint   numCells) {
+                     uint   numCells) {
     // bind textures
     // TODO!!
     cutilSafeCall( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
@@ -308,9 +308,9 @@ void computeArcsCUDA( float*  arcs,
                       uint    numNeighbors) {
     //cutilSafeCall( cudaBindTexture( 0, arcsTex, arcs, numAtoms*numNeighbors*4*sizeof(float4)));
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-	cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-	cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
 
     // execute the kernel
     computeArcs<<< numAtoms, numNeighbors >>>( (float4*)arcs,
@@ -326,9 +326,9 @@ void computeArcsCUDA( float*  arcs,
 
     //cutilSafeCall( cudaUnbindTexture( arcsTex));
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
-	cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-	cutilSafeCall( cudaUnbindTexture( neighborsTex));
-	cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
+    cutilSafeCall( cudaUnbindTexture( neighborCountTex));
+    cutilSafeCall( cudaUnbindTexture( neighborsTex));
+    cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
 }
 
 void computeReducedSurfaceCuda( uint* point1, 
@@ -337,8 +337,8 @@ void computeReducedSurfaceCuda( uint* point1,
         uint* gridParticleIndex, float* visibleAtoms, uint* visibleAtomsId,
         uint numAtoms, uint numVisibleAtoms, uint numNeighbors) {
     // texture bindings
-	cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
     cutilSafeCall( cudaBindTexture( 0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
     cutilSafeCall( cudaBindTexture( 0, visibleAtomsIdTex, visibleAtomsId, numAtoms*sizeof(uint)));
@@ -357,17 +357,17 @@ void computeReducedSurfaceCuda( uint* point1,
     computeReducedSurface<<< numBlocks, numThreads >>>( 
         //(float4*)point1, (float4*)point2, (float4*)point3, (float4*)probePos,
         (uint4*)point1, (float4*)probePos,
-		neighborCount, neighbors, (float4*)atomPos, gridParticleIndex,
+        neighborCount, neighbors, (float4*)atomPos, gridParticleIndex,
         (float4*)visibleAtoms, visibleAtomsId);
 
     // check if kernel invocation generated an error
     cutilCheckMsg("Kernel execution (computeReducedSurface) failed");
 
     cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-	cutilSafeCall( cudaUnbindTexture( neighborsTex));
+    cutilSafeCall( cudaUnbindTexture( neighborsTex));
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
-	cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
-	cutilSafeCall( cudaUnbindTexture( visibleAtomsIdTex));
+    cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
+    cutilSafeCall( cudaUnbindTexture( visibleAtomsIdTex));
 }
 
 void computeTriangleVBOCuda( float3* vbo, uint4* point1, 
@@ -378,7 +378,7 @@ void computeTriangleVBOCuda( float3* vbo, uint4* point1,
     // TODO!
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
     cutilSafeCall( cudaBindTexture( 0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
-	//cutilSafeCall( cudaBindTexture( 0, point1Tex, point1, numAtoms*numNeighbors*numNeighbors*sizeof(uint4)));
+    //cutilSafeCall( cudaBindTexture( 0, point1Tex, point1, numAtoms*numNeighbors*numNeighbors*sizeof(uint4)));
 
     dim3 numThreads;
     numThreads.x = 8;
@@ -401,8 +401,8 @@ void computeTriangleVBOCuda( float3* vbo, uint4* point1,
     // unbind textures
     // TODO!
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
-	cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
-	//cutilSafeCall( cudaUnbindTexture( point1Tex));
+    cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
+    //cutilSafeCall( cudaUnbindTexture( point1Tex));
 }
 
 void computeVisibleTriangleVBOCuda( float3* vbo, uint4* point1, cudaArray* visibility,
@@ -413,12 +413,12 @@ void computeVisibleTriangleVBOCuda( float3* vbo, uint4* point1, cudaArray* visib
     // TODO!
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
     cutilSafeCall( cudaBindTexture( 0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
-	//cutilSafeCall( cudaBindTexture( 0, point1Tex, point1, numAtoms*numNeighbors*numNeighbors*sizeof(uint4)));
+    //cutilSafeCall( cudaBindTexture( 0, point1Tex, point1, numAtoms*numNeighbors*numNeighbors*sizeof(uint4)));
     cutilSafeCall( cudaBindTextureToArray( inVisibilityTex, visibility));
 
     struct cudaChannelFormatDesc desc; 
     cutilSafeCall(cudaGetChannelDesc(&desc, visibility));
-	
+    
     dim3 numThreads;
     numThreads.x = 8;
     numThreads.y = 8;
@@ -440,9 +440,9 @@ void computeVisibleTriangleVBOCuda( float3* vbo, uint4* point1, cudaArray* visib
     // unbind textures
     // TODO!
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
-	cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
-	//cutilSafeCall( cudaUnbindTexture( point1Tex));
-	cutilSafeCall( cudaUnbindTexture( inVisibilityTex));
+    cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
+    //cutilSafeCall( cudaUnbindTexture( point1Tex));
+    cutilSafeCall( cudaUnbindTexture( inVisibilityTex));
 }
 
 void computeSESPrimiticesVBOCuda(
@@ -476,7 +476,7 @@ void computeSESPrimiticesVBOCuda(
     
     // unbind textures
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
-	cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
+    cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
 }
 
 void writeProbePositionsCuda(
@@ -540,8 +540,8 @@ void findAdjacentTrianglesCuda(
     // check the number of visible atoms
     if( numVisibleAtoms == 0 ) return;
     // texture bindings
-	cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
     cutilSafeCall( cudaBindTexture( 0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
     cutilSafeCall( cudaBindTexture( 0, visibleAtomsIdTex, visibleAtomsId, numAtoms*sizeof(uint)));
@@ -569,11 +569,11 @@ void findAdjacentTrianglesCuda(
     cutilCheckMsg("Kernel execution (findAdjacentTriangles) failed");
 
     cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-	cutilSafeCall( cudaUnbindTexture( neighborsTex));
+    cutilSafeCall( cudaUnbindTexture( neighborsTex));
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
-	cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
-	cutilSafeCall( cudaUnbindTexture( visibleAtomsIdTex));
-	cutilSafeCall( cudaUnbindTexture( inVisibilityTex));
+    cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
+    cutilSafeCall( cudaUnbindTexture( visibleAtomsIdTex));
+    cutilSafeCall( cudaUnbindTexture( inVisibilityTex));
 }
 
 void findNeighborsCB(
@@ -587,9 +587,9 @@ void findNeighborsCB(
         uint    numNeighbors,
         uint    numCells) {
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-	cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-	cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
     cutilSafeCall( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
     cutilSafeCall( cudaBindTexture( 0, cellEndTex, cellEnd, numCells*sizeof(uint)));
 
@@ -605,9 +605,9 @@ void findNeighborsCB(
     cutilCheckMsg("Kernel execution failed");
 
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
-	cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-	cutilSafeCall( cudaUnbindTexture( neighborsTex));
-	cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
+    cutilSafeCall( cudaUnbindTexture( neighborCountTex));
+    cutilSafeCall( cudaUnbindTexture( neighborsTex));
+    cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
     cutilSafeCall( cudaUnbindTexture( cellStartTex));
     cutilSafeCall( cudaUnbindTexture( cellEndTex));
 }
@@ -621,7 +621,7 @@ void removeCoveredSmallCirclesCB(
         uint   numAtoms,
         uint   numNeighbors) {
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
 
     // one thread per particle neighbor
     dim3 numThreads;
@@ -641,7 +641,7 @@ void removeCoveredSmallCirclesCB(
     cutilCheckMsg("Kernel execution failed");
 
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
-	cutilSafeCall( cudaUnbindTexture( neighborsTex));
+    cutilSafeCall( cudaUnbindTexture( neighborsTex));
 }
 
 void computeArcsCB(
@@ -655,9 +655,9 @@ void computeArcsCB(
         uint   numAtoms,
         uint   numNeighbors) {
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-	cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-	cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
 
     // one thread per particle neighbor
     dim3 numThreads;
@@ -671,40 +671,40 @@ void computeArcsCB(
 
     // execute the kernel
     computeArcsCBCuda<<< numBlocks, numThreads >>>(
-		smallCircleVisible, (float4*)arcs, arcCount, numAtoms);
+        smallCircleVisible, (float4*)arcs, arcCount, numAtoms);
 
     // check if kernel invocation generated an error
     cutilCheckMsg("Kernel execution failed");
 
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
-	cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-	cutilSafeCall( cudaUnbindTexture( neighborsTex));
-	cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
+    cutilSafeCall( cudaUnbindTexture( neighborCountTex));
+    cutilSafeCall( cudaUnbindTexture( neighborsTex));
+    cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
 }
 
 void writeProbePositionsCB(
-		float*	probePos,
-		float*	sphereTriaVec1,
-		float*	sphereTriaVec2,
-		float*	sphereTriaVec3,
-		float*	torusPos,
-		float*	torusVS,
-		float*	torusAxis,
-		uint*   neighborCount,
-		uint*   neighbors,
-		float*  sortedAtomPos,
-		float*  arcs,
-		uint*	arcCount,
-		uint*	arcCountScan,
-		uint*	scCount,
-		uint*	scCountScan,
-		float*	smallCircles,
-		uint    numAtoms,
-		uint    numNeighbors) {
+        float*	probePos,
+        float*	sphereTriaVec1,
+        float*	sphereTriaVec2,
+        float*	sphereTriaVec3,
+        float*	torusPos,
+        float*	torusVS,
+        float*	torusAxis,
+        uint*   neighborCount,
+        uint*   neighbors,
+        float*  sortedAtomPos,
+        float*  arcs,
+        uint*	arcCount,
+        uint*	arcCountScan,
+        uint*	scCount,
+        uint*	scCountScan,
+        float*	smallCircles,
+        uint    numAtoms,
+        uint    numNeighbors) {
     cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedAtomPos, numAtoms*sizeof(float4)));
-	cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-	cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
 
     // one thread per particle neighbor
     dim3 numThreads;
@@ -718,17 +718,17 @@ void writeProbePositionsCB(
 
     // execute the kernel
     writeProbePositionsCBCuda<<< numBlocks, numThreads >>>( (float4*)probePos, 
-		(float4*)sphereTriaVec1, (float4*)sphereTriaVec2, (float4*)sphereTriaVec3,
-		(float4*)torusPos, (float4*)torusVS, (float4*)torusAxis,
-		(float4*)arcs, arcCount, arcCountScan, scCount, scCountScan, numAtoms);
+        (float4*)sphereTriaVec1, (float4*)sphereTriaVec2, (float4*)sphereTriaVec3,
+        (float4*)torusPos, (float4*)torusVS, (float4*)torusAxis,
+        (float4*)arcs, arcCount, arcCountScan, scCount, scCountScan, numAtoms);
 
     // check if kernel invocation generated an error
     cutilCheckMsg("Kernel execution failed");
 
     cutilSafeCall( cudaUnbindTexture( atomPosTex));
-	cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-	cutilSafeCall( cudaUnbindTexture( neighborsTex));
-	cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
+    cutilSafeCall( cudaUnbindTexture( neighborCountTex));
+    cutilSafeCall( cudaUnbindTexture( neighborsTex));
+    cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
 }
 
 void writeSingularityTextureCB(
