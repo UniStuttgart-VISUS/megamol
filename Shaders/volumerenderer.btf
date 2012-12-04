@@ -24,8 +24,8 @@ void main(void) {
     gl_Position = gl_Vertex;
 
     // calculate light position
-    lightPos = ( gl_ModelViewMatrixInverse * vec4( 60.0, 50.0, 100.0, 1.0)).xyz;
-    fillLightPos = ( gl_ModelViewMatrixInverse * vec4(-60.0, -20.0, 50.0, 1.0)).xyz;
+    lightPos = (gl_ModelViewMatrixInverse * vec4(60.0, 50.0, 100.0, 1.0)).xyz;
+    fillLightPos = (gl_ModelViewMatrixInverse * vec4(-60.0, -20.0, 50.0, 1.0)).xyz;
 }
 -->
             </snippet>
@@ -66,7 +66,7 @@ uniform float isoValue;
 uniform float isoOpacity = 0.4;
 uniform float clipPlaneOpacity = 0.4;
 
-//uniform vec4 clipPlane0 = vec4( 0.0);
+//uniform vec4 clipPlane0 = vec4(0.0);
 
 // textures
 uniform sampler3D volumeSampler;
@@ -93,7 +93,7 @@ vec3 calcIllum(vec3 illumPos, vec3 normal, vec3 dir, vec3 srcColor) {
     float specFill = pow(max(dot(r, -dir), 0.0), 20.0) * 0.24;
     float diffuseFill = 0.5*max(abs(ndotl), 0.0);
 
-    vec3 color = (diff + diffuseFill + 0.3)*srcColor.rgb + ( spec + specFill) * 0.5;
+    vec3 color = (diff + diffuseFill + 0.3)*srcColor.rgb + (spec + specFill) * 0.5;
 
     return color;
 }
@@ -112,7 +112,7 @@ void main(void) {
     vec3 center = vec3(0.0);
 
     // DEBUG
-    //gl_FragColor = vec4( rayLength.www, 1.0);
+    //gl_FragColor = vec4(rayLength.www, 1.0);
     //gl_FragColor = vec4(rayLength.www*0.5, 1.0);
     //gl_FragColor = vec4(rayLength.xyz, 1.0);
     //gl_FragColor = vec4(rayStart.xyz*scaleVol.xyz, 0.8);
@@ -147,11 +147,11 @@ void main(void) {
     float isoDiff = 0;
     float isoDiffOld = texture3D(volumeSampler, pos).r - isoValue;
     
-    if( isoDiffOld > 0.0 ) {
-        volColor = vec3( 0.75, 0.5, 0.0);
-        //volColor = clamp( texture3D(volumeSampler, pos).rgb, 0.0, 1.0);
+    if (isoDiffOld > 0.0) {
+        volColor = vec3(0.75, 0.5, 0.0);
+        //volColor = clamp(texture3D(volumeSampler, pos).rgb, 0.0, 1.0);
         // higher opacity for surfaces orthogonal to view dir
-        dest = vec4( volColor, clipPlaneOpacity);
+        dest = vec4(volColor, clipPlaneOpacity);
         // perform blending
         dest.rgb *= dest.a;
     }
@@ -166,23 +166,23 @@ void main(void) {
             scalarData = texture3D(volumeSampler, pos).r;
             // DEBUG lookup color
             //volColor = texture3D(volumeSampler, pos).rgb;
-            volColor = vec3( 0.75, 0.5, 0.0);
+            volColor = vec3(0.75, 0.5, 0.0);
             */
             data = texture3D(volumeSampler, pos);
             scalarData = data.r;
-            //volColor = clamp( data.rgb, 0.0, 1.0);
-            volColor = vec3( 0.75, 0.5, 0.0);
+            //volColor = clamp(data.rgb, 0.0, 1.0);
+            volColor = vec3(0.75, 0.5, 0.0);
 
 #if defined(VOLUME_RENDERING)
             // lookup in transfer function
             //src = texture1D(transferRGBASampler, log(scalarData*1.0+1.0));
             //src = texture1D(transferRGBASampler, scalarData/1.2-0.18);
             src = texture1D(transferRGBASampler, scalarData);
-            src = vec4( vec3( scalarData), 0.0005); // DEBUG
+            src = vec4(vec3(scalarData), 0.0005); // DEBUG
             // DEBUG ...
-            //src = vec4( clamp( abs( scalarData), 0.0, 1.0) );
-            //if( scalarData > 0.0 ) src *= vec4( 1.0, 0.0, 0.0, 1.0);
-            //else if( scalarData < 0.0 ) src *= vec4( 0.0, 1.0, 0.0, 1.0);
+            //src = vec4(clamp(abs(scalarData), 0.0, 1.0));
+            //if (scalarData > 0.0) src *= vec4(1.0, 0.0, 0.0, 1.0);
+            //else if (scalarData < 0.0) src *= vec4(0.0, 1.0, 0.0, 1.0);
             // ... DEBUG
 
             //src.rgb = vec3(0.6-2.5*scalarData) * vec3(0.2, 1.0, 0.1);
@@ -203,9 +203,9 @@ void main(void) {
                 vec3 isoPos = mix(pos - stepDir, pos, isoDiffOld/(isoDiffOld - isoDiff));
 
                 // lookup color
-                //volColor = texture3D( volumeSampler, isoPos).rgb;
-                //volColor = clamp( volColor, 0.0, 1.0);
-                volColor = vec3( 0.75, 0.5, 0.0);
+                //volColor = texture3D(volumeSampler, isoPos).rgb;
+                //volColor = clamp(volColor, 0.0, 1.0);
+                volColor = vec3(0.75, 0.5, 0.0);
                 
                 // compute gradient by central differences
                 vec3 gradient;
@@ -227,14 +227,14 @@ void main(void) {
                 vec3 dirWorld = dir * scaleVolInv.xyz;
 
                 float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
-                // DEBUG src = vec4(0.45, 0.55, 0.8, min( 1.0, isoOpacity + 1.5*(1.0-tmp))); // higher opacity for surfaces orthogonal to view dir
+                // DEBUG src = vec4(0.45, 0.55, 0.8, min(1.0, isoOpacity + 1.5*(1.0-tmp))); // higher opacity for surfaces orthogonal to view dir
                 //src = vec4(0.45, 0.55, 0.8, 0.6);
-                src = vec4( volColor, min( 1.0, isoOpacity + 1.5*(1.0-tmp))); // DEBUG
-                src.rgb = calcIllum( posWorld, gradient, dirWorld, src.rgb);
+                src = vec4(volColor, min(1.0, isoOpacity + 1.5*(1.0-tmp))); // DEBUG
+                src.rgb = calcIllum(posWorld, gradient, dirWorld, src.rgb);
                 //src.rgb = -gradient*0.5 + 0.5;
                 
                 // draw interior darker
-                if( isoDiffOld > 0.0 )
+                if (isoDiffOld > 0.0)
                     src.xyz *= 0.5;
                 
                 // perform blending
@@ -243,10 +243,10 @@ void main(void) {
                 
                 // rotate clip plane normal
                 //vec3 cp = gl_ClipPlane[0].xyz * gl_NormalMatrix;
-                // if( dot( posWorld - scaleVol.xyz, clipPlane0.xyz ) + clipPlane0.w < 0.05 )
+                // if (dot(posWorld - scaleVol.xyz, clipPlane0.xyz) + clipPlane0.w < 0.05)
                 //  //dest.xyz *= 0.2;
-                //  dest.xyz += 0.5 * vec3( 1.0, 1.0, 0.0);
-                // dest.xyz = clamp( dest.xyz, vec3( 0.0), vec3( 1.0));
+                //  dest.xyz += 0.5 * vec3(1.0, 1.0, 0.0);
+                // dest.xyz = clamp(dest.xyz, vec3(0.0), vec3(1.0));
             }
             isoDiffOld = isoDiff;
 #endif // ISO_SURFACE
@@ -287,11 +287,11 @@ varying vec3 objPos;
 void main(void) {
     // should - be + ??
     objPos = gl_Vertex.xyz - translate;
-    vec4 v = gl_Vertex - vec4( translate, 0.0);
+    vec4 v = gl_Vertex - vec4(translate, 0.0);
     gl_ClipVertex = gl_ModelViewMatrix * v;
     gl_Position = gl_ModelViewProjectionMatrix * v;
 
-    gl_FrontColor = vec4( objPos, gl_Color.a);
+    gl_FrontColor = vec4(objPos, gl_Color.a);
 }
 -->
             </snippet>
@@ -313,7 +313,7 @@ void main(void) {
 varying vec3 objPos;
 
 void main(void) {
-    gl_FragColor = vec4( objPos, gl_Color.a);
+    gl_FragColor = vec4(objPos, gl_Color.a);
 }
 -->
             </snippet>
@@ -336,11 +336,11 @@ varying vec3 objPos;
 
 void main(void) {
     // transform vertices from camera space to object space
-    objPos = ( gl_ModelViewMatrixInverse * gl_Vertex).xyz;
+    objPos = (gl_ModelViewMatrixInverse * gl_Vertex).xyz;
     gl_ClipVertex = gl_Vertex;
     gl_Position = gl_ProjectionMatrix * gl_Vertex;
 
-    gl_FrontColor = vec4( objPos, gl_Color.a);
+    gl_FrontColor = vec4(objPos, gl_Color.a);
 }
 -->
             </snippet>
@@ -362,8 +362,8 @@ void main(void) {
 varying vec3 objPos;
 
 void main(void) {
-    gl_FragData[0] = vec4( objPos, gl_Color.a);
-    gl_FragData[1] = vec4( 1000.0);
+    gl_FragData[0] = vec4(objPos, gl_Color.a);
+    gl_FragData[1] = vec4(1000.0);
 }
 -->
             </snippet>
@@ -403,15 +403,15 @@ float reconstructDepth(float z) {
 }
 
 void main(void) {
-    vec4 rayStart = texelFetch2D( sourceTex, ivec2( gl_FragCoord.xy), 0 );
+    vec4 rayStart = texelFetch2D(sourceTex, ivec2(gl_FragCoord.xy), 0);
 
     vec3 rayDir = objPos - rayStart.xyz;
     float rayLen = length(rayDir);
 
     rayDir = normalize(rayDir);
     
-    float sceneDepthDev = texelFetch2D( depthTex, ivec2( gl_FragCoord.xy), 0 ).x;
-    float sceneDepth = reconstructDepth( sceneDepthDev);
+    float sceneDepthDev = texelFetch2D(depthTex, ivec2(gl_FragCoord.xy), 0).x;
+    float sceneDepth = reconstructDepth(sceneDepthDev);
     // correction factor for depth projection  dot(rayDir, viewDir)
     float projection = abs(dot(rayDir, normalize(gl_ModelViewMatrixInverse[2].xyz)));
     // compute distance between rayStart and camera
@@ -422,8 +422,8 @@ void main(void) {
     rayLen = min(x, rayLen);
     rayLen *= rayStart.w;
     
-    gl_FragData[0] = vec4( rayDir, rayLen);
-    gl_FragData[1] = vec4( rayStartLen);
+    gl_FragData[0] = vec4(rayDir, rayLen);
+    gl_FragData[1] = vec4(rayStartLen);
 }
 
 -->
@@ -467,13 +467,13 @@ uniform float isoValue;
 uniform sampler3D volTex;
 
 void main(void) {
-    vec4 texCol = texture3D( volTex, gl_TexCoord[0].xyz);
-    if( texCol.a < isoValue )
-        //gl_FragColor = vec4( vec3( 1.0) - texCol.xyz, 1.0);
+    vec4 texCol = texture3D(volTex, gl_TexCoord[0].xyz);
+    if (texCol.a < isoValue)
+        //gl_FragColor = vec4(vec3(1.0) - texCol.xyz, 1.0);
         discard;
     else
-        gl_FragColor = vec4( texCol.xyz * 0.2 + vec3( 149.0/255.0, 202.0/255.0, 222.0/255.0) * 0.8, 1.0);
-        //gl_FragColor = vec4( texCol.xyz, 1.0);
+        gl_FragColor = vec4(texCol.xyz * 0.2 + vec3(149.0/255.0, 202.0/255.0, 222.0/255.0) * 0.8, 1.0);
+        //gl_FragColor = vec4(texCol.xyz, 1.0);
 }
 
 -->

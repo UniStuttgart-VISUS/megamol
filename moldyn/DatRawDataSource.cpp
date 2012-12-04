@@ -33,10 +33,10 @@ moldyn::DatRawDataSource::DatRawDataSource(void) : Module(),
     this->datFilenameSlot.SetUpdateCallback(&DatRawDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->datFilenameSlot);
     
-    this->getDataSlot.SetCallback( VolumeDataCall::ClassName(), 
+    this->getDataSlot.SetCallback(VolumeDataCall::ClassName(), 
         VolumeDataCall::FunctionName(VolumeDataCall::CallForGetData),
         &DatRawDataSource::getDataCallback);
-    this->getDataSlot.SetCallback( VolumeDataCall::ClassName(), 
+    this->getDataSlot.SetCallback(VolumeDataCall::ClassName(), 
         VolumeDataCall::FunctionName(VolumeDataCall::CallForGetExtent),
         &DatRawDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -56,7 +56,7 @@ moldyn::DatRawDataSource::~DatRawDataSource(void) {
  * moldyn::DatRawDataSource::create
  */
 bool moldyn::DatRawDataSource::create(void) {
-    if (!this->datFilenameSlot.Param<param::FilePathParam>()->Value().IsEmpty() ) {
+    if (!this->datFilenameSlot.Param<param::FilePathParam>()->Value().IsEmpty()) {
         this->filenameChanged(this->datFilenameSlot);
     }
     return true;
@@ -78,14 +78,14 @@ bool moldyn::DatRawDataSource::filenameChanged(param::ParamSlot& slot) {
     using vislib::sys::Log;
    
     // try to load the header (0 means loading failed)
-    if( datRaw_readHeader( W2A(this->datFilenameSlot.Param<param::FilePathParam>()->Value()), &this->header, NULL) == 0 ) {
+    if (datRaw_readHeader(W2A(this->datFilenameSlot.Param<param::FilePathParam>()->Value()), &this->header, NULL) == 0) {
         return false;
     }
 
     // load data
-    this->data.AssertSize( datRaw_getBufferSize( &this->header, DR_FORMAT_FLOAT));
+    this->data.AssertSize(datRaw_getBufferSize(&this->header, DR_FORMAT_FLOAT));
     void *tmpData = (void*)this->data;
-    datRaw_getNext( &this->header, &tmpData, DR_FORMAT_FLOAT);
+    datRaw_getNext(&this->header, &tmpData, DR_FORMAT_FLOAT);
 
     // TODO calc bounding box
     //if (this->data.GetSize() >= bpp) {
@@ -118,31 +118,31 @@ bool moldyn::DatRawDataSource::filenameChanged(param::ParamSlot& slot) {
  */
 bool moldyn::DatRawDataSource::getDataCallback(Call& caller) {
     VolumeDataCall *vdc = dynamic_cast<VolumeDataCall*>(&caller);
-    if ( vdc == NULL) return false;
+    if (vdc == NULL) return false;
 
     vdc->SetUnlocker(NULL);
     
     /*
     float min, max;
-    if( this->header.resolution[0] * this->header.resolution[1] * this->header.resolution[2] > 0 ) {
+    if (this->header.resolution[0] * this->header.resolution[1] * this->header.resolution[2] > 0) {
         min = max = this->data.As<float>()[0];
-        for( int i = 1; i < this->header.resolution[0] * this->header.resolution[1] * this->header.resolution[2]; i++ ) {
+        for (int i = 1; i < this->header.resolution[0] * this->header.resolution[1] * this->header.resolution[2]; i++) {
             min = min < this->data.As<float>()[i] ? min : this->data.As<float>()[i];
             max = max > this->data.As<float>()[i] ? max : this->data.As<float>()[i];
         }
     }
     // DEBUG normalize data
-    for( unsigned int i = 0; i < this->header.resolution[0] * this->header.resolution[1] * this->header.resolution[2]; i++ ) {
-        this->data.As<float>()[i] = ( this->data.As<float>()[i] - min) / ( max - min);
+    for (unsigned int i = 0; i < this->header.resolution[0] * this->header.resolution[1] * this->header.resolution[2]; i++) {
+        this->data.As<float>()[i] = (this->data.As<float>()[i] - min) / (max - min);
     }
     */
 
     // set data
-    vdc->SetBoundingBox( this->bbox);
-    vdc->SetVolumeDimension( this->header.resolution[0], this->header.resolution[1], this->header.resolution[2]);
-    vdc->SetVoxelMapPointer( this->data.As<float>());
-    //vdc->SetMinimumDensity( min);
-    //vdc->SetMaximumDensity( max);
+    vdc->SetBoundingBox(this->bbox);
+    vdc->SetVolumeDimension(this->header.resolution[0], this->header.resolution[1], this->header.resolution[2]);
+    vdc->SetVoxelMapPointer(this->data.As<float>());
+    //vdc->SetMinimumDensity(min);
+    //vdc->SetMaximumDensity(max);
 
     vdc->SetDataHash(this->datahash);
 
@@ -155,7 +155,7 @@ bool moldyn::DatRawDataSource::getDataCallback(Call& caller) {
  */
 bool moldyn::DatRawDataSource::getExtentCallback(Call& caller) {
     VolumeDataCall *vdc = dynamic_cast<VolumeDataCall*>(&caller);
-    if ( vdc == NULL) return false;
+    if (vdc == NULL) return false;
 
     // TODO fix frame count
     vdc->SetExtent(1,

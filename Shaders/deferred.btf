@@ -62,7 +62,7 @@ void main(void) {
     //vec3 normal = normalize(gl_NormalMatrix*texture2D(normalBuff, gl_TexCoord[0].st).xyz);
     vec3 normal = normalize( texture2D(normalBuff, gl_TexCoord[0].st).xyz);
     
-    if(renderMode == 0) { // Blinn phong illumination
+    if (renderMode == 0) { // Blinn phong illumination
     
         //vec4 posES  = getPosES(depth, winSize, clipPlanes);
 
@@ -84,13 +84,13 @@ void main(void) {
         //gl_FragColor = vec4(color.rgb*(diffuse + ambient) + specular , color.a);
         gl_FragColor = vec4( LocalLighting( V, normal, L, color.rgb), color.a);
     }
-    else if(renderMode == 1) { // Color
+    else if (renderMode == 1) { // Color
         gl_FragColor = texture2D(colorBuff, gl_TexCoord[0].st);
     }
-    else if(renderMode == 2) { // Normal
+    else if (renderMode == 2) { // Normal
         gl_FragColor = vec4(texture2D(normalBuff, gl_TexCoord[0].st).xyz, color.a);
     }
-    else if(renderMode == 3) { // Depth
+    else if (renderMode == 3) { // Depth
         gl_FragColor = vec4(texture2D(depthBuff, gl_TexCoord[0].st).xyz, color.a);
     }
 }

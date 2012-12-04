@@ -74,7 +74,7 @@ namespace moldyn {
          * @return The name of the requested function.
          */
         static const char * FunctionName(unsigned int idx) {
-            switch( idx) {
+            switch(idx) {
                 case 0:
                     return "GetData";
                 case 1:
@@ -93,10 +93,10 @@ namespace moldyn {
          * @param maxY maximal Y value.
          * @param maxZ maximal Z value.
          */
-        inline void SetBoundingBox( float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-            this->bBox.Set( minX, minY, minZ, maxX, maxY, maxZ);
-            if( this->bBox.IsEmpty() ) {
-                this->bBox.Set( 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+        inline void SetBoundingBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+            this->bBox.Set(minX, minY, minZ, maxX, maxY, maxZ);
+            if (this->bBox.IsEmpty()) {
+                this->bBox.Set(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
             }
         }
 
@@ -105,10 +105,10 @@ namespace moldyn {
          *
          * @param box The bounding box cuboid.
          */
-        inline void SetBoundingBox( const vislib::math::Cuboid<float> &box) {
+        inline void SetBoundingBox(const vislib::math::Cuboid<float> &box) {
             this->bBox = box;
-            if( this->bBox.IsEmpty() ) {
-                this->bBox.Set( 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+            if (this->bBox.IsEmpty()) {
+                this->bBox.Set(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
             }
         }
 
@@ -128,8 +128,8 @@ namespace moldyn {
          * @param rows Number of rows.
          * @param secs Number of sections.
          */
-        inline void SetVolumeDimension( unsigned int cols, unsigned int rows, unsigned int secs) {
-            this->volDim.Set( cols, rows, secs);
+        inline void SetVolumeDimension(unsigned int cols, unsigned int rows, unsigned int secs) {
+            this->volDim.Set(cols, rows, secs);
         }
 
         /**
@@ -137,7 +137,7 @@ namespace moldyn {
          *
          * @param box The bounding box cuboid.
          */
-        inline void SetVolumeDimension( const vislib::math::Dimension<unsigned int, 3> &dim) {
+        inline void SetVolumeDimension(const vislib::math::Dimension<unsigned int, 3> &dim) {
             this->volDim = dim;
         }
 
@@ -155,7 +155,7 @@ namespace moldyn {
          *
          * @param density The minimum density.
          */
-        inline void SetMinimumDensity( float density) {
+        inline void SetMinimumDensity(float density) {
             this->minDensity = density;
         }
 
@@ -173,7 +173,7 @@ namespace moldyn {
          *
          * @param density The maximum density.
          */
-        inline void SetMaximumDensity( float density) {
+        inline void SetMaximumDensity(float density) {
             this->maxDensity = density;
         }
 
@@ -191,7 +191,7 @@ namespace moldyn {
          *
          * @param density The mean density.
          */
-        inline void SetMeanDensity( float density) {
+        inline void SetMeanDensity(float density) {
             this->meanDensity = density;
         }
 
@@ -210,9 +210,9 @@ namespace moldyn {
          * must ensure it remains valid as long as it is used through this
          * interface.
          *
-         * @param map Pointer to the voxel map array.
+         * @param voxelMap Pointer to the voxel map array.
          */
-        void SetVoxelMapPointer( float *voxelMap);
+        void SetVoxelMapPointer(float *voxelMap);
 
         /**
          * Returns a pointer to the voxel map. 
@@ -232,37 +232,37 @@ namespace moldyn {
         virtual ~VolumeDataCall(void);
           
     private:
-        // map of the volume
+        /** map of the volume */
         float *map;
-        // Flag whether or not the interface owns the memory of the voxel map.
+        /** Flag whether or not the interface owns the memory of the voxel map */
         bool mapMemory;
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
-        // bounding box
+        /** bounding box */
         vislib::math::Cuboid<float> bBox;
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
 
-        // components per voxel
+        /** components per voxel */
         unsigned int components;
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
-        // volume dimension (the resolution of the volume in voxels).
+        /** volume dimension (the resolution of the volume in voxels). */
         vislib::math::Dimension<unsigned int, 3> volDim;
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
 
-        // min voxel value
+        /** minimum voxel value */
         float minDensity;
-        // max voxel value
+        /** maximum voxel value */
         float maxDensity;
-        // mean voxel value
+        /** mean voxel value */
         float meanDensity;
 
     };

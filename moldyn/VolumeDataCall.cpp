@@ -28,9 +28,8 @@ const unsigned int moldyn::VolumeDataCall::CallForGetExtent = 1;
  * VolumeDataCall::VolumeDataCall
  */
 moldyn::VolumeDataCall::VolumeDataCall(void) : AbstractGetData3DCall(),
-    map( NULL), mapMemory( false), bBox( 0, 0, 0, 0, 0, 0), components( 1), 
-    volDim( 0, 0, 0), minDensity( 0.0f), maxDensity( 0.0f), meanDensity( 0.0f)
-{
+    map(NULL), mapMemory(false), bBox(0, 0, 0, 0, 0, 0), components(1), 
+    volDim(0, 0, 0), minDensity(0.0f), maxDensity(0.0f), meanDensity(0.0f) {
     // intentionally empty
 }
 
@@ -39,15 +38,15 @@ moldyn::VolumeDataCall::VolumeDataCall(void) : AbstractGetData3DCall(),
  * VolumeDataCall::~VolumeDataCall
  */
 moldyn::VolumeDataCall::~VolumeDataCall(void) {
-
 }
 
 
 /*
  * Sets a pointer to the voxel map array.
  */
-void moldyn::VolumeDataCall::SetVoxelMapPointer( float *voxelMap) {
-    if( this->mapMemory ) delete[] this->map;
+void moldyn::VolumeDataCall::SetVoxelMapPointer(float *voxelMap) {
+    if (this->mapMemory) 
+        delete[] this->map;
     this->map = voxelMap;
     this->mapMemory = false;
 }

@@ -93,7 +93,7 @@ namespace moldyn {
          *
          * @return The return value of the function.
          */
-        virtual bool GetCapabilities( megamol::core::Call& call);
+        virtual bool GetCapabilities(megamol::core::Call& call);
 
         /**
          * The get extents callback. The module should set the members of
@@ -104,7 +104,7 @@ namespace moldyn {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents( megamol::core::Call& call);
+        virtual bool GetExtents(megamol::core::Call& call);
 
         /**
         * The Open GL Render callback.
@@ -112,52 +112,52 @@ namespace moldyn {
         * @param call The calling call.
         * @return The return value of the function.
         */
-        virtual bool Render( megamol::core::Call& call);
+        virtual bool Render(megamol::core::Call& call);
         
         /**
          * Volume rendering using volume data.
         */
-        bool RenderVolumeData( megamol::core::view::CallRender3D *call, VolumeDataCall *volume);
+        bool RenderVolumeData(megamol::core::view::CallRender3D *call, VolumeDataCall *volume);
         
         /**
          * Refresh all parameters.
         */
-        void ParameterRefresh( megamol::core::view::CallRender3D *call);
+        void ParameterRefresh(megamol::core::view::CallRender3D *call);
         
         /**
          * Draw the volume.
          *
          * @param boundingbox The bounding box.
          */
-        void RenderVolume( vislib::math::Cuboid<float> boundingbox);
+        void RenderVolume(vislib::math::Cuboid<float> boundingbox);
         
         /**
          * Write the parameters of the ray to the textures.
          *
          * @param boundingbox The bounding box.
          */
-        void RayParamTextures( vislib::math::Cuboid<float> boundingbox);
+        void RayParamTextures(vislib::math::Cuboid<float> boundingbox);
         
         /**
          * Create a volume containing the voxel map.
          *
          * @param volume The data interface.
          */
-        void UpdateVolumeTexture( const VolumeDataCall *volume);
+        void UpdateVolumeTexture(const VolumeDataCall *volume);
 
         /**
          * Draw the bounding box of the protein around the origin.
          *
          * @param boundingbox The bounding box.
          */
-        void DrawBoundingBox( vislib::math::Cuboid<float> boundingbox);
+        void DrawBoundingBox(vislib::math::Cuboid<float> boundingbox);
 
         /**
          * Draw the clipped polygon for correct clip plane rendering.
          *
          * @param boundingbox The bounding box.
          */
-        void drawClippedPolygon( vislib::math::Cuboid<float> boundingbox);
+        void drawClippedPolygon(vislib::math::Cuboid<float> boundingbox);
         
         /**********************************************************************
          * variables

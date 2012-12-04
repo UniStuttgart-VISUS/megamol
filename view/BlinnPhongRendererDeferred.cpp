@@ -45,32 +45,32 @@ bool view::BlinnPhongRendererDeferred::create(void) {
     vislib::graphics::gl::ShaderSource vertSrc;
 
     CoreInstance *ci = this->GetCoreInstance();
-    if(!ci) {
+    if (!ci) {
         return false;
     }
 
-    if(!vislib::graphics::gl::FramebufferObject::InitialiseExtensions()) {
+    if (!vislib::graphics::gl::FramebufferObject::InitialiseExtensions()) {
         return false;
     }
 
-    if(!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
 
     // Try to load fragment shader
-    if(!ci->ShaderSourceFactory().MakeShaderSource("deferred::blinnPhongFrag", fragSrc)) {
+    if (!ci->ShaderSourceFactory().MakeShaderSource("deferred::blinnPhongFrag", fragSrc)) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
             "%s: Unable to load fragment shader source", this->ClassName() );
         return false;
     }
     // Try to load vertex shader
-    if(!ci->ShaderSourceFactory().MakeShaderSource("deferred::vertex", vertSrc)) {
+    if (!ci->ShaderSourceFactory().MakeShaderSource("deferred::vertex", vertSrc)) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
             "%s: Unable to load vertex shader source", this->ClassName() );
         return false;
     }
     try {
-        if(!this->blinnPhongShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+        if (!this->blinnPhongShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
     catch( vislib::Exception e ){
@@ -106,14 +106,14 @@ view::BlinnPhongRendererDeferred::~BlinnPhongRendererDeferred(void) {
 bool view::BlinnPhongRendererDeferred::GetCapabilities(Call& call) {
 
     CallRender3D *crIn = dynamic_cast<CallRender3D*>(&call);
-    if(crIn == NULL) return false;
+    if (crIn == NULL) return false;
 
     //CallRender3D *crOut = this->rendererSlot.CallAs<CallRender3D>();
     CallRenderDeferred3D *crOut = this->rendererSlot.CallAs<CallRenderDeferred3D>();
-    if(crOut == NULL) return false;
+    if (crOut == NULL) return false;
 
     // Call for getCapabilities
-    if(!(*crOut)(2)) return false;
+    if (!(*crOut)(2)) return false;
 
     // Set capabilities of for incoming render call
     crIn->SetCapabilities(crOut->GetCapabilities());
@@ -128,13 +128,13 @@ bool view::BlinnPhongRendererDeferred::GetCapabilities(Call& call) {
 bool view::BlinnPhongRendererDeferred::GetExtents(Call& call) {
 
     CallRender3D *crIn = dynamic_cast<CallRender3D*>(&call);
-    if(crIn == NULL) return false;
+    if (crIn == NULL) return false;
 
     CallRenderDeferred3D *crOut = this->rendererSlot.CallAs<CallRenderDeferred3D>();
-    if(crOut == NULL) return false;
+    if (crOut == NULL) return false;
 
     // Call for getExtends
-    if(!(*crOut)(1)) return false;
+    if (!(*crOut)(1)) return false;
 
     // Set extends of for incoming render call
     crIn->AccessBoundingBoxes() = crOut->GetBoundingBoxes();
@@ -150,10 +150,10 @@ bool view::BlinnPhongRendererDeferred::GetExtents(Call& call) {
 bool view::BlinnPhongRendererDeferred::Render(Call& call) {
 
     CallRender3D *crIn = dynamic_cast<CallRender3D*>(&call);
-    if(crIn == NULL) return false;
+    if (crIn == NULL) return false;
 
     CallRenderDeferred3D *crOut = this->rendererSlot.CallAs<CallRenderDeferred3D>();
-    if(crOut == NULL) return false;
+    if (crOut == NULL) return false;
 
     /* First render pass */
     
@@ -163,14 +163,14 @@ bool view::BlinnPhongRendererDeferred::Render(Call& call) {
     float curVP[4];
     glGetFloatv(GL_VIEWPORT, curVP);
 
-    if(!this->fbo.IsValid()) {
-        if(!this->createFBO((UINT)curVP[2], (UINT)curVP[3]))
+    if (!this->fbo.IsValid()) {
+        if (!this->createFBO((UINT)curVP[2], (UINT)curVP[3]))
             return false;
     }
     else {
-        if((curVP[2] != this->fbo.GetWidth()) || (curVP[3] != this->fbo.GetHeight())) {
+        if ((curVP[2] != this->fbo.GetWidth()) || (curVP[3] != this->fbo.GetHeight())) {
             this->fbo.Release();
-            if(!this->createFBO((UINT)curVP[2],(UINT)curVP[3]))
+            if (!this->createFBO((UINT)curVP[2],(UINT)curVP[3]))
                 return false;
         }
     }
