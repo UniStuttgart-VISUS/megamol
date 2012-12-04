@@ -30,7 +30,7 @@ namespace moldyn {
     /**
      * Base class of rendering graph calls and data interfaces for volumetric data.
      */
-    class VolumeDataCall : public megamol::core::AbstractGetData3DCall {
+    class MEGAMOLCORE_API VolumeDataCall : public megamol::core::AbstractGetData3DCall {
     public:
 
         /** Index of the 'GetData' function */
@@ -236,13 +236,28 @@ namespace moldyn {
         float *map;
         // Flag whether or not the interface owns the memory of the voxel map.
         bool mapMemory;
+
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         // bounding box
         vislib::math::Cuboid<float> bBox;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
+
         // components per voxel
         unsigned int components;
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         // volume dimension (the resolution of the volume in voxels).
         vislib::math::Dimension<unsigned int, 3> volDim;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
+
         // min voxel value
         float minDensity;
         // max voxel value
