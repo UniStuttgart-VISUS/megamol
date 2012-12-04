@@ -28,6 +28,7 @@
 #include "view/CallRenderView.h"
 #include "view/CallTimeControl.h"
 #include "CallVolumeData.h"
+#include "moldyn/VolumeDataCall.h"
 
 using namespace megamol::core;
 
@@ -77,6 +78,7 @@ void CallDescriptionManager::registerObjects(CallDescriptionManager *instance) {
         instance->registerAutoDescription<view::CallTimeControl>();
         instance->registerAutoDescription<DataWriterCtrlCall>();
         instance->registerAutoDescription<CallVolumeData>();
+        instance->registerAutoDescription<moldyn::VolumeDataCall>();
     //}
     //return instance;
 }

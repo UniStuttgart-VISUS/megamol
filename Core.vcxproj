@@ -108,7 +108,7 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(SolutionDir)datraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -120,11 +120,11 @@
       <ObjectFileName>$(IntDir)%(RelativeDir)%(Filename).o</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;datraw$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -150,7 +150,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(SolutionDir)datraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -162,11 +162,11 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ObjectFileName>$(IntDir)%(RelativeDir)%(Filename).o</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;datraw$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -188,7 +188,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(SolutionDir)\."</Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(SolutionDir)datraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -198,11 +198,11 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ObjectFileName>$(IntDir)%(RelativeDir)%(Filename).o</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;datraw$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -229,7 +229,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(SolutionDir)datraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -239,11 +239,11 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ObjectFileName>$(IntDir)%(RelativeDir)%(Filename).o</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;datraw$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -317,6 +317,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\AbstractSimpleParticleDataSource.cpp" />
     <ClCompile Include="moldyn\AbstractSimpleSphereRenderer.cpp" />
     <ClCompile Include="moldyn\AbstractSimpleStoringParticleDataSource.cpp" />
+    <ClCompile Include="moldyn\DatRawDataSource.cpp" />
     <ClCompile Include="moldyn\DirectVolumeRenderer.cpp" />
     <ClCompile Include="moldyn\DirPartColModulate.cpp" />
     <ClCompile Include="moldyn\DirPartFilter.cpp" />
@@ -561,6 +562,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\AbstractSimpleParticleDataSource.h" />
     <ClInclude Include="moldyn\AbstractSimpleSphereRenderer.h" />
     <ClInclude Include="moldyn\AbstractSimpleStoringParticleDataSource.h" />
+    <ClInclude Include="moldyn\DatRawDataSource.h" />
     <ClInclude Include="moldyn\DirectVolumeRenderer.h" />
     <ClInclude Include="moldyn\DirPartColModulate.h" />
     <ClInclude Include="moldyn\DirPartFilter.h" />
@@ -726,6 +728,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <SubType>Designer</SubType>
     </None>
     <None Include="Shaders\simplegeosphere.btf" />
+    <None Include="Shaders\volumerenderer.btf">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="view\special\MegaMolLogoData.inl" />
     <CustomBuildStep Include="config.bat">
       <FileType>Document</FileType>

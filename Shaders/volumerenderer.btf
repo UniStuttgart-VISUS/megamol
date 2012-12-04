@@ -112,8 +112,8 @@ void main(void) {
     vec3 center = vec3(0.0);
 
     // DEBUG
-    //gl_FragColor = vec4(rayLength.www, 1.0);
-    //gl_FragColor = vec4(rayLength.www*0.1, 1.0);
+    //gl_FragColor = vec4( rayLength.www, 1.0);
+    //gl_FragColor = vec4(rayLength.www*0.5, 1.0);
     //gl_FragColor = vec4(rayLength.xyz, 1.0);
     //gl_FragColor = vec4(rayStart.xyz*scaleVol.xyz, 0.8);
     //gl_FragColor = vec4(rayStart.aaa, 0.8);
@@ -145,10 +145,11 @@ void main(void) {
 #if defined(ISO_SURFACE)
     //const float isoValue = 60.0/256.0;
     float isoDiff = 0;
-    float isoDiffOld = texture3D(volumeSampler, pos).w - isoValue;
+    float isoDiffOld = texture3D(volumeSampler, pos).r - isoValue;
     
     if( isoDiffOld > 0.0 ) {
-        volColor = clamp( texture3D(volumeSampler, pos).rgb, 0.0, 1.0);
+        volColor = vec3( 0.75, 0.5, 0.0);
+        //volColor = clamp( texture3D(volumeSampler, pos).rgb, 0.0, 1.0);
         // higher opacity for surfaces orthogonal to view dir
         dest = vec4( volColor, clipPlaneOpacity);
         // perform blending
@@ -162,24 +163,26 @@ void main(void) {
         {
             /*
             // lookup scalar value
-            scalarData = texture3D(volumeSampler, pos).w;
+            scalarData = texture3D(volumeSampler, pos).r;
             // DEBUG lookup color
-            volColor = texture3D(volumeSampler, pos).rgb;
+            //volColor = texture3D(volumeSampler, pos).rgb;
+            volColor = vec3( 0.75, 0.5, 0.0);
             */
             data = texture3D(volumeSampler, pos);
-            scalarData = data.w;
-            volColor = clamp( data.rgb, 0.0, 1.0);
+            scalarData = data.r;
+            //volColor = clamp( data.rgb, 0.0, 1.0);
+            volColor = vec3( 0.75, 0.5, 0.0);
 
 #if defined(VOLUME_RENDERING)
             // lookup in transfer function
             //src = texture1D(transferRGBASampler, log(scalarData*1.0+1.0));
             //src = texture1D(transferRGBASampler, scalarData/1.2-0.18);
             src = texture1D(transferRGBASampler, scalarData);
-            src = vec4( vec3( scalarData), 0.05); // DEBUG
+            src = vec4( vec3( scalarData), 0.0005); // DEBUG
             // DEBUG ...
-            src = vec4( clamp( abs( scalarData), 0.0, 1.0) );
-            if( scalarData > 0.0 ) src *= vec4( 1.0, 0.0, 0.0, 1.0);
-            else if( scalarData < 0.0 ) src *= vec4( 0.0, 1.0, 0.0, 1.0);
+            //src = vec4( clamp( abs( scalarData), 0.0, 1.0) );
+            //if( scalarData > 0.0 ) src *= vec4( 1.0, 0.0, 0.0, 1.0);
+            //else if( scalarData < 0.0 ) src *= vec4( 0.0, 1.0, 0.0, 1.0);
             // ... DEBUG
 
             //src.rgb = vec3(0.6-2.5*scalarData) * vec3(0.2, 1.0, 0.1);
@@ -200,8 +203,9 @@ void main(void) {
                 vec3 isoPos = mix(pos - stepDir, pos, isoDiffOld/(isoDiffOld - isoDiff));
 
                 // lookup color
-                volColor = texture3D( volumeSampler, isoPos).rgb;
-                volColor = clamp( volColor, 0.0, 1.0);
+                //volColor = texture3D( volumeSampler, isoPos).rgb;
+                //volColor = clamp( volColor, 0.0, 1.0);
+                volColor = vec3( 0.75, 0.5, 0.0);
                 
                 // compute gradient by central differences
                 vec3 gradient;
@@ -210,12 +214,12 @@ void main(void) {
                 float gradOffset = 0.075;
                 // 0.015 ==> huebsch.dat
 
-                gradient.x = texture3D(volumeSampler, isoPos + vec3(gradOffset*scaleVol.x, 0, 0)).w
-                             - texture3D(volumeSampler, isoPos + vec3(-gradOffset*scaleVol.x, 0, 0)).w;
-                gradient.y = texture3D(volumeSampler, isoPos + vec3(0, gradOffset*scaleVol.y, 0)).w
-                             - texture3D(volumeSampler, isoPos + vec3(0, -gradOffset*scaleVol.y, 0)).w;
-                gradient.z = texture3D(volumeSampler, isoPos + vec3(0, 0, gradOffset*scaleVol.z)).w
-                             - texture3D(volumeSampler, isoPos + vec3(0, 0, -gradOffset*scaleVol.z)).w;
+                gradient.x = texture3D(volumeSampler, isoPos + vec3(gradOffset*scaleVol.x, 0, 0)).r
+                             - texture3D(volumeSampler, isoPos + vec3(-gradOffset*scaleVol.x, 0, 0)).r;
+                gradient.y = texture3D(volumeSampler, isoPos + vec3(0, gradOffset*scaleVol.y, 0)).r
+                             - texture3D(volumeSampler, isoPos + vec3(0, -gradOffset*scaleVol.y, 0)).r;
+                gradient.z = texture3D(volumeSampler, isoPos + vec3(0, 0, gradOffset*scaleVol.z)).r
+                             - texture3D(volumeSampler, isoPos + vec3(0, 0, -gradOffset*scaleVol.z)).r;
                 gradient = normalize(gradient);
 
                 // illumination
@@ -281,8 +285,8 @@ uniform vec3 translate = vec3(0.0);
 varying vec3 objPos;
 
 void main(void) {
+    // should - be + ??
     objPos = gl_Vertex.xyz - translate;
-    //vec4 v = gl_Vertex; // + vec4( translate, 0.0);
     vec4 v = gl_Vertex - vec4( translate, 0.0);
     gl_ClipVertex = gl_ModelViewMatrix * v;
     gl_Position = gl_ModelViewProjectionMatrix * v;
@@ -469,7 +473,7 @@ void main(void) {
         discard;
     else
         gl_FragColor = vec4( texCol.xyz * 0.2 + vec3( 149.0/255.0, 202.0/255.0, 222.0/255.0) * 0.8, 1.0);
-		//gl_FragColor = vec4( texCol.xyz, 1.0);
+        //gl_FragColor = vec4( texCol.xyz, 1.0);
 }
 
 -->

@@ -39,7 +39,7 @@ using namespace megamol::core;
 /*
  * DirectVolumeRenderer::DirectVolumeRenderer (CTOR)
  */
-DirectVolumeRenderer::DirectVolumeRenderer ( void ) : Renderer3DModule (),
+moldyn::DirectVolumeRenderer::DirectVolumeRenderer ( void ) : Renderer3DModule (),
         volDataCallerSlot ( "getData", "Connects the volume rendering with data storage" ),
         //protRendererCallerSlot ( "renderProtein", "Connects the volume rendering with a protein renderer" ),
         volIsoValueParam( "volIsoValue", "Isovalue for isosurface rendering"),
@@ -48,8 +48,8 @@ DirectVolumeRenderer::DirectVolumeRenderer ( void ) : Renderer3DModule (),
         volClipPlane0NormParam( "clipPlane0Norm", "Volume clipping plane 0 normal"),
         volClipPlane0DistParam( "clipPlane0Dist", "Volume clipping plane 0 distance"),
         volClipPlaneOpacityParam( "clipPlaneOpacity", "Volume clipping plane opacity"),
-        volumeTex( 0), volFBO( 0), width( 0), height( 0), volRayTexWidth( 0), volRayTexHeight( 0),
-        volRayStartTex( 0), volRayLengthTex( 0), volRayDistTex( 0),
+        volumeTex( 0), currentFrameId(-1), volFBO( 0), width( 0), height( 0), volRayTexWidth( 0), 
+        volRayTexHeight( 0), volRayStartTex( 0), volRayLengthTex( 0), volRayDistTex( 0),
         renderIsometric( true), meanDensityValue( 0.0f), isoValue( 0.5f), 
         volIsoOpacity( 0.4f), volClipPlaneFlag( false), volClipPlaneOpacity( 0.4f)
 {
@@ -101,7 +101,7 @@ DirectVolumeRenderer::DirectVolumeRenderer ( void ) : Renderer3DModule (),
 /*
  * DirectVolumeRenderer::~DirectVolumeRenderer (DTOR)
  */
-DirectVolumeRenderer::~DirectVolumeRenderer ( void ) {
+moldyn::DirectVolumeRenderer::~DirectVolumeRenderer ( void ) {
     this->Release ();
 }
 
@@ -109,7 +109,7 @@ DirectVolumeRenderer::~DirectVolumeRenderer ( void ) {
 /*
  * DirectVolumeRenderer::release
  */
-void DirectVolumeRenderer::release ( void ) {
+void moldyn::DirectVolumeRenderer::release ( void ) {
 
 }
 
@@ -117,7 +117,7 @@ void DirectVolumeRenderer::release ( void ) {
 /*
  * DirectVolumeRenderer::create
  */
-bool DirectVolumeRenderer::create ( void ) {
+bool moldyn::DirectVolumeRenderer::create ( void ) {
     if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform") )
         return false;
     if( !glh_init_extensions( "GL_ARB_vertex_program" ) )
@@ -222,7 +222,7 @@ bool DirectVolumeRenderer::create ( void ) {
 /*
  * ProteinRenderer::GetCapabilities
  */
-bool DirectVolumeRenderer::GetCapabilities( Call& call) {
+bool moldyn::DirectVolumeRenderer::GetCapabilities( Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
@@ -237,7 +237,7 @@ bool DirectVolumeRenderer::GetCapabilities( Call& call) {
 /*
  * ProteinRenderer::GetExtents
  */
-bool DirectVolumeRenderer::GetExtents( Call& call) {
+bool moldyn::DirectVolumeRenderer::GetExtents( Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
@@ -298,7 +298,7 @@ bool DirectVolumeRenderer::GetExtents( Call& call) {
 /*
  * DirectVolumeRenderer::Render
  */
-bool DirectVolumeRenderer::Render( Call& call ) {
+bool moldyn::DirectVolumeRenderer::Render( Call& call ) {
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>( &call );
     if( !cr3d ) return false;
@@ -327,43 +327,36 @@ bool DirectVolumeRenderer::Render( Call& call ) {
     }
 
     // create the fbo, if necessary
-    // TODO
-    //if( !this->proteinFBO.IsValid() ) {
-    //    this->proteinFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
-    //}
-    //// resize the fbo, if necessary
-    //if( this->proteinFBO.GetWidth() != this->width || this->proteinFBO.GetHeight() != this->height ) {
-    //    this->proteinFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
-    //}
+    if( !this->opaqueFBO.IsValid() ) {
+        this->opaqueFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+    }
+    // resize the fbo, if necessary
+    if( this->opaqueFBO.GetWidth() != this->width || this->opaqueFBO.GetHeight() != this->height ) {
+        this->opaqueFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+    }
 
     // =============== Protein Rendering ===============
+    // disable the output buffer
+    cr3d->DisableOutputBuffer();
+    // start rendering to the FBO for protein rendering
+    this->opaqueFBO.Enable();
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
     // TODO
-    //// disable the output buffer
-    //cr3d->DisableOutputBuffer();
-    //// start rendering to the FBO for protein rendering
-    //this->proteinFBO.Enable();
-    //glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-    //// render the current mouse position
-    //this->RenderMousePosition( cr3d, 0.3f);
-
-    //// draw segmented voxels
-    //this->RenderSegmentedVoxels( cr3d);
-
     //if( protrencr3d ) {
     //    // setup and call protein renderer
     //    glPushMatrix();
     //    glTranslatef( this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
     //    //glScalef( this->protrenScale, this->protrenScale, this->protrenScale);
     //    *protrencr3d = *cr3d;
-    //    protrencr3d->SetOutputBuffer( &this->proteinFBO); // TODO: Handle incoming buffers!
+    //    protrencr3d->SetOutputBuffer( &this->opaqueFBO); // TODO: Handle incoming buffers!
     //    (*protrencr3d)();
     //    glPopMatrix();
     //}
-    //// stop rendering to the FBO for protein rendering
-    //this->proteinFBO.Disable();
-    //// re-enable the output buffer
-    //cr3d->EnableOutputBuffer();
+    // stop rendering to the FBO for protein rendering
+    this->opaqueFBO.Disable();
+    // re-enable the output buffer
+    cr3d->EnableOutputBuffer();
 
     // =============== Refresh all parameters ===============
     this->ParameterRefresh( cr3d);
@@ -389,95 +382,17 @@ bool DirectVolumeRenderer::Render( Call& call ) {
     return retval;
 }
 
-// TODO check clipplane rendering!
-/*
- * Volume rendering using molecular data.
- */
-/*
-bool DirectVolumeRenderer::RenderMolecularData( view::CallRender3D *call, MolecularDataCall *mol) {
-
-    // decide to use already loaded frame request from CallFrame or 'normal' rendering
-    if( this->callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED ) {
-        if( !this->renderRMSData )
-            return false;
-    } else {
-        if( !(*mol)() )
-            return false;
-    }
-
-    // check last atom count with current atom count
-    if( this->atomCount != mol->AtomCount() ) {
-        this->atomCount = mol->AtomCount();
-        this->forceUpdateVolumeTexture = true;
-    }
-
-    glEnable ( GL_DEPTH_TEST );
-    glEnable ( GL_LIGHTING );
-    glEnable ( GL_VERTEX_PROGRAM_POINT_SIZE );
-
-    glPushMatrix();
-
-    // translate scene for volume ray casting
-    if( !vislib::math::IsEqual( mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
-        this->scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        this->scale = 1.0f;
-    }
-    vislib::math::Vector<float, 3> trans( 
-        mol->AccessBoundingBoxes().ObjectSpaceBBox().GetSize().PeekDimension() );
-    trans *= -this->scale*0.5f;
-    glTranslatef( trans.GetX(), trans.GetY(), trans.GetZ() );
-
-    // ------------------------------------------------------------
-    // --- Volume Rendering                                     ---
-    // --- update & render the volume                           ---
-    // ------------------------------------------------------------
-    
-    vislib::StringA paramSlotName( call->PeekCallerSlot()->Parent()->FullName());
-    paramSlotName += "::anim::play";
-    param::ParamSlot *paramSlot = dynamic_cast<param::ParamSlot*>( this->FindNamedObject( paramSlotName, true));
-    if( paramSlot->Param<param::BoolParam>()->Value() || this->forceUpdateVolumeTexture ) {
-        this->UpdateVolumeTexture( mol);
-        CHECK_FOR_OGL_ERROR();
-        this->forceUpdateVolumeTexture = false;
-    }
-
-    this->proteinFBO.DrawColourTexture();
-    CHECK_FOR_OGL_ERROR();
-
-    unsigned int cpCnt;
-    if( this->volClipPlaneFlag ) {
-        for( cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt ) {
-            glEnable( GL_CLIP_PLANE0+cpCnt );
-        }
-    }
-
-    this->RenderVolume( mol->AccessBoundingBoxes().ObjectSpaceBBox());
-    CHECK_FOR_OGL_ERROR();
-    
-    if( this->volClipPlaneFlag ) {
-        for( cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt ) {
-            glDisable( GL_CLIP_PLANE0+cpCnt );
-        }
-    }
-
-    glDisable ( GL_VERTEX_PROGRAM_POINT_SIZE );
-
-    glDisable ( GL_DEPTH_TEST );
-    
-    glPopMatrix();
-    
-    return true;
-}
-*/
-
 
 /*
  * Volume rendering using volume data.
  */
-bool DirectVolumeRenderer::RenderVolumeData( view::CallRender3D *call, VolumeDataCall *volume) {
+bool moldyn::DirectVolumeRenderer::RenderVolumeData( view::CallRender3D *call, VolumeDataCall *volume) {
     glEnable ( GL_DEPTH_TEST );
     glEnable ( GL_VERTEX_PROGRAM_POINT_SIZE );
+
+    // test for volume data
+    if( volume->FrameCount() == 0 )
+        return false;
 
     glPushMatrix();
 
@@ -493,16 +408,32 @@ bool DirectVolumeRenderer::RenderVolumeData( view::CallRender3D *call, VolumeDat
     // --- Volume Rendering                                     ---
     // --- update & render the volume                           ---
     // ------------------------------------------------------------
-    this->UpdateVolumeTexture( volume);
-    CHECK_FOR_OGL_ERROR();
+    if( static_cast<int>(volume->FrameID()) != this->currentFrameId ) {
+        this->currentFrameId = static_cast<int>(volume->FrameID());
+        this->UpdateVolumeTexture( volume);
+        CHECK_FOR_OGL_ERROR();
+    }
 
-    // TODO reenable second renderer
-    //this->proteinFBO.DrawColourTexture();
+    // reenable second renderer
+    //this->opaqueFBO.DrawColourTexture();
     CHECK_FOR_OGL_ERROR();
+    
+    unsigned int cpCnt;
+    if( this->volClipPlaneFlag ) {
+        for( cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt ) {
+            glEnable( GL_CLIP_PLANE0+cpCnt );
+        }
+    }
 
     this->RenderVolume( volume->BoundingBox());
     CHECK_FOR_OGL_ERROR();
     
+    if( this->volClipPlaneFlag ) {
+        for( cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt ) {
+            glDisable( GL_CLIP_PLANE0+cpCnt );
+        }
+    }
+
     glDisable ( GL_VERTEX_PROGRAM_POINT_SIZE );
 
     glDisable ( GL_DEPTH_TEST );
@@ -515,7 +446,7 @@ bool DirectVolumeRenderer::RenderVolumeData( view::CallRender3D *call, VolumeDat
 /*
  * refresh parameters
  */
-void DirectVolumeRenderer::ParameterRefresh( view::CallRender3D *call) {
+void moldyn::DirectVolumeRenderer::ParameterRefresh( view::CallRender3D *call) {
     
     // volume parameters
     if( this->volIsoValueParam.IsDirty() ) {
@@ -613,7 +544,7 @@ void DirectVolumeRenderer::ParameterRefresh( view::CallRender3D *call) {
 /*
  * Create a volume containing the voxel map
  */
-void DirectVolumeRenderer::UpdateVolumeTexture( const VolumeDataCall *volume) {
+void moldyn::DirectVolumeRenderer::UpdateVolumeTexture( const VolumeDataCall *volume) {
     // generate volume, if necessary
     if( !glIsTexture( this->volumeTex) ) {
         glGenTextures( 1, &this->volumeTex);
@@ -635,12 +566,32 @@ void DirectVolumeRenderer::UpdateVolumeTexture( const VolumeDataCall *volume) {
     glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, mode);
     glBindTexture( GL_TEXTURE_3D, 0);
     CHECK_FOR_OGL_ERROR();
+
+    // generate FBO, if necessary
+    if( !glIsFramebufferEXT( this->volFBO ) ) {
+        glGenFramebuffersEXT( 1, &this->volFBO);
+        CHECK_FOR_OGL_ERROR();
+    }
+    CHECK_FOR_OGL_ERROR();
+    
+    // scale[i] = 1/extent[i] --- extent = size of the bbox
+    this->volScale[0] = 1.0f / ( volume->BoundingBox().Width() * this->scale);
+    this->volScale[1] = 1.0f / ( volume->BoundingBox().Height() * this->scale);
+    this->volScale[2] = 1.0f / ( volume->BoundingBox().Depth() * this->scale);
+    // scaleInv = 1 / scale = extend
+    this->volScaleInv[0] = 1.0f / this->volScale[0];
+    this->volScaleInv[1] = 1.0f / this->volScale[1];
+    this->volScaleInv[2] = 1.0f / this->volScale[2];
+
+    // set volume size
+    this->volumeSize = vislib::math::Max<unsigned int>( volume->VolumeDimension().Depth(),
+        vislib::math::Max<unsigned int>( volume->VolumeDimension().Height(), volume->VolumeDimension().Width()));
 }
 
 /*
  * draw the volume
  */
-void DirectVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox) {
+void moldyn::DirectVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox) {
     const float stepWidth = 1.0f/ ( 2.0f * float( this->volumeSize));
     glDisable( GL_BLEND);
 
@@ -668,7 +619,6 @@ void DirectVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox
     //glUniform1f(_app->shader->paramsCvolume.alphaCorrection, _app->volStepSize/512.0f);
     // TODO: what is the correct value for volStepSize??
     glUniform1f( this->volumeShader.ParameterLocation( "alphaCorrection"), this->volumeSize/256.0f);
-    //glUniform1i(_app->shader->paramsCvolume.numIterations, 255);
     glUniform1i( this->volumeShader.ParameterLocation( "numIterations"), 255);
     glUniform2f( this->volumeShader.ParameterLocation( "screenResInv"), 1.0f/ float(this->width), 1.0f/ float(this->height));
 
@@ -709,14 +659,14 @@ void DirectVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox
     CHECK_FOR_OGL_ERROR();
 
     // restore depth buffer
-    //glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->proteinFBO.GetDepthTextureID(), 0);
+    //glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->opaqueFBO.GetDepthTextureID(), 0);
     CHECK_FOR_OGL_ERROR();
 }
 
 /*
  * write the parameters of the ray to the textures
  */
-void DirectVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundingbox) {
+void moldyn::DirectVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundingbox) {
 
     GLint param = GL_NEAREST;
     GLint mode = GL_CLAMP_TO_EDGE;
@@ -780,10 +730,12 @@ void DirectVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundin
 
     GLuint db[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->volFBO);
+    CHECK_FOR_OGL_ERROR();
 
     // -------- ray start ------------
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D, this->volRayStartTex, 0);
+    CHECK_FOR_OGL_ERROR();
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1,
         GL_TEXTURE_2D, this->volRayDistTex, 0);
     CHECK_FOR_OGL_ERROR();
@@ -897,7 +849,7 @@ void DirectVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundin
 
     glActiveTexture( GL_TEXTURE1);
     // TODO reenable second renderer
-    //this->proteinFBO.BindDepthTexture();
+    this->opaqueFBO.BindDepthTexture();
     glActiveTexture( GL_TEXTURE0);
     glBindTexture( GL_TEXTURE_2D, this->volRayStartTex);
 
@@ -941,7 +893,7 @@ void DirectVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundin
 /*
  * Draw the bounding box.
  */
-void DirectVolumeRenderer::DrawBoundingBox( vislib::math::Cuboid<float> boundingbox) {
+void moldyn::DirectVolumeRenderer::DrawBoundingBox( vislib::math::Cuboid<float> boundingbox) {
 
     vislib::math::Vector<float, 3> position( boundingbox.GetSize().PeekDimension() );
     position *= this->scale;
@@ -995,7 +947,7 @@ void DirectVolumeRenderer::DrawBoundingBox( vislib::math::Cuboid<float> bounding
 /*
  * draw the clipped polygon for correct clip plane rendering
  */
-void DirectVolumeRenderer::drawClippedPolygon( vislib::math::Cuboid<float> boundingbox) {
+void moldyn::DirectVolumeRenderer::drawClippedPolygon( vislib::math::Cuboid<float> boundingbox) {
     if( !this->volClipPlaneFlag )
         return;
 

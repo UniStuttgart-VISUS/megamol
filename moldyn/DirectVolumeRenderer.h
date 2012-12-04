@@ -24,6 +24,7 @@
 
 namespace megamol {
 namespace core {
+namespace moldyn {
 
     /**
      * Protein Renderer class
@@ -188,13 +189,13 @@ namespace core {
         vislib::graphics::gl::GLSLShader volRayStartEyeShader;
         vislib::graphics::gl::GLSLShader volRayLengthShader;
                 
-        // FBO for rendering the protein
-        // TODO
-        //vislib::graphics::gl::FramebufferObject proteinFBO;
+        // FBO for rendering opaque
+        vislib::graphics::gl::FramebufferObject opaqueFBO;
 
         // volume texture
         GLuint volumeTex;
         unsigned int volumeSize;
+        int currentFrameId;
         // FBO for volume generation
         GLuint volFBO;
         // volume parameters
@@ -233,7 +234,7 @@ namespace core {
     
     };
 
-
+} /* end namespace moldyn */
 } /* end namespace core */
 } /* end namespace megamol */
 

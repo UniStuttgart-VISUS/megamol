@@ -729,6 +729,9 @@
     <ClCompile Include="moldyn\VolumeDataCall.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="moldyn\DatRawDataSource.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1328,6 +1331,9 @@
     <ClInclude Include="moldyn\VolumeDataCall.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="moldyn\DatRawDataSource.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icons.rc">
@@ -1465,6 +1471,9 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="Shaders\simplegeosphere.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\volumerenderer.btf">
       <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>

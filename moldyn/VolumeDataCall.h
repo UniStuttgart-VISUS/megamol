@@ -25,6 +25,7 @@
 
 namespace megamol {
 namespace core {
+namespace moldyn {
 
     /**
      * Base class of rendering graph calls and data interfaces for volumetric data.
@@ -44,7 +45,6 @@ namespace core {
          * @return The name of the objects of this description.
          */
         static const char *ClassName(void) {
-            // a call named 'VolumeDataCall' already exists in the megamol-core -> name conflict ...
             return "VolumeDataCall";
         }
 
@@ -256,6 +256,7 @@ namespace core {
     typedef megamol::core::CallAutoDescription<VolumeDataCall> VolumeDataCallDescription;
 
 
+} /* end namespace moldyn */
 } /* end namespace core */
 } /* end namespace megamol */
 
