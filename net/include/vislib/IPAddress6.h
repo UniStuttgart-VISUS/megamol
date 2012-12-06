@@ -105,17 +105,17 @@ namespace net {
         /** Constant loopback address. */
         static const IPAddress6 LOOPBACK;
 
-        /** 
-         * The all-hosts group multicast address addressing all nodes in the 
-         * site local scope (packets may be routed, but not by border routers).
-         */
-        static const IPAddress6 MULTICAST_ALL_SITE_LOCAL_HOSTS;
+        ///** 
+        // * The all-hosts group multicast address addressing all nodes in the 
+        // * site local scope (packets may be routed, but not by border routers).
+        // */
+        //static const IPAddress6 MULTICAST_ALL_SITE_LOCAL_HOSTS;
 
-        /** 
-         * The all-routers group multicast address addressing all nodes in the 
-         * site local scope (packets may be routed, but not by border routers).
-         */
-        static const IPAddress6 MULTICAST_ALL_SITE_LOCAL_ROUTERS;
+        ///** 
+        // * The all-routers group multicast address addressing all nodes in the 
+        // * site local scope (packets may be routed, but not by border routers).
+        // */
+        //static const IPAddress6 MULTICAST_ALL_SITE_LOCAL_ROUTERS;
 
         /** Alias for ANY. */
         static const IPAddress6& UNSPECIFIED;

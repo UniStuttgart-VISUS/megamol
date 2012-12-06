@@ -40,7 +40,7 @@ void TestSysInfo(void) {
         for (DWORD i = 0; i < cntMonitors; i++) {
             std::cout << "Monitor " << i << " has origin ("
                 << monitorSizes[int(i)].Left() << ", " 
-                << monitorSizes[int(i)].Top() << ") and size [" 
+                << monitorSizes[int(i)].Top() << ") (top) and size [" 
                 << monitorSizes[int(i)].Width() << ", " 
                 << monitorSizes[int(i)].Height() << "]" 
                 << std::endl;
@@ -49,10 +49,20 @@ void TestSysInfo(void) {
         SystemInformation::MonitorRect priMonSize = SystemInformation::PrimaryMonitorRect();
         std::cout << "Pimary monitor origin: (" 
             << priMonSize.Left() << ", "
-            << priMonSize.Top() << ")" << std::endl
+            << priMonSize.Top() << ") (top)" << std::endl
             << "Primary monitor size: [" 
             << priMonSize.Width() << ", " 
             << priMonSize.Height() << "]" << std::endl;
+
+        SystemInformation::MonitorRect virtScreen = SystemInformation::VirtualScreen();
+        std::cout << "Virtual screen from ("
+            << virtScreen.Left() << ", "
+            << virtScreen.Top() << ") (top) to ("
+            << virtScreen.Right() << ", "
+            << virtScreen.Top() << ")" << std::endl
+            << "Virtual screen size: ["
+            << virtScreen.Width() << ", "
+            << virtScreen.Height() << "]" << std::endl;
 
 
     } catch (SystemException se) {

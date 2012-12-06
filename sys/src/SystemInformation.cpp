@@ -590,7 +590,7 @@ void vislib::sys::SystemInformation::UserName(vislib::StringW &outName) {
  */
 vislib::sys::SystemInformation::MonitorRect 
 vislib::sys::SystemInformation::VirtualScreen(void) {
-    MonitorRect retval(LONG_MAX, LONG_MIN, LONG_MIN, LONG_MAX);
+    MonitorRect retval(LONG_MAX, LONG_MAX, LONG_MIN, LONG_MIN);
 
 #ifdef _WIN32
     if (!::EnumDisplayMonitors(NULL, NULL, 
@@ -608,13 +608,13 @@ vislib::sys::SystemInformation::VirtualScreen(void) {
         if (monitor.Left() < retval.Left()) {
             retval.SetLeft(monitor.Left());
         }
-        if (monitor.Bottom() > retval.Bottom()) {
+        if (monitor.Bottom() < retval.Bottom()) {
             retval.SetBottom(monitor.Bottom());
         }
         if (monitor.Right() > retval.Right()) {
             retval.SetRight(monitor.Right());
         }
-        if (monitor.Top() < retval.Top()) {
+        if (monitor.Top() > retval.Top()) {
             retval.SetTop(monitor.Top());
         }
     }
@@ -635,13 +635,13 @@ BOOL CALLBACK vislib::sys::SystemInformation::calcVirtualScreenProc(
     if (lprcMonitor->left < vs->Left()) {
         vs->SetLeft(lprcMonitor->left);
     }
-    if (lprcMonitor->bottom > vs->Bottom()) {
+    if (lprcMonitor->bottom < vs->Bottom()) {
         vs->SetBottom(lprcMonitor->bottom);
     }
     if (lprcMonitor->right > vs->Right()) {
         vs->SetRight(lprcMonitor->right);
     }
-    if (lprcMonitor->top < vs->Top()) {
+    if (lprcMonitor->top > vs->Top()) {
         vs->SetTop(lprcMonitor->top);
     }
 
