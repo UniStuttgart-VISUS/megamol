@@ -46,28 +46,28 @@ const vislib::net::IPAddress vislib::net::IPAddress::ALL_ROUTERS_ON_LINK
  * vislib::net::IPAddress::ANY
  */
 const vislib::net::IPAddress vislib::net::IPAddress::ANY(
-    static_cast<unsigned long>(INADDR_ANY));
+    static_cast<unsigned long>(INADDR_ANY), true);
 
 
 /*
  * vislib::net::IPAddress::BROADCAST
  */
 const  vislib::net::IPAddress vislib::net::IPAddress::BROADCAST(
-    static_cast<unsigned long>(INADDR_BROADCAST));
+    static_cast<unsigned long>(INADDR_BROADCAST), true);
 
 
 /*
  * vislib::net::IPAddress::LOCALHOST
  */
 const vislib::net::IPAddress vislib::net::IPAddress::LOCALHOST(
-    static_cast<unsigned long>(INADDR_LOOPBACK));
+    static_cast<unsigned long>(INADDR_LOOPBACK), true);
 
 
 /*
  * vislib::net::IPAddress::NONE
  */
 const vislib::net::IPAddress vislib::net::IPAddress::NONE(
-    static_cast<unsigned long>(INADDR_NONE));
+    static_cast<unsigned long>(INADDR_NONE), true);
 
 
 /*
