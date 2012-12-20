@@ -729,7 +729,8 @@ void main(void) {
     // phong lighting with directional light
     //gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
     gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), gl_Color.w);
-    
+    gl_FragDepth = gl_FragCoord.z;
+
     // calculate depth
 #ifdef DEPTH
     vec4 Ding = vec4( sphereintersection + objPos.xyz, 1.0);
@@ -754,6 +755,11 @@ void main(void) {
         gl_FragColor.rgb += vec3(0.3, 0.3, 0.5);
     }
 #endif // RETICLE
+
+#ifdef PUXELS
+if(puxels_use != 0)
+    puxels_store(gl_FragColor, gl_FragDepth);
+#endif
 
     //gl_FragColor.rgb = normal;
 }
@@ -8349,6 +8355,11 @@ void main(void) {
     if (normal.y < -0.99)     { gl_FragColor.a = 1.0; }
     if (normal.z < -0.99)     { gl_FragColor.a = 1.0; }
     */
+    
+#ifdef PUXELS
+if(puxels_use != 0)
+    puxels_store(gl_FragColor, gl_FragDepth);
+#endif
 }
 -->
       </snippet>
@@ -8946,6 +8957,7 @@ void main(void) {
 
     // phong lighting with directional light
     gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
+    gl_FragDepth = gl_FragCoord.z;
     
     // calculate depth
 #ifdef DEPTH
@@ -8990,6 +9002,11 @@ void main(void) {
     { gl_FragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); }
     if (mc < 0.05) { gl_FragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); }
 #endif // AXISHINTS
+
+#ifdef PUXELS
+		if(puxels_use != 0)
+			puxels_store(gl_FragColor, gl_FragDepth);
+#endif
 }
 -->
       </snippet>
@@ -9883,6 +9900,7 @@ void main(void) {
 
     // phong lighting with directional light
     gl_FragColor = vec4( LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+    gl_FragDepth = gl_FragCoord.z;
     
     // calculate depth
 #ifdef DEPTH
@@ -9916,6 +9934,10 @@ void main(void) {
     if (mc < 0.05) { gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); }
 #endif // AXISHINTS
 
+#ifdef PUXELS
+if(puxels_use != 0)
+    puxels_store(gl_FragColor, gl_FragDepth);
+#endif
 
 }
 -->
@@ -12966,6 +12988,11 @@ void main(void) {
             }
         }
     }
+
+#ifdef PUXELS
+if(puxels_use != 0)
+    puxels_store(gl_FragColor, gl_FragDepth);
+#endif
 
     if(discardExt && discardInt) { discard; }
 }
