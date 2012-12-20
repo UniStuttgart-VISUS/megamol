@@ -46,6 +46,7 @@ namespace gl {
                 ACTION_COMPILE_VERTEX_CODE,
                 ACTION_COMPILE_FRAGMENT_CODE,
                 ACTION_COMPILE_GEOMETRY_CODE,
+				ACTION_COMPILE_COMPUTE_CODE,
                 ACTION_LINK
             };
 

@@ -29,6 +29,7 @@ vislib::graphics::gl::AbstractOpenGLShader::CompileException
         case GL_FRAGMENT_SHADER_ARB: return ACTION_COMPILE_FRAGMENT_CODE;
         case GL_GEOMETRY_SHADER_EXT: return ACTION_COMPILE_GEOMETRY_CODE;
         case GL_VERTEX_SHADER_ARB: return ACTION_COMPILE_VERTEX_CODE;
+        case GL_COMPUTE_SHADER: return ACTION_COMPILE_COMPUTE_CODE;
         default: return ACTION_COMPILE_UNKNOWN;
     }
 }
@@ -42,6 +43,7 @@ const char* vislib::graphics::gl::AbstractOpenGLShader::CompileException
         case ACTION_COMPILE_VERTEX_CODE: return "compile vertex";
         case ACTION_COMPILE_FRAGMENT_CODE: return "compile fragment";
         case ACTION_COMPILE_GEOMETRY_CODE: return "compile geometry";
+        case ACTION_COMPILE_COMPUTE_CODE: return "compile compute";
         case ACTION_LINK: return "link";
         default: return "unknown";
     }
