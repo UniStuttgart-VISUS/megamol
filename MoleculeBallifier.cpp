@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "MoleculeBallifier.h"
 #include "MolecularDataCall.h"
-#include "moldyn\MultiParticleDataCall.h"
+#include "moldyn/MultiParticleDataCall.h"
 
 
 using namespace megamol;
