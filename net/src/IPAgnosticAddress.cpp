@@ -49,10 +49,10 @@ vislib::net::IPAgnosticAddress vislib::net::IPAgnosticAddress::CreateAny(
 
     switch (addressFamily) {
         case FAMILY_INET:
-            return IPAgnosticAddress(IPAgnosticAddress::ANY4);
+            return IPAgnosticAddress(IPAddress::ANY);
 
         case FAMILY_INET6:
-            return IPAgnosticAddress(IPAgnosticAddress::ANY6);
+            return IPAgnosticAddress(IPAddress6::ANY);
 
         default:
             throw IllegalParamException("addressFamily", __FILE__, __LINE__);
