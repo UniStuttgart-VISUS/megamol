@@ -10,6 +10,7 @@
 #include "vislib/DNS.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/IPEndPoint.h"
+#include "vislib/IPAddress.h"
 #include "vislib/IPAddress6.h"
 #include "vislib/Socket.h"
 #include "vislib/SocketException.h"
@@ -23,6 +24,8 @@ void TestIPv6(void) {
     using namespace vislib::net;
 
     Socket::Startup();
+
+    //std::cout << IPAddress::LOCALHOST.ToStringA().PeekBuffer() << std::endl;
 
     AssertTrue("LOOPBACK constant", IPAddress6::LOOPBACK.IsLoopback());
     std::cout << "LOOPBACK constant is: " << IPAddress6::LOOPBACK.ToStringA().PeekBuffer() << std::endl;

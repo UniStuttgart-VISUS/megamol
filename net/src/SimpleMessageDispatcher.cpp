@@ -11,6 +11,7 @@
 #include "vislib/SimpleMessageDispatchListener.h"
 #include "vislib/SocketException.h"
 #include "vislib/Trace.h"
+#include "vislib/Thread.h"
 
 
 /*
@@ -90,46 +91,55 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *config) {
         return e.GetErrorCode();
     }
 
-    VLTRACE(VISLIB_TRCELVL_INFO, "The SimpleMessageDispatcher is entering the "
-        "message loop ...\n");
+    VLTRACE(VISLIB_TRCELVL_INFO, "The SimpleMessageDispatcher [%u] is entering "
+        "the message loop ...\n", vislib::sys::Thread::CurrentID());
     this->fireDispatcherStarted();
 
     try {
         while (doReceive) {
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for "
-                "message header ...\n");
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "[%u] is waiting for "
+                "message header ...\n", vislib::sys::Thread::CurrentID());
             this->configuration.Channel->Receive(static_cast<void *>(this->msg),
                 this->msg.GetHeader().GetHeaderSize(), 
                 AbstractCommChannel::TIMEOUT_INFINITE, 
                 true);
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Received message "
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "[%u] received message "
                 "header with { MessageID = %u, BodySize = %u }\n", 
+                vislib::sys::Thread::CurrentID(),
                 this->msg.GetHeader().GetMessageID(),
                 this->msg.GetHeader().GetBodySize());
             this->msg.AssertBodySize();
 
             if (this->msg.GetHeader().GetBodySize() > 0) {
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for "
-                    "message body ...\n");
+                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "[%u] is waiting "
+                    "for message body ...\n", vislib::sys::Thread::CurrentID());
                 this->configuration.Channel->Receive(this->msg.GetBody(), 
                     this->msg.GetHeader().GetBodySize(),
                     AbstractCommChannel::TIMEOUT_INFINITE, 
                     true);
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Message body "
-                    "received.\n");
+                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "[%u] received "
+                    "message body.\n", vislib::sys::Thread::CurrentID());
             }
 
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Dispatching message "
-                "to registered listeners ...\n");
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "[%u] is dispatching "
+                "message to registered listeners ...\n", 
+                vislib::sys::Thread::CurrentID());
             doReceive = this->fireMessageReceived(this->msg);
         }
     } catch (Exception e) {
-        VLTRACE(VISLIB_TRCELVL_ERROR, "The SimpleMessageDispatcher encountered "
-            " an error: %s\n", e.GetMsgA());
+        VLTRACE(VISLIB_TRCELVL_ERROR, "The SimpleMessageDispatcher [%u] "
+            "encountered an error: %s\n", vislib::sys::Thread::CurrentID(),
+            e.GetMsgA());
         doReceive = this->fireCommunicationError(e);
     }
 
-    this->configuration.Channel->Close();
+    try {
+        this->configuration.Channel->Close();
+    } catch (...) {
+        VLTRACE(VISLIB_TRCELVL_WARN, "The SimpleMessageDispatcher tried to "
+            "close a channel which was probably already closed due to an "
+            "error before.\n");
+    }
 
     try {
         Socket::Cleanup();
