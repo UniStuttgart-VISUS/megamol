@@ -536,6 +536,9 @@
     <None Include="Shaders\SSAOdeferred.btf">
       <Filter>Shader Files</Filter>
     </None>
+    <None Include="Shaders\puxels.btf">
+      <Filter>Shader Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="Shaders\protein.btf">

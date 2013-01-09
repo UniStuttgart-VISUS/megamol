@@ -96,7 +96,7 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleDS (),
     this->rendermodeParam << rm;
 	
     // ----- use Puxels param -----
-    this->usePuxels = false;
+    this->usePuxels = true;
     param::BoolParam *puxbpm = new param::BoolParam( this->usePuxels );
         this->puxelsParam << puxbpm;
 
@@ -332,6 +332,9 @@ bool MoleculeSESRenderer::create( void ) {
 			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for puxel order shader", this->ClassName() );
 			return false;
 		}
+
+		compSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::sespayload"));
+
 		try
 		{
 			if( !this->puxelOrderShader.Compile(compSrc.Code(), compSrc.Count()))
@@ -341,7 +344,34 @@ bool MoleculeSESRenderer::create( void ) {
 		}
 		catch( vislib::Exception e )
 		{
-			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create clear shader: %s\n", this->ClassName(), e.GetMsgA() );
+			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create order shader: %s\n", this->ClassName(), e.GetMsgA() );
+			return false;
+		}
+		
+		//////////////////////////////////
+		// puxel reduced surface shader //
+		//////////////////////////////////
+	    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::puxelsReducedSurfaceRenderVertex", vertSrc ) )
+		{
+			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for puxel render reduced surface shader", this->ClassName() );
+			return false;
+		}
+		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::puxelsReducedSurfaceRenderFragment", fragSrc ) )
+		{
+			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for puxel render reduced surface shader", this->ClassName() );
+			return false;
+		}
+		fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::sespayload"));
+		try
+		{
+			if( !this->puxelRenderReducedSurfaceShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) )
+			{
+				throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
+			}
+		}
+		catch( vislib::Exception e )
+		{
+			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create puxel render reduced surface shader: %s\n", this->ClassName(), e.GetMsgA() );
 			return false;
 		}
 
@@ -358,6 +388,7 @@ bool MoleculeSESRenderer::create( void ) {
 			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for puxel draw shader", this->ClassName() );
 			return false;
 		}
+		fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::sespayload"));
 		try
 		{
 			if( !this->puxelDrawShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) )
@@ -396,8 +427,9 @@ bool MoleculeSESRenderer::create( void ) {
 		fragSrc.Replace(0, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::version"));
 		fragSrc.Insert(1, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::puxeluniform"));
 		fragSrc.Insert(2, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::header"));
-		fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::data"));
-		fragSrc.Insert(4, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::store"));
+		fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::sespayload"));
+		fragSrc.Insert(4, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::data"));
+		fragSrc.Insert(5, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::store"));
 	}
 
     try
@@ -439,12 +471,22 @@ bool MoleculeSESRenderer::create( void ) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for torus shader", this->ClassName() );
         return false;
     }
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::torusFragment", fragSrc ) )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName() );
-        return false;
-    }
-
+	if(allowPuxels)
+	{
+		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::torusFragmentPuxels", fragSrc ) )
+		{
+			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName() );
+			return false;
+		}
+	}
+	else
+	{
+		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::torusFragment", fragSrc ) )
+		{
+			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName() );
+			return false;
+		}
+	}
 	// when we want to use puxels, we have to replace the version snippet and insert puxel code
 	if(allowPuxels)
 	{
@@ -456,8 +498,9 @@ bool MoleculeSESRenderer::create( void ) {
 		fragSrc.Replace(0, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::version"));
 		fragSrc.Insert(1, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::puxeluniform"));
 		fragSrc.Insert(2, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::header"));
-		fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::data"));
-		fragSrc.Insert(4, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::store"));
+		fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::sespayload"));
+		fragSrc.Insert(4, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::data"));
+		fragSrc.Insert(5, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::store"));
 	}
 
     try
@@ -499,11 +542,22 @@ bool MoleculeSESRenderer::create( void ) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for spherical triangle shader", this->ClassName() );
         return false;
     }
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphericaltriangleFragment", fragSrc ) )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName() );
-        return false;
-    }
+	if(allowPuxels)
+	{
+		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphericaltriangleFragmentPuxels", fragSrc ) )
+		{
+			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName() );
+			return false;
+	    }
+	}
+	else
+	{
+		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphericaltriangleFragment", fragSrc ) )
+		{
+			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName() );
+		   return false;
+		}
+	}
  	// when we want to use puxels, we have to replace the version snippet and insert puxel code
 	if(allowPuxels)
 	{
@@ -515,8 +569,9 @@ bool MoleculeSESRenderer::create( void ) {
 		fragSrc.Replace(0, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::version"));
 		fragSrc.Insert(1, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::puxeluniform"));
 		fragSrc.Insert(2, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::header"));
-		fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::data"));
-		fragSrc.Insert(4, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::store"));
+		fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::sespayload"));
+		fragSrc.Insert(4, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::data"));
+		fragSrc.Insert(5, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::store"));
 	}
 	
 	try
@@ -921,7 +976,7 @@ bool MoleculeSESRenderer::Render( Call& call ) {
     if( this->postprocessing != NONE && virtualViewportChanged )
         this->CreateFBO();
 	
-	if( this->usePuxels && virtualViewportChanged )
+	if( this->allowPuxels && virtualViewportChanged )
         puxelsCreateBuffers();
 
     // ==================== Scale & Translate ====================
@@ -978,7 +1033,7 @@ bool MoleculeSESRenderer::Render( Call& call ) {
 
 	// clear puxels buffer
 	if(this->usePuxels)
-		puxelsClear();
+		this->puxelsClear();
 
     // start rendering to frame buffer object
     if( this->postprocessing != NONE ) {
@@ -992,10 +1047,11 @@ bool MoleculeSESRenderer::Render( Call& call ) {
     }
 
 	if(this->usePuxels)
-		puxelsReorder();
-
-	if(this->usePuxels)
-		puxelsDraw();
+	{
+		this->puxelRenderReducedSurface();
+		this->puxelsReorder();
+		this->puxelsDraw();
+	}
 
     //////////////////////////////////
     // apply postprocessing effects //
@@ -1417,7 +1473,7 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
 		virtualViewportChanged = true;
     }
 
-	if( this->usePuxels && virtualViewportChanged )
+	if( this->allowPuxels && virtualViewportChanged )
         puxelsCreateBuffers();
 
     // set viewport
@@ -3140,6 +3196,58 @@ void MoleculeSESRenderer::puxelsReorder()
 	puxelOrderShader.Disable();
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
+}
+
+/**
+ * Renders a reduced surface of the molecule for later discarding internal fragments.
+ */
+void MoleculeSESRenderer::puxelRenderReducedSurface()
+{
+	return;
+    // temporary variables
+    unsigned int max1, max2;
+    max1 = max2 = 0;
+    vislib::math::Vector<float, 3> v1, v2, v3, n1;
+    v1.Set( 0, 0, 0);
+    v2 = v3 = n1 = v1;
+
+    glEnable( GL_COLOR_MATERIAL);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_TRIANGLES );
+    glDisable( GL_CULL_FACE );
+	this->puxelRenderReducedSurfaceShader.Enable();
+	glUniform1ui(this->puxelRenderReducedSurfaceShader.ParameterLocation("width"), this->width);
+	glUniform1ui(this->puxelRenderReducedSurfaceShader.ParameterLocation("height"), this->height);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
+	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
+    unsigned int i;
+    for( unsigned int cntRS = 0; cntRS < (unsigned int)this->reducedSurface.size(); ++cntRS)
+    {
+        max2 = this->reducedSurface[cntRS]->GetRSFaceCount();
+        for( i = 0; i < max2; ++i )
+        {
+            n1 = this->reducedSurface[cntRS]->GetRSFace( i)->GetFaceNormal();
+            v1 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex1()->GetPosition();
+            v2 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex2()->GetPosition();
+            v3 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex3()->GetPosition();
+
+            glBegin( GL_TRIANGLES );
+                glNormal3fv( n1.PeekComponents());
+                glColor4f( 1.0f, 0.8f, 0.0f, 0.2f);
+                glVertex3fv( v1.PeekComponents());
+                //glColor3f( 0.0f, 0.7f, 0.7f);
+                glVertex3fv( v2.PeekComponents());
+                //glColor3f( 0.7f, 0.0f, 0.7f);
+                glVertex3fv( v3.PeekComponents());
+            glEnd(); //GL_TRIANGLES
+        }
+    }
+    this->puxelRenderReducedSurfaceShader.Disable();
+    glDisable( GL_COLOR_MATERIAL);
+
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
+	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, 0);
 }
 
 /**

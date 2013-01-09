@@ -38,14 +38,34 @@ layout(std430, binding = 0) buffer Header
     -->
   </snippet>
 
-  <snippet name="data" type="string">
+  <snippet name="sespayload" type="string">
     <!--
 struct Puxel
 {
     uint 	c;
+    vec3 normal;
     float 	z;
 };
 
+Puxel makePuxel(uint c, vec3 n, float z)
+{
+  Puxel ret;
+  ret.c = c;
+  ret.normal = n;
+  ret.z = z;
+  return ret;
+}
+
+bool comparePuxel(Puxel a, Puxel b)
+{
+  return (a.z > b.z);
+}
+
+    -->
+  </snippet>
+
+  <snippet name="data" type="string">
+    <!--
 struct PuxelEntry
 {
     Puxel	  puxel;
@@ -89,7 +109,7 @@ layout (local_size_x = 16, local_size_y = 16) in;
 uniform unsigned int width;
 uniform unsigned int height;
 
-#line 1059
+#line 113
 
 #define ITEM(i)			  puxel[i]
 #define ITEM_COMP(i)	puxel[i].puxel.z
@@ -129,7 +149,7 @@ void insertsort(unsigned int start)
 
 		unsigned int  j1 = ITEM_PREV(j);
 		puxj1 = ITEM(j1);
-		while(j1 > 0 && puxj1.puxel.z > pux.puxel.z)
+		while(j1 > 0 && comparePuxel(puxj1.puxel, pux.puxel))
 		{
 			puxel[j].puxel = puxj1.puxel;
 
@@ -164,7 +184,7 @@ uniform unsigned int height;
 layout(binding = 5, offset=0) uniform atomic_uint nextEntry;
 
 #line 10136
-void puxels_store(vec4 color, float depth)
+void puxels_store(Puxel payload)
 {
   uvec2 p = uvec2(gl_FragCoord.xy);
   if(p.x >= 0 && p.y >= 0 && p.x < width && p.y < height )
@@ -174,8 +194,7 @@ void puxels_store(vec4 color, float depth)
     uint newEntryId = atomicCounterIncrement(nextEntry);
     puxel[newEntryId % dataBufferSize].prev = atomicExchange(entry[index], newEntryId);
 
-    puxel[newEntryId % dataBufferSize].puxel.c = packUnorm4x8(color);
-    puxel[newEntryId % dataBufferSize].puxel.z = depth;
+    puxel[newEntryId % dataBufferSize].puxel = payload;
   }
   else
 		discard;
@@ -206,10 +225,10 @@ void main()
   if(p.x >= 0 && p.y >= 0 && p.x < width && p.y < height )
   {
     uint index = p.x + p.y*width;
+    unsigned int next = entry[index];
 
-    if(entry[index] != 0)
+    if(next != 0)
     {
-      unsigned int next = entry[index];
       vec4 finalColor=vec4(0.0);
 	    while(next > 0)
 	    {
@@ -232,4 +251,5 @@ void main()
        -->
     </snippet>
   </shader>
+
 </btf>
