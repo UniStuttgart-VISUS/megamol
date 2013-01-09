@@ -361,6 +361,8 @@ namespace protein {
 		vislib::graphics::gl::GLSLComputeShader puxelOrderShader;
 		// shader for drawing the puxel buffer
 		vislib::graphics::gl::GLSLComputeShader puxelDrawShader;
+		// shader for rendering the reduced surface into the puxel buffer
+		vislib::graphics::gl::GLSLComputeShader puxelRenderReducedSurfaceShader;
 
 		// atomic counter for next
 		GLuint puxelsAtomicBufferNextId;
@@ -381,6 +383,11 @@ namespace protein {
 		 * puxelsBufferHeaderand puxelsAtomicBufferNextId to zero.
          */
 		void puxelsClear();
+
+		/**
+		 * Renders a reduced surface of the molecule for later discarding internal fragments.
+	 	 */
+		void puxelRenderReducedSurface();
 
 		/**
          * Calls the puxelOrderShader shader and orders each puxel tube
