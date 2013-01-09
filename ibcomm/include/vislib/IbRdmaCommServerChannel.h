@@ -40,12 +40,7 @@ namespace ib {
         static SmartRef<IbRdmaCommServerChannel> Create(const SIZE_T cntBufRecv,
             const SIZE_T cntBufSend);
 
-        inline static SmartRef<IbRdmaCommServerChannel> Create(
-                const SIZE_T cntBuf) {
-            VLSTACKTRACE("IbRdmaCommServerChannel::Create", __FILE__, __LINE__);
-            return SmartRef<IbRdmaCommServerChannel>(new IbRdmaCommServerChannel(
-                cntBuf, cntBuf), false);
-        }
+        static SmartRef<IbRdmaCommServerChannel> Create(const SIZE_T cntBuf);
 
         virtual SmartRef<AbstractCommClientChannel> Accept(void);
 

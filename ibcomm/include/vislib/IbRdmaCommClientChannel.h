@@ -51,12 +51,8 @@ namespace ib {
          *
          * @return
          */
-        inline static SmartRef<IbRdmaCommClientChannel> Create(
-                const SIZE_T cntBufRecv, const SIZE_T cntBufSend) {
-            VLSTACKTRACE("IbRdmaCommClientChannel::Create", __FILE__, __LINE__);
-            return IbRdmaCommClientChannel::Create(NULL, cntBufRecv, NULL, 
-                cntBufSend);
-        }
+        static SmartRef<IbRdmaCommClientChannel> Create(
+                const SIZE_T cntBufRecv, const SIZE_T cntBufSend);
         
         /**
          * Create a new instance with receive and send buffers of the specified
@@ -66,11 +62,7 @@ namespace ib {
          *
          * @return
          */
-        inline static SmartRef<IbRdmaCommClientChannel> Create(
-                const SIZE_T cntBuf) {
-            VLSTACKTRACE("IbRdmaCommClientChannel::Create", __FILE__, __LINE__);
-            return IbRdmaCommClientChannel::Create(NULL, cntBuf, NULL, cntBuf);
-        }
+        static SmartRef<IbRdmaCommClientChannel> Create(const SIZE_T cntBuf);
 
         /**
          * Create a new instance using the specified buffers for DMA.

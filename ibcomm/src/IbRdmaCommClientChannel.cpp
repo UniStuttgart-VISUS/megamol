@@ -19,6 +19,28 @@
  * vislib::net::ib::IbRdmaCommClientChannel::Create
  */
 vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
+vislib::net::ib::IbRdmaCommClientChannel::Create(const SIZE_T cntBufRecv, 
+        const SIZE_T cntBufSend) {
+    VLSTACKTRACE("IbRdmaCommClientChannel::Create", __FILE__, __LINE__);
+    return IbRdmaCommClientChannel::Create(NULL, cntBufRecv, NULL, 
+        cntBufSend);
+}
+
+
+/*
+ * vislib::net::ib::IbRdmaCommClientChannel::Create
+ */
+vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
+vislib::net::ib::IbRdmaCommClientChannel::Create(const SIZE_T cntBuf) {
+    VLSTACKTRACE("IbRdmaCommClientChannel::Create", __FILE__, __LINE__);
+    return IbRdmaCommClientChannel::Create(NULL, cntBuf, NULL, cntBuf);
+}
+
+
+/*
+ * vislib::net::ib::IbRdmaCommClientChannel::Create
+ */
+vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
 vislib::net::ib::IbRdmaCommClientChannel::Create(BYTE *bufRecv, 
         const SIZE_T cntBufRecv, BYTE *bufSend, const SIZE_T cntBufSend) {
     VLSTACKTRACE("IbRdmaCommClientChannel::Create", __FILE__, __LINE__);
@@ -214,9 +236,13 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
                 // until the data becomes available.
                 VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for RDMA "
                     "receive operation to complete...\n");
-                while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
+                do {
+                    if (this->id == NULL) {
+                        throw IbRdmaException(EOWNERDEAD, __FILE__, __LINE__);
+                    }
+                } while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
                 VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Received %d bytes "
-                    "via RDMA.\n", wc.byte_len);
+                    "via RDMA, status %d.\n", wc.byte_len, wc.status);
 
 
                 // TODO: The following code does not work. The hack above was found at
@@ -229,9 +255,10 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
                 // Determine how much we can copy from the receive buffer to the 
                 // user-supplied destination buffer.
                 this->cntRemRecv = wc.byte_len;
+                ASSERT(this->cntRemRecv <= this->cntBufRecv);
                 lastReceived = cntBytes - totalReceived;
-                if (lastReceived > this->cntBufRecv) {
-                    lastReceived = this->cntBufRecv;
+                if (lastReceived > this->cntRemRecv) {
+                    lastReceived = this->cntRemRecv;
                 }
                 this->cntRemRecv -= lastReceived;
 
@@ -320,13 +347,21 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
 
     } else {
         do {
-            lastSent = (cntBytes < this->cntBufSend) 
-                ? cntBytes : this->cntBufSend;
+            ASSERT(cntBytes >= totalSent);
+            if ((cntBytes - totalSent) < this->cntBufSend) {
+                lastSent = cntBytes - totalSent;
+            } else {
+                lastSent = this->cntBufSend;
+            }
 
             ::memcpy(this->bufSend, inPtr, lastSent);
 
             VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Posting RDMA send "
-                "of %d bytes starting at %p...\n", lastSent, this->bufSend);
+                "of %u bytes (buffer %u bytes) starting at %p...\n", lastSent, 
+                this->cntBufSend, this->bufSend);
+            if (this->id == NULL) {
+                throw IbRdmaException(EOWNERDEAD, __FILE__, __LINE__);
+            }
             result = ::rdma_post_send(this->id, NULL, this->bufSend, 
                 lastSent, this->mrSend, 0);
             if (result != 0) {
@@ -335,17 +370,22 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
 
             VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for RDMA send "
                 "operation to complete...\n");
-            while (!::ibv_poll_cq(this->id->send_cq, 1, &wc));
+            do {
+                if (this->id == NULL) {
+                    throw IbRdmaException(EOWNERDEAD, __FILE__, __LINE__);
+                }
+            } while (!::ibv_poll_cq(this->id->send_cq, 1, &wc));
             // TODO: The following does not work for some reason (same as for Receive()):
             //result = ::rdma_get_send_comp(this->id, &wc);
             //if (result != 0) {
             //    throw IbRdmaException("rdma_get_send_comp", errno, __FILE__, __LINE__);
             //}
             VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "RDMA send operation "
-                "completed.\n");
+                "completed for %u bytes, status %d.\n", wc.byte_len, wc.status);
 
             totalSent += lastSent;
             inPtr += lastSent;
+
 
         } while (forceSend && (totalSent < cntBytes));
     }
@@ -390,6 +430,9 @@ void vislib::net::ib::IbRdmaCommClientChannel::postReceive(void) {
     VLSTACKTRACE("IbRdmaCommClientChannel::postReceive", __FILE__, __LINE__);
     VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Posting RDMA receive of %d "
         "bytes into %p...\n", this->cntBufRecv, this->bufRecv);
+    if (this->id == NULL) {
+        throw IbRdmaException(EOWNERDEAD, __FILE__, __LINE__);
+    }
     int result = ::rdma_post_recv(this->id, NULL, this->bufRecv, 
         this->cntBufRecv, this->mrRecv);
     if (result != 0) {

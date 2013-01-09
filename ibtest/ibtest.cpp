@@ -46,8 +46,9 @@ DWORD Server::Run(void *userData) {
     try {
         IbServerChannel channel = IbRdmaCommServerChannel::Create(512);
 
-        IbEndPoint ep = IPCommEndPoint::Create(IPEndPoint::FAMILY_INET,
-            "192.168.219.250", 12345);
+        //IbEndPoint ep = IPCommEndPoint::Create(IPEndPoint::FAMILY_INET,
+        //    "192.168.219.250", 12345);
+        IbEndPoint ep = IPCommEndPoint::Create(IPEndPoint::FAMILY_INET, 12345);
 
         std::cout << "Bind..." << std::endl;
         channel->Bind(ep);
@@ -96,6 +97,7 @@ DWORD Client::Run(void *userData) {
         IbChannel channel = IbRdmaCommClientChannel::Create(512);
 
         IbEndPoint ep = IPCommEndPoint::Create(IPEndPoint::FAMILY_INET,
+            //"192.168.219.231", 12345);
             "192.168.219.250", 12345);
 
         std::cout << "Waiting for server to become available..." << std::endl;
@@ -116,7 +118,7 @@ DWORD Client::Run(void *userData) {
         std::cout << "Client leaving..." << std::endl;
         return 0;
     } catch (IbRdmaException e) {
-        std::cerr << "IB client failed: " << e.GetMsgA() << std::endl;
+        std::cerr << "IB client failed: " << e.GetMsgA() << ", " << e.GetErrorCode() << std::endl;
         return static_cast<DWORD>(e.GetErrorCode());
     }
 }
@@ -172,16 +174,16 @@ int _tmain(int argc, _TCHAR **argv) {
     }
 
     RunnableThread<Client> clientThread;
-    RunnableThread<Client> clientThread2;
+    //RunnableThread<Client> clientThread2;
     RunnableThread<Server> serverThread;
 
     serverThread.Start();
     clientThread.Start();
-    clientThread2.Start();
+    //clientThread2.Start();
 
     clientThread.Join();
     serverThread.Join();
-    clientThread2.Join();
+    //clientThread2.Join();
 
     try {
         //IbChannel channel = IbvCommChannel::Create();

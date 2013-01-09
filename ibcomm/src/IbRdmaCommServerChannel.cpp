@@ -28,6 +28,17 @@ vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBufRecv,
 
 
 /*
+ * vislib::net::ib::IbRdmaCommServerChannel::Create
+ */
+vislib::SmartRef<vislib::net::ib::IbRdmaCommServerChannel> 
+vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBuf) {
+    VLSTACKTRACE("IbRdmaCommServerChannel::Create", __FILE__, __LINE__);
+    return SmartRef<IbRdmaCommServerChannel>(new IbRdmaCommServerChannel(
+        cntBuf, cntBuf), false);
+}
+
+
+/*
  * vislib::net::ib::IbRdmaCommServerChannel::Accept
  */
 vislib::SmartRef<vislib::net::AbstractCommClientChannel> 
