@@ -214,6 +214,7 @@ namespace ib {
         /** Size of 'bufSend' in bytes. */
         SIZE_T cntBufSend;
 
+        /** Valid bytes starting at 'remRecv'. */
         SIZE_T cntRemRecv;
 
         struct rdma_cm_id *id;
@@ -224,6 +225,10 @@ namespace ib {
         /** Registered memory structure for 'bufSend'. */
         struct ibv_mr *mrSend;
 
+        /** 
+         * Pointer to the start of the data in 'bufRecv' that have not yet been
+         * delivered to the user.
+         */
         BYTE *remRecv;
 
         /** 

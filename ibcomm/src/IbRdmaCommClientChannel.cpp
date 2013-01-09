@@ -217,16 +217,16 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
                 } else {
                     lastReceived = cntBytes;
                 }
-                if (lastReceived > this->cntBufRecv) {
-                    ASSERT(false);
-                    lastReceived = this->cntBufRecv;
-                }
-                this->cntRemRecv -= lastReceived;
 
                 // Copy receive data to user buffer.
+                ASSERT(lastReceived <= this->cntRemRecv);
                 ::memcpy(outPtr, this->remRecv, lastReceived);
 
-                // Update cursor variables.
+                // Update internal cursor variables.
+                this->remRecv += lastReceived;
+                this->cntRemRecv -= lastReceived;
+
+                // Update current call cursor variables.
                 totalReceived += lastReceived;
                 outPtr += lastReceived;
 
@@ -252,29 +252,39 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
                 //    throw IbRdmaException("rdma_get_recv_comp", errno, __FILE__, __LINE__);
                 //}
 
-                // Determine how much we can copy from the receive buffer to the 
-                // user-supplied destination buffer.
+                // Re-initialise internal buffer cursors.
+                this->remRecv = this->bufRecv;
                 this->cntRemRecv = wc.byte_len;
                 ASSERT(this->cntRemRecv <= this->cntBufRecv);
+
+                // Determine how much we can copy from the receive buffer to the 
+                // user-supplied destination buffer.
                 lastReceived = cntBytes - totalReceived;
                 if (lastReceived > this->cntRemRecv) {
+                    // User wants too much...
                     lastReceived = this->cntRemRecv;
                 }
-                this->cntRemRecv -= lastReceived;
 
                 // Copy receive data to user buffer.
-                ::memcpy(outPtr, this->bufRecv, lastReceived);
+                ASSERT(lastReceived <= this->cntRemRecv);
+                ASSERT(this->remRecv == this->bufRecv);
+                ::memcpy(outPtr, this->remRecv, lastReceived);
 
-                // Update cursor variables.
+                // Update internal cursor variables.
+                this->remRecv += lastReceived;
+                this->cntRemRecv -= lastReceived;
+
+                // Update current call cursor variables.
                 totalReceived += lastReceived;
                 outPtr += lastReceived;
             }
+            ASSERT(this->cntRemRecv >= 0);
+            ASSERT(this->cntRemRecv < this->cntBufRecv);
 
-            
-            if (this->cntRemRecv > 0) {
-                // Remember where we stopped for next call to Receive().
-                this->remRecv = this->bufRecv + lastReceived;
-            } else {
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "User did not receive "
+                "%u bytes already in RDMA buffer.\n", this->cntRemRecv);
+
+            if (this->cntRemRecv == 0) {
                 // Post receive for next iteration or next call to Receive().
                 this->postReceive();
             }
