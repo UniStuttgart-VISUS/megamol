@@ -133,14 +133,18 @@ void vislib::net::TcpCommChannel::Listen(const int backlog) {
 SIZE_T vislib::net::TcpCommChannel::Receive(void *outData, 
         const SIZE_T cntBytes, const UINT timeout, const bool forceReceive) {
     VLSTACKTRACE("TcpCommChannel::Receive", __FILE__, __LINE__);
-    SIZE_T retval = this->socket.Receive(outData, cntBytes, timeout, 0, 
-        forceReceive);
+    SIZE_T retval = 0;
+    
+    if (cntBytes > 0) {
+        retval = this->socket.Receive(outData, cntBytes, timeout, 0, 
+            forceReceive);
 
-    if (retval == 0) {
-        throw PeerDisconnectedException(
-            PeerDisconnectedException::FormatMessageForLocalEndpoint(
-            this->socket.GetLocalEndPoint().ToStringW().PeekBuffer()), 
-            __FILE__, __LINE__);
+        if ((retval == 0) || (forceReceive && (retval < cntBytes))) {
+            throw PeerDisconnectedException(
+                PeerDisconnectedException::FormatMessageForLocalEndpoint(
+                this->socket.GetLocalEndPoint().ToStringW().PeekBuffer()), 
+                __FILE__, __LINE__);
+        }
     }
 
     return retval;
