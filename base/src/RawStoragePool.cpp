@@ -19,6 +19,7 @@
  * vislib::RawStoragePool::RawStoragePool
  */
 vislib::RawStoragePool::RawStoragePool(void) {
+    VLAUTOSTACKTRACE;
     // Nothing to do.
 }
 
@@ -27,6 +28,7 @@ vislib::RawStoragePool::RawStoragePool(void) {
  * vislib::RawStoragePool::~RawStoragePool
  */
 vislib::RawStoragePool::~RawStoragePool(void) {
+    VLAUTOSTACKTRACE;
     this->Clear();
 }
 
@@ -35,6 +37,7 @@ vislib::RawStoragePool::~RawStoragePool(void) {
  * vislib::RawStoragePool::Clear
  */
 void vislib::RawStoragePool::Clear(void) {
+    VLAUTOSTACKTRACE;
     while (!this->storageList.IsEmpty()) {
         SAFE_DELETE(this->storageList.First().storage);
         this->storageList.RemoveFirst();
@@ -46,6 +49,7 @@ void vislib::RawStoragePool::Clear(void) {
  * vislib::RawStoragePool::RaiseAtLeast
  */
 vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const SIZE_T size) {
+    VLAUTOSTACKTRACE;
     PooledRawStorage *bestFit = NULL;
     PooledRawStorage *firstUnused = NULL;
     SIZE_T bestDist = SIZE_MAX;
@@ -96,6 +100,7 @@ vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const SIZE_T size) {
  * vislib::RawStoragePool::Return
  */
 void vislib::RawStoragePool::Return(RawStorage *storage) {
+    VLAUTOSTACKTRACE;
     RawStorageList::Iterator it = this->storageList.GetIterator();
 
     while (it.HasNext()) {
@@ -112,9 +117,21 @@ void vislib::RawStoragePool::Return(RawStorage *storage) {
 
 
 /*
+ *  vislib::RawStoragePool::SafeReturn
+ */
+void vislib::RawStoragePool::SafeReturn(RawStorage *storage) {
+    VLAUTOSTACKTRACE;
+    if (storage != NULL) {
+        this->Return(storage);
+    }
+}
+
+
+/*
  * vislib::RawStoragePool::RawStoragePool
  */
 vislib::RawStoragePool::RawStoragePool(const RawStoragePool& rhs) {
+    VLAUTOSTACKTRACE;
     throw UnsupportedOperationException("RawStoragePool::RawStoragePool",
         __FILE__, __LINE__);
 }
@@ -125,6 +142,7 @@ vislib::RawStoragePool::RawStoragePool(const RawStoragePool& rhs) {
  */
 vislib::RawStoragePool& vislib::RawStoragePool::operator =(
         const RawStoragePool& rhs) {
+    VLAUTOSTACKTRACE;
     if (this != &rhs) {
         throw IllegalParamException("rhs", __FILE__, __LINE__);
     }

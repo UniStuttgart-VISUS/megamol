@@ -192,8 +192,8 @@ bool vislib::net::SimpleMessageDispatcher::fireCommunicationError(
     this->listeners.Unlock();
 
     VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "SimpleMessageDispatcher "
-        "received exit request from registered error listener: %d\n", 
-        retval);
+        "received %sexit request from registered error listener.\n", 
+        (retval ? "no ": ""));
     return retval;
 }
 
@@ -247,7 +247,7 @@ bool vislib::net::SimpleMessageDispatcher::fireMessageReceived(
     this->listeners.Unlock();
 
     VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "SimpleMessageDispatcher "
-        "received exit request from registered message listener: %d\n", 
-        retval);
+        "received %sexit request from registered message listener.\n", 
+        (retval ? "no ": ""));
     return retval;
 }

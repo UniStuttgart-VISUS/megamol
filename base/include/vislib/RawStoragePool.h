@@ -17,6 +17,7 @@
 
 #include "vislib/RawStorage.h"
 #include "vislib/SingleLinkedList.h"
+#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -82,6 +83,21 @@ namespace vislib {
          *                               RawStoragePool.
          */
         void Return(RawStorage *storage);
+
+        /**
+         * Return 'storage' for reuse if not NULL.
+         *
+         * Note: The method will, although it tests for NULL, throw an exception
+         * if the storage was not raised from this pool. This indicates a 
+         * serious problem in the application code, so we do not hide it!
+         *
+         * @param storage The RawStorage object to be returned. This must have
+         *                been acquired from the same RawStoragePool before.
+         *
+         * @throws IllegalParamException If 'storage' was not created by this 
+         *                               RawStoragePool.
+         */
+        void SafeReturn(RawStorage *storage);
 
     private:
 
