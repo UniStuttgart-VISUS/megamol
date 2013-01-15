@@ -58,7 +58,7 @@ vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const SIZE_T size) {
             firstUnused = &n;
         }
 
-        if ((n.storage->GetSize() > size)
+        if (!n.isInUse && (n.storage->GetSize() > size)
                 && (n.storage->GetSize() < bestDist)) {
             bestFit = &n;
             bestDist = n.storage->GetSize() - size;
