@@ -25,7 +25,7 @@ namespace moldyn {
     /**
      * Renderer for simple sphere glyphs
      */
-    class AbstractSimpleSphereRenderer : public view::Renderer3DModule {
+    class MEGAMOLCORE_API AbstractSimpleSphereRenderer : public view::Renderer3DModule {
     public:
 
     protected:

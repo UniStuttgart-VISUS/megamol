@@ -16,6 +16,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/memutils.h"
 #include "vislib/types.h"
+#include "api/MegaMolCore.std.h"
 
 
 namespace megamol {
@@ -26,7 +27,7 @@ namespace moldyn {
     /**
      * MMSPD file frame data
      */
-    class MMSPDFrameData {
+    class MEGAMOLCORE_API MMSPDFrameData {
     public:
 
         /**
@@ -34,7 +35,7 @@ namespace moldyn {
          *
          * NOTE: NO Double supported! Doubles will be converted to floats!
          */
-        class Particles {
+        class MEGAMOLCORE_API Particles {
         public:
 
             /**
@@ -126,6 +127,9 @@ namespace moldyn {
             /** The number of particles */
             UINT64 count;
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
             /**
              * The particle data
              *
@@ -135,6 +139,9 @@ namespace moldyn {
              * NOTE: NO Double supported! Doubles will be converted to floats!
              */
             vislib::RawStorage data;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
             /**
              * Mapping field indices of the header to storage positions.
@@ -195,7 +202,10 @@ namespace moldyn {
         }
 
     private:
-
+		
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /**
          * The particle data
          *
@@ -205,7 +215,13 @@ namespace moldyn {
          * the type).
          */
         vislib::Array<Particles> data;
-
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
+		
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /**
          * The particle index reconstruction data
          *
@@ -217,6 +233,9 @@ namespace moldyn {
          * (worst case 2 byte per particle)
          */
         vislib::RawStorage idxRec;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
     };
 

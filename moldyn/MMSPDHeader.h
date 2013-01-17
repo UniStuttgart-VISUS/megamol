@@ -15,6 +15,7 @@
 #include "vislib/Cuboid.h"
 #include "vislib/String.h"
 #include "vislib/types.h"
+#include "api/MegaMolCore.std.h"
 
 
 namespace megamol {
@@ -25,13 +26,13 @@ namespace moldyn {
     /**
      * MMSPD file header data
      */
-    class MMSPDHeader {
+    class MEGAMOLCORE_API MMSPDHeader {
     public:
 
         /**
          * Class for particle definition data fields
          */
-        class Field {
+        class MEGAMOLCORE_API Field {
         public:
 
             /** Possible type identifiers */
@@ -93,9 +94,15 @@ namespace moldyn {
             bool operator==(const Field& rhs) const;
 
         private:
-
+			
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
             /** The name of the field */
             vislib::StringA name;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
             /** The type of the field */
             TypeID type;
@@ -105,7 +112,7 @@ namespace moldyn {
         /**
          * Class for const particle definition data fields
          */
-        class ConstField : public Field {
+        class MEGAMOLCORE_API ConstField : public Field {
         public:
 
             /** Ctor */
@@ -211,7 +218,7 @@ namespace moldyn {
         /**
          * Class of particle type definitions
          */
-        class TypeDefinition {
+        class MEGAMOLCORE_API TypeDefinition {
         public:
 
             /** Ctor */
@@ -303,15 +310,33 @@ namespace moldyn {
             bool operator==(const TypeDefinition& rhs) const;
 
         private:
-
+			
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
             /** The base type identifier */
             vislib::StringA baseType;
-
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
+			
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
             /** The constant data fields */
             vislib::Array<ConstField> constFields;
-
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
+			
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
             /** The variable data fields */
             vislib::Array<Field> fields;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
         };
 
@@ -424,15 +449,27 @@ namespace moldyn {
 
         /** Flag whether or not particle IDs are explicitly stored */
         bool hasIDs;
-
+		
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /** The particles bounding box */
         vislib::math::Cuboid<double> bbox;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
         /** The number of time frames */
         UINT32 timeCount;
-
+		
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /** The defined particle types */
         vislib::Array<TypeDefinition> types;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
         /** The number of particles */
         UINT64 particleCount;
