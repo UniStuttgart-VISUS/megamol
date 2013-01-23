@@ -296,7 +296,7 @@ namespace protein {
 
         megamol::core::param::ParamSlot postprocessingParam;
         megamol::core::param::ParamSlot rendermodeParam;
-		megamol::core::param::ParamSlot puxelsParam;
+        megamol::core::param::ParamSlot puxelsParam;
         megamol::core::param::ParamSlot coloringmodeParam;
         megamol::core::param::ParamSlot silhouettecolorParam;
         megamol::core::param::ParamSlot sigmaParam;
@@ -317,8 +317,8 @@ namespace protein {
         /** Parameter to toggle offscreen rendering */
         megamol::core::param::ParamSlot offscreenRenderingParam;
 
-		bool usePuxels;
-		bool allowPuxels;
+        bool usePuxels;
+        bool allowPuxels;
         bool drawRS;
         bool drawSES;
         bool drawSAS;
@@ -352,57 +352,57 @@ namespace protein {
         // shader for cheap transparency (postprocessing/blending)
         vislib::graphics::gl::GLSLShader transparencyShader;
 
-		////////////
-		// puxels //
-		////////////
-		// shader for clearing the puxel buffer
-		vislib::graphics::gl::GLSLComputeShader puxelClearShader;
-		// shader for reordering the puxel buffer
-		vislib::graphics::gl::GLSLComputeShader puxelOrderShader;
-		// shader for drawing the puxel buffer
-		vislib::graphics::gl::GLSLComputeShader puxelDrawShader;
-		// shader for rendering the reduced surface into the puxel buffer
-		vislib::graphics::gl::GLSLComputeShader puxelRenderReducedSurfaceShader;
+        ////////////
+        // puxels //
+        ////////////
+        // shader for clearing the puxel buffer
+        vislib::graphics::gl::GLSLComputeShader puxelClearShader;
+        // shader for reordering the puxel buffer
+        vislib::graphics::gl::GLSLComputeShader puxelOrderShader;
+        // shader for drawing the puxel buffer
+        vislib::graphics::gl::GLSLComputeShader puxelDrawShader;
+        // shader for rendering the reduced surface into the puxel buffer
+        vislib::graphics::gl::GLSLComputeShader puxelRenderReducedSurfaceShader;
 
-		// atomic counter for next
-		GLuint puxelsAtomicBufferNextId;
-		// buffer containing the puxels header
-		GLuint puxelsBufferHeader;
-		// buffer containing the puxels data
-		GLuint puxelsBufferData;
-		// size of the puxels data buffer in bytes
-		const int puxelSizeBuffer;
+        // atomic counter for next
+        GLuint puxelsAtomicBufferNextId;
+        // buffer containing the puxels header
+        GLuint puxelsBufferHeader;
+        // buffer containing the puxels data
+        GLuint puxelsBufferData;
+        // size of the puxels data buffer in bytes
+        const int puxelSizeBuffer;
 
-		/**
-		 * (Re)initializes the buffers needed for Puxel rendering.
-		 */
-		void puxelsCreateBuffers();
+        /**
+         * (Re)initializes the buffers needed for Puxel rendering.
+         */
+        void puxelsCreateBuffers();
 
-		/**
+        /**
          * Calls the puxelClearShader shader and resets all values of 
-		 * puxelsBufferHeaderand puxelsAtomicBufferNextId to zero.
+         * puxelsBufferHeaderand puxelsAtomicBufferNextId to zero.
          */
-		void puxelsClear();
+        void puxelsClear();
 
-		/**
-		 * Renders a reduced surface of the molecule for later discarding internal fragments.
-	 	 */
-		void puxelRenderReducedSurface();
+        /**
+         * Renders a reduced surface of the molecule for later discarding internal fragments.
+         */
+        void puxelRenderReducedSurface();
 
-		/**
+        /**
          * Calls the puxelOrderShader shader and orders each puxel tube
-		 * according to the depth of the fragments.
+         * according to the depth of the fragments.
          */
-		void puxelsReorder();
+        void puxelsReorder();
 
-		/**
-		 * Calls the puxelBlend shader and displays the contents of the puxel buffer
-		 * on the current Framebuffer or screen
-		 */
-		void puxelsDraw();
+        /**
+         * Calls the puxelBlend shader and displays the contents of the puxel buffer
+         * on the current Framebuffer or screen
+         */
+        void puxelsDraw();
 
-		////////////
-		
+        ////////////
+        
         // the bounding box of the protein
         vislib::math::Cuboid<float> bBox;
 
