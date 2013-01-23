@@ -88,13 +88,13 @@ void main(void) {
         //gl_Position = vec4( 0.0, 0.0, 1000.0, 1.0);
         gl_Position = vec4( 0.0, 0.0, 1000.0, 0.0);
     } else {
-	//	vec3 volPos = (gl_Vertex.xyz-minBBox) * invBBoxExtend;
-		vec3 volPos = (gl_Vertex.xyz - translate) * scaleVol;
-		if (texture3D(volumeSampler, volPos).w /*< 0.000001*/ == 0)
-			//gl_Position = vec4( 0.0, 0.0, 1000.0, 1.0);
-			gl_Position = vec4( 0.0, 0.0, 1000.0, 0.0);
-		else
-			gl_Position = vec4( devCoord.xy, 0.0, 1.0);
+    //	vec3 volPos = (gl_Vertex.xyz-minBBox) * invBBoxExtend;
+        vec3 volPos = (gl_Vertex.xyz - translate) * scaleVol;
+        if (texture3D(volumeSampler, volPos).w /*< 0.000001*/ == 0)
+            //gl_Position = vec4( 0.0, 0.0, 1000.0, 1.0);
+            gl_Position = vec4( 0.0, 0.0, 1000.0, 0.0);
+        else
+            gl_Position = vec4( devCoord.xy, 0.0, 1.0);
     }
 
     gl_PointSize = 2.0 * filterRadius * max( scaleVol.x, scaleVol.y) * volSize * scale;
@@ -219,7 +219,7 @@ void main(void) {
     vec3 pos = vec3( gl_FragCoord.xy * invVolRes.xy, sliceDepth) * scaleVolInv;
     //float density = computeDensity( pos);
     //gl_FragColor.rgb = color * density * scale;
-	//gl_FragColor.rgb = color * density; // * scale;
+    //gl_FragColor.rgb = color * density; // * scale;
 
     gl_FragColor.rgb = color * computeColorDensity(pos) * scale;
 }
@@ -245,23 +245,23 @@ varying float scale;
 varying vec3 color;
 
 /*float computeColorDensity( vec3 pos) {
-	float d = distance( pos, splatCenter.xyz);
-	return ( 1.0 - smoothstep( 0.2*filterRadius*scale, 1.0*filterRadius*scale, d)) * densityScale;
+    float d = distance( pos, splatCenter.xyz);
+    return ( 1.0 - smoothstep( 0.2*filterRadius*scale, 1.0*filterRadius*scale, d)) * densityScale;
 }*/
 
 float computeDensity( vec3 pos) {
-	float d = distance(pos, splatCenter.xyz);
+    float d = distance(pos, splatCenter.xyz);
     //return ( 1.0 - smoothstep( 0.0, 1.0*filterRadius*scale, d)) * densityScale;
-	//return ( d < scale ) ? 1.0 : 0.0;
-	return max(0, scale-d) / scale;
+    //return ( d < scale ) ? 1.0 : 0.0;
+    return max(0, scale-d) / scale;
 }
 
 void main(void) {
-	vec3 pos = vec3( gl_FragCoord.xy * invVolRes.xy, sliceDepth) * scaleVolInv;
-	float density = computeDensity( pos);
-	//gl_FragColor.rgb = color * density * scale;
-	//gl_FragColor.rgb = color * density; // * scale;
-	gl_FragColor.rgb = color * density * densityScale;
+    vec3 pos = vec3( gl_FragCoord.xy * invVolRes.xy, sliceDepth) * scaleVolInv;
+    float density = computeDensity( pos);
+    //gl_FragColor.rgb = color * density * scale;
+    //gl_FragColor.rgb = color * density; // * scale;
+    gl_FragColor.rgb = color * density * densityScale;
 }
 -->
   </snippet>
@@ -941,7 +941,7 @@ void main(void) {
         discard;
     else
         gl_FragColor = vec4( texCol.xyz * 0.2 + vec3( 149.0/255.0, 202.0/255.0, 222.0/255.0) * 0.8, 1.0);
-		//gl_FragColor = vec4( texCol.xyz, 1.0);
+        //gl_FragColor = vec4( texCol.xyz, 1.0);
 }
 
 -->
