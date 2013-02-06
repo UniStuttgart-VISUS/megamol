@@ -46,7 +46,7 @@ LinkerFlags       := $(LinkerFlags) -L$(CudaInstallPath)/lib64 -L$(CudaSdkPath)/
 CudaReleaseDir    := $(ReleaseDir)/Cuda
 CudaDebugDir      := $(DebugDir)/Cuda
 # note: not the dependencies (i.e. particle_kernel.cu)!
-CU_SOURCES        := particleSystem.cu filter_cuda.cu
+CU_SOURCES        := particleSystem.cu filter_cuda.cu CUDAMarchingCubes.cu CUDAQuickSurf.cu CUDACurl.cu
 CU_R_OBS          := $(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
 CU_D_OBS          := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
 LIBS              := $(LIBS) cudart
@@ -71,7 +71,9 @@ CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem
 LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(expatpath)/lib
 
 # cuda
-NVCCFLAGS := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) $(addprefix -I, $(IncludeDir)) -Xcompiler -fPIC
+#NVCCFLAGS := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) $(addprefix -I, $(IncludeDir)) -Xcompiler -fPIC
+NVCCFLAGS := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) $(addprefix -I, $(IncludeDir)) -Xcompiler -fPIC -O3 -arch=sm_21 --ftz=true --prec-sqrt=false --prec-div=false
+#--ptxas-options=-v -m64
 CU_DEPS := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.d, $(CU_SOURCES)))\
 	$(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.d, $(CU_SOURCES)))
 

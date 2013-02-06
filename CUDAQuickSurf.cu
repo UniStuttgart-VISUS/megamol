@@ -2117,6 +2117,10 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
   return 0;
 }
 
+
+/*
+ * CUDAQuickSurf::calc_map
+ */
 int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f, 
                              const float *colors_f,
                              int colorperatom,
@@ -2403,4 +2407,16 @@ float* CUDAQuickSurf::getMap() {
   qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
   return gpuh->devdensity;
 }
+
+float* CUDAQuickSurf::getColorMap() {
+    qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
+    return gpuh->devvoltexmap;
+}
+
+/*void CUDAQuickSurf::setDensFilterVals(float rad, int minN) {
+    qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
+    gpuh->nFilterMinNeighbours = minN;
+    gpuh->nFilterSqrtRad = rad;
+}*/
+
 

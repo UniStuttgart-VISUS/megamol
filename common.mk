@@ -100,7 +100,7 @@ ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 
 # Common linker flags
-LinkerFlags := -L/usr/X11R6/lib -lgomp
+LinkerFlags := -L/usr/X11R6/lib -L/usr/lib/gcc/x86_64-redhat-linux/4.4.4/ -lgomp 
 
 
 # Additional linker flags for special configurations

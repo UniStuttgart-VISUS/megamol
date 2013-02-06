@@ -20,6 +20,8 @@
 #ifndef CUDAQUICKSURF_H
 #define CUDAQUICKSURF_H
 
+#include <vector_types.h>
+
 // Write file for Daniel Kauker (puxel)
 //#define WRITE_FILE
 
@@ -74,10 +76,18 @@ struct Vertex
                float radscale, float gridspacing,
                float isovalue, float gausslim);
   
+  int calc_map_alt(long int natoms, const float *xyzr, const float *colors,
+               int colorperatom, float *origin, int* numvoxels, float maxrad,
+               float radscale, float gridspacing,
+               float isovalue, float gausslim);
+
   int getMapSizeX();
   int getMapSizeY();
   int getMapSizeZ();
   float* getMap();
+  float* getColorMap();
+
+  //void setDensFilterVals(float rad, int minN);
 
   ~CUDAQuickSurf(void);
 };

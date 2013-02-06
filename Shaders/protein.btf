@@ -2287,6 +2287,7 @@ void main(void) {
     }
 #endif // RETICLE
 //    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+//    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
 -->
       </snippet>
@@ -3409,6 +3410,7 @@ void main(void) {
     // phong lighting with directional light
     gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
 //    gl_FragColor = vec4(color, 1.0);
+//    gl_FragColor = vec4(color, 1.0);
     gl_FragColor.rgb = 0.75 * gl_FragColor.rgb + 0.25 * color;
 
 
@@ -3448,11 +3450,12 @@ void main(void) {
     }
 #endif // RETICLE
 
+
 }
 -->
       </snippet>
     </shader>
-
+    
     <shader name="arrowGeom">
       <snippet type="version">150</snippet>
       <snippet name="commondefines"/>
@@ -8273,7 +8276,7 @@ void main(void) {
 -->
       </snippet>
     </shader>
-
+    
     <shader name="sphereGeom">
       <snippet type="version">120</snippet>
       <snippet type="string">

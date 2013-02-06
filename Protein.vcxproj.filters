@@ -235,6 +235,12 @@
     <ClCompile Include="ToonRendererDeferred.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CrystalStructureDataCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DataWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="DofRendererDeferred.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -266,6 +272,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WKFUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CrystalStructureVolumeRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CritPoints.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LIC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UniGrid3D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CrystalStructureDataSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="QuickSurfRenderer2.cpp">
@@ -531,6 +552,21 @@
     <ClInclude Include="ToonRendererDeferred.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CrystalStructureDataCall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DataWriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WKFThreads.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CrystalStructureVolumeRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="DofRendererDeferred.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -562,12 +598,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="QuickSurfRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tables.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WKFThreads.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MoleculeVolumeCudaRenderer.h">
@@ -621,6 +651,21 @@
     <ClInclude Include="IntSelectionCall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CritPoints.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LIC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UniGrid3D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GridDataStructure.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CrystalStructureDataSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="common.mk">
@@ -662,6 +707,9 @@
     <None Include="Shaders\proteinDeferred.btf">
       <Filter>Shader Files</Filter>
     </None>
+    <None Include="CUDACurl.cuh">
+      <Filter>Header Files</Filter>
+    </None>
     <None Include="Shaders\SSAOdeferred.btf">
       <Filter>Shader Files</Filter>
     </None>
@@ -700,6 +748,9 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="CUDAQuickSurf.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDACurl.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="VolumeMeshRenderer-sort.cu">

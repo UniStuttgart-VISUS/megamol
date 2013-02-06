@@ -34,7 +34,7 @@ using namespace megamol::protein;
  * protein::SphereRenderer::SphereRenderer (CTOR)
  */
 protein::SphereRenderer::SphereRenderer(void) : Renderer3DModule (), 
-	sphereDataCallerSlot( "getData", "Connects the sphere rendering with data storage"),
+    sphereDataCallerSlot( "getData", "Connects the sphere rendering with data storage"),
     coloringModeParam( "coloringMode", "Coloring Mode"),
     minValueParam( "minValue", "Minimum vlue for gradient coloring"),
     maxValueParam( "maxValue", "Maximum vlue for gradient coloring"){
@@ -42,9 +42,9 @@ protein::SphereRenderer::SphereRenderer(void) : Renderer3DModule (),
     this->MakeSlotAvailable( &this->sphereDataCallerSlot);
 
     
-	// --- set the coloring mode ---
+    // --- set the coloring mode ---
     param::EnumParam *cm = new param::EnumParam(int(COLOR_TYPE));
-	cm->SetTypePair( COLOR_TYPE, "Type");
+    cm->SetTypePair( COLOR_TYPE, "Type");
     cm->SetTypePair( COLOR_CHARGE, "Charge");
     this->coloringModeParam << cm;
     this->MakeSlotAvailable( &this->coloringModeParam);
@@ -86,11 +86,11 @@ bool protein::SphereRenderer::create(void)
         return false;
     }
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+    glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
@@ -192,12 +192,12 @@ bool protein::SphereRenderer::Render(Call& call)
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if( cr3d == NULL ) return false;
 
-	// get camera information
+    // get camera information
     this->cameraInfo = cr3d->GetCameraParameters();
 
     float callTime = cr3d->Time();
 
-	// get pointer to MolecularDataCall
+    // get pointer to MolecularDataCall
     SphereDataCall *sphere = this->sphereDataCallerSlot.CallAs<SphereDataCall>();
     if( sphere == NULL) return false;
 
@@ -252,7 +252,7 @@ bool protein::SphereRenderer::Render(Call& call)
 
     // TODO: ---------- render ----------
 
-	// -- draw  --
+    // -- draw  --
     glPushMatrix();
 
     float scale;
@@ -264,42 +264,42 @@ bool protein::SphereRenderer::Render(Call& call)
 
     glScalef( scale, scale, scale);
 
-	float viewportStuff[4] = {
-		cameraInfo->TileRect().Left(),
-		cameraInfo->TileRect().Bottom(),
-		cameraInfo->TileRect().Width(),
-		cameraInfo->TileRect().Height()};
-	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-	viewportStuff[2] = 2.0f / viewportStuff[2];
-	viewportStuff[3] = 2.0f / viewportStuff[3];
+    float viewportStuff[4] = {
+        cameraInfo->TileRect().Left(),
+        cameraInfo->TileRect().Bottom(),
+        cameraInfo->TileRect().Width(),
+        cameraInfo->TileRect().Height()};
+    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    viewportStuff[2] = 2.0f / viewportStuff[2];
+    viewportStuff[3] = 2.0f / viewportStuff[3];
 
-	glDisable( GL_BLEND);
+    glDisable( GL_BLEND);
     glEnable( GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-	// enable sphere shader
-	this->sphereShader.Enable();
+    // enable sphere shader
+    this->sphereShader.Enable();
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
-	// set shader variables
+    // set shader variables
     glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
     glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
     glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
     glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-	// draw points
-	// set vertex and color pointers and draw them
+    // draw points
+    // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, posInter);
     //glColorPointer( 3, GL_UNSIGNED_BYTE, 0, sphere->SphereColors() );
     glColorPointer( 3, GL_FLOAT, 0, this->colors.PeekElements() );
     glDrawArrays( GL_POINTS, 0, sphere->SphereCount());
-	// disable sphere shader
+    // disable sphere shader
     glDisableClientState(GL_COLOR_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	this->sphereShader.Disable();
+    glDisableClientState(GL_VERTEX_ARRAY);
+    this->sphereShader.Disable();
 
     delete[] pos0;
     delete[] pos1;
@@ -307,7 +307,7 @@ bool protein::SphereRenderer::Render(Call& call)
 
     glDisable(GL_DEPTH_TEST);
 
-	glPopMatrix();
+    glPopMatrix();
 
     return true;
 }
@@ -329,48 +329,48 @@ void SphereRenderer::ComputeColors( const SphereDataCall *sphere, ColoringMode m
         }
     } else if( mode == COLOR_CHARGE ) {
         // set charge colors
-		vislib::math::Vector<float, 3> colMax( 250.0f/255.0f,  94.0f/255.0f,  82.0f/255.0f);
-		vislib::math::Vector<float, 3> colMid( 250.0f/255.0f, 250.0f/255.0f, 250.0f/255.0f);
-		vislib::math::Vector<float, 3> colMin(  37.0f/255.0f, 136.0f/255.0f, 195.0f/255.0f);
-		vislib::math::Vector<float, 3> col;
-		// get charge range
+        vislib::math::Vector<float, 3> colMax( 250.0f/255.0f,  94.0f/255.0f,  82.0f/255.0f);
+        vislib::math::Vector<float, 3> colMid( 250.0f/255.0f, 250.0f/255.0f, 250.0f/255.0f);
+        vislib::math::Vector<float, 3> colMin(  37.0f/255.0f, 136.0f/255.0f, 195.0f/255.0f);
+        vislib::math::Vector<float, 3> col;
+        // get charge range
         //float min( sphere->MinimumCharge() );
         float min( this->minValueParam.Param<param::FloatParam>()->Value());
-		//float max( sphere->MaximumCharge() );
+        //float max( sphere->MaximumCharge() );
         float max( this->maxValueParam.Param<param::FloatParam>()->Value());
-		float mid( ( max - min)/2.0f + min );
-		float val;
-		// loop over all spheres
+        float mid( ( max - min)/2.0f + min );
+        float val;
+        // loop over all spheres
         for( cnt = 0; cnt < sphere->SphereCount(); ++cnt ) {
-			if( min == max ) {
+            if( min == max ) {
                 this->colors[3*cnt+0] = colMid.X();
-				this->colors[3*cnt+1] = colMid.Y();
-				this->colors[3*cnt+2] = colMid.Z();
-				continue;
-			}
-			// get charge value
+                this->colors[3*cnt+1] = colMid.Y();
+                this->colors[3*cnt+2] = colMid.Z();
+                continue;
+            }
+            // get charge value
             val = sphere->SphereCharges()[cnt];
             if( val > max ) val = max;
             else if( val < min ) val = min;
             // assign color
-			if( val < mid ) {
-			    // below middle value --> blend between min and mid color
-				col = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( val - min );
+            if( val < mid ) {
+                // below middle value --> blend between min and mid color
+                col = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( val - min );
                 this->colors[3*cnt+0] = col.X();
-				this->colors[3*cnt+1] = col.Y();
-				this->colors[3*cnt+2] = col.Z();
-			} else if( val > mid ) {
-			    // above middle value --> blend between max and mid color
-				col = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( val - mid );
+                this->colors[3*cnt+1] = col.Y();
+                this->colors[3*cnt+2] = col.Z();
+            } else if( val > mid ) {
+                // above middle value --> blend between max and mid color
+                col = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( val - mid );
                 this->colors[3*cnt+0] = col.X();
-				this->colors[3*cnt+1] = col.Y();
-				this->colors[3*cnt+2] = col.Z();
+                this->colors[3*cnt+1] = col.Y();
+                this->colors[3*cnt+2] = col.Z();
             } else {
-			    // middle value --> assign mid color
+                // middle value --> assign mid color
                 this->colors[3*cnt+0] = colMid.X();
-				this->colors[3*cnt+1] = colMid.Y();
-				this->colors[3*cnt+2] = colMid.Z();
-			}
-		}
+                this->colors[3*cnt+1] = colMid.Y();
+                this->colors[3*cnt+2] = colMid.Z();
+            }
+        }
     }
 }
