@@ -39,6 +39,8 @@
  * SUCH DAMAGE.
  */
 
+#include "stdafx.h"
+
 #include "WKFUtils.h"
 
 #include <string.h>

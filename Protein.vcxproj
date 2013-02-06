@@ -38,6 +38,8 @@
     <ProjectGuid>{B68B06CD-66AF-475E-BF71-36EA0DED696B}</ProjectGuid>
     <RootNamespace>Protein</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <CudaToolkitCustomDir>
+    </CudaToolkitCustomDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'" Label="Configuration">
@@ -188,6 +190,7 @@
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">.mmplg</TargetExt>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Protein$(BitsD).win$(Bits)</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.mmplg</TargetExt>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.0\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <CUDA_Build_Rule>
@@ -426,7 +429,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <Defines>_DEBUG</Defines>
       <Runtime>MDd</Runtime>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
-      <GPUDebugInfo>true</GPUDebugInfo>
+      <GPUDebugInfo>false</GPUDebugInfo>
       <HostDebugInfo>true</HostDebugInfo>
       <TypeInfo>true</TypeInfo>
     </CudaCompile>
@@ -485,7 +488,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <OpenMPSupport>true</OpenMPSupport>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -525,6 +528,11 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="CCP4VolumeData.cpp" />
     <ClCompile Include="CoarseGrainDataLoader.cpp" />
     <ClCompile Include="Color.cpp" />
+    <ClCompile Include="CritPoints.cpp" />
+    <ClCompile Include="CrystalStructureDataCall.cpp" />
+    <ClCompile Include="CrystalStructureDataSource.cpp" />
+    <ClCompile Include="CrystalStructureVolumeRenderer.cpp" />
+    <ClCompile Include="DataWriter.cpp" />
     <ClCompile Include="Diagram2DCall.cpp" />
     <ClCompile Include="Diagram2DRenderer.cpp" />
     <ClCompile Include="DiagramCall.cpp" />
@@ -587,6 +595,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="HapticsMoleculeRenderer.cpp" />
     <ClCompile Include="MappableCategoryFloat.cpp" />
     <ClCompile Include="MappableFloatPair.cpp" />
+    <ClCompile Include="LIC.cpp" />
     <ClCompile Include="MDDriverConnector.cpp" />
     <ClCompile Include="MolecularAOShader.cpp" />
     <ClCompile Include="MolecularDataCall.cpp" />
@@ -653,30 +662,15 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="Stride.cpp" />
     <ClCompile Include="ToonRendererDeferred.cpp" />
     <ClCompile Include="View3DMouse.cpp" />
+    <ClCompile Include="UniGrid3D.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="View3DSpaceMouse.cpp" />
     <ClCompile Include="VolumeMeshRenderer.cpp" />
     <ClCompile Include="VolumeSliceCall.cpp" />
     <ClCompile Include="VolumeSliceRenderer.cpp" />
-    <ClCompile Include="WKFThreads.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="WKFUtils.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="WKFThreads.cpp" />
+    <ClCompile Include="WKFUtils.cpp" />
     <ClCompile Include="XYZLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -692,9 +686,14 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CoarseGrainDataLoader.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="cuda4fake.h" />
+    <ClInclude Include="CritPoints.h" />
+    <ClInclude Include="CrystalStructureDataCall.h" />
+    <ClInclude Include="CrystalStructureDataSource.h" />
+    <ClInclude Include="CrystalStructureVolumeRenderer.h" />
     <ClInclude Include="CUDAKernels.h" />
     <ClInclude Include="CUDAMarchingCubes.h" />
     <ClInclude Include="CUDAQuickSurf.h" />
+    <ClInclude Include="DataWriter.h" />
     <ClInclude Include="Diagram2DCall.h" />
     <ClInclude Include="Diagram2DRenderer.h" />
     <ClInclude Include="DofRendererDeferred.h" />
@@ -709,10 +708,12 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="GlWidget.h" />
     <ClInclude Include="GlWidgetLibrary.h" />
     <ClInclude Include="gmx_system_xdr.h" />
+    <ClInclude Include="GridDataStructure.h" />
     <ClInclude Include="GridNeighbourFinder.h" />
     <ClInclude Include="GROLoader.h" />
     <ClInclude Include="GromacsLoader.h" />
     <ClInclude Include="HapticsMoleculeRenderer.h" />
+    <ClInclude Include="LIC.h" />
     <ClInclude Include="MappableCategoryFloat.h" />
     <ClInclude Include="MappableFloatPair.h" />
     <ClInclude Include="MDDriverConnector.h" />
@@ -775,6 +776,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="tables.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ToonRendererDeferred.h" />
+    <ClInclude Include="UniGrid3D.h" />
     <ClInclude Include="View3DMouse.h" />
     <ClInclude Include="View3DSpaceMouse.h" />
     <ClInclude Include="VolumeMeshRenderer.h" />
@@ -836,6 +838,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="config.sh" />
     <None Include="configure.lin.pl" />
     <None Include="configure.win.pl" />
+    <None Include="CUDACurl.cuh" />
     <None Include="ExtLibs.mk.input" />
     <None Include="ExtLibs.props.input" />
     <None Include="Makefile" />
@@ -886,10 +889,12 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="VolumeMeshRenderer.cuh" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="CUDACurl.cu" />
     <CudaCompile Include="CUDAMarchingCubes.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">compute_20,sm_20</CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">compute_20,sm_20</CodeGeneration>
@@ -903,6 +908,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">compute_20,sm_20</CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">compute_20,sm_20</CodeGeneration>
@@ -957,5 +963,4 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.2.targets')">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.2.targets" />
   </ImportGroup>
-
 </Project>

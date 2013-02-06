@@ -697,3 +697,4 @@ namespace protein {
 } /* end namespace megamol */
 
 #endif // MMPROTEINPLUGIN_GROLOADER_H_INCLUDED
+
