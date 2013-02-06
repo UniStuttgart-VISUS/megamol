@@ -43,46 +43,46 @@ void calcHash(uint*  gridParticleHash,
               int    numParticles);
 
 void reorderDataAndFindCellStart(uint*  cellStart,
-							     uint*  cellEnd,
-							     float* sortedPos,
+                                 uint*  cellEnd,
+                                 float* sortedPos,
                                  uint*  gridParticleHash,
                                  uint*  gridParticleIndex,
-							     float* oldPos,
-							     uint   numParticles,
-							     uint   numCells);
+                                 float* oldPos,
+                                 uint   numParticles,
+                                 uint   numCells);
 
 void countNeighbors( uint*  neighborCount,
-					 uint*  neighbors,
-					 float* smallCircles,
-				     float* sortedPos,
-					 uint*  gridParticleIndex,
-					 uint*  cellStart,
-					 uint*  cellEnd,
-					 uint   numAtoms,
+                     uint*  neighbors,
+                     float* smallCircles,
+                     float* sortedPos,
+                     uint*  gridParticleIndex,
+                     uint*  cellStart,
+                     uint*  cellEnd,
+                     uint   numAtoms,
                      uint   numNeighbors,
-					 uint   numCells);
+                     uint   numCells);
 
 void countNeighbors2( uint*  neighborCount,
-					 uint*  neighbors,
-				     float* sortedPos,
-					 uint*  gridParticleIndex,
-					 uint*  cellStart,
-					 uint*  cellEnd,
-					 uint   numAtoms,
+                     uint*  neighbors,
+                     float* sortedPos,
+                     uint*  gridParticleIndex,
+                     uint*  cellStart,
+                     uint*  cellEnd,
+                     uint   numAtoms,
                      uint   numNeighbors,
-					 uint   numCells);
+                     uint   numCells);
 
 void countProbeNeighbors( //uint*  probeNeighborCount,
                      float3* probeNeighborCount,
-					 //uint*  probeNeighbors,
+                     //uint*  probeNeighbors,
                      float3*  probeNeighbors,
-				     float* sortedProbePos,
-					 uint*  gridParticleIndex,
-					 uint*  cellStart,
-					 uint*  cellEnd,
-					 uint   numProbes,
+                     float* sortedProbePos,
+                     uint*  gridParticleIndex,
+                     uint*  cellStart,
+                     uint*  cellEnd,
+                     uint   numProbes,
                      uint   numNeighbors,
-					 uint   numCells);
+                     uint   numCells);
 
 void computeArcsCUDA( float*  arcs,
                       uint*   neighborCount,
@@ -123,7 +123,7 @@ void computeTriangleVBOCuda(
 void computeVisibleTriangleVBOCuda( 
     float3* vbo, 
     uint* point1,
-	cudaArray* visiblity,
+    cudaArray* visiblity,
     float* atomPos,
     float* visibleAtoms, 
     uint numAtoms, 
@@ -183,7 +183,7 @@ void findNeighborsCB(
 
 void removeCoveredSmallCirclesCB(
     float* smallCircles,
-	uint*  smallCircleVisible,
+    uint*  smallCircleVisible,
     uint*  neighborCount,
     uint*  neighbors,
     float* sortedPos,
@@ -192,7 +192,7 @@ void removeCoveredSmallCirclesCB(
 
 void computeArcsCB(
     float* smallCircles,
-	uint*  smallCircleVisible,
+    uint*  smallCircleVisible,
     uint*  neighborCount,
     uint*  neighbors,
     float* sortedPos,
@@ -202,24 +202,24 @@ void computeArcsCB(
     uint   numNeighbors);
 
 void writeProbePositionsCB(
-	float*	probePos,
-	float*	sphereTriaVec1,
-	float*	sphereTriaVec2,
-	float*	sphereTriaVec3,
-	float*	torusPos,
-	float*	torusVS,
-	float*	torusAxis,
+    float*	probePos,
+    float*	sphereTriaVec1,
+    float*	sphereTriaVec2,
+    float*	sphereTriaVec3,
+    float*	torusPos,
+    float*	torusVS,
+    float*	torusAxis,
     uint*   neighborCount,
     uint*   neighbors,
     float*  sortedAtomPos,
-	float*  arcs,
-	uint*	arcCount,
-	uint*	arcCountScan,
-	uint*	scCount,
-	uint*	scCountScan,
-	float*	smallCircles,
+    float*  arcs,
+    uint*	arcCount,
+    uint*	arcCountScan,
+    uint*	scCount,
+    uint*	scCountScan,
+    float*	smallCircles,
     uint    numAtoms,
-	uint    numNeighbors);
+    uint    numNeighbors);
 
 void writeSingularityTextureCB(
     float*  texCoord,

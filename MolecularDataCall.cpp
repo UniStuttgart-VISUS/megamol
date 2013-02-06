@@ -76,7 +76,7 @@ protein::MolecularDataCall::Residue::operator=(
     this->firstAtomIdx = rhs.firstAtomIdx;
     this->boundingBox = rhs.boundingBox;
     this->type = rhs.type;
-	this->moleculeIndex = rhs.moleculeIndex;
+    this->moleculeIndex = rhs.moleculeIndex;
     this->filter = rhs.filter;
     return *this;
 }
@@ -91,7 +91,7 @@ bool protein::MolecularDataCall::Residue::operator==(
         && (this->firstAtomIdx == rhs.firstAtomIdx)
         && (this->boundingBox == rhs.boundingBox)
         && (this->type == rhs.type)
-		&& (this->moleculeIndex == rhs.moleculeIndex));
+        && (this->moleculeIndex == rhs.moleculeIndex));
 }
 
 // ======================================================================
@@ -110,7 +110,7 @@ protein::MolecularDataCall::AminoAcid::AminoAcid(void) : Residue(),
  */
 protein::MolecularDataCall::AminoAcid::AminoAcid(
         const protein::MolecularDataCall::AminoAcid& src) : Residue(
-		src.firstAtomIdx, src.atomCnt, src.boundingBox, src.type, src.moleculeIndex), 
+        src.firstAtomIdx, src.atomCnt, src.boundingBox, src.type, src.moleculeIndex), 
         cAlphaIdx(src.cAlphaIdx), cCarbIdx(src.cCarbIdx), 
         nIdx(src.nIdx), oIdx(src.oIdx) {
     // intentionally empty
@@ -525,7 +525,7 @@ void MolecularDataCall::SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt
     this->atomCount = atomCnt;
     this->atomTypeCount = atomTypeCnt;
     this->atomTypeIdx = typeIdx;
-	this->atomResidueIdx = residueIdx; // -> SetAtomResidueIndices()
+    this->atomResidueIdx = residueIdx; // -> SetAtomResidueIndices()
     this->atomPos = pos;
     this->atomType = types;
     this->atomBFactors = bfactor;
@@ -603,8 +603,8 @@ bool MolecularDataCall::SetSecondaryStructure( unsigned int idx, SecStructure se
  */
 void MolecularDataCall::SetMoleculeSecondaryStructure( unsigned int molIdx, 
     unsigned int firstSecS, unsigned int secSCnt) {
-	// TODO: this is very ugly!
-	MolecularDataCall::Molecule *_molecules = const_cast<MolecularDataCall::Molecule*>(this->molecules);
+    // TODO: this is very ugly!
+    MolecularDataCall::Molecule *_molecules = const_cast<MolecularDataCall::Molecule*>(this->molecules);
     if( molIdx < this->molCount ) {
         _molecules[molIdx].SetSecondaryStructure( firstSecS, secSCnt);
     }

@@ -18,7 +18,7 @@
 #include "vislib/SimpleFont.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <glh/glh_genext.h>
+#include <glh/glh_extensions.h>
 #include <math.h>
 
 using namespace megamol;
@@ -37,7 +37,7 @@ Diagram2DRenderer::Diagram2DRenderer( void ) : Renderer2DModule (),
         currentFbo( 0), oldDataPoint( 0.0f, 0.0f) {
     // segmentation data caller slot
     this->dataCallerSlot.SetCompatibleCall<Diagram2DCallDescription>();
-	this->MakeSlotAvailable( &this->dataCallerSlot);
+    this->MakeSlotAvailable( &this->dataCallerSlot);
 
     // set up the resolution param for the texture
     this->resolutionParam.SetParameter( new param::IntParam( 1024, 0, 8192) );
@@ -67,7 +67,7 @@ Diagram2DRenderer::~Diagram2DRenderer( void ) {
  */
 bool Diagram2DRenderer::create() {
 
-	return true;
+    return true;
 }
 
 /*
@@ -83,7 +83,7 @@ bool Diagram2DRenderer::GetExtents( view::CallRender2D& call) {
     // set the bounding box to 0..1
     call.SetBoundingBox( 0.0f, 0.0f, 1.0f, 1.0f);
 
-	return true;
+    return true;
 }
 
 
@@ -91,7 +91,7 @@ bool Diagram2DRenderer::GetExtents( view::CallRender2D& call) {
  * Callback for mouse events (move, press, and release)
  */
 bool Diagram2DRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
-	bool consumeEvent = false;
+    bool consumeEvent = false;
 
     return consumeEvent;
 }
@@ -100,7 +100,7 @@ bool Diagram2DRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
  * Diagram2DRenderer::Render
  */
 bool Diagram2DRenderer::Render( view::CallRender2D &call) {
-	// get pointer to Diagram2DCall
+    // get pointer to Diagram2DCall
     Diagram2DCall *diagram = this->dataCallerSlot.CallAs<Diagram2DCall>();
     if( diagram == NULL ) return false;
     // execute the call
@@ -271,7 +271,7 @@ bool Diagram2DRenderer::Render( view::CallRender2D &call) {
     // store the new data point
     this->oldDataPoint = dataPoint;
 
-	return true;
+    return true;
 }
 
 /*

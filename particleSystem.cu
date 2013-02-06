@@ -16,16 +16,13 @@
 // This file contains C wrappers around the some of the CUDA API and the
 // kernel functions so that they can be called from "particleSystem.cpp"
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 #include <cutil_inline.h>
 #include <cstdlib>
 #include <cstdio>
 #include <string.h>
-
-#if defined(__APPLE__) || defined(MACOSX)
-#include <GLUT/glut.h>
-#else
-#include <GL/glut.h>
-#endif
 
 #include <cuda_gl_interop.h>
 

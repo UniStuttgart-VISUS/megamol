@@ -16,7 +16,6 @@
 #include "ProteinRendererSESGPU.h"
 #include "vislib/ShaderSource.h"
 #include "CoreInstance.h"
-#include "glh/glh_genext.h"
 #include "glh/glh_extensions.h"
 #include <iostream>
 

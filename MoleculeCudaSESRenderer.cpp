@@ -24,7 +24,6 @@
 #include "param/IntParam.h"
 #include "param/FloatParam.h"
 
-#include "glh/glh_genext.h"
 #include "glh/glh_extensions.h"
 #include <iostream>
 

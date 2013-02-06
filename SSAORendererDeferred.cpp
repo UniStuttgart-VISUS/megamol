@@ -262,6 +262,7 @@ bool SSAORendererDeferred::GetExtents(megamol::core::Call& call) {
     // Set extends of for incoming render call
     crIn->AccessBoundingBoxes() = crOut->GetBoundingBoxes();
     crIn->SetLastFrameTime(crOut->LastFrameTime());
+	crIn->SetTimeFramesCount( crOut->TimeFramesCount());
 
     return true;
 }
@@ -317,7 +318,7 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, this->depthBuff, 0);
 
     GLenum mrt[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(2, mrt);
+	glDrawBuffersARB(2, mrt);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -353,34 +354,34 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
 
     /// Calculate ssao factor ///
     this->ssaoShader.Enable();
-    glUniform4f(this->ssaoShader.ParameterLocation("clip"),
+    glUniform4fARB(this->ssaoShader.ParameterLocation("clip"),
         crIn->GetCameraParameters()->NearClip(), // Near
         crIn->GetCameraParameters()->FarClip(),  // Far
         tan(crIn->GetCameraParameters()->HalfApertureAngle()) * crIn->GetCameraParameters()->NearClip(), // Top
         tan(crIn->GetCameraParameters()->HalfApertureAngle()) * crIn->GetCameraParameters()->NearClip() * curVP[2] / curVP[3]); // Right
-    glUniform2f(this->ssaoShader.ParameterLocation("winSize"), curVP[2], curVP[3]);
-    glUniform1i(this->ssaoShader.ParameterLocation("depthBuffer"), 0);
-    glUniform1i(this->ssaoShader.ParameterLocation("rotSampler"), 1);
-    glUniform1i(this->ssaoShader.ParameterLocation("normalBuffer"), 2);
-    glUniform1i(this->ssaoShader.ParameterLocation("randKernel"), 3);
-    glUniform1f(this->ssaoShader.ParameterLocation("aoRadius"),
+    glUniform2fARB(this->ssaoShader.ParameterLocation("winSize"), curVP[2], curVP[3]);
+    glUniform1iARB(this->ssaoShader.ParameterLocation("depthBuffer"), 0);
+    glUniform1iARB(this->ssaoShader.ParameterLocation("rotSampler"), 1);
+    glUniform1iARB(this->ssaoShader.ParameterLocation("normalBuffer"), 2);
+    glUniform1iARB(this->ssaoShader.ParameterLocation("randKernel"), 3);
+    glUniform1fARB(this->ssaoShader.ParameterLocation("aoRadius"),
         this->aoRadiusParam.Param<core::param::FloatParam>()->Value());
-    glUniform1f(this->ssaoShader.ParameterLocation("depthThreshold"),
+    glUniform1fARB(this->ssaoShader.ParameterLocation("depthThreshold"),
         this->depthThresholdParam.Param<core::param::FloatParam>()->Value());
-    glUniform1i(this->ssaoShader.ParameterLocation("aoSamples"),
+    glUniform1iARB(this->ssaoShader.ParameterLocation("aoSamples"),
         this->aoSamplesParam.Param<core::param::IntParam>()->Value());
-    glUniform1i(this->ssaoShader.ParameterLocation("depthLodLvl"),
+    glUniform1iARB(this->ssaoShader.ParameterLocation("depthLodLvl"),
         this->depthMipMapLvlParam.Param<core::param::IntParam>()->Value());
     //glUniformMatrix4fv(this->ssaoShader.ParameterLocation("projMat"), 1, false,
     //    projMat);
 
-    glActiveTexture(GL_TEXTURE1);
+	glActiveTextureARB(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, this->rotSampler);
-    glActiveTexture(GL_TEXTURE2);
+    glActiveTextureARB(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, this->normalBuff);
-    glActiveTexture(GL_TEXTURE3);
+    glActiveTextureARB(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, this->randKernel);
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTextureARB(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->depthBuff);
     glGenerateMipmap(GL_TEXTURE_2D); // Regenerate mip map levels of the depth texture
 
@@ -416,14 +417,14 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
         //  return false;
         //}
         this->filterShaderX.Enable();
-        glUniform2f(this->filterShaderX.ParameterLocation("winSize"), curVP[2], curVP[3]);
-        glUniform1i(this->filterShaderX.ParameterLocation("ssaoBuff"), 0);
-        glUniform1i(this->filterShaderX.ParameterLocation("discBuff"), 1);
-        glUniform1i(this->filterShaderX.ParameterLocation("nFilterSamples"),
+		glUniform2fARB(this->filterShaderX.ParameterLocation("winSize"), curVP[2], curVP[3]);
+        glUniform1iARB(this->filterShaderX.ParameterLocation("ssaoBuff"), 0);
+        glUniform1iARB(this->filterShaderX.ParameterLocation("discBuff"), 1);
+        glUniform1iARB(this->filterShaderX.ParameterLocation("nFilterSamples"),
                 this->nFilterSamplesParam.Param<core::param::IntParam>()->Value());
-        glActiveTexture(GL_TEXTURE1);
+		glActiveTextureARB(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, this->discBuff);
-        glActiveTexture(GL_TEXTURE0);
+        glActiveTextureARB(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->ssaoBuff);
         // Draw
         glBegin(GL_QUADS);
@@ -442,15 +443,15 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D,
                 this->ssaoBuff, 0);
         this->filterShaderY.Enable();
-        glUniform2f(this->filterShaderY.ParameterLocation("winSize"),
+        glUniform2fARB(this->filterShaderY.ParameterLocation("winSize"),
                 curVP[2], curVP[3]);
-        glUniform1i(this->filterShaderY.ParameterLocation("ssaoBuff"), 0);
-        glUniform1i(this->filterShaderY.ParameterLocation("discBuff"), 1);
-        glUniform1i(this->filterShaderY.ParameterLocation("nFilterSamples"),
+        glUniform1iARB(this->filterShaderY.ParameterLocation("ssaoBuff"), 0);
+        glUniform1iARB(this->filterShaderY.ParameterLocation("discBuff"), 1);
+        glUniform1iARB(this->filterShaderY.ParameterLocation("nFilterSamples"),
                 this->nFilterSamplesParam.Param<core::param::IntParam>()->Value());
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTextureARB(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, this->discBuff);
-        glActiveTexture(GL_TEXTURE0);
+        glActiveTextureARB(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->filterBuff); // Apply vertical filter to horizontally filtered values
         // Draw
         glBegin(GL_QUADS);
@@ -471,21 +472,21 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
     /// Deferred shading ///
     this->deferredShader.Enable();
 
-    glUniform2f(this->deferredShader.ParameterLocation("clip"),
+    glUniform2fARB(this->deferredShader.ParameterLocation("clip"),
         crIn->GetCameraParameters()->NearClip(),
         crIn->GetCameraParameters()->FarClip());
-    glUniform2f(this->deferredShader.ParameterLocation("winSize"),
+    glUniform2fARB(this->deferredShader.ParameterLocation("winSize"),
         curVP[2], curVP[3]);
-    glUniform1i(this->deferredShader.ParameterLocation("depthBuff"), 0);
-    glUniform1i(this->deferredShader.ParameterLocation("colorBuff"), 1);
-    glUniform1i(this->deferredShader.ParameterLocation("normalBuff"), 2);
-    glUniform1i(this->deferredShader.ParameterLocation("ssaoBuff"), 3);
-    glUniform1i(this->deferredShader.ParameterLocation("discBuff"), 4);
+    glUniform1iARB(this->deferredShader.ParameterLocation("depthBuff"), 0);
+    glUniform1iARB(this->deferredShader.ParameterLocation("colorBuff"), 1);
+    glUniform1iARB(this->deferredShader.ParameterLocation("normalBuff"), 2);
+    glUniform1iARB(this->deferredShader.ParameterLocation("ssaoBuff"), 3);
+    glUniform1iARB(this->deferredShader.ParameterLocation("discBuff"), 4);
     this->deferredShader.SetParameter("scale",
         this->aoScaleParam.Param<megamol::core::param::FloatParam>()->Value());
-    glUniform1i(this->deferredShader.ParameterLocation("renderMode"),
+	glUniform1iARB(this->deferredShader.ParameterLocation("renderMode"),
         this->renderModeParam.Param<core::param::EnumParam>()->Value());
-    glUniform1i(this->deferredShader.ParameterLocation("depthLodLvl"),
+    glUniform1iARB(this->deferredShader.ParameterLocation("depthLodLvl"),
         this->depthMipMapLvlParam.Param<core::param::IntParam>()->Value());
 
     // Preserve the current framebuffer content (e.g. back of the bounding box)
@@ -493,19 +494,19 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Bind textures
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTextureARB(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, this->colorBuff); // Color buffer
 
-    glActiveTexture(GL_TEXTURE2);
+    glActiveTextureARB(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, this->normalBuff); // Normal buffer
 
-    glActiveTexture(GL_TEXTURE3);
+    glActiveTextureARB(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, this->ssaoBuff); // Ssao value
 
-    glActiveTexture(GL_TEXTURE4);
+    glActiveTextureARB(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, this->discBuff); // Discontinuity buffer value
 
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTextureARB(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->depthBuff); // Depth buffer
 
     // Draw

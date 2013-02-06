@@ -23,7 +23,7 @@
 #include "vislib/AbstractOpenGLShader.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <glh/glh_genext.h>
+#include <glh/glh_extensions.h>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -37,7 +37,7 @@ using namespace megamol::protein;
  * ElectrostaticsRenderer::ElectrostaticsRenderer (CTOR)
  */
 ElectrostaticsRenderer::ElectrostaticsRenderer(void) : Renderer3DModule (), 
-	    dataCallerSlot( "getData", "Connects the rendering with data storage."),
+        dataCallerSlot( "getData", "Connects the rendering with data storage."),
         cellLenghtParam( "cellLength", "The designated cell length."),
         fieldSize( 0), field( 0) {
     // the caller slot
@@ -77,11 +77,11 @@ bool ElectrostaticsRenderer::create(void)
         return false;
     }
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+    glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
@@ -177,12 +177,12 @@ bool ElectrostaticsRenderer::Render(Call& call)
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if( cr3d == NULL ) return false;
 
-	// get camera information
+    // get camera information
     this->cameraInfo = cr3d->GetCameraParameters();
 
     float callTime = cr3d->Time();
 
-	// get pointer to ParticleDataCall
+    // get pointer to ParticleDataCall
     ParticleDataCall *particles = this->dataCallerSlot.CallAs<ParticleDataCall>();
     if( particles == NULL) return false;
 
@@ -190,7 +190,7 @@ bool ElectrostaticsRenderer::Render(Call& call)
 
     // ---------- render ----------
 
-	// -- draw particles --
+    // -- draw particles --
     glPushMatrix();
 
     float scale;
@@ -202,41 +202,41 @@ bool ElectrostaticsRenderer::Render(Call& call)
 
     glScalef( scale, scale, scale);
 
-	float viewportStuff[4] = {
-		cameraInfo->TileRect().Left(),
-		cameraInfo->TileRect().Bottom(),
-		cameraInfo->TileRect().Width(),
-		cameraInfo->TileRect().Height()};
-	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-	viewportStuff[2] = 2.0f / viewportStuff[2];
-	viewportStuff[3] = 2.0f / viewportStuff[3];
+    float viewportStuff[4] = {
+        cameraInfo->TileRect().Left(),
+        cameraInfo->TileRect().Bottom(),
+        cameraInfo->TileRect().Width(),
+        cameraInfo->TileRect().Height()};
+    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    viewportStuff[2] = 2.0f / viewportStuff[2];
+    viewportStuff[3] = 2.0f / viewportStuff[3];
 
-	glDisable( GL_BLEND);
+    glDisable( GL_BLEND);
     glEnable( GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-	// enable sphere shader
-	this->sphereShader.Enable();
+    // enable sphere shader
+    this->sphereShader.Enable();
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
-	// set shader variables
+    // set shader variables
     glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
     glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
     glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
     glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-	// draw points
-	// set vertex and color pointers and draw them
+    // draw points
+    // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, particles->Particles());
     glColorPointer( 3, GL_FLOAT, 0, particles->Colors() );
     glDrawArrays( GL_POINTS, 0, particles->ParticleCount());
-	// disable sphere shader
+    // disable sphere shader
     glDisableClientState(GL_COLOR_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	this->sphereShader.Disable();
+    glDisableClientState(GL_VERTEX_ARRAY);
+    this->sphereShader.Disable();
 
     // ---------- compute & draw field ----------
     this->ComputeElectrostaticField( particles, this->cellLenghtParam.Param<param::FloatParam>()->Value());
@@ -253,7 +253,7 @@ bool ElectrostaticsRenderer::Render(Call& call)
         foutRaw.read( reinterpret_cast<char *>(&test), sizeof( float));
         this->field[i].SetZ( test);
     }
-	foutRaw.close();
+    foutRaw.close();
     */
 
     //this->sphereShader.Enable();
@@ -295,10 +295,10 @@ bool ElectrostaticsRenderer::Render(Call& call)
         } // cntY
     } // cntX
     glEnd();
-	//this->sphereShader.Disable();
+    //this->sphereShader.Disable();
 
     glDisable(GL_DEPTH_TEST);
-	glPopMatrix();
+    glPopMatrix();
 
     return true;
 }
@@ -389,12 +389,12 @@ void ElectrostaticsRenderer::ComputeElectrostaticField( ParticleDataCall *partic
 
     // store the field
     if( storeField ) {
-	    // output filenames
-	    string fnDat, fnRaw;
-	    fnDat = "field.dat";
-	    fnRaw = "field.raw";
+        // output filenames
+        string fnDat, fnRaw;
+        fnDat = "field.dat";
+        fnRaw = "field.raw";
 
-	    ofstream foutDat( fnDat.c_str(), ios::trunc );
+        ofstream foutDat( fnDat.c_str(), ios::trunc );
         foutDat << "# Origin:" << endl << orig.X() << endl << orig.Y() << endl << orig.Z() << endl;
         foutDat << "# Bounding Box Size (W x H x D):" << endl << w << endl << h << endl << d << endl;
         foutDat << "# Number of grid cells (X,Y,Z):" << endl << rx << endl << ry << endl << rz << endl;
@@ -406,13 +406,13 @@ void ElectrostaticsRenderer::ComputeElectrostaticField( ParticleDataCall *partic
                 particles->Particles()[i*4+2] << " " <<
                 particles->Particles()[i*4+3] << endl;
         }
-	    foutDat.close();
+        foutDat.close();
 
         ofstream foutRaw( fnRaw.c_str(),  ios::out | ios::trunc | ios::binary );
         for( unsigned int i = 0; i < this->fieldSize; i++ ) {
             foutRaw.write( reinterpret_cast<char *>(this->field[i].PeekComponents()), sizeof( float)*3);
         }
-	    foutRaw.close();
+        foutRaw.close();
 
     }
 }

@@ -26,7 +26,6 @@
 #include "vislib/Trace.h"
 #include "vislib/ShaderSource.h"
 #include "vislib/AbstractOpenGLShader.h"
-#include "glh/glh_genext.h"
 #include "glh/glh_extensions.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -55,11 +54,11 @@ using namespace megamol::protein;
  * ProteinRendererCBCUDA::ProteinRendererCBCUDA
  */
 ProteinRendererCBCUDA::ProteinRendererCBCUDA( void ) : Renderer3DModule (),
-	protDataCallerSlot ( "getData", "Connects the protein SES rendering with protein data storage" ),
-	probeRadius( 1.4f), atomNeighborCount( 64), cudaInitalized( false)
+    protDataCallerSlot ( "getData", "Connects the protein SES rendering with protein data storage" ),
+    probeRadius( 1.4f), atomNeighborCount( 64), cudaInitalized( false)
 {
-	this->protDataCallerSlot.SetCompatibleCall<CallProteinDataDescription>();
-	this->MakeSlotAvailable ( &this->protDataCallerSlot );
+    this->protDataCallerSlot.SetCompatibleCall<CallProteinDataDescription>();
+    this->MakeSlotAvailable ( &this->protDataCallerSlot );
 }
 
 
@@ -67,7 +66,7 @@ ProteinRendererCBCUDA::ProteinRendererCBCUDA( void ) : Renderer3DModule (),
  * ProteinRendererCBCUDA::~ProteinRendererCBCUDA
  */
 ProteinRendererCBCUDA::~ProteinRendererCBCUDA(void) {
-	this->Release();
+    this->Release();
 }
 
 
@@ -84,52 +83,52 @@ void protein::ProteinRendererCBCUDA::release( void ) {
  * ProteinRendererCBCUDA::create
  */
 bool ProteinRendererCBCUDA::create( void ) {
-	using namespace vislib::sys;
-	using namespace vislib::graphics::gl;
-	// try to initialize the necessary extensions for GLSL shader support
-	if ( !GLSLShader::InitialiseExtensions() )
-		return false;
-	
-	glEnable( GL_DEPTH_TEST);
-	glDepthFunc( GL_LEQUAL);
-	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-	glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
-	
-	float spec[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
-	glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec);
-	glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
+    using namespace vislib::sys;
+    using namespace vislib::graphics::gl;
+    // try to initialize the necessary extensions for GLSL shader support
+    if ( !GLSLShader::InitialiseExtensions() )
+        return false;
+    
+    glEnable( GL_DEPTH_TEST);
+    glDepthFunc( GL_LEQUAL);
+    glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+    glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+    glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
+    
+    float spec[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
+    glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+    glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
 
-	ShaderSource vertSrc;
-	ShaderSource fragSrc;
+    ShaderSource vertSrc;
+    ShaderSource fragSrc;
 
-	CoreInstance *ci = this->GetCoreInstance();
-	if( !ci ) return false;
-	
-	////////////////////////////////////////////////////
-	// load the shader source for the sphere renderer //
-	////////////////////////////////////////////////////
-	if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::sphereVertex", vertSrc ) ) {
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
-			"%s: Unable to load vertex shader source for sphere shader", this->ClassName() );
-		return false;
-	}
-	if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::sphereFragment", fragSrc ) ) {
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
-			"%s: Unable to load fragment shader source for sphere shader", this->ClassName() );
-		return false;
-	}
-	try {
-		if( !this->sphereShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
-			throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-		}
-	} catch( vislib::Exception e ) {
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
-			"%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA() );
-		return false;
-	}
+    CoreInstance *ci = this->GetCoreInstance();
+    if( !ci ) return false;
+    
+    ////////////////////////////////////////////////////
+    // load the shader source for the sphere renderer //
+    ////////////////////////////////////////////////////
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::sphereVertex", vertSrc ) ) {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+            "%s: Unable to load vertex shader source for sphere shader", this->ClassName() );
+        return false;
+    }
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::sphereFragment", fragSrc ) ) {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+            "%s: Unable to load fragment shader source for sphere shader", this->ClassName() );
+        return false;
+    }
+    try {
+        if( !this->sphereShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
+            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
+        }
+    } catch( vislib::Exception e ) {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+            "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA() );
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 
@@ -185,67 +184,67 @@ bool ProteinRendererCBCUDA::GetExtents( Call& call) {
  * ProteinRendererCBCUDA::Render
  */
 bool ProteinRendererCBCUDA::Render( Call& call ) {
-	// temporary variables
-	
-	// get pointer to CallProteinData
-	protein::CallProteinData *protein = this->protDataCallerSlot.CallAs<protein::CallProteinData>();
+    // temporary variables
+    
+    // get pointer to CallProteinData
+    protein::CallProteinData *protein = this->protDataCallerSlot.CallAs<protein::CallProteinData>();
 
-	// if something went wrong --> return
-	if( !protein) return false;
+    // if something went wrong --> return
+    if( !protein) return false;
 
-	// execute the call
-	if ( !( *protein )() )
-		return false;
-	
-	// try to initialize CUDA
-	if( !this->cudaInitalized ) {
-		cudaInitalized = this->initCuda( protein, 16);
-		vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, 
-			"%s: CUDA initialization: %i", this->ClassName(), cudaInitalized );
-	}
-	// execute CUDA kernels, if initialization succeeded
-	if( this->cudaInitalized ) {
-		// write atom positions to array
-		this->writeAtomPositions( protein);
+    // execute the call
+    if ( !( *protein )() )
+        return false;
+    
+    // try to initialize CUDA
+    if( !this->cudaInitalized ) {
+        cudaInitalized = this->initCuda( protein, 16);
+        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, 
+            "%s: CUDA initialization: %i", this->ClassName(), cudaInitalized );
+    }
+    // execute CUDA kernels, if initialization succeeded
+    if( this->cudaInitalized ) {
+        // write atom positions to array
+        this->writeAtomPositions( protein);
 
-		// update constants
-		setParameters( &this->params);
+        // update constants
+        setParameters( &this->params);
 
-		// calculate grid hash
-		calcHash(
-			m_dGridParticleHash,
-			m_dGridParticleIndex,
-			m_dPos,
-			this->numAtoms);
+        // calculate grid hash
+        calcHash(
+            m_dGridParticleHash,
+            m_dGridParticleIndex,
+            m_dPos,
+            this->numAtoms);
 
-		// sort particles based on hash
+        // sort particles based on hash
         //cudppSort( this->sortHandle, m_dGridParticleHash, m_dGridParticleIndex, this->gridSortBits, this->numAtoms);
         sortParticles(m_dGridParticleHash, m_dGridParticleIndex, this->numAtoms);
 
-		// reorder particle arrays into sorted order and
-		// find start and end of each cell
-		reorderDataAndFindCellStart(
-			m_dCellStart,
-			m_dCellEnd,
-			m_dSortedPos,
-			m_dGridParticleHash,
-			m_dGridParticleIndex,
-			m_dPos,
-			this->numAtoms,
-			this->numGridCells);
+        // reorder particle arrays into sorted order and
+        // find start and end of each cell
+        reorderDataAndFindCellStart(
+            m_dCellStart,
+            m_dCellEnd,
+            m_dSortedPos,
+            m_dGridParticleHash,
+            m_dGridParticleIndex,
+            m_dPos,
+            this->numAtoms,
+            this->numGridCells);
 
-		// count neighbors of all atoms
-		countNeighbors(
-			m_dNeighborCount,
-			m_dNeighbors,
-			m_dSmallCircles,
-			m_dSortedPos,
-			m_dGridParticleIndex,
-			m_dCellStart,
-			m_dCellEnd,
-			this->numAtoms,
+        // count neighbors of all atoms
+        countNeighbors(
+            m_dNeighborCount,
+            m_dNeighbors,
+            m_dSmallCircles,
+            m_dSortedPos,
+            m_dGridParticleIndex,
+            m_dCellStart,
+            m_dCellEnd,
+            this->numAtoms,
             this->atomNeighborCount,
-			this->numGridCells);
+            this->numGridCells);
 
         //copyArrayFromDevice( m_hNeighborCount, m_dNeighborCount, 0, sizeof(uint)*this->numAtoms);
         //unsigned int maxNeighbors = 0;
@@ -265,48 +264,48 @@ bool ProteinRendererCBCUDA::Render( Call& call ) {
                          m_dGridParticleIndex, 
                          this->numAtoms,
                          this->atomNeighborCount);
-	}
+    }
 
-	// get camera information
-	this->cameraInfo = dynamic_cast<view::CallRender3D*>( &call )->GetCameraParameters();
+    // get camera information
+    this->cameraInfo = dynamic_cast<view::CallRender3D*>( &call )->GetCameraParameters();
 
-	
-	// ==================== Scale & Translate ====================
-	glPushMatrix();
+    
+    // ==================== Scale & Translate ====================
+    glPushMatrix();
 
-	this->bBox = protein->BoundingBox();
+    this->bBox = protein->BoundingBox();
 
-	float scale, xoff, yoff, zoff;
-	vislib::math::Point<float, 3> bbc = this->bBox.CalcCenter();
+    float scale, xoff, yoff, zoff;
+    vislib::math::Point<float, 3> bbc = this->bBox.CalcCenter();
 
-	xoff = -bbc.X();
-	yoff = -bbc.Y();
-	zoff = -bbc.Z();
+    xoff = -bbc.X();
+    yoff = -bbc.Y();
+    zoff = -bbc.Z();
 
-	scale = 2.0f / vislib::math::Max ( vislib::math::Max ( this->bBox.Width(),
-		this->bBox.Height() ), this->bBox.Depth() );
+    scale = 2.0f / vislib::math::Max ( vislib::math::Max ( this->bBox.Width(),
+        this->bBox.Height() ), this->bBox.Depth() );
 
-	glScalef ( scale, scale, scale );
-	glTranslatef ( xoff, yoff, zoff );
-	
-	// ==================== Start actual rendering ====================
-	glDisable( GL_BLEND);
-	glEnable( GL_DEPTH_TEST);
-	glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-	glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
-	
-	// TODO: do actual rendering
-	
-	float viewportStuff[4] = {
-		cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
-		cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
-	if( viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-	if( viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-	viewportStuff[2] = 2.0f / viewportStuff[2];
-	viewportStuff[3] = 2.0f / viewportStuff[3];
+    glScalef ( scale, scale, scale );
+    glTranslatef ( xoff, yoff, zoff );
+    
+    // ==================== Start actual rendering ====================
+    glDisable( GL_BLEND);
+    glEnable( GL_DEPTH_TEST);
+    glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+    glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
+    
+    // TODO: do actual rendering
+    
+    float viewportStuff[4] = {
+        cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
+        cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
+    if( viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
+    if( viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    viewportStuff[2] = 2.0f / viewportStuff[2];
+    viewportStuff[3] = 2.0f / viewportStuff[3];
 
 #define ATOM_ID 0
-	// get CUDA stuff
+    // get CUDA stuff
     copyArrayFromDevice( m_hNeighborCount, m_dNeighborCount, 0, sizeof(uint)*this->numAtoms);
     //copyArrayFromDevice( m_hNeighbors, m_dNeighbors, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
     //copyArrayFromDevice( m_hParticleIndex, m_dGridParticleIndex, 0, sizeof(uint)*this->numAtoms);
@@ -387,14 +386,14 @@ bool ProteinRendererCBCUDA::Render( Call& call ) {
 
     glDisable( GL_BLEND);
     // enable sphere shader
-	this->sphereShader.Enable();
-	// set shader variables
-	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-	// set vertex and color pointers and draw them
-	glBegin( GL_POINTS);
+    this->sphereShader.Enable();
+    // set shader variables
+    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    // set vertex and color pointers and draw them
+    glBegin( GL_POINTS);
     // draw all arc start- and endpoints as small blue spheres
     for( unsigned int c = 0; c < points.size(); ++c ) {
         glColor3f( 0.0, 0.0, 1.0);
@@ -406,16 +405,16 @@ bool ProteinRendererCBCUDA::Render( Call& call ) {
     */
     // ... DEBUG computation
 
-	// DEBUG ...
+    // DEBUG ...
     //glEnable( GL_BLEND);
     //glDisable( GL_CULL_FACE);
-	// enable sphere shader
-	this->sphereShader.Enable();
-	// set shader variables
-	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    // enable sphere shader
+    this->sphereShader.Enable();
+    // set shader variables
+    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
     
     glDisable( GL_BLEND);
     // draw all arc start- and endpoints as small blue spheres ...
@@ -441,13 +440,13 @@ bool ProteinRendererCBCUDA::Render( Call& call ) {
             if( tmpArc.Length() > 0.0f )
                 glVertex4f( tmpAtom.X() + tmpArc.X(), tmpAtom.Y() + tmpArc.Y(), tmpAtom.Z() + tmpArc.Z(), 0.2f);
         }
-	}
-	glEnd(); // GL_POINTS
+    }
+    glEnd(); // GL_POINTS
     // ... draw all arc start- and endpoints as small blue spheres
 
     glEnable( GL_BLEND);
-	// set vertex and color pointers and draw them
-	glBegin( GL_POINTS);
+    // set vertex and color pointers and draw them
+    glBegin( GL_POINTS);
     for( unsigned int cnt = 0; cnt < protein->ProteinAtomCount(); ++cnt ) {	
         // draw all arc start- and endpoints as small blue spheres
         //for( unsigned int k = 0; k < m_hNeighborCount[cnt]; ++k ) {
@@ -477,7 +476,7 @@ bool ProteinRendererCBCUDA::Render( Call& call ) {
         //        //this->probeRadius);
         //        0.2f);
         //}
-		glColor3f( 1.0, 0.0, 0.0);
+        glColor3f( 1.0, 0.0, 0.0);
         // draw atom #ATOM_ID big and green
         //if( cnt == ATOM_ID ) {
         //    glColor3f( 0.0, 1.0, 0.0);
@@ -494,17 +493,17 @@ bool ProteinRendererCBCUDA::Render( Call& call ) {
         //    }
         //}
         // draw atom
-		glVertex4f(
-			protein->ProteinAtomPositions()[cnt*3+0],
-			protein->ProteinAtomPositions()[cnt*3+1],
-			protein->ProteinAtomPositions()[cnt*3+2],
+        glVertex4f(
+            protein->ProteinAtomPositions()[cnt*3+0],
+            protein->ProteinAtomPositions()[cnt*3+1],
+            protein->ProteinAtomPositions()[cnt*3+2],
             protein->AtomTypes()[protein->ProteinAtomData()[cnt].TypeIndex()].Radius() + this->probeRadius);
             //protein->AtomTypes()[protein->ProteinAtomData()[cnt].TypeIndex()].Radius());
             //0.3f);
-	}
-	glEnd(); // GL_POINTS
-	this->sphereShader.Disable();
-	// ... DEBUG
+    }
+    glEnd(); // GL_POINTS
+    this->sphereShader.Disable();
+    // ... DEBUG
 
     /*
     unsigned int idx;
@@ -547,7 +546,7 @@ bool ProteinRendererCBCUDA::Render( Call& call ) {
         ( ( rk.Dot( rk) - rj.Dot( rk) ) * rj.Dot( rj)) /
         ( rj.Dot( rj) * rk.Dot( rk) - rj.Dot( rk) * rj.Dot( rk));
 
-	glColor3f( 0.0, 0.0, 1.0);
+    glColor3f( 0.0, 0.0, 1.0);
     glVertex3fv( ( a1).PeekComponents() );
     glVertex3fv( ( a1 + rm).PeekComponents() );
 
@@ -561,7 +560,7 @@ bool ProteinRendererCBCUDA::Render( Call& call ) {
     //    glVertex3fv( ( a1 + d2).PeekComponents() );
     //}
     
-	glColor3f( 0.0, 1.0, 1.0);
+    glColor3f( 0.0, 1.0, 1.0);
     glVertex3f(
         protein->ProteinAtomPositions()[0] + m_hArcs[0],
         protein->ProteinAtomPositions()[1] + m_hArcs[1],
@@ -590,9 +589,9 @@ bool ProteinRendererCBCUDA::Render( Call& call ) {
     */
 
 
-	glPopMatrix();
+    glPopMatrix();
 
-	return true;
+    return true;
 }
 
 
@@ -600,29 +599,29 @@ bool ProteinRendererCBCUDA::Render( Call& call ) {
  * ProteinRendererCBCUDA::deinitialise
  */
 void ProteinRendererCBCUDA::deinitialise(void) {
-	// release shaders
-	this->sphereShader.Release();
-	
-	if( this->cudaInitalized ) {
-		delete[] m_hPos;
-		delete[] m_hNeighborCount;
-		delete[] m_hNeighbors;
-		delete[] m_hSmallCircles;
-		delete[] m_hArcs;
-		delete[] m_hCellStart;
-		delete[] m_hCellEnd;
+    // release shaders
+    this->sphereShader.Release();
+    
+    if( this->cudaInitalized ) {
+        delete[] m_hPos;
+        delete[] m_hNeighborCount;
+        delete[] m_hNeighbors;
+        delete[] m_hSmallCircles;
+        delete[] m_hArcs;
+        delete[] m_hCellStart;
+        delete[] m_hCellEnd;
         delete[] m_hParticleIndex;
 
-		freeArray( m_dPos);
-		freeArray( m_dSortedPos);
-		freeArray( m_dNeighborCount);
-		freeArray( m_dNeighbors);
-		freeArray( m_dSmallCircles);
-		freeArray( m_dArcs);
-		freeArray( m_dGridParticleHash);
-		freeArray( m_dGridParticleIndex);
-		freeArray( m_dCellStart);
-		freeArray( m_dCellEnd);
+        freeArray( m_dPos);
+        freeArray( m_dSortedPos);
+        freeArray( m_dNeighborCount);
+        freeArray( m_dNeighbors);
+        freeArray( m_dSmallCircles);
+        freeArray( m_dArcs);
+        freeArray( m_dGridParticleHash);
+        freeArray( m_dGridParticleIndex);
+        freeArray( m_dCellStart);
+        freeArray( m_dCellEnd);
     }
 }
 
@@ -630,17 +629,17 @@ void ProteinRendererCBCUDA::deinitialise(void) {
  * Initialize CUDA
  */
 bool ProteinRendererCBCUDA::initCuda( const CallProteinData *protein, uint gridDim) {
-	// set number of atoms
-	this->numAtoms = protein->ProteinAtomCount();
+    // set number of atoms
+    this->numAtoms = protein->ProteinAtomCount();
 
-	// set grid dimensions
+    // set grid dimensions
     this->gridSize.x = this->gridSize.y = this->gridSize.z = gridDim;
     this->numGridCells = this->gridSize.x * this->gridSize.y * this->gridSize.z;
     //float3 worldSize = make_float3( 2.0f, 2.0f, 2.0f);
-	float3 worldSize = make_float3(
-		protein->BoundingBox().Width(),
-		protein->BoundingBox().Height(),
-		protein->BoundingBox().Depth() );
+    float3 worldSize = make_float3(
+        protein->BoundingBox().Width(),
+        protein->BoundingBox().Height(),
+        protein->BoundingBox().Depth() );
     this->gridSortBits = 18;    // increase this for larger grids
 
     // set parameters
@@ -648,32 +647,32 @@ bool ProteinRendererCBCUDA::initCuda( const CallProteinData *protein, uint gridD
     this->params.numCells = this->numGridCells;
     this->params.numBodies = this->numAtoms;
     //this->params.worldOrigin = make_float3(-1.0f, -1.0f, -1.0f);
-	this->params.worldOrigin = make_float3(
-		protein->BoundingBox().GetLeftBottomBack().GetX(),
-		protein->BoundingBox().GetLeftBottomBack().GetY(),
-		protein->BoundingBox().GetLeftBottomBack().GetZ());
-	this->params.cellSize = make_float3( worldSize.x / this->gridSize.x, worldSize.y / this->gridSize.y, worldSize.z / this->gridSize.z);
-	this->params.probeRadius = this->probeRadius;
+    this->params.worldOrigin = make_float3(
+        protein->BoundingBox().GetLeftBottomBack().GetX(),
+        protein->BoundingBox().GetLeftBottomBack().GetY(),
+        protein->BoundingBox().GetLeftBottomBack().GetZ());
+    this->params.cellSize = make_float3( worldSize.x / this->gridSize.x, worldSize.y / this->gridSize.y, worldSize.z / this->gridSize.z);
+    this->params.probeRadius = this->probeRadius;
     this->params.maxNumNeighbors = this->atomNeighborCount;
 
     // allocate host storage
     m_hPos = new float[this->numAtoms*4];
     memset(m_hPos, 0, this->numAtoms*4*sizeof(float));
 
-	m_hNeighborCount = new uint[this->numAtoms];
-	memset( m_hNeighborCount, 0, this->numAtoms*sizeof(uint));
+    m_hNeighborCount = new uint[this->numAtoms];
+    memset( m_hNeighborCount, 0, this->numAtoms*sizeof(uint));
 
-	m_hNeighbors = new uint[this->numAtoms*this->atomNeighborCount];
-	memset( m_hNeighbors, 0, this->numAtoms*this->atomNeighborCount*sizeof(uint));
+    m_hNeighbors = new uint[this->numAtoms*this->atomNeighborCount];
+    memset( m_hNeighbors, 0, this->numAtoms*this->atomNeighborCount*sizeof(uint));
 
-	m_hSmallCircles = new float[this->numAtoms*this->atomNeighborCount*4];
-	memset( m_hSmallCircles, 0, this->numAtoms*this->atomNeighborCount*4*sizeof(float));
+    m_hSmallCircles = new float[this->numAtoms*this->atomNeighborCount*4];
+    memset( m_hSmallCircles, 0, this->numAtoms*this->atomNeighborCount*4*sizeof(float));
 
-	m_hArcs = new float[this->numAtoms*this->atomNeighborCount*4*4];
-	memset( m_hArcs, 0, this->numAtoms*this->atomNeighborCount*4*4*sizeof(float));
+    m_hArcs = new float[this->numAtoms*this->atomNeighborCount*4*4];
+    memset( m_hArcs, 0, this->numAtoms*this->atomNeighborCount*4*4*sizeof(float));
 
     m_hParticleIndex = new uint[this->numAtoms];
-	memset( m_hParticleIndex, 0, this->numAtoms*sizeof(uint));
+    memset( m_hParticleIndex, 0, this->numAtoms*sizeof(uint));
 
     m_hCellStart = new uint[this->numGridCells];
     memset( m_hCellStart, 0, this->numGridCells*sizeof(uint));
@@ -683,22 +682,22 @@ bool ProteinRendererCBCUDA::initCuda( const CallProteinData *protein, uint gridD
 
     // allocate GPU data
     unsigned int memSize = sizeof(float) * 4 * this->numAtoms;
-	// array for atom positions
+    // array for atom positions
     allocateArray((void**)&m_dPos, memSize);
     //cudaMalloc(  (void**)&m_dPos, memSize);
     //cudaError e;
     //e = cudaGetLastError();
 
-	// array for sorted atom positions
+    // array for sorted atom positions
     allocateArray((void**)&m_dSortedPos, memSize);
-	// array for the counted number of atoms
-	allocateArray((void**)&m_dNeighborCount, this->numAtoms*sizeof(uint));
-	// array for the neighbor atoms
-	allocateArray((void**)&m_dNeighbors, this->numAtoms*this->atomNeighborCount*sizeof(uint));
-	// array for the small circles
-	allocateArray((void**)&m_dSmallCircles, this->numAtoms*this->atomNeighborCount*4*sizeof(float));
-	// array for the arcs
-	allocateArray((void**)&m_dArcs, this->numAtoms*this->atomNeighborCount*4*4*sizeof(float));
+    // array for the counted number of atoms
+    allocateArray((void**)&m_dNeighborCount, this->numAtoms*sizeof(uint));
+    // array for the neighbor atoms
+    allocateArray((void**)&m_dNeighbors, this->numAtoms*this->atomNeighborCount*sizeof(uint));
+    // array for the small circles
+    allocateArray((void**)&m_dSmallCircles, this->numAtoms*this->atomNeighborCount*4*sizeof(float));
+    // array for the arcs
+    allocateArray((void**)&m_dArcs, this->numAtoms*this->atomNeighborCount*4*4*sizeof(float));
 
     allocateArray((void**)&m_dGridParticleHash, this->numAtoms*sizeof(uint));
     allocateArray((void**)&m_dGridParticleIndex, this->numAtoms*sizeof(uint));
@@ -714,27 +713,27 @@ bool ProteinRendererCBCUDA::initCuda( const CallProteinData *protein, uint gridD
     //sortConfig.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
     //cudppPlan( &this->sortHandle, sortConfig, this->numAtoms, 1, 0);
 
-	setParameters( &this->params);
+    setParameters( &this->params);
 
-	return true;
+    return true;
 }
 
 /*
  * Write atom positions and radii to an array for processing in CUDA
  */
 void ProteinRendererCBCUDA::writeAtomPositions( const CallProteinData *protein ) {
-	// write atoms to array
-	int p = 0;
-	for( unsigned int cnt = 0; cnt < protein->ProteinAtomCount(); ++cnt ) {
-		// write pos and rad to array
-		m_hPos[p++] = protein->ProteinAtomPositions()[cnt*3+0];
-		m_hPos[p++] = protein->ProteinAtomPositions()[cnt*3+1];
-		m_hPos[p++] = protein->ProteinAtomPositions()[cnt*3+2];
-		m_hPos[p++] = protein->AtomTypes()[protein->ProteinAtomData()[cnt].TypeIndex()].Radius();
-	}
+    // write atoms to array
+    int p = 0;
+    for( unsigned int cnt = 0; cnt < protein->ProteinAtomCount(); ++cnt ) {
+        // write pos and rad to array
+        m_hPos[p++] = protein->ProteinAtomPositions()[cnt*3+0];
+        m_hPos[p++] = protein->ProteinAtomPositions()[cnt*3+1];
+        m_hPos[p++] = protein->ProteinAtomPositions()[cnt*3+2];
+        m_hPos[p++] = protein->AtomTypes()[protein->ProteinAtomData()[cnt].TypeIndex()].Radius();
+    }
 
-	// setArray( POSITION, m_hPos, 0, this->numAtoms);
-	copyArrayToDevice( this->m_dPos, this->m_hPos, 0, this->numAtoms*4*sizeof(float));
+    // setArray( POSITION, m_hPos, 0, this->numAtoms);
+    copyArrayToDevice( this->m_dPos, this->m_hPos, 0, this->numAtoms*4*sizeof(float));
 }
 
 #endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */

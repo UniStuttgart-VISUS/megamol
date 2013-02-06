@@ -27,9 +27,24 @@ ExcludeFromBuild += ./dllmain.cpp
 # Libraries
 LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid GL GLU
 
-
 # Additional linker flags
-LinkerFlags := $(LinkerFlags) -shared -Wl,-Bsymbolic
+LinkerFlags := $(LinkerFlags) -shared -Wl,-Bsymbolic 
+
+# cuda
+CudaInstallPath   := /usr/local/cuda
+CudaSdkPath       := /opt/NVIDIA_GPU_Computing_SDK
+NVCC	      := $(CudaInstallPath)/bin/nvcc
+CudaReleaseDir    := $(ReleaseDir)/Cuda
+CudaDebugDir      := $(DebugDir)/Cuda
+
+# note: not the dependencies (i.e. particle_kernel.cu)!
+CU_SOURCES	:= particleSystem.cu filter_cuda.cu CUDAMarchingCubes.cu CUDAQuickSurf.cu
+
+CU_R_OBS	  := $(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
+CU_D_OBS	  := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
+LIBS	      := $(LIBS) cudart
+# cudpp_x86_64
+LinkerFlags       := $(LinkerFlags) -L$(CudaInstallPath)/lib64 -L$(CudaSdkPath)/C/common/lib/linux
 
 
 # Collect Files
@@ -41,11 +56,20 @@ CPP_D_OBJS := $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_S
 CPP_R_OBJS := $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 
 IncludeDir := $(IncludeDir) $(addprefix $(vislibpath)/,$(addsuffix /include,$(VISlibs)))
+# note: cuda include dirs have to be added after vislib include dirs
+IncludeDir := $(IncludeDir) $(CudaInstallPath)/include $(CudaSdkPath)/C/common/inc
+
 DebugLinkerFlags := $(DebugLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS)d,$(VISlibs)))
 ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS),$(VISlibs)))
 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
 LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(expatpath)/lib
+
+# cuda
+NVCCFLAGS := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) $(addprefix -I, $(IncludeDir)) -Xcompiler -fPIC -O3 -arch=sm_23 --ftz=true --prec-sqrt=false --prec-div=false
+#--ptxas-options=-v -m64
+CU_DEPS := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.d, $(CU_SOURCES)))\
+	$(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.d, $(CU_SOURCES)))
 
 
 all: $(TargetName)d $(TargetName)
@@ -60,22 +84,40 @@ $(TargetName): $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg
 	@mkdir -p $(outbin)
 	cp $< $(outbin)/$(TargetName)$(BITS).lin$(BITS).mmplg
 
-
 # Rules for intermediate plugins:
-$(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: Makefile $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
-	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: "
-	@$(CLEARTERMCMD)
-	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) $(DebugLinkerFlags) \
+
+$(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: Makefile $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))\
+	$(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
+	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: "
+	@tput sgr0
+	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(CU_D_OBS) $(addprefix -l,$(LIBS)) $(DebugLinkerFlags) \
 	-o $(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg
 
-$(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: Makefile $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
-	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: "
-	@$(CLEARTERMCMD)
-	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) $(ReleaseLinkerFlags) \
+$(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: Makefile $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))\
+	$(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
+	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: "
+	@tput sgr0
+	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(CU_R_OBS) $(addprefix -l,$(LIBS)) $(ReleaseLinkerFlags) \
 	-o $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg
 
-
 # Rules for dependencies:
+
+$(IntDir)/$(CudaDebugDir)/%.d: $(InputDir)/%.cu Makefile
+	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@tput sgr0
+	@echo -n $(dir $@) > $@
+	$(Q)$(NVCC) -M -g -G $(NVCCFLAGS) $< >> $@
+# -g debug information for host code
+# -G debug information for device code
+
+$(IntDir)/$(CudaReleaseDir)/%.d: $(InputDir)/%.cu Makefile
+	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@tput sgr0
+	@echo -n $(dir $@) > $@
+	$(Q)$(NVCC) -M $(NVCCFLAGS) $< >> $@
+    
 $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
@@ -88,17 +130,30 @@ $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile
 	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@$(CLEARTERMCMD)
 	@echo -n $(dir $@) > $@
-	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $< >> $@
+	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $< >> $@ 
 
 
 ifneq ($(MAKECMDGOALS), clean)
 ifneq ($(MAKECMDGOALS), sweep)
 -include $(CPP_DEPS)
+-include $(CU_DEPS)
 endif
 endif
-
 
 # Rules for object files:
+
+$(IntDir)/$(CudaDebugDir)/%.o:
+	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"NVCC "'\E[0;32;40m'"$@: "
+	@tput sgr0
+	$(Q)$(NVCC) -c -g -G $(NVCCFLAGS) $< -o $@
+
+$(IntDir)/$(CudaReleaseDir)/%.o:
+	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"NVCC "'\E[0;32;40m'"$@: "
+	@tput sgr0
+	$(Q)$(NVCC) -c $(NVCCFLAGS) $< -o $@
+
 $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@: "
@@ -111,17 +166,15 @@ $(IntDir)/$(ReleaseDir)/%.o:
 	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) $(ReleaseCompilerFlags) -o $@ $<
 
-
 # Cleanup rules:
+
 clean: sweep
 	rm -f $(outbin)/$(TargetName)$(BITS)d.lin$(BITS).mmplg \
 	$(outbin)/$(TargetName)$(BITS).lin$(BITS).mmplg
 
-
 sweep:
 	rm -f $(CPP_DEPS)
 	rm -rf $(IntDir)/*
-
 
 rebuild: clean all
 
