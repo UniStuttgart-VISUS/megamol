@@ -23,7 +23,7 @@
 #include "vislib/AbstractOpenGLShader.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <glh/glh_genext.h>
+#include <glh/glh_extensions.h>
 
 using namespace megamol;
 using namespace megamol::core;

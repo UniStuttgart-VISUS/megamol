@@ -17,7 +17,6 @@
 #include "param/IntParam.h"
 #include "MolecularDataCall.h"
 
-#include "glh/glh_genext.h"
 #include "glh/glh_extensions.h"
 #include <GL/gl.h>
 #include <GL/glu.h>

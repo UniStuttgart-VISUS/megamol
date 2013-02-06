@@ -129,15 +129,18 @@ varying vec3 color;
 
 float computeDensity( vec3 pos) {
     float d = distance( pos, splatCenter.xyz);
-    float density = ( 1.0 - smoothstep( 0.0, 1.0*filterRadius*scale, d)) * densityScale;
+    //float density = ( 1.0 - smoothstep( 0.0, 1.0*filterRadius*scale, d)) * densityScale;
+    // gaussian function
+    float density = filterRadius * exp( -(d * d)/(2 * scale * scale));
     //if( d < scale ) density = 1.0; else density = 0.0; // DEBUG
     return density;
 }
 
 float computeColorDensity( vec3 pos) {
     float d = distance( pos, splatCenter.xyz);
-    float density = ( 1.0 - smoothstep( 0.2*filterRadius*scale, 1.0*filterRadius*scale, d)) * densityScale;
-        
+    //float density = ( 1.0 - smoothstep( 0.2*filterRadius*scale, 1.0*filterRadius*scale, d)) * densityScale;
+    // gaussian function
+    float density = filterRadius * exp( -(d * d)/(2 * scale * scale)) * densityScale;
     return density;
 }
 
@@ -948,6 +951,47 @@ void main(void) {
             </snippet>
         </shader>
         
+        <shader name="colorWriterVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2011  Michael Krone <kroneml@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~kroneml/
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+void main(void) {
+    gl_Position = ftransform();
+}
+
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="colorWriterFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2011  Michael Krone <kroneml@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~kroneml/
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+uniform vec4 color;
+
+void main(void) {
+    gl_FragColor = color;
+}
+
+-->
+            </snippet>
+        </shader>
     </namespace>
 
 </btf>

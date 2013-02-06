@@ -32,7 +32,7 @@
 #include "ForceDataCall.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <glh/glh_genext.h>
+#include <glh/glh_extensions.h>
 #include <omp.h>
 
 using namespace megamol;

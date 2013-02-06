@@ -177,7 +177,7 @@ void calcSolventVisibilityD(unsigned int *cellStart,
     
     // Non-solvent atoms are visible
     if(!isSolventAtom[idx]) {
-        atomVisibility[idx] = 1;
+        atomVisibility[idx] = 0;
         return;
     }
     

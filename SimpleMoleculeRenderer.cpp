@@ -608,6 +608,9 @@ void SimpleMoleculeRenderer::RenderLines( const MolecularDataCall *mol, const fl
         // get atom indices
         atomIdx0 = mol->Connection()[2*cnt+0];
         atomIdx1 = mol->Connection()[2*cnt+1];
+        // distance check
+        if( ( vislib::math::Vector<float, 3>( &atomPos[atomIdx0*3]) - vislib::math::Vector<float, 3>( &atomPos[atomIdx1*3])).Length() > 3.0f )
+            continue;
         // set colors and vertices of first atom
         glColor3fv( &this->atomColorTable[atomIdx0*3]);
         glVertex3f( atomPos[atomIdx0*3+0], atomPos[atomIdx0*3+1], atomPos[atomIdx0*3+2]);
@@ -780,24 +783,24 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
         glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
 
         // Vertex attributes
-        GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
-        GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
+        GLint vertexPos = glGetAttribLocationARB(this->sphereShaderGeom, "vertex");
+        GLint vertexColor = glGetAttribLocationARB(this->sphereShaderGeom, "color");
 
         // Enable arrays for attributes
-        glEnableVertexAttribArray(vertexPos);
-        glEnableVertexAttribArray(vertexColor);
+        glEnableVertexAttribArrayARB(vertexPos);
+        glEnableVertexAttribArrayARB(vertexColor);
 
         // Set attribute pointers
-        glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
-        glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
+        glVertexAttribPointerARB(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
+        glVertexAttribPointerARB(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
 
         // Draw points
         glDrawArrays(GL_POINTS, 0, mol->AtomCount());
         //glDrawArrays(GL_POINTS, 0, 1);
 
         // Disable arrays for attributes
-        glDisableVertexAttribArray(vertexPos);
-        glDisableVertexAttribArray(vertexColor);
+        glDisableVertexAttribArrayARB(vertexPos);
+        glDisableVertexAttribArrayARB(vertexColor);
 
         // Disable sphere shader
         this->sphereShaderGeom.Disable();
@@ -1097,8 +1100,8 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall *mol, co
         glEnableVertexAttribArray(vertexColor);
 
         // Set attribute pointers
-        glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
-        glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
+        glVertexAttribPointerARB(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
+        glVertexAttribPointerARB(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
 
         // Draw points
         glDrawArrays(GL_POINTS, 0, mol->AtomCount());
@@ -1338,24 +1341,24 @@ void SimpleMoleculeRenderer::RenderSpacefilling( const MolecularDataCall *mol, c
         glUniform4fvARB(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
 
         // Vertex attributes
-        GLint vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
-        GLint vertexColor = glGetAttribLocation(this->sphereShaderGeom, "color");
+        GLint vertexPos = glGetAttribLocationARB(this->sphereShaderGeom, "vertex");
+        GLint vertexColor = glGetAttribLocationARB(this->sphereShaderGeom, "color");
 
         // Enable arrays for attributes
-        glEnableVertexAttribArray(vertexPos);
-        glEnableVertexAttribArray(vertexColor);
+        glEnableVertexAttribArrayARB(vertexPos);
+        glEnableVertexAttribArrayARB(vertexColor);
 
         // Set attribute pointers
-        glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
-        glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
+        glVertexAttribPointerARB(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
+        glVertexAttribPointerARB(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
 
         // Draw points
         glDrawArrays(GL_POINTS, 0, mol->AtomCount());
         //glDrawArrays(GL_POINTS, 0, 1);
 
         // Disable arrays for attributes
-        glDisableVertexAttribArray(vertexPos);
-        glDisableVertexAttribArray(vertexColor);
+        glDisableVertexAttribArrayARB(vertexPos);
+        glDisableVertexAttribArrayARB(vertexColor);
 
         // Disable sphere shader
         this->sphereShaderGeom.Disable();
@@ -1473,8 +1476,8 @@ void SimpleMoleculeRenderer::RenderSAS( const MolecularDataCall *mol, const floa
         glEnableVertexAttribArray(vertexColor);
 
         // Set attribute pointers
-        glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
-        glVertexAttribPointer(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
+        glVertexAttribPointerARB(vertexPos, 4, GL_FLOAT, GL_FALSE, 0, this->vertSpheres.PeekElements());
+        glVertexAttribPointerARB(vertexColor, 3, GL_FLOAT, GL_FALSE, 0, this->atomColorTable.PeekElements());
 
         // Draw points
         glDrawArrays(GL_POINTS, 0, mol->AtomCount());

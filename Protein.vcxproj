@@ -81,9 +81,6 @@
   <ImportGroup Label="ExtensionSettings" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.2.props')">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.2.props" />
   </ImportGroup>
-  <ImportGroup Label="ExtensionSettings">
-    <Import Project="C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.2\extras\visual_studio_integration\MSBuildExtensions\CUDA 4.2.props" />
-  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="vislibVSProps\TargetRelease32.props" />
@@ -199,7 +196,7 @@
     </CUDA_Build_Rule>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include;$(VISlibPath)\math\include;$(VISlibPath)\sys\include;$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;$(VISlibPath)\net\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -211,7 +208,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -225,7 +222,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>.;$(CUDAPath)shared/inc;$(CUDAPath)C/common/inc</Include>
+      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <Defines>_DEBUG</Defines>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
@@ -240,7 +237,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include;$(VISlibPath)\math\include;$(VISlibPath)\sys\include;$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;$(VISlibPath)\net\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -252,7 +249,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -266,7 +263,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>.;$(CUDAPath)shared/inc;$(CUDAPath)C/common/inc</Include>
+      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <Defines>_DEBUG</Defines>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
@@ -278,7 +275,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include;$(VISlibPath)\math\include;$(VISlibPath)\sys\include;$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;$(VISlibPath)\net\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -289,7 +286,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -305,7 +302,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>.;$(CUDAPath)shared/inc;$(CUDAPath)C/common/inc</Include>
+      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
@@ -319,7 +316,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include;$(VISlibPath)\math\include;$(VISlibPath)\sys\include;$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;$(VISlibPath)\net\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -330,7 +327,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -346,7 +343,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>.;$(CUDAPath)shared/inc;$(CUDAPath)C/common/inc</Include>
+      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
@@ -357,7 +354,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </CUDA_Build_Rule>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include;$(VISlibPath)\math\include;$(VISlibPath)\sys\include;$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;$(VISlibPath)\net\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -369,7 +366,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -383,7 +380,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>.;$(CUDAPath)shared/inc;$(CUDAPath)C/common/inc</Include>
+      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <Defines>_DEBUG</Defines>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
@@ -398,7 +395,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include;$(VISlibPath)\math\include;$(VISlibPath)\sys\include;$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;$(VISlibPath)\net\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -410,7 +407,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -425,11 +422,13 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <Include>.;$(CUDAPath)shared/inc;$(CUDAPath)C/common/inc</Include>
+      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <Defines>_DEBUG</Defines>
       <Runtime>MDd</Runtime>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
       <GPUDebugInfo>true</GPUDebugInfo>
+      <HostDebugInfo>true</HostDebugInfo>
+      <TypeInfo>true</TypeInfo>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">
@@ -439,7 +438,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include;$(VISlibPath)\math\include;$(VISlibPath)\sys\include;$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;$(VISlibPath)\net\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -450,7 +449,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -466,7 +465,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>.;$(CUDAPath)shared/inc;$(CUDAPath)C/common/inc</Include>
+      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
@@ -480,7 +480,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include;$(VISlibPath)\math\include;$(VISlibPath)\sys\include;$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;$(VISlibPath)\net\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -491,7 +491,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -508,7 +508,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <Include>.;$(CUDAPath)shared/inc;$(CUDAPath)C/common/inc</Include>
+      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
@@ -526,6 +527,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="Color.cpp" />
     <ClCompile Include="Diagram2DCall.cpp" />
     <ClCompile Include="Diagram2DRenderer.cpp" />
+    <ClCompile Include="DiagramCall.cpp" />
+    <ClCompile Include="DiagramRenderer.cpp" />
     <ClCompile Include="dllmain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">
       </PrecompiledHeader>
@@ -558,6 +561,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="ForceDataCall.cpp" />
     <ClCompile Include="FrodockLoader.cpp" />
     <ClCompile Include="GlButton.cpp" />
+    <ClCompile Include="GLSLVolumeRenderer.cpp" />
     <ClCompile Include="GlWidgetLibrary.cpp" />
     <ClCompile Include="gmx_system_xdr.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">
@@ -581,14 +585,19 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="GROLoader.cpp" />
     <ClCompile Include="GromacsLoader.cpp" />
     <ClCompile Include="HapticsMoleculeRenderer.cpp" />
+    <ClCompile Include="MappableCategoryFloat.cpp" />
+    <ClCompile Include="MappableFloatPair.cpp" />
     <ClCompile Include="MDDriverConnector.cpp" />
+    <ClCompile Include="MolecularAOShader.cpp" />
     <ClCompile Include="MolecularDataCall.cpp" />
     <ClCompile Include="MoleculeBallifier.cpp" />
+    <ClCompile Include="MolecularSurfaceFeature.cpp" />
     <ClCompile Include="MoleculeCartoonRenderer.cpp" />
     <ClCompile Include="MoleculeCBCudaRenderer.cpp" />
     <ClCompile Include="MoleculeCudaSESRenderer.cpp" />
     <ClCompile Include="MoleculeSequenceRenderer.cpp" />
     <ClCompile Include="MoleculeSESRenderer.cpp" />
+    <ClCompile Include="MoleculeVolumeCudaRenderer.cpp" />
     <ClCompile Include="NetCDFData.cpp" />
     <ClCompile Include="ParticleDataCall.cpp" />
     <ClCompile Include="PDBLoader.cpp" />
@@ -606,11 +615,16 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="ProteinRendererSESGPU.cpp" />
     <ClCompile Include="ProteinRendererSESGPUCuda.cpp" />
     <ClCompile Include="ProteinVolumeRenderer.cpp" />
+    <ClCompile Include="QuickSurfMTRenderer.cpp" />
+    <ClCompile Include="QuickSurfRenderer.cpp" />
+    <ClCompile Include="QuickSurfRenderer2.cpp" />
     <ClCompile Include="Raw3DRelativeMouseInput.cpp" />
     <ClCompile Include="ReducedSurface.cpp" />
     <ClCompile Include="ReducedSurfaceSimplified.cpp" />
     <ClCompile Include="Renderer3DModuleMouse.cpp" />
     <ClCompile Include="RMS.cpp" />
+    <ClCompile Include="IntSelection.cpp" />
+    <ClCompile Include="IntSelectionCall.cpp" />
     <ClCompile Include="SimpleMoleculeRenderer.cpp" />
     <ClCompile Include="slicing.cpp" />
     <ClCompile Include="SolPathDataCall.cpp" />
@@ -622,6 +636,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="SphereDataCall.cpp" />
     <ClCompile Include="SphereRenderer.cpp" />
     <ClCompile Include="SphereRendererMouse.cpp" />
+    <ClCompile Include="SplitMergeCall.cpp" />
+    <ClCompile Include="SplitMergeFeature.cpp" />
+    <ClCompile Include="SplitMergeRenderer.cpp" />
     <ClCompile Include="SSAORendererDeferred.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">Create</PrecompiledHeader>
@@ -637,8 +654,29 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="ToonRendererDeferred.cpp" />
     <ClCompile Include="View3DMouse.cpp" />
     <ClCompile Include="View3DSpaceMouse.cpp" />
+    <ClCompile Include="VolumeMeshRenderer.cpp" />
     <ClCompile Include="VolumeSliceCall.cpp" />
     <ClCompile Include="VolumeSliceRenderer.cpp" />
+    <ClCompile Include="WKFThreads.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="WKFUtils.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="XYZLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -653,14 +691,21 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CCP4VolumeData.h" />
     <ClInclude Include="CoarseGrainDataLoader.h" />
     <ClInclude Include="Color.h" />
+    <ClInclude Include="cuda4fake.h" />
+    <ClInclude Include="CUDAKernels.h" />
+    <ClInclude Include="CUDAMarchingCubes.h" />
+    <ClInclude Include="CUDAQuickSurf.h" />
     <ClInclude Include="Diagram2DCall.h" />
     <ClInclude Include="Diagram2DRenderer.h" />
     <ClInclude Include="DofRendererDeferred.h" />
+    <ClInclude Include="DiagramCall.h" />
+    <ClInclude Include="DiagramRenderer.h" />
     <ClInclude Include="ElectrostaticsRenderer.h" />
     <ClInclude Include="Filter.h" />
     <ClInclude Include="ForceDataCall.h" />
     <ClInclude Include="FrodockLoader.h" />
     <ClInclude Include="GlButton.h" />
+    <ClInclude Include="GLSLVolumeRenderer.h" />
     <ClInclude Include="GlWidget.h" />
     <ClInclude Include="GlWidgetLibrary.h" />
     <ClInclude Include="gmx_system_xdr.h" />
@@ -668,14 +713,19 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="GROLoader.h" />
     <ClInclude Include="GromacsLoader.h" />
     <ClInclude Include="HapticsMoleculeRenderer.h" />
+    <ClInclude Include="MappableCategoryFloat.h" />
+    <ClInclude Include="MappableFloatPair.h" />
     <ClInclude Include="MDDriverConnector.h" />
+    <ClInclude Include="MolecularAOShader.h" />
     <ClInclude Include="MolecularDataCall.h" />
     <ClInclude Include="MoleculeBallifier.h" />
+    <ClInclude Include="MolecularSurfaceFeature.h" />
     <ClInclude Include="MoleculeCartoonRenderer.h" />
     <ClInclude Include="MoleculeCBCudaRenderer.h" />
     <ClInclude Include="MoleculeCudaSESRenderer.h" />
     <ClInclude Include="MoleculeSequenceRenderer.h" />
     <ClInclude Include="MoleculeSESRenderer.h" />
+    <ClInclude Include="MoleculeVolumeCudaRenderer.h" />
     <ClInclude Include="NetCDFData.h" />
     <ClInclude Include="ParticleDataCall.h" />
     <ClInclude Include="PDBLoader.h" />
@@ -693,11 +743,16 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="ProteinRendererSESGPU.h" />
     <ClInclude Include="ProteinRendererSESGPUCuda.h" />
     <ClInclude Include="ProteinVolumeRenderer.h" />
+    <ClInclude Include="QuickSurfMTRenderer.h" />
+    <ClInclude Include="QuickSurfRenderer.h" />
+    <ClInclude Include="QuickSurfRenderer2.h" />
     <ClInclude Include="Raw3DRelativeMouseInput.h" />
     <ClInclude Include="ReducedSurface.h" />
     <ClInclude Include="ReducedSurfaceSimplified.h" />
     <ClInclude Include="Renderer3DModuleMouse.h" />
     <ClInclude Include="RMS.h" />
+    <ClInclude Include="IntSelection.h" />
+    <ClInclude Include="IntSelectionCall.h" />
     <ClInclude Include="simple.h" />
     <ClInclude Include="SimpleMoleculeRenderer.h" />
     <ClInclude Include="slicing.h" />
@@ -710,16 +765,23 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="SphereDataCall.h" />
     <ClInclude Include="SphereRenderer.h" />
     <ClInclude Include="SphereRendererMouse.h" />
+    <ClInclude Include="SplitMergeCall.h" />
+    <ClInclude Include="SplitMergeFeature.h" />
+    <ClInclude Include="SplitMergeRenderer.h" />
     <ClInclude Include="SSAORendererDeferred.h" />
     <ClInclude Include="state.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Stride.h" />
+    <ClInclude Include="tables.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ToonRendererDeferred.h" />
     <ClInclude Include="View3DMouse.h" />
     <ClInclude Include="View3DSpaceMouse.h" />
+    <ClInclude Include="VolumeMeshRenderer.h" />
     <ClInclude Include="VolumeSliceCall.h" />
     <ClInclude Include="VolumeSliceRenderer.h" />
+    <ClInclude Include="WKFThreads.h" />
+    <ClInclude Include="WKFUtils.h" />
     <ClInclude Include="XYZLoader.h" />
   </ItemGroup>
   <ItemGroup>
@@ -821,25 +883,63 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </None>
+    <None Include="VolumeMeshRenderer.cuh" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="CUDAMarchingCubes.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">compute_20,sm_20</CodeGeneration>
+    </CudaCompile>
+    <CudaCompile Include="CUDAQuickSurf.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">_DEBUG;WIN32;_WIN32</Defines>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">WIN32;_WIN32</Defines>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">_DEBUG;WIN32;_WIN32</Defines>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">WIN32;_WIN32</Defines>
+    </CudaCompile>
     <CudaCompile Include="filter_cuda.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CudaCompile>
+    <CudaCompile Include="VolumeMeshRenderer-sort.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="VolumeMeshRenderer.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
     <None Include="particles_kernel.cu">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </None>
     <CudaCompile Include="particleSystem.cu">
       <AddedDependencies Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">particleSystem.cuh; particles_kernel.cu; particles_kernel.cuh;</AddedDependencies>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <Include Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc</Include>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc</Include>
@@ -857,7 +957,5 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.2.targets')">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.2.targets" />
   </ImportGroup>
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.2\extras\visual_studio_integration\MSBuildExtensions\CUDA 4.2.targets" />
-  </ImportGroup>
+
 </Project>

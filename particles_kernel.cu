@@ -114,9 +114,9 @@ void reorderDataAndFindCellStartD(uint*   cellStart,        // output: cell star
                                   float4* oldPos,           // input: sorted position array
                                   uint    numParticles)
 {
-	extern __shared__ uint sharedHash[];    // blockSize + 1 elements
+    extern __shared__ uint sharedHash[];    // blockSize + 1 elements
     uint index = __umul24(blockIdx.x,blockDim.x) + threadIdx.x;
-	
+    
     uint hash;
     // handle case when no. of particles not multiple of block size
     if (index < numParticles) {
@@ -125,41 +125,41 @@ void reorderDataAndFindCellStartD(uint*   cellStart,        // output: cell star
         // Load hash data into shared memory so that we can look 
         // at neighboring particle's hash value without loading
         // two hash values per thread
-	    sharedHash[threadIdx.x+1] = hash;
+        sharedHash[threadIdx.x+1] = hash;
 
-	    if (index > 0 && threadIdx.x == 0)
-	    {
-		    // first thread in block must load neighbor particle hash
-		    sharedHash[0] = gridParticleHash[index-1];
-	    }
-	}
+        if (index > 0 && threadIdx.x == 0)
+        {
+            // first thread in block must load neighbor particle hash
+            sharedHash[0] = gridParticleHash[index-1];
+        }
+    }
 
-	__syncthreads();
-	
-	if( index < numParticles ) {
-		// If this particle has a different cell index to the previous
-		// particle then it must be the first particle in the cell,
-		// so store the index of this particle in the cell.
-		// As it isn't the first particle, it must also be the cell end of
-		// the previous particle's cell
+    __syncthreads();
+    
+    if( index < numParticles ) {
+        // If this particle has a different cell index to the previous
+        // particle then it must be the first particle in the cell,
+        // so store the index of this particle in the cell.
+        // As it isn't the first particle, it must also be the cell end of
+        // the previous particle's cell
 
-	    if (index == 0 || hash != sharedHash[threadIdx.x]) {
-		    cellStart[hash] = index;
+        if (index == 0 || hash != sharedHash[threadIdx.x]) {
+            cellStart[hash] = index;
             if (index > 0)
                 cellEnd[sharedHash[threadIdx.x]] = index;
-	    }
+        }
 
         if (index == numParticles - 1) {
             cellEnd[hash] = index + 1;
         }
 
-	    // Now use the sorted index to reorder the pos data
-	    uint sortedIndex = gridParticleIndex[index];
-	    //float4 pos = FETCH( oldPos, sortedIndex);       // macro does either global read or texture fetch
+        // Now use the sorted index to reorder the pos data
+        uint sortedIndex = gridParticleIndex[index];
+        //float4 pos = FETCH( oldPos, sortedIndex);       // macro does either global read or texture fetch
         float4 pos = oldPos[sortedIndex];       // Do not use texture for large arrays!
 
         sortedPos[index] = pos;
-	}
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -167,14 +167,14 @@ void reorderDataAndFindCellStartD(uint*   cellStart,        // output: cell star
 ///////////////////////////////////////////////////////////////////////////////
 __device__
 uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
-						   float4* smallCircles,  // output: small circles
-						   uint    neighborIndex, // input: first index for writing in neighbor list
-						   uint    atomIndex,     // input: atom index for writing in neighbor list
-						   int3    gridPos,
+                           float4* smallCircles,  // output: small circles
+                           uint    neighborIndex, // input: first index for writing in neighbor list
+                           uint    atomIndex,     // input: atom index for writing in neighbor list
+                           int3    gridPos,
                            uint    index,
                            float4  pos,
                            float4* atomPos,
-						   uint*   gridParticleIndex,    // input: sorted atom indices
+                           uint*   gridParticleIndex,    // input: sorted atom indices
                            uint*   cellStart,
                            uint*   cellEnd) {
     uint gridHash = calcGridHash(gridPos);
@@ -183,50 +183,50 @@ uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
     uint startIndex = FETCH( cellStart, gridHash);
 
     uint count = 0;
-	float4 pos2;
-	float3 relPos;
-	float dist;
-	float neighborDist;
-	float r;
-	float3 vec;
-	float4 smallCircle;
+    float4 pos2;
+    float3 relPos;
+    float dist;
+    float neighborDist;
+    float r;
+    float3 vec;
+    float4 smallCircle;
     if( startIndex != 0xffffffff ) {	// cell is not empty
         // iterate over atoms in this cell
         uint endIndex = FETCH( cellEnd, gridHash);
         for( uint j = startIndex; j < endIndex; j++) {
-			// do not count self
+            // do not count self
             if( j != index) {
-				// get position of potential neighbor
-	            pos2 = FETCH( atomPos, j);
+                // get position of potential neighbor
+                pos2 = FETCH( atomPos, j);
                 // check distance
-				relPos = make_float3( pos2.x, pos2.y, pos2.z) - make_float3( pos.x, pos.y, pos.z);
-				dist = length( relPos);
-				neighborDist = pos.w + pos2.w + 2.0f * params.probeRadius;
-				if( dist < neighborDist ) {
+                relPos = make_float3( pos2.x, pos2.y, pos2.z) - make_float3( pos.x, pos.y, pos.z);
+                dist = length( relPos);
+                neighborDist = pos.w + pos2.w + 2.0f * params.probeRadius;
+                if( dist < neighborDist ) {
                     // check number of neighbors
                     if( ( neighborIndex + count) >= params.maxNumNeighbors ) return count;
-					//neighbors[atomIndex*params.maxNumNeighbors+neighborIndex+count] = gridParticleIndex[j];
+                    //neighbors[atomIndex*params.maxNumNeighbors+neighborIndex+count] = gridParticleIndex[j];
                     neighbors[atomIndex*params.maxNumNeighbors+neighborIndex+count] = j;
-					// compute small circle / intersection plane
-					r = ( (pos.w + params.probeRadius)*(pos.w + params.probeRadius))
-						+ ( dist * dist) //dot( relPos, relPos) 
-						- ( (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius));
-					r = r / (2.0f * dist * dist); // dot( relPos, relPos));
-					/*
-					r = (pos.w + params.probeRadius)*(pos.w + params.probeRadius)
-						- (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius);
+                    // compute small circle / intersection plane
+                    r = ( (pos.w + params.probeRadius)*(pos.w + params.probeRadius))
+                        + ( dist * dist) //dot( relPos, relPos) 
+                        - ( (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius));
+                    r = r / (2.0f * dist * dist); // dot( relPos, relPos));
+                    /*
+                    r = (pos.w + params.probeRadius)*(pos.w + params.probeRadius)
+                        - (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius);
                     r = r / (2.0f * dot( relPos, relPos));
-					r = r + 0.5f;
-					*/
-					vec = relPos * r;
-					smallCircle.x = vec.x;
-					smallCircle.y = vec.y;
-					smallCircle.z = vec.z;
-					smallCircle.w = 1.0f;
-					smallCircles[atomIndex*params.maxNumNeighbors+neighborIndex+count] = smallCircle;
-					// increment the neighbor counter
-					count++;
-				}
+                    r = r + 0.5f;
+                    */
+                    vec = relPos * r;
+                    smallCircle.x = vec.x;
+                    smallCircle.y = vec.y;
+                    smallCircle.z = vec.z;
+                    smallCircle.w = 1.0f;
+                    smallCircles[atomIndex*params.maxNumNeighbors+neighborIndex+count] = smallCircle;
+                    // increment the neighbor counter
+                    count++;
+                }
             }
         }
     }
@@ -238,13 +238,13 @@ uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
 ///////////////////////////////////////////////////////////////////////////////
 __device__
 uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
-						   uint    neighborIndex, // input: first index for writing in neighbor list
-						   uint    atomIndex,     // input: atom index for writing in neighbor list
-						   int3    gridPos,
+                           uint    neighborIndex, // input: first index for writing in neighbor list
+                           uint    atomIndex,     // input: atom index for writing in neighbor list
+                           int3    gridPos,
                            uint    index,
                            float4  pos,
                            float4* atomPos,
-						   uint*   gridParticleIndex,    // input: sorted atom indices
+                           uint*   gridParticleIndex,    // input: sorted atom indices
                            uint*   cellStart,
                            uint*   cellEnd) {
     uint gridHash = calcGridHash(gridPos);
@@ -253,30 +253,30 @@ uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
     uint startIndex = FETCH( cellStart, gridHash);
 
     uint count = 0;
-	float4 pos2;
-	float3 relPos;
-	float dist;
-	float neighborDist;
+    float4 pos2;
+    float3 relPos;
+    float dist;
+    float neighborDist;
     if( startIndex != 0xffffffff ) {	// cell is not empty
         // iterate over atoms in this cell
         uint endIndex = FETCH( cellEnd, gridHash);
         for( uint j = startIndex; j < endIndex; j++) {
-			// do not count self
+            // do not count self
             if( j != index) {
-				// get position of potential neighbor
-	            pos2 = FETCH( atomPos, j);
+                // get position of potential neighbor
+                pos2 = FETCH( atomPos, j);
                 // check distance
-				relPos = make_float3( pos2) - make_float3( pos);
-				dist = length( relPos);
-				neighborDist = pos.w + pos2.w + 2.0f * params.probeRadius;
-				if( dist < neighborDist ) {
+                relPos = make_float3( pos2) - make_float3( pos);
+                dist = length( relPos);
+                neighborDist = pos.w + pos2.w + 2.0f * params.probeRadius;
+                if( dist < neighborDist ) {
                     // check number of neighbors
                     if( ( neighborIndex + count) >= params.maxNumNeighbors ) return count;
-					//neighbors[atomIndex*params.maxNumNeighbors+neighborIndex+count] = gridParticleIndex[j];
+                    //neighbors[atomIndex*params.maxNumNeighbors+neighborIndex+count] = gridParticleIndex[j];
                     neighbors[atomIndex*params.maxNumNeighbors+neighborIndex+count] = j;
-					// increment the neighbor counter
-					count++;
-				}
+                    // increment the neighbor counter
+                    count++;
+                }
             }
         }
     }
@@ -289,13 +289,13 @@ uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
 __device__
 uint countProbeNeighborsInCell( //uint*   neighbors,     // output: neighbor indices
                            float3* neighbors,     // output: neighbor positions
-						   uint    neighborIndex, // input: first index for writing in neighbor list
-						   uint    atomIndex,     // input: atom index for writing in neighbor list
-						   int3    gridPos,
+                           uint    neighborIndex, // input: first index for writing in neighbor list
+                           uint    atomIndex,     // input: atom index for writing in neighbor list
+                           int3    gridPos,
                            uint    index,
                            float4  pos,
                            float4* atomPos,
-						   uint*   gridParticleIndex,    // input: sorted atom indices
+                           uint*   gridParticleIndex,    // input: sorted atom indices
                            uint*   cellStart,
                            uint*   cellEnd) {
     uint gridHash = calcGridHash(gridPos);
@@ -304,29 +304,29 @@ uint countProbeNeighborsInCell( //uint*   neighbors,     // output: neighbor ind
     uint startIndex = FETCH( cellStart, gridHash);
 
     uint count = 0;
-	float4 pos2;
-	float3 relPos;
-	float dist;
-	float neighborDist;
+    float4 pos2;
+    float3 relPos;
+    float dist;
+    float neighborDist;
     if( startIndex != 0xffffffff ) {	// cell is not empty
         // iterate over atoms in this cell
         uint endIndex = FETCH( cellEnd, gridHash);
         for( uint j = startIndex; j < endIndex; j++) {
-			// do not count self
+            // do not count self
             if( j != index) {
-				// get position of potential neighbor
-	            pos2 = atomPos[j];
+                // get position of potential neighbor
+                pos2 = atomPos[j];
                 // check distance
-				relPos = make_float3( pos2) - make_float3( pos);
-				dist = length( relPos);
-				neighborDist = 2.0f * params.probeRadius;
-				if( dist < neighborDist ) {
+                relPos = make_float3( pos2) - make_float3( pos);
+                dist = length( relPos);
+                neighborDist = 2.0f * params.probeRadius;
+                if( dist < neighborDist ) {
                     // check number of neighbors
                     if( ( neighborIndex + count) >= rsParams.maxNumProbeNeighbors ) return count;
                     neighbors[atomIndex*rsParams.maxNumProbeNeighbors+neighborIndex+count] = make_float3( pos2);
-					// increment the neighbor counter
-					count++;
-				}
+                    // increment the neighbor counter
+                    count++;
+                }
             }
         }
     }
@@ -338,13 +338,13 @@ uint countProbeNeighborsInCell( //uint*   neighbors,     // output: neighbor ind
 ///////////////////////////////////////////////////////////////////////////////
 __global__
 void countNeighbors( uint*   neighborCount,        // output: number of neighbors
-					 uint*   neighbors,            // output: neighbor indices
-					 float4* smallCircles,         // output: small circles
-					 float4* atomPos,              // input: sorted atom positions
+                     uint*   neighbors,            // output: neighbor indices
+                     float4* smallCircles,         // output: small circles
+                     float4* atomPos,              // input: sorted atom positions
                      uint*   gridParticleIndex,    // input: sorted atom indices
                      uint*   cellStart,
                      uint*   cellEnd,
-					 uint    numAtoms) {
+                     uint    numAtoms) {
     uint index = __mul24( blockIdx.x, blockDim.x) + threadIdx.x;
     if( index >= numAtoms ) return;
     
@@ -352,33 +352,33 @@ void countNeighbors( uint*   neighborCount,        // output: number of neighbor
     uint originalIndex = gridParticleIndex[index];
 
     // read atom data from sorted arrays
-	float4 pos = FETCH( atomPos, index);
+    float4 pos = FETCH( atomPos, index);
 
     // get address in grid
     int3 gridPos = calcGridPos( make_float3( pos));
 
-	int3 gridSize;
-	gridSize.x = int( params.gridSize.x);
-	gridSize.y = int( params.gridSize.y);
-	gridSize.z = int( params.gridSize.z);
-	// search range for neighbor atoms: max atom diameter + probe diameter
-	float range = ( pos.w + 3.0f + 2.0f * params.probeRadius);
-	// compute number of grid cells
-	int3 cellsInRange;
-	cellsInRange.x = ceil( range / params.cellSize.x);
-	cellsInRange.y = ceil( range / params.cellSize.y);
-	cellsInRange.z = ceil( range / params.cellSize.z);
-	int3 start = gridPos - cellsInRange;
-	int3 end = gridPos + cellsInRange;
+    int3 gridSize;
+    gridSize.x = int( params.gridSize.x);
+    gridSize.y = int( params.gridSize.y);
+    gridSize.z = int( params.gridSize.z);
+    // search range for neighbor atoms: max atom diameter + probe diameter
+    float range = ( pos.w + 3.0f + 2.0f * params.probeRadius);
+    // compute number of grid cells
+    int3 cellsInRange;
+    cellsInRange.x = ceil( range / params.cellSize.x);
+    cellsInRange.y = ceil( range / params.cellSize.y);
+    cellsInRange.z = ceil( range / params.cellSize.z);
+    int3 start = gridPos - cellsInRange;
+    int3 end = gridPos + cellsInRange;
 
     // examine neighbouring cells
     uint count = 0;
-	int3 neighborPos;
-	for( int z = ( start.z > 0 ? start.z : 0); z < ( end.z > gridSize.z ? gridSize.z : end.z) ; z++ ) {
+    int3 neighborPos;
+    for( int z = ( start.z > 0 ? start.z : 0); z < ( end.z > gridSize.z ? gridSize.z : end.z) ; z++ ) {
         for( int y = ( start.y > 0 ? start.y : 0); y < ( end.y > gridSize.y ? gridSize.y : end.y) ; y++ ) {
             for( int x = ( start.x > 0 ? start.x : 0); x < ( end.x > gridSize.x ? gridSize.x : end.x) ; x++ ) {
                 neighborPos = make_int3( x, y, z);
-				count += countNeighborsInCell( neighbors, smallCircles, count, originalIndex, neighborPos, index, pos, atomPos, gridParticleIndex, cellStart, cellEnd);
+                count += countNeighborsInCell( neighbors, smallCircles, count, originalIndex, neighborPos, index, pos, atomPos, gridParticleIndex, cellStart, cellEnd);
             }
         }
     }
@@ -392,12 +392,12 @@ void countNeighbors( uint*   neighborCount,        // output: number of neighbor
 ///////////////////////////////////////////////////////////////////////////////
 __global__
 void countNeighbors( uint*   neighborCount,        // output: number of neighbors
-					 uint*   neighbors,            // output: neighbor indices
-					 float4* atomPos,              // input: sorted atom positions
+                     uint*   neighbors,            // output: neighbor indices
+                     float4* atomPos,              // input: sorted atom positions
                      uint*   gridParticleIndex,    // input: sorted atom indices
                      uint*   cellStart,
                      uint*   cellEnd,
-					 uint    numAtoms) {
+                     uint    numAtoms) {
     uint index = __mul24( blockIdx.x, blockDim.x) + threadIdx.x;
     if( index >= numAtoms ) return;
     
@@ -405,33 +405,33 @@ void countNeighbors( uint*   neighborCount,        // output: number of neighbor
     uint originalIndex = gridParticleIndex[index];
 
     // read atom data from sorted arrays
-	float4 pos = FETCH( atomPos, index);
+    float4 pos = FETCH( atomPos, index);
 
     // get address in grid
     int3 gridPos = calcGridPos( make_float3( pos));
 
-	int3 gridSize;
-	gridSize.x = int( params.gridSize.x);
-	gridSize.y = int( params.gridSize.y);
-	gridSize.z = int( params.gridSize.z);
-	// search range for neighbor atoms: max atom diameter + probe diameter
-	float range = ( pos.w + 3.0f + 2.0f * params.probeRadius);
-	// compute number of grid cells
-	int3 cellsInRange;
-	cellsInRange.x = ceil( range / params.cellSize.x);
-	cellsInRange.y = ceil( range / params.cellSize.y);
-	cellsInRange.z = ceil( range / params.cellSize.z);
-	int3 start = gridPos - cellsInRange;
-	int3 end = gridPos + cellsInRange;
+    int3 gridSize;
+    gridSize.x = int( params.gridSize.x);
+    gridSize.y = int( params.gridSize.y);
+    gridSize.z = int( params.gridSize.z);
+    // search range for neighbor atoms: max atom diameter + probe diameter
+    float range = ( pos.w + 3.0f + 2.0f * params.probeRadius);
+    // compute number of grid cells
+    int3 cellsInRange;
+    cellsInRange.x = ceil( range / params.cellSize.x);
+    cellsInRange.y = ceil( range / params.cellSize.y);
+    cellsInRange.z = ceil( range / params.cellSize.z);
+    int3 start = gridPos - cellsInRange;
+    int3 end = gridPos + cellsInRange;
 
     // examine neighbouring cells
     uint count = 0;
-	int3 neighborPos;
-	for( int z = ( start.z > 0 ? start.z : 0); z < ( end.z > gridSize.z ? gridSize.z : end.z) ; z++ ) {
+    int3 neighborPos;
+    for( int z = ( start.z > 0 ? start.z : 0); z < ( end.z > gridSize.z ? gridSize.z : end.z) ; z++ ) {
         for( int y = ( start.y > 0 ? start.y : 0); y < ( end.y > gridSize.y ? gridSize.y : end.y) ; y++ ) {
             for( int x = ( start.x > 0 ? start.x : 0); x < ( end.x > gridSize.x ? gridSize.x : end.x) ; x++ ) {
                 neighborPos = make_int3( x, y, z);
-				count += countNeighborsInCell( neighbors, count, originalIndex, neighborPos, index, pos, atomPos, gridParticleIndex, cellStart, cellEnd);
+                count += countNeighborsInCell( neighbors, count, originalIndex, neighborPos, index, pos, atomPos, gridParticleIndex, cellStart, cellEnd);
             }
         }
     }
@@ -446,13 +446,13 @@ void countNeighbors( uint*   neighborCount,        // output: number of neighbor
 __global__
 void countProbeNeighbors( //uint*   probeNeighborCount, // output: number of neighbors
                      float3* probeNeighborCount,        // output: number of neighbors
-					 //uint*   probeNeighbors,          // output: neighbor indices
+                     //uint*   probeNeighbors,          // output: neighbor indices
                      float3* probeNeighbors,            // output: neighbor indices
-					 float4* probePos,                  // input: sorted atom positions
+                     float4* probePos,                  // input: sorted atom positions
                      uint*   gridParticleIndex,         // input: sorted atom indices
                      uint*   cellStart,
                      uint*   cellEnd,
-					 uint    numProbes) {
+                     uint    numProbes) {
     uint index = __mul24( blockIdx.x, blockDim.x) + threadIdx.x;
     if( index >= numProbes ) return;
     
@@ -460,33 +460,33 @@ void countProbeNeighbors( //uint*   probeNeighborCount, // output: number of nei
     uint originalIndex = gridParticleIndex[index];
 
     // read atom data from sorted arrays
-	float4 pos = probePos[index];
+    float4 pos = probePos[index];
 
     // get address in grid
     int3 gridPos = calcGridPos( make_float3( pos));
 
-	int3 gridSize;
-	gridSize.x = int( params.gridSize.x);
-	gridSize.y = int( params.gridSize.y);
-	gridSize.z = int( params.gridSize.z);
-	// search range for neighbor probes: 2x probe diameter
-	float range = 2.0f * params.probeRadius;
-	// compute number of grid cells
-	int3 cellsInRange;
-	cellsInRange.x = ceil( range / params.cellSize.x);
-	cellsInRange.y = ceil( range / params.cellSize.y);
-	cellsInRange.z = ceil( range / params.cellSize.z);
-	int3 start = gridPos - cellsInRange;
-	int3 end = gridPos + cellsInRange;
+    int3 gridSize;
+    gridSize.x = int( params.gridSize.x);
+    gridSize.y = int( params.gridSize.y);
+    gridSize.z = int( params.gridSize.z);
+    // search range for neighbor probes: 2x probe diameter
+    float range = 2.0f * params.probeRadius;
+    // compute number of grid cells
+    int3 cellsInRange;
+    cellsInRange.x = ceil( range / params.cellSize.x);
+    cellsInRange.y = ceil( range / params.cellSize.y);
+    cellsInRange.z = ceil( range / params.cellSize.z);
+    int3 start = gridPos - cellsInRange;
+    int3 end = gridPos + cellsInRange;
 
     // examine neighbouring cells
     uint count = 0;
-	int3 neighborPos;
-	for( int z = ( start.z > 0 ? start.z : 0); z < ( end.z > gridSize.z ? gridSize.z : end.z) ; z++ ) {
+    int3 neighborPos;
+    for( int z = ( start.z > 0 ? start.z : 0); z < ( end.z > gridSize.z ? gridSize.z : end.z) ; z++ ) {
         for( int y = ( start.y > 0 ? start.y : 0); y < ( end.y > gridSize.y ? gridSize.y : end.y) ; y++ ) {
             for( int x = ( start.x > 0 ? start.x : 0); x < ( end.x > gridSize.x ? gridSize.x : end.x) ; x++ ) {
                 neighborPos = make_int3( x, y, z);
-				count += countProbeNeighborsInCell( probeNeighbors, count, originalIndex, neighborPos, index, pos, probePos, gridParticleIndex, cellStart, cellEnd);
+                count += countProbeNeighborsInCell( probeNeighbors, count, originalIndex, neighborPos, index, pos, probePos, gridParticleIndex, cellStart, cellEnd);
             }
         }
     }
@@ -500,12 +500,12 @@ void countProbeNeighbors( //uint*   probeNeighborCount, // output: number of nei
 ///////////////////////////////////////////////////////////////////////////////
 __global__
 void computeArcs( float4* arcs,                 // output: arcs
-			      uint*   neighborCount,        // input: number of neighbors
-				  uint*   neighbors,            // input: neighbor indices
-				  float4* smallCircles,         // input: small circles
-				  float4* atomPos,              // input: sorted atom positions
+                  uint*   neighborCount,        // input: number of neighbors
+                  uint*   neighbors,            // input: neighbor indices
+                  float4* smallCircles,         // input: small circles
+                  float4* atomPos,              // input: sorted atom positions
                   uint*   gridParticleIndex,    // input: sorted atom indices
-				  uint    numAtoms) {
+                  uint    numAtoms) {
     // get atom index
     uint atomIdx = blockIdx.x;
     // get neighbor atom index
@@ -521,10 +521,10 @@ void computeArcs( float4* arcs,                 // output: arcs
     if( neighborIdx >= numNeighbors ) return;
 
     // read atom position from sorted arrays
-	float4 atom = FETCH( atomPos, atomIdx);
+    float4 atom = FETCH( atomPos, atomIdx);
     // read neighbor position from sorted arrays
     //float4 ak = FETCH( atomPos, FETCH( neighbors, origAtomIdx * params.maxNumNeighbors + neighborIdx));
-	float3 ai = make_float3( atom);
+    float3 ai = make_float3( atom);
     float3 aj;
 
     float3 rm;
@@ -545,7 +545,7 @@ void computeArcs( float4* arcs,                 // output: arcs
     for( uint cnt = 0; cnt < numNeighbors; ++cnt ) {
         if( cnt == neighborIdx ) continue;
         
-		aj = make_float3( FETCH( atomPos, FETCH( neighbors, origAtomIdx * params.maxNumNeighbors + cnt)));
+        aj = make_float3( FETCH( atomPos, FETCH( neighbors, origAtomIdx * params.maxNumNeighbors + cnt)));
         // compute the auxiliary vector rm (plane intersection)
         rj4 = FETCH( smallCircles, origAtomIdx * params.maxNumNeighbors + cnt);
         rj = make_float3( rj4);
@@ -560,20 +560,20 @@ void computeArcs( float4* arcs,                 // output: arcs
         if( dot( rm, rm) > Ri2 ) continue;
 
         // compute the start- and endpoint of the newly found arc
-		cross_rj_rk = cross( rj, rk);
+        cross_rj_rk = cross( rj, rk);
         tmpFloat3 = cross_rj_rk * sqrt( ( Ri2 - dot( rm, rm)) / dot( cross_rj_rk, cross_rj_rk));
-		
-		if( dot( rj, aj - ai) < 0.0f ) {
-			// x1
-			p1 = rm + tmpFloat3;
-			// x2
-			p2 = rm - tmpFloat3;
-		} else {
-			// x2
-			p2 = rm + tmpFloat3;
-			// x1
-			p1 = rm - tmpFloat3;
-		}
+        
+        if( dot( rj, aj - ai) < 0.0f ) {
+            // x1
+            p1 = rm + tmpFloat3;
+            // x2
+            p2 = rm - tmpFloat3;
+        } else {
+            // x2
+            p2 = rm + tmpFloat3;
+            // x1
+            p1 = rm - tmpFloat3;
+        }
 
         if( dot( cross( p1 - rk, p2 - rk), rk) < 0.0f ) {
             tmpFloat3 = p1;
@@ -594,7 +594,7 @@ void computeArcs( float4* arcs,                 // output: arcs
         }
 
         // compute angles
-		/*
+        /*
         tmpAngle1 = acos( dot( normalize( p1 - rk), e1));
         tmpAngle = dot( normalize( p1 - rk), e2);
         if( tmpAngle < 0.0f )
@@ -618,42 +618,42 @@ void computeArcs( float4* arcs,                 // output: arcs
             arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0f);
             // TODO: second arc segment
         }
-		*/
-		float d1 = dot( aj - ai, e1 - rj);
-		float d2 = dot( aj - ai, e2 - rj);
-		float d3 = dot( rk, aj - ai) * dot( cross( e1, p1), e2);
+        */
+        float d1 = dot( aj - ai, e1 - rj);
+        float d2 = dot( aj - ai, e2 - rj);
+        float d3 = dot( rk, aj - ai) * dot( cross( e1, p1), e2);
 
-		if( d1 > 0.0f ) {
-			if( d2 > 0.0f ) {
-				if( d3 > 0.0f ) {
-					e1 = make_float3( 0.0f, 0.0f, 0.0f);
-					e2 = make_float3( 0.0f, 0.0f, 0.0f);
-				} else { // d3 < 0
-					e1 = p1;
-					e2 = p2;
-				}
-			} else { // d2 < 0
-				if( d3 > 0.0f ) {
-					e1 = p1;
-				} else { // d3 < 0
-					e1 = p2;
-				}
-			}
-		} else { // d1 < 0
-			if( d2 > 0.0f ) {
-				if( d3 > 0.0f ) {
-					e2 = p1;
-				} else { // d3 < 0
-					e2 = p2;
-				}
-			} else { // d2 < 0
-				if( d3 > 0.0f ) {
-					// Teilung in zwei Bögen
-				} else { // d3 < 0
-					// keine Auswirkung
-				}
-			}
-		}
+        if( d1 > 0.0f ) {
+            if( d2 > 0.0f ) {
+                if( d3 > 0.0f ) {
+                    e1 = make_float3( 0.0f, 0.0f, 0.0f);
+                    e2 = make_float3( 0.0f, 0.0f, 0.0f);
+                } else { // d3 < 0
+                    e1 = p1;
+                    e2 = p2;
+                }
+            } else { // d2 < 0
+                if( d3 > 0.0f ) {
+                    e1 = p1;
+                } else { // d3 < 0
+                    e1 = p2;
+                }
+            }
+        } else { // d1 < 0
+            if( d2 > 0.0f ) {
+                if( d3 > 0.0f ) {
+                    e2 = p1;
+                } else { // d3 < 0
+                    e2 = p2;
+                }
+            } else { // d2 < 0
+                if( d3 > 0.0f ) {
+                    // Teilung in zwei Bögen
+                } else { // d3 < 0
+                    // keine Auswirkung
+                }
+            }
+        }
     }
     arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( e1, 1.0f);
     arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( e2, 1.0f);
@@ -742,9 +742,9 @@ void computeArcs( float4* arcs,                 // output: arcs
 __global__
 void computeReducedSurface( uint4* point1,      // output: the atom indices
                   float4* probePos,             // output: the probe position and orientation
-			      uint*   neighborCount,        // input: number of neighbors
-				  uint*   neighbors,            // input: neighbor indices
-				  float4* atomPos,              // input: sorted atom positions
+                  uint*   neighborCount,        // input: number of neighbors
+                  uint*   neighbors,            // input: neighbor indices
+                  float4* atomPos,              // input: sorted atom positions
                   uint*   gridParticleIndex,    // input: sorted atom indices
                   float4* visibleAtoms,         // input: visible atoms position and radius
                   uint*   visibleAtomsId ) {    // input: visible atoms original index list
@@ -880,7 +880,7 @@ void computeTriangleVBO( float3* vbo,           // output: triangle vertices and
                   //float4* point2,               // input: point 2 of the RS face
                   //float4* point3 ) {            // input: point 3 of the RS face
                   uint4* point1,                // input: point 1 of the RS face
-				  float4* atomPos,              // input: sorted atom positions
+                  float4* atomPos,              // input: sorted atom positions
                   float4* visibleAtoms,         // input: visible atoms position and radius
                   uint offset ) {
 
@@ -907,10 +907,10 @@ void computeTriangleVBO( float3* vbo,           // output: triangle vertices and
     //uint vboIdx = pointIdx * 6;
     uint vboIdx = ( ( visibleAtomIdx - offset) * params.maxNumNeighbors * params.maxNumNeighbors + idxX) * 6;
     // write the positions
-	//uint4 point = FETCH( point1, pointIdx);
-	uint4 point = point1[pointIdx];
+    //uint4 point = FETCH( point1, pointIdx);
+    uint4 point = point1[pointIdx];
     //pos = FETCH( atomPos, point1[pointIdx].x);
-	pos = FETCH( atomPos, point.x);
+    pos = FETCH( atomPos, point.x);
     pos.w = 1.0f;
     vbo[vboIdx+0] = make_float3( pos);
 
@@ -926,7 +926,7 @@ void computeTriangleVBO( float3* vbo,           // output: triangle vertices and
     vbo[vboIdx+3] = color;
 
     //pos = FETCH( visibleAtoms, point1[pointIdx].z);
-	pos = FETCH( visibleAtoms, point.z);
+    pos = FETCH( visibleAtoms, point.z);
     pos.w = 1.0f;
     vbo[vboIdx+4] = make_float3( pos);
 
@@ -939,10 +939,10 @@ void computeTriangleVBO( float3* vbo,           // output: triangle vertices and
 ///////////////////////////////////////////////////////////////////////////////
 __global__
 void computeVisibleTriangleVBO( float3* vbo,           // output: triangle vertices and colors
-								uint4* point1,         // input: point 1 of the RS face
-								float4* atomPos,       // input: sorted atom positions
-								float4* visibleAtoms,  // input: visible atoms position and radius
-								uint offset ) {
+                                uint4* point1,         // input: point 1 of the RS face
+                                float4* atomPos,       // input: sorted atom positions
+                                float4* visibleAtoms,  // input: visible atoms position and radius
+                                uint offset ) {
 
     // get atom index
     uint visibleAtomIdx = offset + blockIdx.y * blockDim.y + threadIdx.y;
@@ -966,13 +966,13 @@ void computeVisibleTriangleVBO( float3* vbo,           // output: triangle verti
     // offset: 3 vertices + 3 colors
     //uint vboIdx = pointIdx * 6;
     uint vboIdx = ( ( visibleAtomIdx - offset) * params.maxNumNeighbors * params.maxNumNeighbors + idxX) * 6;
-	// get the visiblity
+    // get the visiblity
     float visible = tex2D( inVisibilityTex, idxX, visibleAtomIdx).x;
     // write the positions
-	//uint4 point = FETCH( point1, pointIdx);
-	uint4 point = point1[pointIdx];
+    //uint4 point = FETCH( point1, pointIdx);
+    uint4 point = point1[pointIdx];
     //pos = FETCH( atomPos, point1[pointIdx].x);
-	pos = FETCH( atomPos, point.x);
+    pos = FETCH( atomPos, point.x);
     pos.w = 1.0f;
     vbo[vboIdx+0] = make_float3( pos) * visible;
 
@@ -1371,46 +1371,46 @@ __device__ uint findNeighborsInCellCBCuda(
     uint startIndex = FETCH( cellStart, gridHash);
 
     uint count = 0;
-	float4 pos2;
-	float3 relPos;
-	float dist;
-	float neighborDist;
-	float r;
-	float3 vec;
-	float4 smallCircle;
+    float4 pos2;
+    float3 relPos;
+    float dist;
+    float neighborDist;
+    float r;
+    float3 vec;
+    float4 smallCircle;
     if( startIndex != 0xffffffff ) {	// cell is not empty
         // iterate over atoms in this cell
         uint endIndex = FETCH( cellEnd, gridHash);
         for( uint j = startIndex; j < endIndex; j++) {
-			// do not count self
+            // do not count self
             if( j != index) {
-				// get position of potential neighbor
-	            pos2 = FETCH( atomPos, j);
+                // get position of potential neighbor
+                pos2 = FETCH( atomPos, j);
                 // check distance
-				relPos = make_float3( pos2.x, pos2.y, pos2.z) - make_float3( pos.x, pos.y, pos.z);
-				dist = length( relPos);
-				neighborDist = pos.w + pos2.w + 2.0f * params.probeRadius;
-				if( dist < neighborDist ) {
+                relPos = make_float3( pos2.x, pos2.y, pos2.z) - make_float3( pos.x, pos.y, pos.z);
+                dist = length( relPos);
+                neighborDist = pos.w + pos2.w + 2.0f * params.probeRadius;
+                if( dist < neighborDist ) {
                     // check number of neighbors
                     if( ( neighborIndex + count) >= params.maxNumNeighbors ) return count;
-					// write the (sorted) neighbor index
+                    // write the (sorted) neighbor index
                     neighbors[index*params.maxNumNeighbors+neighborIndex+count] = j;
-					// compute small circle / intersection plane
-					r = ( (pos.w + params.probeRadius)*(pos.w + params.probeRadius))
-						+ ( dist * dist)
-						- ( (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius));
-					r = r / (2.0f * dist * dist);
-					vec = relPos * r;
+                    // compute small circle / intersection plane
+                    r = ( (pos.w + params.probeRadius)*(pos.w + params.probeRadius))
+                        + ( dist * dist)
+                        - ( (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius));
+                    r = r / (2.0f * dist * dist);
+                    vec = relPos * r;
                     // set small circle
-					smallCircle.x = vec.x;
-					smallCircle.y = vec.y;
-					smallCircle.z = vec.z;
-					//smallCircle.w = 1.0f;
+                    smallCircle.x = vec.x;
+                    smallCircle.y = vec.y;
+                    smallCircle.z = vec.z;
+                    //smallCircle.w = 1.0f;
                     smallCircle.w = sqrt(((pos.w + params.probeRadius) * (pos.w + params.probeRadius)) - dot( vec, vec));
-					smallCircles[index*params.maxNumNeighbors+neighborIndex+count] = smallCircle;
-					// increment the neighbor counter
-					count++;
-				}
+                    smallCircles[index*params.maxNumNeighbors+neighborIndex+count] = smallCircle;
+                    // increment the neighbor counter
+                    count++;
+                }
             }
         }
     }
@@ -1431,33 +1431,33 @@ __global__ void findNeighborsCBCuda(
     if( index >= numAtoms ) return;
 
     // read atom data from sorted arrays
-	float4 pos = FETCH( atomPos, index);
+    float4 pos = FETCH( atomPos, index);
 
     // get address in grid
     int3 gridPos = calcGridPos( make_float3( pos));
 
-	int3 gridSize;
-	gridSize.x = int( params.gridSize.x);
-	gridSize.y = int( params.gridSize.y);
-	gridSize.z = int( params.gridSize.z);
-	// search range for neighbor atoms: max atom diameter + probe diameter
-	float range = ( pos.w + 3.0f + 2.0f * params.probeRadius);
-	// compute number of grid cells
-	int3 cellsInRange;
-	cellsInRange.x = ceil( range / params.cellSize.x);
-	cellsInRange.y = ceil( range / params.cellSize.y);
-	cellsInRange.z = ceil( range / params.cellSize.z);
-	int3 start = gridPos - cellsInRange;
-	int3 end = gridPos + cellsInRange;
+    int3 gridSize;
+    gridSize.x = int( params.gridSize.x);
+    gridSize.y = int( params.gridSize.y);
+    gridSize.z = int( params.gridSize.z);
+    // search range for neighbor atoms: max atom diameter + probe diameter
+    float range = ( pos.w + 3.0f + 2.0f * params.probeRadius);
+    // compute number of grid cells
+    int3 cellsInRange;
+    cellsInRange.x = ceil( range / params.cellSize.x);
+    cellsInRange.y = ceil( range / params.cellSize.y);
+    cellsInRange.z = ceil( range / params.cellSize.z);
+    int3 start = gridPos - cellsInRange;
+    int3 end = gridPos + cellsInRange;
 
     // examine neighbouring cells
     uint count = 0;
-	int3 neighborPos;
-	for( int z = ( start.z > 0 ? start.z : 0); z < ( end.z > gridSize.z ? gridSize.z : end.z) ; z++ ) {
+    int3 neighborPos;
+    for( int z = ( start.z > 0 ? start.z : 0); z < ( end.z > gridSize.z ? gridSize.z : end.z) ; z++ ) {
         for( int y = ( start.y > 0 ? start.y : 0); y < ( end.y > gridSize.y ? gridSize.y : end.y) ; y++ ) {
             for( int x = ( start.x > 0 ? start.x : 0); x < ( end.x > gridSize.x ? gridSize.x : end.x) ; x++ ) {
                 neighborPos = make_int3( x, y, z);
-				count += findNeighborsInCellCBCuda( neighbors, smallCircles, count, neighborPos, index, pos, atomPos, cellStart, cellEnd);
+                count += findNeighborsInCellCBCuda( neighbors, smallCircles, count, neighborPos, index, pos, atomPos, cellStart, cellEnd);
             }
         }
     }
@@ -1469,7 +1469,7 @@ __global__ void findNeighborsCBCuda(
 // find and remove unnecessary small circles
 __global__ void removeCoveredSmallCirclesCBCuda(
         float4* smallCircles,         // in/out: small circles
-		uint*   smallCircleVisible,   // out: small circle visibility
+        uint*   smallCircleVisible,   // out: small circle visibility
         uint*   neighborCount,        // in/out: number of neighbors
         uint*   neighbors,            // input: neighbor indices
         float4* atomPos,              // input: sorted atom positions
@@ -1482,14 +1482,14 @@ __global__ void removeCoveredSmallCirclesCBCuda(
     if( atomIdx >= numAtoms ) return;
     // check, if neighbor index is within bounds
     if( jIdx >= params.maxNumNeighbors ) return;
-	// set small circle visibility to false
-	smallCircleVisible[atomIdx * params.maxNumNeighbors + jIdx] = 0;
+    // set small circle visibility to false
+    smallCircleVisible[atomIdx * params.maxNumNeighbors + jIdx] = 0;
     // check, if neighbor index is within bounds
     uint numNeighbors = neighborCount[atomIdx];
     if( jIdx >= numNeighbors ) return;
 
     // read position and radius of atom i from sorted array
-	float4 atomi = FETCH( atomPos, atomIdx);
+    float4 atomi = FETCH( atomPos, atomIdx);
     float3 pi = make_float3( atomi.x, atomi.y, atomi.z);
     float R = atomi.w + params.probeRadius;
 
@@ -1559,12 +1559,12 @@ __global__ void removeCoveredSmallCirclesCBCuda(
                         // k cuts off j --> remove j
                         addJ = false;
                     }
-		        } else {
-				    if( dot( mj, mk) > 0.0f && dot( nj, q) < 0.0f ) {
+                } else {
+                    if( dot( mj, mk) > 0.0f && dot( nj, q) < 0.0f ) {
                         // atom i has no contour
                         neighborCount[atomIdx] = 0;
                     }
-			    }
+                }
             }
         }
     }
@@ -1576,7 +1576,7 @@ __global__ void removeCoveredSmallCirclesCBCuda(
 
 // compute all arcs of atom j on the surface of atom i
 __global__ void computeArcsCBCuda(
-		uint*   smallCircleVisible,		// out: small circle visibility
+        uint*   smallCircleVisible,		// out: small circle visibility
         float4* arcs,					// out: the arcs
         uint*   arcCount,				// out: the number of arcs
         uint    numAtoms) {
@@ -1593,7 +1593,7 @@ __global__ void computeArcsCBCuda(
     if( jIdx >= numNeighbors ) return;
 
     // read position and radius of atom i from sorted array
-	float4 atomi = FETCH( atomPos, atomIdx);
+    float4 atomi = FETCH( atomPos, atomIdx);
     float3 pi = make_float3( atomi.x, atomi.y, atomi.z);
     float R = atomi.w + params.probeRadius;
 
@@ -1618,26 +1618,26 @@ __global__ void computeArcsCBCuda(
     bool arcValid[64];
     start[0] = 0.0f;
     end[0] = 6.28318530718f;
-	startkIndex[0] = 0;
-	endkIndex[0] = 0;
+    startkIndex[0] = 0;
+    endkIndex[0] = 0;
     arcValid[0] = true;
     uint arcCnt = 1;
     // temporary arc arrays for new arcs
     float tmpStart[16];
     float tmpEnd[16];
-	uint tmpStartkIndex[16];
-	uint tmpEndkIndex[16];
+    uint tmpStartkIndex[16];
+    uint tmpEndkIndex[16];
     uint tmpArcCnt = 0;
-	// compute axes of local coordinate system
+    // compute axes of local coordinate system
     float3 ex = make_float3( 1.0f, 0.0f, 0.0f);
     float3 ey = make_float3( 0.0f, 1.0f, 0.0f);
-	float3 xAxis = cross( vj, ey);
-	if( dot( xAxis, xAxis) == 0.0f ) {
-		xAxis = cross( vj, ex);
-	}
-	xAxis = normalize( xAxis);
-	float3 yAxis = cross( xAxis, vj);
-	yAxis = normalize( yAxis);
+    float3 xAxis = cross( vj, ey);
+    if( dot( xAxis, xAxis) == 0.0f ) {
+        xAxis = cross( vj, ex);
+    }
+    xAxis = normalize( xAxis);
+    float3 yAxis = cross( xAxis, vj);
+    yAxis = normalize( yAxis);
 
     // variables for k
     uint k;
@@ -1659,10 +1659,10 @@ __global__ void computeArcsCBCuda(
     float angleX1;
     float angleX2;
     uint aCnt;
-	float s;
-	float e;
-	float skIndex;
-	float ekIndex;
+    float s;
+    float e;
+    float skIndex;
+    float ekIndex;
 
     // check j with all other neighbors k
     for( uint kCnt = 0; kCnt < numNeighbors; kCnt++ ) {
@@ -1703,135 +1703,135 @@ __global__ void computeArcsCBCuda(
             x1 = x2;
             x2 = tmpVec;
         }
-		// transform x1 and x2 to small circle coordinate system
-		xX1 = dot( x1 - vj, xAxis);
-		yX1 = dot( x1 - vj, yAxis);
-		xX2 = dot( x2 - vj, xAxis);
-		yX2 = dot( x2 - vj, yAxis);
-		angleX1 = atan2( yX1, xX1);
-		angleX2 = atan2( yX2, xX2);
-		// limit angles to 0..2*PI
-		if( angleX1 > 6.28318530718f ) {
-			angleX1 = fmod( angleX1, 6.28318530718f);
-			angleX2 = fmod( angleX2, 6.28318530718f);
-		}
-		// angle of x2 has to be larger than angle of x1 (add 2 PI)
-		if( angleX2 < angleX1 ) {
-			angleX2 += 6.28318530718f;
-		}
-		// make all angles positive (add 2 PI)
-		if( angleX1 < 0.0f ) {
-			angleX1 += 6.28318530718f;
-			angleX2 += 6.28318530718f;
-		}
+        // transform x1 and x2 to small circle coordinate system
+        xX1 = dot( x1 - vj, xAxis);
+        yX1 = dot( x1 - vj, yAxis);
+        xX2 = dot( x2 - vj, xAxis);
+        yX2 = dot( x2 - vj, yAxis);
+        angleX1 = atan2( yX1, xX1);
+        angleX2 = atan2( yX2, xX2);
+        // limit angles to 0..2*PI
+        if( angleX1 > 6.28318530718f ) {
+            angleX1 = fmod( angleX1, 6.28318530718f);
+            angleX2 = fmod( angleX2, 6.28318530718f);
+        }
+        // angle of x2 has to be larger than angle of x1 (add 2 PI)
+        if( angleX2 < angleX1 ) {
+            angleX2 += 6.28318530718f;
+        }
+        // make all angles positive (add 2 PI)
+        if( angleX1 < 0.0f ) {
+            angleX1 += 6.28318530718f;
+            angleX2 += 6.28318530718f;
+        }
 
-		// check all existing arcs with new arc k
-		for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
-			s = start[aCnt];
-			e = end[aCnt];
-			skIndex = startkIndex[aCnt];
-			ekIndex = endkIndex[aCnt];
+        // check all existing arcs with new arc k
+        for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
+            s = start[aCnt];
+            e = end[aCnt];
+            skIndex = startkIndex[aCnt];
+            ekIndex = endkIndex[aCnt];
             if( arcValid[aCnt] ) {
-			    if( angleX1 < s ) {
-				    // case (1) & (10)
-				    if( ( s - angleX1) > ( angleX2 - angleX1)) {
-					    if( ( ( s - angleX1) + ( e - s)) > 6.28318530718f ) {
-						    if( ( ( s - angleX1) + ( e - s)) < ( 6.28318530718f + angleX2 - angleX1) ) {
-							    // case (10)
-							    start[aCnt] = angleX1;
-								startkIndex[aCnt] = k;
-							    end[aCnt] = fmod( e, 6.28318530718f);
-							    // second angle check
-							    if( end[aCnt] < start[aCnt] )
-								    end[aCnt] += 6.28318530718f;
-						    } else {
-							    start[aCnt] = angleX1;
-								startkIndex[aCnt] = k;
-							    end[aCnt] = fmod( angleX2, 6.28318530718f);
-								endkIndex[aCnt] = k;
-							    // second angle check
-							    if( end[aCnt] < start[aCnt] )
-								    end[aCnt] += 6.28318530718f;
-						    }
-					    } else {
-						    // case (1)
-						    //arcAngles.RemoveAt( aCnt);
-						    //aCnt--;
+                if( angleX1 < s ) {
+                    // case (1) & (10)
+                    if( ( s - angleX1) > ( angleX2 - angleX1)) {
+                        if( ( ( s - angleX1) + ( e - s)) > 6.28318530718f ) {
+                            if( ( ( s - angleX1) + ( e - s)) < ( 6.28318530718f + angleX2 - angleX1) ) {
+                                // case (10)
+                                start[aCnt] = angleX1;
+                                startkIndex[aCnt] = k;
+                                end[aCnt] = fmod( e, 6.28318530718f);
+                                // second angle check
+                                if( end[aCnt] < start[aCnt] )
+                                    end[aCnt] += 6.28318530718f;
+                            } else {
+                                start[aCnt] = angleX1;
+                                startkIndex[aCnt] = k;
+                                end[aCnt] = fmod( angleX2, 6.28318530718f);
+                                endkIndex[aCnt] = k;
+                                // second angle check
+                                if( end[aCnt] < start[aCnt] )
+                                    end[aCnt] += 6.28318530718f;
+                            }
+                        } else {
+                            // case (1)
+                            //arcAngles.RemoveAt( aCnt);
+                            //aCnt--;
                             arcValid[aCnt] = false;
-					    }
-				    } else {
-					    if( ( ( s - angleX1) + ( e - s)) > ( angleX2 - angleX1) ) {
-						    // case (5)
-						    end[aCnt] = fmod( angleX2, 6.28318530718f);
-							endkIndex[aCnt] = k;
-						    // second angle check
-						    if( end[aCnt] < start[aCnt] )
-							    end[aCnt] += 6.28318530718f;
-						    if( ( ( s - angleX1) + ( e - s)) > 6.28318530718f ) {
-							    // case (6)
+                        }
+                    } else {
+                        if( ( ( s - angleX1) + ( e - s)) > ( angleX2 - angleX1) ) {
+                            // case (5)
+                            end[aCnt] = fmod( angleX2, 6.28318530718f);
+                            endkIndex[aCnt] = k;
+                            // second angle check
+                            if( end[aCnt] < start[aCnt] )
+                                end[aCnt] += 6.28318530718f;
+                            if( ( ( s - angleX1) + ( e - s)) > 6.28318530718f ) {
+                                // case (6)
                                 tmpStart[tmpArcCnt] = angleX1;
-								tmpStartkIndex[tmpArcCnt] = k;
+                                tmpStartkIndex[tmpArcCnt] = k;
                                 tmpEnd[tmpArcCnt] = fmod( e, 6.28318530718f);
-								tmpEndkIndex[tmpArcCnt] = ekIndex;
-							    // second angle check
+                                tmpEndkIndex[tmpArcCnt] = ekIndex;
+                                // second angle check
                                 if( tmpEnd[tmpArcCnt] < tmpStart[tmpArcCnt] )
                                     tmpEnd[tmpArcCnt] += 6.28318530718f;
                                 tmpArcCnt++;
-						    }
-					    }
-				    } // case (4): Do nothing!
-			    } else { // angleX1 > s
-				    // case (2) & (9)
-				    if( ( angleX1 - s) > ( e - s)) {
-					    if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > 6.28318530718f ) {
-						    if( ( ( angleX1 - s) + ( angleX2 - angleX1)) < ( 6.28318530718f + e - s)) {
-							    // case (9)
-							    end[aCnt] = fmod( angleX2, 6.28318530718f);
-								endkIndex[aCnt] = k;
-							    // second angle check
-							    if( end[aCnt] < start[aCnt] )
-								    end[aCnt] += 6.28318530718f;
-						    }
-					    } else {
-						    // case (2)
-						    //arcAngles.RemoveAt( aCnt);
-						    //aCnt--;
+                            }
+                        }
+                    } // case (4): Do nothing!
+                } else { // angleX1 > s
+                    // case (2) & (9)
+                    if( ( angleX1 - s) > ( e - s)) {
+                        if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > 6.28318530718f ) {
+                            if( ( ( angleX1 - s) + ( angleX2 - angleX1)) < ( 6.28318530718f + e - s)) {
+                                // case (9)
+                                end[aCnt] = fmod( angleX2, 6.28318530718f);
+                                endkIndex[aCnt] = k;
+                                // second angle check
+                                if( end[aCnt] < start[aCnt] )
+                                    end[aCnt] += 6.28318530718f;
+                            }
+                        } else {
+                            // case (2)
+                            //arcAngles.RemoveAt( aCnt);
+                            //aCnt--;
                             arcValid[aCnt] = false;
-					    }
-				    } else {
-					    if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > ( e - s) ) {
-						    // case (7)
-						    start[aCnt] = angleX1;
-							startkIndex[aCnt] = k;
-						    // second angle check
-						    end[aCnt] = fmod( end[aCnt], 6.28318530718f);
-						    if( end[aCnt] < start[aCnt] )
-							    end[aCnt] += 6.28318530718f;
-						    if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > 6.28318530718f ) {
-							    // case (8)
+                        }
+                    } else {
+                        if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > ( e - s) ) {
+                            // case (7)
+                            start[aCnt] = angleX1;
+                            startkIndex[aCnt] = k;
+                            // second angle check
+                            end[aCnt] = fmod( end[aCnt], 6.28318530718f);
+                            if( end[aCnt] < start[aCnt] )
+                                end[aCnt] += 6.28318530718f;
+                            if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > 6.28318530718f ) {
+                                // case (8)
                                 tmpStart[tmpArcCnt] = s;
-								tmpStartkIndex[tmpArcCnt] = skIndex;
+                                tmpStartkIndex[tmpArcCnt] = skIndex;
                                 tmpEnd[tmpArcCnt] = fmod( angleX2, 6.28318530718f);
-								tmpEndkIndex[tmpArcCnt] = k;
-							    // second angle check
+                                tmpEndkIndex[tmpArcCnt] = k;
+                                // second angle check
                                 if( tmpEnd[tmpArcCnt] < tmpStart[tmpArcCnt] )
                                     tmpEnd[tmpArcCnt] += 6.28318530718f;
                                 tmpArcCnt++;
-						    }
-					    } else {
-						    // case (3)
-						    start[aCnt] = angleX1;
-							startkIndex[aCnt] = k;
-						    end[aCnt] = fmod( angleX2, 6.28318530718f);
-							endkIndex[aCnt] = k;
-						    // second angle check
-						    if( end[aCnt] < start[aCnt] )
-							    end[aCnt] += 6.28318530718f;
-					    }
-				    }
-			    }
+                            }
+                        } else {
+                            // case (3)
+                            start[aCnt] = angleX1;
+                            startkIndex[aCnt] = k;
+                            end[aCnt] = fmod( angleX2, 6.28318530718f);
+                            endkIndex[aCnt] = k;
+                            // second angle check
+                            if( end[aCnt] < start[aCnt] )
+                                end[aCnt] += 6.28318530718f;
+                        }
+                    }
+                }
             } // if( arcValid[aCnt] )
-		} // for( uint aCnt = 0; aCnt < arcCnt; aCnt++ )
+        } // for( uint aCnt = 0; aCnt < arcCnt; aCnt++ )
 
         // copy new arcs to arc array
         for( aCnt = 0; aCnt < tmpArcCnt; aCnt++ ) {
@@ -1865,23 +1865,23 @@ __global__ void computeArcsCBCuda(
 
     // TODO: remove/merge split arcs ( x..2*PI / 0..y --> x..y+2*PI )
 
-	// merge arcs if arc with angle 0 and arc with angle 2*PI exist
-	int idx0 = -1;
-	int idx2pi = -1;
-	for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
-		if( start[aCnt] < 0.00001f ) {
-			idx0 = int( aCnt);
-		} else if( abs( end[aCnt] - 6.28318530718f) < 0.0001f ) {
-			idx2pi = int( aCnt);
-		}
-	}
-	if( idx0 >= 0 && idx2pi >= 0 ) {
+    // merge arcs if arc with angle 0 and arc with angle 2*PI exist
+    int idx0 = -1;
+    int idx2pi = -1;
+    for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
+        if( start[aCnt] < 0.00001f ) {
+            idx0 = int( aCnt);
+        } else if( abs( end[aCnt] - 6.28318530718f) < 0.0001f ) {
+            idx2pi = int( aCnt);
+        }
+    }
+    if( idx0 >= 0 && idx2pi >= 0 ) {
         start[uint(idx0)] = start[uint(idx2pi)];
-		startkIndex[uint(idx0)] = startkIndex[uint(idx2pi)];
-		// second angle check
-		end[uint(idx0)] = fmod( end[uint(idx0)], 6.28318530718f);
-		if( end[uint(idx0)] < start[uint(idx0)] )
-			end[uint(idx0)] += 6.28318530718f;
+        startkIndex[uint(idx0)] = startkIndex[uint(idx2pi)];
+        // second angle check
+        end[uint(idx0)] = fmod( end[uint(idx0)], 6.28318530718f);
+        if( end[uint(idx0)] < start[uint(idx0)] )
+            end[uint(idx0)] += 6.28318530718f;
         // fill gaps (overwrite removed arc idx2pi)
         for( aCnt = uint(idx2pi); aCnt < arcCnt - 1; aCnt++ ) {
             start[aCnt] = start[aCnt + 1];
@@ -1892,54 +1892,54 @@ __global__ void computeArcsCBCuda(
         }
         // subtract the removed arc from total number of arcs
         arcCnt--;
-	}
+    }
 
-	uint arcWritten = 0;
+    uint arcWritten = 0;
     // copy arcs to global arc array
     for( aCnt = 0; aCnt < arcCnt; aCnt++ ) {
-		if( atomIdx < j ) {
-			if( j < startkIndex[aCnt] ) {
-				arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcWritten] = 
-					make_float4( pi + vj + ( cos( start[aCnt]) * xAxis + sin( start[aCnt]) * yAxis) * scj.w, float( startkIndex[aCnt]) + 0.2f); //start[aCnt]);
-				arcWritten++;
-			}
-			if( j < endkIndex[aCnt] ) {
-				arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcWritten] = 
-					make_float4( pi + vj + ( cos( end[aCnt]) * xAxis + sin( end[aCnt]) * yAxis) * scj.w, float( endkIndex[aCnt]) + 0.2f); //end[aCnt]);
-				arcWritten++;
-			}
-		}
+        if( atomIdx < j ) {
+            if( j < startkIndex[aCnt] ) {
+                arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcWritten] = 
+                    make_float4( pi + vj + ( cos( start[aCnt]) * xAxis + sin( start[aCnt]) * yAxis) * scj.w, float( startkIndex[aCnt]) + 0.2f); //start[aCnt]);
+                arcWritten++;
+            }
+            if( j < endkIndex[aCnt] ) {
+                arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + arcWritten] = 
+                    make_float4( pi + vj + ( cos( end[aCnt]) * xAxis + sin( end[aCnt]) * yAxis) * scj.w, float( endkIndex[aCnt]) + 0.2f); //end[aCnt]);
+                arcWritten++;
+            }
+        }
     }
 
     // write number of arcs
     arcCount[atomIdx * params.maxNumNeighbors + jIdx] = arcWritten;
 
-	// set small circle j visible if at least one arc was created and i < j
-	if( atomIdx < j && arcCnt > 0 ) {
-	//if( arcWritten > 0 ) {
-		smallCircleVisible[atomIdx * params.maxNumNeighbors + jIdx] = 1;
-	}
-	// DO NOT USE THIS!! It will create false, internal arcs!
-	//if( arcCnt == 0 ) {
-	//	smallCircles[atomIdx * params.maxNumNeighbors + jIdx].w = -1.0f;
-	//}
+    // set small circle j visible if at least one arc was created and i < j
+    if( atomIdx < j && arcCnt > 0 ) {
+    //if( arcWritten > 0 ) {
+        smallCircleVisible[atomIdx * params.maxNumNeighbors + jIdx] = 1;
+    }
+    // DO NOT USE THIS!! It will create false, internal arcs!
+    //if( arcCnt == 0 ) {
+    //	smallCircles[atomIdx * params.maxNumNeighbors + jIdx].w = -1.0f;
+    //}
 
 }
 
 // Write all arc start and end points to a vertex array.
 __global__ void writeProbePositionsCBCuda(
-		float4*	probePos,		// out: the probe positions
-		float4*	sphereTriaVec1,	// out: the spherical triangle vector 1
-		float4*	sphereTriaVec2,	// out: the spherical triangle vector 2
-		float4*	sphereTriaVec3,	// out: the spherical triangle vector 3
-		float4*	torusPos,		// out: torus center
-		float4*	torusVS,		// out: torus visibility sphere
-		float4*	torusAxis,		// out: torus axis
-		float4* arcs,			// in: the arc start and end points
-		uint*	arcCount,		// in: the number of probes
-		uint*	arcCountScan,	// in: the prefix sum of "arcCount"
-		uint*	scCount,		// in: the small circle count
-		uint*	scCountScan,	// in: the prefix sum of "scCount"
+        float4*	probePos,		// out: the probe positions
+        float4*	sphereTriaVec1,	// out: the spherical triangle vector 1
+        float4*	sphereTriaVec2,	// out: the spherical triangle vector 2
+        float4*	sphereTriaVec3,	// out: the spherical triangle vector 3
+        float4*	torusPos,		// out: torus center
+        float4*	torusVS,		// out: torus visibility sphere
+        float4*	torusAxis,		// out: torus axis
+        float4* arcs,			// in: the arc start and end points
+        uint*	arcCount,		// in: the number of probes
+        uint*	arcCountScan,	// in: the prefix sum of "arcCount"
+        uint*	scCount,		// in: the small circle count
+        uint*	scCountScan,	// in: the prefix sum of "scCount"
         uint    numAtoms) {
     // get atom index
     uint atomIdx = blockIdx.y * blockDim.y + threadIdx.y;
@@ -1951,58 +1951,58 @@ __global__ void writeProbePositionsCBCuda(
     uint numNeighbors = FETCH( neighborCount, atomIdx);
     if( jIdx >= numNeighbors ) return;
 
-	float4 ai = FETCH( atomPos, atomIdx);
-	float4 aj = FETCH( atomPos, FETCH( neighbors, atomIdx * params.maxNumNeighbors + jIdx));
-	float4 ak;
+    float4 ai = FETCH( atomPos, atomIdx);
+    float4 aj = FETCH( atomPos, FETCH( neighbors, atomIdx * params.maxNumNeighbors + jIdx));
+    float4 ak;
 
-	// ---------- write spherical triangle ----------
+    // ---------- write spherical triangle ----------
 
-	// get number of probes and the sum of previous probes for this neighbor
-	uint numProbes = arcCount[atomIdx * params.maxNumNeighbors + jIdx];
-	uint numPreviousProbes = arcCountScan[atomIdx * params.maxNumNeighbors + jIdx];
+    // get number of probes and the sum of previous probes for this neighbor
+    uint numProbes = arcCount[atomIdx * params.maxNumNeighbors + jIdx];
+    uint numPreviousProbes = arcCountScan[atomIdx * params.maxNumNeighbors + jIdx];
 
-	float4 tmpProbePos;
-	uint kIdx;
+    float4 tmpProbePos;
+    uint kIdx;
 
-	for( uint cnt = 0; cnt < numProbes; cnt++ ) {
-		tmpProbePos = arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + cnt];
-		probePos[numPreviousProbes + cnt] = make_float4( tmpProbePos.x, tmpProbePos.y, tmpProbePos.z, params.probeRadius);
-		kIdx = uint( floor( tmpProbePos.w));
-		//ak = FETCH( atomPos, FETCH( neighbors, kIdx));
-		ak = FETCH( atomPos, kIdx);
-		sphereTriaVec1[numPreviousProbes + cnt] = make_float4( make_float3( ai) - make_float3( tmpProbePos), 1.0f);
-		sphereTriaVec2[numPreviousProbes + cnt] = make_float4( make_float3( aj) - make_float3( tmpProbePos), 1.0f);
-		sphereTriaVec3[numPreviousProbes + cnt] = make_float4( make_float3( ak) - make_float3( tmpProbePos), params.probeRadius * params.probeRadius);
-	}
+    for( uint cnt = 0; cnt < numProbes; cnt++ ) {
+        tmpProbePos = arcs[atomIdx * params.maxNumNeighbors * params.maxNumNeighbors + jIdx * params.maxNumNeighbors + cnt];
+        probePos[numPreviousProbes + cnt] = make_float4( tmpProbePos.x, tmpProbePos.y, tmpProbePos.z, params.probeRadius);
+        kIdx = uint( floor( tmpProbePos.w));
+        //ak = FETCH( atomPos, FETCH( neighbors, kIdx));
+        ak = FETCH( atomPos, kIdx);
+        sphereTriaVec1[numPreviousProbes + cnt] = make_float4( make_float3( ai) - make_float3( tmpProbePos), 1.0f);
+        sphereTriaVec2[numPreviousProbes + cnt] = make_float4( make_float3( aj) - make_float3( tmpProbePos), 1.0f);
+        sphereTriaVec3[numPreviousProbes + cnt] = make_float4( make_float3( ak) - make_float3( tmpProbePos), params.probeRadius * params.probeRadius);
+    }
 
-	// ---------- write torus ----------
+    // ---------- write torus ----------
 
-	if( scCount[atomIdx * params.maxNumNeighbors + jIdx] > 0 ) {
-		float4 sc;
-		uint torusIdx = scCountScan[atomIdx * params.maxNumNeighbors + jIdx];
-		sc = FETCH( smallCircles, atomIdx * params.maxNumNeighbors + jIdx);
-		// torus axis
-		float3 ta = normalize( make_float3( sc));
-		// torus center
-		float3 tc = make_float3( sc) + make_float3( ai);
-		float3 ortho = normalize( cross( ta, make_float3( 0.0f, 0.0f, 1.0f)));
+    if( scCount[atomIdx * params.maxNumNeighbors + jIdx] > 0 ) {
+        float4 sc;
+        uint torusIdx = scCountScan[atomIdx * params.maxNumNeighbors + jIdx];
+        sc = FETCH( smallCircles, atomIdx * params.maxNumNeighbors + jIdx);
+        // torus axis
+        float3 ta = normalize( make_float3( sc));
+        // torus center
+        float3 tc = make_float3( sc) + make_float3( ai);
+        float3 ortho = normalize( cross( ta, make_float3( 0.0f, 0.0f, 1.0f)));
 
-		// compute the tangential point X2 of the spheres
+        // compute the tangential point X2 of the spheres
         float3 P = tc + ( ortho * sc.w);
         float3 X = normalize( P - make_float3( ai)) * ai.w;
         float3 C = ( length( P - make_float3( ai)) /
-			( length( P - make_float3( aj)) + length( P - make_float3( ai)))) * 
-			( make_float3( aj) - make_float3( ai));
+            ( length( P - make_float3( aj)) + length( P - make_float3( ai)))) * 
+            ( make_float3( aj) - make_float3( ai));
         float distance = length( X - C);
         C = ( C + make_float3( ai)) - tc;
 
-		// write torus center & torus radius R
-		torusPos[torusIdx] = make_float4( tc, sc.w);
-		// write torus axis & probe radius (= torus radius r)
-		torusAxis[torusIdx] = make_float4( ta, params.probeRadius);
-		// write visibility sphere
-		torusVS[torusIdx] = make_float4( C, distance);
-	}
+        // write torus center & torus radius R
+        torusPos[torusIdx] = make_float4( tc, sc.w);
+        // write torus axis & probe radius (= torus radius r)
+        torusAxis[torusIdx] = make_float4( ta, params.probeRadius);
+        // write visibility sphere
+        torusVS[torusIdx] = make_float4( C, distance);
+    }
 
 }
 
@@ -2024,30 +2024,30 @@ __device__ uint findProbeNeighborsInCellCBCuda(
     uint startIndex = FETCH( cellStart, gridHash);
 
     uint count = 0;
-	float4 pos2;
-	float3 relPos;
-	float dist;
-	float neighborDist;
+    float4 pos2;
+    float3 relPos;
+    float dist;
+    float neighborDist;
     if( startIndex != 0xffffffff ) {	// cell is not empty
         // iterate over atoms in this cell
         uint endIndex = FETCH( cellEnd, gridHash);
         for( uint j = startIndex; j < endIndex; j++) {
-			// do not count self
+            // do not count self
             if( j != index) {
-				// get position of potential neighbor
-	            pos2 = probePos[j];
+                // get position of potential neighbor
+                pos2 = probePos[j];
                 // check distance
-				relPos = make_float3( pos2.x, pos2.y, pos2.z) - make_float3( pos.x, pos.y, pos.z);
-				dist = length( relPos);
-				neighborDist = params.probeRadius + params.probeRadius;
-				if( dist < neighborDist ) {
+                relPos = make_float3( pos2.x, pos2.y, pos2.z) - make_float3( pos.x, pos.y, pos.z);
+                dist = length( relPos);
+                neighborDist = params.probeRadius + params.probeRadius;
+                if( dist < neighborDist ) {
                     // check number of neighbors
                     if( ( neighborIndex + count) >= numNeighbors ) return count;
                     // write singTex
                     singTex[index * numNeighbors + neighborIndex + count] = make_float3( pos2);
-					// increment the neighbor counter
-					count++;
-				}
+                    // increment the neighbor counter
+                    count++;
+                }
             }
         }
     }
@@ -2068,33 +2068,33 @@ __global__ void findProbeNeighborsCBCuda(
     if( index >= numProbes ) return;
 
     // read atom data from sorted arrays
-	float4 pos = probePos[index];
+    float4 pos = probePos[index];
 
     // get address in grid
     int3 gridPos = calcGridPos( make_float3( pos));
 
-	int3 gridSize;
-	gridSize.x = int( params.gridSize.x);
-	gridSize.y = int( params.gridSize.y);
-	gridSize.z = int( params.gridSize.z);
-	// search range for neighbor atoms: max atom diameter + probe diameter
-	float range = params.probeRadius + params.probeRadius;
-	// compute number of grid cells
-	int3 cellsInRange;
-	cellsInRange.x = ceil( range / params.cellSize.x);
-	cellsInRange.y = ceil( range / params.cellSize.y);
-	cellsInRange.z = ceil( range / params.cellSize.z);
-	int3 start = gridPos - cellsInRange;
-	int3 end = gridPos + cellsInRange;
+    int3 gridSize;
+    gridSize.x = int( params.gridSize.x);
+    gridSize.y = int( params.gridSize.y);
+    gridSize.z = int( params.gridSize.z);
+    // search range for neighbor atoms: max atom diameter + probe diameter
+    float range = params.probeRadius + params.probeRadius;
+    // compute number of grid cells
+    int3 cellsInRange;
+    cellsInRange.x = ceil( range / params.cellSize.x);
+    cellsInRange.y = ceil( range / params.cellSize.y);
+    cellsInRange.z = ceil( range / params.cellSize.z);
+    int3 start = gridPos - cellsInRange;
+    int3 end = gridPos + cellsInRange;
 
     // examine neighbouring cells
     uint count = 0;
-	int3 neighborPos;
-	for( int z = ( start.z > 0 ? start.z : 0); z < ( end.z > gridSize.z ? gridSize.z : end.z) ; z++ ) {
+    int3 neighborPos;
+    for( int z = ( start.z > 0 ? start.z : 0); z < ( end.z > gridSize.z ? gridSize.z : end.z) ; z++ ) {
         for( int y = ( start.y > 0 ? start.y : 0); y < ( end.y > gridSize.y ? gridSize.y : end.y) ; y++ ) {
             for( int x = ( start.x > 0 ? start.x : 0); x < ( end.x > gridSize.x ? gridSize.x : end.x) ; x++ ) {
                 neighborPos = make_int3( x, y, z);
-				count += findProbeNeighborsInCellCBCuda( singTex, count, neighborPos, index, pos, probePos, gridProbeIndex, cellStart, cellEnd, numNeighbors);
+                count += findProbeNeighborsInCellCBCuda( singTex, count, neighborPos, index, pos, probePos, gridProbeIndex, cellStart, cellEnd, numNeighbors);
             }
         }
     }

@@ -21,18 +21,18 @@
 namespace megamol {
 namespace protein {
 
-	/*
+    /*
      * Simple Molecular Renderer class
      */
 
-	class SphereRenderer : public megamol::core::view::Renderer3DModule
-	{
-	public:
+    class SphereRenderer : public megamol::core::view::Renderer3DModule
+    {
+    public:
         /** The coloring modes */
-		enum ColoringMode {
-			COLOR_TYPE    = 0,
-			COLOR_CHARGE  = 1
-		};
+        enum ColoringMode {
+            COLOR_TYPE    = 0,
+            COLOR_CHARGE  = 1
+        };
 
         /**
          * Answer the name of this module.
@@ -40,7 +40,7 @@ namespace protein {
          * @return The name of this module.
          */
         static const char *ClassName(void) 
-		{
+        {
             return "SphereRenderer";
         }
 
@@ -50,7 +50,7 @@ namespace protein {
          * @return A human readable description of this module.
          */
         static const char *Description(void) 
-		{
+        {
             return "Offers sphere renderings.";
         }
 
@@ -60,7 +60,7 @@ namespace protein {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) 
-		{
+        {
             return true;
         }
 
@@ -70,7 +70,7 @@ namespace protein {
         /** Dtor. */
         virtual ~SphereRenderer(void);
 
-	protected:
+    protected:
 
         /**
          * Implementation of 'Create'.
@@ -84,11 +84,11 @@ namespace protein {
          */
         virtual void release(void);
 
-	private:
+    private:
 
-	   /**********************************************************************
-		* 'render'-functions
-	    **********************************************************************/
+       /**********************************************************************
+        * 'render'-functions
+        **********************************************************************/
 
         /**
          * The get capabilities callback. The module should set the members
@@ -117,7 +117,7 @@ namespace protein {
          * @param call The calling call.
          * @return The return value of the function.
          */
-		virtual bool Render( megamol::core::Call& call);
+        virtual bool Render( megamol::core::Call& call);
 
         /**
          * Compute the color array.
@@ -127,35 +127,35 @@ namespace protein {
          */
         void ComputeColors( const SphereDataCall *sphere, ColoringMode mode);
 
-		/**********************************************************************
-		 * variables
-		 **********************************************************************/
+        /**********************************************************************
+         * variables
+         **********************************************************************/
 
         // caller slot
-		megamol::core::CallerSlot sphereDataCallerSlot;
+        megamol::core::CallerSlot sphereDataCallerSlot;
 
-		// camera information
-		vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+        // camera information
+        vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
 
         // parameter slots
         megamol::core::param::ParamSlot coloringModeParam;
         megamol::core::param::ParamSlot minValueParam;
         megamol::core::param::ParamSlot maxValueParam;
 
-		// shader for the spheres (raycasting view)
-		vislib::graphics::gl::GLSLShader sphereShader;
-		// shader for the cylinders (raycasting view)
-		vislib::graphics::gl::GLSLShader cylinderShader;
+        // shader for the spheres (raycasting view)
+        vislib::graphics::gl::GLSLShader sphereShader;
+        // shader for the cylinders (raycasting view)
+        vislib::graphics::gl::GLSLShader cylinderShader;
 
-		// attribute locations for GLSL-Shader
-		GLint attribLocInParams;
-		GLint attribLocQuatC;
-		GLint attribLocColor1;
-		GLint attribLocColor2;
+        // attribute locations for GLSL-Shader
+        GLint attribLocInParams;
+        GLint attribLocQuatC;
+        GLint attribLocColor1;
+        GLint attribLocColor2;
 
         // the color array
         vislib::Array<float> colors;
-	};
+    };
 
 
 } /* end namespace protein */

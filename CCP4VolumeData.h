@@ -29,8 +29,8 @@ namespace megamol {
 namespace protein {
 
     /**
-	 * Data source for CCP4 files
-	 *
+     * Data source for CCP4 files
+     *
      * For a detailed description of the CCP4 file format, refer to:
      * http://www.ccp4.ac.uk/html/maplib.html#description
      *
@@ -41,12 +41,12 @@ namespace protein {
      *  - Skew transformation is not supported
      *  - Reorder map data, if corresponding axis are not in order: (x, y, z)
      *  - 
-	 */
+     */
 
-	class CCP4VolumeData : public megamol::core::Module
-	{
+    class CCP4VolumeData : public megamol::core::Module
+    {
     public:
-		
+        
         /**
          * Container class for CCP4 header information
          */
@@ -103,98 +103,98 @@ namespace protein {
             char label[10*80];
         };
 
-		/** Ctor */
-		CCP4VolumeData(void);
+        /** Ctor */
+        CCP4VolumeData(void);
 
-		/** Dtor */
-		virtual ~CCP4VolumeData(void);
+        /** Dtor */
+        virtual ~CCP4VolumeData(void);
 
-		/**
-		 * Answer the name of this module.
-		 *
-		 * @return The name of this module.
-		 */
-		static const char *ClassName(void) 
-		{
-			return "CCP4VolumeData";
-		}
+        /**
+         * Answer the name of this module.
+         *
+         * @return The name of this module.
+         */
+        static const char *ClassName(void) 
+        {
+            return "CCP4VolumeData";
+        }
 
-		/**
-		 * Answer a human readable description of this module.
-		 *
-		 * @return A human readable description of this module.
-		 */
-		static const char *Description(void) 
-		{
-			return "Offers volumetric data.";
-		}
+        /**
+         * Answer a human readable description of this module.
+         *
+         * @return A human readable description of this module.
+         */
+        static const char *Description(void) 
+        {
+            return "Offers volumetric data.";
+        }
 
-		/**
-		 * Answers whether this module is available on the current system.
-		 *
-		 * @return 'true' if the module is available, 'false' otherwise.
-		 */
-		static bool IsAvailable(void) 
-		{
-			return true;
-		}
+        /**
+         * Answers whether this module is available on the current system.
+         *
+         * @return 'true' if the module is available, 'false' otherwise.
+         */
+        static bool IsAvailable(void) 
+        {
+            return true;
+        }
 
-	protected:
+    protected:
 
-		/**
-		 * Implementation of 'Create'.
-		 *
-		 * @return 'true' on success, 'false' otherwise.
-		 */
-		virtual bool create(void);
+        /**
+         * Implementation of 'Create'.
+         *
+         * @return 'true' on success, 'false' otherwise.
+         */
+        virtual bool create(void);
 
-		/**
-		 * Implementation of 'Release'.
-		 */
-		virtual void release(void) {};
+        /**
+         * Implementation of 'Release'.
+         */
+        virtual void release(void) {};
 
-	private:
+    private:
 
-		/**
-		 * ProtData callback.
-		 *
-		 * @param call The calling call.
-		 *
-		 * @return 'true' on success, 'false' otherwise.
-		 */
-		bool VolumeDataCallback( megamol::core::Call& call);
+        /**
+         * ProtData callback.
+         *
+         * @param call The calling call.
+         *
+         * @return 'true' on success, 'false' otherwise.
+         */
+        bool VolumeDataCallback( megamol::core::Call& call);
 
-		/**********************************************************************
-		 * 'volume'-functions
-		 **********************************************************************/
+        /**********************************************************************
+         * 'volume'-functions
+         **********************************************************************/
 
-		/** Clear and reset all data structures */
-		void ClearData();
+        /** Clear and reset all data structures */
+        void ClearData();
 
-		/**
-		 * Tries to load the file 'm_filename' into memory
+        /**
+         * Tries to load the file 'm_filename' into memory
          * 
-		 * @ param rturn 'true' if file(s) could be loaded, 'false' otherwise 
-		 */
-		bool tryLoadFile(void);
+         * @ param rturn 'true' if file(s) could be loaded, 'false' otherwise 
+         */
+        bool tryLoadFile(void);
 
-		/**********************************************************************
-		 * variables
-		 **********************************************************************/
+        /**********************************************************************
+         * variables
+         **********************************************************************/
 
-		/** Callee slot */
-		megamol::core::CalleeSlot volumeDataCalleeSlot;
+        /** Callee slot */
+        megamol::core::CalleeSlot volumeDataCalleeSlot;
 
         /** The filename parameter */
         megamol::core::param::ParamSlot filename;
 
-		////////////////////////////////////////////////////////////
-		// variables for storing all data needed by the interface //
-		////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////
+        // variables for storing all data needed by the interface //
+        ////////////////////////////////////////////////////////////
         CCP4Header header;
         float *map;
         char *symmetry;
-	};
+    };
 
 
 } /* end namespace protein */
