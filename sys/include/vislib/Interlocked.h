@@ -237,7 +237,7 @@ namespace sys {
          *
          * @return The old value of the variable designated by 'address'.
          */
-        VISLIB_FORCEINLINE static void *Exchange(void *volatile *address,
+        VISLIB_FORCEINLINE static void *Exchange(void **address,
                 const void *value) {
 #ifdef _WIN32
 #pragma warning(disable: 4311)

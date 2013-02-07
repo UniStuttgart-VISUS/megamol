@@ -113,8 +113,8 @@ vislib::graphics::Camera::CalcViewFrustum(
             // cut out local frustum for tile rect
             l -= w;
             r -= w;
-            b -= w;
-            t -= w;
+            b -= h;
+            t -= h;
         } break;
 
         case CameraParameters::STEREO_OFF_AXIS: {
