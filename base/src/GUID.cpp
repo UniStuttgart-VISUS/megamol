@@ -35,7 +35,7 @@ vislib::GUID::GUID(const BYTE b[16]) {
 #ifdef _WIN32
     ::memcpy(&this->guid, b, sizeof(this->guid));
 #else /* _WIN32 */
-    ::memcpy(&this->guid, b, sizeof(this->guid));
+    ::memcpy(this->guid, b, sizeof(this->guid));
 #endif /* _WIN32 */
 }
 
@@ -233,7 +233,8 @@ UINT32 vislib::GUID::HashCode(void) const {
     const BYTE *str = this->guid;
 #endif /* _WIN32 */
 
-    while ((c = *str++) != 0) {
+    for (size_t i = 0; i < sizeof(this->guid); ++i) {
+        c = str[i];
         hash = ((hash << 5) + hash) + static_cast<UINT32>(c);
     }
 
