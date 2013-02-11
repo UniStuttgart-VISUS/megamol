@@ -134,6 +134,9 @@ namespace gl {
          * Create a framebuffer object with the specified dimension having the 
          * specified render targets attached.
          *
+         * Once the framebuffer object has been created, the previously bound
+         * framebuffer will be restored before the method returns.
+         *
          * STENCIL ATTACHMENTS ARE CURRENTLY UNSUPPORTED. sap.state MUST BE
          * ATTACHMENT_DISABLED!
          *
@@ -164,6 +167,9 @@ namespace gl {
          * Create a framebuffer object with the specified dimension having one
          * colour attachment and a depth attachment. The depth attachment is
          * realised as renderbuffer object.
+         *
+         * Once the framebuffer object has been created, the previously bound
+         * framebuffer will be restored before the method returns.
          *
          * This is just a convenience method.
          *

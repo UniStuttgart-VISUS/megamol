@@ -134,7 +134,12 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
         const StencilAttachParams& sap) {
     VLAUTOSTACKTRACE;
     USES_GL_DEFERRED_VERIFY;
+    GLint oldFb = 0;
     bool retval = true;
+    
+    /* Preserve current FBO state. */
+    GL_DEFERRED_VERIFY(::glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFb), 
+        __LINE__);
 
     /* Release possible old FBO before doing anything else! */
     try {
@@ -235,7 +240,8 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
 
     /* Check for completeness and unbind FBO before returning. */
     retval = this->isComplete();
-    GL_DEFERRED_VERIFY(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0), __LINE__);
+    GL_DEFERRED_VERIFY(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, oldFb),
+        __LINE__);
 
     /* Check for errors and revert in case one was captured before. */
     if (GL_DEFERRED_FAILED()) {
