@@ -102,12 +102,14 @@ vislib::net::Socket vislib::net::Socket::Accept(IPEndPoint *outConnAddr) {
     // mueller: Fixes the panagias bug of a CommServer not terminating while
     // being blocked by accept().
     do {
-        if (TEMP_FAILURE_RETRY(::select(n, NULL, &writeSet, NULL, &timeOut))
+        VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Accept pending...\n");
+        if (TEMP_FAILURE_RETRY(::select(n, &fdSet, NULL, NULL, &timeOut))
                 == SOCKET_ERROR) {
             throw SocketException(__FILE__, __LINE__);
         }
-    } while (!FD_ISSET(this->handle, &writeSet));
+    } while (!FD_ISSET(this->handle, &fdSet));
 
+    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Accepting client...\n");
     TEMP_FAILURE_RETRY(newSocket = ::accept(this->handle, 
         reinterpret_cast<sockaddr *>(&connAddr), &addrLen));
     if (newSocket == SOCKET_ERROR) {
