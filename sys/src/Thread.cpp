@@ -187,6 +187,7 @@ void vislib::sys::Thread::Join(void) {
         if (::pthread_join(this->id, NULL) != 0) {
             throw SystemException(__FILE__, __LINE__);
         }
+        this->id = 0;
     }
 
 #endif /* _WIN32 */

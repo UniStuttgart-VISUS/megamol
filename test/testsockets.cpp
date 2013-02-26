@@ -141,6 +141,7 @@ DWORD SocketServer::Run(void *cntRepeat) {
 
         serverSocket.Create(Socket::FAMILY_INET, Socket::TYPE_STREAM,
             Socket::PROTOCOL_TCP);
+        serverSocket.SetReuseAddr(true);
         serverSocket.Bind(SocketAddress::CreateInet(TEST_PORT));
         serverSocket.Listen();
         clientSocket = serverSocket.Accept();
@@ -198,6 +199,7 @@ DWORD SocketClient::Run(void *cntRepeat) {
 
         clientSocket.Create(Socket::FAMILY_INET, Socket::TYPE_STREAM,
             Socket::PROTOCOL_TCP);
+        clientSocket.SetNoDelay(true);
         clientSocket.Connect(SocketAddress::CreateInet("127.0.0.1", TEST_PORT));
     
         SocketWriter writer(clientSocket);
@@ -237,8 +239,10 @@ void TestAsyncSocketSender(void) {
 
     serverThread.Start(&cntRepeat);
 
+    Thread::Sleep(1000);
     socket.Create(Socket::FAMILY_INET, Socket::TYPE_STREAM,
         Socket::PROTOCOL_TCP);
+    socket.SetNoDelay(true);
     socket.Connect(SocketAddress::CreateInet("127.0.0.1", TEST_PORT));
     senderThread.Start(&socket);
 

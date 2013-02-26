@@ -86,6 +86,27 @@ vislib::net::Socket vislib::net::Socket::Accept(IPEndPoint *outConnAddr) {
 
 #else /* _WIN32 */
     unsigned int addrLen = static_cast<unsigned int>(sizeof(connAddr));
+    fd_set fdSet;               // Set of sockets to check for availability.
+    int n = 0;                  // Highest descriptor in 'writeSet' + 1.
+    struct timeval timeOut;     // Timeout for availability check.
+
+    /* Initialise socket set and timeout structure. */
+    FD_ZERO(&fdSet);
+    FD_SET(this->handle, &fdSet);
+
+    timeOut.tv_sec = 1;
+    timeOut.tv_usec = 0;
+
+    n = this->handle + 1;
+
+    // mueller: Fixes the panagias bug of a CommServer not terminating while
+    // being blocked by accept().
+    do {
+        if (TEMP_FAILURE_RETRY(::select(n, NULL, &writeSet, NULL, &timeOut))
+                == SOCKET_ERROR) {
+            throw SocketException(__FILE__, __LINE__);
+        }
+    } while (!FD_ISSET(this->handle, &writeSet));
 
     TEMP_FAILURE_RETRY(newSocket = ::accept(this->handle, 
         reinterpret_cast<sockaddr *>(&connAddr), &addrLen));
