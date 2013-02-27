@@ -12,6 +12,7 @@
 
 #else /* _WIN32 */
 #include <poll.h>
+#include <sys/socket.h> // panagias: needed for shutdown()
 #include <unistd.h>
 #include <net/if.h>
 
@@ -86,57 +87,13 @@ vislib::net::Socket vislib::net::Socket::Accept(IPEndPoint *outConnAddr) {
 
 #else /* _WIN32 */
     unsigned int addrLen = static_cast<unsigned int>(sizeof(connAddr));
-    fd_set fdSet;               // Set of sockets to check for availability.
-    int n = 0;                  // Highest descriptor in 'writeSet' + 1.
-    struct timeval timeOut;     // Timeout for availability check.
 
-    /* Initialise socket set and timeout structure. */
-    FD_ZERO(&fdSet);
-    FD_SET(this->handle, &fdSet);
-
-
-    // mueller: Fixes the panagias bug of a CommServer not terminating while
-    // being blocked by accept().
-    do {
-//        VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Accept pending...\n");
-    n = this->handle + 1;
-    timeOut.tv_sec = 1;
-    timeOut.tv_usec = 0;
-    FD_SET(this->handle, &fdSet);
-
-	int result = ::select(n, &fdSet, NULL, NULL, &timeOut);
-
-	if (result < 0)
-	{
-		if (result != EAGAIN)
-		{
-			throw SocketException(__FILE__, __LINE__);
-		}
-	}
-	else if (result > 0)
-	{
-		break;
-	}
-	else
-	{
-		// timeout
-	}
-    } while (handle > 0 && !FD_ISSET(this->handle, &fdSet));
-
-    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Accepting client...\n");
-
-if (FD_ISSET(this->handle, &fdSet))
-{
     TEMP_FAILURE_RETRY(newSocket = ::accept(this->handle, 
         reinterpret_cast<sockaddr *>(&connAddr), &addrLen));
+
     if (newSocket == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
-}
-else
-{
-        throw SocketException(__FILE__, __LINE__);
-}
 
 #endif /* _WIN32 */
 
@@ -215,7 +172,8 @@ void vislib::net::Socket::Close(void) {
 #ifdef _WIN32
         if (::closesocket(this->handle) == SOCKET_ERROR) {
 #else /* _WIN32 */
-        if (TEMP_FAILURE_RETRY(::close(this->handle)) == SOCKET_ERROR) {
+// panagias: Use shutdown instead of close, see http://stackoverflow.com/questions/2486335/wake-up-thread-blocked-on-accept-call/2489066#2489066
+        if (TEMP_FAILURE_RETRY(::shutdown(this->handle, SHUT_RDWR)) == SOCKET_ERROR) {
 #endif /* _WIN32 */
             throw SocketException(__FILE__, __LINE__);
         }
