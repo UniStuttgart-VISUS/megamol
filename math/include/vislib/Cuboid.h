@@ -77,7 +77,7 @@ namespace math {
                 = origin.Z();
             this->bounds[Super::IDX_RIGHT] += size.Width();
             this->bounds[Super::IDX_TOP] += size.Height();
-            this->bounds[Super::IDX_BACK] += size.Depth();
+            this->bounds[Super::IDX_FRONT] += size.Depth();
         }
 
         /**
