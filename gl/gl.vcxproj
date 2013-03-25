@@ -476,6 +476,7 @@
     </ClCompile>
     <ClCompile Include="src\FramebufferObject.cpp" />
     <ClCompile Include="src\glfunctions.cpp" />
+    <ClCompile Include="src\GLSLComputeShader.cpp" />
     <ClCompile Include="src\GLSLGeometryShader.cpp" />
     <ClCompile Include="src\GLSLShader.cpp" />
     <ClCompile Include="src\GlutMouseInteractionAdapter.cpp" />
@@ -564,6 +565,7 @@
     <ClInclude Include="include\vislib\ExtensionsDependent.h" />
     <ClInclude Include="include\vislib\FramebufferObject.h" />
     <ClInclude Include="include\vislib\glfunctions.h" />
+    <ClInclude Include="include\vislib\GLSLComputeShader.h" />
     <ClInclude Include="include\vislib\GLSLGeometryShader.h" />
     <ClInclude Include="include\vislib\GLSLShader.h" />
     <ClInclude Include="include\vislib\GlutMouseInteractionAdapter.h" />

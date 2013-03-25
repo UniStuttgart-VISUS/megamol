@@ -66,6 +66,9 @@
     <ClCompile Include="src\SimpleFont.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\GLSLComputeShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\SimpleFontData.inc">
@@ -125,6 +128,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\SimpleFont.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\GLSLComputeShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
