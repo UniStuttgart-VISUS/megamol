@@ -267,6 +267,9 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
                 }
             }
         }
+        if (wsp != NULL) {
+            words.Append(wsp);
+        }
         // no need for paging here
         this->lines.Append(words);
         words.Clear();
