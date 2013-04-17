@@ -310,11 +310,7 @@ bool XmlReader::parseXml(void) {
     XML_Parser parser = XML_ParserCreate(NULL);
 
     if (parser == NULL) {
-        throw std::bad_alloc(
-#ifdef _WIN32
-            "cannot create expat xml parser"
-#endif /* _WIN32 */
-            );
+        throw std::bad_alloc();
     }
     // store parser for internal calls
     this->internalParser = static_cast<void*>(&parser);
