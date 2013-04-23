@@ -6,10 +6,10 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_genext.h"
 #include "AbstractRenderingView.h"
 #include "AbstractNamedObject.h"
 #include "vislib/String.h"
-#include <GL/gl.h>
 #include "param/BoolParam.h"
 #include "param/StringParam.h"
 #include "utility/ColourParser.h"

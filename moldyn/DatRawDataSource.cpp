@@ -78,9 +78,15 @@ bool moldyn::DatRawDataSource::filenameChanged(param::ParamSlot& slot) {
     using vislib::sys::Log;
    
     // try to load the header (0 means loading failed)
+#ifdef WIN32
     if (datRaw_readHeader(W2A(this->datFilenameSlot.Param<param::FilePathParam>()->Value()), &this->header, NULL) == 0) {
         return false;
     }
+#else
+    if (datRaw_readHeader( this->datFilenameSlot.Param<param::FilePathParam>()->Value(), &this->header, NULL) == 0) {
+        return false;
+    }
+#endif
 
     // load data
     this->data.AssertSize(datRaw_getBufferSize(&this->header, DR_FORMAT_FLOAT));

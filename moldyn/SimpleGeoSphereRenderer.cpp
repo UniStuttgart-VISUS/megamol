@@ -6,6 +6,7 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_genext.h"
 #include "SimpleGeoSphereRenderer.h"
 #include "view/CallRender3D.h"
 #include "vislib/ShaderSource.h"

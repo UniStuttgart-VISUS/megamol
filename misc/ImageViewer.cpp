@@ -6,13 +6,13 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_genext.h"
 //#define _USE_MATH_DEFINES
 #include "ImageViewer.h"
 #include "param/FilePathParam.h"
 #include "param/StringParam.h"
 #include "view/CallRender3D.h"
 #include "vislib/Log.h"
-#include <GL/gl.h>
 //#include <cmath>
 
 using namespace megamol::core;

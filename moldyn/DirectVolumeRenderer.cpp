@@ -6,6 +6,7 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_genext.h"
 
 #define _USE_MATH_DEFINES 1
 #define STOP_SEGMENTATION
@@ -28,9 +29,7 @@
 #include "vislib/Trace.h"
 #include "vislib/ShaderSource.h"
 #include "vislib/AbstractOpenGLShader.h"
-#include <GL/gl.h>
 #include <GL/glu.h>
-#include <glh/glh_genext.h>
 #include <math.h>
 #include <time.h>
 

@@ -26,6 +26,7 @@ ExcludeFromBuild += vismol2/Mol20DataCall.cpp vismol2/Mol20DataSource.cpp vismol
 
 # Libraries
 LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid GL GLU png z
+StaticLibs := datraw/lib$(BITS)/libdatRaw.a
 
 
 # Additional linker flags
@@ -50,6 +51,7 @@ LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(expatpath)/lib
 
 
 all: VersionInfo $(TargetName)d $(TargetName)
+	make -C datraw
 
 
 # Rules for shared objects in $(OutDir):
@@ -97,7 +99,7 @@ VersionInfo:
 $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(DebugDir)/lib$(TargetName).so: "
 	@$(CLEARTERMCMD)
-	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) $(DebugLinkerFlags) \
+	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) $(StaticLibs) $(DebugLinkerFlags) \
 	-o $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 
 #	gcc -Wall -W -DPIC -fPIC -shared -DUNIX -D_GNU_SOURCE -D_LIN64 DllEntry.c -lc -Wl,-e,mmCoreMain \
@@ -106,7 +108,7 @@ $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile productversion.gen.h
 $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(ReleaseDir)/lib$(TargetName).so: "
 	@$(CLEARTERMCMD)
-	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) $(ReleaseLinkerFlags) \
+	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) $(StaticLibs) $(ReleaseLinkerFlags) \
 	-o $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
 
 #	gcc -Wall -W -DPIC -fPIC -shared -DUNIX -D_GNU_SOURCE -D_LIN64 DllEntry.c -lc -Wl,-e,mmCoreMain \
@@ -152,6 +154,7 @@ $(IntDir)/$(ReleaseDir)/%.o:
 
 # Cleanup rules:
 clean: sweep
+	make clean -C datraw
 	rm -f $(OutDir)/lib$(TargetName)$(BITS).so $(OutDir)/lib$(TargetName)$(BITS)d.so \
 	$(outbin)/lib$(TargetName)$(BITS).so $(outbin)/lib$(TargetName)$(BITS)d.so
 

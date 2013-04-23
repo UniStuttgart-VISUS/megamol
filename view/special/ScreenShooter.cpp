@@ -6,8 +6,8 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_genext.h"
 #include "ScreenShooter.h"
-#include <GL/gl.h>
 #include "AbstractNamedObject.h"
 #include "AbstractNamedObjectContainer.h"
 #include "CoreInstance.h"

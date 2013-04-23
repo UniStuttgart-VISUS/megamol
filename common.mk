@@ -53,7 +53,7 @@ InputDir := .
 
 
 # The default include directories:
-IncludeDir := .
+IncludeDir := . ./datraw
 
 
 # List of system include directories:
@@ -99,9 +99,9 @@ ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 
 # Common linker flags
-LinkerFlags := -lX11 -lXext
+LinkerFlags := -lX11 -lXext 
 
 
 # Additional linker flags for special configurations
-DebugLinkerFlags :=
-ReleaseLinkerFlags :=
+DebugLinkerFlags := 
+ReleaseLinkerFlags := 
