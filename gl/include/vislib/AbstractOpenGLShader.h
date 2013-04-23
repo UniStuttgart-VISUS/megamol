@@ -14,13 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include <GL/gl.h>
-#ifndef _WIN32
-#undef GL_VERSION_1_1
-#undef GL_VERSION_1_2
-#undef GL_VERSION_1_3
-#undef GL_VERSION_1_4
-#endif
+#include "glh/glh_genext.h"
 #include "vislib/Exception.h"
 #include "vislib/String.h"
 

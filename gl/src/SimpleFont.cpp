@@ -7,7 +7,7 @@
 
 #include "vislib/SimpleFont.h"
 #include "vislib/types.h"
-#include <GL/gl.h>
+#include "glh/glh_genext.h"
 #include <GL/glu.h>
 #include <float.h>
 #include <climits>

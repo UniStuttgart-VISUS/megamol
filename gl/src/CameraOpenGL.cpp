@@ -8,7 +8,7 @@
 
 #include "vislib/CameraOpenGL.h"
 
-#include <GL/gl.h>
+#include "glh/glh_genext.h"
 #include <GL/glu.h>
 
 #include "vislib/assert.h"

@@ -10,7 +10,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif /* _WIN32 */
-#include <GL/gl.h>
+#include "glh/glh_genext.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
 

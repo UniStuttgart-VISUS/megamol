@@ -5,7 +5,7 @@
  */
 
 #include "vislib/glfunctions.h"
-#include <GL/gl.h>
+#include "glh/glh_genext.h"
 
 #include <stdlib.h>
 
