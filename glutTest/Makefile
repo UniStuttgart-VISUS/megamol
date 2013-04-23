@@ -21,7 +21,7 @@ CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -Wall -ansi -O3 -gg
 # removed: -pedantic 
 
 # Linker flags:
-LDFLAGS := -lX11 -lXext -lXxf86vm -L../lib -lm -lpthread -lGLU -lGL
+LDFLAGS := -ldl -lXext -lXxf86vm -L../lib -lm -lpthread -lGLU -lGL -lX11 
 
 ifneq ($(MAKECMDGOALS), clean)
 ifneq ($(MAKECMDGOALS), sweep)
@@ -40,6 +40,8 @@ else
 	OutDir := ../Lin32
 	LDFLAGS += -lvislibgl32 -lvislibgraphics32 -lvislibmath32 -lvislibsys32 -lvislibbase32
 endif
+
+LDFLAGS += -lX11 -lXxf86vm -lpthread
 
 # Append the include directories to the flags:
 CPPFLAGS += $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
