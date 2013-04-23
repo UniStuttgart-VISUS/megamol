@@ -4,6 +4,16 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma warning(disable: 4996)
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#define GLH_EXT_SINGLE_FILE
+#include "glh/glh_extensions.h"
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma warning(default: 4996)
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+
 #include "AbstractGlutApp.h"
 #include "GlutAppManager.h"
 
@@ -14,7 +24,6 @@
 
 #include <stdio.h>
 #include "vislibGlutInclude.h"
-#include <GL/gl.h>
 #include <cassert>
 #include <stdlib.h>
 

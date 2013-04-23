@@ -3,11 +3,10 @@
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
+#include "glh/glh_genext.h"
 #include "SimpleFontTest.h"
 
 #include "vislibGlutInclude.h"
-#include <GL/gl.h>
-#include <GL/glu.h>
 #include <cstdio>
 
 #include "vislib/types.h"

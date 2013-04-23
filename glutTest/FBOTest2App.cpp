@@ -5,8 +5,7 @@
  */
 
 #include "FBOTest2App.h"
-
-#include <GL/gl.h>
+#include "glh/glh_genext.h"
 #include "vislibGlutInclude.h"
 #include <iostream>
 
