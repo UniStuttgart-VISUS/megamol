@@ -5,7 +5,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(VISlibPath)/base/include;$(VISlibPath)/math/include;$(VISlibPath)/sys/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VISlibPath)/base/include;$(VISlibPath)/math/include;$(VISlibPath)/sys/include;$(VISlibPath)/graphics/include;$(VISlibPath)/gl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
 </Project>

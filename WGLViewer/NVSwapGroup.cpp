@@ -10,10 +10,10 @@
 #include "vislib/String.h"
 #include "vislib/sysfunctions.h"
 #ifdef _WIN32
+#include "glh/glh_extensions.h"
 #include <windows.h>
 #include <GL/gl.h>
 #include "GL/wglext.h"
-#include "glh/glh_extensions.h"
 #endif /* _WIN32 */
 
 //extern "C" {

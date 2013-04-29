@@ -6,12 +6,12 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_extensions.h"
 #include "Window.h"
 #include "visglut.h"
 #include "vislib/glfunctions.h"
 #include "vislib/KeyCode.h"
 #include "vislib/Log.h"
-#include <GL/gl.h>
 
 
 /*
