@@ -51,6 +51,9 @@ LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(expatpath)/lib
 
 
 all: VersionInfo $(TargetName)d $(TargetName)
+
+
+datraw:
 	make -C datraw
 
 
@@ -96,7 +99,7 @@ VersionInfo:
 
 
 # Rules for intermediate shared objects:
-$(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+$(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile datraw productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(DebugDir)/lib$(TargetName).so: "
 	@$(CLEARTERMCMD)
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) $(StaticLibs) $(DebugLinkerFlags) \
@@ -105,7 +108,7 @@ $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile productversion.gen.h
 #	gcc -Wall -W -DPIC -fPIC -shared -DUNIX -D_GNU_SOURCE -D_LIN64 DllEntry.c -lc -Wl,-e,mmCoreMain \
 #	-o $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 
-$(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+$(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile datraw productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(ReleaseDir)/lib$(TargetName).so: "
 	@$(CLEARTERMCMD)
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) $(StaticLibs) $(ReleaseLinkerFlags) \
@@ -116,14 +119,14 @@ $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile productversion.gen.
 
 
 # Rules for dependencies:
-$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl
+$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile datraw productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@$(CLEARTERMCMD)
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) -I$(<D) $(DebugCompilerFlags) $< >> $@
 
-$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl
+$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile datraw productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@$(CLEARTERMCMD)
