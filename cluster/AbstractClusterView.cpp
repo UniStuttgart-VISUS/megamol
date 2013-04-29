@@ -6,13 +6,13 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_extensions.h"
 #include "cluster/AbstractClusterView.h"
 #include "cluster/InfoIconRenderer.h"
 #include "cluster/NetMessages.h"
 #include "CoreInstance.h"
 #include "param/StringParam.h"
 #include "view/AbstractView.h"
-#include <GL/gl.h>
 #include "vislib/AutoLock.h"
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/IPEndPoint.h"

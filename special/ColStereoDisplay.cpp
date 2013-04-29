@@ -7,11 +7,11 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES 1
+#include "glh/glh_extensions.h"
 #include "ColStereoDisplay.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif /* _WIN32 */
-#include <GL/gl.h>
 #include "param/BoolParam.h"
 #include "special/ClusterSignRenderer.h"
 #include "view/CallRenderView.h"

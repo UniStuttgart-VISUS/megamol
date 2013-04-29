@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_extensions.h"
 #include "LinearTransferFunction.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include <GL/gl.h>
 #include "param/BoolParam.h"
 #include "param/FloatParam.h"
 #include "param/IntParam.h"

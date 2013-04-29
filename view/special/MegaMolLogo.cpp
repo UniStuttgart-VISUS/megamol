@@ -6,12 +6,12 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_extensions.h"
 #include "MegaMolLogo.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif /* _WIN32 */
 #include "MegaMolLogoData.inl"
-#include <GL/gl.h>
 #include "vislib/assert.h"
 #include "vislib/Array.h"
 #include "vislib/mathfunctions.h"

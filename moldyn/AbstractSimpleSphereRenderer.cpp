@@ -6,12 +6,12 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_extensions.h"
 #include "moldyn/AbstractSimpleSphereRenderer.h"
 #include "CoreInstance.h"
 #include "view/CallClipPlane.h"
 #include "view/CallGetTransferFunction.h"
 #include "view/CallRender3D.h"
-#include <GL/gl.h>
 #include "vislib/assert.h"
 
 using namespace megamol::core;

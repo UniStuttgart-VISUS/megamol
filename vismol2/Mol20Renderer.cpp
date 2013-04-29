@@ -6,10 +6,10 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_extensions.h"
 #include "Mol20Renderer.h"
 #include "view/CallRender3D.h"
 #include "vismol2/Mol20DataCall.h"
-#include <GL/gl.h>
 
 using namespace megamol::core;
 

@@ -7,10 +7,10 @@
 
 #include "stdafx.h"
 //#define _USE_MATH_DEFINES
+#include "glh/glh_extensions.h"
 #include "LinesRenderer.h"
 #include "LinesDataCall.h"
 #include "view/CallRender3D.h"
-#include <GL/gl.h>
 //#include <cmath>
 
 using namespace megamol::core;

@@ -12,12 +12,12 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Call.h"
+#include "glh/glh_extensions.h"
 #include "view/AbstractRenderOutput.h"
 #include "vislib/Array.h"
 #include "vislib/FramebufferObject.h"
 #include "vislib/Rectangle.h"
 #include "vislib/types.h"
-#include <GL/gl.h>
 
 
 namespace megamol {

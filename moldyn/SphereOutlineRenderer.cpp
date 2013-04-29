@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #define USE_MATH_DEFINES
+#include "glh/glh_extensions.h"
 #include "SphereOutlineRenderer.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
@@ -15,7 +16,6 @@
 #include "param/IntParam.h"
 #include "param/FloatParam.h"
 #include "view/CallRender3D.h"
-#include <GL/gl.h>
 #include <GL/glu.h>
 #include "vislib/assert.h"
 #include "vislib/mathfunctions.h"

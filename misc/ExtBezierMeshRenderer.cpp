@@ -7,13 +7,13 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
+#include "glh/glh_extensions.h"
 #include "misc/ExtBezierMeshRenderer.h"
 #include "param/IntParam.h"
 #include "view/CallRender3D.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
-#include <GL/gl.h>
 #include <cmath>
 
 using namespace megamol::core;

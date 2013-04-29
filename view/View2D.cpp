@@ -6,12 +6,12 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_extensions.h"
 #include "View2D.h"
 #include "CoreInstance.h"
 #include "view/CallRenderView.h"
 #include "view/CallRender2D.h"
 #include "view/MouseFlags.h"
-#include <GL/gl.h>
 #include "param/BoolParam.h"
 #include "param/ButtonParam.h"
 #include "param/StringParam.h"

@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
+#include "glh/glh_extensions.h"
 #include "ExtBezierRaycastRenderer.h"
 #include "misc/ExtBezierDataCall.h"
 #include "CoreInstance.h"
@@ -14,7 +15,6 @@
 #include "vislib/Exception.h"
 #include "vislib/Log.h"
 #include "vislib/ShaderSource.h"
-//#include <GL/gl.h>
 //#include <cmath>
 
 using namespace megamol::core;

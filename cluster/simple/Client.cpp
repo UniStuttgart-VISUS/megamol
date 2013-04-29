@@ -27,7 +27,6 @@
 #include "vislib/UTF8Encoder.h"
 #include <signal.h>
 //#include "AbstractNamedObject.h"
-//#include <GL/gl.h>
 //#include "vislib/Thread.h"
 
 

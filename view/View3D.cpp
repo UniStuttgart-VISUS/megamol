@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_extensions.h"
 #include "View3D.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif /* _WIN32 */
-#include <GL/gl.h>
 #include <GL/glu.h>
 #include "view/CallRenderView.h"
 #include "view/CameraParamOverride.h"

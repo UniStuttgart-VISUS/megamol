@@ -7,10 +7,10 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
+#include "glh/glh_extensions.h"
 #include "cluster/InfoIconRenderer.h"
 #include "view/graphicsresources.h"
 #include <cmath>
-#include <GL/gl.h>
 #include "vislib/mathfunctions.h"
 #include "vislib/OutlineFont.h"
 #include "vislib/sysfunctions.h"

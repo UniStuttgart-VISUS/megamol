@@ -6,6 +6,7 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_extensions.h"
 #include "cluster/simple/View.h"
 #include "cluster/simple/ClientViewRegistration.h"
 #include "cluster/simple/Client.h"
@@ -15,7 +16,6 @@
 #include "param/StringParam.h"
 #include "AbstractNamedObject.h"
 #include "CoreInstance.h"
-#include <GL/gl.h>
 #include "vislib/assert.h"
 #include "vislib/AutoLock.h"
 #include "vislib/DNS.h"

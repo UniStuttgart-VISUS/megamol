@@ -7,12 +7,12 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
+#include "glh/glh_extensions.h"
 #include "AbstractBezierRaycastRenderer.h"
 #include "AbstractGetData3DCall.h"
 //#include "BezierDataCall.h"
 //#include "param/EnumParam.h"
 //#include "param/IntParam.h"
-#include <GL/gl.h>
 //#include <cmath>
 
 using namespace megamol::core;

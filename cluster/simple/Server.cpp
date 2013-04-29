@@ -35,7 +35,6 @@
 #include "vislib/UTF8Encoder.h"
 //#include "vislib/SocketException.h"
 //#include "AbstractNamedObject.h"
-//#include <GL/gl.h>
 //#include "vislib/Thread.h"
 
 

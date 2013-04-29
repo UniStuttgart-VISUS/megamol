@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_extensions.h"
 #include "AddParticleColours.h"
 #include "MultiParticleDataCall.h"
 #include "param/ButtonParam.h"
 #include "view/CallGetTransferFunction.h"
-#include <GL/gl.h>
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 
