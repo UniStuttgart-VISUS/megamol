@@ -12,7 +12,7 @@ include ../ExtLibs.mk
 # Target name
 TargetName := MegaMolCon
 IncludeDir := $(IncludeDir) ../Viewer/include $(visglutpath)/include $(mmcorepath)/api
-VISlibs := sys math base
+VISlibs := gl graphics sys math base
 
 
 # Additional compiler flags

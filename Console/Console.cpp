@@ -729,7 +729,11 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 #endif /* !_WIN32 */
     signal(SIGINT, signalCtrlC);
 
-    parameterFile = vislib::sys::Path::Resolve(parser->ParameterFile());
+    //parameterFile = vislib::sys::Path::Resolve(parser->ParameterFile());
+    parameterFile = parser->ParameterFile();
+    if (!parameterFile.IsEmpty()) {
+        parameterFile = vislib::sys::Path::Resolve(parameterFile);
+    }
     initParameterFile = parser->InitParameterFile();
     initOnlyParameterFile = parser->InitOnlyParameterFile();
     setVSync = parser->SetVSync();
@@ -745,7 +749,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 
     // run the application!
 #ifdef _WIN32
-    //vislib::sys::Console::SetTitle(L"MegaMol™");
+    //vislib::sys::Console::SetTitle(L"MegaMol\99");
     //vislib::sys::Console::SetIcon(100);
 #endif /* _WIN32 */
 
