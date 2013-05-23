@@ -869,6 +869,42 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryW(void *hCore,
     const wchar_t *frontend, const wchar_t *feparams,
     const wchar_t *filetype, bool unreg, bool overwrite);
 
+/**
+ * Answer the number of exported modules
+ *
+ * @return The number of exported modules
+ */
+MEGAMOLCORE_API int MEGAMOLCORE_CALL mmcModuleCount(void);
+
+/**
+ * Answer the module definition object of the idx-th module
+ *
+ * DO NOT Release the memory of the returned objects
+ *
+ * @param idx The zero-based index
+ *
+ * @return The module definition
+ */
+MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcModuleDescription(int idx);
+
+/**
+ * Answer the number of exported calls
+ *
+ * @return The number of exported calls
+ */
+MEGAMOLCORE_API int MEGAMOLCORE_CALL mmcCallCount(void);
+
+/**
+ * Answer the call definition object of the idx-th call
+ *
+ * DO NOT Release the memory of the returned objects
+ *
+ * @param idx The zero-based index
+ *
+ * @return The call definition
+ */
+MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcCallDescription(int idx);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

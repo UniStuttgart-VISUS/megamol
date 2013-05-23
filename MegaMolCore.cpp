@@ -25,6 +25,8 @@
 #include "ViewInstance.h"
 #include "view/AbstractView.h"
 #include "job/AbstractJob.h"
+#include "ModuleDescriptionManager.h"
+#include "CallDescriptionManager.h"
 
 #include "vislib/assert.h"
 #include "vislib/CriticalSection.h"
@@ -1152,4 +1154,66 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryW(void *hCore,
         megamol::core::CoreInstance>(hCore);
     if (core == NULL) return;
     core->QuickstartRegistry(W2T(frontend), W2T(feparams), W2T(filetype), unreg, overwrite);
+}
+
+
+/*
+ * mmcModuleCount
+ */
+MEGAMOLCORE_API int MEGAMOLCORE_CALL mmcModuleCount(void) {
+    int cnt = 0;
+    megamol::core::ModuleDescriptionManager::DescriptionIterator it
+        = megamol::core::ModuleDescriptionManager::Instance()->GetIterator();
+    while (it.HasNext()) {
+        it.Next();
+        cnt++;
+    }
+    return cnt;
+}
+
+
+/*
+ * mmcModuleDescription
+ */
+MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcModuleDescription(int idx) {
+    if (idx < 0) return nullptr;
+    megamol::core::ModuleDescriptionManager::DescriptionIterator it
+        = megamol::core::ModuleDescriptionManager::Instance()->GetIterator();
+    while (it.HasNext()) {
+        megamol::core::ModuleDescription *d = it.Next();
+        if (idx == 0) return d;
+        idx--;
+    }
+    return nullptr;
+}
+
+
+/*
+ * mmcCallCount
+ */
+MEGAMOLCORE_API int MEGAMOLCORE_CALL mmcCallCount(void) {
+    int cnt = 0;
+    megamol::core::CallDescriptionManager::DescriptionIterator it
+        = megamol::core::CallDescriptionManager::Instance()->GetIterator();
+    while (it.HasNext()) {
+        it.Next();
+        cnt++;
+    }
+    return cnt;
+}
+
+
+/*
+ * mmcCallDescription
+ */
+MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcCallDescription(int idx) {
+    if (idx < 0) return nullptr;
+    megamol::core::CallDescriptionManager::DescriptionIterator it
+        = megamol::core::CallDescriptionManager::Instance()->GetIterator();
+    while (it.HasNext()) {
+        megamol::core::CallDescription *d = it.Next();
+        if (idx == 0) return d;
+        idx--;
+    }
+    return nullptr;
 }
