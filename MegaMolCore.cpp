@@ -27,6 +27,7 @@
 #include "job/AbstractJob.h"
 #include "ModuleDescriptionManager.h"
 #include "CallDescriptionManager.h"
+#include "CallerSlot.h"
 
 #include "vislib/assert.h"
 #include "vislib/CriticalSection.h"
@@ -1258,10 +1259,12 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
     ASSERT(outCntCallerSlots != NULL);
     ASSERT(outCallerSlots != NULL);
 
+    megamol::core::RootModuleNamespace rms;
     megamol::core::ModuleDescription *md = static_cast<megamol::core::ModuleDescription*>(desc);
     ASSERT(md != NULL);
 
     megamol::core::Module *m = md->CreateModule("Hugo", NULL);
+    rms.AddChild(m);
 
     vislib::Array<mmcParamSlotDescription> pa;
     vislib::Array<mmcCalleeSlotDescription> cea;
@@ -1272,9 +1275,87 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
 
     while (!stack.IsEmpty()) {
         megamol::core::Module::ChildList::Iterator iter = stack.Pop();
+        while (iter.HasNext()) {
+            megamol::core::AbstractNamedObject *ano = iter.Next();
 
-        // TODO: Implement
+            megamol::core::ModuleNamespace *ns = dynamic_cast<megamol::core::ModuleNamespace*>(ano);
+            megamol::core::param::ParamSlot *ps = dynamic_cast<megamol::core::param::ParamSlot*>(ano);
+            megamol::core::CalleeSlot *ces = dynamic_cast<megamol::core::CalleeSlot*>(ano);
+            megamol::core::CallerSlot *crs = dynamic_cast<megamol::core::CallerSlot*>(ano);
 
+            if (ns != NULL) {
+                ASSERT(false);
+                // TODO: Implement
+            } else if (ps != NULL) {
+                SIZE_T i = pa.Count();
+                pa.SetCount(i + 1);
+
+                vislib::StringA str = ps->FullName();
+                vislib::StringA str2 = m->FullName() + "::";
+                if (str.StartsWith(str2)) str.Remove(0, str2.Length());
+
+                pa[i].name = new char[str.Length() + 1];
+                ::memcpy(const_cast<char*>(pa[i].name), str.PeekBuffer(), str.Length() + 1);
+
+                str = ps->Description();
+                pa[i].desc = new char[str.Length() + 1];
+                ::memcpy(const_cast<char*>(pa[i].desc), str.PeekBuffer(), str.Length() + 1);
+
+                vislib::RawStorage blob;
+                ps->Param<::megamol::core::param::AbstractParam>()->Definition(blob);
+
+                pa[i].typeInfoSize = blob.GetSize();
+                pa[i].typeInfo = new const unsigned char[pa[i].typeInfoSize];
+                ::memcpy(const_cast<unsigned char*>(pa[i].typeInfo), blob, pa[i].typeInfoSize);
+
+            } else if (ces != NULL) {
+                SIZE_T i = cea.Count();
+                cea.SetCount(i + 1);
+
+                vislib::StringA str = ces->FullName();
+                vislib::StringA str2 = m->FullName() + "::";
+                if (str.StartsWith(str2)) str.Remove(0, str2.Length());
+
+                cea[i].name = new char[str.Length() + 1];
+                ::memcpy(const_cast<char*>(cea[i].name), str.PeekBuffer(), str.Length() + 1);
+
+                str = ces->Description();
+                cea[i].desc = new char[str.Length() + 1];
+                ::memcpy(const_cast<char*>(cea[i].desc), str.PeekBuffer(), str.Length() + 1);
+
+                cea[i].cntCallbacks = static_cast<unsigned int>(ces->GetCallbackCount());
+                cea[i].callbackCallType = new const char*[cea[i].cntCallbacks];
+                cea[i].callbackFuncName = new const char*[cea[i].cntCallbacks];
+
+                for (unsigned int j = 0; j < cea[i].cntCallbacks; j++) {
+                    str = ces->GetCallbackCallName(j);
+                    cea[i].callbackCallType[j] = new char[str.Length() + 1];
+                    ::memcpy(const_cast<char*>(cea[i].callbackCallType[j]), str.PeekBuffer(), str.Length() + 1);
+
+                    str = ces->GetCallbackFuncName(j);
+                    cea[i].callbackFuncName[j] = new char[str.Length() + 1];
+                    ::memcpy(const_cast<char*>(cea[i].callbackFuncName[j]), str.PeekBuffer(), str.Length() + 1);
+                }
+
+            } else if (crs != NULL) {
+                SIZE_T i = cra.Count();
+                pa.SetCount(i + 1);
+
+                vislib::StringA str = crs->FullName();
+                vislib::StringA str2 = m->FullName() + "::";
+                if (str.StartsWith(str2)) str.Remove(0, str2.Length());
+
+                cra[i].name = new char[str.Length() + 1];
+                ::memcpy(const_cast<char*>(cra[i].name), str.PeekBuffer(), str.Length() + 1);
+
+                str = crs->Description();
+                cra[i].desc = new char[str.Length() + 1];
+                ::memcpy(const_cast<char*>(cra[i].desc), str.PeekBuffer(), str.Length() + 1);
+
+                ASSERT(false);
+                // TODO: Implement
+            }
+        }
     }
 
     *outCntParamSlots = pa.Count();
@@ -1287,6 +1368,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
     *outCallerSlots = new mmcCallerSlotDescription[*outCntCallerSlots];
     ::memcpy(*outCallerSlots, cra.PeekElements(), sizeof(mmcCallerSlotDescription) * *outCntCallerSlots);
 
+    rms.RemoveChild(m);
     m->SetAllCleanupMarks();
     m->PerformCleanup();
     delete m;

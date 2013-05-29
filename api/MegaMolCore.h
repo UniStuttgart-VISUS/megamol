@@ -911,7 +911,8 @@ MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcCallDescription(int idx);
 typedef struct _mmcParamSlotDescription_t {
     const char *name;
     const char *desc;
-    const char *typeInfo;
+    unsigned int typeInfoSize;
+    const unsigned char *typeInfo;
 } mmcParamSlotDescription;
 
 /**
