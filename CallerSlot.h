@@ -198,6 +198,20 @@ namespace core {
             vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
             const vislib::SmartPtr<param::AbstractParam>& param) const;
 
+        /**
+         * TODO: Document me
+         */
+        inline SIZE_T GetCompCallCount(void) const {
+            return this->compDesc.Count();
+        }
+
+        /**
+         * TODO: Document me
+         */
+        inline const char * GetCompCallClassName(SIZE_T idx) const {
+            return this->compDesc[idx]->ClassName();
+        }
+
     private:
 
         /** The connecting call object */

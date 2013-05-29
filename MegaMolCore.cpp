@@ -1278,15 +1278,11 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
         while (iter.HasNext()) {
             megamol::core::AbstractNamedObject *ano = iter.Next();
 
-            megamol::core::ModuleNamespace *ns = dynamic_cast<megamol::core::ModuleNamespace*>(ano);
             megamol::core::param::ParamSlot *ps = dynamic_cast<megamol::core::param::ParamSlot*>(ano);
             megamol::core::CalleeSlot *ces = dynamic_cast<megamol::core::CalleeSlot*>(ano);
             megamol::core::CallerSlot *crs = dynamic_cast<megamol::core::CallerSlot*>(ano);
 
-            if (ns != NULL) {
-                ASSERT(false);
-                // TODO: Implement
-            } else if (ps != NULL) {
+            if (ps != NULL) {
                 SIZE_T i = pa.Count();
                 pa.SetCount(i + 1);
 
@@ -1339,7 +1335,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
 
             } else if (crs != NULL) {
                 SIZE_T i = cra.Count();
-                pa.SetCount(i + 1);
+                cra.SetCount(i + 1);
 
                 vislib::StringA str = crs->FullName();
                 vislib::StringA str2 = m->FullName() + "::";
@@ -1352,8 +1348,14 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
                 cra[i].desc = new char[str.Length() + 1];
                 ::memcpy(const_cast<char*>(cra[i].desc), str.PeekBuffer(), str.Length() + 1);
 
-                ASSERT(false);
-                // TODO: Implement
+                cra[i].cntCompCalls = static_cast<unsigned int>(crs->GetCompCallCount());
+                cra[i].compCalls = new const char *[cra[i].cntCompCalls];
+                for (unsigned int j = 0; j < cra[i].cntCompCalls; j++) {
+                    str = crs->GetCompCallClassName(j);
+                    cra[i].compCalls[j] = new char[str.Length() + 1];
+                    ::memcpy(const_cast<char*>(cra[i].compCalls[j]), str.PeekBuffer(), str.Length() + 1);
+                }
+
             }
         }
     }
