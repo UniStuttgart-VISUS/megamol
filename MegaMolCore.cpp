@@ -1219,6 +1219,30 @@ MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcCallDescription(int idx) {
 }
 
 
+/**
+ * TODO: Document me
+ */
+bool operator==(const mmcParamSlotDescription lhs, mmcParamSlotDescription rhs) {
+    return ::memcmp(&lhs, &rhs, sizeof(mmcParamSlotDescription));
+}
+
+
+/**
+ * TODO: Document me
+ */
+bool operator==(const mmcCalleeSlotDescription lhs, mmcCalleeSlotDescription rhs) {
+    return ::memcmp(&lhs, &rhs, sizeof(mmcCalleeSlotDescription));
+}
+
+
+/**
+ * TODO: Document me
+ */
+bool operator==(const mmcCallerSlotDescription lhs, mmcCallerSlotDescription rhs) {
+    return ::memcmp(&lhs, &rhs, sizeof(mmcCallerSlotDescription));
+}
+
+
 /*
  * mmcGetModuleSlotDescriptions
  */
@@ -1234,14 +1258,38 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
     ASSERT(outCntCallerSlots != NULL);
     ASSERT(outCallerSlots != NULL);
 
-    // TODO: Implement
+    megamol::core::ModuleDescription *md = static_cast<megamol::core::ModuleDescription*>(desc);
+    ASSERT(md != NULL);
 
-    *outCntParamSlots = 0;
-    *outParamSlots = new mmcParamSlotDescription[0];
-    *outCntCalleeSlots = 0;
-    *outCalleeSlots = new mmcCalleeSlotDescription[0];
-    *outCntCallerSlots = 0;
-    *outCallerSlots = new mmcCallerSlotDescription[0];
+    megamol::core::Module *m = md->CreateModule("Hugo", NULL);
+
+    vislib::Array<mmcParamSlotDescription> pa;
+    vislib::Array<mmcCalleeSlotDescription> cea;
+    vislib::Array<mmcCallerSlotDescription> cra;
+
+    vislib::Stack<megamol::core::Module::ChildList::Iterator> stack;
+    stack.Push(m->GetChildIterator());
+
+    while (!stack.IsEmpty()) {
+        megamol::core::Module::ChildList::Iterator iter = stack.Pop();
+
+        // TODO: Implement
+
+    }
+
+    *outCntParamSlots = pa.Count();
+    *outParamSlots = new mmcParamSlotDescription[*outCntParamSlots];
+    ::memcpy(*outParamSlots, pa.PeekElements(), sizeof(mmcParamSlotDescription) * *outCntParamSlots);
+    *outCntCalleeSlots = cea.Count();
+    *outCalleeSlots = new mmcCalleeSlotDescription[*outCntCalleeSlots];
+    ::memcpy(*outCalleeSlots, cea.PeekElements(), sizeof(mmcCalleeSlotDescription) * *outCntCalleeSlots);
+    *outCntCallerSlots = cra.Count();
+    *outCallerSlots = new mmcCallerSlotDescription[*outCntCallerSlots];
+    ::memcpy(*outCallerSlots, cra.PeekElements(), sizeof(mmcCallerSlotDescription) * *outCntCallerSlots);
+
+    m->SetAllCleanupMarks();
+    m->PerformCleanup();
+    delete m;
 }
 
 
@@ -1256,6 +1304,36 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcReleaseModuleSlotDescriptions(
     ASSERT(outCalleeSlots != NULL);
     ASSERT(outCallerSlots != NULL);
 
-    // TODO: Implement
+    for (unsigned int i = 0; i < outCntParamSlots; i++) {
+        delete[] (*outParamSlots)[i].name;
+        delete[] (*outParamSlots)[i].desc;
+        delete[] (*outParamSlots)[i].typeInfo;
+    }
+    delete[] (*outParamSlots);
+    *outParamSlots = NULL;
+
+    for (unsigned int i = 0; i < outCntCalleeSlots; i++) {
+        delete[] (*outCalleeSlots)[i].name;
+        delete[] (*outCalleeSlots)[i].desc;
+        for (unsigned int j = 0; j < (*outCalleeSlots)[i].cntCallbacks; j++) {
+            delete[] (*outCalleeSlots)[i].callbackCallType[j];
+            delete[] (*outCalleeSlots)[i].callbackFuncName[j];
+        }
+        delete[] (*outCalleeSlots)[i].callbackCallType;
+        delete[] (*outCalleeSlots)[i].callbackFuncName;
+    }
+    delete[] (*outCalleeSlots);
+    *outCalleeSlots = NULL;
+
+    for (unsigned int i = 0; i < outCntCallerSlots; i++) {
+        delete[] (*outCallerSlots)[i].name;
+        delete[] (*outCallerSlots)[i].desc;
+        for (unsigned int j = 0; j < (*outCallerSlots)[i].cntCompCalls; j++) {
+            delete[] (*outCallerSlots)[i].compCalls[j];
+        }
+        delete[] (*outCallerSlots)[i].compCalls;
+    }
+    delete[] (*outCallerSlots);
+    *outCallerSlots = NULL;
 
 }
