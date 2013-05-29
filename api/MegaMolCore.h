@@ -905,6 +905,52 @@ MEGAMOLCORE_API int MEGAMOLCORE_CALL mmcCallCount(void);
  */
 MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcCallDescription(int idx);
 
+/**
+ * TODO: Document me!
+ */
+typedef struct _mmcParamSlotDescription_t {
+    const char *name;
+    const char *desc;
+    const char *typeInfo;
+} mmcParamSlotDescription;
+
+/**
+ * TODO: Document me!
+ */
+typedef struct _mmcCalleeSlotDescription_t {
+    const char *name;
+    const char *desc;
+    unsigned int cntCallbacks;
+    const char ** callbackCallType;
+    const char ** callbackFuncName;
+} mmcCalleeSlotDescription;
+
+/**
+ * TODO: Document me!
+ */
+typedef struct _mmcCallerSlotDescription_t {
+    const char *name;
+    const char *desc;
+    unsigned int cntCompCalls;
+    const char ** compCalls;
+} mmcCallerSlotDescription;
+
+/**
+ * TODO: Document me!
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc, 
+    unsigned int *outCntParamSlots, mmcParamSlotDescription **outParamSlots,
+    unsigned int *outCntCalleeSlots, mmcCalleeSlotDescription **outCalleeSlots,
+    unsigned int *outCntCallerSlots, mmcCallerSlotDescription **outCallerSlots);
+
+/**
+ * TODO: Document me!
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcReleaseModuleSlotDescriptions(
+    unsigned int outCntParamSlots, mmcParamSlotDescription **outParamSlots,
+    unsigned int outCntCalleeSlots, mmcCalleeSlotDescription **outCalleeSlots,
+    unsigned int outCntCallerSlots, mmcCallerSlotDescription **outCallerSlots);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

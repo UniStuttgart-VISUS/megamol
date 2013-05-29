@@ -1217,3 +1217,45 @@ MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcCallDescription(int idx) {
     }
     return nullptr;
 }
+
+
+/*
+ * mmcGetModuleSlotDescriptions
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc, 
+        unsigned int *outCntParamSlots, mmcParamSlotDescription **outParamSlots,
+        unsigned int *outCntCalleeSlots, mmcCalleeSlotDescription **outCalleeSlots,
+        unsigned int *outCntCallerSlots, mmcCallerSlotDescription **outCallerSlots) {
+    ASSERT(desc != NULL);
+    ASSERT(outCntParamSlots != NULL);
+    ASSERT(outParamSlots != NULL);
+    ASSERT(outCntCalleeSlots != NULL);
+    ASSERT(outCalleeSlots != NULL);
+    ASSERT(outCntCallerSlots != NULL);
+    ASSERT(outCallerSlots != NULL);
+
+    // TODO: Implement
+
+    *outCntParamSlots = 0;
+    *outParamSlots = new mmcParamSlotDescription[0];
+    *outCntCalleeSlots = 0;
+    *outCalleeSlots = new mmcCalleeSlotDescription[0];
+    *outCntCallerSlots = 0;
+    *outCallerSlots = new mmcCallerSlotDescription[0];
+}
+
+
+/*
+ * mmcReleaseModuleSlotDescriptions
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcReleaseModuleSlotDescriptions(
+        unsigned int outCntParamSlots, mmcParamSlotDescription **outParamSlots,
+        unsigned int outCntCalleeSlots, mmcCalleeSlotDescription **outCalleeSlots,
+        unsigned int outCntCallerSlots, mmcCallerSlotDescription **outCallerSlots) {
+    ASSERT(outParamSlots != NULL);
+    ASSERT(outCalleeSlots != NULL);
+    ASSERT(outCallerSlots != NULL);
+
+    // TODO: Implement
+
+}
