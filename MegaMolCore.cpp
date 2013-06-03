@@ -1263,7 +1263,16 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
     megamol::core::ModuleDescription *md = static_cast<megamol::core::ModuleDescription*>(desc);
     ASSERT(md != NULL);
 
-    megamol::core::Module *m = md->CreateModule("Hugo", NULL);
+    megamol::core::Module *m = md->CreateModule(NULL, NULL);
+    if (m == NULL) {
+        *outCntParamSlots = 0;
+        *outParamSlots = NULL;
+        *outCntCalleeSlots = 0;
+        *outCalleeSlots = NULL;
+        *outCntCallerSlots = 0;
+        *outCallerSlots = NULL;
+        return;
+    }
     rms.AddChild(m);
 
     vislib::Array<mmcParamSlotDescription> pa;
