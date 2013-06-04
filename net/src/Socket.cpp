@@ -1074,7 +1074,7 @@ SIZE_T vislib::net::Socket::sendTo(const IPEndPoint& toAddr,
         wsaBuf.len -= lastSent;
 
 #else /* _WIN32 */
-        TEMP_FAILURE_RETRY(::sendto(this->handle, 
+        TEMP_FAILURE_RETRY(lastSent = ::sendto(this->handle, 
             static_cast<const char *>(data),
             static_cast<int>(cntBytes - totalSent), flags, to, toLen));
 
