@@ -330,7 +330,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
     data.tileWidth = static_cast<UINT>(vislib::math::Max(0, this->tileWidthSlot.Param<param::IntParam>()->Value()));
     data.tileHeight = static_cast<UINT>(vislib::math::Max(0, this->tileHeightSlot.Param<param::IntParam>()->Value()));
     vislib::TString filename = this->imageFilenameSlot.Param<param::FilePathParam>()->Value();
-    float frameTime = 0.0f;
+    float frameTime = -1.0f;
     if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
         param::ParamSlot* time = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time"));
         if (time != NULL) {
