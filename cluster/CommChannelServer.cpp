@@ -109,6 +109,47 @@ void cluster::CommChannelServer::MultiSendMessage(const vislib::net::AbstractSim
     }
 }
 
+/*
+ * cluster::CommChannelServer::MultiSendMessage
+ */
+void cluster::CommChannelServer::SingleSendMessage(const vislib::net::AbstractSimpleMessage& msg, unsigned int node) {
+    vislib::sys::AutoLock(this->clientsLock);
+    vislib::SingleLinkedList<cluster::CommChannel>::Iterator iter = this->clients.GetIterator();
+	
+	unsigned int current = 0;
+
+    while (iter.HasNext()) {
+        cluster::CommChannel& channel = iter.Next();
+		if ( current == node ) {
+			try {
+				channel.SendMessage(msg);
+			} catch(vislib::net::SocketException skex) {
+				if ((static_cast<int>(skex.GetErrorCode()) != 10054) 
+						&& (static_cast<int>(skex.GetErrorCode()) != 10053)) {
+					vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+						"Unable to send message to %s: [%d] %s", channel.CounterpartName().PeekBuffer(),
+						static_cast<int>(skex.GetErrorCode()), skex.GetMsgA());
+				}
+			} catch(vislib::Exception ex) {
+				vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+					"Unable to send message to %s: %s", channel.CounterpartName().PeekBuffer(), ex.GetMsgA());
+			} catch(...) {
+				vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+					"Unable to send message to %s", channel.CounterpartName().PeekBuffer());
+			}
+			break;
+		} 
+		++ current;
+    }
+}
+
+/**
+ * Answers the number of clients currently connected.
+ */
+unsigned int cluster::CommChannelServer::ClientsCount()
+{
+	return this->clients.Count();
+}
 
 /*
  * cluster::CommChannelServer::OnCommChannelDisconnect

@@ -129,6 +129,18 @@ namespace cluster {
          */
         void MultiSendMessage(const vislib::net::AbstractSimpleMessage& msg);
 
+        /**
+         * Sends a message to the nth node in the cluster.
+         *
+         * @param msg The message to be send
+         */
+        void SingleSendMessage(const vislib::net::AbstractSimpleMessage& msg, unsigned int node);
+
+		/**
+		 * Answers the number of clients currently connected.
+		 */
+		unsigned int ClientsCount();
+
     protected:
 
         /**
