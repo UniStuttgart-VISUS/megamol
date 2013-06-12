@@ -420,7 +420,6 @@ bool SimpleMoleculeRenderer::GetExtents(Call& call) {
  * protein::SimpleMoleculeRenderer::Render
  */
 bool SimpleMoleculeRenderer::Render(Call& call) {
-
     // cast the call to Render3D
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if( cr3d == NULL ) return false;
