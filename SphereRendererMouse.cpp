@@ -12,7 +12,7 @@
 
 #include <math.h>
 
-#include <GL/gl.h>
+#include "glh/glh_extensions.h"
 #include <GL/glu.h>
 
 #include <CoreInstance.h>

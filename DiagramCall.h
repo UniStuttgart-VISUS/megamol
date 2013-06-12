@@ -21,12 +21,7 @@
 #include "vislib/Vector.h"
 #include "vislib/String.h"
 #include "vislib/forceinline.h"
-//#include <limits.h>
-//#include "vislib/IllegalParamException.h"
-//#include "vislib/Cuboid.h"
 
-//#include <vector>
-//#include <GL/gl.h>
 
 namespace megamol {
 namespace protein {

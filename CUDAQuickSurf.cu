@@ -23,9 +23,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#define GLH_EXT_SINGLE_FILE
 #include "glh/glh_extensions.h"
-#include <GL/gl.h>
 #include <GL/glu.h>
 
 #include <stdio.h>

@@ -35,8 +35,7 @@
 #include "vislib/AbstractOpenGLShader.h"
 #include "vislib/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
-#include <glh/glh_extensions.h>
-#include <GL/gl.h>
+#include "glh/glh_extensions.h"
 #include <GL/glu.h>
 #include <math.h>
 #include <time.h>

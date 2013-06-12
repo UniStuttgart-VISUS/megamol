@@ -8,6 +8,8 @@
 
 #define _USE_MATH_DEFINES 1
 
+#ifdef WITH_CUDA
+
 //#define TEST
 
 #include "VolumeMeshRenderer.h"
@@ -2329,3 +2331,5 @@ bool VolumeMeshRenderer::GetDiagramData(core::Call& call) {
 
     return true;
 }
+
+#endif

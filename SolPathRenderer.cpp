@@ -5,6 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
+
 #include "SolPathRenderer.h"
 #include "CallAutoDescription.h"
 #include "CoreInstance.h"
@@ -13,7 +14,7 @@
 #include "view/CallRender3D.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/ShaderSource.h"
-#include <GL/gl.h>
+#include "glh/glh_extensions.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -43,6 +44,11 @@ SolPathRenderer::~SolPathRenderer(void) {
  */
 bool SolPathRenderer::create(void) {
     using vislib::sys::Log;
+    if( !glh_init_extensions( "GL_ARB_vertex_program GL_VERSION_2_0") ) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            "Unable to initialise opengl extensions for ARB shaders and OGL 2.0");
+        return false;
+    }
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to initialise opengl extensions for glsl");

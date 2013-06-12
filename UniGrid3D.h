@@ -13,9 +13,9 @@
 #include <vislib/Vector.h>
 #include <vislib/OutOfRangeException.h>
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
+#ifdef WITH_CUDA
 #include <cutil_inline.h>
-#endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */
+#endif  // WITH_CUDA
 
 namespace megamol {
 namespace protein {

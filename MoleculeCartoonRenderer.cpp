@@ -28,9 +28,8 @@
 #include "vislib/ASCIIFileBuffer.h"
 #include "utility/ColourParser.h"
 #include "vislib/StringConverter.h"
-#include <GL/gl.h>
+#include "glh/glh_extensions.h"
 #include <GL/glu.h>
-#include <glh/glh_extensions.h>
 #include <math.h>
 #include <time.h>
 

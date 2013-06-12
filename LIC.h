@@ -17,6 +17,9 @@
 namespace megamol {
 namespace protein {
 
+
+#ifdef WITH_CUDA
+
 /**
  * Class offering computation of LIC (Line Integral Convolution) based on a
  * 3D uniform grid.
@@ -152,6 +155,8 @@ private:
             vislib::math::Vector<float, 3> min,
             vislib::math::Vector<float, 3> max);
 };
+
+#endif // WITH_CUDA
 
 } /* end namespace protein */
 } /* end namespace megamol */
