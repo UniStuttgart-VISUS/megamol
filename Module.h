@@ -87,6 +87,17 @@ namespace core {
         }
 
         /**
+         * Gets the name of the current instance as specified on the command
+         * line, i.e. the name one level below the root namespace.
+         * Caution: This can only work after the module is properly
+         * inserted into the module graph and its parent is known,
+         * calling it on create, e.g. will not yield satisfactory results.
+         *
+         * @return the according name
+         */
+        vislib::StringA GetDemiRootName() const;
+
+        /**
          * Gets the instance of the core owning this module.
          *
          * @return The instance of the core owning this module.
@@ -120,6 +131,22 @@ namespace core {
          * @return 'true' on success, 'false' otherwise.
          */
         virtual bool create(void) = 0;
+
+        /**
+         * Check the configuration for a value for the parameter 'val'.
+         * It checks, in descending order of priority, for occurences
+         * of: [this.GetDemiRootName]-[name], *-[name], [name] and
+         * returns the respective value. If nothing is found,
+         * vislib::StringA::EMPTY is returned.
+         * Caution: This can only work after the module is properly
+         * inserted into the module graph, since otherwise the
+         * DemiRootName cannot be determined reliably
+         *
+         * @param name the name of the sought value
+         *
+         * @return the value or vislib::StringA::EMPTY
+         */
+        vislib::StringA getRelevantConfigValue(vislib::StringA name);
 
         /**
          * Gets the instance of the core owning this module.

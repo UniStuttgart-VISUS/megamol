@@ -69,9 +69,10 @@ view::AbstractTileView::~AbstractTileView(void) {
 void view::AbstractTileView::initTileViewParameters(void) {
     using vislib::sys::Log;
     const utility::Configuration& cfg = this->GetCoreInstance()->Configuration();
+    vislib::StringA v;
 
-    if (cfg.IsConfigValueSet("tveye")) {
-        vislib::StringA v(cfg.ConfigValue("tveye"));
+    v = this->getRelevantConfigValue("tveye");
+    if (!v.IsEmpty()) {
         bool seteye = true;
 
         if (v.Equals("left", false)) {
@@ -111,8 +112,8 @@ void view::AbstractTileView::initTileViewParameters(void) {
         }
     }
 
-    if (cfg.IsConfigValueSet("tvproj")) {
-        vislib::StringA v(cfg.ConfigValue("tvproj"));
+    v = this->getRelevantConfigValue("tvproj");
+    if (!v.IsEmpty()) {
         bool setproj = true;
 
         if (v.Equals("mono", false)) {
@@ -181,9 +182,10 @@ void view::AbstractTileView::initTileViewParameters(void) {
         }
     }
 
-    if (cfg.IsConfigValueSet("tvview")) {
+    v = this->getRelevantConfigValue("tvview");
+    if (!v.IsEmpty()) {
         try {
-            if (!this->virtSizeSlot.Param<param::Vector2fParam>()->ParseValue(cfg.ConfigValue("tvview"))) {
+            if (!this->virtSizeSlot.Param<param::Vector2fParam>()->ParseValue(v)) {
                 throw new vislib::Exception("ex", __FILE__, __LINE__);
             }
         } catch(...) {
@@ -191,9 +193,10 @@ void view::AbstractTileView::initTileViewParameters(void) {
         }
     }
 
-    if (cfg.IsConfigValueSet("tvtile")) {
+    v = this->getRelevantConfigValue("tvtile");
+    if (!v.IsEmpty()) {
         try {
-            if (!this->tileSlot.Param<param::Vector4fParam>()->ParseValue(cfg.ConfigValue("tvtile"))) {
+            if (!this->tileSlot.Param<param::Vector4fParam>()->ParseValue(v)) {
                 throw new vislib::Exception("ex", __FILE__, __LINE__);
             }
         } catch(...) {

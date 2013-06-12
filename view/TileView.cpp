@@ -15,7 +15,7 @@ using vislib::graphics::CameraParameters;
 /*
  * view::TileView::TileView
  */
-view::TileView::TileView(void) : AbstractTileView() {
+view::TileView::TileView(void) : AbstractTileView(), firstFrame(false) {
 
 }
 
@@ -34,7 +34,10 @@ view::TileView::~TileView(void) {
 void view::TileView::Render(float time, double instTime) {
     view::CallRenderView *crv = this->getCallRenderView();
     if (crv == NULL) return; // false ?
-
+    if (this->firstFrame) {
+        this->initTileViewParameters();
+        this->firstFrame = false;
+    }
     this->checkParameters();
 
     crv->ResetAll();
@@ -55,7 +58,7 @@ void view::TileView::Render(float time, double instTime) {
  * view::TileView::create
  */
 bool view::TileView::create(void) {
-    // intentionally empty
+    this->firstFrame = true;
     return true;
 }
 

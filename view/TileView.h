@@ -88,6 +88,9 @@ namespace view {
 
     private:
 
+        /** Flag to identify the first frame */
+        bool firstFrame;
+
     };
 
 

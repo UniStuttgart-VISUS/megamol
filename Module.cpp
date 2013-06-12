@@ -73,6 +73,18 @@ AbstractSlot * Module::FindSlot(const vislib::StringA& name) {
 
 
 /*
+ * Module::GetDemiRootName
+ */
+vislib::StringA Module::GetDemiRootName() const {
+    const Module *tm = this;
+    while (tm->Parent() != NULL && !tm->Parent()->Name().IsEmpty()) {
+        tm = static_cast<const Module *>(tm->Parent());
+    }
+    return tm->Name();
+}
+
+
+/*
  * Module::Release
  */
 void Module::Release(void) {
@@ -128,6 +140,30 @@ void Module::PerformCleanup(void) {
         }
     } while (c != NULL);
 
+}
+
+
+/*
+ * Module::getRelevantConfigValue
+ */
+vislib::StringA Module::getRelevantConfigValue(vislib::StringA name) {
+    vislib::StringA ret = vislib::StringA::EMPTY;
+    const utility::Configuration& cfg = this->GetCoreInstance()->Configuration();
+    vislib::StringA drn = this->GetDemiRootName();
+    vislib::StringA test = drn;
+    test.Append("-");
+    test.Append(name);
+    vislib::StringA test2("*-");
+    test2.Append(name);
+    if (cfg.IsConfigValueSet(test)) {
+        ret = cfg.ConfigValue(test);
+    } else if (cfg.IsConfigValueSet(test2)) {
+        ret = cfg.ConfigValue(test2);
+    } else if (cfg.IsConfigValueSet(name)) {
+        ret = cfg.ConfigValue(name);
+    }
+
+    return ret;
 }
 
 

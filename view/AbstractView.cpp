@@ -84,8 +84,9 @@ bool view::AbstractView::DesiredWindowPosition(int *x, int *y, int *w,
     if (tm != NULL) {
 
         // this is not working properly if the main module/view is placed at top namespace root
-        vislib::StringA name(tm->Name());
-        if (tm->Parent() != NULL) name = tm->Parent()->Name();
+        //vislib::StringA name(tm->Name());
+        //if (tm->Parent() != NULL) name = tm->Parent()->Name();
+        vislib::StringA name(tm->GetDemiRootName());
 
         if (name.IsEmpty()) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 1200,
