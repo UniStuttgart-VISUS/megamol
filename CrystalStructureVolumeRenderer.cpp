@@ -45,8 +45,7 @@
 #include <thrust/version.h>
 #include <cutil_inline.h>
 
-#include <GL/glext.h>
-#include <GL/gl.h>
+#include "glh/glh_extensions.h"
 #include <GL/glu.h>
 
 #include <cmath>

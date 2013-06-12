@@ -29,7 +29,7 @@
 #include "glh/glh_extensions.h"
 #include "vislib/Matrix.h"
 #include "vislib/ColourRGBAu8.h"
-#include <GL/gl.h>
+#include "glh/glh_extensions.h"
 #include <GL/glu.h>
 #include <iostream>
 #include <ctime>

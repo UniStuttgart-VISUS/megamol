@@ -11,9 +11,8 @@
 
 #include "VolumeSliceRenderer.h"
 #include "CoreInstance.h"
-#include <GL/gl.h>
+#include "glh/glh_extensions.h"
 #include <GL/glu.h>
-#include <glh/glh_extensions.h>
 #include <math.h>
 
 using namespace megamol;

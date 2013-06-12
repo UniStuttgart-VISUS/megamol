@@ -18,7 +18,6 @@
 #include "MolecularDataCall.h"
 
 #include "glh/glh_extensions.h"
-#include <GL/gl.h>
 #include <GL/glu.h>
 
 #include "Filter.h"

@@ -27,7 +27,7 @@
 #include "vislib/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
-#include <GL/gl.h>
+#include "glh/glh_extensions.h"
 #include <GL/glu.h>
 #include <iostream>
 #include <ctime>

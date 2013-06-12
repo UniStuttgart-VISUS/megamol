@@ -17,9 +17,9 @@
 #include "CallerSlot.h"
 #include "view/Renderer3DModuleDS.h"
 #include "view/AbstractCallRender3D.h"
+
 #include "vislib/GLSLShader.h"
 #include "vislib/GLSLGeometryShader.h"
-
 
 
 namespace megamol {

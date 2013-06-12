@@ -16,6 +16,7 @@
 
 using namespace megamol;
 
+#ifdef WITH_CUDA
 
 /*
  * protein::LIC::CalcLicX
@@ -708,3 +709,4 @@ void protein::LIC::clampVec(vislib::math::Vector<float, 3> &vec,
     if(vec.Z() >= max.Z()) vec.SetZ(max.Z()-1.0f);
 }
 
+#endif // WITH_CUDA

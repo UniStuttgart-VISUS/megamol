@@ -27,7 +27,7 @@
 #  include <windows.h>
 #endif
 
-#include <GL/gl.h>
+#include "glh/glh_extensions.h"
 //#include "mmath.h"
 
 

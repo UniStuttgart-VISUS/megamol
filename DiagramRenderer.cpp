@@ -14,9 +14,8 @@
 #include "vislib/Rectangle.h"
 #include "vislib/BufferedFile.h"
 #include "vislib/sysfunctions.h"
-#include <GL/gl.h>
+#include "glh/glh_extensions.h"
 #include <GL/glu.h>
-#include <glh/glh_extensions.h>
 #include <math.h>
 #include <vislib/verdana.inc>
 #include "misc/ImageViewer.h"

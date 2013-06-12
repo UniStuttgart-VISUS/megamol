@@ -15,7 +15,6 @@
 #include <math.h>
 #include "misc/ImageViewer.h"
 #include "utility/ResourceWrapper.h"
-//#include "GL/gl.h"
 #include "glh/glh_extensions.h"
 
 using namespace megamol;

@@ -24,6 +24,8 @@ using namespace vislib;
 using namespace vislib::math;
 
 
+#ifdef WITH_CUDA
+
 /*
  * protein:CritPoints::GetCritPoints
  */
@@ -575,3 +577,5 @@ vislib::math::Vector<float, 3> protein::CritPoints::sampleUniGridNearestNeighbou
     return vislib::math::Vector<float, 3>(vecRes.x, vecRes.y, vecRes.z);
 }
 
+
+#endif // WITH_CUDA

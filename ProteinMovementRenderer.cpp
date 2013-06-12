@@ -27,9 +27,8 @@
 #include "vislib/AbstractOpenGLShader.h"
 #include "vislib/Array.h"
 #include "vislib/Matrix.h"
-#include <GL/gl.h>
+#include "glh/glh_extensions.h"
 #include <GL/glu.h>
-#include <glh/glh_extensions.h>
 #include <math.h>
 #include <time.h>
 

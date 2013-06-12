@@ -7,6 +7,8 @@
  * $Id$
  */
 
+#include "stdafx.h"
+
 #include "UniGrid3D.h"
 
 // Empty

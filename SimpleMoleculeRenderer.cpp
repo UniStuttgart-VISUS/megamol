@@ -9,6 +9,9 @@
 
 #define _USE_MATH_DEFINES 1
 
+#define GLH_EXT_SINGLE_FILE
+#include "glh/glh_extensions.h"
+
 #include "SimpleMoleculeRenderer.h"
 #include "CoreInstance.h"
 #include "Color.h"
@@ -28,9 +31,7 @@
 #include "vislib/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
 #include <vislib/Matrix.h>
-#include <GL/gl.h>
 #include <GL/glu.h>
-#include <glh/glh_genext.h>
 #include <omp.h>
 
 

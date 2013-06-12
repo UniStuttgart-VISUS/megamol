@@ -1824,9 +1824,15 @@ bool PDBLoader::readNumXTCFrames() {
 
     vislib::math::Cuboid<float> tmpBBox( this->bbox);
 
-    // read until eof
-    while( !xtcFile.eof() ) {
+    std::fstream::iostate st = 0;
 
+    // get length of file:
+    xtcFile.seekg(0, xtcFile.end);
+    int xtcFileLength = xtcFile.tellg();
+    xtcFile.seekg (0, xtcFile.beg);
+
+    // read until eof
+    while( !xtcFile.eof() && xtcFile.tellg() < xtcFileLength ) {
         // add the offset to the offset array
         this->XTCFrameOffset.Add( (unsigned int)xtcFile.tellg());
 
@@ -1885,6 +1891,7 @@ bool PDBLoader::readNumXTCFrames() {
 
         // add this frame to the frame count
         this->numXTCFrames++;
+        st = xtcFile.rdstate();
     }
     xtcFile.close();
 
