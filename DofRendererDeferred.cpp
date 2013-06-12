@@ -6,6 +6,7 @@
  */
 
 #include "stdafx.h"
+#include "glh/glh_extensions.h"
 #include <GL/glu.h>
 
 #include <param/EnumParam.h>
