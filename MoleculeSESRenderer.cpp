@@ -60,7 +60,8 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleDS (),
     molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"),
     colorTableFileParam( "colorTableFilename", "The filename of the color table."),
     offscreenRenderingParam( "offscreenRendering", "Toggle offscreen rendering."),
-	puxelSizeBuffer(512 << 20)
+	puxelSizeBuffer(512 << 20),
+    computeSesPerMolecule(false)
 {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable ( &this->molDataCallerSlot );
@@ -95,7 +96,7 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleDS (),
     this->rendermodeParam << rm;
 	
     // ----- use Puxels param -----
-    this->usePuxels = true;
+    this->usePuxels = false;
     param::BoolParam *puxbpm = new param::BoolParam( this->usePuxels );
         this->puxelsParam << puxbpm;
 
@@ -203,7 +204,9 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleDS (),
     // export parameters
     this->MakeSlotAvailable( &this->rendermodeParam );
     this->MakeSlotAvailable( &this->postprocessingParam );
+#ifdef WITH_PUXELS
 	this->MakeSlotAvailable( &this->puxelsParam );
+#endif
     this->MakeSlotAvailable( &this->coloringmodeParam );
     this->MakeSlotAvailable( &this->silhouettecolorParam );
     this->MakeSlotAvailable( &this->sigmaParam );
@@ -259,7 +262,7 @@ MoleculeSESRenderer::~MoleculeSESRenderer(void) {
 /*
  * protein::MoleculeSESRenderer::release
  */
-void protein::MoleculeSESRenderer::release( void ) {
+void MoleculeSESRenderer::release( void ) {
 
 }
 
@@ -271,7 +274,11 @@ bool MoleculeSESRenderer::create( void ) {
     if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float") )
         return false;
 
+#ifdef WITH_PUXELS
 	allowPuxels = glh_init_extensions( "GL_VERSION_3_0 GL_VERSION_4_3" );
+#else
+    allowPuxels = false;
+#endif
 
     if ( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
         return false;
@@ -925,7 +932,43 @@ bool MoleculeSESRenderer::Render( Call& call ) {
         */
 
         // ----------------------------------------------------------------------------
-
+        
+        // init the reduced surfaces
+        if( this->reducedSurface.empty() ) {
+            time_t t = clock();
+            // create the reduced surface
+            unsigned int chainIds;
+            if( !this->computeSesPerMolecule ) {
+                this->reducedSurface.push_back( new ReducedSurface(mol, this->probeRadius));
+                this->reducedSurface.back()->ComputeReducedSurfaceMolecule();
+            } else {
+                // if no molecule indices are given, compute the SES for all molecules
+                if( this->molIdxList.IsEmpty()) {
+                    for( chainIds = 0; chainIds < mol->MoleculeCount(); ++chainIds ) {
+                        this->reducedSurface.push_back(
+                            new ReducedSurface(chainIds, mol, this->probeRadius) );
+                        this->reducedSurface.back()->ComputeReducedSurfaceMolecule();
+                    }
+                } else {
+                    // else compute the SES for all selected molecules
+                    for( chainIds = 0; chainIds < this->molIdxList.Count(); ++chainIds ) {
+                        this->reducedSurface.push_back(
+                            new ReducedSurface( atoi( this->molIdxList[chainIds]), mol, this->probeRadius) );
+                        this->reducedSurface.back()->ComputeReducedSurfaceMolecule();
+                    }
+                }
+            }
+            vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+                "%s: RS computed in: %f s\n", this->ClassName(), 
+                ( double( clock() - t) / double( CLOCKS_PER_SEC)));
+        }
+        // update the data / the RS
+        for( cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS ) {
+            if( this->reducedSurface[cntRS]->UpdateData( 1.0f, 5.0f) ) {
+                this->ComputeRaycastingArrays( cntRS);
+            }
+        }
+        /*
         // init the reduced surfaces
         if( this->reducedSurface.empty() ) {
             time_t t = clock();
@@ -944,6 +987,7 @@ bool MoleculeSESRenderer::Render( Call& call ) {
                 this->ComputeRaycastingArrays( cntRS);
             }
         }
+        */
     }
 
     if( !this->preComputationDone ) {
@@ -1164,7 +1208,10 @@ void MoleculeSESRenderer::UpdateParameters( const MolecularDataCall *mol) {
     if( recomputeColors ) {
         this->preComputationDone = false;
     }
-
+    
+#ifndef WITH_PUXELS
+    this->usePuxels = false;
+#endif
 }
 
 /*
@@ -1522,18 +1569,19 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
                 attribInSphere = glGetAttribLocationARB( this->torusShaderOR, "inSphere");
                 attribInColors = glGetAttribLocationARB( this->torusShaderOR, "inColors");
                 attribInCuttingPlane = glGetAttribLocationARB( this->torusShaderOR, "inCuttingPlane");
-            }
-            else {
+            } else {
                 this->torusShader.Enable();
                 // set shader variables
 
 				// puxels
-				glUniform1ui( this->torusShader.ParameterLocation("puxels_use"), this->usePuxels ? 1 : 0);
+#ifdef WITH_PUXELS
 				glUniform1ui( this->torusShader.ParameterLocation("width"),        this->cameraInfo->TileRect().Width());
 				glUniform1ui( this->torusShader.ParameterLocation("height"),       this->cameraInfo->TileRect().Height());
+				glUniform1ui( this->torusShader.ParameterLocation("puxels_use"), this->usePuxels ? 1 : 0);
 				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
 				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
 				glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
+#endif
 
                 glUniform4fvARB( this->torusShader.ParameterLocation( "viewAttr"), 1, viewportStuff);
                 glUniform3fvARB( this->torusShader.ParameterLocation( "camIn"), 1, this->cameraInfo->Front().PeekComponents());
@@ -1577,8 +1625,10 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
             // enable torus shader
 
 			// puxels
-			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+#ifdef WITH_PUXELS
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 			glMemoryBarrier(GL_ATOMIC_COUNTER_BARRIER_BIT);
+#endif
 
             if(offscreenRendering) {
                 this->torusShaderOR.Disable();
@@ -1625,13 +1675,15 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
             else {
                 this->sphericalTriangleShader.Enable();
                 // set shader variables
+#ifdef WITH_PUXELS
 				// puxels
-				glUniform1ui( this->sphericalTriangleShader.ParameterLocation("puxels_use"), this->usePuxels ? 1 : 0);
 				glUniform1ui( this->sphericalTriangleShader.ParameterLocation("width"),        this->cameraInfo->TileRect().Width());
 				glUniform1ui( this->sphericalTriangleShader.ParameterLocation("height"),       this->cameraInfo->TileRect().Height());
+				glUniform1ui( this->sphericalTriangleShader.ParameterLocation("puxels_use"), this->usePuxels ? 1 : 0);
 				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
 				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
-				glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
+                glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
+#endif
 
                 glUniform4fvARB( this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
                 glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
@@ -1684,8 +1736,10 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
             glDisableClientState(GL_VERTEX_ARRAY);
 
 			// puxels
+#ifdef WITH_PUXELS
 			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 			glMemoryBarrier(GL_ATOMIC_COUNTER_BARRIER_BIT);
+#endif
 
             // disable spherical triangle shader
             if(offscreenRendering) {
@@ -1718,13 +1772,15 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
                 this->sphereShader.Enable();
                 // set shader variables
 
+#ifdef WITH_PUXELS
 				// puxels
-				glUniform1ui( this->sphereShader.ParameterLocation("puxels_use"), this->usePuxels ? 1 : 0);
 				glUniform1ui( this->sphereShader.ParameterLocation("width"),        this->cameraInfo->TileRect().Width());
 				glUniform1ui( this->sphereShader.ParameterLocation("height"),       this->cameraInfo->TileRect().Height());
+				glUniform1ui( this->sphereShader.ParameterLocation("puxels_use"), this->usePuxels ? 1 : 0);
 				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
 				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
 				glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
+#endif
 
                 glUniform4fvARB( this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
                 glUniform3fvARB( this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
@@ -1747,10 +1803,12 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
         // disable sphere shader
         glDisableClientState( GL_COLOR_ARRAY);
         glDisableClientState( GL_VERTEX_ARRAY);
-
+        
+#ifdef WITH_PUXELS
 		// puxels
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 		glMemoryBarrier(GL_ATOMIC_COUNTER_BARRIER_BIT);
+#endif
 
         // disable sphere shader
         if( this->currentRendermode == GPU_RAYCASTING ) {
@@ -1764,9 +1822,11 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
         else { // GPU_RAYCASTING_INTERIOR_CLIPPING
             this->sphereClipInteriorShader.Disable();
         }
+#ifdef WITH_PUXELS
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
 		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, 0);
+#endif
     }
 
     // delete pointers
@@ -3101,9 +3161,11 @@ void MoleculeSESRenderer::deinitialise(void) {
     this->silhouetteShader.Release();
     this->transparencyShader.Release();
 	
+#ifdef WITH_PUXELS
 	this->puxelClearShader.Release();
 	this->puxelOrderShader.Release();
 	this->puxelDrawShader.Release();
+#endif
 }
 
 

@@ -25,8 +25,7 @@ using namespace megamol::protein;
  */
 ReducedSurface::ReducedSurface( const CallProteinData *prot,
 										  float probeRad) :
-		protein( prot), molecule( 0), globalRS( true), zeroVec3( 0, 0, 0)
-{
+        protein( prot), molecule( 0), globalRS( true), zeroVec3( 0, 0, 0) {
 	// set the first atom index to 0
 	this->firstAtomIdx = 0;
 	// set the number of atoms to the total number of protein atoms
@@ -45,28 +44,20 @@ ReducedSurface::ReducedSurface( const CallProteinData *prot,
 }
 
 ReducedSurface::ReducedSurface( unsigned int chainId, 
-										  const CallProteinData *prot,
-										  float probeRad) :
-		protein( prot), molecule( 0), globalRS( false), zeroVec3( 0, 0, 0)
-{
-	if( chainId < this->protein->ProteinChainCount() )
-	{
+        const CallProteinData *prot, float probeRad) :
+        protein( prot), molecule( 0), globalRS( false), zeroVec3( 0, 0, 0) {
+    if( chainId < this->protein->ProteinChainCount() ) {
 		// set the first atom index
 		this->firstAtomIdx = protein->ProteinChain( chainId).AminoAcid()[0].FirstAtomIndex();
 		// set the number of atoms to the total number of protein atoms
-		if( ( chainId + 1) < this->protein->ProteinChainCount() )
-		{
+        if( ( chainId + 1) < this->protein->ProteinChainCount() ) {
 			this->numberOfAtoms = 
 					protein->ProteinChain( chainId + 1).AminoAcid()[0].FirstAtomIndex() -
 					this->firstAtomIdx;
-		}
-		else
-		{
+        } else {
 			this->numberOfAtoms = this->protein->ProteinAtomCount() - this->firstAtomIdx;
 		}
-	}
-	else
-	{
+    } else {
 		// chain index too high!
 		// --> set first atom and number of atoms to zero
 		this->firstAtomIdx = 0;
@@ -83,6 +74,33 @@ ReducedSurface::ReducedSurface( unsigned int chainId,
 	// compute the reduced surface
 	if( protein && this->numberOfAtoms > 0 )
 		this->ComputeReducedSurface();
+}
+
+ReducedSurface::ReducedSurface( MolecularDataCall *mol,
+        float probeRad) :
+        protein( 0), molecule( mol), globalRS( true), zeroVec3( 0, 0, 0) {
+    // set the first atom index to 0
+    this->firstAtomIdx = 0;
+    // set the number of atoms to the total number of protein atoms
+    this->numberOfAtoms = this->molecule->AtomCount();
+    
+    // set epsilon value for float-comparison
+    this->epsilon = vislib::math::FLOAT_EPSILON;
+    // set probe radius
+    this->probeRadius = probeRad;
+    // set number of cut edges to 0
+    this->countCutEdges = 0;
+    
+    // copy the atom data
+    if( this->molecule && this->numberOfAtoms > 0 ) {
+        this->atoms.resize( this->molecule->AtomCount() * 4);
+        for( unsigned int i = 0; i < this->molecule->AtomCount(); ++i ) {
+            this->atoms[4*i+0] = this->molecule->AtomPositions()[3*i+0];
+            this->atoms[4*i+1] = this->molecule->AtomPositions()[3*i+1];
+            this->atoms[4*i+2] = this->molecule->AtomPositions()[3*i+2];
+            this->atoms[4*i+3] = this->molecule->AtomTypes()[this->molecule->AtomTypeIndices()[i]].Radius();
+        }
+    }
 }
 
 ReducedSurface::ReducedSurface( unsigned int molId,

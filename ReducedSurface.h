@@ -240,6 +240,17 @@ namespace protein {
 		
 		/**
 		 * ctor
+         * Computes the Reduced Surface(s) for the whole dataset provided by the
+         * given MolecularDataCall.
+         *
+         * @param mol Pointer to the MolecularDataCall.
+         * @param probeRad The radius of the probe.
+         */
+        ReducedSurface( MolecularDataCall *mol,
+                             float probeRad = 1.4f);
+
+        /**
+         * ctor
 		 * Computes the Reduced Surface for a specified amino acid chain of the 
 		 * given MolecularDataCall.
 		 *
@@ -247,7 +258,7 @@ namespace protein {
 		 * @param mol       Pointer to the MolecularDataCall.
 		 * @param probeRad  The radius of the probe.
 		 */
-		ReducedSurface( unsigned int molId, MolecularDataCall *molecule, 
+        ReducedSurface( unsigned int molId, MolecularDataCall *mol, 
             float probeRad = 1.4f);
 		
 		/** dtor */
