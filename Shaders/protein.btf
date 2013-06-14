@@ -10085,6 +10085,8 @@ void main(void) {
       <snippet name="::common::lighting::simple"/>
       <snippet type="string">
         <!--
+#extension GL_EXT_gpu_shader4 : enable
+
 uniform vec4 viewAttr;
 uniform vec3 zValues;
 uniform vec3 fogCol;
@@ -13173,6 +13175,7 @@ void main(void) {
       <snippet name="simpleLighting"/>
       <snippet type="string">
         <!--
+#extension GL_EXT_gpu_shader4 : enable
 
 uniform vec4 viewAttr;
 uniform vec3 zValues;

@@ -497,7 +497,8 @@ namespace protein {
 
         // the list of molecular indices
         vislib::Array<vislib::StringA> molIdxList;
-
+        // flag for SES computation (false = one SES per molecule)
+        bool computeSesPerMolecule;
     };
 
 } /* end namespace protein */
