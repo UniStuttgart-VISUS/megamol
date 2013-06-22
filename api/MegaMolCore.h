@@ -913,6 +913,7 @@ typedef struct _mmcParamSlotDescription_t {
     const char *desc;
     unsigned int typeInfoSize;
     const unsigned char *typeInfo;
+    const char *defVal;
 } mmcParamSlotDescription;
 
 /**

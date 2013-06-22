@@ -1224,7 +1224,7 @@ MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcCallDescription(int idx) {
  * TODO: Document me
  */
 bool operator==(const mmcParamSlotDescription lhs, mmcParamSlotDescription rhs) {
-    return ::memcmp(&lhs, &rhs, sizeof(mmcParamSlotDescription));
+    return ::memcmp(&lhs, &rhs, sizeof(mmcParamSlotDescription)) == 0;
 }
 
 
@@ -1232,7 +1232,7 @@ bool operator==(const mmcParamSlotDescription lhs, mmcParamSlotDescription rhs) 
  * TODO: Document me
  */
 bool operator==(const mmcCalleeSlotDescription lhs, mmcCalleeSlotDescription rhs) {
-    return ::memcmp(&lhs, &rhs, sizeof(mmcCalleeSlotDescription));
+    return ::memcmp(&lhs, &rhs, sizeof(mmcCalleeSlotDescription)) == 0;
 }
 
 
@@ -1240,7 +1240,7 @@ bool operator==(const mmcCalleeSlotDescription lhs, mmcCalleeSlotDescription rhs
  * TODO: Document me
  */
 bool operator==(const mmcCallerSlotDescription lhs, mmcCallerSlotDescription rhs) {
-    return ::memcmp(&lhs, &rhs, sizeof(mmcCallerSlotDescription));
+    return ::memcmp(&lhs, &rhs, sizeof(mmcCallerSlotDescription)) == 0;
 }
 
 
@@ -1309,9 +1309,13 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
                 vislib::RawStorage blob;
                 ps->Param<::megamol::core::param::AbstractParam>()->Definition(blob);
 
-                pa[i].typeInfoSize = blob.GetSize();
+                pa[i].typeInfoSize = static_cast<unsigned int>(blob.GetSize());
                 pa[i].typeInfo = new const unsigned char[pa[i].typeInfoSize];
                 ::memcpy(const_cast<unsigned char*>(pa[i].typeInfo), blob, pa[i].typeInfoSize);
+
+                str = ps->Parameter()->ValueString();
+                pa[i].defVal = new char[str.Length() + 1];
+                ::memcpy(const_cast<char*>(pa[i].defVal), str.PeekBuffer(), str.Length() + 1);
 
             } else if (ces != NULL) {
                 SIZE_T i = cea.Count();
@@ -1369,13 +1373,13 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
         }
     }
 
-    *outCntParamSlots = pa.Count();
+    *outCntParamSlots = static_cast<unsigned int>(pa.Count());
     *outParamSlots = new mmcParamSlotDescription[*outCntParamSlots];
     ::memcpy(*outParamSlots, pa.PeekElements(), sizeof(mmcParamSlotDescription) * *outCntParamSlots);
-    *outCntCalleeSlots = cea.Count();
+    *outCntCalleeSlots = static_cast<unsigned int>(cea.Count());
     *outCalleeSlots = new mmcCalleeSlotDescription[*outCntCalleeSlots];
     ::memcpy(*outCalleeSlots, cea.PeekElements(), sizeof(mmcCalleeSlotDescription) * *outCntCalleeSlots);
-    *outCntCallerSlots = cra.Count();
+    *outCntCallerSlots = static_cast<unsigned int>(cra.Count());
     *outCallerSlots = new mmcCallerSlotDescription[*outCntCallerSlots];
     ::memcpy(*outCallerSlots, cra.PeekElements(), sizeof(mmcCallerSlotDescription) * *outCntCallerSlots);
 
@@ -1401,6 +1405,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcReleaseModuleSlotDescriptions(
         delete[] (*outParamSlots)[i].name;
         delete[] (*outParamSlots)[i].desc;
         delete[] (*outParamSlots)[i].typeInfo;
+        delete[] (*outParamSlots)[i].defVal;
     }
     delete[] (*outParamSlots);
     *outParamSlots = NULL;
