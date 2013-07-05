@@ -13,7 +13,6 @@
 #include "MolecularDataCall.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
-#include "CallFrame.h"
 #include "Color.h"
 #include "view/Renderer3DModuleDS.h"
 #include "view/CallRender3D.h"
@@ -284,13 +283,7 @@ namespace protein {
 
         /** camera information */
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
-
-        // 'true' if there is rms data to be rendered
-        bool MoleculeSESRendererrenderRMSData;
-
-        // label with id of current loaded frame
-        vislib::graphics::AbstractFont *MoleculeSESRendererframeLabel;
-
+        
         // camera information
         vislib::SmartPtr<vislib::graphics::CameraParameters> MoleculeSESRenderercameraInfo;
 

@@ -525,12 +525,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AnimDataTimer.cpp" />
     <ClCompile Include="BSpline.cpp" />
-    <ClCompile Include="CallFrame.cpp" />
     <ClCompile Include="CallMouseInput.cpp" />
-    <ClCompile Include="CallProteinData.cpp" />
-    <ClCompile Include="CallProteinMovementData.cpp" />
     <ClCompile Include="CallVolumeData.cpp" />
     <ClCompile Include="CartoonDataSource.cpp" />
     <ClCompile Include="CCP4VolumeData.cpp" />
@@ -599,7 +595,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="GROLoader.cpp" />
-    <ClCompile Include="GromacsLoader.cpp" />
     <ClCompile Include="HapticsMoleculeRenderer.cpp" />
     <ClCompile Include="MappableCategoryFloat.cpp" />
     <ClCompile Include="MappableFloatPair.cpp" />
@@ -615,22 +610,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="MoleculeSequenceRenderer.cpp" />
     <ClCompile Include="MoleculeSESRenderer.cpp" />
     <ClCompile Include="MoleculeVolumeCudaRenderer.cpp" />
-    <ClCompile Include="NetCDFData.cpp" />
     <ClCompile Include="ParticleDataCall.cpp" />
     <ClCompile Include="PDBLoader.cpp" />
     <ClCompile Include="PhantomDeviceWrapper.cpp" />
     <ClCompile Include="Protein.cpp" />
-    <ClCompile Include="ProteinData.cpp" />
-    <ClCompile Include="ProteinMovementData.cpp" />
-    <ClCompile Include="ProteinMovementRenderer.cpp" />
-    <ClCompile Include="ProteinRenderer.cpp" />
-    <ClCompile Include="ProteinRendererBDP.cpp" />
-    <ClCompile Include="ProteinRendererCartoon.cpp" />
-    <ClCompile Include="ProteinRendererCBCUDA.cpp" />
-    <ClCompile Include="ProteinRendererCBOpenCL.cpp" />
-    <ClCompile Include="ProteinRendererSES.cpp" />
-    <ClCompile Include="ProteinRendererSESGPU.cpp" />
-    <ClCompile Include="ProteinRendererSESGPUCuda.cpp" />
     <ClCompile Include="ProteinVolumeRenderer.cpp" />
     <ClCompile Include="QuickSurfMTRenderer.cpp" />
     <ClCompile Include="QuickSurfRenderer.cpp" />
@@ -648,7 +631,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="SolPathDataSource.cpp" />
     <ClCompile Include="SolPathRenderer.cpp" />
     <ClCompile Include="SolventDataGenerator.cpp" />
-    <ClCompile Include="SolventRenderer.cpp" />
     <ClCompile Include="SolventVolumeRenderer.cpp" />
     <ClCompile Include="SphereDataCall.cpp" />
     <ClCompile Include="SphereRenderer.cpp" />
@@ -682,18 +664,13 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="XYZLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AnimDataTimer.h" />
     <ClInclude Include="BSpline.h" />
-    <ClInclude Include="CallFrame.h" />
     <ClInclude Include="CallMouseInput.h" />
-    <ClInclude Include="CallProteinData.h" />
-    <ClInclude Include="CallProteinMovementData.h" />
     <ClInclude Include="CallVolumeData.h" />
     <ClInclude Include="CartoonDataSource.h" />
     <ClInclude Include="CCP4VolumeData.h" />
     <ClInclude Include="CoarseGrainDataLoader.h" />
     <ClInclude Include="Color.h" />
-    <ClInclude Include="cuda4fake.h" />
     <ClInclude Include="CritPoints.h" />
     <ClInclude Include="CrystalStructureDataCall.h" />
     <ClInclude Include="CrystalStructureDataSource.h" />
@@ -719,7 +696,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="GridDataStructure.h" />
     <ClInclude Include="GridNeighbourFinder.h" />
     <ClInclude Include="GROLoader.h" />
-    <ClInclude Include="GromacsLoader.h" />
     <ClInclude Include="HapticsMoleculeRenderer.h" />
     <ClInclude Include="LIC.h" />
     <ClInclude Include="MappableCategoryFloat.h" />
@@ -735,22 +711,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="MoleculeSequenceRenderer.h" />
     <ClInclude Include="MoleculeSESRenderer.h" />
     <ClInclude Include="MoleculeVolumeCudaRenderer.h" />
-    <ClInclude Include="NetCDFData.h" />
     <ClInclude Include="ParticleDataCall.h" />
     <ClInclude Include="PDBLoader.h" />
     <ClInclude Include="PhantomDeviceWrapper.h" />
     <ClInclude Include="Protein.h" />
-    <ClInclude Include="ProteinData.h" />
-    <ClInclude Include="ProteinMovementData.h" />
-    <ClInclude Include="ProteinMovementRenderer.h" />
-    <ClInclude Include="ProteinRenderer.h" />
-    <ClInclude Include="ProteinRendererBDP.h" />
-    <ClInclude Include="ProteinRendererCartoon.h" />
-    <ClInclude Include="ProteinRendererCBCUDA.h" />
-    <ClInclude Include="ProteinRendererCBOpenCL.h" />
-    <ClInclude Include="ProteinRendererSES.h" />
-    <ClInclude Include="ProteinRendererSESGPU.h" />
-    <ClInclude Include="ProteinRendererSESGPUCuda.h" />
     <ClInclude Include="ProteinVolumeRenderer.h" />
     <ClInclude Include="QuickSurfMTRenderer.h" />
     <ClInclude Include="QuickSurfRenderer.h" />
@@ -769,7 +733,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="SolPathDataSource.h" />
     <ClInclude Include="SolPathRenderer.h" />
     <ClInclude Include="SolventDataGenerator.h" />
-    <ClInclude Include="SolventRenderer.h" />
     <ClInclude Include="SolventVolumeRenderer.h" />
     <ClInclude Include="SphereDataCall.h" />
     <ClInclude Include="SphereRenderer.h" />
@@ -850,17 +813,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="ExtLibs.mk.input" />
     <None Include="ExtLibs.props.input" />
     <None Include="Makefile" />
-    <CustomBuildStep Include="Shaders\contourbuildupKernel.cl">
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CustomBuildStep>
     <None Include="filter_cuda.cuh">
       <FileType>Document</FileType>
     </None>

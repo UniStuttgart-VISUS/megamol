@@ -12,8 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "MolecularDataCall.h"
-#include "CallProteinData.h"
-#include "CallProteinMovementData.h"
 #include <string>
 
 namespace megamol {
@@ -62,17 +60,6 @@ namespace protein {
             unsigned int idx);
 
         /**
-         * Get the coloring mode at a certain index of a given data call.
-         *
-         * @param mol The data call.
-         * @param idx The index.
-         *
-         * @return The coloring mode.
-         */
-        static Color::ColoringMode GetModeByIndex(const CallProteinData *prot,
-            unsigned int idx);
-
-        /**
          * Get the corresponding name of a given coloring mode.
          *
          * @param col The coloring mode.
@@ -90,17 +77,6 @@ namespace protein {
          */
         static unsigned int GetNumOfColoringModes(const MolecularDataCall *mol) {
             return 9;
-        }
-
-        /**
-         * Get the number of coloring modes used by a given data call.
-         *
-         * @param prot The data call.
-         *
-         * @return The number of coloring modes.
-         */
-        static unsigned int GetNumOfColoringModes(const CallProteinData *prot) {
-            return 7;
         }
 
         /**
@@ -161,61 +137,6 @@ namespace protein {
             vislib::TString minGradColor,
             vislib::TString midGradColor,
             vislib::TString maxGradColor,
-            bool forceRecompute = false);
-
-
-        /**
-         * Make color table for all atoms acoording to the current coloring
-         * mode.
-         * The color table is only computed if it is empty or if the
-         * recomputation is forced by parameter.
-         *
-         * @param prot                The data interface.
-         * @param currentColoringMode The current coloring mode.
-         * @param protAtomColorTable  The atom color table.
-         * @param aminoAcidColorTable The amino acid color table.
-         * @param rainbowColors       The rainbow color lookup table.
-         * @param forceRecompute      Force recomputation of the color table.
-         */
-        static void MakeColorTable( const CallProteinData *prot,
-            ColoringMode currentColoringMode,
-            vislib::Array<float> &atomColorTable,
-            vislib::Array<vislib::math::Vector<float, 3> > &aminoAcidColorTable,
-            vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
-            bool forceRecompute = false,
-            vislib::math::Vector<float, 3> minValueColor
-                    = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f),
-            vislib::math::Vector<float, 3> meanValueColor
-                    = vislib::math::Vector<float, 3>(0.5f, 0.5f, 0.5f),
-            vislib::math::Vector<float, 3> maxValueColor
-                    = vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
-
-        /**
-         * Make color table for all atoms acoording to the current coloring
-         * mode.
-         * The color table is only computed if it is empty or if the
-         * recomputation is forced by parameter.
-         *
-         * @param prot                The data interface.
-         * @param currentColoringMode The current coloring mode.
-         * @param colMax              colMax
-         * @param colMid              colMid
-         * @param colMin              colMin
-         * @param col                 col
-         * @param protAtomColorTable  The atom color table.
-         * @param aminoAcidColorTable The amino acid color table.
-         * @param rainbowColors       The rainbow color lookup table.
-         * @param forceRecompute      Force recomputation of the color table.
-         */
-        static void MakeColorTable( const CallProteinMovementData *prot,
-            ColoringMode currentColoringMode,
-            vislib::Array<float> &protAtomColorTable,
-            vislib::Array<vislib::math::Vector<float, 3> > &aminoAcidColorTable,
-            vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
-            vislib::math::Vector<int, 3> colMax,
-            vislib::math::Vector<int, 3> colMid,
-            vislib::math::Vector<int, 3> colMin,
-            vislib::math::Vector<int, 3> col,
             bool forceRecompute = false);
 
          /**

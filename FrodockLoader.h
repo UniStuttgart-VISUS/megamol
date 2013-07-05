@@ -22,7 +22,6 @@
 #include "vislib/Vector.h"
 #include "vislib/Matrix.h"
 #include "vislib/Cuboid.h"
-#include "CallProteinData.h"
 #include "MolecularDataCall.h"
 #include "Stride.h"
 #include "vislib/Socket.h"

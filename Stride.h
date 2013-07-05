@@ -19,8 +19,6 @@
 #include <stdarg.h>
 #include <vislib/String.h>
 #include <vislib/Vector.h>
-#include "CallProteinData.h"
-#include "CallProteinMovementData.h"
 #include "MolecularDataCall.h"
 
 namespace megamol {
@@ -279,19 +277,13 @@ public:
 		BUFFER Type;
 	} PATTERN;
 
-	Stride( megamol::protein::CallProteinData *pdi);
-    Stride( megamol::protein::CallProteinMovementData *pdi);
-    Stride( megamol::protein::MolecularDataCall *mol);
+	Stride( megamol::protein::MolecularDataCall *mol);
 	virtual ~Stride(void);
 
-	bool WriteToInterface( megamol::protein::CallProteinData *pdi);
-    bool WriteToInterface( megamol::protein::CallProteinMovementData *pdi);
-    bool WriteToInterface( megamol::protein::MolecularDataCall *mol);
+	bool WriteToInterface( megamol::protein::MolecularDataCall *mol);
 	
 protected:
-	void GetChains( megamol::protein::CallProteinData *pdi);
-    void GetChains( megamol::protein::CallProteinMovementData *pdi);
-    void GetChains( megamol::protein::MolecularDataCall *mol);
+	void GetChains( megamol::protein::MolecularDataCall *mol);
 	bool ComputeSecondaryStructure();
 	
 	void DefaultCmd( COMMAND *Cmd );

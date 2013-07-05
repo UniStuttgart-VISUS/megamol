@@ -20,27 +20,12 @@
     <Filter Include="Config and Make Files">
       <UniqueIdentifier>{10526968-a1f8-468f-9ae1-fe4c5b90ba5a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="OpenCL Files">
-      <UniqueIdentifier>{cfc5e6c0-af44-49ed-be8f-04da44efc898}</UniqueIdentifier>
-    </Filter>
     <Filter Include="CUDA Files">
       <UniqueIdentifier>{2968c56b-9b66-4953-8231-6f6daaabbcb5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AnimDataTimer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BSpline.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CallFrame.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CallProteinData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CallProteinMovementData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CallVolumeData.cpp">
@@ -85,9 +70,6 @@
     <ClCompile Include="gmx_system_xdr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GromacsLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MolecularDataCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -106,9 +88,6 @@
     <ClCompile Include="MoleculeSESRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NetCDFData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ParticleDataCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -116,39 +95,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Protein.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProteinData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProteinMovementData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProteinMovementRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProteinRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProteinRendererBDP.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProteinRendererCartoon.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProteinRendererCBCUDA.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProteinRendererCBOpenCL.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProteinRendererSES.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProteinRendererSESGPU.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProteinRendererSESGPUCuda.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ProteinVolumeRenderer.cpp">
@@ -179,9 +125,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SolventDataGenerator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SolventRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SolventVolumeRenderer.cpp">
@@ -333,19 +276,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AnimDataTimer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="BSpline.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CallFrame.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CallProteinData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CallProteinMovementData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CallVolumeData.h">
@@ -393,9 +324,6 @@
     <ClInclude Include="GridNeighbourFinder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GromacsLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MolecularDataCall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -414,9 +342,6 @@
     <ClInclude Include="MoleculeSESRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="NetCDFData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ParticleDataCall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -424,39 +349,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Protein.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProteinData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProteinMovementData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProteinMovementRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProteinRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProteinRendererBDP.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProteinRendererCartoon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProteinRendererCBCUDA.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProteinRendererCBOpenCL.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProteinRendererSES.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProteinRendererSESGPU.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProteinRendererSESGPUCuda.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProteinVolumeRenderer.h">
@@ -490,9 +382,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SolventDataGenerator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SolventRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SolventVolumeRenderer.h">
@@ -633,9 +522,6 @@
     <ClInclude Include="MolecularSurfaceFeature.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cuda4fake.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SplitMergeRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -732,9 +618,6 @@
     </CustomBuildStep>
     <CustomBuildStep Include="Shaders\volume.btf">
       <Filter>Shader Files</Filter>
-    </CustomBuildStep>
-    <CustomBuildStep Include="Shaders\contourbuildupKernel.cl">
-      <Filter>OpenCL Files</Filter>
     </CustomBuildStep>
   </ItemGroup>
   <ItemGroup>

@@ -52,7 +52,6 @@ using namespace megamol::protein;
  */
 protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModule (),
         protDataCallerSlot ( "getData", "Connects the volume rendering with data storage" ),
-        callFrameCalleeSlot ( "callFrame", "Connects the volume rendering with frame call from RMS renderer" ),
         protRendererCallerSlot ( "renderProtein", "Connects the volume rendering with a protein renderer" ),
         dataOutSlot ( "volumeout", "Connects the volume rendering with a volume slice renderer" ),
         diagramDataOutSlot ( "segmentationout", "Connects the volume rendering with a 2D diagram renderer" ),
@@ -85,15 +84,9 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
         drawMarker( true), forceUpdateVolumeTexture( true)
 {
     // set caller slot for different data calls
-    this->protDataCallerSlot.SetCompatibleCall<CallProteinDataDescription>();
     this->protDataCallerSlot.SetCompatibleCall<CallVolumeDataDescription>();
     this->protDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable ( &this->protDataCallerSlot );
-
-    // set frame callee slot
-    protein::CallFrameDescription dfd;
-    this->callFrameCalleeSlot.SetCallback ( dfd.ClassName(), "CallFrame", &ProteinVolumeRenderer::ProcessFrameRequest );
-    this->MakeSlotAvailable ( &this->callFrameCalleeSlot );
 
     // set renderer caller slot
     this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
@@ -214,9 +207,6 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
     // fill rainbow color table
     Color::MakeRainbowColorTable( 100, this->rainbowColors);
 
-    this->renderRMSData = false;
-    this->frameLabel = NULL;
-
     // empty segmented voxel list
     this->segmentedVoxels.clear();
 
@@ -227,7 +217,6 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
  * protein::ProteinVolumeRenderer::~ProteinVolumeRenderer (DTOR)
  */
 protein::ProteinVolumeRenderer::~ProteinVolumeRenderer ( void ) {
-    delete this->frameLabel;
     this->Release ();
 }
 
@@ -457,7 +446,6 @@ bool protein::ProteinVolumeRenderer::GetExtents( Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    CallProteinData *protein = this->protDataCallerSlot.CallAs<CallProteinData>();
     CallVolumeData *volume = this->protDataCallerSlot.CallAs<CallVolumeData>();
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 
@@ -466,16 +454,7 @@ bool protein::ProteinVolumeRenderer::GetExtents( Call& call) {
     vislib::math::Point<float, 3> bbc;
 
     // try to get the bounding box from the active data call
-    if( protein ) {
-        // decide to use already loaded frame request from CallFrame or 'normal' rendering
-        if( this->callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED) {
-            if( !this->renderRMSData ) return false;
-        } else {
-            if( !(*protein)() ) return false;
-        }
-        // get bounding box
-        boundingBox = protein->BoundingBox();
-    } else if( volume ) {
+    if( volume ) {
         // try to call the volume data
         if( !(*volume)() ) return false;
         // get bounding box
@@ -540,15 +519,12 @@ bool ProteinVolumeRenderer::getVolumeData( core::Call& call) {
     if( c == NULL ) return false;
 
     // get the data call
-    CallProteinData *protein = this->protDataCallerSlot.CallAs<CallProteinData>();
     CallVolumeData *volume = this->protDataCallerSlot.CallAs<CallVolumeData>();
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
     // set the bounding box dimensions
     vislib::math::Cuboid<float> box( 0, 0, 0, 1, 1, 1);
     vislib::math::Vector<float, 3> dim;
-    if( protein )
-        box = protein->AccessBoundingBoxes().ObjectSpaceBBox();
-    else if( volume )
+    if( volume )
         box = volume->BoundingBox();
     else if( mol )
         box = mol->AccessBoundingBoxes().ObjectSpaceBBox();
@@ -582,19 +558,11 @@ bool ProteinVolumeRenderer::getSegmentationData( core::Call& call) {
     if( c == NULL ) return false;
 
     // get the data call
-    CallProteinData *protein = this->protDataCallerSlot.CallAs<CallProteinData>();
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 
     // set the range
     vislib::math::Vector<float, 2> range;
-    if( protein )
-#ifdef PLOT_PERCENTAGE
-        range.Set( protein->FrameCount(), 1.0f);
-#else
-        range.Set( static_cast<float>(protein->FrameCount()), 
-            static_cast<float>(this->volumeSize * this->volumeSize));
-#endif
-    else if( mol )
+    if( mol )
 #ifdef PLOT_PERCENTAGE
         range.Set( mol->FrameCount(), 1.0f);
 #else
@@ -619,9 +587,7 @@ bool ProteinVolumeRenderer::getSegmentationData( core::Call& call) {
     this->drawMarker = false;
 
     // set the last call time
-    if( protein ) 
-        c->SetCallTime( this->callTime);
-    else if( mol )
+    if( mol )
         c->SetCallTime( this->callTime);
     else
         return false;
@@ -639,8 +605,6 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
     if( !cr3d ) return false;
     // get the pointer to CallRender3D (protein renderer)
     view::CallRender3D *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
-    // get pointer to CallProteinData
-    CallProteinData *protein = this->protDataCallerSlot.CallAs<CallProteinData>();
     // get pointer to CallVolumeData
     CallVolumeData *volume = this->protDataCallerSlot.CallAs<CallVolumeData>();
     // get pointer to MolecularDataCall
@@ -733,16 +697,7 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
 #endif
 
     // make the atom color table if necessary
-    if( protein ) {
-        if( !(*protein)(CallProteinData::CallForGetData) )
-            return false;
-        Color::MakeColorTable( protein, 
-          this->currentColoringMode,
-          this->atomColorTable,
-          this->aminoAcidColorTable,
-          this->rainbowColors,
-          true);
-    } else if( mol ) {
+    if( mol ) {
         // set frame ID and call data
         mol->SetFrameID(static_cast<int>( callTime));
         if( !(*mol)(MolecularDataCall::CallForGetData) )
@@ -822,10 +777,6 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
 
     // =============== Volume Rendering ===============
     bool retval = false;
-    // try to start volume rendering using protein data
-    if( protein ) {
-        retval = this->RenderProteinData( cr3d, protein);
-    }
     // try to start volume rendering using volume data
     if( volume ) {
         retval = this->RenderVolumeData( cr3d, volume);
@@ -868,94 +819,12 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
 
 
 /*
- * Volume rendering using protein data.
- */
-bool protein::ProteinVolumeRenderer::RenderProteinData( view::CallRender3D *call, CallProteinData *protein) {
-    // get the current frame id
-    if( this->currentFrameId != protein->GetCurrentFrameId() ) {
-        this->currentFrameId = protein->GetCurrentFrameId();
-    }
-
-    // decide to use already loaded frame request from CallFrame or 'normal' rendering
-    if( this->callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED ) {
-        if( !this->renderRMSData )
-            return false;
-    } else {
-        if( !(*protein)() )
-            return false;
-    }
-
-    // check last atom count with current atom count
-    if( this->atomCount != protein->ProteinAtomCount() ) {
-        this->atomCount = protein->ProteinAtomCount();
-        this->forceUpdateVolumeTexture = true;
-    }
-
-    glEnable ( GL_DEPTH_TEST );
-    glEnable ( GL_LIGHTING );
-    glEnable ( GL_VERTEX_PROGRAM_POINT_SIZE );
-
-    glPushMatrix();
-
-    // translate scene for volume ray casting
-    this->scale = 2.0f / vislib::math::Max ( vislib::math::Max ( protein->BoundingBox().Width(),
-                                       protein->BoundingBox().Height() ), protein->BoundingBox().Depth() );
-    vislib::math::Vector<float, 3> trans( protein->BoundingBox().GetSize().PeekDimension() );
-    trans *= -this->scale*0.5f;
-    glTranslatef( trans.GetX(), trans.GetY(), trans.GetZ() );
-
-    // ------------------------------------------------------------
-    // --- Volume Rendering                                     ---
-    // --- update & render the volume                           ---
-    // ------------------------------------------------------------
-    this->UpdateVolumeTexture( protein);
-    CHECK_FOR_OGL_ERROR();
-
-    this->proteinFBO.DrawColourTexture();
-    CHECK_FOR_OGL_ERROR();
-
-    unsigned int cpCnt;
-    if( this->volClipPlaneFlag )
-        for( cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt ) {
-            glEnable( GL_CLIP_PLANE0+cpCnt );
-    }
-
-    this->RenderVolume( protein->BoundingBox());
-    CHECK_FOR_OGL_ERROR();
-
-    if( this->volClipPlaneFlag )
-        for( cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt ) {
-            glDisable( GL_CLIP_PLANE0+cpCnt );
-    }
-
-    glDisable ( GL_VERTEX_PROGRAM_POINT_SIZE );
-
-    glDisable ( GL_DEPTH_TEST );
-    
-    glPopMatrix();
-
-    // render label if RMS is used
-    if ( this->renderRMSData )
-        this->DrawLabel( protein->GetRequestedRMSFrame() );
-
-    return true;
-    }
-
-
-
-/*
  * Volume rendering using molecular data.
  */
 bool protein::ProteinVolumeRenderer::RenderMolecularData( view::CallRender3D *call, MolecularDataCall *mol) {
 
-    // decide to use already loaded frame request from CallFrame or 'normal' rendering
-    if( this->callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED ) {
-        if( !this->renderRMSData )
-            return false;
-    } else {
-        if( !(*mol)() )
-            return false;
-    }
+    if( !(*mol)() )
+        return false;
 
     // check last atom count with current atom count
     if( this->atomCount != mol->AtomCount() ) {
@@ -1357,209 +1226,6 @@ void protein::ProteinVolumeRenderer::ParameterRefresh( view::CallRender3D *call)
 
 }
 
-/*
- * protein::ProteinVolumeRenderer::ProcessFrameRequest
- */
-bool protein::ProteinVolumeRenderer::ProcessFrameRequest ( Call& call )
-{
-    // get pointer to CallProteinData
-    protein::CallProteinData *protein = this->protDataCallerSlot.CallAs<protein::CallProteinData>();
-
-    // ensure that NetCDFData uses 'RMS' specific frame handling
-    protein->SetRMSUse ( true );
-
-    // get pointer to frame call
-    protein::CallFrame *pcf = dynamic_cast<protein::CallFrame*> ( &call );
-
-    if ( pcf->NewRequest() )
-    {
-        // pipe frame request from frame call to protein call
-        protein->SetRequestedRMSFrame ( pcf->GetFrameRequest() );
-        if ( ! ( *protein ) () )
-        {
-            this->renderRMSData = false;
-            return false;
-        }
-        this->renderRMSData = true;
-    }
-
-    return true;
-}
-
-
-/**
- * protein::ProteinVolumeRenderer::DrawLabel
- */
-void protein::ProteinVolumeRenderer::DrawLabel( unsigned int frameID )
-{
-    using namespace vislib::graphics;
-
-    glPushAttrib( GL_ENABLE_BIT);
-    glDisable( GL_CULL_FACE);
-    glDisable( GL_LIGHTING);
-
-    glMatrixMode( GL_MODELVIEW );
-    glPushMatrix();
-
-    glTranslatef(-1.0f, 1.0f, 1.0f );
-
-    glColor3f( 1.0, 1.0, 1.0 );
-    if( this->frameLabel == NULL ) {
-        this->frameLabel = new vislib::graphics::gl::SimpleFont();
-        if( !this->frameLabel->Initialise() ) {
-            vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_WARN, "ProteinVolumeRenderer: Problems to initalise the Font" );
-        }
-    }
-    
-//    char frameChar[15];
-//#if _WIN32
-//#define snprintf _snprintf
-//#endif
-//    snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
-    vislib::StringA tmpStr;
-    tmpStr.Format( "Frame: %i", frameID);
-
-    this->frameLabel->DrawString( 0.0f, 0.0f, 0.1f, true, tmpStr.PeekBuffer(), AbstractFont::ALIGN_LEFT_TOP );
-
-    glPopMatrix();
-
-    glPopAttrib();
-}
-
-
-/*
- * Create a volume containing all protein atoms
- */
-void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinData *protein) {
-    // generate volume, if necessary
-    if( !glIsTexture( this->volumeTex) ) {
-        // from CellVis: cellVis.cpp, initGL
-        glGenTextures( 1, &this->volumeTex);
-        glBindTexture( GL_TEXTURE_3D, this->volumeTex);
-        glTexImage3D( GL_TEXTURE_3D, 0, //GL_LUMINANCE32F_ARB,
-                      GL_RGBA16F, 
-                      this->volumeSize, this->volumeSize, this->volumeSize, 0,
-                      //GL_LUMINANCE, GL_FLOAT, 0);
-                      GL_RGBA, GL_FLOAT, 0);
-        GLint param = GL_LINEAR;
-        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, param);
-        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, param);
-        GLint mode = GL_CLAMP_TO_EDGE;
-        //GLint mode = GL_REPEAT;
-        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, mode);
-        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, mode);
-        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, mode);
-        glBindTexture( GL_TEXTURE_3D, 0);
-        CHECK_FOR_OGL_ERROR();
-    }
-    // generate FBO, if necessary
-    if( !glIsFramebufferEXT( this->volFBO ) ) {
-        glGenFramebuffersEXT( 1, &this->volFBO);
-        CHECK_FOR_OGL_ERROR();
-    }
-
-    // counter variable
-    unsigned int z;
-
-    // store current frame buffer object ID
-    GLint prevFBO;
-    glGetIntegerv( GL_FRAMEBUFFER_BINDING_EXT, &prevFBO);
-
-    glMatrixMode( GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glMatrixMode( GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    // store old viewport
-    GLint viewport[4];
-    glGetIntegerv( GL_VIEWPORT, viewport);
-    // set viewport
-    glViewport( 0, 0, this->volumeSize, this->volumeSize);
-
-    glDisable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-
-    glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->volFBO);
-    glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-
-    glColor4f( 0.0, 0.0, 0.0, 1.0);
-    
-    float bgColor[4];
-    glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
-    glClearColor( 0.1f, 0.1f, 0.1f, 0.0f);
-    // clear 3d texture
-    for( z = 0; z < this->volumeSize; ++z) {
-        // attach texture slice to FBO
-        glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, this->volumeTex, 0, z);
-        glClear( GL_COLOR_BUFFER_BIT);
-        //glRecti(-1, -1, 1, 1);
-    }
-    glClearColor( bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);
-    glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
-
-    // scale[i] = 1/extent[i] --- extent = size of the bbox
-    this->volScale[0] = 1.0f / ( protein->BoundingBox().Width() * this->scale);
-    this->volScale[1] = 1.0f / ( protein->BoundingBox().Height() * this->scale);
-    this->volScale[2] = 1.0f / ( protein->BoundingBox().Depth() * this->scale);
-    // scaleInv = 1 / scale = extend
-    this->volScaleInv[0] = 1.0f / this->volScale[0];
-    this->volScaleInv[1] = 1.0f / this->volScale[1];
-    this->volScaleInv[2] = 1.0f / this->volScale[2];
-    
-    this->updateVolumeShader.Enable();
-    vislib::math::Vector<float, 3> orig( protein->BoundingBox().GetLeftBottomBack().PeekCoordinates());
-    orig = ( orig + this->translation) * this->scale;
-    vislib::math::Vector<float, 3> nullVec( 0.0f, 0.0f, 0.0f);
-
-    // set shader params
-    glUniform1f( this->updateVolumeShader.ParameterLocation( "filterRadius"), this->volFilterRadius);
-    glUniform1f( this->updateVolumeShader.ParameterLocation( "densityScale"), this->volDensityScale);
-    glUniform3fv( this->updateVolumeShader.ParameterLocation( "scaleVol"), 1, this->volScale);
-    glUniform3fv( this->updateVolumeShader.ParameterLocation( "scaleVolInv"), 1, this->volScaleInv);
-    glUniform3f( this->updateVolumeShader.ParameterLocation( "invVolRes"), 
-        1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize));
-    glUniform3fv( this->updateVolumeShader.ParameterLocation( "translate"), 1, orig.PeekComponents() );
-    glUniform1f( this->updateVolumeShader.ParameterLocation( "volSize"), float( this->volumeSize));
-    CHECK_FOR_OGL_ERROR();
-
-    for( z = 0; z < this->volumeSize; ++z ) {
-        // attach texture slice to FBO
-        glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);
-        glUniform1f( this->updateVolumeShader.ParameterLocation( "sliceDepth"), (float( z) + 0.5f) / float(this->volumeSize));
-        // draw all atoms as points, using w for radius
-        glBegin( GL_POINTS);
-        for( unsigned int cnt = 0; cnt < protein->ProteinAtomCount(); ++cnt ) {
-            glColor3fv( this->GetAtomColor( cnt));
-            glVertex4f( ( protein->ProteinAtomPositions()[cnt*3+0] + this->translation.GetX()) * this->scale,
-                ( protein->ProteinAtomPositions()[cnt*3+1] + this->translation.GetY()) * this->scale, 
-                ( protein->ProteinAtomPositions()[cnt*3+2] + this->translation.GetZ()) * this->scale, 
-                protein->AtomTypes()[protein->ProteinAtomData()[cnt].TypeIndex()].Radius() * this->scale );
-        }
-        glEnd(); // GL_POINTS
-    }
-
-    this->updateVolumeShader.Disable();
-
-    // restore viewport
-    glViewport( viewport[0], viewport[1], viewport[2], viewport[3]);
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-
-    glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, prevFBO);
-
-    glDisable( GL_BLEND);
-    glEnable( GL_DEPTH_TEST);
-    glDepthMask( GL_TRUE);
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
 
 /*
  * Create a volume containing all molecule atoms

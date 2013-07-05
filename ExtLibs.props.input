@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="UserMacros">
     <OutputBin>%outbin%</OutputBin>
@@ -14,12 +14,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)base\include;$(VISlibPath)math\include;$(VISlibPath)sys\include;$(VISlibPath)graphics\include;$(VISlibPath)gl\include;$(VISlibPath)net\include;%withNETCDF%!$(NETCDFPath)include;!!%withOPENCL%!$(OPENCLPath)OpenCL/common/inc;!!%withCUDA%!$(CUDAPath)C/common/inc;!!%withHAPTICS%!$(HAPTICSPath)/include;$(HAPTICSPath)/utilities/include;!!%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>%withNETCDF%!WITH_NETCDF;!!%withOPENCL%!WITH_OPENCL;!!%withCUDA%!WITH_CUDA;!!%withHAPTICS%!WITH_OPENHAPTICS;!!%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)base\include;$(VISlibPath)math\include;$(VISlibPath)sys\include;$(VISlibPath)graphics\include;$(VISlibPath)gl\include;$(VISlibPath)net\include;%withHAPTICS%!$(HAPTICSPath)/include;$(HAPTICSPath)/utilities/include;!!%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>%withCUDA%!WITH_CUDA;!!%withHAPTICS%!WITH_OPENHAPTICS;!!%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>%withNETCDF%!$(NETCDFPath)lib$(BitsD);!!%withOPENCL%!$(OPENCLPath)OpenCL/common/lib/$(PlatformName);!!%withCUDA%!$(CUDAPath)C/common/lib/$(PlatformName);!!%withHAPTICS%!$(HAPTICSPath)\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\utilities\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\lib\$(Platform);!!%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%withNETCDF%!netcdf$(Bits).lib !!%withOPENCL%!OpenCL.lib !!%withCUDA%!cudart.lib;cutil$(BitsD).lib;!!%withHAPTICS%!hl.lib;hlu.lib;hd.lib;hdu.lib;!!%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%withHAPTICS%!$(HAPTICSPath)\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\utilities\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\lib\$(Platform);!!%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%withCUDA%!cudart.lib;!!%withHAPTICS%!hl.lib;hlu.lib;hd.lib;hdu.lib;!!%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <Include>$(VISlibPath)gl\include</Include>

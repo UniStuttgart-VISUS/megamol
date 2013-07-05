@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "MolecularDataCall.h"
-#include "CallFrame.h"
 #include "param/ParamSlot.h"
 #include "BSpline.h"
 #include "CallerSlot.h"
@@ -167,21 +166,6 @@ namespace protein {
         virtual bool Render( megamol::core::Call& call);
 
         /**
-         * Draw label for current loaded RMS frame.
-         *
-         * @param call Ths calling CallFrame.
-         */
-        void DrawLabel(unsigned int frameID);
-
-        /**
-         * The CallFrame callback.
-         *
-         * @param call The calling call.
-         * @return The return value of the function.
-         */
-        bool ProcessFrameRequest( megamol::core::Call& call);
-
-        /**
          * Render protein in hybrid CARTOON mode using the Geometry Shader.
          *
          * @param prot The data interface.
@@ -231,10 +215,7 @@ namespace protein {
         megamol::core::CallerSlot molRendererCallerSlot;
 		// caller slot for offscreen rendering
         megamol::core::CallerSlot molRendererORCallerSlot;
-
-        // label with id of current loaded frame
-        vislib::graphics::AbstractFont *frameLabel;
-
+        
         /** camera information */
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
 
