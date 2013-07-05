@@ -764,8 +764,6 @@ GROLoader::GROLoader(void) : AnimDataModule(),
     this->forceDataCallerSlot.SetCompatibleCall<ForceDataCallDescription>();
     this->MakeSlotAvailable( &this->forceDataCallerSlot);
 
-    this->dataOutSlot.SetCallback( CallProteinData::ClassName(), CallProteinData::FunctionName(CallProteinData::CallForGetData), &GROLoader::getData);
-    this->dataOutSlot.SetCallback( CallProteinData::ClassName(), CallProteinData::FunctionName(CallProteinData::CallForGetExtent), &GROLoader::getExtent);
     this->dataOutSlot.SetCallback( MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(MolecularDataCall::CallForGetData), &GROLoader::getData);
     this->dataOutSlot.SetCallback( MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(MolecularDataCall::CallForGetExtent), &GROLoader::getExtent);
     this->MakeSlotAvailable( &this->dataOutSlot);

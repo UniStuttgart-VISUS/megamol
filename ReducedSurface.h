@@ -10,7 +10,6 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
-#include "CallProteinData.h"
 #include "MolecularDataCall.h"
 #include <vislib/Quaternion.h>
 #include <vector>
@@ -213,30 +212,6 @@ namespace protein {
 			// index of the probe in the probe voxel map
 			vislib::math::Vector<unsigned int, 3> probeIdx;
 		};
-
-		/**
-		 * ctor
-		 * Computes the Reduced Surface(s) for the whole dataset provided by the
-		 * given CallProteinData.
-		 *
-		 * @param prot Pointer to the CallProteinData.
-		 * @param probeRad The radius of the probe.
-		 */
-		ReducedSurface( const CallProteinData *prot,
-							 float probeRad = 1.4f);
-
-		/**
-		 * ctor
-		 * Computes the Reduced Surface for a specified amino acid chain of the 
-		 * given CallProteinData.
-		 *
-		 * @param chainId Index of the amino acid chain.
-		 * @param prot Pointer to the CallProteinData.
-		 * @param probeRad The radius of the probe.
-		 */
-		ReducedSurface( unsigned int chainId,
-							 const CallProteinData *prot, 
-							 float probeRad = 1.4f);
 		
 		/**
 		 * ctor
@@ -324,22 +299,10 @@ namespace protein {
 		 */
 		bool UpdateData( const float lowerThreshold, const float upperThreshold);
 		
-		/**
-		 * Read the next timestep and check for differences between the atoms.
-		 *
-		 * @param protein The protein data source.
-		 * @param lowerThreshold The lower treshold.
-		 * @param upperThreshold The upper treshold.
-		 */
-		bool UpdateDataMolecule( const float lowerThreshold, const float upperThreshold);
-		
 		/** compute the reduced surface of a molecule */
-		void ComputeReducedSurfaceMolecule();
+		void ComputeReducedSurface();
 
 	protected:
-
-		/** compute the reduced surface of a protein */
-		void ComputeReducedSurface();
 
 		/** 
 		 * Write the indices of all atoms within the probe range relative to an atom at
@@ -438,8 +401,6 @@ namespace protein {
 		void ComputeProbeCutVertex( RSVertex *vertex);
 				
 	private:
-		// The pointer to the protein data interface
-		const CallProteinData *protein;
 		// The pointer to the protein data interface
         MolecularDataCall *molecule;
 		

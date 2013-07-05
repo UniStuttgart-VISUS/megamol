@@ -18,7 +18,6 @@
 #include "vislib/Array.h"
 #include "vislib/Vector.h"
 #include "vislib/Cuboid.h"
-#include "CallProteinData.h"
 #include "MolecularDataCall.h"
 #include "Stride.h"
 #include "view/AnimDataModule.h"

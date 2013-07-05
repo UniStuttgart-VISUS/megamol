@@ -176,8 +176,6 @@ protein::MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DMod
 
     // fill rainbow color table
     Color::MakeRainbowColorTable( 100, this->rainbowColors);
-
-    this->frameLabel = NULL;
 }
 
 
@@ -185,7 +183,6 @@ protein::MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DMod
  * protein::MoleculeCartoonRenderer::~MoleculeCartoonRenderer (DTOR)
  */
 protein::MoleculeCartoonRenderer::~MoleculeCartoonRenderer (void) {
-    delete this->frameLabel;
     this->Release ();
 }
 
@@ -900,45 +897,6 @@ void MoleculeCartoonRenderer::UpdateParameters( const MolecularDataCall *mol) {
         //    cartoonSplineCreated = false;
         //}
     }
-}
-
-
-/**
- * protein::MoleculeCartoonRenderer::DrawLabel
- */
-void protein::MoleculeCartoonRenderer::DrawLabel(unsigned int frameID) {
-    using namespace vislib::graphics;
-
-    glPushAttrib(GL_ENABLE_BIT);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-
-        glTranslatef(-1.0f, 1.0f, 1.0f);
-
-        glColor3f(1.0, 1.0, 1.0);
-        if (this->frameLabel == NULL) {
-            this->frameLabel = new vislib::graphics::gl::SimpleFont();
-            if(!this->frameLabel->Initialise()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "ProteinRenderer: Problems to initalise the Font");
-            }
-        }
-
-//    char frameChar[15];
-//#if _WIN32
-//#define snprintf _snprintf
-//#endif
-//    snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
-    vislib::StringA tmpStr;
-    tmpStr.Format( "Frame: %i", frameID);
-
-    this->frameLabel->DrawString(0.0f, 0.0f, 0.1f, true, tmpStr.PeekBuffer(), AbstractFont::ALIGN_LEFT_TOP);
-
-    glPopMatrix();
-
-    glPopAttrib();
 }
 
 

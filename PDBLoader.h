@@ -18,7 +18,6 @@
 #include "vislib/Vector.h"
 #include "vislib/Cuboid.h"
 #include "vislib/RunnableThread.h"
-#include "CallProteinData.h"
 #include "MolecularDataCall.h"
 #include "ForceDataCall.h"
 #include "Stride.h"

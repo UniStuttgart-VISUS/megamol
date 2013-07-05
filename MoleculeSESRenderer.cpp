@@ -940,21 +940,21 @@ bool MoleculeSESRenderer::Render( Call& call ) {
             unsigned int chainIds;
             if( !this->computeSesPerMolecule ) {
                 this->reducedSurface.push_back( new ReducedSurface(mol, this->probeRadius));
-                this->reducedSurface.back()->ComputeReducedSurfaceMolecule();
+                this->reducedSurface.back()->ComputeReducedSurface();
             } else {
                 // if no molecule indices are given, compute the SES for all molecules
                 if( this->molIdxList.IsEmpty()) {
                     for( chainIds = 0; chainIds < mol->MoleculeCount(); ++chainIds ) {
                         this->reducedSurface.push_back(
                             new ReducedSurface(chainIds, mol, this->probeRadius) );
-                        this->reducedSurface.back()->ComputeReducedSurfaceMolecule();
+                        this->reducedSurface.back()->ComputeReducedSurface();
                     }
                 } else {
                     // else compute the SES for all selected molecules
                     for( chainIds = 0; chainIds < this->molIdxList.Count(); ++chainIds ) {
                         this->reducedSurface.push_back(
                             new ReducedSurface( atoi( this->molIdxList[chainIds]), mol, this->probeRadius) );
-                        this->reducedSurface.back()->ComputeReducedSurfaceMolecule();
+                        this->reducedSurface.back()->ComputeReducedSurface();
                     }
                 }
             }

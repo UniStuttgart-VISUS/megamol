@@ -14,7 +14,6 @@
 #include "slicing.h"
 #include "Color.h"
 #include "MolecularDataCall.h"
-#include "CallFrame.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "view/Renderer3DModule.h"
@@ -170,13 +169,6 @@ namespace protein {
 		*/
         void ParameterRefresh( megamol::core::view::CallRender3D *call, MolecularDataCall *mol);
 		
-		/**
-		* Draw label for current loaded RMS frame.
-		*
-		* @param call Ths calling CallFrame.
-		*/
-		void DrawLabel(unsigned int frameID);
-
 		/** 
          * Create a volume containing all molecule atoms.
 		 *
@@ -244,19 +236,9 @@ namespace protein {
 		
 		/** caller slot */
 		megamol::core::CallerSlot protDataCallerSlot;
-		/** callee slot */
-		megamol::core::CalleeSlot callFrameCalleeSlot;
-		/** caller slot */
-	//	megamol::core::CallerSlot protRendererCallerSlot;
         /** The volume data callee slot */
         megamol::core::CalleeSlot dataOutSlot;
-		
-		// 'true' if there is rms data to be rendered
-		bool renderRMSData;
-		
-		// label with id of current loaded frame
-		vislib::graphics::AbstractFont *frameLabel;
-		
+				
 		// camera information
 		vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
         // scaling factor for the scene

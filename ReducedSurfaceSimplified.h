@@ -10,7 +10,7 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
-#include "CallProteinData.h"
+#include "MolecularDataCall.h"
 #include <vislib/Quaternion.h>
 #include <vector>
 #include <set>
@@ -39,7 +39,7 @@ namespace protein {
 			 * @param inter Pointer to the protein data interface.
 			 * @param chId ID of the chain.
 			 */
-			SimplifiedChain( const CallProteinData *inter,
+			SimplifiedChain( MolecularDataCall *inter,
 								  unsigned int chId);
 			/** dtor */
 			virtual ~SimplifiedChain();
@@ -64,10 +64,10 @@ namespace protein {
 			/** Initialize the backbone & sidechain for the chain */
 			void Init();
 		private:
-			/** the protein data interface (unchangeable ) */
-			const CallProteinData *protein;
-			/** the chain ID (unchangeable) */
-			const unsigned int chainId;
+			/** the protein data interface */
+			MolecularDataCall *protein;
+			/** the chain ID */
+			unsigned int chainId;
 			/** null vector in R^3 */
 			const vislib::math::Vector<float, 3> nullvec3;
 			
@@ -279,12 +279,12 @@ namespace protein {
 		/**
 		 * ctor
 		 * Computes the Reduced Surface(s) for the whole dataset provided by the
-		 * given CallProteinData.
+		 * given MolecularDataCall.
 		 *
-		 * @param prot Pointer to the CallProteinData.
+		 * @param prot Pointer to the MolecularDataCall.
 		 * @param probeRad The radius of the probe.
 		 */
-		ReducedSurfaceSimplified( const CallProteinData *prot,
+		ReducedSurfaceSimplified( MolecularDataCall *prot,
 							 float probeRad = 1.4f);
 		
 		/** dtor */
@@ -456,7 +456,7 @@ namespace protein {
 				
 	private:
 		// The pointer to the protein data interface
-		const CallProteinData *protein;
+		MolecularDataCall *protein;
 		
 		std::vector<SimplifiedChain*> simpleChain;
 		

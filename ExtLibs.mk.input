@@ -13,17 +13,17 @@ mmcorepath := %mmcorePath%
 # Paths to external libraries
 vislibpath := %vislib%
 
-ifeq (%withNETCDF%$1$0$, 1)
-	netcdfpath := %netcdfPath%
-	IncludeDir += $(netcdfpath)/include
-	CompilerFlags += -DWITH_NETCDF
-	LinkerFlags += -lnetcdf
-	DebugLinkerFlags += -L$(netcdfpath)/lib$(BITS)d 
-	ReleaseLinkerFlags += -L$(netcdfpath)/lib$(BITS)
-endif
+#ifeq (%withNETCDF%$1$0$, 1)
+#	netcdfpath := %netcdfPath%
+#	IncludeDir += $(netcdfpath)/include
+#	CompilerFlags += -DWITH_NETCDF
+#	LinkerFlags += -lnetcdf
+#	DebugLinkerFlags += -L$(netcdfpath)/lib$(BITS)d 
+#	ReleaseLinkerFlags += -L$(netcdfpath)/lib$(BITS)
+#endif
 
 ifeq (%withCUDA%$1$0$, 1)
 	CompilerFlags += -DWITH_CUDA
 	CudaInstallPath   := %cudaPath%
-	CudaSdkPath       := %cudaSdkPath%
+	#CudaSdkPath       := %cudaSdkPath%
 endif

@@ -21,14 +21,14 @@ using namespace megamol::protein;
 /*
  * ReducedSurfaceSimplified::ReducedSurfaceSimplified
  */
-ReducedSurfaceSimplified::ReducedSurfaceSimplified( const CallProteinData *prot,
+ReducedSurfaceSimplified::ReducedSurfaceSimplified( MolecularDataCall *prot,
 										  float probeRad) :
 		protein( prot), zeroVec3( 0, 0, 0)
 {
 	// set the first atom index to 0
 	this->firstAtomIdx = 0;
 	// set the number of atoms to the total number of protein atoms
-	this->numberOfAtoms = this->protein->ProteinAtomCount();
+    this->numberOfAtoms = this->protein->AtomCount();
 	
 	// set epsilon value for float-comparison
 	this->epsilon = vislib::math::FLOAT_EPSILON;
@@ -38,7 +38,7 @@ ReducedSurfaceSimplified::ReducedSurfaceSimplified( const CallProteinData *prot,
 	this->countCutEdges = 0;
 	
 	// compute the reduced surface
-	if( protein && protein->ProteinChainCount() > 0 )
+    if( protein && protein->ChainCount() > 0 )
 		this->ComputeReducedSurfaceSimplified();
 }
 
@@ -83,9 +83,9 @@ void ReducedSurfaceSimplified::ComputeReducedSurfaceSimplified()
 	
 	// compute simplified chains
 	float maxRad = 0.0f;
-	this->simpleChain.resize( protein->ProteinChainCount(), NULL);
+	this->simpleChain.resize( protein->ChainCount(), NULL);
 	//unsigned int atomcounter = 0;
-	for( cnt1 = 0; cnt1 < protein->ProteinChainCount(); ++cnt1 )
+	for( cnt1 = 0; cnt1 < protein->ChainCount(); ++cnt1 )
 	{
 		this->simpleChain[cnt1] = new SimplifiedChain( this->protein, cnt1);
 		maxRad = ( simpleChain[cnt1]->MaxRadius() > maxRad) ? simpleChain[cnt1]->MaxRadius() : maxRad;
@@ -124,7 +124,7 @@ void ReducedSurfaceSimplified::ComputeReducedSurfaceSimplified()
 	// index of the atom with the smallest z-value
 	unsigned int zIdx = 0;
 	// create the voxel map
-	this->bBox = this->protein->BoundingBox();
+    this->bBox = this->protein->AccessBoundingBoxes().ObjectSpaceBBox();
 	// set voxel lenght --> diameter of the probe + maximum atom diameter
 	this->voxelLength = 2 * this->probeRadius + 2 * maxRad;
 	unsigned int tmpSize = (unsigned int)ceilf( this->bBox.Width() / this->voxelLength);
@@ -1486,7 +1486,7 @@ bool ReducedSurfaceSimplified::UpdateData( const float lowerThreshold,
 	std::vector<RSEdge*> tmpRSEdge;
 	
 	// do nothing if the number of atoms differs
-	if( this->protein->ProteinAtomCount() < ( firstAtomIdx + numberOfAtoms) )
+	if( this->protein->AtomCount() < ( firstAtomIdx + numberOfAtoms) )
 	{
 		std::cout << "ERROR: too few atoms!" << std::endl;
 		return false;
@@ -1497,9 +1497,9 @@ bool ReducedSurfaceSimplified::UpdateData( const float lowerThreshold,
 	{
 		cnt3 = cnt1 - firstAtomIdx;
 		// get position of current atom
-		tmpVec1.SetX( this->protein->ProteinAtomPositions()[cnt1*3+0]);
-		tmpVec1.SetY( this->protein->ProteinAtomPositions()[cnt1*3+1]);
-		tmpVec1.SetZ( this->protein->ProteinAtomPositions()[cnt1*3+2]);
+		tmpVec1.SetX( this->protein->AtomPositions()[cnt1*3+0]);
+		tmpVec1.SetY( this->protein->AtomPositions()[cnt1*3+1]);
+		tmpVec1.SetZ( this->protein->AtomPositions()[cnt1*3+2]);
 		// compute the difference
 		difference = ( this->rsVertex[cnt3]->GetPosition() - tmpVec1).Length();
 		
@@ -2015,18 +2015,19 @@ bool ReducedSurfaceSimplified::RSFace::operator==(const RSFace& rhs) const
  * ctor SimplifiedChain
  */
 ReducedSurfaceSimplified::SimplifiedChain::SimplifiedChain(
-		const CallProteinData *inter, unsigned int chId) : 
-		 protein( inter), chainId( chId), nullvec3( 0.0f, 0.0f, 0.0f)
+        MolecularDataCall *inter, unsigned int chId) : 
+        protein( inter), chainId( chId), nullvec3( 0.0f, 0.0f, 0.0f)
 {
 	// set the chain lenght to zero
 	this->chainLength = 0;
 	// resize backbone and side chain vectors
-	this->backbonePos.resize( protein->ProteinChain( chainId).AminoAcidCount());
-	this->sidechainPos.resize( protein->ProteinChain( chainId).AminoAcidCount());
-	this->backboneRadius.resize( protein->ProteinChain( chainId).AminoAcidCount());
-	this->sidechainRadius.resize( protein->ProteinChain( chainId).AminoAcidCount());
-	this->backboneAtomIndex.resize( protein->ProteinChain( chainId).AminoAcidCount());
-	this->sidechainAtomIndex.resize( protein->ProteinChain( chainId).AminoAcidCount());
+    chainId = vislib::math::Min( chainId, protein->MoleculeCount() - 1);
+    this->backbonePos.resize( protein->Molecules()[chainId].ResidueCount());
+	this->sidechainPos.resize( protein->Molecules()[chainId].ResidueCount());
+	this->backboneRadius.resize( protein->Molecules()[chainId].ResidueCount());
+	this->sidechainRadius.resize( protein->Molecules()[chainId].ResidueCount());
+	this->backboneAtomIndex.resize( protein->Molecules()[chainId].ResidueCount());
+	this->sidechainAtomIndex.resize( protein->Molecules()[chainId].ResidueCount());
 	
 	// initialize simplified chain
 	Init();
@@ -2123,28 +2124,27 @@ void ReducedSurfaceSimplified::SimplifiedChain::Init()
 	unsigned int cnt1, cnt2, firstAtom, atomCnt, firstAtomSC;
 	vislib::math::Vector<float, 3> posBB, posSC;
 	vislib::math::Cuboid<float> bBoxBB, bBoxSC;
-	CallProteinData::AtomType type;
+	MolecularDataCall::AtomType type;
 	vislib::StringA typeName;
 	float max;
 	// set maximum radius to zero
 	this->maxRad = 0.0f;
 	
 	// loop over all amino acids of the current chain
-	for( cnt1 = 0; cnt1 < protein->ProteinChain( chainId).AminoAcidCount(); ++cnt1 )
-	{
+    for( cnt1 = 0; cnt1 < protein->Molecules()[chainId].ResidueCount(); ++cnt1 ) {
 		// set the backbone and sidechain bounding boxes to zero
 		bBoxBB.SetNull();
 		bBoxSC.SetNull();
 		// store first atom and length of the current amino acid
-		firstAtom = protein->ProteinChain( chainId).AminoAcid()[cnt1].FirstAtomIndex();
-		atomCnt = protein->ProteinChain( chainId).AminoAcid()[cnt1].AtomCount();
+        firstAtom = protein->Residues()[protein->Molecules()[chainId].FirstResidueIndex() + cnt1]->FirstAtomIndex();
+        firstAtom = protein->Residues()[protein->Molecules()[chainId].FirstResidueIndex() + cnt1]->AtomCount();
 		// set first sidechain atom index
-		firstAtomSC = this->protein->ProteinAtomCount();
+		firstAtomSC = this->protein->AtomCount();
 		// loop over all atoms of the current amino acid
 		for( cnt2 = firstAtom; cnt2 < ( firstAtom + atomCnt); ++cnt2 )
 		{
 			// get type of the current atom
-			type = protein->AtomTypes()[protein->ProteinAtomData()[cnt2].TypeIndex()];
+            type = protein->AtomTypes()[protein->AtomTypeIndices()[cnt2]];
 			// get type name of the current atom
 			typeName = type.Name();
 			// ignore H-atoms
@@ -2159,21 +2159,21 @@ void ReducedSurfaceSimplified::SimplifiedChain::Init()
 				if( bBoxBB.Height() < 1.0f )
 				{
 					bBoxBB.Set(
-						protein->ProteinAtomPositions()[cnt2*3+0],
-						protein->ProteinAtomPositions()[cnt2*3+1],
-						protein->ProteinAtomPositions()[cnt2*3+2],
-						protein->ProteinAtomPositions()[cnt2*3+0],
-						protein->ProteinAtomPositions()[cnt2*3+1],
-						protein->ProteinAtomPositions()[cnt2*3+2]);
+						protein->AtomPositions()[cnt2*3+0],
+						protein->AtomPositions()[cnt2*3+1],
+						protein->AtomPositions()[cnt2*3+2],
+						protein->AtomPositions()[cnt2*3+0],
+						protein->AtomPositions()[cnt2*3+1],
+						protein->AtomPositions()[cnt2*3+2]);
 				}
 				bBoxBB.GrowToPoint(
-					protein->ProteinAtomPositions()[cnt2*3+0] + type.Radius(),
-					protein->ProteinAtomPositions()[cnt2*3+1] + type.Radius(),
-					protein->ProteinAtomPositions()[cnt2*3+2] + type.Radius());
+					protein->AtomPositions()[cnt2*3+0] + type.Radius(),
+					protein->AtomPositions()[cnt2*3+1] + type.Radius(),
+					protein->AtomPositions()[cnt2*3+2] + type.Radius());
 				bBoxBB.GrowToPoint(
-					protein->ProteinAtomPositions()[cnt2*3+0] - type.Radius(),
-					protein->ProteinAtomPositions()[cnt2*3+1] - type.Radius(),
-					protein->ProteinAtomPositions()[cnt2*3+2] - type.Radius());
+					protein->AtomPositions()[cnt2*3+0] - type.Radius(),
+					protein->AtomPositions()[cnt2*3+1] - type.Radius(),
+					protein->AtomPositions()[cnt2*3+2] - type.Radius());
 			}
 			// sidechain
 			else
@@ -2181,21 +2181,21 @@ void ReducedSurfaceSimplified::SimplifiedChain::Init()
 				if( bBoxSC.Height() < 1.0f )
 				{
 					bBoxSC.Set(
-						protein->ProteinAtomPositions()[cnt2*3+0],
-						protein->ProteinAtomPositions()[cnt2*3+1],
-						protein->ProteinAtomPositions()[cnt2*3+2],
-						protein->ProteinAtomPositions()[cnt2*3+0],
-						protein->ProteinAtomPositions()[cnt2*3+1],
-						protein->ProteinAtomPositions()[cnt2*3+2]);
+						protein->AtomPositions()[cnt2*3+0],
+						protein->AtomPositions()[cnt2*3+1],
+						protein->AtomPositions()[cnt2*3+2],
+						protein->AtomPositions()[cnt2*3+0],
+						protein->AtomPositions()[cnt2*3+1],
+						protein->AtomPositions()[cnt2*3+2]);
 				}
 				bBoxSC.GrowToPoint(
-					protein->ProteinAtomPositions()[cnt2*3+0] + type.Radius(),
-					protein->ProteinAtomPositions()[cnt2*3+1] + type.Radius(),
-					protein->ProteinAtomPositions()[cnt2*3+2] + type.Radius());
+					protein->AtomPositions()[cnt2*3+0] + type.Radius(),
+					protein->AtomPositions()[cnt2*3+1] + type.Radius(),
+					protein->AtomPositions()[cnt2*3+2] + type.Radius());
 				bBoxSC.GrowToPoint(
-					protein->ProteinAtomPositions()[cnt2*3+0] - type.Radius(),
-					protein->ProteinAtomPositions()[cnt2*3+1] - type.Radius(),
-					protein->ProteinAtomPositions()[cnt2*3+2] - type.Radius());
+					protein->AtomPositions()[cnt2*3+0] - type.Radius(),
+					protein->AtomPositions()[cnt2*3+1] - type.Radius(),
+					protein->AtomPositions()[cnt2*3+2] - type.Radius());
 				// set first atom index for sidechain
 				firstAtomSC = ( firstAtomSC > cnt2 ) ? cnt2 : firstAtomSC;
 			}

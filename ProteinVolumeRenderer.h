@@ -12,11 +12,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "slicing.h"
-#include "CallProteinData.h"
 #include "CallVolumeData.h"
 #include "Color.h"
 #include "MolecularDataCall.h"
-#include "CallFrame.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "view/Renderer3DModule.h"
@@ -152,11 +150,6 @@ namespace protein {
 		virtual bool Render( megamol::core::Call& call);
 		
 		/**
-         * Volume rendering using protein data.
-		*/
-        bool RenderProteinData( megamol::core::view::CallRender3D *call, CallProteinData *protein);
-		
-		/**
          * Volume rendering using volume data.
 		*/
         bool RenderVolumeData( megamol::core::view::CallRender3D *call, CallVolumeData *volume);
@@ -186,28 +179,7 @@ namespace protein {
 		*/
         void ParameterRefresh( megamol::core::view::CallRender3D *call);
 		
-		/**
-		* Draw label for current loaded RMS frame.
-		*
-		* @param call Ths calling CallFrame.
-		*/
-		void DrawLabel(unsigned int frameID);
-		
-		/**
-		* The CallFrame callback.
-		*
-		* @param call The calling call.
-		* @return The return value of the function.
-		*/
-		bool ProcessFrameRequest( megamol::core::Call& call);
 
-		/**
-         * Create a volume containing all protein atoms.
-		*
-		* @param prot The data interface.
-		*/
-        void UpdateVolumeTexture( const CallProteinData *protein);
-	
 		/** 
          * Create a volume containing all molecule atoms.
 		 *
@@ -310,21 +282,13 @@ namespace protein {
 		
 		/** caller slot */
 		megamol::core::CallerSlot protDataCallerSlot;
-		/** callee slot */
-		megamol::core::CalleeSlot callFrameCalleeSlot;
 		/** caller slot */
 		megamol::core::CallerSlot protRendererCallerSlot;
         /** The volume data callee slot */
         megamol::core::CalleeSlot dataOutSlot;
         /** The segmentation data callee slot */
         megamol::core::CalleeSlot diagramDataOutSlot;
-		
-		// 'true' if there is rms data to be rendered
-		bool renderRMSData;
-		
-		// label with id of current loaded frame
-		vislib::graphics::AbstractFont *frameLabel;
-		
+
 		// camera information
 		vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
         // scaling factor for the scene

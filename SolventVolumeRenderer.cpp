@@ -53,8 +53,6 @@ using namespace megamol::protein;
  */
 protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModule (),
         protDataCallerSlot ( "getData", "Connects the volume rendering with data storage" ),
-        callFrameCalleeSlot ( "callFrame", "Connects the volume rendering with frame call from RMS renderer" ),
-    //  protRendererCallerSlot ( "renderProtein", "Connects the volume rendering with a protein renderer" ),
         dataOutSlot ( "volumeout", "Connects the volume rendering with a volume slice renderer" ),
         coloringModeSolventParam ( "coloringModeSolvent", "solvent coloring mode" ),
         coloringModePolymerParam ( "coloringModePolymer", "polymer coloring node" ),
@@ -96,11 +94,6 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
     // set caller slot for different data calls
     this->protDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable ( &this->protDataCallerSlot );
-
-    // set frame callee slot
-    protein::CallFrameDescription dfd;
-//    this->callFrameCalleeSlot.SetCallback ( dfd.ClassName(), "CallFrame", &SolventVolumeRenderer::ProcessFrameRequest );
-    this->MakeSlotAvailable ( &this->callFrameCalleeSlot );
 
     // set renderer caller slot
 //    this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
@@ -245,8 +238,6 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
     // fill rainbow color table
     Color::MakeRainbowColorTable( 100, this->rainbowColors);
 
-    this->renderRMSData = false;
-    this->frameLabel = NULL;
 }
 
 
@@ -254,7 +245,6 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
  * protein::SolventVolumeRenderer::~SolventVolumeRenderer (DTOR)
  */
 protein::SolventVolumeRenderer::~SolventVolumeRenderer ( void ) {
-    delete this->frameLabel;
     this->Release ();
 }
 
@@ -506,41 +496,6 @@ bool SolventVolumeRenderer::getVolumeData( core::Call& call) {
     return true;
 }
 
-/*
-bool protein::SolventVolumeRenderer::getFrameData(MolecularDataCall *mol, int frameID, float *&interPosFramePtr, int *&interHBondFramePtr) {
-    int id = frameID % ATOM_FRAMES_IN_CORE;    
-
-    // get positions of the first frame
-    if (this->interpFrameIDs[id] != frameID) {
-        vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO, "loading frame: %d", frameID );
-
-        // set frame ID and call data
-        mol->SetFrameID(frameID);
-        if( !(*mol)(MolecularDataCall::CallForGetData) )
-            return false;
-
-        if (this->interpAtomPosFrames[id].Count() < mol->AtomCount()*3)
-            this->interpAtomPosFrames[id].SetCount( mol->AtomCount()*3 );
-        memcpy( &this->interpAtomPosFrames[id][0], mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
-
-        if (mol->AtomHydrogenBondIndices()) {
-            if (this->interpHBondFrames[id].Count() < mol->AtomCount())
-                this->interpHBondFrames[id].SetCount(mol->AtomCount());
-            memcpy( &this->interpHBondFrames[id][0], mol->AtomHydrogenBondIndices(), mol->AtomCount() * sizeof(int));
-        } else
-            this->interpHBondFrames[id].Clear();
-
-        this->interpFrameIDs[id] = frameID;
-    }
-
-    interPosFramePtr = &interpAtomPosFrames[id][0];
-
-    if (this->interpHBondFrames[id].Count())
-        interHBondFramePtr = &this->interpHBondFrames[id][0];
-    else
-        interHBondFramePtr = 0;
-}*/
-
 
 void protein::SolventVolumeRenderer::ColorAtom(float *atomColor, MolecularDataCall *mol, int colorMode, int atomIdx, int residueIdx ) {
     switch(colorMode) {
@@ -647,8 +602,7 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>( &call );
     if( !cr3d ) return false;
-    // get the pointer to CallRender3D (protein renderer)
-    //view::CallRender3D *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
+
     // get pointer to MolecularDataCall
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 
@@ -1549,13 +1503,8 @@ void protein::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataCall
 bool protein::SolventVolumeRenderer::RenderMolecularData( view::CallRender3D *call, MolecularDataCall *mol) {
 
     // decide to use already loaded frame request from CallFrame or 'normal' rendering
-    if( this->callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED ) {
-        if( !this->renderRMSData )
-            return false;
-    } else {
-        if( !(*mol)() )
-            return false;
-    }
+    if( !(*mol)() )
+        return false;
 
     // check last atom count with current atom count
     if( this->atomCount != mol->AtomCount() ) {
@@ -1797,45 +1746,6 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call,
     }*/
 }
 
-/**
- * TODO: this is not used so far ... keep it anyway?
- * protein::SolventVolumeRenderer::DrawLabel
- */
-void protein::SolventVolumeRenderer::DrawLabel( unsigned int frameID )
-{
-    using namespace vislib::graphics;
-
-    glPushAttrib( GL_ENABLE_BIT);
-    glDisable( GL_CULL_FACE);
-    glDisable( GL_LIGHTING);
-
-    glMatrixMode( GL_MODELVIEW );
-    glPushMatrix();
-
-    glTranslatef(-1.0f, 1.0f, 1.0f );
-
-    glColor3f( 1.0, 1.0, 1.0 );
-    if( this->frameLabel == NULL ) {
-        this->frameLabel = new vislib::graphics::gl::SimpleFont();
-        if( !this->frameLabel->Initialise() ) {
-            vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_WARN, "SolventVolumeRenderer: Problems to initalise the Font" );
-        }
-    }
-    
-//    char frameChar[15];
-//#if _WIN32
-//#define snprintf _snprintf
-//#endif
-//    snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
-    vislib::StringA tmpStr;
-    tmpStr.Format( "Frame: %i", frameID);
-
-    this->frameLabel->DrawString( 0.0f, 0.0f, 0.1f, true, tmpStr.PeekBuffer(), AbstractFont::ALIGN_LEFT_TOP );
-
-    glPopMatrix();
-
-    glPopAttrib();
-}
 
 #if 0
 void protein::SolventVolumeRenderer::CreateSpatialProbabilitiesTexture( MolecularDataCall *mol) {

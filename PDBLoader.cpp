@@ -760,8 +760,6 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
     this->forceDataCallerSlot.SetCompatibleCall<ForceDataCallDescription>();
     this->MakeSlotAvailable( &this->forceDataCallerSlot);
 
-    this->dataOutSlot.SetCallback( CallProteinData::ClassName(), CallProteinData::FunctionName(CallProteinData::CallForGetData), &PDBLoader::getData);
-    this->dataOutSlot.SetCallback( CallProteinData::ClassName(), CallProteinData::FunctionName(CallProteinData::CallForGetExtent), &PDBLoader::getExtent);
     this->dataOutSlot.SetCallback( MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(MolecularDataCall::CallForGetData), &PDBLoader::getData);
     this->dataOutSlot.SetCallback( MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(MolecularDataCall::CallForGetExtent), &PDBLoader::getExtent);
     this->MakeSlotAvailable( &this->dataOutSlot);
