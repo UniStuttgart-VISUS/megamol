@@ -1435,3 +1435,75 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcReleaseModuleSlotDescriptions(
     *outCallerSlots = NULL;
 
 }
+
+
+/*
+ * mmcGetModuleDescriptionInfo
+ */
+MEGAMOLCORE_EXT_APICALL(mmcModuleDescriptionInfo*, mmcGetModuleDescriptionInfo)(void * desc) {
+    megamol::core::ModuleDescription *md = static_cast<megamol::core::ModuleDescription*>(desc);
+    ASSERT(md != NULL);
+    mmcModuleDescriptionInfo *d = new mmcModuleDescriptionInfo();
+
+    vislib::StringA str = md->ClassName();
+    d->name = new char[str.Length() + 1];
+    ::memcpy(const_cast<char*>(d->name), str.PeekBuffer(), str.Length() + 1);
+
+    str = md->Description();
+    d->desc = new char[str.Length() + 1];
+    ::memcpy(const_cast<char*>(d->desc), str.PeekBuffer(), str.Length() + 1);
+
+    return d;
+}
+
+
+/*
+ * mmcReleaseModuleDescriptionInfo
+ */
+MEGAMOLCORE_EXT_APICALL(void, mmcReleaseModuleDescriptionInfo)(mmcModuleDescriptionInfo* desc) {
+    delete[] desc->name;
+    delete[] desc->desc;
+    delete desc;
+}
+
+
+/*
+ * mmcGetCallDescriptionInfo
+ */
+MEGAMOLCORE_EXT_APICALL(mmcCallDescriptionInfo*, mmcGetCallDescriptionInfo)(void * desc) {
+    megamol::core::CallDescription *cd = static_cast<megamol::core::CallDescription*>(desc);
+    ASSERT(cd != NULL);
+    mmcCallDescriptionInfo *d = new mmcCallDescriptionInfo();
+
+    vislib::StringA str = cd->ClassName();
+    d->name = new char[str.Length() + 1];
+    ::memcpy(const_cast<char*>(d->name), str.PeekBuffer(), str.Length() + 1);
+
+    str = cd->Description();
+    d->desc = new char[str.Length() + 1];
+    ::memcpy(const_cast<char*>(d->desc), str.PeekBuffer(), str.Length() + 1);
+
+    d->cntFunc = cd->FunctionCount();
+    d->funcNames = new const char*[d->cntFunc];
+    for (unsigned int i = 0; i < d->cntFunc; i++) {
+        str = cd->FunctionName(i);
+        d->funcNames[i] = new char[str.Length() + 1];
+        ::memcpy(const_cast<char*>(d->funcNames[i]), str.PeekBuffer(), str.Length() + 1);
+    }
+
+    return d;
+}
+
+
+/*
+ * mmcReleaseCallDescriptionInfo
+ */
+MEGAMOLCORE_EXT_APICALL(void, mmcReleaseCallDescriptionInfo)(mmcCallDescriptionInfo* desc) {
+    delete[] desc->name;
+    delete[] desc->desc;
+    for (unsigned int i = 0; i < desc->cntFunc; i++) {
+        delete[] desc->funcNames[i];
+    }
+    delete[] desc->funcNames;
+    delete desc;
+}

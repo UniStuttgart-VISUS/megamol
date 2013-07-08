@@ -869,41 +869,10 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryW(void *hCore,
     const wchar_t *frontend, const wchar_t *feparams,
     const wchar_t *filetype, bool unreg, bool overwrite);
 
-/**
- * Answer the number of exported modules
- *
- * @return The number of exported modules
- */
-MEGAMOLCORE_API int MEGAMOLCORE_CALL mmcModuleCount(void);
-
-/**
- * Answer the module definition object of the idx-th module
- *
- * DO NOT Release the memory of the returned objects
- *
- * @param idx The zero-based index
- *
- * @return The module definition
- */
-MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcModuleDescription(int idx);
-
-/**
- * Answer the number of exported calls
- *
- * @return The number of exported calls
- */
-MEGAMOLCORE_API int MEGAMOLCORE_CALL mmcCallCount(void);
-
-/**
- * Answer the call definition object of the idx-th call
- *
- * DO NOT Release the memory of the returned objects
- *
- * @param idx The zero-based index
- *
- * @return The call definition
- */
-MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcCallDescription(int idx);
+#ifndef MEGAMOLCORE_EXT_API
+#define MEGAMOLCORE_EXT_API 1
+#define MEGAMOLCORE_EXT_APICALL(A, B) MEGAMOLCORE_API A MEGAMOLCORE_CALL B
+#endif /* MEGAMOLCORE_EXT_API */
 
 /**
  * TODO: Document me!
@@ -940,7 +909,61 @@ typedef struct _mmcCallerSlotDescription_t {
 /**
  * TODO: Document me!
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc, 
+typedef struct _mmcModuleDescriptionInfo_t {
+    const char *name;
+    const char *desc;
+} mmcModuleDescriptionInfo;
+
+/**
+ * TODO: Document me!
+ */
+typedef struct _mmcCallDescriptionInfo_t {
+    const char *name;
+    const char *desc;
+    unsigned int cntFunc;
+    const char ** funcNames;
+} mmcCallDescriptionInfo;
+
+/**
+ * Answer the number of exported modules
+ *
+ * @return The number of exported modules
+ */
+MEGAMOLCORE_EXT_APICALL(int, mmcModuleCount)(void);
+
+/**
+ * Answer the module definition object of the idx-th module
+ *
+ * DO NOT Release the memory of the returned objects
+ *
+ * @param idx The zero-based index
+ *
+ * @return The module definition
+ */
+MEGAMOLCORE_EXT_APICALL(void*, mmcModuleDescription)(int idx);
+
+/**
+ * Answer the number of exported calls
+ *
+ * @return The number of exported calls
+ */
+MEGAMOLCORE_EXT_APICALL(int, mmcCallCount)(void);
+
+/**
+ * Answer the call definition object of the idx-th call
+ *
+ * DO NOT Release the memory of the returned objects
+ *
+ * @param idx The zero-based index
+ *
+ * @return The call definition
+ */
+MEGAMOLCORE_EXT_APICALL(void*, mmcCallDescription)(int idx);
+
+/**
+ * TODO: Document me!
+ */
+MEGAMOLCORE_EXT_APICALL(void, mmcGetModuleSlotDescriptions)(void * desc, 
     unsigned int *outCntParamSlots, mmcParamSlotDescription **outParamSlots,
     unsigned int *outCntCalleeSlots, mmcCalleeSlotDescription **outCalleeSlots,
     unsigned int *outCntCallerSlots, mmcCallerSlotDescription **outCallerSlots);
@@ -948,10 +971,30 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
 /**
  * TODO: Document me!
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcReleaseModuleSlotDescriptions(
+MEGAMOLCORE_EXT_APICALL(void, mmcReleaseModuleSlotDescriptions)(
     unsigned int outCntParamSlots, mmcParamSlotDescription **outParamSlots,
     unsigned int outCntCalleeSlots, mmcCalleeSlotDescription **outCalleeSlots,
     unsigned int outCntCallerSlots, mmcCallerSlotDescription **outCallerSlots);
+
+/**
+ * TODO: Document me!
+ */
+MEGAMOLCORE_EXT_APICALL(mmcModuleDescriptionInfo*, mmcGetModuleDescriptionInfo)(void * desc);
+
+/**
+ * TODO: Document me!
+ */
+MEGAMOLCORE_EXT_APICALL(void, mmcReleaseModuleDescriptionInfo)(mmcModuleDescriptionInfo* desc);
+
+/**
+ * TODO: Document me!
+ */
+MEGAMOLCORE_EXT_APICALL(mmcCallDescriptionInfo*, mmcGetCallDescriptionInfo)(void * desc);
+
+/**
+ * TODO: Document me!
+ */
+MEGAMOLCORE_EXT_APICALL(void, mmcReleaseCallDescriptionInfo)(mmcCallDescriptionInfo* desc);
 
 #ifdef __cplusplus
 } /* extern "C" */
