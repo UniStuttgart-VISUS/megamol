@@ -22,7 +22,7 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "cutil_math.h"
+#include "cuda_helper.h"
 #include "math_constants.h"
 #include "particles_kernel.cuh"
 
@@ -266,7 +266,7 @@ uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
                 // get position of potential neighbor
                 pos2 = FETCH( atomPos, j);
                 // check distance
-                relPos = make_float3( pos2) - make_float3( pos);
+                relPos = make_float3( pos2.x,  pos2.y,  pos2.z) - make_float3( pos.x, pos.y, pos.z);
                 dist = length( relPos);
                 neighborDist = pos.w + pos2.w + 2.0f * params.probeRadius;
                 if( dist < neighborDist ) {
@@ -317,13 +317,13 @@ uint countProbeNeighborsInCell( //uint*   neighbors,     // output: neighbor ind
                 // get position of potential neighbor
                 pos2 = atomPos[j];
                 // check distance
-                relPos = make_float3( pos2) - make_float3( pos);
+                relPos = make_float3( pos2.x, pos2.y, pos2.z) - make_float3( pos.x, pos.y, pos.z);
                 dist = length( relPos);
                 neighborDist = 2.0f * params.probeRadius;
                 if( dist < neighborDist ) {
                     // check number of neighbors
                     if( ( neighborIndex + count) >= rsParams.maxNumProbeNeighbors ) return count;
-                    neighbors[atomIndex*rsParams.maxNumProbeNeighbors+neighborIndex+count] = make_float3( pos2);
+                    neighbors[atomIndex*rsParams.maxNumProbeNeighbors+neighborIndex+count] = make_float3( pos2.x, pos2.y, pos2.z);
                     // increment the neighbor counter
                     count++;
                 }
@@ -355,7 +355,7 @@ void countNeighbors( uint*   neighborCount,        // output: number of neighbor
     float4 pos = FETCH( atomPos, index);
 
     // get address in grid
-    int3 gridPos = calcGridPos( make_float3( pos));
+    int3 gridPos = calcGridPos( make_float3( pos.x, pos.y, pos.z));
 
     int3 gridSize;
     gridSize.x = int( params.gridSize.x);
@@ -463,7 +463,7 @@ void countProbeNeighbors( //uint*   probeNeighborCount, // output: number of nei
     float4 pos = probePos[index];
 
     // get address in grid
-    int3 gridPos = calcGridPos( make_float3( pos));
+    int3 gridPos = calcGridPos( make_float3( pos.x, pos.y, pos.z));
 
     int3 gridSize;
     gridSize.x = int( params.gridSize.x);
@@ -531,7 +531,7 @@ void computeArcs( float4* arcs,                 // output: arcs
     float4 rj4;
     float3 rj;
     float4 rk4 = FETCH( smallCircles, origAtomIdx * params.maxNumNeighbors + neighborIdx);
-    float3 rk = make_float3( rk4);
+    float3 rk = make_float3( rk4.x, rk4.y, rk4.z);
     float Ri = atom.w + params.probeRadius;
     float Ri2 = Ri * Ri;
     float numer1, numer2, denom, rj_dot_rk, rj2, rk2;

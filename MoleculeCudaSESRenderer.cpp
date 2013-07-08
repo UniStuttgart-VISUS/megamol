@@ -30,8 +30,7 @@
 #include "particleSystem.cuh"
 #include "particles_kernel.cuh"
 
-#include <cutil_inline.h>
-#include <cutil_gl_inline.h>
+#include "cuda_helper.h"
 #include <cuda_gl_interop.h>
 
 extern "C" void cudaInit(int argc, char **argv);

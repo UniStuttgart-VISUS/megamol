@@ -16,7 +16,6 @@
 #include "slicing.h"
 #include "Color.h"
 #include "MolecularDataCall.h"
-#include "CallFrame.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "view/Renderer3DModule.h"

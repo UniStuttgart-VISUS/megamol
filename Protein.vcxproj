@@ -87,8 +87,8 @@
     <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.2.props')">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.2.props" />
+  <ImportGroup Label="ExtensionSettings" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 5.0.props')">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.0.props" />
   </ImportGroup>
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'" Label="PropertySheets">
@@ -233,7 +233,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <Defines>_DEBUG</Defines>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
@@ -274,7 +273,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <Defines>_DEBUG</Defines>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
@@ -313,7 +311,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
@@ -354,7 +351,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
@@ -391,7 +387,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <Defines>_DEBUG</Defines>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
@@ -433,7 +428,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <Defines>_DEBUG</Defines>
       <Runtime>MDd</Runtime>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
@@ -476,7 +470,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
     <CudaCompile>
-      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
@@ -519,7 +512,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <Include>%(Include);$(CUDAPath)C/common/inc</Include>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
@@ -678,6 +670,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CUDAKernels.h" />
     <ClInclude Include="CUDAMarchingCubes.h" />
     <ClInclude Include="CUDAQuickSurf.h" />
+    <ClInclude Include="cuda_helper.h" />
     <ClInclude Include="DataWriter.h" />
     <ClInclude Include="Diagram2DCall.h" />
     <ClInclude Include="Diagram2DRenderer.h" />
@@ -930,8 +923,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </CudaCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 4.2.targets')">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.2.targets" />
+  <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 5.0.targets')">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.0.targets" />
   </ImportGroup>
   <ImportGroup Label="ExtensionTargets" />
 </Project>

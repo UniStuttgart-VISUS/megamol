@@ -14,7 +14,7 @@
 #include <vislib/OutOfRangeException.h>
 
 #ifdef WITH_CUDA
-#include <cutil_inline.h>
+#include "cuda_helper.h"
 #endif  // WITH_CUDA
 
 namespace megamol {

@@ -4,9 +4,6 @@
     <OutputBin>%outbin%</OutputBin>
     <MegaMolCorePath>%mmcorePath%</MegaMolCorePath>
     <VISlibPath>%vislib%</VISlibPath>
-    <NETCDFPath>%netcdfPath%</NETCDFPath>
-    <OPENCLPath>%openclPath%</OPENCLPath>
-    <CUDAPath>%cudaPath%</CUDAPath>
     <HAPTICSPath>%hapticsPath%</HAPTICSPath>
   </PropertyGroup>
   <PropertyGroup>
@@ -34,15 +31,6 @@
     </BuildMacro>
     <BuildMacro Include="VISlibPath">
       <Value>$(VISlibPath)</Value>
-    </BuildMacro>
-    <BuildMacro Include="NETCDFPath">
-      <Value>$(NETCDFPath)</Value>
-    </BuildMacro>
-    <BuildMacro Include="OPENCLPath">
-      <Value>$(OPENCLPath)</Value>
-    </BuildMacro>
-    <BuildMacro Include="CUDAPath">
-      <Value>$(CUDAPath)</Value>
     </BuildMacro>
     <BuildMacro Include="HAPTICSPath">
       <Value>$(HAPTICSPath)</Value>

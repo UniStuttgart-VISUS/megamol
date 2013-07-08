@@ -28,8 +28,7 @@
 #include <thrust/version.h>
 #include <iostream>
 #include <vector_types.h>
-#include <cutil_inline.h>
-#include <cutil_gl_inline.h>
+#include "cuda_helper.h"
 #include <cuda_gl_interop.h>
 
 #include <thrust/sort.h>
