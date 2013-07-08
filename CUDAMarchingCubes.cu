@@ -936,7 +936,8 @@ bool CUDAMarchingCubes::SetVolumeData(float *volume, float *colors, uint3 gridsi
 
   // copy data to 3D array
   cudaMemcpy3DParms copyParams = {0};
-  copyParams.srcPtr   = make_cudaPitchedPtr((void*)d_volume, 0, 0, 0);
+  //copyParams.srcPtr   = make_cudaPitchedPtr((void*)d_volume, 0, 0, 0);
+  copyParams.srcPtr   = make_cudaPitchedPtr((void*)d_volume, sizeof(float)*gridSize.x, gridSize.x, gridSize.y);
   copyParams.dstArray = d_volumeArray;
   copyParams.extent   = gridExtent;
   copyParams.kind     = cudaMemcpyDeviceToDevice;

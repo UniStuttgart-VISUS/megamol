@@ -34,7 +34,7 @@
 #include <glh/glh_extensions.h>
 #include <GL/glu.h>
 #include <cuda_gl_interop.h>
-#include <cutil_math.h>
+#include "cuda_helper.h"
 #include <thrust/version.h>
 #include <thrust/reduce.h>
 #include <thrust/sort.h>

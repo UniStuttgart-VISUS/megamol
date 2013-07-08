@@ -13,8 +13,8 @@
 #include <thrust/reduce.h>
 #include <thrust/unique.h>
 #include <thrust/iterator/constant_iterator.h>
-#include <cutil_math.h>
-#include <device_functions.h>
+#include "cuda_helper.h"
+//#include <device_functions.h>
 
 /*
  * Note:

@@ -1913,6 +1913,10 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
     if (!gpuh->mc->SetVolumeData(gpuh->devdensity, gpuh->devvoltexmap, 
                                  gvsz, gorg, gbnds, true)) {
       printf("MC SetVolumeData() failed\n");
+      err = cudaGetLastError();
+      // If an error occured, we print it
+      if (err != cudaSuccess)
+          printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
     }
     // set the sub-volume starting/ending indices if needed
     if (skipstartplane || skipendplane) {

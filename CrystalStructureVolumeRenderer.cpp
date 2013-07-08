@@ -43,7 +43,7 @@
 #include <glh/glh_extensions.h>
 
 #include <thrust/version.h>
-#include <cutil_inline.h>
+#include "cuda_helper.h"
 
 #include "glh/glh_extensions.h"
 #include <GL/glu.h>

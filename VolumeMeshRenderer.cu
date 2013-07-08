@@ -12,8 +12,8 @@
 #include <thrust/sort.h>
 #include <thrust/reduce.h>
 #include <thrust/iterator/constant_iterator.h>
-#include <cutil_math.h>
-#include <device_functions.h>
+#include "cuda_helper.h"
+//#include <device_functions.h>
 
 #ifdef CUDA_NO_SM_11_ATOMIC_INTRINSICS
 #error "Atomic intrinsics are missing (nvcc -arch=sm_11)"

@@ -24,8 +24,7 @@
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
-#include <cutil_inline.h>
-#include <cutil_gl_inline.h>
+#include "cuda_helper.h"
 #include <cuda_gl_interop.h>
 
 #include "filter_cuda.cuh"

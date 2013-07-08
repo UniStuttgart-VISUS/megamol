@@ -13,9 +13,7 @@
  * 
  */
 
-#include <cutil_inline.h>
-#include <vector_types.h>
-#include <cutil_math.h>
+#include "cuda_helper.h"
 
 #include "filter_cuda.cuh"
 
@@ -340,7 +338,7 @@ extern "C" {
         
         // Compute grid size
         unsigned int numThreads = min(256, atmCntProt);
-        unsigned int numBlocks  = ceil((float)atmCntProt/(float)numThreads);
+        unsigned int numBlocks  = (unsigned int)ceil((float)atmCntProt/(float)numThreads);
     
         // Execute the kernel
         calcFilterHashGridD <<< numBlocks, numThreads >>> (gridHash,
@@ -363,7 +361,7 @@ extern "C" {
                            unsigned int  atmCntProt) {
   
         unsigned int numThreads = min(256, atmCntProt);
-        unsigned int numBlocks  = ceil((float)atmCntProt/(float)numThreads);
+        unsigned int numBlocks  = (unsigned int)ceil((float)atmCntProt/(float)numThreads);
         
         // Compute memory size
         unsigned int memSize = sizeof(unsigned int)*(numThreads+1);
@@ -425,7 +423,7 @@ extern "C" {
     
         // Compute grid size
         unsigned int numThreads = min(256, atmCnt);
-        unsigned int numBlocks  = ceil((float)atmCnt/(float)numThreads);                                     
+        unsigned int numBlocks  = (unsigned int)ceil((float)atmCnt/(float)numThreads);                                     
                                          
         // Execute kernel
         calcSolventVisibilityD <<< numBlocks, numThreads >>> (cellStart,

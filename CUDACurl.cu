@@ -8,9 +8,7 @@
  */
 
 #include "CUDACurl.cuh"
-#include <cutil_inline.h>
-#include <cutil_math.h>
-#include <vector_types.h>
+#include "cuda_helper.h"
 
 using namespace megamol;
 
@@ -271,7 +269,7 @@ void protein::CudaGradX_D(float *gridVecFieldD,
     grad.y -= gridVecFieldD[idx_dxDown*3+1];
     grad.z -= gridVecFieldD[idx_dxDown*3+2];
 
-    grad*=hInvHalf;
+    grad *= hInvHalf;
 
     // Write result
 
@@ -386,7 +384,7 @@ cudaError_t protein::CudaGetCurlMagnitude(float *gridVecFieldD,
 		                                  float gridSpacing) {
 
 	uint nThreadsPerBlock = min(512, nVoxels);
-	uint nBlocks  = ceil((float)nVoxels/(float)nThreadsPerBlock);
+	uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
 
     // Set magnitude and curl vector to zero
     cutilSafeCall(cudaMemset(gridCurlMagD, 0, nVoxels*sizeof(float)));
@@ -428,7 +426,7 @@ cudaError_t CudaGetGradX(float *gridVecFieldD,
                             float gridSpacing) {
 
 	uint nThreadsPerBlock = min(512, nVoxels);
-	uint nBlocks  = ceil((float)nVoxels/(float)nThreadsPerBlock);
+	uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
 
     // Set gradient to zero
     cutilSafeCall(cudaMemset(gridGrad_D, 0, nVoxels*sizeof(float)*3));
@@ -457,7 +455,7 @@ cudaError_t CudaGetGradY(float *gridVecFieldD,
                             float gridSpacing) {
 
 	uint nThreadsPerBlock = min(512, nVoxels);
-	uint nBlocks  = ceil((float)nVoxels/(float)nThreadsPerBlock);
+	uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
 
     // Set gradient to zero
     cutilSafeCall(cudaMemset(gridGrad_D, 0, nVoxels*sizeof(float)*3));
@@ -486,7 +484,7 @@ cudaError_t CudaGetGradZ(float *gridVecFieldD,
                             float gridSpacing) {
 
 	uint nThreadsPerBlock = min(512, nVoxels);
-	uint nBlocks  = ceil((float)nVoxels/(float)nThreadsPerBlock);
+	uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
 
     // Set gradient to zero
     cutilSafeCall(cudaMemset(gridGrad_D, 0, nVoxels*sizeof(float)*3));

@@ -15,7 +15,6 @@
 #include "MolecularDataCall.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
-#include "CallFrame.h"
 #include "view/Renderer3DModule.h"
 #include "view/CallRender3D.h"
 #include "vislib/GLSLShader.h"

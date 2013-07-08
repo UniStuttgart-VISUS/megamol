@@ -19,7 +19,7 @@
 #ifdef _WIN32
 #include <Windows.h>
 #endif
-#include <cutil_inline.h>
+#include "cuda_helper.h"
 #include <cstdlib>
 #include <cstdio>
 #include <string.h>
@@ -47,22 +47,14 @@ void scanParticles(uint *dInput, uint *dOutput, uint count) {
                            thrust::device_ptr<uint>(dOutput));
 }
 
-void cudaInit(int argc, char **argv) {   
-    // use command-line specified CUDA device, otherwise use device with highest Gflops/s
-    if( cutCheckCmdLineFlag(argc, (const char**)argv, "device") ) {
-        cutilDeviceInit(argc, argv);
-    } else {
-        cudaSetDevice( cutGetMaxGflopsDeviceId() );
-    }
+void cudaInit(int argc, char **argv) {
+    // use CUDA device with highest Gflops/s
+    cudaSetDevice( cutGetMaxGflopsDeviceId() );
 }
 
-void cudaGLInit(int argc, char **argv) {   
-    // use command-line specified CUDA device, otherwise use device with highest Gflops/s
-    if( cutCheckCmdLineFlag(argc, (const char**)argv, "device") ) {
-        cutilDeviceInit(argc, argv);
-    } else {
-        cudaGLSetGLDevice( cutGetMaxGflopsDeviceId() );
-    }
+void cudaGLInit(int argc, char **argv) {
+    // use CUDA device with highest Gflops/s
+    cudaGLSetGLDevice( cutGetMaxGflopsDeviceId() );
 }
 
 void allocateArray(void **devPtr, size_t size) {

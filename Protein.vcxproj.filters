@@ -552,6 +552,9 @@
     <ClInclude Include="CrystalStructureDataSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cuda_helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="common.mk">
