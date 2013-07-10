@@ -665,9 +665,14 @@ namespace vislib {
 
         if ((l != NULL) && (r != NULL)) {
             while ((*l != 0) && (*r != 0)) {
-                while (*l++ == *r++);
+                while (*l++ == *r++) {
+                    if (*l == 0) {
+                        ++l; ++r;
+                        break;
+                    }
+                }
             }
-    
+
             return (*l == *r);
         } else {
             /* 'l' and 'r' must both be NULL for being equal. */

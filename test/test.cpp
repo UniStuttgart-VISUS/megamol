@@ -61,6 +61,7 @@
 #include "testtriangle.h"
 #include "testBitmapImage.h"
 #include "testReaderWriterLock.h"
+#include "testmultisz.h"
 #ifdef _WIN32
 #include "testwinreg.h"
 #endif /* _WIN32 */
@@ -97,6 +98,7 @@ VislibTest tests[] = {
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
     {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
     {_T("RLEUINT"), ::TestRLEUInt, "Tests UINT RLE Encoding"},
+    {_T("multisz"), ::TestMultiSz, "Tests MultiSz container"},
     // graphics
     {_T("BitmapCodecSimple"), ::TestBitmapCodecSimple, "Performs very simple tests of vislib::graphics::*BitmapCodec"},
     {_T("NamedColours"), ::TestNamedColours, "Tests NamedColours"},
