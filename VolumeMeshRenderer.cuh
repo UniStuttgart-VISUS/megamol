@@ -12,6 +12,9 @@
 
 typedef unsigned int uint;
 
+cudaError_t copyVolSizeToDevice( uint3 volSize);
+cudaError_t copyVolSizeFromDevice( uint3 &volSize);
+
 /*
  * greater than comparison for int2 (compares x values)
  */
