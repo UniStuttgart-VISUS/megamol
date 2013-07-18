@@ -13,7 +13,6 @@
 #include <thrust/reduce.h>
 #include <thrust/iterator/constant_iterator.h>
 #include "cuda_helper.h"
-//#include <device_functions.h>
 
 #ifdef CUDA_NO_SM_11_ATOMIC_INTRINSICS
 #error "Atomic intrinsics are missing (nvcc -arch=sm_11)"
@@ -29,7 +28,20 @@
 __device__ float* volumeTex;
 texture<float, cudaTextureType3D, cudaReadModeElementType> aoVolumeTex;
 
-__device__ uint3 dVolumeSize;
+__device__ __constant__ uint3 dVolumeSize;
+
+cudaError_t copyVolSizeToDevice( uint3 volSize) {
+    cudaError_t error = cudaMemcpyToSymbol( dVolumeSize, (void*)&volSize, sizeof(uint3));
+    cudaDeviceSynchronize();
+    return error;
+}
+
+cudaError_t copyVolSizeFromDevice( uint3 &volSize) {
+    volSize = make_uint3( 0, 0, 0);
+    cudaError_t error = cudaMemcpyFromSymbol( (void*)&volSize, dVolumeSize, sizeof(uint3));
+    cudaDeviceSynchronize();
+    return error;
+}
 
 /*
  * Voxel index and access functions.

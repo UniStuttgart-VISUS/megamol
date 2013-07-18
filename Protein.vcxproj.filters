@@ -274,6 +274,9 @@
     <ClCompile Include="IntSelectionCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SequenceRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSpline.h">
@@ -553,6 +556,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cuda_helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SequenceRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

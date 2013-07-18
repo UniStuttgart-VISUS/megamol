@@ -14,7 +14,6 @@
 #include <thrust/unique.h>
 #include <thrust/iterator/constant_iterator.h>
 #include "cuda_helper.h"
-//#include <device_functions.h>
 
 /*
  * Note:

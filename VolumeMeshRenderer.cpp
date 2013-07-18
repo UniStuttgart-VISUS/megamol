@@ -21,7 +21,6 @@
 #include "param/BoolParam.h"
 #include "param/StringParam.h"
 #include "param/IntParam.h"
-#include "VolumeMeshRenderer.cuh"
 #include "MappableFloatPair.h"
 #include "MappableCategoryFloat.h"
 #include "CoreInstance.h"
@@ -38,7 +37,6 @@
 #include <thrust/version.h>
 #include <thrust/reduce.h>
 #include <thrust/sort.h>
-//#include <map>
 #include <omp.h>
 
 using namespace megamol;
@@ -233,7 +231,7 @@ bool VolumeMeshRenderer::create(void)
     if (glh_init_extensions("GL_VERSION_2_0 GL_ARB_vertex_buffer_object") != GL_TRUE) {
         return false;
     }
-    if  (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if  (!vislib::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
         return false;
     }
 
@@ -519,12 +517,12 @@ bool VolumeMeshRenderer::Render(Call& call)
     hVolSize.y = numvoxels[1];
     hVolSize.z = numvoxels[2];
     this->volumeSize = hVolSize;
-    //cudaMemcpy( &dVolumeSize, &hVolSize, sizeof(float3), cudaMemcpyHostToDevice);
-    CUDA_VERIFY(cudaMemcpyToSymbol( "dVolumeSize", &hVolSize, sizeof(uint3)));
-    // TEST: read back dVolumeSize to verify correct copy!
+    CUDA_VERIFY( copyVolSizeToDevice( hVolSize));
     cudaDeviceSynchronize();
+    // TEST: read back dVolumeSize to verify correct copy!
     hVolSize = make_uint3( 0, 0, 0);
-    cudaMemcpyFromSymbol( &hVolSize, "dVolumeSize", sizeof(float3));
+    CUDA_VERIFY( copyVolSizeFromDevice( hVolSize));
+    cudaDeviceSynchronize();
     if( hVolSize.x != numvoxels[0] || hVolSize.y != numvoxels[1] || hVolSize.z != numvoxels[2] ) {
         Log::DefaultLog.WriteError( "%s: cudaMemcpyFromSymbol failed!\n", this->Name());
         delete[] pos0;
@@ -533,8 +531,6 @@ bool VolumeMeshRenderer::Render(Call& call)
         mol->Unlock();
         return false;
     }
-
-    cudaDeviceSynchronize(); // Paranoia
     
     // -------- START create mesh -----
     try {
