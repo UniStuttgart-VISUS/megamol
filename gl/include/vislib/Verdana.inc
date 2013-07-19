@@ -51,7 +51,7 @@ namespace gl {
 namespace font2gl {
 namespace Verdana {
 
-const char *_font_name = "Verdana";
+const char _font_name[] = "Verdana";
 const unsigned short _glyph0002_looplengths[] = {4, 4};
 const float _glyph0002_points[] = {
     0.2069104f, 0.229007632f, 0.196464449f, 0.662515044f, 0.128163919f, 0.662515044f, 0.116914421f, 0.229007632f,
