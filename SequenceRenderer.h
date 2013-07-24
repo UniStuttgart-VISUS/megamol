@@ -6,8 +6,8 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_SEQUENCERENDERER_H_INCLUDED
-#define MEGAMOLCORE_SEQUENCERENDERER_H_INCLUDED
+#ifndef MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED
+#define MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -15,8 +15,10 @@
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "view/Renderer2DModule.h"
+#include "MolecularDataCall.h"
+#include "BindingSiteCall.h"
 #include "vislib/GLSLShader.h"
-#include <vislib/OutlineFont.h>
+#include "vislib/SimpleFont.h"
 #include <vislib/OpenGLTexture2D.h>
 
 namespace megamol {
@@ -81,7 +83,23 @@ namespace protein {
          */
         virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 
+        /**
+         * Prepares the data for rendering.
+         *
+         * @param mol The molecular data call.
+         * @return true if preparation was successful, false otherwise
+         */
+        bool PrepareData( MolecularDataCall *mol);
+
     private:
+
+        /**
+         * Returns the single letter code for an amino acid given the three letter code.
+         *
+         * @param resName The name of the residue as three letter code.
+         * @return The single letter code for the amino acid.
+         */
+        char GetAminoAcidOneLetterCode( vislib::StringA resName );
 
         /**********************************************************************
          * 'render'-functions
@@ -109,17 +127,42 @@ namespace protein {
         /**********************************************************************
          * variables
          **********************************************************************/
-
+        
         /** caller slot */
         core::CallerSlot dataCallerSlot;
+        /** caller slot */
+        core::CallerSlot bindingSiteCallerSlot;
         
-
         // the number of residues in one row
         megamol::core::param::ParamSlot resCountPerRowParam;
+
+        // data preparation flag
+        bool dataPrepared;
+
+        // the number of residues
+        unsigned int resCount;
+        // the number of residue columns
+        unsigned int resCols;
+        // the number of residue rows
+        unsigned int resRows;
+        // the height of a row
+        float rowHeight;
+        
+        // font rendering
+        vislib::graphics::gl::SimpleFont theFont;
+        // the array of amino acid 1-letter codes
+        vislib::Array<vislib::StringA> aminoAcidStrings;
+
+        // the vertex buffer array for the tiles
+        vislib::Array<float> vertices;
+        // the index of the residue
+        vislib::Array<unsigned int> resIndex;
+        // the secondary structure element type of the residue
+        vislib::Array<MolecularDataCall::SecStructure::ElementType> resSecStructType;
 
     };
 
 } /* end namespace protein */
 } /* end namespace megamol */
 
-#endif // MEGAMOLCORE_SEQUENCERENDERER_H_INCLUDED
+#endif // MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED

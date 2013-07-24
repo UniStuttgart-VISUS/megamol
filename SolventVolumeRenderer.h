@@ -236,6 +236,8 @@ namespace protein {
 		
 		/** caller slot */
 		megamol::core::CallerSlot protDataCallerSlot;
+		/** caller slot */
+		megamol::core::CallerSlot protRendererCallerSlot;
         /** The volume data callee slot */
         megamol::core::CalleeSlot dataOutSlot;
 				

@@ -277,6 +277,12 @@
     <ClCompile Include="SequenceRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BindingSiteDataSource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BindingSiteCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSpline.h">
@@ -559,6 +565,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SequenceRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BindingSiteDataSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BindingSiteCall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
