@@ -173,7 +173,7 @@ uniform float densityScale;
 
 varying vec3 splatCenter;
 varying float scale;
-//varying vec3 color;
+varying vec3 color;
 
 float computeDensity( vec3 pos) {
     float d = distance(pos, splatCenter.xyz);
@@ -182,9 +182,18 @@ float computeDensity( vec3 pos) {
     return density;
 }
 
+float computeColorDensity( vec3 pos) {
+    float d = distance( pos, splatCenter.xyz);
+    //float density = ( 1.0 - smoothstep( 0.2*filterRadius*scale, 1.0*filterRadius*scale, d)) * densityScale;
+    // gaussian function
+    float density = filterRadius * exp( -(d * d)/(2 * scale * scale)) * densityScale;
+    return density;
+}
+
 void main(void) {
     vec3 pos = vec3( gl_FragCoord.xy * invVolRes.xy, sliceDepth) * scaleVolInv;
-    gl_FragColor = vec4(0, 0, 0, computeDensity(pos));
+    //gl_FragColor = vec4(0, 0, 0, computeDensity(pos));
+	gl_FragColor = vec4( color * computeColorDensity( pos) * scale, computeDensity(pos));
 }
 -->
         </snippet>

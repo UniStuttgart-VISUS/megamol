@@ -48,9 +48,9 @@ using namespace megamol::protein;
 
 
 /*
- * protein::ProteinVolumeRenderer::ProteinVolumeRenderer (CTOR)
+ * ProteinVolumeRenderer::ProteinVolumeRenderer (CTOR)
  */
-protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModule (),
+ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModule (),
         protDataCallerSlot ( "getData", "Connects the volume rendering with data storage" ),
         protRendererCallerSlot ( "renderProtein", "Connects the volume rendering with a protein renderer" ),
         dataOutSlot ( "volumeout", "Connects the volume rendering with a volume slice renderer" ),
@@ -93,14 +93,14 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
     this->MakeSlotAvailable( &this->protRendererCallerSlot);
 
     // set data out callee slot
-    protein::VolumeSliceCallDescription vscd;
+    VolumeSliceCallDescription vscd;
     this->dataOutSlot.SetCallback( vscd.ClassName(), 
         VolumeSliceCall::FunctionName( VolumeSliceCall::CallForGetData), 
         &ProteinVolumeRenderer::getVolumeData);
     this->MakeSlotAvailable( &this->dataOutSlot);
 
     // set data out callee slot
-    protein::Diagram2DCallDescription d2dcd;
+    Diagram2DCallDescription d2dcd;
     this->diagramDataOutSlot.SetCallback( d2dcd.ClassName(), 
         Diagram2DCall::FunctionName( Diagram2DCall::CallForGetData), 
         &ProteinVolumeRenderer::getSegmentationData);
@@ -214,25 +214,25 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
 
 
 /*
- * protein::ProteinVolumeRenderer::~ProteinVolumeRenderer (DTOR)
+ * ProteinVolumeRenderer::~ProteinVolumeRenderer (DTOR)
  */
-protein::ProteinVolumeRenderer::~ProteinVolumeRenderer ( void ) {
+ProteinVolumeRenderer::~ProteinVolumeRenderer ( void ) {
     this->Release ();
 }
 
 
 /*
- * protein::ProteinVolumeRenderer::release
+ * ProteinVolumeRenderer::release
  */
-void protein::ProteinVolumeRenderer::release ( void ) {
+void ProteinVolumeRenderer::release ( void ) {
 
 }
 
 
 /*
- * protein::ProteinVolumeRenderer::create
+ * ProteinVolumeRenderer::create
  */
-bool protein::ProteinVolumeRenderer::create ( void ) {
+bool ProteinVolumeRenderer::create ( void ) {
     if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform") )
         return false;
     if( !glh_init_extensions( "GL_ARB_vertex_program" ) )
@@ -425,9 +425,9 @@ bool protein::ProteinVolumeRenderer::create ( void ) {
  **********************************************************************/
 
 /*
- * protein::ProteinRenderer::GetCapabilities
+ * ProteinRenderer::GetCapabilities
  */
-bool protein::ProteinVolumeRenderer::GetCapabilities( Call& call) {
+bool ProteinVolumeRenderer::GetCapabilities( Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
@@ -440,9 +440,9 @@ bool protein::ProteinVolumeRenderer::GetCapabilities( Call& call) {
 
 
 /*
- * protein::ProteinRenderer::GetExtents
+ * ProteinRenderer::GetExtents
  */
-bool protein::ProteinVolumeRenderer::GetExtents( Call& call) {
+bool ProteinVolumeRenderer::GetExtents( Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
@@ -597,9 +597,9 @@ bool ProteinVolumeRenderer::getSegmentationData( core::Call& call) {
 
 
 /*
- * protein::ProteinVolumeRenderer::Render
+ * ProteinVolumeRenderer::Render
  */
-bool protein::ProteinVolumeRenderer::Render( Call& call ) {
+bool ProteinVolumeRenderer::Render( Call& call ) {
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>( &call );
     if( !cr3d ) return false;
@@ -821,7 +821,7 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
 /*
  * Volume rendering using molecular data.
  */
-bool protein::ProteinVolumeRenderer::RenderMolecularData( view::CallRender3D *call, MolecularDataCall *mol) {
+bool ProteinVolumeRenderer::RenderMolecularData( view::CallRender3D *call, MolecularDataCall *mol) {
 
     if( !(*mol)() )
         return false;
@@ -895,7 +895,7 @@ bool protein::ProteinVolumeRenderer::RenderMolecularData( view::CallRender3D *ca
 /*
  * Volume rendering using volume data.
  */
-bool protein::ProteinVolumeRenderer::RenderVolumeData( view::CallRender3D *call, CallVolumeData *volume) {
+bool ProteinVolumeRenderer::RenderVolumeData( view::CallRender3D *call, CallVolumeData *volume) {
     // try to call
     if( !(*volume)() ) return false;
 
@@ -1104,7 +1104,7 @@ void ProteinVolumeRenderer::RenderSegmentedVoxels( view::CallRender3D *call) {
 /*
  * refresh parameters
  */
-void protein::ProteinVolumeRenderer::ParameterRefresh( view::CallRender3D *call) {
+void ProteinVolumeRenderer::ParameterRefresh( view::CallRender3D *call) {
     
     // parameter refresh
     if( this->coloringModeParam.IsDirty() ) {
@@ -1230,7 +1230,7 @@ void protein::ProteinVolumeRenderer::ParameterRefresh( view::CallRender3D *call)
 /*
  * Create a volume containing all molecule atoms
  */
-void protein::ProteinVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
+void ProteinVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
     // generate volume, if necessary
     if( !glIsTexture( this->volumeTex) ) {
         // from CellVis: cellVis.cpp, initGL
@@ -1390,7 +1390,7 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 /*
  * Create a volume containing the voxel map
  */
-void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallVolumeData *volume) {
+void ProteinVolumeRenderer::UpdateVolumeTexture( const CallVolumeData *volume) {
     // generate volume, if necessary
     if( !glIsTexture( this->volumeTex) ) {
         glGenTextures( 1, &this->volumeTex);
@@ -1417,7 +1417,7 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallVolumeData *
 /*
  * draw the volume
  */
-void protein::ProteinVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox) {
+void ProteinVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox) {
     const float stepWidth = 1.0f/ ( 2.0f * float( this->volumeSize));
     glDisable( GL_BLEND);
 
@@ -1497,7 +1497,7 @@ void protein::ProteinVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> b
 /*
  * draw the volume
  */
-void protein::ProteinVolumeRenderer::RenderVolume( const CallVolumeData *volume) {
+void ProteinVolumeRenderer::RenderVolume( const CallVolumeData *volume) {
     // check average density value
     if( vislib::math::Abs<float>( volume->MeanDensity() - this->meanDensityValue) > vislib::math::FLOAT_EPSILON ) {
         this->meanDensityValue = volume->MeanDensity();
@@ -1641,7 +1641,7 @@ void protein::ProteinVolumeRenderer::RenderVolume( const CallVolumeData *volume)
 /*
  * write the parameters of the ray to the textures
  */
-void protein::ProteinVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundingbox) {
+void ProteinVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundingbox) {
 
     GLint param = GL_NEAREST;
     GLint mode = GL_CLAMP_TO_EDGE;
@@ -1880,7 +1880,7 @@ void protein::ProteinVolumeRenderer::RayParamTextures( vislib::math::Cuboid<floa
 /*
  * write the parameters of the ray to the textures
  */
-void protein::ProteinVolumeRenderer::RayParamTextures( const CallVolumeData *volume) {
+void ProteinVolumeRenderer::RayParamTextures( const CallVolumeData *volume) {
 
     GLint param = GL_NEAREST;
     GLint mode = GL_CLAMP_TO_EDGE;
@@ -2091,7 +2091,7 @@ void protein::ProteinVolumeRenderer::RayParamTextures( const CallVolumeData *vol
 /*
  * Draw the bounding box.
  */
-void protein::ProteinVolumeRenderer::DrawBoundingBoxTranslated( vislib::math::Cuboid<float> boundingbox) {
+void ProteinVolumeRenderer::DrawBoundingBoxTranslated( vislib::math::Cuboid<float> boundingbox) {
 
     vislib::math::Vector<float, 3> position;
     glBegin(GL_QUADS);
@@ -2270,7 +2270,7 @@ void protein::ProteinVolumeRenderer::DrawBoundingBoxTranslated( vislib::math::Cu
 /*
  * Draw the bounding box.
  */
-void protein::ProteinVolumeRenderer::DrawBoundingBox( vislib::math::Cuboid<float> boundingbox) {
+void ProteinVolumeRenderer::DrawBoundingBox( vislib::math::Cuboid<float> boundingbox) {
 
     //vislib::math::Vector<float, 3> position( protein->BoundingBox().GetSize().PeekDimension() );
     vislib::math::Vector<float, 3> position( boundingbox.GetSize().PeekDimension() );

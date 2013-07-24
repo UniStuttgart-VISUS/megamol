@@ -53,6 +53,7 @@ using namespace megamol::protein;
  */
 protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModule (),
         protDataCallerSlot ( "getData", "Connects the volume rendering with data storage" ),
+        protRendererCallerSlot ( "renderMolecule", "Connects the volume rendering with a molecule renderer" ),
         dataOutSlot ( "volumeout", "Connects the volume rendering with a volume slice renderer" ),
         coloringModeSolventParam ( "coloringModeSolvent", "solvent coloring mode" ),
         coloringModePolymerParam ( "coloringModePolymer", "polymer coloring node" ),
@@ -94,10 +95,10 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
     // set caller slot for different data calls
     this->protDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable ( &this->protDataCallerSlot );
-
+    
     // set renderer caller slot
-//    this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
-//    this->MakeSlotAvailable( &this->protRendererCallerSlot);
+    this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
+    this->MakeSlotAvailable( &this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
     param::EnumParam *polymerCMEnum = new param::EnumParam ( int ( Color::ELEMENT ) );
@@ -588,8 +589,17 @@ void protein::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall *mol) {
             float *atomColor = &atomColorTablePtr[atomIdx*3];
             if (isSolvent)
                 ColorAtom(atomColor, mol, solventColorMode, atomIdx, residueIdx );
-            else
-                ColorAtom(atomColor, mol, polymerColorMode, atomIdx, residueIdx );
+            else {
+                Color::ColoringMode currentColoringMode0 = static_cast<Color::ColoringMode>(int(this->coloringModePolymerParam.Param<param::EnumParam>()->Value()));
+                //ColorAtom(atomColor, mol, polymerColorMode, atomIdx, residueIdx );
+                Color::MakeColorTable( mol,
+                    currentColoringMode0,
+                    this->atomColorTable, this->colorLookupTable, this->rainbowColors,
+                    this->minGradColorParam.Param<param::StringParam>()->Value(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                    true);
+            }
         }
     }
 }
@@ -802,10 +812,23 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
             scale = 1.0f;
         glScalef( scale, scale, scale);
         //cr3d->SetOutputBuffer( &this->proteinFBO); // TODO: Handle incoming buffers!
-
-        RenderMolecules(mol, this->atomPosInterPtr);
+        
+#if 1 // HACKHACKHACK
+        // get the pointer to CallRender3D (protein renderer)
+        view::CallRender3D *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
+        if( protrencr3d ) {
+            // setup and call protein renderer
+            glPushMatrix();
+            *protrencr3d = *cr3d;
+            protrencr3d->SetOutputBuffer( &this->proteinFBO); // TODO: Handle incoming buffers!
+            (*protrencr3d)();
+            glPopMatrix();
+        } else
+#endif // HACKHACKHACK
+            RenderMolecules(mol, this->atomPosInterPtr);
 
         RenderHydrogenBounds(mol, this->atomPosInterPtr); // TEST
+        
 
     glPopMatrix();
     // stop rendering to the FBO for protein rendering
@@ -2181,7 +2204,13 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
                 atomPos[0] = (interPos[0] + this->translation.X()) * this->scale;
                 atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
                 atomPos[2] = (interPos[2] + this->translation.Z()) * this->scale;
-                atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
+                atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;          
+#if 1 //HACKHACKHACK
+                float *atomCol = &updatVolumeTextureColors[atomIdx*3];
+                atomCol[0] = this->atomColorTable[3*atomIdx];
+                atomCol[1] = this->atomColorTable[3*atomIdx+1];
+                atomCol[2] = this->atomColorTable[3*atomIdx+2];
+#endif //HACKHACKHACK
             }
             atomCntDensity += (lastAtomIndx - firstAtomIndex);
         }
@@ -2208,6 +2237,10 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 
         glEnableClientState(GL_VERTEX_ARRAY);
         glVertexPointer( 4, GL_FLOAT, 0, updatVolumeTextureAtoms);
+#if 1 //HACKHACKHACK
+        glEnableClientState(GL_COLOR_ARRAY);
+        glColorPointer( 3, GL_FLOAT, 0, updatVolumeTextureColors);
+#endif // HACKHACKHACK
         for(unsigned int z = 0; z < this->volumeSize; ++z ) {
             // TODO: spacial grid to speedup FBO rendering here?
             // attach texture slice to FBO
@@ -2216,6 +2249,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
             // draw all atoms as points, using w for radius
             glDrawArrays( GL_POINTS, 0, atomCntDensity);
         }
+        glDisableClientState(GL_COLOR_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
     this->updateVolumeShaderMoleculeVolume.Disable();
 
