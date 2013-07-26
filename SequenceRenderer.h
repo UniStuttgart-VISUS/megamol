@@ -12,13 +12,21 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+//#define USE_SIMPLE_FONT
+
+
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "view/Renderer2DModule.h"
 #include "MolecularDataCall.h"
 #include "BindingSiteCall.h"
 #include "vislib/GLSLShader.h"
+#ifdef USE_SIMPLE_FONT
 #include "vislib/SimpleFont.h"
+#else
+#include "vislib/OutlineFont.h"
+#include "vislib/verdana.inc"
+#endif
 #include <vislib/OpenGLTexture2D.h>
 
 namespace megamol {
@@ -145,6 +153,8 @@ namespace protein {
 
         // data preparation flag
         bool dataPrepared;
+        // the total number of atoms
+        unsigned int atomCount;
 
         // the number of residues
         unsigned int resCount;
@@ -156,7 +166,11 @@ namespace protein {
         float rowHeight;
         
         // font rendering
+#ifdef USE_SIMPLE_FONT
         vislib::graphics::gl::SimpleFont theFont;
+#else
+        vislib::graphics::gl::OutlineFont theFont;
+#endif
         // the array of amino acid 1-letter codes
         vislib::Array<vislib::StringA> aminoAcidStrings;
         // the array of amino acid chain name and index
