@@ -94,6 +94,13 @@ namespace protein {
     private:
 
         /**
+         * Try to get information about binding sites.
+         *
+         * @param site The binding site data call.
+         */
+        void getBindingSites( BindingSiteCall *site);
+
+        /**
          * Returns the single letter code for an amino acid given the three letter code.
          *
          * @param resName The name of the residue as three letter code.
@@ -152,6 +159,8 @@ namespace protein {
         vislib::graphics::gl::SimpleFont theFont;
         // the array of amino acid 1-letter codes
         vislib::Array<vislib::StringA> aminoAcidStrings;
+        // the array of amino acid chain name and index
+        vislib::Array<vislib::Array<vislib::StringA> > aminoAcidIndexStrings;
 
         // the vertex buffer array for the tiles
         vislib::Array<float> vertices;

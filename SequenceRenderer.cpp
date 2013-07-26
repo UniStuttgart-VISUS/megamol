@@ -35,7 +35,7 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
     this->MakeSlotAvailable(&this->dataCallerSlot);
 
     // binding site data caller slot
-    this->bindingSiteCallerSlot.SetCompatibleCall<BindingSiteCall>();
+    this->bindingSiteCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bindingSiteCallerSlot);
 
     // param slot for number of residues per row
@@ -71,7 +71,13 @@ bool SequenceRenderer::GetExtents(view::CallRender2D& call) {
     if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
     
     // prepare the data
-    this->dataPrepared = this->PrepareData( mol);
+    if( this->dataPrepared = this->PrepareData( mol) ) {
+        // try to get binding site information
+        BindingSiteCall *site = this->bindingSiteCallerSlot.CallAs<BindingSiteCall>();
+        if( site != NULL ) {
+            this->getBindingSites( site);
+        }
+    }
         
     // set the bounding box
     //call.SetBoundingBox( 0.0f, 0.0f, static_cast<float>(this->resCols), static_cast<float>(this->resRows));
@@ -126,11 +132,14 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                 for( unsigned int j = 0; j < this->aminoAcidStrings[i].Length(); j++ ) {
                     theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight), 1.0f, -1.0f,
                         1.0f, true, this->aminoAcidStrings[i].Substring(j, 1), vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
+                    theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight + 3.0f), 1.0f, 0.5f,
+                        0.4f, true, this->aminoAcidIndexStrings[i][j], vislib::graphics::AbstractFont::ALIGN_CENTER_BOTTOM);
                 }
             }
         }
 
         // amino acid number
+        /*
         vislib::StringA tmpStr;
         int cnt = 0;
         if( theFont.Initialise() ) {
@@ -144,6 +153,7 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                 }
             }
         }
+        */
 
     } // dataPrepared
 
@@ -170,6 +180,8 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol) {
 
     // temporary variables
     unsigned int firstStruct;
+    unsigned int firstMol;
+    vislib::StringA tmpStr;
 
     // initialization
     this->resCount = 0;
@@ -177,32 +189,51 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol) {
     this->vertices.AssertCapacity( mol->ResidueCount() * 2);
     this->resIndex.Clear();
     this->resIndex.AssertCapacity( mol->ResidueCount());
+    this->resCols = static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value());
+    this->aminoAcidStrings.Clear();
+    this->aminoAcidStrings.AssertCapacity( mol->ResidueCount() / this->resCols + 1);
+    this->aminoAcidIndexStrings.Clear();
+    this->aminoAcidIndexStrings.AssertCapacity( mol->ResidueCount() / this->resCols + 1);
+    unsigned int currentRow = 0;
     // count residues
-    for( unsigned int mCnt = 0; mCnt < mol->MoleculeCount(); mCnt++ ) {
-        firstStruct = mol->Molecules()[mCnt].FirstSecStructIndex();
-        for( unsigned int sCnt = 0; sCnt < mol->Molecules()[mCnt].SecStructCount(); sCnt++ ) {
-            for( unsigned int rCnt = 0; rCnt < mol->SecondaryStructures()[firstStruct + sCnt].AminoAcidCount(); rCnt++ ) {
-                // store the original index of the current residue
-                this->resIndex.Add( mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt);
-                // store the secondary structure element type of the current residue
-                this->resSecStructType.Add( mol->SecondaryStructures()[firstStruct + sCnt].Type());
-                // compute the position of the residue icon
-                if( this->resCount == 0 ) {
-                    this->vertices.Add( 0.0f);
-                    this->vertices.Add( 0.0f);
-                } else {
-                    if( this->resCount % static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value()) != 0 ) {
-                        this->vertices.Add( this->vertices[this->resCount * 2 - 2] + 1.0f);
-                        this->vertices.Add( this->vertices[this->resCount * 2 - 1]);
-                    } else {
+    for( unsigned int cCnt = 0; cCnt < mol->ChainCount(); cCnt++ ) {
+        firstMol = mol->Chains()[cCnt].FirstMoleculeIndex();
+        //for( unsigned int mCnt = 0; mCnt < mol->MoleculeCount(); mCnt++ ) {
+        for( unsigned int mCnt = firstMol; mCnt < firstMol + mol->Chains()[cCnt].MoleculeCount(); mCnt++ ) {
+            firstStruct = mol->Molecules()[mCnt].FirstSecStructIndex();
+            for( unsigned int sCnt = 0; sCnt < mol->Molecules()[mCnt].SecStructCount(); sCnt++ ) {
+                for( unsigned int rCnt = 0; rCnt < mol->SecondaryStructures()[firstStruct + sCnt].AminoAcidCount(); rCnt++ ) {
+                    // store the original index of the current residue
+                    this->resIndex.Add( mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt);
+                    // store the secondary structure element type of the current residue
+                    this->resSecStructType.Add( mol->SecondaryStructures()[firstStruct + sCnt].Type());
+                    // compute the position of the residue icon
+                    if( this->resCount == 0 ) {
                         this->vertices.Add( 0.0f);
-                        this->vertices.Add( this->vertices[this->resCount * 2 - 1] + this->rowHeight);
+                        this->vertices.Add( 0.0f);
+                        this->aminoAcidStrings.Add("");
+                        this->aminoAcidIndexStrings.Add(vislib::Array<vislib::StringA>());
+                    } else {
+                        if( this->resCount % static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value()) != 0 ) {
+                            this->vertices.Add( this->vertices[this->resCount * 2 - 2] + 1.0f);
+                            this->vertices.Add( this->vertices[this->resCount * 2 - 1]);
+                        } else {
+                            this->vertices.Add( 0.0f);
+                            this->vertices.Add( this->vertices[this->resCount * 2 - 1] + this->rowHeight);
+                            currentRow++;
+                            this->aminoAcidStrings.Add("");
+                            this->aminoAcidIndexStrings.Add(vislib::Array<vislib::StringA>());
+                        }
                     }
-                }
-                this->resCount++;
-            }
-        }
-    }
+                    // store the amino acid name
+                    this->aminoAcidStrings[currentRow].Append( this->GetAminoAcidOneLetterCode(mol->ResidueTypeNames()[mol->Residues()[this->resIndex.Last()]->Type()]));
+                    tmpStr.Format("%c %i", mol->Chains()[cCnt].Name(), mol->Residues()[this->resIndex.Last()]->OriginalResIndex());
+                    this->aminoAcidIndexStrings[currentRow].Add( tmpStr);
+                    this->resCount++;
+                } // residues
+            } // secondary structures
+        } // molecules
+    } // chains
     
     // set the number of columns
     this->resCols = vislib::math::Min(this->resCount,
@@ -212,6 +243,7 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol) {
     this->resRows = static_cast<unsigned int>( std::ceilf(static_cast<float>(this->resCount) / static_cast<float>(this->resCols)));
     
     // write the amino acid strings
+    /*
     this->aminoAcidStrings.Clear();
     this->aminoAcidStrings.AssertCapacity( this->resRows);
     unsigned int cnt = 0;
@@ -226,6 +258,7 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol) {
             }
         }
     }
+    */
 
     return true;
 }
@@ -265,4 +298,13 @@ char SequenceRenderer::GetAminoAcidOneLetterCode( vislib::StringA resName ) {
     else if( resName.Equals( "LYN" ) ) return 'K';
     else if( resName.Equals( "TYM" ) ) return 'Y';
     else return '?';
+}
+
+
+/*
+ * Try to get information about binding sites.
+ */
+void SequenceRenderer::getBindingSites( BindingSiteCall *site) {
+    if( !site ) return;
+
 }

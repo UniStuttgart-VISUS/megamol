@@ -16,6 +16,7 @@
 #include "Call.h"
 #include "CallAutoDescription.h"
 #include "vislib/Array.h"
+#include "vislib/String.h"
 
 namespace megamol {
 namespace protein {
@@ -71,13 +72,24 @@ namespace protein {
             return "";
         }
         
+        /**
+         * Get the number of binding sites.
+         *
+         * @return The binding site count.
+         */
         inline unsigned int GetBindingSiteCount(void) const {
             if( !this->bindingSites )
                 return 0;
             else
                 return this->bindingSites->Count();
         }
-
+        
+        /**
+         * Get the residue indices of a binding site.
+         *
+         * @param i The index of the residue.
+         * @return Pointer to the array of residue indices.
+         */
         inline vislib::Array<unsigned int> *GetBindingSite( unsigned int i) const {
             if( !this->bindingSites )
                 return 0;
@@ -87,6 +99,22 @@ namespace protein {
                 //return &(*this->bindingSites)[i];
                 return &(this->bindingSites->operator[](i));
         }
+        
+        /**
+         * Get the residue names of a binding site.
+         *
+         * @param i The index of the residue.
+         * @return Pointer to the array of residue names.
+         */
+        inline vislib::Array<vislib::StringA> *GetBindingSiteResNames( unsigned int i) const {
+            if( !this->bindingSiteResNames )
+                return 0;
+            else if( this->bindingSiteResNames->Count() < i )
+                return 0;
+            else
+                //return &(*this->bindingSites)[i];
+                return &(this->bindingSiteResNames->operator[](i));
+        }
 
         BindingSiteCall(void);
         virtual ~BindingSiteCall(void);
@@ -94,6 +122,8 @@ namespace protein {
     private:
         /** Pointer to binding site array */
         vislib::Array<vislib::Array<unsigned int> > *bindingSites;
+        /** Pointer to binding site residue name array */
+        vislib::Array<vislib::Array<vislib::StringA> > *bindingSiteResNames;
     };
 
     /** Description class typedef */

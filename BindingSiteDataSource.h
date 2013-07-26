@@ -15,6 +15,7 @@
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
 #include "Module.h"
+#include "vislib/String.h"
 		
 
 namespace megamol {
@@ -80,7 +81,13 @@ namespace protein {
         bool getData( megamol::core::Call& call);
 
     private:
-        
+        /**
+         * Load information about amino acids and residues from a PDB file.
+         *
+         * @param filename The PDB file name.
+         */
+        void loadPDBFile( vislib::StringA filename);
+
         /** The data callee slot */
         core::CalleeSlot dataOutSlot;
 

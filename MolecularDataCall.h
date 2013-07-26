@@ -69,9 +69,12 @@ namespace protein {
              * @param firstAtomIdx The index of the first atom of this residue.
              * @param atomCnt The size of the residue in number of atoms.
              * @param bbox The bounding box of this residue.
+             * @param typeIdx The bounding box of this residue.
+             * @param moleculeIdx The index of the type of this residue.
+             * @param origResIdx The original index of this residue.
              */
             Residue( unsigned int firstAtomIdx, unsigned int atomCnt,
-                vislib::math::Cuboid<float> bbox, unsigned int typeIdx, int moleculeIdx);
+                vislib::math::Cuboid<float> bbox, unsigned int typeIdx, int moleculeIdx, unsigned int origResIdx);
 
             /** Dtor. */
             ~Residue(void);
@@ -178,7 +181,21 @@ namespace protein {
             inline bool operator!=(const Residue& rhs) const {
                 return !(*this == rhs);
             }
+            
+            /**
+             * Sets the original index of the residue.
+             *
+             * @param val The index.
+             */
+            inline void SetOriginalResIndex( unsigned int val) { this->origResIndex = val; };
 
+            /**
+             * Get the original index of the residue.
+             *
+             * @return The index.
+             */
+            unsigned int OriginalResIndex(void) const { return this->origResIndex; };
+        
             /**
              * Sets the filter value of the residue.
              *
@@ -207,9 +224,12 @@ namespace protein {
 
             /** The index of the type of the residue */
             unsigned int type;
-
+            
             /** molecule index of the residue (may be undefined -> -1) */
             int moleculeIndex;
+
+            /** the original index of this resiude (from the PDB file) */
+            unsigned int origResIndex;
 
             /** The filter value */
             int filter;
@@ -247,11 +267,14 @@ namespace protein {
              *             amino acid.
              * @param nameIdx The index of the name of the amino acid.
              * @param bbox The bounding box of this residue.
+             * @param typeIdx The index of the type of this residue.
+             * @param moleculeIdx The molecule index of this residue.
+             * @param origResIdx The original residue index
              */
             AminoAcid( unsigned int firstAtomIdx, unsigned int atomCnt,
                 unsigned int cAlphaIdx, unsigned int cCarbIdx,
                 unsigned int nIdx, unsigned int oIdx, 
-                vislib::math::Cuboid<float> bbox, unsigned int typeIdx, int moleculeIdx);
+                vislib::math::Cuboid<float> bbox, unsigned int typeIdx, int moleculeIdx, unsigned int origResIdx);
 
             /** Dtor. */
             ~AminoAcid(void);
@@ -714,13 +737,14 @@ namespace protein {
              *
              * @param firstMolIdx The index of the first molecule of this chain.
              * @param molCnt The size of the chain in number of molecules.
+             * @param chainName The name of the chain.
              * @param chainType The type of the chain.
              */
-            Chain( unsigned int firstMolIdx, unsigned int molCnt, ChainType chainType = UNSPECIFIC);
+            Chain( unsigned int firstMolIdx, unsigned int molCnt, char name = ' ', ChainType chainType = UNSPECIFIC);
 
             /** dtor */
             ~Chain();
-
+            
             /**
              * Sets the type of the chain.
              *
@@ -731,12 +755,30 @@ namespace protein {
             }
 
             /**
-             * Returns the number of molecules.
+             * Returns the type of the chain.
              *
-             * @return The number of molecules.
+             * @return The type of the chain.
              */
             inline ChainType Type(void) const {
                 return this->type;
+            }
+
+            /**
+             * Sets the name of the chain.
+             *
+             * @param n The name of the chain.
+             */
+            void SetName( char n) {
+                this->name = n;
+            }
+
+            /**
+             * Returns the name of the chain.
+             *
+             * @return The name of the chain.
+             */
+            inline char Name(void) const {
+                return this->name;
             }
 
             /**
@@ -817,6 +859,8 @@ namespace protein {
         private:
             /** the chain type */
             ChainType type;
+            /** the chain name */
+            char name;
             /** the index of the first molecule in the chain */
             unsigned int firstMoleculeIndex;
             /** the number of molecules in the chain */

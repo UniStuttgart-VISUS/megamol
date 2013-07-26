@@ -54,15 +54,22 @@ void BindingSiteDataSource::release() {
 bool BindingSiteDataSource::getData( Call& call) {
     using vislib::sys::Log;
 
-    //MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>( &call);
-    //if ( dc == NULL ) return false;
+    BindingSiteCall *site = dynamic_cast<BindingSiteCall*>( &call);
+    if ( !site ) return false;
 
     if ( this->pdbFilenameSlot.IsDirty() ) {
         this->pdbFilenameSlot.ResetDirty();
-        //this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
+        this->loadPDBFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
     //dc->SetDataHash( this->datahash);
 
     return true;
+}
+
+/*
+ * BindingSiteDataSource::loadPDBFile
+ */
+void BindingSiteDataSource::loadPDBFile( vislib::StringA filename) {
+
 }

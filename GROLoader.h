@@ -674,6 +674,7 @@ namespace protein {
         // Temporary variables for molecular chains
         vislib::Array<unsigned int> chainFirstRes;
         vislib::Array<unsigned int> chainResCount;
+        vislib::Array<char> chainName;
         vislib::Array<MolecularDataCall::Chain::ChainType> chainType;
         char chainId;
 
