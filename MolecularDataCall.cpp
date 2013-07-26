@@ -21,7 +21,7 @@ using namespace megamol::protein;
  */
 protein::MolecularDataCall::Residue::Residue(void) : atomCnt(0), 
         firstAtomIdx(0), boundingBox( 0, 0, 0, 0, 0, 0), type( 0), moleculeIndex(-1),
-        filter(1) {
+        filter(1), origResIndex(0) {
     // intentionally empty
 }
 
@@ -32,7 +32,7 @@ protein::MolecularDataCall::Residue::Residue(void) : atomCnt(0),
 protein::MolecularDataCall::Residue::Residue(
         const protein::MolecularDataCall::Residue& src) : atomCnt( src.atomCnt),
         firstAtomIdx( src.firstAtomIdx), boundingBox( src.boundingBox),
-        type( src.type), moleculeIndex(src.moleculeIndex),filter(1) {
+        type( src.type), moleculeIndex(src.moleculeIndex),origResIndex(src.origResIndex),filter(1) {
     // intentionally empty
 }
 
@@ -42,8 +42,8 @@ protein::MolecularDataCall::Residue::Residue(
  */
 protein::MolecularDataCall::Residue::Residue( unsigned int firstAtomIdx,
         unsigned int atomCnt, vislib::math::Cuboid<float> bbox, 
-        unsigned int typeIdx, int moleculeIdx) : atomCnt(atomCnt), firstAtomIdx(firstAtomIdx), 
-        boundingBox( bbox), type( typeIdx), moleculeIndex(moleculeIdx), filter(1) {
+        unsigned int typeIdx, int moleculeIdx, unsigned int origResIdx) : atomCnt(atomCnt), firstAtomIdx(firstAtomIdx), 
+        boundingBox( bbox), type( typeIdx), moleculeIndex(moleculeIdx), origResIndex(origResIdx), filter(1) {
     // intentionally empty
 }
 
@@ -77,6 +77,7 @@ protein::MolecularDataCall::Residue::operator=(
     this->boundingBox = rhs.boundingBox;
     this->type = rhs.type;
     this->moleculeIndex = rhs.moleculeIndex;
+    this->origResIndex = rhs.origResIndex;
     this->filter = rhs.filter;
     return *this;
 }
@@ -91,6 +92,7 @@ bool protein::MolecularDataCall::Residue::operator==(
         && (this->firstAtomIdx == rhs.firstAtomIdx)
         && (this->boundingBox == rhs.boundingBox)
         && (this->type == rhs.type)
+        && (this->origResIndex == rhs.origResIndex)
         && (this->moleculeIndex == rhs.moleculeIndex));
 }
 
@@ -110,7 +112,7 @@ protein::MolecularDataCall::AminoAcid::AminoAcid(void) : Residue(),
  */
 protein::MolecularDataCall::AminoAcid::AminoAcid(
         const protein::MolecularDataCall::AminoAcid& src) : Residue(
-        src.firstAtomIdx, src.atomCnt, src.boundingBox, src.type, src.moleculeIndex), 
+        src.firstAtomIdx, src.atomCnt, src.boundingBox, src.type, src.moleculeIndex, src.origResIndex), 
         cAlphaIdx(src.cAlphaIdx), cCarbIdx(src.cCarbIdx), 
         nIdx(src.nIdx), oIdx(src.oIdx) {
     // intentionally empty
@@ -123,8 +125,8 @@ protein::MolecularDataCall::AminoAcid::AminoAcid(
 protein::MolecularDataCall::AminoAcid::AminoAcid(unsigned int firstAtomIdx,
         unsigned int atomCnt, unsigned int cAlphaIdx, unsigned int cCarbIdx,
         unsigned int nIdx, unsigned int oIdx, 
-        vislib::math::Cuboid<float> bbox, unsigned int typeIdx, int moleculeIdx) : 
-        Residue( firstAtomIdx, atomCnt, bbox, typeIdx, moleculeIdx),
+        vislib::math::Cuboid<float> bbox, unsigned int typeIdx, int moleculeIdx, unsigned int origResIdx) : 
+        Residue( firstAtomIdx, atomCnt, bbox, typeIdx, moleculeIdx, origResIdx),
         cAlphaIdx(cAlphaIdx), cCarbIdx(cCarbIdx), nIdx(nIdx), oIdx(oIdx) {
     // intentionally empty
 }
@@ -184,6 +186,8 @@ protein::MolecularDataCall::AminoAcid::operator=(
     this->oIdx = rhs.oIdx;
     this->boundingBox = rhs.boundingBox;
     this->type = rhs.type;
+    this->moleculeIndex = rhs.moleculeIndex;
+    this->origResIndex = rhs.origResIndex;
     return *this;
 }
 
@@ -200,7 +204,9 @@ bool protein::MolecularDataCall::AminoAcid::operator==(
         && (this->nIdx == rhs.nIdx)
         && (this->oIdx == rhs.oIdx)
         && (this->boundingBox == rhs.boundingBox)
-        && (this->type == rhs.type));
+        && (this->type == rhs.type)
+        && (this->moleculeIndex == rhs.moleculeIndex)
+        && (this->origResIndex == rhs.origResIndex));
 }
 
 // ======================================================================
@@ -443,8 +449,8 @@ protein::MolecularDataCall::Chain::Chain(
  * protein::MolecularDataCall::Chain::Chain
  */
 protein::MolecularDataCall::Chain::Chain( unsigned int firstMolIdx,
-    unsigned int molCnt, ChainType chainType) : firstMoleculeIndex( firstMolIdx),
-    moleculeCount( molCnt), type( chainType), filter(1) {
+    unsigned int molCnt, char name, ChainType chainType) : firstMoleculeIndex( firstMolIdx),
+    moleculeCount( molCnt), type( chainType), name(name), filter(1) {
     // intentionally empty
 }
 
@@ -466,6 +472,7 @@ protein::MolecularDataCall::Chain::operator=(
     this->firstMoleculeIndex = rhs.firstMoleculeIndex;
     this->moleculeCount = rhs.moleculeCount;
     this->type = rhs.type;
+    this->name = rhs.name;
     this->filter = rhs.filter;
     return *this;
 }
@@ -478,7 +485,8 @@ bool protein::MolecularDataCall::Chain::operator==(
     const protein::MolecularDataCall::Chain& rhs) const {
     return ((this->firstMoleculeIndex == rhs.firstMoleculeIndex)
     && (this->moleculeCount == rhs.moleculeCount)
-    && (this->type == rhs.type));
+    && (this->type == rhs.type)
+    && (this->name == rhs.name));
 }
 
 // ======================================================================

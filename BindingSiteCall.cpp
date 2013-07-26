@@ -10,10 +10,12 @@ using namespace megamol::protein;
 const unsigned int BindingSiteCall::CallForGetData = 0;
 
 
-BindingSiteCall::BindingSiteCall(void) : bindingSites(NULL) {
+BindingSiteCall::BindingSiteCall(void) : bindingSites(NULL),
+        bindingSiteResNames(NULL) {
 }
 
 
 BindingSiteCall::~BindingSiteCall(void) {
     this->bindingSites = NULL;
+    this->bindingSiteResNames = NULL;
 }

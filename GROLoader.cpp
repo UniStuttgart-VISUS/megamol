@@ -1272,7 +1272,7 @@ void GROLoader::loadFile( const vislib::TString& filename) {
             }
             // add new chain
             this->chain.Add( MolecularDataCall::Chain( static_cast<unsigned int>(this->molecule.Count() - 1), 
-                1, this->chainType[chainCnt]));
+                1, this->chainName[chainCnt], this->chainType[chainCnt]));
             // get the residue range of the current chain
             first = this->chainFirstRes[chainCnt];
             cnt = first + this->chainResCount[chainCnt];
@@ -1496,17 +1496,24 @@ void GROLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
         this->resSeq = newResSeq;
         if( this->IsAminoAcid( resName) ) {
             MolecularDataCall::AminoAcid *res =
-                new MolecularDataCall::AminoAcid( atom, 1, 0, 0, 0, 0, atomBBox, resTypeIdx, -1);
+                new MolecularDataCall::AminoAcid( atom, 1, 0, 0, 0, 0, atomBBox, resTypeIdx, -1, newResSeq);
             this->residue.Add( (MolecularDataCall::Residue*)res);
         } else {
             MolecularDataCall::Residue *res =
-                new MolecularDataCall::Residue( atom, 1, atomBBox, resTypeIdx, -1);
+                new MolecularDataCall::Residue( atom, 1, atomBBox, resTypeIdx, -1, newResSeq);
             this->residue.Add( res);
         }
         // first chain
         this->chainId = tmpChainId;
+        this->chainFirstRes.Clear();
+        this->chainFirstRes.SetCapacityIncrement( 100);
         this->chainFirstRes.Add( 0);
+        this->chainResCount.Clear();
+        this->chainResCount.SetCapacityIncrement( 100);
         this->chainResCount.Add( 1);
+        this->chainName.Clear();
+        this->chainName.SetCapacityIncrement( 100);
+        this->chainName.Add( this->chainId);
         this->chainType.Add( tmpChainType);
     } else if( newResSeq == this->resSeq ) {
         // still the same residue - add one atom
@@ -1523,11 +1530,11 @@ void GROLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
         this->resSeq = newResSeq;
         if( this->IsAminoAcid( resName) ) {
             MolecularDataCall::AminoAcid *res =
-                new MolecularDataCall::AminoAcid( atom, 1, 0, 0, 0, 0, atomBBox, resTypeIdx, -1);
+                new MolecularDataCall::AminoAcid( atom, 1, 0, 0, 0, 0, atomBBox, resTypeIdx, -1, newResSeq);
             this->residue.Add( (MolecularDataCall::Residue*)res);
         } else {
             MolecularDataCall::Residue *res =
-                new MolecularDataCall::Residue( atom, 1, atomBBox, resTypeIdx, -1);
+                new MolecularDataCall::Residue( atom, 1, atomBBox, resTypeIdx, -1, newResSeq);
             this->residue.Add( res);
         }
         // elongate existing chain or create new chain
@@ -1538,6 +1545,7 @@ void GROLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
             this->chainFirstRes.Add( static_cast<unsigned int>(this->residue.Count() - 1));
             this->chainResCount.Add( 1);
             this->chainType.Add( tmpChainType);
+            this->chainName.Add( this->chainId);
         }
     }
     this->atomResidueIdx[atom] = static_cast<int>(this->residue.Count() - 1);
@@ -1863,6 +1871,7 @@ void GROLoader::resetAllData() {
     secStructAvailable = false;
     this->chainFirstRes.Clear();
     this->chainResCount.Clear();
+    this->chainName.Clear();
     this->chainType.Clear();
 }
 
