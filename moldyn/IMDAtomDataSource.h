@@ -15,6 +15,7 @@
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
 #include "vislib/Array.h"
+#include "vislib/PtrArray.h"
 #include "vislib/File.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
@@ -175,6 +176,13 @@ namespace moldyn {
          */
         bool readHeader(vislib::sys::File& file, HeaderData& header);
 
+        // TODO document!!!!!!
+        // read a value and ADVANCE column1!!
+        template<typename T> void readToIntColumn(T& reader, bool& fail,
+            unsigned int *column, ...);
+        template<typename T> void readToFloatColumn(T& reader, bool& fail,
+            unsigned int *column, ...);
+
         /**
          * Reads the data of the imd file. This method also calculated the
          * data bounding box and sets the corresponding members.
@@ -194,9 +202,7 @@ namespace moldyn {
          * @return 'true' on success
          */
         template<typename T> bool readData(vislib::sys::File& file,
-            const HeaderData& header, vislib::RawStorageWriter& pos,
-            vislib::RawStorageWriter& col, vislib::RawStorageWriter& dir,
-            bool loadDir, bool splitDir);
+            const HeaderData& header, bool loadDir, bool splitDir);
 
         /**
          * Updates the posX filter data (decrese only!)
@@ -230,6 +236,9 @@ namespace moldyn {
         /** The maximum value for the colour mapping of the column */
         param::ParamSlot maxColumnValSlot;
 
+        /** The type column slot */
+        param::ParamSlot typeColumnSlot;
+
         param::ParamSlot posXFilterNow;
         param::ParamSlot posXFilter;
         param::ParamSlot posXMinFilter;
@@ -251,10 +260,12 @@ namespace moldyn {
         param::ParamSlot dirNormDirSlot;
 
         /** The xyz position data */
-        vislib::RawStorage posData;
+        //vislib::RawStorage posData;
+        vislib::PtrArray<vislib::RawStorage> posData;
 
         /** The colour data */
-        vislib::RawStorage colData;
+        //vislib::RawStorage colData;
+        vislib::PtrArray<vislib::RawStorage> colData;
 
         /** The position bounding box as read from the data file header */
         float headerMinX, headerMinY, headerMinZ, headerMaxX, headerMaxY, headerMaxZ;
@@ -266,14 +277,16 @@ namespace moldyn {
         unsigned char defCol[3];
 
         /** The bounding values of the colour column */
-        float minC, maxC;
+        vislib::Array<float> minC, maxC;
 
         /** The hash value of the loaded data */
         SIZE_T datahash;
 
         /** All data for directional particles */
-        vislib::RawStorage allDirData;
+        //vislib::RawStorage allDirData;
+        vislib::PtrArray<vislib::RawStorage> allDirData;
 
+        vislib::Array<unsigned int> typeData;
     };
 
 } /* end namespace moldyn */

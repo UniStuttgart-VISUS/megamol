@@ -123,6 +123,15 @@ namespace moldyn {
         }
 
         /**
+         * Answer the global particle type
+         *
+         * @return the global type
+         */
+        inline unsigned int GetGlobalType(void) const {
+            return this->particleType;
+        }
+
+        /**
          * Answer the maximum colour index value to be mapped
          *
          * @return The maximum colour index value to be mapped
@@ -234,6 +243,15 @@ namespace moldyn {
         }
 
         /**
+         * Sets the global particle type
+         *
+         * @param t The global type
+         */
+        void SetGlobalType(unsigned int t) {
+            this->particleType = t;
+        }
+
+        /**
          * Sets the vertex data
          *
          * @param t The type of the vertex data
@@ -292,6 +310,9 @@ namespace moldyn {
 
         /** The global radius */
         float radius;
+
+        /** The global type of particles in the list */
+        unsigned int particleType;
 
         /** The vertex data type */
         VertexDataType vertDataType;

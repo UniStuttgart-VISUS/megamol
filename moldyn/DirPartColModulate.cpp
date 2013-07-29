@@ -117,11 +117,11 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
     }
     *outDpdc = *inDpdc;
     for (int i = outDpdc->GetParticleListCount() - 1; i >= 0; i--) {
-        switch (outDpdc->AccessParticles(i).GetColourDataType()) {
-            case DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I: // falls through
-            case DirectionalParticleDataCall::Particles::COLDATA_NONE: // falls through
-                return false;
-        }
+        //switch (outDpdc->AccessParticles(i).GetColourDataType()) {
+        //    case DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I: // falls through
+        //    case DirectionalParticleDataCall::Particles::COLDATA_NONE: // falls through
+        //        return false;
+        //}
         switch (outDpdc->AccessParticles(i).GetVertexDataType()) {
             case DirectionalParticleDataCall::Particles::VERTDATA_NONE: // falls through
             case DirectionalParticleDataCall::Particles::VERTDATA_SHORT_XYZ: // falls through
@@ -207,6 +207,10 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
                     break;
                 }
 
+                if (outDpdc->AccessParticles(i).GetColourDataType() == DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I
+                    || outDpdc->AccessParticles(i).GetColourDataType() == DirectionalParticleDataCall::Particles::COLDATA_NONE) {
+                        continue;
+                }
                 for (SIZE_T p = 0; p < pCnt; p++, cnt += 3, inColDat += inColStep, inPosDat += inPosStep) {
                     float x = (reinterpret_cast<const float*>(inPosDat)[0] - volBB.Left()) / volBB.Width();
                     float y = (reinterpret_cast<const float*>(inPosDat)[1] - volBB.Bottom()) / volBB.Height();
@@ -299,8 +303,18 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
         unsigned int cnt = outDpdc->GetParticleListCount();
         SIZE_T off = 0;
         for (unsigned int i = 0; i < cnt; i++) {
-            outDpdc->AccessParticles(i).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_UINT8_RGB, this->colData.At(off));
-            off += static_cast<SIZE_T>(outDpdc->AccessParticles(i).GetCount() * 3);
+
+            switch (outDpdc->AccessParticles(i).GetColourDataType()) {
+                case DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I: // falls through
+                case DirectionalParticleDataCall::Particles::COLDATA_NONE: // falls through
+                    //return false;
+                    outDpdc->AccessParticles(i).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
+                    break;
+                default:
+                    outDpdc->AccessParticles(i).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_UINT8_RGB, this->colData.At(off));
+                    off += static_cast<SIZE_T>(outDpdc->AccessParticles(i).GetCount() * 3);
+            }
+
         }
     }
 
