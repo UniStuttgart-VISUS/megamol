@@ -444,10 +444,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="misc\BezierDataSource.cpp" />
     <ClCompile Include="misc\BezierMeshRenderer.cpp" />
     <ClCompile Include="misc\BezierRaycastRenderer.cpp" />
-    <ClCompile Include="misc\ExtBezierDataCall.cpp" />
-    <ClCompile Include="misc\ExtBezierDataSource.cpp" />
-    <ClCompile Include="misc\ExtBezierMeshRenderer.cpp" />
-    <ClCompile Include="misc\ExtBezierRaycastRenderer.cpp" />
     <ClCompile Include="misc\ImageViewer.cpp" />
     <ClCompile Include="misc\LinesDataCall.cpp" />
     <ClCompile Include="misc\LinesRenderer.cpp" />
@@ -665,10 +661,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="misc\BezierDataSource.h" />
     <ClInclude Include="misc\BezierMeshRenderer.h" />
     <ClInclude Include="misc\BezierRaycastRenderer.h" />
-    <ClInclude Include="misc\ExtBezierDataCall.h" />
-    <ClInclude Include="misc\ExtBezierDataSource.h" />
-    <ClInclude Include="misc\ExtBezierMeshRenderer.h" />
-    <ClInclude Include="misc\ExtBezierRaycastRenderer.h" />
     <ClInclude Include="misc\ImageViewer.h" />
     <ClInclude Include="misc\LinesDataCall.h" />
     <ClInclude Include="misc\LinesRenderer.h" />

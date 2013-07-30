@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SHADERSOURCEFACTORY_H_INCLUDED
-#define MEGAMOLCORE_SHADERSOURCEFACTORY_H_INCLUDED
+#ifndef BEZTUBE_SHADERSOURCEFACTORY_H_INCLUDED
+#define BEZTUBE_SHADERSOURCEFACTORY_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -210,4 +210,4 @@ namespace utility {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_SHADERSOURCEFACTORY_H_INCLUDED */
+#endif /* BEZTUBE_SHADERSOURCEFACTORY_H_INCLUDED */

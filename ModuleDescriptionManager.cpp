@@ -24,9 +24,6 @@
 #include "misc/BezierDataSource.h"
 #include "misc/BezierMeshRenderer.h"
 #include "misc/BezierRaycastRenderer.h"
-#include "misc/ExtBezierDataSource.h"
-#include "misc/ExtBezierMeshRenderer.h"
-#include "misc/ExtBezierRaycastRenderer.h"
 #include "misc/ImageViewer.h"
 #include "misc/LinesRenderer.h"
 #include "misc/SiffCSplineFitter.h"
@@ -126,9 +123,6 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<misc::BezierDataSource>();
         instance->registerAutoDescription<misc::BezierMeshRenderer>();
         instance->registerAutoDescription<misc::BezierRaycastRenderer>();
-        instance->registerAutoDescription<misc::ExtBezierDataSource>();
-        instance->registerAutoDescription<misc::ExtBezierMeshRenderer>();
-        instance->registerAutoDescription<misc::ExtBezierRaycastRenderer>();
         instance->registerAutoDescription<misc::ImageViewer>();
         instance->registerAutoDescription<misc::LinesRenderer>();
         instance->registerAutoDescription<misc::SiffCSplineFitter>();

@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "api/MegaMolCore.std.h"
 #include "view/Renderer3DModule.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
@@ -25,7 +26,7 @@ namespace misc {
     /**
      * Raycasting-based renderer for bézier curve tubes
      */
-    class AbstractBezierRaycastRenderer : public view::Renderer3DModule {
+    class MEGAMOLCORE_API AbstractBezierRaycastRenderer : public view::Renderer3DModule {
     public:
 
     protected:

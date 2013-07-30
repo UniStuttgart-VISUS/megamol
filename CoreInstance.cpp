@@ -1259,7 +1259,7 @@ void megamol::core::CoreInstance::Quickstart(const vislib::TString& filename) {
         Log::DefaultLog.WriteError(_T("Failed to Quickstart \"%s\": Unable to load peek data"), filename.PeekBuffer());
         return;
     }
-    SIZE_T bufferSize = file.Read(buffer, maxBufferSize);
+    SIZE_T bufferSize = static_cast<SIZE_T>(file.Read(buffer, maxBufferSize));
     file.Close();
 
     if (bufferSize <= 0) {

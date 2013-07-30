@@ -432,18 +432,6 @@
     <ClCompile Include="misc\BezierRaycastRenderer.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="misc\ExtBezierDataCall.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="misc\ExtBezierDataSource.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="misc\ExtBezierMeshRenderer.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="misc\ExtBezierRaycastRenderer.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="misc\ImageViewer.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
@@ -1029,18 +1017,6 @@
       <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="misc\BezierRaycastRenderer.h">
-      <Filter>misc\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="misc\ExtBezierDataCall.h">
-      <Filter>misc\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="misc\ExtBezierDataSource.h">
-      <Filter>misc\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="misc\ExtBezierMeshRenderer.h">
-      <Filter>misc\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="misc\ExtBezierRaycastRenderer.h">
       <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="misc\ImageViewer.h">
