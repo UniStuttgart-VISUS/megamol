@@ -20,6 +20,8 @@
 #include "vislib/Point.h"
 #include "vislib/Vector.h"
 
+#include "vislib/deprecated.h"
+
 
 namespace megamol {
 namespace core {
@@ -402,6 +404,7 @@ namespace misc {
          *
          * @return The number of bézier curves
          */
+        VLDEPRECATED
         VISLIB_FORCEINLINE unsigned int Count(void) const {
             return this->count;
         }
@@ -412,6 +415,7 @@ namespace misc {
          *
          * @return The bézier curves
          */
+        VLDEPRECATED
         VISLIB_FORCEINLINE const vislib::math::BezierCurve<BezierPoint, 3> *
         Curves(void) const {
             return this->curves;
@@ -425,6 +429,7 @@ namespace misc {
          * @param count The number of bézier curves stored in 'curves'
          * @param curves Pointer to a flat array of bézier curves.
          */
+        VLDEPRECATED
         void SetData(unsigned int count,
                 const vislib::math::BezierCurve<BezierPoint, 3> *curves);
 

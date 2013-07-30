@@ -29,6 +29,7 @@
 #include "view/CallTimeControl.h"
 #include "CallVolumeData.h"
 #include "moldyn/VolumeDataCall.h"
+#include "misc/BezierCurvesListDataCall.h"
 
 using namespace megamol::core;
 
@@ -79,6 +80,7 @@ void CallDescriptionManager::registerObjects(CallDescriptionManager *instance) {
         instance->registerAutoDescription<DataWriterCtrlCall>();
         instance->registerAutoDescription<CallVolumeData>();
         instance->registerAutoDescription<moldyn::VolumeDataCall>();
+        instance->registerAutoDescription<misc::BezierCurvesListDataCall>();
     //}
     //return instance;
 }

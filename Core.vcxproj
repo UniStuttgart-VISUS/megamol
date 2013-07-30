@@ -305,6 +305,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="MegaMolCore.cpp" />
+    <ClCompile Include="misc\BezierCurvesListDataCall.cpp" />
     <ClCompile Include="misc\PngBitmapCodec.cpp" />
     <ClCompile Include="misc\TestSpheresDataSource.cpp" />
     <ClCompile Include="misc\VolumeCache.cpp" />
@@ -555,6 +556,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="JobInstance.h" />
     <ClInclude Include="JobInstanceRequest.h" />
     <ClInclude Include="LoaderADModuleAutoDescription.h" />
+    <ClInclude Include="misc\BezierCurvesListDataCall.h" />
     <ClInclude Include="misc\PngBitmapCodec.h" />
     <ClInclude Include="misc\TestSpheresDataSource.h" />
     <ClInclude Include="misc\VolumeCache.h" />

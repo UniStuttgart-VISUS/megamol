@@ -25,6 +25,8 @@
 #include "vislib/Quaternion.h"
 #include "vislib/Vector.h"
 
+#include "vislib/deprecated.h"
+
 
 namespace megamol {
 namespace core {
@@ -422,6 +424,7 @@ namespace misc {
          *
          * @return The number of bézier curves
          */
+        VLDEPRECATED
         VISLIB_FORCEINLINE unsigned int CountElliptic(void) const {
             return this->cntEllip;
         }
@@ -431,6 +434,7 @@ namespace misc {
          *
          * @return The number of bézier curves
          */
+        VLDEPRECATED
         VISLIB_FORCEINLINE unsigned int CountRectangular(void) const {
             return this->cntRect;
         }
@@ -441,6 +445,7 @@ namespace misc {
          *
          * @return The bézier curves
          */
+        VLDEPRECATED
         VISLIB_FORCEINLINE const vislib::math::BezierCurve<Point, 3> *
         EllipticCurves(void) const {
             return this->ellipCurves;
@@ -452,6 +457,7 @@ namespace misc {
          *
          * @return The bézier curves
          */
+        VLDEPRECATED
         VISLIB_FORCEINLINE const vislib::math::BezierCurve<Point, 3> *
         RectangularCurves(void) const {
             return this->rectCurves;
@@ -471,6 +477,7 @@ namespace misc {
          * @param rectCurves Pointer to a flat array of bézier curves
          *                   with rectangular profile
          */
+        VLDEPRECATED
         void SetData(unsigned int cntEllip, unsigned int cntRect,
                 const vislib::math::BezierCurve<Point, 3> *ellipCurves,
                 const vislib::math::BezierCurve<Point, 3> *rectCurves);
