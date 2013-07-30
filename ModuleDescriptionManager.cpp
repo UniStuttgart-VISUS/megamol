@@ -80,6 +80,7 @@
 #include "moldyn/DirectVolumeRenderer.h"
 #include "moldyn/VolumeDataCall.h"
 #include "moldyn/DatRawDataSource.h"
+#include "moldyn/SIFFWriter.h"
 
 using namespace megamol::core;
 
@@ -184,6 +185,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<RenderVolumeSlice>();
         instance->registerAutoDescription<moldyn::DirectVolumeRenderer>();
         instance->registerAutoDescription<moldyn::DatRawDataSource>();
+        instance->registerAutoDescription<moldyn::SIFFWriter>();
     //}
     //return instance;
 }
