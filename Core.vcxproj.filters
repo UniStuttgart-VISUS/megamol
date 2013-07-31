@@ -417,19 +417,7 @@
     <ClCompile Include="misc\AbstractBezierRaycastRenderer.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="misc\BezierControlLines.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="misc\BezierDataCall.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="misc\BezierDataSource.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="misc\BezierMeshRenderer.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="misc\BezierRaycastRenderer.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="misc\ImageViewer.cpp">
@@ -1004,19 +992,7 @@
     <ClInclude Include="misc\AbstractBezierRaycastRenderer.h">
       <Filter>misc\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="misc\BezierControlLines.h">
-      <Filter>misc\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="misc\BezierDataCall.h">
-      <Filter>misc\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="misc\BezierDataSource.h">
-      <Filter>misc\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="misc\BezierMeshRenderer.h">
-      <Filter>misc\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="misc\BezierRaycastRenderer.h">
       <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="misc\ImageViewer.h">

@@ -20,10 +20,6 @@
 #include "cluster/simple/Server.h"
 #include "cluster/simple/View.h"
 #include "DataFileSequencer.h"
-#include "misc/BezierControlLines.h"
-#include "misc/BezierDataSource.h"
-#include "misc/BezierMeshRenderer.h"
-#include "misc/BezierRaycastRenderer.h"
 #include "misc/ImageViewer.h"
 #include "misc/LinesRenderer.h"
 #include "misc/SiffCSplineFitter.h"
@@ -119,10 +115,6 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<cluster::simple::Server>();
         instance->registerAutoDescription<cluster::simple::View>();
         instance->registerAutoDescription<DataFileSequencer>();
-        instance->registerAutoDescription<misc::BezierControlLines>();
-        instance->registerAutoDescription<misc::BezierDataSource>();
-        instance->registerAutoDescription<misc::BezierMeshRenderer>();
-        instance->registerAutoDescription<misc::BezierRaycastRenderer>();
         instance->registerAutoDescription<misc::ImageViewer>();
         instance->registerAutoDescription<misc::LinesRenderer>();
         instance->registerAutoDescription<misc::SiffCSplineFitter>();
