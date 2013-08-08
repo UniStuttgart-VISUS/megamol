@@ -52,6 +52,14 @@ namespace net {
         static const UINT64 FLAG_NODELAY;
 
         /**
+         * This behaviour flag sets the send buffer of the underlying socket to
+         * zero. Setting the flag has an effect on the communication
+          * channel itself as well as on the child channels created in server
+          * mode.
+         */
+        static const UINT64 FLAG_NOSENDBUFFER;
+
+        /**
          * This flag enables or disables the reuse of addresses already bound.
          * Setting the flag has an effect on the communication channel itself 
          * as well as on the child channels created in server mode.
@@ -144,6 +152,17 @@ namespace net {
             VLSTACKTRACE("TcpCommChannel::IsSetNoDelay", __FILE__, __LINE__);
             return ((this->flags & FLAG_NODELAY) != 0);
         }
+
+        /**
+         * Answer whether the send buffer of this socket is set to zero.
+         *
+         * @return true if the send buffer is zero, false otherwise.
+         */
+        inline bool IsSetNoSendBuffer(void) const {
+            VLAUTOSTACKTRACE;
+            return ((this->flags & FLAG_NOSENDBUFFER) != 0);
+        }
+
 
         /**
          * Answer whether address reuse (SO_REUSEADDR) is enabled or not.

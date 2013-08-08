@@ -24,6 +24,12 @@ const UINT64 vislib::net::TcpCommChannel::FLAG_NODELAY = 0x00000001;
 
 
 /*
+ * vislib::net::TcpCommChannel::FLAG_NOSENDBUFFER
+ */
+const UINT64 vislib::net::TcpCommChannel::FLAG_NOSENDBUFFER = 0x00000004;
+
+
+/*
  * vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS
  */
 const UINT64 vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS = 0x00000002;
@@ -178,6 +184,9 @@ vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket, const UINT64 flags)
     VLSTACKTRACE("TcpCommChannel::TcpCommChannel", __FILE__, __LINE__);
     socket.SetNoDelay(this->IsSetNoDelay());
     socket.SetReuseAddr(this->IsSetReuseAddress());
+    if (this->IsSetNoSendBuffer()) {
+        socket.SetSndBuf(0);
+    }
 }
 
 
@@ -220,4 +229,7 @@ void vislib::net::TcpCommChannel::createSocket(const IPEndPoint& endPoint) {
     this->socket.Create(endPoint, Socket::TYPE_STREAM, Socket::PROTOCOL_TCP);
     this->socket.SetNoDelay(this->IsSetNoDelay());
     this->socket.SetReuseAddr(this->IsSetReuseAddress());
+    if (this->IsSetNoSendBuffer()) {
+        socket.SetSndBuf(0);
+    }
 }
