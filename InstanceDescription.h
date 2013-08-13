@@ -36,8 +36,118 @@ namespace core {
             ModuleInstanceRequest;
 
         /** Type of call instantiation requests */
-        typedef vislib::Pair<vislib::Pair<vislib::StringA, vislib::StringA>,
-            CallDescription*> CallInstanceRequest;
+        class CallInstanceRequest {
+        public:
+
+            /** Ctor */
+            CallInstanceRequest(void) : from(), to(), desc(NULL), doProfiling(false) {
+                // intentionally empty
+            }
+
+            /**
+             * Copy Ctor
+             *
+             * @param rhs The object to clone from
+             */
+            CallInstanceRequest(const CallInstanceRequest& rhs)
+                : from(rhs.from), to(rhs.to), desc(rhs.desc), doProfiling(rhs.doProfiling) {
+                // intentionally empty
+            }
+
+            /**
+             * Ctor
+             *
+             * @param caller The id of the caller slot.
+             * @param callee The id of the callee slot.
+             * @param desc The description of the call to be instantiated.
+             * @param doProfiling Flag if this call should be added to profiling
+             *            if the profiling set is to 'SELECTED'
+             */
+            CallInstanceRequest(const vislib::StringA& caller, const vislib::StringA& callee, CallDescription *desc, bool doProfiling)
+                :from(caller), to(callee), desc(desc), doProfiling(doProfiling) {
+                // intentionally empty
+            }
+
+            /**
+             * Answers the id of the caller slot.
+             *
+             * @return The id of the caller slot.
+             */
+            inline const vislib::StringA& From(void) const {
+                return this->from;
+            }
+
+            /**
+             * Answers the id of the callee slot.
+             *
+             * @return The id of the callee slot.
+             */
+            inline const vislib::StringA& To(void) const {
+                return this->to;
+            }
+
+            /**
+             * Gets the description of the call to be instantiated.
+             *
+             * @return The description of the call to be instantiated.
+             */
+            inline CallDescription* Description(void) const {
+                return this->desc;
+            }
+
+            /**
+             * Gets the flag if this call should be added to profiling
+             *
+             * @return The flag if this call should be added to profiling
+             */
+            inline bool DoProfiling(void) const {
+                return this->doProfiling;
+            }
+
+            /**
+             * Test for equality
+             *
+             * @param rhs The right hand side operand
+             *
+             * @return True if 'this' and 'rhs' are equal
+             */
+            inline bool operator==(const CallInstanceRequest& rhs) const {
+                return (this->from == rhs.from)
+                    && (this->to == rhs.to)
+                    && (this->desc == rhs.desc)
+                    && (this->doProfiling == rhs.doProfiling);
+            }
+
+            /**
+             * Assignment operator
+             *
+             * @param rhs The object to copy from
+             *
+             * @return A reference to this object
+             */
+            inline CallInstanceRequest& operator=(const CallInstanceRequest& rhs) {
+                this->from = rhs.from;
+                this->to = rhs.to;
+                this->desc = rhs.desc;
+                this->doProfiling = rhs.doProfiling;
+                return *this;
+            }
+
+        private:
+
+            /** caller The id of the caller slot. */
+            vislib::StringA from;
+
+            /** callee The id of the callee slot. */
+            vislib::StringA to;
+
+            /** The description of the call to be instantiated. */
+            CallDescription *desc;
+
+            /** Flag if this call should be added to profiling */
+            bool doProfiling;
+
+        };
 
         /**
          * Add a request for a call instantiation to this instance
@@ -46,11 +156,13 @@ namespace core {
          * @param desc The description of the call to be instantiated.
          * @param caller The id of the caller slot.
          * @param callee The id of the callee slot.
+         * @param doProfiling Flag if this call should be added to profiling
+         *            if the profiling set is to 'SELECTED'
          */
         inline void AddCall(CallDescription *desc,
-                const vislib::StringA& caller, const vislib::StringA& callee) {
-            this->calls.Add(CallInstanceRequest(vislib::Pair<vislib::StringA,
-                vislib::StringA>(caller, callee), desc));
+                const vislib::StringA& caller, const vislib::StringA& callee,
+                bool doProfiling = false) {
+            this->calls.Add(CallInstanceRequest(caller, callee, desc, doProfiling));
         }
 
         /**

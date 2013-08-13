@@ -398,6 +398,16 @@ namespace core {
         void QuickstartRegistry(const vislib::TString& frontend, const vislib::TString& feparams,
             const vislib::TString& filetype, bool unreg, bool overwrite);
 
+        /**
+         * Answer the root object of the module graph.
+         * Used for internal computations only
+         *
+         * @return The root object of the module graph
+         */
+        inline const RootModuleNamespace * ModuleGraphRoot(void) const {
+            return &this->namespaceRoot;
+        }
+
     private:
 
         /**

@@ -53,6 +53,7 @@
 #include "vislib/vislibversion.h"
 #include "productversion.h"
 #include "versioninfo.h"
+#include "profiler/Manager.h"
 
 
 /*****************************************************************************/
@@ -99,6 +100,8 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
+
+    profiler::Manager::Instance().SetCoreInstance(this);
 
     this->config.instanceLog = &this->log;
 
@@ -352,6 +355,32 @@ void megamol::core::CoreInstance::Initialise(void) {
     // printf("\tEcho-Level: %u\n", vislib::sys::Log::DefaultLog.GetEchoLevel());
     // printf("\tEcho-Target: %d\n", (long)(vislib::sys::Log::DefaultLog.GetEchoOutTarget()));
 
+    // set up profiling manager
+    if (this->config.IsConfigValueSet("profiling")) {
+        vislib::StringA prof(this->config.ConfigValue("profiling"));
+        if (prof.Equals("all", false)) {
+            profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_ALL);
+        } else if (prof.Equals("selected", false)) {
+            profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_SELECTED);
+        } else if (prof.Equals("none", false)) {
+            profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_NONE);
+        } else {
+            try {
+                bool b = vislib::CharTraitsA::ParseBool(prof);
+                if (b) {
+                    profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_SELECTED);
+                } else {
+                    profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_NONE);
+                }
+            } catch(...) {
+                profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_NONE);
+            }
+        }
+    } else {
+        // Do not profile on default
+        profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_NONE);
+    }
+
     while (this->config.HasInstantiationRequests()) {
         utility::Configuration::InstanceRequest r
             = this->config.GetNextInstantiationRequest();
@@ -376,6 +405,7 @@ void megamol::core::CoreInstance::Initialise(void) {
     }
 
     SAFE_DELETE(this->preInit);
+
 }
 
 
@@ -643,10 +673,10 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
     // instantiate calls
     for (unsigned int idx = 0; idx < request.Description()->CallCount(); idx++) {
         const ViewDescription::CallInstanceRequest &cir = request.Description()->Call(idx);
-        CallDescription *desc = cir.Second();
+        CallDescription *desc = cir.Description();
 
-        vislib::StringA fromFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.First().First());
-        vislib::StringA toFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.First().Second());
+        vislib::StringA fromFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.From());
+        vislib::StringA toFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.To());
 
         if (desc == NULL) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -660,6 +690,8 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
         Call *call = this->InstantiateCall(fromFullName, toFullName, desc);
         if (call == NULL) {
             hasErrors = true;
+        } else if (profiler::Manager::Instance().GetModus() != profiler::Manager::PROFILE_NONE) {
+            if (cir.DoProfiling() || (profiler::Manager::Instance().GetModus() == profiler::Manager::PROFILE_ALL)) profiler::Manager::Instance().Select(fromFullName);
         }
     }
 
@@ -752,9 +784,9 @@ megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription *
     // instantiate calls
     for (unsigned int idx = 0; idx < vd->CallCount(); idx++) {
         const ViewDescription::CallInstanceRequest &cir = vd->Call(idx);
-        CallDescription *desc = cir.Second();
-        const vislib::StringA& fromFullName = cir.First().First();
-        const vislib::StringA& toFullName = cir.First().Second();
+        CallDescription *desc = cir.Description();
+        const vislib::StringA& fromFullName = cir.From();
+        const vislib::StringA& toFullName = cir.To();
 
         if (desc == NULL) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -768,6 +800,8 @@ megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription *
         Call *call = this->InstantiateCall(fromFullName, toFullName, desc);
         if (call == NULL) {
             hasErrors = true;
+        } else if (profiler::Manager::Instance().GetModus() != profiler::Manager::PROFILE_NONE) {
+            if (cir.DoProfiling() || (profiler::Manager::Instance().GetModus() == profiler::Manager::PROFILE_ALL)) profiler::Manager::Instance().Select(fromFullName);
         }
     }
 
@@ -873,10 +907,10 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
     // instantiate calls
     for (unsigned int idx = 0; idx < request.Description()->CallCount(); idx++) {
         const JobDescription::CallInstanceRequest &cir = request.Description()->Call(idx);
-        CallDescription *desc = cir.Second();
+        CallDescription *desc = cir.Description();
 
-        vislib::StringA fromFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.First().First());
-        vislib::StringA toFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.First().Second());
+        vislib::StringA fromFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.From());
+        vislib::StringA toFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.To());
 
         if (desc == NULL) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -890,6 +924,8 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
         Call *call = this->InstantiateCall(fromFullName, toFullName, desc);
         if (call == NULL) {
             hasErrors = true;
+        } else if (profiler::Manager::Instance().GetModus() != profiler::Manager::PROFILE_NONE) {
+            if (cir.DoProfiling() || (profiler::Manager::Instance().GetModus() == profiler::Manager::PROFILE_ALL)) profiler::Manager::Instance().Select(fromFullName);
         }
     }
 
@@ -1398,10 +1434,10 @@ void megamol::core::CoreInstance::Quickstart(const vislib::TString& filename) {
     }
     for (unsigned int i = 0; i < view.CallCount(); i++) {
         Log::DefaultLog.WriteInfo(25, "Call from \"%s\" to \"%s\" of class \"%s\"\n",
-            view.Call(i).First().First().PeekBuffer(),
-            view.Call(i).First().Second().PeekBuffer(),
-            view.Call(i).Second()->ClassName());
-        newview->AddCall(view.Call(i).Second(), view.Call(i).First().First(), view.Call(i).First().Second());
+            view.Call(i).From().PeekBuffer(),
+            view.Call(i).To().PeekBuffer(),
+            view.Call(i).Description()->ClassName());
+        newview->AddCall(view.Call(i).Description(), view.Call(i).From(), view.Call(i).To());
     }
     for (unsigned int i = 0; i < view.ParamValueCount(); i++) {
         newview->AddParamValue(view.ParamValue(i).First(), view.ParamValue(i).Second());

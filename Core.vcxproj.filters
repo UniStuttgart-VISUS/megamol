@@ -148,6 +148,15 @@
     <Filter Include="cluster\simple\Source Files">
       <UniqueIdentifier>{c4059213-91b2-4969-b741-bc772424e71a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="profiler">
+      <UniqueIdentifier>{b05721d6-1e9a-447a-971a-f4e27c88cddc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="profiler\Header Files">
+      <UniqueIdentifier>{6c1c6b1e-092d-485b-8391-5b9bd0d1db45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="profiler\Source Files">
+      <UniqueIdentifier>{a51dc135-3322-4d9f-bb3c-336918557a37}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AbstractDataWriter.cpp">
@@ -710,6 +719,9 @@
     </ClCompile>
     <ClCompile Include="moldyn\SIFFWriter.cpp">
       <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="profiler\Manager.cpp">
+      <Filter>profiler\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1291,6 +1303,9 @@
     </ClInclude>
     <ClInclude Include="moldyn\SIFFWriter.h">
       <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="profiler\Manager.h">
+      <Filter>profiler\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

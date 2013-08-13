@@ -253,6 +253,7 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
         const MMXML_CHAR *className = NULL;
         const MMXML_CHAR *fromName = NULL;
         const MMXML_CHAR *toName = NULL;
+        const MMXML_CHAR *profilingSetting = NULL;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("class").Equals(attrib[i])) {
                 className = attrib[i + 1];
@@ -262,6 +263,9 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             } else
             if (MMXML_STRING("to").Equals(attrib[i])) {
                 toName = attrib[i + 1];
+            } else
+            if (MMXML_STRING("profile").Equals(attrib[i])) {
+                profilingSetting = attrib[i + 1];
             } else {
                 this->WarnUnexpectedAttribut(name, attrib[i]);
             }
@@ -284,11 +288,16 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             this->Error("\"call\" class not found");
             return true;
         }
+        bool doProfiling = false;
+        try {
+            doProfiling = vislib::CharTraits<MMXML_CHAR>::ParseBool(profilingSetting);
+        } catch(...) {
+        }
         if (this->vd != NULL) {
-            this->vd->AddCall(cd, vislib::StringA(fromName), vislib::StringA(toName));
+            this->vd->AddCall(cd, vislib::StringA(fromName), vislib::StringA(toName), doProfiling);
         } else {
             ASSERT(this->jd != NULL);
-            this->jd->AddCall(cd, vislib::StringA(fromName), vislib::StringA(toName));
+            this->jd->AddCall(cd, vislib::StringA(fromName), vislib::StringA(toName), doProfiling);
         }
         return true;
     }

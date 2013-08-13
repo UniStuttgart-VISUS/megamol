@@ -339,6 +339,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="ObjectDescription.cpp" />
     <ClCompile Include="ObjectDescriptionManager.cpp" />
     <ClCompile Include="ParamValueSetRequest.cpp" />
+    <ClCompile Include="profiler\Manager.cpp" />
     <ClCompile Include="RenderVolumeSlice.cpp" />
     <ClCompile Include="RootModuleNamespace.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -580,6 +581,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="productversion.gen.h" />
     <ClInclude Include="productversion.h" />
     <ClInclude Include="productversion.template.h" />
+    <ClInclude Include="profiler\Manager.h" />
     <ClInclude Include="RenderVolumeSlice.h" />
     <ClInclude Include="RootModuleNamespace.h" />
     <ClInclude Include="stdafx.h" />
