@@ -66,10 +66,12 @@ protein::MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DMod
     this->MakeSlotAvailable( &this->molRendererORCallerSlot);
 
     // check if geom-shader is supported
-    if( this->cartoonShader.AreExtensionsAvailable())
-        this->geomShaderSupported = true;
-    else
-        this->geomShaderSupported = false;
+    //if( this->cartoonShader.AreExtensionsAvailable())
+    //    this->geomShaderSupported = true;
+    //else
+    //    this->geomShaderSupported = false;
+    // HACKEDIHACK
+    this->geomShaderSupported = true;
 
     // fill color table with default values and set the filename param
     vislib::StringA filename( "colors.txt");

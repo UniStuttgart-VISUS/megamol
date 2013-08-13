@@ -42,6 +42,7 @@
 #include "CUDAKernels.h" 
 #include "CUDAMarchingCubes.h"
 #include "CUDAQuickSurf.h"
+#include <thrust/device_ptr.h>
 //
 // multi-threaded direct summation implementation
 //

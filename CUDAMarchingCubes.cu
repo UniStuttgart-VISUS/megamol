@@ -45,6 +45,7 @@
 #include "CUDAMarchingCubes.h"
 #include <thrust/scan.h>
 #include <thrust/functional.h>
+#include <thrust/device_ptr.h>
 
 // The number of threads to use for triangle generation 
 // (limited by shared memory size)

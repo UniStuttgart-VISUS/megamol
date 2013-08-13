@@ -12,6 +12,7 @@
 #include <thrust/sort.h>
 #include <thrust/reduce.h>
 #include <thrust/iterator/constant_iterator.h>
+#include <thrust/device_ptr.h>
 #include "cuda_helper.h"
 
 #ifdef CUDA_NO_SM_11_ATOMIC_INTRINSICS
