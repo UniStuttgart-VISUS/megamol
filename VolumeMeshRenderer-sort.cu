@@ -13,6 +13,7 @@
 #include <thrust/reduce.h>
 #include <thrust/unique.h>
 #include <thrust/iterator/constant_iterator.h>
+#include <thrust/device_ptr.h>
 #include "cuda_helper.h"
 
 /*
