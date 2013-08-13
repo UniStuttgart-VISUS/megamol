@@ -16,6 +16,7 @@
 #include "Call.h"
 #include "CallAutoDescription.h"
 #include "vislib/Array.h"
+#include "vislib/Pair.h"
 #include "vislib/String.h"
 
 namespace megamol {
@@ -85,19 +86,28 @@ namespace protein {
         }
         
         /**
-         * Get the residue indices of a binding site.
+         * Get the residue and chain indices of a binding site.
          *
          * @param i The index of the residue.
          * @return Pointer to the array of residue indices.
          */
-        inline vislib::Array<unsigned int> *GetBindingSite( unsigned int i) const {
+        inline vislib::Array<vislib::Pair<char, unsigned int> > *GetBindingSite( unsigned int i) const {
             if( !this->bindingSites )
                 return 0;
-            else if( this->bindingSites->Count() < i )
+            else if( this->bindingSites->Count() <= i )
                 return 0;
             else
                 //return &(*this->bindingSites)[i];
                 return &(this->bindingSites->operator[](i));
+        }
+        
+        /**
+         * Set the binding sites pointer (residue and chain indices).
+         *
+         * @param bsPtr The pointer.
+         */
+        inline void SetBindingSite( vislib::Array<vislib::Array<vislib::Pair<char, unsigned int> > > *bsPtr) {
+            this->bindingSites = bsPtr;
         }
         
         /**
@@ -109,11 +119,44 @@ namespace protein {
         inline vislib::Array<vislib::StringA> *GetBindingSiteResNames( unsigned int i) const {
             if( !this->bindingSiteResNames )
                 return 0;
-            else if( this->bindingSiteResNames->Count() < i )
+            else if( this->bindingSiteResNames->Count() <= i )
                 return 0;
             else
                 //return &(*this->bindingSites)[i];
                 return &(this->bindingSiteResNames->operator[](i));
+        }
+
+        /**
+         * Set the pointer to the residue names of the binding site.
+         *
+         * @param rnPtr The pointer.
+         */
+        inline void SetBindingSiteResNames( vislib::Array<vislib::Array<vislib::StringA> > *rnPtr) {
+            this->bindingSiteResNames = rnPtr;
+        }
+        
+        /**
+         * Get the name of a binding site.
+         *
+         * @param i The index of the residue.
+         * @return Pointer to the array of residue names.
+         */
+        inline vislib::StringA GetBindingSiteName( unsigned int i) const {
+            if( !this->bindingSiteNames )
+                return "";
+            else if( this->bindingSiteNames->Count() <= i )
+                return "";
+            else
+                return (this->bindingSiteNames->operator[](i));
+        }
+
+        /**
+         * Set the pointer to the names of a binding sites.
+         *
+         * @param nPtr The pointer.
+         */
+        inline void SetBindingSiteNames( vislib::Array<vislib::StringA> *nPtr) {
+            this->bindingSiteNames = nPtr;
         }
 
         BindingSiteCall(void);
@@ -121,9 +164,11 @@ namespace protein {
 
     private:
         /** Pointer to binding site array */
-        vislib::Array<vislib::Array<unsigned int> > *bindingSites;
+        vislib::Array<vislib::Array<vislib::Pair<char, unsigned int> > > *bindingSites;
         /** Pointer to binding site residue name array */
         vislib::Array<vislib::Array<vislib::StringA> > *bindingSiteResNames;
+        /** The binding site name */
+        vislib::Array<vislib::StringA> *bindingSiteNames;
     };
 
     /** Description class typedef */
