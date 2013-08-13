@@ -4,6 +4,7 @@
 #include "SequenceRenderer.h"
 #include "CoreInstance.h"
 #include "param/IntParam.h"
+#include "param/FilePathParam.h"
 #include "utility/ColourParser.h"
 #include "vislib/Rectangle.h"
 #include "vislib/BufferedFile.h"
@@ -13,6 +14,7 @@
 #include <math.h>
 #include "misc/ImageViewer.h"
 #include "utility/ResourceWrapper.h"
+#include "Color.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -27,7 +29,8 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
         dataCallerSlot( "getData", "Connects the sequence diagram rendering with data storage." ),
         bindingSiteCallerSlot( "getBindingSites", "Connects the sequence diagram rendering with binding site storage." ),
         resCountPerRowParam( "ResiduesPerRow", "The number of residues per row" ),
-        dataPrepared(false), atomCount(0), resCount(0), resCols(0), resRows(0), rowHeight( 3.0f)
+        colorTableFileParam( "ColorTableFilename", "The filename of the color table."),
+        dataPrepared(false), atomCount(0), bindingSiteCount(0), resCount(0), resCols(0), resRows(0), rowHeight( 3.0f)
 #ifndef USE_SIMPLE_FONT
         , theFont(FontInfo_Verdana) 
 #endif
@@ -44,6 +47,13 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
     // param slot for number of residues per row
     this->resCountPerRowParam.SetParameter( new param::IntParam( 50, 1));
     this->MakeSlotAvailable( &this->resCountPerRowParam);
+    
+    // fill color table with default values and set the filename param
+    vislib::StringA filename( "colors.txt");
+    this->colorTableFileParam.SetParameter(new param::FilePathParam( A2T( filename)));
+    this->MakeSlotAvailable( &this->colorTableFileParam);
+    Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
+
 }
 
 /*
@@ -73,26 +83,41 @@ bool SequenceRenderer::GetExtents(view::CallRender2D& call) {
     if( mol == NULL ) return false;
     if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
     
+    // get pointer to BindingSiteCall
+    BindingSiteCall *bs = this->bindingSiteCallerSlot.CallAs<BindingSiteCall>();
+    if( bs != NULL ) {
+        // execute the call
+        if( !(*bs)(BindingSiteCall::CallForGetData) ) {
+            bs = NULL;
+        }
+    }
+    
     // check whether the number of residues per row or the number of atoms was changed
     if( this->resCountPerRowParam.IsDirty() ||
         this->atomCount != mol->AtomCount() ) {
         this->dataPrepared = false;
     }
 
+    // check whether the number of binding sites has changed
+    if( bs && this->bindingSiteCount != bs->GetBindingSiteCount() ) {
+        this->dataPrepared = false;
+    }
+
     // prepare the data
     if( !this->dataPrepared ) {
-        this->dataPrepared = this->PrepareData( mol);
+        unsigned int oldRowHeight = this->rowHeight;
+        this->dataPrepared = this->PrepareData( mol, bs);
+        if( oldRowHeight != this->rowHeight ) {
+            this->dataPrepared = this->PrepareData( mol, bs);
+        }
 
         if( this->dataPrepared ) {
             // the data has been prepared for the current number of residues per row
             this->resCountPerRowParam.ResetDirty();
             // store the number of atoms for which the data was prepared
             this->atomCount = mol->AtomCount();
-            // try to get binding site information
-            BindingSiteCall *site = this->bindingSiteCallerSlot.CallAs<BindingSiteCall>();
-            if( site != NULL ) {
-                this->getBindingSites( site);
-            }
+            //store the number of binding sites
+            bs ? this->bindingSiteCount = bs->GetBindingSiteCount() : this->bindingSiteCount = 0;
         }
     }
         
@@ -108,15 +133,21 @@ bool SequenceRenderer::GetExtents(view::CallRender2D& call) {
  * SequenceRenderer::Render
  */
 bool SequenceRenderer::Render(view::CallRender2D &call) {
-    // get pointer to Diagram2DCall
+    // get pointer to MolecularDataCall
     MolecularDataCall *mol = this->dataCallerSlot.CallAs<MolecularDataCall>();
     if( mol == NULL ) return false;
-    
     // execute the call
     if( !(*mol)(MolecularDataCall::CallForGetData) ) return false;
     
+    // read and update the color table, if necessary
+    if( this->colorTableFileParam.IsDirty() ) {
+        Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
+        this->colorTableFileParam.ResetDirty();
+    }
+
     if( this->dataPrepared ) {
-        glBegin( GL_TRIANGLES);
+        //draw tiles for structure
+        glBegin( GL_QUADS);
         for( unsigned int i = 0; i < this->resIndex.Count(); i++ ) {
             if( this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_HELIX )
                 glColor3f( 1.0f, 0.0f, 0.0f);
@@ -128,11 +159,22 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                 glColor3f( 0.5f, 0.5f, 0.5f);
             glVertex2f( this->vertices[2*i]       , -this->vertices[2*i+1]);
             glVertex2f( this->vertices[2*i]       , -this->vertices[2*i+1] - 1.0f);
+            glVertex2f( this->vertices[2*i] + 1.0f, -this->vertices[2*i+1] - 1.0f);
             glVertex2f( this->vertices[2*i] + 1.0f, -this->vertices[2*i+1]);
         }
         glEnd();
-
+        // draw tiles for binding sites
+        glBegin( GL_QUADS);
+        for( unsigned int i = 0; i < this->bsIndices.Count(); i++ ) {
+            glColor3fv( this->colorTable[this->bsIndices[i]].PeekComponents());
+            glVertex2f( this->bsVertices[2*i] + 0.1f, -this->bsVertices[2*i+1]);
+            glVertex2f( this->bsVertices[2*i] + 0.1f, -this->bsVertices[2*i+1] - 0.4f);
+            glVertex2f( this->bsVertices[2*i] + 0.9f, -this->bsVertices[2*i+1] - 0.4f);
+            glVertex2f( this->bsVertices[2*i] + 0.9f, -this->bsVertices[2*i+1]);
+        }
+        glEnd();
     
+        // set test color (inverse background color)
         float bgColor[4];
         float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
         glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
@@ -149,8 +191,8 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                     theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight), 1.0f, -1.0f,
                         1.0f, true, this->aminoAcidStrings[i].Substring(j, 1), vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
                     // draw the chain name and amino acid index
-                    theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight + 3.0f), 1.0f, 0.5f,
-                        0.4f, true, this->aminoAcidIndexStrings[i][j], vislib::graphics::AbstractFont::ALIGN_CENTER_BOTTOM);
+                    theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight + this->rowHeight - 0.5f), 1.0f, 0.5f,
+                        0.35f, true, this->aminoAcidIndexStrings[i][j], vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
                 }
             }
         }
@@ -166,8 +208,7 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
  */
 bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     bool consumeEvent = false;
-
-
+    
     return consumeEvent;
 }
 
@@ -175,7 +216,7 @@ bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
 /*
  *
  */
-bool SequenceRenderer::PrepareData( MolecularDataCall *mol) {
+bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs) {
     if( !mol ) return false;
 
     // temporary variables
@@ -187,6 +228,10 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol) {
     this->resCount = 0;
     this->vertices.Clear();
     this->vertices.AssertCapacity( mol->ResidueCount() * 2);
+    this->bsVertices.Clear();
+    this->bsVertices.AssertCapacity( mol->ResidueCount() * 2);
+    this->bsIndices.Clear();
+    this->bsIndices.AssertCapacity( mol->ResidueCount());
     this->resIndex.Clear();
     this->resIndex.AssertCapacity( mol->ResidueCount());
     this->resCols = static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value());
@@ -195,10 +240,11 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol) {
     this->aminoAcidIndexStrings.Clear();
     this->aminoAcidIndexStrings.AssertCapacity( mol->ResidueCount() / this->resCols + 1);
     unsigned int currentRow = 0;
+    unsigned int maxNumBindingSitesPerRes = 0;
+
     // count residues
     for( unsigned int cCnt = 0; cCnt < mol->ChainCount(); cCnt++ ) {
         firstMol = mol->Chains()[cCnt].FirstMoleculeIndex();
-        //for( unsigned int mCnt = 0; mCnt < mol->MoleculeCount(); mCnt++ ) {
         for( unsigned int mCnt = firstMol; mCnt < firstMol + mol->Chains()[cCnt].MoleculeCount(); mCnt++ ) {
             firstStruct = mol->Molecules()[mCnt].FirstSecStructIndex();
             for( unsigned int sCnt = 0; sCnt < mol->Molecules()[mCnt].SecStructCount(); sCnt++ ) {
@@ -230,11 +276,36 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol) {
                     // store the chain name and residue index
                     tmpStr.Format("%c %i", mol->Chains()[cCnt].Name(), mol->Residues()[this->resIndex.Last()]->OriginalResIndex());
                     this->aminoAcidIndexStrings[currentRow].Add( tmpStr);
+                    
+                    // try to match binding sites
+                    if( bs ) {
+                        vislib::Pair<char, unsigned int> bsRes;
+                        unsigned int numBS = 0;
+                        // loop over all binding sites
+                        for( unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++ ) {
+                            for( unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++ ) {
+                                bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
+                                if( mol->Chains()[cCnt].Name() == bsRes.First() &&
+                                    mol->Residues()[this->resIndex.Last()]->OriginalResIndex() == bsRes.Second() &&
+                                    mol->ResidueTypeNames()[mol->Residues()[this->resIndex.Last()]->Type()] == bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt) ) {
+                                        //this->aminoAcidIndexStrings[currentRow].Last().Append(" *");
+                                        this->bsVertices.Add( this->vertices[this->vertices.Count()-2]);
+                                        this->bsVertices.Add( this->vertices[this->vertices.Count()-1] + 2.0f + numBS * 0.5f);
+                                        this->bsIndices.Add( bsCnt);
+                                        numBS++;
+                                        maxNumBindingSitesPerRes = vislib::math::Max( maxNumBindingSitesPerRes, numBS);
+                                }
+                            }
+                        }
+                    }
+
                     this->resCount++;
                 } // residues
             } // secondary structures
         } // molecules
     } // chains
+
+    this->rowHeight = 3.0f + maxNumBindingSitesPerRes * 0.5f;
     
     // set the number of columns
     this->resCols = vislib::math::Min(this->resCount,
@@ -283,11 +354,3 @@ char SequenceRenderer::GetAminoAcidOneLetterCode( vislib::StringA resName ) {
     else return '?';
 }
 
-
-/*
- * Try to get information about binding sites.
- */
-void SequenceRenderer::getBindingSites( BindingSiteCall *site) {
-    if( !site ) return;
-
-}

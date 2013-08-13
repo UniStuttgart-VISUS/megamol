@@ -97,16 +97,9 @@ namespace protein {
          * @param mol The molecular data call.
          * @return true if preparation was successful, false otherwise
          */
-        bool PrepareData( MolecularDataCall *mol);
+        bool PrepareData( MolecularDataCall *mol, BindingSiteCall *bs);
 
     private:
-
-        /**
-         * Try to get information about binding sites.
-         *
-         * @param site The binding site data call.
-         */
-        void getBindingSites( BindingSiteCall *site);
 
         /**
          * Returns the single letter code for an amino acid given the three letter code.
@@ -150,11 +143,15 @@ namespace protein {
         
         // the number of residues in one row
         megamol::core::param::ParamSlot resCountPerRowParam;
+        // the file name for the color table
+        megamol::core::param::ParamSlot colorTableFileParam;
 
         // data preparation flag
         bool dataPrepared;
         // the total number of atoms
         unsigned int atomCount;
+        // the total number of atoms
+        unsigned int bindingSiteCount;
 
         // the number of residues
         unsigned int resCount;
@@ -175,14 +172,19 @@ namespace protein {
         vislib::Array<vislib::StringA> aminoAcidStrings;
         // the array of amino acid chain name and index
         vislib::Array<vislib::Array<vislib::StringA> > aminoAcidIndexStrings;
-
+        
         // the vertex buffer array for the tiles
         vislib::Array<float> vertices;
+        // the vertex buffer array for the binding site tiles
+        vislib::Array<float> bsVertices;
+        // the index array for the binding site tiles
+        vislib::Array<unsigned int> bsIndices;
         // the index of the residue
         vislib::Array<unsigned int> resIndex;
         // the secondary structure element type of the residue
         vislib::Array<MolecularDataCall::SecStructure::ElementType> resSecStructType;
-
+        // color table
+        vislib::Array<vislib::math::Vector<float, 3> > colorTable;
     };
 
 } /* end namespace protein */

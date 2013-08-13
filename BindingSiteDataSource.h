@@ -15,6 +15,8 @@
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
 #include "Module.h"
+#include "vislib/Array.h"
+#include "vislib/Pair.h"
 #include "vislib/String.h"
 		
 
@@ -86,16 +88,20 @@ namespace protein {
          *
          * @param filename The PDB file name.
          */
-        void loadPDBFile( vislib::StringA filename);
+        void loadPDBFile( const vislib::TString &filename);
 
         /** The data callee slot */
         core::CalleeSlot dataOutSlot;
 
         /** the parameter slot for the binding site file (PDB) */
         core::param::ParamSlot pdbFilenameSlot;
-
+        
         /** The binding site information */
-        vislib::Array<vislib::Array<unsigned int> > bindingSites;
+        vislib::Array<vislib::Array<vislib::Pair<char, unsigned int> > > bindingSites;
+        /** Pointer to binding site residue name array */
+        vislib::Array<vislib::Array<vislib::StringA> > bindingSiteResNames;
+        /** The binding site name */
+        vislib::Array<vislib::StringA> bindingSiteNames;
 
     };
 
