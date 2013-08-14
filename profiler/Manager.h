@@ -1,4 +1,3 @@
-#pragma once
 /*
  * profiler/Manager.h
  *
@@ -12,6 +11,8 @@
 
 #include "vislib/String.h"
 #include "CoreInstance.h"
+#include "vislib/Array.h"
+#include "profiler/Connection.h"
 
 
 namespace megamol {
@@ -93,6 +94,20 @@ namespace profiler {
          */
         void Select(const vislib::StringA& caller);
 
+        /**
+         * Adds a connection
+         *
+         * @param conn The connection to be added
+         */
+        void AddConnection(Connection::ptr_type conn);
+
+        /**
+         * Removes a connection
+         *
+         * @param conn The connection to be removed
+         */
+        void RemoveConnection(Connection::ptr_type conn);
+
     private:
 
         /** Hidden ctor */
@@ -106,6 +121,9 @@ namespace profiler {
 
         /** The core instance */
         CoreInstance *ci;
+
+        /** The connections to call callbacks */
+        vislib::Array<Connection::ptr_type> connections;
 
     };
 

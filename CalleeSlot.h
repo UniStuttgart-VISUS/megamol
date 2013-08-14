@@ -19,6 +19,7 @@
 #include "vislib/Array.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
+#include "profiler/Connection.h"
 
 
 namespace megamol {
@@ -216,25 +217,64 @@ namespace core {
             const vislib::SmartPtr<param::AbstractParam>& param) const;
 
         /**
-         * TODO: Document me
+         * Answer the number of registered callback with names
+         *
+         * @return The number of registered callback with names
          */
         inline SIZE_T GetCallbackCount(void) const {
-            return this->callbacks.Count();
+            SIZE_T allCnt = this->callbacks.Count();
+            SIZE_T valCnt = 0;
+            for (SIZE_T i = 0; i < allCnt; i++, valCnt++) {
+                Callback* cb = this->callbacks[i];
+                if (dynamic_cast<ProfilingCallback*>(cb) != NULL) break;
+            }
+            return valCnt;
         }
 
         /**
-         * TODO: Document me
+         * Answer the call class name of the idx-th registered callback
+         *
+         * @param idx The zero-based index of the callback to return the call class name of
+         *
+         * @return The call class name of the requested callback
          */
         inline const char* GetCallbackCallName(SIZE_T idx) const {
             return this->callbacks[idx]->CallName();
         }
 
         /**
-         * TODO: Document me
+         * Answer the function name of the idx-th registered callback
+         *
+         * @param idx The zero-based index of the callback to return the function name of
+         *
+         * @return The function name of the requested callback
          */
         inline const char* GetCallbackFuncName(SIZE_T idx) const {
             return this->callbacks[idx]->FuncName();
         }
+
+        /**
+         * Answer if the specified call is profiling
+         *
+         * @param c The call to test
+         *
+         * @return True if the call 'c' is being profiled
+         */
+        bool IsCallProfiling(const Call* c) const;
+
+        /**
+         * Adds profiling mechanisms for the specified call
+         *
+         * @param c The call to add profiling for
+         */
+        void AddCallProfiling(const Call* c);
+
+        /**
+         * Removes call profiling mechanismus for the specified call
+         *
+         * @param c The call to remove profiling for
+         */
+        void RemoveCallProfiling(const Call* c);
 
     private:
 
@@ -381,6 +421,61 @@ namespace core {
             bool (C::*func)(Call&);
 
             C* parent;
+
+        };
+
+        /**
+         * Special callback class for performance profiling
+         */
+        class ProfilingCallback : public Callback {
+        public:
+
+            /**
+             * Ctor
+             *
+             * @param cb The encapsuled callback
+             * @param conn The connection the the profiler
+             */
+            ProfilingCallback(Callback *cb, profiler::Connection::ptr_type conn);
+
+            /** Dtor */
+            virtual ~ProfilingCallback(void);
+
+            /**
+             * Call this callback.
+             *
+             * @param owner The owning object.
+             * @param call The calling call.
+             *
+             * @return The return value of the function.
+             */
+            virtual bool CallMe(Module *owner, Call& call);
+
+            /**
+             * Answer the internal callback
+             *
+             * @return The internal callback
+             */
+            inline Callback * GetCallback(void) const {
+                return this->cb;
+            }
+
+            /**
+             * Answer the profiler connection
+             *
+             * @return The profiler connection
+             */
+            inline profiler::Connection::ptr_type GetConnection(void) const {
+                return this->conn;
+            }
+
+        private:
+
+            /** The actual callback */
+            Callback *cb;
+
+            /** The connection */
+            profiler::Connection::ptr_type conn;
 
         };
 

@@ -723,6 +723,9 @@
     <ClCompile Include="profiler\Manager.cpp">
       <Filter>profiler\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="profiler\Connection.cpp">
+      <Filter>profiler\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1305,6 +1308,9 @@
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="profiler\Manager.h">
+      <Filter>profiler\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="profiler\Connection.h">
       <Filter>profiler\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -71,9 +71,10 @@ void profiler::Manager::SetModus(Modus modus) {
  * profiler::Manager::UnselectAll
  */
 void profiler::Manager::UnselectAll(void) {
-
-    // TODO: Implement
-
+    while (!this->connections.IsEmpty()) {
+        const Call* call = this->connections[0]->get_call();
+        const_cast<CalleeSlot*>(call->PeekCalleeSlot())->RemoveCallProfiling(call);
+    }
     vislib::sys::Log::DefaultLog.WriteInfo("All calls removed from profiling");
 }
 
@@ -82,17 +83,75 @@ void profiler::Manager::UnselectAll(void) {
  * profiler::Manager::Select
  */
 void profiler::Manager::Select(const vislib::StringA& caller) {
+    const Call *call = NULL;
+
+    vislib::Stack<const AbstractNamedObjectContainer*> stack;
+    stack.Push(ci->ModuleGraphRoot());
+    while (!stack.IsEmpty()) {
+        const AbstractNamedObjectContainer* node = stack.Pop();
+        vislib::ConstIterator<AbstractNamedObjectContainer::ChildList::Iterator> children = node->GetConstChildIterator();
+        while (children.HasNext()) {
+            const AbstractNamedObject *child = children.Next();
+            const AbstractNamedObjectContainer *anoc = dynamic_cast<const AbstractNamedObjectContainer*>(child);
+            if (anoc != NULL) stack.Push(anoc); // continue
+            const CallerSlot *callerSlot = dynamic_cast<const CallerSlot*>(child);
+            if (callerSlot != NULL) {
+                if (callerSlot->FullName().Equals(caller, false)) {
+                    call = const_cast<CallerSlot*>(callerSlot)->CallAs<Call>();
+                    if (call != NULL) {
+                        if (call->PeekCalleeSlot() != NULL) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (call == NULL) {
+        vislib::sys::Log::DefaultLog.WriteError("Failed to select call at %s for profiling: not found", caller.PeekBuffer());
+        return;
+    }
+    ASSERT(call->PeekCalleeSlot() != NULL);
+    ASSERT(call->PeekCallerSlot() != NULL);
+
+    if (!call->PeekCalleeSlot()->IsCallProfiling(call)) {
+        const_cast<CalleeSlot*>(call->PeekCalleeSlot())->AddCallProfiling(call);
+        vislib::sys::Log::DefaultLog.WriteInfo("Call at %s added to profiling", caller.PeekBuffer());
+    } else {
+        vislib::sys::Log::DefaultLog.WriteWarn("Call at %s not added to profiling: already profiling", caller.PeekBuffer());
+    }
+}
+
+
+/*
+ * profiler::Manager::AddConnection
+ */
+void profiler::Manager::AddConnection(Connection::ptr_type conn) {
+    if (!this->connections.Contains(conn)) {
+        this->connections.Add(conn);
+
+        // TODO: Implement
+
+    }
+}
+
+
+/*
+ * profiler::Manager::RemoveConnection
+ */
+void profiler::Manager::RemoveConnection(Connection::ptr_type conn) {
+    this->connections.RemoveAll(conn);
 
     // TODO: Implement
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Call at %s added to profiling", caller.PeekBuffer());
 }
 
 
 /*
  * profiler::Manager::Manager
  */
-profiler::Manager::Manager(void) : modus(PROFILE_NONE), ci(NULL) {
+profiler::Manager::Manager(void) : modus(PROFILE_NONE), ci(NULL), connections() {
 
     // TODO: Implement
 
