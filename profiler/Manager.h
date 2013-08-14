@@ -13,6 +13,8 @@
 #include "CoreInstance.h"
 #include "vislib/Array.h"
 #include "profiler/Connection.h"
+#include "vislib/CriticalSection.h"
+#include "vislib/types.h"
 
 
 namespace megamol {
@@ -108,6 +110,18 @@ namespace profiler {
          */
         void RemoveConnection(Connection::ptr_type conn);
 
+        /**
+         * Answer the timing information in seconds
+         *
+         * @return Timing information in seconds
+         */
+        double Now(void) const;
+
+        /**
+         * Exemplary report of performance values
+         */
+        void Report(void);
+
     private:
 
         /** Hidden ctor */
@@ -123,7 +137,13 @@ namespace profiler {
         CoreInstance *ci;
 
         /** The connections to call callbacks */
-        vislib::Array<Connection::ptr_type> connections;
+        vislib::Array<Connection::ptr_type, vislib::sys::CriticalSection> connections;
+
+        /** The time value base */
+        UINT64 timeBase;
+
+        /** value for debug reporting */
+        UINT64 debugReportTime;
 
     };
 

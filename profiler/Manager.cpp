@@ -12,6 +12,7 @@
 #include "CallerSlot.h"
 #include "AbstractNamedObject.h"
 #include "Call.h"
+#include "vislib/PerformanceCounter.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -71,10 +72,14 @@ void profiler::Manager::SetModus(Modus modus) {
  * profiler::Manager::UnselectAll
  */
 void profiler::Manager::UnselectAll(void) {
+    this->connections.Lock();
     while (!this->connections.IsEmpty()) {
         const Call* call = this->connections[0]->get_call();
+        this->connections.Unlock();
         const_cast<CalleeSlot*>(call->PeekCalleeSlot())->RemoveCallProfiling(call);
+        this->connections.Lock();
     }
+    this->connections.Unlock();
     vislib::sys::Log::DefaultLog.WriteInfo("All calls removed from profiling");
 }
 
@@ -130,9 +135,6 @@ void profiler::Manager::Select(const vislib::StringA& caller) {
 void profiler::Manager::AddConnection(Connection::ptr_type conn) {
     if (!this->connections.Contains(conn)) {
         this->connections.Add(conn);
-
-        // TODO: Implement
-
     }
 }
 
@@ -142,19 +144,63 @@ void profiler::Manager::AddConnection(Connection::ptr_type conn) {
  */
 void profiler::Manager::RemoveConnection(Connection::ptr_type conn) {
     this->connections.RemoveAll(conn);
+}
 
-    // TODO: Implement
 
+/*
+ * profiler::Manager::Now
+ */
+double profiler::Manager::Now(void) const {
+    UINT64 now = vislib::sys::PerformanceCounter::Query(true);
+    UINT64 tc = now
+#if defined(DEBUG) || defined(_DEBUG)
+         - this->debugReportTime;
+    if (this->modus != PROFILE_NONE) {
+        if (vislib::sys::PerformanceCounter::ToMillis(tc) > 5000.0) {
+            const_cast<Manager*>(this)->debugReportTime = now;
+            const_cast<Manager*>(this)->Report();
+        }
+    }
+    tc = now
+#endif /* DEBUG || _DEBUG */
+        - this->timeBase;
+    return vislib::sys::PerformanceCounter::ToMillis(tc) * 0.001;
+}
+
+
+/*
+ * profiler::Manager::Report
+ */
+void profiler::Manager::Report(void) {
+    this->connections.Lock();
+    try {
+
+        // TODO: Implement some better reporting:
+
+        if (!this->connections.IsEmpty()) {
+            printf("Call Performance Profile:\n");
+            for (SIZE_T i = 0; i < this->connections.Count(); i++) {
+                Connection::ptr_type conn = this->connections[i];
+                printf("\t%s(%u) = %f\n",
+                    conn->get_call()->PeekCallerSlot()->FullName().PeekBuffer(),
+                    conn->get_function_id(),
+                    conn->get_mean());
+            }
+        }
+
+        this->connections.Unlock();
+    } catch(...) {
+        this->connections.Unlock();
+        throw;
+    }
 }
 
 
 /*
  * profiler::Manager::Manager
  */
-profiler::Manager::Manager(void) : modus(PROFILE_NONE), ci(NULL), connections() {
-
-    // TODO: Implement
-
+profiler::Manager::Manager(void) : modus(PROFILE_NONE), ci(NULL), connections(), timeBase(0), debugReportTime(0) {
+    this->timeBase = vislib::sys::PerformanceCounter::Query(true);
 }
 
 
@@ -162,8 +208,6 @@ profiler::Manager::Manager(void) : modus(PROFILE_NONE), ci(NULL), connections() 
  * profiler::Manager::~Manager
  */
 profiler::Manager::~Manager(void) {
+    // this->UnselectAll(); Does not work, because calls will already be invalid. ...
     this->ci = NULL; // Do not delete
-
-    // TODO: Implement
-
 }

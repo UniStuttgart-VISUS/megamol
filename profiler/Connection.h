@@ -11,6 +11,8 @@
 
 #include <memory>
 #include "Call.h"
+#include "vislib/Array.h"
+#include "vislib/Pair.h"
 
 
 namespace megamol {
@@ -74,13 +76,32 @@ namespace profiler {
             return this->func;
         }
 
+        /**
+         * Computes the mean call duration time (in seconds)
+         *
+         * @return The mean call duration time (in seconds)
+         */
+        double get_mean(void) const;
+
     private:
+
+        /** The log size */
+        static const SIZE_T log_size;
 
         /** The connected call */
         const Call *call;
 
         /** The function number */
         unsigned int func;
+
+        /** The measured performance values */
+        vislib::Pair<double, double> *values;
+
+        /** The count of valid values */
+        SIZE_T values_cnt;
+
+        /** The position of the current value */
+        SIZE_T values_pos;
 
     };
 
