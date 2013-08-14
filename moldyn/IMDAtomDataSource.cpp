@@ -934,7 +934,7 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
     }
     vislib::Array<int> colMode(this->posData.Count(), this->colourModeSlot.Param<param::EnumParam>()->Value(),
         vislib::Array<int>::DEFAULT_CAPACITY_INCREMENT);
-    for (int i = 0; i < this->posData.Count(); i++) {
+    for (int i = 0; i < static_cast<int>(this->posData.Count()); i++) {
         if ((colMode[i] == 1) && (this->colData[i]->GetSize() == 0)) {
             colMode[i] = 0;
         }
@@ -959,7 +959,7 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
         mpdc->SetDataHash(this->datahash);
         mpdc->SetParticleListCount(this->posData.Count()); 
         // TODO hier ne for-schleife um die listen...
-        for (int idx = 0; idx < this->posData.Count(); idx++) {
+        for (int idx = 0; idx < static_cast<int>(this->posData.Count()); idx++) {
             mpdc->AccessParticles(idx).SetGlobalColour(this->defCol[0], this->defCol[1], this->defCol[2]);
             mpdc->AccessParticles(idx).SetGlobalRadius(this->radiusSlot.Param<param::FloatParam>()->Value());
             mpdc->AccessParticles(idx).SetCount(this->posData[idx]->GetSize() / (3 * sizeof(float)));
@@ -996,7 +996,7 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
         dpdc->SetFrameID(0);
         dpdc->SetDataHash(this->datahash);
         dpdc->SetParticleListCount(this->posData.Count()); // For the moment
-        for (int idx = 0; idx < this->posData.Count(); idx++) {
+        for (int idx = 0; idx < static_cast<int>(this->posData.Count()); idx++) {
             dpdc->AccessParticles(idx).SetGlobalColour(this->dirdefCol[0], this->dirdefCol[1], this->dirdefCol[2]);
             dpdc->AccessParticles(idx).SetGlobalRadius(this->dirradiusSlot.Param<param::FloatParam>()->Value());
             dpdc->AccessParticles(idx).SetGlobalType(this->typeData[idx]);
@@ -1109,7 +1109,7 @@ bool moldyn::IMDAtomDataSource::getExtentCallback(Call& caller) {
  * moldyn::IMDAtomDataSource::clear
  */
 void moldyn::IMDAtomDataSource::clear(void) {
-    for (int i = 0; i < this->posData.Count(); i++) {
+    for (int i = 0; i < static_cast<int>(this->posData.Count()); i++) {
         this->posData[i]->EnforceSize(0);
         this->colData[i]->EnforceSize(0);
         this->allDirData[i]->EnforceSize(0);
@@ -1234,7 +1234,7 @@ void moldyn::IMDAtomDataSource::assertData(void) {
         // TODO allTypeData
 
         SIZE_T cnt = 0;
-        for (int i = 0; i < this->posData.Count(); i++) {
+        for (int i = 0; i < static_cast<int>(this->posData.Count()); i++) {
             if (this->allDirData[i]->GetSize() > 0) {
                 unsigned int dircolMode = this->dircolourModeSlot.Param<param::EnumParam>()->Value();
                 unsigned int fpp = (dircolMode == 1) ? 7 : ((dircolMode == 2) ? 9 : 6); // floats per particle
@@ -1910,13 +1910,13 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
     }
 
     if (!first) {
-        for (int i = 0; i < posData.Count(); i++) {
+        for (int i = 0; i < static_cast<int>(posData.Count()); i++) {
             this->posData[i]->EnforceSize(posWriters[i]->End(), true);
             this->colData[i]->EnforceSize(colWriters[i]->End(), true);
             this->allDirData[i]->EnforceSize(dirWriters[i]->End(), true);
         }
     } else {
-        for (int i = 0; i < posData.Count(); i++) {
+        for (int i = 0; i < static_cast<int>(posData.Count()); i++) {
             this->posData[i]->EnforceSize(0, true);
             this->colData[i]->EnforceSize(0, true);
             this->allDirData[i]->EnforceSize(0, true);
@@ -1940,7 +1940,7 @@ bool moldyn::IMDAtomDataSource::posXFilterUpdate(param::ParamSlot& slot) {
     float maxX = this->posXMaxFilter.Param<param::FloatParam>()->Value();
 
     // number of input particles
-    for (int idx = 0; idx < this->posData.Count(); idx++) {
+    for (int idx = 0; idx < static_cast<int>(this->posData.Count()); idx++) {
         SIZE_T inCnt = this->posData[idx]->GetSize() / (3 * sizeof(float));
         SIZE_T outCnt = 0;
         float *outPos = this->posData[idx]->As<float>();
