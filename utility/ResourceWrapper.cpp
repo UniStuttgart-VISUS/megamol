@@ -39,7 +39,7 @@ SIZE_T ResourceWrapper::LoadResource(const Configuration& config, const vislib::
         return 0;
     }
 
-    SIZE_T size = vislib::sys::File::GetSize(filename);
+    SIZE_T size = static_cast<SIZE_T>(vislib::sys::File::GetSize(filename));
     if (size < 1) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to load resource \"%s\": file is empty\n",
@@ -56,7 +56,7 @@ SIZE_T ResourceWrapper::LoadResource(const Configuration& config, const vislib::
         ARY_SAFE_DELETE(*outData);
         return 0;
     }
-    SIZE_T num = f.Read(*outData, size);
+    SIZE_T num = static_cast<SIZE_T>(f.Read(*outData, size));
     if (num != size) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to load resource \"%s\": cannot read whole file\n",
