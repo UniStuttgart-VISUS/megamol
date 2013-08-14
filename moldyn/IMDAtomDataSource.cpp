@@ -957,7 +957,7 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
     if (mpdc != NULL) {
         mpdc->SetFrameID(0);
         mpdc->SetDataHash(this->datahash);
-        mpdc->SetParticleListCount(this->posData.Count()); 
+        mpdc->SetParticleListCount(static_cast<unsigned int>(this->posData.Count()));
         // TODO hier ne for-schleife um die listen...
         for (int idx = 0; idx < static_cast<int>(this->posData.Count()); idx++) {
             mpdc->AccessParticles(idx).SetGlobalColour(this->defCol[0], this->defCol[1], this->defCol[2]);
@@ -995,7 +995,7 @@ bool moldyn::IMDAtomDataSource::getDataCallback(Call& caller) {
     } else if (dpdc != NULL) {
         dpdc->SetFrameID(0);
         dpdc->SetDataHash(this->datahash);
-        dpdc->SetParticleListCount(this->posData.Count()); // For the moment
+        dpdc->SetParticleListCount(static_cast<unsigned int>(this->posData.Count())); // For the moment
         for (int idx = 0; idx < static_cast<int>(this->posData.Count()); idx++) {
             dpdc->AccessParticles(idx).SetGlobalColour(this->dirdefCol[0], this->dirdefCol[1], this->dirdefCol[2]);
             dpdc->AccessParticles(idx).SetGlobalRadius(this->dirradiusSlot.Param<param::FloatParam>()->Value());
@@ -1820,9 +1820,9 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
 
         if (!fail) {
             int rawIdx = 0;
-            if ((rawIdx = typeData.IndexOf(static_cast<unsigned int>(t))) == vislib::Array<unsigned int>::INVALID_POS) {
+            if ((rawIdx = static_cast<int>(typeData.IndexOf(static_cast<unsigned int>(t)))) == static_cast<int>(vislib::Array<unsigned int>::INVALID_POS)) {
                 typeData.Append(static_cast<unsigned int>(t));
-                rawIdx = typeData.Count() - 1;
+                rawIdx = static_cast<int>(typeData.Count() - 1);
                 this->posData.Append(new vislib::RawStorage());
                 this->colData.Append(new vislib::RawStorage());
                 this->allDirData.Append(new vislib::RawStorage());

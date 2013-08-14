@@ -146,9 +146,8 @@ void cluster::CommChannelServer::SingleSendMessage(const vislib::net::AbstractSi
 /**
  * Answers the number of clients currently connected.
  */
-unsigned int cluster::CommChannelServer::ClientsCount()
-{
-	return this->clients.Count();
+unsigned int cluster::CommChannelServer::ClientsCount() {
+    return static_cast<unsigned int>(this->clients.Count());
 }
 
 /*
