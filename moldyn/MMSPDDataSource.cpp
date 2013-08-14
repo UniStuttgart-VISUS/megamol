@@ -67,7 +67,7 @@ bool moldyn::MMSPDDataSource::Frame::LoadFrame(
         vislib::sys::File *file, unsigned int idx, UINT64 size,
         const moldyn::MMSPDHeader& header, bool isBinary, bool isBigEndian) {
     this->frame = idx;
-    char *buf = new char[size];
+    char *buf = new char[static_cast<SIZE_T>(size)];
     try {
         if (file->Read(buf, size) != size) {
             throw vislib::Exception("Frame data truncated", __FILE__, __LINE__);
@@ -309,17 +309,18 @@ void moldyn::MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, co
     for (SIZE_T i = 0; i < typeCnt; i++) {
         typeData[i] = new vislib::RawStorageWriter(this->Data()[i].Data());
         typeData[i]->SetIncrement(vislib::math::Max<SIZE_T>(
-            (header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt)
-            / (2 * typeCnt), 1024 * 1024));
+            static_cast<SIZE_T>((header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt)
+            / (2 * typeCnt)),
+            1024 * 1024));
     }
     vislib::RawStorageWriter idxRecDat(this->IndexReconstructionData());
-    if (typeCnt > 1) idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(partCnt / 10, 10 * 1024));
+    if (typeCnt > 1) idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(static_cast<SIZE_T>(partCnt / 10), 10 * 1024));
     UINT32 irdLastType = static_cast<UINT32>(typeCnt);
     UINT64 irdLastCount;
 
     SIZE_T type = 0;
     for (UINT64 pi = 0; pi < partCnt; pi++) {
-        const vislib::sys::ASCIIFileBuffer::LineBuffer &line = txt.Line(1 + pi);
+        const vislib::sys::ASCIIFileBuffer::LineBuffer &line = txt.Line(static_cast<SIZE_T>(1 + pi));
         unsigned int off = 0;
         if (typeCnt > 1) {
             if (header.HasIDs()) {
@@ -378,12 +379,13 @@ void moldyn::MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, 
         typeData[i] = new vislib::RawStorageWriter(this->Data()[i].Data());
         valuesCount = vislib::math::Max(valuesCount, header.GetTypes()[i].GetFields().Count());
         typeData[i]->SetIncrement(vislib::math::Max<SIZE_T>(
-            (header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt)
-            / (2 * typeCnt), 1024 * 1024));
+            static_cast<SIZE_T>((header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt)
+            / (2 * typeCnt)),
+            1024 * 1024));
     }
     vislib::SmartPtr<float, vislib::ArrayAllocator<float> > values = new float[valuesCount];
     vislib::RawStorageWriter idxRecDat(this->IndexReconstructionData());
-    if (typeCnt > 1) idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(partCnt / 10, 10 * 1024));
+    if (typeCnt > 1) idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(static_cast<SIZE_T>(partCnt / 10), 10 * 1024));
     UINT32 irdLastType = static_cast<UINT32>(typeCnt);
     UINT64 irdLastCount;
 
@@ -454,12 +456,13 @@ void moldyn::MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size
         typeData[i] = new vislib::RawStorageWriter(this->Data()[i].Data());
         valuesCount = vislib::math::Max(valuesCount, header.GetTypes()[i].GetFields().Count());
         typeData[i]->SetIncrement(vislib::math::Max<SIZE_T>(
-            (header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt)
-            / (2 * typeCnt), 1024 * 1024));
+            static_cast<SIZE_T>((header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt)
+            / (2 * typeCnt)),
+            1024 * 1024));
     }
     vislib::SmartPtr<float, vislib::ArrayAllocator<float> > values = new float[valuesCount];
     vislib::RawStorageWriter idxRecDat(this->IndexReconstructionData());
-    if (typeCnt > 1) idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(partCnt / 10, 10 * 1024));
+    if (typeCnt > 1) idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(static_cast<SIZE_T>(partCnt / 10), 10 * 1024));
     UINT32 irdLastType = static_cast<UINT32>(typeCnt);
     UINT64 irdLastCount;
 
@@ -731,7 +734,7 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
 
     // sizes of a particle in binary files
     unsigned int *typeSizes = new unsigned int[that->dataHeader.GetTypes().Count()];
-    for (int i = 0; i < that->dataHeader.GetTypes().Count(); i++) {
+    for (int i = 0; i < static_cast<int>(that->dataHeader.GetTypes().Count()); i++) {
         typeSizes[i] = that->dataHeader.GetTypes()[i].GetDataSize();
         if (that->dataHeader.HasIDs()) typeSizes[i] += 8;
         if (that->dataHeader.GetTypes().Count() > 1) typeSizes[i] += 4;
@@ -790,7 +793,7 @@ DWORD moldyn::MMSPDDataSource::buildFrameIndex(void *userdata) {
 
             while (!f.IsEOF()) {
                 UINT64 bufPos = f.Tell();
-                SIZE_T bufSize = f.Read(buffer, MAX_BUFFER_SIZE);
+                SIZE_T bufSize = static_cast<SIZE_T>(f.Read(buffer, MAX_BUFFER_SIZE));
                 SIZE_T bufIdx = 0;
 
                 if (that->isBinaryFile) {
@@ -1568,7 +1571,7 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
                 }
             }
 
-            dataSizeInMem = pcnt * maxFields * sizeof(float);
+            dataSizeInMem = static_cast<SIZE_T>(pcnt * maxFields * sizeof(float));
 
         }
 

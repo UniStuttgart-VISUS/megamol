@@ -131,7 +131,7 @@ bool moldyn::SphereDataUnifier::getDataCallback(Call& caller) {
                     break;
                 }
 
-                datPos += deS * pCnt;
+                datPos += static_cast<SIZE_T>(deS * pCnt);
             }
 
             this->data.AssertSize(datPos);
@@ -171,9 +171,9 @@ bool moldyn::SphereDataUnifier::getDataCallback(Call& caller) {
                         SIZE_T vDs = vislib::math::Max<SIZE_T>(3 * sizeof(float), outP.GetVertexDataStride());
                         for (UINT64 pi = 0; pi < pCnt; pi++, vD += vDs) {
                             const float *vDf = reinterpret_cast<const float*>(vD);
-                            *this->data.AsAt<float>(datPos + pi * deS + 0 * sizeof(float)) = (vDf[0] + xOff) * scale;
-                            *this->data.AsAt<float>(datPos + pi * deS + 1 * sizeof(float)) = (vDf[1] + yOff) * scale;
-                            *this->data.AsAt<float>(datPos + pi * deS + 2 * sizeof(float)) = (vDf[2] + zOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 0 * sizeof(float))) = (vDf[0] + xOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 1 * sizeof(float))) = (vDf[1] + yOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 2 * sizeof(float))) = (vDf[2] + zOff) * scale;
                         }
                     }
                     break;
@@ -184,10 +184,10 @@ bool moldyn::SphereDataUnifier::getDataCallback(Call& caller) {
                         SIZE_T vDs = vislib::math::Max<SIZE_T>(4 * sizeof(float), outP.GetVertexDataStride());
                         for (UINT64 pi = 0; pi < pCnt; pi++, vD += vDs) {
                             const float *vDf = reinterpret_cast<const float*>(vD);
-                            *this->data.AsAt<float>(datPos + pi * deS + 0 * sizeof(float)) = (vDf[0] + xOff) * scale;
-                            *this->data.AsAt<float>(datPos + pi * deS + 1 * sizeof(float)) = (vDf[1] + yOff) * scale;
-                            *this->data.AsAt<float>(datPos + pi * deS + 2 * sizeof(float)) = (vDf[2] + zOff) * scale;
-                            *this->data.AsAt<float>(datPos + pi * deS + 3 * sizeof(float)) = vDf[3] * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 0 * sizeof(float))) = (vDf[0] + xOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 1 * sizeof(float))) = (vDf[1] + yOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 2 * sizeof(float))) = (vDf[2] + zOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 3 * sizeof(float))) = vDf[3] * scale;
                         }
                     }
                     break;
@@ -203,9 +203,9 @@ bool moldyn::SphereDataUnifier::getDataCallback(Call& caller) {
                         SIZE_T vDs = vislib::math::Max<SIZE_T>(3 * sizeof(float), outP.GetVertexDataStride());
                         for (UINT64 pi = 0; pi < pCnt; pi++, vD += vDs) {
                             const signed short *vDf = reinterpret_cast<const signed short*>(vD);
-                            *this->data.AsAt<float>(datPos + pi * deS + 0 * sizeof(float)) = (static_cast<float>(vDf[0]) + xOff) * scale;
-                            *this->data.AsAt<float>(datPos + pi * deS + 1 * sizeof(float)) = (static_cast<float>(vDf[1]) + yOff) * scale;
-                            *this->data.AsAt<float>(datPos + pi * deS + 2 * sizeof(float)) = (static_cast<float>(vDf[2]) + zOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 0 * sizeof(float))) = (static_cast<float>(vDf[0]) + xOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 1 * sizeof(float))) = (static_cast<float>(vDf[1]) + yOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 2 * sizeof(float))) = (static_cast<float>(vDf[2]) + zOff) * scale;
                         }
                     }
                     break;
@@ -214,7 +214,7 @@ bool moldyn::SphereDataUnifier::getDataCallback(Call& caller) {
                     break;
                 }
 
-                datPos += deS * pCnt;
+                datPos += static_cast<SIZE_T>(deS * pCnt);
             }
 
             ASSERT(datPos == this->data.GetSize());
@@ -276,7 +276,7 @@ bool moldyn::SphereDataUnifier::getDataCallback(Call& caller) {
                     ? MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ
                     : MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
                     this->data.AsAt<float>(datPos), 0);
-                datPos += deS * pCnt;
+                datPos += static_cast<SIZE_T>(deS * pCnt);
             }
         }
 
