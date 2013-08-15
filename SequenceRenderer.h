@@ -98,6 +98,11 @@ namespace protein {
          * @return true if preparation was successful, false otherwise
          */
         bool PrepareData( MolecularDataCall *mol, BindingSiteCall *bs);
+        
+        /**
+         * TODO
+         */
+        bool LoadTexture(vislib::StringA filename);
 
     private:
 
@@ -145,6 +150,8 @@ namespace protein {
         megamol::core::param::ParamSlot resCountPerRowParam;
         // the file name for the color table
         megamol::core::param::ParamSlot colorTableFileParam;
+        // parameter to turn the binding site legend/key on/off
+        megamol::core::param::ParamSlot toggleKeyParam;
 
         // data preparation flag
         bool dataPrepared;
@@ -172,9 +179,17 @@ namespace protein {
         vislib::Array<vislib::StringA> aminoAcidStrings;
         // the array of amino acid chain name and index
         vislib::Array<vislib::Array<vislib::StringA> > aminoAcidIndexStrings;
+        // the array of binding site names
+        vislib::Array<vislib::StringA> bindingSiteNames;
+        // the array of descriptons for the binding sites
+        vislib::Array<vislib::StringA> bindingSiteDescription;
         
         // the vertex buffer array for the tiles
         vislib::Array<float> vertices;
+        // the vertex buffer array for the chain tiles
+        vislib::Array<float> chainVertices;
+        // the color buffer array for the chain tiles
+        vislib::Array<float> chainColors;
         // the vertex buffer array for the binding site tiles
         vislib::Array<float> bsVertices;
         // the index array for the binding site tiles
@@ -185,6 +200,8 @@ namespace protein {
         vislib::Array<MolecularDataCall::SecStructure::ElementType> resSecStructType;
         // color table
         vislib::Array<vislib::math::Vector<float, 3> > colorTable;
+        
+        vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
     };
 
 } /* end namespace protein */

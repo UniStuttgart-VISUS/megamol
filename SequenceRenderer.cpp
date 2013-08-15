@@ -5,6 +5,7 @@
 #include "CoreInstance.h"
 #include "param/IntParam.h"
 #include "param/FilePathParam.h"
+#include "param/BoolParam.h"
 #include "utility/ColourParser.h"
 #include "vislib/Rectangle.h"
 #include "vislib/BufferedFile.h"
@@ -30,11 +31,13 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
         bindingSiteCallerSlot( "getBindingSites", "Connects the sequence diagram rendering with binding site storage." ),
         resCountPerRowParam( "ResiduesPerRow", "The number of residues per row" ),
         colorTableFileParam( "ColorTableFilename", "The filename of the color table."),
-        dataPrepared(false), atomCount(0), bindingSiteCount(0), resCount(0), resCols(0), resRows(0), rowHeight( 3.0f)
+        toggleKeyParam( "ToggleKeyDrawing", "Turns the drawing of the binding site key/legend on and off."),
+        dataPrepared(false), atomCount(0), bindingSiteCount(0), resCount(0), resCols(0), resRows(0), rowHeight( 3.0f), 
 #ifndef USE_SIMPLE_FONT
-        , theFont(FontInfo_Verdana) 
+        theFont(FontInfo_Verdana), 
 #endif
-        {
+        markerTextures(0)
+    {
 
     // molecular data caller slot
     this->dataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -53,7 +56,11 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
     this->colorTableFileParam.SetParameter(new param::FilePathParam( A2T( filename)));
     this->MakeSlotAvailable( &this->colorTableFileParam);
     Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
-
+    
+    // param slot for key toggling
+    this->toggleKeyParam.SetParameter( new param::BoolParam(true));
+    this->MakeSlotAvailable( &this->toggleKeyParam);
+    
 }
 
 /*
@@ -67,6 +74,13 @@ SequenceRenderer::~SequenceRenderer( void ) {
  * SequenceRenderer::create
  */
 bool SequenceRenderer::create() {
+    this->LoadTexture("stride-white.png");
+    this->LoadTexture("stride-coil.png");
+    this->LoadTexture("stride-sheet.png");
+    this->LoadTexture("stride-arrow.png");
+    this->LoadTexture("stride-helix-left.png");
+    this->LoadTexture("stride-helix.png");
+    this->LoadTexture("stride-helix-right.png");
 
     return true;
 }
@@ -146,35 +160,69 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
     }
 
     if( this->dataPrepared ) {
+        float eps = 0.01f;
         //draw tiles for structure
-        glBegin( GL_QUADS);
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_BLEND);
         for( unsigned int i = 0; i < this->resIndex.Count(); i++ ) {
-            if( this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_HELIX )
+            markerTextures[0]->Bind();
+            if( this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_HELIX ) {
                 glColor3f( 1.0f, 0.0f, 0.0f);
-            else if( this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_SHEET )
+                if( i > 0 && this->resSecStructType[i-1] != this->resSecStructType[i] ) {
+                    markerTextures[4]->Bind();
+                } else if( (i + 1) < this->resIndex.Count() && this->resSecStructType[i+1] != this->resSecStructType[i] ) {
+                    markerTextures[6]->Bind();
+                } else {
+                    markerTextures[5]->Bind();
+                }
+            } else if( this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_SHEET ) {
                 glColor3f( 0.0f, 0.0f, 1.0f);
-            else if( this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_TURN )
+                if( (i + 1) < this->resIndex.Count() && this->resSecStructType[i+1] != this->resSecStructType[i] ) {
+                    markerTextures[3]->Bind();
+                } else {
+                    markerTextures[2]->Bind();
+                }
+            } else if( this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_TURN ) {
                 glColor3f( 1.0f, 1.0f, 0.0f);
-            else
+            } else {
                 glColor3f( 0.5f, 0.5f, 0.5f);
+                markerTextures[1]->Bind();
+            }
+        glBegin( GL_QUADS);
+            glTexCoord2f( eps, eps);
             glVertex2f( this->vertices[2*i]       , -this->vertices[2*i+1]);
+            glTexCoord2f( eps, 1.0f - eps);
             glVertex2f( this->vertices[2*i]       , -this->vertices[2*i+1] - 1.0f);
+            glTexCoord2f( 1.0f - eps, 1.0f - eps);
             glVertex2f( this->vertices[2*i] + 1.0f, -this->vertices[2*i+1] - 1.0f);
+            glTexCoord2f( 1.0f - eps, eps);
             glVertex2f( this->vertices[2*i] + 1.0f, -this->vertices[2*i+1]);
-        }
         glEnd();
+        }
+        glDisable( GL_BLEND);
+        glDisable( GL_TEXTURE_2D);
         // draw tiles for binding sites
         glBegin( GL_QUADS);
         for( unsigned int i = 0; i < this->bsIndices.Count(); i++ ) {
-            glColor3fv( this->colorTable[this->bsIndices[i]].PeekComponents());
+            glColor3fv( this->colorTable[this->bsIndices[i] + mol->ChainCount()].PeekComponents());
             glVertex2f( this->bsVertices[2*i] + 0.1f, -this->bsVertices[2*i+1]);
             glVertex2f( this->bsVertices[2*i] + 0.1f, -this->bsVertices[2*i+1] - 0.4f);
             glVertex2f( this->bsVertices[2*i] + 0.9f, -this->bsVertices[2*i+1] - 0.4f);
             glVertex2f( this->bsVertices[2*i] + 0.9f, -this->bsVertices[2*i+1]);
         }
         glEnd();
+        // draw tiles for chains
+        glBegin( GL_QUADS);
+        for( unsigned int i = 0; i < this->chainVertices.Count() / 2; i++ ) {
+            glColor3fv( (&this->chainColors[i*3]));
+            glVertex2f( this->chainVertices[2*i]       , -this->chainVertices[2*i+1] - 0.2f);
+            glVertex2f( this->chainVertices[2*i]       , -this->chainVertices[2*i+1] - 0.3f);
+            glVertex2f( this->chainVertices[2*i] + 1.0f, -this->chainVertices[2*i+1] - 0.3f);
+            glVertex2f( this->chainVertices[2*i] + 1.0f, -this->chainVertices[2*i+1] - 0.2f);
+        }
+        glEnd();
     
-        // set test color (inverse background color)
+        // set text color (inverse background color)
         float bgColor[4];
         float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
         glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
@@ -191,12 +239,71 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                     theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight), 1.0f, -1.0f,
                         1.0f, true, this->aminoAcidStrings[i].Substring(j, 1), vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
                     // draw the chain name and amino acid index
-                    theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight + this->rowHeight - 0.5f), 1.0f, 0.5f,
-                        0.35f, true, this->aminoAcidIndexStrings[i][j], vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
+                    //theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight + this->rowHeight - 0.5f), 1.0f, 0.5f,
+                    theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight + 2.5f), 1.0f, 0.5f,
+                        0.35f, true, this->aminoAcidIndexStrings[i][j], vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
                 }
             }
         }
-                
+        
+        // draw legend / key
+        if( this->toggleKeyParam.Param<param::BoolParam>()->Value() ) {
+            glColor3fv( fgColor);
+            vislib::StringA tmpStr;
+            float wordlength;
+            float fontSize = 1.0f;
+            if( theFont.Initialise() ) {
+                // draw binding site legend
+                if( !this->bindingSiteNames.IsEmpty() ) {
+                    tmpStr = "Binding Sites: ";
+                    wordlength = theFont.LineWidth( fontSize, tmpStr);
+                    theFont.DrawString( static_cast<float>(this->resCols) + 1.0f,-1.0f, 
+                        wordlength, 1.0f,
+                        fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+                    for( unsigned int i = 0; i < this->bindingSiteNames.Count(); i++ ) {
+                        // draw the binding site names
+                        glColor3fv( this->colorTable[i + mol->ChainCount()].PeekComponents());
+                        theFont.DrawString( static_cast<float>(this->resCols) + 1.0f, -( static_cast<float>(i) * 2.0f + 2.0f), 
+                            wordlength, 1.0f,
+                            fontSize, true, this->bindingSiteNames[i], vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+                        theFont.DrawString( static_cast<float>(this->resCols) + 1.0f, -( static_cast<float>(i) * 2.0f + 3.0f), 
+                            wordlength, 1.0f,
+                            fontSize * 0.5f, true, this->bindingSiteDescription[i], vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+                    }
+                }
+                // draw diagram legend
+                glColor3fv( fgColor);
+                fontSize = 0.5f;
+                tmpStr = "STRIDE";
+                wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
+                theFont.DrawString( -wordlength,-1.0f, 
+                    wordlength, 1.0f,
+                    fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                tmpStr = "Residue";
+                wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
+                theFont.DrawString( -wordlength,-2.0f, 
+                    wordlength, 1.0f,
+                    fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                tmpStr = "PDB";
+                wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
+                theFont.DrawString( -wordlength,-2.5f, 
+                    wordlength, 0.5f,
+                    fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                tmpStr = "Chain";
+                wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
+                theFont.DrawString( -wordlength,-3.0f, 
+                    wordlength, 0.5f,
+                    fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                if( !this->bindingSiteNames.IsEmpty() ) {
+                    tmpStr = "Binding Sites";
+                    wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
+                    theFont.DrawString( -wordlength,-this->rowHeight, 
+                        wordlength, this->rowHeight - 3.0f,
+                        fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                }
+            }
+        }
+
     } // dataPrepared
     
     return true;
@@ -228,6 +335,10 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
     this->resCount = 0;
     this->vertices.Clear();
     this->vertices.AssertCapacity( mol->ResidueCount() * 2);
+    this->chainVertices.Clear();
+    this->chainVertices.AssertCapacity( mol->ResidueCount() * 2);
+    this->chainColors.Clear();
+    this->chainColors.AssertCapacity( mol->ResidueCount() * 3);
     this->bsVertices.Clear();
     this->bsVertices.AssertCapacity( mol->ResidueCount() * 2);
     this->bsIndices.Clear();
@@ -239,6 +350,17 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
     this->aminoAcidStrings.AssertCapacity( mol->ResidueCount() / this->resCols + 1);
     this->aminoAcidIndexStrings.Clear();
     this->aminoAcidIndexStrings.AssertCapacity( mol->ResidueCount() / this->resCols + 1);
+    this->bindingSiteDescription.Clear();
+    this->bindingSiteNames.Clear();
+    if( bs ) {
+        this->bindingSiteDescription.SetCount( bs->GetBindingSiteCount());
+        this->bindingSiteNames.AssertCapacity( bs->GetBindingSiteCount());
+        // copy binding site names
+        for( unsigned int i = 0; i < bs->GetBindingSiteCount(); i++ ) {
+            this->bindingSiteDescription[i].Clear();
+            this->bindingSiteNames.Add( bs->GetBindingSiteName( i));
+        }
+    }
     unsigned int currentRow = 0;
     unsigned int maxNumBindingSitesPerRes = 0;
 
@@ -255,20 +377,42 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
                     this->resSecStructType.Add( mol->SecondaryStructures()[firstStruct + sCnt].Type());
                     // compute the position of the residue icon
                     if( this->resCount == 0 ) {
+                        // structure vertices
                         this->vertices.Add( 0.0f);
                         this->vertices.Add( 0.0f);
                         this->aminoAcidStrings.Add("");
                         this->aminoAcidIndexStrings.Add(vislib::Array<vislib::StringA>());
+                        // chain tile vertices and colors
+                        this->chainVertices.Add( 0.0f);
+                        //this->chainVertices.Add( this->rowHeight - 0.5f);
+                        this->chainVertices.Add( 2.5f);
+                        this->chainColors.Add( this->colorTable[cCnt].X());
+                        this->chainColors.Add( this->colorTable[cCnt].Y());
+                        this->chainColors.Add( this->colorTable[cCnt].Z());
                     } else {
                         if( this->resCount % static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value()) != 0 ) {
+                            // structure vertices
                             this->vertices.Add( this->vertices[this->resCount * 2 - 2] + 1.0f);
                             this->vertices.Add( this->vertices[this->resCount * 2 - 1]);
+                            // chain tile vertices and colors
+                            this->chainVertices.Add( this->chainVertices[this->resCount * 2 - 2] + 1.0f);
+                            this->chainVertices.Add( this->chainVertices[this->resCount * 2 - 1]);
+                            this->chainColors.Add( this->colorTable[cCnt].X());
+                            this->chainColors.Add( this->colorTable[cCnt].Y());
+                            this->chainColors.Add( this->colorTable[cCnt].Z());
                         } else {
+                            // structure vertices
                             this->vertices.Add( 0.0f);
                             this->vertices.Add( this->vertices[this->resCount * 2 - 1] + this->rowHeight);
                             currentRow++;
                             this->aminoAcidStrings.Add("");
                             this->aminoAcidIndexStrings.Add(vislib::Array<vislib::StringA>());
+                            // chain tile vertices and colors
+                            this->chainVertices.Add( 0.0f);
+                            this->chainVertices.Add( this->chainVertices[this->resCount * 2 - 1] + this->rowHeight);
+                            this->chainColors.Add( this->colorTable[cCnt].X());
+                            this->chainColors.Add( this->colorTable[cCnt].Y());
+                            this->chainColors.Add( this->colorTable[cCnt].Z());
                         }
                     }
                     // store the amino acid name
@@ -290,8 +434,12 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
                                     mol->ResidueTypeNames()[mol->Residues()[this->resIndex.Last()]->Type()] == bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt) ) {
                                         //this->aminoAcidIndexStrings[currentRow].Last().Append(" *");
                                         this->bsVertices.Add( this->vertices[this->vertices.Count()-2]);
-                                        this->bsVertices.Add( this->vertices[this->vertices.Count()-1] + 2.0f + numBS * 0.5f);
+                                        this->bsVertices.Add( this->vertices[this->vertices.Count()-1] + 3.0f + numBS * 0.5f);
                                         this->bsIndices.Add( bsCnt);
+                                        if( !this->bindingSiteDescription[bsCnt].IsEmpty() ) {
+                                            this->bindingSiteDescription[bsCnt].Append( ", ");
+                                        }
+                                        this->bindingSiteDescription[bsCnt].Append( tmpStr);
                                         numBS++;
                                         maxNumBindingSitesPerRes = vislib::math::Max( maxNumBindingSitesPerRes, numBS);
                                 }
@@ -354,3 +502,44 @@ char SequenceRenderer::GetAminoAcidOneLetterCode( vislib::StringA resName ) {
     else return '?';
 }
 
+
+bool SequenceRenderer::LoadTexture(vislib::StringA filename) {
+    static vislib::graphics::BitmapImage img;
+    static sg::graphics::PngBitmapCodec pbc;
+    pbc.Image() = &img;
+    ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    void *buf = NULL;
+    SIZE_T size = 0;
+
+    if ((size = megamol::core::utility::ResourceWrapper::LoadResource(
+            this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
+        if (pbc.Load(buf, size)) {
+            img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
+            for (unsigned int i = 0; i < img.Width() * img.Height(); i++ ) {
+                BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
+                BYTE g = img.PeekDataAs<BYTE>()[i * 4 + 1];
+                BYTE b = img.PeekDataAs<BYTE>()[i * 4 + 2];
+                if (r + g + b > 0) {
+                    img.PeekDataAs<BYTE>()[i * 4 + 3] = 255;
+                } else {
+                    img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
+                }
+            }
+            markerTextures.Add( vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D>());
+            markerTextures.Last() = new vislib::graphics::gl::OpenGLTexture2D();
+            if (markerTextures.Last()->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
+                Log::DefaultLog.WriteError("could not load %s texture.", filename.PeekBuffer());
+                ARY_SAFE_DELETE(buf);
+                return false;
+            }
+            markerTextures.Last()->SetFilter(GL_LINEAR, GL_LINEAR);
+            ARY_SAFE_DELETE(buf);
+            return true;
+        } else {
+            Log::DefaultLog.WriteError("could not read %s texture.", filename.PeekBuffer());
+        }
+    } else {
+        Log::DefaultLog.WriteError("could not find %s texture.", filename.PeekBuffer());
+    }
+    return false;
+}
