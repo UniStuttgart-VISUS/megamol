@@ -87,8 +87,8 @@
     <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 5.0.props')">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.0.props" />
+  <ImportGroup Label="ExtensionSettings" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props')">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props" />
   </ImportGroup>
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'" Label="PropertySheets">
@@ -524,6 +524,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="CallVolumeData.cpp" />
     <ClCompile Include="CartoonDataSource.cpp" />
     <ClCompile Include="CCP4VolumeData.cpp" />
+    <ClCompile Include="CenterLineGenerator.cpp" />
     <ClCompile Include="CoarseGrainDataLoader.cpp" />
     <ClCompile Include="Color.cpp" />
     <ClCompile Include="CritPoints.cpp" />
@@ -665,6 +666,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CallVolumeData.h" />
     <ClInclude Include="CartoonDataSource.h" />
     <ClInclude Include="CCP4VolumeData.h" />
+    <ClInclude Include="CenterLineGenerator.h" />
     <ClInclude Include="CoarseGrainDataLoader.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="CritPoints.h" />
@@ -929,8 +931,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </CudaCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 5.0.targets')">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.0.targets" />
+  <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets')">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets" />
   </ImportGroup>
   <ImportGroup Label="ExtensionTargets" />
 </Project>

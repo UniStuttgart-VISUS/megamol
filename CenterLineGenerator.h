@@ -45,12 +45,51 @@ public:
 		Nodes nodes;
 		bool visited;
 
-		void getEdges(Nodes edges) {
+		void getEdges(Edges edges) {
 			for(auto it : nodes) {
 				edges.insert(it->edges.begin(), it->edges.end());
 			}
 		}
 	};
+	
+	struct CenterLineNode;
+	struct CenterLineEdge;
+	typedef std::set<CenterLineEdge*> CenterLineEdges;
+	typedef std::set<CenterLineNode*> CenterLineNodes;
+
+	struct CenterLineNode
+	{
+		CenterLineNode()
+			: p()
+			, minimumDistance(0.0f)
+		{}
+
+		CenterLineNode(Vector position, float minDistance)
+			: p(position)
+			, minimumDistance(minDistance)
+		{}
+
+		Vector p;
+		float minimumDistance;
+
+		CenterLineEdges edges;
+	};
+
+	struct CenterLineEdge
+	{
+		CenterLineEdge()
+		{}
+
+		CenterLineNodes nodes;
+	};
+
+	
+	struct Section
+	{
+		Edges edges;
+		CenterLineNode centerLineNode;
+	};
+
 
 	CenterLineGenerator(void);
 	virtual ~CenterLineGenerator(void);
@@ -65,18 +104,20 @@ public:
 
 private:
 
-	Vector Collapse(Nodes &selection);
+	CenterLineNode Collapse(Nodes &selection);
 
 	Edge *findEdgeNeighborInSet(Edge *edge, Edges &set, bool removeFromSet);
 
 	Node *nodeSharedByEdges(Edge *e1, Edge *e2);
 
-	void NextSection(Edges &current, Edges &next, Nodes &visited);
+	void NextSection(Edges &current, Section &next, Nodes &visited);
 	void FindBranch(Edges &current, std::vector<Edges*> &branches);
 
 	void NodesFromEdges(Edges &edges, Nodes &nodes);
 
 	Edges edges;
 	Nodes nodes;
+
+	//std::vector<Edges*> &openLoops;
 };
 

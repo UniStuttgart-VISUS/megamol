@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "CenterLineGenerator.h"
 
-
 CenterLineGenerator::CenterLineGenerator(void)
 {
 }
@@ -31,17 +30,22 @@ void CenterLineGenerator::NodesFromEdges(Edges &edges, Nodes &nodes)
 	}
 }
 
-CenterLineGenerator::Vector CenterLineGenerator::Collapse(Nodes &selection)
+CenterLineGenerator::CenterLineNode CenterLineGenerator::Collapse(Nodes &selection)
 {
 	CenterLineGenerator::Vector v;
 
 	for(auto it : selection)
 		v += it->p;
 
-	return v / selection.size();
+	float minimumDistance = 1e100;
+	for(auto it : selection)
+		minimumDistance = vislib::math::Min(minimumDistance, (it->p - v).Length());
+
+	CenterLineNode node(v / selection.size(), minimumDistance);
+	return node;
 }
 
-void CenterLineGenerator::NextSection(Edges &current, Edges &next, Nodes &visited)
+void CenterLineGenerator::NextSection(Edges &current, Section &next, Nodes &visited)
 {
 /*
 	1. Input:
@@ -82,7 +86,7 @@ void CenterLineGenerator::NextSection(Edges &current, Edges &next, Nodes &visite
 			}
 
 			if( !found ) {
-				next.insert( edge );
+				next.edges.insert( edge );
 
 				// 5)
 				visited.insert(edge->nodes.begin(), edge->nodes.end());
@@ -146,6 +150,10 @@ void CenterLineGenerator::FindBranch(Edges &current, std::vector<Edges*> &branch
 */
 	// 1)
 	bool continueOnStep6 = false;
+
+	// if current is empty and the first edge has not been reached, it is a open loop:
+	// save for later
+	// check every edge if it connects to one of the open loops...
 
 	while( !current.empty() ) {
 		Edges *S0 = new Edges();
@@ -218,6 +226,9 @@ void CenterLineGenerator::CenterLine(Edges &selection, Edges &centerLineEdges, N
 	Edges visited( initial );
 	Nodes visitedNodes;
 	this->NodesFromEdges( initial, visitedNodes );
+
+	bool firstRun = true;
+	CenterLineNode centerLineNode;
 	
 	while( !branches.empty() ) {
 		Edges *current = branches.front();
@@ -226,10 +237,18 @@ void CenterLineGenerator::CenterLine(Edges &selection, Edges &centerLineEdges, N
 		// 2)
 		Nodes currentNodes;
 		this->NodesFromEdges( *current, currentNodes );
-		Vector c0 = Collapse( currentNodes );
+		CenterLineNode newCenterLineNode = Collapse( currentNodes );
+
+		if( firstRun ) {
+			firstRun = false;
+		} else {
+		}
+		
+		centerLineNode = newCenterLineNode;
 
 		// 3)
-		Edges next;
+		Section next;
+		next.centerLineNode = newCenterLineNode;
 		NextSection( *current, next, visitedNodes);
 
 		// 4)

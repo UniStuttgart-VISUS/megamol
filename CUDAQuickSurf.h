@@ -20,6 +20,8 @@
 #ifndef CUDAQUICKSURF_H
 #define CUDAQUICKSURF_H
 
+#ifdef WITH_CUDA
+
 #include <vector_types.h>
 
 // Write file for Daniel Kauker (puxel)
@@ -91,6 +93,8 @@ struct Vertex
 
   ~CUDAQuickSurf(void);
 };
+
+#endif // WITH_CUDA
 
 #endif
 
