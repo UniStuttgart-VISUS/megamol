@@ -65,9 +65,9 @@ void vislib::net::ib::IbRdmaCommClientChannel::Close(void) {
             "code %d when closing the channel.\n", errno);
     }
 
-    if (this->id != NULL) {
-        ::rdma_destroy_ep(this->id);
-        this->id = NULL;
+    if (this->mrRecv != NULL) {
+        ::rdma_dereg_mr(this->mrRecv);
+        this->mrRecv = NULL;
     }
 
     if (this->mrSend != NULL) {

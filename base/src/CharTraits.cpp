@@ -6,6 +6,11 @@
 
 #include "vislib/CharTraits.h"
 
+#include <cstdlib>
+#include <wchar.h>
+
+#include "vislib/StackTrace.h"
+
 
 /*
  * vislib::CharTraitsA<char>::ParseBool
@@ -99,6 +104,58 @@ int vislib::CharTraits<char>::ParseInt(const Char *str) {
     }
     
     return retval;
+}
+
+
+/*
+ * vislib::CharTraits<char>::ParseInt64
+ */
+INT64 vislib::CharTraits<char>::ParseInt64(const Char *str) {
+    VLAUTOSTACKTRACE;
+    if (str == NULL) {
+        throw IllegalParamException("str", __FILE__, __LINE__);
+    }
+    Char *end = NULL;
+    UINT64 retval = 0;
+
+#ifdef _WIN32
+    retval = ::_strtoi64(str, &end, 10);
+#else /* _WIN32 */
+    retval = static_cast<INT64>(::strtoll(str, &end, 10));
+#endif /* _WIN32 */
+
+    if (str < end) {
+        return retval;
+    } else {
+        throw FormatException("Cannot convert String to 64 bit integer",
+            __FILE__, __LINE__);
+    }
+}
+
+
+/*
+ * vislib::CharTraits<char>::ParseUInt64
+ */
+UINT64 vislib::CharTraits<char>::ParseUInt64(const Char *str) {
+    VLAUTOSTACKTRACE;
+    if (str == NULL) {
+        throw IllegalParamException("str", __FILE__, __LINE__);
+    }
+    Char *end = NULL;
+    UINT64 retval = 0;
+
+#ifdef _WIN32
+    retval = ::_strtoui64(str, &end, 10);
+#else /* _WIN32 */
+    retval = static_cast<UINT64>(::strtoull(str, &end, 10));
+#endif /* _WIN32 */
+
+    if (str < end) {
+        return retval;
+    } else {
+        throw FormatException("Cannot convert String to 64 bit integer",
+            __FILE__, __LINE__);
+    }
 }
 
 
@@ -315,6 +372,58 @@ int vislib::CharTraits<WCHAR>::ParseInt(const Char *str) {
     }
     
     return retval;
+}
+
+
+/*
+ * vislib::CharTraits<char>::ParseInt64
+ */
+INT64 vislib::CharTraits<WCHAR>::ParseInt64(const Char *str) {
+    VLAUTOSTACKTRACE;
+    if (str == NULL) {
+        throw IllegalParamException("str", __FILE__, __LINE__);
+    }
+    Char *end = NULL;
+    UINT64 retval = 0;
+
+#ifdef _WIN32
+    retval = ::_wcstoi64(str, &end, 10);
+#else /* _WIN32 */
+    retval = static_cast<INT64>(::wcstoll(str, &end, 10));
+#endif /* _WIN32 */
+
+    if (str < end) {
+        return retval;
+    } else {
+        throw FormatException("Cannot convert String to 64 bit integer",
+            __FILE__, __LINE__);
+    }
+}
+
+
+/*
+ * vislib::CharTraits<char>::ParseUInt64
+ */
+UINT64 vislib::CharTraits<WCHAR>::ParseUInt64(const Char *str) {
+    VLAUTOSTACKTRACE;
+    if (str == NULL) {
+        throw IllegalParamException("str", __FILE__, __LINE__);
+    }
+    Char *end = NULL;
+    UINT64 retval = 0;
+
+#ifdef _WIN32
+    retval = ::_wcstoui64(str, &end, 10);
+#else /* _WIN32 */
+    retval = static_cast<UINT64>(::wcstoull(str, &end, 10));
+#endif /* _WIN32 */
+
+    if (str < end) {
+        return retval;
+    } else {
+        throw FormatException("Cannot convert String to 64 bit integer",
+            __FILE__, __LINE__);
+    }
 }
 
 
