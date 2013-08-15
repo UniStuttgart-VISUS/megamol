@@ -7,6 +7,8 @@
 #ifndef MEGAMOLPROTEIN_VOLUMEMESHRENDERER_CUH_INCLUDED
 #define MEGAMOLPROTEIN_VOLUMEMESHRENDERER_CUH_INCLUDED
 
+#ifdef WITH_CUDA
+
 #include <cuda.h>
 #include <cuda_runtime.h>
 
@@ -141,5 +143,7 @@ cudaError WritePrevTetraLabel( int2* labelPair, uint* cubeStatesOld, uint* cubeO
 
 extern "C"
 cudaError SortPrevTetraLabel( int2* labelPair, uint tetrahedronCount, int &labelCount);
+
+#endif // WITH_CUDA
 
 #endif // MEGAMOLPROTEIN_VOLUMEMESHRENDERER_CUH_INCLUDED
