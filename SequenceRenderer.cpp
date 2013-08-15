@@ -184,7 +184,8 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                 }
             } else if( this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_TURN ) {
                 glColor3f( 1.0f, 1.0f, 0.0f);
-            } else {
+                markerTextures[1]->Bind();
+            } else { // TYPE_COIL
                 glColor3f( 0.5f, 0.5f, 0.5f);
                 markerTextures[1]->Bind();
             }
