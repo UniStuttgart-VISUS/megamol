@@ -159,6 +159,30 @@ namespace protein {
             this->bindingSiteNames = nPtr;
         }
 
+        /**
+         * Get the description of a binding site.
+         *
+         * @param i The index of the residue.
+         * @return Pointer to the array of binding site descriptions.
+         */
+        inline vislib::StringA GetBindingSiteDescription( unsigned int i) const {
+            if( !this->bindingSiteDescriptions )
+                return "";
+            else if( this->bindingSiteDescriptions->Count() <= i )
+                return "";
+            else
+                return (this->bindingSiteDescriptions->operator[](i));
+        }
+
+        /**
+         * Set the pointer to the descriptions of a binding sites.
+         *
+         * @param nPtr The pointer.
+         */
+        inline void SetBindingSiteDescriptions( vislib::Array<vislib::StringA> *nPtr) {
+            this->bindingSiteDescriptions = nPtr;
+        }
+
         BindingSiteCall(void);
         virtual ~BindingSiteCall(void);
 
@@ -169,6 +193,8 @@ namespace protein {
         vislib::Array<vislib::Array<vislib::StringA> > *bindingSiteResNames;
         /** The binding site name */
         vislib::Array<vislib::StringA> *bindingSiteNames;
+        /** The binding site name */
+        vislib::Array<vislib::StringA> *bindingSiteDescriptions;
     };
 
     /** Description class typedef */

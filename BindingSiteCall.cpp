@@ -11,7 +11,8 @@ const unsigned int BindingSiteCall::CallForGetData = 0;
 
 
 BindingSiteCall::BindingSiteCall(void) : megamol::core::Call(),
-        bindingSites(NULL), bindingSiteResNames(NULL), bindingSiteNames(NULL) {
+        bindingSites(NULL), bindingSiteResNames(NULL), bindingSiteNames(NULL),
+        bindingSiteDescriptions(NULL) {
 }
 
 
@@ -19,4 +20,5 @@ BindingSiteCall::~BindingSiteCall(void) {
     this->bindingSites = NULL;
     this->bindingSiteResNames = NULL;
     this->bindingSiteNames = NULL;
+    this->bindingSiteDescriptions = NULL;
 }

@@ -71,6 +71,7 @@ bool BindingSiteDataSource::getData( Call& call) {
     } else {
         //site->SetDataHash( this->datahash);
         site->SetBindingSiteNames( &this->bindingSiteNames);
+        site->SetBindingSiteDescriptions( &this->bindingSiteDescription);
         site->SetBindingSiteResNames( &this->bindingSiteResNames);
         site->SetBindingSite( &this->bindingSites);
         return true;
@@ -90,9 +91,12 @@ void BindingSiteDataSource::loadPDBFile( const vislib::TString& filename) {
     unsigned int resId;
     vislib::sys::ASCIIFileBuffer file;
     vislib::Array<vislib::StringA> bsEntries;
-    SIZE_T bsEntriesCapacity = 100;
-    bsEntries.AssertCapacity( bsEntriesCapacity);
-    bsEntries.SetCapacityIncrement( bsEntriesCapacity);
+    vislib::Array<vislib::StringA> remarkEntries;
+    SIZE_T entriesCapacity = 100;
+    bsEntries.AssertCapacity( entriesCapacity);
+    bsEntries.SetCapacityIncrement( entriesCapacity);
+    remarkEntries.AssertCapacity( entriesCapacity);
+    remarkEntries.SetCapacityIncrement( entriesCapacity);
 
     // reset data
     for( i = 0; i < this->bindingSites.Count(); i++ ) {
@@ -121,6 +125,15 @@ void BindingSiteDataSource::loadPDBFile( const vislib::TString& filename) {
                 // add site entry
                 bsEntries.Add( line);
             }
+            // store all remark 800 entries
+            if( line.StartsWith( "REMARK 800") ) {
+                line = line.Substring( 10);
+                line.TrimSpaces();
+                // add remark entry
+                if( !line.IsEmpty() ) {
+                    remarkEntries.Add( line);
+                }
+            }
             // next line
             lineCnt++;
         }
@@ -130,6 +143,7 @@ void BindingSiteDataSource::loadPDBFile( const vislib::TString& filename) {
             // write binding site name (check if this is the first entry)
             if( this->bindingSiteNames.IsEmpty() ) {
                 this->bindingSiteNames.Add( bsEntries[i].Substring( 11, 4));
+                this->bindingSiteNames.Last().TrimSpaces();
                 this->bindingSites.Add( vislib::Array<vislib::Pair<char, unsigned int> >(10, 10));
                 this->bindingSiteResNames.Add( vislib::Array<vislib::StringA>(10, 10));
                 bsIdx = 0;
@@ -140,6 +154,7 @@ void BindingSiteDataSource::loadPDBFile( const vislib::TString& filename) {
                 seqNumString.TrimSpaces();
                 if( atoi( seqNumString) == 1 ) {
                     this->bindingSiteNames.Add( bsEntries[i].Substring( 11, 4));
+                    this->bindingSiteNames.Last().TrimSpaces();
                     this->bindingSites.Add( vislib::Array<vislib::Pair<char, unsigned int> >(10, 10));
                     this->bindingSiteResNames.Add( vislib::Array<vislib::StringA>(10, 10));
                     bsIdx++;
@@ -172,7 +187,35 @@ void BindingSiteDataSource::loadPDBFile( const vislib::TString& filename) {
                 cnt++;
             }
         }
+        // get binding site descriptons
+        this->bindingSiteDescription.SetCount( this->bindingSiteNames.Count());
+        for( unsigned int i = 0; i < this->bindingSiteNames.Count(); i++ ) {
+            this->bindingSiteDescription[i] = this->ExtractBindingSiteDescripton( this->bindingSiteNames[i], remarkEntries);
+        }
+
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Bindings Site count: %i", bindingSiteNames.Count() ); // DEBUG
     }
 
+}
+
+
+/*
+ *
+ */
+vislib::StringA BindingSiteDataSource::ExtractBindingSiteDescripton( vislib::StringA bsName, vislib::Array<vislib::StringA> remarkArray) {
+    vislib::StringA retStr("");
+    for( unsigned int i = 0; i < remarkArray.Count(); i++) {
+        // search for binding site name
+        if( remarkArray[i].EndsWith( bsName) ) {
+            if( (i + 2) < remarkArray.Count() && remarkArray[i+2].StartsWith("SITE_DESCRIPTION:") ) {
+                retStr = remarkArray[i+2].Substring( 17);
+                retStr.TrimSpaces();
+                remarkArray.RemoveAt(i);
+                remarkArray.RemoveAt(i);
+                remarkArray.RemoveAt(i);
+                return retStr;  
+            }
+        }
+    }
+    return retStr;
 }

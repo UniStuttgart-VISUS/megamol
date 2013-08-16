@@ -35,7 +35,7 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
         dataPrepared(false), atomCount(0), bindingSiteCount(0), resCount(0), resCols(0), resRows(0), rowHeight( 3.0f), 
 #ifndef USE_SIMPLE_FONT
         theFont(FontInfo_Verdana), 
-#endif
+#endif // USE_SIMPLE_FONT
         markerTextures(0)
     {
 
@@ -276,6 +276,7 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                         theFont.DrawString( static_cast<float>(this->resCols) + 1.0f, -( static_cast<float>(i) * 2.0f + 2.0f), 
                             wordlength, 1.0f,
                             fontSize, true, this->bindingSiteNames[i], vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+                        wordlength = theFont.LineWidth( fontSize, this->bindingSiteDescription[i]);
                         theFont.DrawString( static_cast<float>(this->resCols) + 1.0f, -( static_cast<float>(i) * 2.0f + 3.0f), 
                             wordlength, 1.0f,
                             fontSize * 0.5f, true, this->bindingSiteDescription[i], vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
@@ -469,6 +470,12 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
         this->chainSeparatorVertices.Add( this->vertices[this->vertices.Count()-2] + 1.0f);
         this->chainSeparatorVertices.Add( -(this->chainVertices[this->chainVertices.Count()-1] + 0.5f));
     } // chains
+    
+    // loop over all binding sites and add binding site descriptions
+    for( unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++ ) {
+        this->bindingSiteDescription[bsCnt].Prepend( "\n");
+        this->bindingSiteDescription[bsCnt].Prepend( bs->GetBindingSiteDescription( bsCnt));
+    }
 
     this->rowHeight = 3.0f + maxNumBindingSitesPerRes * 0.5f;
     
