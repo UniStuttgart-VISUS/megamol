@@ -190,6 +190,8 @@ namespace protein {
         vislib::Array<float> chainVertices;
         // the color buffer array for the chain tiles
         vislib::Array<float> chainColors;
+        // the vertex buffer array for the chain separator lines
+        vislib::Array<float> chainSeparatorVertices;
         // the vertex buffer array for the binding site tiles
         vislib::Array<float> bsVertices;
         // the index array for the binding site tiles

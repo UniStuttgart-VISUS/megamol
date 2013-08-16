@@ -79,7 +79,7 @@ bool SequenceRenderer::create() {
     this->LoadTexture("stride-sheet.png");
     this->LoadTexture("stride-arrow.png");
     this->LoadTexture("stride-helix-left.png");
-    this->LoadTexture("stride-helix.png");
+    this->LoadTexture("stride-helix2.png");
     this->LoadTexture("stride-helix-right.png");
 
     return true;
@@ -158,9 +158,17 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
         Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
         this->colorTableFileParam.ResetDirty();
     }
+    
+    // get the text color (inverse background color)
+    float bgColor[4];
+    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
+    glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
+    for( unsigned int i = 0; i < 4; i++ ) {
+        fgColor[i] -= bgColor[i];
+    }
 
     if( this->dataPrepared ) {
-        float eps = 0.01f;
+        const float eps = 0.0f;
         //draw tiles for structure
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
@@ -189,16 +197,18 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                 glColor3f( 0.5f, 0.5f, 0.5f);
                 markerTextures[1]->Bind();
             }
-        glBegin( GL_QUADS);
-            glTexCoord2f( eps, eps);
-            glVertex2f( this->vertices[2*i]       , -this->vertices[2*i+1]);
-            glTexCoord2f( eps, 1.0f - eps);
-            glVertex2f( this->vertices[2*i]       , -this->vertices[2*i+1] - 1.0f);
-            glTexCoord2f( 1.0f - eps, 1.0f - eps);
-            glVertex2f( this->vertices[2*i] + 1.0f, -this->vertices[2*i+1] - 1.0f);
-            glTexCoord2f( 1.0f - eps, eps);
-            glVertex2f( this->vertices[2*i] + 1.0f, -this->vertices[2*i+1]);
-        glEnd();
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+            glBegin( GL_QUADS);
+                glTexCoord2f( eps, eps);
+                glVertex2f( this->vertices[2*i]       , -this->vertices[2*i+1]);
+                glTexCoord2f( eps, 1.0f - eps);
+                glVertex2f( this->vertices[2*i]       , -this->vertices[2*i+1] - 1.0f);
+                glTexCoord2f( 1.0f - eps, 1.0f - eps);
+                glVertex2f( this->vertices[2*i] + 1.0f, -this->vertices[2*i+1] - 1.0f);
+                glTexCoord2f( 1.0f - eps, eps);
+                glVertex2f( this->vertices[2*i] + 1.0f, -this->vertices[2*i+1]);
+            glEnd();
         }
         glDisable( GL_BLEND);
         glDisable( GL_TEXTURE_2D);
@@ -222,15 +232,14 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
             glVertex2f( this->chainVertices[2*i] + 1.0f, -this->chainVertices[2*i+1] - 0.2f);
         }
         glEnd();
-    
-        // set text color (inverse background color)
-        float bgColor[4];
-        float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
-        glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
-        for( unsigned int i = 0; i < 4; i++ ) {
-            fgColor[i] -= bgColor[i];
-        }
         
+        // draw chain separators
+        glColor3fv( fgColor);
+        glEnable( GL_VERTEX_ARRAY);
+        glVertexPointer( 2, GL_FLOAT, 0, this->chainSeparatorVertices.PeekElements());
+        glDrawArrays( GL_LINES, 0, this->chainSeparatorVertices.Count() / 2 - 2);
+        glDisable( GL_VERTEX_ARRAY);
+
         // labeling
         glColor3fv( fgColor);
         if( theFont.Initialise() ) {
@@ -338,6 +347,8 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
     this->vertices.AssertCapacity( mol->ResidueCount() * 2);
     this->chainVertices.Clear();
     this->chainVertices.AssertCapacity( mol->ResidueCount() * 2);
+    this->chainSeparatorVertices.Clear();
+    this->chainSeparatorVertices.AssertCapacity( mol->ChainCount() * 4);
     this->chainColors.Clear();
     this->chainColors.AssertCapacity( mol->ResidueCount() * 3);
     this->bsVertices.Clear();
@@ -452,6 +463,11 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
                 } // residues
             } // secondary structures
         } // molecules
+        // add chain separator vertices
+        this->chainSeparatorVertices.Add( this->vertices[this->vertices.Count()-2] + 1.0f);
+        this->chainSeparatorVertices.Add( -this->vertices[this->vertices.Count()-1]);
+        this->chainSeparatorVertices.Add( this->vertices[this->vertices.Count()-2] + 1.0f);
+        this->chainSeparatorVertices.Add( -(this->chainVertices[this->chainVertices.Count()-1] + 0.5f));
     } // chains
 
     this->rowHeight = 3.0f + maxNumBindingSitesPerRes * 0.5f;
