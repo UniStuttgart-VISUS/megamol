@@ -90,6 +90,11 @@ namespace protein {
          */
         void loadPDBFile( const vislib::TString &filename);
 
+        /**
+         * TODO
+         */
+        vislib::StringA ExtractBindingSiteDescripton( vislib::StringA bsName, vislib::Array<vislib::StringA> remarkArray);
+
         /** The data callee slot */
         core::CalleeSlot dataOutSlot;
 
@@ -102,7 +107,8 @@ namespace protein {
         vislib::Array<vislib::Array<vislib::StringA> > bindingSiteResNames;
         /** The binding site name */
         vislib::Array<vislib::StringA> bindingSiteNames;
-
+        /** The binding site description */
+        vislib::Array<vislib::StringA> bindingSiteDescription;
     };
 
 } /* end namespace protein */
