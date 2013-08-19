@@ -14,6 +14,11 @@ $incpath =~ s/\/[^\/]+$//;
 push @INC, "$incpath/configperl";
 require configperl;
 
+my $fullauto = 0;
+if ((grep {$_ eq "fullauto"} @ARGV) || (defined $ENV{'CONFIGPERL_FULLAUTO'})) {
+    $fullauto = 1;
+}
+
 my ($a, $b, $c);
 my @pps = ();
 my @fps = ();
@@ -56,7 +61,7 @@ $b = FlagParameter->new();
     $b->id("withTweakbar");
     $b->description("Enable the use of the AntTweakBar library");
     $b->placeholder("%withTweakbar%");
-    $b->value(0);
+    $b->value(1);
     push @fps, $b;
 $a = PathParameter->new();
     $a->id("tweakbarpath");
@@ -90,5 +95,5 @@ $c = ConfigFilePair->new();
     $c->outFile("ExtLibs.mk");
     push @cfps, $c;
 
-VISUS::configperl::Configure("MegaMol(TM) Console Configuration for Linux", ".megamol.console.lin.cache", \@pps, \@fps, \@cfps, \@sps);
+VISUS::configperl::Configure("MegaMol(TM) Console Configuration for Linux", ".megamol.console.lin.cache", \@pps, \@fps, \@cfps, \@sps, $fullauto);
 
