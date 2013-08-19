@@ -54,7 +54,6 @@
 #include "CCP4VolumeData.h"
 #include "CoarseGrainDataLoader.h"
 #include "FrodockLoader.h"
-#include "CartoonDataSource.h"
 #include "XYZLoader.h"
 #include "Filter.h"
 #include "SolventDataGenerator.h"
@@ -161,48 +160,47 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case 9: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeSESRenderer>();
         case 10: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCartoonRenderer>();
         case 11: return new megamol::core::ModuleAutoDescription<megamol::protein::FrodockLoader>();
-        case 12: return new megamol::core::ModuleAutoDescription<megamol::protein::CartoonDataSource>();
-        case 13: return new megamol::core::ModuleAutoDescription<megamol::protein::VolumeSliceRenderer>();
-        case 14: return new megamol::core::ModuleAutoDescription<megamol::protein::Diagram2DRenderer>();
-        case 15: return new megamol::core::ModuleAutoDescription<megamol::protein::XYZLoader>();
-        case 16: return new megamol::core::ModuleAutoDescription<megamol::protein::ElectrostaticsRenderer>();
-        case 17: return new megamol::core::ModuleAutoDescription<megamol::protein::SolventVolumeRenderer>();
-        case 18: return new megamol::core::ModuleAutoDescription<megamol::protein::Filter>();
-        case 19: return new megamol::core::ModuleAutoDescription<megamol::protein::SolventDataGenerator>();
-        case 20: return new megamol::core::ModuleAutoDescription<megamol::protein::View3DSpaceMouse>();
-        case 21: return new megamol::core::ModuleAutoDescription<megamol::protein::GROLoader>();
-        case 22: return new megamol::core::ModuleAutoDescription<megamol::protein::SSAORendererDeferred>();
-        case 23: return new megamol::core::ModuleAutoDescription<megamol::protein::ToonRendererDeferred>();
-        case 24: return new megamol::core::ModuleAutoDescription<megamol::protein::DofRendererDeferred>();
-        case 25: return new megamol::core::ModuleAutoDescription<megamol::protein::SphereRendererMouse>();
-        case 26: return new megamol::core::ModuleAutoDescription<megamol::protein::View3DMouse>();
-        case 27: return new megamol::core::ModuleAutoDescription<megamol::protein::GLSLVolumeRenderer>();
-        case 28: return new megamol::core::ModuleAutoDescription<megamol::protein::DiagramRenderer>();
-        case 29: return new megamol::core::ModuleAutoDescription<megamol::protein::SplitMergeRenderer>();
-        case 30: return new megamol::core::ModuleAutoDescription<megamol::protein::IntSelection>();
-        case 31: return new megamol::core::ModuleAutoDescription<megamol::protein::CrystalStructureDataSource>();
+        case 12: return new megamol::core::ModuleAutoDescription<megamol::protein::VolumeSliceRenderer>();
+        case 13: return new megamol::core::ModuleAutoDescription<megamol::protein::Diagram2DRenderer>();
+        case 14: return new megamol::core::ModuleAutoDescription<megamol::protein::XYZLoader>();
+        case 15: return new megamol::core::ModuleAutoDescription<megamol::protein::ElectrostaticsRenderer>();
+        case 16: return new megamol::core::ModuleAutoDescription<megamol::protein::SolventVolumeRenderer>();
+        case 17: return new megamol::core::ModuleAutoDescription<megamol::protein::Filter>();
+        case 18: return new megamol::core::ModuleAutoDescription<megamol::protein::SolventDataGenerator>();
+        case 19: return new megamol::core::ModuleAutoDescription<megamol::protein::View3DSpaceMouse>();
+        case 20: return new megamol::core::ModuleAutoDescription<megamol::protein::GROLoader>();
+        case 21: return new megamol::core::ModuleAutoDescription<megamol::protein::SSAORendererDeferred>();
+        case 22: return new megamol::core::ModuleAutoDescription<megamol::protein::ToonRendererDeferred>();
+        case 23: return new megamol::core::ModuleAutoDescription<megamol::protein::DofRendererDeferred>();
+        case 24: return new megamol::core::ModuleAutoDescription<megamol::protein::SphereRendererMouse>();
+        case 25: return new megamol::core::ModuleAutoDescription<megamol::protein::View3DMouse>();
+        case 26: return new megamol::core::ModuleAutoDescription<megamol::protein::GLSLVolumeRenderer>();
+        case 27: return new megamol::core::ModuleAutoDescription<megamol::protein::DiagramRenderer>();
+        case 28: return new megamol::core::ModuleAutoDescription<megamol::protein::SplitMergeRenderer>();
+        case 29: return new megamol::core::ModuleAutoDescription<megamol::protein::IntSelection>();
+        case 30: return new megamol::core::ModuleAutoDescription<megamol::protein::CrystalStructureDataSource>();
 #ifdef WITH_CUDA
-        case 32: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCudaSESRenderer>();
-        case 33: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCBCudaRenderer>();
-        case 34: return new megamol::core::ModuleAutoDescription<megamol::protein::QuickSurfRenderer>();
-        case 35: return new megamol::core::ModuleAutoDescription<megamol::protein::QuickSurfRenderer2>();
-        case 36: return new megamol::core::ModuleAutoDescription<megamol::protein::QuickSurfMTRenderer>();
-        case 37: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeVolumeCudaRenderer>();
-        case 38: return new megamol::core::ModuleAutoDescription<megamol::protein::VolumeMeshRenderer>();
-        case 39: return new megamol::core::ModuleAutoDescription<megamol::protein::DataWriter>();
-        case 40: return new megamol::core::ModuleAutoDescription<megamol::protein::CrystalStructureVolumeRenderer>();
+        case 31: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCudaSESRenderer>();
+        case 32: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCBCudaRenderer>();
+        case 33: return new megamol::core::ModuleAutoDescription<megamol::protein::QuickSurfRenderer>();
+        case 34: return new megamol::core::ModuleAutoDescription<megamol::protein::QuickSurfRenderer2>();
+        case 35: return new megamol::core::ModuleAutoDescription<megamol::protein::QuickSurfMTRenderer>();
+        case 36: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeVolumeCudaRenderer>();
+        case 37: return new megamol::core::ModuleAutoDescription<megamol::protein::VolumeMeshRenderer>();
+        case 38: return new megamol::core::ModuleAutoDescription<megamol::protein::DataWriter>();
+        case 39: return new megamol::core::ModuleAutoDescription<megamol::protein::CrystalStructureVolumeRenderer>();
         #define CUDA_OFFSET 9
 #else
         #define CUDA_OFFSET 0
 #endif // WITH_CUDA
 #ifdef WITH_OPENHAPTICS
-        case 32 + CUDA_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::HapticsMoleculeRenderer>();
+        case 31 + CUDA_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::HapticsMoleculeRenderer>();
         #define HAPTICS_OFFSET 1
 #else
         #define HAPTICS_OFFSET 0
 #endif // WITH_OPENHAPTICS
-        case 32 + CUDA_OFFSET + HAPTICS_OFFSET : return new megamol::core::ModuleAutoDescription<megamol::protein::SequenceRenderer>();
-        case 33 + CUDA_OFFSET + HAPTICS_OFFSET : return new megamol::core::ModuleAutoDescription<megamol::protein::BindingSiteDataSource>();
+        case 31 + CUDA_OFFSET + HAPTICS_OFFSET : return new megamol::core::ModuleAutoDescription<megamol::protein::SequenceRenderer>();
+        case 32 + CUDA_OFFSET + HAPTICS_OFFSET : return new megamol::core::ModuleAutoDescription<megamol::protein::BindingSiteDataSource>();
         default: return NULL;
     }
     return NULL;

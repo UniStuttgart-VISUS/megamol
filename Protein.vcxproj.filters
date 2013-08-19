@@ -31,9 +31,6 @@
     <ClCompile Include="CallVolumeData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CartoonDataSource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CCP4VolumeData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -292,9 +289,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CallVolumeData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CartoonDataSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CCP4VolumeData.h">

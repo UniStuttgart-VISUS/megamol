@@ -522,7 +522,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="BSpline.cpp" />
     <ClCompile Include="CallMouseInput.cpp" />
     <ClCompile Include="CallVolumeData.cpp" />
-    <ClCompile Include="CartoonDataSource.cpp" />
     <ClCompile Include="CCP4VolumeData.cpp" />
     <ClCompile Include="CenterLineGenerator.cpp" />
     <ClCompile Include="CoarseGrainDataLoader.cpp" />
@@ -664,7 +663,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="BSpline.h" />
     <ClInclude Include="CallMouseInput.h" />
     <ClInclude Include="CallVolumeData.h" />
-    <ClInclude Include="CartoonDataSource.h" />
     <ClInclude Include="CCP4VolumeData.h" />
     <ClInclude Include="CenterLineGenerator.h" />
     <ClInclude Include="CoarseGrainDataLoader.h" />
