@@ -359,26 +359,26 @@ void megamol::core::CoreInstance::Initialise(void) {
     if (this->config.IsConfigValueSet("profiling")) {
         vislib::StringA prof(this->config.ConfigValue("profiling"));
         if (prof.Equals("all", false)) {
-            profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_ALL);
+            profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_ALL);
         } else if (prof.Equals("selected", false)) {
-            profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_SELECTED);
+            profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_SELECTED);
         } else if (prof.Equals("none", false)) {
-            profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_NONE);
+            profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
         } else {
             try {
                 bool b = vislib::CharTraitsA::ParseBool(prof);
                 if (b) {
-                    profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_SELECTED);
+                    profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_SELECTED);
                 } else {
-                    profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_NONE);
+                    profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
                 }
             } catch(...) {
-                profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_NONE);
+                profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
             }
         }
     } else {
         // Do not profile on default
-        profiler::Manager::Instance().SetModus(profiler::Manager::PROFILE_NONE);
+        profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
     }
 
     while (this->config.HasInstantiationRequests()) {
@@ -690,8 +690,8 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
         Call *call = this->InstantiateCall(fromFullName, toFullName, desc);
         if (call == NULL) {
             hasErrors = true;
-        } else if (profiler::Manager::Instance().GetModus() != profiler::Manager::PROFILE_NONE) {
-            if (cir.DoProfiling() || (profiler::Manager::Instance().GetModus() == profiler::Manager::PROFILE_ALL)) profiler::Manager::Instance().Select(fromFullName);
+        } else if (profiler::Manager::Instance().GetMode() != profiler::Manager::PROFILE_NONE) {
+            if (cir.DoProfiling() || (profiler::Manager::Instance().GetMode() == profiler::Manager::PROFILE_ALL)) profiler::Manager::Instance().Select(fromFullName);
         }
     }
 
@@ -800,8 +800,8 @@ megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription *
         Call *call = this->InstantiateCall(fromFullName, toFullName, desc);
         if (call == NULL) {
             hasErrors = true;
-        } else if (profiler::Manager::Instance().GetModus() != profiler::Manager::PROFILE_NONE) {
-            if (cir.DoProfiling() || (profiler::Manager::Instance().GetModus() == profiler::Manager::PROFILE_ALL)) profiler::Manager::Instance().Select(fromFullName);
+        } else if (profiler::Manager::Instance().GetMode() != profiler::Manager::PROFILE_NONE) {
+            if (cir.DoProfiling() || (profiler::Manager::Instance().GetMode() == profiler::Manager::PROFILE_ALL)) profiler::Manager::Instance().Select(fromFullName);
         }
     }
 
@@ -924,8 +924,8 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
         Call *call = this->InstantiateCall(fromFullName, toFullName, desc);
         if (call == NULL) {
             hasErrors = true;
-        } else if (profiler::Manager::Instance().GetModus() != profiler::Manager::PROFILE_NONE) {
-            if (cir.DoProfiling() || (profiler::Manager::Instance().GetModus() == profiler::Manager::PROFILE_ALL)) profiler::Manager::Instance().Select(fromFullName);
+        } else if (profiler::Manager::Instance().GetMode() != profiler::Manager::PROFILE_NONE) {
+            if (cir.DoProfiling() || (profiler::Manager::Instance().GetMode() == profiler::Manager::PROFILE_ALL)) profiler::Manager::Instance().Select(fromFullName);
         }
     }
 

@@ -41,13 +41,13 @@ namespace profiler {
     public:
 
         /**
-         * The profiling modus
+         * The profiling mode
          */
-        typedef enum _Modus_t {
+        typedef enum _Mode_t {
             PROFILE_NONE = 0,     //< profiles no calls at all
             PROFILE_SELECTED = 1, //< profiles selected calls
             PROFILE_ALL = 2       //< profiles all calls
-        } Modus;
+        } Mode;
 
         /**
          * Answer the only instance of this class
@@ -71,8 +71,8 @@ namespace profiler {
          *
          * @return The current profiling modus
          */
-        inline Modus GetModus(void) const {
-            return this->modus;
+        inline Mode GetMode(void) const {
+            return this->mode;
         }
 
         /**
@@ -81,7 +81,7 @@ namespace profiler {
          *
          * @param modus The new profiling modus
          */
-        void SetModus(Modus modus);
+        void SetMode(Mode mode);
 
         /**
          * Unselects all calls from being profiled
@@ -131,7 +131,7 @@ namespace profiler {
         ~Manager(void);
 
         /** The current profiling modus */
-        Modus modus;
+        Mode mode;
 
         /** The core instance */
         CoreInstance *ci;

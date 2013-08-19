@@ -30,20 +30,20 @@ profiler::Manager& profiler::Manager::Instance(void) {
 /*
  * profiler::Manager::SetModus
  */
-void profiler::Manager::SetModus(Modus modus) {
-    if (this->modus != modus) {
-        this->modus = modus;
-        vislib::sys::Log::DefaultLog.WriteInfo("Profiler modus set to %d", static_cast<int>(modus));
+void profiler::Manager::SetMode(Mode mode) {
+    if (this->mode != mode) {
+        this->mode = mode;
+        vislib::sys::Log::DefaultLog.WriteInfo("Profiler modus set to %d", static_cast<int>(mode));
 
-        if (modus == PROFILE_NONE) {
+        if (mode == PROFILE_NONE) {
             this->UnselectAll();
-        } else if (modus == PROFILE_SELECTED) {
+        } else if (mode == PROFILE_SELECTED) {
             this->UnselectAll();
             // The call selection is not persistant.
             // So we do not select anything here.
             // Could be changed in future
         } else {
-            ASSERT(modus == PROFILE_ALL);
+            ASSERT(mode == PROFILE_ALL);
             // collect all calls
             vislib::Stack<const AbstractNamedObjectContainer*> stack;
             stack.Push(ci->ModuleGraphRoot());
@@ -155,7 +155,7 @@ double profiler::Manager::Now(void) const {
     UINT64 tc = now
 #if defined(DEBUG) || defined(_DEBUG)
          - this->debugReportTime;
-    if (this->modus != PROFILE_NONE) {
+    if (this->mode != PROFILE_NONE) {
         if (vislib::sys::PerformanceCounter::ToMillis(tc) > 5000.0) {
             const_cast<Manager*>(this)->debugReportTime = now;
             const_cast<Manager*>(this)->Report();
@@ -199,7 +199,7 @@ void profiler::Manager::Report(void) {
 /*
  * profiler::Manager::Manager
  */
-profiler::Manager::Manager(void) : modus(PROFILE_NONE), ci(NULL), connections(), timeBase(0), debugReportTime(0) {
+profiler::Manager::Manager(void) : mode(PROFILE_NONE), ci(NULL), connections(), timeBase(0), debugReportTime(0) {
     this->timeBase = vislib::sys::PerformanceCounter::Query(true);
 }
 
