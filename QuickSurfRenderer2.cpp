@@ -1,4 +1,4 @@
-q/*
+/*
  * QuickSurfRenderer2.cpp
  *
  * Copyright (C) 2011 by Universitaet Stuttgart (VISUS).

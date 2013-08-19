@@ -17,6 +17,7 @@
 #include "utility/ResourceWrapper.h"
 #include "Color.h"
 
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -484,7 +485,7 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
         static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value()));
     this->resCountPerRowParam.Param<param::IntParam>()->SetValue( this->resCols);
     // compute the number of rows
-    this->resRows = static_cast<unsigned int>( std::ceilf(static_cast<float>(this->resCount) / static_cast<float>(this->resCols)));
+    this->resRows = static_cast<unsigned int>( ceilf(static_cast<float>(this->resCount) / static_cast<float>(this->resCols)));
     
     return true;
 }

@@ -1,7 +1,5 @@
 #include "stdafx.h"
 #include "DiagramRenderer.h"
-
-#include "DiagramRenderer.h"
 #include "CoreInstance.h"
 #include "param/IntParam.h"
 #include "param/StringParam.h"
@@ -17,9 +15,10 @@
 #include "glh/glh_extensions.h"
 #include <GL/glu.h>
 #include <math.h>
-#include <vislib/verdana.inc>
+#include <vislib/Verdana.inc>
 #include "misc/ImageViewer.h"
 #include "utility/ResourceWrapper.h"
+#include <float.h>
 
 using namespace megamol;
 using namespace megamol::core;

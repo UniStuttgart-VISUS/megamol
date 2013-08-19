@@ -20,7 +20,7 @@ VISlibs := net gl graphics sys math base
 
 
 # Additional compiler flags
-CompilerFlags := $(CompilerFlags) -fPIC
+CompilerFlags := $(CompilerFlags) -fPIC -std=c++0x
 ExcludeFromBuild += ./dllmain.cpp
 
 
@@ -29,23 +29,6 @@ LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid GL GLU
 
 # Additional linker flags
 LinkerFlags := $(LinkerFlags) -shared -Wl,-Bsymbolic 
-
-# cuda
-CudaInstallPath   := /usr/local/cuda
-CudaSdkPath       := /opt/NVIDIA_GPU_Computing_SDK
-NVCC	      := $(CudaInstallPath)/bin/nvcc
-CudaReleaseDir    := $(ReleaseDir)/Cuda
-CudaDebugDir      := $(DebugDir)/Cuda
-
-# note: not the dependencies (i.e. particle_kernel.cu)!
-CU_SOURCES	:= particleSystem.cu filter_cuda.cu CUDAMarchingCubes.cu CUDAQuickSurf.cu
-
-CU_R_OBS	  := $(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
-CU_D_OBS	  := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
-LIBS	      := $(LIBS) cudart
-# cudpp_x86_64
-LinkerFlags       := $(LinkerFlags) -L$(CudaInstallPath)/lib64 -L$(CudaSdkPath)/C/common/lib/linux
-
 
 # Collect Files
 # WARNING: $(InputDirs) MUST be relative paths!
@@ -56,21 +39,12 @@ CPP_D_OBJS := $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_S
 CPP_R_OBJS := $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 
 IncludeDir := $(IncludeDir) $(addprefix $(vislibpath)/,$(addsuffix /include,$(VISlibs)))
-# note: cuda include dirs have to be added after vislib include dirs
-IncludeDir := $(IncludeDir) $(CudaInstallPath)/include $(CudaSdkPath)/C/common/inc
 
 DebugLinkerFlags := $(DebugLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS)d,$(VISlibs)))
 ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS),$(VISlibs)))
 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
 LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(expatpath)/lib
-
-# cuda
-NVCCFLAGS := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) $(addprefix -I, $(IncludeDir)) -Xcompiler -fPIC -O3 -arch=sm_23 --ftz=true --prec-sqrt=false --prec-div=false
-#--ptxas-options=-v -m64
-CU_DEPS := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.d, $(CU_SOURCES)))\
-	$(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.d, $(CU_SOURCES)))
-
 
 all: $(TargetName)d $(TargetName)
 
@@ -102,22 +76,6 @@ $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: Makefile $(addpre
 
 # Rules for dependencies:
 
-$(IntDir)/$(CudaDebugDir)/%.d: $(InputDir)/%.cu Makefile
-	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
-	@tput sgr0
-	@echo -n $(dir $@) > $@
-	$(Q)$(NVCC) -M -g -G $(NVCCFLAGS) $< >> $@
-# -g debug information for host code
-# -G debug information for device code
-
-$(IntDir)/$(CudaReleaseDir)/%.d: $(InputDir)/%.cu Makefile
-	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
-	@tput sgr0
-	@echo -n $(dir $@) > $@
-	$(Q)$(NVCC) -M $(NVCCFLAGS) $< >> $@
-    
 $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
@@ -141,18 +99,6 @@ endif
 endif
 
 # Rules for object files:
-
-$(IntDir)/$(CudaDebugDir)/%.o:
-	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"NVCC "'\E[0;32;40m'"$@: "
-	@tput sgr0
-	$(Q)$(NVCC) -c -g -G $(NVCCFLAGS) $< -o $@
-
-$(IntDir)/$(CudaReleaseDir)/%.o:
-	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"NVCC "'\E[0;32;40m'"$@: "
-	@tput sgr0
-	$(Q)$(NVCC) -c $(NVCCFLAGS) $< -o $@
 
 $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)

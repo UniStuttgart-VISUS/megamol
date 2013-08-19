@@ -122,7 +122,7 @@ namespace protein {
         /**
          * sets the xTickOff!
          */
-        void DiagramRenderer::drawXAxis(XAxisTypes xType);
+        void drawXAxis(XAxisTypes xType);
 
         void drawLegend();
 

@@ -25,7 +25,7 @@
 #include "vislib/SimpleFont.h"
 #else //  USE_SIMPLE_FONT
 #include "vislib/OutlineFont.h"
-#include "vislib/verdana.inc"
+#include "vislib/Verdana.inc"
 #endif //  USE_SIMPLE_FONT
 #include <vislib/OpenGLTexture2D.h>
 

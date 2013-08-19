@@ -16,6 +16,7 @@
 #include "misc/ImageViewer.h"
 #include "utility/ResourceWrapper.h"
 #include "glh/glh_extensions.h"
+#include <float.h>
 
 using namespace megamol;
 using namespace megamol::core;
