@@ -116,7 +116,7 @@ INT64 vislib::CharTraits<char>::ParseInt64(const Char *str) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
     Char *end = NULL;
-    UINT64 retval = 0;
+    INT64 retval = 0;
 
 #ifdef _WIN32
     retval = ::_strtoi64(str, &end, 10);
@@ -384,7 +384,7 @@ INT64 vislib::CharTraits<WCHAR>::ParseInt64(const Char *str) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
     Char *end = NULL;
-    UINT64 retval = 0;
+    INT64 retval = 0;
 
 #ifdef _WIN32
     retval = ::_wcstoi64(str, &end, 10);
