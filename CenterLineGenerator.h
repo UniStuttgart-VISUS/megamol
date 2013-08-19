@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vislib\Point.h>
+#include "vislib/Point.h"
 #include <set>
 #include <vector>
 

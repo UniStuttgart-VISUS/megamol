@@ -1831,7 +1831,7 @@ bool PDBLoader::readNumXTCFrames() {
 
     vislib::math::Cuboid<float> tmpBBox( this->bbox);
 
-    std::fstream::iostate st = 0;
+    //std::fstream::iostate st = 0;
 
     // get length of file:
     xtcFile.seekg(0, xtcFile.end);
@@ -1898,7 +1898,8 @@ bool PDBLoader::readNumXTCFrames() {
 
         // add this frame to the frame count
         this->numXTCFrames++;
-        st = xtcFile.rdstate();
+        //st = xtcFile.rdstate();
+        xtcFile.rdstate();
     }
     xtcFile.close();
 
