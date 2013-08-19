@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "misc/ExtBezierDataCall.h"
+//#include "misc/ExtBezierDataCall.h"
 #include "misc/BezierDataCall.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
@@ -138,13 +138,13 @@ namespace protein {
         /** The data hash */
         SIZE_T datahash;
 
-        /** The curves data */
-        vislib::Array<vislib::math::BezierCurve<
-            core::misc::ExtBezierDataCall::Point, 3> > ellipCurves;
+        ///** The curves data */
+        //vislib::Array<vislib::math::BezierCurve<
+        //    core::misc::ExtBezierDataCall::Point, 3> > ellipCurves;
 
-        /** The curves data */
-        vislib::Array<vislib::math::BezierCurve<
-            core::misc::ExtBezierDataCall::Point, 3> > rectCurves;
+        ///** The curves data */
+        //vislib::Array<vislib::math::BezierCurve<
+        //    core::misc::ExtBezierDataCall::Point, 3> > rectCurves;
 
         /** The curves data */
         vislib::Array<vislib::math::BezierCurve<

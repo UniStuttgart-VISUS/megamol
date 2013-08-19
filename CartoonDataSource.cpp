@@ -31,15 +31,15 @@ CartoonDataSource::CartoonDataSource(void) : Module(),
         dataOutSlot( "dataout", "The slot providing the loaded data"),
         strideFlagSlot( "strideFlag", "The flag wether STRIDE should be used or not."),
         molDataCallerSlot( "molData", "The slot providing the data of the molecule."),
-        datahash(0), ellipCurves(), rectCurves(), tubeCurves() {
+        datahash(0), /*ellipCurves(), rectCurves(), */tubeCurves() {
     this->filenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable( &this->filenameSlot);
     
     // ExtBezierDataCall
-    this->dataOutSlot.SetCallback(ExtBezierDataCall::ClassName(), "GetData",
-        &CartoonDataSource::getData);
-    this->dataOutSlot.SetCallback(ExtBezierDataCall::ClassName(), "GetExtent",
-        &CartoonDataSource::getExtent);
+    //this->dataOutSlot.SetCallback(ExtBezierDataCall::ClassName(), "GetData",
+    //    &CartoonDataSource::getData);
+    //this->dataOutSlot.SetCallback(ExtBezierDataCall::ClassName(), "GetExtent",
+    //    &CartoonDataSource::getExtent);
     // BezierDataCall
     this->dataOutSlot.SetCallback(BezierDataCall::ClassName(), "GetData",
         &CartoonDataSource::getData);
@@ -79,9 +79,9 @@ bool CartoonDataSource::create(void) {
  */
 bool CartoonDataSource::getData( core::Call& call) {
 
-    ExtBezierDataCall *dc = dynamic_cast<ExtBezierDataCall*>( &call);
+//    ExtBezierDataCall *dc = dynamic_cast<ExtBezierDataCall*>( &call);
     BezierDataCall *bdc = dynamic_cast<BezierDataCall*>( &call);
-    if ( dc == NULL && bdc == NULL ) return false;
+    if (/* dc == NULL && */bdc == NULL ) return false;
 
     // try to load the input file
     if ( this->filenameSlot.IsDirty() ) {
@@ -97,7 +97,7 @@ bool CartoonDataSource::getData( core::Call& call) {
     if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
 
     // set values to data call
-    if( dc ) {
+    /*if( dc ) {
         // using ExtBezierDataCall
         this->ComputeBezierPoints( mol);
 
@@ -115,7 +115,7 @@ bool CartoonDataSource::getData( core::Call& call) {
         dc->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
 
         dc->SetUnlocker( NULL);
-    } else {
+    } else*/ {
         // using BezierDataCall
         this->ComputeBezierPointsTubes( mol);
 
@@ -141,9 +141,9 @@ bool CartoonDataSource::getData( core::Call& call) {
  * CartoonDataSource::getExtent
  */
 bool CartoonDataSource::getExtent( core::Call& call) {
-    ExtBezierDataCall *dc = dynamic_cast<ExtBezierDataCall*>( &call);
+    //ExtBezierDataCall *dc = dynamic_cast<ExtBezierDataCall*>( &call);
     BezierDataCall *bdc = dynamic_cast<BezierDataCall*>( &call);
-    if( dc == NULL && bdc == NULL )
+    if(/* dc == NULL && */bdc == NULL )
         return false;
 
     if ( this->filenameSlot.IsDirty() ) {
@@ -157,20 +157,20 @@ bool CartoonDataSource::getExtent( core::Call& call) {
     if( mol ) {
         // get extends of molecule
         if (!(*mol)(MolecularDataCall::CallForGetExtent)) return false;
-        if( dc ) {
+        /*if( dc ) {
             dc->AccessBoundingBoxes().Clear();
             dc->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
-        } else {
+        } else*/ {
             bdc->AccessBoundingBoxes().Clear();
             bdc->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
         }
     }
 
     // set frame count
-    if( dc ) {
+    /*if( dc ) {
         dc->SetFrameCount( vislib::math::Max(1U, mol->FrameCount()));
         dc->SetDataHash( this->datahash);
-    } else {
+    } else*/ {
         bdc->SetFrameCount( vislib::math::Max(1U, mol->FrameCount()));
         bdc->SetDataHash( this->datahash);
     }
@@ -234,14 +234,14 @@ bool CartoonDataSource::loadFile( const vislib::TString& filename) {
  * Compute the bezier points
  */
 void CartoonDataSource::ComputeBezierPoints( const MolecularDataCall *mol) {
-    this->ellipCurves.Clear();
-    this->rectCurves.Clear();
+    //this->ellipCurves.Clear();
+    //this->rectCurves.Clear();
 
     // reserve memory
-    unsigned int numEllipCurves = 0;
-    this->ellipCurves.SetCount( mol->ResidueCount());
-    unsigned int numRectCurves = 0;
-    this->rectCurves.SetCount( mol->ResidueCount());
+    //unsigned int numEllipCurves = 0;
+    //this->ellipCurves.SetCount( mol->ResidueCount());
+    //unsigned int numRectCurves = 0;
+    //this->rectCurves.SetCount( mol->ResidueCount());
 
     const MolecularDataCall::AminoAcid *aa0;
     const MolecularDataCall::AminoAcid *aa1;
@@ -317,68 +317,68 @@ void CartoonDataSource::ComputeBezierPoints( const MolecularDataCall *mol) {
                 if( ( resIdx + 1) > ( secSFirstRes + secSResCnt) ) {
                     widthY = 0.3f;
                 }
-                this->rectCurves[numRectCurves][0].Set( pos1.X(), pos1.Y(), pos1.Z(), 
-                    dir0.X(), dir0.Y(), dir0.Z(), 
-                    0.9f, 0.3f, 
-                    255, 0, 0);
-                this->rectCurves[numRectCurves][1].Set( cp1.X(), cp1.Y(), cp1.Z(), 
-                    dir1.X(), dir1.Y(), dir1.Z(), 
-                    0.9f, 0.3f, 
-                    255, 255, 0);
-                this->rectCurves[numRectCurves][2].Set( cp2.X(), cp2.Y(), cp2.Z(), 
-                    dir2.X(), dir2.Y(), dir2.Z(), 
-                    0.9f, 0.3f, 
-                    0, 255, 255);
-                this->rectCurves[numRectCurves][3].Set( pos2.X(), pos2.Y(), pos2.Z(), 
-                    dir3.X(), dir3.Y(), dir3.Z(), 
-                    widthY, 0.3f, 
-                    0, 0, 255);
-                numRectCurves++;
+                //this->rectCurves[numRectCurves][0].Set( pos1.X(), pos1.Y(), pos1.Z(), 
+                //    dir0.X(), dir0.Y(), dir0.Z(), 
+                //    0.9f, 0.3f, 
+                //    255, 0, 0);
+                //this->rectCurves[numRectCurves][1].Set( cp1.X(), cp1.Y(), cp1.Z(), 
+                //    dir1.X(), dir1.Y(), dir1.Z(), 
+                //    0.9f, 0.3f, 
+                //    255, 255, 0);
+                //this->rectCurves[numRectCurves][2].Set( cp2.X(), cp2.Y(), cp2.Z(), 
+                //    dir2.X(), dir2.Y(), dir2.Z(), 
+                //    0.9f, 0.3f, 
+                //    0, 255, 255);
+                //this->rectCurves[numRectCurves][3].Set( pos2.X(), pos2.Y(), pos2.Z(), 
+                //    dir3.X(), dir3.Y(), dir3.Z(), 
+                //    widthY, 0.3f, 
+                //    0, 0, 255);
+                //numRectCurves++;
             } else if( mol->SecondaryStructures()[currentSecS].Type() == MolecularDataCall::SecStructure::TYPE_HELIX ) {
                 widthY = 0.9f;
                 if( ( resIdx + 1) > ( secSFirstRes + secSResCnt) ) {
                     widthY = 0.3f;
                 }
-                this->ellipCurves[numEllipCurves][0].Set( pos1.X(), pos1.Y(), pos1.Z(), 
-                    dir0.X(), dir0.Y(), dir0.Z(), 
-                    0.9f, 0.3f, 
-                    255, 0, 0);
-                this->ellipCurves[numEllipCurves][1].Set( cp1.X(), cp1.Y(), cp1.Z(), 
-                    dir1.X(), dir1.Y(), dir1.Z(), 
-                    0.9f, 0.3f, 
-                    255, 255, 0);
-                this->ellipCurves[numEllipCurves][2].Set( cp2.X(), cp2.Y(), cp2.Z(), 
-                    dir2.X(), dir2.Y(), dir2.Z(), 
-                    0.9f, 0.3f, 
-                    0, 255, 255);
-                this->ellipCurves[numEllipCurves][3].Set( pos2.X(), pos2.Y(), pos2.Z(), 
-                    dir3.X(), dir3.Y(), dir3.Z(), 
-                    widthY, 0.3f, 
-                    0, 0, 255);
-                numEllipCurves++;
+                //this->ellipCurves[numEllipCurves][0].Set( pos1.X(), pos1.Y(), pos1.Z(), 
+                //    dir0.X(), dir0.Y(), dir0.Z(), 
+                //    0.9f, 0.3f, 
+                //    255, 0, 0);
+                //this->ellipCurves[numEllipCurves][1].Set( cp1.X(), cp1.Y(), cp1.Z(), 
+                //    dir1.X(), dir1.Y(), dir1.Z(), 
+                //    0.9f, 0.3f, 
+                //    255, 255, 0);
+                //this->ellipCurves[numEllipCurves][2].Set( cp2.X(), cp2.Y(), cp2.Z(), 
+                //    dir2.X(), dir2.Y(), dir2.Z(), 
+                //    0.9f, 0.3f, 
+                //    0, 255, 255);
+                //this->ellipCurves[numEllipCurves][3].Set( pos2.X(), pos2.Y(), pos2.Z(), 
+                //    dir3.X(), dir3.Y(), dir3.Z(), 
+                //    widthY, 0.3f, 
+                //    0, 0, 255);
+                //numEllipCurves++;
             } else {
                 widthY = 0.3f;
                 if( ( resIdx + 1) > ( secSFirstRes + secSResCnt) && 
                     mol->SecondaryStructures()[currentSecS + 1].Type() == MolecularDataCall::SecStructure::TYPE_HELIX) {
                     widthY = 0.9f;
                 }
-                this->ellipCurves[numEllipCurves][0].Set( pos1.X(), pos1.Y(), pos1.Z(), 
-                    dir0.X(), dir0.Y(), dir0.Z(), 
-                    0.3f, 0.3f, 
-                    255, 0, 0);
-                this->ellipCurves[numEllipCurves][1].Set( cp1.X(), cp1.Y(), cp1.Z(), 
-                    dir1.X(), dir1.Y(), dir1.Z(), 
-                    0.3f, 0.3f, 
-                    255, 255, 0);
-                this->ellipCurves[numEllipCurves][2].Set( cp2.X(), cp2.Y(), cp2.Z(), 
-                    dir2.X(), dir2.Y(), dir2.Z(), 
-                    0.3f, 0.3f, 
-                    0, 255, 255);
-                this->ellipCurves[numEllipCurves][3].Set( pos2.X(), pos2.Y(), pos2.Z(), 
-                    dir3.X(), dir3.Y(), dir3.Z(), 
-                    widthY, 0.3f, 
-                    0, 0, 255);
-                numEllipCurves++;
+                //this->ellipCurves[numEllipCurves][0].Set( pos1.X(), pos1.Y(), pos1.Z(), 
+                //    dir0.X(), dir0.Y(), dir0.Z(), 
+                //    0.3f, 0.3f, 
+                //    255, 0, 0);
+                //this->ellipCurves[numEllipCurves][1].Set( cp1.X(), cp1.Y(), cp1.Z(), 
+                //    dir1.X(), dir1.Y(), dir1.Z(), 
+                //    0.3f, 0.3f, 
+                //    255, 255, 0);
+                //this->ellipCurves[numEllipCurves][2].Set( cp2.X(), cp2.Y(), cp2.Z(), 
+                //    dir2.X(), dir2.Y(), dir2.Z(), 
+                //    0.3f, 0.3f, 
+                //    0, 255, 255);
+                //this->ellipCurves[numEllipCurves][3].Set( pos2.X(), pos2.Y(), pos2.Z(), 
+                //    dir3.X(), dir3.Y(), dir3.Z(), 
+                //    widthY, 0.3f, 
+                //    0, 0, 255);
+                //numEllipCurves++;
             }
         }
     }
