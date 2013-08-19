@@ -14,6 +14,11 @@ $incpath =~ s/\/[^\/]+$//;
 push @INC, "$incpath/configperl";
 require configperl;
 
+my $fullauto = 0;
+if ((grep {$_ eq "fullauto"} @ARGV) || (defined $ENV{'CONFIGPERL_FULLAUTO'})) {
+    $fullauto = 1;
+}
+
 my ($a, $b, $c);
 my @pps = ();
 my @fps = ();
@@ -60,5 +65,5 @@ $c = ConfigFilePair->new();
     $c->outFile("ExtLibs.mk");
     push @cfps, $c;
 
-VISUS::configperl::Configure("MegaMol(TM) Core Configuration for Linux", ".megamol.core.lin.cache", \@pps, \@fps, \@cfps, \@sps);
+VISUS::configperl::Configure("MegaMol(TM) Core Configuration for Linux", ".megamol.core.lin.cache", \@pps, \@fps, \@cfps, \@sps, $fullauto);
 

@@ -14,13 +14,13 @@ TargetName := MegaMolCore
 OutDir := lib
 # subdirectories below $(InputRootDir)
 InputRootDir := $(InputDir)
-InputDirs := . api cluster cluster/simple job misc moldyn param utility utility/xml view view/special vismol2
+InputDirs := . api cluster cluster/simple job misc moldyn param utility utility/xml view view/special vismol2 profiler
 IncludeDir := $(IncludeDir)
 VISlibs := cluster net gl graphics sys math base
 
 
 # Additional compiler flags
-CompilerFlags := $(CompilerFlags) -fPIC
+CompilerFlags := $(CompilerFlags) -fPIC -std=c++0x
 ExcludeFromBuild += vismol2/Mol20DataCall.cpp vismol2/Mol20DataSource.cpp vismol2/Mol20Renderer.cpp vismol2/Mol2Data.cpp
 
 
@@ -52,10 +52,14 @@ LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(expatpath)/lib
 
 all: VersionInfo $(TargetName)d $(TargetName)
 
-
-datraw:
-	make -C datraw
-
+datraw/lib32/libdatRaw.a:
+	$(MAKE) -C datraw
+	
+datraw/lib64/libdatRaw.a:
+	$(MAKE) -C datraw
+	
+datraw: datraw/lib$(BITS)/libdatRaw.a
+	
 
 # Rules for shared objects in $(OutDir):
 $(TargetName)d: $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so

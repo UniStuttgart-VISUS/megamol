@@ -1307,10 +1307,10 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
                 ::memcpy(const_cast<char*>(pa[i].desc), str.PeekBuffer(), str.Length() + 1);
 
                 vislib::RawStorage blob;
-                ps->Param<::megamol::core::param::AbstractParam>()->Definition(blob);
+                ps->Param< ::megamol::core::param::AbstractParam>()->Definition(blob);
 
                 pa[i].typeInfoSize = static_cast<unsigned int>(blob.GetSize());
-                pa[i].typeInfo = new const unsigned char[pa[i].typeInfoSize];
+                pa[i].typeInfo = new unsigned char[pa[i].typeInfoSize];
                 ::memcpy(const_cast<unsigned char*>(pa[i].typeInfo), blob, pa[i].typeInfoSize);
 
                 str = ps->Parameter()->ValueString();
