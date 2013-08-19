@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "XYZLoader.h"
 #include "ParticleDataCall.h"
+#include "moldyn/MultiParticleDataCall.h"
 #include "param/FilePathParam.h"
 #include "param/IntParam.h"
 #include "param/BoolParam.h"
@@ -47,6 +48,9 @@ XYZLoader::XYZLoader(void) : megamol::core::Module(),
 
     this->dataOutSlot.SetCallback( ParticleDataCall::ClassName(), ParticleDataCall::FunctionName(ParticleDataCall::CallForGetData), &XYZLoader::getData);
     this->dataOutSlot.SetCallback( ParticleDataCall::ClassName(), ParticleDataCall::FunctionName(ParticleDataCall::CallForGetExtent), &XYZLoader::getExtent);
+
+    this->dataOutSlot.SetCallback("MultiParticleDataCall", "GetData", &XYZLoader::getData);
+    this->dataOutSlot.SetCallback("MultiParticleDataCall", "GetExtent", &XYZLoader::getExtent);
     this->MakeSlotAvailable( &this->dataOutSlot);
 
 }
@@ -71,23 +75,38 @@ bool XYZLoader::create(void) {
  */
 bool XYZLoader::getData( core::Call& call) {
     using vislib::sys::Log;
+    using namespace megamol::core::moldyn;
 
     ParticleDataCall *dc = dynamic_cast<ParticleDataCall*>( &call);
-    if ( dc == NULL ) return false;
+    MultiParticleDataCall *mpdc = dynamic_cast<MultiParticleDataCall*>(&call);
+    if ( dc == NULL && mpdc == NULL) return false;
 
     if ( this->filenameSlot.IsDirty() ) {
         this->filenameSlot.ResetDirty();
-        this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+        if (mpdc != NULL) {
+            this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value(), false);
+        } else {
+            this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+        }
     }
 
-    dc->SetDataHash( this->datahash);
+    if (dc != NULL) {
+        dc->SetDataHash( this->datahash);
 
-    // set values to call
-    dc->SetParticleCount( this->particleCount);
-    dc->SetParticles( this->particles);
-    dc->SetColors( this->colors);
-    dc->SetCharges( this->charges);
-
+        // set values to call
+        dc->SetParticleCount( this->particleCount);
+        dc->SetParticles( this->particles);
+        dc->SetColors( this->colors);
+        dc->SetCharges( this->charges);
+    } else {
+        mpdc->SetDataHash( this->datahash);
+        mpdc->SetFrameCount(1);
+        // set values to call
+        mpdc->SetParticleListCount(1);
+        mpdc->AccessParticles(0).SetCount(this->particleCount);
+        mpdc->AccessParticles(0).SetVertexData(SimpleSphericalParticles::VERTDATA_FLOAT_XYZR, this->particles);
+        mpdc->AccessParticles(0).SetColourData(SimpleSphericalParticles::COLDATA_FLOAT_RGB, this->colors);
+    }
     return true;
 }
 
@@ -96,20 +115,34 @@ bool XYZLoader::getData( core::Call& call) {
  */
 bool XYZLoader::getExtent( core::Call& call) {
     // get data call
+    using namespace megamol::core::moldyn;
     ParticleDataCall *dc = dynamic_cast<ParticleDataCall*>( &call);
-    if ( dc == NULL ) return false;
+    MultiParticleDataCall *mpdc = dynamic_cast<MultiParticleDataCall*>(&call);
+    if ( dc == NULL && mpdc == NULL) return false;
 
     if ( this->filenameSlot.IsDirty() ) {
         this->filenameSlot.ResetDirty();
-        this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+        if (mpdc != NULL) {
+            this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value(), false);
+        } else {
+            this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+        }
     }
 
-    dc->AccessBoundingBoxes().Clear();
-    dc->AccessBoundingBoxes().SetObjectSpaceBBox( this->bbox);
-    dc->AccessBoundingBoxes().SetObjectSpaceClipBox( this->bbox);
+    if (dc != NULL) {
+        dc->AccessBoundingBoxes().Clear();
+        dc->AccessBoundingBoxes().SetObjectSpaceBBox( this->bbox);
+        dc->AccessBoundingBoxes().SetObjectSpaceClipBox( this->bbox);
 
-    dc->SetDataHash( this->datahash);
+        dc->SetDataHash( this->datahash);
+    } else {
+        mpdc->SetFrameCount(1);
+        mpdc->AccessBoundingBoxes().Clear();
+        mpdc->AccessBoundingBoxes().SetObjectSpaceBBox( this->bbox);
+        mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox( this->bbox);
 
+        mpdc->SetDataHash( this->datahash);
+    }
     return true;
 }
 
@@ -123,7 +156,7 @@ void XYZLoader::release(void) {
 /*
  * XYZLoader::loadFile
  */
-void XYZLoader::loadFile( const vislib::TString& filename) {
+void XYZLoader::loadFile( const vislib::TString& filename, bool doElectrostatics) {
     using vislib::sys::Log;
 
     this->bbox.Set( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -206,28 +239,30 @@ void XYZLoader::loadFile( const vislib::TString& filename) {
                 }
             }
         }
-        float edge = this->bbox.LongestEdge() * 5.0f;
-        this->bbox.Grow( edge, edge, edge);
+
+        if (doElectrostatics) {
+            float edge = this->bbox.LongestEdge() * 5.0f;
+            this->bbox.Grow( edge, edge, edge);
 
 #ifdef USE_RANDOM_ROT_TRANS
-        vislib::math::Vector<float, 3> center( 0, 0, 0);
-        for( unsigned int i = 0; i < this->particleCount; i++ ) {
-            center += vislib::math::Vector<float, 3>( this->particles[i*4+0], this->particles[i*4+1], this->particles[i*4+2]);
-        }
-        center /= float( this->particleCount);
-        vislib::math::Quaternion<float> quart( angle, rotAxis);
-        for( unsigned int i = 0; i < this->particleCount; i++ ) {
-            vislib::math::Vector<float, 3> part( this->particles[i*4+0], this->particles[i*4+1], this->particles[i*4+2]);
-            part -= center;
-            part = quart * part;
-            part += center;
-            part += trans;
-            this->particles[i*4+0] = part.X();
-            this->particles[i*4+1] = part.Y();
-            this->particles[i*4+2] = part.Z();
-        }
+            vislib::math::Vector<float, 3> center( 0, 0, 0);
+            for( unsigned int i = 0; i < this->particleCount; i++ ) {
+                center += vislib::math::Vector<float, 3>( this->particles[i*4+0], this->particles[i*4+1], this->particles[i*4+2]);
+            }
+            center /= float( this->particleCount);
+            vislib::math::Quaternion<float> quart( angle, rotAxis);
+            for( unsigned int i = 0; i < this->particleCount; i++ ) {
+                vislib::math::Vector<float, 3> part( this->particles[i*4+0], this->particles[i*4+1], this->particles[i*4+2]);
+                part -= center;
+                part = quart * part;
+                part += center;
+                part += trans;
+                this->particles[i*4+0] = part.X();
+                this->particles[i*4+1] = part.Y();
+                this->particles[i*4+2] = part.Z();
+            }
 #endif
-
+        }
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file %s: %f", static_cast<const char*>(T2A( filename)), ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
     } else {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file %s", static_cast<const char*>(T2A( filename))); // DEBUG
@@ -254,9 +289,7 @@ float XYZLoader::getElementRadius( vislib::StringA name) {
                 if( name[cnt+1] == 'l' )
                     return 1.75f; // chlorine
             return 1.7f; // carbon
-        } else if( name[cnt] == 'N' )
-            return 1.55f;
-        else if( name[cnt] == 'O' )
+        } else if( name[cnt] == 'O' )
             return 1.52f;
         else if( name[cnt] == 'S' )
             return 1.8f;
@@ -264,6 +297,12 @@ float XYZLoader::getElementRadius( vislib::StringA name) {
             return 1.8f;
         else if( name[cnt] == 'C' )
             return 1.7f;
+        else if( name[cnt] == 'N' ) {
+            if( ( cnt + 1) < static_cast<unsigned int>(name.Length()) )
+                if( name[cnt+1] == 'i' )
+                    return 1.63f; // nickel
+            return 1.55f; // nitrogen
+        }
     }
 
     return 1.5f;

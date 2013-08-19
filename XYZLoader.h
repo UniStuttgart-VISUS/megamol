@@ -104,7 +104,7 @@ namespace protein {
          *
          * @param filename The path to the file to load.
          */
-        void loadFile( const vislib::TString& filename);
+        void loadFile( const vislib::TString& filename, bool doElectrostatics = true);
 
         /**
          * Get the radius of the element
