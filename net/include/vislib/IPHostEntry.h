@@ -167,14 +167,15 @@ namespace net {
         char buffer[NI_MAXHOST];    // Receives the host name
         int err = 0;                // OS operation return value.
 
-        if (this->canonicalName.IsEmpty() && (this->addresses.Count() > 0)) {
-			IPEndPoint ep(this->addresses[0]);
-			socklen_t size = (ep.GetAddressFamily() == IPEndPoint::FAMILY_INET)
-				? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
-			if ((err = ::getnameinfo(static_cast<const sockaddr *>(ep), size,
-					buffer, sizeof(buffer), NULL, 0, NI_NAMEREQD)) != 0) {
-                VLTRACE(Trace::LEVEL_VL_ERROR, "::getnameinfo failed in "
-                    "IPHostEntry::fixHostName(): %s\n",
+        for (SIZE_T i = 0; i < this->addresses.Count()
+                && this->canonicalName.IsEmpty(); ++i) {
+            IPEndPoint ep(this->addresses[0]);
+            socklen_t size = (ep.GetAddressFamily() == IPEndPoint::FAMILY_INET)
+                ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
+            if ((err = ::getnameinfo(static_cast<const sockaddr *>(ep), size,
+                buffer, sizeof(buffer), NULL, 0, NI_NAMEREQD)) != 0) {
+                    VLTRACE(Trace::LEVEL_VL_ERROR, "::getnameinfo failed in "
+                        "IPHostEntry::fixHostName(): %s\n",
 #ifdef _WIN32
                     ::gai_strerrorA(err)
 #else /* _WIN32 */
