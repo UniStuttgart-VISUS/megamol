@@ -215,16 +215,14 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
 /*
  * VolumeMeshRenderer::~VolumeMeshRenderer(DTOR)
  */
-VolumeMeshRenderer::~VolumeMeshRenderer(void)
-{
+VolumeMeshRenderer::~VolumeMeshRenderer(void) {
     this->Release();
 }
 
 /*
  * VolumeMeshRenderer::create
  */
-bool VolumeMeshRenderer::create(void) 
-{
+bool VolumeMeshRenderer::create(void) {
     using vislib::sys::Log;
     using namespace vislib::graphics::gl;
 
@@ -286,14 +284,17 @@ bool VolumeMeshRenderer::create(void)
     }
 
     // Create OpenGL interoperable CUDA device.
-    cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId() );
-    printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
+    cudaError_t cuerr = cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
+    if( cuerr != cudaError::cudaSuccess ) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: cudaGLSetGLDevice: %s\n", this->ClassName(), cudaGetErrorString( cuerr));
+    }
     
+    // log thrust version
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Thrust Version: %d.%d.%d\n", THRUST_MAJOR_VERSION, THRUST_MINOR_VERSION, THRUST_SUBMINOR_VERSION);
+
     // Allocate CUDA memory for labeling.
     CUDA_VERIFY(cudaMalloc(&modified, sizeof(bool)));
     CUDA_VERIFY(cudaMalloc(&segmentsRemoved, sizeof(bool)));
-
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Thrust Version: %d.%d.%d\n", THRUST_MAJOR_VERSION, THRUST_MINOR_VERSION, THRUST_SUBMINOR_VERSION);
 
     return true;
 }
@@ -301,8 +302,7 @@ bool VolumeMeshRenderer::create(void)
 /*
  * VolumeMeshRenderer::release
  */
-void VolumeMeshRenderer::release(void) 
-{    
+void VolumeMeshRenderer::release(void) {
     if (cudaqsurf) {
         CUDAQuickSurf *cqs = (CUDAQuickSurf *) cudaqsurf;
         delete cqs;
@@ -339,8 +339,7 @@ void VolumeMeshRenderer::release(void)
 /*
  * ProteinRenderer::GetCapabilities
  */
-bool VolumeMeshRenderer::GetCapabilities(Call& call)
-{ 
+bool VolumeMeshRenderer::GetCapabilities(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
@@ -354,8 +353,7 @@ bool VolumeMeshRenderer::GetCapabilities(Call& call)
 /*
  * ProteinRenderer::GetExtents
  */
-bool VolumeMeshRenderer::GetExtents(Call& call) 
-{
+bool VolumeMeshRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (!cr3d) {
         return false;
@@ -387,8 +385,7 @@ bool VolumeMeshRenderer::GetExtents(Call& call)
 /*
  * VolumeMeshRenderer::Render
  */
-bool VolumeMeshRenderer::Render(Call& call)
-{
+bool VolumeMeshRenderer::Render(Call& call) {
     using vislib::sys::Log;
 
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
@@ -707,8 +704,7 @@ bool VolumeMeshRenderer::Render(Call& call)
  * VolumeMeshRenderer::UpdateMesh
  */
 bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<float, 3> translation, 
-    vislib::math::Vector<float, 3> scale, const float* aoVolumeHost, MolecularDataCall *mol)
-{
+    vislib::math::Vector<float, 3> scale, const float* aoVolumeHost, MolecularDataCall *mol) {
     using vislib::sys::Log;
     
     // allocate buffers for copies from previous step
@@ -1710,8 +1706,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     return true;
 }
 
-float4 VolumeMeshRenderer::GetNextColor()
-{
+float4 VolumeMeshRenderer::GetNextColor() {
     using vislib::sys::Log;
     bool repick = true;
     int nextColorIndex = centroidColorsIndex;
@@ -1743,8 +1738,7 @@ float4 VolumeMeshRenderer::GetNextColor()
 /*
  * refresh parameters
  */
-void VolumeMeshRenderer::ParameterRefresh( const MolecularDataCall *mol) 
-{
+void VolumeMeshRenderer::ParameterRefresh( const MolecularDataCall *mol) {
     if (this->polygonModeParam.IsDirty()) {
         this->polygonMode = static_cast<PolygonMode>(this->polygonModeParam.Param<param::EnumParam>()->Value());
         this->polygonModeParam.ResetDirty();
