@@ -25,6 +25,7 @@
 #include "vislib/Array.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/String.h"
+#include "vislib/Trace.h"
 
 
 namespace vislib {
@@ -81,6 +82,11 @@ namespace net {
         IPHostEntry& operator =(const IPHostEntry& rhs);
 
     private:
+
+        /**
+         * Tries to find the host name if it is empty.
+         */
+        void fixHostName(void);
 
         /**
          * Fill the IPHostEntry with the specified address info.
@@ -154,6 +160,54 @@ namespace net {
 
 
     /*
+     * IPHostEntry<T>::fixHostName
+     */
+    template<class T> void IPHostEntry<T>::fixHostName(void) {
+        char buffer[NI_MAXHOST];    // Receives the host name
+        int err = 0;                // OS operation return value.
+
+        if (this->canonicalName.IsEmpty() && (this->addresses.Count() > 0)) {
+            // TODO: This code is a nightmare...
+            const IPAgnosticAddress& a = this->addresses[0];
+            struct sockaddr sa;
+            ::ZeroMemory(&sa, sizeof(sa));
+            SIZE_T size = 0;
+            if (a.IsV4()) {
+                const IPAddress *a4 = static_cast<const IPAddress *>(a);
+                size = sizeof(struct sockaddr_in);
+                sa.sa_family = AF_INET;
+                ::memcpy(sa.sa_data, static_cast<const struct in_addr *>(
+                    *a4), sizeof(struct in_addr));
+
+            } else if (a.IsV6()) {
+                const IPAddress6 *a6 = static_cast<const IPAddress6 *>(a);
+                size = sizeof(struct sockaddr_in6);
+                sa.sa_family = AF_INET6;
+                ::memcpy(sa.sa_data, static_cast<const struct in6_addr *>(
+                    *a6), sizeof(struct in6_addr));
+            } else {
+                ASSERT(false);
+            }
+
+            if ((err = ::getnameinfo(&sa, size, buffer, sizeof(buffer), NULL, 0,
+                    NI_NOFQDN)) != 0) {
+                VLTRACE(Trace::LEVEL_VL_ERROR, "::getnameinfo failed in "
+                    "IPHostEntry::fixHostName(): %s\n",
+#ifdef _WIN32
+                    ::gai_strerrorA(err)
+#else /* _WIN32 */
+                    ::gai_strerror(err)
+#endif /* _WIN32 */
+                );
+                buffer[0] = 0;
+            }
+
+            this->canonicalName = String<T>(buffer);
+        }
+    }
+
+
+    /*
      * IPHostEntry<T>::IPHostEntry
      */
     template<class T> void IPHostEntry<T>::set(
@@ -189,6 +243,8 @@ namespace net {
 
             ai = ai->ai_next;
         }
+
+        this->fixHostName();
     }
 
 
@@ -227,6 +283,8 @@ namespace net {
 
             ai = ai->ai_next;
         }
+
+        this->fixHostName();
     }
 #endif /* _WIN32 */
 
