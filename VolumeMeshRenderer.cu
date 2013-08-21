@@ -294,6 +294,8 @@ void GenerateTriangles_kernel(float4* vertices, float4* normals, float translate
         return;
     }
     __shared__ float3 edgeVertex[6 * GT_THREADS];
+    // TODO temporary storage for edge vertex neighbor atom
+    //__shared__ int edgeVertexNeighborAtom[6 * GT_THREADS];
     __shared__ float3 edgeNormal[6 * GT_THREADS];
     // Find intersection of the surface with each edge.
     for (int edgeIndex = 0; edgeIndex < 6; edgeIndex++) {
@@ -306,6 +308,8 @@ void GenerateTriangles_kernel(float4* vertices, float4* normals, float translate
             const float interpolator = (thresholdValue - f0) / (VoxelValue(v1) - f0);
             float3 vertex = lerp(make_float3(v0.x, v0.y, v0.z), make_float3(v1.x, v1.y, v1.z), interpolator);
             edgeVertex[threadIdx.x * 6 + edgeIndex] = vertex;
+            // TODO store nearest atom per edge vertex
+            //edgeVertexNeighborAtom[threadIdx.x * 6 + edgeIndex] = (interpolator > 0.5) ?  NeighborAtom(v0) : NeighborAtom(v1);
             // Compute normal from gradient.
             edgeNormal[threadIdx.x * 6 + edgeIndex] = normalize(lerp(VoxelGradient(v0), VoxelGradient(v1), interpolator));
         }
@@ -329,6 +333,8 @@ void GenerateTriangles_kernel(float4* vertices, float4* normals, float translate
                 //	 edgeVertex[edgeIndex].z / 128.0f, 1.0f);
                 vertices[vertexOffset] = make_float4( edgeVertex[edgeIndex].x, 
                      edgeVertex[edgeIndex].y, edgeVertex[edgeIndex].z, 1.0f);
+                // TODO store nearest atom per output vertex
+                //neighborAtom[vertexOffset] = edgeVertexNeighborAtom[edgeIndex];
                 //normals[vertexOffset] = make_float4(faceNormal.x, faceNormal.y, faceNormal.z, 0.0f);
                 normals[vertexOffset] = make_float4(edgeNormal[edgeIndex].x, 
                     edgeNormal[edgeIndex].y, edgeNormal[edgeIndex].z, 0.0f);

@@ -169,7 +169,7 @@ namespace protein {
         bool UpdateMesh(float* densityMap, 
             vislib::math::Vector<float, 3> translation, 
             vislib::math::Vector<float, 3> scale, const float* aoVolumeHost, 
-            MolecularDataCall *mol);
+            MolecularDataCall *mol, int* neighborMap);
 
         /**
          *

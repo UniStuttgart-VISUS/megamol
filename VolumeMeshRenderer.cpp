@@ -503,7 +503,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
         this->radscaleParam.Param<param::FloatParam>()->Value(),
         this->gridspacingParam.Param<param::FloatParam>()->Value(),
         this->isoValueParam.Param<param::FloatParam>()->Value(),
-        true);
+        false);
 
     cudaDeviceSynchronize(); // Paranoia
 
@@ -544,8 +544,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
                 static_cast<unsigned int>(mol->AccessBoundingBoxes().ObjectSpaceBBox().Height() / 10.0f),
                 static_cast<unsigned int>(mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth() / 10.0f));
             float* aoVolumeHost = this->aoShader.createVolume(*mol);
-            //if (!UpdateMesh(volumeTex, translation, scale, aoVolumeHost)) {
-            if (!UpdateMesh( cqs->getMap(), translation, scale, aoVolumeHost, mol)) {
+            if (!UpdateMesh( cqs->getMap(), translation, scale, aoVolumeHost, mol, cqs->getNeighborMap())) {
                 delete[] aoVolumeHost;
                 return false;
             }
@@ -704,7 +703,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
  * VolumeMeshRenderer::UpdateMesh
  */
 bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<float, 3> translation, 
-    vislib::math::Vector<float, 3> scale, const float* aoVolumeHost, MolecularDataCall *mol) {
+    vislib::math::Vector<float, 3> scale, const float* aoVolumeHost, MolecularDataCall *mol, int* neighborMap) {
     using vislib::sys::Log;
     
     // allocate buffers for copies from previous step
@@ -747,7 +746,9 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
 
     cudaDeviceSynchronize(); // Paranoia
 
+    // ========================================================================
     // Phase 1: classify cubes.
+    // ========================================================================
     this->cubeCount = this->volumeSize.x * this->volumeSize.y * this->volumeSize.z;
     CUDA_VERIFY(ClassifyCubes(cubeStates, this->isoValue, this->cubeCount));
     CUDA_VERIFY(ScanCubes(cubeOffsets, cubeStates, this->cubeCount));
@@ -763,11 +764,15 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     //    static_cast<float>(this->activeCubeCount) / cubeCount * 100);
 
     cudaDeviceSynchronize(); // Paranoia
-
+    
+    // ========================================================================
     // Phase 2: compact active cubes.
+    // ========================================================================
     CUDA_VERIFY(CompactCubes(cubeMap, cubeOffsets, cubeStates, this->cubeCount));
-
+    
+    // ========================================================================
     // Phase 3: classify tetrahedrons (active cubes).
+    // ========================================================================
     const uint tetrahedronCount = activeCubeCount * 6;
     CUDA_VERIFY(ClassifyTetrahedronsInACube(verticesPerTetrahedron, cubeMap, this->isoValue,
         activeCubeCount));
@@ -793,15 +798,19 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     CUDA_VERIFY(cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&colors), &resourceSize, colorResource));
 
     cudaDeviceSynchronize(); // Paranoia
-
+    
+    // ========================================================================
     // Phase 4: generate triangles.
+    // ========================================================================
     CUDA_VERIFY(GenerateTriangles(vertices, normals, translation.X(), translation.Y(), translation.Z(),
         scale.X(), scale.Y(), scale.Z(), vertexOffsets, cubeMap, this->isoValue, tetrahedronCount));
     cudaDeviceSynchronize(); // Paranoia
     CUDA_VERIFY(ComputeTriangleAO( vertices, normals, triangleAO, triangleCount));
     cudaDeviceSynchronize(); // Paranoia
-
+    
+    // ========================================================================
     // Phase 5: label mesh using tetrahedral neighbors.
+    // ========================================================================
     bool hostModified;
     CUDA_VERIFY(MeshReset(eqList, refList, tetrahedronCount, vertexOffsets, triangleAO));
     cudaDeviceSynchronize(); // Paranoia
@@ -820,8 +829,10 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     }
 
     cudaDeviceSynchronize(); // Paranoia
-
+    
+    // ========================================================================
     // Phase 6: map, reduce and finalize mesh segments to centroids.
+    // ========================================================================
     uint centroidCount;
     CUDA_VERIFY(CentroidMap(vertexLabels, vertexOffsets, verticesPerTetrahedron, eqList, tetrahedronCount));
     CUDA_VERIFY(cudaMemcpy(verticesCopy, vertices, this->vertexCount * sizeof(float4), cudaMemcpyDeviceToDevice));
@@ -889,7 +900,9 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     
     // search for small segments and mark them for removal
     if (segmentsRemovedHost) {
+        // ====================================================================
         // Phase 5: label mesh using tetrahedral neighbors.
+        // ====================================================================
         bool hostModified;
         CUDA_VERIFY(MeshReset(eqList, refList, tetrahedronCount, vertexOffsets, triangleAO));
         cudaDeviceSynchronize(); // Paranoia
@@ -906,8 +919,10 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             CUDA_VERIFY(MeshLabeling(eqList, refList, tetrahedronCount));
         }
         cudaDeviceSynchronize(); // Paranoia
-
+        
+        // ====================================================================
         // Phase 6: map, reduce and finalize mesh segments to centroids.
+        // ====================================================================
         CUDA_VERIFY(CentroidMap(vertexLabels, vertexOffsets, verticesPerTetrahedron, eqList, tetrahedronCount));
         CUDA_VERIFY(cudaMemcpy(verticesCopy, vertices, this->vertexCount * sizeof(float4), cudaMemcpyDeviceToDevice));
         CUDA_VERIFY(cudaMemcpy(vertexLabelsCopy, vertexLabels, this->vertexCount * sizeof(uint), cudaMemcpyDeviceToDevice));
@@ -936,7 +951,9 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     //delete[] vl;
     //delete[] se;
     
+    // ========================================================================
     // Phase 7: correlate centroids
+    // ========================================================================
     vislib::StringA featureName;
     uint* centroidLabelsHost = new uint[centroidCount];
     uint* centroidCountsHost = new uint[centroidCount];
@@ -1109,14 +1126,18 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                         smf->SetPosition( centroidsHost[i].x, centroidsHost[i].y, centroidsHost[i].z);
                         this->splitMergeList.Append( sms);
                         // Add transition
-                        int test = smf->GetDataCount() - 1;
-                        this->transitionList.Add( new SplitMergeCall::SplitMergeTransition(
-                            tmpFeatureListIdx[i],
-                            0,
-                            centroidAreasHost[i],
-                            this->featureListIdx[j],
-                            prevFeatureDataLastIdx[j],
-                            centroidAreasLast[j]));
+                        int test = smf->GetDataCount() - 1;    
+                        if( tmpFeatureListIdx[i] == this->featureListIdx[j] ) {
+                            Log::DefaultLog.WriteError( 1, "%s, SplitMerge split partner list corrupted!", this->ClassName());
+                        } else {
+                            this->transitionList.Add( new SplitMergeCall::SplitMergeTransition(
+                                tmpFeatureListIdx[i],
+                                0,
+                                centroidAreasHost[i],
+                                this->featureListIdx[j],
+                                prevFeatureDataLastIdx[j],
+                                centroidAreasLast[j]));
+                        }
                     }
                 } else {
                     // --> continuity
@@ -1138,6 +1159,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                 vislib::Array<int> *partners = new vislib::Array<int>();
                 for( uint k = 0; k < cur2prevMatching[i].Count(); k++ ) {    
                     j = 0;
+                    // find the matching centroid label from the last time step (index j)
                     while( cur2prevMatching[i][k] != centroidLabelsLast[j] && j < centroidCountLast ) {
                         j++;
                     }
@@ -1176,6 +1198,10 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                 smf->SetPosition( centroidsHost[i].x, centroidsHost[i].y, centroidsHost[i].z);
                 // Add transition for all merge partners
                 for( unsigned int mpIdx = 0; mpIdx < (*partners).Count(); mpIdx++ ) {
+                    if( tmpFeatureListIdx[i] == (*partners)[mpIdx] ) {
+                        Log::DefaultLog.WriteError( 1, "%s, SplitMerge merge partner list corrupted!", this->ClassName());
+                        continue;
+                    }
                     // Add transition
                     smf = static_cast<SplitMergeFeature*>(this->splitMergeList[(*partners)[mpIdx]]->GetMappable());
                     unsigned int lastDataIdx = smf->GetDataCount() - 1;
@@ -1630,6 +1656,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     // TODO: für alle feature jede 0.5 T (MegaMol-time) wertepaar anhängen
     // TODO: hash implementieren (fuer diagramcall)
 
+    // Get feature selection for coloring
     IntSelectionCall *selectionCall = this->selectionCallerSlot.CallAs<IntSelectionCall>();
     if (selectionCall != NULL) {
         (*selectionCall)(IntSelectionCall::CallForGetSelection);
@@ -1648,7 +1675,8 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             }
         }
     }
-
+    
+    // Get feature selection for visibility of features
     IntSelectionCall *visibilityCall = this->hiddenCallerSlot.CallAs<IntSelectionCall>();
     if (visibilityCall != NULL) {
         (*visibilityCall)(IntSelectionCall::CallForGetSelection);
@@ -1668,8 +1696,8 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
         }
     }
 
+    // Set features visible/invisible (alpha value of centroid color)
     for( unsigned int i = 0; i < centroidCount; i++ ) {
-        //if( !this->featureList[this->featureListIdx[i]]->GetVisible() ) {
         float w;
         if (this->featureVisibility[this->featureListIdx[i]]) {
             w = 1.0f;
@@ -1686,8 +1714,10 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                 w);
         }
     }
-
+    
+    // ========================================================================
     // Phase 8: Colorize vertices by centroid.
+    // ========================================================================
     CUDA_VERIFY(cudaMemcpy(centroidColors, centroidColorsHost, centroidCount * sizeof(float4), cudaMemcpyHostToDevice));
     ColorizeByCentroid(colors, centroidColors, centroidLabels, centroidCount, vertexLabels, this->vertexCount);
     //ColorizeByAO(colors, triangleAO, aoThreshold, this->vertexCount);
@@ -2097,7 +2127,7 @@ int VolumeMeshRenderer::calcMap(MolecularDataCall *mol, float *posInter,
     float gridpadding = radscale * maxrad * 1.5f;
     float padrad = gridpadding;
     padrad = 0.4f * sqrtf(4.0f/3.0f*static_cast<float>(M_PI)*padrad*padrad*padrad);
-    gridpadding = std::max(gridpadding, padrad);
+    gridpadding = vislib::math::Max(gridpadding, padrad);
 
 #if VERBOSE
     printf("  Padding radius: %.3f  (minrad: %.3f maxrad: %.3f)\n", 
@@ -2215,9 +2245,9 @@ int VolumeMeshRenderer::calcMap(MolecularDataCall *mol, float *posInter,
     //    radscale, gridspacing, gausslim,
     //    gpunumverts, gv, gn, gc, gpunumfacets, gf);
     int rc = cqs->calc_map( mol->AtomCount(), &xyzr[0],
-        (useCol) ? &colors[0] : &this->atomColorTable[0],
+        (useCol) ? &colors[0] : NULL,
         useCol, origin, numvoxels, maxrad,
-        radscale, gridspacing, isoval, gausslim);
+        radscale, gridspacing, isoval, gausslim, true);
 
     if (rc == 0) {
         free(xyzr);

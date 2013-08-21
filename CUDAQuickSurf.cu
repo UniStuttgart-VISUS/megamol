@@ -105,6 +105,16 @@ static void * cudadensitythread(void *);
 #define FLOPSPERATOMEVAL    (17.0/2.0)
 #endif
 
+
+__global__ static void setArrayToInt( int count, int* array, int value) {
+    // get global index
+    const unsigned int idx = __umul24(__umul24(blockIdx.y, gridDim.x) + blockIdx.x, blockDim.x) + threadIdx.x;
+    // early exit if this thread is outside of the grid bounds
+    if (idx >= count)
+        return;
+    array[idx] = value;
+}
+
 __global__ static void gaussdensity_direct_tex(int natoms, 
                                         const float4 *xyzr, 
                                         const float4 *colors,
@@ -681,6 +691,7 @@ __global__ void sortAtomsGenCellLists(unsigned int natoms,
                            const float4 *xyzr_d,
                            const float4 *color_d,
                            const unsigned int *atomIndex_d,
+                           unsigned int *sorted_atomIndex_d,
                            const unsigned int *atomHash_d,
                            float4 *sorted_xyzr_d,
                            float4 *sorted_color_d,
@@ -716,6 +727,7 @@ __global__ void sortAtomsGenCellLists(unsigned int natoms,
 
     // Reorder atoms according to sorted indices
     unsigned int sortedIndex = atomIndex_d[index];
+    sorted_atomIndex_d[sortedIndex] = index;
     float4 pos = xyzr_d[sortedIndex];
     sorted_xyzr_d[index] = pos;
  
@@ -734,6 +746,7 @@ int vmd_cuda_build_density_atom_grid(int natoms,
                                      float4 * sorted_xyzr_d,
                                      float4 * sorted_color_d,
                                      unsigned int *atomIndex_d,
+                                     unsigned int *sorted_atomIndex_d,
                                      unsigned int *atomHash_d,
                                      uint2 * cellStartEnd_d,
                                      int3 volsz,
@@ -774,8 +787,8 @@ int vmd_cuda_build_density_atom_grid(int natoms,
   //     per-dimension 65535 block grid size limitation
   unsigned int smemSize = sizeof(unsigned int)*(hBsz.x+1);
   sortAtomsGenCellLists<<<hGsz, hBsz, smemSize>>>(
-                       natoms, xyzr_d, color_d, atomIndex_d, atomHash_d, 
-                       sorted_xyzr_d, sorted_color_d, cellStartEnd_d);
+                       natoms, xyzr_d, color_d, atomIndex_d, sorted_atomIndex_d, 
+                       atomHash_d, sorted_xyzr_d, sorted_color_d, cellStartEnd_d);
 
 #if 1
   // XXX when the code is ready for production use, we can disable
@@ -824,7 +837,10 @@ __global__ static void gaussdensity_fast_tex(int natoms,
                                          float gridspacing, unsigned int z, 
                                          float *densitygrid,
                                          float3 *voltexmap,
-                                         float invisovalue) {
+                                         float invisovalue,
+                                         bool storeNearestNeighbor,
+                                         int* nearestNeighbor,
+                                         unsigned int* sorted_atomIndex) {
   unsigned int xindex  = (blockIdx.x * blockDim.x) + threadIdx.x;
   unsigned int yindex  = (blockIdx.y * blockDim.y) + threadIdx.y;
   unsigned int zindex  = ((blockIdx.z * blockDim.z) + threadIdx.z) * GTEXUNROLL;
@@ -873,6 +889,25 @@ __global__ static void gaussdensity_fast_tex(int natoms,
   float3 densitycol4=densitycol1;
 #endif
 
+  // the minimum distance to the next atom
+  float minDist1 = 2.0f * gridspacing;
+#if GTEXUNROLL >= 2
+  float minDist2 = 2.0f * gridspacing;
+#endif
+#if GTEXUNROLL >= 4
+  float minDist3 = 2.0f * gridspacing;
+  float minDist4 = 2.0f * gridspacing;
+#endif
+  // the index of the next atom
+  int neighbor1 = -1;
+#if GTEXUNROLL >= 2
+  int neighbor2 = -1;
+#endif
+#if GTEXUNROLL >= 4
+  int neighbor3 = -1;
+  int neighbor4 = -1;
+#endif
+
   int acplanesz = acncells.x * acncells.y;
   int xab, yab, zab;
   for (zab=zabmin; zab<=zabmax; zab++) {
@@ -888,7 +923,6 @@ __global__ static void gaussdensity_fast_tex(int natoms,
             float dx = coorx - atom.x;
             float dy = coory - atom.y;
             float dxy2 = dx*dx + dy*dy;
-
             float dz = coorz - atom.z;
             float r21 = (dxy2 + dz*dz) * atom.w;
             float tmp1 = exp2f(r21);
@@ -897,6 +931,11 @@ __global__ static void gaussdensity_fast_tex(int natoms,
             densitycol1.x += tmp1 * color.x;
             densitycol1.y += tmp1 * color.y;
             densitycol1.z += tmp1 * color.z;
+            // store nearest neighbor
+            if( (dxy2 + dz*dz) < minDist1 ) {
+                minDist1 = (dxy2 + dz*dz);
+                neighbor1 = atomid;
+            }
 
 #if GTEXUNROLL >= 2
             float dz2 = dz + gridspacing;
@@ -907,6 +946,11 @@ __global__ static void gaussdensity_fast_tex(int natoms,
             densitycol2.x += tmp2 * color.x;
             densitycol2.y += tmp2 * color.y;
             densitycol2.z += tmp2 * color.z;
+            // store nearest neighbor
+            if( (dxy2 + dz2*dz2) < minDist2 ) {
+                minDist2 = (dxy2 + dz2*dz2);
+                neighbor2 = atomid;
+            }
 #endif
 #if GTEXUNROLL >= 4
             float dz3 = dz2 + gridspacing;
@@ -917,6 +961,11 @@ __global__ static void gaussdensity_fast_tex(int natoms,
             densitycol3.x += tmp3 * color.x;
             densitycol3.y += tmp3 * color.y;
             densitycol3.z += tmp3 * color.z;
+            // store nearest neighbor
+            if( (dxy2 + dz3*dz3) < minDist3 ) {
+                minDist3 = (dxy2 + dz3*dz3);
+                neighbor3 = atomid;
+            }
 
             float dz4 = dz3 + gridspacing;
             float r24 = (dxy2 + dz4*dz4) * atom.w;
@@ -926,6 +975,11 @@ __global__ static void gaussdensity_fast_tex(int natoms,
             densitycol4.x += tmp4 * color.x;
             densitycol4.y += tmp4 * color.y;
             densitycol4.z += tmp4 * color.z;
+            // store nearest neighbor
+            if( (dxy2 + dz4*dz4) < minDist4 ) {
+                minDist4 = (dxy2 + dz4*dz4);
+                neighbor4 = atomid;
+            }
 #endif
           }
         }
@@ -956,6 +1010,18 @@ __global__ static void gaussdensity_fast_tex(int natoms,
   voltexmap[outaddr + 3*planesz].y = densitycol4.y;
   voltexmap[outaddr + 3*planesz].z = densitycol4.z;
 #endif
+  
+  if( storeNearestNeighbor ) {
+    nearestNeighbor[outaddr          ] = sorted_atomIndex[neighbor1];
+#if GUNROLL >= 2
+    int planesz = numvoxels.x * numvoxels.y;
+    nearestNeighbor[outaddr + planesz] = sorted_atomIndex[neighbor2];
+#endif
+#if GUNROLL >= 4
+    nearestNeighbor[outaddr + 2*planesz] = sorted_atomIndex[neighbor3];
+    nearestNeighbor[outaddr + 3*planesz] = sorted_atomIndex[neighbor4];
+#endif
+  }
 }
 
 
@@ -967,7 +1033,10 @@ __global__ static void gaussdensity_fast(int natoms,
                                          float invacgridspacing,
                                          const uint2 * cellStartEnd,
                                          float gridspacing, unsigned int z, 
-                                         float *densitygrid) {
+                                         float *densitygrid,
+                                         bool storeNearestNeighbor,
+                                         int* nearestNeighbor,
+                                         unsigned int* sorted_atomIndex) {
   unsigned int xindex  = (blockIdx.x * blockDim.x) + threadIdx.x;
   unsigned int yindex  = (blockIdx.y * blockDim.y) + threadIdx.y;
   unsigned int zindex  = ((blockIdx.z * blockDim.z) + threadIdx.z) * GUNROLL;
@@ -1010,6 +1079,25 @@ __global__ static void gaussdensity_fast(int natoms,
   float densityval3=0.0f;
   float densityval4=0.0f;
 #endif
+  
+  // the minimum distance to the next atom
+  float minDist1 = 2.0f * gridspacing;
+#if GTEXUNROLL >= 2
+  float minDist2 = 2.0f * gridspacing;
+#endif
+#if GTEXUNROLL >= 4
+  float minDist3 = 2.0f * gridspacing;
+  float minDist4 = 2.0f * gridspacing;
+#endif
+  // the index of the next atom
+  int neighbor1 = -1;
+#if GTEXUNROLL >= 2
+  int neighbor2 = -1;
+#endif
+#if GTEXUNROLL >= 4
+  int neighbor3 = -1;
+  int neighbor4 = -1;
+#endif
 
   int acplanesz = acncells.x * acncells.y;
   int xab, yab, zab;
@@ -1029,27 +1117,47 @@ __global__ static void gaussdensity_fast(int natoms,
             float dz = coorz - atom.z;
             float r21 = (dxy2 + dz*dz) * atom.w;
             densityval1 += exp2f(r21);
+            // store nearest neighbor
+            if( (dxy2 + dz*dz) < minDist1 ) {
+                minDist1 = (dxy2 + dz*dz);
+                neighbor1 = atomid;
+            }
 
 #if GUNROLL >= 2
             float dz2 = dz + gridspacing;
             float r22 = (dxy2 + dz2*dz2) * atom.w;
             densityval2 += exp2f(r22);
+            // store nearest neighbor
+            if( (dxy2 + dz2*dz2) < minDist2 ) {
+                minDist2 = (dxy2 + dz2*dz2);
+                neighbor2 = atomid;
+            }
 #endif
 #if GUNROLL >= 4
             float dz3 = dz2 + gridspacing;
             float r23 = (dxy2 + dz3*dz3) * atom.w;
             densityval3 += exp2f(r23);
+            // store nearest neighbor
+            if( (dxy2 + dz3*dz3) < minDist3 ) {
+                minDist3 = (dxy2 + dz3*dz3);
+                neighbor3 = atomid;
+            }
 
             float dz4 = dz3 + gridspacing;
             float r24 = (dxy2 + dz4*dz4) * atom.w;
             densityval4 += exp2f(r24);
+            // store nearest neighbor
+            if( (dxy2 + dz4*dz4) < minDist4 ) {
+                minDist4 = (dxy2 + dz4*dz4);
+                neighbor4 = atomid;
+            }
 #endif
           }
         }
       }
     }
   }
-
+  
   densitygrid[outaddr            ] = densityval1;
 #if GUNROLL >= 2
   int planesz = numvoxels.x * numvoxels.y;
@@ -1059,6 +1167,18 @@ __global__ static void gaussdensity_fast(int natoms,
   densitygrid[outaddr + 2*planesz] = densityval3;
   densitygrid[outaddr + 3*planesz] = densityval4;
 #endif
+  
+  if( storeNearestNeighbor ) {
+    nearestNeighbor[outaddr          ] = sorted_atomIndex[neighbor1];
+#if GUNROLL >= 2
+    int planesz = numvoxels.x * numvoxels.y;
+    nearestNeighbor[outaddr + planesz] = sorted_atomIndex[neighbor2];
+#endif
+#if GUNROLL >= 4
+    nearestNeighbor[outaddr + 2*planesz] = sorted_atomIndex[neighbor3];
+    nearestNeighbor[outaddr + 3*planesz] = sorted_atomIndex[neighbor4];
+#endif
+  }
 }
 
 
@@ -1079,8 +1199,10 @@ typedef struct {
   float4 *sorted_xyzr_d;     ///< cell-sorted coords and radii
   float4 *color_d;           ///< colors
   float4 *sorted_color_d;    ///< cell-sorted colors
-
+  int *nearest_atom_d;           ///< colors
+  
   unsigned int *atomIndex_d; ///< cell index for each atom
+  unsigned int *sorted_atomIndex_d; ///< original index for each sorted atom
   unsigned int *atomHash_d;  ///<  
   uint2 *cellStartEnd_d;     ///< cell start/end indices 
 
@@ -1156,10 +1278,14 @@ int CUDAQuickSurf::free_bufs() {
   if (gpuh->sorted_color_d != NULL)
     cudaFree(gpuh->sorted_color_d);
   gpuh->sorted_color_d=NULL;
-
+  
   if (gpuh->atomIndex_d != NULL)
     cudaFree(gpuh->atomIndex_d);
   gpuh->atomIndex_d=NULL;
+
+  if (gpuh->sorted_atomIndex_d != NULL)
+    cudaFree(gpuh->sorted_atomIndex_d);
+  gpuh->sorted_atomIndex_d=NULL;
 
   if (gpuh->atomHash_d != NULL)
     cudaFree(gpuh->atomHash_d);
@@ -1236,10 +1362,18 @@ int CUDAQuickSurf::free_bufs_map() {
   if (gpuh->sorted_color_d != NULL)
     cudaFree(gpuh->sorted_color_d);
   gpuh->sorted_color_d=NULL;
-
+  
+  if (gpuh->nearest_atom_d != NULL)
+      cudaFree(gpuh->nearest_atom_d);
+  gpuh->nearest_atom_d=NULL;
+  
   if (gpuh->atomIndex_d != NULL)
     cudaFree(gpuh->atomIndex_d);
   gpuh->atomIndex_d=NULL;
+
+  if (gpuh->sorted_atomIndex_d != NULL)
+    cudaFree(gpuh->sorted_atomIndex_d);
+  gpuh->sorted_atomIndex_d=NULL;
 
   if (gpuh->atomHash_d != NULL)
     cudaFree(gpuh->atomHash_d);
@@ -1295,6 +1429,7 @@ int CUDAQuickSurf::alloc_bufs(long int natoms, int colorperatom,
   cudaMalloc((void**)&gpuh->xyzr_d, natoms * sizeof(float4));
   cudaMalloc((void**)&gpuh->sorted_xyzr_d, natoms * sizeof(float4));
   cudaMalloc((void**)&gpuh->atomIndex_d, natoms * sizeof(unsigned int));
+  cudaMalloc((void**)&gpuh->sorted_atomIndex_d, natoms * sizeof(unsigned int));
   cudaMalloc((void**)&gpuh->atomHash_d, natoms * sizeof(unsigned int));
   cudaMalloc((void**)&gpuh->cellStartEnd_d, ncells * sizeof(uint2));
 
@@ -1350,7 +1485,8 @@ int CUDAQuickSurf::alloc_bufs(long int natoms, int colorperatom,
 
 
 int CUDAQuickSurf::alloc_bufs_map(long int natoms, int colorperatom, 
-                                  int gx, int gy, int gz) {
+                                  int gx, int gy, int gz,
+                                  bool storeNearestAtom) {
   qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
 
   // early exit from allocation call if we've already got existing
@@ -1375,9 +1511,13 @@ int CUDAQuickSurf::alloc_bufs_map(long int natoms, int colorperatom,
     cudaMalloc((void**)&gpuh->color_d, natoms * sizeof(float4));
     cudaMalloc((void**)&gpuh->sorted_color_d, natoms * sizeof(float4));
   }
+  if (storeNearestAtom) {
+      cudaMalloc((void**)&gpuh->nearest_atom_d, ncells * sizeof(int));
+  }
   cudaMalloc((void**)&gpuh->xyzr_d, natoms * sizeof(float4));
   cudaMalloc((void**)&gpuh->sorted_xyzr_d, natoms * sizeof(float4));
   cudaMalloc((void**)&gpuh->atomIndex_d, natoms * sizeof(unsigned int));
+  cudaMalloc((void**)&gpuh->sorted_atomIndex_d, natoms * sizeof(unsigned int));
   cudaMalloc((void**)&gpuh->atomHash_d, natoms * sizeof(unsigned int));
   cudaMalloc((void**)&gpuh->cellStartEnd_d, ncells * sizeof(uint2));
   
@@ -1491,7 +1631,8 @@ int CUDAQuickSurf::get_chunk_bufs_map(int testexisting,
                                   long int natoms, int colorperatom, 
                                   int gx, int gy, int gz,
                                   int &cx, int &cy, int &cz,
-                                  int &sx, int &sy, int &sz) {
+                                  int &sx, int &sy, int &sz,
+                                  bool storeNearestAtom) {
   dim3 Bsz(GBLOCKSZX, GBLOCKSZY, GBLOCKSZZ);
   if (colorperatom)
     Bsz.z = GTEXBLOCKSZZ;
@@ -1560,7 +1701,7 @@ int CUDAQuickSurf::get_chunk_bufs_map(int testexisting,
       if (check_bufs(natoms, colorperatom, cx, cy, cz) != 0)
         continue;
     } else {
-      if (alloc_bufs_map(natoms, colorperatom, cx, cy, cz) != 0)
+      if (alloc_bufs_map(natoms, colorperatom, cx, cy, cz, storeNearestAtom) != 0)
         continue;
     }
 
@@ -1716,8 +1857,8 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
   if (vmd_cuda_build_density_atom_grid(natoms, gpuh->xyzr_d, gpuh->color_d,
                                        gpuh->sorted_xyzr_d,
                                        gpuh->sorted_color_d,
-                                       gpuh->atomIndex_d, gpuh->atomHash_d,
-                                       gpuh->cellStartEnd_d, 
+                                       gpuh->atomIndex_d, gpuh->sorted_atomIndex_d,
+                                       gpuh->atomHash_d, gpuh->cellStartEnd_d, 
                                        accelcells, 1.0f / acgridspacing) != 0) {
     wkf_timer_destroy(globaltimer);
     free_bufs();
@@ -1839,12 +1980,12 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
             gpuh->sorted_xyzr_d, gpuh->sorted_color_d, 
             curslab, accelcells, acgridspacing,
             1.0f / acgridspacing, gpuh->cellStartEnd_d, gridspacing, z+lzinc,
-            volslice_d, (float3 *) texslice_d, 1.0f / isovalue);
+            volslice_d, (float3 *) texslice_d, 1.0f / isovalue, false, 0, 0);
       } else {
         gaussdensity_fast<<<Gszslice, Bsz, 0>>>(natoms, 
             gpuh->sorted_xyzr_d, 
             curslab, accelcells, acgridspacing, 1.0f / acgridspacing, 
-            gpuh->cellStartEnd_d, gridspacing, z+lzinc, volslice_d);
+            gpuh->cellStartEnd_d, gridspacing, z+lzinc, volslice_d, false, 0, 0);
       }
     }
     cudaThreadSynchronize(); 
@@ -2129,7 +2270,8 @@ int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f,
                              int colorperatom,
                              float *origin, int *numvoxels, float maxrad,
                              float radscale, float gridspacing, 
-                             float isovalue, float gausslim) {
+                             float isovalue, float gausslim, 
+                             bool storeNearestAtom) {
   qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
 
   float4 *colors = (float4 *) colors_f;
@@ -2222,7 +2364,7 @@ int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f,
       get_chunk_bufs_map(1, natoms, colorperatom,
                      volsz.x, volsz.y, volsz.z,
                      chunksz.x, chunksz.y, chunksz.z,
-                     slabsz.x, slabsz.y, slabsz.z) == -1) {
+                     slabsz.x, slabsz.y, slabsz.z, storeNearestAtom) == -1) {
     // reset the chunksz and slabsz after failing to try and
     // fit them into the existing allocations...
     chunksz = volsz;
@@ -2233,7 +2375,7 @@ int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f,
     if (get_chunk_bufs_map(0, natoms, colorperatom,
                        volsz.x, volsz.y, volsz.z,
                        chunksz.x, chunksz.y, chunksz.z,
-                       slabsz.x, slabsz.y, slabsz.z) == -1) {
+                       slabsz.x, slabsz.y, slabsz.z, storeNearestAtom) == -1) {
       wkf_timer_destroy(globaltimer);
       free(xyzr);
       return -1;
@@ -2257,14 +2399,28 @@ int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f,
   cudaMemcpy(gpuh->xyzr_d, xyzr, natoms * sizeof(float4), cudaMemcpyHostToDevice);
   if (colorperatom)
     cudaMemcpy(gpuh->color_d, colors, natoms * sizeof(float4), cudaMemcpyHostToDevice);
+  // set all nearest neighbor values to -1 (no neighbor)
+  if (storeNearestAtom) {
+      int gridDim = gpuh->gx * gpuh->gy * gpuh->gz;
+      const dim3 maxGridSize(65535, 65535, 0);
+      const int blocksPerGrid = (gridDim + 256 - 1) / 256;
+      dim3 grid(blocksPerGrid, 1, 1);
+      // Test if grid needs to be extended to 2D.
+      while (grid.x > maxGridSize.x) {
+          grid.x /= 2;
+          grid.y *= 2;
+      }
+      setArrayToInt<<<grid, 256>>>( gridDim, gpuh->nearest_atom_d, -1);
+  }
+  
   free(xyzr);
  
   // build uniform grid acceleration structure
   if (vmd_cuda_build_density_atom_grid(natoms, gpuh->xyzr_d, gpuh->color_d,
                                        gpuh->sorted_xyzr_d,
                                        gpuh->sorted_color_d,
-                                       gpuh->atomIndex_d, gpuh->atomHash_d,
-                                       gpuh->cellStartEnd_d, 
+                                       gpuh->atomIndex_d, gpuh->sorted_atomIndex_d,
+                                       gpuh->atomHash_d, gpuh->cellStartEnd_d, 
                                        accelcells, 1.0f / acgridspacing) != 0) {
     wkf_timer_destroy(globaltimer);
     free_bufs();
@@ -2349,12 +2505,12 @@ int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f,
             gpuh->sorted_xyzr_d, gpuh->sorted_color_d, 
             curslab, accelcells, acgridspacing,
             1.0f / acgridspacing, gpuh->cellStartEnd_d, gridspacing, z+lzinc,
-            volslice_d, (float3 *) texslice_d, 1.0f / isovalue);
+            volslice_d, (float3 *) texslice_d, 1.0f / isovalue, storeNearestAtom, gpuh->nearest_atom_d, gpuh->sorted_atomIndex_d);
       } else {
         gaussdensity_fast<<<Gszslice, Bsz, 0>>>(natoms, 
             gpuh->sorted_xyzr_d, 
             curslab, accelcells, acgridspacing, 1.0f / acgridspacing, 
-            gpuh->cellStartEnd_d, gridspacing, z+lzinc, volslice_d);
+            gpuh->cellStartEnd_d, gridspacing, z+lzinc, volslice_d, storeNearestAtom, gpuh->nearest_atom_d, gpuh->sorted_atomIndex_d);
       }
     }
     cudaThreadSynchronize(); 
@@ -2414,6 +2570,11 @@ float* CUDAQuickSurf::getMap() {
 float* CUDAQuickSurf::getColorMap() {
     qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
     return gpuh->devvoltexmap;
+}
+
+int* CUDAQuickSurf::getNeighborMap() {
+  qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
+  return gpuh->nearest_atom_d;
 }
 
 /*void CUDAQuickSurf::setDensFilterVals(float rad, int minN) {

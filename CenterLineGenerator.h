@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vislib/Point.h"
-#include <set>
+#include <unordered_set>
 #include <vector>
 
 class CenterLineGenerator
@@ -13,8 +13,8 @@ public:
 	struct Node;
 	struct Edge;
 
-	typedef std::set<Node*> Nodes;
-	typedef std::set<Edge*> Edges;
+    typedef std::unordered_set<Node*> Nodes;
+	typedef std::unordered_set<Edge*> Edges;
 
 	struct Node
 	{
@@ -54,8 +54,8 @@ public:
 	
 	struct CenterLineNode;
 	struct CenterLineEdge;
-	typedef std::set<CenterLineEdge*> CenterLineEdges;
-	typedef std::set<CenterLineNode*> CenterLineNodes;
+	typedef std::unordered_set<CenterLineEdge*> CenterLineEdges;
+	typedef std::unordered_set<CenterLineNode*> CenterLineNodes;
 
 	struct CenterLineNode
 	{
