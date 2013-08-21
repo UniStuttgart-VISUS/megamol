@@ -169,7 +169,7 @@ namespace net {
 
         for (SIZE_T i = 0; i < this->addresses.Count()
                 && this->canonicalName.IsEmpty(); ++i) {
-            IPEndPoint ep(this->addresses[i]);
+            IPEndPoint ep(this->addresses[i], 0);
             socklen_t size = (ep.GetAddressFamily() == IPEndPoint::FAMILY_INET)
                 ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
             if ((err = ::getnameinfo(static_cast<const sockaddr *>(ep), size,
