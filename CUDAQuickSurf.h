@@ -52,7 +52,8 @@ struct Vertex
                  int gx, int gy, int gz);
   
   int alloc_bufs_map(long int natoms, int colorperatom, 
-                     int gx, int gy, int gz);
+                     int gx, int gy, int gz,
+                     bool storeNearestAtom = false);
   
   int get_chunk_bufs(int testexisting,
                      long int natoms, int colorperatom, 
@@ -64,7 +65,8 @@ struct Vertex
                      long int natoms, int colorperatom, 
                      int gx, int gy, int gz,
                      int &cx, int &cy, int &cz,
-                     int &sx, int &sy, int &sz);
+                     int &sx, int &sy, int &sz,
+                     bool storeNearestAtom = false);
   
   int calc_surf(long int natoms, const float *xyzr, const float *colors,
                 int colorperatom, float *origin, int* numvoxels, float maxrad,
@@ -76,18 +78,19 @@ struct Vertex
   int calc_map(long int natoms, const float *xyzr, const float *colors,
                int colorperatom, float *origin, int* numvoxels, float maxrad,
                float radscale, float gridspacing,
-               float isovalue, float gausslim);
+               float isovalue, float gausslim, bool storeNearestAtom = false);
   
-  int calc_map_alt(long int natoms, const float *xyzr, const float *colors,
-               int colorperatom, float *origin, int* numvoxels, float maxrad,
-               float radscale, float gridspacing,
-               float isovalue, float gausslim);
+  //int calc_map_alt(long int natoms, const float *xyzr, const float *colors,
+  //             int colorperatom, float *origin, int* numvoxels, float maxrad,
+  //             float radscale, float gridspacing,
+  //             float isovalue, float gausslim);
 
   int getMapSizeX();
   int getMapSizeY();
   int getMapSizeZ();
   float* getMap();
   float* getColorMap();
+  int* getNeighborMap();
 
   //void setDensFilterVals(float rad, int minN);
 
