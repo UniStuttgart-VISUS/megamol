@@ -840,7 +840,7 @@ __global__ static void gaussdensity_fast_tex(int natoms,
                                          float invisovalue,
                                          bool storeNearestNeighbor,
                                          int* nearestNeighbor,
-                                         unsigned int* sorted_atomIndex) {
+                                         unsigned int* atomIndex) {
   unsigned int xindex  = (blockIdx.x * blockDim.x) + threadIdx.x;
   unsigned int yindex  = (blockIdx.y * blockDim.y) + threadIdx.y;
   unsigned int zindex  = ((blockIdx.z * blockDim.z) + threadIdx.z) * GTEXUNROLL;
@@ -890,13 +890,13 @@ __global__ static void gaussdensity_fast_tex(int natoms,
 #endif
 
   // the minimum distance to the next atom
-  float minDist1 = 2.0f * gridspacing;
+  float minDist1 = 1000000.0f;
 #if GTEXUNROLL >= 2
-  float minDist2 = 2.0f * gridspacing;
+  float minDist2 = minDist1;
 #endif
 #if GTEXUNROLL >= 4
-  float minDist3 = 2.0f * gridspacing;
-  float minDist4 = 2.0f * gridspacing;
+  float minDist3 = minDist1;
+  float minDist4 = minDist1;
 #endif
   // the index of the next atom
   int neighbor1 = -1;
@@ -1012,14 +1012,14 @@ __global__ static void gaussdensity_fast_tex(int natoms,
 #endif
   
   if( storeNearestNeighbor ) {
-    nearestNeighbor[outaddr          ] = sorted_atomIndex[neighbor1];
+    nearestNeighbor[outaddr          ] = atomIndex[neighbor1];
 #if GUNROLL >= 2
     int planesz = numvoxels.x * numvoxels.y;
-    nearestNeighbor[outaddr + planesz] = sorted_atomIndex[neighbor2];
+    nearestNeighbor[outaddr + planesz] = atomIndex[neighbor2];
 #endif
 #if GUNROLL >= 4
-    nearestNeighbor[outaddr + 2*planesz] = sorted_atomIndex[neighbor3];
-    nearestNeighbor[outaddr + 3*planesz] = sorted_atomIndex[neighbor4];
+    nearestNeighbor[outaddr + 2*planesz] = atomIndex[neighbor3];
+    nearestNeighbor[outaddr + 3*planesz] = atomIndex[neighbor4];
 #endif
   }
 }
@@ -1036,7 +1036,7 @@ __global__ static void gaussdensity_fast(int natoms,
                                          float *densitygrid,
                                          bool storeNearestNeighbor,
                                          int* nearestNeighbor,
-                                         unsigned int* sorted_atomIndex) {
+                                         unsigned int* atomIndex) {
   unsigned int xindex  = (blockIdx.x * blockDim.x) + threadIdx.x;
   unsigned int yindex  = (blockIdx.y * blockDim.y) + threadIdx.y;
   unsigned int zindex  = ((blockIdx.z * blockDim.z) + threadIdx.z) * GUNROLL;
@@ -1081,13 +1081,13 @@ __global__ static void gaussdensity_fast(int natoms,
 #endif
   
   // the minimum distance to the next atom
-  float minDist1 = 2.0f * gridspacing;
+  float minDist1 = 1000000.0f;
 #if GTEXUNROLL >= 2
-  float minDist2 = 2.0f * gridspacing;
+  float minDist2 = minDist1;
 #endif
 #if GTEXUNROLL >= 4
-  float minDist3 = 2.0f * gridspacing;
-  float minDist4 = 2.0f * gridspacing;
+  float minDist3 = minDist1;
+  float minDist4 = minDist1;
 #endif
   // the index of the next atom
   int neighbor1 = -1;
@@ -1169,14 +1169,14 @@ __global__ static void gaussdensity_fast(int natoms,
 #endif
   
   if( storeNearestNeighbor ) {
-    nearestNeighbor[outaddr          ] = sorted_atomIndex[neighbor1];
+    nearestNeighbor[outaddr          ] = atomIndex[neighbor1];
 #if GUNROLL >= 2
     int planesz = numvoxels.x * numvoxels.y;
-    nearestNeighbor[outaddr + planesz] = sorted_atomIndex[neighbor2];
+    nearestNeighbor[outaddr + planesz] = atomIndex[neighbor2];
 #endif
 #if GUNROLL >= 4
-    nearestNeighbor[outaddr + 2*planesz] = sorted_atomIndex[neighbor3];
-    nearestNeighbor[outaddr + 3*planesz] = sorted_atomIndex[neighbor4];
+    nearestNeighbor[outaddr + 2*planesz] = atomIndex[neighbor3];
+    nearestNeighbor[outaddr + 3*planesz] = atomIndex[neighbor4];
 #endif
   }
 }
@@ -2505,12 +2505,12 @@ int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f,
             gpuh->sorted_xyzr_d, gpuh->sorted_color_d, 
             curslab, accelcells, acgridspacing,
             1.0f / acgridspacing, gpuh->cellStartEnd_d, gridspacing, z+lzinc,
-            volslice_d, (float3 *) texslice_d, 1.0f / isovalue, storeNearestAtom, gpuh->nearest_atom_d, gpuh->sorted_atomIndex_d);
+            volslice_d, (float3 *) texslice_d, 1.0f / isovalue, storeNearestAtom, gpuh->nearest_atom_d, gpuh->atomIndex_d);
       } else {
         gaussdensity_fast<<<Gszslice, Bsz, 0>>>(natoms, 
             gpuh->sorted_xyzr_d, 
             curslab, accelcells, acgridspacing, 1.0f / acgridspacing, 
-            gpuh->cellStartEnd_d, gridspacing, z+lzinc, volslice_d, storeNearestAtom, gpuh->nearest_atom_d, gpuh->sorted_atomIndex_d);
+            gpuh->cellStartEnd_d, gridspacing, z+lzinc, volslice_d, storeNearestAtom, gpuh->nearest_atom_d, gpuh->atomIndex_d);
       }
     }
     cudaThreadSynchronize(); 

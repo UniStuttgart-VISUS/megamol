@@ -62,6 +62,9 @@ cudaError BindVolumeTexture(float* textureArray);
 //cudaError BindVolumeTexture(cudaArray* textureArray);
 
 extern "C"
+cudaError BindNeighborAtomTexture(int* textureArray);
+
+extern "C"
 cudaError UnbindVolumeTexture();
 
 extern "C"
@@ -86,7 +89,7 @@ extern "C"
 cudaError ScanTetrahedrons(uint* vertexOffsets, uint* verticesPerTetrahedron, uint tetrahedronCount);
 
 extern "C"
-cudaError GenerateTriangles(float4* vertices, float4* normals, float translateX, float translateY, float translateZ,
+cudaError GenerateTriangles(float4* vertices, int* neighborAtoms, float4* normals, float translateX, float translateY, float translateZ,
     float scaleX, float scaleY, float scaleZ, uint* vertexOffsets, uint* cubeMap, float thresholdValue, uint tetrahedronCount);
 
 extern "C"

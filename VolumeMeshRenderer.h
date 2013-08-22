@@ -428,7 +428,20 @@ namespace protein {
 
         /** data bounding box */
         vislib::math::Cuboid<float> dataBBox;
-
+        
+        /** host array for the nearest neighbor atom for each vertex */
+        int *neighborAtomOfVertex;
+        /** device array for the nearest neighbor atom for each vertex */
+        int *neighborAtomOfVertex_d;
+        /** the vertex color array */
+        float* vertexColors;
+        
+        /** pinned memory for start and end of features */
+        uint2 *featureStartEndHost;
+        /** pinned memory for feature triangle vertices */
+        float4 *featureTriangleVerticesHost;
+        /** counter for feature triangles */
+        unsigned int featureTrianglesCount;
     };
 
 
