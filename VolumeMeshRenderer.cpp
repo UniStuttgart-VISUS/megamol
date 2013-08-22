@@ -38,6 +38,7 @@
 #include <thrust/reduce.h>
 #include <thrust/sort.h>
 #include <omp.h>
+#include "CenterLineGenerator.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -597,6 +598,22 @@ bool VolumeMeshRenderer::Render(Call& call) {
 
     //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Scale: %f\n", scale);
     
+    
+    // TEST feature triangle drawing ...
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
+    glLineWidth(3.0f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glColor3f( 1.0f, 1.0f, 1.0f);
+    glBegin( GL_TRIANGLES);
+    for(unsigned int tCnt = 0; tCnt < this->featureTrianglesCount; tCnt++ ) {
+        glVertex3f( this->featureTriangleVerticesHost[3*tCnt].x,  this->featureTriangleVerticesHost[3*tCnt].y,  this->featureTriangleVerticesHost[3*tCnt].z);
+        glVertex3f( this->featureTriangleVerticesHost[3*tCnt+1].x,  this->featureTriangleVerticesHost[3*tCnt+1].y,  this->featureTriangleVerticesHost[3*tCnt+1].z);
+        glVertex3f( this->featureTriangleVerticesHost[3*tCnt+2].x,  this->featureTriangleVerticesHost[3*tCnt+2].y,  this->featureTriangleVerticesHost[3*tCnt+2].z);
+    }
+    glEnd();
+    // ... TEST feature triangle drawing
+
     // Bind VBOs.
     glBindBufferARB(GL_ARRAY_BUFFER, this->positionVbo);
     glVertexPointer(4, GL_FLOAT, sizeof(GLfloat) * 4, 0);
@@ -726,6 +743,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
         return false;
     }
     CUDA_VERIFY(BindVolumeTexture( densityMap));
+    CUDA_VERIFY(BindNeighborAtomTexture( neighborMap));
 
     cudaDeviceSynchronize(); // Paranoia
 
@@ -802,9 +820,11 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     // ========================================================================
     // Phase 4: generate triangles.
     // ========================================================================
-    CUDA_VERIFY(GenerateTriangles(vertices, normals, translation.X(), translation.Y(), translation.Z(),
+    CUDA_VERIFY(GenerateTriangles(vertices, neighborAtomOfVertex_d, normals, translation.X(), translation.Y(), translation.Z(),
         scale.X(), scale.Y(), scale.Z(), vertexOffsets, cubeMap, this->isoValue, tetrahedronCount));
     cudaDeviceSynchronize(); // Paranoia
+    // TODO use cudaMemcpyAsync here?
+    CUDA_VERIFY(cudaMemcpy(this->neighborAtomOfVertex, this->neighborAtomOfVertex_d, this->vertexCount*sizeof(int), cudaMemcpyDeviceToHost));
     CUDA_VERIFY(ComputeTriangleAO( vertices, normals, triangleAO, triangleCount));
     cudaDeviceSynchronize(); // Paranoia
     
@@ -950,7 +970,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     //} 
     //delete[] vl;
     //delete[] se;
-    
+
     // ========================================================================
     // Phase 7: correlate centroids
     // ========================================================================
@@ -1715,14 +1735,78 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
         }
     }
     
+    
     // ========================================================================
-    // Phase 8: Colorize vertices by centroid.
+    // Phase 8: Compute center lines for all features
+    // ========================================================================
+
+    // List the beginning and end of each surface feature
+    //uint *vl = new uint[this->vertexCount];
+    //uint2 *se = new uint2[centroidCount];
+    //CUDA_VERIFY(cudaMemcpy(vl, vertexLabelsCopy, this->vertexCount * sizeof(uint), cudaMemcpyDeviceToHost));
+    //CUDA_VERIFY(cudaMemcpy(se, featureStartEnd, centroidCount * sizeof(uint2), cudaMemcpyDeviceToHost));
+    //cudaDeviceSynchronize();
+    //for( unsigned int i = 0; i < centroidCount; i++ ) {
+    //    printf( "feature %2i start = %8i; end = %8i\n", i, se[i].x, se[i].y);
+    //    printf( "           start = %8i; end = %8i\n", vl[3*se[i].x], vl[3*se[i].y]);
+    //} 
+    //delete[] vl;
+    //delete[] se;
+
+    // get the feature start and end indices to compute center
+    CUDA_VERIFY(cudaMemcpy( this->featureStartEndHost, this->featureStartEnd, centroidCount * sizeof(uint2), cudaMemcpyDeviceToHost));
+    cudaDeviceSynchronize();
+    this->featureTrianglesCount = 0;
+    // loop over all features (skip first feature)
+    for( unsigned int fCnt = 1; fCnt < centroidCount; fCnt++ ) {
+        unsigned int fStart = this->featureStartEndHost[fCnt].x;
+        unsigned int fEnd = this->featureStartEndHost[fCnt].y;
+        unsigned int fLength = fEnd - fStart + 1;
+        //CUDA_VERIFY(cudaMemcpy( &(this->featureTriangleVerticesHost[3*this->featureTrianglesCount]), &(verticesCopy[3*fStart]), fLength * 3 * sizeof(float4), cudaMemcpyDeviceToHost));
+        //this->featureTrianglesCount += fLength;
+        CUDA_VERIFY(cudaMemcpy( this->featureTriangleVerticesHost, &(verticesCopy[3*fStart]), fLength * 3 * sizeof(float4), cudaMemcpyDeviceToHost));
+        this->featureTrianglesCount = fLength;
+        cudaDeviceSynchronize();
+        // TODO compute the center line of this feature
+        //CenterLineGenerator clg;
+        //clg.SetTriangleMesh( fLength, (float*)this->featureTriangleVerticesHost);
+
+    }
+
+    // ========================================================================
+    // Phase 9: Colorize vertices by centroid.
     // ========================================================================
     CUDA_VERIFY(cudaMemcpy(centroidColors, centroidColorsHost, centroidCount * sizeof(float4), cudaMemcpyHostToDevice));
     ColorizeByCentroid(colors, centroidColors, centroidLabels, centroidCount, vertexLabels, this->vertexCount);
     //ColorizeByAO(colors, triangleAO, aoThreshold, this->vertexCount);
     
     cudaDeviceSynchronize(); // Paranoia
+    
+    // TEST coloring by nearest atom TEST ...
+    cudaMemcpy( this->vertexColors, colors, this->vertexCount * 4 * sizeof(float), cudaMemcpyDeviceToHost);
+    int atomIdx;
+    for( unsigned int i = 0; i < this->vertexCount; i++ ) {
+        atomIdx = this->neighborAtomOfVertex[i];
+        if( atomIdx <= 0 ) {
+            this->vertexColors[4*i+0] = 1.0f;
+            this->vertexColors[4*i+1] = 0.0f;
+            this->vertexColors[4*i+2] = 1.0f;
+            this->vertexColors[4*i+3] = 1.0f;
+        } else if( atomIdx >= (this->atomColorTable.Count() / 3)) {
+            this->vertexColors[4*i+0] = 0.0f;
+            this->vertexColors[4*i+1] = 1.0f;
+            this->vertexColors[4*i+2] = 1.0f;
+            this->vertexColors[4*i+3] = 1.0f;
+        } else {
+            this->vertexColors[4*i+0] = ( this->atomColorTable[3*atomIdx+0] * 0.5f + this->vertexColors[4*i+0] * 0.5f);
+            this->vertexColors[4*i+1] = ( this->atomColorTable[3*atomIdx+1] * 0.5f + this->vertexColors[4*i+1] * 0.5f);
+            this->vertexColors[4*i+2] = ( this->atomColorTable[3*atomIdx+2] * 0.5f + this->vertexColors[4*i+2] * 0.5f);
+            this->vertexColors[4*i+3] = 1.0f;
+        }
+    }
+    cudaMemcpy( colors, this->vertexColors, this->vertexCount * 4 * sizeof(float), cudaMemcpyHostToDevice);
+    cudaDeviceSynchronize(); // Paranoia
+    // ... TEST coloring by nearest atom TEST
 
     // Unmap VBOs.
     CUDA_VERIFY(cudaGraphicsUnmapResources(1, &positionResource, 0));
@@ -1967,16 +2051,25 @@ void VolumeMeshRenderer::ValidateVertexMemory(uint vertexCount) {
         DestroyVbo(&positionVbo, &positionResource);    
         DestroyVbo(&normalVbo, &normalResource);
         DestroyVbo(&colorVbo, &colorResource);
+        CUDA_VERIFY(cudaFreeHost(neighborAtomOfVertex));
+        CUDA_VERIFY(cudaFree(neighborAtomOfVertex_d));
+        CUDA_VERIFY(cudaFreeHost(vertexColors));
+        CUDA_VERIFY(cudaFreeHost(featureTriangleVerticesHost));
     }
     if (vertexCount > 0) {
         this->vertexCountAllocted = vertexCount * 2;
         const size_t floatSize = sizeof(GLfloat) * this->vertexCountAllocted;
         const size_t float4Size = sizeof(GLfloat) * 4 * this->vertexCountAllocted;
         const size_t uintBufferSize =  sizeof(uint) * this->vertexCountAllocted;
+        const size_t intBufferSize =  sizeof(int) * this->vertexCountAllocted;
         // Allocate VBOs for Marching Tetrahedrons.
         CreateVbo(&positionVbo, float4Size, &positionResource);
         CreateVbo(&normalVbo, float4Size, &normalResource);
         CreateVbo(&colorVbo, float4Size, &colorResource);
+        CUDA_VERIFY(cudaMallocHost(&neighborAtomOfVertex, intBufferSize));
+        CUDA_VERIFY(cudaMalloc(&neighborAtomOfVertex_d, intBufferSize));
+        CUDA_VERIFY(cudaMallocHost(&vertexColors, float4Size));
+        CUDA_VERIFY(cudaMallocHost(&featureTriangleVerticesHost, float4Size));
         // Allocate CUDA memory for centroid map-reduce.
         CUDA_VERIFY(cudaMalloc(&vertexLabels, uintBufferSize));
         CUDA_VERIFY(cudaMalloc(&vertexLabelsCopy, uintBufferSize));
@@ -2003,6 +2096,7 @@ void VolumeMeshRenderer::ValidateCentroidMemory(uint centroidCount)
         CUDA_VERIFY(cudaFree(centroids));
         CUDA_VERIFY(cudaFree(centroidColors));
         CUDA_VERIFY(cudaFree(featureStartEnd));
+        CUDA_VERIFY(cudaFreeHost(featureStartEndHost));
     }
     if (vertexCount > 0) {
         this->centroidCountAllocated = centroidCount * 2;        
@@ -2011,6 +2105,7 @@ void VolumeMeshRenderer::ValidateCentroidMemory(uint centroidCount)
         CUDA_VERIFY(cudaMalloc(&centroids, float4Size));
         CUDA_VERIFY(cudaMalloc(&centroidColors, float4Size));
         CUDA_VERIFY(cudaMalloc(&featureStartEnd, centroidCountAllocated * sizeof(uint2)));
+        CUDA_VERIFY(cudaMallocHost(&featureStartEndHost, centroidCountAllocated * sizeof(uint2)));
     }
 }
 

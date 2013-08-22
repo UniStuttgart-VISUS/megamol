@@ -1,32 +1,90 @@
 #include "stdafx.h"
 #include "CenterLineGenerator.h"
 
-CenterLineGenerator::CenterLineGenerator(void)
-{
+CenterLineGenerator::CenterLineGenerator(void) {
 }
 
 
-CenterLineGenerator::~CenterLineGenerator(void)
-{
+CenterLineGenerator::~CenterLineGenerator(void) {
 }
 
-void CenterLineGenerator::Add(Edge &edge)
-{
+void CenterLineGenerator::SetTriangleMesh( unsigned int count, float* mesh) {
+    // clear previous data
+    edges.clear();
+	nodes.clear();
+
+    // loop over all triangles
+    for( unsigned int tCnt = 0; tCnt < count; tCnt++) {
+        Node *v1 = new Node();
+        Node *v2 = new Node();
+        Node *v3 = new Node();
+        Edge *e1 = new Edge();
+        Edge *e2 = new Edge();
+        Edge *e3 = new Edge();
+        std::pair<Nodes::iterator, bool> itv1, itv2, itv3;
+        std::pair<Edges::iterator, bool> ite1, ite2, ite3;
+        
+        // get all the vertices of the current triangle from the mesh
+        v1->p.Set( mesh[12 * tCnt + 0], mesh[12 * tCnt + 1], mesh[12*tCnt + 2]);
+        v2->p.Set( mesh[12 * tCnt + 4], mesh[12 * tCnt + 5], mesh[12*tCnt + 6]);
+        v3->p.Set( mesh[12 * tCnt + 8], mesh[12 * tCnt + 9], mesh[12*tCnt +10]);
+        // (1) insert all vertices into the nodes list
+        // TODO add comparison function for nodes (based on p value)
+        itv1 = nodes.insert( v1);
+        itv2 = nodes.insert( v2);
+        itv3 = nodes.insert( v3);
+        // (2) construct edges (v1, v2) (v2, v3) (v1, v3)
+        e1->setNodes( *(itv1.first), *(itv2.first));
+        e1->setNodes( *(itv2.first), *(itv3.first));
+        e1->setNodes( *(itv1.first), *(itv3.first));
+        // (3) insert all edges into the edge list
+        // TODO add comparison function for edges (based on sorted nodes)
+        ite1 = edges.insert( e1);
+        ite2 = edges.insert( e2);
+        ite3 = edges.insert( e3);
+        // (4) add all edges to all vertices
+        (*(itv1.first))->edges.insert( *(ite1.first));
+        (*(itv1.first))->edges.insert( *(ite2.first));
+        (*(itv1.first))->edges.insert( *(ite3.first));
+        (*(itv2.first))->edges.insert( *(ite1.first));
+        (*(itv2.first))->edges.insert( *(ite2.first));
+        (*(itv2.first))->edges.insert( *(ite3.first));
+        (*(itv3.first))->edges.insert( *(ite1.first));
+        (*(itv3.first))->edges.insert( *(ite2.first));
+        (*(itv3.first))->edges.insert( *(ite3.first));
+        // delete vertex pointer if the vertex was not newly inserted
+        if( !itv1.second ) delete v1;
+        if( !itv2.second ) delete v2;
+        if( !itv3.second ) delete v3;
+        // delete edge pointer if the edge was not newly inserted
+        if( !ite1.second ) delete e1;
+        if( !ite2.second ) delete e2;
+        if( !ite3.second ) delete e3;
+    }
+}
+
+void CenterLineGenerator::Add(Edge &edge) {
 	edges.insert(&edge);
-	nodes.insert(edge.nodes.begin(), edge.nodes.end());
+	//nodes.insert(edge.nodes.begin(), edge.nodes.end());
+    nodes.insert( edge.getNode1());
+    nodes.insert( edge.getNode2());
 }
 
-void CenterLineGenerator::Add(Edges::iterator start, Edges::iterator end)
-{
+void CenterLineGenerator::Add(Edges::iterator start, Edges::iterator end) {
 	edges.insert(start, end);
-	for(Edges::iterator it = start; it != end; ++it)
-		nodes.insert((*it)->nodes.begin(), (*it)->nodes.end());
+	for(Edges::iterator it = start; it != end; ++it) {
+		//nodes.insert((*it)->nodes.begin(), (*it)->nodes.end());
+        nodes.insert( (*it)->getNode1());
+        nodes.insert( (*it)->getNode2());
+    }
+    // TODO: the nodes need to know to which edges they are connected!
 }
 
-void CenterLineGenerator::NodesFromEdges(Edges &edges, Nodes &nodes)
-{
+void CenterLineGenerator::NodesFromEdges(Edges &edges, Nodes &nodes) {
 	for(auto edge : edges) {
-		nodes.insert( edge->nodes.begin(), edge->nodes.end() );
+		//nodes.insert( edge->nodes.begin(), edge->nodes.end() );
+        nodes.insert( edge->getNode1());
+        nodes.insert( edge->getNode2());
 	}
 }
 
@@ -37,6 +95,7 @@ CenterLineGenerator::CenterLineNode CenterLineGenerator::Collapse(Nodes &selecti
 	for(auto it : selection)
 		v += it->p;
 
+    // TODO Visual Studio compiler says: warning C4056: overflow in floating-point constant arithmetic
 	float minimumDistance = 1e100;
 	for(auto it : selection)
 		minimumDistance = vislib::math::Min(minimumDistance, (it->p - v).Length());
@@ -64,14 +123,34 @@ void CenterLineGenerator::NextSection(Edges &current, Section &next, Nodes &visi
 	// 2)
 	Edges E1;
 	for(auto edge : edges) {
-		for(auto node : edge->nodes) {
-			if( visited.find( node ) == visited.end() )	{
-				bool found = false;
-				for(auto curNode : currentNodes) {
-					if( found = (node == curNode)) {
-						E1.insert( edge );
-						break;
-					}
+		//for(auto node : edge->nodes) {
+		//	if( visited.find( node ) == visited.end() )	{
+		//		bool found = false;
+		//		for(auto curNode : currentNodes) {
+		//			if( found = (node == curNode)) {
+		//				E1.insert( edge );
+		//				break;
+		//			}
+		//		}
+		//	}
+		//}
+        auto node = edge->getNode1();
+		if( visited.find( node ) == visited.end() )	{
+			bool found = false;
+			for(auto curNode : currentNodes) {
+				if( found = (node == curNode)) {
+					E1.insert( edge );
+					break;
+				}
+			}
+		}
+        node = edge->getNode2();
+		if( visited.find( node ) == visited.end() )	{
+			bool found = false;
+			for(auto curNode : currentNodes) {
+				if( found = (node == curNode)) {
+					E1.insert( edge );
+					break;
 				}
 			}
 		}
@@ -79,47 +158,81 @@ void CenterLineGenerator::NextSection(Edges &current, Section &next, Nodes &visi
 
 	// 3), 4)
 	for(auto edge : E1) {
-		for(auto node : edge->nodes) {
-			bool found = false;
-			for(auto curNode : currentNodes) {
-				found = (node == curNode);
-			}
+		//for(auto node : edge->nodes) {
+		//	bool found = false;
+		//	for(auto curNode : currentNodes) {
+		//		found = (node == curNode);
+		//	}
 
-			if( !found ) {
-				next.edges.insert( edge );
+		//	if( !found ) {
+		//		next.edges.insert( edge );
 
-				// 5)
-				visited.insert(edge->nodes.begin(), edge->nodes.end());
-			}
+		//		// 5)
+		//		visited.insert(edge->nodes.begin(), edge->nodes.end());
+		//	}
+		//}
+        
+        auto node = edge->getNode1();
+        bool found = false;
+		for(auto curNode : currentNodes) {
+			found = (node == curNode);
+		}
+		if( !found ) {
+			next.edges.insert( edge );
+			// 5)
+			//visited.insert(edge->nodes.begin(), edge->nodes.end());
+            visited.insert(edge->getNode1());
+            visited.insert(edge->getNode2());
+		}
+        node = edge->getNode2();
+        found = false;
+		for(auto curNode : currentNodes) {
+			found = (node == curNode);
+		}
+		if( !found ) {
+			next.edges.insert( edge );
+			// 5)
+			//visited.insert(edge->nodes.begin(), edge->nodes.end());
+            visited.insert(edge->getNode1());
+            visited.insert(edge->getNode2());
 		}
 	}
 }
 
-CenterLineGenerator::Edge *CenterLineGenerator::findEdgeNeighborInSet(Edge *edge, Edges &set, bool removeFromSet)
-{
-	Node *node = *edge->nodes.begin();
+CenterLineGenerator::Edge *CenterLineGenerator::findEdgeNeighborInSet(Edge *edge, Edges &set, bool removeFromSet) {
+    // TODO this seems to be wrong - why just search for first node in the edges of 'set'?
+    // TODO should this return just the first neighbor?
+    // TODO what happens if there is no neighbor?
 	Edge *retEdge = nullptr;
-	for(auto it = set.begin(); it != set.end(); ++it) {
-		retEdge = *it;
-		if( retEdge->nodes.find( node ) != retEdge->nodes.end() ) {
-			if( removeFromSet ) {
-				set.erase( it );
-			}
-			break;
-		}
-	}
+	//Node *node = *edge->nodes.begin();
+	//for(auto it = set.begin(); it != set.end(); ++it) {
+	//	retEdge = *it;
+	//	if( retEdge->nodes.find( node ) != retEdge->nodes.end() ) {
+	//		if( removeFromSet ) {
+	//			set.erase( it );
+	//		}
+	//		break;
+	//	}
+	//}
 
 	return retEdge;
 }
 
-CenterLineGenerator::Node *CenterLineGenerator::nodeSharedByEdges(Edge *e1, Edge *e2)
-{
-	for(auto n1 : e1->nodes) {
-		for(auto n2 : e2->nodes) {
-			if( n1 == n2 )
-				return n1;
-		}
-	}
+CenterLineGenerator::Node *CenterLineGenerator::nodeSharedByEdges(Edge *e1, Edge *e2) {
+	//for(auto n1 : e1->nodes) {
+	//	for(auto n2 : e2->nodes) {
+	//		if( n1 == n2 )
+	//			return n1;
+	//	}
+	//}
+    if( e1->getNode1() == e2->getNode1() )
+        return e1->getNode1();
+    if( e1->getNode1() == e2->getNode2() )
+        return e1->getNode1();
+    if( e1->getNode2() == e2->getNode1() )
+        return e1->getNode2();
+    if( e1->getNode2() == e2->getNode2() )
+        return e1->getNode2();
 
 	return nullptr;
 }
