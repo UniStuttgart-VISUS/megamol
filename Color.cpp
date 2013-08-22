@@ -75,6 +75,25 @@ Color::ColoringMode Color::GetModeByIndex(const MolecularDataCall *mol,
     }
 }
 
+/*
+ * Color::GetModeByIndex
+ */
+Color::ColoringMode Color::GetModeByIndex(const MolecularDataCall *mol,
+        const BindingSiteCall *bs, unsigned int idx) {
+    switch(idx) {
+        case 0 : return ELEMENT;
+        case 1 : return RESIDUE;
+        case 2 : return STRUCTURE;
+        case 3 : return BFACTOR;
+        case 4 : return CHARGE;
+        case 5 : return OCCUPANCY;
+        case 6 : return CHAIN;
+        case 7 : return MOLECULE;
+        case 8 : return RAINBOW;
+        case 9 : return BINDINGSITE;
+        default : return ELEMENT;
+    }
+}
 
 /*
  * Color::GetName
@@ -82,20 +101,21 @@ Color::ColoringMode Color::GetModeByIndex(const MolecularDataCall *mol,
 std::string Color::GetName(Color::ColoringMode col) {
 
     switch(col) {
-        case ELEMENT   : return "Element";
-        case STRUCTURE : return "Structure";
-        case RAINBOW   : return "Rainbow";
-        case BFACTOR   : return "BFactor";
-        case CHARGE    : return "Charge";
-        case OCCUPANCY : return "Occupancy";
-        case CHAIN     : return "Chain";
-        case MOLECULE  : return "Molecule";
-        case RESIDUE   : return "Residue";
-        case CHAINBOW  : return "Chainbow";
-        case AMINOACID : return "Aminoacid";
-        case VALUE     : return "Value";
-        case CHAIN_ID  : return "ChainID";
-        case MOVEMENT  : return "Movement";
+        case ELEMENT     : return "Element";
+        case STRUCTURE   : return "Structure";
+        case RAINBOW     : return "Rainbow";
+        case BFACTOR     : return "BFactor";
+        case CHARGE      : return "Charge";
+        case OCCUPANCY   : return "Occupancy";
+        case CHAIN       : return "Chain";
+        case MOLECULE    : return "Molecule";
+        case RESIDUE     : return "Residue";
+        case CHAINBOW    : return "Chainbow";
+        case AMINOACID   : return "Aminoacid";
+        case VALUE       : return "Value";
+        case CHAIN_ID    : return "ChainID";
+        case MOVEMENT    : return "Movement";
+        case BINDINGSITE : return "BindingSite";
         default : return "";
     }
 }
@@ -112,7 +132,8 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
         vislib::TString minGradColor,
         vislib::TString midGradColor,
         vislib::TString maxGradColor,
-        bool forceRecompute) {
+        bool forceRecompute,
+        const BindingSiteCall *bs) {
 
     // temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx,
@@ -448,6 +469,50 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
                 atomColorTable.Add( color.Z());
             }
         } // ... END coloring mode MOLECULE
+        else if( currentColoringMode == BINDINGSITE ) {
+            // initialize all colors as white
+            for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
+                atomColorTable.Add( 1.0f);
+                atomColorTable.Add( 1.0f);
+                atomColorTable.Add( 1.0f);
+            }
+            // search for binding sites if BindingSiteCall is available
+            if( bs ) {
+                // temporary variables
+                unsigned int firstMol;
+                unsigned int firstRes;
+                unsigned int firstAtom;
+                unsigned int atomIdx;
+                for( unsigned int cCnt = 0; cCnt < mol->ChainCount(); cCnt++ ) {
+                    firstMol = mol->Chains()[cCnt].FirstMoleculeIndex();
+                    for( unsigned int mCnt = firstMol; mCnt < firstMol + mol->Chains()[cCnt].MoleculeCount(); mCnt++ ) {
+                        firstRes = mol->Molecules()[mCnt].FirstResidueIndex();
+                        for( unsigned int rCnt = 0; rCnt < mol->Molecules()[mCnt].ResidueCount(); rCnt++ ) {
+                            // try to match binding sites
+                            vislib::Pair<char, unsigned int> bsRes;
+                            // loop over all binding sites
+                            for( unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++ ) {
+                                for( unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++ ) {
+                                    bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
+                                    if( mol->Chains()[cCnt].Name() == bsRes.First() &&
+                                        mol->Residues()[rCnt]->OriginalResIndex() == bsRes.Second() &&
+                                        mol->ResidueTypeNames()[mol->Residues()[rCnt]->Type()] == bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt) ) {
+                                            // TODO loop over all atoms and add the color
+                                        firstAtom = mol->Residues()[rCnt]->FirstAtomIndex();
+                                        for( unsigned int aCnt = 0; aCnt < mol->Residues()[rCnt]->AtomCount(); aCnt++ ) {
+                                            atomIdx = firstAtom + aCnt;
+                                            atomColorTable[3 * atomIdx + 0] = colorLookupTable[(bsCnt + mol->ChainCount())%colorLookupTable.Count()].X();
+                                            atomColorTable[3 * atomIdx + 1] = colorLookupTable[(bsCnt + mol->ChainCount())%colorLookupTable.Count()].Y();
+                                            atomColorTable[3 * atomIdx + 2] = colorLookupTable[(bsCnt + mol->ChainCount())%colorLookupTable.Count()].Z();
+                                        }
+                                    }
+                                }
+                            }
+                        } // residues
+                    } // molecules
+                } // chains
+            } // BindingSiteCall available
+        } // ... END coloring mode BINDINGSITE
         else if( currentColoringMode == RAINBOW ) {
             for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
                 idx = int( ( float( cnt) / float( mol->AtomCount())) *
@@ -477,7 +542,8 @@ void Color::MakeColorTable(const MolecularDataCall *mol,
         vislib::TString minGradColor,
         vislib::TString midGradColor,
         vislib::TString maxGradColor,
-        bool forceRecompute) {
+        bool forceRecompute,
+        const BindingSiteCall *bs) {
 
     // if recomputation is forced: clear current color table
     if(forceRecompute) {
@@ -503,11 +569,11 @@ void Color::MakeColorTable(const MolecularDataCall *mol,
 
         // Compute first color table
         Color::MakeColorTable(mol, cm0, color0, colorLookupTable, rainbowColors,
-            minGradColor, midGradColor, maxGradColor, true);
+            minGradColor, midGradColor, maxGradColor, true, bs);
 
         // Compute second color table
         Color::MakeColorTable(mol, cm1, color1, colorLookupTable, rainbowColors,
-            minGradColor, midGradColor, maxGradColor, true);
+            minGradColor, midGradColor, maxGradColor, true, bs);
 
         // Interpolate
         for(int cnt = 0; cnt < mol->AtomCount()*3; cnt++) {

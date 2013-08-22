@@ -52,6 +52,7 @@ using namespace megamol::protein;
  */
 VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(), 
         molDataCallerSlot ("getData", "Connects the molecule rendering with molecule data storage"),
+        bsDataCallerSlot ("getBindingSites", "Connects the molecule rendering with binding site data storage"),
         selectionCallerSlot( "getSelection", "Connects the rendering with selection storage." ),
         hiddenCallerSlot( "getHidden", "Connects the rendering with visibility storage." ),
         diagramCalleeSlot ("diagramout", "Provides data for time-based line graph"),
@@ -84,6 +85,8 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
     // set caller slot for different data calls
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable (&this->molDataCallerSlot);
+    this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
+    this->MakeSlotAvailable (&this->bsDataCallerSlot);
     this->selectionCallerSlot.SetCompatibleCall<IntSelectionCallDescription>();
     this->MakeSlotAvailable(&this->selectionCallerSlot);
     this->hiddenCallerSlot.SetCompatibleCall<IntSelectionCallDescription>();
@@ -125,13 +128,15 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
     this->currentColoringMode = Color::MOLECULE;	
     param::EnumParam *cm = new param::EnumParam ( int ( this->currentColoringMode ) );
     MolecularDataCall *mol = new MolecularDataCall();
+    BindingSiteCall *bs = new BindingSiteCall();
     unsigned int cCnt;
     Color::ColoringMode cMode;
-    for( cCnt = 0; cCnt < Color::GetNumOfColoringModes( mol); ++cCnt) {
-        cMode = Color::GetModeByIndex( mol, cCnt);
+    for( cCnt = 0; cCnt < Color::GetNumOfColoringModes( mol, bs); ++cCnt) {
+        cMode = Color::GetModeByIndex( mol, bs, cCnt);
         cm->SetTypePair( cMode, Color::GetName( cMode).c_str());
     }
     delete mol;
+    delete bs;
     this->coloringModeParam << cm;
     this->MakeSlotAvailable( &this->coloringModeParam );
     // make the rainbow color table
@@ -399,6 +404,12 @@ bool VolumeMeshRenderer::Render(Call& call) {
     MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if( mol == NULL) return false;
     
+    // get pointer to BindingSiteCall
+    BindingSiteCall *bs = this->bsDataCallerSlot.CallAs<BindingSiteCall>();
+    if( bs ) {
+        (*bs)(BindingSiteCall::CallForGetData);
+    }
+
     int cnt;
 
     // set call time
@@ -464,7 +475,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
     }
     */
 
-    ParameterRefresh( mol);
+    ParameterRefresh( mol, bs);
     
     // recompute color table, if necessary
     if( this->atomColorTable.Count()/3 < mol->AtomCount() ) {
@@ -475,7 +486,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
           this->minGradColorParam.Param<param::StringParam>()->Value(),
           this->midGradColorParam.Param<param::StringParam>()->Value(),
           this->maxGradColorParam.Param<param::StringParam>()->Value(),
-          true);
+          true, bs);
     }
     
     // TEST
@@ -1785,6 +1796,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     // TEST coloring by nearest atom TEST ...
     cudaMemcpy( this->vertexColors, colors, this->vertexCount * 4 * sizeof(float), cudaMemcpyDeviceToHost);
     int atomIdx;
+    float interpolFactor = 0.9f;
     for( unsigned int i = 0; i < this->vertexCount; i++ ) {
         atomIdx = this->neighborAtomOfVertex[i];
         if( atomIdx <= 0 ) {
@@ -1798,9 +1810,9 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             this->vertexColors[4*i+2] = 1.0f;
             this->vertexColors[4*i+3] = 1.0f;
         } else {
-            this->vertexColors[4*i+0] = ( this->atomColorTable[3*atomIdx+0] * 0.5f + this->vertexColors[4*i+0] * 0.5f);
-            this->vertexColors[4*i+1] = ( this->atomColorTable[3*atomIdx+1] * 0.5f + this->vertexColors[4*i+1] * 0.5f);
-            this->vertexColors[4*i+2] = ( this->atomColorTable[3*atomIdx+2] * 0.5f + this->vertexColors[4*i+2] * 0.5f);
+            this->vertexColors[4*i+0] = ( this->atomColorTable[3*atomIdx+0] * interpolFactor + this->vertexColors[4*i+0] * (1.0f - interpolFactor));
+            this->vertexColors[4*i+1] = ( this->atomColorTable[3*atomIdx+1] * interpolFactor + this->vertexColors[4*i+1] * (1.0f - interpolFactor));
+            this->vertexColors[4*i+2] = ( this->atomColorTable[3*atomIdx+2] * interpolFactor + this->vertexColors[4*i+2] * (1.0f - interpolFactor));
             this->vertexColors[4*i+3] = 1.0f;
         }
     }
@@ -1852,7 +1864,7 @@ float4 VolumeMeshRenderer::GetNextColor() {
 /*
  * refresh parameters
  */
-void VolumeMeshRenderer::ParameterRefresh( const MolecularDataCall *mol) {
+void VolumeMeshRenderer::ParameterRefresh( const MolecularDataCall *mol, const BindingSiteCall *bs) {
     if (this->polygonModeParam.IsDirty()) {
         this->polygonMode = static_cast<PolygonMode>(this->polygonModeParam.Param<param::EnumParam>()->Value());
         this->polygonModeParam.ResetDirty();
@@ -1906,7 +1918,7 @@ void VolumeMeshRenderer::ParameterRefresh( const MolecularDataCall *mol) {
           this->minGradColorParam.Param<param::StringParam>()->Value(),
           this->midGradColorParam.Param<param::StringParam>()->Value(),
           this->maxGradColorParam.Param<param::StringParam>()->Value(),
-          true);
+          true, bs);
 
         this->coloringModeParam.ResetDirty();
     }
