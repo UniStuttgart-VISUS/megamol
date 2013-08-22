@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "MolecularDataCall.h"
+#include "BindingSiteCall.h"
 #include <string>
 
 namespace megamol {
@@ -36,7 +37,8 @@ namespace protein {
             AMINOACID   = 10,
             VALUE       = 11,
             CHAIN_ID    = 12,
-            MOVEMENT    = 13
+            MOVEMENT    = 13,
+            BINDINGSITE = 14
         };
 
         /**
@@ -47,7 +49,7 @@ namespace protein {
         static void FillAminoAcidColorTable(
             vislib::Array<vislib::math::Vector<float, 3> >
               &aminoAcidColorTable);
-
+        
         /**
          * Get the coloring mode at a certain index of a given data call.
          *
@@ -60,6 +62,18 @@ namespace protein {
             unsigned int idx);
 
         /**
+         * Get the coloring mode at a certain index of a given data call.
+         *
+         * @param mol The molecular data call.
+         * @param bs  The binding site data call.
+         * @param idx The index.
+         *
+         * @return The coloring mode.
+         */
+        static Color::ColoringMode GetModeByIndex(const MolecularDataCall *mol,
+            const BindingSiteCall *bs, unsigned int idx);
+
+        /**
          * Get the corresponding name of a given coloring mode.
          *
          * @param col The coloring mode.
@@ -67,7 +81,7 @@ namespace protein {
          * @return The name.
          */
         static std::string GetName(Color::ColoringMode col);
-
+        
         /**
          * Get the number of coloring modes used by a given data call.
          *
@@ -77,6 +91,17 @@ namespace protein {
          */
         static unsigned int GetNumOfColoringModes(const MolecularDataCall *mol) {
             return 9;
+        }
+
+        /**
+         * Get the number of coloring modes used by a given data call.
+         *
+         * @param mol The data call.
+         *
+         * @return The number of coloring modes.
+         */
+        static unsigned int GetNumOfColoringModes(const MolecularDataCall *mol, const BindingSiteCall *bs) {
+            return 10;
         }
 
         /**
@@ -98,6 +123,7 @@ namespace protein {
          * @param midGradColor        The middle value for gradient coloring.
          * @param maxGradColor        The maximum value for gradient coloring.
          * @param forceRecompute      Force recomputation of the color table.
+         * @param bs                  The binding site data call.
          */
         static void MakeColorTable(const MolecularDataCall *mol,
             ColoringMode cm0,
@@ -110,7 +136,8 @@ namespace protein {
             vislib::TString minGradColor,
             vislib::TString midGradColor,
             vislib::TString maxGradColor,
-            bool forceRecompute = false);
+            bool forceRecompute = false,
+            const BindingSiteCall *bs = 0);
 
 
         /**
@@ -128,6 +155,7 @@ namespace protein {
          * @param midGradColor        The middle value for gradient coloring.
          * @param maxGradColor        The maximum value for gradient coloring.
          * @param forceRecompute      Force recomputation of the color table.
+         * @param bs                  The binding site data call.
          */
         static void MakeColorTable(const MolecularDataCall *mol,
             ColoringMode currentColoringMode,
@@ -137,7 +165,8 @@ namespace protein {
             vislib::TString minGradColor,
             vislib::TString midGradColor,
             vislib::TString maxGradColor,
-            bool forceRecompute = false);
+            bool forceRecompute = false,
+            const BindingSiteCall *bs = 0);
 
          /**
          * Creates a rainbow color table with 'num' entries.

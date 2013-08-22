@@ -17,6 +17,7 @@
 #include "view/Renderer3DModuleDS.h"
 #include "DiagramCall.h"
 #include "SplitMergeCall.h"
+#include "BindingSiteCall.h"
 #include "Color.h"
 #include "param/ParamSlot.h"
 #include "vislib/GLSLGeometryShader.h"
@@ -179,7 +180,7 @@ namespace protein {
         /**
          *
          */
-        void ParameterRefresh( const MolecularDataCall *mol);
+        void ParameterRefresh( const MolecularDataCall *mol, const BindingSiteCall *bs = 0);
         
         /**
          *
@@ -236,9 +237,11 @@ namespace protein {
          */
         void CudaVerify(cudaError error, const int line);
 
-
-        /** caller slot */
+        
+        /** MolecularDataCall caller slot */
         megamol::core::CallerSlot molDataCallerSlot;
+        /** BindingSiteCall caller slot */
+        megamol::core::CallerSlot bsDataCallerSlot;
 
         megamol::core::CallerSlot selectionCallerSlot;
         megamol::core::CallerSlot hiddenCallerSlot;
