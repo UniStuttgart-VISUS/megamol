@@ -150,8 +150,9 @@ public:
 	{
 		CenterLineEdge()
 		{}
-
-		CenterLineNodes nodes;
+        
+		CenterLineNode *node1;
+		CenterLineNode *node2;
 	};
 
 	
@@ -187,6 +188,8 @@ public:
     // TODO make this private again!!!
 	Edges edges;
 	Nodes nodes;
+
+    std::vector<Section*> allBranches;
 private:
 
 	CenterLineNode Collapse(Nodes &selection);
