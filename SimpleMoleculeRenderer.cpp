@@ -46,6 +46,7 @@ using namespace megamol::protein;
  */
 SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModuleDS (),
         molDataCallerSlot( "getData", "Connects the molecule rendering with molecule data storage"),
+        bsDataCallerSlot ("getBindingSites", "Connects the molecule rendering with binding site data storage"),
         colorTableFileParam( "color::colorTableFilename", "The filename of the color table."),
         coloringModeParam0( "color::coloringMode0", "The first coloring mode."),
         coloringModeParam1( "color::coloringMode1", "The second coloring mode."),
@@ -64,43 +65,36 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModuleDS (),
 {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable( &this->molDataCallerSlot);
+    this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
+    this->MakeSlotAvailable (&this->bsDataCallerSlot);
 
     // fill color table with default values and set the filename param
     vislib::StringA filename( "colors.txt");
     Color::ReadColorTableFromFile( filename, this->colorLookupTable);
     this->colorTableFileParam.SetParameter(new param::StringParam( A2T( filename)));
     this->MakeSlotAvailable( &this->colorTableFileParam);
-
-    // coloring mode #0
+    
+    // coloring modes
     this->currentColoringMode0 = Color::CHAIN;
-    param::EnumParam *cm0 = new param::EnumParam(int(this->currentColoringMode0));
-    cm0->SetTypePair( Color::ELEMENT, "Element");
-    cm0->SetTypePair( Color::RESIDUE, "Residue");
-    cm0->SetTypePair( Color::STRUCTURE, "Structure");
-    cm0->SetTypePair( Color::BFACTOR, "BFactor");
-    cm0->SetTypePair( Color::CHARGE, "Charge");
-    cm0->SetTypePair( Color::OCCUPANCY, "Occupancy");
-    cm0->SetTypePair( Color::CHAIN, "Chain");
-    cm0->SetTypePair( Color::MOLECULE, "Molecule");
-    cm0->SetTypePair( Color::RAINBOW, "Rainbow");
-    this->coloringModeParam0 << cm0;
-    this->MakeSlotAvailable( &this->coloringModeParam0);
-
-    // coloring mode #1
     this->currentColoringMode1 = Color::ELEMENT;
-    param::EnumParam *cm1 = new param::EnumParam(int(this->currentColoringMode1));
-    cm1->SetTypePair( Color::ELEMENT, "Element");
-    cm1->SetTypePair( Color::RESIDUE, "Residue");
-    cm1->SetTypePair( Color::STRUCTURE, "Structure");
-    cm1->SetTypePair( Color::BFACTOR, "BFactor");
-    cm1->SetTypePair( Color::CHARGE, "Charge");
-    cm1->SetTypePair( Color::OCCUPANCY, "Occupancy");
-    cm1->SetTypePair( Color::CHAIN, "Chain");
-    cm1->SetTypePair( Color::MOLECULE, "Molecule");
-    cm1->SetTypePair( Color::RAINBOW, "Rainbow");
+    param::EnumParam *cm0 = new param::EnumParam ( int ( this->currentColoringMode0) );
+    param::EnumParam *cm1 = new param::EnumParam ( int ( this->currentColoringMode1) );
+    MolecularDataCall *mol = new MolecularDataCall();
+    BindingSiteCall *bs = new BindingSiteCall();
+    unsigned int cCnt;
+    Color::ColoringMode cMode;
+    for( cCnt = 0; cCnt < Color::GetNumOfColoringModes( mol, bs); ++cCnt) {
+        cMode = Color::GetModeByIndex( mol, bs, cCnt);
+        cm0->SetTypePair( cMode, Color::GetName( cMode).c_str());
+        cm1->SetTypePair( cMode, Color::GetName( cMode).c_str());
+    }
+    delete mol;
+    delete bs;
+    this->coloringModeParam0 << cm0;
     this->coloringModeParam1 << cm1;
+    this->MakeSlotAvailable( &this->coloringModeParam0);
     this->MakeSlotAvailable( &this->coloringModeParam1);
-
+    
     // Color weighting parameter
     this->cmWeightParam.SetParameter(new param::FloatParam(0.5f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->cmWeightParam);
@@ -432,6 +426,12 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     // get pointer to MolecularDataCall
     MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if( mol == NULL) return false;
+    
+    // get pointer to BindingSiteCall
+    BindingSiteCall *bs = this->bsDataCallerSlot.CallAs<BindingSiteCall>();
+    if( bs ) {
+        (*bs)(BindingSiteCall::CallForGetData);
+    }
 
     int cnt;
 
@@ -495,7 +495,7 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     glScalef( scale, scale, scale);
 
     // ---------- update parameters ----------
-    this->UpdateParameters( mol);
+    this->UpdateParameters( mol, bs);
 
     // recompute color table, if necessary
     if( this->atomColorTable.Count()/3 < mol->AtomCount() ) {
@@ -510,7 +510,7 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
                 this->minGradColorParam.Param<param::StringParam>()->Value(),
                 this->midGradColorParam.Param<param::StringParam>()->Value(),
                 this->maxGradColorParam.Param<param::StringParam>()->Value(),
-                true);
+                true, bs);
 
         // Use one coloring mode
         /*Color::MakeColorTable( mol,
@@ -1947,7 +1947,7 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter( const MolecularDataCall *
 /*
  * update parameters
  */
-void SimpleMoleculeRenderer::UpdateParameters( const MolecularDataCall *mol) {
+void SimpleMoleculeRenderer::UpdateParameters( const MolecularDataCall *mol, const BindingSiteCall *bs) {
     // color table param
     if( this->colorTableFileParam.IsDirty() ) {
         Color::ReadColorTableFromFile(
@@ -1976,7 +1976,7 @@ void SimpleMoleculeRenderer::UpdateParameters( const MolecularDataCall *mol) {
                 this->minGradColorParam.Param<param::StringParam>()->Value(),
                 this->midGradColorParam.Param<param::StringParam>()->Value(),
                 this->maxGradColorParam.Param<param::StringParam>()->Value(),
-                true);
+                true, bs);
 
         // Use one coloring mode
         /*Color::MakeColorTable( mol,

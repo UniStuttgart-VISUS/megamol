@@ -42,29 +42,34 @@ using namespace megamol::protein;
  * MoleculeSESRenderer::MoleculeSESRenderer
  */
 MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleDS (),
-    molDataCallerSlot ( "getData", "Connects the protein SES rendering with protein data storage" ),
-    postprocessingParam( "postProcessingMode", "Enable Postprocessing Mode: "),
-    rendermodeParam( "renderingMode", "Choose Render Mode: "),
-	puxelsParam( "puxels", "Enable Puxel Rendering: "),
-    coloringmodeParam( "coloringMode", "Choose Coloring Mode: "),
-    silhouettecolorParam( "silhouetteColor", "Silhouette Color: "),
-    sigmaParam( "SSAOsigma", "Sigma value for SSAO: " ),
-    lambdaParam( "SSAOlambda", "Lambda value for SSAO: "),
-    minGradColorParam( "minGradColor", "The color for the minimum value for gradient coloring" ),
-    midGradColorParam( "midGradColor", "The color for the middle value for gradient coloring" ),
-    maxGradColorParam( "maxGradColor", "The color for the maximum value for gradient coloring" ),
-    debugParam( "drawRS", "Draw the Reduced Surface: "),
-    drawSESParam( "drawSES", "Draw the SES: "),
-    drawSASParam( "drawSAS", "Draw the SAS: "),
-    fogstartParam( "fogStart", "Fog Start: "),
-    molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"),
-    colorTableFileParam( "colorTableFilename", "The filename of the color table."),
-    offscreenRenderingParam( "offscreenRendering", "Toggle offscreen rendering."),
-	puxelSizeBuffer(512 << 20),
-    computeSesPerMolecule(false)
+        molDataCallerSlot ( "getData", "Connects the protein SES rendering with protein data storage" ),
+        bsDataCallerSlot ("getBindingSites", "Connects the molecule rendering with binding site data storage"),
+        postprocessingParam( "postProcessingMode", "Enable Postprocessing Mode: "),
+        rendermodeParam( "renderingMode", "Choose Render Mode: "),
+	    puxelsParam( "puxels", "Enable Puxel Rendering: "),
+        coloringModeParam0( "color::coloringMode0", "The first coloring mode."),
+        coloringModeParam1( "color::coloringMode1", "The second coloring mode."),
+        cmWeightParam( "color::colorWeighting", "The weighting of the two coloring modes."),
+        silhouettecolorParam( "silhouetteColor", "Silhouette Color: "),
+        sigmaParam( "SSAOsigma", "Sigma value for SSAO: " ),
+        lambdaParam( "SSAOlambda", "Lambda value for SSAO: "),
+        minGradColorParam( "color::minGradColor", "The color for the minimum value for gradient coloring" ),
+        midGradColorParam( "color::midGradColor", "The color for the middle value for gradient coloring" ),
+        maxGradColorParam( "color::maxGradColor", "The color for the maximum value for gradient coloring" ),
+        debugParam( "drawRS", "Draw the Reduced Surface: "),
+        drawSESParam( "drawSES", "Draw the SES: "),
+        drawSASParam( "drawSAS", "Draw the SAS: "),
+        fogstartParam( "fogStart", "Fog Start: "),
+        molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"),
+        colorTableFileParam( "color::colorTableFilename", "The filename of the color table."),
+        offscreenRenderingParam( "offscreenRendering", "Toggle offscreen rendering."),
+	    puxelSizeBuffer(512 << 20),
+        computeSesPerMolecule(false)
 {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable ( &this->molDataCallerSlot );
+    this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
+    this->MakeSlotAvailable (&this->bsDataCallerSlot);
 
     // set epsilon value for float-comparison
     this->epsilon = vislib::math::FLOAT_EPSILON;
@@ -119,21 +124,31 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleDS (),
     this->fogStart = 0.5f;
     param::FloatParam *fs = new param::FloatParam( this->fogStart, 0.0f );
     this->fogstartParam << fs;
+    
+    // coloring modes
+    this->currentColoringMode0 = Color::CHAIN;
+    this->currentColoringMode1 = Color::ELEMENT;
+    param::EnumParam *cm0 = new param::EnumParam ( int ( this->currentColoringMode0) );
+    param::EnumParam *cm1 = new param::EnumParam ( int ( this->currentColoringMode1) );
+    MolecularDataCall *mol = new MolecularDataCall();
+    BindingSiteCall *bs = new BindingSiteCall();
+    unsigned int cCnt;
+    Color::ColoringMode cMode;
+    for( cCnt = 0; cCnt < Color::GetNumOfColoringModes( mol, bs); ++cCnt) {
+        cMode = Color::GetModeByIndex( mol, bs, cCnt);
+        cm0->SetTypePair( cMode, Color::GetName( cMode).c_str());
+        cm1->SetTypePair( cMode, Color::GetName( cMode).c_str());
+    }
+    delete mol;
+    delete bs;
+    this->coloringModeParam0 << cm0;
+    this->coloringModeParam1 << cm1;
+    this->MakeSlotAvailable( &this->coloringModeParam0);
+    this->MakeSlotAvailable( &this->coloringModeParam1);
 
-        // ----- choose current coloring mode -----
-    //this->currentColoringMode = ELEMENT;
-    this->currentColoringMode = Color::RESIDUE;
-    param::EnumParam *cm = new param::EnumParam(int(this->currentColoringMode));
-    cm->SetTypePair( Color::ELEMENT, "Element");
-    cm->SetTypePair( Color::RESIDUE, "Residue");
-    cm->SetTypePair( Color::STRUCTURE, "Structure");
-    cm->SetTypePair( Color::BFACTOR, "BFactor");
-    cm->SetTypePair( Color::CHARGE, "Charge");
-    cm->SetTypePair( Color::OCCUPANCY, "Occupancy");
-    cm->SetTypePair( Color::CHAIN, "Chain");
-    cm->SetTypePair( Color::MOLECULE, "Molecule");
-    cm->SetTypePair( Color::RAINBOW, "Rainbow");
-    this->coloringmodeParam << cm;
+    // Color weighting parameter
+    this->cmWeightParam.SetParameter(new param::FloatParam(0.5f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->cmWeightParam);
 
     // the color for the minimum value (gradient coloring
     this->minGradColorParam.SetParameter(new param::StringParam( "#146496"));
@@ -207,7 +222,6 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleDS (),
 #ifdef WITH_PUXELS
 	this->MakeSlotAvailable( &this->puxelsParam );
 #endif
-    this->MakeSlotAvailable( &this->coloringmodeParam );
     this->MakeSlotAvailable( &this->silhouettecolorParam );
     this->MakeSlotAvailable( &this->sigmaParam );
     this->MakeSlotAvailable( &this->lambdaParam );
@@ -887,9 +901,15 @@ bool MoleculeSESRenderer::Render( Call& call ) {
     // execute the call
     mol->SetFrameID(static_cast<int>( callTime));
     if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
+    
+    // get pointer to BindingSiteCall
+    BindingSiteCall *bs = this->bsDataCallerSlot.CallAs<BindingSiteCall>();
+    if( bs ) {
+        (*bs)(BindingSiteCall::CallForGetData);
+    }
 
         // ==================== check parameters ====================
-    this->UpdateParameters( mol);
+    this->UpdateParameters( mol, bs);
 
         // ==================== Precomputations ====================
 
@@ -993,13 +1013,16 @@ bool MoleculeSESRenderer::Render( Call& call ) {
     if( !this->preComputationDone ) {
         // compute the color table
         Color::MakeColorTable(mol,
-          this->currentColoringMode,
-          this->atomColorTable, this->colorLookupTable,
-          this->rainbowColors,
-          this->minGradColorParam.Param<param::StringParam>()->Value(),
-          this->midGradColorParam.Param<param::StringParam>()->Value(),
-          this->maxGradColorParam.Param<param::StringParam>()->Value(),
-          true);
+            this->currentColoringMode0,
+            this->currentColoringMode1,
+            this->cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
+            1.0 - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+            this->atomColorTable, this->colorLookupTable,
+            this->rainbowColors,
+            this->minGradColorParam.Param<param::StringParam>()->Value(),
+            this->midGradColorParam.Param<param::StringParam>()->Value(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value(),
+            true, bs);
         // compute the data needed for the current render mode
         if( this->currentRendermode == GPU_RAYCASTING )
             this->ComputeRaycastingArrays();
@@ -1123,7 +1146,7 @@ bool MoleculeSESRenderer::Render( Call& call ) {
 /*
  * update parameters
  */
-void MoleculeSESRenderer::UpdateParameters( const MolecularDataCall *mol) {
+void MoleculeSESRenderer::UpdateParameters( const MolecularDataCall *mol, const BindingSiteCall *bs) {
     // variables
     bool recomputeColors = false;
     // ==================== check parameters ====================
@@ -1142,19 +1165,25 @@ void MoleculeSESRenderer::UpdateParameters( const MolecularDataCall *mol) {
 		if(!this->allowPuxels)
 			this->puxelsParam.Param<param::BoolParam>()->SetValue(false, false);
     }
-    if( this->coloringmodeParam.IsDirty() ) {
-        this->currentColoringMode = static_cast<Color::ColoringMode>(  this->coloringmodeParam.Param<param::EnumParam>()->Value() );
+    if( this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty()) {
+        this->currentColoringMode0 = static_cast<Color::ColoringMode>(  this->coloringModeParam0.Param<param::EnumParam>()->Value() );
 
         Color::MakeColorTable( mol,
-          this->currentColoringMode,
-          this->atomColorTable, this->colorLookupTable,
-          this->rainbowColors,
-          this->minGradColorParam.Param<param::StringParam>()->Value(),
-          this->midGradColorParam.Param<param::StringParam>()->Value(),
-          this->maxGradColorParam.Param<param::StringParam>()->Value());
+            this->currentColoringMode0,
+            this->currentColoringMode1,
+            this->cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
+            1.0 - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+            this->atomColorTable, this->colorLookupTable,
+            this->rainbowColors,
+            this->minGradColorParam.Param<param::StringParam>()->Value(),
+            this->midGradColorParam.Param<param::StringParam>()->Value(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value(),
+            true, bs);
 
         this->preComputationDone = false;
-        this->coloringmodeParam.ResetDirty();
+        this->coloringModeParam0.ResetDirty();
+        this->coloringModeParam1.ResetDirty();
+        this->cmWeightParam.ResetDirty();
     }
     if( this->silhouettecolorParam.IsDirty() ) {
         this->SetSilhouetteColor( this->DecodeColor( this->silhouettecolorParam.Param<param::IntParam>()->Value() ) );
