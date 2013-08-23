@@ -664,7 +664,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
     // TEST feature triangle drawing ...
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
-    glLineWidth(3.0f);
+    glLineWidth(1.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glColor3f( 1.0f, 1.0f, 1.0f);
     glBegin( GL_TRIANGLES);
@@ -675,6 +675,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
     }
     glEnd();
     // ... TEST feature triangle drawing
+
     // TEST center line drawing ...
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
@@ -689,7 +690,45 @@ bool VolumeMeshRenderer::Render(Call& call) {
         curClnCnt++;
     }
     glEnd();
+    glLineWidth( 3.0f);
+    glBegin( GL_LINES);
+    clnCnt = this->clEdges.size();
+    curClnCnt = 0;
+    for( auto ed : this->clEdges) {
+        glColor3f( 1.0f, ( 1.0f / clnCnt) * curClnCnt, 0.0f);
+        glVertex3fv( ed->node1->p.PeekComponents());
+        glColor3f( 1.0f, ( 1.0f / clnCnt) * (curClnCnt+1), 0.0f);
+        glVertex3fv( ed->node2->p.PeekComponents());
+        curClnCnt++;
+    }
+    glEnd();
     // ... TEST center line drawing
+
+    // TEST center line branches ...
+    /*
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
+    glLineWidth(5.0f);
+    glColor3f( 0.0f, 1.0f, 1.0f);
+    glBegin( GL_LINES);
+    clnCnt = this->clNodes.size();
+    curClnCnt = 0;
+    for( auto branch : clg.allBranches) {
+        if(curClnCnt % 2)
+            glColor3f( 0.0f, ( 1.0f / clnCnt) * curClnCnt, 1.0f);
+        else
+            glColor3f( 1.0f, ( 1.0f / clnCnt) * curClnCnt, 0.0f);
+        for(auto edge : branch->edges ) {
+            glVertex3fv( edge->getNode1()->p.PeekComponents());
+            glVertex3fv( edge->getNode2()->p.PeekComponents());
+        }
+        curClnCnt++;
+    }
+    glEnd();
+    */
+    // ... TEST center line branches
+
+    /*
     // TEST center line first ring ...
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
@@ -702,6 +741,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
     }
     glEnd();
     // ... TEST center line first ring
+    */
 
     glPointSize( 1.0f);
 

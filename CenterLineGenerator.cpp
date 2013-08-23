@@ -121,7 +121,7 @@ void CenterLineGenerator::NodesFromEdges(Edges &edges, Nodes &nodes) {
 }
 
 CenterLineGenerator::CenterLineNode CenterLineGenerator::Collapse(Nodes &selection) {
-	CenterLineGenerator::Vector v;
+	CenterLineGenerator::Vector v( 0.0f, 0.0f, 0.0f);
 
 	for(auto it : selection) {
 		v += it->p;
@@ -335,11 +335,43 @@ void CenterLineGenerator::FindBranch(Section *current, std::vector<Section*> &br
 	// save for later
 	// check every edge if it connects to one of the open loops...
     
-	Section *S0 = new Section();
-    S0->prevCenterLineNode = current->centerLineNode;
+	Section *S0;
 	Edge *edge = nullptr;
 	Edge *edgeNext = nullptr;
-	Edge *edgeNextNext = nullptr;
+    Edge *edgeNextNext = nullptr;
+    std::list<Edge*> edgeVec;
+    
+    while( !current->edges.empty() ) {
+        S0 = new Section();
+        S0->centerLineNode = nullptr;
+        S0->prevCenterLineNode = current->prevCenterLineNode;
+        // get first element for new ring
+        auto eit = current->edges.begin();
+        Edge *e = *eit;
+        current->edges.erase( eit);
+        /*
+        while( e != nullptr ) {
+            S0->edges.insert( e);
+            e = findEdgeNeighborInSet( e, current->edges, true);
+        }
+        */
+        // DEBUG
+        edgeVec.clear();
+        edgeVec.push_back( e);
+        while( !edgeVec.empty() ) {
+            while( edgeVec.back() != nullptr ) {
+                edgeVec.push_back( findEdgeNeighborInSet( edgeVec.front(), current->edges, true));
+            }
+            edgeVec.pop_back();
+            S0->edges.insert( edgeVec.front());
+            edgeVec.pop_front();
+        }
+        // ring found -> add to branch list
+        branches.push_back( S0);
+    }
+
+
+    /*
     while( !current->edges.empty() ) {
 
 		if( !continueOnStep6 ) {
@@ -396,6 +428,7 @@ void CenterLineGenerator::FindBranch(Section *current, std::vector<Section*> &br
             }
 		}
 	}
+    */
 }
 
 void CenterLineGenerator::CenterLine(Edges &selection, CenterLineEdges &centerLineEdges, CenterLineNodes &centerLineNodes) {
@@ -427,6 +460,9 @@ void CenterLineGenerator::CenterLine(Edges &selection, CenterLineEdges &centerLi
 	while( !branches.empty() ) {
 		Section *current = branches.front();
 		branches.erase( branches.begin() );
+        
+        // DEBUG
+        allBranches.push_back(current);
 
 		// 2)
 		Nodes currentNodes;
@@ -439,19 +475,34 @@ void CenterLineGenerator::CenterLine(Edges &selection, CenterLineEdges &centerLi
         current->centerLineNode = new CenterLineNode();
 		*current->centerLineNode = Collapse( currentNodes);
         centerLineNodes.push_back( current->centerLineNode);
+        
+        // construct center line edge
+        if( current->prevCenterLineNode != nullptr ) {
+            CenterLineEdge *cle = new CenterLineEdge();
+            cle->node1 = current->prevCenterLineNode;
+            cle->node2 = current->centerLineNode;
+            centerLineEdges.push_back( cle);
+        }
 
 		// 3)
 		Section *next = new Section();
         next->prevCenterLineNode = current->centerLineNode;
+        next->centerLineNode = nullptr;
         // TODO store nodes in next for future use in next cycle???
         NextSection( current->edges, currentNodes, next);
 
 		// 4)
+#if 1
         FindBranch( next, branches);
         
         next->centerLineNode = nullptr;
         next->prevCenterLineNode = nullptr;
         delete next;
+#else
+        // DEBUG
+        if( !next->edges.empty() )
+            branches.push_back( next);
+#endif
 	}
 
 }
