@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "MolecularDataCall.h"
+#include "BindingSiteCall.h"
 #include "Color.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
@@ -207,15 +208,17 @@ namespace protein {
          *
          * @param mol   Pointer to the data call.
          */
-        void UpdateParameters( const MolecularDataCall *mol);
+        void UpdateParameters( const MolecularDataCall *mol, const BindingSiteCall *bs = 0);
 
 
         /**********************************************************************
          * variables
          **********************************************************************/
-
-        /** caller slot */
+        
+        /** MolecularDataCall caller slot */
         megamol::core::CallerSlot molDataCallerSlot;
+        /** BindingSiteCall caller slot */
+        megamol::core::CallerSlot bsDataCallerSlot;
 
         /** camera information */
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;

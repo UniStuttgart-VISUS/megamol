@@ -11,6 +11,7 @@
 #endif /* (_MSC_VER > 1000) */
 
 #include "MolecularDataCall.h"
+#include "BindingSiteCall.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "Color.h"
@@ -237,7 +238,7 @@ namespace protein {
          *
          * @param mol   Pointer to the data call.
          */
-        void UpdateParameters( const MolecularDataCall *mol);
+        void UpdateParameters( const MolecularDataCall *mol, const BindingSiteCall *bs = 0);
 
         /**
          * The get capabilities callback. The module should set the members
@@ -277,9 +278,11 @@ namespace protein {
         /**********************************************************************
          * variables
          **********************************************************************/
-
-        // caller slot
+        
+        /** MolecularDataCall caller slot */
         megamol::core::CallerSlot molDataCallerSlot;
+        /** BindingSiteCall caller slot */
+        megamol::core::CallerSlot bsDataCallerSlot;
 
         /** camera information */
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
@@ -290,7 +293,12 @@ namespace protein {
         megamol::core::param::ParamSlot postprocessingParam;
         megamol::core::param::ParamSlot rendermodeParam;
         megamol::core::param::ParamSlot puxelsParam;
-        megamol::core::param::ParamSlot coloringmodeParam;
+        /** parameter slot for coloring mode */
+        megamol::core::param::ParamSlot coloringModeParam0;
+        /** parameter slot for coloring mode */
+        megamol::core::param::ParamSlot coloringModeParam1;
+        /** parameter slot for coloring mode weighting*/
+        megamol::core::param::ParamSlot cmWeightParam;
         megamol::core::param::ParamSlot silhouettecolorParam;
         megamol::core::param::ParamSlot sigmaParam;
         megamol::core::param::ParamSlot lambdaParam;
@@ -413,8 +421,9 @@ namespace protein {
 
         /** current render mode */
         RenderMode currentRendermode;
-        /** current coloring mode */
-        Color::ColoringMode currentColoringMode;
+        /** The current coloring mode */
+        Color::ColoringMode currentColoringMode0;
+        Color::ColoringMode currentColoringMode1;
         /** postprocessing mode */
         PostprocessingMode postprocessing;
 

@@ -27,6 +27,7 @@
 #include "WKFUtils.h"
 #include "CUDAQuickSurf.h"
 #include <cuda_runtime.h>
+#include "CenterLineGenerator.h"
 
 namespace megamol {
 namespace protein {
@@ -403,19 +404,24 @@ namespace protein {
         vislib::Array<float> atomColorTable;
         /** The color lookup table which stores the rainbow colors */
         vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
-        /** The current coloring mode */
-        Color::ColoringMode currentColoringMode;
         /** parameter slot for coloring mode */
-        megamol::core::param::ParamSlot coloringModeParam;
+        megamol::core::param::ParamSlot coloringModeParam0;
+        /** parameter slot for coloring mode */
+        megamol::core::param::ParamSlot coloringModeParam1;
+        /** parameter slot for coloring mode weighting*/
+        megamol::core::param::ParamSlot cmWeightParam;
         /** parameter slot for min color of gradient color mode */
         megamol::core::param::ParamSlot minGradColorParam;
         /** parameter slot for mid color of gradient color mode */
         megamol::core::param::ParamSlot midGradColorParam;
         /** parameter slot for max color of gradient color mode */
         megamol::core::param::ParamSlot maxGradColorParam;        
-
         /** parameter slot for segment area threshold */
         megamol::core::param::ParamSlot areaThresholdParam;
+        
+        /** The current coloring mode */
+        int currentColoringMode0;
+        int currentColoringMode1;
         
         vislib::Array<bool> featureSelection;
         vislib::Array<bool> featureVisibility;
@@ -445,6 +451,11 @@ namespace protein {
         float4 *featureTriangleVerticesHost;
         /** counter for feature triangles */
         unsigned int featureTrianglesCount;
+
+        /** center line variables */
+        CenterLineGenerator::CenterLineEdges clEdges;
+        CenterLineGenerator::CenterLineNodes clNodes;
+        CenterLineGenerator clg;
     };
 
 

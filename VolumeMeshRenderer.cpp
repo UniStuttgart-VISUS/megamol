@@ -38,7 +38,7 @@
 #include <thrust/reduce.h>
 #include <thrust/sort.h>
 #include <omp.h>
-#include "CenterLineGenerator.h"
+#include <ctime>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -66,7 +66,9 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
         maxDistanceParam("maxDistance", "Distance threshold"),
         maxDeltaDistanceParam("maxDistanceDelta", "Distance' threshold"),
         colorTableFileParam("color::colorTableFile", "Color Table Filename"),
-        coloringModeParam("color::coloringMode", "The first coloring mode."),
+        coloringModeParam0( "color::coloringMode0", "The first coloring mode."),
+        coloringModeParam1( "color::coloringMode1", "The second coloring mode."),
+        cmWeightParam( "color::colorWeighting", "The weighting of the two coloring modes."),
         minGradColorParam("color::minGradColor", "The color for the minimum value for gradient coloring" ),
         midGradColorParam("color::midGradColor", "The color for the middle value for gradient coloring" ),
         maxGradColorParam("color::maxGradColor", "The color for the maximum value for gradient coloring" ),
@@ -124,21 +126,33 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
     this->MakeSlotAvailable(&this->maxDeltaDistanceParam);
     this->MakeSlotAvailable(&this->colorTableFileParam);
     
-    // coloring mode
-    this->currentColoringMode = Color::MOLECULE;	
-    param::EnumParam *cm = new param::EnumParam ( int ( this->currentColoringMode ) );
+    // coloring modes
+    this->currentColoringMode0 = Color::CHAIN;
+    this->currentColoringMode1 = Color::ELEMENT;
+    param::EnumParam *cm0 = new param::EnumParam ( int ( this->currentColoringMode0) );
+    param::EnumParam *cm1 = new param::EnumParam ( int ( this->currentColoringMode1) );
     MolecularDataCall *mol = new MolecularDataCall();
     BindingSiteCall *bs = new BindingSiteCall();
     unsigned int cCnt;
     Color::ColoringMode cMode;
     for( cCnt = 0; cCnt < Color::GetNumOfColoringModes( mol, bs); ++cCnt) {
         cMode = Color::GetModeByIndex( mol, bs, cCnt);
-        cm->SetTypePair( cMode, Color::GetName( cMode).c_str());
+        cm0->SetTypePair( cMode, Color::GetName( cMode).c_str());
+        cm1->SetTypePair( cMode, Color::GetName( cMode).c_str());
     }
+    cm0->SetTypePair( -1, "SurfaceFeature");
+    cm1->SetTypePair( -1, "SurfaceFeature");
     delete mol;
     delete bs;
-    this->coloringModeParam << cm;
-    this->MakeSlotAvailable( &this->coloringModeParam );
+    this->coloringModeParam0 << cm0;
+    this->coloringModeParam1 << cm1;
+    this->MakeSlotAvailable( &this->coloringModeParam0);
+    this->MakeSlotAvailable( &this->coloringModeParam1);
+    
+    // Color weighting parameter
+    this->cmWeightParam.SetParameter(new param::FloatParam(0.5f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->cmWeightParam);
+
     // make the rainbow color table
     Color::MakeRainbowColorTable( 100, this->rainbowColors);
 
@@ -293,6 +307,7 @@ bool VolumeMeshRenderer::create(void) {
     cudaError_t cuerr = cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
     if( cuerr != cudaError::cudaSuccess ) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: cudaGLSetGLDevice: %s\n", this->ClassName(), cudaGetErrorString( cuerr));
+        return false;
     }
     
     // log thrust version
@@ -477,16 +492,49 @@ bool VolumeMeshRenderer::Render(Call& call) {
 
     ParameterRefresh( mol, bs);
     
-    // recompute color table, if necessary
+    // recompute color table, if necessary (i.e. the atom count has changed)
     if( this->atomColorTable.Count()/3 < mol->AtomCount() ) {
-        // Use one coloring mode
-        Color::MakeColorTable( mol,
-          this->currentColoringMode,
-          this->atomColorTable, this->colorTable, this->rainbowColors,
-          this->minGradColorParam.Param<param::StringParam>()->Value(),
-          this->midGradColorParam.Param<param::StringParam>()->Value(),
-          this->maxGradColorParam.Param<param::StringParam>()->Value(),
-          true, bs);
+        if( this->currentColoringMode0 < 0 ) {
+            if( this->currentColoringMode1 < 0 ) {
+                // Color by surface feature -> set all colors to white
+                this->atomColorTable.SetCount( mol->AtomCount() * 3);
+                for( unsigned int i = 0; i < mol->AtomCount() * 3; i++ ) {
+                    this->atomColorTable[i] = 1.0f;
+                }
+            } else {
+                // only color by color mode 1
+                Color::MakeColorTable( mol,
+                    static_cast<Color::ColoringMode>(this->currentColoringMode1),
+                    this->atomColorTable, this->colorTable, this->rainbowColors,
+                    this->minGradColorParam.Param<param::StringParam>()->Value(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                    true, bs);
+            }
+        } else {
+            if( this->currentColoringMode1 < 0 ) {
+                // only color by color mode 0
+                Color::MakeColorTable( mol,
+                    static_cast<Color::ColoringMode>(this->currentColoringMode0),
+                    this->atomColorTable, this->colorTable, this->rainbowColors,
+                    this->minGradColorParam.Param<param::StringParam>()->Value(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                    true, bs);
+            } else {
+            // Mix two coloring modes
+            Color::MakeColorTable( mol,
+                static_cast<Color::ColoringMode>(this->currentColoringMode0),
+                static_cast<Color::ColoringMode>(this->currentColoringMode1),
+                cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
+                1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+                this->atomColorTable, this->colorTable, this->rainbowColors,
+                this->minGradColorParam.Param<param::StringParam>()->Value(),
+                this->midGradColorParam.Param<param::StringParam>()->Value(),
+                this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                true, bs);
+            }
+        }
     }
     
     // TEST
@@ -581,7 +629,10 @@ bool VolumeMeshRenderer::Render(Call& call) {
     // Push attributes and model matrix.
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glPushMatrix();
-
+    
+    float spec[4] = { 0.0f, 0.0f, 0.0f, 0.0f};
+    glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+    glEnable( GL_COLOR_MATERIAL);
 
     // Scale model properly.
     float scale;
@@ -624,6 +675,35 @@ bool VolumeMeshRenderer::Render(Call& call) {
     }
     glEnd();
     // ... TEST feature triangle drawing
+    // TEST center line drawing ...
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    unsigned int clnCnt = this->clNodes.size();
+    unsigned int curClnCnt = 0;
+    glPointSize( 5.0f);
+    glBegin( GL_POINTS);
+    for( auto nodes : this->clNodes) {
+        glColor3f( 1.0f, ( 1.0f / clnCnt) * curClnCnt, 0.0f);
+        glVertex3fv( nodes->p.PeekComponents());
+        curClnCnt++;
+    }
+    glEnd();
+    // ... TEST center line drawing
+    // TEST center line first ring ...
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
+    glLineWidth(5.0f);
+    glColor3f( 0.0f, 1.0f, 1.0f);
+    glBegin( GL_LINES);
+    for( auto edge : clg.freeEdgeRing) {
+        glVertex3fv( edge->getNode1()->p.PeekComponents());
+        glVertex3fv( edge->getNode2()->p.PeekComponents());
+    }
+    glEnd();
+    // ... TEST center line first ring
+
+    glPointSize( 1.0f);
 
     // Bind VBOs.
     glBindBufferARB(GL_ARRAY_BUFFER, this->positionVbo);
@@ -1779,13 +1859,16 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
         this->featureTrianglesCount = fLength;
         cudaDeviceSynchronize();
         // TODO compute the center line of this feature
-        //CenterLineGenerator clg;
-        //clg.SetTriangleMesh( fLength, (float*)this->featureTriangleVerticesHost);
-
+        time_t t = clock();
+        clg.SetTriangleMesh( fLength, (float*)this->featureTriangleVerticesHost);
+        printf( "Time to prepare center line data for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
+        t = clock();
+        clg.CenterLine( clg.freeEdgeRing, clEdges, clNodes);
+        printf( "Time to compute center line for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
     }
 
     // ========================================================================
-    // Phase 9: Colorize vertices by centroid.
+    // Phase 9: Colorize vertices
     // ========================================================================
     CUDA_VERIFY(cudaMemcpy(centroidColors, centroidColorsHost, centroidCount * sizeof(float4), cudaMemcpyHostToDevice));
     ColorizeByCentroid(colors, centroidColors, centroidLabels, centroidCount, vertexLabels, this->vertexCount);
@@ -1796,24 +1879,47 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     // TEST coloring by nearest atom TEST ...
     cudaMemcpy( this->vertexColors, colors, this->vertexCount * 4 * sizeof(float), cudaMemcpyDeviceToHost);
     int atomIdx;
-    float interpolFactor = 0.9f;
+    float ifac = this->cmWeightParam.Param<param::FloatParam>()->Value();
     for( unsigned int i = 0; i < this->vertexCount; i++ ) {
         atomIdx = this->neighborAtomOfVertex[i];
         if( atomIdx <= 0 ) {
+            // ERROR no nearest atom found (color magenta)
             this->vertexColors[4*i+0] = 1.0f;
             this->vertexColors[4*i+1] = 0.0f;
             this->vertexColors[4*i+2] = 1.0f;
             this->vertexColors[4*i+3] = 1.0f;
         } else if( atomIdx >= (this->atomColorTable.Count() / 3)) {
+            // ERROR nearest atom has too large index (color cyan)
             this->vertexColors[4*i+0] = 0.0f;
             this->vertexColors[4*i+1] = 1.0f;
             this->vertexColors[4*i+2] = 1.0f;
             this->vertexColors[4*i+3] = 1.0f;
         } else {
-            this->vertexColors[4*i+0] = ( this->atomColorTable[3*atomIdx+0] * interpolFactor + this->vertexColors[4*i+0] * (1.0f - interpolFactor));
-            this->vertexColors[4*i+1] = ( this->atomColorTable[3*atomIdx+1] * interpolFactor + this->vertexColors[4*i+1] * (1.0f - interpolFactor));
-            this->vertexColors[4*i+2] = ( this->atomColorTable[3*atomIdx+2] * interpolFactor + this->vertexColors[4*i+2] * (1.0f - interpolFactor));
-            this->vertexColors[4*i+3] = 1.0f;
+            // color triangles
+            if( this->currentColoringMode0 < 0 ) {
+                if( this->currentColoringMode1 >= 0 ) {
+                    // mix between surface feature color and color mode 1
+                    this->vertexColors[4*i+0] = ( this->vertexColors[4*i+0] * ifac + this->atomColorTable[3*atomIdx+0] * (1.0f - ifac));
+                    this->vertexColors[4*i+1] = ( this->vertexColors[4*i+1] * ifac + this->atomColorTable[3*atomIdx+1] * (1.0f - ifac));
+                    this->vertexColors[4*i+2] = ( this->vertexColors[4*i+2] * ifac + this->atomColorTable[3*atomIdx+2] * (1.0f - ifac));
+                    this->vertexColors[4*i+3] = 1.0f;
+                }
+                // else - color by surface feature (do nothing)
+            } else {
+                if( this->currentColoringMode1 < 0 ) {
+                    // mix between color mode 0 and  surface feature color
+                    this->vertexColors[4*i+0] = ( this->atomColorTable[3*atomIdx+0] * ifac + this->vertexColors[4*i+0] * (1.0f - ifac));
+                    this->vertexColors[4*i+1] = ( this->atomColorTable[3*atomIdx+1] * ifac + this->vertexColors[4*i+1] * (1.0f - ifac));
+                    this->vertexColors[4*i+2] = ( this->atomColorTable[3*atomIdx+2] * ifac + this->vertexColors[4*i+2] * (1.0f - ifac));
+                    this->vertexColors[4*i+3] = 1.0f;
+                } else {
+                    // use only atom colors
+                    this->vertexColors[4*i+0] = this->atomColorTable[3*atomIdx+0];
+                    this->vertexColors[4*i+1] = this->atomColorTable[3*atomIdx+1];
+                    this->vertexColors[4*i+2] = this->atomColorTable[3*atomIdx+2];
+                    this->vertexColors[4*i+3] = 1.0f;
+                }
+            }
         }
     }
     cudaMemcpy( colors, this->vertexColors, this->vertexCount * 4 * sizeof(float), cudaMemcpyHostToDevice);
@@ -1906,21 +2012,58 @@ void VolumeMeshRenderer::ParameterRefresh( const MolecularDataCall *mol, const B
         this->colorTableFileParam.ResetDirty();
     }
     // Recompute color table
-    if( this->coloringModeParam.IsDirty() ) {
-
-        this->currentColoringMode = static_cast<Color::ColoringMode>(int(
-            this->coloringModeParam.Param<param::EnumParam>()->Value()));
-
-        // Use one coloring mode
-        Color::MakeColorTable( mol,
-          this->currentColoringMode,
-          this->atomColorTable, this->colorTable, this->rainbowColors,
-          this->minGradColorParam.Param<param::StringParam>()->Value(),
-          this->midGradColorParam.Param<param::StringParam>()->Value(),
-          this->maxGradColorParam.Param<param::StringParam>()->Value(),
-          true, bs);
-
-        this->coloringModeParam.ResetDirty();
+    if( this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty()) {
+        
+        this->currentColoringMode0 = static_cast<Color::ColoringMode>(int(
+            this->coloringModeParam0.Param<param::EnumParam>()->Value()));
+        this->currentColoringMode1 = static_cast<Color::ColoringMode>(int(
+            this->coloringModeParam1.Param<param::EnumParam>()->Value()));
+        
+        if( this->currentColoringMode0 < 0 ) {
+            if( this->currentColoringMode1 < 0 ) {
+                // Color by surface feature -> set all colors to white
+                this->atomColorTable.SetCount( mol->AtomCount() * 3);
+                for( unsigned int i = 0; i < mol->AtomCount() * 3; i++ ) {
+                    this->atomColorTable[i] = 1.0f;
+                }
+            } else {
+                // only color by color mode 1
+                Color::MakeColorTable( mol,
+                    static_cast<Color::ColoringMode>(this->currentColoringMode1),
+                    this->atomColorTable, this->colorTable, this->rainbowColors,
+                    this->minGradColorParam.Param<param::StringParam>()->Value(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                    true, bs);
+            }
+        } else {
+            if( this->currentColoringMode1 < 0 ) {
+                // only color by color mode 0
+                Color::MakeColorTable( mol,
+                    static_cast<Color::ColoringMode>(this->currentColoringMode0),
+                    this->atomColorTable, this->colorTable, this->rainbowColors,
+                    this->minGradColorParam.Param<param::StringParam>()->Value(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                    true, bs);
+            } else {
+            // Mix two coloring modes
+            Color::MakeColorTable( mol,
+                static_cast<Color::ColoringMode>(this->currentColoringMode0),
+                static_cast<Color::ColoringMode>(this->currentColoringMode1),
+                cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
+                1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+                this->atomColorTable, this->colorTable, this->rainbowColors,
+                this->minGradColorParam.Param<param::StringParam>()->Value(),
+                this->midGradColorParam.Param<param::StringParam>()->Value(),
+                this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                true, bs);
+            }
+        }
+        
+        this->coloringModeParam0.ResetDirty();
+        this->coloringModeParam1.ResetDirty();
+        this->cmWeightParam.ResetDirty();
     }
 }
 

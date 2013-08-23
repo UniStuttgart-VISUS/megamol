@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "MolecularDataCall.h"
+#include "BindingSiteCall.h"
 #include "param/ParamSlot.h"
 #include "BSpline.h"
 #include "CallerSlot.h"
@@ -103,9 +104,11 @@ namespace protein {
 
         /** Set current render mode */
         void SetRenderMode( CartoonRenderMode rm) { currentRenderMode = rm; RecomputeAll(); };
-
+        
         /** Set current coloring mode */
-        void SetColoringMode( Color::ColoringMode cm) { currentColoringMode = cm; RecomputeAll(); };
+        void SetColoringMode0( Color::ColoringMode cm) { currentColoringMode0 = cm; RecomputeAll(); };
+        /** Set current coloring mode */
+        void SetColoringMode1( Color::ColoringMode cm) { currentColoringMode1 = cm; RecomputeAll(); };
 
         /** Set radius for cartoon rendering mode */
         inline void SetRadiusCartoon( float rad ) { radiusCartoon = rad; RecomputeAll(); };
@@ -203,7 +206,7 @@ namespace protein {
          *
          * @param mol   Pointer to the data call.
          */
-        void UpdateParameters( const MolecularDataCall *mol);
+        void UpdateParameters( const MolecularDataCall *mol, const BindingSiteCall * bs = 0);
 
         /**********************************************************************
          * variables
@@ -215,12 +218,19 @@ namespace protein {
         megamol::core::CallerSlot molRendererCallerSlot;
 		// caller slot for offscreen rendering
         megamol::core::CallerSlot molRendererORCallerSlot;
+        /** BindingSiteCall caller slot */
+        megamol::core::CallerSlot bsDataCallerSlot;
         
         /** camera information */
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
 
         megamol::core::param::ParamSlot renderingModeParam;
-        megamol::core::param::ParamSlot coloringModeParam;
+        /** parameter slot for coloring mode */
+        megamol::core::param::ParamSlot coloringModeParam0;
+        /** parameter slot for coloring mode */
+        megamol::core::param::ParamSlot coloringModeParam1;
+        /** parameter slot for coloring mode weighting*/
+        megamol::core::param::ParamSlot cmWeightParam;
         megamol::core::param::ParamSlot stickColoringModeParam;
         megamol::core::param::ParamSlot smoothCartoonColoringParam;
         /** parameter slot for color table filename */
@@ -258,8 +268,9 @@ namespace protein {
 
         // current render mode
         CartoonRenderMode currentRenderMode;
-        // current coloring mode
-        Color::ColoringMode currentColoringMode;
+        /** The current coloring mode */
+        Color::ColoringMode currentColoringMode0;
+        Color::ColoringMode currentColoringMode1;
         // smooth coloring of cartoon mode
         bool smoothCartoonColoringMode;
 
