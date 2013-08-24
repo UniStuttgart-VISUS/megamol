@@ -18,6 +18,7 @@
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/String.h"
+#include "vislib/Vector.h"
 		
 
 namespace megamol {
@@ -100,6 +101,8 @@ namespace protein {
 
         /** the parameter slot for the binding site file (PDB) */
         core::param::ParamSlot pdbFilenameSlot;
+        // the file name for the color table
+        megamol::core::param::ParamSlot colorTableFileParam;
         
         /** The binding site information */
         vislib::Array<vislib::Array<vislib::Pair<char, unsigned int> > > bindingSites;
@@ -109,6 +112,12 @@ namespace protein {
         vislib::Array<vislib::StringA> bindingSiteNames;
         /** The binding site description */
         vislib::Array<vislib::StringA> bindingSiteDescription;
+        
+        // color table
+        vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
+        // color table
+        vislib::Array<vislib::math::Vector<float, 3> > bindingSiteColors;
+
     };
 
 } /* end namespace protein */

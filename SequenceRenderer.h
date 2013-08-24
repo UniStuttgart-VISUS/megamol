@@ -196,6 +196,8 @@ namespace protein {
         vislib::Array<float> bsVertices;
         // the index array for the binding site tiles
         vislib::Array<unsigned int> bsIndices;
+        // the color array for the binding site tiles
+        vislib::Array<vislib::math::Vector<float, 3> > bsColors;
         // the index of the residue
         vislib::Array<unsigned int> resIndex;
         // the secondary structure element type of the residue

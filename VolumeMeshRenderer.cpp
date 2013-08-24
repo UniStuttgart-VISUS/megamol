@@ -660,7 +660,8 @@ bool VolumeMeshRenderer::Render(Call& call) {
 
     //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Scale: %f\n", scale);
     
-    
+//#define DRAW_FEATURE_TRIANGLES
+#ifdef DRAW_FEATURE_TRIANGLES
     // TEST feature triangle drawing ...
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
@@ -675,8 +676,11 @@ bool VolumeMeshRenderer::Render(Call& call) {
     }
     glEnd();
     // ... TEST feature triangle drawing
+#endif // DRAW_FEATURE_TRIANGLES
 
     // TEST center line drawing ...
+#define DRAW_CENTERLINE
+#ifdef DRAW_CENTERLINE
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -703,6 +707,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
     }
     glEnd();
     // ... TEST center line drawing
+#endif // DRAW_CENTERLINE
 
     // TEST center line branches ...
     /*
@@ -1902,9 +1907,19 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
         time_t t = clock();
         clg.SetTriangleMesh( fLength, (float*)this->featureTriangleVerticesHost);
         printf( "Time to prepare center line data for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
-        t = clock();
-        clg.CenterLine( clg.freeEdgeRing, clEdges, clNodes);
-        printf( "Time to compute center line for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
+        if( !clg.freeEdgeRing.empty() ) {
+            t = clock();
+            for ( auto edge : clEdges )  {
+                if( edge ) delete edge;
+            }
+            for ( auto node : clNodes )  {
+                if( node ) delete node;
+            }
+            clEdges.clear();
+            clNodes.clear();
+            clg.CenterLine( clg.freeEdgeRing, clEdges, clNodes);
+            printf( "Time to compute center line for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
+        }
     }
 
     // ========================================================================
