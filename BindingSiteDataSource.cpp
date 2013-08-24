@@ -10,6 +10,7 @@
 #include "vislib/sysfunctions.h"
 #include "vislib/mathfunctions.h"
 #include <math.h>
+#include "Color.h"
 
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -19,14 +20,20 @@ using namespace megamol::protein;
  */
 BindingSiteDataSource::BindingSiteDataSource( void ) : megamol::core::Module(),
         dataOutSlot( "dataout", "The slot providing the binding site data"),
-        pdbFilenameSlot( "pdbFilename", "The PDB file containing the binding site information") {
+        pdbFilenameSlot( "pdbFilename", "The PDB file containing the binding site information"),
+        colorTableFileParam( "ColorTableFilename", "The filename of the color table.") {
             
     this->pdbFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable( &this->pdbFilenameSlot);
     
     this->dataOutSlot.SetCallback( BindingSiteCall::ClassName(), BindingSiteCall::FunctionName(BindingSiteCall::CallForGetData), &BindingSiteDataSource::getData);
     this->MakeSlotAvailable( &this->dataOutSlot);
-
+    
+    // fill color table with default values and set the filename param
+    vislib::StringA filename( "colors.txt");
+    this->colorTableFileParam.SetParameter(new param::FilePathParam( A2T( filename)));
+    this->MakeSlotAvailable( &this->colorTableFileParam);
+    Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorLookupTable);
 }
 
 /*
@@ -59,6 +66,12 @@ bool BindingSiteDataSource::getData( Call& call) {
     BindingSiteCall *site = dynamic_cast<BindingSiteCall*>( &call);
     if ( !site ) return false;
 
+    // read and update the color table, if necessary
+    if( this->colorTableFileParam.IsDirty() ) {
+        Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorLookupTable);
+        this->colorTableFileParam.ResetDirty();
+    }
+    
     // try to load file, if necessary
     if ( this->pdbFilenameSlot.IsDirty() ) {
         this->pdbFilenameSlot.ResetDirty();
@@ -74,6 +87,7 @@ bool BindingSiteDataSource::getData( Call& call) {
         site->SetBindingSiteDescriptions( &this->bindingSiteDescription);
         site->SetBindingSiteResNames( &this->bindingSiteResNames);
         site->SetBindingSite( &this->bindingSites);
+        site->SetBindingSiteColors( &this->bindingSiteColors);
         return true;
     } 
 }
@@ -187,10 +201,12 @@ void BindingSiteDataSource::loadPDBFile( const vislib::TString& filename) {
                 cnt++;
             }
         }
-        // get binding site descriptons
+        // get binding site descriptons and set colors
         this->bindingSiteDescription.SetCount( this->bindingSiteNames.Count());
+        this->bindingSiteColors.SetCount( this->bindingSiteNames.Count());
         for( unsigned int i = 0; i < this->bindingSiteNames.Count(); i++ ) {
             this->bindingSiteDescription[i] = this->ExtractBindingSiteDescripton( this->bindingSiteNames[i], remarkEntries);
+            this->bindingSiteColors[i] = this->colorLookupTable[i%this->colorLookupTable.Count()];
         }
 
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Bindings Site count: %i", bindingSiteNames.Count() ); // DEBUG

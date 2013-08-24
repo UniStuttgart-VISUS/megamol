@@ -495,15 +495,15 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
                                 for( unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++ ) {
                                     bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
                                     if( mol->Chains()[cCnt].Name() == bsRes.First() &&
-                                        mol->Residues()[rCnt]->OriginalResIndex() == bsRes.Second() &&
-                                        mol->ResidueTypeNames()[mol->Residues()[rCnt]->Type()] == bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt) ) {
+                                        mol->Residues()[firstRes+rCnt]->OriginalResIndex() == bsRes.Second() &&
+                                        mol->ResidueTypeNames()[mol->Residues()[firstRes+rCnt]->Type()] == bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt) ) {
                                             // TODO loop over all atoms and add the color
-                                        firstAtom = mol->Residues()[rCnt]->FirstAtomIndex();
-                                        for( unsigned int aCnt = 0; aCnt < mol->Residues()[rCnt]->AtomCount(); aCnt++ ) {
+                                        firstAtom = mol->Residues()[firstRes+rCnt]->FirstAtomIndex();
+                                        for( unsigned int aCnt = 0; aCnt < mol->Residues()[firstRes+rCnt]->AtomCount(); aCnt++ ) {
                                             atomIdx = firstAtom + aCnt;
-                                            atomColorTable[3 * atomIdx + 0] = colorLookupTable[(bsCnt + mol->ChainCount())%colorLookupTable.Count()].X();
-                                            atomColorTable[3 * atomIdx + 1] = colorLookupTable[(bsCnt + mol->ChainCount())%colorLookupTable.Count()].Y();
-                                            atomColorTable[3 * atomIdx + 2] = colorLookupTable[(bsCnt + mol->ChainCount())%colorLookupTable.Count()].Z();
+                                            atomColorTable[3 * atomIdx + 0] = bs->GetBindingSiteColor(bsCnt).X();
+                                            atomColorTable[3 * atomIdx + 1] = bs->GetBindingSiteColor(bsCnt).Y();
+                                            atomColorTable[3 * atomIdx + 2] = bs->GetBindingSiteColor(bsCnt).Z();
                                         }
                                     }
                                 }

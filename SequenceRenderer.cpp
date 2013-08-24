@@ -160,6 +160,9 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
         this->colorTableFileParam.ResetDirty();
     }
     
+    glDisable( GL_CULL_FACE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
     // get the text color (inverse background color)
     float bgColor[4];
     float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
@@ -216,7 +219,8 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
         // draw tiles for binding sites
         glBegin( GL_QUADS);
         for( unsigned int i = 0; i < this->bsIndices.Count(); i++ ) {
-            glColor3fv( this->colorTable[this->bsIndices[i] + mol->ChainCount()].PeekComponents());
+            //glColor3fv( this->colorTable[this->bsIndices[i] + mol->ChainCount()].PeekComponents());
+            glColor3fv( this->bsColors[this->bsIndices[i]].PeekComponents());
             glVertex2f( this->bsVertices[2*i] + 0.1f, -this->bsVertices[2*i+1]);
             glVertex2f( this->bsVertices[2*i] + 0.1f, -this->bsVertices[2*i+1] - 0.4f);
             glVertex2f( this->bsVertices[2*i] + 0.9f, -this->bsVertices[2*i+1] - 0.4f);
@@ -273,7 +277,7 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                         fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
                     for( unsigned int i = 0; i < this->bindingSiteNames.Count(); i++ ) {
                         // draw the binding site names
-                        glColor3fv( this->colorTable[i + mol->ChainCount()].PeekComponents());
+                        glColor3fv( this->bsColors[i].PeekComponents());
                         theFont.DrawString( static_cast<float>(this->resCols) + 1.0f, -( static_cast<float>(i) * 2.0f + 2.0f), 
                             wordlength, 1.0f,
                             fontSize, true, this->bindingSiteNames[i], vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
@@ -357,6 +361,7 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
     this->bsVertices.AssertCapacity( mol->ResidueCount() * 2);
     this->bsIndices.Clear();
     this->bsIndices.AssertCapacity( mol->ResidueCount());
+    this->bsColors.Clear();
     this->resIndex.Clear();
     this->resIndex.AssertCapacity( mol->ResidueCount());
     this->resCols = static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value());
@@ -369,10 +374,12 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
     if( bs ) {
         this->bindingSiteDescription.SetCount( bs->GetBindingSiteCount());
         this->bindingSiteNames.AssertCapacity( bs->GetBindingSiteCount());
+        this->bsColors.SetCount( bs->GetBindingSiteCount());
         // copy binding site names
         for( unsigned int i = 0; i < bs->GetBindingSiteCount(); i++ ) {
             this->bindingSiteDescription[i].Clear();
             this->bindingSiteNames.Add( bs->GetBindingSiteName( i));
+            this->bsColors[i] = bs->GetBindingSiteColor(i);
         }
     }
     unsigned int currentRow = 0;

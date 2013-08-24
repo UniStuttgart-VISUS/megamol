@@ -12,8 +12,20 @@ CenterLineGenerator::~CenterLineGenerator(void) {
 
 void CenterLineGenerator::SetTriangleMesh( unsigned int count, float* mesh) {
     // clear previous data
+    for( auto edge : edges ) {
+        if( edge ) delete edge;
+    }
+    for( auto node : nodes ) {
+        if( node ) delete node;
+    }
+    for( auto branch : allBranches ) {
+        if( branch ) delete branch;
+    }
     edges.clear();
 	nodes.clear();
+    allBranches.clear();
+    freeEdgeRing.clear();
+
     // Array for free edges (allocate space for three edges per triangle)
     vislib::Array<Edge*> freeEdges( count * 3);
 
@@ -359,10 +371,13 @@ void CenterLineGenerator::FindBranch(Section *current, std::vector<Section*> &br
         edgeVec.clear();
         edgeVec.push_back( e);
         while( !edgeVec.empty() ) {
+            // add all neighbors of the current first edge
             while( edgeVec.back() != nullptr ) {
                 edgeVec.push_back( findEdgeNeighborInSet( edgeVec.front(), current->edges, true));
             }
+            // the last element is a nullptr -> remove it!
             edgeVec.pop_back();
+            // insert first element of the edge list to S0 and remove it from the edge list
             S0->edges.insert( edgeVec.front());
             edgeVec.pop_front();
         }

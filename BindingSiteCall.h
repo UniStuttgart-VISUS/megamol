@@ -18,6 +18,7 @@
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/String.h"
+#include "vislib/Vector.h"
 
 namespace megamol {
 namespace protein {
@@ -158,7 +159,7 @@ namespace protein {
         inline void SetBindingSiteNames( vislib::Array<vislib::StringA> *nPtr) {
             this->bindingSiteNames = nPtr;
         }
-
+        
         /**
          * Get the description of a binding site.
          *
@@ -183,6 +184,30 @@ namespace protein {
             this->bindingSiteDescriptions = nPtr;
         }
 
+        /**
+         * Get the color of a binding site.
+         *
+         * @param i The index of the residue.
+         * @return Pointer to the array of binding site descriptions.
+         */
+        inline vislib::math::Vector<float, 3> GetBindingSiteColor( unsigned int i) const {
+            if( !this->bindingSiteColors )
+                return vislib::math::Vector<float, 3>(0.5f, 0.5f, 0.5f);
+            else if( this->bindingSiteColors->Count() <= i )
+                return vislib::math::Vector<float, 3>(0.5f, 0.5f, 0.5f);
+            else
+                return (this->bindingSiteColors->operator[](i));
+        }
+
+        /**
+         * Set the pointer to the colors of a binding sites.
+         *
+         * @param nPtr The pointer.
+         */
+        inline void SetBindingSiteColors( vislib::Array<vislib::math::Vector<float, 3> > *nPtr) {
+            this->bindingSiteColors = nPtr;
+        }
+
         BindingSiteCall(void);
         virtual ~BindingSiteCall(void);
 
@@ -195,6 +220,8 @@ namespace protein {
         vislib::Array<vislib::StringA> *bindingSiteNames;
         /** The binding site name */
         vislib::Array<vislib::StringA> *bindingSiteDescriptions;
+        // color table
+        vislib::Array<vislib::math::Vector<float, 3> > *bindingSiteColors;
     };
 
     /** Description class typedef */
