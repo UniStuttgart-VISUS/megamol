@@ -37,6 +37,8 @@
 #include <thrust/version.h>
 #include <thrust/reduce.h>
 #include <thrust/sort.h>
+#include <thrust/fill.h>
+#include <thrust/scan.h>
 #include <omp.h>
 #include <ctime>
 
@@ -1932,6 +1934,24 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     CUDA_VERIFY(cudaMemcpy( this->featureStartEndHost, this->featureStartEnd, centroidCount * sizeof(uint2), cudaMemcpyDeviceToHost));
     cudaDeviceSynchronize();
     this->featureTrianglesCount = 0;
+    
+#ifndef CENTERLINE_HOST
+    // loop over all features (skip first feature)
+    for( unsigned int fCnt = 1; fCnt < centroidCount; fCnt++ ) {
+        unsigned int fStart = this->featureStartEndHost[fCnt].x;
+        unsigned int fEnd = this->featureStartEndHost[fCnt].y;
+        unsigned int fLength = fEnd - fStart + 1;
+        CUDA_VERIFY(cudaMemcpy( this->featureVertices, &(verticesCopy[3*fStart]), fLength * 3 * sizeof(float4), cudaMemcpyDeviceToDevice));
+        this->featureTrianglesCount = fLength;
+        cudaDeviceSynchronize();
+        thrust::fill_n( this->featureVertexCnt, fLength, 1);
+        thrust::exclusive_scan( this->featureVertexCnt, this->featureVertexCnt + fLength, this->featureVertexIdx);
+        thrust::stable_sort_by_key( this->featureVertices, this->featureVertices + fLength, this->featureVertexIdx, less_float4());
+        thrust::pair<float4*,uint*> new_end;
+        new_end = thrust::reduce_by_key( this->featureVertices, this->featureVertices + fLength, this->featureVertexCnt, this->featureVertices, this->featureVertexCnt, equal_float4());
+    }
+
+#else
     // loop over all features (skip first feature)
     for( unsigned int fCnt = 1; fCnt < centroidCount; fCnt++ ) {
         unsigned int fStart = this->featureStartEndHost[fCnt].x;
@@ -1961,6 +1981,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             printf( "Time to compute center line for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
         }
     }
+#endif // CENTERLINE_HOST
 
     // ========================================================================
     // Phase 9: Colorize vertices
@@ -2291,6 +2312,9 @@ void VolumeMeshRenderer::ValidateVertexMemory(uint vertexCount) {
         CUDA_VERIFY(cudaFree(vertexLabels));
         CUDA_VERIFY(cudaFree(vertexLabelsCopy));
         CUDA_VERIFY(cudaFree(verticesCopy));
+        CUDA_VERIFY(cudaFree(featureVertices));
+        CUDA_VERIFY(cudaFree(featureVertexIdx));
+        CUDA_VERIFY(cudaFree(featureVertexCnt));
         CUDA_VERIFY(cudaFree(triangleAO));
         CUDA_VERIFY(cudaFree(triangleAreas));
         CUDA_VERIFY(cudaFree(centroidLabels));
@@ -2324,6 +2348,9 @@ void VolumeMeshRenderer::ValidateVertexMemory(uint vertexCount) {
         CUDA_VERIFY(cudaMalloc(&vertexLabels, uintBufferSize));
         CUDA_VERIFY(cudaMalloc(&vertexLabelsCopy, uintBufferSize));
         CUDA_VERIFY(cudaMalloc(&verticesCopy, float4Size));
+        CUDA_VERIFY(cudaMalloc(&featureVertices, float4Size));
+        CUDA_VERIFY(cudaMalloc(&featureVertexIdx, uintBufferSize));
+        CUDA_VERIFY(cudaMalloc(&featureVertexCnt, uintBufferSize));
         CUDA_VERIFY(cudaMalloc(&triangleAO, floatSize / 3));
         CUDA_VERIFY(cudaMalloc(&triangleAreas, floatSize / 3));
         CUDA_VERIFY(cudaMalloc(&centroidLabels, uintBufferSize));
