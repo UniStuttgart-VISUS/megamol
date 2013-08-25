@@ -96,8 +96,8 @@ void CenterLineGenerator::SetTriangleMesh( unsigned int count, float* mesh) {
     
     // TODO make faster!!
     this->freeEdgeRing.clear();
+    Edges freeEdgeSet;
     if( freeEdges.Count() > 0 ) {
-        Edges freeEdgeSet;
         // insert all free edges to the set
         for( unsigned int i = 1; i < freeEdges.Count(); i++ ) {
             freeEdgeSet.insert( freeEdges[i]);
@@ -107,6 +107,14 @@ void CenterLineGenerator::SetTriangleMesh( unsigned int count, float* mesh) {
             this->freeEdgeRing.insert( e);
             e = findEdgeNeighborInSet( e, freeEdgeSet, true);
         }
+    }
+    // classify feature mesh
+    if( this->freeEdgeRing.empty() ) {
+        this->fType = CAVITY;
+    } else if( freeEdgeSet.empty() ) {
+        this->fType = POCKET;
+    } else {
+        this->fType = CHANNEL;
     }
 }
 
@@ -381,8 +389,60 @@ void CenterLineGenerator::FindBranch(Section *current, std::vector<Section*> &br
             S0->edges.insert( edgeVec.front());
             edgeVec.pop_front();
         }
+        // remove dangling edges
+        Nodes nodes;
+        this->NodesFromEdges( S0->edges, nodes);
+        std::vector<Node*> nodeVec;
+        for( auto e : S0->edges ) {
+            nodeVec.push_back( e->getNode1());
+            nodeVec.push_back( e->getNode2());
+        }
+        unsigned int counter;
+        for( auto n : nodes ) {
+            counter = 0;
+            for( auto n0 : nodeVec ) {
+                if( n == n0 ) {
+                    counter++;
+                }
+            }
+            if( counter == 1 ) {
+                for( auto e : S0->edges ) {
+                    if( e->getNode1() == n || e->getNode2() == n ) {
+                        S0->edges.erase( e);
+                        break;
+                    }
+                }
+            }
+        }
+        // check ring
+        nodeVec.clear();
+        for( auto e : S0->edges ) {
+            nodeVec.push_back( e->getNode1());
+            nodeVec.push_back( e->getNode2());
+        }
+        bool isRing = true;
+        for( auto n : nodes ) {
+            counter = 0;
+            for( auto n0 : nodeVec ) {
+                if( n == n0 ) {
+                    counter++;
+                }
+            }
+            if( counter == 1 ) {
+                isRing = false;
+            }
+        }
         // ring found -> add to branch list
-        branches.push_back( S0);
+        if( isRing ) {
+            branches.push_back( S0);
+        } else {
+            if( current->edges.empty() ) {
+                // HACK only add non-ring if it is the only segment
+                branches.push_back( S0);
+            } else {
+                return;
+            }
+        }
     }
 
 
