@@ -10,6 +10,13 @@ class CenterLineGenerator
 {
 public:
 
+    /** The names of the coloring modes */
+    enum FeatureType {
+        CAVITY  = 0,
+        CHANNEL = 1,
+        POCKET  = 2
+    };
+
 	typedef vislib::math::Vector<float, 3> Vector;
 
 	struct Node;
@@ -184,6 +191,7 @@ public:
     
     // TODO fix this!!!
     Edges freeEdgeRing;
+    FeatureType fType;
 
     // TODO make this private again!!!
 	Edges edges;

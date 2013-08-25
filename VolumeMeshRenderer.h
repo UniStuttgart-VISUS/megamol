@@ -453,9 +453,9 @@ namespace protein {
         unsigned int featureTrianglesCount;
 
         /** center line variables */
-        CenterLineGenerator::CenterLineEdges clEdges;
-        CenterLineGenerator::CenterLineNodes clNodes;
-        CenterLineGenerator clg;
+        vislib::Array<CenterLineGenerator::CenterLineEdges> clEdges;
+        vislib::Array<CenterLineGenerator::CenterLineNodes> clNodes;
+        vislib::Array<CenterLineGenerator*> clg;
     };
 
 

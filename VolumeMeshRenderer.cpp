@@ -684,54 +684,77 @@ bool VolumeMeshRenderer::Render(Call& call) {
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    unsigned int clnCnt = this->clNodes.size();
-    unsigned int curClnCnt = 0;
     glPointSize( 5.0f);
-    glBegin( GL_POINTS);
-    for( auto nodes : this->clNodes) {
-        glColor3f( 1.0f, ( 1.0f / clnCnt) * curClnCnt, 0.0f);
-        glVertex3fv( nodes->p.PeekComponents());
-        curClnCnt++;
-    }
-    glEnd();
     glLineWidth( 3.0f);
-    glBegin( GL_LINES);
-    clnCnt = this->clEdges.size();
-    curClnCnt = 0;
-    for( auto ed : this->clEdges) {
-        glColor3f( 1.0f, ( 1.0f / clnCnt) * curClnCnt, 0.0f);
-        glVertex3fv( ed->node1->p.PeekComponents());
-        glColor3f( 1.0f, ( 1.0f / clnCnt) * (curClnCnt+1), 0.0f);
-        glVertex3fv( ed->node2->p.PeekComponents());
-        curClnCnt++;
+    for( unsigned int fCnt = 0; fCnt < this->clNodes.Count(); fCnt++ ) {
+        unsigned int clnCnt = this->clNodes[fCnt].size();
+        unsigned int curClnCnt = 0;
+        glBegin( GL_POINTS);
+        for( auto nodes : this->clNodes[fCnt]) {
+            if( this->clg[fCnt]->fType == CenterLineGenerator::CHANNEL )
+                //glColor3f( ( 1.0f / clnCnt) * curClnCnt, 1.0f, 0.0f);
+                glColor3f( 0.0f, 1.0f, 0.0f);
+            else if( this->clg[fCnt]->fType == CenterLineGenerator::POCKET )
+                //glColor3f( 1.0f, 0.0f, ( 1.0f / clnCnt) * curClnCnt);
+                glColor3f( 1.0f, 0.0f, 1.0f);
+            else // this->clg[fCnt]->fType == CenterLineGenerator::CAVITY
+                //glColor3f( 0.0f, 1.0f, ( 1.0f / clnCnt) * curClnCnt);
+                glColor3f( 0.0f, 1.0f, 1.0f);
+            glVertex3fv( nodes->p.PeekComponents());
+            curClnCnt++;
+        }
+        glEnd();
+        glBegin( GL_LINES);
+        clnCnt = this->clEdges[fCnt].size();
+        curClnCnt = 0;
+        for( auto ed : this->clEdges[fCnt]) {
+            if( this->clg[fCnt]->fType == CenterLineGenerator::CHANNEL )
+                glColor3f( 0.0f, 1.0f, 0.0f);
+            else if( this->clg[fCnt]->fType == CenterLineGenerator::POCKET )
+                glColor3f( 1.0f, 0.0f, 1.0f);
+            else // this->clg[fCnt]->fType == CenterLineGenerator::CAVITY
+                glColor3f( 0.0f, 1.0f, 1.0f);
+            glVertex3fv( ed->node1->p.PeekComponents());
+            //if( this->clg[fCnt]->fType == CenterLineGenerator::CHANNEL )
+            //    glColor3f( ( 1.0f / clnCnt) * (curClnCnt+1), 1.0f, 0.0f);
+            //else if( this->clg[fCnt]->fType == CenterLineGenerator::POCKET )
+            //    glColor3f( 1.0f, 0.0f, ( 1.0f / clnCnt) * (curClnCnt+1));
+            //else // this->clg[fCnt]->fType == CenterLineGenerator::CAVITY
+            //    glColor3f( 0.0f, 1.0f, ( 1.0f / clnCnt) * (curClnCnt+1));
+            glVertex3fv( ed->node2->p.PeekComponents());
+            curClnCnt++;
+        }
+        glEnd();
     }
-    glEnd();
     // ... TEST center line drawing
 #endif // DRAW_CENTERLINE
 
+//#define DRAW_CENTER_LINE_RINGS
+#ifdef DRAW_CENTER_LINE_RINGS
     // TEST center line branches ...
-    /*
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glLineWidth(5.0f);
     glColor3f( 0.0f, 1.0f, 1.0f);
     glBegin( GL_LINES);
-    clnCnt = this->clNodes.size();
-    curClnCnt = 0;
-    for( auto branch : clg.allBranches) {
-        if(curClnCnt % 2)
-            glColor3f( 0.0f, ( 1.0f / clnCnt) * curClnCnt, 1.0f);
-        else
-            glColor3f( 1.0f, ( 1.0f / clnCnt) * curClnCnt, 0.0f);
-        for(auto edge : branch->edges ) {
-            glVertex3fv( edge->getNode1()->p.PeekComponents());
-            glVertex3fv( edge->getNode2()->p.PeekComponents());
+    for( unsigned int fCnt = 0; fCnt < this->clNodes.Count(); fCnt++ ) {
+        unsigned int clnCnt = this->clNodes[fCnt].size();
+        unsigned int curClnCnt = 0;
+        for( auto branch : clg[fCnt]->allBranches) {
+            if(curClnCnt % 2)
+                glColor3f( 0.0f, ( 1.0f / clnCnt) * curClnCnt, 1.0f);
+            else
+                glColor3f( 1.0f, ( 1.0f / clnCnt) * curClnCnt, 0.0f);
+            for(auto edge : branch->edges ) {
+                glVertex3fv( edge->getNode1()->p.PeekComponents());
+                glVertex3fv( edge->getNode2()->p.PeekComponents());
+            }
+            curClnCnt++;
         }
-        curClnCnt++;
     }
     glEnd();
-    */
     // ... TEST center line branches
+#endif // DRAW_CENTER_LINE_RINGS
 
     /*
     // TEST center line first ring ...
@@ -740,9 +763,11 @@ bool VolumeMeshRenderer::Render(Call& call) {
     glLineWidth(5.0f);
     glColor3f( 0.0f, 1.0f, 1.0f);
     glBegin( GL_LINES);
-    for( auto edge : clg.freeEdgeRing) {
-        glVertex3fv( edge->getNode1()->p.PeekComponents());
-        glVertex3fv( edge->getNode2()->p.PeekComponents());
+    for( unsigned int fCnt = 0; fCnt < this->clNodes.Count(); fCnt++ ) {
+        for( auto edge : clg[fCnt]->freeEdgeRing) {
+            glVertex3fv( edge->getNode1()->p.PeekComponents());
+            glVertex3fv( edge->getNode2()->p.PeekComponents());
+        }
     }
     glEnd();
     // ... TEST center line first ring
@@ -1889,6 +1914,20 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     //delete[] vl;
     //delete[] se;
 
+    if( this->clg.Capacity() < centroidCount ) {
+        this->clg.AssertCapacity( centroidCount * 2);
+        this->clEdges.AssertCapacity( centroidCount * 2);
+        this->clNodes.AssertCapacity( centroidCount * 2);
+    }
+    for( unsigned int i = 0; i < this->clg.Count(); i++ ) {
+        if( clg[i] )
+            delete clg[i];
+        clg[i] = 0;
+    }
+    this->clg.SetCount( centroidCount-1);
+    this->clEdges.SetCount( centroidCount-1);
+    this->clNodes.SetCount( centroidCount-1);
+
     // get the feature start and end indices to compute center
     CUDA_VERIFY(cudaMemcpy( this->featureStartEndHost, this->featureStartEnd, centroidCount * sizeof(uint2), cudaMemcpyDeviceToHost));
     cudaDeviceSynchronize();
@@ -1905,19 +1944,20 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
         cudaDeviceSynchronize();
         // TODO compute the center line of this feature
         time_t t = clock();
-        clg.SetTriangleMesh( fLength, (float*)this->featureTriangleVerticesHost);
+        clg[fCnt-1] = new CenterLineGenerator();
+        clg[fCnt-1]->SetTriangleMesh( fLength, (float*)this->featureTriangleVerticesHost);
         printf( "Time to prepare center line data for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
-        if( !clg.freeEdgeRing.empty() ) {
+        if( !clg[fCnt-1]->freeEdgeRing.empty() ) {
             t = clock();
-            for ( auto edge : clEdges )  {
+            for ( auto edge : clEdges[fCnt-1] )  {
                 if( edge ) delete edge;
             }
-            for ( auto node : clNodes )  {
+            for ( auto node : clNodes[fCnt-1] )  {
                 if( node ) delete node;
             }
-            clEdges.clear();
-            clNodes.clear();
-            clg.CenterLine( clg.freeEdgeRing, clEdges, clNodes);
+            clEdges[fCnt-1].clear();
+            clNodes[fCnt-1].clear();
+            clg[fCnt-1]->CenterLine( clg[fCnt-1]->freeEdgeRing, clEdges[fCnt-1], clNodes[fCnt-1]);
             printf( "Time to compute center line for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
         }
     }
