@@ -39,6 +39,16 @@ struct lessInt2X {
 };
 
 /*
+ * less than comparison for uint2 (compares x values)
+ */
+struct less_uint2 {
+    __host__ __device__
+    bool operator()(const uint2& lhs, const uint2& rhs) const {
+        return ( lhs.x < rhs.x) || ( ( lhs.x == rhs.x ) && ( lhs.y < rhs.y) );
+    }
+};
+
+/*
  * greater than comparison for int2 (compares x values)
  */
 struct greaterInt2Y {
@@ -54,6 +64,16 @@ struct greaterInt2Y {
 struct equalInt2 {
     __host__ __device__
     bool operator()(const int2& lhs, const int2& rhs) const {
+        return (lhs.x == rhs.x && lhs.y == rhs.y);
+    }
+};
+  
+/*
+ * equal_to comparison adapted from thrust for uint2
+ */
+struct equal_uint2 {
+    __host__ __device__
+    bool operator()(const uint2& lhs, const uint2& rhs) const {
         return (lhs.x == rhs.x && lhs.y == rhs.y);
     }
 };
@@ -83,7 +103,7 @@ struct less_float4 : public thrust::binary_function<float4,float4,bool> {
  */
 struct equal_float4 : public thrust::binary_function<float4,float4,bool> {
     __host__ __device__ bool operator()(const float4 &l, const float4 &r) const {
-		const float eps = 1e-3f;
+		const float eps = 1e-4f;
         return (( fabsf( l.x - r.x) < eps) && ( fabsf( l.y - r.y) < eps) && ( fabsf( l.z - r.z) < eps) && ( fabsf( l.w - r.w) < eps));
     }
 };
@@ -179,10 +199,17 @@ extern "C"
 cudaError SortPrevTetraLabel( int2* labelPair, uint tetrahedronCount, int &labelCount);
 
 extern "C"
-cudaError WriteTriangleVertexIndexList( uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxNew, uint fLength, uint vertexCnt);
+cudaError WriteTriangleVertexIndexList( uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxOut, uint triaVertexCnt, uint vertexCnt);
 
 extern "C"
-cudaError TriangleVerticesToIndexList( float4* featureVertices, uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxNew, uint fLength, uint &vertexCnt);
+cudaError TriangleVerticesToIndexList( float4* featureVertices, float4* featureVerticesOut, uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexCntOut, 
+                                       uint* featureVertexStartIdx, uint* featureVertexIdxOut, uint triaVertexCnt, uint &vertexCnt);
+
+extern "C"
+cudaError WriteTriangleEdgeList( uint* featureVertexIdxOut, uint triaCnt, uint2 *featureEdges);
+
+extern "C"
+cudaError TriangleEdgeList( uint* featureVertexIdxOut, uint* featureEdgeCnt, uint* featureEdgeCntOut, uint triaCnt, uint2 *featureEdges, uint2 *featureEdgesOut, uint &edgeCnt);
 
 #endif // WITH_CUDA
 

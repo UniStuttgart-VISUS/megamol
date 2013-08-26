@@ -1146,7 +1146,7 @@ cudaError WritePrevTetraLabel( int2* labelPair, uint* cubeStatesOld, uint* cubeO
 }
 
 __global__
-void WriteTriangleVertexIndexList_kernel( uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxNew, uint fLength, uint vertexCnt)
+void WriteTriangleVertexIndexList_kernel( uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxOut, uint triaVertexCnt, uint vertexCnt)
 {
     // vertex index
     const uint vertexIdx = Index();
@@ -1167,15 +1167,43 @@ void WriteTriangleVertexIndexList_kernel( uint* featureVertexIdx, uint* featureV
         // get original vertex index
         origIdx = featureVertexIdx[fvStartIdx + i];
         // write new vertex index
-        featureVertexIdxNew[origIdx] = vertexIdx;
+        featureVertexIdxOut[origIdx] = vertexIdx;
     }
 
 }
 
 extern "C"
-cudaError WriteTriangleVertexIndexList( uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxNew, uint fLength, uint vertexCnt) {
+cudaError WriteTriangleVertexIndexList( uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxOut, uint triaVertexCnt, uint vertexCnt) {
     const int threads = GT_THREADS;
-    WriteTriangleVertexIndexList_kernel<<<Grid(vertexCnt, threads), threads>>>( featureVertexIdx, featureVertexCnt, featureVertexStartIdx, featureVertexIdxNew, fLength, vertexCnt);
+    WriteTriangleVertexIndexList_kernel<<<Grid(vertexCnt, threads), threads>>>( featureVertexIdx, featureVertexCnt, featureVertexStartIdx, featureVertexIdxOut, triaVertexCnt, vertexCnt);
+    return cudaGetLastError();
+}
+
+__global__
+void WriteTriangleEdgeList_kernel( uint* featureVertexIdxOut, uint triaCnt, uint2 *featureEdges)
+{
+    // feature index
+    const uint triangleIdx = Index() * 3;
+    // check bounds
+    if( triangleIdx >= (triaCnt * 3)) {
+        return;
+    }
+    
+    // get the three vertex indices of the current triangle
+    uint idx0 = featureVertexIdxOut[triangleIdx];
+    uint idx1 = featureVertexIdxOut[triangleIdx+1];
+    uint idx2 = featureVertexIdxOut[triangleIdx+2];
+    
+    // write three edges of the current feature triangle (vertex indices sorted)
+    featureEdges[triangleIdx]   = make_uint2( min( idx0, idx1), max( idx0, idx1));
+    featureEdges[triangleIdx+1] = make_uint2( min( idx0, idx2), max( idx0, idx2));
+    featureEdges[triangleIdx+2] = make_uint2( min( idx1, idx2), max( idx1, idx2));
+}
+
+extern "C"
+cudaError WriteTriangleEdgeList( uint* featureVertexIdxOut, uint triaCnt, uint2 *featureEdges) {
+    const int threads = GT_THREADS;
+    WriteTriangleEdgeList_kernel<<<Grid(triaCnt, threads), threads>>>( featureVertexIdxOut, triaCnt, featureEdges);
     return cudaGetLastError();
 }
 
