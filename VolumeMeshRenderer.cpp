@@ -1967,8 +1967,8 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
         cudaDeviceSynchronize();
         // the new feature vertex count
         featureVertexCntNew = 0;
-        CUDA_VERIFY( TriangleVerticesToIndexList( this->featureVertices, this->featureVertexIdx, this->featureVertexCnt, this->featureVertexStartIdx, this->featureVertexIdxNew, fLength, featureVertexCntNew));
-        
+        CUDA_VERIFY( TriangleVerticesToIndexList( this->featureVertices, this->featureVertexIdx, this->featureVertexCnt, this->featureVertexStartIdx, this->featureVertexIdxNew, fLength*3, featureVertexCntNew));
+        cudaDeviceSynchronize();
         // download compacted feature vertices */
         CUDA_VERIFY(cudaMemcpy( this->featureTriangleVerticesHost, this->featureVertices, featureVertexCntNew * sizeof(float4), cudaMemcpyDeviceToHost));
 
