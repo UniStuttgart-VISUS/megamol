@@ -91,21 +91,49 @@ cudaError SortPrevTetraLabel( int2* labelPair, uint tetrahedronCount, int &label
 }
 
 extern "C"
-cudaError TriangleVerticesToIndexList( float4* featureVertices, uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxNew, uint fLength, uint &vertexCnt) {
+cudaError TriangleVerticesToIndexList( float4* featureVertices, uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, 
+									   uint* featureVertexIdxNew, uint fLength, uint &vertexCnt) {
     thrust::sequence( thrust::device_ptr<uint>(featureVertexIdx), thrust::device_ptr<uint>(featureVertexIdx + fLength));
     thrust::fill_n( thrust::device_ptr<uint>(featureVertexCnt), fLength, 1);
-    thrust::stable_sort_by_key( thrust::device_ptr<float4>(featureVertices), 
+    cudaDeviceSynchronize();
+	thrust::sort_by_key( thrust::device_ptr<float4>(featureVertices), 
         thrust::device_ptr<float4>(featureVertices + fLength), 
         thrust::device_ptr<uint>(featureVertexIdx), less_float4());
+	cudaDeviceSynchronize();
+	
+	float4* featureVerticesOut;
+	cudaMalloc(&featureVerticesOut, sizeof(float4) * fLength);
+	uint* featureVertexCntOut;
+	cudaMalloc(&featureVertexCntOut, sizeof(uint) * fLength);
+	cudaDeviceSynchronize();
+
+	float4* new_end = thrust::reduce_by_key( thrust::device_ptr<float4>(featureVertices), 
+        thrust::device_ptr<float4>(featureVertices + fLength), 
+        thrust::device_ptr<uint>(featureVertexCnt),
+        thrust::device_ptr<float4>(featureVerticesOut), 
+        thrust::device_ptr<uint>(featureVertexCntOut), equal_float4()).first.get();
+	cudaDeviceSynchronize();
+    vertexCnt = (new_end - featureVerticesOut);
+
+	cudaMemcpy(featureVertices, featureVerticesOut, sizeof(float4) * fLength, cudaMemcpyDeviceToDevice);
+	cudaMemcpy(featureVertexCnt, featureVertexCntOut, sizeof(uint) * fLength, cudaMemcpyDeviceToDevice);
+	
+	cudaDeviceSynchronize();
+	cudaFree(featureVerticesOut);
+	cudaFree(featureVertexCntOut);
+
+	/*
     float4* new_end = thrust::reduce_by_key( thrust::device_ptr<float4>(featureVertices), 
         thrust::device_ptr<float4>(featureVertices + fLength), 
         thrust::device_ptr<uint>(featureVertexCnt),
         thrust::device_ptr<float4>(featureVertices), 
         thrust::device_ptr<uint>(featureVertexCnt), equal_float4()).first.get();
+	cudaDeviceSynchronize();
     vertexCnt = (new_end - featureVertices);
+	
+	*/
     thrust::exclusive_scan( thrust::device_ptr<uint>(featureVertexCnt), thrust::device_ptr<uint>(featureVertexCnt + vertexCnt), thrust::device_ptr<uint>(featureVertexStartIdx));
     WriteTriangleVertexIndexList( featureVertexIdx, featureVertexCnt, featureVertexStartIdx, featureVertexIdxNew, fLength, vertexCnt);
-
     return cudaGetLastError();
 }
 
