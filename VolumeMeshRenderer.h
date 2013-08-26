@@ -335,16 +335,23 @@ namespace protein {
         uint* vertexLabelsCopy;
         float4* verticesCopy;
         float4* featureVertices;
+        float4* featureVerticesOut;
         uint* featureVertexIdx;
         uint* featureVertexCnt;
+        uint* featureVertexCntOut;
         uint* featureVertexStartIdx;
-        uint* featureVertexIdxNew;
+        uint* featureVertexIdxOut;
         float* triangleAO;
         float* triangleAreas;
         uint* centroidLabels;
         float* centroidAreas;
         float4* centroidSums;
         uint* centroidCounts;
+        uint* featureEdgeCnt;
+        uint* featureEdgeCntOut;
+        uint2 *featureEdges;
+        uint2 *featureEdgesOut;
+        uint edgeCount;
 
         /** centroids */
         float4* centroids;
@@ -454,6 +461,12 @@ namespace protein {
         uint2 *featureStartEndHost;
         /** pinned memory for feature triangle vertices */
         float4 *featureTriangleVerticesHost;
+        /** pinned memory for feature triangle vertices */
+        uint *featureTriangleVertexIndicesHost;
+        /** pinned memory for feature triangle vertices */
+        uint2 *featureTriangleEdgesHost;
+        /** pinned memory for feature triangle vertices */
+        uint *featureTriangleEdgeCountHost;
         /** counter for feature triangles */
         unsigned int featureTrianglesCount;
         /** counter or compacted feature vertices */
