@@ -647,8 +647,7 @@ void ComputeTriangleAreas_kernel(float4 *pos, float *area, unsigned int maxTria)
 /*
  * Utility functions.
  */
-dim3 Grid(const uint size, const int threadsPerBlock)
-{
+dim3 Grid(const uint size, const int threadsPerBlock) {
     //TODO: remove hardcoded hardware capabilities :(
     // see: http://code.google.com/p/thrust/source/browse/thrust/detail/backend/cuda/arch.inl
     //   and http://code.google.com/p/thrust/source/browse/thrust/detail/backend/cuda/detail/safe_scan.inl
@@ -1143,6 +1142,40 @@ cudaError WritePrevTetraLabel( int2* labelPair, uint* cubeStatesOld, uint* cubeO
     const int threads = GT_THREADS;
     WritePrevTetraLabel_kernel<<<Grid(tetrahedronCount, threads), threads>>>( labelPair, cubeStatesOld, cubeOffsetsOld, //cubeMapOld,
         verticesPerTetrahedronOld, eqListOld, cubeMap, verticesPerTetrahedron, eqList, tetrahedronCount);
+    return cudaGetLastError();
+}
+
+__global__
+void WriteTriangleVertexIndexList_kernel( uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxNew, uint fLength, uint vertexCnt)
+{
+    // vertex index
+    const uint vertexIdx = Index();
+    // check bounds
+    if( vertexIdx >= vertexCnt ) {
+        return;
+    }
+    
+    // the number of duplications for vertex 'vertexIdx'
+    const uint fvCnt = featureVertexCnt[vertexIdx];
+    // the start index of the duplicates for vertex 'vertexIdx'
+    const uint fvStartIdx = featureVertexStartIdx[vertexIdx];
+
+    // temp variable for original vertex index
+    uint origIdx;
+    // loop over all duplicates
+    for( uint i = 0; i < fvCnt; i++ ) {
+        // get original vertex index
+        origIdx = featureVertexIdx[fvStartIdx + i];
+        // write new vertex index
+        featureVertexIdxNew[origIdx] = vertexIdx;
+    }
+
+}
+
+extern "C"
+cudaError WriteTriangleVertexIndexList( uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxNew, uint fLength, uint vertexCnt) {
+    const int threads = GT_THREADS;
+    WriteTriangleVertexIndexList_kernel<<<Grid(vertexCnt, threads), threads>>>( featureVertexIdx, featureVertexCnt, featureVertexStartIdx, featureVertexIdxNew, fLength, vertexCnt);
     return cudaGetLastError();
 }
 

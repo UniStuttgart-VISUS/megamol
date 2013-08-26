@@ -37,8 +37,6 @@
 #include <thrust/version.h>
 #include <thrust/reduce.h>
 #include <thrust/sort.h>
-#include <thrust/fill.h>
-#include <thrust/scan.h>
 #include <omp.h>
 #include <ctime>
 
@@ -679,6 +677,21 @@ bool VolumeMeshRenderer::Render(Call& call) {
     glEnd();
     // ... TEST feature triangle drawing
 #endif // DRAW_FEATURE_TRIANGLES
+
+#define DRAW_FEATURE_VERTICES
+#ifdef DRAW_FEATURE_VERTICES
+    // TEST feature vertex drawing ...
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
+    glPointSize(5.0f);
+    glColor3f( 1.0f, 1.0f, 1.0f);
+    glBegin( GL_POINTS);
+    for(unsigned int tCnt = 0; tCnt < this->featureVertexCntNew; tCnt++ ) {
+        glVertex3f( this->featureTriangleVerticesHost[tCnt].x,  this->featureTriangleVerticesHost[tCnt].y,  this->featureTriangleVerticesHost[tCnt].z);
+    }
+    glEnd();
+    // ... TEST feature vertex drawing
+#endif // DRAW_FEATURE_VERTICES
 
     // TEST center line drawing ...
 #define DRAW_CENTERLINE
@@ -1935,20 +1948,37 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     cudaDeviceSynchronize();
     this->featureTrianglesCount = 0;
     
+//#define CENTERLINE_HOST
 #ifndef CENTERLINE_HOST
+    
+    cudaEvent_t start, stop;    // TIMING
+    float time;                 // TIMING
+    cudaEventCreate(&start);    // TIMING
+    cudaEventCreate(&stop);     // TIMING
+    
     // loop over all features (skip first feature)
     for( unsigned int fCnt = 1; fCnt < centroidCount; fCnt++ ) {
+        cudaEventRecord( start, 0); // TIMING
         unsigned int fStart = this->featureStartEndHost[fCnt].x;
         unsigned int fEnd = this->featureStartEndHost[fCnt].y;
         unsigned int fLength = fEnd - fStart + 1;
         CUDA_VERIFY(cudaMemcpy( this->featureVertices, &(verticesCopy[3*fStart]), fLength * 3 * sizeof(float4), cudaMemcpyDeviceToDevice));
         this->featureTrianglesCount = fLength;
         cudaDeviceSynchronize();
-        thrust::fill_n( this->featureVertexCnt, fLength, 1);
-        thrust::exclusive_scan( this->featureVertexCnt, this->featureVertexCnt + fLength, this->featureVertexIdx);
-        thrust::stable_sort_by_key( this->featureVertices, this->featureVertices + fLength, this->featureVertexIdx, less_float4());
-        thrust::pair<float4*,uint*> new_end;
-        new_end = thrust::reduce_by_key( this->featureVertices, this->featureVertices + fLength, this->featureVertexCnt, this->featureVertices, this->featureVertexCnt, equal_float4());
+        // the new feature vertex count
+        featureVertexCntNew = 0;
+        CUDA_VERIFY( TriangleVerticesToIndexList( this->featureVertices, this->featureVertexIdx, this->featureVertexCnt, this->featureVertexStartIdx, this->featureVertexIdxNew, fLength, featureVertexCntNew));
+        
+        // download compacted feature vertices */
+        CUDA_VERIFY(cudaMemcpy( this->featureTriangleVerticesHost, this->featureVertices, featureVertexCntNew * sizeof(float4), cudaMemcpyDeviceToHost));
+
+        cudaDeviceSynchronize();        // TIMING
+        cudaEventRecord( stop, 0);      // TIMING
+        cudaEventSynchronize( stop);    // TIMING
+        cudaEventElapsedTime(&time, start, stop);   // TIMING
+        printf( "Time to prepare center line data for feature %3i (%5i triangles): %f\n", fCnt, fLength, time); // TIMING
+        
+        clg[fCnt-1] = new CenterLineGenerator();
     }
 
 #else
@@ -2315,6 +2345,8 @@ void VolumeMeshRenderer::ValidateVertexMemory(uint vertexCount) {
         CUDA_VERIFY(cudaFree(featureVertices));
         CUDA_VERIFY(cudaFree(featureVertexIdx));
         CUDA_VERIFY(cudaFree(featureVertexCnt));
+        CUDA_VERIFY(cudaFree(featureVertexStartIdx));
+        CUDA_VERIFY(cudaFree(featureVertexIdxNew));
         CUDA_VERIFY(cudaFree(triangleAO));
         CUDA_VERIFY(cudaFree(triangleAreas));
         CUDA_VERIFY(cudaFree(centroidLabels));
@@ -2351,6 +2383,8 @@ void VolumeMeshRenderer::ValidateVertexMemory(uint vertexCount) {
         CUDA_VERIFY(cudaMalloc(&featureVertices, float4Size));
         CUDA_VERIFY(cudaMalloc(&featureVertexIdx, uintBufferSize));
         CUDA_VERIFY(cudaMalloc(&featureVertexCnt, uintBufferSize));
+        CUDA_VERIFY(cudaMalloc(&featureVertexStartIdx, uintBufferSize));
+        CUDA_VERIFY(cudaMalloc(&featureVertexIdxNew, uintBufferSize));
         CUDA_VERIFY(cudaMalloc(&triangleAO, floatSize / 3));
         CUDA_VERIFY(cudaMalloc(&triangleAreas, floatSize / 3));
         CUDA_VERIFY(cudaMalloc(&centroidLabels, uintBufferSize));

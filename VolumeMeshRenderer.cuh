@@ -11,6 +11,7 @@
 
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <thrust/functional.h>
 
 typedef unsigned int uint;
 
@@ -56,7 +57,36 @@ struct equalInt2 {
         return (lhs.x == rhs.x && lhs.y == rhs.y);
     }
 };
+  
+/**
+ * Less-function for float4
+ */
+struct less_float4 : public thrust::binary_function<float4,float4,bool> {
+    __host__ __device__ bool operator()(const float4 &l, const float4 &r) const {
+        if( l.x < r.x ) return true;
+        if( l.x > r.x ) return false;
+        // l.x == r.x
+        if( l.y < r.y ) return true;
+        if( l.y > r.y ) return false;
+        // l.x == r.x && l.y == r.y
+        if( l.z < r.z ) return true;
+        if( l.z > r.z ) return false;
+        // l.x == r.x && l.y == r.y && l.z == r.z
+        if( l.w < r.w ) return true;
+        if( l.w > r.w ) return false;
+        return false;
+    }
+};
         
+/**
+ * equal-function for float4
+ */
+struct equal_float4 : public thrust::binary_function<float4,float4,bool> {
+    __host__ __device__ bool operator()(const float4 &l, const float4 &r) const {
+        return (( fabsf( l.x - r.x) < 1e-5f) && ( fabsf( l.y - r.y) < 1e-5f) && ( fabsf( l.z - r.z) < 1e-5f) && ( fabsf( l.w - r.w) < 1e-5f));
+    }
+};
+      
 extern "C"
 cudaError BindVolumeTexture(float* textureArray);
 //cudaError BindVolumeTexture(cudaArray* textureArray);
@@ -146,6 +176,12 @@ cudaError WritePrevTetraLabel( int2* labelPair, uint* cubeStatesOld, uint* cubeO
 
 extern "C"
 cudaError SortPrevTetraLabel( int2* labelPair, uint tetrahedronCount, int &labelCount);
+
+extern "C"
+cudaError WriteTriangleVertexIndexList( uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxNew, uint fLength, uint vertexCnt);
+
+extern "C"
+cudaError TriangleVerticesToIndexList( float4* featureVertices, uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxNew, uint fLength, uint &vertexCnt);
 
 #endif // WITH_CUDA
 
