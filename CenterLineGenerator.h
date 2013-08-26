@@ -49,8 +49,11 @@ public:
 		}
 	};
 
-    typedef std::unordered_set<Node*, hash_node, equal_to_nodeptr> Nodes;
-	typedef std::unordered_set<Edge*, hash_edge, equal_to_edgeptr> Edges;
+    typedef std::unordered_set<Node*, hash_node, equal_to_nodeptr> NodeSet;
+	typedef std::unordered_set<Edge*, hash_edge, equal_to_edgeptr> EdgeSet;
+
+    typedef std::list<Node*> Nodes;
+	typedef std::list<Edge*> Edges;
 
 	struct Node
 	{
@@ -63,14 +66,6 @@ public:
 		Vector p;
 		Edges edges;
 		bool visited;
-
-		void getNodes(Nodes nodes) {
-			for(auto it : edges) {
-				//nodes.insert(it->nodes.begin(), it->nodes.end());
-                nodes.insert( it->getNode1());
-                nodes.insert( it->getNode2());
-			}
-		}
 	};
 
 	class Edge {
@@ -84,14 +79,6 @@ public:
 
 		bool visited;
 
-		void getEdges(Edges edges) {
-			//for(auto it : nodes) {
-			//	edges.insert(it->edges.begin(), it->edges.end());
-			//}
-            edges.insert(node1->edges.begin(), node1->edges.end());
-            edges.insert(node2->edges.begin(), node2->edges.end());
-		}
-        
         void setNodes( Node *n1, Node *n2) {
             // TODO check for null pointers
             // sort nodes by p
@@ -140,6 +127,7 @@ public:
 		CenterLineNode()
 			: p()
 			, minimumDistance(0.0f)
+            , isRing(true)
 		{}
 
 		CenterLineNode(Vector position, float minDistance)
@@ -149,6 +137,7 @@ public:
 
 		Vector p;
 		float minimumDistance;
+        bool isRing;
 
 		CenterLineEdges edges;
 	};
@@ -165,6 +154,7 @@ public:
 	
 	struct Section {
 		Edges edges;
+        bool isRing;
 		CenterLineNode *centerLineNode;
 		CenterLineNode *prevCenterLineNode;
 	};
@@ -174,22 +164,14 @@ public:
 	virtual ~CenterLineGenerator(void);
 
     /**
-     * Use the given triangle mesh for center line extraction.
-     * The tringles have to be in the format [(xyzw)(xyzw)(xyzw)][...]..., 
-     * however, the w coordinate is ommitted.
-     * The function clears all previously set data.
+     * TODO
      *
-     * @param count The number of triangles.
-     * @param mesh The set of unordered triangles.
+     * @param TODO
      */
-    void SetTriangleMesh( unsigned int count, float* mesh);
-
-	void Add(Edge &edge);
-	void Add(Edges::iterator start, Edges::iterator end);
+    void SetTriangleMesh( unsigned int vertexCnt, float* vertices, unsigned int edgeCnt, unsigned int *edges, unsigned int *freeEdge);
 
 	void CenterLine(Edges &selection, CenterLineEdges &centerLineEdges, CenterLineNodes &centerLineNodes);
     
-    // TODO fix this!!!
     Edges freeEdgeRing;
     FeatureType fType;
 
@@ -200,16 +182,16 @@ public:
     std::vector<Section*> allBranches;
 private:
 
-	CenterLineNode Collapse(Nodes &selection);
+	CenterLineNode Collapse(NodeSet &selection);
 
 	Edge *findEdgeNeighborInSet(Edge *edge, Edges &set, bool removeFromSet);
 
 	Node *nodeSharedByEdges(Edge *e1, Edge *e2);
 
-	void NextSection(Edges &current, Nodes &currentNodes, Section *next);
+	void NextSection(Edges &current, NodeSet &currentNodes, Section *next);
     void FindBranch(Section *current, std::vector<Section*> &branches);
 
-	void NodesFromEdges(Edges &edges, Nodes &nodes);
+	void NodesFromEdges(Edges &edges, NodeSet &nodes);
 
 };
 

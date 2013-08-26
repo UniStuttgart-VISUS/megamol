@@ -660,6 +660,8 @@ bool VolumeMeshRenderer::Render(Call& call) {
 
     //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Scale: %f\n", scale);
     
+    glEnable(GL_DEPTH_TEST);
+
 //#define DRAW_FEATURE_TRIANGLES
 #ifdef DRAW_FEATURE_TRIANGLES
     // TEST feature triangle drawing ...
@@ -678,7 +680,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
     // ... TEST feature triangle drawing
 #endif // DRAW_FEATURE_TRIANGLES
 
-//#define DRAW_FEATURE_VERTICES
+#define DRAW_FEATURE_VERTICES
 #ifdef DRAW_FEATURE_VERTICES
     // TEST feature vertex drawing ...
     glDisable(GL_CULL_FACE);
@@ -694,10 +696,23 @@ bool VolumeMeshRenderer::Render(Call& call) {
     glLineWidth(1.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glColor3f( 1.0f, 1.0f, 0.0f);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(4, GL_FLOAT, 0, (float*)this->featureTriangleVerticesHost);
-    glDrawElements(GL_LINES, this->edgeCount * 2, GL_UNSIGNED_INT, (unsigned int*)this->featureTriangleEdgesHost);
-    glDisableClientState(GL_VERTEX_ARRAY);
+    //glEnableClientState(GL_VERTEX_ARRAY);
+    //glVertexPointer(4, GL_FLOAT, 0, (float*)this->featureTriangleVerticesHost);
+    //glDrawElements(GL_LINES, this->edgeCount * 2, GL_UNSIGNED_INT, (unsigned int*)this->featureTriangleEdgesHost);
+    //glDisableClientState(GL_VERTEX_ARRAY);
+    glBegin(GL_LINES);
+    for(unsigned int eCnt = 0; eCnt < this->edgeCount; eCnt++ ) {
+        if( this->featureTriangleEdgeCountHost[eCnt] < 2 )
+            glColor3f( 1.0f, 0.5f, 0.0f);
+        else
+            glColor3f( 1.0f, 1.0f, 0.0f);
+        glVertex3f( this->featureTriangleVerticesHost[this->featureTriangleEdgesHost[eCnt].x].x,
+                    this->featureTriangleVerticesHost[this->featureTriangleEdgesHost[eCnt].x].y,
+                    this->featureTriangleVerticesHost[this->featureTriangleEdgesHost[eCnt].x].z);
+        glVertex3f( this->featureTriangleVerticesHost[this->featureTriangleEdgesHost[eCnt].y].x,
+                    this->featureTriangleVerticesHost[this->featureTriangleEdgesHost[eCnt].y].y,
+                    this->featureTriangleVerticesHost[this->featureTriangleEdgesHost[eCnt].y].z);
+    }
     // ... TEST feature vertex drawing
 #endif // DRAW_FEATURE_VERTICES
 
@@ -708,12 +723,14 @@ bool VolumeMeshRenderer::Render(Call& call) {
     glDisable(GL_LIGHTING);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glPointSize( 5.0f);
-    glLineWidth( 3.0f);
+    glLineWidth( 2.0f);
     for( unsigned int fCnt = 0; fCnt < this->clNodes.Count(); fCnt++ ) {
         unsigned int clnCnt = this->clNodes[fCnt].size();
         unsigned int curClnCnt = 0;
         glBegin( GL_POINTS);
         for( auto nodes : this->clNodes[fCnt]) {
+            // draw only center line nodes that were created by a full ring
+            if( !nodes->isRing ) continue;
             if( this->clg[fCnt]->fType == CenterLineGenerator::CHANNEL )
                 //glColor3f( ( 1.0f / clnCnt) * curClnCnt, 1.0f, 0.0f);
                 glColor3f( 0.0f, 1.0f, 0.0f);
@@ -757,7 +774,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
     // TEST center line branches ...
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
-    glLineWidth(5.0f);
+    glLineWidth(3.0f);
     glColor3f( 0.0f, 1.0f, 1.0f);
     glBegin( GL_LINES);
     for( unsigned int fCnt = 0; fCnt < this->clNodes.Count(); fCnt++ ) {
@@ -778,13 +795,14 @@ bool VolumeMeshRenderer::Render(Call& call) {
     glEnd();
     // ... TEST center line branches
 #endif // DRAW_CENTER_LINE_RINGS
-
-    /*
+    
+//#define DRAW_FIRST_RING
+#ifdef DRAW_FIRST_RING
     // TEST center line first ring ...
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glLineWidth(5.0f);
-    glColor3f( 0.0f, 1.0f, 1.0f);
+    glColor3f( 1.0f, 0.0f, 1.0f);
     glBegin( GL_LINES);
     for( unsigned int fCnt = 0; fCnt < this->clNodes.Count(); fCnt++ ) {
         for( auto edge : clg[fCnt]->freeEdgeRing) {
@@ -794,7 +812,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
     }
     glEnd();
     // ... TEST center line first ring
-    */
+#endif // DRAW_FIRST_RING
 
     glPointSize( 1.0f);
 
@@ -833,7 +851,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
         break;
     case LINE:
-        glLineWidth(0.5f);
+        glLineWidth(1.0f);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         break;
     case FILL:
@@ -1996,9 +2014,27 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
         cudaEventRecord( stop, 0);      // TIMING
         cudaEventSynchronize( stop);    // TIMING
         cudaEventElapsedTime(&time, start, stop);   // TIMING
-        printf( "Time to prepare center line data for feature %3i (%5i triangles): %f\n", fCnt, fLength, time / 1000.0f); // TIMING
+        printf( "CUDA time to prepare center line data for feature %3i (%5i triangles): %f\n", fCnt, fLength, time / 1000.0f); // TIMING
         
+        // TODO compute the center line of this feature
+        time_t t = clock();
         clg[fCnt-1] = new CenterLineGenerator();
+        clg[fCnt-1]->SetTriangleMesh( this->featureVertexCntNew, (float*)this->featureTriangleVerticesHost, 
+            this->edgeCount, (unsigned int*)this->featureTriangleEdgesHost, (unsigned int*)this->featureTriangleEdgeCountHost);
+        printf( "Time to prepare center line data for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
+        if( !clg[fCnt-1]->freeEdgeRing.empty() ) {
+            t = clock();
+            for ( auto edge : clEdges[fCnt-1] )  {
+                if( edge ) delete edge;
+            }
+            for ( auto node : clNodes[fCnt-1] )  {
+                if( node ) delete node;
+            }
+            clEdges[fCnt-1].clear();
+            clNodes[fCnt-1].clear();
+            clg[fCnt-1]->CenterLine( clg[fCnt-1]->freeEdgeRing, clEdges[fCnt-1], clNodes[fCnt-1]);
+            printf( "Time to compute center line for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
+        }
     }
 
 #else

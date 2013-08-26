@@ -114,7 +114,7 @@ cudaError TriangleVerticesToIndexList( float4* featureVertices, float4* featureV
 
 extern "C"
 cudaError TriangleEdgeList( uint* featureVertexIdxOut, uint* featureEdgeCnt, uint* featureEdgeCntOut, uint triaCnt, uint2 *featureEdges, uint2 *featureEdgesOut, uint &edgeCnt) {
-    thrust::fill_n( thrust::device_ptr<uint>(featureEdgeCnt), triaCnt, 1);
+    thrust::fill_n( thrust::device_ptr<uint>(featureEdgeCnt), triaCnt * 3, 1);
     // write edges
     WriteTriangleEdgeList( featureVertexIdxOut, triaCnt, featureEdges);
     cudaDeviceSynchronize();
