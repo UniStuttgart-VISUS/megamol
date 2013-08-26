@@ -714,6 +714,9 @@
     <ClCompile Include="moldyn\DatRawDataSource.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="moldyn\ParticleListFilter.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="misc\BezierCurvesListDataCall.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
@@ -1299,6 +1302,9 @@
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="moldyn\DatRawDataSource.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\ParticleListFilter.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="misc\BezierCurvesListDataCall.h">
