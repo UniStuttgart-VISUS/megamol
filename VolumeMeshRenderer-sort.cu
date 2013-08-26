@@ -14,6 +14,9 @@
 #include <thrust/unique.h>
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/device_ptr.h>
+#include <thrust/fill.h>
+#include <thrust/scan.h>
+#include <thrust/sequence.h>
 #include "cuda_helper.h"
 
 /*
@@ -83,6 +86,25 @@ cudaError SortPrevTetraLabel( int2* labelPair, uint tetrahedronCount, int &label
     thrust::sort( thrust::device_ptr<int2>(labelPair), thrust::device_ptr<int2>(labelPair + tetrahedronCount), lessInt2X());
     const int numberOfUniqueValues = thrust::unique( thrust::device_ptr<int2>(labelPair), thrust::device_ptr<int2>(labelPair + tetrahedronCount), equalInt2()) - thrust::device_ptr<int2>(labelPair);
     labelCount = numberOfUniqueValues;
+
+    return cudaGetLastError();
+}
+
+extern "C"
+cudaError TriangleVerticesToIndexList( float4* featureVertices, uint* featureVertexIdx, uint* featureVertexCnt, uint* featureVertexStartIdx, uint* featureVertexIdxNew, uint fLength, uint &vertexCnt) {
+    thrust::sequence( thrust::device_ptr<uint>(featureVertexIdx), thrust::device_ptr<uint>(featureVertexIdx + fLength));
+    thrust::fill_n( thrust::device_ptr<uint>(featureVertexCnt), fLength, 1);
+    thrust::stable_sort_by_key( thrust::device_ptr<float4>(featureVertices), 
+        thrust::device_ptr<float4>(featureVertices + fLength), 
+        thrust::device_ptr<uint>(featureVertexIdx), less_float4());
+    float4* new_end = thrust::reduce_by_key( thrust::device_ptr<float4>(featureVertices), 
+        thrust::device_ptr<float4>(featureVertices + fLength), 
+        thrust::device_ptr<uint>(featureVertexCnt),
+        thrust::device_ptr<float4>(featureVertices), 
+        thrust::device_ptr<uint>(featureVertexCnt), equal_float4()).first.get();
+    vertexCnt = (new_end - featureVertices);
+    thrust::exclusive_scan( thrust::device_ptr<uint>(featureVertexCnt), thrust::device_ptr<uint>(featureVertexCnt + vertexCnt), thrust::device_ptr<uint>(featureVertexStartIdx));
+    WriteTriangleVertexIndexList( featureVertexIdx, featureVertexCnt, featureVertexStartIdx, featureVertexIdxNew, fLength, vertexCnt);
 
     return cudaGetLastError();
 }
