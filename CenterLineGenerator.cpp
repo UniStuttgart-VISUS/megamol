@@ -2,15 +2,22 @@
 #include "CenterLineGenerator.h"
 #include <float.h>
 #include "vislib/Array.h"
+#include <time.h>
+#include "vislib/PerformanceCounter.h"
 
 CenterLineGenerator::CenterLineGenerator(void) {
 }
 
 
 CenterLineGenerator::~CenterLineGenerator(void) {
+    delete[] theNodes;
+    delete[] theEdges;
 }
 
 void CenterLineGenerator::SetTriangleMesh( unsigned int meshVertexCnt, float* meshVertices, unsigned int meshEdgeCnt, unsigned int *meshEdges, unsigned int *meshFreeEdges) {
+    // temp variables
+    vislib::sys::PerformanceCounter perf(true);
+    
     // clear previous data
     for( auto edge : edges ) {
         if( edge ) delete edge;
@@ -25,53 +32,87 @@ void CenterLineGenerator::SetTriangleMesh( unsigned int meshVertexCnt, float* me
 	nodes.clear();
     allBranches.clear();
     freeEdgeRing.clear();
+    freeEdgeRing.clear();    
 
-    // list for free edges
-    Edges freeEdges;
-
-    Node **tmpNodePtr = new Node*[meshVertexCnt];
+    perf.SetMark();
+    theNodes = new Node[meshVertexCnt];
+    //Node **tmpNodePtr = new Node*[meshVertexCnt];
+    Node *tmpNodePtr;
+    Node **nodesPtr = this->nodes.get_allocator().allocate(meshVertexCnt);
     // loop over all triangles
     for( unsigned int vCnt = 0; vCnt < meshVertexCnt; vCnt++) {
-        tmpNodePtr[vCnt] = new Node();
+        //tmpNodePtr[vCnt] = new Node();
+        tmpNodePtr = theNodes + vCnt;
         // get the vertex
-        tmpNodePtr[vCnt]->p.Set( meshVertices[4 * vCnt + 0], meshVertices[4 * vCnt + 1], meshVertices[4 * vCnt + 2]);
+        //tmpNodePtr[vCnt]->p.Set( meshVertices[4 * vCnt + 0], meshVertices[4 * vCnt + 1], meshVertices[4 * vCnt + 2]);
+        tmpNodePtr->p.Set( meshVertices[4 * vCnt + 0], meshVertices[4 * vCnt + 1], meshVertices[4 * vCnt + 2]);
         // insert the vertex into the nodes list
-        this->nodes.push_back( tmpNodePtr[vCnt]);
+        //this->nodes.push_back( tmpNodePtr[vCnt]);
+        //this->nodes.push_back( tmpNodePtr);
+        nodesPtr[vCnt] = tmpNodePtr;
     }
-
+    INT64 t2 = perf.Difference();
+    printf( "     Time to insert mesh vertices into node list:             (%.5f)\n", vislib::sys::PerformanceCounter::ToMillis(t2) / 1000.0f);
+    
+    perf.SetMark();
+    theEdges = new Edge[meshEdgeCnt];
+    Edge **edgesPtr = this->edges.get_allocator().allocate(meshEdgeCnt);
+    // list for free edges
+    Edges freeEdges;
     for( unsigned int eCnt = 0; eCnt < meshEdgeCnt; eCnt++ ) {
         // construct edge and insert it into the edge list
-        this->edges.push_back( new Edge());
-        this->edges.back()->setNodes( tmpNodePtr[meshEdges[2*eCnt]], tmpNodePtr[meshEdges[2*eCnt+1]]);
+        //this->edges.push_back( new Edge());
+        edgesPtr[eCnt] = theEdges + eCnt;
+        //this->edges.back()->setNodes( tmpNodePtr[meshEdges[2*eCnt]], tmpNodePtr[meshEdges[2*eCnt+1]]);
+        //this->edges.back()->setNodes( &testNodes[meshEdges[2*eCnt]], &testNodes[meshEdges[2*eCnt+1]]);
+        edgesPtr[eCnt]->setNodes( &theNodes[meshEdges[2*eCnt]], &theNodes[meshEdges[2*eCnt+1]]);
         // add the edges to both nodes
-        tmpNodePtr[meshEdges[2*eCnt]]->edges.push_back( this->edges.back());
-        tmpNodePtr[meshEdges[2*eCnt+1]]->edges.push_back( this->edges.back());
+        //tmpNodePtr[meshEdges[2*eCnt]]->edges.push_back( this->edges.back());
+        //tmpNodePtr[meshEdges[2*eCnt+1]]->edges.push_back( this->edges.back());
+        //testNodes[meshEdges[2*eCnt]].edges.push_back( this->edges.back());
+        //testNodes[meshEdges[2*eCnt+1]].edges.push_back( this->edges.back());
+        //testNodes[meshEdges[2*eCnt]].edges.push_back( edgesPtr[eCnt]);
+        //testNodes[meshEdges[2*eCnt+1]].edges.push_back( edgesPtr[eCnt]);
+        theNodes[meshEdges[2*eCnt]].edges[theNodes[meshEdges[2*eCnt]].edgeCnt++] = edgesPtr[eCnt];
+        theNodes[meshEdges[2*eCnt+1]].edges[theNodes[meshEdges[2*eCnt+1]].edgeCnt++] = edgesPtr[eCnt];
         // add edge to free edges if it is free!
         if( meshFreeEdges[eCnt] == 1 ) {
-            freeEdges.push_back( this->edges.back());
+            //freeEdges.push_back( this->edges.back());
+            freeEdges.push_back( edgesPtr[eCnt]);
         }
     }
     
     // delete temporary array
-    delete[] tmpNodePtr;
+    //delete[] tmpNodePtr;
+    INT64 t3 = perf.Difference();
+    printf( "     Time to insert mesh edges into edge list:                (%.5f)\n", vislib::sys::PerformanceCounter::ToMillis(t3) / 1000.0f);
 
+    perf.SetMark();
+    Edges tmpFreeEdgeRing;
     // TODO make faster!!
-    this->freeEdgeRing.clear();
-    if( freeEdges.size() > 0 ) {
+    //this->freeEdgeRing.clear();
+    while( freeEdges.size() > 0 ) {
+        tmpFreeEdgeRing.clear();
         Edge *e = freeEdges.front();
         while( e != nullptr ) {
-            this->freeEdgeRing.push_back( e);
+            //this->freeEdgeRing.push_back( e);
+            tmpFreeEdgeRing.push_back( e);
             e = findEdgeNeighborInSet( e, freeEdges, true);
         }
+        this->freeEdgeRing.push_back( tmpFreeEdgeRing);
     }
+
     // classify feature mesh
     if( this->freeEdgeRing.empty() ) {
         this->fType = CAVITY;
-    } else if( freeEdges.empty() ) {
+    //} else if( freeEdges.empty() ) {
+    } else if( freeEdges.size() == 1 ) {
         this->fType = POCKET;
     } else {
         this->fType = CHANNEL;
     }
+    INT64 t4 = perf.Difference();
+    //printf( "     Time to find free edge rings and classify feature:       (%.5f)\n", vislib::sys::PerformanceCounter::ToMillis(t4) / 1000.0f);
 }
 
 void CenterLineGenerator::NodesFromEdges( Edges &edges, NodeSet &nodes) {
@@ -118,7 +159,9 @@ void CenterLineGenerator::NextSection(Edges &current, NodeSet &currentNodes, Sec
     EdgeSet A2;
     // get all connected edges for all current nodes (one shared node)
     for( auto node : currentNodes ) {
-        for( auto edge : node->edges ) {
+        //for( auto edge : node->edges ) {
+        for( unsigned int i = 0; i < node->edgeCnt; i++ ) {
+            auto edge = node->edges[i];
             // if other node is not in current node set and edge not visited: add edge to E1
             // all nodes in E1 are now counting as visited
             if( edge->getNode1() == node && !edge->getNode2()->visited ) {
@@ -134,7 +177,9 @@ void CenterLineGenerator::NextSection(Edges &current, NodeSet &currentNodes, Sec
     }
     // 4)
     for( auto node : N1 ) {
-        for( auto edge : node->edges ) {
+        //for( auto edge : node->edges ) {
+        for( unsigned int i = 0; i < node->edgeCnt; i++ ) {
+            auto edge = node->edges[i];
             // both nodes have to be in N1
             if( edge->getNode1() == node && N1.find( edge->getNode2()) != N1.end() ) {
                 A2.insert( edge);
@@ -183,7 +228,7 @@ CenterLineGenerator::Node *CenterLineGenerator::nodeSharedByEdges(Edge *e1, Edge
 	return nullptr;
 }
 
-void CenterLineGenerator::FindBranch(Section *current, std::vector<Section*> &branches) {
+void CenterLineGenerator::FindBranch(Section *current, std::list<Section*> &branches) {
 /*
 	1. Input:
 		A0 : Set of edges of the current section	= current
@@ -240,6 +285,9 @@ void CenterLineGenerator::FindBranch(Section *current, std::vector<Section*> &br
             S0->edges.push_back( edgeVec.front());
             edgeVec.pop_front();
         }
+
+//#define RING_TEST
+#ifdef RING_TEST
         // remove dangling edges
         NodeSet nodes;
         this->NodesFromEdges( S0->edges, nodes);
@@ -288,19 +336,21 @@ void CenterLineGenerator::FindBranch(Section *current, std::vector<Section*> &br
         if( isRing ) {
             branches.push_back( S0);
         } else {
-            if( current->edges.empty() ) {
+            if( current->edges.empty() && !S0->edges.empty() ) {
                 // HACK only add non-ring if it is the only segment
                 branches.push_back( S0);
             } else {
                 return;
             }
         }
-        //branches.push_back( S0);
+#else
+        branches.push_back( S0);
+#endif // RING_TEST
     }
 
 }
 
-void CenterLineGenerator::CenterLine(Edges &selection, CenterLineEdges &centerLineEdges, CenterLineNodes &centerLineNodes) {
+void CenterLineGenerator::CenterLine(Edges &selection, CenterLineEdges &centerLineEdges, CenterLineNodes &centerLineNodes, float minCenterLineNodeDist) {
 	/*
 	1. Input:
 		Mesh M
@@ -319,18 +369,29 @@ void CenterLineGenerator::CenterLine(Edges &selection, CenterLineEdges &centerLi
 			For each branch vSi, S0 = vSi and go to step 2
 	*/
 
-    std::vector<Section*> branches;
+    std::list<Section*> branches;
+    CenterLineNodes freeCLNodes;
     
-    branches.push_back( new Section());
-    for( auto e : selection ) {
-        branches[0]->edges.push_back( e);
+    //branches.push_back( new Section());
+    //for( auto e : selection ) {
+    //    branches[0]->edges.push_back( e);
+    //}
+    //branches[0]->centerLineNode = nullptr;
+    //branches[0]->prevCenterLineNode = nullptr;
+
+    // Add all free edge rings to the branch list
+    for( auto fE : this->freeEdgeRing ) {
+        branches.push_back( new Section());
+        for( auto e : fE ) {
+            branches.back()->edges.push_back( e);
+        }
+        branches.back()->centerLineNode = nullptr;
+        branches.back()->prevCenterLineNode = nullptr;
     }
-    branches[0]->centerLineNode = nullptr;
-    branches[0]->prevCenterLineNode = nullptr;
-    	
+    
 	while( !branches.empty() ) {
 		Section *current = branches.front();
-		branches.erase( branches.begin() );
+        branches.pop_front();
         
         // DEBUG
         allBranches.push_back(current);
@@ -342,39 +403,75 @@ void CenterLineGenerator::CenterLine(Edges &selection, CenterLineEdges &centerLi
         for( auto edge : current->edges) {
             edge->visited = true;
         }
+        if( currentNodes.empty() ) continue;
+
+        float meanEdgeLength = 0;
+        for( auto cle : centerLineEdges ) {
+            meanEdgeLength += (cle->node1->p - cle->node2->p).Length();
+        }
+        meanEdgeLength /= centerLineEdges.size();
 
         current->centerLineNode = new CenterLineNode();
 		*current->centerLineNode = Collapse( currentNodes);
         current->centerLineNode->isRing = current->isRing;
+        // do not follow branch if it is too narrow
+        if( current->centerLineNode->minimumDistance < minCenterLineNodeDist ) {
+            delete current->centerLineNode;
+            continue;
+        }
         centerLineNodes.push_back( current->centerLineNode);
         
+        // TEST merge center lines
+        bool clMerged = false;
         // construct center line edge
         if( current->prevCenterLineNode != nullptr ) {
             CenterLineEdge *cle = new CenterLineEdge();
             cle->node1 = current->prevCenterLineNode;
             cle->node2 = current->centerLineNode;
             centerLineEdges.push_back( cle);
+            // TEST merge center lines
+            for( auto it = freeCLNodes.begin(); it != freeCLNodes.end(); it++ ) {
+                if( (*it) == current->prevCenterLineNode ) {
+                    freeCLNodes.erase( it);
+                    break;
+                }
+            }
+            for( auto n : freeCLNodes ) {
+                if( (current->centerLineNode->p - n->p).Length() < (3.0f * meanEdgeLength) ) {
+                    cle = new CenterLineEdge();
+                    cle->node1 = n;
+                    cle->node2 = current->centerLineNode;
+                    centerLineEdges.push_back( cle);
+                    for( auto b = branches.begin(); b != branches.end(); ) {
+                        if( (*b)->prevCenterLineNode == n ) {
+                            b = branches.erase( b);
+                        } else {
+                            b++;
+                        }
+                    }
+                    clMerged = true;
+                }
+            }
+            if( !clMerged ) {
+                freeCLNodes.push_back( current->centerLineNode);
+            }
         }
 
-		// 3)
-		Section *next = new Section();
-        next->prevCenterLineNode = current->centerLineNode;
-        next->centerLineNode = nullptr;
-        // TODO store nodes in next for future use in next cycle???
-        NextSection( current->edges, currentNodes, next);
+        if( !clMerged ) {
+		    // 3)
+		    Section *next = new Section();
+            next->prevCenterLineNode = current->centerLineNode;
+            next->centerLineNode = nullptr;
+            // TODO store nodes in next for future use in next cycle???
+            NextSection( current->edges, currentNodes, next);
 
-		// 4)
-#if 1
-        FindBranch( next, branches);
+		    // 4)
+            FindBranch( next, branches);
         
-        next->centerLineNode = nullptr;
-        next->prevCenterLineNode = nullptr;
-        delete next;
-#else
-        // DEBUG
-        if( !next->edges.empty() )
-            branches.push_back( next);
-#endif
+            next->centerLineNode = nullptr;
+            next->prevCenterLineNode = nullptr;
+            delete next;
+        }
 	}
 
 }

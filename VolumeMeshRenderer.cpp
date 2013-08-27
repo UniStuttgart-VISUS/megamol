@@ -57,10 +57,12 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
         hiddenCallerSlot( "getHidden", "Connects the rendering with visibility storage." ),
         diagramCalleeSlot ("diagramout", "Provides data for time-based line graph"),
         splitMergeCalleeSlot("splitmergeout", "Provides data for splitmerge graph"),
+        centerLineDiagramCalleeSlot("centerlineout", "Provides data for center line graph"),
         polygonModeParam("polygonMode", "Polygon rasterization mode"),
         blendItParam("blendIt", "Enable blending"),
         showNormalsParam("showNormals", "Render normals"),
         showCentroidsParam("showCentroids", "Render centroids"),
+        minDistCenterLineParam( "minDistCenterLine", "Minimum distance of center line node to molecular surface."),
         aoThresholdParam("aoThreshold", "AO-Threshold for Segmentation"),
         isoValueParam("isoValue", "Isovalue for marching tetrahedrons"),
         maxDistanceParam("maxDistance", "Distance threshold"),
@@ -93,10 +95,13 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
     this->MakeSlotAvailable(&this->selectionCallerSlot);
     this->hiddenCallerSlot.SetCompatibleCall<IntSelectionCallDescription>();
     this->MakeSlotAvailable(&this->hiddenCallerSlot);
+
     this->diagramCalleeSlot.SetCallback(DiagramCall::ClassName(), DiagramCall::FunctionName(DiagramCall::CallForGetData), &VolumeMeshRenderer::GetDiagramData);
     this->MakeSlotAvailable(&this->diagramCalleeSlot);
     this->splitMergeCalleeSlot.SetCallback(SplitMergeCall::ClassName(), SplitMergeCall::FunctionName(SplitMergeCall::CallForGetData), &VolumeMeshRenderer::GetSplitMergeData);
     this->MakeSlotAvailable(&this->splitMergeCalleeSlot);
+    this->centerLineDiagramCalleeSlot.SetCallback(DiagramCall::ClassName(), DiagramCall::FunctionName(DiagramCall::CallForGetData), &VolumeMeshRenderer::GetCenterLineDiagramData);
+    this->MakeSlotAvailable(&this->centerLineDiagramCalleeSlot);
 
     // parameters
     param::EnumParam* fm = new param::EnumParam(this->polygonMode);
@@ -181,6 +186,10 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
 
     this->gridspacingParam.SetParameter( new param::FloatParam( 1.0f, vislib::math::FLOAT_EPSILON));
     this->MakeSlotAvailable( &this->gridspacingParam);
+    
+    // parameter for minimum distance of center line node to molecular surface
+    this->minDistCenterLineParam.SetParameter(new param::FloatParam( 1.4f, 0.0f));
+    this->MakeSlotAvailable(&this->minDistCenterLineParam);
 
     numvoxels[0] = 128;
     numvoxels[1] = 128;
@@ -680,7 +689,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
     // ... TEST feature triangle drawing
 #endif // DRAW_FEATURE_TRIANGLES
 
-#define DRAW_FEATURE_VERTICES
+//#define DRAW_FEATURE_VERTICES
 #ifdef DRAW_FEATURE_VERTICES
     // TEST feature vertex drawing ...
     glDisable(GL_CULL_FACE);
@@ -714,6 +723,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
                     this->featureTriangleVerticesHost[this->featureTriangleEdgesHost[eCnt].y].z);
     }
     // ... TEST feature vertex drawing
+    glEnd(); // GL_LINES
 #endif // DRAW_FEATURE_VERTICES
 
     // TEST center line drawing ...
@@ -721,16 +731,17 @@ bool VolumeMeshRenderer::Render(Call& call) {
 #ifdef DRAW_CENTERLINE
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glPointSize( 5.0f);
-    glLineWidth( 2.0f);
+    glPointSize( 10.0f);
+    glEnable(GL_POINT_SMOOTH);
+    glLineWidth( 5.0f);
     for( unsigned int fCnt = 0; fCnt < this->clNodes.Count(); fCnt++ ) {
         unsigned int clnCnt = this->clNodes[fCnt].size();
         unsigned int curClnCnt = 0;
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glBegin( GL_POINTS);
         for( auto nodes : this->clNodes[fCnt]) {
             // draw only center line nodes that were created by a full ring
-            if( !nodes->isRing ) continue;
+            //if( !nodes->isRing ) continue;
             if( this->clg[fCnt]->fType == CenterLineGenerator::CHANNEL )
                 //glColor3f( ( 1.0f / clnCnt) * curClnCnt, 1.0f, 0.0f);
                 glColor3f( 0.0f, 1.0f, 0.0f);
@@ -766,10 +777,11 @@ bool VolumeMeshRenderer::Render(Call& call) {
         }
         glEnd();
     }
+    glDisable(GL_POINT_SMOOTH);
     // ... TEST center line drawing
 #endif // DRAW_CENTERLINE
 
-//#define DRAW_CENTER_LINE_RINGS
+#define DRAW_CENTER_LINE_RINGS
 #ifdef DRAW_CENTER_LINE_RINGS
     // TEST center line branches ...
     glDisable(GL_CULL_FACE);
@@ -1974,9 +1986,6 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     cudaDeviceSynchronize();
     this->featureTrianglesCount = 0;
     
-//#define CENTERLINE_HOST
-#ifndef CENTERLINE_HOST
-    
     cudaEvent_t start, stop;    // TIMING
     float time;                 // TIMING
     cudaEventCreate(&start);    // TIMING
@@ -2014,15 +2023,15 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
         cudaEventRecord( stop, 0);      // TIMING
         cudaEventSynchronize( stop);    // TIMING
         cudaEventElapsedTime(&time, start, stop);   // TIMING
-        printf( "CUDA time to prepare center line data for feature %3i (%5i triangles): %f\n", fCnt, fLength, time / 1000.0f); // TIMING
+        printf( "CUDA Prepare center line data for feature %3i (%5i tria):    %.5f\n", fCnt, fLength, time / 1000.0f); // TIMING
         
         // TODO compute the center line of this feature
         time_t t = clock();
         clg[fCnt-1] = new CenterLineGenerator();
         clg[fCnt-1]->SetTriangleMesh( this->featureVertexCntNew, (float*)this->featureTriangleVerticesHost, 
             this->edgeCount, (unsigned int*)this->featureTriangleEdgesHost, (unsigned int*)this->featureTriangleEdgeCountHost);
-        printf( "Time to prepare center line data for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
-        if( !clg[fCnt-1]->freeEdgeRing.empty() ) {
+        printf( "Time to prepare center line data for feature %3i (%5i tria): %.5f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
+        if( !clg[fCnt-1]->freeEdgeRing.empty() && !clg[fCnt-1]->freeEdgeRing[0].empty() ) {
             t = clock();
             for ( auto edge : clEdges[fCnt-1] )  {
                 if( edge ) delete edge;
@@ -2032,42 +2041,10 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             }
             clEdges[fCnt-1].clear();
             clNodes[fCnt-1].clear();
-            clg[fCnt-1]->CenterLine( clg[fCnt-1]->freeEdgeRing, clEdges[fCnt-1], clNodes[fCnt-1]);
-            printf( "Time to compute center line for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
+            clg[fCnt-1]->CenterLine( clg[fCnt-1]->freeEdgeRing[0], clEdges[fCnt-1], clNodes[fCnt-1], this->minDistCenterLineParam.Param<param::FloatParam>()->Value());
+            printf( "Time to compute center line for feature %3i (%5i tria):      %.5f\n\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
         }
     }
-
-#else
-    // loop over all features (skip first feature)
-    for( unsigned int fCnt = 1; fCnt < centroidCount; fCnt++ ) {
-        unsigned int fStart = this->featureStartEndHost[fCnt].x;
-        unsigned int fEnd = this->featureStartEndHost[fCnt].y;
-        unsigned int fLength = fEnd - fStart + 1;
-        //CUDA_VERIFY(cudaMemcpy( &(this->featureTriangleVerticesHost[3*this->featureTrianglesCount]), &(verticesCopy[3*fStart]), fLength * 3 * sizeof(float4), cudaMemcpyDeviceToHost));
-        //this->featureTrianglesCount += fLength;
-        CUDA_VERIFY(cudaMemcpy( this->featureTriangleVerticesHost, &(verticesCopy[3*fStart]), fLength * 3 * sizeof(float4), cudaMemcpyDeviceToHost));
-        this->featureTrianglesCount = fLength;
-        cudaDeviceSynchronize();
-        // TODO compute the center line of this feature
-        time_t t = clock();
-        clg[fCnt-1] = new CenterLineGenerator();
-        clg[fCnt-1]->SetTriangleMesh( fLength, (float*)this->featureTriangleVerticesHost);
-        printf( "Time to prepare center line data for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
-        if( !clg[fCnt-1]->freeEdgeRing.empty() ) {
-            t = clock();
-            for ( auto edge : clEdges[fCnt-1] )  {
-                if( edge ) delete edge;
-            }
-            for ( auto node : clNodes[fCnt-1] )  {
-                if( node ) delete node;
-            }
-            clEdges[fCnt-1].clear();
-            clNodes[fCnt-1].clear();
-            clg[fCnt-1]->CenterLine( clg[fCnt-1]->freeEdgeRing, clEdges[fCnt-1], clNodes[fCnt-1]);
-            printf( "Time to compute center line for feature %3i (%5i triangles): %f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
-        }
-    }
-#endif // CENTERLINE_HOST
 
     // ========================================================================
     // Phase 9: Colorize vertices
@@ -2789,6 +2766,55 @@ bool VolumeMeshRenderer::GetDiagramData(core::Call& call) {
     if (dc == NULL) return false;    
     
 #if 1
+    for( SIZE_T sIdx = dc->GetSeriesCount(); sIdx < this->featureList.Count(); sIdx++ ) {
+        dc->AddSeries( this->featureList[sIdx]);
+    }
+#else
+    DiagramCall::DiagramSeries *ds;
+    if (dc->GetSeriesCount() == 0) {
+        ds = new DiagramCall::DiagramSeries(vislib::StringA("horscht"), new MappableFloatPair(0.0f, 1.0f, false, 7));
+        ds->SetColor(0.9f, 0.1f, 0.1f);
+        ds->AddMarker(new DiagramCall::DiagramMarker(1, DiagramCall::DIAGRAM_MARKER_DISAPPEAR, "kaboom!"));
+        dc->AddSeries(ds);
+        ds = new DiagramCall::DiagramSeries(vislib::StringA("hugo"), new MappableFloatPair());
+        ds->SetColor(0.2f, 1.0f, 0.2f);
+        ds->AddMarker(new DiagramCall::DiagramMarker(4, DiagramCall::DIAGRAM_MARKER_SPLIT));
+        ds->AddMarker(new DiagramCall::DiagramMarker(7, DiagramCall::DIAGRAM_MARKER_BOOKMARK));
+        dc->AddSeries(ds);
+        ds = new DiagramCall::DiagramSeries(vislib::StringA("heinz"), new MappableFloatPair(0.0f, 0.5f, true, 2));
+        ds->SetColor(0.1f, 0.3f, 0.7f);
+        ds->AddMarker(new DiagramCall::DiagramMarker(4, DiagramCall::DIAGRAM_MARKER_MERGE, "universe joining something\n or other"));
+        dc->AddSeries(ds);
+        ds = new DiagramCall::DiagramSeries(vislib::StringA("helge"), new MappableCategoryFloat(0));
+        ds->SetColor(1.0f, 0.4f, 0.7f);
+        dc->AddSeries(ds);
+        ds = new DiagramCall::DiagramSeries(vislib::StringA("hägar"), new MappableCategoryFloat(1));
+        ds->SetColor(0.6f, 0.8f, 0.7f);
+        dc->AddSeries(ds);
+    } else {
+        ds = dc->GetSeries(0);
+    }
+
+#endif
+    // set current call time for sliding guide line
+    MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
+    if (mol != NULL) {
+        if (dc->GetGuideCount() == 0) {
+            dc->AddGuide(mol->Calltime(), DiagramCall::DIAGRAM_GUIDE_VERTICAL);
+        } else {
+            dc->GetGuide(0)->SetPosition(mol->Calltime());
+        }
+    }
+
+    return true;
+}
+
+bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
+
+    DiagramCall *dc = dynamic_cast<DiagramCall*>(&call);
+    if (dc == NULL) return false;    
+    
+#if 0
     for( SIZE_T sIdx = dc->GetSeriesCount(); sIdx < this->featureList.Count(); sIdx++ ) {
         dc->AddSeries( this->featureList[sIdx]);
     }

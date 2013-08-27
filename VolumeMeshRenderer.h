@@ -107,6 +107,8 @@ namespace protein {
 
         virtual bool GetSplitMergeData(core::Call& call);
 
+        virtual bool GetCenterLineDiagramData(core::Call& call);
+
         /**
          * The get extents callback. The module should set the members of
          * 'call' to tell the caller the extents of its data (bounding boxes
@@ -251,6 +253,8 @@ namespace protein {
         megamol::core::CalleeSlot diagramCalleeSlot;
 
         megamol::core::CalleeSlot splitMergeCalleeSlot;
+        
+        megamol::core::CalleeSlot centerLineDiagramCalleeSlot;
 
         /** polygon mode */
         megamol::core::param::ParamSlot polygonModeParam;
@@ -285,6 +289,9 @@ namespace protein {
         /** color table filename */
         megamol::core::param::ParamSlot colorTableFileParam;
         vislib::Array< vislib::math::Vector<float, 3> > colorTable;
+        
+        /** parameter for minimum distance of center line node to molecular surface */
+        megamol::core::param::ParamSlot minDistCenterLineParam;
 
         /** maximum CUDA grid size */
         dim3 gridSize;
@@ -446,6 +453,9 @@ namespace protein {
         
         /** array for feature transitions */
         vislib::PtrArray<SplitMergeCall::SplitMergeTransition> transitionList;
+        
+        /** array for surface feature center lines */
+        vislib::PtrArray<DiagramCall::DiagramSeries> featureCenterLines;
 
         /** data bounding box */
         vislib::math::Cuboid<float> dataBBox;
