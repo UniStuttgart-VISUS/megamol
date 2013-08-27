@@ -421,7 +421,7 @@ void CenterLineGenerator::CenterLine(Edges &selection, CenterLineEdges &centerLi
         }
         centerLineNodes.push_back( current->centerLineNode);
         
-        // TEST merge center lines
+        // merge center lines
         bool clMerged = false;
         // construct center line edge
         if( current->prevCenterLineNode != nullptr ) {
@@ -429,7 +429,7 @@ void CenterLineGenerator::CenterLine(Edges &selection, CenterLineEdges &centerLi
             cle->node1 = current->prevCenterLineNode;
             cle->node2 = current->centerLineNode;
             centerLineEdges.push_back( cle);
-            // TEST merge center lines
+            // merge center lines
             for( auto it = freeCLNodes.begin(); it != freeCLNodes.end(); it++ ) {
                 if( (*it) == current->prevCenterLineNode ) {
                     freeCLNodes.erase( it);
@@ -455,8 +455,12 @@ void CenterLineGenerator::CenterLine(Edges &selection, CenterLineEdges &centerLi
             if( !clMerged ) {
                 freeCLNodes.push_back( current->centerLineNode);
             }
+        } else {
+            // the center line node has no previous node
+            current->centerLineNode->isStartNode = true;
         }
 
+        // do nothing if the current segment was merged with another center line segment
         if( !clMerged ) {
 		    // 3)
 		    Section *next = new Section();

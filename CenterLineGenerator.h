@@ -132,6 +132,7 @@ public:
 			: p()
 			, minimumDistance(0.0f)
             , isRing(true)
+            , isStartNode(false)
 		{}
 
 		CenterLineNode(Vector position, float minDistance)
@@ -142,6 +143,7 @@ public:
 		Vector p;
 		float minimumDistance;
         bool isRing;
+        bool isStartNode;
 
 		CenterLineEdges edges;
 	};
