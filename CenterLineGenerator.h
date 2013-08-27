@@ -59,12 +59,16 @@ public:
 	{
 		Node()
 			: p()
-			, edges()
+			//, edges()
+            , edgeCnt(0)
 			, visited(false)
 		{}
 
 		Vector p;
-		Edges edges;
+		//Edges edges;
+        // TODO is 16 really a good value for marching tetrahedra meshes?
+        Edge *edges[16];
+        unsigned int edgeCnt;
 		bool visited;
 	};
 
@@ -170,16 +174,21 @@ public:
      */
     void SetTriangleMesh( unsigned int vertexCnt, float* vertices, unsigned int edgeCnt, unsigned int *edges, unsigned int *freeEdge);
 
-	void CenterLine(Edges &selection, CenterLineEdges &centerLineEdges, CenterLineNodes &centerLineNodes);
+	void CenterLine(Edges &selection, CenterLineEdges &centerLineEdges, CenterLineNodes &centerLineNodes, float minCenterLineNodeDist = 0.0f);
     
-    Edges freeEdgeRing;
+    std::vector<Edges> freeEdgeRing;
     FeatureType fType;
 
     // TODO make this private again!!!
 	Edges edges;
 	Nodes nodes;
 
-    std::vector<Section*> allBranches;
+    std::list<Section*> allBranches;
+    
+    Node *theNodes;
+
+    Edge *theEdges;
+
 private:
 
 	CenterLineNode Collapse(NodeSet &selection);
@@ -189,7 +198,7 @@ private:
 	Node *nodeSharedByEdges(Edge *e1, Edge *e2);
 
 	void NextSection(Edges &current, NodeSet &currentNodes, Section *next);
-    void FindBranch(Section *current, std::vector<Section*> &branches);
+    void FindBranch(Section *current, std::list<Section*> &branches);
 
 	void NodesFromEdges(Edges &edges, NodeSet &nodes);
 
