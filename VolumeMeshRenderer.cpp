@@ -751,6 +751,8 @@ bool VolumeMeshRenderer::Render(Call& call) {
             else // this->clg[fCnt]->fType == CenterLineGenerator::CAVITY
                 //glColor3f( 0.0f, 1.0f, ( 1.0f / clnCnt) * curClnCnt);
                 glColor3f( 0.0f, 1.0f, 1.0f);
+            if( nodes->isStartNode )
+                glColor3f( 1.0f, 1.0f, 1.0f);
             glVertex3fv( nodes->p.PeekComponents());
             curClnCnt++;
         }
@@ -781,7 +783,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
     // ... TEST center line drawing
 #endif // DRAW_CENTERLINE
 
-#define DRAW_CENTER_LINE_RINGS
+//#define DRAW_CENTER_LINE_RINGS
 #ifdef DRAW_CENTER_LINE_RINGS
     // TEST center line branches ...
     glDisable(GL_CULL_FACE);
