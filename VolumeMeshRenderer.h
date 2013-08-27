@@ -486,6 +486,10 @@ namespace protein {
         vislib::Array<CenterLineGenerator::CenterLineEdges> clEdges;
         vislib::Array<CenterLineGenerator::CenterLineNodes> clNodes;
         vislib::Array<CenterLineGenerator*> clg;
+
+        
+        cudaEvent_t start, stop;    // TIMING
+        float time;                 // TIMING
     };
 
 

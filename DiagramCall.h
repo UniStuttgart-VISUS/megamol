@@ -448,7 +448,18 @@ namespace protein {
             //VISLIB_FORCEINLINE const bool GetVisible() const {
             //    return this->visible;
             //}
-
+            
+            /**
+             * Set the color the series should be represented with.
+             *
+             * @param r the red component of the color
+             * @param g the green component of the color
+             * @param b the blue component of the color
+             */
+            VISLIB_FORCEINLINE void SetColor(const vislib::math::Vector<float, 4> col) {
+                this->color.Set(col.X(), col.Y(), col.Z(), col.W());
+            }
+            
             /**
              * Set the color the series should be represented with.
              *

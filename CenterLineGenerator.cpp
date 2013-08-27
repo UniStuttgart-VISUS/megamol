@@ -52,7 +52,7 @@ void CenterLineGenerator::SetTriangleMesh( unsigned int meshVertexCnt, float* me
         nodesPtr[vCnt] = tmpNodePtr;
     }
     INT64 t2 = perf.Difference();
-    printf( "     Time to insert mesh vertices into node list:             (%.5f)\n", vislib::sys::PerformanceCounter::ToMillis(t2) / 1000.0f);
+    //printf( "     Time to insert mesh vertices into node list:             (%.5f)\n", vislib::sys::PerformanceCounter::ToMillis(t2) / 1000.0f);
     
     perf.SetMark();
     theEdges = new Edge[meshEdgeCnt];
@@ -85,7 +85,7 @@ void CenterLineGenerator::SetTriangleMesh( unsigned int meshVertexCnt, float* me
     // delete temporary array
     //delete[] tmpNodePtr;
     INT64 t3 = perf.Difference();
-    printf( "     Time to insert mesh edges into edge list:                (%.5f)\n", vislib::sys::PerformanceCounter::ToMillis(t3) / 1000.0f);
+    //printf( "     Time to insert mesh edges into edge list:                (%.5f)\n", vislib::sys::PerformanceCounter::ToMillis(t3) / 1000.0f);
 
     perf.SetMark();
     Edges tmpFreeEdgeRing;
@@ -106,7 +106,7 @@ void CenterLineGenerator::SetTriangleMesh( unsigned int meshVertexCnt, float* me
     if( this->freeEdgeRing.empty() ) {
         this->fType = CAVITY;
     //} else if( freeEdges.empty() ) {
-    } else if( freeEdges.size() == 1 ) {
+    } else if( freeEdgeRing.size() == 1 ) {
         this->fType = POCKET;
     } else {
         this->fType = CHANNEL;
@@ -122,7 +122,7 @@ void CenterLineGenerator::NodesFromEdges( Edges &edges, NodeSet &nodes) {
 	}
 }
 
-CenterLineGenerator::CenterLineNode CenterLineGenerator::Collapse(NodeSet &selection) {
+CenterLineGenerator::CenterLineNode* CenterLineGenerator::Collapse(NodeSet &selection) {
 	CenterLineGenerator::Vector v( 0.0f, 0.0f, 0.0f);
 
 	for(auto it : selection) {
@@ -135,7 +135,7 @@ CenterLineGenerator::CenterLineNode CenterLineGenerator::Collapse(NodeSet &selec
 	for(auto it : selection)
 		minimumDistance = vislib::math::Min(minimumDistance, (it->p - v).Length());
 
-	CenterLineNode node(v, minimumDistance);
+    CenterLineNode *node = new CenterLineNode(v, minimumDistance);
 	return node;
 }
 
@@ -411,8 +411,7 @@ void CenterLineGenerator::CenterLine(Edges &selection, CenterLineEdges &centerLi
         }
         meanEdgeLength /= centerLineEdges.size();
 
-        current->centerLineNode = new CenterLineNode();
-		*current->centerLineNode = Collapse( currentNodes);
+		current->centerLineNode = Collapse( currentNodes);
         current->centerLineNode->isRing = current->isRing;
         // do not follow branch if it is too narrow
         if( current->centerLineNode->minimumDistance < minCenterLineNodeDist ) {
