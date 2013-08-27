@@ -123,8 +123,8 @@ public:
 	
 	struct CenterLineNode;
 	struct CenterLineEdge;
-	typedef std::vector<CenterLineEdge*> CenterLineEdges;
-	typedef std::vector<CenterLineNode*> CenterLineNodes;
+	typedef std::list<CenterLineEdge*> CenterLineEdges;
+	typedef std::list<CenterLineNode*> CenterLineNodes;
 
 	struct CenterLineNode
 	{
@@ -138,6 +138,8 @@ public:
 		CenterLineNode(Vector position, float minDistance)
 			: p(position)
 			, minimumDistance(minDistance)
+            , isRing(true)
+            , isStartNode(false)
 		{}
 
 		Vector p;
@@ -151,10 +153,14 @@ public:
 	struct CenterLineEdge
 	{
 		CenterLineEdge()
+            : node1(nullptr)
+            , node2(nullptr)
+            , visited(false)
 		{}
         
 		CenterLineNode *node1;
 		CenterLineNode *node2;
+        bool visited;
 	};
 
 	
@@ -193,7 +199,7 @@ public:
 
 private:
 
-	CenterLineNode Collapse(NodeSet &selection);
+	CenterLineNode* Collapse(NodeSet &selection);
 
 	Edge *findEdgeNeighborInSet(Edge *edge, Edges &set, bool removeFromSet);
 

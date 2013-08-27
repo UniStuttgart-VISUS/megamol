@@ -30,6 +30,7 @@
 #include "vislib/ShaderSource.h"
 #include "vislib/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
+#include "vislib/PerformanceCounter.h"
 #include <glh/glh_extensions.h>
 #include <GL/glu.h>
 #include <cuda_gl_interop.h>
@@ -325,6 +326,9 @@ bool VolumeMeshRenderer::create(void) {
     // Allocate CUDA memory for labeling.
     CUDA_VERIFY(cudaMalloc(&modified, sizeof(bool)));
     CUDA_VERIFY(cudaMalloc(&segmentsRemoved, sizeof(bool)));
+
+    CUDA_VERIFY(cudaEventCreate(&start));    // TIMING
+    CUDA_VERIFY(cudaEventCreate(&stop));     // TIMING
 
     return true;
 }
@@ -938,6 +942,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
 bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<float, 3> translation, 
     vislib::math::Vector<float, 3> scale, const float* aoVolumeHost, MolecularDataCall *mol, int* neighborMap) {
     using vislib::sys::Log;
+    vislib::sys::PerformanceCounter perf(true);
     
     // allocate buffers for copies from previous step
     this->ValidateOldCubeMemory();
@@ -1987,12 +1992,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     CUDA_VERIFY(cudaMemcpy( this->featureStartEndHost, this->featureStartEnd, centroidCount * sizeof(uint2), cudaMemcpyDeviceToHost));
     cudaDeviceSynchronize();
     this->featureTrianglesCount = 0;
-    
-    cudaEvent_t start, stop;    // TIMING
-    float time;                 // TIMING
-    cudaEventCreate(&start);    // TIMING
-    cudaEventCreate(&stop);     // TIMING
-    
+        
     // loop over all features (skip first feature)
     for( unsigned int fCnt = 1; fCnt < centroidCount; fCnt++ ) {
         cudaEventRecord( start, 0); // TIMING
@@ -2025,16 +2025,15 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
         cudaEventRecord( stop, 0);      // TIMING
         cudaEventSynchronize( stop);    // TIMING
         cudaEventElapsedTime(&time, start, stop);   // TIMING
-        printf( "CUDA Prepare center line data for feature %3i (%5i tria):    %.5f\n", fCnt, fLength, time / 1000.0f); // TIMING
+        //printf( "CUDA Prepare center line data for feature %3i (%5i tria):    %.5f\n", fCnt, fLength, time / 1000.0f); // TIMING
         
         // TODO compute the center line of this feature
-        time_t t = clock();
+        perf.SetMark();
         clg[fCnt-1] = new CenterLineGenerator();
         clg[fCnt-1]->SetTriangleMesh( this->featureVertexCntNew, (float*)this->featureTriangleVerticesHost, 
             this->edgeCount, (unsigned int*)this->featureTriangleEdgesHost, (unsigned int*)this->featureTriangleEdgeCountHost);
-        printf( "Time to prepare center line data for feature %3i (%5i tria): %.5f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
+        //printf( "Time to prepare center line data for feature %3i (%5i tria): %.5f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
         if( !clg[fCnt-1]->freeEdgeRing.empty() && !clg[fCnt-1]->freeEdgeRing[0].empty() ) {
-            t = clock();
             for ( auto edge : clEdges[fCnt-1] )  {
                 if( edge ) delete edge;
             }
@@ -2044,8 +2043,10 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             clEdges[fCnt-1].clear();
             clNodes[fCnt-1].clear();
             clg[fCnt-1]->CenterLine( clg[fCnt-1]->freeEdgeRing[0], clEdges[fCnt-1], clNodes[fCnt-1], this->minDistCenterLineParam.Param<param::FloatParam>()->Value());
-            printf( "Time to compute center line for feature %3i (%5i tria):      %.5f\n\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
+            //printf( "Time to compute center line for feature %3i (%5i tria):      %.5f\n\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
         }
+        INT64 t1 = perf.Difference();
+        Log::DefaultLog.WriteInfo( 1, "Time to compute centerline for feature %3i (%5i tria): %.5f", fCnt, fLength, (vislib::sys::PerformanceCounter::ToMillis(t1) + time) / 1000.0);
     }
 
     // ========================================================================
@@ -2814,11 +2815,83 @@ bool VolumeMeshRenderer::GetDiagramData(core::Call& call) {
 bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
 
     DiagramCall *dc = dynamic_cast<DiagramCall*>(&call);
-    if (dc == NULL) return false;    
+    if (dc == NULL) return false;
+    MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
+    if (mol == NULL) return false;
     
-#if 0
-    for( SIZE_T sIdx = dc->GetSeriesCount(); sIdx < this->featureList.Count(); sIdx++ ) {
-        dc->AddSeries( this->featureList[sIdx]);
+#if 1
+    vislib::StringA featureName;
+    DiagramCall::DiagramSeries *ds;
+    MolecularSurfaceFeature *ms, *prevMS;
+    for( SIZE_T fIdx = this->featureCenterLines.Count(); fIdx < this->clg.Count(); fIdx++ ) {
+        if( this->clg[fIdx]->fType == CenterLineGenerator::CAVITY )
+            featureName.Format( "Feature %i (Cavity)", fIdx+1);
+        else if( this->clg[fIdx]->fType == CenterLineGenerator::CHANNEL )
+            featureName.Format( "Feature %i (Channel)", fIdx+1);
+        else
+            featureName.Format( "Feature %i (Pocket)", fIdx+1);
+        ds = new DiagramCall::DiagramSeries( featureName, 
+            new MolecularSurfaceFeature( static_cast<float>(mol->FrameCount())));
+        ds->SetColor( this->featureList[fIdx+1]->GetColor());
+        ms = static_cast<MolecularSurfaceFeature*>(ds->GetMappable());
+        //ms->AppendValue( mol->Calltime(), centroidAreasHost[i]);
+        this->featureCenterLines.Append( ds);
+    }
+    
+    for( SIZE_T fIdx = 0; fIdx < this->clg.Count(); fIdx++ ) {
+        if( this->clEdges[fIdx].empty() ) continue;
+        ds = this->featureCenterLines[fIdx];
+        float length = 0.0f;
+        // sum up edge length and reset edge as not visited
+        for( auto edge : this->clEdges[fIdx] ) {
+            //length += (edge->node1->p - edge->node2->p).Length();
+            length++;
+            edge->visited = false;
+        }
+        ms = new MolecularSurfaceFeature( length);
+        auto edge = this->clEdges[fIdx].front();
+        edge->visited = true;
+        auto node1 = edge->node1;
+        auto node2 = edge->node2;
+        if( node2->isStartNode ) {
+            node1 = edge->node2;
+            node2 = edge->node1;
+        }
+        length = 0;
+        ms->AppendValue( length, node1->minimumDistance);
+        length += (node1->p - node2->p).Length();
+        ms->AppendValue( length, node2->minimumDistance);
+        while( node2 != nullptr && !node2->isStartNode ) {
+            node1 = node2;
+            node2 = nullptr;
+            for( auto nextEdge : this->clEdges[fIdx] ) {
+                if( !nextEdge->visited ) {
+                    // TODO support branching! (recursion)
+                    if( nextEdge->node1 == node1 ) {
+                        node2 = nextEdge->node2;
+                        //length += (node1->p - node2->p).Length();
+                        length++;
+                        ms->AppendValue( length, node2->minimumDistance);
+                        nextEdge->visited = true;
+                        break;
+                    } else if( nextEdge->node2 == node1 ) {
+                        node2 = nextEdge->node1;
+                        //length += (node1->p - node2->p).Length();
+                        length++;
+                        ms->AppendValue( length, node2->minimumDistance);
+                        nextEdge->visited = true;
+                        break;
+                    }
+                }
+            }
+        }
+        prevMS = static_cast<MolecularSurfaceFeature*>(ds->GetMappable());
+        delete prevMS;
+        ds->SetMappable( ms);
+    }
+
+    for( SIZE_T sIdx = dc->GetSeriesCount(); sIdx < this->featureCenterLines.Count(); sIdx++ ) {
+        dc->AddSeries( this->featureCenterLines[sIdx]);
     }
 #else
     DiagramCall::DiagramSeries *ds;
@@ -2845,17 +2918,7 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
     } else {
         ds = dc->GetSeries(0);
     }
-
 #endif
-    // set current call time for sliding guide line
-    MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
-    if (mol != NULL) {
-        if (dc->GetGuideCount() == 0) {
-            dc->AddGuide(mol->Calltime(), DiagramCall::DIAGRAM_GUIDE_VERTICAL);
-        } else {
-            dc->GetGuide(0)->SetPosition(mol->Calltime());
-        }
-    }
 
     return true;
 }
