@@ -283,6 +283,12 @@
     <ClCompile Include="CenterLineGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ResidueSelection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ResidueSelectionCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSpline.h">
@@ -571,6 +577,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CenterLineGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ResidueSelection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ResidueSelectionCall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

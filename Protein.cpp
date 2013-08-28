@@ -75,11 +75,13 @@
 #include "DiagramCall.h"
 #include "SplitMergeCall.h"
 #include "IntSelectionCall.h"
+#include "ResidueSelectionCall.h"
 #include "BindingSiteCall.h"
 #include "MoleculeBallifier.h"
 
 // other modules
 #include "IntSelection.h"
+#include "ResidueSelection.h"
 
 #include "CallAutoDescription.h"
 #include "ModuleAutoDescription.h"
@@ -132,7 +134,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 34;
+    int moduleCount = 35;
 #ifdef WITH_CUDA
     moduleCount+=9;
 #endif // WITH_CUDA
@@ -178,29 +180,30 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case 27: return new megamol::core::ModuleAutoDescription<megamol::protein::DiagramRenderer>();
         case 28: return new megamol::core::ModuleAutoDescription<megamol::protein::SplitMergeRenderer>();
         case 29: return new megamol::core::ModuleAutoDescription<megamol::protein::IntSelection>();
-        case 30: return new megamol::core::ModuleAutoDescription<megamol::protein::CrystalStructureDataSource>();
+        case 30: return new megamol::core::ModuleAutoDescription<megamol::protein::ResidueSelection>();
+        case 31: return new megamol::core::ModuleAutoDescription<megamol::protein::CrystalStructureDataSource>();
 #ifdef WITH_CUDA
-        case 31: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCudaSESRenderer>();
-        case 32: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCBCudaRenderer>();
-        case 33: return new megamol::core::ModuleAutoDescription<megamol::protein::QuickSurfRenderer>();
-        case 34: return new megamol::core::ModuleAutoDescription<megamol::protein::QuickSurfRenderer2>();
-        case 35: return new megamol::core::ModuleAutoDescription<megamol::protein::QuickSurfMTRenderer>();
-        case 36: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeVolumeCudaRenderer>();
-        case 37: return new megamol::core::ModuleAutoDescription<megamol::protein::VolumeMeshRenderer>();
-        case 38: return new megamol::core::ModuleAutoDescription<megamol::protein::DataWriter>();
-        case 39: return new megamol::core::ModuleAutoDescription<megamol::protein::CrystalStructureVolumeRenderer>();
+        case 32: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCudaSESRenderer>();
+        case 33: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCBCudaRenderer>();
+        case 34: return new megamol::core::ModuleAutoDescription<megamol::protein::QuickSurfRenderer>();
+        case 35: return new megamol::core::ModuleAutoDescription<megamol::protein::QuickSurfRenderer2>();
+        case 36: return new megamol::core::ModuleAutoDescription<megamol::protein::QuickSurfMTRenderer>();
+        case 37: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeVolumeCudaRenderer>();
+        case 38: return new megamol::core::ModuleAutoDescription<megamol::protein::VolumeMeshRenderer>();
+        case 39: return new megamol::core::ModuleAutoDescription<megamol::protein::DataWriter>();
+        case 40: return new megamol::core::ModuleAutoDescription<megamol::protein::CrystalStructureVolumeRenderer>();
         #define CUDA_OFFSET 9
 #else
         #define CUDA_OFFSET 0
 #endif // WITH_CUDA
 #ifdef WITH_OPENHAPTICS
-        case 31 + CUDA_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::HapticsMoleculeRenderer>();
+        case 32 + CUDA_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::HapticsMoleculeRenderer>();
         #define HAPTICS_OFFSET 1
 #else
         #define HAPTICS_OFFSET 0
 #endif // WITH_OPENHAPTICS
-        case 31 + CUDA_OFFSET + HAPTICS_OFFSET : return new megamol::core::ModuleAutoDescription<megamol::protein::SequenceRenderer>();
-        case 32 + CUDA_OFFSET + HAPTICS_OFFSET : return new megamol::core::ModuleAutoDescription<megamol::protein::BindingSiteDataSource>();
+        case 32 + CUDA_OFFSET + HAPTICS_OFFSET : return new megamol::core::ModuleAutoDescription<megamol::protein::SequenceRenderer>();
+        case 33 + CUDA_OFFSET + HAPTICS_OFFSET : return new megamol::core::ModuleAutoDescription<megamol::protein::BindingSiteDataSource>();
         default: return NULL;
     }
     return NULL;
@@ -211,7 +214,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 PROTEIN_API int mmplgCallCount(void) {
-    return 14;
+    return 15;
 }
 
 
@@ -232,8 +235,9 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
         case 9: return new megamol::core::CallAutoDescription<megamol::protein::DiagramCall>();
         case 10: return new megamol::core::CallAutoDescription<megamol::protein::SplitMergeCall>();
         case 11: return new megamol::core::CallAutoDescription<megamol::protein::IntSelectionCall>();
-        case 12: return new megamol::core::CallAutoDescription<megamol::protein::CrystalStructureDataCall>();
-        case 13: return new megamol::core::CallAutoDescription<megamol::protein::BindingSiteCall>();
+        case 12: return new megamol::core::CallAutoDescription<megamol::protein::ResidueSelectionCall>();
+        case 13: return new megamol::core::CallAutoDescription<megamol::protein::CrystalStructureDataCall>();
+        case 14: return new megamol::core::CallAutoDescription<megamol::protein::BindingSiteCall>();
         default: return NULL;
     }
     return NULL;

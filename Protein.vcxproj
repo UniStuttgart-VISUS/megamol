@@ -624,6 +624,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="ReducedSurface.cpp" />
     <ClCompile Include="ReducedSurfaceSimplified.cpp" />
     <ClCompile Include="Renderer3DModuleMouse.cpp" />
+    <ClCompile Include="ResidueSelection.cpp" />
+    <ClCompile Include="ResidueSelectionCall.cpp" />
     <ClCompile Include="RMS.cpp" />
     <ClCompile Include="IntSelection.cpp" />
     <ClCompile Include="IntSelectionCall.cpp" />
@@ -729,6 +731,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="ReducedSurface.h" />
     <ClInclude Include="ReducedSurfaceSimplified.h" />
     <ClInclude Include="Renderer3DModuleMouse.h" />
+    <ClInclude Include="ResidueSelection.h" />
+    <ClInclude Include="ResidueSelectionCall.h" />
     <ClInclude Include="RMS.h" />
     <ClInclude Include="IntSelection.h" />
     <ClInclude Include="IntSelectionCall.h" />
