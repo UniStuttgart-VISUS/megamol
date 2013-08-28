@@ -2058,24 +2058,22 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     
     cudaDeviceSynchronize(); // Paranoia
     
-    // TEST coloring by nearest atom TEST ...
+    // coloring by nearest atom TEST ...
     cudaMemcpy( this->vertexColors, colors, this->vertexCount * 4 * sizeof(float), cudaMemcpyDeviceToHost);
-    int atomIdx;
     float ifac = this->cmWeightParam.Param<param::FloatParam>()->Value();
-    for( unsigned int i = 0; i < this->vertexCount; i++ ) {
-        atomIdx = this->neighborAtomOfVertex[i];
-        if( atomIdx <= 0 ) {
+#pragma omp parallel for
+    for( int i = 0; i < this->vertexCount; i++ ) {
+        int atomIdx = this->neighborAtomOfVertex[i];
+        if( atomIdx < 0 ) {
             // ERROR no nearest atom found (color magenta)
             this->vertexColors[4*i+0] = 1.0f;
             this->vertexColors[4*i+1] = 0.0f;
             this->vertexColors[4*i+2] = 1.0f;
-            this->vertexColors[4*i+3] = 1.0f;
         } else if( atomIdx >= (this->atomColorTable.Count() / 3)) {
             // ERROR nearest atom has too large index (color cyan)
             this->vertexColors[4*i+0] = 0.0f;
             this->vertexColors[4*i+1] = 1.0f;
             this->vertexColors[4*i+2] = 1.0f;
-            this->vertexColors[4*i+3] = 1.0f;
         } else {
             // color triangles
             if( this->currentColoringMode0 < 0 ) {
@@ -2084,7 +2082,6 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                     this->vertexColors[4*i+0] = ( this->vertexColors[4*i+0] * ifac + this->atomColorTable[3*atomIdx+0] * (1.0f - ifac));
                     this->vertexColors[4*i+1] = ( this->vertexColors[4*i+1] * ifac + this->atomColorTable[3*atomIdx+1] * (1.0f - ifac));
                     this->vertexColors[4*i+2] = ( this->vertexColors[4*i+2] * ifac + this->atomColorTable[3*atomIdx+2] * (1.0f - ifac));
-                    this->vertexColors[4*i+3] = 1.0f;
                 }
                 // else - color by surface feature (do nothing)
             } else {
@@ -2093,20 +2090,18 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                     this->vertexColors[4*i+0] = ( this->atomColorTable[3*atomIdx+0] * ifac + this->vertexColors[4*i+0] * (1.0f - ifac));
                     this->vertexColors[4*i+1] = ( this->atomColorTable[3*atomIdx+1] * ifac + this->vertexColors[4*i+1] * (1.0f - ifac));
                     this->vertexColors[4*i+2] = ( this->atomColorTable[3*atomIdx+2] * ifac + this->vertexColors[4*i+2] * (1.0f - ifac));
-                    this->vertexColors[4*i+3] = 1.0f;
                 } else {
                     // use only atom colors
                     this->vertexColors[4*i+0] = this->atomColorTable[3*atomIdx+0];
                     this->vertexColors[4*i+1] = this->atomColorTable[3*atomIdx+1];
                     this->vertexColors[4*i+2] = this->atomColorTable[3*atomIdx+2];
-                    this->vertexColors[4*i+3] = 1.0f;
                 }
             }
         }
     }
     cudaMemcpy( colors, this->vertexColors, this->vertexCount * 4 * sizeof(float), cudaMemcpyHostToDevice);
     cudaDeviceSynchronize(); // Paranoia
-    // ... TEST coloring by nearest atom TEST
+    // ... coloring by nearest atom TEST
 
     // Unmap VBOs.
     CUDA_VERIFY(cudaGraphicsUnmapResources(1, &positionResource, 0));
@@ -2823,33 +2818,38 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
     vislib::StringA featureName;
     DiagramCall::DiagramSeries *ds;
     MolecularSurfaceFeature *ms, *prevMS;
-    for( SIZE_T fIdx = this->featureCenterLines.Count(); fIdx < this->clg.Count(); fIdx++ ) {
-        if( this->clg[fIdx]->fType == CenterLineGenerator::CAVITY )
-            featureName.Format( "Feature %i (Cavity)", fIdx+1);
-        else if( this->clg[fIdx]->fType == CenterLineGenerator::CHANNEL )
-            featureName.Format( "Feature %i (Channel)", fIdx+1);
-        else
-            featureName.Format( "Feature %i (Pocket)", fIdx+1);
+    for( SIZE_T fIdx = this->featureCenterLines.Count(); fIdx < (this->clg.Count() + 1); fIdx++ ) {
+        if( fIdx == 0 ) {
+            // add first feature (outer surface)
+            featureName.Format( "Feature %i (Surface)", fIdx);
+        } else {
+            if( this->clg[fIdx-1]->fType == CenterLineGenerator::CAVITY )
+                featureName.Format( "Feature %i (Cavity)", fIdx);
+            else if( this->clg[fIdx-1]->fType == CenterLineGenerator::CHANNEL )
+                featureName.Format( "Feature %i (Channel)", fIdx);
+            else
+                featureName.Format( "Feature %i (Pocket)", fIdx);
+        }
         ds = new DiagramCall::DiagramSeries( featureName, 
             new MolecularSurfaceFeature( 1.0f));
-        ds->SetColor( this->featureList[fIdx+1]->GetColor());
+        ds->SetColor( this->featureList[fIdx]->GetColor());
         this->featureCenterLines.Append( ds);
     }
     
     float length = 0.0f;
     float maxLength = 0.0f;
-    for( SIZE_T fIdx = 0; fIdx < this->featureCenterLines.Count(); fIdx++ ) {
-        if( this->clEdges[fIdx].empty() ) continue;
+    for( SIZE_T fIdx = 1; fIdx < this->featureCenterLines.Count(); fIdx++ ) {
+        if( this->clEdges[fIdx-1].empty() ) continue;
         // sum up edge length and reset edge as not visited
         length = 0.0f;
-        for( auto edge : this->clEdges[fIdx] ) {
+        for( auto edge : this->clEdges[fIdx-1] ) {
             length += (edge->node1->p - edge->node2->p).Length();
             edge->visited = false;
         }
         maxLength = vislib::math::Max( maxLength, length);
     }
-    for( SIZE_T fIdx = 0; fIdx < this->featureCenterLines.Count(); fIdx++ ) {
-        if( this->clEdges[fIdx].empty() ) continue;
+    for( SIZE_T fIdx = 1; fIdx < this->featureCenterLines.Count(); fIdx++ ) {
+        if( this->clEdges[fIdx-1].empty() ) continue;
         ds = this->featureCenterLines[fIdx];
         length = 0.0f;
         /*
@@ -2864,7 +2864,7 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
         ms = static_cast<MolecularSurfaceFeature*>(ds->GetMappable());
         ms->ClearValues();
         ms->SetMaxTime( maxLength);
-        auto edge = this->clEdges[fIdx].front();
+        auto edge = this->clEdges[fIdx-1].front();
         edge->visited = true;
         auto node1 = edge->node1;
         auto node2 = edge->node2;
@@ -2879,7 +2879,7 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
         while( node2 != nullptr && !node2->isStartNode ) {
             node1 = node2;
             node2 = nullptr;
-            for( auto nextEdge : this->clEdges[fIdx] ) {
+            for( auto nextEdge : this->clEdges[fIdx-1] ) {
                 if( !nextEdge->visited ) {
                     // TODO support branching! (recursion)
                     if( nextEdge->node1 == node1 ) {

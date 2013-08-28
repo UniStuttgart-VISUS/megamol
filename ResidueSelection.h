@@ -30,16 +30,13 @@ namespace protein {
     class ResidueSelection : public core::Module {
     public:
 
-
-		struct Residue
-		{
+		struct Residue {
 			int id;
-			int number;
-			char letter;
+			int resNum;
+			char chainID;
 
-			bool operator ==( Residue const& rhs)
-			{
-				return this->id == rhs.id && this->number == rhs.number && this->letter == rhs.letter;
+			bool operator ==( Residue const& rhs) {
+				return this->id == rhs.id && this->resNum == rhs.resNum && this->chainID == rhs.chainID;
 			}
 		};
 
