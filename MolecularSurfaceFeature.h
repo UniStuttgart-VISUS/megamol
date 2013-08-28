@@ -62,6 +62,21 @@ namespace protein {
         };
         
         /** 
+         * Clear all values and rest max. surface area.
+         */
+        void ClearValues() {
+            this->data.Clear();
+            maxSurfaceArea = 1.0f;
+        }
+
+        /** 
+         * Set a new maximum time.
+         */
+        void SetMaxTime( float maxT) {
+            maxTime = maxT;
+        }
+
+        /** 
          * Set the position of the feature (e.g. centroid).
          *
          * @param pos The position.
