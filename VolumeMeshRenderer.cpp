@@ -2831,24 +2831,39 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
         else
             featureName.Format( "Feature %i (Pocket)", fIdx+1);
         ds = new DiagramCall::DiagramSeries( featureName, 
-            new MolecularSurfaceFeature( static_cast<float>(mol->FrameCount())));
+            new MolecularSurfaceFeature( 1.0f));
         ds->SetColor( this->featureList[fIdx+1]->GetColor());
-        ms = static_cast<MolecularSurfaceFeature*>(ds->GetMappable());
-        //ms->AppendValue( mol->Calltime(), centroidAreasHost[i]);
         this->featureCenterLines.Append( ds);
     }
     
-    for( SIZE_T fIdx = 0; fIdx < this->clg.Count(); fIdx++ ) {
+    float length = 0.0f;
+    float maxLength = 0.0f;
+    for( SIZE_T fIdx = 0; fIdx < this->featureCenterLines.Count(); fIdx++ ) {
         if( this->clEdges[fIdx].empty() ) continue;
-        ds = this->featureCenterLines[fIdx];
-        float length = 0.0f;
         // sum up edge length and reset edge as not visited
+        length = 0.0f;
         for( auto edge : this->clEdges[fIdx] ) {
-            //length += (edge->node1->p - edge->node2->p).Length();
-            length++;
+            length += (edge->node1->p - edge->node2->p).Length();
             edge->visited = false;
         }
-        ms = new MolecularSurfaceFeature( length);
+        maxLength = vislib::math::Max( maxLength, length);
+    }
+    for( SIZE_T fIdx = 0; fIdx < this->featureCenterLines.Count(); fIdx++ ) {
+        if( this->clEdges[fIdx].empty() ) continue;
+        ds = this->featureCenterLines[fIdx];
+        length = 0.0f;
+        /*
+        // sum up edge length and reset edge as not visited
+        for( auto edge : this->clEdges[fIdx] ) {
+            length += (edge->node1->p - edge->node2->p).Length();
+            //length++;
+            edge->visited = false;
+        }
+        */
+        //ms = new MolecularSurfaceFeature( length);
+        ms = static_cast<MolecularSurfaceFeature*>(ds->GetMappable());
+        ms->ClearValues();
+        ms->SetMaxTime( maxLength);
         auto edge = this->clEdges[fIdx].front();
         edge->visited = true;
         auto node1 = edge->node1;
@@ -2869,15 +2884,15 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
                     // TODO support branching! (recursion)
                     if( nextEdge->node1 == node1 ) {
                         node2 = nextEdge->node2;
-                        //length += (node1->p - node2->p).Length();
-                        length++;
+                        length += (node1->p - node2->p).Length();
+                        //length++;
                         ms->AppendValue( length, node2->minimumDistance);
                         nextEdge->visited = true;
                         break;
                     } else if( nextEdge->node2 == node1 ) {
                         node2 = nextEdge->node1;
-                        //length += (node1->p - node2->p).Length();
-                        length++;
+                        length += (node1->p - node2->p).Length();
+                        //length++;
                         ms->AppendValue( length, node2->minimumDistance);
                         nextEdge->visited = true;
                         break;
@@ -2885,9 +2900,9 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
                 }
             }
         }
-        prevMS = static_cast<MolecularSurfaceFeature*>(ds->GetMappable());
-        delete prevMS;
-        ds->SetMappable( ms);
+        //prevMS = static_cast<MolecularSurfaceFeature*>(ds->GetMappable());
+        //delete prevMS;
+        //ds->SetMappable( ms);
     }
 
     for( SIZE_T sIdx = dc->GetSeriesCount(); sIdx < this->featureCenterLines.Count(); sIdx++ ) {
