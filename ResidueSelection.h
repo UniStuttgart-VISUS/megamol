@@ -1,8 +1,9 @@
 /*
- * SIFFDataSource.h
+ * ResidueSelection.h
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS). 
- * Alle Rechte vorbehalten.
+ * Author: Daniel Kauker & Michael Krone
+ * Copyright (C) 2013 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
  */
 
 #ifndef MEGAMOL_PROTEIN_RESIDUE_SELECTION_H_INCLUDED
@@ -14,32 +15,20 @@
 #include "Module.h"
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
-#include "moldyn/MultiParticleDataCall.h"
 #include "vislib/Cuboid.h"
 #include "vislib/RawStorage.h"
+#include "vislib/Array.h"
+#include "ResidueSelectionCall.h"
 
 
 namespace megamol {
 namespace protein {
-
-
 
     /**
      * zeug
      */
     class ResidueSelection : public core::Module {
     public:
-
-		struct Residue {
-			int id;
-			int resNum;
-			char chainID;
-
-			bool operator ==( Residue const& rhs) {
-				return this->id == rhs.id && this->resNum == rhs.resNum && this->chainID == rhs.chainID;
-			}
-		};
-
         /**
          * Answer the name of this module.
          *
@@ -111,7 +100,7 @@ namespace protein {
         core::CalleeSlot getSelectionSlot;
 
         /** The data */
-        vislib::Array<Residue> selection;
+        vislib::Array<ResidueSelectionCall::Residue> selection;
 
         /** The data hash */
         SIZE_T datahash;

@@ -60,6 +60,7 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
         diagramCalleeSlot ("diagramout", "Provides data for time-based line graph"),
         splitMergeCalleeSlot("splitmergeout", "Provides data for splitmerge graph"),
         centerLineDiagramCalleeSlot("centerlineout", "Provides data for center line graph"),
+        resSelectionCallerSlot( "getResSelection", "Connects the sequence diagram rendering with residue selection storage." ),
         polygonModeParam("polygonMode", "Polygon rasterization mode"),
         blendItParam("blendIt", "Enable blending"),
         alphaParam("alphaBlend", "Alpha for blending"),
@@ -98,7 +99,9 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
     this->MakeSlotAvailable(&this->selectionCallerSlot);
     this->hiddenCallerSlot.SetCompatibleCall<IntSelectionCallDescription>();
     this->MakeSlotAvailable(&this->hiddenCallerSlot);
-
+    this->resSelectionCallerSlot.SetCompatibleCall<ResidueSelectionCallDescription>();
+    this->MakeSlotAvailable(&this->resSelectionCallerSlot);
+    
     this->diagramCalleeSlot.SetCallback(DiagramCall::ClassName(), DiagramCall::FunctionName(DiagramCall::CallForGetData), &VolumeMeshRenderer::GetDiagramData);
     this->MakeSlotAvailable(&this->diagramCalleeSlot);
     this->splitMergeCalleeSlot.SetCallback(SplitMergeCall::ClassName(), SplitMergeCall::FunctionName(SplitMergeCall::CallForGetData), &VolumeMeshRenderer::GetSplitMergeData);
@@ -453,6 +456,42 @@ bool VolumeMeshRenderer::Render(Call& call) {
     // set frame ID and call data
     mol->SetFrameID(static_cast<int>( callTime));
     if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
+
+    
+    // try to get the residue selection
+    ResidueSelectionCall *resSelectionCall = this->resSelectionCallerSlot.CallAs<ResidueSelectionCall>();
+    if (resSelectionCall != NULL) {
+        (*resSelectionCall)(ResidueSelectionCall::CallForGetSelection);
+        // try to match selection <chainID,resNum> to <id> from MolecularDataCall
+        vislib::Array<ResidueSelectionCall::Residue> *resSelPtr = resSelectionCall->GetSelectionPointer();
+        if( resSelPtr ) {
+            for( unsigned int i = 0; i < resSelPtr->Count(); i++) {
+                // do nothing if the id was already set
+                if( (*resSelPtr)[i].id >= 0 ) continue;
+                int chainIdx = -1;
+                // loop over chains to find chainID
+                for( unsigned int cCnt = 0; cCnt < mol->ChainCount(); cCnt++ ) {
+                    if( mol->Chains()[cCnt].Name() == (*resSelPtr)[i].chainID ) {
+                        chainIdx = cCnt;
+                        break;
+                    }
+                }
+                // do nothing if no matching chain was found
+                if( chainIdx < 0 ) continue;
+                // loop over amino acids to find the correct one
+                unsigned int firstResIdx = mol->Molecules()[mol->Chains()[chainIdx].FirstMoleculeIndex()].FirstResidueIndex();
+                unsigned int lastResIdx = mol->Molecules()[mol->Chains()[chainIdx].FirstMoleculeIndex()+mol->Chains()[chainIdx].MoleculeCount()-1].FirstResidueIndex()
+                    + mol->Molecules()[mol->Chains()[chainIdx].FirstMoleculeIndex()+mol->Chains()[chainIdx].MoleculeCount()-1].ResidueCount();
+                for( unsigned int rCnt = firstResIdx; rCnt < lastResIdx; rCnt++ ) {
+                    if( mol->Residues()[rCnt]->OriginalResIndex() == (*resSelPtr)[i].resNum ) {
+                        (*resSelPtr)[i].id = rCnt;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
 
     // check if atom count is zero
     if( mol->AtomCount() == 0 ) return true;
@@ -2901,7 +2940,8 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
         // sum up edge length and reset edge as not visited
         length = 0.0f;
         for( auto edge : this->clEdges[fIdx-1] ) {
-            length += (edge->node1->p - edge->node2->p).Length();
+            //length += (edge->node1->p - edge->node2->p).Length();
+            length++;
             edge->visited = false;
         }
         maxLength = vislib::math::Max( maxLength, length);
@@ -2932,7 +2972,8 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
         }
         length = 0;
         ms->AppendValue( length, node1->minimumDistance);
-        length += (node1->p - node2->p).Length();
+        //length += (node1->p - node2->p).Length();
+        length++;
         ms->AppendValue( length, node2->minimumDistance);
         while( node2 != nullptr && !node2->isStartNode ) {
             node1 = node2;
@@ -2942,20 +2983,24 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
                     // TODO support branching! (recursion)
                     if( nextEdge->node1 == node1 ) {
                         node2 = nextEdge->node2;
-                        length += (node1->p - node2->p).Length();
-                        //length++;
+                        //length += (node1->p - node2->p).Length();
+                        length++;
                         ms->AppendValue( length, node2->minimumDistance);
                         nextEdge->visited = true;
                         break;
                     } else if( nextEdge->node2 == node1 ) {
                         node2 = nextEdge->node1;
-                        length += (node1->p - node2->p).Length();
-                        //length++;
+                        //length += (node1->p - node2->p).Length();
+                        length++;
                         ms->AppendValue( length, node2->minimumDistance);
                         nextEdge->visited = true;
                         break;
                     }
                 }
+            }
+            // set marker if the last node was a start node
+            if( node2 != nullptr && node2->isStartNode ) {
+                ds->AddMarker(new DiagramCall::DiagramMarker(ms->GetDataCount() - 1, DiagramCall::DIAGRAM_MARKER_EXIT, "Channel exit!"));
             }
         }
         //prevMS = static_cast<MolecularSurfaceFeature*>(ds->GetMappable());

@@ -28,6 +28,7 @@
 #include "vislib/Verdana.inc"
 #endif //  USE_SIMPLE_FONT
 #include <vislib/OpenGLTexture2D.h>
+#include "ResidueSelectionCall.h"
 
 namespace megamol {
 namespace protein {
@@ -141,10 +142,12 @@ namespace protein {
          * variables
          **********************************************************************/
         
-        /** caller slot */
+        /** pdb caller slot */
         core::CallerSlot dataCallerSlot;
-        /** caller slot */
+        /** binding site caller slot */
         core::CallerSlot bindingSiteCallerSlot;
+        /** residue selection caller slot */
+        core::CallerSlot resSelectionCallerSlot;
         
         // the number of residues in one row
         megamol::core::param::ParamSlot resCountPerRowParam;
@@ -178,7 +181,7 @@ namespace protein {
         // the array of amino acid 1-letter codes
         vislib::Array<vislib::StringA> aminoAcidStrings;
         // the array of amino acid chain name and index
-        vislib::Array<vislib::Array<vislib::StringA> > aminoAcidIndexStrings;
+        vislib::Array<vislib::Array<vislib::Pair<char, int> > > aminoAcidIndexStrings;
         // the array of binding site names
         vislib::Array<vislib::StringA> bindingSiteNames;
         // the array of descriptons for the binding sites
@@ -212,6 +215,7 @@ namespace protein {
         int mousePosResIdx;
         // selection 
         vislib::Array<bool> selection;
+        ResidueSelectionCall *resSelectionCall;
     };
 
 } /* end namespace protein */

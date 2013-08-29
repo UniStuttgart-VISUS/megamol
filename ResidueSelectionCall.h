@@ -1,8 +1,8 @@
 /*
- * SplitMergeCall.h
+ * ResidueSelectionCall.h
  *
- * Author: Guido Reina
- * Copyright (C) 2012 by Universitaet Stuttgart (VISUS).
+ * Author: Daniel Kauker & Michael Krone
+ * Copyright (C) 2013 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
@@ -17,7 +17,6 @@
 #include "CallAutoDescription.h"
 #include "vislib/Array.h"
 
-#include "ResidueSelection.h"
 
 namespace megamol {
 namespace protein {
@@ -33,6 +32,17 @@ namespace protein {
 
     class ResidueSelectionCall : public megamol::core::Call {
     public:
+        
+		struct Residue {
+			int id;
+			int resNum;
+			char chainID;
+            
+			bool operator ==( Residue const& rhs) {
+				return this->id == rhs.id && this->resNum == rhs.resNum && this->chainID == rhs.chainID;
+			}
+		};
+
         /**
          * Answer the name of the objects of this description.
          *
@@ -82,11 +92,11 @@ namespace protein {
             return "";
         }
 
-		inline vislib::Array<ResidueSelection::Residue> *GetSelectionPointer(void) const {
+		inline vislib::Array<Residue> *GetSelectionPointer(void) const {
             return this->selection;
         }
 
-        inline void SetSelectionPointer(vislib::Array<ResidueSelection::Residue> *selection) {
+        inline void SetSelectionPointer(vislib::Array<Residue> *selection) {
             this->selection = selection;
         }
 
@@ -94,7 +104,7 @@ namespace protein {
         virtual ~ResidueSelectionCall(void);
 
     private:
-        vislib::Array<ResidueSelection::Residue> *selection;
+        vislib::Array<Residue> *selection;
     };
 
     /** Description class typedef */

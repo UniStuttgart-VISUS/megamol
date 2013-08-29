@@ -151,6 +151,7 @@ bool DiagramRenderer::create() {
     this->LoadIcon("bookmark.png", DiagramCall::DIAGRAM_MARKER_BOOKMARK);
     this->LoadIcon("merge.png", DiagramCall::DIAGRAM_MARKER_MERGE);
     this->LoadIcon("split.png", DiagramCall::DIAGRAM_MARKER_SPLIT);
+    this->LoadIcon("exit2.png", DiagramCall::DIAGRAM_MARKER_EXIT);
 
     return true;
 }
