@@ -88,7 +88,8 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
         centroidColorsIndex(-1), vertexCount(0), cubeCount( 0), cubeCountAllocated(0), cubeCountOld( 0), activeCubeCountOld( 0), 
         activeCubeCountAllocted(0), vertexCountAllocted(0), centroidCountAllocated(0), centroidCountLast( 0), centroidsLast(0), 
         centroidColorsLast(0), centroidLabelsLast(0), centroidAreasLast( 0), featureCounter( 0), featureListIdx( 0),
-        modified( 0), segmentsRemoved( 0), featureList(), splitMergeList(), transitionList(), featureSelection(), featureVisibility()
+        modified( 0), segmentsRemoved( 0), featureList(), splitMergeList(), transitionList(), featureSelection(), featureVisibility(),
+        resSelectionCall(0), atomSelection(0), atomSelectionCnt(0)
 {
     // set caller slot for different data calls
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -457,10 +458,18 @@ bool VolumeMeshRenderer::Render(Call& call) {
     mol->SetFrameID(static_cast<int>( callTime));
     if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
 
-    
+    // resize selection array, if necessary
+    if( this->atomSelectionCnt < mol->AtomCount() ) {
+        if( this->atomSelection )
+            delete[] this->atomSelection;
+        this->atomSelection = new bool[mol->AtomCount()];
+        this->atomSelectionCnt = mol->AtomCount();
+    }
+    // reset selection array
+    memset( this->atomSelection, 0, mol->AtomCount() * sizeof(bool));
     // try to get the residue selection
-    ResidueSelectionCall *resSelectionCall = this->resSelectionCallerSlot.CallAs<ResidueSelectionCall>();
-    if (resSelectionCall != NULL) {
+    resSelectionCall = this->resSelectionCallerSlot.CallAs<ResidueSelectionCall>();
+    if (resSelectionCall != nullptr) {
         (*resSelectionCall)(ResidueSelectionCall::CallForGetSelection);
         // try to match selection <chainID,resNum> to <id> from MolecularDataCall
         vislib::Array<ResidueSelectionCall::Residue> *resSelPtr = resSelectionCall->GetSelectionPointer();
@@ -483,12 +492,21 @@ bool VolumeMeshRenderer::Render(Call& call) {
                 unsigned int lastResIdx = mol->Molecules()[mol->Chains()[chainIdx].FirstMoleculeIndex()+mol->Chains()[chainIdx].MoleculeCount()-1].FirstResidueIndex()
                     + mol->Molecules()[mol->Chains()[chainIdx].FirstMoleculeIndex()+mol->Chains()[chainIdx].MoleculeCount()-1].ResidueCount();
                 for( unsigned int rCnt = firstResIdx; rCnt < lastResIdx; rCnt++ ) {
+                    unsigned int firstAtomIdx = mol->Residues()[rCnt]->FirstAtomIndex();
+                    unsigned int lastAtomIdx = firstAtomIdx + mol->Residues()[rCnt]->AtomCount();
                     if( mol->Residues()[rCnt]->OriginalResIndex() == (*resSelPtr)[i].resNum ) {
                         (*resSelPtr)[i].id = rCnt;
-                        break;
-                    }
+                        for( unsigned int aCnt = firstAtomIdx; aCnt < lastAtomIdx; aCnt++ ) {
+                            this->atomSelection[aCnt] = true;
+                        }
+                    } 
                 }
             }
+            if( resSelPtr->Count() == 0 ) {
+                this->resSelectionCall = nullptr;
+            }
+        } else {
+            this->resSelectionCall = nullptr;
         }
     }
 
@@ -2153,7 +2171,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     // coloring by nearest atom TEST ...
     cudaMemcpy( this->vertexColors, colors, this->vertexCount * 4 * sizeof(float), cudaMemcpyDeviceToHost);
     float ifac = this->cmWeightParam.Param<param::FloatParam>()->Value();
-#pragma omp parallel for
+//#pragma omp parallel for
     for( int i = 0; i < this->vertexCount; i++ ) {
         int atomIdx = this->neighborAtomOfVertex[i];
         if( atomIdx < 0 ) {
@@ -2166,7 +2184,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             this->vertexColors[4*i+0] = 0.0f;
             this->vertexColors[4*i+1] = 1.0f;
             this->vertexColors[4*i+2] = 1.0f;
-        } else {
+        } else if ( !this->resSelectionCall || this->atomSelection[atomIdx] ) {
             // color triangles
             if( this->currentColoringMode0 < 0 ) {
                 if( this->currentColoringMode1 >= 0 ) {
@@ -2189,6 +2207,11 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                     this->vertexColors[4*i+2] = this->atomColorTable[3*atomIdx+2];
                 }
             }
+        } else {
+            // atom not selected: color grey
+            this->vertexColors[4*i+0] = 0.5f;
+            this->vertexColors[4*i+1] = 0.5f;
+            this->vertexColors[4*i+2] = 0.5f;
         }
         if( this->blendIt ) {
             this->vertexColors[4*i+3] = vislib::math::Min( 

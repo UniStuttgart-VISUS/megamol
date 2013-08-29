@@ -502,6 +502,11 @@ namespace protein {
         
         cudaEvent_t start, stop;    // TIMING
         float time;                 // TIMING
+
+        /** call ptr for residue selection */
+        ResidueSelectionCall *resSelectionCall;
+        bool *atomSelection;
+        unsigned int atomSelectionCnt;
     };
 
 
