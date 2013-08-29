@@ -31,6 +31,7 @@
 #include "vislib/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
 #include "vislib/PerformanceCounter.h"
+#include "vislib/Matrix.h"
 #include <glh/glh_extensions.h>
 #include <GL/glu.h>
 #include <cuda_gl_interop.h>
@@ -61,6 +62,7 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
         centerLineDiagramCalleeSlot("centerlineout", "Provides data for center line graph"),
         polygonModeParam("polygonMode", "Polygon rasterization mode"),
         blendItParam("blendIt", "Enable blending"),
+        alphaParam("alphaBlend", "Alpha for blending"),
         showNormalsParam("showNormals", "Render normals"),
         showCentroidsParam("showCentroids", "Render centroids"),
         minDistCenterLineParam( "minDistCenterLine", "Minimum distance of center line node to molecular surface."),
@@ -132,6 +134,9 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
     this->MakeSlotAvailable(&this->maxDeltaDistanceParam);
     this->MakeSlotAvailable(&this->colorTableFileParam);
     
+    this->alphaParam.SetParameter( new param::FloatParam( 0.2f, 0.0f, 1.0f));
+    this->MakeSlotAvailable( &this->alphaParam);
+
     // coloring modes
     this->currentColoringMode0 = Color::CHAIN;
     this->currentColoringMode1 = Color::ELEMENT;
@@ -426,6 +431,9 @@ bool VolumeMeshRenderer::Render(Call& call) {
     if (!cr3d) {
         return false;
     }
+    
+    // get camera information
+    this->cameraInfo = cr3d->GetCameraParameters();
 
     float callTime = cr3d->Time();
     // get pointer to MolecularDataCall
@@ -832,6 +840,11 @@ bool VolumeMeshRenderer::Render(Call& call) {
     // ... TEST center line first ring
 #endif // DRAW_FIRST_RING
 
+    // sort the mesh for transparent rendering
+    if( this->blendIt ) {
+        this->SortTriangleMesh();
+    }
+
     glPointSize( 1.0f);
 
     // Bind VBOs.
@@ -847,11 +860,11 @@ bool VolumeMeshRenderer::Render(Call& call) {
 
     // Render mesh.
     if (this->blendIt) {
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        glBlendFunc(GL_ONE, GL_ONE);
+        //glBlendFunc(GL_ONE, GL_ONE);
         glEnable(GL_BLEND);
-        glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_DEPTH_TEST);
     } else {
         glDisable(GL_BLEND);
         glDepthFunc(GL_LEQUAL);
@@ -934,6 +947,46 @@ bool VolumeMeshRenderer::Render(Call& call) {
     mol->Unlock();
 
     return true;
+}
+
+void VolumeMeshRenderer::SortTriangleMesh() {
+    // Calculate cam pos using last column of inverse modelview matrix
+    float3 camPos;
+    GLfloat m[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, m);
+    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelMatrix(&m[0]);
+    modelMatrix.Invert();
+    camPos.x = modelMatrix.GetAt(0, 3);
+    camPos.y = modelMatrix.GetAt(1, 3);
+    camPos.z = modelMatrix.GetAt(2, 3);
+
+    copyCamPosToDevice( camPos);
+
+    // Map VBOs.
+    size_t resourceSize;
+    float4* vertices;
+    CUDA_VERIFY(cudaGraphicsMapResources(1, &positionResource, 0));
+    CUDA_VERIFY(cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&vertices), &resourceSize, positionResource));
+    float4* normals;
+    CUDA_VERIFY(cudaGraphicsMapResources(1, &normalResource, 0));
+    CUDA_VERIFY(cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&normals), &resourceSize, normalResource));
+    float4* colors;
+    CUDA_VERIFY(cudaGraphicsMapResources(1, &colorResource, 0));
+    CUDA_VERIFY(cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&colors), &resourceSize, colorResource));
+    cudaDeviceSynchronize(); // Paranoia
+
+    // make copy of vertices to sort normals
+    CUDA_VERIFY(cudaMemcpy(verticesCopy, vertices, this->vertexCount * sizeof(float4), cudaMemcpyDeviceToDevice));
+    cudaDeviceSynchronize(); // Paranoia
+
+    // sort everything
+    SortTrianglesDevice( this->vertexCount / 3, (float4x3*)vertices, (float4x3*)verticesCopy, (float4x3*)colors, (float4x3*)normals);
+    
+    // Unmap VBOs.
+    CUDA_VERIFY(cudaGraphicsUnmapResources(1, &positionResource, 0));
+    CUDA_VERIFY(cudaGraphicsUnmapResources(1, &normalResource, 0));
+    CUDA_VERIFY(cudaGraphicsUnmapResources(1, &colorResource, 0));
+    cudaDeviceSynchronize(); // Paranoia
 }
 
 /*
@@ -2097,6 +2150,11 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                     this->vertexColors[4*i+2] = this->atomColorTable[3*atomIdx+2];
                 }
             }
+        }
+        if( this->blendIt ) {
+            this->vertexColors[4*i+3] = vislib::math::Min( 
+                this->alphaParam.Param<param::FloatParam>()->Value(),
+                this->vertexColors[4*i+3]);
         }
     }
     cudaMemcpy( colors, this->vertexColors, this->vertexCount * 4 * sizeof(float), cudaMemcpyHostToDevice);

@@ -28,6 +28,7 @@
 #include "CUDAQuickSurf.h"
 #include <cuda_runtime.h>
 #include "CenterLineGenerator.h"
+#include "vislib/CameraParameters.h"
 
 namespace megamol {
 namespace protein {
@@ -167,6 +168,11 @@ namespace protein {
         }
 
         /**
+         * Sort the triangles of the mesh for transparent rendering.
+         */
+        void SortTriangleMesh();
+
+        /**
          * Marches the isosurface and updates all associated vertex buffer objects.
          */
         //bool UpdateMesh(GLuint volumeTextureId, 
@@ -262,6 +268,7 @@ namespace protein {
 
         /** blending flag */
         megamol::core::param::ParamSlot blendItParam;
+        megamol::core::param::ParamSlot alphaParam;
         bool blendIt;
 
         /** show normals flag */
@@ -486,7 +493,9 @@ namespace protein {
         vislib::Array<CenterLineGenerator::CenterLineEdges> clEdges;
         vislib::Array<CenterLineGenerator::CenterLineNodes> clNodes;
         vislib::Array<CenterLineGenerator*> clg;
-
+        
+        /** camera information */
+        vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
         
         cudaEvent_t start, stop;    // TIMING
         float time;                 // TIMING
