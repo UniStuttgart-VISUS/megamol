@@ -131,4 +131,38 @@ cudaError TriangleEdgeList( uint* featureVertexIdxOut, uint* featureEdgeCnt, uin
     return cudaGetLastError();
 }
 
+// global variable for camera position
+__device__ __constant__ float3 camPosition;
+
+cudaError_t copyCamPosToDevice( float3 camPos) {
+    cudaError_t error = cudaMemcpyToSymbol( camPosition, (void*)&camPos, sizeof(float3));
+    cudaDeviceSynchronize();
+    return error;
+}
+
+/*
+ * greater than comparison
+ */
+__device__ bool greater_float4x3::operator()(const float4x3& lhs, const float4x3& rhs) const {
+    // use midpoint
+    float3 trianglePos1 = make_float3(lhs.v1 + lhs.v2 + lhs.v3)/3.0f;
+    float3 trianglePos2 = make_float3(rhs.v1 + rhs.v2 + rhs.v3)/3.0f;
+    float dist1 = length(trianglePos1 - camPosition);
+    float dist2 = length(trianglePos2 - camPosition);
+
+    return (dist1 > dist2);
+}
+
+extern "C"
+cudaError SortTrianglesDevice( uint triaCnt, float4x3 *vertices, float4x3 *verticesCopy, float4x3 *colors, float4x3 *normals) {
+    thrust::sort_by_key( thrust::device_ptr<float4x3>(vertices), 
+        thrust::device_ptr<float4x3>(vertices + triaCnt), 
+        thrust::device_ptr<float4x3>(colors), greater_float4x3());
+    thrust::sort_by_key( thrust::device_ptr<float4x3>(verticesCopy), 
+        thrust::device_ptr<float4x3>(verticesCopy + triaCnt), 
+        thrust::device_ptr<float4x3>(normals), greater_float4x3());
+	cudaDeviceSynchronize();
+    return cudaGetLastError();
+}
+
 #endif // MEGAMOLPROTEIN_VOLUMEMESHRENDERER_SORT_CU_INCLUDED

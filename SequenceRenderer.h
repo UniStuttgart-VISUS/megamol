@@ -206,6 +206,12 @@ namespace protein {
         vislib::Array<vislib::math::Vector<float, 3> > colorTable;
         
         vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
+
+        // mouse hover
+        vislib::math::Vector<float, 2> mousePos;
+        int mousePosResIdx;
+        // selection 
+        vislib::Array<bool> selection;
     };
 
 } /* end namespace protein */

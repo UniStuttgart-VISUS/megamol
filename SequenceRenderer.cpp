@@ -320,6 +320,68 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
             }
         }
 
+        // render mouse hover
+        if( this->mousePos.X() > -1.0f && this->mousePos.X() < static_cast<float>(this->resCols) &&
+            this->mousePos.Y() >  0.0f && this->mousePos.Y() < static_cast<float>(this->resRows+1) &&
+            this->mousePosResIdx > -1 && this->mousePosResIdx < this->resCount)
+        {
+            glColor3f( 1.0f, 0.75f, 0.0f);
+            glBegin( GL_LINE_STRIP);
+                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y() - 1.0f));
+                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y()));
+                glVertex2f( this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y()));
+                glVertex2f( this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y() - 1.0f));
+                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y() - 1.0f));
+            glEnd();
+        }
+        // draw frames for selected amino acids
+        vislib::math::Vector<float, 2> pos;
+        glColor3fv( fgColor);
+        glBegin( GL_LINES);
+        for( unsigned int i = 0; i < this->selection.Count(); i++ ) {
+            if( this->selection[i] ) {
+                pos.Set( static_cast<float>( i % this->resCols),
+                    floorf( static_cast<float>(i) / this->resCols) + 1.0f);
+                // left (only draw if left neighbor ist not selected)
+                if( i == 0 || !this->selection[i-1] ) {
+                    glVertex2f( pos.X()       , -this->rowHeight * (pos.Y() - 1.0f));
+                    glVertex2f( pos.X()       , -this->rowHeight * (pos.Y()));
+                }
+                // bottom
+                glVertex2f( pos.X()       , -this->rowHeight * (pos.Y()));
+                glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y()));
+                // right (only draw if right neighbor ist not selected)
+                if( i == (this->selection.Count() - 1) || !this->selection[i+1] ) {
+                    glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y()));
+                    glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y() - 1.0f));
+                }
+                // top
+                glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y() - 1.0f));
+                glVertex2f( pos.X()       , -this->rowHeight * (pos.Y() - 1.0f));
+            }
+        }
+        glEnd();
+        // draw overlays for selected amino acids
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_BLEND);
+        glDisable(GL_DEPTH_TEST);
+        fgColor[3] = 0.3f;
+        glColor4fv(fgColor);
+        for( unsigned int i = 0; i < this->selection.Count(); i++ ) {
+            if( this->selection[i] ) {
+                pos.Set( static_cast<float>( i % this->resCols),
+                    floorf( static_cast<float>(i) / this->resCols) + 1.0f);
+                glBegin( GL_QUADS);
+                    glVertex2f( pos.X()       , -this->rowHeight * (pos.Y() - 1.0f));
+                    glVertex2f( pos.X()       , -this->rowHeight * (pos.Y()));
+                    glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y()));
+                    glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y() - 1.0f));
+                glEnd();
+            }
+        }
+        glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
+
     } // dataPrepared
     
     return true;
@@ -331,7 +393,16 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
  */
 bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     bool consumeEvent = false;
-    
+    this->mousePos.Set( floorf(x), fabsf(floorf(y / this->rowHeight)));
+    this->mousePosResIdx = static_cast<int>(this->mousePos.X() + (this->resCols * (this->mousePos.Y()-1)));
+
+    // left click
+    if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
+        if( this->mousePosResIdx > -1 && this->mousePosResIdx < this->resCount) {
+            this->selection[this->mousePosResIdx] = !this->selection[this->mousePosResIdx];
+        }
+    }
+
     return consumeEvent;
 }
 
@@ -348,6 +419,7 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
     vislib::StringA tmpStr;
 
     // initialization
+    unsigned int oldResCount = this->resCount;
     this->resCount = 0;
     this->vertices.Clear();
     this->vertices.AssertCapacity( mol->ResidueCount() * 2);
@@ -479,6 +551,14 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
         this->chainSeparatorVertices.Add( -(this->chainVertices[this->chainVertices.Count()-1] + 0.5f));
     } // chains
     
+    // check if residue count changed and adjust selection array
+    if( oldResCount != this->resCount ) {
+        this->selection.SetCount( this->resCount);
+        for( unsigned int i = 0; i < this->selection.Count(); i++ ) {
+            this->selection[i] = false;
+        }
+    }
+
     // loop over all binding sites and add binding site descriptions
     for( unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++ ) {
         this->bindingSiteDescription[bsCnt].Prepend( "\n");

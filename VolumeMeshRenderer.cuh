@@ -15,8 +15,25 @@
 
 typedef unsigned int uint;
 
+cudaError_t copyCamPosToDevice( float3 camPos);
 cudaError_t copyVolSizeToDevice( uint3 volSize);
 cudaError_t copyVolSizeFromDevice( uint3 &volSize);
+
+// structure for triangle sorting
+struct float4x3{
+    float4 v1;
+    float4 v2;
+    float4 v3;
+};
+
+/*
+ * greater than comparison for int2 (compares x values)
+ */
+struct greater_float4x3 {
+    __device__
+    bool operator()(const float4x3& lhs, const float4x3& rhs) const;
+};
+
 
 /*
  * greater than comparison for int2 (compares x values)
@@ -210,6 +227,9 @@ cudaError WriteTriangleEdgeList( uint* featureVertexIdxOut, uint triaCnt, uint2 
 
 extern "C"
 cudaError TriangleEdgeList( uint* featureVertexIdxOut, uint* featureEdgeCnt, uint* featureEdgeCntOut, uint triaCnt, uint2 *featureEdges, uint2 *featureEdgesOut, uint &edgeCnt);
+
+extern "C"
+cudaError SortTrianglesDevice( uint triaCnt, float4x3 *vertices, float4x3 *verticesCopy, float4x3 *colors, float4x3 *normals);
 
 #endif // WITH_CUDA
 
