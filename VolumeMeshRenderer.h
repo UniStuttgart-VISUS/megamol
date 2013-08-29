@@ -29,6 +29,7 @@
 #include <cuda_runtime.h>
 #include "CenterLineGenerator.h"
 #include "vislib/CameraParameters.h"
+#include "ResidueSelectionCall.h"
 
 namespace megamol {
 namespace protein {
@@ -251,6 +252,8 @@ namespace protein {
         megamol::core::CallerSlot molDataCallerSlot;
         /** BindingSiteCall caller slot */
         megamol::core::CallerSlot bsDataCallerSlot;
+        /** residue selection caller slot */
+        core::CallerSlot resSelectionCallerSlot;
 
         megamol::core::CallerSlot selectionCallerSlot;
         megamol::core::CallerSlot hiddenCallerSlot;

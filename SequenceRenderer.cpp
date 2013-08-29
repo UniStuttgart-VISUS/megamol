@@ -30,6 +30,7 @@ using vislib::sys::Log;
 SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
         dataCallerSlot( "getData", "Connects the sequence diagram rendering with data storage." ),
         bindingSiteCallerSlot( "getBindingSites", "Connects the sequence diagram rendering with binding site storage." ),
+        resSelectionCallerSlot( "getResSelection", "Connects the sequence diagram rendering with residue selection storage." ),
         resCountPerRowParam( "ResiduesPerRow", "The number of residues per row" ),
         colorTableFileParam( "ColorTableFilename", "The filename of the color table."),
         toggleKeyParam( "ToggleKeyDrawing", "Turns the drawing of the binding site key/legend on and off."),
@@ -37,7 +38,7 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
 #ifndef USE_SIMPLE_FONT
         theFont(FontInfo_Verdana), 
 #endif // USE_SIMPLE_FONT
-        markerTextures(0)
+        markerTextures(0), resSelectionCall(nullptr)
     {
 
     // molecular data caller slot
@@ -47,7 +48,11 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
     // binding site data caller slot
     this->bindingSiteCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bindingSiteCallerSlot);
-
+    
+    // residue selection caller slot
+    this->resSelectionCallerSlot.SetCompatibleCall<ResidueSelectionCallDescription>();
+    this->MakeSlotAvailable(&this->resSelectionCallerSlot);
+    
     // param slot for number of residues per row
     this->resCountPerRowParam.SetParameter( new param::IntParam( 50, 1));
     this->MakeSlotAvailable( &this->resCountPerRowParam);
@@ -154,6 +159,12 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
     // execute the call
     if( !(*mol)(MolecularDataCall::CallForGetData) ) return false;
     
+    
+    this->resSelectionCall = this->resSelectionCallerSlot.CallAs<ResidueSelectionCall>();
+    if (this->resSelectionCall != NULL) {
+        (*this->resSelectionCall)(ResidueSelectionCall::CallForGetSelection);
+    }
+
     // read and update the color table, if necessary
     if( this->colorTableFileParam.IsDirty() ) {
         Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
@@ -172,7 +183,9 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
     }
 
     if( this->dataPrepared ) {
+        // temporary variables and constants
         const float eps = 0.0f;
+        vislib::StringA tmpStr;
         //draw tiles for structure
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
@@ -255,8 +268,10 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                         1.0f, true, this->aminoAcidStrings[i].Substring(j, 1), vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
                     // draw the chain name and amino acid index
                     //theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight + this->rowHeight - 0.5f), 1.0f, 0.5f,
+                    tmpStr.Format("%c %i", this->aminoAcidIndexStrings[i][j].First(), this->aminoAcidIndexStrings[i][j].Second());
                     theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight + 2.5f), 1.0f, 0.5f,
-                        0.35f, true, this->aminoAcidIndexStrings[i][j], vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+                        0.35f, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+                        //0.35f, true, this->aminoAcidIndexStrings[i][j], vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
                 }
             }
         }
@@ -264,7 +279,6 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
         // draw legend / key
         if( this->toggleKeyParam.Param<param::BoolParam>()->Value() ) {
             glColor3fv( fgColor);
-            vislib::StringA tmpStr;
             float wordlength;
             float fontSize = 1.0f;
             if( theFont.Initialise() ) {
@@ -395,13 +409,40 @@ bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     bool consumeEvent = false;
     this->mousePos.Set( floorf(x), fabsf(floorf(y / this->rowHeight)));
     this->mousePosResIdx = static_cast<int>(this->mousePos.X() + (this->resCols * (this->mousePos.Y()-1)));
+    // do nothing else if mouse is outside bounding box
+    if( this->mousePos.X() < 0.0f || this->mousePos.X() > this->resCols ||
+        this->mousePos.Y() < 0.0f || this->mousePos.Y() > this->resRows )
+    {
+        return consumeEvent;
+    }
 
     // left click
     if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
         if( this->mousePosResIdx > -1 && this->mousePosResIdx < this->resCount) {
             this->selection[this->mousePosResIdx] = !this->selection[this->mousePosResIdx];
         }
+        if (flags & view::MOUSEFLAG_MODKEY_ALT_DOWN) {
+            consumeEvent = true;
+        }
     }
+    
+    // propagate selection to selection module
+    if (this->resSelectionCall != NULL) {
+        vislib::Array<ResidueSelectionCall::Residue> selectedRes;
+        for (unsigned int i = 0; i < this->selection.Count(); i++) {
+            if (this->selection[i]) {
+                unsigned int x = i % this->resCols;
+                unsigned int y = i / this->resCols;
+                selectedRes.Add( ResidueSelectionCall::Residue());
+                selectedRes.Last().chainID = this->aminoAcidIndexStrings[y][x].First();
+                selectedRes.Last().resNum = this->aminoAcidIndexStrings[y][x].Second();
+                selectedRes.Last().id = -1;
+            }
+        }
+        this->resSelectionCall->SetSelectionPointer(&selectedRes);
+        (*this->resSelectionCall)(ResidueSelectionCall::CallForSetSelection);
+    }
+
 
     return consumeEvent;
 }
@@ -474,7 +515,8 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
                         this->vertices.Add( 0.0f);
                         this->vertices.Add( 0.0f);
                         this->aminoAcidStrings.Add("");
-                        this->aminoAcidIndexStrings.Add(vislib::Array<vislib::StringA>());
+                        //this->aminoAcidIndexStrings.Add(vislib::Array<vislib::StringA>());
+                        this->aminoAcidIndexStrings.Add(vislib::Array<vislib::Pair<char, int> >());
                         // chain tile vertices and colors
                         this->chainVertices.Add( 0.0f);
                         //this->chainVertices.Add( this->rowHeight - 0.5f);
@@ -499,7 +541,8 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
                             this->vertices.Add( this->vertices[this->resCount * 2 - 1] + this->rowHeight);
                             currentRow++;
                             this->aminoAcidStrings.Add("");
-                            this->aminoAcidIndexStrings.Add(vislib::Array<vislib::StringA>());
+                            //this->aminoAcidIndexStrings.Add(vislib::Array<vislib::StringA>());
+                            this->aminoAcidIndexStrings.Add(vislib::Array<vislib::Pair<char, int> >());
                             // chain tile vertices and colors
                             this->chainVertices.Add( 0.0f);
                             this->chainVertices.Add( this->chainVertices[this->resCount * 2 - 1] + this->rowHeight);
@@ -511,8 +554,9 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
                     // store the amino acid name
                     this->aminoAcidStrings[currentRow].Append( this->GetAminoAcidOneLetterCode(mol->ResidueTypeNames()[mol->Residues()[this->resIndex.Last()]->Type()]));
                     // store the chain name and residue index
-                    tmpStr.Format("%c %i", mol->Chains()[cCnt].Name(), mol->Residues()[this->resIndex.Last()]->OriginalResIndex());
-                    this->aminoAcidIndexStrings[currentRow].Add( tmpStr);
+                    //tmpStr.Format("%c %i", mol->Chains()[cCnt].Name(), mol->Residues()[this->resIndex.Last()]->OriginalResIndex());
+                    //this->aminoAcidIndexStrings[currentRow].Add( tmpStr);
+                    this->aminoAcidIndexStrings[currentRow].Add( vislib::Pair<char, int>(mol->Chains()[cCnt].Name(), mol->Residues()[this->resIndex.Last()]->OriginalResIndex()));
                     
                     // try to match binding sites
                     if( bs ) {

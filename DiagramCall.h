@@ -120,7 +120,8 @@ namespace protein {
             DIAGRAM_MARKER_DISAPPEAR = 1,
             DIAGRAM_MARKER_MERGE = 2,
             DIAGRAM_MARKER_SPLIT = 4,
-            DIAGRAM_MARKER_BOOKMARK = 8
+            DIAGRAM_MARKER_BOOKMARK = 8,
+            DIAGRAM_MARKER_EXIT = 16
         };
 
         /**
