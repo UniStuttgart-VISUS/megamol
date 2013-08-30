@@ -80,7 +80,14 @@ namespace core {
          *         'false' otherwise.
          */
         virtual bool IsDescribing(const Module * module) const {
-            return dynamic_cast<const C*>(module) != NULL;
+            //return dynamic_cast<const C*>(module) != NULL;
+            // mueller: The version above depends on modules being ordered from
+            // most-specialised to base classes. This is cannot be guaranteed
+            // and has the effect that the network serialisation uses wrong
+            // types. The new RTTI version only allows exact matches. We believe
+            // that this does not have any negative effects somewhere else in the
+            // programme.
+            return (typeid(C) == typeid(*module));
         }
 
         /**
