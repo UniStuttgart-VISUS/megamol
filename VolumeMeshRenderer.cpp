@@ -2179,7 +2179,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     // coloring by nearest atom TEST ...
     cudaMemcpy( this->vertexColors, colors, this->vertexCount * 4 * sizeof(float), cudaMemcpyDeviceToHost);
     float ifac = this->cmWeightParam.Param<param::FloatParam>()->Value();
-//#pragma omp parallel for
+#pragma omp parallel for
     for( int i = 0; i < this->vertexCount; i++ ) {
         int atomIdx = this->neighborAtomOfVertex[i];
         if( atomIdx < 0 ) {
@@ -2222,9 +2222,14 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             this->vertexColors[4*i+2] = 0.5f;
         }
         if( this->blendIt ) {
-            this->vertexColors[4*i+3] = vislib::math::Min( 
-                this->alphaParam.Param<param::FloatParam>()->Value(),
-                this->vertexColors[4*i+3]);
+            if ( !this->resSelectionCall || this->atomSelection[atomIdx] ) {
+                // is this correct? if alpha was set to zero (invisible) keep it that way.
+                this->vertexColors[4*i+3] = vislib::math::Min( 1.0f, this->vertexColors[4*i+3]);
+            } else {
+                this->vertexColors[4*i+3] = vislib::math::Min( 
+                    this->alphaParam.Param<param::FloatParam>()->Value(),
+                    this->vertexColors[4*i+3]);
+            }
         }
     }
     cudaMemcpy( colors, this->vertexColors, this->vertexCount * 4 * sizeof(float), cudaMemcpyHostToDevice);
