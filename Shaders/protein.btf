@@ -14173,9 +14173,198 @@ void main(void) {
 -->
       </snippet>
     </shader>
+  </namespace>
+
+    <namespace name="halo">
+      <shader name="GenerateVertex">
+        <snippet type="version">110</snippet>
+        <snippet type="string">
+          <!--
+          void main(void) {
+            vec4 vertexPos = gl_Vertex;
+  
+            
+            gl_Position = gl_ModelViewProjectionMatrix * vertexPos;
+              
+            gl_FrontColor = gl_Color;
+            gl_BackColor = gl_Color;
+          }
+        
+          -->
+        </snippet>
+      </shader>
+
+      <shader name="GenerateFragment">
+        <snippet type="version">110</snippet>
+        <snippet type="string">
+          <!--
+          uniform vec4 haloColor;
+          void main(void) {
+            vec3 col = abs(gl_Color.rgb - vec3(0.5, 0.5, 0.5));
+            float epsilon = 0.01;
+            if( col.r < epsilon && col.g < epsilon && col.b < epsilon)
+              discard;
+            else
+              gl_FragColor = haloColor;
+          }
+        
+          -->
+        </snippet>
+      </shader>
+
+      <shader name="fragmentHoriz">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+          <!--
+#define GAUSS_3x3
+#undef GAUSS_3x3
+
+//#define VERTICAL_FILTER
+
+uniform sampler2D sourceTex;
+uniform vec2 screenResInv;
+
+#ifdef GAUSS_3x3
+#   define FILTERSAMPLES 3
+#   define FILTEROFFSET  1
+    float gaussTable[3] = float[3]( 0.25, 0.5, 0.25 );
+#else
+#   define FILTERSAMPLES 5
+#   define FILTEROFFSET  2
+    float gaussTable[5] = float[5]( 2.0/30.0, 7.0/30.0, 12.0/30.0, 7.0/30.0, 2.0/30.0 );
+#endif
 
 
 
+void main(void)
+{
+    vec4 cOut = vec4(0.0);
+    vec4 src = texture2D(sourceTex, gl_TexCoord[0].xy);
+
+    vec2 stepSize = screenResInv;
+#ifdef VERTICAL_FILTER
+    stepSize.x = 0.0;
+#else
+    stepSize.y = 0.0;
+#endif
+
+    for (int i=0; i<FILTERSAMPLES; ++i)
+    {
+        vec2 texPos = gl_TexCoord[0].xy + stepSize * (i-FILTEROFFSET);
+        vec4 sample = texture2D(sourceTex, texPos);
+        cOut += gaussTable[i] * sample;
+    }
+
+    gl_FragColor =  cOut;
+}
+-->
+        </snippet>
+      </shader>
+      <shader name="fragmentVert">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+          <!--
+#define GAUSS_3x3
+#undef GAUSS_3x3
+
+#define VERTICAL_FILTER
+
+uniform sampler2D sourceTex;
+uniform vec2 screenResInv;
+
+#ifdef GAUSS_3x3
+#   define FILTERSAMPLES 3
+#   define FILTEROFFSET  1
+    float gaussTable[3] = float[3]( 0.25, 0.5, 0.25 );
+#else
+#   define FILTERSAMPLES 5
+#   define FILTEROFFSET  2
+    float gaussTable[5] = float[5]( 2.0/30.0, 7.0/30.0, 12.0/30.0, 7.0/30.0, 2.0/30.0 );
+#endif
+
+
+
+void main(void)
+{
+    vec4 cOut = vec4(0.0);
+    vec4 src = texture2D(sourceTex, gl_TexCoord[0].xy);
+
+    vec2 stepSize = screenResInv;
+#ifdef VERTICAL_FILTER
+    stepSize.x = 0.0;
+#else
+    stepSize.y = 0.0;
+#endif
+
+    for (int i=0; i<FILTERSAMPLES; ++i)
+    {
+        vec2 texPos = gl_TexCoord[0].xy + stepSize * (i-FILTEROFFSET);
+        vec4 sample = texture2D(sourceTex, texPos);
+        cOut += gaussTable[i] * sample;
+    }
+
+    gl_FragColor =  cOut;
+}
+-->
+        </snippet>
+      </shader>
+
+      <shader name="growFragment">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+          <!--
+uniform sampler2D sourceTex;
+uniform vec2 screenResInv;
+
+#define FILTERSAMPLES 5
+#define FILTEROFFSET  2
+
+void main(void)
+{
+    vec4 cOut = vec4(0.0);
+    vec4 src = texture2D(sourceTex, gl_TexCoord[0].xy);
+
+    vec2 stepSize = screenResInv;
+
+    for(int y = -FILTERSAMPLES-1; y < FILTERSAMPLES; ++y)
+      for(int x = -FILTERSAMPLES-1; x < FILTERSAMPLES; ++x)
+      {
+        vec2 texPos = gl_TexCoord[0].xy + stepSize * vec2(x, y);
+        vec4 sample = texture2D(sourceTex, texPos);
+        vec3 col = abs(sample.rgb);
+        float epsilon = 0.01;
+        if( col.r > epsilon && col.g > epsilon && col.b > epsilon)
+        {
+          gl_FragColor = sample;
+          return;
+        }
+      }
+    discard;
+}
+-->
+        </snippet>
+      </shader>
+      
+
+      <shader name="SubstractFragment">
+        <snippet type="version">110</snippet>
+        <snippet type="string">
+          <!--
+          uniform sampler2D originalTex;
+          uniform sampler2D blurredTex;
+          void main(void) {
+            vec4 orig = texture2D(originalTex, gl_TexCoord[0].xy);
+            vec3 col = abs(orig.rgb);
+            float epsilon = 0.01;
+            if( col.r < epsilon && col.g < epsilon && col.b < epsilon)
+              gl_FragColor = texture2D(blurredTex, gl_TexCoord[0].xy);
+            else
+              discard;
+          }
+        
+          -->
+        </snippet>
+      </shader>
   </namespace>
 
 </btf>

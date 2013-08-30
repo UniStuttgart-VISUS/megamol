@@ -29,6 +29,7 @@
 #include <cuda_runtime.h>
 #include "CenterLineGenerator.h"
 #include "vislib/CameraParameters.h"
+#include "vislib/FramebufferObject.h"
 #include "ResidueSelectionCall.h"
 
 namespace megamol {
@@ -507,7 +508,23 @@ namespace protein {
         ResidueSelectionCall *resSelectionCall;
         bool *atomSelection;
         unsigned int atomSelectionCnt;
-    };
+
+        // width and height of view
+        unsigned int width, height;
+
+		/** halo rendering of selected features **/
+		vislib::graphics::gl::FramebufferObject haloFBO;
+		vislib::graphics::gl::FramebufferObject haloBlurFBO;
+		vislib::graphics::gl::FramebufferObject haloBlurFBO2;
+        megamol::core::param::ParamSlot haloEnableParam;
+        megamol::core::param::ParamSlot haloAlphaParam;
+        megamol::core::param::ParamSlot haloColorParam;
+        vislib::graphics::gl::GLSLShader haloGenerateShader;
+        vislib::graphics::gl::GLSLShader haloGrowShader;	
+		vislib::graphics::gl::GLSLShader haloGaussianHoriz;
+		vislib::graphics::gl::GLSLShader haloGaussianVert;
+		vislib::graphics::gl::GLSLShader haloDifferenceShader;
+	};
 
 
 } /* end namespace protein */
