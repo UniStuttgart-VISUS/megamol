@@ -6,6 +6,7 @@
 #include "param/IntParam.h"
 #include "param/FilePathParam.h"
 #include "param/BoolParam.h"
+#include "param/ButtonParam.h"
 #include "utility/ColourParser.h"
 #include "vislib/Rectangle.h"
 #include "vislib/BufferedFile.h"
@@ -34,6 +35,7 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
         resCountPerRowParam( "ResiduesPerRow", "The number of residues per row" ),
         colorTableFileParam( "ColorTableFilename", "The filename of the color table."),
         toggleKeyParam( "ToggleKeyDrawing", "Turns the drawing of the binding site key/legend on and off."),
+        clearResSelectionParam( "clearResidueSelection", "Clears the current selection (everything will be deselected)."),
         dataPrepared(false), atomCount(0), bindingSiteCount(0), resCount(0), resCols(0), resRows(0), rowHeight( 3.0f), 
 #ifndef USE_SIMPLE_FONT
         theFont(FontInfo_Verdana), 
@@ -66,6 +68,10 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
     // param slot for key toggling
     this->toggleKeyParam.SetParameter( new param::BoolParam(true));
     this->MakeSlotAvailable( &this->toggleKeyParam);
+    
+    // param slot for key toggling
+    this->clearResSelectionParam.SetParameter( new param::ButtonParam('c'));
+    this->MakeSlotAvailable( &this->clearResSelectionParam);
     
 }
 
@@ -163,6 +169,28 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
     this->resSelectionCall = this->resSelectionCallerSlot.CallAs<ResidueSelectionCall>();
     if (this->resSelectionCall != NULL) {
         (*this->resSelectionCall)(ResidueSelectionCall::CallForGetSelection);
+        if( this->clearResSelectionParam.IsDirty() ) {
+            this->resSelectionCall->GetSelectionPointer()->Clear();
+            this->clearResSelectionParam.ResetDirty();
+        }
+        unsigned int cnt = 0;
+        vislib::Array<ResidueSelectionCall::Residue> *resSelPtr = resSelectionCall->GetSelectionPointer();
+        for( unsigned int i = 0; i < aminoAcidIndexStrings.Count(); i++) {
+            for( unsigned int j = 0; j < aminoAcidIndexStrings[i].Count(); j++) {
+                this->selection[cnt] = false;
+                if( resSelPtr ) {
+                    // loop over selections and try to match wit the current amino acid
+                    for( unsigned int k = 0; k < resSelPtr->Count(); k++ ) {
+                        if( (*resSelPtr)[k].chainID == aminoAcidIndexStrings[i][j].First() &&
+                            (*resSelPtr)[k].resNum == aminoAcidIndexStrings[i][j].Second() )
+                        {
+                            this->selection[cnt] = true;
+                        }
+                    }
+                }
+                cnt++;
+            }
+        }
     }
 
     // read and update the color table, if necessary

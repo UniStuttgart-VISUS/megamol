@@ -475,8 +475,15 @@ bool VolumeMeshRenderer::Render(Call& call) {
         vislib::Array<ResidueSelectionCall::Residue> *resSelPtr = resSelectionCall->GetSelectionPointer();
         if( resSelPtr ) {
             for( unsigned int i = 0; i < resSelPtr->Count(); i++) {
-                // do nothing if the id was already set
-                if( (*resSelPtr)[i].id >= 0 ) continue;
+                // do not search for the correct amino acid, if the id was already set (mark atoms directly)
+                if( (*resSelPtr)[i].id >= 0 ) {
+                    unsigned int firstAtomIdx = mol->Residues()[(*resSelPtr)[i].id]->FirstAtomIndex();
+                    unsigned int lastAtomIdx = firstAtomIdx + mol->Residues()[(*resSelPtr)[i].id]->AtomCount();
+                    for( unsigned int aCnt = firstAtomIdx; aCnt < lastAtomIdx; aCnt++ ) {
+                        this->atomSelection[aCnt] = true;
+                    }
+                    continue;
+                }
                 int chainIdx = -1;
                 // loop over chains to find chainID
                 for( unsigned int cCnt = 0; cCnt < mol->ChainCount(); cCnt++ ) {
@@ -496,6 +503,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
                     unsigned int lastAtomIdx = firstAtomIdx + mol->Residues()[rCnt]->AtomCount();
                     if( mol->Residues()[rCnt]->OriginalResIndex() == (*resSelPtr)[i].resNum ) {
                         (*resSelPtr)[i].id = rCnt;
+                        // mark all atoms of the current amino acid
                         for( unsigned int aCnt = firstAtomIdx; aCnt < lastAtomIdx; aCnt++ ) {
                             this->atomSelection[aCnt] = true;
                         }
