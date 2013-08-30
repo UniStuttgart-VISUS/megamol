@@ -155,6 +155,8 @@ namespace protein {
         megamol::core::param::ParamSlot colorTableFileParam;
         // parameter to turn the binding site legend/key on/off
         megamol::core::param::ParamSlot toggleKeyParam;
+        // clear the current residue selection
+        megamol::core::param::ParamSlot clearResSelectionParam;
 
         // data preparation flag
         bool dataPrepared;
