@@ -42,6 +42,8 @@
 #include <omp.h>
 #include <ctime>
 
+#include "utility/ColourParser.h"
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -83,6 +85,9 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
         radscaleParam( "quicksurf::radscale", "Radius scale" ),
         gridspacingParam( "quicksurf::gridspacing", "Grid spacing" ),
         areaThresholdParam( "areaThreshold", "Area threshold for segment removal"),
+		haloEnableParam( "halo::enable", "Enable the halo."),
+		haloColorParam( "halo::color", "Color of halo."),
+		haloAlphaParam( "halo::alpha", "Alpha of halo."),
         lastTime(-1), polygonMode(FILL), blendIt(false), showNormals(false),
         showCentroids(false), aoThreshold(0.15f), isoValue(0.5f), maxDistance(2.0f), maxDeltaDistance(1.0f),
         centroidColorsIndex(-1), vertexCount(0), cubeCount( 0), cubeCountAllocated(0), cubeCountOld( 0), activeCubeCountOld( 0), 
@@ -140,6 +145,13 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
     
     this->alphaParam.SetParameter( new param::FloatParam( 0.2f, 0.0f, 1.0f));
     this->MakeSlotAvailable( &this->alphaParam);
+    
+	this->haloEnableParam.SetParameter( new param::BoolParam(true));
+    this->MakeSlotAvailable( &this->haloEnableParam);
+	this->haloAlphaParam.SetParameter( new param::FloatParam( 0.5f, 0.0f, 1.0f));
+    this->MakeSlotAvailable( &this->haloAlphaParam);
+	this->haloColorParam.SetParameter( new param::StringParam( "#146496"));
+    this->MakeSlotAvailable( &this->haloColorParam);
 
     // coloring modes
     this->currentColoringMode0 = Color::CHAIN;
@@ -321,6 +333,108 @@ bool VolumeMeshRenderer::create(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create per pixel lighting shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
+
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::halo::GenerateVertex", vertSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for halo generation shader", this->ClassName());
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::halo::GenerateFragment", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for halo generation shader", this->ClassName());
+        return false;
+    }
+    try {
+        if (!this->haloGenerateShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+        }
+    }
+    catch (vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create halo generation shader: %s\n", this->ClassName(), e.GetMsgA());
+        return false;
+    }
+
+	// Try to load shader for gaussian filter (horizontal)
+	if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"%s: Unable to load vertex shader source: gaussian filter (horizontal)", this->ClassName());
+		return false;
+	}
+	if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::halo::fragmentHoriz", fragSrc)) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"%s: Unable to load fragment shader source: gaussian filter (horizontal)", this->ClassName());
+		return false;
+	}
+	try {
+		if(!this->haloGaussianHoriz.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+	}
+	catch(vislib::Exception e){
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
+		return false;
+	}
+
+	// Try to load shader for gaussian filter (vertical)
+	if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"%s: Unable to load vertex shader source: gaussian filter (vertical)", this->ClassName());
+		return false;
+	}
+	if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::halo::fragmentVert", fragSrc)) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"%s: Unable to load fragment shader source: gaussian filter (vertical)", this->ClassName());
+		return false;
+	}
+	try {
+		if(!this->haloGaussianVert.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+	}
+	catch(vislib::Exception e){
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
+		return false;
+	}
+	
+	// Try to load shader for substract filter
+	if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"%s: Unable to load vertex shader source: halo substract", this->ClassName());
+		return false;
+	}
+	if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::halo::SubstractFragment", fragSrc)) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"%s: Unable to load fragment shader source: halo substract", this->ClassName());
+		return false;
+	}
+	try {
+		if(!this->haloDifferenceShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+	}
+	catch(vislib::Exception e){
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
+		return false;
+	}
+
+	// Try to load shader for grow filter
+	if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"%s: Unable to load vertex shader source: halo grow filter", this->ClassName());
+		return false;
+	}
+	if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::halo::growFragment", fragSrc)) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"%s: Unable to load fragment shader source: halo grow filter", this->ClassName());
+		return false;
+	}
+	try {
+		if(!this->haloGrowShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+	}
+	catch(vislib::Exception e){
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
+		return false;
+	}
 
     // Create OpenGL interoperable CUDA device.
     cudaError_t cuerr = cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
@@ -957,7 +1071,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
     glDrawArrays(GL_TRIANGLES, 0, this->vertexCount);
     this->lightShader.Disable();
 
-    // Render normals, if requested.
+	// Render normals, if requested.
     if (this->showNormals) {
         glLineWidth(1.0f);
         this->normalShader.Enable();
@@ -989,7 +1103,159 @@ bool VolumeMeshRenderer::Render(Call& call) {
         }
         glEnd();
     }
-    
+
+	if( this->haloEnableParam.Param<param::BoolParam>()->Value() )
+	{
+		// =============== Query Camera View Dimensions ===============
+		if( static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
+			static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight()) != this->height ) {
+			this->width = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth());
+			this->height = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight());
+		}
+	 
+		// create the fbo, if necessary
+		if( !this->haloFBO.IsValid() ) {
+			this->haloFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+		}
+		if( !this->haloBlurFBO.IsValid() ) {
+			this->haloBlurFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+		}
+		if( !this->haloBlurFBO2.IsValid() ) {
+			this->haloBlurFBO2.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+		}
+		// resize the fbo, if necessary
+		if( this->haloFBO.GetWidth() != this->width || this->haloFBO.GetHeight() != this->height ) {
+			this->haloFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+			this->haloBlurFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+			this->haloBlurFBO2.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+		}
+
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_BLEND);
+
+		vislib::math::Vector<float, 4> haloColor;
+		megamol::core::utility::ColourParser::FromString(
+			this->haloColorParam.Param<param::StringParam>()->Value(),
+            haloColor.PeekComponents()[0],
+            haloColor.PeekComponents()[1],
+            haloColor.PeekComponents()[2]);
+
+		haloColor.SetW( this->haloAlphaParam.Param<param::FloatParam>()->Value() );
+		
+		this->haloFBO.Enable();
+			glClearColor( 0.0f, 0.0f, 0.0f, 0.0f);
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+			glDisable( GL_DEPTH_TEST );
+
+			this->haloGenerateShader.Enable();
+			glUniform4fv(this->haloGenerateShader.ParameterLocation("haloColor"), 1, haloColor.PeekComponents() );
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glDrawArrays(GL_TRIANGLES, 0, this->vertexCount);
+			this->haloGenerateShader.Disable();
+		this->haloFBO.Disable();
+
+
+		this->haloBlurFBO2.Enable();
+			glClearColor( 0.0f, 0.0f, 0.0f, 0.0f);
+			glClear( GL_COLOR_BUFFER_BIT );
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, this->haloFBO.GetColourTextureID());
+			
+			this->haloGrowShader.Enable();
+			glUniform1i(this->haloGrowShader.ParameterLocation("sourceTex"), 0);
+			glUniform2f(this->haloGaussianHoriz.ParameterLocation("screenResInv"), 1.0f/this->width, 1.0f/this->height);
+
+			glRecti(-1, -1, 1, 1); // Draw screen quad
+			this->haloGrowShader.Disable();
+			glBindTexture(GL_TEXTURE_2D, 0);
+		this->haloBlurFBO2.Disable();
+
+		this->haloBlurFBO.Enable();
+			glClearColor( 0.0f, 0.0f, 0.0f, 0.0f);
+			glClear( GL_COLOR_BUFFER_BIT );
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, this->haloBlurFBO2.GetColourTextureID());
+			
+			this->haloGaussianHoriz.Enable();
+			glUniform1i(this->haloGaussianHoriz.ParameterLocation("sourceTex"), 0);
+			glUniform2f(this->haloGaussianHoriz.ParameterLocation("screenResInv"), 1.0f/this->width, 1.0f/this->height);
+
+			glRecti(-1, -1, 1, 1); // Draw screen quad
+			this->haloGaussianHoriz.Disable();
+			glBindTexture(GL_TEXTURE_2D, 0);
+		this->haloBlurFBO.Disable();
+
+
+		this->haloBlurFBO2.Enable();
+			glClearColor( 0.0f, 0.0f, 0.0f, 0.0f);
+			glClear( GL_COLOR_BUFFER_BIT );
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, this->haloBlurFBO.GetColourTextureID());
+			
+			this->haloGaussianVert.Enable();
+			glUniform1i(this->haloGaussianVert.ParameterLocation("sourceTex"), 0);
+			glUniform2f(this->haloGaussianVert.ParameterLocation("screenResInv"), 1.0f/this->width, 1.0f/this->height);
+
+			glRecti(-1, -1, 1, 1); // Draw screen quad
+			this->haloGaussianVert.Disable();
+			glBindTexture(GL_TEXTURE_2D, 0);
+		this->haloBlurFBO2.Disable();
+		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, this->haloFBO.GetColourTextureID());
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, this->haloBlurFBO2.GetColourTextureID());
+
+		this->haloDifferenceShader.Enable();
+		glUniform1i(this->haloDifferenceShader.ParameterLocation("originalTex"), 0);
+		glUniform1i(this->haloDifferenceShader.ParameterLocation("blurredTex"), 1);
+		glRecti(-1, -1, 1, 1); // Draw screen quad
+		this->haloDifferenceShader.Disable();
+		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		
+		//this->haloBlurFBO2.DrawColourTexture();
+
+		glEnable( GL_DEPTH_TEST );
+        glDisable(GL_BLEND);
+		/*
+
+		parameter für an/aus
+		selectionHalo
+
+		framebuffer->attach()
+		clear(black)
+		texture1 = render_features (alpha == 1)
+		vislib::graphics::gl::GLSLShader gaussianHoriz;
+		vislib::graphics::gl::GLSLShader gaussianVert;
+		texture 2 = blur/guass (texture1)
+		draw(texture2 - texture1)
+
+
+
+		this->lightShader.Enable();
+		switch (polygonMode) {
+		case POINT:
+			glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+			break;
+		case LINE:
+			glLineWidth(1.0f);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			break;
+		case FILL:
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			break;
+		}
+		glDrawArrays(GL_TRIANGLES, 0, this->vertexCount);
+		this->lightShader.Disable();
+
+		*/
+	}
+
     // Unbind VBOs.
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
