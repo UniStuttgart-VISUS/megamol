@@ -337,7 +337,7 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                 theFont.DrawString( -wordlength,-1.0f, 
                     wordlength, 1.0f,
                     fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                tmpStr = "Residue";
+                tmpStr = "Amino Acid";
                 wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
                 theFont.DrawString( -wordlength,-2.0f, 
                     wordlength, 1.0f,
@@ -370,8 +370,8 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
             glColor3f( 1.0f, 0.75f, 0.0f);
             glBegin( GL_LINE_STRIP);
                 glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y() - 1.0f));
-                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y()));
-                glVertex2f( this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y()));
+                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y()) + 0.5f);
+                glVertex2f( this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y()) + 0.5f);
                 glVertex2f( this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y() - 1.0f));
                 glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y() - 1.0f));
             glEnd();
@@ -387,14 +387,14 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                 // left (only draw if left neighbor ist not selected)
                 if( i == 0 || !this->selection[i-1] ) {
                     glVertex2f( pos.X()       , -this->rowHeight * (pos.Y() - 1.0f));
-                    glVertex2f( pos.X()       , -this->rowHeight * (pos.Y()));
+                    glVertex2f( pos.X()       , -this->rowHeight * (pos.Y()) + 0.5f);
                 }
                 // bottom
-                glVertex2f( pos.X()       , -this->rowHeight * (pos.Y()));
-                glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y()));
+                glVertex2f( pos.X()       , -this->rowHeight * (pos.Y()) + 0.5f);
+                glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y()) + 0.5f);
                 // right (only draw if right neighbor ist not selected)
                 if( i == (this->selection.Count() - 1) || !this->selection[i+1] ) {
-                    glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y()));
+                    glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y()) + 0.5f);
                     glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y() - 1.0f));
                 }
                 // top
@@ -415,8 +415,8 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                     floorf( static_cast<float>(i) / this->resCols) + 1.0f);
                 glBegin( GL_QUADS);
                     glVertex2f( pos.X()       , -this->rowHeight * (pos.Y() - 1.0f));
-                    glVertex2f( pos.X()       , -this->rowHeight * (pos.Y()));
-                    glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y()));
+                    glVertex2f( pos.X()       , -this->rowHeight * (pos.Y()) + 0.5f);
+                    glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y()) + 0.5f);
                     glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y() - 1.0f));
                 glEnd();
             }
@@ -637,7 +637,7 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
         this->bindingSiteDescription[bsCnt].Prepend( bs->GetBindingSiteDescription( bsCnt));
     }
 
-    this->rowHeight = 3.0f + maxNumBindingSitesPerRes * 0.5f;
+    this->rowHeight = 3.0f + maxNumBindingSitesPerRes * 0.5f + 0.5f;
     
     // set the number of columns
     this->resCols = vislib::math::Min(this->resCount,
