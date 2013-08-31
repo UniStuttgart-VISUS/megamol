@@ -739,9 +739,16 @@ void DiagramRenderer::drawXAxis(XAxisTypes xType) {
             numXTicks = this->numXTicksParam.Param<param::IntParam>()->Value();
             break;
         case DIAGRAM_XAXIS_INTEGRAL: {
-                DiagramCall::DiagramSeries *ds = diagram->GetSeries(0);
-                const DiagramCall::DiagramMappable *dm = ds->GetMappable();
-                numXTicks = dm->GetDataCount() + 1;
+                //numXTicks = 0;
+                //for (int i = 0; i < diagram->GetSeriesCount(); i++) {
+                //    DiagramCall::DiagramSeries *ds = diagram->GetSeries(i);
+                //    const DiagramCall::DiagramMappable *dm = ds->GetMappable();
+                //    if (dm->GetDataCount() > numXTicks) {
+                //        numXTicks = dm->GetDataCount();
+                //    }
+                //}
+                //numXTicks++;
+                numXTicks = xValues.Count();
             }
             break;
         case DIAGRAM_XAXIS_CATEGORICAL:
@@ -938,7 +945,7 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
     }
     preparedData = new vislib::PtrArray<vislib::PtrArray<vislib::math::Point<float, 3> > >();
     vislib::Array<float> maxYValues;
-    vislib::Array<float> xValues;
+    xValues.Clear();
     xValues.SetCapacityIncrement(10);
     bool drawLog = this->drawYLogParam.Param<param::BoolParam>()->Value();
     categories.Clear();
@@ -946,7 +953,7 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
     vislib::StringA tmpString;
     int maxCount = 0;
     float maxStackedY = -FLT_MAX;
-    float x, y, z;
+    float x, y, z, tempX;
     // find "broadest" series as well as all distinct abscissa values (for stacking)
     for (int s = 0; s < diagram->GetSeriesCount(); s++) {
         DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
@@ -984,6 +991,68 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
         maxYValues[i] = 0.0f;
     }
     localXIndexToGlobal.SetCount(diagram->GetSeriesCount());
+
+#if 1
+    int cntSeries = 0;
+    for (int s = 0; s < diagram->GetSeriesCount(); s++) {
+        DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
+        const DiagramCall::DiagramMappable *dm = ds->GetMappable();
+        if (!seriesVisible[s] || isCategoricalMappable(dm) != drawCategorical) {
+            continue;
+        }
+        cntSeries++;
+        localXIndexToGlobal[cntSeries - 1].SetCount(dm->GetDataCount());
+        if (preparedData->Count() < cntSeries) {
+            preparedData->Append(new vislib::PtrArray<vislib::math::Point<float, 3> >());
+            preparedSeries.Append(ds);
+            (*preparedData)[preparedData->Count() - 1]->SetCount(xValues.Count());
+        }
+        int globalX = 0;
+        bool inHole = true, ret;
+        for (int localX = 0; localX < dm->GetDataCount(); localX++) {
+            if (drawCategorical) {
+                ret = dm->GetAbscissaValue(localX, 0, &tmpString);
+                if (ret) {
+                    int idx = static_cast<int>(categories.IndexOf(tmpString));
+                    tempX = static_cast<float>(idx);
+                    while (xValues[globalX] < tempX) {
+                        if (inHole) {
+                            (*(*preparedData)[cntSeries - 1])[globalX] = NULL;
+                        } else {
+                            (*(*preparedData)[cntSeries - 1])[globalX] = new vislib::math::Point<float, 3>(x, y, z);
+                        }
+                        globalX++;
+                    }
+                    ASSERT(xValues[globalX] == tempX);
+                    localXIndexToGlobal[cntSeries - 1][localX] = globalX;
+                    y = dm->GetOrdinateValue(localX);
+                }
+            } else {
+                ret = dm->GetAbscissaValue(localX, 0, &tempX);
+                if (ret) {
+                    while (xValues[globalX] < tempX) {
+                        if (inHole) {
+                            (*(*preparedData)[cntSeries - 1])[globalX] = NULL;
+                        } else {
+                            (*(*preparedData)[cntSeries - 1])[globalX] = new vislib::math::Point<float, 3>(x, y, z);
+                        }
+                        globalX++;
+                    }
+                    ASSERT(xValues[globalX] == tempX);
+                    localXIndexToGlobal[cntSeries - 1][localX] = globalX;
+                    x = tempX - xRange.First();
+                    x /= xRange.Second() - xRange.First();
+                    y = dm->GetOrdinateValue(localX);
+                }
+            }
+            if (ret) {
+                z =  0.0f;
+                (*(*preparedData)[cntSeries - 1])[globalX] = new vislib::math::Point<float, 3>(x, y, z);
+            }
+            inHole = !ret;
+        }
+    }
+#else // old, wrong implementation
     for (int i = 0; i < xValues.Count(); i++) {
         int cntSeries = 0;
         for (int s = 0; s < diagram->GetSeriesCount(); s++) {
@@ -1039,6 +1108,7 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
             }
         }
     }
+#endif
     //for (int s = 0; s < preparedData->Count(); s++) {
     //    printf("series %u:", s);
     //    for (int i = 0; i < xValues.Count(); i++) {
