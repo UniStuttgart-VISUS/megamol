@@ -3242,8 +3242,8 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
         // sum up edge length and reset edge as not visited
         length = 0.0f;
         for( auto edge : this->clEdges[fIdx-1] ) {
-            //length += (edge->node1->p - edge->node2->p).Length();
-            length++;
+            length += (edge->node1->p - edge->node2->p).Length();
+            //length++;
             edge->visited = false;
         }
         maxLength = vislib::math::Max( maxLength, length);
@@ -3274,8 +3274,8 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
         }
         length = 0;
         ms->AppendValue( length, node1->minimumDistance);
-        //length += (node1->p - node2->p).Length();
-        length++;
+        length += (node1->p - node2->p).Length();
+        //length++;
         ms->AppendValue( length, node2->minimumDistance);
         while( node2 != nullptr && !node2->isStartNode ) {
             node1 = node2;
@@ -3285,15 +3285,15 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
                     // TODO support branching! (recursion)
                     if( nextEdge->node1 == node1 ) {
                         node2 = nextEdge->node2;
-                        //length += (node1->p - node2->p).Length();
-                        length++;
+                        length += (node1->p - node2->p).Length();
+                        //length++;
                         ms->AppendValue( length, node2->minimumDistance);
                         nextEdge->visited = true;
                         break;
                     } else if( nextEdge->node2 == node1 ) {
                         node2 = nextEdge->node1;
-                        //length += (node1->p - node2->p).Length();
-                        length++;
+                        length += (node1->p - node2->p).Length();
+                        //length++;
                         ms->AppendValue( length, node2->minimumDistance);
                         nextEdge->visited = true;
                         break;
@@ -3325,7 +3325,7 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
         ds->AddMarker(new DiagramCall::DiagramMarker(4, DiagramCall::DIAGRAM_MARKER_SPLIT));
         ds->AddMarker(new DiagramCall::DiagramMarker(7, DiagramCall::DIAGRAM_MARKER_BOOKMARK));
         dc->AddSeries(ds);
-        ds = new DiagramCall::DiagramSeries(vislib::StringA("heinz"), new MappableFloatPair(0.0f, 0.5f, true, 2));
+        ds = new DiagramCall::DiagramSeries(vislib::StringA("heinz"), new MappableFloatPair(0.1f, 0.5f, true, 2));
         ds->SetColor(0.1f, 0.3f, 0.7f);
         ds->AddMarker(new DiagramCall::DiagramMarker(4, DiagramCall::DIAGRAM_MARKER_MERGE, "universe joining something\n or other"));
         dc->AddSeries(ds);

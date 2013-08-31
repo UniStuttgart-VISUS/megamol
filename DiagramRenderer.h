@@ -221,6 +221,8 @@ namespace protein {
 
         vislib::Array<vislib::StringA> categories;
 
+        vislib::Array<float> xValues;
+
         vislib::Array<vislib::Array<int> > localXIndexToGlobal;
 
         vislib::Array<vislib::Pair<int, vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > > markerTextures;
