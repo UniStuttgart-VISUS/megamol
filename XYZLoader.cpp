@@ -334,10 +334,7 @@ vislib::math::Vector<float, 3> XYZLoader::getElementColor( vislib::StringA name)
             if( ( cnt + 1) < static_cast<unsigned int>(name.Length()) )
                 // Chlorine: yellowgreen
                 col.Set( 173, 255, 47);
-        } else if( name[cnt] == 'N' ) // blue
-            //col.Set( 37, 136, 195);
-            col.Set( 37, 136, 195);
-        else if( name[cnt] == 'O' ) // red
+        } else if( name[cnt] == 'O' ) // red
             //col.Set( 250, 94, 82);
             col.Set( 206, 34, 34);
         else if( name[cnt] == 'S' ) // yellow
@@ -345,6 +342,14 @@ vislib::math::Vector<float, 3> XYZLoader::getElementColor( vislib::StringA name)
             col.Set( 255, 215, 0);
         else if( name[cnt] == 'P' ) // orange
             col.Set( 255, 128, 64);
+        else if( name[cnt] == 'N' ) {
+            if( ( cnt + 1) < static_cast<unsigned int>(name.Length()) ) {
+                if( name[cnt+1] == 'i' )
+                    col.Set( 136, 136, 136); // nickel
+            } else {
+                col.Set( 37, 136, 195); // nitrogen
+            }
+        }
     }
 
     colFloat.Set( float( col.X()) / 255.0f, float( col.Y()) / 255.0f, float( col.Z()) / 255.0f);
