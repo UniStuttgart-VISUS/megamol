@@ -781,7 +781,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
     CUDA_VERIFY( copyVolSizeFromDevice( hVolSize));
     cudaDeviceSynchronize();
     if( hVolSize.x != numvoxels[0] || hVolSize.y != numvoxels[1] || hVolSize.z != numvoxels[2] ) {
-        Log::DefaultLog.WriteError( "%s: cudaMemcpyFromSymbol failed!\n", this->Name());
+        Log::DefaultLog.WriteError( "%s: cudaMemcpyFromSymbol failed!\n", this->Name().PeekBuffer());
         delete[] pos0;
         delete[] pos1;
         delete[] posInter;
@@ -2716,7 +2716,8 @@ void VolumeMeshRenderer::ValidateCubeMemory() {
         cudaExtent aoVolumeExtent = make_cudaExtent(this->aoShader.getVolumeSizeX(), 
             this->aoShader.getVolumeSizeY(), 
             this->aoShader.getVolumeSizeZ());
-        CUDA_VERIFY(cudaMalloc3DArray(&this->aoVolume, &cudaCreateChannelDesc<float>(), aoVolumeExtent));
+        cudaChannelFormatDesc cd = cudaCreateChannelDesc<float>();
+        CUDA_VERIFY(cudaMalloc3DArray(&this->aoVolume, &cd, aoVolumeExtent));
         // Emulate cudaMemset3D for cudaArrays. 
         float* zeroArray = (float*) calloc(aoVolumeExtent.width * aoVolumeExtent.height * aoVolumeExtent.depth, sizeof(float));
         cudaMemcpy3DParms copyParams = {0};

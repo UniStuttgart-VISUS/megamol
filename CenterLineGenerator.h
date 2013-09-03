@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>   // std::equal_to
 #include <algorithm>    // std::mismatch
+#include <list>
 
 class CenterLineGenerator
 {
