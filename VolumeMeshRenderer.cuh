@@ -12,6 +12,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <thrust/functional.h>
+#include "cuda_helper.h"
 
 typedef unsigned int uint;
 
