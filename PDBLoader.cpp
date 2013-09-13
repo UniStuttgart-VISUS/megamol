@@ -847,14 +847,49 @@ bool PDBLoader::getData( core::Call& call) {
             this->data[dc->FrameID()]->MaxOccupancy());
     } else {
 
+        if (dc->FrameID() >= vislib::math::Max(1U, static_cast<unsigned int>(
+                this->numXTCFrames))) {
+            return false;
+        }
+
         Frame *fr = NULL;
         fr = dynamic_cast<PDBLoader::Frame *>(this->
                requestLockedFrame(dc->FrameID()));
-
-        if (fr == NULL)
-            return false;
-
         dc->SetUnlocker(new Unlocker(*fr));
+
+        if (fr == NULL) {
+            return false;
+        }
+
+        // If the 'force' flag is set, check whether the frame number is correct,
+        // if not re-request the frame
+        if (dc->IsFrameForced()) {
+            while (dc->FrameID() != fr->FrameNumber()) {
+                dc->Unlock();
+                int frameBefore = ((static_cast<int>(dc->FrameID()-1)+
+                        static_cast<int>(this->FrameCount())))%static_cast<int>(this->FrameCount());
+//                printf("PDBLoader (while frame %i) %u requested, frame count %u\n",
+//                        frameBefore, dc->FrameID(), this->FrameCount()); // DEBUG
+
+                // scharnkn:
+                // Request the frame before the actual requested frame (modulo
+                // framenumber) to trigger loading of the actually requested frame
+                fr = dynamic_cast<PDBLoader::Frame *>(this->requestLockedFrame(frameBefore));
+                dc->SetUnlocker(new Unlocker(*fr));
+                dc->Unlock();
+                //printf("PDBLoader: (while frame loaded): %u (%u requested)\n",
+                //        fr->FrameNumber(), frameBefore); // DEBUG
+                fr = dynamic_cast<PDBLoader::Frame *>(this->requestLockedFrame(dc->FrameID()));
+                dc->SetUnlocker(new Unlocker(*fr));
+                //printf("PDBLoader: (while frame loaded): %u (%u requested)\n",
+                //        fr->FrameNumber(), dc->FrameID()); // DEBUG
+                if (fr == NULL) {
+                    return false;
+                }
+            }
+        }
+
+
 
         dc->SetAtoms( this->data[0]->AtomCount(),
                       static_cast<unsigned int>(this->atomType.Count()),

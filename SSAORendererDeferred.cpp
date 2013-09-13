@@ -208,7 +208,7 @@ void SSAORendererDeferred::release(void) {
     glDeleteTextures(1, &this->ssaoBuff);
     glDeleteTextures(1, &this->filterBuff);
     glDeleteTextures(1, &this->discBuff);
-    glDeleteFramebuffers(1, &this->deferredFBO);
+    glDeleteFramebuffersEXT(1, &this->deferredFBO);
 }
 
 
@@ -312,10 +312,10 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
     /// Render scene ///
 
     // Enable rendering to FBO
-    glBindFramebuffer(GL_FRAMEBUFFER, this->deferredFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->colorBuff, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, this->normalBuff, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, this->depthBuff, 0);
+    glBindFramebufferEXT(GL_FRAMEBUFFER, this->deferredFBO);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->colorBuff, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, this->normalBuff, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, this->depthBuff, 0);
 
     GLenum mrt[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
 	glDrawBuffersARB(2, mrt);
@@ -330,13 +330,13 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
     (*crOut)(0);
 
     // Detach textures that are not needed anymore
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, 0, 0);
 
     // Attach SSAO and discontinuity buffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->ssaoBuff, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, this->discBuff, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->ssaoBuff, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, this->discBuff, 0);
     //GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     //if(status != GL_FRAMEBUFFER_COMPLETE) {
     //  return false;
@@ -375,15 +375,15 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
     //glUniformMatrix4fv(this->ssaoShader.ParameterLocation("projMat"), 1, false,
     //    projMat);
 
-	glActiveTextureARB(GL_TEXTURE1);
+	glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, this->rotSampler);
-    glActiveTextureARB(GL_TEXTURE2);
+    glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, this->normalBuff);
-    glActiveTextureARB(GL_TEXTURE3);
+    glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, this->randKernel);
-    glActiveTextureARB(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->depthBuff);
-    glGenerateMipmap(GL_TEXTURE_2D); // Regenerate mip map levels of the depth texture
+    glGenerateMipmapEXT(GL_TEXTURE_2D); // Regenerate mip map levels of the depth texture
 
     // Draw
     glBegin(GL_QUADS);
@@ -401,8 +401,8 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
     glBindTexture(GL_TEXTURE_2D,0);
 
     // Detach textures that are not needed anymore
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, 0, 0);
 
 
     if(this->filterParam.Param<core::param::BoolParam>()->Value()) {
@@ -410,7 +410,7 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
         //// Horizontal filter pass ///
 
         // Attach temporary filter buffer
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D,
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D,
                 this->filterBuff, 0);
         //GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         //if(status != GL_FRAMEBUFFER_COMPLETE) {
@@ -422,9 +422,9 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
         glUniform1iARB(this->filterShaderX.ParameterLocation("discBuff"), 1);
         glUniform1iARB(this->filterShaderX.ParameterLocation("nFilterSamples"),
                 this->nFilterSamplesParam.Param<core::param::IntParam>()->Value());
-		glActiveTextureARB(GL_TEXTURE1);
+		glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, this->discBuff);
-        glActiveTextureARB(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->ssaoBuff);
         // Draw
         glBegin(GL_QUADS);
@@ -436,11 +436,11 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
         this->filterShaderX.Disable();
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0); // TODO necessary?
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0); // TODO necessary?
 
         /// Vertical filter pass ///
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D,
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D,
                 this->ssaoBuff, 0);
         this->filterShaderY.Enable();
         glUniform2fARB(this->filterShaderY.ParameterLocation("winSize"),
@@ -449,9 +449,9 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
         glUniform1iARB(this->filterShaderY.ParameterLocation("discBuff"), 1);
         glUniform1iARB(this->filterShaderY.ParameterLocation("nFilterSamples"),
                 this->nFilterSamplesParam.Param<core::param::IntParam>()->Value());
-        glActiveTextureARB(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, this->discBuff);
-        glActiveTextureARB(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->filterBuff); // Apply vertical filter to horizontally filtered values
         // Draw
         glBegin(GL_QUADS);
@@ -463,11 +463,11 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
         this->filterShaderY.Disable();
         glBindTexture(GL_TEXTURE_2D,0);
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0); // TODO necessary?
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0); // TODO necessary?
     }
 
     // Disable rendering to framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 
     /// Deferred shading ///
     this->deferredShader.Enable();
@@ -494,19 +494,19 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Bind textures
-    glActiveTextureARB(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, this->colorBuff); // Color buffer
 
-    glActiveTextureARB(GL_TEXTURE2);
+    glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, this->normalBuff); // Normal buffer
 
-    glActiveTextureARB(GL_TEXTURE3);
+    glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, this->ssaoBuff); // Ssao value
 
-    glActiveTextureARB(GL_TEXTURE4);
+    glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, this->discBuff); // Discontinuity buffer value
 
-    glActiveTextureARB(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->depthBuff); // Depth buffer
 
     // Draw
@@ -542,13 +542,13 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
 bool SSAORendererDeferred::createFBO(UINT width, UINT height) {
 
     // Delete textures + fbo if necessary
-    if(glIsFramebuffer(this->deferredFBO)) {
+    if(glIsFramebufferEXT(this->deferredFBO)) {
         glDeleteTextures(1, &this->colorBuff);
         glDeleteTextures(1, &this->normalBuff);
         glDeleteTextures(1, &this->ssaoBuff);
         glDeleteTextures(1, &this->filterBuff);
         glDeleteTextures(1, &this->discBuff);
-        glDeleteFramebuffers(1, &this->deferredFBO);
+        glDeleteFramebuffersEXT(1, &this->deferredFBO);
     }
 
     glEnable(GL_TEXTURE_2D);
@@ -607,29 +607,29 @@ bool SSAORendererDeferred::createFBO(UINT width, UINT height) {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glGenFramebuffers(1, &this->deferredFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, deferredFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->colorBuff, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, this->normalBuff, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,  GL_TEXTURE_2D, this->ssaoBuff, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3,  GL_TEXTURE_2D, this->filterBuff, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4,  GL_TEXTURE_2D, this->discBuff, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, this->depthBuff, 0);
+    glGenFramebuffersEXT(1, &this->deferredFBO);
+    glBindFramebufferEXT(GL_FRAMEBUFFER, deferredFBO);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->colorBuff, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, this->normalBuff, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,  GL_TEXTURE_2D, this->ssaoBuff, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3,  GL_TEXTURE_2D, this->filterBuff, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4,  GL_TEXTURE_2D, this->discBuff, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, this->depthBuff, 0);
 
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE) {
       vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Could not create FBO");
       return false;
     }
 
     // Detach all textures
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, 0, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, 0, 0);
+    glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 
     return true;
 }

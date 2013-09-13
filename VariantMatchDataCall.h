@@ -1,0 +1,175 @@
+//
+// VariantMatchDataCall.h
+//
+// Copyright (C) 2013 by University of Stuttgart (VISUS).
+// All rights reserved.
+//
+// Created on: Jun 15, 2013
+//     Author: scharnkn
+//
+
+#ifndef MMPROTEINPLUGIN_VARIANTMATCHDATACALL_H_INCLUDED
+#define MMPROTEINPLUGIN_VARIANTMATCHDATACALL_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include "Call.h"
+#include "CallAutoDescription.h"
+#include "vislib/Cuboid.h"
+#include "view/CallRender3D.h"
+#include <GL/gl.h>
+
+namespace megamol {
+namespace protein {
+
+class VariantMatchDataCall : public core::Call {
+
+public:
+
+    /// Index of the 'CallForGetData' function
+    static const unsigned int CallForGetData;
+
+    /**
+     * Answer the name of the objects of this description.
+     *
+     * @return The name of the objects of this description.
+     */
+    static const char *ClassName(void) {
+        return "VariantMatchDataCall";
+    }
+
+    /**
+     * Gets a human readable description of the module.
+     *
+     * @return A human readable description of the module.
+     */
+    static const char *Description(void) {
+        return "Call to transmit varian match data";
+    }
+
+    /**
+     * Answer the number of functions used for this call.
+     *
+     * @return The number of functions used for this call.
+     */
+    static unsigned int FunctionCount(void) {
+        return 1;
+    }
+
+    /**
+     * Answer the name of the function used for this call.
+     *
+     * @param idx The index of the function to return it's name.
+     *
+     * @return The name of the requested function.
+     */
+    static const char * FunctionName(unsigned int idx) {
+        switch(idx) {
+        case 0:
+            return "getData";
+        }
+        return "";
+    }
+
+    /** Ctor. */
+    VariantMatchDataCall(void);
+
+    /** Dtor. */
+    virtual ~VariantMatchDataCall(void);
+
+    /**
+     * TODO
+     */
+    inline const vislib::TString *GetLabels() {
+        return this->labels;
+    }
+
+    /**
+     * TODO
+     */
+    inline const float *GetMatch() {
+        return this->match;
+    }
+
+    /**
+     * TODO
+     */
+    inline float GetMax() {
+        return this->max;
+    }
+
+    /**
+     * TODO
+     */
+    inline float GetMin() {
+        return this->min;
+    }
+
+    /**
+     * TODO
+     */
+    inline unsigned int GetVariantCnt() const {
+        return this->variantCnt;
+    }
+
+    /**
+     * TODO
+     */
+    void SetLabels(const vislib::TString *labels) {
+        this->labels = labels;
+    }
+
+    /**
+     * TODO
+     */
+    void SetMatch(const float *match) {
+        this->match = match;
+    }
+
+    /**
+     * TODO
+     */
+    void SetMatchRange(float min, float max) {
+        this->min = min;
+        this->max = max;
+    }
+
+    /**
+     * TODO
+     */
+    void SetVariantCnt(unsigned int variantCnt) {
+        this->variantCnt = variantCnt;
+    }
+
+protected:
+
+
+private:
+
+    /// The number of variants
+    unsigned int variantCnt;
+
+    /// The labels of all variants
+    const vislib::TString *labels;
+
+    /// The matching value matrix
+    const float *match;
+
+    /// The maximum match value
+    float max;
+
+    /// The minimum match value
+    float min;
+
+};
+
+/// Description class typedef
+typedef core::CallAutoDescription<VariantMatchDataCall> VariantMatchDataCallDescription;
+
+
+} // end namespace protein
+} // end namespace megamol
+
+#endif // MMPROTEINPLUGIN_VARIANTMATCHDATACALL_H_INCLUDED
+

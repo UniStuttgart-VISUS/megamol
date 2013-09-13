@@ -1,0 +1,131 @@
+//
+// VariantMatchRenderer.h
+//
+// Copyright (C) 2013 by University of Stuttgart (VISUS).
+// All rights reserved.
+//
+// Created on: Jun 15, 2013
+//     Author: scharnkn
+//
+
+#ifndef MEGAMOLCORE_VARIANTMATCHRENDERER_H_INCLUDED
+#define MEGAMOLCORE_VARIANTMATCHRENDERER_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma once
+#endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
+
+#include "param/ParamSlot.h"
+#include "CallerSlot.h"
+#include "view/Renderer2DModule.h"
+#include "vislib/GLSLShader.h"
+
+
+namespace megamol {
+namespace protein {
+
+
+class VariantMatchRenderer : public megamol::core::view::Renderer2DModule {
+
+public:
+
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char *ClassName(void) {
+        return "VariantMatchRenderer";
+    }
+
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char *Description(void) {
+        return "Offers matrix-like rendering of variant matchings";
+    }
+
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
+
+    /** Dtor */
+    VariantMatchRenderer(void);
+
+    /** Ctor */
+    ~VariantMatchRenderer(void);
+
+protected:
+
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
+
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtents(megamol::core::view::CallRender2D& call);
+
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
+
+    /**
+     * The Open GL Render callback.
+     *
+     * @param call The calling call.
+     * @return The return value of the function.
+     */
+    virtual bool Render(megamol::core::view::CallRender2D& call);
+
+    /**
+     * Update all parameter slots
+     */
+    void updateParams();
+
+private:
+
+    /// The data caller slot
+    core::CallerSlot dataCallerSlot;
+
+
+    /* Parameter slots */
+
+    /// Space in the final rendering that is used to show the labels (fraction
+    /// of two)
+    core::param::ParamSlot labelSpaceSlot;
+    float labelSpace;
+
+    /// Font size used to render the labels
+    core::param::ParamSlot labelSizeSlot;
+    float labelSize;
+
+    /// The texturing shader
+    vislib::graphics::gl::GLSLShader matrixTexShader;
+
+    /// The matix texture handle
+    GLuint matrixTex;
+
+};
+
+} // end namespace protein
+} // end namespace megamol
+
+#endif // MEGAMOLCORE_VARIANTMATCHRENDERER_H_INCLUDED
+

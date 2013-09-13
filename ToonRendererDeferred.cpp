@@ -19,6 +19,7 @@
 #include <vislib/Log.h>
 
 #include "ToonRendererDeferred.h"
+#include "glh/glh_extensions.h"
 
 using namespace megamol::protein;
 
@@ -92,8 +93,9 @@ bool ToonRendererDeferred::create(void) {
         return false;
     }
 
-    if(!glh_init_extensions("GL_EXT_framebuffer_object GL_ARB_draw_buffers"))
+    if(!glh_init_extensions("GL_EXT_framebuffer_object GL_ARB_draw_buffers")) {
         return false;
+    }
 
     if(!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
@@ -116,7 +118,7 @@ bool ToonRendererDeferred::create(void) {
         if(!this->sobelShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
-    catch(vislib::Exception e){
+    catch(vislib::Exception &e){
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
@@ -137,7 +139,7 @@ bool ToonRendererDeferred::create(void) {
         if(!this->ssaoShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
-    catch(vislib::Exception e){
+    catch(vislib::Exception &e){
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
@@ -158,7 +160,7 @@ bool ToonRendererDeferred::create(void) {
         if(!this->toonShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
-    catch(vislib::Exception e){
+    catch(vislib::Exception &e){
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
@@ -284,15 +286,15 @@ bool ToonRendererDeferred::Render(megamol::core::Call& call) {
     /// 1. Offscreen rendering ///
 
     // Enable rendering to FBO
-    glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
+    glBindFramebufferEXT(GL_FRAMEBUFFER, this->fbo);
 
     // Enable rendering to color attachents 0 and 1
     GLenum mrt[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
     glDrawBuffers(2, mrt);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->colorBuffer, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, this->normalBuffer, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, this->depthBuffer, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->colorBuffer, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, this->normalBuffer, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, this->depthBuffer, 0);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -301,9 +303,9 @@ bool ToonRendererDeferred::Render(megamol::core::Call& call) {
     (*crOut)(0);
 
     // Detach texture that are not needed anymore
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, 0, 0);
 
     // Prepare rendering screen quad
     glMatrixMode(GL_MODELVIEW);
@@ -323,7 +325,7 @@ bool ToonRendererDeferred::Render(megamol::core::Call& call) {
     glDepthMask(GL_FALSE); // Disable writing to depth buffer
 
     // Attach gradient texture
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->gradientBuffer, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->gradientBuffer, 0);
 
     this->sobelShader.Enable();
     glUniform1i(this->sobelShader.ParameterLocation("depthBuffer"), 0);
@@ -343,7 +345,7 @@ bool ToonRendererDeferred::Render(megamol::core::Call& call) {
     /// 3. Calculate ssao value if needed ///
     if(this->ssaoParam.Param<core::param::BoolParam>()->Value()) {
         // Attach ssao buffer
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->ssaoBuffer, 0);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->ssaoBuffer, 0);
 
         this->ssaoShader.Enable();
         glUniform4f(this->ssaoShader.ParameterLocation("clip"),
@@ -380,7 +382,7 @@ bool ToonRendererDeferred::Render(megamol::core::Call& call) {
     }
 
     // Disable rendering to framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 
     /// 4. Deferred shading ///
 
@@ -425,7 +427,7 @@ bool ToonRendererDeferred::Render(megamol::core::Call& call) {
 
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, this->ssaoBuffer); // SSAO buffer
-    glGenerateMipmap(GL_TEXTURE_2D); // Generate mip map levels for ssao texture
+    glGenerateMipmapEXT(GL_TEXTURE_2D); // Generate mip map levels for ssao texture
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->depthBuffer); // Depth buffer
@@ -465,13 +467,13 @@ bool ToonRendererDeferred::Render(megamol::core::Call& call) {
 bool ToonRendererDeferred::createFBO(UINT width, UINT height) {
 
     // Delete textures + fbo if necessary
-    if(glIsFramebuffer(this->fbo)) {
+    if(glIsFramebufferEXT(this->fbo)) {
         glDeleteTextures(1, &this->colorBuffer);
         glDeleteTextures(1, &this->normalBuffer);
         glDeleteTextures(1, &this->gradientBuffer);
         glDeleteTextures(1, &this->depthBuffer);
         glDeleteTextures(1, &this->ssaoBuffer);
-        glDeleteFramebuffers(1, &this->fbo);
+        glDeleteFramebuffersEXT(1, &this->fbo);
     }
 
     glEnable(GL_TEXTURE_2D);
@@ -511,8 +513,6 @@ bool ToonRendererDeferred::createFBO(UINT width, UINT height) {
     glGenTextures(1, &this->ssaoBuffer);
     glBindTexture(GL_TEXTURE_2D, this->ssaoBuffer);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-    //glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    //glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -525,34 +525,22 @@ bool ToonRendererDeferred::createFBO(UINT width, UINT height) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
 
 
     // Generate framebuffer
-    glGenFramebuffers(1, &this->fbo);
-    /*glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, this->colorBuff, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, this->normalBuff, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,  GL_TEXTURE_2D, this->gradientBuffer, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3,  GL_TEXTURE_2D, this->ssaoBuffer, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, this->depthBuff, 0);*/
+    glGenFramebuffersEXT(1, &this->fbo);
 
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE) {
       vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Could not create FBO");
       return false;
     }
 
     // Detach all textures
-    /*glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,  GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, 0, 0);*/
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 
     return true;
 }

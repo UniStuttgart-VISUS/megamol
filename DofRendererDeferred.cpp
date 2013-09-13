@@ -276,7 +276,7 @@ void protein::DofRendererDeferred::release(void) {
 	glDeleteTextures(1, &this->fboMipMapTexId[1]);
 	glDeleteTextures(1, &this->fboLowResTexId[0]);
 	glDeleteTextures(1, &this->fboLowResTexId[1]);
-	glDeleteFramebuffers(1, &this->fbo);
+	glDeleteFramebuffersEXT(1, &this->fbo);
 }
 
 
@@ -376,12 +376,12 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 	// 1. Render scene
 
 	// Setup rendering to FBO
-	glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
+	glBindFramebufferEXT(GL_FRAMEBUFFER, this->fbo);
 	GLenum mrt[] = {GL_COLOR_ATTACHMENT0};
-	glDrawBuffers(1, mrt);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+	glDrawBuffersARB(1, mrt);
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 			GL_TEXTURE_2D, this->sourceBuffer, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
 			GL_TEXTURE_2D, this->depthBuffer, 0);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -390,8 +390,8 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 	(*crOut)(0);
 
 	// Detach texture that are not needed anymore
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 
 	// 2. Apply depth of field
 
@@ -422,7 +422,7 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 	}
 
 	// Disable rendering to framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 
 	// Restore viewport
 	glViewport(0, 0, this->width, this->height);
@@ -477,14 +477,14 @@ float protein::DofRendererDeferred::calcCocSlope(float d_focus, float a, float f
 bool protein::DofRendererDeferred::createFbo(GLuint width, GLuint height) {
 
 	// Delete textures + fbo if necessary
-	if(glIsFramebuffer(this->fbo)) {
+	if(glIsFramebufferEXT(this->fbo)) {
 		glDeleteTextures(1, &this->depthBuffer);
 		glDeleteTextures(1, &this->sourceBuffer);
 		glDeleteTextures(1, &this->fboMipMapTexId[0]);
 		glDeleteTextures(1, &this->fboMipMapTexId[1]);
 		glDeleteTextures(1, &this->fboLowResTexId[0]);
 		glDeleteTextures(1, &this->fboLowResTexId[1]);
-		glDeleteFramebuffers(1, &this->fbo);
+		glDeleteFramebuffersEXT(1, &this->fbo);
 	}
 
 	glEnable(GL_TEXTURE_2D);
@@ -519,7 +519,7 @@ bool protein::DofRendererDeferred::createFbo(GLuint width, GLuint height) {
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
 			GL_NEAREST_MIPMAP_NEAREST);
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glGenerateMipmap(GL_TEXTURE_2D); // Establish a mipmap chain for the texture
+	glGenerateMipmapEXT(GL_TEXTURE_2D); // Establish a mipmap chain for the texture
 	glBindTexture(GL_TEXTURE_2D, 0);
 	// Second mipmap texture
 	glBindTexture(GL_TEXTURE_2D, this->fboMipMapTexId[1]);
@@ -528,7 +528,7 @@ bool protein::DofRendererDeferred::createFbo(GLuint width, GLuint height) {
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
 			GL_NEAREST_MIPMAP_NEAREST);
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glGenerateMipmap(GL_TEXTURE_2D); // Establish a mipmap chain for the texture
+	glGenerateMipmapEXT(GL_TEXTURE_2D); // Establish a mipmap chain for the texture
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glGenTextures(2, this->fboLowResTexId);
@@ -548,16 +548,16 @@ bool protein::DofRendererDeferred::createFbo(GLuint width, GLuint height) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Generate framebuffer
-	glGenFramebuffers(1, &this->fbo);
+	glGenFramebuffersEXT(1, &this->fbo);
 
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER);
 	if(status != GL_FRAMEBUFFER_COMPLETE) {
 		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
 				"Could not create fbo");
 		return false;
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 
 	return true;
 }
@@ -572,7 +572,7 @@ void protein::DofRendererDeferred::filterShaderX() {
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, this->fboLowResTexId[0]);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 			GL_TEXTURE_2D, this->fboLowResTexId[1], 0);
 
 	this->gaussianHoriz.Enable();
@@ -588,7 +588,7 @@ void protein::DofRendererDeferred::filterShaderX() {
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, this->fboLowResTexId[1]);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 			GL_TEXTURE_2D, this->fboLowResTexId[0], 0);
 
 	this->gaussianVert.Enable();
@@ -620,7 +620,7 @@ void protein::DofRendererDeferred::filterMipmap() {
 		if(pass == 0) {
 
 			glBindTexture(GL_TEXTURE_2D, this->fboMipMapTexId[0]);
-			glGenerateMipmap(GL_TEXTURE_2D); // Generate all mipmaps
+			glGenerateMipmapEXT(GL_TEXTURE_2D); // Generate all mipmaps
 			//CHECK_GL_ERROR();
 
 			this->gaussianHoriz.Enable();
@@ -634,7 +634,7 @@ void protein::DofRendererDeferred::filterMipmap() {
 
 			glBindTexture(GL_TEXTURE_2D, this->fboMipMapTexId[1]);
 			//CHECK_GL_ERROR();
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+			glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 					GL_TEXTURE_2D, 0, 0);
 
 			this->gaussianVert.Enable();
@@ -654,7 +654,7 @@ void protein::DofRendererDeferred::filterMipmap() {
 			glUniform2f(screenResInv, 1.0f/resX, 1.0f/resY);
 			//CHECK_GL_ERROR();
 
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+			glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 					GL_TEXTURE_2D, targetTex, i);
 			//CHECK_FRAMEBUFFER_STATUS();
 			//CHECK_GL_ERROR();
@@ -693,7 +693,7 @@ void protein::DofRendererDeferred::filterLee() {
 	// Generate all mipmaps
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, this->fboMipMapTexId[0]);
-	glGenerateMipmap(GL_TEXTURE_2D);
+	glGenerateMipmapEXT(GL_TEXTURE_2D);
 
 	this->gaussianLee.Enable();
 	glUniform1i(this->gaussianLee.ParameterLocation("sourceTex"), 0);
@@ -707,7 +707,7 @@ void protein::DofRendererDeferred::filterLee() {
 		glUniform2f(this->gaussianLee.ParameterLocation("screenResInv"),
 				1.0f/resX, 1.0f/resY);
 
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 				GL_TEXTURE_2D, this->fboMipMapTexId[1], i);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, i);
@@ -751,7 +751,7 @@ void protein::DofRendererDeferred::recalcShaderXParams() {
 	this->dNear *= filmWidth * this->widthInv;
 	this->dFar *= filmWidth * this->widthInv;
 
-	printf("near blur plane: %f, far blur plane: %f\n", this->dNear, this->dFar);
+	//printf("near blur plane: %f, far blur plane: %f\n", this->dNear, this->dFar);
 }
 
 
@@ -768,10 +768,10 @@ void protein::DofRendererDeferred::createReducedTexShaderX() {
 
     // Enable rendering to framebuffer
     //glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D, this->fboLowResTexId[0], 0);
     GLenum mrt[] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(1, mrt);
+    glDrawBuffersARB(1, mrt);
 
     // Bind textures
     glActiveTexture(GL_TEXTURE1);
@@ -807,10 +807,10 @@ void protein::DofRendererDeferred::createReducedTexMipmap() {
 
 	//glViewport(0, 0, this->width/4, this->height/4);
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 			GL_TEXTURE_2D, this->fboMipMapTexId[0], 0);
 	GLenum mrt[] = {GL_COLOR_ATTACHMENT0};
-	glDrawBuffers(1, mrt);
+	glDrawBuffersARB(1, mrt);
 
 	// Bind textures
 	glActiveTexture(GL_TEXTURE1);
@@ -972,10 +972,10 @@ bool protein::DofRendererDeferred::updateParams() {
 		this->focalDistParam.ResetDirty();
 		this->recalcShaderXParams();
 		if(!this->cameraInfo.IsNull()) {
-			printf("==== near %f, far %f, focalDist %f\n",
-					this->cameraInfo->NearClip(),
-					this->cameraInfo->FarClip(),
-					this->focalDist); // DEBUG
+//			printf("==== near %f, far %f, focalDist %f\n",
+//					this->cameraInfo->NearClip(),
+//					this->cameraInfo->FarClip(),
+//					this->focalDist); // DEBUG
 		}
 	}
 
@@ -996,7 +996,7 @@ bool protein::DofRendererDeferred::updateParams() {
 	if (this->focalLengthParam.IsDirty()) {
 		this->focalLength = this->focalLengthParam.Param<core::param::FloatParam>()->Value()/100.0f;
 		this->focalLengthParam.ResetDirty();
-		printf("new focal length %f\n", this->focalLength);
+//		printf("new focal length %f\n", this->focalLength);
 	}
 
 	return true;
