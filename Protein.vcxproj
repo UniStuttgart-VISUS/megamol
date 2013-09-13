@@ -378,7 +378,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -419,7 +419,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -461,7 +461,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -503,7 +503,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -525,15 +525,27 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+<<<<<<< .working
     <ClCompile Include="BindingSiteCall.cpp" />
     <ClCompile Include="BindingSiteDataSource.cpp" />
+=======
+    <ClCompile Include="Base64.cpp" />
+    <ClCompile Include="BindingSiteCall.cpp" />
+    <ClCompile Include="BindingSiteDataSource.cpp" />
+>>>>>>> .merge-right.r1161
     <ClCompile Include="BSpline.cpp" />
+<<<<<<< .working
+=======
+    <ClCompile Include="CallCamParams.cpp" />
+>>>>>>> .merge-right.r1161
     <ClCompile Include="CallMouseInput.cpp" />
     <ClCompile Include="CallVolumeData.cpp" />
     <ClCompile Include="CCP4VolumeData.cpp" />
     <ClCompile Include="CenterLineGenerator.cpp" />
     <ClCompile Include="CoarseGrainDataLoader.cpp" />
     <ClCompile Include="Color.cpp" />
+    <ClCompile Include="ComparativeFieldTopologyRenderer.cpp" />
+    <ClCompile Include="ComparativeSurfacePotentialRenderer.cpp" />
     <ClCompile Include="CritPoints.cpp" />
     <ClCompile Include="CrystalStructureDataCall.cpp" />
     <ClCompile Include="CrystalStructureDataSource.cpp" />
@@ -598,6 +610,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="GROLoader.cpp" />
     <ClCompile Include="HapticsMoleculeRenderer.cpp" />
+    <ClCompile Include="LinkedView3D.cpp" />
     <ClCompile Include="MappableCategoryFloat.cpp" />
     <ClCompile Include="MappableFloatPair.cpp" />
     <ClCompile Include="LIC.cpp" />
@@ -614,8 +627,15 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="MoleculeVolumeCudaRenderer.cpp" />
     <ClCompile Include="ParticleDataCall.cpp" />
     <ClCompile Include="PDBLoader.cpp" />
+    <ClCompile Include="PDBWriter.cpp" />
     <ClCompile Include="PhantomDeviceWrapper.cpp" />
+    <ClCompile Include="PotentialCalculator.cpp" />
+    <ClCompile Include="PotentialVolumeRaycaster.cpp" />
     <ClCompile Include="Protein.cpp" />
+<<<<<<< .working
+=======
+    <ClCompile Include="ProteinVariantMatch.cpp" />
+>>>>>>> .merge-right.r1161
     <ClCompile Include="ProteinVolumeRenderer.cpp" />
     <ClCompile Include="QuickSurfMTRenderer.cpp" />
     <ClCompile Include="QuickSurfRenderer.cpp" />
@@ -629,7 +649,12 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="RMS.cpp" />
     <ClCompile Include="IntSelection.cpp" />
     <ClCompile Include="IntSelectionCall.cpp" />
+<<<<<<< .working
     <ClCompile Include="SequenceRenderer.cpp" />
+=======
+    <ClCompile Include="SequenceRenderer.cpp" />
+    <ClCompile Include="SharedCameraParameters.cpp" />
+>>>>>>> .merge-right.r1161
     <ClCompile Include="SimpleMoleculeRenderer.cpp" />
     <ClCompile Include="slicing.cpp" />
     <ClCompile Include="SolPathDataCall.cpp" />
@@ -654,29 +679,56 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Streamline.cpp" />
+    <ClCompile Include="StreamlineRenderer.cpp" />
     <ClCompile Include="Stride.cpp" />
+    <ClCompile Include="SurfaceMappingTest.cpp" />
+    <ClCompile Include="SurfacePotentialRendererSlave.cpp" />
     <ClCompile Include="ToonRendererDeferred.cpp" />
+    <ClCompile Include="TrajectorySmoothFilter.cpp" />
+    <ClCompile Include="VariantMatchDataCall.cpp" />
+    <ClCompile Include="VariantMatchRenderer.cpp" />
+    <ClCompile Include="VBODataCall.cpp" />
+    <ClCompile Include="VecField3f.cpp" />
     <ClCompile Include="View3DMouse.cpp" />
     <ClCompile Include="UniGrid3D.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="View3DSpaceMouse.cpp" />
+    <ClCompile Include="VMDDXLoader.cpp" />
     <ClCompile Include="VolumeMeshRenderer.cpp" />
     <ClCompile Include="VolumeSliceCall.cpp" />
     <ClCompile Include="VolumeSliceRenderer.cpp" />
+    <ClCompile Include="VTIDataCall.cpp" />
+    <ClCompile Include="VTILoader.cpp" />
+    <ClCompile Include="VTIWriter.cpp" />
     <ClCompile Include="WKFThreads.cpp" />
     <ClCompile Include="WKFUtils.cpp" />
     <ClCompile Include="XYZLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+<<<<<<< .working
     <ClInclude Include="BindingSiteCall.h" />
+=======
+    <ClInclude Include="Base64.h" />
+    <ClInclude Include="BindingSiteCall.h" />
+>>>>>>> .merge-right.r1161
     <ClInclude Include="BSpline.h" />
+<<<<<<< .working
+=======
+    <ClInclude Include="CallCamParams.h" />
+>>>>>>> .merge-right.r1161
     <ClInclude Include="CallMouseInput.h" />
     <ClInclude Include="CallVolumeData.h" />
     <ClInclude Include="CCP4VolumeData.h" />
     <ClInclude Include="CenterLineGenerator.h" />
     <ClInclude Include="CoarseGrainDataLoader.h" />
     <ClInclude Include="Color.h" />
+<<<<<<< .working
+=======
+    <ClInclude Include="ComparativeFieldTopologyRenderer.h" />
+    <ClInclude Include="ComparativeSurfacePotentialRenderer.h" />
+>>>>>>> .merge-right.r1161
     <ClInclude Include="CritPoints.h" />
     <ClInclude Include="CrystalStructureDataCall.h" />
     <ClInclude Include="CrystalStructureDataSource.h" />
@@ -706,6 +758,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="HapticsMoleculeRenderer.h" />
     <ClInclude Include="BindingSiteDataSource.h" />
     <ClInclude Include="LIC.h" />
+    <ClInclude Include="LinkedView3D.h" />
     <ClInclude Include="MappableCategoryFloat.h" />
     <ClInclude Include="MappableFloatPair.h" />
     <ClInclude Include="MDDriverConnector.h" />
@@ -721,8 +774,15 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="MoleculeVolumeCudaRenderer.h" />
     <ClInclude Include="ParticleDataCall.h" />
     <ClInclude Include="PDBLoader.h" />
+    <ClInclude Include="PDBWriter.h" />
     <ClInclude Include="PhantomDeviceWrapper.h" />
+    <ClInclude Include="PotentialCalculator.h" />
+    <ClInclude Include="PotentialVolumeRaycaster.h" />
     <ClInclude Include="Protein.h" />
+<<<<<<< .working
+=======
+    <ClInclude Include="ProteinVariantMatch.h" />
+>>>>>>> .merge-right.r1161
     <ClInclude Include="ProteinVolumeRenderer.h" />
     <ClInclude Include="QuickSurfMTRenderer.h" />
     <ClInclude Include="QuickSurfRenderer.h" />
@@ -736,7 +796,12 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="RMS.h" />
     <ClInclude Include="IntSelection.h" />
     <ClInclude Include="IntSelectionCall.h" />
+<<<<<<< .working
     <ClInclude Include="SequenceRenderer.h" />
+=======
+    <ClInclude Include="SequenceRenderer.h" />
+    <ClInclude Include="SharedCameraParameters.h" />
+>>>>>>> .merge-right.r1161
     <ClInclude Include="simple.h" />
     <ClInclude Include="SimpleMoleculeRenderer.h" />
     <ClInclude Include="slicing.h" />
@@ -754,16 +819,29 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="SSAORendererDeferred.h" />
     <ClInclude Include="state.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Streamline.h" />
+    <ClInclude Include="StreamlineRenderer.h" />
     <ClInclude Include="Stride.h" />
+    <ClInclude Include="SurfaceMappingTest.h" />
+    <ClInclude Include="SurfacePotentialRendererSlave.h" />
     <ClInclude Include="tables.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ToonRendererDeferred.h" />
+    <ClInclude Include="TrajectorySmoothFilter.h" />
     <ClInclude Include="UniGrid3D.h" />
+    <ClInclude Include="VariantMatchDataCall.h" />
+    <ClInclude Include="VariantMatchRenderer.h" />
+    <ClInclude Include="VBODataCall.h" />
+    <ClInclude Include="VecField3f.h" />
     <ClInclude Include="View3DMouse.h" />
     <ClInclude Include="View3DSpaceMouse.h" />
+    <ClInclude Include="VMDDXLoader.h" />
     <ClInclude Include="VolumeMeshRenderer.h" />
     <ClInclude Include="VolumeSliceCall.h" />
     <ClInclude Include="VolumeSliceRenderer.h" />
+    <ClInclude Include="VTIDataCall.h" />
+    <ClInclude Include="VTILoader.h" />
+    <ClInclude Include="VTIWriter.h" />
     <ClInclude Include="WKFThreads.h" />
     <ClInclude Include="WKFUtils.h" />
     <ClInclude Include="XYZLoader.h" />
@@ -816,11 +894,14 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <SubType>Designer</SubType>
     </CustomBuildStep>
     <None Include="common.mk" />
+    <None Include="ComparativeSurfacePotentialRenderer.cuh" />
+    <None Include="ComparativeSurfacePotentialRenderer_inline_device_functions.cuh" />
     <None Include="config.bat" />
     <None Include="config.sh" />
     <None Include="configure.lin.pl" />
     <None Include="configure.win.pl" />
     <None Include="CUDACurl.cuh" />
+    <None Include="CUDAFieldTopology.cuh" />
     <None Include="ExtLibs.mk.input" />
     <None Include="ExtLibs.props.input" />
     <None Include="Makefile" />
@@ -833,6 +914,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="particleSystem.cuh">
       <FileType>Document</FileType>
     </None>
+    <None Include="PotentialCalculator.cuh" />
     <None Include="Shaders\proteinDeferred.btf">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -857,15 +939,31 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </None>
+    <None Include="sort_triangles.cuh" />
     <None Include="VolumeMeshRenderer.cuh" />
   </ItemGroup>
   <ItemGroup>
+<<<<<<< .working
     <CudaCompile Include="CUDACurl.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CudaCompile>
+=======
+    <CudaCompile Include="ComparativeSurfacePotentialRenderer.cu" />
+    <CudaCompile Include="ComparativeSurfacePotentialRenderer_metric.cu" />
+    <CudaCompile Include="ComparativeSurfacePotentialRenderer_surface_generation.cu" />
+    <CudaCompile Include="ComparativeSurfacePotentialRenderer_surface_mapping.cu" />
+    <CudaCompile Include="ComparativeSurfacePotentialRenderer_thrust_stuff.cu" />
+    <CudaCompile Include="CUDACurl.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="CUDAFieldTopology.cu" />
+>>>>>>> .merge-right.r1161
     <CudaCompile Include="CUDAMarchingCubes.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -905,6 +1003,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </CudaCompile>
+    <CudaCompile Include="PotentialCalculator.cu" />
+    <CudaCompile Include="sort_triangles.cu" />
     <CudaCompile Include="VolumeMeshRenderer-sort.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

@@ -648,7 +648,7 @@ void computeArcs( float4* arcs,                 // output: arcs
                 }
             } else { // d2 < 0
                 if( d3 > 0.0f ) {
-                    // Teilung in zwei Bögen
+                    // Teilung in zwei Bï¿½gen
                 } else { // d3 < 0
                     // keine Auswirkung
                 }

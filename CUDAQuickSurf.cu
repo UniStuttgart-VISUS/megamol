@@ -25,7 +25,7 @@
 #include <windows.h>
 #endif
 #include "glh/glh_extensions.h"
-#include <GL/glu.h>
+
 
 #include <stdio.h>
 #include <stdlib.h>
