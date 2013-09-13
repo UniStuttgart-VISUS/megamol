@@ -441,7 +441,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="job\AbstractThreadedJob.cpp" />
     <ClCompile Include="job\DataWriterJob.cpp" />
     <ClCompile Include="job\JobThread.cpp" />
-    <ClCompile Include="misc\BezierDataCall.cpp" />
     <ClCompile Include="misc\ImageViewer.cpp" />
     <ClCompile Include="misc\LinesDataCall.cpp" />
     <ClCompile Include="misc\LinesRenderer.cpp" />
@@ -656,7 +655,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="job\AbstractThreadedJob.h" />
     <ClInclude Include="job\DataWriterJob.h" />
     <ClInclude Include="job\JobThread.h" />
-    <ClInclude Include="misc\BezierDataCall.h" />
     <ClInclude Include="misc\ImageViewer.h" />
     <ClInclude Include="misc\LinesDataCall.h" />
     <ClInclude Include="misc\LinesRenderer.h" />

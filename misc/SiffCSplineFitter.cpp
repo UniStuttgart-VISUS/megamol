@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "SiffCSplineFitter.h"
-#include "BezierDataCall.h"
+#include "misc/BezierCurvesListDataCall.h"
 #include "moldyn/MultiParticleDataCall.h"
 #include "param/BoolParam.h"
 #include "param/EnumParam.h"
@@ -42,8 +42,8 @@ misc::SiffCSplineFitter::SiffCSplineFitter(void) : Module(),
     this->deCycleSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->deCycleSlot);
 
-    this->getDataSlot.SetCallback("BezierDataCall", "GetData", &SiffCSplineFitter::getDataCallback);
-    this->getDataSlot.SetCallback("BezierDataCall", "GetExtent", &SiffCSplineFitter::getExtentCallback);
+    this->getDataSlot.SetCallback(BezierCurvesListDataCall::ClassName(), "GetData", &SiffCSplineFitter::getDataCallback);
+    this->getDataSlot.SetCallback(BezierCurvesListDataCall::ClassName(), "GetExtent", &SiffCSplineFitter::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->inDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
@@ -84,19 +84,22 @@ void misc::SiffCSplineFitter::release(void) {
  * misc::SiffCSplineFitter::getDataCallback
  */
 bool misc::SiffCSplineFitter::getDataCallback(Call& caller) {
-    BezierDataCall *bdc = dynamic_cast<BezierDataCall*>(&caller);
+    BezierCurvesListDataCall *bdc = dynamic_cast<BezierCurvesListDataCall*>(&caller);
     if (bdc == NULL) return false;
 
     this->assertData();
 
-    bdc->SetData(static_cast<unsigned int>(this->curves.Count()),
-        this->curves.PeekElements());
-    bdc->SetDataHash(this->datahash);
-    bdc->SetFrameCount(1);
-    bdc->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
-    bdc->AccessBoundingBoxes().SetObjectSpaceClipBox(cbox);
-    bdc->SetFrameID(0);
-    bdc->SetUnlocker(NULL);
+    // TODO: Re-Implement
+    return false;
+
+    //bdc->SetData(static_cast<unsigned int>(this->curves.Count()),
+    //    this->curves.PeekElements());
+    //bdc->SetDataHash(this->datahash);
+    //bdc->SetFrameCount(1);
+    //bdc->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
+    //bdc->AccessBoundingBoxes().SetObjectSpaceClipBox(cbox);
+    //bdc->SetFrameID(0);
+    //bdc->SetUnlocker(NULL);
 
     return true;
 }
@@ -106,7 +109,7 @@ bool misc::SiffCSplineFitter::getDataCallback(Call& caller) {
  * misc::SiffCSplineFitter::getExtentCallback
  */
 bool misc::SiffCSplineFitter::getExtentCallback(Call& caller) {
-    BezierDataCall *bdc = dynamic_cast<BezierDataCall*>(&caller);
+    BezierCurvesListDataCall *bdc = dynamic_cast<BezierCurvesListDataCall*>(&caller);
     if (bdc == NULL) return false;
 
     this->assertData();
@@ -223,6 +226,12 @@ void misc::SiffCSplineFitter::assertData(void) {
  * misc::SiffCSplineFitter::addSpline
  */
 void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int cnt, float rad, unsigned char colR, unsigned char colG, unsigned char colB) {
+
+
+    // TODO: Re-Implement
+
+
+/*
     typedef vislib::math::ShallowPoint<float, 3> ShallowPoint;
     typedef vislib::math::Point<float, 3> Point;
     typedef vislib::math::Vector<float, 3> Vector;
@@ -429,7 +438,7 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
     curve[2].Set(lines[lines.Count() - 2].Interpolate(lines.Last(), 0.25f), rad * radii.Last(), colR, colG, colB);
     curve[3].Set(lines.Last(), rad * radii.Last(), colR, colG, colB);
     this->curves.Add(curve);
-
+*/
 }
 
 

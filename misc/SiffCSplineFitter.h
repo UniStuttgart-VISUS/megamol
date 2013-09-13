@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "BezierDataCall.h"
+#include "misc/BezierCurvesListDataCall.h"
 #include "CalleeSlot.h"
 #include "CallerSlot.h"
 #include "Module.h"
@@ -155,8 +155,7 @@ namespace misc {
         vislib::math::Cuboid<float> cbox;
 
         /** The curves data */
-        vislib::Array<vislib::math::BezierCurve<
-            BezierDataCall::BezierPoint, 3> > curves;
+        vislib::Array<misc::BezierCurvesListDataCall::Curves> curves;
 
         /** The hash value of the outgoing data */
         SIZE_T datahash;

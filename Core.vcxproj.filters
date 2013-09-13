@@ -423,9 +423,6 @@
     <ClCompile Include="job\JobThread.cpp">
       <Filter>job\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="misc\BezierDataCall.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="misc\ImageViewer.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
@@ -1003,9 +1000,6 @@
     </ClInclude>
     <ClInclude Include="job\JobThread.h">
       <Filter>job\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="misc\BezierDataCall.h">
-      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="misc\ImageViewer.h">
       <Filter>misc\Header Files</Filter>
