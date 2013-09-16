@@ -30,7 +30,7 @@ namespace protein {
 class SecPlaneRenderer : public core::view::Renderer3DModule {
 public:
 
-    enum ShadingMode {DENSITY=0, POTENTIAL, LIC}; // TODO extend: LIC, THRESHOLD, COLDWARM, RAINBOW?
+    enum ShadingMode {DENSITY=0, POTENTIAL, LIC, ISOLINES};
 
     /**
      * Answer the name of this module.
@@ -149,6 +149,15 @@ private:
 
     /// Parameter slor for LIC random noise texture coordinates scale
     core::param::ParamSlot licTCSclSlot;
+
+    /// Parameter for isovalue
+    core::param::ParamSlot isoValueSlot;
+
+    /// Parameter for isoline threshold
+    core::param::ParamSlot isoThreshSlot;
+
+    /// Parameter for isoline distribution
+    core::param::ParamSlot isoDistributionSlot;
 
     /// Parameter slot for x-Plane
     core::param::ParamSlot xPlaneSlot;
