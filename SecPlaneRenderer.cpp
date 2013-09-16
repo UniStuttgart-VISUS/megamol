@@ -40,6 +40,9 @@ SecPlaneRenderer::SecPlaneRenderer(void) : view::Renderer3DModule(),
     licBrightnessSlot("licBrightness", "LIC licBrightness"),
     licDirSclSlot("licDirScl", "LIC stepsize scale factor"),
     licTCSclSlot("licTCScl", "LIC random noise texture coordinates scale"),
+    isoValueSlot("isoValue", "Isovalue for isolines"),
+    isoThreshSlot("isoThresh", "Threshold for isolines"),
+    isoDistributionSlot("isoDistribution", "Dertermines the amount of isolines"),
     xPlaneSlot("xPlanePos", "Change the position of the x-Plane"),
     yPlaneSlot("yPlanePos", "Change the position of the y-Plane"),
     zPlaneSlot("zPlanePos", "Change the position of the z-Plane"),
@@ -59,6 +62,7 @@ SecPlaneRenderer::SecPlaneRenderer(void) : view::Renderer3DModule(),
     srm->SetTypePair(0, "Density Map");
     srm->SetTypePair(1, "Potential Map");
     srm->SetTypePair(2, "LIC");
+    srm->SetTypePair(3, "Isolines");
     this->shadingSlot << srm;
     this->MakeSlotAvailable(&this->shadingSlot);
 
@@ -85,6 +89,18 @@ SecPlaneRenderer::SecPlaneRenderer(void) : view::Renderer3DModule(),
     // LIC tex coord scale
     this->licTCSclSlot.SetParameter(new core::param::FloatParam(1.0f, 0.0f));
     this->MakeSlotAvailable(&this->licTCSclSlot);
+
+    // Isovalue
+    this->isoValueSlot.SetParameter(new core::param::FloatParam(1.0f));
+    this->MakeSlotAvailable(&this->isoValueSlot);
+
+    // Threshold for rendering of isolines (determines thickness)
+    this->isoThreshSlot.SetParameter(new core::param::FloatParam(1.0f, 0.0f));
+    this->MakeSlotAvailable(&this->isoThreshSlot);
+
+    // Determines the amount of isolines
+    this->isoDistributionSlot.SetParameter(new core::param::FloatParam(1.0f, 0.0f));
+    this->MakeSlotAvailable(&this->isoDistributionSlot);
 
     // X-plane position
     this->xPlaneSlot.SetParameter(new core::param::FloatParam(0.0f));
@@ -374,9 +390,10 @@ bool SecPlaneRenderer::Render(megamol::core::Call& call) {
 
     glEnable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDisable(GL_BLEND);
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     Vec3f gridMinCoord = vti->GetOrigin();
     Vec3f gridMaxCoord;
@@ -409,6 +426,12 @@ bool SecPlaneRenderer::Render(megamol::core::Call& call) {
             this->licDirSclSlot.Param<core::param::FloatParam>()->Value());
     glUniform1fARB(this->sliceShader.ParameterLocation("licTCScl"),
             this->licTCSclSlot.Param<core::param::FloatParam>()->Value());
+    glUniform1fARB(this->sliceShader.ParameterLocation("isoval"),
+            this->isoValueSlot.Param<core::param::FloatParam>()->Value());
+    glUniform1fARB(this->sliceShader.ParameterLocation("isoThresh"),
+            this->isoThreshSlot.Param<core::param::FloatParam>()->Value());
+    glUniform1fARB(this->sliceShader.ParameterLocation("isoDistribution"),
+            this->isoDistributionSlot.Param<core::param::FloatParam>()->Value());
 
     glActiveTextureARB(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_3D, this->randNoiseTex);

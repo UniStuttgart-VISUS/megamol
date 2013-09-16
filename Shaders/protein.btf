@@ -14388,6 +14388,8 @@ void main(void) {
             <snippet name="colormaps::COOLWARM" />
             <snippet type="string">
         <!--
+#extension GL_EXT_gpu_shader4 : enable
+
 uniform sampler3D tex;
 uniform float minTex;
 uniform float maxTex;
@@ -14395,10 +14397,13 @@ uniform int mode;
 
 // LIC stuff
 uniform sampler3D randNoiseTex;
-uniform float licContrast = 1.0;
-uniform float licBrightness = 0.0;
-uniform float licDirScl = 1.0;
-uniform float licTCScl = 1.0;
+uniform float licContrast;
+uniform float licBrightness;
+uniform float licDirScl;
+uniform float licTCScl;
+uniform float isoval;
+uniform float isoThresh;
+uniform float isoDistribution;
 
 /*
  * GetGradient
@@ -14463,6 +14468,13 @@ float CalcLIC(int l) {
  * main
  */
 void main() {
+    
+    // Get texel coordinates
+    ivec3 texelCoords;
+    texelCoords.x = int(textureSize(tex, 0).x*gl_TexCoord[0].s);
+    texelCoords.y = int(textureSize(tex, 0).y*gl_TexCoord[0].t);
+    texelCoords.z = int(textureSize(tex, 0).z*gl_TexCoord[0].p);
+    
     if (mode == 0) { // Density map
         gl_FragColor =  vec4(MixColors(texture3D(tex, gl_TexCoord[0].stp).a, 
         minTex, maxTex, 
@@ -14472,16 +14484,20 @@ void main() {
         vec3 colMsh = CoolWarmMsh(texture3D(tex, 
             gl_TexCoord[0].stp).a, minTex, 0.0, maxTex);
         gl_FragColor = vec4(MSH2RGB(colMsh.x, colMsh.y, colMsh.z), 1.0);
-        
     } else if (mode == 2) { // LIC
         float lic = CalcLIC(10);
         gl_FragColor = vec4(lic,lic, lic, 1.0);
+    } else if (mode == 3) { // Isolines
+        // Interpolation in MSH color space
+        float val = texture3D(tex, gl_TexCoord[0].stp).a;
+        vec3 colMsh = CoolWarmMsh(val, minTex, 0.0, maxTex);
+        //gl_FragColor = vec4(0.5, 0.0, 0.0, 1.0);
+        //float col = float((abs(val-isoval)/isoDistribution) < isoThresh);
+        float col = float(abs(val-isoval)/isoDistribution - float(int(abs(val-isoval)/isoDistribution)) < isoThresh);
+        gl_FragColor = vec4(MSH2RGB(colMsh.x, colMsh.y, colMsh.z)*col, col);
     } else { // Invalid color mode
         gl_FragColor = vec4(0.5, 1.0, 0.0, 1.0);
-    }
-
-//    gl_FragColor = gl_TexCoord[0];
-    
+    }    
 }
 -->
             </snippet>
