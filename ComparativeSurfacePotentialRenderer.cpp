@@ -1495,8 +1495,8 @@ bool ComparativeSurfacePotentialRenderer::initPotentialMap(
     if (!glIsTexture(potentialTex)) {
         glGenTextures(1, &potentialTex);
     }
-    glBindTexture (GL_TEXTURE_3D, potentialTex);
-    glTexImage3DEXT (GL_TEXTURE_3D,
+    glBindTexture(GL_TEXTURE_3D, potentialTex);
+    glTexImage3DEXT(GL_TEXTURE_3D,
             0,
             GL_RGBA32F,
             cmd->GetGridsize().X(),
@@ -1506,11 +1506,11 @@ bool ComparativeSurfacePotentialRenderer::initPotentialMap(
             GL_ALPHA,
             GL_FLOAT,
             cmd->GetPointDataByIdx(0, 0));
-    glTexParameteri (GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri (GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri (GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
 
     glDisable(GL_TEXTURE_3D);
 
