@@ -50,6 +50,7 @@
 #include "SurfacePotentialRendererSlave.h"
 #include "StreamlineRenderer.h"
 #include "VariantMatchRenderer.h"
+#include "SecPlaneRenderer.h"
 
 // 2D renderers
 #include "VolumeSliceRenderer.h"
@@ -156,7 +157,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 46; // TODO?
+    int moduleCount = 47;
 #ifdef WITH_CUDA
     moduleCount+=13;
 #endif // WITH_CUDA
@@ -244,6 +245,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case CUDA_OFFSET + HAPTICS_OFFSET + 43 : return new ModuleAutoDescription<protein::ProteinVariantMatch>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 44 : return new ModuleAutoDescription<protein::MoleculeBallifier>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 45 : return new ModuleAutoDescription<protein::ResidueSelection>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 46 : return new ModuleAutoDescription<protein::SecPlaneRenderer>();
         default: return NULL;
     }
     return NULL;

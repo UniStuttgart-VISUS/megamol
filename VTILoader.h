@@ -202,6 +202,85 @@ private:
         }
 
         /**
+         * Get point data array according to the array's id and the piece's
+         * index. Might return NULL if the requested id is not in use.
+         *
+         * @param The arrays id.
+         * @param The piece's index.
+         * @return A pointer to the requested data array or NULL.
+         */
+        const char* GetPointDataByName(vislib::StringA id,
+                unsigned int idx) const {
+            return this->data.PeekPointData(id, idx)->PeekData();
+        }
+
+        /**
+         * Get point data array according to the array's index and the piece's
+         * index. Might return NULL if the requested id is not in use.
+         *
+         * @param The arrays id.
+         * @param The piece's index.
+         * @return A pointer to the requested data array or NULL.
+         */
+        const char* GetPointDataByIdx(unsigned int arrayIdx,
+                unsigned int pieceIdx) const {
+
+            return this->data.PeekPointData(arrayIdx, pieceIdx)->PeekData();
+        }
+
+        /**
+         * Get cell data array according to the array's id and the piece's
+         * index. Might return NULL if the requested id is not in use.
+         *
+         * @param The arrays id.
+         * @param The piece's index.
+         * @return A pointer to the requested data array or NULL.
+         */
+        const char* GetCellDataByName(vislib::StringA id,
+                unsigned int idx) {
+
+            return this->data.PeekCellData(id, idx)->PeekData();
+        }
+
+        /**
+         * Get cell data array according to the array's index and the piece's
+         * index. Might return NULL if the requested id is not in use.
+         *
+         * @param The arrays id.
+         * @param The piece's index.
+         * @return A pointer to the requested data array or NULL.
+         */
+        const char* GetCellDataByIdx(unsigned int arrayIdx,
+                unsigned int pieceIdx) const {
+
+            return this->data.PeekCellData(arrayIdx, pieceIdx)->PeekData();
+        }
+
+        /**
+         * Answers the number of elements in the cell data array in the piece
+         * 'pieceIdx' with the index 'dataIdx'.
+         *
+         * @param pieceIdx The piece's index
+         * @param dataIdx  The data array's index
+         * @return The number of elements in the data array.
+         */
+        size_t GetPieceCellArraySize(unsigned int pieceIdx, unsigned int dataIdx) {
+            return this->data.GetPieceCellArraySize(dataIdx, pieceIdx);
+        }
+
+        /**
+         * Answers the number of elements in the point data array in the piece
+         * 'pieceIdx' with the index 'dataIdx'.
+         *
+         * @param pieceIdx The piece's index
+         * @param dataIdx  The data array's index
+         * @return The number of elements in the data array.
+         */
+        size_t GetPiecePointArraySize(unsigned int pieceIdx, unsigned int dataIdx) {
+            return this->data.GetPiecePointArraySize(dataIdx, pieceIdx);
+        }
+
+        /**
          * Answers the spacing of the frame data.
          *
          * @return The spacing of the frame data.

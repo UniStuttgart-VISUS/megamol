@@ -114,8 +114,8 @@ bool VTILoader::getData(core::Call& call) {
 //    printf("Frame requested: %u\n", dc->FrameID()); // DEBUG
 
     if (dc->FrameID() >= this->FrameCount()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Frame %u requested (nFrames %u)",
-                this->ClassName(), dc->FrameID(), this->FrameCount());
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Frame %u requested (nFrames %u)",
+//                this->ClassName(), dc->FrameID(), this->FrameCount());
         return false;
     }
 
@@ -127,6 +127,15 @@ bool VTILoader::getData(core::Call& call) {
     if (fr == NULL) {
         return false;
     }
+
+//    printf("Vorher: %.16f\n", (const float*)(fr->GetPointDataByIdx(0, 0))[10000]);
+
+//    // DEBUG print texture values
+//    for (int i = 0; i < fr->GetPiecePointArraySize(0, 0); ++i) {
+//        printf("%.16f\n", (const float*)(fr->GetPointDataByIdx(0, 0))[i]);
+//    }
+    // printf("Size %u\n", fr->GetPiecePointArraySize(0, 0));
+    // END DEBUG
 
     // If the 'force' flag is set, check whether the frame number is correct,
     // if not re-request the frame
@@ -172,6 +181,13 @@ bool VTILoader::getData(core::Call& call) {
     dc->SetDataHash(this->hash);
 
     //printf("Frame loaded: %u\n", fr->FrameNumber()); // DEBUG
+
+//    // DEBUG print texture values
+//    for (int i = 0; i < dc->GetPiecePointArraySize(0, 0); ++i) {
+//        printf("%f\n", (const float*)(dc->GetPointDataByIdx(0, 0))[i]);
+//    }
+//    // END DEBUG
+//    printf("Get data: Size %u\n", dc->GetPiecePointArraySize(0, 0));
 
     return true;
 }
@@ -576,7 +592,7 @@ void VTILoader::readDataBinary2Float(char *buffIn, float* buffOut, // TODO Other
  */
 view::AnimDataModule::Frame* VTILoader::constructFrame(void) const {
     Frame *f = new Frame(*const_cast<VTILoader*>(this));
-    f->SetNumberOfPieces(this->nPieces);
+//    f->SetNumberOfPieces(this->nPieces);
     return f;
 }
 
@@ -703,7 +719,8 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
 
         } else if(entity.StartsWith("Piece")) {
 
-            //printf("    -----------------\n"); // DEBUG
+            pieceCounter++;
+            fr->SetNumberOfPieces(pieceCounter);
 
             vislib::math::Vector<int, 6> extent;
             vislib::StringA extentStr;
@@ -727,11 +744,11 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
             // TODO Use string2int instead
 
             // Set the pieces extent
-            fr->SetPieceExtent(pieceCounter, Cubeu(extent[0], extent[1],
+            fr->SetPieceExtent(pieceCounter-1, Cubeu(extent[0], extent[1],
                     extent[2], extent[3], extent[4], extent[5]));
 
         }
-        else if(entity.StartsWith("DataArray")) {
+        else if (entity.StartsWith("DataArray")) {
 
             //printf("    -----------------\n"); // DEBUG
 
@@ -798,9 +815,9 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
 
             // Get overall grid size of the current piece
             uint gridSize =
-                    (fr->GetPieceExtent(pieceCounter).Width()+1)*
-                    (fr->GetPieceExtent(pieceCounter).Depth()+1)*
-                    (fr->GetPieceExtent(pieceCounter).Height()+1);
+                    (fr->GetPieceExtent(pieceCounter-1).Width()+1)*
+                    (fr->GetPieceExtent(pieceCounter-1).Depth()+1)*
+                    (fr->GetPieceExtent(pieceCounter-1).Height()+1);
 
             float *data;
             if(f == VTKImageData::VTISOURCE_ASCII) {
@@ -809,14 +826,23 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
                 fr->SetPointData(
                         (const char*)data, min, max,
                         VTKImageData::DataArray::VTI_FLOAT,
-                        vislib::StringA("potential"), 1, pieceCounter); // TODO Use real ID AND NUMBER OF COMPONENTS!!
+                        name,
+                        1, pieceCounter-1); // TODO Use real ID AND NUMBER OF COMPONENTS!!
             } else if(f == VTKImageData::VTISOURCE_BINARY) {
                 data = new float[gridSize+1];
                 this->readDataBinary2Float(pt_end, data, gridSize);
+                const float *dataplus = data + 1;
                 fr->SetPointData(
-                        (const char*)(data+1), min, max,
+                        (const char*)(dataplus), min, max,
                         VTKImageData::DataArray::VTI_FLOAT,
-                        vislib::StringA("potential"), 1, pieceCounter); // TODO Use real ID AND NUMBER OF COMPONENTS!!
+                        name,
+                        1, pieceCounter-1); // TODO Use real ID AND NUMBER OF COMPONENTS!!
+
+//                // DEBUG print texture values
+//                for (int i = 0; i < fr->GetPiecePointArraySize(0, 0); ++i) {
+//                    printf("%i: %.16f\n", i, data[i]);
+//                }
+//                // END DEBUG
             }
             delete[] data;
         }
@@ -839,6 +865,14 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
             fileSize,
             (double(clock()-t)/double(CLOCKS_PER_SEC))); // DEBUG
 #endif // defined(VERBOSE)
+
+
+//    // DEBUG print texture values
+//    for (int i = 0; i < fr->GetPiecePointArraySize(0, 0); ++i) {
+//        printf("%i: %.16f\n", i, ((const float*)(fr->GetPointDataByIdx(0, 0)))[i]);
+//    }
+//    printf("Size %u\n", fr->GetPiecePointArraySize(0, 0));
+//    // END DEBUG
 }
 
 
