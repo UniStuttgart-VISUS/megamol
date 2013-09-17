@@ -94,7 +94,7 @@ namespace misc {
              */
             template<class T>
             inline const T * GetData(void) const {
-                return static_cast<const T*>(this->data);
+                return reinterpret_cast<const T*>(this->data);
             }
 
             /**
@@ -107,7 +107,7 @@ namespace misc {
              */
             template<class T>
             inline const T * GetDataAt(size_t offset) const {
-                return static_cast<const T*>(this->data + offset);
+                return reinterpret_cast<const T*>(this->data + offset);
             }
 
             /**
