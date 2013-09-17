@@ -74,8 +74,8 @@ void misc::BezierCurvesListDataCall::Curves::Clear(void) {
  * misc::BezierCurvesListDataCall::BezierCurvesListDataCall
  */
 misc::BezierCurvesListDataCall::BezierCurvesListDataCall(void)
-        : AbstractGetData3DCall(), curves(), count() {
-
+        : AbstractGetData3DCall(), curves(), count(), static_indices(false) {
+    // intentionally empty
 }
 
 
@@ -86,4 +86,5 @@ misc::BezierCurvesListDataCall::~BezierCurvesListDataCall(void) {
     this->Unlock();
     this->curves = NULL;
     this->count = 0;
+    this->static_indices = false;
 }

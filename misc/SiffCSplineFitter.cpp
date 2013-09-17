@@ -87,19 +87,13 @@ bool misc::SiffCSplineFitter::getDataCallback(Call& caller) {
     BezierCurvesListDataCall *bdc = dynamic_cast<BezierCurvesListDataCall*>(&caller);
     if (bdc == NULL) return false;
 
-    this->assertData();
-
-    // TODO: Re-Implement
-    return false;
-
-    //bdc->SetData(static_cast<unsigned int>(this->curves.Count()),
-    //    this->curves.PeekElements());
-    //bdc->SetDataHash(this->datahash);
-    //bdc->SetFrameCount(1);
-    //bdc->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
-    //bdc->AccessBoundingBoxes().SetObjectSpaceClipBox(cbox);
-    //bdc->SetFrameID(0);
-    //bdc->SetUnlocker(NULL);
+    bdc->SetData(this->curves.PeekElements(), this->curves.Count());
+    bdc->SetDataHash(this->datahash);
+    bdc->SetFrameCount(1);
+    bdc->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
+    bdc->AccessBoundingBoxes().SetObjectSpaceClipBox(cbox);
+    bdc->SetFrameID(0);
+    bdc->SetUnlocker(NULL);
 
     return true;
 }
@@ -199,6 +193,7 @@ void misc::SiffCSplineFitter::assertData(void) {
     float *pos = new float[frameCnt * 3];
     float *times = new float[frameCnt * 2];
 
+    this->curves.AssertCapacity(frameSize);
     for (unsigned int i = 0; i < frameSize; i++) {
         colR = cdata[0];
         colG = cdata[1];
@@ -226,25 +221,35 @@ void misc::SiffCSplineFitter::assertData(void) {
  * misc::SiffCSplineFitter::addSpline
  */
 void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int cnt, float rad, unsigned char colR, unsigned char colG, unsigned char colB) {
-
-
-    // TODO: Re-Implement
-
-
-/*
     typedef vislib::math::ShallowPoint<float, 3> ShallowPoint;
     typedef vislib::math::Point<float, 3> Point;
     typedef vislib::math::Vector<float, 3> Vector;
-    typedef vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3> BezierCurve;
+
+    this->curves.Add(misc::BezierCurvesListDataCall::Curves());
+    misc::BezierCurvesListDataCall::Curves& list = this->curves.Last();
 
     const bool useTimeColour = (this->colourMapSlot.Param<param::EnumParam>()->Value() == 1);
     const bool deCycle = this->deCycleSlot.Param<param::BoolParam>()->Value();
 
-    if (cnt == 0) return;
-    BezierCurve curve;
+    vislib::RawStorage data;
+    vislib::RawStorage index;
+    misc::BezierCurvesListDataCall::DataLayout layout = useTimeColour
+        ? misc::BezierCurvesListDataCall::DATALAYOUT_XYZ_F_RGB_B
+        : misc::BezierCurvesListDataCall::DATALAYOUT_XYZ_F;
+    size_t bpp = useTimeColour ? (3 * 4 + 3 * 1) : (3 * 4);
 
+    if (cnt == 0) return;
+
+/*
+    typedef vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3> BezierCurve;
+    BezierCurve curve;
+*/
     const float bminB = 0.15f;
     const float bmaxB = 1.0f - bminB;
+
+    // fix splines by either changing positions:
+    //  deCycle allows splines to leave the bounding box, but the spline will stay in one
+    //  false will split the splines into several segments all contained in the bounding box
     if (deCycle) {
         // compensate cyclic boundary conditions
         Vector off;
@@ -310,6 +315,7 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
                     || ((p1.Z() < bminZ) && (p2.Z() > bmaxZ)) // cb-jump in Z
                     || ((p2.Z() < bminZ) && (p1.Z() > bmaxZ)) ) { // cb-jump in Z
 
+                // recurse for nex spline segement
                 this->addSpline(pos + s * 3, times + s * 2, i - s, rad, colR, colG, colB);
                 s = i;
                 splitted = true;
@@ -324,121 +330,195 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
 
     if (cnt == 1) {
         // super trivial nonsense: simply dots
-        if (useTimeColour) this->timeColour(times[0], colR, colG, colB);
-        curve[0].Set(pos[0] + 0.05f * rad, pos[1], pos[2], rad, colR, colG, colB);
-        if (useTimeColour) this->timeColour((times[0] + times[1]) * 0.5f, colR, colG, colB);
-        curve[1].Set(pos[0], pos[1], pos[2], rad, colR, colG, colB);
-        curve[2].Set(pos[0], pos[1], pos[2], rad, colR, colG, colB);
-        if (useTimeColour) this->timeColour(times[1], colR, colG, colB);
-        curve[3].Set(pos[0] - 0.05f * rad, pos[1], pos[2], rad, colR, colG, colB);
-        this->curves.Add(curve);
-        return;
-    }
+        unsigned char col[3];
+        data.Append(pos, 3 * sizeof(float));
+        if (useTimeColour) {
+            this->timeColour(times[0], col[0], col[1], col[2]);
+            data.Append(col, 3);
+        }
+        data.Append(pos, 3 * sizeof(float));
+        if (useTimeColour) {
+            this->timeColour((times[0] + times[1]) * 0.5f, col[0], col[1], col[2]);
+            data.Append(col, 3);
+        }
+        data.Append(pos, 3 * sizeof(float));
+        if (useTimeColour) {
+            this->timeColour(times[1], col[0], col[1], col[2]);
+            data.Append(col, 3);
+        }
 
-    // looping and/or fitting
-    // first fit a polyline
-    vislib::Array<Point> lines; // the polyline
-    vislib::Array<unsigned int> indices; // the index of input point
+        unsigned int i[4] = {0, 1, 1, 2};
+        index.Append(i, 4 * sizeof(unsigned int));
 
-    indices.Add(0);
-    lines.Add(ShallowPoint(pos));
-    indices.Add(cnt - 1);
-    lines.Add(ShallowPoint(pos + (cnt - 1) * 3));
+    } else {
+        // looping and/or fitting
+        // first fit a polyline
+        vislib::Array<Point> lines; // the polyline
+        vislib::Array<unsigned int> indices; // the index of input point
 
-    const float distEps = rad;
+        indices.Add(0);
+        lines.Add(ShallowPoint(pos));
+        indices.Add(cnt - 1);
+        lines.Add(ShallowPoint(pos + (cnt - 1) * 3));
 
-    bool refined = true;
-    while (refined) {
-        refined = false;
-        for (unsigned int l = 1; l < lines.Count(); l++) {
-            // The line segment
-            ShallowPoint p1(pos + indices[l - 1] * 3);
-            ShallowPoint p2(pos + indices[l] * 3); 
-            Vector lv = p2 - p1;
-            float ll = lv.Normalise();
+        const float distEps = rad;
 
-            unsigned int maxP = UINT_MAX;
-            float maxDist = -1.0f;
+        bool refined = true;
+        while (refined) {
+            refined = false;
+            for (unsigned int l = 1; l < lines.Count(); l++) {
+                // The line segment
+                ShallowPoint p1(pos + indices[l - 1] * 3);
+                ShallowPoint p2(pos + indices[l] * 3); 
+                Vector lv = p2 - p1;
+                float ll = lv.Normalise();
 
-            // search point with max distance to current line segment
-            for (unsigned int p = indices[l - 1] + 1; p < indices[l]; p++) {
-                ShallowPoint pn(pos + p * 3);
-                Vector pv = pn - p1;
-                float l = lv.Dot(pv);
-                float dist;
+                unsigned int maxP = UINT_MAX;
+                float maxDist = -1.0f;
 
-                if (l < 0.0) {
-                    dist = pn.Distance(p1);
-                } else if (l > ll) {
-                    dist = pn.Distance(p2);
-                } else {
-                    dist = pn.Distance(p1 + lv * l);
+                // search point with max distance to current line segment
+                for (unsigned int p = indices[l - 1] + 1; p < indices[l]; p++) {
+                    ShallowPoint pn(pos + p * 3);
+                    Vector pv = pn - p1;
+                    float l = lv.Dot(pv);
+                    float dist;
+
+                    if (l < 0.0) {
+                        dist = pn.Distance(p1);
+                    } else if (l > ll) {
+                        dist = pn.Distance(p2);
+                    } else {
+                        dist = pn.Distance(p1 + lv * l);
+                    }
+
+                    if (maxDist < dist) {
+                        maxDist = dist;
+                        maxP = p;
+                    }
                 }
 
-                if (maxDist < dist) {
-                    maxDist = dist;
-                    maxP = p;
+                if (maxDist > distEps) {
+                    // split this line
+                    indices.Insert(l, maxP);
+                    lines.Insert(l, ShallowPoint(pos + maxP * 3));
+                    l++;
+                    refined = true;
                 }
             }
+        }
 
-            if (maxDist > distEps) {
-                // split this line
-                indices.Insert(l, maxP);
-                lines.Insert(l, ShallowPoint(pos + maxP * 3));
-                l++;
-                refined = true;
+        // approx lines though curved (bullshit but good enough for the IEEE-VIS)
+        if (lines.Count() == 2) {
+            // simple line:
+            unsigned char col[3];
+            data.Append(lines[0].PeekCoordinates(), 3 * sizeof(float));
+            if (useTimeColour) {
+                this->timeColour(times[indices[0] * 2], col[0], col[1], col[2]);
+                data.Append(col, 3);
             }
+            data.Append(lines[1].PeekCoordinates(), 3 * sizeof(float));
+            if (useTimeColour) {
+                this->timeColour(times[indices[1] * 2 + 1], col[0], col[1], col[2]);
+                data.Append(col, 3);
+            }
+
+            unsigned int i[4] = {0, 0, 1, 1};
+            index.Append(i, 4 * sizeof(unsigned int));
+
+        } else {
+            layout = useTimeColour
+                ? misc::BezierCurvesListDataCall::DATALAYOUT_XYZR_F_RGB_B
+                : misc::BezierCurvesListDataCall::DATALAYOUT_XYZR_F;
+            bpp = useTimeColour ? (4 * 4 + 3 * 1) : (4 * 4);
+
+            // segment length for radius mapping
+            float maxLen = 1.0f;
+            for (unsigned int i = 1; i < indices.Count(); i++) {
+                float len = static_cast<float>(indices[i] - indices[i - 1]);
+                len /= lines[i - 1].Distance(lines[i]);
+                if (maxLen < len) maxLen = len;
+            }
+            vislib::Array<float> radii(indices.Count() - 1, 1.0f);
+            for (unsigned int i = 1; i < indices.Count(); i++) {
+                float len = static_cast<float>(indices[i] - indices[i - 1]);
+                len /= lines[i - 1].Distance(lines[i]);
+                radii[i - 1] = 0.5f + 0.5f * len / maxLen;
+            }
+
+            // first curve
+            unsigned char col[3];
+            unsigned int idx = 0;
+            float r = rad * radii[0];
+            data.Append(lines[0].PeekCoordinates(), 3 * sizeof(float));
+            data.Append(&r, sizeof(float));
+            if (useTimeColour) {
+                this->timeColour(times[indices[0] * 2], col[0], col[1], col[2]);
+                data.Append(col, 3);
+            }
+            index.Append(&idx, sizeof(unsigned int));
+
+            data.Append(lines[0].Interpolate(lines[1], 0.75).PeekCoordinates(), 3 * sizeof(float));
+            data.Append(&r, sizeof(float));
+            if (useTimeColour) data.Append(col, 3);
+            idx++; index.Append(&idx, sizeof(unsigned int));
+
+            // inner curves
+            for (unsigned int i = 1; i < lines.Count() - 1; i++) {
+                data.Append(lines[i].Interpolate(lines[i + 1], 0.25f).PeekCoordinates(), 3 * sizeof(float));
+                r = rad * radii[i]; data.Append(&r, sizeof(float));
+                if (useTimeColour) {
+                    this->timeColour(times[indices[i] * 2] * 0.5f + times[indices[i] * 2 + 1] * 0.5f, col[0], col[1], col[2]);
+                    data.Append(col, 3);
+                }
+                idx++; index.Append(&idx, sizeof(unsigned int));
+
+                data.Append(lines[i].Interpolate(lines[i + 1], 0.5f).PeekCoordinates(), 3 * sizeof(float));
+                data.Append(&r, sizeof(float));
+                if (useTimeColour) data.Append(col, 3);
+                idx++; index.Append(&idx, sizeof(unsigned int));
+                index.Append(&idx, sizeof(unsigned int)); // use this point twice
+
+                data.Append(lines[i].Interpolate(lines[i + 1], 0.75f).PeekCoordinates(), 3 * sizeof(float));
+                data.Append(&r, sizeof(float));
+                if (useTimeColour) data.Append(col, 3);
+                idx++; index.Append(&idx, sizeof(unsigned int));
+            }
+
+            // last curve
+            data.Append(lines[lines.Count() - 2].Interpolate(lines.Last(), 0.25f).PeekCoordinates(), 3 * sizeof(float));
+            r = rad * radii.Last(); data.Append(&r, sizeof(float));
+            if (useTimeColour) {
+                this->timeColour(times[indices.Last() * 2 + 1], col[0], col[1], col[2]);
+                data.Append(col, 3);
+            }
+            idx++; index.Append(&idx, sizeof(unsigned int));
+            data.Append(lines.Last().PeekCoordinates(), 3 * sizeof(float));
+            data.Append(&r, sizeof(float));
+            if (useTimeColour) data.Append(col, 3);
+            idx++; index.Append(&idx, sizeof(unsigned int));
+
         }
     }
 
-    // approx lines though curved (bullshit but good enough for the IEEE-VIS)
-    if (lines.Count() == 2) {
-        // quite trivial
-        if (useTimeColour) this->timeColour(times[indices[0] * 2], colR, colG, colB);
-        curve[0].Set(lines[0], rad, colR, colG, colB);
-        curve[1].Set(lines[0], rad, colR, colG, colB);
-        if (useTimeColour) this->timeColour(times[indices[1] * 2 + 1], colR, colG, colB);
-        curve[2].Set(lines[1], rad, colR, colG, colB);
-        curve[3].Set(lines[1], rad, colR, colG, colB);
-        this->curves.Add(curve);
-        return;
+    if ((data.GetSize() != 0) && (index.GetSize() != 0)) {
+        // copy the data to new flat arrays, so that the list object can overtake the memory
+        unsigned char *dat = new unsigned char[data.GetSize()];
+        ::memcpy(dat, data, data.GetSize());
+        unsigned int *idx = new unsigned int[index.GetSize() / sizeof(unsigned int)];
+        ::memcpy(idx, index, index.GetSize());
+
+        // the list object now takes ownership of the data
+        list.Set(layout,
+            dat, data.GetSize() / bpp, true,
+            idx, index.GetSize() / sizeof(unsigned int), true,
+            rad, colR, colG, colB);
+
+        dat = nullptr; // do not delete!
+        idx = nullptr; // do not delete!
+    } else {
+        list.Set(BezierCurvesListDataCall::DATALAYOUT_NONE, nullptr, 0, nullptr, 0);
     }
 
-    // segment length for radius mapping
-    float maxLen = 1.0f;
-    for (unsigned int i = 1; i < indices.Count(); i++) {
-        float len = static_cast<float>(indices[i] - indices[i - 1]);
-        len /= lines[i - 1].Distance(lines[i]);
-        if (maxLen < len) maxLen = len;
-    }
-    vislib::Array<float> radii(indices.Count() - 1, 1.0f);
-    for (unsigned int i = 1; i < indices.Count(); i++) {
-        float len = static_cast<float>(indices[i] - indices[i - 1]);
-        len /= lines[i - 1].Distance(lines[i]);
-        radii[i - 1] = 0.5f + 0.5f * len / maxLen;
-    }
-
-    // first curve
-    if (useTimeColour) this->timeColour(times[indices[0] * 2], colR, colG, colB);
-    curve[0].Set(lines[0], rad * radii[0], colR, colG, colB);
-    curve[1].Set(lines[0].Interpolate(lines[1], 0.75), rad * radii[0], colR, colG, colB);
-
-    // inner curves
-    for (unsigned int i = 1; i < lines.Count() - 1; i++) {
-        if (useTimeColour) this->timeColour(times[indices[i] * 2] * 0.5f + times[indices[i] * 2 + 1] * 0.5f, colR, colG, colB);
-        curve[2].Set(lines[i].Interpolate(lines[i + 1], 0.25f), rad * radii[i], colR, colG, colB);
-        curve[3].Set(lines[i].Interpolate(lines[i + 1], 0.5f), rad * radii[i], colR, colG, colB);
-        this->curves.Add(curve);
-        curve[0] = curve[3];
-        curve[1].Set(lines[i].Interpolate(lines[i + 1], 0.75f), rad * radii[i], colR, colG, colB);
-    }
-
-    // last curve
-    if (useTimeColour) this->timeColour(times[indices.Last() * 2 + 1], colR, colG, colB);
-    curve[2].Set(lines[lines.Count() - 2].Interpolate(lines.Last(), 0.25f), rad * radii.Last(), colR, colG, colB);
-    curve[3].Set(lines.Last(), rad * radii.Last(), colR, colG, colB);
-    this->curves.Add(curve);
-*/
 }
 
 

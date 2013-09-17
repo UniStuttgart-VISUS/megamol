@@ -462,7 +462,7 @@ namespace misc {
          *
          * @return The number of bézier curves
          */
-        size_t Count(void) const {
+        inline size_t Count(void) const {
             return this->count;
         }
 
@@ -472,8 +472,23 @@ namespace misc {
          *
          * @return The bézier curves
          */
-        const Curves * GetCurves(void) const {
+        inline const Curves * GetCurves(void) const {
             return this->curves;
+        }
+
+        /**
+         * Answer whether or not this data has static indices.
+         *
+         * If this flag indicates that static index data is used, then all
+         * frames will return the same number of curve lists with the same
+         * lengths and exactly the same index data. Only the position, radius,
+         * and colour data will differ. This allows for interpolation between
+         * the frames.
+         *
+         * @return True if this data has static index data
+         */
+        inline bool HasStaticIndices(void) const {
+            return this->static_indices;
         }
 
         /**
@@ -483,10 +498,29 @@ namespace misc {
          *
          * @param curves Pointer to a flat array of bézier curves.
          * @param count The number of objects stored in 'curves'
+         * @param static_indices Indicates whether or not the data has static
+         *                       index data
          */
-        inline void SetData(Curves *curves, size_t count) {
+        inline void SetData(const Curves *curves, size_t count,
+                bool static_indices = false) {
             this->curves = curves;
             this->count = count;
+            this->static_indices = static_indices;
+        }
+
+        /**
+         * Sets the flag whether or not static index data is used.
+         *
+         * If this flag indicates that static index data is used, then all
+         * frames will return the same number of curve lists with the same
+         * lengths and exactly the same index data. Only the position, radius,
+         * and colour data will differ. This allows for interpolation between
+         * the frames.
+         *
+         * @param static_indices Set to true to indicate static index data
+         */
+        inline void SetHasStaticIndices(bool static_indices) {
+            this->static_indices = static_indices;
         }
 
         /**
@@ -501,6 +535,7 @@ namespace misc {
         inline BezierCurvesListDataCall& operator=(const BezierCurvesListDataCall& rhs) {
             this->curves = rhs.curves;
             this->count = rhs.count;
+            this->static_indices = rhs.static_indices;
             AbstractGetData3DCall::operator=(rhs);
             return *this;
         }
@@ -508,10 +543,18 @@ namespace misc {
     private:
 
         /** The list of curves */
-        Curves *curves;
+        const Curves *curves;
 
         /** The number of curves */
         size_t count;
+
+        /**
+         * Flag to indicate static index data, i.e. all frames will return the
+         * same number of curve lists with the same lengths and exactly the
+         * same index data. Only the position, radius, and colour data will
+         * differ. This allows for interpolation between the frames.
+         */
+        bool static_indices;
 
     };
 
