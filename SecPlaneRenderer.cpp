@@ -42,7 +42,7 @@ SecPlaneRenderer::SecPlaneRenderer(void) : view::Renderer3DModule(),
     licTCSclSlot("licTCScl", "LIC random noise texture coordinates scale"),
     isoValueSlot("isoValue", "Isovalue for isolines"),
     isoThreshSlot("isoThresh", "Threshold for isolines"),
-    isoDistributionSlot("isoDistribution", "Dertermines the amount of isolines"),
+    isoDistributionSlot("isoDistribution", "Determines the amount of isolines"),
     xPlaneSlot("xPlanePos", "Change the position of the x-Plane"),
     yPlaneSlot("yPlanePos", "Change the position of the y-Plane"),
     zPlaneSlot("zPlanePos", "Change the position of the z-Plane"),
@@ -241,7 +241,7 @@ bool SecPlaneRenderer::GetExtents(megamol::core::Call& call) {
     this->bbox.MakeScaledWorld(scale);
 
     cr3d->AccessBoundingBoxes() = this->bbox;
-    cr3d->SetTimeFramesCount(vti->FrameCount());
+    cr3d->SetTimeFramesCount(vti->FrameCount()); // TODO USe combined frame count
 
     return true;
 }
@@ -373,7 +373,6 @@ bool SecPlaneRenderer::Render(megamol::core::Call& call) {
                 this->ClassName());
     }
 
-
     /* Render slices */
 
     // Compute scale factor and scale world
@@ -381,12 +380,12 @@ bool SecPlaneRenderer::Render(megamol::core::Call& call) {
     glPushMatrix();
 
     float scale;
-    if(!vislib::math::IsEqual(vti->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
-        scale = 2.0f / vti->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    if(!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
+        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
     } else {
         scale = 1.0f;
     }
-    glScalef( scale, scale, scale);
+    glScalef(scale, scale, scale);
 
     glEnable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -478,7 +477,7 @@ bool SecPlaneRenderer::Render(megamol::core::Call& call) {
 
     this->sliceShader.Disable();
     glBindTexture(GL_TEXTURE_3D, 0);
-
+    glDisable(GL_TEXTURE_3D);
     glPopMatrix();
 
     return CheckForGLError();

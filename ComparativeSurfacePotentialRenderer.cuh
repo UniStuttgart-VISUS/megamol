@@ -28,6 +28,8 @@
 
 typedef unsigned int uint;
 
+#include "cuda_helper.h"
+
 // The number of possible neighbours for every vertex when using the
 // Freudenthal subdivision scheme
 #define MT_FREUDENTHAL_SUBDIV_MAXNEIGHBOURS 18
