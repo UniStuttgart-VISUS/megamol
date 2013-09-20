@@ -106,7 +106,6 @@
 #include "PotentialCalculator.h"
 #include "SharedCameraParameters.h"
 #include "ProteinVariantMatch.h"
-#include "SurfaceMapper.h"
 
 #include "CallAutoDescription.h"
 #include "ModuleAutoDescription.h"
@@ -161,7 +160,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
 PROTEIN_API int mmplgModuleCount(void) {
     int moduleCount = 47;
 #ifdef WITH_CUDA
-    moduleCount+=15;
+    moduleCount+=14;
 #endif // WITH_CUDA
 #ifdef WITH_OPENHAPTICS
     moduleCount+=1;
@@ -197,9 +196,8 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case HAPTICS_OFFSET + 10 : return new ModuleAutoDescription<protein::VolumeMeshRenderer>();
         case HAPTICS_OFFSET + 11 : return new ModuleAutoDescription<protein::DataWriter>();
         case HAPTICS_OFFSET + 12 : return new ModuleAutoDescription<protein::CrystalStructureVolumeRenderer>();
-        case HAPTICS_OFFSET + 13 : return new ModuleAutoDescription<protein::SurfaceMapper>();
-        case HAPTICS_OFFSET + 14 : return new ModuleAutoDescription<protein::ComparativeMolSurfaceRenderer>();
-        #define CUDA_OFFSET 15
+        case HAPTICS_OFFSET + 13 : return new ModuleAutoDescription<protein::ComparativeMolSurfaceRenderer>();
+        #define CUDA_OFFSET 14
 #else
         #define CUDA_OFFSET 0
 #endif // WITH_CUDA

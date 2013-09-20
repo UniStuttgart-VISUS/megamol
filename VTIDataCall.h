@@ -384,6 +384,7 @@ public:
 private:
 
     float calltime;            ///> The exact requested/stored call time
+    size_t frameCnt;           ///> The number of frames
     const VTKImageData *data;  ///> The current frame's image data (pointer)
 
 };

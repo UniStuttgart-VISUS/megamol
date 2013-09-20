@@ -1003,7 +1003,6 @@ __global__ void UpdateVertexPositionTrilinear_D(
         return;
     }
 
-
     const uint posBaseIdx = dataArrSize*idx+dataArrOffs;
 
     /* Retrieve stuff from global device memory */

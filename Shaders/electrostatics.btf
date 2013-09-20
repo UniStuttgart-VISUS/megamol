@@ -185,7 +185,7 @@ varying vec3 view;
 varying vec3 normalFrag;
 varying vec3 posNewFrag; 
 varying vec3 posOldFrag; 
-varying float corruptTriangleFlagFrag;
+//varying float corruptTriangleFlagFrag;
 //varying float signSwitchedFlag;
 
 void main() {
@@ -206,8 +206,8 @@ void main() {
     if (colorMode == 0) { // Uniform color
         color = vec4(colorUniform, 1.0);
         // Set for corrupt triangles
-        color = color*(1.0 - corruptTriangleFlagFrag) +       
-                vec4(0.8f, 0.8f, 0.0f, 1.0)*corruptTriangleFlagFrag;
+        //color = color*(1.0 - corruptTriangleFlagFrag) +       
+        //        vec4(0.8f, 0.8f, 0.0f, 1.0)*corruptTriangleFlagFrag;
     } else if (colorMode == 1) { // Normal
         lightparams = vec4(1.0, 0.0, 0.0, 1.0);
         color = vec4(normalize(normalFrag), 1.0);
