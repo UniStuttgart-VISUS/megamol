@@ -518,6 +518,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h" />
+    <ClInclude Include="AbstractDataWriterBase.h" />
     <ClInclude Include="AbstractGetData3DCall.h" />
     <ClInclude Include="AbstractGetDataCall.h" />
     <ClInclude Include="AbstractNamedObject.h" />

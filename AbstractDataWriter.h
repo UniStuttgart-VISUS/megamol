@@ -22,7 +22,7 @@ namespace core {
     /**
      * Abstract base class for data writer modules
      */
-    class AbstractDataWriter : public Module {
+    class MEGAMOLCORE_API AbstractDataWriter : public Module {
     public:
 
         /** Ctor. */
