@@ -51,7 +51,7 @@ namespace misc {
         /**
          * Nested class of one list of curves
          */
-        class Curves {
+        class MEGAMOLCORE_API Curves {
         public:
 
             /**
