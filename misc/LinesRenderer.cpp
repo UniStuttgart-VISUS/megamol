@@ -68,6 +68,7 @@ bool misc::LinesRenderer::GetExtents(Call& call) {
     if (cr == NULL) return false;
 
     LinesDataCall *ldc = this->getDataSlot.CallAs<misc::LinesDataCall>();
+    if (ldc != nullptr) ldc->SetFrameID(static_cast<int>(cr->Time()), true);
     if ((ldc != NULL) && ((*ldc)(1))) {
         cr->SetTimeFramesCount(ldc->FrameCount());
         cr->AccessBoundingBoxes() = ldc->AccessBoundingBoxes();
@@ -95,6 +96,8 @@ void misc::LinesRenderer::release(void) {
  * misc::LinesRenderer::Render
  */
 bool misc::LinesRenderer::Render(Call& call) {
+    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+    if (cr == NULL) return false;
 
     ::glDisable(GL_TEXTURE);
     ::glDisable(GL_LINE_SMOOTH);
@@ -104,6 +107,7 @@ bool misc::LinesRenderer::Render(Call& call) {
     ::glLineWidth(1.0f);
 
     LinesDataCall *ldc = this->getDataSlot.CallAs<misc::LinesDataCall>();
+    if (ldc != nullptr) ldc->SetFrameID(static_cast<int>(cr->Time()), true);
     if ((ldc == NULL) || (!(*ldc)(0))) return false;
 
     bool useColourArray = false;
