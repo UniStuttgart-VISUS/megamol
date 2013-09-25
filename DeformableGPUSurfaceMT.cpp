@@ -26,69 +26,6 @@ using namespace megamol::protein;
 
 
 /*
- * DeformableGPUSurfaceMT::ComputeConnectivity
- */
-bool DeformableGPUSurfaceMT::ComputeConnectivity(float *volume_D,
-        size_t volDim[3], float volWSOrg[3], float volWSDelta[3],
-        float isovalue) {
-
-    /* Init grid parameters for all files */
-
-    if (!CudaSafeCall(InitVolume(
-            make_uint3(volDim[0], volDim[1], volDim[2]),
-            make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
-            make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
-        return false;
-    }
-
-    if (!CudaSafeCall(InitVolume_surface_generation(
-            make_uint3(volDim[0], volDim[1], volDim[2]),
-            make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
-            make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
-        return false;
-    }
-
-    /* Compute neighbours */
-
-    if (!CudaSafeCall(vertexNeighbours_D.Validate(this->vertexCnt*18))) {
-        return false;
-    }
-    if (!CudaSafeCall(vertexNeighbours_D.Set(-1))) {
-        return false;
-    }
-    if (!CudaSafeCall(ComputeVertexConnectivity(
-            this->vertexNeighbours_D.Peek(),
-            this->vertexStates_D.Peek(),
-            this->vertexMap_D.Peek(),
-            this->vertexMapInv_D.Peek(),
-            this->cubeMap_D.Peek(),
-            this->cubeMapInv_D.Peek(),
-            this->cubeStates_D.Peek(),
-            this->vertexCnt,
-            volume_D,
-            isovalue))) {
-
-//        // DEBUG Print neighbour indices
-//        HostArr<int> vertexNeighbours;
-//        vertexNeighbours.Validate(vertexNeighbours_D.GetSize());
-//        vertexNeighbours_D.CopyToHost(vertexNeighbours.Peek());
-//        for (int i = 0; i < vertexNeighbours_D.GetSize()/18; ++i) {
-//            printf("Neighbours vtx #%i: ", i);
-//            for (int j = 0; j < 18; ++j) {
-//                printf("%i ", vertexNeighbours.Peek()[i*18+j]);
-//            }
-//            printf("\n");
-//        }
-//        // END DEBUG
-
-        return false;
-    }
-    this->neighboursReady = true;
-    return true;
-}
-
-
-/*
  * DeformableGPUSurfaceMT::DeformableGPUSurfaceMT
  */
 DeformableGPUSurfaceMT::DeformableGPUSurfaceMT() : GPUSurfaceMT(),
@@ -427,7 +364,6 @@ DeformableGPUSurfaceMT& DeformableGPUSurfaceMT::operator=(const DeformableGPUSur
     this->neighboursReady = rhs.neighboursReady;
 
     return *this;
-
 }
 
 #endif // WITH_CUDA
