@@ -30,6 +30,13 @@ class GPUSurfaceMT : public AbstractGPUSurface {
 public:
 
     /**
+     * TODO
+     */
+    bool ComputeConnectivity(float *volume_D,
+            size_t volDim[3], float volWSOrg[3], float volWSDelta[3],
+            float isovalue);
+
+    /**
      * Computes the vertex positions based on a given level set using the
      * Marching Tetrahedra method. Needs vertex data to be ready.
      *
@@ -185,6 +192,8 @@ private:
     /* Triangle sorting */
 
     CudaDevArr<float> triangleCamDistance_D;
+
+    bool neighboursReady;
 
 };
 

@@ -31,13 +31,6 @@ public:
     // Interpolation mode used when computing external forces based on gradient
     enum InterpolationMode {INTERP_LINEAR=0, INTERP_CUBIC};
 
-    /**
-     * TODO
-     */
-    bool ComputeConnectivity(float *volume_D,
-            size_t volDim[3], float volWSOrg[3], float volWSDelta[3],
-            float isovalue);
-
     /** DTor */
     DeformableGPUSurfaceMT();
 
