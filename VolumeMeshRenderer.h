@@ -274,6 +274,9 @@ namespace protein {
         megamol::core::param::ParamSlot blendItParam;
         megamol::core::param::ParamSlot alphaParam;
         bool blendIt;
+        
+        /** centerline param */
+        megamol::core::param::ParamSlot showCenterlinesParam;
 
         /** show normals flag */
         megamol::core::param::ParamSlot showNormalsParam;

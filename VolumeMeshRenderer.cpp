@@ -67,6 +67,7 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
         polygonModeParam("polygonMode", "Polygon rasterization mode"),
         blendItParam("blendIt", "Enable blending"),
         alphaParam("alphaBlend", "Alpha for blending"),
+        showCenterlinesParam("showCenterlines", "Render centerlines"),
         showNormalsParam("showNormals", "Render normals"),
         showCentroidsParam("showCentroids", "Render centroids"),
         minDistCenterLineParam( "minDistCenterLine", "Minimum distance of center line node to molecular surface."),
@@ -123,6 +124,7 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
     fm->SetTypePair(FILL, "Fill");
     this->polygonModeParam.SetParameter(fm);
     this->blendItParam.SetParameter(new param::BoolParam(this->blendIt));
+    this->showCenterlinesParam.SetParameter(new param::BoolParam(false));
     this->showNormalsParam.SetParameter(new param::BoolParam(this->showNormals));
     this->showCentroidsParam.SetParameter(new param::BoolParam(this->showCentroids));
     this->aoThresholdParam.SetParameter(new param::FloatParam(this->aoThreshold, vislib::math::FLOAT_EPSILON));
@@ -136,6 +138,7 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
     // make all slots available
     this->MakeSlotAvailable(&this->polygonModeParam);
     this->MakeSlotAvailable(&this->blendItParam);
+    this->MakeSlotAvailable(&this->showCenterlinesParam);
     this->MakeSlotAvailable(&this->showNormalsParam);
     this->MakeSlotAvailable(&this->showCentroidsParam);
     this->MakeSlotAvailable(&this->aoThresholdParam);
@@ -921,58 +924,60 @@ bool VolumeMeshRenderer::Render(Call& call) {
     // TEST center line drawing ...
 #define DRAW_CENTERLINE
 #ifdef DRAW_CENTERLINE
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glPointSize( 10.0f);
-    glEnable(GL_POINT_SMOOTH);
-    glLineWidth( 5.0f);
-    for( unsigned int fCnt = 0; fCnt < this->clNodes.Count(); fCnt++ ) {
-        unsigned int clnCnt = this->clNodes[fCnt].size();
-        unsigned int curClnCnt = 0;
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glBegin( GL_POINTS);
-        for( auto nodes : this->clNodes[fCnt]) {
-            // draw only center line nodes that were created by a full ring
-            //if( !nodes->isRing ) continue;
-            if( this->clg[fCnt]->fType == CenterLineGenerator::CHANNEL )
-                //glColor3f( ( 1.0f / clnCnt) * curClnCnt, 1.0f, 0.0f);
-                glColor3f( 0.0f, 1.0f, 0.0f);
-            else if( this->clg[fCnt]->fType == CenterLineGenerator::POCKET )
-                //glColor3f( 1.0f, 0.0f, ( 1.0f / clnCnt) * curClnCnt);
-                glColor3f( 1.0f, 0.0f, 1.0f);
-            else // this->clg[fCnt]->fType == CenterLineGenerator::CAVITY
-                //glColor3f( 0.0f, 1.0f, ( 1.0f / clnCnt) * curClnCnt);
-                glColor3f( 0.0f, 1.0f, 1.0f);
-            if( nodes->isStartNode )
-                glColor3f( 1.0f, 1.0f, 1.0f);
-            glVertex3fv( nodes->p.PeekComponents());
-            curClnCnt++;
+    if( this->showCenterlinesParam.Param<param::BoolParam>()->Value() ) {
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_LIGHTING);
+        glPointSize( 10.0f);
+        glEnable(GL_POINT_SMOOTH);
+        glLineWidth( 5.0f);
+        for( unsigned int fCnt = 0; fCnt < this->clNodes.Count(); fCnt++ ) {
+            unsigned int clnCnt = this->clNodes[fCnt].size();
+            unsigned int curClnCnt = 0;
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glBegin( GL_POINTS);
+            for( auto nodes : this->clNodes[fCnt]) {
+                // draw only center line nodes that were created by a full ring
+                //if( !nodes->isRing ) continue;
+                if( this->clg[fCnt]->fType == CenterLineGenerator::CHANNEL )
+                    //glColor3f( ( 1.0f / clnCnt) * curClnCnt, 1.0f, 0.0f);
+                    glColor3f( 0.0f, 1.0f, 0.0f);
+                else if( this->clg[fCnt]->fType == CenterLineGenerator::POCKET )
+                    //glColor3f( 1.0f, 0.0f, ( 1.0f / clnCnt) * curClnCnt);
+                    glColor3f( 1.0f, 0.0f, 1.0f);
+                else // this->clg[fCnt]->fType == CenterLineGenerator::CAVITY
+                    //glColor3f( 0.0f, 1.0f, ( 1.0f / clnCnt) * curClnCnt);
+                    glColor3f( 0.0f, 1.0f, 1.0f);
+                if( nodes->isStartNode )
+                    glColor3f( 1.0f, 1.0f, 1.0f);
+                glVertex3fv( nodes->p.PeekComponents());
+                curClnCnt++;
+            }
+            glEnd();
+            glBegin( GL_LINES);
+            clnCnt = this->clEdges[fCnt].size();
+            curClnCnt = 0;
+            for( auto ed : this->clEdges[fCnt]) {
+                if( this->clg[fCnt]->fType == CenterLineGenerator::CHANNEL )
+                    glColor3f( 0.0f, 1.0f, 0.0f);
+                else if( this->clg[fCnt]->fType == CenterLineGenerator::POCKET )
+                    glColor3f( 1.0f, 0.0f, 1.0f);
+                else // this->clg[fCnt]->fType == CenterLineGenerator::CAVITY
+                    glColor3f( 0.0f, 1.0f, 1.0f);
+                glVertex3fv( ed->node1->p.PeekComponents());
+                //if( this->clg[fCnt]->fType == CenterLineGenerator::CHANNEL )
+                //    glColor3f( ( 1.0f / clnCnt) * (curClnCnt+1), 1.0f, 0.0f);
+                //else if( this->clg[fCnt]->fType == CenterLineGenerator::POCKET )
+                //    glColor3f( 1.0f, 0.0f, ( 1.0f / clnCnt) * (curClnCnt+1));
+                //else // this->clg[fCnt]->fType == CenterLineGenerator::CAVITY
+                //    glColor3f( 0.0f, 1.0f, ( 1.0f / clnCnt) * (curClnCnt+1));
+                glVertex3fv( ed->node2->p.PeekComponents());
+                curClnCnt++;
+            }
+            glEnd();
         }
-        glEnd();
-        glBegin( GL_LINES);
-        clnCnt = this->clEdges[fCnt].size();
-        curClnCnt = 0;
-        for( auto ed : this->clEdges[fCnt]) {
-            if( this->clg[fCnt]->fType == CenterLineGenerator::CHANNEL )
-                glColor3f( 0.0f, 1.0f, 0.0f);
-            else if( this->clg[fCnt]->fType == CenterLineGenerator::POCKET )
-                glColor3f( 1.0f, 0.0f, 1.0f);
-            else // this->clg[fCnt]->fType == CenterLineGenerator::CAVITY
-                glColor3f( 0.0f, 1.0f, 1.0f);
-            glVertex3fv( ed->node1->p.PeekComponents());
-            //if( this->clg[fCnt]->fType == CenterLineGenerator::CHANNEL )
-            //    glColor3f( ( 1.0f / clnCnt) * (curClnCnt+1), 1.0f, 0.0f);
-            //else if( this->clg[fCnt]->fType == CenterLineGenerator::POCKET )
-            //    glColor3f( 1.0f, 0.0f, ( 1.0f / clnCnt) * (curClnCnt+1));
-            //else // this->clg[fCnt]->fType == CenterLineGenerator::CAVITY
-            //    glColor3f( 0.0f, 1.0f, ( 1.0f / clnCnt) * (curClnCnt+1));
-            glVertex3fv( ed->node2->p.PeekComponents());
-            curClnCnt++;
-        }
-        glEnd();
+        glDisable(GL_POINT_SMOOTH);
+        // ... TEST center line drawing
     }
-    glDisable(GL_POINT_SMOOTH);
-    // ... TEST center line drawing
 #endif // DRAW_CENTERLINE
 
 //#define DRAW_CENTER_LINE_RINGS
@@ -2489,7 +2494,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             this->vertexColors[4*i+2] = 0.5f;
         }
         if( this->blendIt ) {
-            if ( !this->resSelectionCall || this->atomSelection[atomIdx] ) {
+            if ( this->resSelectionCall && this->atomSelection[atomIdx] ) {
                 // is this correct? if alpha was set to zero (invisible) keep it that way.
                 this->vertexColors[4*i+3] = vislib::math::Min( 1.0f, this->vertexColors[4*i+3]);
             } else {

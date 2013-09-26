@@ -212,7 +212,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
             // Set particle type
             mpdc->AccessParticles(0).SetGlobalType(0); // TODO What is this?
             // Set attribute array as float 'color' value
-            if (!this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value().Equals("")) {
+            if (!this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value().IsEmpty()) {
                 mpdc->AccessParticles(0).SetColourData(
                         core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                         fr->PeekPointDataByName(
