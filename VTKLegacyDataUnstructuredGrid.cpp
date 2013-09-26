@@ -51,52 +51,6 @@ VTKLegacyDataUnstructuredGrid::~VTKLegacyDataUnstructuredGrid() {
 }
 
 
-///*
-// * VTKLegacyDataUnstructuredGrid::PeekCellDataByIndex
-// */
-//const char *VTKLegacyDataUnstructuredGrid::PeekCellDataByIndex(size_t idx) const {
-//    using namespace vislib::sys;
-//    if (idx >= this->cellData.Count()) {
-//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                "Requested idx out of bound, returning NULL.");
-//        return NULL;
-//    } else {
-//        return this->cellData[idx].PeekData();
-//    }
-//}
-//
-//
-///*
-// * VTKLegacyDataUnstructuredGrid::PeekCellDataByName
-// */
-//const char *VTKLegacyDataUnstructuredGrid::PeekCellDataByName(vislib::StringA name) const {
-//
-//    using namespace vislib::sys;
-//
-//    // Check whether the id is in use
-//    bool isUsed = false;
-//    int idx = -1;
-//    for (unsigned int i = 0; i < this->cellData.Count(); ++i) {
-//        if (this->cellData[i].GetId() == name) {
-//            isUsed = true;
-//            idx = i;
-//            break;
-//        }
-//    }
-//
-//    // If the id is not in use: return null
-//    if (!isUsed) {
-//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                "Requested id '%s' not in use, returning NULL.",
-//                name.PeekBuffer());
-//        return NULL;
-//    } else { // else: return the data array
-//        return this->cellData[idx].PeekData();
-//    }
-//
-//}
-
-
 /*
  * VTKLegacyDataUnstructuredGrid::PeekPointDataByIndex
  */

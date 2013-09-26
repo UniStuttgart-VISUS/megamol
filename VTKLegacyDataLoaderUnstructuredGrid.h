@@ -258,6 +258,31 @@ private:
          */
         bool operator==(const Frame& rhs);
 
+        /** TODO */
+        inline size_t GetPointDataCount() const {
+            return this->data.GetPointDataCount();
+        }
+
+        /**
+         * Answers the pointer to a point data attribute array specified by a name.
+         *
+         * @param idx The index of the seeked data array.
+         * @return The pointer to the data, or NULL if the array is not there
+         */
+        const AbstractVTKLegacyData::AttributeArray* PeekPointDataByIndex(size_t idx) const {
+            return this->data.PeekPointDataByIndex(idx);
+        }
+
+        /**
+         * Answers the pointer to a point data attribute array specified by a name.
+         *
+         * @param name The name of the seeked data array.
+         * @return The pointer to the data, or NULL if the array is not there
+         */
+        const AbstractVTKLegacyData::AttributeArray* PeekPointDataByName(vislib::StringA name) const {
+            return this->data.PeekPointDataByName(name);
+        }
+
     private:
 
         /// The data object containing the VTK unstructured grid data
