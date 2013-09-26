@@ -361,6 +361,42 @@
     <ClCompile Include="PotentialCalculator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BindingSiteDataSource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UnstructuredGridRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ComparativeMolSurfaceRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SecPlaneRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VTKLegacyDataCallUnstructuredGrid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VTKLegacyDataLoaderUnstructuredGrid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VTKLegacyDataUnstructuredGrid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AbstractGPUSurface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AbstractVTKLegacyData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DeformableGPUSurfaceMT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DiffusionSolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GPUSurfaceMT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSpline.h">
@@ -633,9 +669,6 @@
     <ClInclude Include="CrystalStructureDataSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cuda_helper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="AggregatedDensity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -729,6 +762,45 @@
     <ClInclude Include="vislib_vector_typedefs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SequenceRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda_helper.h">
+      <Filter>CUDA Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UnstructuredGridRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ComparativeMolSurfaceRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SecPlaneRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VTKLegacyDataUnstructuredGrid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VTKLegacyDataCallUnstructuredGrid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VTKLegacyDataLoaderUnstructuredGrid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractGPUSurface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractVTKLegacyData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DeformableGPUSurfaceMT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DiffusionSolver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GPUSurfaceMT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="common.mk">
@@ -785,6 +857,21 @@
     <None Include="interpol.cuh">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="ComparativeSurfacePotentialRenderer.cuh">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="ComparativeSurfacePotentialRenderer_inline_device_functions.cuh">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="CUDAFieldTopology.cuh">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="PotentialCalculator.cuh">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="sort_triangles.cuh">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="Shaders\protein.btf">
@@ -820,6 +907,30 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="VolumeMeshRenderer.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="ComparativeSurfacePotentialRenderer.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="ComparativeSurfacePotentialRenderer_metric.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="ComparativeSurfacePotentialRenderer_surface_generation.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="ComparativeSurfacePotentialRenderer_surface_mapping.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="ComparativeSurfacePotentialRenderer_thrust_stuff.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDAFieldTopology.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="PotentialCalculator.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="sort_triangles.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
   </ItemGroup>

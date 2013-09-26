@@ -10,7 +10,7 @@
 
 #include "stdafx.h"
 #if (defined(WITH_CUDA) && (WITH_CUDA))
-#include "cuda_helper.h"
+//#include "cuda_helper.h"
 #define _USE_MATH_DEFINES 1
 
 #endif

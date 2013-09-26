@@ -525,6 +525,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbstractGPUSurface.cpp" />
+    <ClCompile Include="AbstractVTKLegacyData.cpp" />
     <ClCompile Include="AggregatedDensity.cpp" />
     <ClCompile Include="BindingSiteCall.cpp" />
     <ClCompile Include="BindingSiteDataSource.cpp" />
@@ -538,16 +540,19 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="CoarseGrainDataLoader.cpp" />
     <ClCompile Include="Color.cpp" />
     <ClCompile Include="ComparativeFieldTopologyRenderer.cpp" />
+    <ClCompile Include="ComparativeMolSurfaceRenderer.cpp" />
     <ClCompile Include="ComparativeSurfacePotentialRenderer.cpp" />
     <ClCompile Include="CritPoints.cpp" />
     <ClCompile Include="CrystalStructureDataCall.cpp" />
     <ClCompile Include="CrystalStructureDataSource.cpp" />
     <ClCompile Include="CrystalStructureVolumeRenderer.cpp" />
     <ClCompile Include="DataWriter.cpp" />
+    <ClCompile Include="DeformableGPUSurfaceMT.cpp" />
     <ClCompile Include="Diagram2DCall.cpp" />
     <ClCompile Include="Diagram2DRenderer.cpp" />
     <ClCompile Include="DiagramCall.cpp" />
     <ClCompile Include="DiagramRenderer.cpp" />
+    <ClCompile Include="DiffusionSolver.cpp" />
     <ClCompile Include="dllmain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">
       </PrecompiledHeader>
@@ -601,6 +606,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="GPUSurfaceMT.cpp" />
     <ClCompile Include="GROLoader.cpp" />
     <ClCompile Include="HapticsMoleculeRenderer.cpp" />
     <ClCompile Include="LinkedView3D.cpp" />
@@ -639,6 +645,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="RMS.cpp" />
     <ClCompile Include="IntSelection.cpp" />
     <ClCompile Include="IntSelectionCall.cpp" />
+    <ClCompile Include="SecPlaneRenderer.cpp" />
     <ClCompile Include="SequenceRenderer.cpp" />
     <ClCompile Include="SharedCameraParameters.cpp" />
     <ClCompile Include="SimpleMoleculeRenderer.cpp" />
@@ -672,6 +679,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="SurfacePotentialRendererSlave.cpp" />
     <ClCompile Include="ToonRendererDeferred.cpp" />
     <ClCompile Include="TrajectorySmoothFilter.cpp" />
+    <ClCompile Include="UnstructuredGridRenderer.cpp" />
     <ClCompile Include="VariantMatchDataCall.cpp" />
     <ClCompile Include="VariantMatchRenderer.cpp" />
     <ClCompile Include="VBODataCall.cpp" />
@@ -688,11 +696,16 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="VTIDataCall.cpp" />
     <ClCompile Include="VTILoader.cpp" />
     <ClCompile Include="VTIWriter.cpp" />
+    <ClCompile Include="VTKLegacyDataCallUnstructuredGrid.cpp" />
+    <ClCompile Include="VTKLegacyDataLoaderUnstructuredGrid.cpp" />
+    <ClCompile Include="VTKLegacyDataUnstructuredGrid.cpp" />
     <ClCompile Include="WKFThreads.cpp" />
     <ClCompile Include="WKFUtils.cpp" />
     <ClCompile Include="XYZLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractGPUSurface.h" />
+    <ClInclude Include="AbstractVTKLegacyData.h" />
     <ClInclude Include="AggregatedDensity.h" />
     <ClInclude Include="BindingSiteCall.h" />
     <ClInclude Include="Base64.h" />
@@ -705,6 +718,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CoarseGrainDataLoader.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="ComparativeFieldTopologyRenderer.h" />
+    <ClInclude Include="ComparativeMolSurfaceRenderer.h" />
     <ClInclude Include="ComparativeSurfacePotentialRenderer.h" />
     <ClInclude Include="CritPoints.h" />
     <ClInclude Include="CrystalStructureDataCall.h" />
@@ -715,8 +729,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CUDAQuickSurf.h" />
     <ClInclude Include="cuda_helper.h" />
     <ClInclude Include="DataWriter.h" />
+    <ClInclude Include="DeformableGPUSurfaceMT.h" />
     <ClInclude Include="Diagram2DCall.h" />
     <ClInclude Include="Diagram2DRenderer.h" />
+    <ClInclude Include="DiffusionSolver.h" />
     <ClInclude Include="DofRendererDeferred.h" />
     <ClInclude Include="DiagramCall.h" />
     <ClInclude Include="DiagramRenderer.h" />
@@ -729,6 +745,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="GlWidget.h" />
     <ClInclude Include="GlWidgetLibrary.h" />
     <ClInclude Include="gmx_system_xdr.h" />
+    <ClInclude Include="GPUSurfaceMT.h" />
     <ClInclude Include="GridDataStructure.h" />
     <ClInclude Include="GridNeighbourFinder.h" />
     <ClInclude Include="GROLoader.h" />
@@ -770,6 +787,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="RMS.h" />
     <ClInclude Include="IntSelection.h" />
     <ClInclude Include="IntSelectionCall.h" />
+    <ClInclude Include="SecPlaneRenderer.h" />
     <ClInclude Include="SequenceRenderer.h" />
     <ClInclude Include="SharedCameraParameters.h" />
     <ClInclude Include="simple.h" />
@@ -799,6 +817,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="ToonRendererDeferred.h" />
     <ClInclude Include="TrajectorySmoothFilter.h" />
     <ClInclude Include="UniGrid3D.h" />
+    <ClInclude Include="UnstructuredGridRenderer.h" />
     <ClInclude Include="VariantMatchDataCall.h" />
     <ClInclude Include="VariantMatchRenderer.h" />
     <ClInclude Include="VBODataCall.h" />
@@ -813,6 +832,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="VTIDataCall.h" />
     <ClInclude Include="VTILoader.h" />
     <ClInclude Include="VTIWriter.h" />
+    <ClInclude Include="VTKLegacyDataCallUnstructuredGrid.h" />
+    <ClInclude Include="VTKLegacyDataLoaderUnstructuredGrid.h" />
+    <ClInclude Include="VTKLegacyDataUnstructuredGrid.h" />
     <ClInclude Include="WKFThreads.h" />
     <ClInclude Include="WKFUtils.h" />
     <ClInclude Include="XYZLoader.h" />
