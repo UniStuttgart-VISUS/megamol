@@ -8,21 +8,22 @@
 #ifndef MMPROTEINPLUGIN_VECFIELD3D_H_INCLUDED
 #define MMPROTEINPLUGIN_VECFIELD3D_H_INCLUDED
 
-#include "vislib/Matrix.h"
-#include "vislib/Vector.h"
-#include "vislib/Array.h"
-#include "vislib/OutOfRangeException.h"
-#include "Interpol.h"
-#include "vislib_vector_typedefs.h"
-
-#if (defined(WITH_CUDA) && (WITH_CUDA))
+#ifdef WITH_CUDA
+#undef min
+#undef max
+#pragma pop_macro("min")
+#pragma pop_macro("max")
 #include "CUDAFieldTopology.cuh"
 #include <vector_types.h>
+
+#include "cuda_helper.h"
 //#include <cutil_inline.h>
 //#include <cutil_gl_inline.h>
 #include "cuda_helper.h"
 #include <cuda_gl_interop.h>
 #endif
+#include "vislib_vector_typedefs.h"
+#include "vislib/Array.h"
 
 namespace megamol {
 namespace protein {
@@ -271,7 +272,7 @@ public:
     void SearchCritPoints(unsigned int maxBisections, unsigned int maxItNewton,
             float stepNewton, float epsNewton);
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
+#ifdef WITH_CUDA
     /**
      * Search null points and classify them according to their Eigenvalues. The
      * bisection is done using CUDA.

@@ -34,7 +34,7 @@ protein::CCP4VolumeData::CCP4VolumeData(void) : Module (),
 		filename( "filename", "The path to the CCP4 volume data file to load."),
         symmetry( 0), map( 0)
 {
-    CallVolumeDataDescription cpdd;
+    CallProteinVolumeDataDescription cpdd;
     this->volumeDataCalleeSlot.SetCallback(cpdd.ClassName(), "GetData", &CCP4VolumeData::VolumeDataCallback);
     this->MakeSlotAvailable(&this->volumeDataCalleeSlot);
 
@@ -56,7 +56,7 @@ protein::CCP4VolumeData::~CCP4VolumeData(void) {
  */
 bool protein::CCP4VolumeData::VolumeDataCallback(Call& call) {
     // cast call
-    protein::CallVolumeData *volcall = dynamic_cast<protein::CallVolumeData*>(&call);
+    protein::CallProteinVolumeData *volcall = dynamic_cast<protein::CallProteinVolumeData*>(&call);
 
     if( this->filename.IsDirty())  {
 		// load the data.

@@ -5,8 +5,20 @@
 // All rights reserved.
 //
 
+
+
+
 #include "stdafx.h"
+#if (defined(WITH_CUDA) && (WITH_CUDA))
+#include "cuda_helper.h"
+#define _USE_MATH_DEFINES 1
+
+#endif
+
 #include "VecField3f.h"
+#include "Interpol.h"
+
+
 
 using namespace megamol::protein;
 

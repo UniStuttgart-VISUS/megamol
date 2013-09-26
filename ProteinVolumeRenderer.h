@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "slicing.h"
-#include "CallVolumeData.h"
+#include "CallProteinVolumeData.h"
 #include "Color.h"
 #include "MolecularDataCall.h"
 #include "param/ParamSlot.h"
@@ -152,7 +152,7 @@ namespace protein {
 		/**
          * Volume rendering using volume data.
 		*/
-        bool RenderVolumeData( megamol::core::view::CallRender3D *call, CallVolumeData *volume);
+        bool RenderVolumeData( megamol::core::view::CallRender3D *call, CallProteinVolumeData *volume);
 		
 		/**
          * Volume rendering using molecular data.
@@ -206,21 +206,21 @@ namespace protein {
 		 *
 		 * @param volume The data interface.
          */
-        void UpdateVolumeTexture( const CallVolumeData *volume);
+        void UpdateVolumeTexture( const CallProteinVolumeData *volume);
 
         /**
          * Draw the volume.
 		 *
 		 * @param volume The data interface.
          */
-        void RenderVolume( const CallVolumeData *volume);
+        void RenderVolume( const CallProteinVolumeData *volume);
 
         /**
          * Write the parameters of the ray to the textures.
 		 *
 		 * @param volume The data interface.
          */
-        void RayParamTextures( const CallVolumeData *volume);
+        void RayParamTextures( const CallProteinVolumeData *volume);
 
         /**
          * Draw the bounding box of the protein.

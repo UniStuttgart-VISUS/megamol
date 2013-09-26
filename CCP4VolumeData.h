@@ -12,7 +12,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CallVolumeData.h"
+#include "CallProteinVolumeData.h"
 #include "Module.h"
 #include "CalleeSlot.h"
 #include "param/ParamSlot.h"
