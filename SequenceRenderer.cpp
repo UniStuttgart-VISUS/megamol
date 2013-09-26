@@ -40,7 +40,7 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
 #ifndef USE_SIMPLE_FONT
         theFont(FontInfo_Verdana), 
 #endif // USE_SIMPLE_FONT
-        markerTextures(0), resSelectionCall(nullptr)
+        markerTextures(0), resSelectionCall(nullptr), leftMouseDown(false)
     {
 
     // molecular data caller slot
@@ -361,23 +361,29 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
                 }
             }
         }
-
-        // render mouse hover
-        if( this->mousePos.X() > -1.0f && this->mousePos.X() < static_cast<float>(this->resCols) &&
-            this->mousePos.Y() >  0.0f && this->mousePos.Y() < static_cast<float>(this->resRows+1) &&
-            this->mousePosResIdx > -1 && this->mousePosResIdx < this->resCount)
-        {
-            glColor3f( 1.0f, 0.75f, 0.0f);
-            glBegin( GL_LINE_STRIP);
-                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y() - 1.0f));
-                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y()) + 0.5f);
-                glVertex2f( this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y()) + 0.5f);
-                glVertex2f( this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y() - 1.0f));
-                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y() - 1.0f));
-            glEnd();
-        }
-        // draw frames for selected amino acids
+        
+        glDisable(GL_DEPTH_TEST);
+        // draw overlays for selected amino acids
         vislib::math::Vector<float, 2> pos;
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_BLEND);
+        fgColor[3] = 0.3f;
+        glColor4fv(fgColor);
+        for( unsigned int i = 0; i < this->selection.Count(); i++ ) {
+            if( this->selection[i] ) {
+                pos.Set( static_cast<float>( i % this->resCols),
+                    floorf( static_cast<float>(i) / this->resCols) + 1.0f);
+                glBegin( GL_QUADS);
+                    glVertex2f( pos.X()       , -this->rowHeight * (pos.Y() - 1.0f));
+                    glVertex2f( pos.X()       , -this->rowHeight * (pos.Y()) + 0.5f);
+                    glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y()) + 0.5f);
+                    glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y() - 1.0f));
+                glEnd();
+            }
+        }
+        glDisable(GL_BLEND);
+        // draw frames for selected amino acids
+        fgColor[3] = 1.0f;
         glColor3fv( fgColor);
         glBegin( GL_LINES);
         for( unsigned int i = 0; i < this->selection.Count(); i++ ) {
@@ -403,25 +409,21 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
             }
         }
         glEnd();
-        // draw overlays for selected amino acids
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_BLEND);
-        glDisable(GL_DEPTH_TEST);
-        fgColor[3] = 0.3f;
-        glColor4fv(fgColor);
-        for( unsigned int i = 0; i < this->selection.Count(); i++ ) {
-            if( this->selection[i] ) {
-                pos.Set( static_cast<float>( i % this->resCols),
-                    floorf( static_cast<float>(i) / this->resCols) + 1.0f);
-                glBegin( GL_QUADS);
-                    glVertex2f( pos.X()       , -this->rowHeight * (pos.Y() - 1.0f));
-                    glVertex2f( pos.X()       , -this->rowHeight * (pos.Y()) + 0.5f);
-                    glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y()) + 0.5f);
-                    glVertex2f( pos.X() + 1.0f, -this->rowHeight * (pos.Y() - 1.0f));
-                glEnd();
-            }
+        
+        // render mouse hover
+        if( this->mousePos.X() > -1.0f && this->mousePos.X() < static_cast<float>(this->resCols) &&
+            this->mousePos.Y() >  0.0f && this->mousePos.Y() < static_cast<float>(this->resRows+1) &&
+            this->mousePosResIdx > -1 && this->mousePosResIdx < this->resCount)
+        {
+            glColor3f( 1.0f, 0.75f, 0.0f);
+            glBegin( GL_LINE_STRIP);
+                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y() - 1.0f));
+                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y()) + 0.5f);
+                glVertex2f( this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y()) + 0.5f);
+                glVertex2f( this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y() - 1.0f));
+                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y() - 1.0f));
+            glEnd();
         }
-        glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
 
     } // dataPrepared
@@ -443,15 +445,23 @@ bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     {
         return consumeEvent;
     }
-
+    
     // left click
     if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
-        if( this->mousePosResIdx > -1 && this->mousePosResIdx < this->resCount) {
-            this->selection[this->mousePosResIdx] = !this->selection[this->mousePosResIdx];
-        }
         if (flags & view::MOUSEFLAG_MODKEY_ALT_DOWN) {
+            if( !this->leftMouseDown ) {
+                this->initialClickSelection = !this->selection[this->mousePosResIdx];
+            }
+            this->selection[this->mousePosResIdx] = this->initialClickSelection;
             consumeEvent = true;
+        } else {
+            if( this->mousePosResIdx > -1 && this->mousePosResIdx < this->resCount) {
+                this->selection[this->mousePosResIdx] = !this->selection[this->mousePosResIdx];
+            }
         }
+        this->leftMouseDown = true;
+    } else {
+        this->leftMouseDown = false;
     }
     
     // propagate selection to selection module

@@ -215,6 +215,8 @@ namespace protein {
         // mouse hover
         vislib::math::Vector<float, 2> mousePos;
         int mousePosResIdx;
+        bool leftMouseDown;
+        bool initialClickSelection;
         // selection 
         vislib::Array<bool> selection;
         ResidueSelectionCall *resSelectionCall;
