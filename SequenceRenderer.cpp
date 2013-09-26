@@ -632,9 +632,11 @@ bool SequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs)
     }
 
     // loop over all binding sites and add binding site descriptions
-    for( unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++ ) {
-        this->bindingSiteDescription[bsCnt].Prepend( "\n");
-        this->bindingSiteDescription[bsCnt].Prepend( bs->GetBindingSiteDescription( bsCnt));
+    if( bs ) {
+        for( unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++ ) {
+            this->bindingSiteDescription[bsCnt].Prepend( "\n");
+            this->bindingSiteDescription[bsCnt].Prepend( bs->GetBindingSiteDescription( bsCnt));
+        }
     }
 
     this->rowHeight = 3.0f + maxNumBindingSitesPerRes * 0.5f + 0.5f;
