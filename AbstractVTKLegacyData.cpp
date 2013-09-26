@@ -8,6 +8,8 @@
 // Author     : scharnkn
 //
 
+#include "stdafx.h"
+
 #include "AbstractVTKLegacyData.h"
 
 using namespace megamol;

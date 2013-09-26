@@ -8,6 +8,8 @@
 // Author     : scharnkn
 //
 
+#include "stdafx.h"
+
 #include "GPUSurfaceMT.h"
 
 #ifdef WITH_CUDA

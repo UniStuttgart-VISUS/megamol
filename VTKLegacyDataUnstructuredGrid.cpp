@@ -8,6 +8,8 @@
 // Author     : scharnkn
 //
 
+#include "stdafx.h"
+
 #include "VTKLegacyDataUnstructuredGrid.h"
 #include "vislib/Log.h"
 

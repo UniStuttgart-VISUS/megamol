@@ -8,6 +8,8 @@
 // Author     : scharnkn
 //
 
+#include "stdafx.h"
+
 #include <glh/glh_extensions.h>
 #include "DeformableGPUSurfaceMT.h"
 #include "ogl_error_check.h"
