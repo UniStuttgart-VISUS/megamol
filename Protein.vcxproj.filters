@@ -28,9 +28,6 @@
     <ClCompile Include="BSpline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CallVolumeData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CCP4VolumeData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -271,7 +268,6 @@
     <ClCompile Include="IntSelectionCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-<<<<<<< .working
     <ClCompile Include="SequenceRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -290,101 +286,15 @@
     <ClCompile Include="ResidueSelectionCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-=======
-    <ClCompile Include="SequenceRenderer.cpp">
+    <ClCompile Include="AggregatedDensity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BindingSiteDataSource.cpp">
+    <ClCompile Include="CallProteinVolumeData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BindingSiteCall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CenterLineGenerator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ResidueSelection.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ResidueSelectionCall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LinkedView3D.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VTIWriter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SharedCameraParameters.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VBODataCall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ComparativeFieldTopologyRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ComparativeSurfacePotentialRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VariantMatchRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="StreamlineRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VTILoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VariantMatchDataCall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CallCamParams.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SurfaceMappingTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PotentialVolumeRaycaster.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TrajectorySmoothFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VMDDXLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PDBWriter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProteinVariantMatch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SurfacePotentialRendererSlave.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Base64.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VTIDataCall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VecField3f.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Streamline.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PotentialCalculator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
->>>>>>> .merge-right.r1161
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSpline.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CallVolumeData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CCP4VolumeData.h">
@@ -654,7 +564,6 @@
     <ClInclude Include="CrystalStructureDataSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-<<<<<<< .working
     <ClInclude Include="cuda_helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -676,98 +585,12 @@
     <ClInclude Include="ResidueSelectionCall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-=======
-    <ClInclude Include="cuda_helper.h">
+    <ClInclude Include="AggregatedDensity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SequenceRenderer.h">
+    <ClInclude Include="CallProteinVolumeData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BindingSiteDataSource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BindingSiteCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CenterLineGenerator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ResidueSelection.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ResidueSelectionCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LinkedView3D.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VTIWriter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SharedCameraParameters.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VBODataCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ComparativeFieldTopologyRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ComparativeSurfacePotentialRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VariantMatchRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="StreamlineRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VTILoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VariantMatchDataCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CallCamParams.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SurfaceMappingTest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PotentialVolumeRaycaster.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TrajectorySmoothFilter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VMDDXLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PDBWriter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProteinVariantMatch.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SurfacePotentialRendererSlave.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Base64.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VTIDataCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VecField3f.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Streamline.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PotentialCalculator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
->>>>>>> .merge-right.r1161
   </ItemGroup>
   <ItemGroup>
     <None Include="common.mk">
@@ -794,6 +617,15 @@
     <None Include="ExtLibs.props.input">
       <Filter>Config and Make Files</Filter>
     </None>
+    <None Include="particles_kernel.cuh">
+      <Filter>CUDA Files</Filter>
+    </None>
+    <None Include="particleSystem.cuh">
+      <Filter>CUDA Files</Filter>
+    </None>
+    <None Include="filter_cuda.cuh">
+      <Filter>CUDA Files</Filter>
+    </None>
     <None Include="particles_kernel.cu">
       <Filter>CUDA Files</Filter>
     </None>
@@ -810,31 +642,7 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="VolumeMeshRenderer.cuh">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="particleSystem.cuh">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="particles_kernel.cuh">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="filter_cuda.cuh">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="ComparativeSurfacePotentialRenderer.cuh">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="ComparativeSurfacePotentialRenderer_inline_device_functions.cuh">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="CUDAFieldTopology.cuh">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="PotentialCalculator.cuh">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="sort_triangles.cuh">
-      <Filter>Header Files</Filter>
+      <Filter>CUDA Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -871,30 +679,6 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="VolumeMeshRenderer.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="ComparativeSurfacePotentialRenderer.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="ComparativeSurfacePotentialRenderer_metric.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="ComparativeSurfacePotentialRenderer_thrust_stuff.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="ComparativeSurfacePotentialRenderer_surface_generation.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="ComparativeSurfacePotentialRenderer_surface_mapping.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDAFieldTopology.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="PotentialCalculator.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="sort_triangles.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
   </ItemGroup>
