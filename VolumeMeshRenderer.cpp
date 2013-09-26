@@ -11,7 +11,8 @@
 #ifdef WITH_CUDA
 
 //#define TEST
-
+#undef min
+#undef max
 #include "VolumeMeshRenderer.h"
 #include "IntSelectionCall.h"
 #include "MolecularDataCall.h"

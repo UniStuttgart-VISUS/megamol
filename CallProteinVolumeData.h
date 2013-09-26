@@ -1,5 +1,5 @@
 /*
- * CallVolumeData.h
+ * CallProteinVolumeData.h
  *
  * Author: Michael Krone
  * Copyright (C) 2010 by Universitaet Stuttgart (VISUS).
@@ -7,8 +7,8 @@
  */
 
 
-#ifndef MEGAMOL_PROTEIN_CALLVOLUMEDATA_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALLVOLUMEDATA_H_INCLUDED
+#ifndef MEGAMOL_PROTEIN_CallProteinVolumeData_H_INCLUDED
+#define MEGAMOL_PROTEIN_CallProteinVolumeData_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -36,7 +36,7 @@ namespace protein {
      * Base class of rendering graph calls and data interfaces for volume data.
      */
 
-    class CallVolumeData : public megamol::core::Call {
+    class CallProteinVolumeData : public megamol::core::Call {
     public:
 
         /**
@@ -45,7 +45,7 @@ namespace protein {
          * @return The name of the objects of this description.
          */
         static const char *ClassName(void) {
-            // a call named 'CallVolumeData' already exists in the megamol-core -> name conflict ...
+            // a call named 'CallProteinVolumeData' already exists in the megamol-core -> name conflict ...
             return "CallProteinVolumeData";
         }
 
@@ -221,10 +221,10 @@ namespace protein {
         }
 
         /** Ctor. */
-        CallVolumeData(void);
+        CallProteinVolumeData(void);
 
         /** Dtor. */
-        virtual ~CallVolumeData(void);
+        virtual ~CallProteinVolumeData(void);
     	  
     private:
         // map of the volume
@@ -246,10 +246,10 @@ namespace protein {
     };
 
     /** Description class typedef */
-    typedef megamol::core::CallAutoDescription<CallVolumeData> CallVolumeDataDescription;
+    typedef megamol::core::CallAutoDescription<CallProteinVolumeData> CallProteinVolumeDataDescription;
 
 
 } /* end namespace protein */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_PROTEIN_CALLVOLUMEDATA_H_INCLUDED */
+#endif /* MEGAMOL_PROTEIN_CallProteinVolumeData_H_INCLUDED */

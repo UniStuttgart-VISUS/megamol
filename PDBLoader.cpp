@@ -816,6 +816,17 @@ bool PDBLoader::getData( core::Call& call) {
     }
 
     dc->SetDataHash( this->datahash);
+    
+    if( !xtcFileValid ) {
+        // no XTC file set or loaded --> use number of loaded frames
+        dc->SetFrameCount( vislib::math::Max(1U,
+                           static_cast<unsigned int>( this->data.Count())));
+    }
+    else {
+        // XTC file set and loaded --> use number of frames
+        dc->SetFrameCount( vislib::math::Max(1U, static_cast<unsigned int>(
+                           this->numXTCFrames)));
+    }
 
     // if no xtc-filename has been set
     if( !this->xtcFileValid) {

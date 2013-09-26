@@ -84,7 +84,7 @@ ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModule (),
         drawMarker( true), forceUpdateVolumeTexture( true)
 {
     // set caller slot for different data calls
-    this->protDataCallerSlot.SetCompatibleCall<CallVolumeDataDescription>();
+    this->protDataCallerSlot.SetCompatibleCall<CallProteinVolumeDataDescription>();
     this->protDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable ( &this->protDataCallerSlot );
 
@@ -446,7 +446,7 @@ bool ProteinVolumeRenderer::GetExtents( Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    CallVolumeData *volume = this->protDataCallerSlot.CallAs<CallVolumeData>();
+    CallProteinVolumeData *volume = this->protDataCallerSlot.CallAs<CallProteinVolumeData>();
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 
     float scale, xoff, yoff, zoff;
@@ -519,7 +519,7 @@ bool ProteinVolumeRenderer::getVolumeData( core::Call& call) {
     if( c == NULL ) return false;
 
     // get the data call
-    CallVolumeData *volume = this->protDataCallerSlot.CallAs<CallVolumeData>();
+    CallProteinVolumeData *volume = this->protDataCallerSlot.CallAs<CallProteinVolumeData>();
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
     // set the bounding box dimensions
     vislib::math::Cuboid<float> box( 0, 0, 0, 1, 1, 1);
@@ -605,8 +605,8 @@ bool ProteinVolumeRenderer::Render( Call& call ) {
     if( !cr3d ) return false;
     // get the pointer to CallRender3D (protein renderer)
     view::CallRender3D *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
-    // get pointer to CallVolumeData
-    CallVolumeData *volume = this->protDataCallerSlot.CallAs<CallVolumeData>();
+    // get pointer to CallProteinVolumeData
+    CallProteinVolumeData *volume = this->protDataCallerSlot.CallAs<CallProteinVolumeData>();
     // get pointer to MolecularDataCall
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 
@@ -895,7 +895,7 @@ bool ProteinVolumeRenderer::RenderMolecularData( view::CallRender3D *call, Molec
 /*
  * Volume rendering using volume data.
  */
-bool ProteinVolumeRenderer::RenderVolumeData( view::CallRender3D *call, CallVolumeData *volume) {
+bool ProteinVolumeRenderer::RenderVolumeData( view::CallRender3D *call, CallProteinVolumeData *volume) {
     // try to call
     if( !(*volume)() ) return false;
 
@@ -1390,7 +1390,7 @@ void ProteinVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
 /*
  * Create a volume containing the voxel map
  */
-void ProteinVolumeRenderer::UpdateVolumeTexture( const CallVolumeData *volume) {
+void ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinVolumeData *volume) {
     // generate volume, if necessary
     if( !glIsTexture( this->volumeTex) ) {
         glGenTextures( 1, &this->volumeTex);
@@ -1497,7 +1497,7 @@ void ProteinVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbo
 /*
  * draw the volume
  */
-void ProteinVolumeRenderer::RenderVolume( const CallVolumeData *volume) {
+void ProteinVolumeRenderer::RenderVolume( const CallProteinVolumeData *volume) {
     // check average density value
     if( vislib::math::Abs<float>( volume->MeanDensity() - this->meanDensityValue) > vislib::math::FLOAT_EPSILON ) {
         this->meanDensityValue = volume->MeanDensity();
@@ -1880,7 +1880,7 @@ void ProteinVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundi
 /*
  * write the parameters of the ray to the textures
  */
-void ProteinVolumeRenderer::RayParamTextures( const CallVolumeData *volume) {
+void ProteinVolumeRenderer::RayParamTextures( const CallProteinVolumeData *volume) {
 
     GLint param = GL_NEAREST;
     GLint mode = GL_CLAMP_TO_EDGE;

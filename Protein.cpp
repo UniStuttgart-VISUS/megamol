@@ -76,6 +76,7 @@
 #include "VMDDXLoader.h"
 #include "TrajectorySmoothFilter.h"
 #include "BindingSiteDataSource.h"
+#include "AggregatedDensity.h"
 #include "ResidueSelection.h"
 #include "VTKLegacyDataLoaderUnstructuredGrid.h"
 
@@ -161,7 +162,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 49;
+    int moduleCount = 50;
 #ifdef WITH_CUDA
     moduleCount+=14;
 #endif // WITH_CUDA
@@ -251,8 +252,9 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case CUDA_OFFSET + HAPTICS_OFFSET + 44 : return new ModuleAutoDescription<protein::MoleculeBallifier>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 45 : return new ModuleAutoDescription<protein::ResidueSelection>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 46 : return new ModuleAutoDescription<protein::SecPlaneRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 47 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
+		case CUDA_OFFSET + HAPTICS_OFFSET + 47 : return new ModuleAutoDescription<protein::AggregatedDensity>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 49 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
         default: return NULL;
     }
     return NULL;
@@ -273,7 +275,7 @@ PROTEIN_API int mmplgCallCount(void) {
 PROTEIN_API void* mmplgCallDescription(int idx) {
     switch (idx) {
         case 0: return new megamol::core::CallAutoDescription<megamol::protein::SolPathDataCall>();
-        case 1: return new megamol::core::CallAutoDescription<megamol::protein::CallVolumeData>();
+        case 1: return new megamol::core::CallAutoDescription<megamol::protein::CallProteinVolumeData>();
         case 2: return new megamol::core::CallAutoDescription<megamol::protein::MolecularDataCall>();
         case 3: return new megamol::core::CallAutoDescription<megamol::protein::SphereDataCall>();
         case 4: return new megamol::core::CallAutoDescription<megamol::protein::VolumeSliceCall>();

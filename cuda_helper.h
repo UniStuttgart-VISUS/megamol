@@ -18,7 +18,6 @@
 #undef __CUDA_INTERNAL_COMPILATION__
 #include "vector_functions.h"
 #include "host_defines.h"
-
 typedef unsigned int uint;
 
 #define cutilCheckMsg(msg)  __cutilCheckMsg(msg, __FILE__, __LINE__)
