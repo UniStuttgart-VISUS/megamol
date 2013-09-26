@@ -15,6 +15,7 @@
 #include "param/FilePathParam.h"
 #include "param/IntParam.h"
 #include "param/FloatParam.h"
+#include "param/StringParam.h"
 #include <cmath>
 #include <ctype.h>
 #include "vislib/Log.h"
@@ -37,6 +38,7 @@ VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid() :
         maxFramesSlot("maxFrames", "The maximum number of frames to be loaded"),
         frameStartSlot("frameStart", "The first frame to be loaded"),
         maxCacheSizeSlot("maxCacheSize", "The maximum size of the cache"),
+        mpdcAttributeSlot("mpdcAttribute", "The name of the point data attribute to be sent with MultiParticleDataCall"),
         hash(0), nFrames(0), readPointData(false), readCellData(false),
         bbox(0.0, 0.0, 0.0, 0.0, 0.0, 0.0) {
 
@@ -73,6 +75,10 @@ VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid() :
 
     this->maxCacheSizeSlot.SetParameter(new core::param::IntParam(10, 1));
     this->MakeSlotAvailable(&this->maxCacheSizeSlot);
+
+    this->mpdcAttributeSlot.SetParameter(new core::param::StringParam(""));
+    this->MakeSlotAvailable(&this->mpdcAttributeSlot);
+
 }
 
 
@@ -195,26 +201,28 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
             }
 
             mpdc->SetDataHash(this->hash);
-            mpdc->SetParticleListCount(static_cast<unsigned int>(fr->GetPointDataCount()));
+            mpdc->SetParticleListCount(1); // Only one particle list
 
             // Loop through all particle lists
-            for (int idx = 0; idx < static_cast<int>(fr->GetPointDataCount()); idx++) {
 
-                // Set global radius to 1 TODO ?
-                mpdc->AccessParticles(idx).SetGlobalRadius(1.0f);
-                // Set number of frames
-                mpdc->AccessParticles(idx).SetCount(fr->GetNumberOfPoints());
-                // Set particle type
-                mpdc->AccessParticles(idx).SetGlobalType(0); // TODO What is this?
-                // Set attribute array as float 'color' value
-                mpdc->AccessParticles(idx).SetColourData(
+            // Set global radius to 1 TODO ?
+            mpdc->AccessParticles(0).SetGlobalRadius(1.0f);
+            // Set number of frames
+            mpdc->AccessParticles(0).SetCount(fr->GetNumberOfPoints());
+            // Set particle type
+            mpdc->AccessParticles(0).SetGlobalType(0); // TODO What is this?
+            // Set attribute array as float 'color' value
+            if (!this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value().Equals("")) {
+                mpdc->AccessParticles(0).SetColourData(
                         core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
-                        fr->PeekPointDataByIndex(idx), 0);
-                // Set vertex positions
-                mpdc->AccessParticles(idx).SetVertexData(
-                        core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
-                        (const void*)(fr->GetData()->PeekPoints()));
+                        fr->PeekPointDataByName(
+                                this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value()), 0);
             }
+            // Set vertex positions
+            mpdc->AccessParticles(0).SetVertexData(
+                    core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                    (const void*)(fr->GetData()->PeekPoints()));
+
             mpdc->SetUnlocker(new Unlocker(*fr));
 
 

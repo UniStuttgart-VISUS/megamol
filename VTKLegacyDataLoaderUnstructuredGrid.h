@@ -447,6 +447,9 @@ private:
     /// Parameter slot for the maximum cache size
     core::param::ParamSlot maxCacheSizeSlot;
 
+    /// Parameter slot for the name of the data set to be sent with MultiparticleDataCall
+    core::param::ParamSlot mpdcAttributeSlot;
+
 
     /* The data set */
 
