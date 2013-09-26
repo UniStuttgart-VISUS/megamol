@@ -11,6 +11,7 @@
 #include "stdafx.h"
 #include "VTKLegacyDataLoaderUnstructuredGrid.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
+#include "moldyn/MultiParticleDataCall.h"
 #include "param/FilePathParam.h"
 #include "param/IntParam.h"
 #include "param/FloatParam.h"
@@ -39,6 +40,7 @@ VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid() :
         hash(0), nFrames(0), readPointData(false), readCellData(false),
         bbox(0.0, 0.0, 0.0, 0.0, 0.0, 0.0) {
 
+    // Unstructured grid data
     this->dataOutSlot.SetCallback(
             VTKLegacyDataCallUnstructuredGrid::ClassName(),
             VTKLegacyDataCallUnstructuredGrid::FunctionName(VTKLegacyDataCallUnstructuredGrid::CallForGetData),
@@ -46,6 +48,16 @@ VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid() :
     this->dataOutSlot.SetCallback(
             VTKLegacyDataCallUnstructuredGrid::ClassName(),
             VTKLegacyDataCallUnstructuredGrid::FunctionName(VTKLegacyDataCallUnstructuredGrid::CallForGetExtent),
+            &VTKLegacyDataLoaderUnstructuredGrid::getExtent);
+
+    // Multi stream particle data
+    this->dataOutSlot.SetCallback(
+            core::moldyn::MultiParticleDataCall::ClassName(),
+            core::moldyn::MultiParticleDataCall::FunctionName(0),
+            &VTKLegacyDataLoaderUnstructuredGrid::getData);
+    this->dataOutSlot.SetCallback(
+            core::moldyn::MultiParticleDataCall::ClassName(),
+            core::moldyn::MultiParticleDataCall::FunctionName(1),
             &VTKLegacyDataLoaderUnstructuredGrid::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
@@ -93,61 +105,124 @@ void VTKLegacyDataLoaderUnstructuredGrid::release(void) {
 bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
     using namespace vislib::sys;
 
-    // Get data call
+    // Get unstructured grid data call
     VTKLegacyDataCallUnstructuredGrid *dc = dynamic_cast<VTKLegacyDataCallUnstructuredGrid*>(&call);
-    if (dc == NULL) {
-        return false;
-    }
-
-    if (dc->FrameID() >= this->FrameCount()) {
+    if (dc != NULL) {
+        if (dc->FrameID() >= this->FrameCount()) {
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Frame %u requested (nFrames %u)",
-                this->ClassName(), dc->FrameID(), this->FrameCount());
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Frame %u requested (nFrames %u)",
+                    this->ClassName(), dc->FrameID(), this->FrameCount());
 #endif
-        return false;
-    }
+            return false;
+        }
 
-    // Request the frame
-    Frame *fr = NULL;
-    fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->
-                   requestLockedFrame(dc->FrameID()));
+        // Request the frame
+        Frame *fr = NULL;
+        fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->
+                requestLockedFrame(dc->FrameID()));
 
-    if (fr == NULL) {
-        return false;
-    }
+        if (fr == NULL) {
+            return false;
+        }
 
-    // If the 'force' flag is set, check whether the frame number is correct,
-    // if not re-request the frame
-    if (dc->IsFrameForced()) {
-        while (dc->FrameID() != fr->FrameNumber()) {
-            dc->Unlock();
-            int frameBefore = ((static_cast<int>(dc->FrameID()-1)+
-                    static_cast<int>(this->FrameCount())))%static_cast<int>(this->FrameCount());
+        // If the 'force' flag is set, check whether the frame number is correct,
+        // if not re-request the frame
+        if (dc->IsFrameForced()) {
+            while (dc->FrameID() != fr->FrameNumber()) {
+                dc->Unlock();
+                int frameBefore = ((static_cast<int>(dc->FrameID()-1)+
+                        static_cast<int>(this->FrameCount())))%static_cast<int>(this->FrameCount());
 
-            // scharnkn:
-            // Request the frame before the actual requested frame (modulo
-            // framenumber) to trigger loading of the actually requested frame
-            fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->requestLockedFrame(frameBefore));
-            dc->SetUnlocker(new Unlocker(*fr));
-            dc->Unlock();
-            fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->requestLockedFrame(dc->FrameID()));
-            dc->SetUnlocker(new Unlocker(*fr));
+                // scharnkn:
+                // Request the frame before the actual requested frame (modulo
+                // framenumber) to trigger loading of the actually requested frame
+                fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->requestLockedFrame(frameBefore));
+                dc->SetUnlocker(new Unlocker(*fr));
+                dc->Unlock();
+                fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->requestLockedFrame(dc->FrameID()));
+                dc->SetUnlocker(new Unlocker(*fr));
+                if (fr == NULL) {
+                    return false;
+                }
+            }
+        }
+
+        // Set unlocker object for the frame
+        dc->SetUnlocker(new Unlocker(*fr));
+
+        // Set data of the call
+        dc->SetData(fr->GetData());
+
+        // Set data hash value
+        dc->SetDataHash(this->hash);
+
+        //printf("Frame loaded: %u\n", fr->FrameNumber()); // DEBUG
+    } else {
+        // Try to get pointer to unstructured grid call
+        core::moldyn::MultiParticleDataCall *mpdc =
+                dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        if (mpdc != NULL) {
+
+            // Request the frame
+            Frame *fr = NULL;
+            fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->
+                    requestLockedFrame(mpdc->FrameID()));
+
             if (fr == NULL) {
                 return false;
             }
+
+            // If the 'force' flag is set, check whether the frame number is correct,
+            // if not re-request the frame
+            if (mpdc->IsFrameForced()) {
+                while (mpdc->FrameID() != fr->FrameNumber()) {
+                    mpdc->Unlock();
+                    int frameBefore = ((static_cast<int>(mpdc->FrameID()-1)+
+                            static_cast<int>(this->FrameCount())))%static_cast<int>(this->FrameCount());
+
+                    // scharnkn:
+                    // Request the frame before the actual requested frame (modulo
+                    // framenumber) to trigger loading of the actually requested frame
+                    fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->requestLockedFrame(frameBefore));
+                    mpdc->SetUnlocker(new Unlocker(*fr));
+                    mpdc->Unlock();
+                    fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->requestLockedFrame(mpdc->FrameID()));
+                    mpdc->SetUnlocker(new Unlocker(*fr));
+                    if (fr == NULL) {
+                        return false;
+                    }
+                }
+            }
+
+            mpdc->SetDataHash(this->hash);
+            mpdc->SetParticleListCount(static_cast<unsigned int>(fr->GetPointDataCount()));
+
+            // Loop through all particle lists
+            for (int idx = 0; idx < static_cast<int>(fr->GetPointDataCount()); idx++) {
+
+                // Set global radius to 1 TODO ?
+                mpdc->AccessParticles(idx).SetGlobalRadius(1.0f);
+                // Set number of frames
+                mpdc->AccessParticles(idx).SetCount(fr->GetNumberOfPoints());
+                // Set particle type
+                mpdc->AccessParticles(idx).SetGlobalType(0); // TODO What is this?
+                // Set attribute array as float 'color' value
+                mpdc->AccessParticles(idx).SetColourData(
+                        core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                        fr->PeekPointDataByIndex(idx), 0);
+                // Set vertex positions
+                mpdc->AccessParticles(idx).SetVertexData(
+                        core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                        (const void*)(fr->GetData()->PeekPoints()));
+            }
+            mpdc->SetUnlocker(new Unlocker(*fr));
+
+
+
+        } else {
+            return false;
         }
     }
-
-    // Set unlocker object for the frame
-    dc->SetUnlocker(new Unlocker(*fr));
-
-    // Set data of the call
-    dc->SetData(fr->GetData());
-
-    // Set data hash value
-    dc->SetDataHash(this->hash);
-
-    //printf("Frame loaded: %u\n", fr->FrameNumber()); // DEBUG
 
     return true;
 }
@@ -201,21 +276,37 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
          this->initFrameCache(this->maxCacheSizeSlot.Param<core::param::IntParam>()->Value());
      }
 
-     // Get data call
+     // Try to get pointer to unstructured grid call
      VTKLegacyDataCallUnstructuredGrid *dc = dynamic_cast<VTKLegacyDataCallUnstructuredGrid*>(&call);
-     if (dc == NULL) {
-         return false;
+     if (dc != NULL) {
+
+         // Set frame count
+         dc->SetFrameCount(std::min(
+                 static_cast<size_t>(
+                         this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
+                         this->nFrames));
+
+         dc->AccessBoundingBoxes().Clear();
+         dc->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
+         dc->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
+     } else {
+         // Try to get pointer to unstructured grid call
+         core::moldyn::MultiParticleDataCall *mpdc =
+                 dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+         if (mpdc != NULL) {
+             // Set frame count
+             mpdc->SetFrameCount(std::min(
+                     static_cast<size_t>(
+                             this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
+                             this->nFrames));
+
+             mpdc->AccessBoundingBoxes().Clear();
+             mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
+             mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
+         } else {
+             return false;
+         }
      }
-
-     // Set frame count
-     dc->SetFrameCount(std::min(
-             static_cast<size_t>(
-                     this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
-                     this->nFrames));
-
-     dc->AccessBoundingBoxes().Clear();
-     dc->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-     dc->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
 
      return true;
 }
