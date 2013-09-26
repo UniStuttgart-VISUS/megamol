@@ -13,13 +13,14 @@
 #ifdef WITH_CUDA
 
 #include "cuda_error_check.h"
-#include "cuda_helper.h"
+
 #include "ComparativeSurfacePotentialRenderer.cuh"
 #include "HostArr.h"
 #include "sort_triangles.cuh"
 
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
+//#include "cuda_helper.h"
 
 
 using namespace megamol;

@@ -29,6 +29,8 @@
 #include "param/FloatParam.h"
 #include "param/IntParam.h"
 
+#include <cmath>
+
 using namespace megamol;
 using namespace megamol::protein;
 
@@ -415,8 +417,8 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
                         else {
                             this->gridDataPos.Peek()[4*particleCnt+3] = 1.0f;
                         }
-                        this->maxAtomRad = ::fmaxf(this->maxAtomRad, this->gridDataPos.Peek()[4*particleCnt+3]);
-                        this->minAtomRad = ::fminf(this->minAtomRad, this->gridDataPos.Peek()[4*particleCnt+3]);
+                        this->maxAtomRad = std::max(this->maxAtomRad, this->gridDataPos.Peek()[4*particleCnt+3]);
+                        this->minAtomRad = std::min(this->minAtomRad, this->gridDataPos.Peek()[4*particleCnt+3]);
 
                         particleCnt++;
                     }

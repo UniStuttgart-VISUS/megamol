@@ -235,7 +235,7 @@ private:
          *
          * @param idx the index
          */
-        void SetFrameIdx(uint idx) {
+        void SetFrameIdx(unsigned int idx) {
             this->frame = idx;
         }
 
