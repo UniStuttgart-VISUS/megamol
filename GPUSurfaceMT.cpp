@@ -32,14 +32,15 @@ using namespace megamol::protein;
 /*
  * GPUSurfaceMT::GPUSurfaceMT
  */
-GPUSurfaceMT::GPUSurfaceMT() : AbstractGPUSurface() {
+GPUSurfaceMT::GPUSurfaceMT() : AbstractGPUSurface() , neighboursReady(false) {
 }
 
 
 /*
  * GPUSurfaceMT::GPUSurfaceMT
  */
-GPUSurfaceMT::GPUSurfaceMT(const GPUSurfaceMT& other) : AbstractGPUSurface(other) {
+GPUSurfaceMT::GPUSurfaceMT(const GPUSurfaceMT& other) : AbstractGPUSurface(other),
+    neighboursReady(false) {
 
     // Copy GPU memory
 

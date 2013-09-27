@@ -30,8 +30,7 @@ using namespace megamol::protein;
 /*
  * DeformableGPUSurfaceMT::DeformableGPUSurfaceMT
  */
-DeformableGPUSurfaceMT::DeformableGPUSurfaceMT() : GPUSurfaceMT(),
-        neighboursReady(false) {
+DeformableGPUSurfaceMT::DeformableGPUSurfaceMT() : GPUSurfaceMT() {
 }
 
 

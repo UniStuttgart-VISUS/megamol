@@ -187,13 +187,16 @@ protected:
     /// The number of active cells
     size_t activeCellCnt;
 
-private:
-
     /* Triangle sorting */
 
+    /// Array used for triangles sorting
     CudaDevArr<float> triangleCamDistance_D;
 
+    /// Flag to tell whether the connectivity information has been computed yet
     bool neighboursReady;
+
+private:
+
 
 };
 
