@@ -21,6 +21,7 @@
 #include "RMS.h"
 #include "ogl_error_check.h"
 #include "cuda_error_check.h"
+#include "DiffusionSolver.h"
 
 #include "CoreInstance.h"
 #include "view/AbstractCallRender3D.h"
@@ -35,7 +36,7 @@ using namespace megamol;
 using namespace megamol::protein;
 
 // Hardcoded parameters for 'quicksurf' class
-const float ComparativeMolSurfaceRenderer::qsParticleRad = 0.8f;
+const float ComparativeMolSurfaceRenderer::qsParticleRad = 1.2f;
 const float ComparativeMolSurfaceRenderer::qsGaussLim = 10.0f;
 const float ComparativeMolSurfaceRenderer::qsGridSpacing = 1.0f;
 const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
@@ -74,16 +75,18 @@ bool ComparativeMolSurfaceRenderer::applyRMSFitting(
         }
         centroid /= static_cast<float>(mol->AtomCount());
 
-        float travsVec[] = {-centroid.X(), -centroid.Y(), -centroid.Z()};
-        if (!surf->Translate(travsVec)) {
+        // Move center to origin
+        float transVec[] = {-centroid.X(), -centroid.Y(), -centroid.Z()};
+        if (!surf->Translate(transVec)) {
             return false;
         }
 
-
+        // Rotate
         if (!surf->Rotate(this->rmsRotation.PeekComponents())) {
             return false;
         }
 
+        // Translate to target center
         if (!surf->Translate(this->rmsTranslation.PeekComponents())) {
             return false;
         }
@@ -139,17 +142,6 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         triggerSurfaceMapping(true), triggerRMSFit(true) {
 
     /* Make data caller/callee slots available */
-
-    // Volume output
-    this->volOutputSlot.SetCallback(
-            VTIDataCall::ClassName(),
-            VTIDataCall::FunctionName(VTIDataCall::CallForGetData),
-            &ComparativeMolSurfaceRenderer::getVolData);
-    this->volOutputSlot.SetCallback(
-            VTIDataCall::ClassName(),
-            VTIDataCall::FunctionName(VTIDataCall::CallForGetExtent),
-            &ComparativeMolSurfaceRenderer::getVolExtent);
-    this->MakeSlotAvailable(&this->volOutputSlot);
 
     // Molecular data input #1
     this->molDataSlot1.SetCompatibleCall<MolecularDataCallDescription>();
@@ -471,8 +463,8 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
     int rc = cqs->calc_map(
             mol->AtomCount(),
             &this->gridDataPos.Peek()[0],
-            NULL,                 // Pointer to 'color' array
-            false,                // Do not use 'color' array
+            NULL,   // Pointer to 'color' array
+            false,  // Do not use 'color' array
             (float*)&gridDensMap.minC,
             (int*)&gridDensMap.size,
             this->maxAtomRad,
@@ -486,6 +478,14 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
                 "%s: Quicksurf class returned val != 0\n", this->ClassName());
         return false;
     }
+
+//    this->externalPotentialBuff.Validate(volSize);
+//    printf("volsize1 %i\n", volSize);
+//    this->externalPotentialBuff.Set(0x00);
+//    if (!CudaSafeCall(cudaMemcpy(this->externalPotentialBuff.Peek(),
+//            cqs->getMap(), volSize*sizeof(float), cudaMemcpyDeviceToHost))) {
+//        return false;
+//    }
 
     return CheckForGLError();
 }
@@ -1020,93 +1020,14 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
         return false; // Invalid compare mode
     }
 
-    return true;
-}
+//    printf("bbox %f %f %f %f %f %f\n",
+//            this->bbox.ObjectSpaceBBox().Left(),
+//            this->bbox.ObjectSpaceBBox().Bottom(),
+//            this->bbox.ObjectSpaceBBox().Back(),
+//            this->bbox.ObjectSpaceBBox().Right(),
+//            this->bbox.ObjectSpaceBBox().Top(),
+//            this->bbox.ObjectSpaceBBox().Front());
 
-
-/*
- * ComparativeMolSurfaceRenderer::getVolData
- */
-bool ComparativeMolSurfaceRenderer::getVolData(core::Call& call) {
-
-    VTIDataCall *vtiIn = dynamic_cast<VTIDataCall*>(&call);
-    if (vtiIn == NULL) {
-        return false;
-    }
-
-    CUDAQuickSurf *cqs = (CUDAQuickSurf*)this->cudaqsurf1;
-
-    size_t volSize = this->gridDensMap1.size[0]*this->gridDensMap1.size[1]*this->gridDensMap1.size[2];
-
-
-    this->externalPotentialBuff.Validate(volSize);
-    if (!CudaSafeCall(cudaMemcpy(this->externalPotentialBuff.Peek(),
-            cqs->getMap(), volSize*sizeof(float), cudaMemcpyDeviceToHost))) {
-        return false;
-    }
-
-    // Initialize image data object for external potential
-    this->externalPotential.SetNumberOfPieces(1);
-    this->externalPotential.SetSpacing(Vec3f(&this->gridDensMap1.delta[0]));
-    this->externalPotential.SetOrigin(Vec3f(&this->gridDensMap1.minC[0]));
-    this->externalPotential.SetWholeExtent(Cubeu(0, 0, 0,
-            this->gridDensMap1.size[0]-1,
-            this->gridDensMap1.size[1]-1,
-            this->gridDensMap1.size[2]-1));
-    this->externalPotential.SetPieceExtent(0, Cubeu(0, 0, 0,
-            this->gridDensMap1.size[0]-1,
-            this->gridDensMap1.size[1]-1,
-            this->gridDensMap1.size[2]-1));
-    this->externalPotential.SetPointData(
-            (const char *)this->externalPotentialBuff.Peek(),
-            -1.0, // Hardcoded TODO?
-            1.0,  // Hardcoded TODO?
-            VTKImageData::DataArray::VTI_FLOAT,
-            "externalPotential", // Id
-            1,  // Number of components
-            0); // Piece index
-
-
-    // Set data in call
-    vtiIn->SetData(&this->externalPotential);
-//    vtiIn->AccessBoundingBoxes().Clear();
-//    vtiIn->AccessBoundingBoxes().SetObjectSpaceBBox(this->bboxParticles1.ObjectSpaceBBox());
-//    vtiIn->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bboxParticles1.ObjectSpaceClipBox());
-
-//    // DEBUG print texture values
-//    for (int i = 0; i < vti->GetPiecePointArraySize(0, 0); ++i) {
-//        printf("%f\n", ((const float*)(vti->GetPointDataByIdx(0, 0)))[i]);
-//    }
-//    // END DEBUG
-
-    return true;
-}
-
-
-/*
- * ComparativeMolSurfaceRenderer::getVolExtent
- */
-bool ComparativeMolSurfaceRenderer::getVolExtent(core::Call& call) {
-    // Get extent of texture
-    VTIDataCall *vtiOut = this->volDataSlot1.CallAs<VTIDataCall>(); // TODO Use unified frame count
-    if (vtiOut == NULL) {
-        return false;
-    }
-    if (!(*vtiOut)(VTIDataCall::CallForGetExtent)) {
-        return false;
-    }
-
-    // Write texture extent to incoming data call
-    VTIDataCall *vtiIn = dynamic_cast<VTIDataCall*>(&call);
-    if (vtiIn == NULL) {
-        return false;
-    }
-
-    // Set frame count
-    vtiIn->SetFrameCount(vtiOut->FrameCount());
-    vtiIn->AccessBoundingBoxes().Clear();
-    vtiIn->AccessBoundingBoxes().SetObjectSpaceBBox(this->bboxParticles1.ObjectSpaceBBox());
-    vtiIn->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bboxParticles1.ObjectSpaceClipBox());
     return true;
 }
 
@@ -1289,7 +1210,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         this->datahashParticles2 = mol2->DataHash();
         this->calltimeOld = calltime;
 
-        if (!this->fitMoleculeRMS(mol1, mol2)) {
+        if (!this->fitMoleculeRMS(mol2, mol1)) {
             return false;
         }
         this->triggerRMSFit = false;
@@ -1509,8 +1430,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         volDim1[1] = this->gridDensMap1.size[1];
         volDim1[2] = this->gridDensMap1.size[2];
 
-        // Morph surface #2 to shape #1
-        if (!this->deformSurfMapped.MorphToVolume(
+        // Morph surface #2 to shape #1 using GVF
+        if (!this->deformSurfMapped.MorphToVolumeGVF(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                 volDim1,
                 &this->gridDensMap1.minC[0],
@@ -1602,6 +1523,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     camPos[0] = modelMatrix.GetAt(0, 3);
     camPos[1] = modelMatrix.GetAt(1, 3);
     camPos[2] = modelMatrix.GetAt(2, 3);
+
 
     if (this->surface1RM != SURFACE_NONE) {
 
@@ -1945,6 +1867,8 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->triggerRMSFit = true;
         this->triggerComputeVolume = true;
         this->triggerInitPotentialTex = true;
+        this->triggerComputeSurfacePoints1 = true;
+        this->triggerSurfaceMapping = true;
     }
 
     // Param for single frame #2
@@ -1954,6 +1878,8 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->triggerRMSFit = true;
         this->triggerComputeVolume = true;
         this->triggerInitPotentialTex = true;
+        this->triggerComputeSurfacePoints1 = true;
+        this->triggerSurfaceMapping = true;
     }
 
 
@@ -1977,7 +1903,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->fittingMode = static_cast<RMSFittingMode>(
                 this->fittingModeSlot.Param<core::param::EnumParam>()->Value());
         this->fittingModeSlot.ResetDirty();
-        this->toggleRMSFit = true;
+        this->triggerRMSFit = true;
         this->triggerSurfaceMapping = true;
     }
 

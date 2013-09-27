@@ -332,6 +332,10 @@ bool SecPlaneRenderer::Render(megamol::core::Call& call) {
         return false;
     }
 
+    if (vti->GetPiecePointArraySize(0, 0) == 0) {
+        return true;
+    }
+
 //    // DEBUG print texture values
 //    for (int i = 0; i < vti->GetPiecePointArraySize(0, 0); ++i) {
 //        printf("%f\n", ((const float*)(vti->GetPointDataByIdx(0, 0)))[i]);

@@ -391,9 +391,6 @@
     <ClCompile Include="DeformableGPUSurfaceMT.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DiffusionSolver.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GPUSurfaceMT.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -931,6 +928,9 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="sort_triangles.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="DiffusionSolver.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
   </ItemGroup>
