@@ -692,7 +692,8 @@ void main (void) {
     
     vec2 texc = ((pos.xy/pos.w) + 1.0f)/2.0f; // Get normalized device coords
     
-    vec3 viewES =  normalize(texture2D(posESBuff, texc).rgb - posES); // For local lighting
+    //vec3 viewES =  normalize(texture2D(posESBuff, texc).rgb - posES); // For local lighting
+    vec3 viewES =  normalize(posES); // For local lighting
 
     vec3 rayEnd0 = texture2D(tcBuff0, texc).rgb;
     vec3 rayStart0 = gl_TexCoord[0].stp;

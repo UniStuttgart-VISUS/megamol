@@ -1285,11 +1285,15 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 || (mol2->DataHash() != this->datahashParticles2)
                 || (calltime != this->calltimeOld)) {
 
+        this->datahashParticles1 = mol1->DataHash();
+        this->datahashParticles2 = mol2->DataHash();
+        this->calltimeOld = calltime;
+
         if (!this->fitMoleculeRMS(mol1, mol2)) {
             return false;
         }
         this->triggerRMSFit = false;
-
+        this->triggerComputeVolume = true;
 #ifdef USE_TIMER
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
             "%s: Time for RMS fitting: %.6f s",
@@ -1299,13 +1303,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     }
 
     // (Re-)compute volume texture if necessary
-    if ((this->triggerComputeVolume)
-            ||(mol1->DataHash() != this->datahashParticles1)
-            ||(mol2->DataHash() != this->datahashParticles2)
-            ||(calltime != this->calltimeOld)) {
-
-        this->datahashParticles1 = mol1->DataHash();
-        this->datahashParticles2 = mol2->DataHash();
+    if (this->triggerComputeVolume) {
 
         if (!this->computeDensityMap(
                 mol1,
@@ -1385,8 +1383,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->qsIsoVal)) {
             return false;
         }
-
-        CheckForCudaError();
 
         // Regularize the mesh of surface #1
         if (!this->deformSurf1.MorphToVolume(
@@ -1552,7 +1548,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     // Get camera information
     this->cameraInfo =  dynamic_cast<core::view::AbstractCallRender3D*>(&call)->GetCameraParameters();
 
-
     /* Rendering of scene objects */
 
     glMatrixMode(GL_MODELVIEW);
@@ -1651,7 +1646,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         }
     }
 
-
     if (this->surfaceMappedRM != SURFACE_NONE) {
 
         // Sort triangles by camera distance
@@ -1680,8 +1674,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     glEnable(GL_LIGHTING);
 
     glPopMatrix();
-
-    this->calltimeOld = calltime;
 
     // Unlock frames
     mol1->Unlock();
