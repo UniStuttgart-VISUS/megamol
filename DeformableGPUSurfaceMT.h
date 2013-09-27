@@ -55,12 +55,27 @@ public:
             float externalForcesWeight); // TODO
 
     /**
+     * TODO
+     */
+    bool MorphToVolumeGVF(float *volume_D, size_t volDim[3],
+            float volWSOrg[3], float volWSDelta[3], float isovalue,
+            InterpolationMode interpMode, size_t maxIt,
+            float surfMappedMinDisplScl,
+            float springStiffness, float forceScl,
+            float externalForcesWeight); // TODO
+
+    /**
      * Assignment operator (makes deep copy).
      *
      * @param rhs The assigned surface object
      * @return The returned surface object
      */
     DeformableGPUSurfaceMT& operator=(const DeformableGPUSurfaceMT &rhs);
+
+    // DEBUG
+    const float4 *PeekGVF() {
+        return this->volGradient_D.Peek();
+    }
 
 protected:
 

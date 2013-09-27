@@ -38,8 +38,12 @@
 __global__ void CalcVolGradient_D(float4 *grad_D, float *field_D) {
 
     const uint idx = ::GetThreadIndex();
+
     // Get grid coordinates
-    uint3 gridCoord = GetGridCoordsByPosIdx(idx);
+    uint3 gridCoord = make_uint3(
+            idx % gridSize_D.x,
+            (idx / gridSize_D.x) % gridSize_D.y,
+            (idx / gridSize_D.x) / gridSize_D.y);
 
     // Omit border cells (gradient remains zero)
     if (gridCoord.x == 0) return;
@@ -53,15 +57,15 @@ __global__ void CalcVolGradient_D(float4 *grad_D, float *field_D) {
 
     grad.x =
             field_D[GetPosIdxByGridCoords(make_uint3(gridCoord.x+1, gridCoord.y+0, gridCoord.z+0))]-
-            field_D[GetPosIdxByGridCoords(make_uint3(gridCoord.x+0, gridCoord.y+0, gridCoord.z+0))];
+            field_D[GetPosIdxByGridCoords(make_uint3(gridCoord.x-1, gridCoord.y+0, gridCoord.z+0))];
 
     grad.y =
             field_D[GetPosIdxByGridCoords(make_uint3(gridCoord.x, gridCoord.y+1, gridCoord.z+0))]-
-            field_D[GetPosIdxByGridCoords(make_uint3(gridCoord.x, gridCoord.y+0, gridCoord.z+0))];
+            field_D[GetPosIdxByGridCoords(make_uint3(gridCoord.x, gridCoord.y-1, gridCoord.z+0))];
 
     grad.z =
             field_D[GetPosIdxByGridCoords(make_uint3(gridCoord.x, gridCoord.y+0, gridCoord.z+1))]-
-            field_D[GetPosIdxByGridCoords(make_uint3(gridCoord.x, gridCoord.y+0, gridCoord.z+0))];
+            field_D[GetPosIdxByGridCoords(make_uint3(gridCoord.x, gridCoord.y+0, gridCoord.z-1))];
 
     grad = safeNormalize(grad);
 
@@ -76,6 +80,7 @@ __global__ void CalcVolGradient_D(float4 *grad_D, float *field_D) {
  */
 extern "C"
 cudaError_t CalcVolGradient(float4 *grad_D, float *field_D, uint gridSize) {
+
 
 #ifdef USE_TIMER
     float dt_ms;

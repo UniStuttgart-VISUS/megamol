@@ -552,7 +552,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="Diagram2DRenderer.cpp" />
     <ClCompile Include="DiagramCall.cpp" />
     <ClCompile Include="DiagramRenderer.cpp" />
-    <ClCompile Include="DiffusionSolver.cpp" />
     <ClCompile Include="dllmain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">
       </PrecompiledHeader>
@@ -1011,6 +1010,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <Defines Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">_DEBUG;WIN32;_WIN32</Defines>
       <Defines Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">WIN32;_WIN32</Defines>
     </CudaCompile>
+    <CudaCompile Include="DiffusionSolver.cu" />
     <CudaCompile Include="filter_cuda.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>

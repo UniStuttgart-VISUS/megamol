@@ -32,7 +32,6 @@
 #include "vislib/GLSLShader.h"
 #include "HostArr.h"
 
-
 namespace megamol {
 namespace protein {
 
@@ -180,22 +179,6 @@ protected:
      * @return The return value of the function.
      */
     virtual bool GetExtents(core::Call& call);
-
-    /**
-     * Call callback to get the GVF volume texture
-     *
-     * @param call The calling call
-     * @return True on success
-     */
-    bool getVolData(core::Call& call);
-
-    /**
-     * Call callback to get the GVF volume texture
-     *
-     * @param call The calling call
-     * @return True on success
-     */
-    bool getVolExtent(core::Call& call);
 
     /**
      * Initializes a texture associated with potential map
@@ -503,12 +486,6 @@ private:
     /// The deformable mesh representing the second molecular surface
     DeformableGPUSurfaceMT deformSurfMapped;
 
-    /// DEBUG image data object for external potential rendering
-    VTKImageData externalPotential;
-
-    /// DEBUG Host buffer for external potential
-    HostArr<float> externalPotentialBuff;
-
 
     /* Surface rendering */
 
@@ -534,7 +511,6 @@ private:
     float rmsValue;             ///> The calculated RMS value
     Mat3f rmsRotation;          ///> Rotation matrix for the fitting
     Vec3f rmsTranslation;       ///> Translation vector for the fitting
-    bool toggleRMSFit;          ///> Toggles RMS fitting
     static const float maxRMSVal;  ///> Maximum RMS value to enable fitting
 
 

@@ -67,6 +67,15 @@ public:
     }
 
     /**
+     * Inits each byte in the array with a given value.
+     *
+     * @param c The byte value
+     */
+    void Set(char c) {
+        memset((char*)(this->pt), c, this->GetSize()*sizeof(T));
+    }
+
+    /**
      * If necessary (re)allocates the device memory to meet the desired new size
      * of the array.
      *
