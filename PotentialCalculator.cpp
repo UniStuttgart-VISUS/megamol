@@ -413,6 +413,7 @@ bool PotentialCalculator::computePotentialMap(const MolecularDataCall *mol) {
     case PARTICLE_MESH_EWALD: // TODO
     case CONTINUUM_SOLVATION_POISSON_BOLTZMAN: break; // TODO
     case GPU_POISSON_SOLVER:
+#ifdef WITH_CUDA
         if (!CudaSafeCall(this->potential_D.Validate(volSize))) {
             return false;
         }
@@ -423,6 +424,7 @@ bool PotentialCalculator::computePotentialMap(const MolecularDataCall *mol) {
                         this->charges.Peek(),
                         this->potential_D.Peek(),
                         this->potential.Peek()));
+#endif // WITH_CUDA
         break;
     case EWALD_SUMMATION:
         if (!this->computePotentialMapEwaldSum(mol, 0.25f)) {

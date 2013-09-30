@@ -8,6 +8,8 @@
 //     Author: scharnkn
 //
 
+#if WITH_CUDA
+
 #ifndef MMPROTEINPLUGIN_FIELDTOPOLOGYRENDERER_H_INCLUDED
 #define MMPROTEINPLUGIN_FIELDTOPOLOGYRENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -489,3 +491,4 @@ private:
 } // namespace megamol
 
 #endif // MMPROTEINPLUGIN_ComparativeFieldTopologyRenderer_H_INCLUDED
+#endif // WITH_CUDA

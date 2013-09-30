@@ -162,9 +162,9 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 50;
+    int moduleCount = 49;
 #ifdef WITH_CUDA
-    moduleCount+=14;
+    moduleCount+=15;
 #endif // WITH_CUDA
 #ifdef WITH_OPENHAPTICS
     moduleCount+=1;
@@ -201,7 +201,8 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case HAPTICS_OFFSET + 11 : return new ModuleAutoDescription<protein::DataWriter>();
         case HAPTICS_OFFSET + 12 : return new ModuleAutoDescription<protein::CrystalStructureVolumeRenderer>();
         case HAPTICS_OFFSET + 13 : return new ModuleAutoDescription<protein::ComparativeMolSurfaceRenderer>();
-        #define CUDA_OFFSET 14
+        case HAPTICS_OFFSET + 14 : return new ModuleAutoDescription<protein::ComparativeFieldTopologyRenderer>();
+        #define CUDA_OFFSET 15
 #else
         #define CUDA_OFFSET 0
 #endif // WITH_CUDA
@@ -238,23 +239,22 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case CUDA_OFFSET + HAPTICS_OFFSET + 30 : return new ModuleAutoDescription<protein::IntSelection>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 31 : return new ModuleAutoDescription<protein::CrystalStructureDataSource>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 32 : return new ModuleAutoDescription<protein::VTILoader>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 33 : return new ModuleAutoDescription<protein::ComparativeFieldTopologyRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 34 : return new ModuleAutoDescription<protein::PDBWriter>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 35 : return new ModuleAutoDescription<protein::VTIWriter>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 36 : return new ModuleAutoDescription<protein::PotentialCalculator>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 37 : return new ModuleAutoDescription<protein::VMDDXLoader>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 38 : return new ModuleAutoDescription<protein::TrajectorySmoothFilter>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 39 : return new ModuleAutoDescription<protein::LinkedView3D>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 40 : return new ModuleAutoDescription<protein::SurfacePotentialRendererSlave>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 41 : return new ModuleAutoDescription<protein::SharedCameraParameters>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 42 : return new ModuleAutoDescription<protein::VariantMatchRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 43 : return new ModuleAutoDescription<protein::ProteinVariantMatch>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 44 : return new ModuleAutoDescription<protein::MoleculeBallifier>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 45 : return new ModuleAutoDescription<protein::ResidueSelection>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 46 : return new ModuleAutoDescription<protein::SecPlaneRenderer>();
-		case CUDA_OFFSET + HAPTICS_OFFSET + 47 : return new ModuleAutoDescription<protein::AggregatedDensity>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 49 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 33 : return new ModuleAutoDescription<protein::PDBWriter>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 34 : return new ModuleAutoDescription<protein::VTIWriter>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 35 : return new ModuleAutoDescription<protein::PotentialCalculator>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 36 : return new ModuleAutoDescription<protein::VMDDXLoader>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 37 : return new ModuleAutoDescription<protein::TrajectorySmoothFilter>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 38 : return new ModuleAutoDescription<protein::LinkedView3D>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 39 : return new ModuleAutoDescription<protein::SurfacePotentialRendererSlave>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 40 : return new ModuleAutoDescription<protein::SharedCameraParameters>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 41 : return new ModuleAutoDescription<protein::VariantMatchRenderer>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 42 : return new ModuleAutoDescription<protein::ProteinVariantMatch>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 43 : return new ModuleAutoDescription<protein::MoleculeBallifier>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 44 : return new ModuleAutoDescription<protein::ResidueSelection>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 45 : return new ModuleAutoDescription<protein::SecPlaneRenderer>();
+		case CUDA_OFFSET + HAPTICS_OFFSET + 46 : return new ModuleAutoDescription<protein::AggregatedDensity>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 47 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
         default: return NULL;
     }
     return NULL;
