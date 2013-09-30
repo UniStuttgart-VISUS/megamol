@@ -12,6 +12,7 @@
 
 #include <glh/glh_extensions.h>
 #include "DeformableGPUSurfaceMT.h"
+#ifdef WITH_CUDA
 #include "ogl_error_check.h"
 #include "cuda_error_check.h"
 #include "ComparativeSurfacePotentialRenderer.cuh"
@@ -21,7 +22,7 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 
-#ifdef WITH_CUDA
+
 #define USE_TIMER
 
 using namespace megamol;

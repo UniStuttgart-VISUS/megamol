@@ -202,7 +202,9 @@ private:
 
     gridParams potentialGrid;       ///> Grid params for the potential map
     HostArr<float> potential;       ///> The potential map (host memory)
+#ifdef WITH_CUDA
     CudaDevArr<float> potential_D;  ///> The potential map (device memory)
+#endif // WITH_CUDA
     float minPotential;             ///> Minimum potential value
     float maxPotential;             ///> Maximum potential value
 

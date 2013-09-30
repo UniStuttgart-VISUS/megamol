@@ -257,6 +257,13 @@ protected:
             float alphaScl);
 
     /**
+     * Render external forces as arrow glyphes (ray casted).
+     *
+     * @return 'True' on success, 'false' otherwise
+     */
+    bool renderExternalForces();
+
+    /**
      * Update all parameters if necessary.
      */
     void updateParams();

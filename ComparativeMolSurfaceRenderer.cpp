@@ -1588,6 +1588,12 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         }
     }
 
+    // DEBUG Render external forces as streamlines
+    if (!this->renderExternalForces()) {
+        return false;
+    }
+    // END DEBUG
+
     glDisable(GL_TEXTURE_3D);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
@@ -1604,6 +1610,19 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     vti2->Unlock();
 
     return CheckForGLError();
+}
+
+
+/*
+ * ComparativeMolSurfaceRenderer::renderExternalForces
+ */
+bool ComparativeMolSurfaceRenderer::renderExternalForces() {
+
+    using namespace vislib::math;
+
+
+
+    return true;
 }
 
 

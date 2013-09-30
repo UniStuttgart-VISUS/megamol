@@ -9,6 +9,9 @@
 //
 
 #include "stdafx.h"
+#include "ComparativeFieldTopologyRenderer.h"
+
+#ifdef WITH_CUDA
 #include <cmath>
 #include <ctime>
 
@@ -24,7 +27,7 @@
 #include "vislib/Log.h"
 #include "vislib/mathfunctions.h"
 
-#include "ComparativeFieldTopologyRenderer.h"
+
 #include "VTIDataCall.h"
 #include "Interpol.h"
 #include "VecField3f.h"
@@ -2572,3 +2575,5 @@ void ComparativeFieldTopologyRenderer::updateParams() {
         this->texPosZSlot.ResetDirty();
     }
 }
+
+#endif WITH_CUDA
