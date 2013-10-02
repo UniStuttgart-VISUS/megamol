@@ -18,6 +18,7 @@
 #include "MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/Vector.h"
+#include "param/ParamSlot.h"
 
 
 namespace megamol {
@@ -121,6 +122,9 @@ namespace protein {
         /** The data hash */
         SIZE_T hash;
 
+        /** The data hash */
+        SIZE_T outhash;
+
         /** The time code */
         unsigned int timeCode;
 
@@ -130,6 +134,13 @@ namespace protein {
         vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
         vislib::Array<float> atomColorTable;
         vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
+
+        core::param::ParamSlot color1Slot;
+        core::param::ParamSlot color2Slot;
+        core::param::ParamSlot minGradColorSlot;
+        core::param::ParamSlot mixGradColorSlot;
+        core::param::ParamSlot maxGradColorSlot;
+        core::param::ParamSlot colorMixSlot;
 
     };
 

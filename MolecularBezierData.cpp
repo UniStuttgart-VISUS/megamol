@@ -13,6 +13,9 @@
 #include <vector>
 #include "Color.h"
 #include "vislib/NamedColours.h"
+#include "param/EnumParam.h"
+#include "param/FloatParam.h"
+#include "param/StringParam.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -24,7 +27,13 @@ using namespace megamol::protein;
 MolecularBezierData::MolecularBezierData(void) : Module(),
         outDataSlot("outData", "presents data as BezierCurvesListDataCall"),
         inDataSlot("inData", "fetches data either as ExtBezierDataCall or v1.BezierDataCall"),
-        hash(0), timeCode(0) {
+        hash(0), outhash(0), timeCode(0), data(), colorLookupTable(), atomColorTable(), rainbowColors(),
+        color1Slot("color1", "The primary color mode"),
+        color2Slot("color2", "The secondary color mode"),
+        minGradColorSlot("gradCol.min", "The color for minimum values"),
+        mixGradColorSlot("gradCol.normal", "The color for normal values"),
+        maxGradColorSlot("gradCol.max", "The color for maximum values"),
+        colorMixSlot("colorMix", "Mixing value for the two color modes") {
 
     this->outDataSlot.SetCallback(core::misc::BezierCurvesListDataCall::ClassName(), "GetData", &MolecularBezierData::getDataCallback);
     this->outDataSlot.SetCallback(core::misc::BezierCurvesListDataCall::ClassName(), "GetExtent", &MolecularBezierData::getExtentCallback);
@@ -32,6 +41,35 @@ MolecularBezierData::MolecularBezierData(void) : Module(),
 
     this->inDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
+
+    core::param::EnumParam *colMode1 = new core::param::EnumParam(Color::STRUCTURE);
+    core::param::EnumParam *colMode2 = new core::param::EnumParam(Color::BFACTOR);
+
+    MolecularDataCall *mol = new MolecularDataCall();
+    BindingSiteCall *bs = new BindingSiteCall();
+    for (unsigned int cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
+        Color::ColoringMode cMode = Color::GetModeByIndex( mol, bs, cCnt);
+        colMode1->SetTypePair( cMode, Color::GetName( cMode).c_str());
+        colMode2->SetTypePair( cMode, Color::GetName( cMode).c_str());
+    }
+
+    this->color1Slot << colMode1;
+    this->MakeSlotAvailable(&this->color1Slot);
+
+    this->color2Slot << colMode2;
+    this->MakeSlotAvailable(&this->color2Slot);
+
+    this->colorMixSlot << new core::param::FloatParam(0.5f, 0.0f, 1.0f);
+    this->MakeSlotAvailable(&this->colorMixSlot);
+
+    this->minGradColorSlot << new core::param::StringParam("#146496");
+    this->MakeSlotAvailable(&this->minGradColorSlot);
+
+    this->mixGradColorSlot << new core::param::StringParam("#f0f0f0");
+    this->MakeSlotAvailable(&this->mixGradColorSlot);
+
+    this->maxGradColorSlot << new core::param::StringParam("#ae3b32");
+    this->MakeSlotAvailable(&this->maxGradColorSlot);
 }
 
 
@@ -76,6 +114,22 @@ bool MolecularBezierData::getDataCallback(core::Call& caller) {
     if (!(*agd3dc)(1u)) return false;
     agd3dc->Unlock();
 
+    if (this->color1Slot.IsDirty()
+            || this->color2Slot.IsDirty()
+            || this->minGradColorSlot.IsDirty()
+            || this->mixGradColorSlot.IsDirty()
+            || this->maxGradColorSlot.IsDirty()
+            || this->colorMixSlot.IsDirty()) {
+        this->color1Slot.ResetDirty();
+        this->color2Slot.ResetDirty();
+        this->minGradColorSlot.ResetDirty();
+        this->mixGradColorSlot.ResetDirty();
+        this->maxGradColorSlot.ResetDirty();
+        this->colorMixSlot.ResetDirty();
+
+        this->hash = static_cast<size_t>(-1);
+    }
+
     if ((bcldc->FrameID() != this->timeCode) || (this->hash == 0) || (this->hash != agd3dc->DataHash())) {
         agd3dc->SetFrameID(bcldc->FrameID(), bcldc->IsFrameForced());
 
@@ -86,6 +140,7 @@ bool MolecularBezierData::getDataCallback(core::Call& caller) {
             // new data: recompute bezier data
             this->hash = agd3dc->DataHash();
             this->timeCode = agd3dc->FrameID();
+            this->outhash++;
 
             MolecularDataCall *mdc = dynamic_cast<MolecularDataCall*>(agd3dc);
             if (mdc != nullptr) {
@@ -100,7 +155,7 @@ bool MolecularBezierData::getDataCallback(core::Call& caller) {
         }
     }
 
-    bcldc->SetDataHash(this->hash);
+    bcldc->SetDataHash(this->outhash);
     bcldc->SetFrameID(this->timeCode);
     bcldc->SetUnlocker(nullptr); // HAZARD
     bcldc->SetData(&this->data, 1);
@@ -125,7 +180,7 @@ bool MolecularBezierData::getExtentCallback(core::Call& caller) {
     bcldc->AccessBoundingBoxes() = agd3dc->AccessBoundingBoxes();
     bcldc->SetFrameID(agd3dc->FrameID(), agd3dc->IsFrameForced());
     bcldc->SetFrameCount(agd3dc->FrameCount());
-    bcldc->SetDataHash(agd3dc->DataHash());
+    bcldc->SetDataHash(this->outhash);
     bcldc->SetUnlocker(nullptr);
 
     agd3dc->Unlock();
@@ -161,14 +216,17 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
     vislib::RawStorageWriter idx(idx_blob);
     size_t cnt = 0;
 
-    const float col_mix = 0.5f;
+    const float col_mix = this->colorMixSlot.Param<core::param::FloatParam>()->Value();
     Color::MakeColorTable(&dat,
-        Color::STRUCTURE,
-        Color::BFACTOR,
+        static_cast<Color::ColoringMode>(this->color1Slot.Param<core::param::EnumParam>()->Value()),
+        static_cast<Color::ColoringMode>(this->color2Slot.Param<core::param::EnumParam>()->Value()),
         col_mix,       // blending factor between both color maps
         1.0 - col_mix, // 
         this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-        _T("blue"), _T("white"), _T("red"), true);
+        this->minGradColorSlot.Param<core::param::StringParam>()->Value(),
+        this->mixGradColorSlot.Param<core::param::StringParam>()->Value(),
+        this->maxGradColorSlot.Param<core::param::StringParam>()->Value(),
+        true);
 
     for (unsigned int mi = 0; mi < dat.MoleculeCount(); mi++) {
         std::vector<const float* > poss;
