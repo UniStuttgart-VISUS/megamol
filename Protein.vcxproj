@@ -614,6 +614,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="LIC.cpp" />
     <ClCompile Include="MDDriverConnector.cpp" />
     <ClCompile Include="MolecularAOShader.cpp" />
+    <ClCompile Include="MolecularBezierData.cpp" />
     <ClCompile Include="MolecularDataCall.cpp" />
     <ClCompile Include="MoleculeBallifier.cpp" />
     <ClCompile Include="MolecularSurfaceFeature.cpp" />
@@ -756,6 +757,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="MappableFloatPair.h" />
     <ClInclude Include="MDDriverConnector.h" />
     <ClInclude Include="MolecularAOShader.h" />
+    <ClInclude Include="MolecularBezierData.h" />
     <ClInclude Include="MolecularDataCall.h" />
     <ClInclude Include="MoleculeBallifier.h" />
     <ClInclude Include="MolecularSurfaceFeature.h" />

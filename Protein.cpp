@@ -79,6 +79,7 @@
 #include "AggregatedDensity.h"
 #include "ResidueSelection.h"
 #include "VTKLegacyDataLoaderUnstructuredGrid.h"
+#include "MolecularBezierData.h"
 
 // data interfaces (calls)
 #include "SolPathDataCall.h"
@@ -162,7 +163,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 49;
+    int moduleCount = 50;
 #ifdef WITH_CUDA
     moduleCount+=15;
 #endif // WITH_CUDA
@@ -255,6 +256,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
 		case CUDA_OFFSET + HAPTICS_OFFSET + 46 : return new ModuleAutoDescription<protein::AggregatedDensity>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 47 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 49 : return new ModuleAutoDescription<protein::MolecularBezierData>();
         default: return NULL;
     }
     return NULL;
