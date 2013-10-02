@@ -10,7 +10,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib/Point.h"
-#include <list>
+#include <vector>
 #include "Color.h"
 #include "vislib/NamedColours.h"
 
@@ -134,6 +134,22 @@ bool MolecularBezierData::getExtentCallback(core::Call& caller) {
 }
 
 
+/**
+ * local utility function for linear interpolation
+ *
+ * @param v1 Value 1
+ * @param v2 Value 2
+ * @param a Interpolation value
+ *
+ * @return The interpolated value
+ */
+static float interpolate(float v1, float v2, float a) {
+    if (a < 0.0f) a = 0.0f;
+    if (a > 1.0f) a = 1.0f;
+    return v1 * (1.0f - a) + v2 * a;
+}
+
+
 /*
  * MolecularBezierData::update
  */
@@ -145,7 +161,7 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
     vislib::RawStorageWriter idx(idx_blob);
     size_t cnt = 0;
 
-    const float col_mix = 1.0f;
+    const float col_mix = 0.5f;
     Color::MakeColorTable(&dat,
         Color::STRUCTURE,
         Color::BFACTOR,
@@ -155,9 +171,9 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
         _T("blue"), _T("white"), _T("red"), true);
 
     for (unsigned int mi = 0; mi < dat.MoleculeCount(); mi++) {
-        std::list<vislib::math::Point<float, 3> > poss;
-        std::list<float> rads;
-        std::list<vislib::math::Vector<float, 3> > cols;
+        std::vector<const float* > poss;
+        std::vector<float> rads;
+        std::vector<const float* > cols;
 
         unsigned ssi = dat.Molecules()[mi].FirstSecStructIndex();
         for (unsigned int ssit = 0; ssit < dat.Molecules()[mi].SecStructCount(); ssi++, ssit++) {
@@ -167,10 +183,7 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
                 if (dat.Residues()[aai]->Identifier() != MolecularDataCall::Residue::AMINOACID) continue;
                 unsigned int ca = static_cast<const MolecularDataCall::AminoAcid*>(dat.Residues()[aai])->CAlphaIndex();
 
-                vislib::math::Point<float, 3> pos(dat.AtomPositions() + (ca * 3));
-                float rad = 0.3f;
-                vislib::math::Vector<float, 3> col(atomColorTable.PeekElements() + (ca * 3));
-
+                float rad = 0.3f; // Ångström
                 switch (dat.SecondaryStructures()[ssi].Type()) {
                 case MolecularDataCall::SecStructure::TYPE_HELIX:
                     rad = 0.4f; // Ångström
@@ -185,32 +198,116 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
                 default: rad = 0.3f; // Ångström
                 }
 
-                poss.push_back(pos);
+                poss.push_back(dat.AtomPositions() + (ca * 3));
                 rads.push_back(rad);
-                cols.push_back(col);
+                cols.push_back(atomColorTable.PeekElements() + (ca * 3));
             }
         }
 
-        // TODO: Fix me
+        ASSERT(poss.size() == rads.size());
+        ASSERT(poss.size() == cols.size());
+        if (poss.size() < 2) {
+            continue; // skip this empty data
+        } else if (poss.size() == 2) {
+            // simple line:
+            pt.Write(poss[0][0]);
+            pt.Write(poss[0][1]);
+            pt.Write(poss[0][2]);
+            pt.Write(rads[0]);
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(cols[0][0] * 255.0f), 0, 255)));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(cols[0][1] * 255.0f), 0, 255)));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(cols[0][2] * 255.0f), 0, 255)));
+            cnt++;
+            pt.Write(poss[1][0]);
+            pt.Write(poss[1][1]);
+            pt.Write(poss[1][2]);
+            pt.Write(rads[1]);
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(cols[1][0] * 255.0f), 0, 255)));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(cols[1][1] * 255.0f), 0, 255)));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(cols[1][2] * 255.0f), 0, 255)));
+            cnt++;
+            idx.Write(static_cast<unsigned int>(cnt - 2));
+            idx.Write(static_cast<unsigned int>(cnt - 2));
+            idx.Write(static_cast<unsigned int>(cnt - 1));
+            idx.Write(static_cast<unsigned int>(cnt - 1));
+        } else {
+            // more than three points (spline-siff-code from old core module)
 
-        auto possE = poss.end();
-        auto posI = poss.begin();
-        auto radI = rads.begin();
-        auto colI = cols.begin();
-        for (; posI != possE; posI++, radI++, colI++) {
-            pt.Write(posI->X());
-            pt.Write(posI->Y());
-            pt.Write(posI->Z());
-            pt.Write(*radI);
-            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(colI->X() * 255.0f), 0, 255)));
-            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(colI->Y() * 255.0f), 0, 255)));
-            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(colI->Z() * 255.0f), 0, 255)));
-            if (cnt > 1) {
-                idx.Write(static_cast<unsigned int>(cnt - 1));
-                idx.Write(static_cast<unsigned int>(cnt - 1));
+            // first curve
+            pt.Write(poss[0][0]);
+            pt.Write(poss[0][1]);
+            pt.Write(poss[0][2]);
+            pt.Write(rads[0]);
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(cols[0][0] * 255.0f), 0, 255)));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(cols[0][1] * 255.0f), 0, 255)));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(cols[0][2] * 255.0f), 0, 255)));
+            idx.Write(static_cast<unsigned int>(cnt));
+            cnt++;
+
+            pt.Write(interpolate(poss[0][0], poss[1][0], 0.75f));
+            pt.Write(interpolate(poss[0][1], poss[1][1], 0.75f));
+            pt.Write(interpolate(poss[0][2], poss[1][2], 0.75f));
+            pt.Write(interpolate(rads[0], rads[1], 0.75f));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[0][0], cols[1][0], 0.75f) * 255.0f), 0, 255)));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[0][1], cols[1][1], 0.75f) * 255.0f), 0, 255)));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[0][2], cols[1][2], 0.75f) * 255.0f), 0, 255)));
+            idx.Write(static_cast<unsigned int>(cnt));
+            cnt++;
+
+            // inner curves
+            for (unsigned int i = 1; i < poss.size() - 1; i++) {
+
+                pt.Write(interpolate(poss[i][0], poss[i + 1][0], 0.25f));
+                pt.Write(interpolate(poss[i][1], poss[i + 1][1], 0.25f));
+                pt.Write(interpolate(poss[i][2], poss[i + 1][2], 0.25f));
+                pt.Write(interpolate(rads[i], rads[i + 1], 0.25f));
+                pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[i][0], cols[i + 1][0], 0.25f) * 255.0f), 0, 255)));
+                pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[i][1], cols[i + 1][1], 0.25f) * 255.0f), 0, 255)));
+                pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[i][2], cols[i + 1][2], 0.25f) * 255.0f), 0, 255)));
                 idx.Write(static_cast<unsigned int>(cnt));
+                cnt++;
+
+                pt.Write(interpolate(poss[i][0], poss[i + 1][0], 0.5f));
+                pt.Write(interpolate(poss[i][1], poss[i + 1][1], 0.5f));
+                pt.Write(interpolate(poss[i][2], poss[i + 1][2], 0.5f));
+                pt.Write(interpolate(rads[i], rads[i + 1], 0.5f));
+                pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[i][0], cols[i + 1][0], 0.5f) * 255.0f), 0, 255)));
+                pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[i][1], cols[i + 1][1], 0.5f) * 255.0f), 0, 255)));
+                pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[i][2], cols[i + 1][2], 0.5f) * 255.0f), 0, 255)));
                 idx.Write(static_cast<unsigned int>(cnt));
+                idx.Write(static_cast<unsigned int>(cnt)); // use this point twice
+                cnt++;
+
+                pt.Write(interpolate(poss[i][0], poss[i + 1][0], 0.75f));
+                pt.Write(interpolate(poss[i][1], poss[i + 1][1], 0.75f));
+                pt.Write(interpolate(poss[i][2], poss[i + 1][2], 0.75f));
+                pt.Write(interpolate(rads[i], rads[i + 1], 0.75f));
+                pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[i][0], cols[i + 1][0], 0.75f) * 255.0f), 0, 255)));
+                pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[i][1], cols[i + 1][1], 0.75f) * 255.0f), 0, 255)));
+                pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[i][2], cols[i + 1][2], 0.75f) * 255.0f), 0, 255)));
+                idx.Write(static_cast<unsigned int>(cnt));
+                cnt++;
             }
+
+            // last curve
+            pt.Write(interpolate(poss[poss.size() - 2][0], poss[poss.size() - 1][0], 0.25f));
+            pt.Write(interpolate(poss[poss.size() - 2][1], poss[poss.size() - 1][1], 0.25f));
+            pt.Write(interpolate(poss[poss.size() - 2][2], poss[poss.size() - 1][2], 0.25f));
+            pt.Write(interpolate(rads[poss.size() - 2], rads[poss.size() - 1], 0.25f));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[poss.size() - 2][0], cols[poss.size() - 1][0], 0.25f) * 255.0f), 0, 255)));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[poss.size() - 2][1], cols[poss.size() - 1][1], 0.25f) * 255.0f), 0, 255)));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(interpolate(cols[poss.size() - 2][2], cols[poss.size() - 1][2], 0.25f) * 255.0f), 0, 255)));
+            idx.Write(static_cast<unsigned int>(cnt));
+            cnt++;
+
+            pt.Write(poss[poss.size() - 1][0]);
+            pt.Write(poss[poss.size() - 1][1]);
+            pt.Write(poss[poss.size() - 1][2]);
+            pt.Write(rads[poss.size() - 1]);
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(cols[poss.size() - 1][0] * 255.0f), 0, 255)));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(cols[poss.size() - 1][1] * 255.0f), 0, 255)));
+            pt.Write(static_cast<unsigned char>(vislib::math::Clamp(static_cast<int>(cols[poss.size() - 1][2] * 255.0f), 0, 255)));
+            idx.Write(static_cast<unsigned int>(cnt));
             cnt++;
         }
 
