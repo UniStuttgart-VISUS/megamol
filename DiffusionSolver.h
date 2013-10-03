@@ -38,12 +38,9 @@ public:
      * @return 'True' on success, 'false' otherwise
      */
     static bool CalcGVF(
-            const float *startVol,
-            size_t dim[3],
-            float isovalue,
-            float radius,
-            float *gvfVol_D,
-            unsigned int maxIt);
+            const float *startVol, float *gvfConstData_D, const unsigned int *cellStates_D,
+                    float *grad_D, size_t dim[3], float isovalue,
+                    float *gvf_D, unsigned int maxIt, float scl);
 
 protected:
 
@@ -63,11 +60,8 @@ protected:
      *                    GVF computation.
      */
     static bool initGVF(
-            const float *startVol,
-            size_t dim[3],
-            float isovalue,
-            float radius,
-            float *gvfVol_D);
+            const float *startVol, size_t dim[3], const unsigned int *cellStates_D,
+                    float isovalue, float *grad_D, float *gvfConstData_D);
 
 private:
 
