@@ -120,6 +120,8 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         surfaceMappingMaxItSlot("surfMap::maxIt","Maximum number of iterations for the surface mapping"),
         surfMappedMinDisplSclSlot("surfMap::minDisplScl", "Minimum displacement for vertices"),
         surfMappedSpringStiffnessSlot("surfMap::stiffness", "Spring stiffness"),
+        surfMappedGVFSclSlot("surfMap::GVFScl", "GVF scale factor"),
+        surfMappedGVFItSlot("surfMap::GVFIt", "GVF iterations"),
         /* Surface regularization */
         regMaxItSlot("surfReg::regMaxIt", "Maximum number of iterations for regularization"),
         regSpringStiffnessSlot("surfReg::stiffness", "Spring stiffness"),
@@ -139,7 +141,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         cudaqsurf1(NULL), cudaqsurf2(NULL),
         triggerComputeVolume(true), triggerInitPotentialTex(true),
         triggerComputeSurfacePoints1(true), triggerComputeSurfacePoints2(true),
-        triggerSurfaceMapping(true), triggerRMSFit(true) {
+        triggerSurfaceMapping(true), triggerRMSFit(true), triggerComputeLines(true) {
 
     /* Make data caller/callee slots available */
 
@@ -235,6 +237,16 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->surfMappedMinDisplScl = 0.1;
     this->surfMappedMinDisplSclSlot.SetParameter(new core::param::FloatParam(this->surfMappedMinDisplScl, 0.0f));
     this->MakeSlotAvailable(&this->surfMappedMinDisplSclSlot);
+
+    /// GVF scale factor
+    this->surfMappedGVFScl = 1.0f;
+    this->surfMappedGVFSclSlot.SetParameter(new core::param::FloatParam(this->surfMappedGVFScl, 0.0f));
+    this->MakeSlotAvailable(&this->surfMappedGVFSclSlot);
+
+    /// GVF iterations
+    this->surfMappedGVFIt = 0;
+    this->surfMappedGVFItSlot.SetParameter(new core::param::IntParam(this->surfMappedGVFIt, 0));
+    this->MakeSlotAvailable(&this->surfMappedGVFItSlot);
 
 
     /* Parameters for surface regularization */
@@ -1423,16 +1435,18 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Make deep copy of regularized second surface
         this->deformSurfMapped = this->deformSurf2;
 
+        // Transform vertices
         this->applyRMSFitting(mol2, &this->deformSurfMapped);
 
         size_t volDim1[3];
-        volDim1[0] = this->gridDensMap1.size[0];
-        volDim1[1] = this->gridDensMap1.size[1];
-        volDim1[2] = this->gridDensMap1.size[2];
+        volDim1[0] = static_cast<size_t>(this->gridDensMap1.size[0]);
+        volDim1[1] = static_cast<size_t>(this->gridDensMap1.size[1]);
+        volDim1[2] = static_cast<size_t>(this->gridDensMap1.size[2]);
 
         // Morph surface #2 to shape #1 using GVF
         if (!this->deformSurfMapped.MorphToVolumeGVF(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                this->deformSurf1.PeekCubeStates(),
                 volDim1,
                 &this->gridDensMap1.minC[0],
                 &this->gridDensMap1.delta[0],
@@ -1442,7 +1456,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->surfMappedMinDisplScl,
                 this->surfMappedSpringStiffness,
                 this->surfaceMappingForcesScl,
-                this->surfaceMappingExternalForcesWeightScl)) {
+                this->surfaceMappingExternalForcesWeightScl,
+                this->surfMappedGVFScl,
+                this->surfMappedGVFIt)) {
             return false;
         }
 
@@ -1620,9 +1636,59 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
 
     using namespace vislib::math;
 
+    size_t gridSize = this->gridDensMap1.size[0]*this->gridDensMap1.size[1]*this->gridDensMap1.size[2];
+    if (this->triggerComputeLines) {
 
+        this->gvf.Validate(gridSize*4);
+        if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
+                this->deformSurfMapped.PeekGVF(), sizeof(float)*gridSize*4,
+                cudaMemcpyDeviceToHost))) {
+            return false;
+        }
+        this->lines.SetCount(gridSize*6);
+        for (size_t x = 0; x < this->gridDensMap1.size[0]; ++x) {
+            for (size_t y = 0; y < this->gridDensMap1.size[1]; ++y) {
+                for (size_t z = 0; z < this->gridDensMap1.size[2]; ++z) {
+                    unsigned int idx = this->gridDensMap1.size[0]*(this->gridDensMap1.size[1]*z + y) + x;
 
-    return true;
+                    Vec3f pos(this->gridDensMap1.minC[0] + x*this->gridDensMap1.delta[0],
+                            this->gridDensMap1.minC[1] + y*this->gridDensMap1.delta[1],
+                            this->gridDensMap1.minC[2] + z*this->gridDensMap1.delta[2]);
+
+                    Vec3f vec(gvf.Peek()[4*idx+0], gvf.Peek()[4*idx+1], gvf.Peek()[4*idx+2]);
+                    //Vec3f vec(1.0, 1.0, 1.0);
+//                    if ((x > this->gridDensMap1.size[0]*0.5)&&(x < this->gridDensMap1.size[0]*0.5+2)) {
+                        this->lines[6*idx+0] = pos.X() - vec.X()*0.5f;
+                        this->lines[6*idx+1] = pos.Y() - vec.Y()*0.5f;
+                        this->lines[6*idx+2] = pos.Z() - vec.Z()*0.5f;
+                        this->lines[6*idx+3] = pos.X() + vec.X()*0.5f;
+                        this->lines[6*idx+4] = pos.Y() + vec.Y()*0.5f;
+                        this->lines[6*idx+5] = pos.Z() + vec.Z()*0.5f;
+//                    } else {
+//                        this->lines[6*idx+0] = 0.0f;
+//                        this->lines[6*idx+1] = 0.0f;
+//                        this->lines[6*idx+2] = 0.0f;
+//                        this->lines[6*idx+3] = 0.0f;
+//                        this->lines[6*idx+4] = 0.0f;
+//                        this->lines[6*idx+5] = 0.0f;
+//                    }
+                }
+            }
+        }
+        this->triggerComputeLines = false;
+    }
+
+    // Draw lines
+    glColor3f(1.0, 0.0, 0.0);
+    glDisable(GL_LINE_SMOOTH);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, this->lines.PeekElements());
+
+    glDrawArrays(GL_LINES, 0, gridSize*2);
+    // deactivate vertex arrays after drawing
+    glDisableClientState(GL_VERTEX_ARRAY);
+
+    return CheckForGLError();
 }
 
 
@@ -1961,6 +2027,25 @@ void ComparativeMolSurfaceRenderer::updateParams() {
                 this->surfMappedSpringStiffnessSlot.Param<core::param::FloatParam>()->Value();
         this->surfMappedSpringStiffnessSlot.ResetDirty();
         this->triggerSurfaceMapping = true;
+    }
+
+
+    /// GVF scale factor
+    if (this->surfMappedGVFSclSlot.IsDirty()) {
+        this->surfMappedGVFScl =
+                this->surfMappedGVFSclSlot.Param<core::param::FloatParam>()->Value();
+        this->surfMappedGVFSclSlot.ResetDirty();
+        this->triggerSurfaceMapping = true;
+        this->triggerComputeLines = true;
+    }
+
+    /// GVF iterations
+    if (this->surfMappedGVFItSlot.IsDirty()) {
+        this->surfMappedGVFIt =
+                this->surfMappedGVFItSlot.Param<core::param::IntParam>()->Value();
+        this->surfMappedGVFItSlot.ResetDirty();
+        this->triggerSurfaceMapping = true;
+        this->triggerComputeLines = true;
     }
 
 

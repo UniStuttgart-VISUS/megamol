@@ -331,10 +331,13 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
 /*
  * DeformableGPUSurfaceMT::MorphToVolumeGVF
  */
-bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D, size_t volDim[3],
+bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D,
+        const unsigned int *targetCubeStates_D,
+        size_t volDim[3],
         float volWSOrg[3], float volWSDelta[3], float isovalue,
         InterpolationMode interpMode, size_t maxIt, float surfMappedMinDisplScl,
-        float springStiffness, float forceScl, float externalForcesWeight) {
+        float springStiffness, float forceScl, float externalForcesWeight,
+        float gvfScl, unsigned int gvfIt) {
 
     CheckForCudaError();
 
@@ -349,6 +352,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D, size_t volDim[3],
     }
 
     size_t volSize = volDim[0]*volDim[1]*volDim[2];
+    size_t gridCellCnt = (volDim[0]-1)*(volDim[1]-1)*(volDim[2]-1);
 
 
     /* Init grid parameters for all files */
@@ -368,30 +372,39 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D, size_t volDim[3],
     }
 
     // Compute external forces
-    if (!CudaSafeCall(this->volGradient_D.Validate(volSize))) {
+    if (!CudaSafeCall(this->gvf_D.Validate(volSize*4))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->gvf_D.Set(0))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->gvfConstData_D.Validate(volSize*4))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->gvfConstData_D.Set(0))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->grad_D.Validate(volSize*4))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->grad_D.Set(0))) {
         return false;
     }
 
     // Use GVF
     if (!DiffusionSolver::CalcGVF(
             volume_D,
+            this->gvfConstData_D.Peek(),
+            targetCubeStates_D,
+            this->grad_D.Peek(),
             volDim,
             isovalue,
-            1.0f, // TODO param
-            (float*)(this->volGradient_D.Peek()),
-            10)) {
+            this->gvf_D.Peek(),
+            gvfIt,
+            gvfScl)) {
         return false;
     }
 
-
-
-//    if (!CudaSafeCall(this->volGradient_D.Set(0))) {
-//        return false;
-//    }
-//    if (!CudaSafeCall(CalcVolGradient(this->volGradient_D.Peek(), volume_D,
-//            this->volGradient_D.GetSize()))) {
-//        return false;
-//    }
 
 //    // DEBUG Print gradient field
 //    HostArr<float4> gradFieldTest;
@@ -420,7 +433,6 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D, size_t volDim[3],
     if (!CudaSafeCall(cudaGraphicsMapResources(1, &this->vertexDataResource, 0))) {
         return false;
     }
-
 
     // Get mapped pointers to the vertex data buffers
     float *vboPt;
@@ -498,7 +510,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D, size_t volDim[3],
                     vboPt,
                     this->vertexExternalForcesScl_D.Peek(),
                     this->vertexNeighbours_D.Peek(),
-                    this->volGradient_D.Peek(),
+                    (float4*)this->gvf_D.Peek(),
                     this->laplacian_D.Peek(),
                     this->vertexCnt,
                     externalForcesWeight,
@@ -521,7 +533,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D, size_t volDim[3],
                     vboPt,
                     this->vertexExternalForcesScl_D.Peek(),
                     this->vertexNeighbours_D.Peek(),
-                    this->volGradient_D.Peek(),
+                    (float4*)this->gvf_D.Peek(),
                     this->laplacian_D.Peek(),
                     this->vertexCnt,
                     externalForcesWeight,
@@ -582,7 +594,6 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D, size_t volDim[3],
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
         return false;
     }
-
 
     return true;
 }

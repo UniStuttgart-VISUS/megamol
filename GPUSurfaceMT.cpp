@@ -158,7 +158,7 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
 
     using vislib::sys::Log;
 
-    size_t gridCellCnt = volDim[0]*volDim[1]*volDim[2];
+    size_t gridCellCnt = (volDim[0]-1)*(volDim[1]-1)*(volDim[2]-1);
 
 
     /* Init grid parameters */

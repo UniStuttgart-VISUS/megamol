@@ -57,12 +57,13 @@ public:
     /**
      * TODO
      */
-    bool MorphToVolumeGVF(float *volume_D, size_t volDim[3],
+    bool MorphToVolumeGVF(float *volume_D, const unsigned int *targetCubeStates_D,
+            size_t volDim[3],
             float volWSOrg[3], float volWSDelta[3], float isovalue,
             InterpolationMode interpMode, size_t maxIt,
             float surfMappedMinDisplScl,
             float springStiffness, float forceScl,
-            float externalForcesWeight); // TODO
+            float externalForcesWeight, float gvfScl, unsigned int gvfIt); // TODO
 
     /**
      * Assignment operator (makes deep copy).
@@ -73,18 +74,31 @@ public:
     DeformableGPUSurfaceMT& operator=(const DeformableGPUSurfaceMT &rhs);
 
     // DEBUG
-    const float4 *PeekGVF() {
-        return this->volGradient_D.Peek();
+    const float *PeekGVF() {
+        return this->gvf_D.Peek();
+    }
+
+    const unsigned int *PeekCubeStates() {
+        return this->cubeStates_D.Peek();
     }
 
 protected:
 
 private:
 
-    /* Surface mapping */
+    /* Device arrays for external forces */
 
     /// Device pointer to external forces for every vertex
     CudaDevArr<float> vertexExternalForcesScl_D;
+
+    /// TODO
+    CudaDevArr<float> gvf_D;
+
+    /// TODO
+    CudaDevArr<float> gvfConstData_D;
+
+    /// TODO
+    CudaDevArr<float> grad_D;
 
     /// Device pointer to gradient field
     CudaDevArr<float4> volGradient_D;

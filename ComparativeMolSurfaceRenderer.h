@@ -339,6 +339,14 @@ private:
     core::param::ParamSlot surfMappedSpringStiffnessSlot;
     float surfMappedSpringStiffness;
 
+    /// GVF scale factor
+    core::param::ParamSlot surfMappedGVFSclSlot;
+    float surfMappedGVFScl;
+
+    /// GVF iterations
+    core::param::ParamSlot surfMappedGVFItSlot;
+    unsigned int surfMappedGVFIt;
+
 
     /* Surface regularization */
 
@@ -537,6 +545,11 @@ private:
 
     /// Triggers recomputation of minimum RMSD
     bool triggerRMSFit;
+
+    /// DEBUG
+    vislib::Array<float> lines;
+    bool triggerComputeLines;
+    HostArr<float> gvf;
 
 };
 

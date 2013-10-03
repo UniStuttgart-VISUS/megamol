@@ -43,7 +43,7 @@ ElectrostaticsRenderer::ElectrostaticsRenderer(void) : Renderer3DModule (),
     this->dataCallerSlot.SetCompatibleCall<ParticleDataCallDescription>();
     this->dataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable( &this->dataCallerSlot);
-    
+
     // the cell length parameter
     this->cellLenghtParam.SetParameter(new param::FloatParam( 10.0f, 0.0f));
     this->MakeSlotAvailable( &this->cellLenghtParam);
