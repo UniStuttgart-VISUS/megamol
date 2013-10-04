@@ -40,7 +40,7 @@ public:
     static bool CalcGVF(
             const float *startVol, float *gvfConstData_D, const unsigned int *cellStates_D,
                     float *grad_D, size_t dim[3], float isovalue,
-                    float *gvf_D, unsigned int maxIt, float scl);
+                    float *gvfIn_D, float *gvfOut_D, unsigned int maxIt, float scl);
 
 protected:
 
