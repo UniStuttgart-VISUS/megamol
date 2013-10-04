@@ -23,11 +23,17 @@ using namespace megamol::protein;
 #define USE_CUDA_TIMER
 
 
-////////////////////////////////////////////////////////////////////////////////
-//  Grid utility functions offering coversion of different indices. The term  //
-//  'cell' refers to grid centers rather than grid corners. Thus, there are   //
-//  gridSize - 1 cells in every dimension.                                    //
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * Samples the field at a given (integer) grid position.
+ *
+ * @param x,y,z Coordinates of the position
+ * @return The sampled value of the field
+ */
+template <typename T>
+inline __device__ T SampleFieldAt_D(uint x, uint y, uint z, T *field_D, uint3 dim) {
+    return field_D[dim.x*(dim.y*z+y)+x];
+}
+
 
 /**
  * Answers the grid position index associated with the given coordinates.
@@ -79,7 +85,8 @@ inline __device__ uint3 GetGridCoordsByPosIdx(uint index, uint3 voldim) {
  * updateGVF_D
  */
 __global__ void updateGVF_D(
-        float *gvf_D,
+        float *gvfIn_D,
+        float *gvfOut_D,
         float *gvfConstData_D, // b, c1, c2, c3
         float scl,
         uint3 voldim) {
@@ -108,28 +115,22 @@ __global__ void updateGVF_D(
     /* Update isotropic diffusion for all vector components */
 
     // Get indices of adjacent values
-    idxAdj[0] = ::GetPosIdxByGridCoords(make_uint3(clamp(uint(gridC.x-1), uint(0), voldim.x), gridC.y, gridC.z), voldim);
-    idxAdj[1] = ::GetPosIdxByGridCoords(make_uint3(clamp(uint(gridC.x+1), uint(0), voldim.x), gridC.y, gridC.z), voldim);
-    idxAdj[2] = ::GetPosIdxByGridCoords(make_uint3(gridC.x, clamp(uint(gridC.y-1), uint(0), voldim.y), gridC.z), voldim);
-    idxAdj[3] = ::GetPosIdxByGridCoords(make_uint3(gridC.x, clamp(uint(gridC.y+1), uint(0), voldim.y), gridC.z), voldim);
-    idxAdj[4] = ::GetPosIdxByGridCoords(make_uint3(gridC.x, gridC.y, clamp(uint(gridC.z-1), uint(0), voldim.z)), voldim);
-    idxAdj[5] = ::GetPosIdxByGridCoords(make_uint3(gridC.x, gridC.y, clamp(uint(gridC.z+1), uint(0), voldim.z)), voldim);
-
-    if (idxAdj[0] >= volsize) return;
-    if (idxAdj[1] >= volsize) return;
-    if (idxAdj[2] >= volsize) return;
-    if (idxAdj[3] >= volsize) return;
-    if (idxAdj[4] >= volsize) return;
-    if (idxAdj[5] >= volsize) return;
+    idxAdj[0] = ::GetPosIdxByGridCoords(make_uint3(uint(clamp(int(gridC.x)-1, 0, int(voldim.x-1))), gridC.y, gridC.z), voldim);
+    idxAdj[1] = ::GetPosIdxByGridCoords(make_uint3(uint(clamp(int(gridC.x)+1, 0, int(voldim.x-1))), gridC.y, gridC.z), voldim);
+    idxAdj[2] = ::GetPosIdxByGridCoords(make_uint3(gridC.x, uint(clamp(int(gridC.y)-1, 0, int(voldim.y-1))), gridC.z), voldim);
+    idxAdj[3] = ::GetPosIdxByGridCoords(make_uint3(gridC.x, uint(clamp(int(gridC.y)+1, 0, int(voldim.y-1))), gridC.z), voldim);
+    idxAdj[4] = ::GetPosIdxByGridCoords(make_uint3(gridC.x, gridC.y, uint(clamp(int(gridC.z)-1, 0, int(voldim.z-1)))), voldim);
+    //idxAdj[4] = 0;
+    idxAdj[5] = ::GetPosIdxByGridCoords(make_uint3(gridC.x, gridC.y, uint(clamp(int(gridC.z)+1, 0, int(voldim.z-1)))), voldim);
 
     // Get adjacent gvf values
-    gvfOld = make_float3(gvf_D[4*idx+0], gvf_D[4*idx+1], gvf_D[4*idx+2]);
-    gvfAdj[0] = make_float3(gvf_D[4*idxAdj[0]+0], gvf_D[4*idxAdj[0]+1], gvf_D[4*idxAdj[0]+2]);
-    gvfAdj[1] = make_float3(gvf_D[4*idxAdj[1]+0], gvf_D[4*idxAdj[1]+1], gvf_D[4*idxAdj[1]+2]);
-    gvfAdj[2] = make_float3(gvf_D[4*idxAdj[2]+0], gvf_D[4*idxAdj[2]+1], gvf_D[4*idxAdj[2]+2]);
-    gvfAdj[3] = make_float3(gvf_D[4*idxAdj[3]+0], gvf_D[4*idxAdj[3]+1], gvf_D[4*idxAdj[3]+2]);
-    gvfAdj[4] = make_float3(gvf_D[4*idxAdj[4]+0], gvf_D[4*idxAdj[4]+1], gvf_D[4*idxAdj[4]+2]);
-    gvfAdj[5] = make_float3(gvf_D[4*idxAdj[5]+0], gvf_D[4*idxAdj[5]+1], gvf_D[4*idxAdj[5]+2]);
+    gvfOld = make_float3(gvfIn_D[4*idx+0], gvfIn_D[4*idx+1], gvfIn_D[4*idx+2]);
+    gvfAdj[0] = make_float3(gvfIn_D[4*idxAdj[0]+0], gvfIn_D[4*idxAdj[0]+1], gvfIn_D[4*idxAdj[0]+2]);
+    gvfAdj[1] = make_float3(gvfIn_D[4*idxAdj[1]+0], gvfIn_D[4*idxAdj[1]+1], gvfIn_D[4*idxAdj[1]+2]);
+    gvfAdj[2] = make_float3(gvfIn_D[4*idxAdj[2]+0], gvfIn_D[4*idxAdj[2]+1], gvfIn_D[4*idxAdj[2]+2]);
+    gvfAdj[3] = make_float3(gvfIn_D[4*idxAdj[3]+0], gvfIn_D[4*idxAdj[3]+1], gvfIn_D[4*idxAdj[3]+2]);
+    gvfAdj[4] = make_float3(gvfIn_D[4*idxAdj[4]+0], gvfIn_D[4*idxAdj[4]+1], gvfIn_D[4*idxAdj[4]+2]);
+    gvfAdj[5] = make_float3(gvfIn_D[4*idxAdj[5]+0], gvfIn_D[4*idxAdj[5]+1], gvfIn_D[4*idxAdj[5]+2]);
 
     // Compute diffusion
     gvf.x = (1.0-b)*gvfOld.x;
@@ -147,25 +148,13 @@ __global__ void updateGVF_D(
             gvfAdj[4].z + gvfAdj[5].z -6*gvfOld.z)*scl;
     gvf.z += c3;
 
-    gvf.x = gvfAdj[4].x + c1;
-    gvf.y = gvfAdj[4].y + c2;
-    gvf.z = gvfAdj[4].z + c3;
-
-    gvf.x = gvfAdj[4].x;
-    gvf.y = gvfAdj[4].y;
-    gvf.z = gvfAdj[4].z;
-
-    gvf.x = c1;
-    gvf.y = c2;
-    gvf.z = c3;
-
     float len = length(gvf);
-    if (len) gvf /= len;
+    if (len > 0.0f) gvf /= len;
 
-    __syncthreads();
-    gvf_D[4*idx+0] = gvf.x;
-    gvf_D[4*idx+1] = gvf.y;
-    gvf_D[4*idx+2] = gvf.z;
+    //__syncthreads();
+    gvfOut_D[4*idx+0] = gvf.x;
+    gvfOut_D[4*idx+1] = gvf.y;
+    gvfOut_D[4*idx+2] = gvf.z;
 }
 
 
@@ -175,9 +164,7 @@ __global__ void updateGVF_D(
 bool DiffusionSolver::CalcGVF(const float *startVol, float *gvfConstData_D,
         const unsigned int *cellStates_D,
         float *grad_D, size_t dim[3], float isovalue,
-        float *gvf_D, unsigned int maxIt, float scl) {
-
-    // TODO Use the correct starting volume!
+        float *gvfIn_D, float *gvfOut_D, unsigned int maxIt, float scl) {
 
     // Initialize the GVF field with the gradient in the starting regions
     if (!DiffusionSolver::initGVF(startVol, dim, cellStates_D, isovalue, grad_D,
@@ -188,7 +175,8 @@ bool DiffusionSolver::CalcGVF(const float *startVol, float *gvfConstData_D,
     uint volsize = dim[0]*dim[1]*dim[2];
     uint3 voldim = make_uint3(dim[0], dim[1], dim[2]);
 
-    for (unsigned int it = 0; it < maxIt; ++it) {
+
+    for (unsigned int it=(maxIt%2); it < maxIt+(maxIt%2); ++it) {
 
 #ifdef USE_CUDA_TIMER
         float dt_ms;
@@ -197,12 +185,22 @@ bool DiffusionSolver::CalcGVF(const float *startVol, float *gvfConstData_D,
         cudaEventCreate(&event2);
         cudaEventRecord(event1, 0);
 #endif
-        // Calculate gradient using finite differences
-        updateGVF_D <<< DiffusionSolver::Grid(volsize, 256), 256 >>> (
-                gvf_D, gvfConstData_D, scl, voldim);
+        if (it%2 == 0) {
+            // Update diffusion
+            updateGVF_D <<< DiffusionSolver::Grid(volsize, 256), 256 >>> (
+                    gvfIn_D, gvfOut_D, gvfConstData_D, scl, voldim);
 
-        if (cudaGetLastError() != cudaSuccess) {
-            return false;
+            if (cudaGetLastError() != cudaSuccess) {
+                return false;
+            }
+        } else {
+            // Update diffusion
+            updateGVF_D <<< DiffusionSolver::Grid(volsize, 256), 256 >>> (
+                    gvfOut_D, gvfIn_D, gvfConstData_D, scl, voldim);
+
+            if (cudaGetLastError() != cudaSuccess) {
+                return false;
+            }
         }
 
 #ifdef USE_CUDA_TIMER
@@ -225,7 +223,7 @@ bool DiffusionSolver::CalcGVF(const float *startVol, float *gvfConstData_D,
  * Computes the gradient of the given volume.
  */
 __global__ void calcGradient_D(const float *vol_D, float *grad_D,
-        const unsigned int *cellStates_D, uint3 voldim) {
+        const unsigned int *cellStates_D, uint3 voldim, float isovalue) {
 
     const uint idx = __umul24(__umul24(blockIdx.y, gridDim.x) +
             blockIdx.x, blockDim.x) + threadIdx.x;
@@ -233,7 +231,7 @@ __global__ void calcGradient_D(const float *vol_D, float *grad_D,
     uint volsize = voldim.x*voldim.y*voldim.z;
     if (idx >= volsize) return;
 
-
+    uint nCells = (voldim.x-1)*(voldim.y-1)*(voldim.z-1);
 
     int3 cellC;
     uint cellIdx;
@@ -247,64 +245,71 @@ __global__ void calcGradient_D(const float *vol_D, float *grad_D,
 
     int3 voldimI = make_int3(int(voldim.x), int(voldim.y), int(voldim.z));
 
-    /* Check all eight adjactent cells */
+    /* Check all eight adjacent cells */
 
     // (-1, -1, -1)
     cellC = make_int3(
-            clamp(gridC.x-1, 0, voldimI.x-1),
-            clamp(gridC.y-1, 0, voldimI.y-1),
-            clamp(gridC.z-1, 0, voldimI.z-1));
+            clamp(gridC.x-1, 0, voldimI.x-2),
+            clamp(gridC.y-1, 0, voldimI.y-2),
+            clamp(gridC.z-1, 0, voldimI.z-2));
     cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
-    active = cellStates_D[cellIdx];
+    active |= cellStates_D[cellIdx];
+
     // (-1, 1, -1)
     cellC = make_int3(
-            clamp(gridC.x-1, 0, voldimI.x-1),
-            clamp(gridC.y, 0, voldimI.y-1),
-            clamp(gridC.z-1, 0, voldimI.z-1));
+            clamp(gridC.x-1, 0, voldimI.x-2),
+            clamp(gridC.y, 0, voldimI.y-2),
+            clamp(gridC.z-1, 0, voldimI.z-2));
     cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
-    active = cellStates_D[cellIdx];
+    active |= cellStates_D[cellIdx];
+
     // (-1, 1, 1)
     cellC = make_int3(
-            clamp(gridC.x-1, 0, voldimI.x-1),
-            clamp(gridC.y, 0, voldimI.y-1),
-            clamp(gridC.z, 0, voldimI.z-1));
+            clamp(gridC.x-1, 0, voldimI.x-2),
+            clamp(gridC.y, 0, voldimI.y-2),
+            clamp(gridC.z, 0, voldimI.z-2));
     cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
-    active = cellStates_D[cellIdx];
+    active |= cellStates_D[cellIdx];
+
     // (-1, -1, 1)
     cellC = make_int3(
-            clamp(gridC.x-1, 0, voldimI.x-1),
-            clamp(gridC.y-1, 0, voldimI.y-1),
-            clamp(gridC.z, 0, voldimI.z-1));
+            clamp(gridC.x-1, 0, voldimI.x-2),
+            clamp(gridC.y-1, 0, voldimI.y-2),
+            clamp(gridC.z, 0, voldimI.z-2));
     cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
-    active = cellStates_D[cellIdx];
+    active |= cellStates_D[cellIdx];
+
     // (1, -1, -1)
     cellC = make_int3(
-            clamp(gridC.x, 0, voldimI.x-1),
-            clamp(gridC.y-1, 0, voldimI.y-1),
-            clamp(gridC.z-1, 0, voldimI.z-1));
+            clamp(gridC.x, 0, voldimI.x-2),
+            clamp(gridC.y-1, 0, voldimI.y-2),
+            clamp(gridC.z-1, 0, voldimI.z-2));
     cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
-    active = cellStates_D[cellIdx];
+    active |= cellStates_D[cellIdx];
+
     // (1, 1, -1)
     cellC = make_int3(
-            clamp(gridC.x, 0, voldimI.x-1),
-            clamp(gridC.y, 0, voldimI.y-1),
-            clamp(gridC.z-1, 0, voldimI.z-1));
+            clamp(gridC.x, 0, voldimI.x-2),
+            clamp(gridC.y, 0, voldimI.y-2),
+            clamp(gridC.z-1, 0, voldimI.z-2));
     cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
-    active = cellStates_D[cellIdx];
+    active |= cellStates_D[cellIdx];
+
     // (1, 1, 1)
     cellC = make_int3(
-            clamp(gridC.x, 0, voldimI.x-1),
-            clamp(gridC.y, 0, voldimI.y-1),
-            clamp(gridC.z, 0, voldimI.z-1));
+            clamp(gridC.x, 0, voldimI.x-2),
+            clamp(gridC.y, 0, voldimI.y-2),
+            clamp(gridC.z, 0, voldimI.z-2));
     cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
-    active = cellStates_D[cellIdx];
+    active |= cellStates_D[cellIdx];
+
     // (1, -1, 1)
     cellC = make_int3(
-            clamp(gridC.x, 0, voldimI.x-1),
-            clamp(gridC.y-1, 0, voldimI.y-1),
-            clamp(gridC.z, 0, voldimI.z-1));
+            clamp(gridC.x, 0, voldimI.x-2),
+            clamp(gridC.y-1, 0, voldimI.y-2),
+            clamp(gridC.z, 0, voldimI.z-2));
     cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
-    active = cellStates_D[cellIdx];
+    active |= cellStates_D[cellIdx];
 
     /* Sample gradient if necessary */
 
@@ -329,9 +334,14 @@ __global__ void calcGradient_D(const float *vol_D, float *grad_D,
 
         float len = length(grad);
         if (len > 0.0) grad/= len;
+
         grad_D[4*idx+0] = grad.x;
         grad_D[4*idx+1] = grad.y;
         grad_D[4*idx+2] = grad.z;
+    } else {
+        grad_D[4*idx+0] = 0.0;
+        grad_D[4*idx+1] = 0.0;
+        grad_D[4*idx+2] = 0.0;
     }
 }
 
@@ -395,7 +405,7 @@ bool DiffusionSolver::initGVF(const float *startVol, size_t dim[3],
 
     // Calculate gradient using finite differences
     calcGradient_D <<< DiffusionSolver::Grid(volsize, 256), 256 >>> (
-            startVol, grad_D, cellStates_D, voldim);
+            startVol, grad_D, cellStates_D, voldim, isovalue);
 
 #ifdef USE_CUDA_TIMER
     cudaEventRecord(event2, 0);

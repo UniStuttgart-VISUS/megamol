@@ -854,7 +854,8 @@ __global__ void UpdateVertexPositionTricubic_D(
 
         float3 normal = externalForce;
         normal = safeNormalize(normal);
-        float3 internalForce = correctionVec - dot(correctionVec, normal)*normal;
+        //float3 internalForce = correctionVec - dot(correctionVec, normal)*normal; // With projection
+        float3 internalForce = correctionVec;                                       // Without projection
 
         laplacian_D[idx] = internalForce;
         __syncthreads();

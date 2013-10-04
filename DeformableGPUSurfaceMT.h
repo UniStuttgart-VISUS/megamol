@@ -79,6 +79,7 @@ public:
     }
 
     const unsigned int *PeekCubeStates() {
+        printf("cube states size %u\n", this->cubeStates_D.GetCount());
         return this->cubeStates_D.Peek();
     }
 
@@ -93,6 +94,9 @@ private:
 
     /// TODO
     CudaDevArr<float> gvf_D;
+
+    /// TODO
+    CudaDevArr<float> gvfTmp_D;
 
     /// TODO
     CudaDevArr<float> gvfConstData_D;

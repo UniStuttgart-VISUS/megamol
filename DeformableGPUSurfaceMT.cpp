@@ -354,6 +354,8 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D,
     size_t volSize = volDim[0]*volDim[1]*volDim[2];
     size_t gridCellCnt = (volDim[0]-1)*(volDim[1]-1)*(volDim[2]-1);
 
+    printf("volsize %u\n", volSize);
+
 
     /* Init grid parameters for all files */
 
@@ -378,6 +380,12 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D,
     if (!CudaSafeCall(this->gvf_D.Set(0))) {
         return false;
     }
+    if (!CudaSafeCall(this->gvfTmp_D.Validate(volSize*4))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->gvfTmp_D.Set(0))) {
+        return false;
+    }
     if (!CudaSafeCall(this->gvfConstData_D.Validate(volSize*4))) {
         return false;
     }
@@ -400,6 +408,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D,
             volDim,
             isovalue,
             this->gvf_D.Peek(),
+            this->gvfTmp_D.Peek(),
             gvfIt,
             gvfScl)) {
         return false;

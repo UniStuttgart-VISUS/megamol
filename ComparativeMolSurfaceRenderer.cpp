@@ -36,7 +36,7 @@ using namespace megamol;
 using namespace megamol::protein;
 
 // Hardcoded parameters for 'quicksurf' class
-const float ComparativeMolSurfaceRenderer::qsParticleRad = 1.2f;
+const float ComparativeMolSurfaceRenderer::qsParticleRad = 1.0f;
 const float ComparativeMolSurfaceRenderer::qsGaussLim = 10.0f;
 const float ComparativeMolSurfaceRenderer::qsGridSpacing = 1.0f;
 const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
@@ -1540,6 +1540,20 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     camPos[1] = modelMatrix.GetAt(1, 3);
     camPos[2] = modelMatrix.GetAt(2, 3);
 
+//    printf("volsize 1 %u %u %u (%u), volsize 2 %u %u %u\n",
+//            this->gridDensMap1.size[0], this->gridDensMap1.size[1],
+//            this->gridDensMap1.size[2],
+//            this->gridDensMap1.size[0]*this->gridDensMap1.size[1]*this->gridDensMap1.size[2],
+//            this->gridDensMap2.size[0],
+//            this->gridDensMap2.size[1], this->gridDensMap2.size[2]);
+
+
+    // DEBUG Render external forces as lines
+    if (!this->renderExternalForces()) {
+        return false;
+    }
+    // END DEBUG
+
 
     if (this->surface1RM != SURFACE_NONE) {
 
@@ -1604,12 +1618,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         }
     }
 
-    // DEBUG Render external forces as streamlines
-    if (!this->renderExternalForces()) {
-        return false;
-    }
-    // END DEBUG
-
     glDisable(GL_TEXTURE_3D);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
@@ -1657,21 +1665,21 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
 
                     Vec3f vec(gvf.Peek()[4*idx+0], gvf.Peek()[4*idx+1], gvf.Peek()[4*idx+2]);
                     //Vec3f vec(1.0, 1.0, 1.0);
-//                    if ((x > this->gridDensMap1.size[0]*0.5)&&(x < this->gridDensMap1.size[0]*0.5+2)) {
+                    if ((x > this->gridDensMap1.size[0]*0.5)&&(x < this->gridDensMap1.size[0]*0.5+3)) {
                         this->lines[6*idx+0] = pos.X() - vec.X()*0.5f;
                         this->lines[6*idx+1] = pos.Y() - vec.Y()*0.5f;
                         this->lines[6*idx+2] = pos.Z() - vec.Z()*0.5f;
                         this->lines[6*idx+3] = pos.X() + vec.X()*0.5f;
                         this->lines[6*idx+4] = pos.Y() + vec.Y()*0.5f;
                         this->lines[6*idx+5] = pos.Z() + vec.Z()*0.5f;
-//                    } else {
-//                        this->lines[6*idx+0] = 0.0f;
-//                        this->lines[6*idx+1] = 0.0f;
-//                        this->lines[6*idx+2] = 0.0f;
-//                        this->lines[6*idx+3] = 0.0f;
-//                        this->lines[6*idx+4] = 0.0f;
-//                        this->lines[6*idx+5] = 0.0f;
-//                    }
+                    } else {
+                        this->lines[6*idx+0] = 0.0f;
+                        this->lines[6*idx+1] = 0.0f;
+                        this->lines[6*idx+2] = 0.0f;
+                        this->lines[6*idx+3] = 0.0f;
+                        this->lines[6*idx+4] = 0.0f;
+                        this->lines[6*idx+5] = 0.0f;
+                    }
                 }
             }
         }
