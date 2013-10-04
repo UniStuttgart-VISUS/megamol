@@ -741,6 +741,7 @@ cudaError InitVolume_surface_mapping(uint3 gridSize, float3 org, float3 delta) {
  *                                        (in 'w') for all vertices
  * @param[in]      vertexNeighbours_D     The neighbour indices of all vertices
  * @param[in]      gradient_D             Array with the gradient
+ * @param[in]      vtxNormals_D           The current normals of all vertices
  * @param[in]      vertexCount            The number of vertices
  * @param[in]      externalWeight         Weighting factor for the external
  *                                        forces. The factor for internal forces
@@ -755,7 +756,7 @@ cudaError InitVolume_surface_mapping(uint3 gridSize, float3 org, float3 delta) {
  *                                        vertices to be updated
  * @param[in]      dataArrOffs            The vertex position offset in the
  *                                        vertex data buffer
- * @param[in]      dataArrSize            The stride of the vertex data buffer
+ * @param[in]      dataArrSize            The stride of the vertex data buffer TODO
  */
 __global__ void UpdateVertexPositionTricubic_D(
         float *targetVolume_D,
@@ -770,7 +771,8 @@ __global__ void UpdateVertexPositionTricubic_D(
         float stiffness,
         float isoval,
         float minDispl,
-        uint dataArrOffs,
+        uint dataArrOffsPos,
+        uint dataArrOffsNormal,
         uint dataArrSize) {
 
     const uint idx = GetThreadIndex();
@@ -778,7 +780,7 @@ __global__ void UpdateVertexPositionTricubic_D(
         return;
     }
 
-    const uint posBaseIdx = dataArrSize*idx+dataArrOffs;
+    const uint posBaseIdx = dataArrSize*idx+dataArrOffsPos;
 
     /* Retrieve stuff from global device memory */
 
@@ -823,15 +825,30 @@ __global__ void UpdateVertexPositionTricubic_D(
         externalForce.z = externalForceTmp.z;
 
         externalForce = safeNormalize(externalForce);
+        externalForce *= forcesScl*externalForcesScl*externalWeight;
+
+        float3 normal = make_float3(
+                vertexPosMapped_D[dataArrSize*idx+dataArrOffsNormal+0],
+                vertexPosMapped_D[dataArrSize*idx+dataArrOffsNormal+1],
+                vertexPosMapped_D[dataArrSize*idx+dataArrOffsNormal+2]);
+
+        if (outside) {
+            if (dot(normalize(normal), normalize(externalForce)) > 0.0) {
+                externalForce *= 0.0;
+                externalWeight = 0.0;
+            }
+        } else {
+            if (dot(normalize(normal), normalize(externalForce)) < 0.0) {
+                externalForce *= 0.0;
+                externalWeight = 0.0;
+            }
+        }
 
         // Calculate new position when using external forces only
         float3 vertexPosExternalOnly;
-        vertexPosExternalOnly.x = pos.x +
-                forcesScl*externalForcesScl*externalWeight*externalForce.x;
-        vertexPosExternalOnly.y = pos.y +
-                forcesScl*externalForcesScl*externalWeight*externalForce.y;
-        vertexPosExternalOnly.z = pos.z +
-                forcesScl*externalForcesScl*externalWeight*externalForce.z;
+        vertexPosExternalOnly.x = pos.x + externalForce.x;
+        vertexPosExternalOnly.y = pos.y + externalForce.y;
+        vertexPosExternalOnly.z = pos.z + externalForce.z;
 
         // Calculate correction vector based on internal spring forces
         float3 correctionVec = make_float3(0.0, 0.0, 0.0);
@@ -841,9 +858,9 @@ __global__ void UpdateVertexPositionTricubic_D(
             int isIdxValid = int(nIdx[i] >= 0); // Check if idx != -1
             float3 posNeighbour;
             int tmpIdx = isIdxValid*nIdx[i]; // Map negative indices to 0
-            posNeighbour.x = vertexPosMapped_D[dataArrSize*tmpIdx+dataArrOffs+0];
-            posNeighbour.y = vertexPosMapped_D[dataArrSize*tmpIdx+dataArrOffs+1];
-            posNeighbour.z = vertexPosMapped_D[dataArrSize*tmpIdx+dataArrOffs+2];
+            posNeighbour.x = vertexPosMapped_D[dataArrSize*tmpIdx+dataArrOffsPos+0];
+            posNeighbour.y = vertexPosMapped_D[dataArrSize*tmpIdx+dataArrOffsPos+1];
+            posNeighbour.z = vertexPosMapped_D[dataArrSize*tmpIdx+dataArrOffsPos+2];
             displ = (posNeighbour - pos);
 //            correctionVec += displ*stiffness*isIdxValid;
             correctionVec += displ*isIdxValid;
@@ -852,10 +869,9 @@ __global__ void UpdateVertexPositionTricubic_D(
         //correctionVec *= stiffness;
         correctionVec /= activeNeighbourCnt; // Represents internal force
 
-        float3 normal = externalForce;
-        normal = safeNormalize(normal);
-        //float3 internalForce = correctionVec - dot(correctionVec, normal)*normal; // With projection
-        float3 internalForce = correctionVec;                                       // Without projection
+//        normal = safeNormalize(normal);
+        float3 internalForce = correctionVec - dot(correctionVec, normal)*normal; // With projection
+        //float3 internalForce = correctionVec;                                       // Without projection
 
         laplacian_D[idx] = internalForce;
         __syncthreads();
@@ -917,7 +933,8 @@ cudaError_t UpdateVertexPositionTricubic(
         float stiffness,
         float isoval,
         float minDispl,
-        uint dataArrOffs,
+        uint dataArrOffsPos,
+        uint dataArrOffsNormal,
         uint dataArrSize) {
 
 #ifdef USE_TIMER
@@ -945,7 +962,8 @@ cudaError_t UpdateVertexPositionTricubic(
             stiffness,
             isoval,
             minDispl,
-            dataArrOffs,
+            dataArrOffsPos,
+            dataArrOffsNormal,
             dataArrSize);
 
 #ifdef USE_TIMER

@@ -415,6 +415,33 @@ private:
     float surfMappedAlphaScl;
 
 
+    /* DEBUG Parameters for the external forces rendering */
+
+    /// Parameter for max x atom filter
+    core::param::ParamSlot filterXMaxParam;
+    float posXMax;
+
+    /// Parameter for max y atom filter
+    core::param::ParamSlot filterYMaxParam;
+    float posYMax;
+
+    /// Parameter for max z atom filter
+    core::param::ParamSlot filterZMaxParam;
+    float posZMax;
+
+    /// Parameter for min x atom filter
+    core::param::ParamSlot filterXMinParam;
+    float posXMin;
+
+    /// Parameter for min y atom filter
+    core::param::ParamSlot filterYMinParam;
+    float posYMin;
+
+    /// Parameter for min z atom filter
+    core::param::ParamSlot filterZMinParam;
+    float posZMin;
+
+
     /* Volume generation */
 
     /// Pointer to CUDAQuickSurf objects
@@ -548,6 +575,7 @@ private:
 
     /// DEBUG
     vislib::Array<float> lines;
+    vislib::Array<float> lineColors;
     bool triggerComputeLines;
     HostArr<float> gvf;
 

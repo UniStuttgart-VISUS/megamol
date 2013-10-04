@@ -2684,24 +2684,24 @@ bool ComparativeSurfacePotentialRenderer::regularizeSurface(
     } else {
         for (uint i = 0; i < maxIt; i += UPDATE_VTX_POS_ITERATIONS_PER_KERNEL) {
 
-            // Update position for all vertices using cubic interpolation
-            if (!CudaSafeCall(UpdateVertexPositionTricubic(
-                    volume_D,
-                    vboPt,
-                    this->vertexExternalForcesScl_D.Peek(),
-                    vertexNeighbours_D.Peek(),
-                    this->volGradient_D.Peek(),
-                    this->laplacian_D.Peek(),
-                    vertexCnt,
-                    externalForcesWeight,
-                    forceScl,
-                    springStiffness,
-                    this->qsIsoVal,
-                    this->surfMappedMinDisplScl,
-                    this->vertexDataOffsPos,
-                    this->vertexDataStride))) {
-                return false;
-            }
+//            // Update position for all vertices using cubic interpolation
+//            if (!CudaSafeCall(UpdateVertexPositionTricubic(
+//                    volume_D,
+//                    vboPt,
+//                    this->vertexExternalForcesScl_D.Peek(),
+//                    vertexNeighbours_D.Peek(),
+//                    this->volGradient_D.Peek(),
+//                    this->laplacian_D.Peek(),
+//                    vertexCnt,
+//                    externalForcesWeight,
+//                    forceScl,
+//                    springStiffness,
+//                    this->qsIsoVal,
+//                    this->surfMappedMinDisplScl,
+//                    this->vertexDataOffsPos,
+//                    this->vertexDataStride))) {
+//                return false;
+//            }
         }
     }
     printf("Parameters: vertex count %u, externalForcesWeight %f, forceScl %f, springStiffness %f, this->qsIsoVal %f minDispl %f\n",
@@ -2939,24 +2939,24 @@ bool ComparativeSurfacePotentialRenderer::mapIsosurfaceToVolume(
     } else {
         for (uint i = 0; i < maxIt; i += UPDATE_VTX_POS_ITERATIONS_PER_KERNEL) {
 
-            // Update position for all vertices
-            if (!CudaSafeCall(UpdateVertexPositionTricubic(
-                    volume_D,
-                    vboPt,
-                    this->vertexExternalForcesScl_D.Peek(),
-                    vertexNeighbours_D.Peek(),
-                    this->volGradient_D.Peek(),
-                    this->laplacian_D.Peek(),
-                    vertexCnt,
-                    externalForcesWeight,
-                    forceScl,
-                    springStiffness,
-                    this->qsIsoVal,
-                    this->surfMappedMinDisplScl,
-                    this->vertexDataMappedOffsPosNew,
-                    this->vertexDataMappedStride))) {
-                return false;
-            }
+//            // Update position for all vertices
+//            if (!CudaSafeCall(UpdateVertexPositionTricubic(
+//                    volume_D,
+//                    vboPt,
+//                    this->vertexExternalForcesScl_D.Peek(),
+//                    vertexNeighbours_D.Peek(),
+//                    this->volGradient_D.Peek(),
+//                    this->laplacian_D.Peek(),
+//                    vertexCnt,
+//                    externalForcesWeight,
+//                    forceScl,
+//                    springStiffness,
+//                    this->qsIsoVal,
+//                    this->surfMappedMinDisplScl,
+//                    this->vertexDataMappedOffsPosNew,
+//                    this->vertexDataMappedStride))) {
+//                return false;
+//            }
 
 //            // Update position for all vertices
 //            if (!CudaSafeCall(UpdateVertexPositionTricubicWithDispl(
