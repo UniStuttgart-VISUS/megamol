@@ -121,6 +121,13 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
         return false;
     }
 
+    if (!CudaSafeCall(InitVolume_surface_generation(
+            make_uint3(volDim[0], volDim[1], volDim[2]),
+            make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
+            make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
+        return false;
+    }
+
     // Compute gradient
     if (!CudaSafeCall(this->volGradient_D.Validate(volSize))) {
         return false;
@@ -270,6 +277,7 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
                     isovalue,
                     surfMappedMinDisplScl,
                     this->vertexDataOffsPos,
+                    this->vertexDataOffsNormal,
                     this->vertexDataStride))) {
                 return false;
             }
@@ -331,7 +339,8 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
 /*
  * DeformableGPUSurfaceMT::MorphToVolumeGVF
  */
-bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D,
+bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
+        float *volumeTarget_D,
         const unsigned int *targetCubeStates_D,
         size_t volDim[3],
         float volWSOrg[3], float volWSDelta[3], float isovalue,
@@ -347,7 +356,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D,
         return false;
     }
 
-    if (volume_D == NULL) {
+    if (volumeTarget_D == NULL) {
         return false;
     }
 
@@ -401,7 +410,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D,
 
     // Use GVF
     if (!DiffusionSolver::CalcGVF(
-            volume_D,
+            volumeTarget_D,
             this->gvfConstData_D.Peek(),
             targetCubeStates_D,
             this->grad_D.Peek(),
@@ -461,7 +470,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D,
     // outside or inside the isosurface
     if (!CudaSafeCall (InitExternalForceScl(
             this->vertexExternalForcesScl_D.Peek(),
-            volume_D,
+            volumeTarget_D,
             vboPt,
             static_cast<uint>(this->vertexExternalForcesScl_D.GetCount()),
             isovalue,
@@ -515,7 +524,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D,
             // Update position for all vertices
             // Use no distance field
             if (!CudaSafeCall(UpdateVertexPositionTrilinear(
-                    volume_D,
+                    volumeTarget_D,
                     vboPt,
                     this->vertexExternalForcesScl_D.Peek(),
                     this->vertexNeighbours_D.Peek(),
@@ -538,7 +547,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D,
 
             // Update position for all vertices
             if (!CudaSafeCall(UpdateVertexPositionTricubic(
-                    volume_D,
+                    volumeTarget_D,
                     vboPt,
                     this->vertexExternalForcesScl_D.Peek(),
                     this->vertexNeighbours_D.Peek(),
@@ -551,6 +560,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volume_D,
                     isovalue,
                     surfMappedMinDisplScl,
                     this->vertexDataOffsPos,
+                    this->vertexDataOffsNormal,
                     this->vertexDataStride))) {
                 return false;
             }

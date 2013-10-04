@@ -57,7 +57,8 @@ public:
     /**
      * TODO
      */
-    bool MorphToVolumeGVF(float *volume_D, const unsigned int *targetCubeStates_D,
+    bool MorphToVolumeGVF(float *volumeSource_D,
+            float *volumeTarget_D, const unsigned int *targetCubeStates_D,
             size_t volDim[3],
             float volWSOrg[3], float volWSDelta[3], float isovalue,
             InterpolationMode interpMode, size_t maxIt,

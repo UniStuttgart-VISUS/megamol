@@ -1189,24 +1189,24 @@ bool SurfaceMappingTest::mapIsosurfaceToVolume(
     } else {
         for (uint i = 0; i < maxIt; i += UPDATE_VTX_POS_ITERATIONS_PER_KERNEL) {
 
-            // Update position for all vertices
-            if (!CudaSafeCall(UpdateVertexPositionTricubic(
-                    volume_D,
-                    vertexPos_D.Peek(),
-                    this->vertexExternalForcesScl_D.Peek(),
-                    vertexNeighbours_D.Peek(),
-                    this->volGradient_D.Peek(),
-                    this->laplacian_D.Peek(),
-                    vertexCnt,
-                    externalForcesWeight,
-                    forceScl,
-                    springStiffness,
-                    this->qsIsoVal,
-                    this->minDispl,
-                    0,     // Offset for positions in array
-                    3))) { // Stride in array
-                return false;
-            }
+//            // Update position for all vertices
+//            if (!CudaSafeCall(UpdateVertexPositionTricubic(
+//                    volume_D,
+//                    vertexPos_D.Peek(),
+//                    this->vertexExternalForcesScl_D.Peek(),
+//                    vertexNeighbours_D.Peek(),
+//                    this->volGradient_D.Peek(),
+//                    this->laplacian_D.Peek(),
+//                    vertexCnt,
+//                    externalForcesWeight,
+//                    forceScl,
+//                    springStiffness,
+//                    this->qsIsoVal,
+//                    this->minDispl,
+//                    0,     // Offset for positions in array
+//                    3))) { // Stride in array
+//                return false;
+//            }
         }
     }
 
@@ -1365,23 +1365,23 @@ bool SurfaceMappingTest::regularizeSurface(
     } else {
         for (uint i = 0; i < maxIt; ++i) {
 
-            if (!CudaSafeCall(UpdateVertexPositionTricubic(
-                    volume_D,
-                    vertexPos_D.Peek(),
-                    this->vertexExternalForcesScl_D.Peek(),
-                    vertexNeighbours_D.Peek(),
-                    this->volGradient_D.Peek(),
-                    this->laplacian_D.Peek(),
-                    vertexCnt,
-                    externalForcesWeight,
-                    forceScl,
-                    springStiffness,
-                    this->qsIsoVal,
-                    this->minDispl,
-                    0,     // Offset for positions in array
-                    3))) { // Stride in array
-                return false;
-            }
+//            if (!CudaSafeCall(UpdateVertexPositionTricubic(
+//                    volume_D,
+//                    vertexPos_D.Peek(),
+//                    this->vertexExternalForcesScl_D.Peek(),
+//                    vertexNeighbours_D.Peek(),
+//                    this->volGradient_D.Peek(),
+//                    this->laplacian_D.Peek(),
+//                    vertexCnt,
+//                    externalForcesWeight,
+//                    forceScl,
+//                    springStiffness,
+//                    this->qsIsoVal,
+//                    this->minDispl,
+//                    0,     // Offset for positions in array
+//                    3))) { // Stride in array
+//                return false;
+//            }
         }
     }
 

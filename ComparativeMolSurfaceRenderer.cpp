@@ -138,6 +138,13 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         surfaceMappedColorModeSlot("surfMap::color", "Color mode for the mapped surface"),
         surfMaxPosDiffSlot("surfMap::maxPosDiff", "Maximum value for euclidian distance"),
         surfMappedAlphaSclSlot("surfMap::alphaScl", "Transparency scale factor"),
+        /* DEBUG external forces */
+        filterXMaxParam("posFilter::XMax", "The maximum position in x-direction"),
+        filterYMaxParam("posFilter::YMax", "The maximum position in y-direction"),
+        filterZMaxParam("posFilter::ZMax", "The maximum position in z-direction"),
+        filterXMinParam("posFilter::XMin", "The minimum position in x-direction"),
+        filterYMinParam("posFilter::YMin", "The minimum position in y-direction"),
+        filterZMinParam("posFilter::ZMin", "The minimum position in z-direction"),
         cudaqsurf1(NULL), cudaqsurf2(NULL),
         triggerComputeVolume(true), triggerInitPotentialTex(true),
         triggerComputeSurfacePoints1(true), triggerComputeSurfacePoints2(true),
@@ -360,6 +367,38 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->surfMappedAlphaScl = 1.0f;
     this->surfMappedAlphaSclSlot.SetParameter(new core::param::FloatParam(this->surfMappedAlphaScl, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->surfMappedAlphaSclSlot);
+
+    /* DEBUG external forces */
+
+    // Param for maximum x value
+    this->posXMax = 10.0f;
+    this->filterXMaxParam.SetParameter(new core::param::FloatParam(this->posXMax, -1000.0f, 1000.0f));
+    this->MakeSlotAvailable(&this->filterXMaxParam);
+
+    // Param for maximum y value
+    this->posYMax = 10.0f;
+    this->filterYMaxParam.SetParameter(new core::param::FloatParam(this->posYMax, -1000.0f, 1000.0f));
+    this->MakeSlotAvailable(&this->filterYMaxParam);
+
+    // Param for maximum z value
+    this->posZMax = 10.0f;
+    this->filterZMaxParam.SetParameter(new core::param::FloatParam(this->posZMax, -1000.0f, 1000.0f));
+    this->MakeSlotAvailable(&this->filterZMaxParam);
+
+    // Param for minimum x value
+    this->posXMin = -10.0f;
+    this->filterXMinParam.SetParameter(new core::param::FloatParam(this->posXMin, -1000.0f, 1000.0f));
+    this->MakeSlotAvailable(&this->filterXMinParam);
+
+    // Param for minimum y value
+    this->posYMin = -10.0f;
+    this->filterYMinParam.SetParameter(new core::param::FloatParam(this->posYMin, -1000.0f, 1000.0f));
+    this->MakeSlotAvailable(&this->filterYMinParam);
+
+    // Param for minimum z value
+    this->posZMin = -10.0f;
+    this->filterZMinParam.SetParameter(new core::param::FloatParam(this->posZMin, -1000.0f, 1000.0f));
+    this->MakeSlotAvailable(&this->filterZMinParam);
 }
 
 
@@ -1445,6 +1484,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Morph surface #2 to shape #1 using GVF
         if (!this->deformSurfMapped.MorphToVolumeGVF(
+                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                 this->deformSurf1.PeekCubeStates(),
                 volDim1,
@@ -1462,10 +1502,15 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+        size_t volDim2[3];
+        volDim2[0] = static_cast<size_t>(this->gridDensMap2.size[0]);
+        volDim2[1] = static_cast<size_t>(this->gridDensMap2.size[1]);
+        volDim2[2] = static_cast<size_t>(this->gridDensMap2.size[2]);
+
         // Compute vertex normals
         if (!this->deformSurfMapped.ComputeNormals(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                                volDim1,
+                                volDim2,
                                 &this->gridDensMap2.minC[0],
                                 &this->gridDensMap2.delta[0],
                                 this->qsIsoVal)) {
@@ -1654,6 +1699,7 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
             return false;
         }
         this->lines.SetCount(gridSize*6);
+        this->lineColors.SetCount(gridSize*6);
         for (size_t x = 0; x < this->gridDensMap1.size[0]; ++x) {
             for (size_t y = 0; y < this->gridDensMap1.size[1]; ++y) {
                 for (size_t z = 0; z < this->gridDensMap1.size[2]; ++z) {
@@ -1664,8 +1710,11 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
                             this->gridDensMap1.minC[2] + z*this->gridDensMap1.delta[2]);
 
                     Vec3f vec(gvf.Peek()[4*idx+0], gvf.Peek()[4*idx+1], gvf.Peek()[4*idx+2]);
-                    //Vec3f vec(1.0, 1.0, 1.0);
-                    if ((x > this->gridDensMap1.size[0]*0.5)&&(x < this->gridDensMap1.size[0]*0.5+3)) {
+
+                    if ((pos.X() <= this->posXMax)&&(pos.X() >= this->posXMin)
+                      &&(pos.Y() <= this->posYMax)&&(pos.Y() >= this->posYMin)
+                      &&(pos.Z() <= this->posZMax)&&(pos.Z() >= this->posZMin)) {
+
                         this->lines[6*idx+0] = pos.X() - vec.X()*0.5f;
                         this->lines[6*idx+1] = pos.Y() - vec.Y()*0.5f;
                         this->lines[6*idx+2] = pos.Z() - vec.Z()*0.5f;
@@ -1680,6 +1729,14 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
                         this->lines[6*idx+4] = 0.0f;
                         this->lines[6*idx+5] = 0.0f;
                     }
+
+                    /// Color mode for south/north
+                    this->lineColors[6*idx+0] = 0.0f;
+                    this->lineColors[6*idx+1] = 0.0f;
+                    this->lineColors[6*idx+2] = 1.0f;
+                    this->lineColors[6*idx+3] = 1.0f;
+                    this->lineColors[6*idx+4] = 1.0f;
+                    this->lineColors[6*idx+5] = 0.0f;
                 }
             }
         }
@@ -1687,14 +1744,18 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
     }
 
     // Draw lines
-    glColor3f(1.0, 0.0, 0.0);
     glDisable(GL_LINE_SMOOTH);
     glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, this->lines.PeekElements());
+    glColorPointer(3, GL_FLOAT, 0, this->lineColors.PeekElements());
 
+    glLineWidth(4.0);
     glDrawArrays(GL_LINES, 0, gridSize*2);
     // deactivate vertex arrays after drawing
     glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glLineWidth(1.0);
 
     return CheckForGLError();
 }
@@ -2165,6 +2226,50 @@ void ComparativeMolSurfaceRenderer::updateParams() {
     if (this->surfMappedAlphaSclSlot.IsDirty()) {
         this->surfMappedAlphaScl = this->surfMappedAlphaSclSlot.Param<core::param::FloatParam>()->Value();
         this->surfMappedAlphaSclSlot.ResetDirty();
+    }
+
+    /* DEBUG External forces rendering */
+
+    // Max x
+    if (this->filterXMaxParam.IsDirty()) {
+        this->posXMax = this->filterXMaxParam.Param<core::param::FloatParam>()->Value();
+        this->filterXMaxParam.ResetDirty();
+        this->triggerComputeLines = true;
+    }
+
+    // Max y
+    if (this->filterYMaxParam.IsDirty()) {
+        this->posYMax = this->filterYMaxParam.Param<core::param::FloatParam>()->Value();
+        this->filterYMaxParam.ResetDirty();
+        this->triggerComputeLines = true;
+    }
+
+    // Max z
+    if (this->filterZMaxParam.IsDirty()) {
+        this->posZMax = this->filterZMaxParam.Param<core::param::FloatParam>()->Value();
+        this->filterZMaxParam.ResetDirty();
+        this->triggerComputeLines = true;
+    }
+
+    // Min x
+    if (this->filterXMinParam.IsDirty()) {
+        this->posXMin = this->filterXMinParam.Param<core::param::FloatParam>()->Value();
+        this->filterXMinParam.ResetDirty();
+        this->triggerComputeLines = true;
+    }
+
+    // Min y
+    if (this->filterYMinParam.IsDirty()) {
+        this->posYMin = this->filterYMinParam.Param<core::param::FloatParam>()->Value();
+        this->filterYMinParam.ResetDirty();
+        this->triggerComputeLines = true;
+    }
+
+    // Min z
+    if (this->filterZMinParam.IsDirty()) {
+        this->posZMin = this->filterZMinParam.Param<core::param::FloatParam>()->Value();
+        this->filterZMinParam.ResetDirty();
+        this->triggerComputeLines = true;
     }
 }
 

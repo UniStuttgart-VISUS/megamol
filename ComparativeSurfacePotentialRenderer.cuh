@@ -133,7 +133,8 @@ cudaError_t InitVertexData3(float *dataOut_D, uint dataOutStride,
 cudaError_t InitVolume_surface_mapping(uint3 gridSize, float3 org,
         float3 delta);
 
-cudaError_t UpdateVertexPositionTricubic(float *targetVolume_D,
+cudaError_t UpdateVertexPositionTricubic(
+        float *targetVolume_D,
         float *vertexPosMapped_D,
         float *vertexExternalForcesScl_D,
         int *vertexNeighbours_D,
@@ -142,7 +143,10 @@ cudaError_t UpdateVertexPositionTricubic(float *targetVolume_D,
         uint vertexCount,
         float externalWeight,
         float forcesScl, float stiffness, float isoval,
-        float minDispl, uint dataArrOffs, uint dataArrSize);
+        float minDispl,
+        uint dataArrOffsPos,
+        uint dataArrOffsNormal,
+        uint dataArrSize);
 
 cudaError_t UpdateVertexPositionTrilinear(float *targetVolume_D,
         float *vertexPosMapped_D,

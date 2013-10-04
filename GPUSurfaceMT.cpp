@@ -592,8 +592,6 @@ bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
     //    printf("grid org   %f %f %f\n", gridDensMap.minC[0], gridDensMap.minC[1], gridDensMap.minC[2]);
     //    printf("grid delta %f %f %f\n", gridDensMap.delta[0], gridDensMap.delta[1], gridDensMap.delta[2]);
 
-    CheckForCudaErrorSync(); // Error check with device sync
-
     //    printf("Create VBO of size %u\n", activeVertexCount*this->vertexDataStride*sizeof(float));
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
