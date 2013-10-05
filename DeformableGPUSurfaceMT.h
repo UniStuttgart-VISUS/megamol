@@ -79,8 +79,12 @@ public:
         return this->gvf_D.Peek();
     }
 
+    // DEBUG
+    const float4 *PeekVolGradient() {
+        return this->volGradient_D.Peek();
+    }
+
     const unsigned int *PeekCubeStates() {
-        printf("cube states size %u\n", this->cubeStates_D.GetCount());
         return this->cubeStates_D.Peek();
     }
 

@@ -66,6 +66,12 @@ public:
         COMPARE_N_N
     };
 
+    enum ExternalForces {
+        METABALLS=0,
+        METABALLS_DISTFIELD,
+        GVF
+    };
+
     /**
      * Answer the name of this module.
      *
@@ -317,6 +323,10 @@ private:
     /// RMS fitting mode
     core::param::ParamSlot fittingModeSlot;
     RMSFittingMode fittingMode;
+
+    /// External forces for surface mapping
+    core::param::ParamSlot surfMappedExtForceSlot;
+    ExternalForces surfMappedExtForce;
 
     /// Weighting for external forces when mapping the surface
     core::param::ParamSlot surfaceMappingExternalForcesWeightSclSlot;

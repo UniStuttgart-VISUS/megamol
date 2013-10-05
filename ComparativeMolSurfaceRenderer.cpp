@@ -36,7 +36,7 @@ using namespace megamol;
 using namespace megamol::protein;
 
 // Hardcoded parameters for 'quicksurf' class
-const float ComparativeMolSurfaceRenderer::qsParticleRad = 1.0f;
+const float ComparativeMolSurfaceRenderer::qsParticleRad = 0.8f;
 const float ComparativeMolSurfaceRenderer::qsGaussLim = 10.0f;
 const float ComparativeMolSurfaceRenderer::qsGridSpacing = 1.0f;
 const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
@@ -115,7 +115,8 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         interpolModeSlot("interpolation", "Change interpolation method"),
         /* Parameters for mapped surface */
         fittingModeSlot("surfMap::RMSDfitting", "RMSD fitting for the mapped surface"),
-        surfaceMappingExternalForcesWeightSclSlot("surfMap::externalForces","Scale factor for the external forces weighting"),
+        surfMappedExtForceSlot("surfMap::externalForces", "External forces for surface mapping"),
+        surfaceMappingExternalForcesWeightSclSlot("surfMap::externalForcesScl","Scale factor for the external forces weighting"),
         surfaceMappingForcesSclSlot("surfMap::sclAll","Overall scale factor for all forces"),
         surfaceMappingMaxItSlot("surfMap::maxIt","Maximum number of iterations for the surface mapping"),
         surfMappedMinDisplSclSlot("surfMap::minDisplScl", "Minimum displacement for vertices"),
@@ -218,6 +219,15 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     rms->SetTypePair(RMS_C_ALPHA, "C alpha");
     this->fittingModeSlot << rms;
     this->MakeSlotAvailable(&this->fittingModeSlot);
+
+    // Param slot for compare mode
+    this->surfMappedExtForce = METABALLS;
+    core::param::EnumParam *ext = new core::param::EnumParam(int(this->surfMappedExtForce));
+    ext->SetTypePair(METABALLS, "Meta balls");
+    ext->SetTypePair(METABALLS_DISTFIELD, "Meta balls + distance field");
+    ext->SetTypePair(GVF, "GVF");
+    this->surfMappedExtForceSlot << ext;
+    this->MakeSlotAvailable(&this->surfMappedExtForceSlot);
 
     // Weighting for external forces when mapping the surface
     this->surfaceMappingExternalForcesWeightScl = 0.5f;
@@ -1482,23 +1492,46 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         volDim1[1] = static_cast<size_t>(this->gridDensMap1.size[1]);
         volDim1[2] = static_cast<size_t>(this->gridDensMap1.size[2]);
 
-        // Morph surface #2 to shape #1 using GVF
-        if (!this->deformSurfMapped.MorphToVolumeGVF(
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                this->deformSurf1.PeekCubeStates(),
-                volDim1,
-                &this->gridDensMap1.minC[0],
-                &this->gridDensMap1.delta[0],
-                this->qsIsoVal,
-                this->interpolMode,
-                this->surfaceMappingMaxIt,
-                this->surfMappedMinDisplScl,
-                this->surfMappedSpringStiffness,
-                this->surfaceMappingForcesScl,
-                this->surfaceMappingExternalForcesWeightScl,
-                this->surfMappedGVFScl,
-                this->surfMappedGVFIt)) {
+        if (this->surfMappedExtForce == GVF) {
+
+            // Morph surface #2 to shape #1 using GVF
+            if (!this->deformSurfMapped.MorphToVolumeGVF(
+                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                    this->deformSurf1.PeekCubeStates(),
+                    volDim1,
+                    &this->gridDensMap1.minC[0],
+                    &this->gridDensMap1.delta[0],
+                    this->qsIsoVal,
+                    this->interpolMode,
+                    this->surfaceMappingMaxIt,
+                    this->surfMappedMinDisplScl,
+                    this->surfMappedSpringStiffness,
+                    this->surfaceMappingForcesScl,
+                    this->surfaceMappingExternalForcesWeightScl,
+                    this->surfMappedGVFScl,
+                    this->surfMappedGVFIt)) {
+                return false;
+            }
+        } else if (this->surfMappedExtForce == METABALLS) {
+            // Morph surface #2 to shape #1 using implicit molecular surface
+            if (!this->deformSurfMapped.MorphToVolume(
+                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                    volDim1,
+                    &this->gridDensMap1.minC[0],
+                    &this->gridDensMap1.delta[0],
+                    this->qsIsoVal,
+                    this->interpolMode,
+                    this->surfaceMappingMaxIt,
+                    this->surfMappedMinDisplScl,
+                    this->surfMappedSpringStiffness,
+                    this->surfaceMappingForcesScl,
+                    this->surfaceMappingExternalForcesWeightScl)) {
+                return false;
+            }
+        } else if (this->surfMappedExtForce == METABALLS_DISTFIELD) {
+
+        } else {
             return false;
         }
 
@@ -1693,11 +1726,28 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
     if (this->triggerComputeLines) {
 
         this->gvf.Validate(gridSize*4);
-        if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
-                this->deformSurfMapped.PeekGVF(), sizeof(float)*gridSize*4,
-                cudaMemcpyDeviceToHost))) {
+        if (this->surfMappedExtForce == GVF) {
+            if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
+                    this->deformSurfMapped.PeekGVF(), sizeof(float)*gridSize*4,
+                    cudaMemcpyDeviceToHost))) {
+                return false;
+            }
+        } else if (this->surfMappedExtForce == METABALLS) {
+            if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
+                    this->deformSurfMapped.PeekVolGradient(), sizeof(float)*gridSize*4,
+                    cudaMemcpyDeviceToHost))) {
+                return false;
+            }
+        } else if (this->surfMappedExtForce == METABALLS_DISTFIELD) {
+            if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
+                    this->deformSurfMapped.PeekVolGradient(), sizeof(float)*gridSize*4,
+                    cudaMemcpyDeviceToHost))) {
+                return false;
+            }
+        } else {
             return false;
         }
+
         this->lines.SetCount(gridSize*6);
         this->lineColors.SetCount(gridSize*6);
         for (size_t x = 0; x < this->gridDensMap1.size[0]; ++x) {
@@ -2059,6 +2109,15 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->fittingModeSlot.ResetDirty();
         this->triggerRMSFit = true;
         this->triggerSurfaceMapping = true;
+    }
+
+    // Parameter for the external forces
+    if (this->surfMappedExtForceSlot.IsDirty()) {
+        this->surfMappedExtForce = static_cast<ExternalForces>(
+                this->surfMappedExtForceSlot.Param<core::param::EnumParam>()->Value());
+        this->surfMappedExtForceSlot.ResetDirty();
+        this->triggerSurfaceMapping = true;
+        this->triggerComputeLines = true;
     }
 
     // Weighting for external forces when mapping the surface
