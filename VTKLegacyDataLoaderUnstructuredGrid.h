@@ -17,6 +17,7 @@
 #include "VTKLegacyDataUnstructuredGrid.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
 #include "view/AnimDataModule.h"
+#include "AbstractGetData3DCall.h"
 #include "Call.h"
 #include "CalleeSlot.h"
 #include "param/ParamSlot.h"
@@ -289,12 +290,12 @@ private:
         VTKLegacyDataUnstructuredGrid data;
 
     };
-
+    
     /**
      * Helper class to unlock frame data when
      * 'VTKLegacyDataCallUnstructuredGrid' is used.
      */
-    class Unlocker : public VTKLegacyDataCallUnstructuredGrid::Unlocker {
+    class VTKUnlocker : public megamol::core::AbstractGetData3DCall::Unlocker {
     public:
 
         /**
@@ -302,13 +303,13 @@ private:
          *
          * @param frame The frame to unlock
          */
-        Unlocker(Frame& frame) : VTKLegacyDataCallUnstructuredGrid::Unlocker(),
+        VTKUnlocker(Frame& frame) : megamol::core::AbstractGetData3DCall::Unlocker(),
                 frame(&frame) {
             // intentionally empty
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        virtual ~VTKUnlocker(void) {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
@@ -326,7 +327,6 @@ private:
         /** The frame to unlock */
         Frame *frame;
     };
-
 
     /**
      * Answers whether the given char is a whitespace character.

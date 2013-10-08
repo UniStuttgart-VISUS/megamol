@@ -397,6 +397,9 @@
     <ClCompile Include="MolecularBezierData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MultiParticleDataFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSpline.h">
@@ -802,6 +805,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MolecularBezierData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MultiParticleDataFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

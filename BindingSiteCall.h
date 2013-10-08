@@ -83,7 +83,7 @@ namespace protein {
             if( !this->bindingSites )
                 return 0;
             else
-                return this->bindingSites->Count();
+                return static_cast<unsigned int>(this->bindingSites->Count());
         }
         
         /**

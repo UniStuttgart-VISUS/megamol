@@ -180,7 +180,7 @@ namespace protein {
          *
          * @param prot The data interface.
          */
-        void RenderCartoonCPU( const MolecularDataCall *mol);
+        void RenderCartoonCPU( const MolecularDataCall *mol, float* atomPos);
 
          /**
          * Render protein in GPU CARTOON mode using OpenGL primitives.
@@ -321,6 +321,11 @@ namespace protein {
         unsigned int currentFrameId;
 
         unsigned int atomCount;
+
+		// coordinates of the first (center) b-spline (result of the spline computation)
+		std::vector<std::vector<vislib::math::Vector<float, 3> > > bSplineCoordsCPU;
+		// color of secondary structure b-spline
+		std::vector<std::vector<vislib::math::Vector<float, 3> > > cartoonColorCPU;
 
     };
 

@@ -576,7 +576,7 @@ void Color::MakeColorTable(const MolecularDataCall *mol,
             minGradColor, midGradColor, maxGradColor, true, bs);
 
         // Interpolate
-        for(int cnt = 0; cnt < mol->AtomCount()*3; cnt++) {
+        for(unsigned int cnt = 0; cnt < mol->AtomCount()*3; cnt++) {
             atomColorTable.Add(color0[cnt]*weight0+color1[cnt]*weight1);
         }
 
