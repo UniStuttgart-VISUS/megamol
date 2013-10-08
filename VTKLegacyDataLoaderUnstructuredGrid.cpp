@@ -120,7 +120,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
                     this->ClassName(), dc->FrameID(), this->FrameCount());
 #endif
             return false;
-        }
+        } 
 
         // Request the frame
         Frame *fr = NULL;
@@ -143,10 +143,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
                 // Request the frame before the actual requested frame (modulo
                 // framenumber) to trigger loading of the actually requested frame
                 fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->requestLockedFrame(frameBefore));
-                dc->SetUnlocker(new Unlocker(*fr));
+                dc->SetUnlocker(new VTKUnlocker(*fr));
                 dc->Unlock();
                 fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->requestLockedFrame(dc->FrameID()));
-                dc->SetUnlocker(new Unlocker(*fr));
+                dc->SetUnlocker(new VTKUnlocker(*fr));
                 if (fr == NULL) {
                     return false;
                 }
@@ -154,7 +154,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
         }
 
         // Set unlocker object for the frame
-        dc->SetUnlocker(new Unlocker(*fr));
+        dc->SetUnlocker(new VTKUnlocker(*fr));
 
         // Set data of the call
         dc->SetData(fr->GetData());
@@ -190,10 +190,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
                     // Request the frame before the actual requested frame (modulo
                     // framenumber) to trigger loading of the actually requested frame
                     fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->requestLockedFrame(frameBefore));
-                    mpdc->SetUnlocker(new Unlocker(*fr));
+                    mpdc->SetUnlocker(new VTKUnlocker(*fr));
                     mpdc->Unlock();
                     fr = dynamic_cast<VTKLegacyDataLoaderUnstructuredGrid::Frame *>(this->requestLockedFrame(mpdc->FrameID()));
-                    mpdc->SetUnlocker(new Unlocker(*fr));
+                    mpdc->SetUnlocker(new VTKUnlocker(*fr));
                     if (fr == NULL) {
                         return false;
                     }
@@ -216,14 +216,14 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
                 mpdc->AccessParticles(0).SetColourData(
                         core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                         fr->PeekPointDataByName(
-                                this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value()), 0);
+                            this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value())->PeekData(), 0);
             }
             // Set vertex positions
             mpdc->AccessParticles(0).SetVertexData(
                     core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                     (const void*)(fr->GetData()->PeekPoints()));
 
-            mpdc->SetUnlocker(new Unlocker(*fr));
+            mpdc->SetUnlocker(new VTKUnlocker(*fr));
 
 
 

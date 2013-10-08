@@ -778,7 +778,7 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
         this->currentColoringMode0,
         this->currentColoringMode1,
         cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-        1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+        1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
         this->atomColorTable, this->colorLookupTable, this->rainbowColors,
         this->minGradColorParam.Param<param::StringParam>()->Value(),
         this->midGradColorParam.Param<param::StringParam>()->Value(),
@@ -830,7 +830,7 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
         // --- CARTOON_CPU                                          ---
         // --- render the protein using OpenGL primitives           ---
         // ------------------------------------------------------------
-        this->RenderCartoonCPU( mol);
+		this->RenderCartoonCPU( mol, posInter);
     }
 
     if( this->currentRenderMode == CARTOON_GPU ) {
@@ -858,7 +858,7 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
         this->currentColoringMode0,
         this->currentColoringMode1,
         cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-        1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+        1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
         this->atomColorTable, this->colorLookupTable, this->rainbowColors,
         this->minGradColorParam.Param<param::StringParam>()->Value(),
         this->midGradColorParam.Param<param::StringParam>()->Value(),
@@ -905,7 +905,7 @@ void MoleculeCartoonRenderer::UpdateParameters( const MolecularDataCall *mol, co
             this->currentColoringMode0,
             this->currentColoringMode1,
             cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-            1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+            1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
             this->minGradColorParam.Param<param::StringParam>()->Value(),
             this->midGradColorParam.Param<param::StringParam>()->Value(),
@@ -1384,7 +1384,103 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataCall *mol,
  * MoleculeCartoonRenderer::RenderCartoonCPU
  */
 void MoleculeCartoonRenderer::RenderCartoonCPU(
-    const MolecularDataCall *mol) {
+	const MolecularDataCall *mol, float* atomPos) {
+
+    // prepare CPU cartoon representation, if necessary
+    if( this->prepareCartoonCPU ) {
+	    unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
+	    // B-Spline
+	    BSpline bSpline;
+	    // control points for the first (center) b-spline
+	    std::vector<vislib::math::Vector<float, 3> > controlPoints;
+	    // temporary vectors
+	    vislib::math::Vector<float, 3> vecCA, vecC, vecO, vecTmp, vecTmpOld;
+	    // temporary color
+	    //const float *color;
+	    // temporary color vector
+	    vislib::math::Vector<float, 3> colorVec;
+
+	    // secondary structure type for b-spline
+	    std::vector<std::vector<MolecularDataCall::SecStructure::ElementType> > bSplineSecStruct;
+
+
+	    // set the number of segments to create
+	    bSpline.setN( this->numberOfSplineSeg);
+
+	    // resize result vector for coordinates of first b-spline segments
+	    bSplineCoordsCPU.resize( mol->MoleculeCount());
+	    // resize vector for secondary structure
+	    bSplineSecStruct.resize( mol->MoleculeCount());
+	    // resize color vector
+	    this->cartoonColorCPU.resize( mol->MoleculeCount());
+
+	    // --- compute the b-splines ---
+	    // loop over all chains
+	    MolecularDataCall::Molecule chain;
+	    MolecularDataCall::AminoAcid *aminoacid;
+	    for( cntChain = 0; cntChain < mol->MoleculeCount(); ++cntChain ) {
+		    chain = mol->Molecules()[cntChain];
+		    controlPoints.clear();
+            this->cartoonColorCPU[cntChain].clear();
+		    // check if the first residue is an amino acid
+		    if( mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID ) {
+			    continue;
+		    }
+		    firstSS = chain.FirstSecStructIndex();
+		    countSS = firstSS + chain.SecStructCount();
+		    // loop over all secondary structure elements
+		    for( cntS = firstSS; cntS < countSS; ++cntS ) {
+			    firstAA = mol->SecondaryStructures()[cntS].FirstAminoAcidIndex();
+			    countAA = firstAA + mol->SecondaryStructures()[cntS].AminoAcidCount();
+			    // loop over all amino acids in the current sec struct
+			    for( cntAA = firstAA; cntAA < countAA; ++cntAA ) {
+				    // add sec struct type
+				    bSplineSecStruct[cntChain].push_back( mol->SecondaryStructures()[cntS].Type());
+				    // get the index of the C-alpha atom
+				    if( mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID )
+					    aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
+				    else
+					    continue;
+				    idx = aminoacid->CAlphaIndex();
+				    // get the coordinates of the C-alpha atom
+				    vecCA.SetX( atomPos[idx*3+0]);
+				    vecCA.SetY( atomPos[idx*3+1]);
+				    vecCA.SetZ( atomPos[idx*3+2]);
+				    // add the C-alpha coords to the list of control points
+				    controlPoints.push_back( vecCA);
+
+				    // add the color of the C-alpha atom to the color vector
+				    colorVec.SetX( this->atomColorTable[3*idx]);
+				    colorVec.SetY( this->atomColorTable[3*idx+1]);
+				    colorVec.SetZ( this->atomColorTable[3*idx+2]);
+				    cartoonColorCPU[cntChain].push_back( colorVec);
+			    }
+		    }
+		    // set the control points, compute the first spline and fetch the result
+		    bSpline.setBackbone( controlPoints);
+		    if( bSpline.computeSpline() )
+			    bSpline.getResult( bSplineCoordsCPU[cntChain]);
+		    else
+			    continue; // --> return if spline could not be computed
+	    }
+
+	    this->prepareCartoonCPU = false;
+    }
+
+
+    if( !this->prepareCartoonCPU ) {
+	    glDisable( GL_LIGHTING);
+	    glColor3f( 1.0f, 1.0f, 1.0f);
+	    for( unsigned int j = 0; j < bSplineCoordsCPU.size(); j++ ) {
+		    glBegin( GL_LINE_STRIP);
+		    for( unsigned int i = 0; i < bSplineCoordsCPU[j].size(); i++ ) {
+			    glColor3fv(cartoonColorCPU[j][i/this->numberOfSplineSeg].PeekComponents());
+			    glVertex3fv( bSplineCoordsCPU[j][i].PeekComponents());
+		    }
+		    glEnd(); // GL_LINE_STRIP
+	    }
+    }
+
     /*
     //{
     //      // return if geometry shaders are not supported

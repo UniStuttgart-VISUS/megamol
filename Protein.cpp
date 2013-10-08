@@ -111,6 +111,7 @@
 #include "PotentialCalculator.h"
 #include "SharedCameraParameters.h"
 #include "ProteinVariantMatch.h"
+#include "MultiParticleDataFilter.h"
 
 #include "CallAutoDescription.h"
 #include "ModuleAutoDescription.h"
@@ -163,7 +164,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 50;
+    int moduleCount = 51;
 #ifdef WITH_CUDA
     moduleCount+=15;
 #endif // WITH_CUDA
@@ -257,6 +258,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case CUDA_OFFSET + HAPTICS_OFFSET + 47 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 49 : return new ModuleAutoDescription<protein::MolecularBezierData>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 50 : return new ModuleAutoDescription<protein::MultiParticleDataFilter>();
         default: return NULL;
     }
     return NULL;
