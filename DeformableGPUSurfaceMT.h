@@ -57,6 +57,16 @@ public:
     /**
      * TODO
      */
+    bool MorphToVolumeDistfield(float *volume_D, size_t volDim[3],
+            float volWSOrg[3], float volWSDelta[3], float isovalue,
+            InterpolationMode interpMode, size_t maxIt,
+            float surfMappedMinDisplScl,
+            float springStiffness, float forceScl,
+            float externalForcesWeight, float distfieldDist); // TODO
+
+    /**
+     * TODO
+     */
     bool MorphToVolumeGVF(float *volumeSource_D,
             float *volumeTarget_D, const unsigned int *targetCubeStates_D,
             size_t volDim[3],
@@ -117,6 +127,9 @@ private:
 
     /// Array to safe displacement length
     CudaDevArr<float> displLen_D;
+
+    /// Array for distance field
+    CudaDevArr<float> distField_D;
 
     /// Flag whether the neighbors have been computed
     bool neighboursReady;

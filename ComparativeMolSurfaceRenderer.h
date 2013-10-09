@@ -357,6 +357,10 @@ private:
     core::param::ParamSlot surfMappedGVFItSlot;
     unsigned int surfMappedGVFIt;
 
+    /// Distance field distance threshold
+    core::param::ParamSlot distFieldThreshSlot;
+    float distFieldThresh;
+
 
     /* Surface regularization */
 

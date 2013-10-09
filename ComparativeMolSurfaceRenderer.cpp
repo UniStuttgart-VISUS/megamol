@@ -36,16 +36,16 @@ using namespace megamol;
 using namespace megamol::protein;
 
 // Hardcoded parameters for 'quicksurf' class
-const float ComparativeMolSurfaceRenderer::qsParticleRad = 0.8f;
+const float ComparativeMolSurfaceRenderer::qsParticleRad = 1.0f;
 const float ComparativeMolSurfaceRenderer::qsGaussLim = 10.0f;
 const float ComparativeMolSurfaceRenderer::qsGridSpacing = 1.0f;
 const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
 const float ComparativeMolSurfaceRenderer::qsIsoVal = 0.5f;
 
 // Hardcoded colors for surface rendering
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = Vec3f(0.36f, 0.36f, 1.0f);
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = Vec3f(0.7f, 0.8f, 0.4f);
 const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = Vec3f(0.8f, 0.8f, 0.0f);
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurfMapped = Vec3f(0.5f, 0.5f, 0.5f);
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurfMapped = Vec3f(0.13f, 0.30f, 0.58f);
 const Vec3f ComparativeMolSurfaceRenderer::colorMaxPotential = Vec3f(0.0f, 0.0f, 1.0f);
 const Vec3f ComparativeMolSurfaceRenderer::colorMinPotential = Vec3f(1.0f, 0.0f, 0.0f);
 
@@ -123,6 +123,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         surfMappedSpringStiffnessSlot("surfMap::stiffness", "Spring stiffness"),
         surfMappedGVFSclSlot("surfMap::GVFScl", "GVF scale factor"),
         surfMappedGVFItSlot("surfMap::GVFIt", "GVF iterations"),
+        distFieldThreshSlot("surfMap::distFieldThresh", "..."),
         /* Surface regularization */
         regMaxItSlot("surfReg::regMaxIt", "Maximum number of iterations for regularization"),
         regSpringStiffnessSlot("surfReg::stiffness", "Spring stiffness"),
@@ -264,6 +265,11 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->surfMappedGVFIt = 0;
     this->surfMappedGVFItSlot.SetParameter(new core::param::IntParam(this->surfMappedGVFIt, 0));
     this->MakeSlotAvailable(&this->surfMappedGVFItSlot);
+
+    /// Distance field threshold
+    this->distFieldThresh = 1.0f;
+    this->distFieldThreshSlot.SetParameter(new core::param::FloatParam(this->distFieldThresh, 0.0f));
+    this->MakeSlotAvailable(&this->distFieldThreshSlot);
 
 
     /* Parameters for surface regularization */
@@ -1530,7 +1536,22 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 return false;
             }
         } else if (this->surfMappedExtForce == METABALLS_DISTFIELD) {
-
+            // Morph surface #2 to shape #1 using implicit molecular surface + distance field
+            if (!this->deformSurfMapped.MorphToVolumeDistfield(
+                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                    volDim1,
+                    &this->gridDensMap1.minC[0],
+                    &this->gridDensMap1.delta[0],
+                    this->qsIsoVal,
+                    this->interpolMode,
+                    this->surfaceMappingMaxIt,
+                    this->surfMappedMinDisplScl,
+                    this->surfMappedSpringStiffness,
+                    this->surfaceMappingForcesScl,
+                    this->surfaceMappingExternalForcesWeightScl,
+                    this->distFieldThresh)) {
+                return false;
+            }
         } else {
             return false;
         }
@@ -2017,6 +2038,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     } else if (renderMode == SURFACE_POINTS){
         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
     }
+    glLineWidth(2.0f);
 
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, vboTriangleIdx);
     CheckForGLError(); // OpenGL error check
@@ -2172,6 +2194,15 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->surfMappedGVFIt =
                 this->surfMappedGVFItSlot.Param<core::param::IntParam>()->Value();
         this->surfMappedGVFItSlot.ResetDirty();
+        this->triggerSurfaceMapping = true;
+        this->triggerComputeLines = true;
+    }
+
+    /// Distance field threshold
+    if (this->distFieldThreshSlot.IsDirty()) {
+        this->distFieldThresh =
+                this->distFieldThreshSlot.Param<core::param::FloatParam>()->Value();
+        this->distFieldThreshSlot.ResetDirty();
         this->triggerSurfaceMapping = true;
         this->triggerComputeLines = true;
     }
