@@ -870,8 +870,8 @@ __global__ void UpdateVertexPositionTricubic_D(
         correctionVec /= activeNeighbourCnt; // Represents internal force
 
 //        normal = safeNormalize(normal);
-        float3 internalForce = correctionVec - dot(correctionVec, normal)*normal; // With projection
-        //float3 internalForce = correctionVec;                                       // Without projection
+//        float3 internalForce = correctionVec - dot(correctionVec, normal)*normal; // With projection
+        float3 internalForce = correctionVec;                                       // Without projection
 
         laplacian_D[idx] = internalForce;
         __syncthreads();

@@ -360,12 +360,14 @@ attribute vec3 texCoord;
 varying vec3 lightDir;
 varying vec3 view;
 varying vec3 normalFrag; 
+varying vec3 posWS;
 
 void main() {   
     
     // Vertex positions
     gl_Position = gl_ModelViewProjectionMatrix*vec4(pos, 1.0);
     //gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex; // Vertex positions
+    posWS = pos;
     
     // Get view vector in eye space
     view = (gl_ModelViewMatrix*vec4(pos, 1.0)).xyz;
@@ -406,8 +408,11 @@ uniform float alphaScl;
 varying vec3 lightDir;
 varying vec3 view;
 varying vec3 normalFrag; 
+varying vec3 posWS;
 
 void main() {
+    
+    if (posWS.z > 50) return;
     
     vec4 lightparams, color;
     
