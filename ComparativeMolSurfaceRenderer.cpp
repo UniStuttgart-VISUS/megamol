@@ -227,6 +227,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     ext->SetTypePair(METABALLS, "Meta balls");
     ext->SetTypePair(METABALLS_DISTFIELD, "Meta balls + distance field");
     ext->SetTypePair(GVF, "GVF");
+    ext->SetTypePair(TWO_WAY_GVF, "Two-Way-GVF");
     this->surfMappedExtForceSlot << ext;
     this->MakeSlotAvailable(&this->surfMappedExtForceSlot);
 
@@ -1008,8 +1009,31 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
         }
     }
 
-    this->bboxParticles1 = mol0->AccessBoundingBoxes();
-    this->bboxParticles2 = mol1->AccessBoundingBoxes();
+    // Calc union of all bounding boxes
+    vislib::math::Cuboid<float> bboxTmp;
+
+    /* Calc particle bounding box */
+
+    // Object space bbox
+    bboxTmp = mol0->AccessBoundingBoxes().ObjectSpaceBBox();
+    bboxTmp.Union(mol1->AccessBoundingBoxes().ObjectSpaceBBox());
+    this->bboxParticles.SetObjectSpaceBBox(bboxTmp);
+
+    // Object space clip box
+    bboxTmp = mol0->AccessBoundingBoxes().ObjectSpaceClipBox();
+    bboxTmp.Union(mol1->AccessBoundingBoxes().ObjectSpaceClipBox());
+    this->bboxParticles.SetObjectSpaceClipBox(bboxTmp);
+
+    // World space bbox
+    bboxTmp = mol0->AccessBoundingBoxes().WorldSpaceBBox();
+    bboxTmp.Union(mol1->AccessBoundingBoxes().WorldSpaceBBox());
+    this->bboxParticles.SetWorldSpaceBBox(bboxTmp);
+
+    // World space clip box
+    bboxTmp = mol0->AccessBoundingBoxes().WorldSpaceClipBox();
+    bboxTmp.Union(mol1->AccessBoundingBoxes().WorldSpaceClipBox());
+    this->bboxParticles.SetWorldSpaceClipBox(bboxTmp);
+
 //    core::BoundingBoxes bboxPotential0 = cmd0->AccessBoundingBoxes();
     core::BoundingBoxes bboxPotential1 = cmd1->AccessBoundingBoxes();
 
@@ -1017,9 +1041,6 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     if (ren != NULL) {
         bbox_external = ren->AccessBoundingBoxes();
     }
-
-    // Calc union of all bounding boxes
-    vislib::math::Cuboid<float> bboxTmp;
 
     //bboxTmp = cmd0->AccessBoundingBoxes().ObjectSpaceBBox();
     //bboxTmp.Union(cmd1->AccessBoundingBoxes().ObjectSpaceBBox());
@@ -1296,8 +1317,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->computeDensityMap(
                 mol1,
                 (CUDAQuickSurf*)this->cudaqsurf1,
-                this->gridDensMap1,
-                this->bboxParticles1.ObjectSpaceBBox()
+                this->gridDensMap,
+                this->bboxParticles.ObjectSpaceBBox()
                 )) {
             return false;
         }
@@ -1305,8 +1326,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->computeDensityMap(
                 mol2,
                 (CUDAQuickSurf*)this->cudaqsurf2,
-                this->gridDensMap2,
-                this->bboxParticles2.ObjectSpaceBBox()
+                this->gridDensMap,
+                this->bboxParticles.ObjectSpaceBBox()
                 )) {
             return false;
         }
@@ -1340,14 +1361,14 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Get vertex positions based on the level set
         size_t volDim[3];
-        volDim[0] = this->gridDensMap1.size[0];
-        volDim[1] = this->gridDensMap1.size[1];
-        volDim[2] = this->gridDensMap1.size[2];
+        volDim[0] = this->gridDensMap.size[0];
+        volDim[1] = this->gridDensMap.size[1];
+        volDim[2] = this->gridDensMap.size[2];
         if (!this->deformSurf1.ComputeVertexPositions(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                 volDim,
-                &this->gridDensMap1.minC[0],
-                &this->gridDensMap1.delta[0],
+                &this->gridDensMap.minC[0],
+                &this->gridDensMap.delta[0],
                 this->qsIsoVal)) {
             return false;
         }
@@ -1356,8 +1377,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->deformSurf1.ComputeTriangles(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                                 volDim,
-                                &this->gridDensMap1.minC[0],
-                                &this->gridDensMap1.delta[0],
+                                &this->gridDensMap.minC[0],
+                                &this->gridDensMap.delta[0],
                                 this->qsIsoVal)) {
             return false;
         }
@@ -1366,8 +1387,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->deformSurf1.ComputeConnectivity(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                 volDim,
-                &this->gridDensMap1.minC[0],
-                &this->gridDensMap1.delta[0],
+                &this->gridDensMap.minC[0],
+                &this->gridDensMap.delta[0],
                 this->qsIsoVal)) {
             return false;
         }
@@ -1376,8 +1397,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->deformSurf1.MorphToVolume(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                 volDim,
-                &this->gridDensMap1.minC[0],
-                &this->gridDensMap1.delta[0],
+                &this->gridDensMap.minC[0],
+                &this->gridDensMap.delta[0],
                 this->qsIsoVal,
                 this->interpolMode,
                 this->regMaxIt,
@@ -1392,8 +1413,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->deformSurf1.ComputeNormals(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                                 volDim,
-                                &this->gridDensMap1.minC[0],
-                                &this->gridDensMap1.delta[0],
+                                &this->gridDensMap.minC[0],
+                                &this->gridDensMap.delta[0],
                                 this->qsIsoVal)) {
             return false;
         }
@@ -1415,14 +1436,14 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Get vertex positions based on the level set
         size_t volDim[3];
-        volDim[0] = this->gridDensMap2.size[0];
-        volDim[1] = this->gridDensMap2.size[1];
-        volDim[2] = this->gridDensMap2.size[2];
+        volDim[0] = this->gridDensMap.size[0];
+        volDim[1] = this->gridDensMap.size[1];
+        volDim[2] = this->gridDensMap.size[2];
         if (!this->deformSurf2.ComputeVertexPositions(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
                 volDim,
-                &this->gridDensMap2.minC[0],
-                &this->gridDensMap2.delta[0],
+                &this->gridDensMap.minC[0],
+                &this->gridDensMap.delta[0],
                 this->qsIsoVal)) {
             return false;
         }
@@ -1431,8 +1452,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->deformSurf2.ComputeTriangles(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
                                 volDim,
-                                &this->gridDensMap2.minC[0],
-                                &this->gridDensMap2.delta[0],
+                                &this->gridDensMap.minC[0],
+                                &this->gridDensMap.delta[0],
                                 this->qsIsoVal)) {
             return false;
         }
@@ -1441,8 +1462,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->deformSurf2.ComputeConnectivity(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
                 volDim,
-                &this->gridDensMap2.minC[0],
-                &this->gridDensMap2.delta[0],
+                &this->gridDensMap.minC[0],
+                &this->gridDensMap.delta[0],
                 this->qsIsoVal)) {
             return false;
         }
@@ -1451,8 +1472,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->deformSurf2.MorphToVolume(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
                 volDim,
-                &this->gridDensMap2.minC[0],
-                &this->gridDensMap2.delta[0],
+                &this->gridDensMap.minC[0],
+                &this->gridDensMap.delta[0],
                 this->qsIsoVal,
                 this->interpolMode,
                 this->regMaxIt,
@@ -1467,8 +1488,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->deformSurf2.ComputeNormals(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
                                 volDim,
-                                &this->gridDensMap2.minC[0],
-                                &this->gridDensMap2.delta[0],
+                                &this->gridDensMap.minC[0],
+                                &this->gridDensMap.delta[0],
                                 this->qsIsoVal)) {
             return false;
         }
@@ -1493,10 +1514,10 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Transform vertices
         this->applyRMSFitting(mol2, &this->deformSurfMapped);
 
-        size_t volDim1[3];
-        volDim1[0] = static_cast<size_t>(this->gridDensMap1.size[0]);
-        volDim1[1] = static_cast<size_t>(this->gridDensMap1.size[1]);
-        volDim1[2] = static_cast<size_t>(this->gridDensMap1.size[2]);
+        size_t volDim[3];
+        volDim[0] = static_cast<size_t>(this->gridDensMap.size[0]);
+        volDim[1] = static_cast<size_t>(this->gridDensMap.size[1]);
+        volDim[2] = static_cast<size_t>(this->gridDensMap.size[2]);
 
         if (this->surfMappedExtForce == GVF) {
 
@@ -1505,9 +1526,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     this->deformSurf1.PeekCubeStates(),
-                    volDim1,
-                    &this->gridDensMap1.minC[0],
-                    &this->gridDensMap1.delta[0],
+                    volDim,
+                    &this->gridDensMap.minC[0],
+                    &this->gridDensMap.delta[0],
                     this->qsIsoVal,
                     this->interpolMode,
                     this->surfaceMappingMaxIt,
@@ -1523,9 +1544,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             // Morph surface #2 to shape #1 using implicit molecular surface
             if (!this->deformSurfMapped.MorphToVolume(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                    volDim1,
-                    &this->gridDensMap1.minC[0],
-                    &this->gridDensMap1.delta[0],
+                    volDim,
+                    &this->gridDensMap.minC[0],
+                    &this->gridDensMap.delta[0],
                     this->qsIsoVal,
                     this->interpolMode,
                     this->surfaceMappingMaxIt,
@@ -1539,9 +1560,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             // Morph surface #2 to shape #1 using implicit molecular surface + distance field
             if (!this->deformSurfMapped.MorphToVolumeDistfield(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                    volDim1,
-                    &this->gridDensMap1.minC[0],
-                    &this->gridDensMap1.delta[0],
+                    volDim,
+                    &this->gridDensMap.minC[0],
+                    &this->gridDensMap.delta[0],
                     this->qsIsoVal,
                     this->interpolMode,
                     this->surfaceMappingMaxIt,
@@ -1552,21 +1573,42 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->distFieldThresh)) {
                 return false;
             }
+        } else if (this->surfMappedExtForce == TWO_WAY_GVF) {
+            // Morph surface #2 to shape #1 using GVF
+            if (!this->deformSurfMapped.MorphToVolumeTwoWayGVF(
+                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                    this->deformSurf2.PeekCubeStates(),
+                    this->deformSurf1.PeekCubeStates(),
+                    volDim,
+                    &this->gridDensMap.minC[0],
+                    &this->gridDensMap.delta[0],
+                    this->qsIsoVal,
+                    this->interpolMode,
+                    this->surfaceMappingMaxIt,
+                    this->surfMappedMinDisplScl,
+                    this->surfMappedSpringStiffness,
+                    this->surfaceMappingForcesScl,
+                    this->surfaceMappingExternalForcesWeightScl,
+                    this->surfMappedGVFScl,
+                    this->surfMappedGVFIt)) {
+                return false;
+            }
         } else {
             return false;
         }
 
         size_t volDim2[3];
-        volDim2[0] = static_cast<size_t>(this->gridDensMap2.size[0]);
-        volDim2[1] = static_cast<size_t>(this->gridDensMap2.size[1]);
-        volDim2[2] = static_cast<size_t>(this->gridDensMap2.size[2]);
+        volDim2[0] = static_cast<size_t>(this->gridDensMap.size[0]);
+        volDim2[1] = static_cast<size_t>(this->gridDensMap.size[1]);
+        volDim2[2] = static_cast<size_t>(this->gridDensMap.size[2]);
 
         // Compute vertex normals
         if (!this->deformSurfMapped.ComputeNormals(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
                                 volDim2,
-                                &this->gridDensMap2.minC[0],
-                                &this->gridDensMap2.delta[0],
+                                &this->gridDensMap.minC[0],
+                                &this->gridDensMap.delta[0],
                                 this->qsIsoVal)) {
             return false;
         }
@@ -1743,7 +1785,7 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
 
     using namespace vislib::math;
 
-    size_t gridSize = this->gridDensMap1.size[0]*this->gridDensMap1.size[1]*this->gridDensMap1.size[2];
+    size_t gridSize = this->gridDensMap.size[0]*this->gridDensMap.size[1]*this->gridDensMap.size[2];
     if (this->triggerComputeLines) {
 
         this->gvf.Validate(gridSize*4);
@@ -1753,6 +1795,12 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
                     cudaMemcpyDeviceToHost))) {
                 return false;
             }
+        } else if (this->surfMappedExtForce == TWO_WAY_GVF) {
+            if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
+                     this->deformSurfMapped.PeekGVF(), sizeof(float)*gridSize*4,
+                     cudaMemcpyDeviceToHost))) {
+                 return false;
+             }
         } else if (this->surfMappedExtForce == METABALLS) {
             if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
                     this->deformSurfMapped.PeekVolGradient(), sizeof(float)*gridSize*4,
@@ -1771,14 +1819,14 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
 
         this->lines.SetCount(gridSize*6);
         this->lineColors.SetCount(gridSize*6);
-        for (size_t x = 0; x < this->gridDensMap1.size[0]; ++x) {
-            for (size_t y = 0; y < this->gridDensMap1.size[1]; ++y) {
-                for (size_t z = 0; z < this->gridDensMap1.size[2]; ++z) {
-                    unsigned int idx = this->gridDensMap1.size[0]*(this->gridDensMap1.size[1]*z + y) + x;
+        for (size_t x = 0; x < this->gridDensMap.size[0]; ++x) {
+            for (size_t y = 0; y < this->gridDensMap.size[1]; ++y) {
+                for (size_t z = 0; z < this->gridDensMap.size[2]; ++z) {
+                    unsigned int idx = this->gridDensMap.size[0]*(this->gridDensMap.size[1]*z + y) + x;
 
-                    Vec3f pos(this->gridDensMap1.minC[0] + x*this->gridDensMap1.delta[0],
-                            this->gridDensMap1.minC[1] + y*this->gridDensMap1.delta[1],
-                            this->gridDensMap1.minC[2] + z*this->gridDensMap1.delta[2]);
+                    Vec3f pos(this->gridDensMap.minC[0] + x*this->gridDensMap.delta[0],
+                            this->gridDensMap.minC[1] + y*this->gridDensMap.delta[1],
+                            this->gridDensMap.minC[2] + z*this->gridDensMap.delta[2]);
 
                     Vec3f vec(gvf.Peek()[4*idx+0], gvf.Peek()[4*idx+1], gvf.Peek()[4*idx+2]);
 
