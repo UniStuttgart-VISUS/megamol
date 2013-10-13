@@ -411,8 +411,12 @@ varying vec3 normalFrag;
 varying vec3 posWS;
 
 void main() {
+
+	// DEBUG clipping planes
+	//if (posWS.z < 49) return;
+	//if (posWS.z > 50) return;
     
-    if (posWS.z > 50) return;
+    //if (posWS.z > 50) return;
     
     vec4 lightparams, color;
     

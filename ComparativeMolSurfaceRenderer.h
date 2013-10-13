@@ -69,7 +69,8 @@ public:
     enum ExternalForces {
         METABALLS=0,
         METABALLS_DISTFIELD,
-        GVF
+        GVF,
+        TWO_WAY_GVF
     };
 
     /**
@@ -513,13 +514,13 @@ private:
     core::BoundingBoxes bbox;
 
     /// The bounding boxes for particle data
-    core::BoundingBoxes bboxParticles1, bboxParticles2;
+    core::BoundingBoxes bboxParticles;
 
     /// The bounding boxes for potential maps
     gridParams gridPotential1, gridPotential2;
 
-    /// The bounding boxes of the density maps
-    gridParams gridDensMap1, gridDensMap2;
+    /// The dimensions of the united bounding boxes of the density maps
+    gridParams gridDensMap;
 
     /// The data hash for the particle data
     SIZE_T datahashParticles1, datahashParticles2;

@@ -42,10 +42,55 @@ public:
                     float *grad_D, size_t dim[3], float isovalue,
                     float *gvfIn_D, float *gvfOut_D, unsigned int maxIt, float scl);
 
+    /**
+     * TODO
+     *
+     * @param v      The vector field (also used as output)
+     * @param dim    The dimensions of the vector field
+     * @param maxIt  The maximum number of iterations
+     * @return 'True' on success, 'false' otherwise
+     */
+    static bool CalcTwoWayGVF(
+            const float *volSource_D,
+            const float *volTarget_D,
+            float *gvfConstData_D,
+            const unsigned int *cellStatesSource_D,
+            const unsigned int *cellStatesTarget_D,
+            float *grad_D,
+            size_t dim[3],
+            float isovalue,
+            float *gvfIn_D,
+            float *gvfOut_D,
+            unsigned int maxIt,
+            float scl);
+
 protected:
 
     /** TODO */
     static dim3 Grid(const unsigned int size, const int threadsPerBlock);
+
+    /**
+     * Initializes the texture for the isotropic diffusion used in the
+     * GVF computation.
+     *
+     * @param targetVol_D  The initial volume texture provided by the used
+     *                     (device memory). This can be any arbitrary volume
+     *                     texture containing a level set.
+     * @param dim          The dimensions of the target volume.
+     * @param cellStates_D Device array telling whether cell are crossed by the
+     *                     iso surface.
+     * @param isovalue     The isovalue defining the level set in 'startVol'.
+     * @param radius       The sampling radius for the volume.
+     * @param gvfVol_D     The resoluting volume that can then be used in the
+     *                     GVF computation.
+     */
+    static bool initGVF(
+            const float *startVol_D,
+            size_t dim[3],
+            const unsigned int *cellStates_D,
+            float isovalue,
+            float *grad_D,
+            float *gvfConstData_D);
 
     /**
      * Initializes the texture for the isotropic diffusion used in the
@@ -58,10 +103,17 @@ protected:
      * @param radius      The sampling radius for the volume.
      * @param gvfVol_D    The resoluting volume that can then be used in the
      *                    GVF computation.
+     *                    TODO
      */
-    static bool initGVF(
-            const float *startVol, size_t dim[3], const unsigned int *cellStates_D,
-                    float isovalue, float *grad_D, float *gvfConstData_D);
+    static bool initTwoWayGVF(
+            const float *sourceVol_D,
+            const float *targetVol_D,
+            size_t dim[3],
+            const unsigned int *cellStatesSource_D,
+            const unsigned int *cellStatesTarget_D,
+            float isovalue,
+            float *grad_D,
+            float *gvfConstData_D);
 
 private:
 

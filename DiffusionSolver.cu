@@ -20,7 +20,7 @@ using namespace megamol;
 using namespace megamol::protein;
 
 #define USE_TIMER
-#define USE_CUDA_TIMER
+//#define USE_CUDA_TIMER
 
 
 /**
@@ -168,6 +168,76 @@ bool DiffusionSolver::CalcGVF(const float *startVol, float *gvfConstData_D,
 
     // Initialize the GVF field with the gradient in the starting regions
     if (!DiffusionSolver::initGVF(startVol, dim, cellStates_D, isovalue, grad_D,
+            gvfConstData_D)) {
+        return false;
+    }
+
+    uint volsize = dim[0]*dim[1]*dim[2];
+    uint3 voldim = make_uint3(dim[0], dim[1], dim[2]);
+
+
+    for (unsigned int it=(maxIt%2); it < maxIt+(maxIt%2); ++it) {
+
+#ifdef USE_CUDA_TIMER
+        float dt_ms;
+        cudaEvent_t event1, event2;
+        cudaEventCreate(&event1);
+        cudaEventCreate(&event2);
+        cudaEventRecord(event1, 0);
+#endif
+        if (it%2 == 0) {
+            // Update diffusion
+            updateGVF_D <<< DiffusionSolver::Grid(volsize, 256), 256 >>> (
+                    gvfIn_D, gvfOut_D, gvfConstData_D, scl, voldim);
+
+            if (cudaGetLastError() != cudaSuccess) {
+                return false;
+            }
+        } else {
+            // Update diffusion
+            updateGVF_D <<< DiffusionSolver::Grid(volsize, 256), 256 >>> (
+                    gvfOut_D, gvfIn_D, gvfConstData_D, scl, voldim);
+
+            if (cudaGetLastError() != cudaSuccess) {
+                return false;
+            }
+        }
+
+#ifdef USE_CUDA_TIMER
+        cudaEventRecord(event2, 0);
+        cudaEventSynchronize(event1);
+        cudaEventSynchronize(event2);
+        cudaEventElapsedTime(&dt_ms, event1, event2);
+        printf("CUDA time for 'updateGVF_D':                       %.10f sec\n",
+                dt_ms/1000.0f);
+        cudaEventRecord(event1, 0);
+#endif
+    }
+
+    return true;
+}
+
+
+/*
+ * DiffusionSolver::CalcTwoWayGVF
+ */
+bool DiffusionSolver::CalcTwoWayGVF(
+        const float *volSource_D,
+        const float *volTarget_D,
+        float *gvfConstData_D,
+        const unsigned int *cellStatesSource_D,
+        const unsigned int *cellStatesTarget_D,
+        float *grad_D,
+        size_t dim[3],
+        float isovalue,
+        float *gvfIn_D,
+        float *gvfOut_D,
+        unsigned int maxIt,
+        float scl) {
+
+    // Initialize the GVF field with the gradient in the starting regions
+    if (!DiffusionSolver::initTwoWayGVF(volSource_D, volTarget_D, dim,
+            cellStatesSource_D, cellStatesTarget_D, isovalue, grad_D,
             gvfConstData_D)) {
         return false;
     }
@@ -406,6 +476,292 @@ bool DiffusionSolver::initGVF(const float *startVol, size_t dim[3],
     // Calculate gradient using finite differences
     calcGradient_D <<< DiffusionSolver::Grid(volsize, 256), 256 >>> (
             startVol, grad_D, cellStates_D, voldim, isovalue);
+
+#ifdef USE_CUDA_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'calcGradient_D':                        %.10f sec\n",
+            dt_ms/1000.0f);
+    cudaEventRecord(event1, 0);
+#endif
+
+    // Precompute b,c1,c2, and c3
+    prepareGVFDiffusion_D <<< DiffusionSolver::Grid(volsize, 256), 256 >>> (
+            grad_D, gvfConstData_D, voldim);
+
+#ifdef USE_CUDA_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'prepareGVFDiffusion_D':                 %.10f sec\n",
+            dt_ms/1000.0f);
+#endif
+
+    return true;
+}
+
+
+/*
+ * calcGradient_D
+ * Computes the gradient of the given volume.
+ */
+__global__ void calcTwoWayGradient_D(
+        const float *sourceVol_D,
+        const float *targetVol_D,
+        float *grad_D,
+        const unsigned int *cellStatesSource_D,
+        const unsigned int *cellStatesTarget_D,
+        uint3 voldim,
+        float isovalue) {
+
+    const uint idx = __umul24(__umul24(blockIdx.y, gridDim.x) +
+            blockIdx.x, blockDim.x) + threadIdx.x;
+
+    uint volsize = voldim.x*voldim.y*voldim.z;
+    if (idx >= volsize) return;
+
+    uint nCells = (voldim.x-1)*(voldim.y-1)*(voldim.z-1);
+
+    int3 cellC;
+    uint cellIdx;
+    int activeSource = 0, activeTarget=0;
+
+    // Get grid coordinates
+    int3 gridC = make_int3(
+            idx % (voldim.x),
+            (idx / voldim.x) % voldim.y,
+            (idx / voldim.x) / voldim.y);
+
+    int3 voldimI = make_int3(int(voldim.x), int(voldim.y), int(voldim.z));
+
+    /* Check all eight adjacent cells in source volume */
+
+    // (-1, -1, -1)
+    cellC = make_int3(
+            clamp(gridC.x-1, 0, voldimI.x-2),
+            clamp(gridC.y-1, 0, voldimI.y-2),
+            clamp(gridC.z-1, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeSource |= cellStatesSource_D[cellIdx];
+
+    // (-1, 1, -1)
+    cellC = make_int3(
+            clamp(gridC.x-1, 0, voldimI.x-2),
+            clamp(gridC.y, 0, voldimI.y-2),
+            clamp(gridC.z-1, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeSource |= cellStatesSource_D[cellIdx];
+
+    // (-1, 1, 1)
+    cellC = make_int3(
+            clamp(gridC.x-1, 0, voldimI.x-2),
+            clamp(gridC.y, 0, voldimI.y-2),
+            clamp(gridC.z, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeSource |= cellStatesSource_D[cellIdx];
+
+    // (-1, -1, 1)
+    cellC = make_int3(
+            clamp(gridC.x-1, 0, voldimI.x-2),
+            clamp(gridC.y-1, 0, voldimI.y-2),
+            clamp(gridC.z, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeSource |= cellStatesSource_D[cellIdx];
+
+    // (1, -1, -1)
+    cellC = make_int3(
+            clamp(gridC.x, 0, voldimI.x-2),
+            clamp(gridC.y-1, 0, voldimI.y-2),
+            clamp(gridC.z-1, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeSource |= cellStatesSource_D[cellIdx];
+
+    // (1, 1, -1)
+    cellC = make_int3(
+            clamp(gridC.x, 0, voldimI.x-2),
+            clamp(gridC.y, 0, voldimI.y-2),
+            clamp(gridC.z-1, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeSource |= cellStatesSource_D[cellIdx];
+
+    // (1, 1, 1)
+    cellC = make_int3(
+            clamp(gridC.x, 0, voldimI.x-2),
+            clamp(gridC.y, 0, voldimI.y-2),
+            clamp(gridC.z, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeSource |= cellStatesSource_D[cellIdx];
+
+    // (1, -1, 1)
+    cellC = make_int3(
+            clamp(gridC.x, 0, voldimI.x-2),
+            clamp(gridC.y-1, 0, voldimI.y-2),
+            clamp(gridC.z, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeSource |= cellStatesSource_D[cellIdx];
+
+
+    /* Check all adjacent cells in the target volume */
+
+    // (-1, -1, -1)
+    cellC = make_int3(
+            clamp(gridC.x-1, 0, voldimI.x-2),
+            clamp(gridC.y-1, 0, voldimI.y-2),
+            clamp(gridC.z-1, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeTarget |= cellStatesTarget_D[cellIdx];
+
+    // (-1, 1, -1)
+    cellC = make_int3(
+            clamp(gridC.x-1, 0, voldimI.x-2),
+            clamp(gridC.y, 0, voldimI.y-2),
+            clamp(gridC.z-1, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeTarget |= cellStatesTarget_D[cellIdx];
+
+    // (-1, 1, 1)
+    cellC = make_int3(
+            clamp(gridC.x-1, 0, voldimI.x-2),
+            clamp(gridC.y, 0, voldimI.y-2),
+            clamp(gridC.z, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeTarget |= cellStatesTarget_D[cellIdx];
+
+    // (-1, -1, 1)
+    cellC = make_int3(
+            clamp(gridC.x-1, 0, voldimI.x-2),
+            clamp(gridC.y-1, 0, voldimI.y-2),
+            clamp(gridC.z, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeTarget |= cellStatesTarget_D[cellIdx];
+
+    // (1, -1, -1)
+    cellC = make_int3(
+            clamp(gridC.x, 0, voldimI.x-2),
+            clamp(gridC.y-1, 0, voldimI.y-2),
+            clamp(gridC.z-1, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeTarget |= cellStatesTarget_D[cellIdx];
+
+    // (1, 1, -1)
+    cellC = make_int3(
+            clamp(gridC.x, 0, voldimI.x-2),
+            clamp(gridC.y, 0, voldimI.y-2),
+            clamp(gridC.z-1, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeTarget |= cellStatesTarget_D[cellIdx];
+
+    // (1, 1, 1)
+    cellC = make_int3(
+            clamp(gridC.x, 0, voldimI.x-2),
+            clamp(gridC.y, 0, voldimI.y-2),
+            clamp(gridC.z, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeTarget |= cellStatesTarget_D[cellIdx];
+
+    // (1, -1, 1)
+    cellC = make_int3(
+            clamp(gridC.x, 0, voldimI.x-2),
+            clamp(gridC.y-1, 0, voldimI.y-2),
+            clamp(gridC.z, 0, voldimI.z-2));
+    cellIdx = ::GetCellIdxByGridCoords(cellC, voldim);
+    activeTarget |= cellStatesTarget_D[cellIdx];
+
+
+    /* Sample gradients  */
+
+    float3 gradSource,gradTarget;
+    uint3 x1, x2;
+
+    x1 = make_uint3(clamp(gridC.x+1, 0, voldimI.x-1), gridC.y, gridC.z);
+    x2 = make_uint3(clamp(gridC.x-1, 0, voldimI.x-1), gridC.y, gridC.z);
+    gradSource.x = sourceVol_D[voldim.x*(voldim.y*x1.z + x1.y) + x1.x]-
+            sourceVol_D[voldim.x*(voldim.y*x2.z + x2.y) + x2.x];
+
+    x1 = make_uint3(gridC.x, clamp(gridC.y+1, 0, voldimI.y-1), gridC.z);
+    x2 = make_uint3(gridC.x, clamp(gridC.y-1, 0, voldimI.y-1), gridC.z);
+    gradSource.y = sourceVol_D[voldim.x*(voldim.y*x1.z + x1.y) + x1.x]-
+            sourceVol_D[voldim.x*(voldim.y*x2.z + x2.y) + x2.x];
+
+    x1 = make_uint3(gridC.x, gridC.y, clamp(gridC.z+1, 0, voldimI.z-1));
+    x2 = make_uint3(gridC.x, gridC.y, clamp(gridC.z-1, 0, voldimI.z-1));
+    gradSource.z = targetVol_D[voldim.x*(voldim.y*x1.z + x1.y) + x1.x]-
+            targetVol_D[voldim.x*(voldim.y*x2.z + x2.y) + x2.x];
+
+    float len = length(gradSource);
+    if (len > 0.0) gradSource /= len;
+
+    x1 = make_uint3(clamp(gridC.x+1, 0, voldimI.x-1), gridC.y, gridC.z);
+    x2 = make_uint3(clamp(gridC.x-1, 0, voldimI.x-1), gridC.y, gridC.z);
+    gradTarget.x = targetVol_D[voldim.x*(voldim.y*x1.z + x1.y) + x1.x]-
+            targetVol_D[voldim.x*(voldim.y*x2.z + x2.y) + x2.x];
+
+    x1 = make_uint3(gridC.x, clamp(gridC.y+1, 0, voldimI.y-1), gridC.z);
+    x2 = make_uint3(gridC.x, clamp(gridC.y-1, 0, voldimI.y-1), gridC.z);
+    gradTarget.y = targetVol_D[voldim.x*(voldim.y*x1.z + x1.y) + x1.x]-
+            targetVol_D[voldim.x*(voldim.y*x2.z + x2.y) + x2.x];
+
+    x1 = make_uint3(gridC.x, gridC.y, clamp(gridC.z+1, 0, voldimI.z-1));
+    x2 = make_uint3(gridC.x, gridC.y, clamp(gridC.z-1, 0, voldimI.z-1));
+    gradTarget.z = targetVol_D[voldim.x*(voldim.y*x1.z + x1.y) + x1.x]-
+            targetVol_D[voldim.x*(voldim.y*x2.z + x2.y) + x2.x];
+
+    len = length(gradTarget);
+    if (len > 0.0) gradTarget /= len;
+
+
+    /* Compute final gradient sample based on active cells */
+
+    float3 gradFinal;
+    gradFinal.x = activeSource*gradSource.x + activeTarget*gradTarget.x;
+    gradFinal.y = activeSource*gradSource.y + activeTarget*gradTarget.y;
+    gradFinal.z = activeSource*gradSource.z + activeTarget*gradTarget.z;
+
+    len = length(gradFinal);
+    if (len > 0.0) gradFinal /= len;
+
+    grad_D[4*idx+0] = gradFinal.x;
+    grad_D[4*idx+1] = gradFinal.y;
+    grad_D[4*idx+2] = gradFinal.z;
+}
+
+
+/*
+ * DiffusionSolver::initGVFCuda
+ */
+bool DiffusionSolver::initTwoWayGVF(
+        const float *sourceVol_D,
+        const float *targetVol_D,
+        size_t dim[3],
+        const unsigned int *cellStatesSource_D,
+        const unsigned int *cellStatesTarget_D,
+        float isovalue,
+        float *grad_D,
+        float *gvfConstData_D) {
+
+    size_t volsize = dim[0]*dim[1]*dim[2];
+    uint3 voldim = make_uint3(dim[0], dim[1], dim[2]);
+
+#ifdef USE_CUDA_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
+#endif
+
+    // Calculate gradient using finite differences
+    calcTwoWayGradient_D <<< DiffusionSolver::Grid(volsize, 256), 256 >>> (
+            sourceVol_D,
+            targetVol_D,
+            grad_D,
+            cellStatesSource_D,
+            cellStatesTarget_D,
+            voldim,
+            isovalue);
 
 #ifdef USE_CUDA_TIMER
     cudaEventRecord(event2, 0);
