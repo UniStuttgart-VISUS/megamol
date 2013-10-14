@@ -47,11 +47,17 @@ public:
     /**
      * TODO
      */
-    bool MorphToVolume(float *volume_D, size_t volDim[3],
-            float volWSOrg[3], float volWSDelta[3], float isovalue,
-            InterpolationMode interpMode, size_t maxIt,
+    bool MorphToVolume(
+            float *volume_D,
+            size_t volDim[3],
+            float volWSOrg[3],
+            float volWSDelta[3],
+            float isovalue,
+            InterpolationMode interpMode,
+            size_t maxIt,
             float surfMappedMinDisplScl,
-            float springStiffness, float forceScl,
+            float springStiffness,
+            float forceScl,
             float externalForcesWeight); // TODO
 
     /**
@@ -98,6 +104,27 @@ public:
             float externalForcesWeight, float gvfScl, unsigned int gvfIt); // TODO
 
     /**
+     * TODO
+     */
+    bool MorphToVolumeTwoWayGVF(
+            float *volumeSource_D,
+            float *volumeTarget_D,
+            const unsigned int *cellStatesSource_D,
+            const unsigned int *cellStatesTarget_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float isovalue,
+            InterpolationMode interpMode,
+            size_t maxIt,
+            float surfMappedMinDisplScl,
+            float springStiffness,
+            float forceScl,
+            float externalForcesWeight,
+            float gvfScl,
+            unsigned int gvfIt); // TODO
+
+    /**
      * Assignment operator (makes deep copy).
      *
      * @param rhs The assigned surface object
@@ -105,18 +132,14 @@ public:
      */
     DeformableGPUSurfaceMT& operator=(const DeformableGPUSurfaceMT &rhs);
 
-    // DEBUG
-    const float *PeekGVF() {
-        return this->gvf_D.Peek();
-    }
-
-    // DEBUG
-    const float4 *PeekVolGradient() {
-        return this->volGradient_D.Peek();
-    }
-
+    /** TODO */
     const unsigned int *PeekCubeStates() {
         return this->cubeStates_D.Peek();
+    }
+
+    /** TODO */
+    const float *PeekExternalForces() {
+        return this->externalForces_D.Peek();
     }
 
 protected:
@@ -129,9 +152,6 @@ private:
     CudaDevArr<float> vertexExternalForcesScl_D;
 
     /// TODO
-    CudaDevArr<float> gvf_D;
-
-    /// TODO
     CudaDevArr<float> gvfTmp_D;
 
     /// TODO
@@ -141,7 +161,7 @@ private:
     CudaDevArr<float> grad_D;
 
     /// Device pointer to gradient field
-    CudaDevArr<float4> volGradient_D;
+//    CudaDevArr<float4> volGradient_D;
 
     /// Array for laplacian
     CudaDevArr<float3> laplacian_D;
@@ -154,6 +174,9 @@ private:
 
     /// Flag whether the neighbors have been computed
     bool neighboursReady;
+
+    /// Device array for external forces
+    CudaDevArr<float> externalForces_D;
 
 };
 

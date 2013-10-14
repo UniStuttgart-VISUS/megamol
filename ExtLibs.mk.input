@@ -33,7 +33,7 @@ CudaReleaseDir    := $(ReleaseDir)/Cuda
 CudaDebugDir      := $(DebugDir)/Cuda
 
 # note: not the dependencies (i.e. particle_kernel.cu)!
-CU_SOURCES	:= particleSystem.cu filter_cuda.cu CUDAMarchingCubes.cu CUDAQuickSurf.cu CUDACurl.cu CUDAFieldTopology.cu ComparativeSurfacePotentialRenderer.cu PotentialCalculator.cu sort_triangles.cu ComparativeSurfacePotentialRenderer_thrust_stuff.cu ComparativeSurfacePotentialRenderer_surface_mapping.cu ComparativeSurfacePotentialRenderer_surface_generation.cu ComparativeSurfacePotentialRenderer_metric.cu VolumeMeshRenderer.cu VolumeMeshRenderer-sort.cu DiffusionSolver.cu
+CU_SOURCES	:= particleSystem.cu filter_cuda.cu CUDAMarchingCubes.cu CUDAQuickSurf.cu CUDACurl.cu CUDAFieldTopology.cu ComparativeSurfacePotentialRenderer.cu PotentialCalculator.cu sort_triangles.cu ComparativeSurfacePotentialRenderer_thrust_stuff.cu ComparativeSurfacePotentialRenderer_surface_mapping.cu ComparativeSurfacePotentialRenderer_surface_generation.cu ComparativeSurfacePotentialRenderer_metric.cu VolumeMeshRenderer.cu VolumeMeshRenderer-sort.cu DiffusionSolver.cu DeformableGPUSurfaceMT.cu GPUSurfaceMT.cu
 
 CU_R_OBS	  := $(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
 CU_D_OBS	  := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
@@ -58,7 +58,7 @@ $(IntDir)/$(CudaDebugDir)/%.d: $(InputDir)/%.cu Makefile
 	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@$(CLEARTERMCMD)
 	@echo -n $(dir $@) > $@
-	$(Q)$(NVCC) -M -g -G $(NVCCFLAGS) $< >> $@
+	$(Q)$(NVCC) -M -g $(NVCCFLAGS) $< >> $@
 # -g debug information for host code
 # -G debug information for device code
 

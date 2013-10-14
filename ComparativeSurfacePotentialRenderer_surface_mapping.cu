@@ -14,6 +14,7 @@
 #include "cuda_helper.h"
 #include <cstdio>
 
+
 // Toggle performance measurement and respective messages
 //#define USE_TIMER
 #define UPDATE_VERTEX_POSITION_BLOCKDIM 256

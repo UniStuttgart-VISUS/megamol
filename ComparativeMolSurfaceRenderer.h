@@ -123,7 +123,11 @@ protected:
      * @param surf  The surface object
      * @return 'True' on success, 'false' otherwise
      */
-    bool applyRMSFitting(MolecularDataCall *mol, DeformableGPUSurfaceMT *surf);
+//    bool applyRMSFitting(MolecularDataCall *mol, DeformableGPUSurfaceMT *surf);
+
+    /** TODO */
+    void computeDensityBBox(const float *atomPos1, const float *atomPos2,
+            size_t atomCnt1, size_t atomCnt2);
 
     /**
      * (Re-)computes a smooth density map based on an array of givwen particle
@@ -137,15 +141,14 @@ protected:
      * @param volume        The array holding the actual density map (only if
      *                      USE_TEXTURE_SLICES is defined)
      * @param volumeTex     Texture object associated with the density map (only
-     *                      if USE_TEXTURE_SLICES is defined)
+     *                      if USE_TEXTURE_SLICES is defined) TODO
      *
      * @return 'True' on success, 'false' otherwise
      */
     bool computeDensityMap(
+            const float *atomPos,
             const MolecularDataCall *mol,
-            CUDAQuickSurf *cqs,
-            gridParams &gridDensMap,
-            const Cubef &bboxParticles);
+            CUDAQuickSurf *cqs);
 
     /**
      * Implementation of 'create'.
@@ -156,15 +159,15 @@ protected:
 
     /**
      * Computes the translation vector and the rotation matrix to minimize the
-     * RMS (Root Mean Square) of the particles contained in data set 0 and data
-     * set 1. Data set 1 is fitted to data set 0.
+     * RMS (Root Mean Square) of the particles contained in data set 1 and data
+     * set 2. Data set 2 is fitted to data set 1.
      *
-     * @param mol0 The data call containing the particles of data set 0
      * @param mol1 The data call containing the particles of data set 1
+     * @param mol2 The data call containing the particles of data set 2
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool fitMoleculeRMS(MolecularDataCall *mol0, MolecularDataCall *mol1);
+    bool fitMoleculeRMS(MolecularDataCall *mol1, MolecularDataCall *mol2);
 
     /**
      * The get capabilities callback. The module should set the members
@@ -514,12 +517,12 @@ private:
     core::BoundingBoxes bbox;
 
     /// The bounding boxes for particle data
-    core::BoundingBoxes bboxParticles;
+    Cubef bboxParticles;
 
     /// The bounding boxes for potential maps
     gridParams gridPotential1, gridPotential2;
 
-    /// The dimensions of the united bounding boxes of the density maps
+    /// The bounding boxes of the density maps
     gridParams gridDensMap;
 
     /// The data hash for the particle data
@@ -530,6 +533,15 @@ private:
 
     /// Calltime of the last frame
     float calltimeOld;
+
+    /// Dimensions of the density volumes
+    int3 volDim;
+
+    /// Origin of the density volumes
+    float3 volOrg;
+
+    /// Delta for the density volumes
+    float3 volDelta;
 
 
     /* Surface morphing */
@@ -561,14 +573,15 @@ private:
 
     /* RMSD fitting */
 
-    HostArr<float> rmsPosVec0;  ///> Position vector #0 for rms fitting
-    HostArr<float> rmsPosVec1;  ///> Position vector #1 for rms fitting
+    HostArr<float> rmsPosVec1;  ///> Position vector #0 for rms fitting
+    HostArr<float> rmsPosVec2;  ///> Position vector #1 for rms fitting
     HostArr<float> rmsWeights;  ///> Particle weights
     HostArr<int> rmsMask;       ///> Mask for particles
     float rmsValue;             ///> The calculated RMS value
     Mat3f rmsRotation;          ///> Rotation matrix for the fitting
     Vec3f rmsTranslation;       ///> Translation vector for the fitting
     static const float maxRMSVal;  ///> Maximum RMS value to enable fitting
+    HostArr<float> atomPosFitted;  ///> The rotated/translated atom positions
 
 
     /* Boolean flags */
