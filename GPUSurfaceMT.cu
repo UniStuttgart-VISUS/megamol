@@ -22,8 +22,6 @@
 
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
-//#include "cuda_helper.h"
-
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -366,8 +364,6 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
         }
         return false;
     }
-
-    printf("vboSize: %u, should be %u\n", vboSize, this->vertexCnt*this->vertexDataStride*sizeof(float));
 
     // Init with zeros
     if (!CudaSafeCall(cudaMemset(vboPt, 0, vboSize))) {
