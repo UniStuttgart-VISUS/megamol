@@ -38,7 +38,7 @@ using namespace megamol::protein;
 // Hardcoded parameters for 'quicksurf' class
 const float ComparativeMolSurfaceRenderer::qsParticleRad = 1.0f;
 const float ComparativeMolSurfaceRenderer::qsGaussLim = 8.0f;
-const float ComparativeMolSurfaceRenderer::qsGridSpacing = 3.0f;
+const float ComparativeMolSurfaceRenderer::qsGridSpacing = 1.0f;
 const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
 const float ComparativeMolSurfaceRenderer::qsIsoVal = 0.5f;
 
@@ -509,16 +509,16 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
             this->gridDataPos.Peek()[4*cnt+2] -= gridDensMap.minC[2];
     }
 
-    printf("Grid dim %u %u %u, mol atom count %u, grid: %f, org %f %f %f\n",
-            gridDensMap.size[0], gridDensMap.size[1], gridDensMap.size[2],
-            mol->AtomCount(), this->gridDataPos.Peek()[0],
-            gridDensMap.minC[0], gridDensMap.minC[1], gridDensMap.minC[2]);
+//    printf("Grid dim %u %u %u, mol atom count %u, grid: %f, org %f %f %f\n",
+//            gridDensMap.size[0], gridDensMap.size[1], gridDensMap.size[2],
+//            mol->AtomCount(), this->gridDataPos.Peek()[0],
+//            gridDensMap.minC[0], gridDensMap.minC[1], gridDensMap.minC[2]);
 
-    float dt_ms;
-    cudaEvent_t event1, event2;
-    cudaEventCreate(&event1);
-    cudaEventCreate(&event2);
-    cudaEventRecord(event1, 0);
+//    float dt_ms;
+//    cudaEvent_t event1, event2;
+//    cudaEventCreate(&event1);
+//    cudaEventCreate(&event2);
+//    cudaEventRecord(event1, 0);
 
     // Compute uniform grid
     int rc = cqs->calc_map(
@@ -534,26 +534,18 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
             this->qsIsoVal,
             this->qsGaussLim);
 
-    cudaEventRecord(event2, 0);
-    cudaEventSynchronize(event1);
-    cudaEventSynchronize(event2);
-    cudaEventElapsedTime(&dt_ms, event1, event2);
-    printf("CUDA time for 'quicksurf':                             %.10f sec\n",
-            dt_ms/1000.0f);
+//    cudaEventRecord(event2, 0);
+//    cudaEventSynchronize(event1);
+//    cudaEventSynchronize(event2);
+//    cudaEventElapsedTime(&dt_ms, event1, event2);
+//    printf("CUDA time for 'quicksurf':                             %.10f sec\n",
+//            dt_ms/1000.0f);
 
     if (rc != 0) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: Quicksurf class returned val != 0\n", this->ClassName());
         return false;
     }
-
-//    this->externalPotentialBuff.Validate(volSize);
-//    printf("volsize1 %i\n", volSize);
-//    this->externalPotentialBuff.Set(0x00);
-//    if (!CudaSafeCall(cudaMemcpy(this->externalPotentialBuff.Peek(),
-//            cqs->getMap(), volSize*sizeof(float), cudaMemcpyDeviceToHost))) {
-//        return false;
-//    }
 
     return CheckForGLError();
 }
@@ -1319,8 +1311,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
             return false;
         }
-        this->triggerRMSFit = false;
-        this->triggerComputeVolume = true;
+
 #ifdef USE_TIMER
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
             "%s: Time for RMS fitting: %.6f s",
@@ -1334,6 +1325,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->atomPosFitted.Peek(),
                 mol1->AtomCount(),
                 mol2->AtomCount());
+
+        this->triggerRMSFit = false;
+        this->triggerComputeVolume = true;
     }
 
 
@@ -1925,12 +1919,12 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         }
     }
 
-//    // DEBUG Show gitted atom positions
-//    glBegin(GL_POINTS);
-//        for(int p = 0; p < this->atomPosFitted.GetCount()/3; ++p)
-//            glVertex3fv(&this->atomPosFitted.Peek()[3*p]);
-//    glEnd();
-//    // DEBUG end
+    // DEBUG Show gitted atom positions
+    glBegin(GL_POINTS);
+        for(int p = 0; p < this->atomPosFitted.GetCount()/3; ++p)
+            glVertex3fv(&this->atomPosFitted.Peek()[3*p]);
+    glEnd();
+    // DEBUG end
 
     glDisable(GL_TEXTURE_3D);
     glDisable(GL_TEXTURE_2D);
