@@ -166,7 +166,7 @@ bool AbstractGPUSurface::InitTriangleIdxVBO(size_t triangleCnt) {
 bool AbstractGPUSurface::InitVertexDataVBO(size_t vertexCnt) {
 
     // Destroy if necessary
-    if (this->vertexDataReady) {
+    if (this->vboVtxData) {
         glBindBufferARB(GL_ARRAY_BUFFER, this->vboVtxData);
         glDeleteBuffersARB(1, &this->vboVtxData);
         this->vboVtxData = 0;

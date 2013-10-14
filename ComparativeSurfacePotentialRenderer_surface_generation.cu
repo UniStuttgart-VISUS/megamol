@@ -770,7 +770,6 @@ __global__ void FlagTetrahedrons_D(
         float *volume_D) {
 
     const uint activeCubeIndex = GetThreadIndex();
-    const uint3 cubeVertex0 = GetGridCoordsByCellIdx(cubeMap_D[activeCubeIndex]);
 
     LoadCubeOffsetsToSharedMemory();
     LoadTetrahedronsInACubeToSharedMemory();
@@ -780,6 +779,7 @@ __global__ void FlagTetrahedrons_D(
     if (activeCubeIndex >= activeCubeCount) {
         return;
     }
+    const uint3 cubeVertex0 = GetGridCoordsByCellIdx(cubeMap_D[activeCubeIndex]);
     // Classify all tetrahedrons in a cube.
     for (int tetrahedronIndex = 0; tetrahedronIndex < 6; ++tetrahedronIndex) {
         // Compute tetrahedron flags.
@@ -831,9 +831,10 @@ cudaError_t GetTetrahedronVertexOffsets(
         uint *verticesPerTetrahedron_D,
         uint tetrahedronCount) {
 
-    ::ComputePrefixSumExclusiveScan(verticesPerTetrahedron_D,
+    ::ComputePrefixSumExclusiveScan(
+            verticesPerTetrahedron_D,
             tetrahedronVertexOffsets_D,
-            tetrahedronCount);
+            tetrahedronCount-1); // TODO This is unintuitive
 
     return cudaGetLastError();
 }
@@ -867,7 +868,7 @@ void GetTrianglesIdx_D(
     const uint id = GetThreadIndex();
     const uint activeCubeIndex = id / 6;
     const int tetrahedronIndex = id % 6;
-    const uint3 cubeVertex0 = GetGridCoordsByCellIdx(cubeMap_D[activeCubeIndex]);
+
 
     // Load tables from constant to shared memory
     LoadCubeOffsetsToSharedMemory();
@@ -878,6 +879,8 @@ void GetTrianglesIdx_D(
     if (id >= tetrahedronCount) {
         return;
     }
+
+    const uint3 cubeVertex0 = GetGridCoordsByCellIdx(cubeMap_D[activeCubeIndex]);
 
     // Get bitmap to classify the tetrahedron
     unsigned char tetrahedronFlags = TetrahedronFlags_D(cubeVertex0,
@@ -1214,7 +1217,8 @@ void ComputeVertexNormals_D(
     if (cellOrg.z <= 0) return;
 
     float3 normal = make_float3(0.0, 0.0, 0.0);
-    float3 pos = make_float3(dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsPos+0],
+    float3 pos = make_float3(
+            dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsPos+0],
             dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsPos+1],
             dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsPos+2]);
 
@@ -1230,10 +1234,12 @@ void ComputeVertexNormals_D(
                 cellOrg.y + VertexNeighbouringTetrahedrons[v][tetrahedronIdx][1],
                 cellOrg.z + VertexNeighbouringTetrahedrons[v][tetrahedronIdx][2]);
 
+
         // Get tetrahedron flags of the adjacent tetrahedron
         terahedronFlagsTmp = TetrahedronFlags_D(
                 make_uint3(cellOrgTemp.x, cellOrgTemp.y, cellOrgTemp.z),
                 VertexNeighbouringTetrahedrons[v][tetrahedronIdx][3], isoval, volume_D);
+
 
         // Edge index of this vertex in the adjacent tetrahedron
         ownEdgeIdx = VertexNeighbouringTetrahedronsOwnEdgeIdx[v][tetrahedronIdx];
@@ -1251,6 +1257,8 @@ void ComputeVertexNormals_D(
                     uint edgeIdx0 = tetrahedronTriangles[terahedronFlagsTmp][triangleIdx*3 + (vtx+1)%3];
                     uint edgeIdx1 = tetrahedronTriangles[terahedronFlagsTmp][triangleIdx*3 + (vtx+2)%3];
 
+
+
                     int3 cubeIdx0 = make_int3(
                             TetrahedronEdgeVertexIdxOffset[tetrahedronIdx][edgeIdx0][0],
                             TetrahedronEdgeVertexIdxOffset[tetrahedronIdx][edgeIdx0][1],
@@ -1267,11 +1275,16 @@ void ComputeVertexNormals_D(
                     int vertexIdx1 = vertexMapInv_D[cubeMapInv_D[GetCellIdxByGridCoords(cubeIdx1)]*7 +
                                                     TetrahedronEdgeVertexIdxOffset[tetrahedronIdx][edgeIdx1][3]];
 
+//                    if (vertexIdx0 >= activeVertexCnt) continue;
+//                    if (vertexIdx1 >= activeVertexCnt) continue;
+
                     float3 pos0, pos1;
-                    pos0 = make_float3(dataBuffer_D[arrDataSize*vertexIdx0+arrDataOffsPos+0],
+                    pos0 = make_float3(
+                            dataBuffer_D[arrDataSize*vertexIdx0+arrDataOffsPos+0],
                             dataBuffer_D[arrDataSize*vertexIdx0+arrDataOffsPos+1],
                             dataBuffer_D[arrDataSize*vertexIdx0+arrDataOffsPos+2]);
-                    pos1 = make_float3(dataBuffer_D[arrDataSize*vertexIdx1+arrDataOffsPos+0],
+                    pos1 = make_float3(
+                            dataBuffer_D[arrDataSize*vertexIdx1+arrDataOffsPos+0],
                             dataBuffer_D[arrDataSize*vertexIdx1+arrDataOffsPos+1],
                             dataBuffer_D[arrDataSize*vertexIdx1+arrDataOffsPos+2]);
                     float3 vec0 = safeNormalize(pos0 - pos);

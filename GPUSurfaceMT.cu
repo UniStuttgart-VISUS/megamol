@@ -153,9 +153,6 @@ GPUSurfaceMT::~GPUSurfaceMT() {
 bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
         float volWSOrg[3], float volWSDelta[3], float isovalue) {
 
-    CheckForCudaError();
-
-
     using vislib::sys::Log;
 
     size_t gridCellCnt = (volDim[0]-1)*(volDim[1]-1)*(volDim[2]-1);
@@ -339,9 +336,6 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
         return false;
     }
 
-//    printf("Vertex count %u\n", activeVertexCount);
-
-
     /* Create vertex buffer object and register with CUDA */
 
     // Create empty vbo to hold vertex data for the surface
@@ -349,7 +343,6 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
         return false;
     }
 
-//    printf("Create VBO of size %u\n", activeVertexCount*this->vertexDataStride*sizeof(float));
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
             &this->vertexDataResource, this->vboVtxData,
@@ -367,13 +360,22 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
             reinterpret_cast<void**>(&vboPt), // The mapped pointer
             &vboSize,             // The size of the accessible data
             this->vertexDataResource))) {                   // The mapped resource
+        // Unmap CUDA graphics resource
+        if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource))) {
+            return false;
+        }
         return false;
     }
+
+    printf("vboSize: %u, should be %u\n", vboSize, this->vertexCnt*this->vertexDataStride*sizeof(float));
 
     // Init with zeros
     if (!CudaSafeCall(cudaMemset(vboPt, 0, vboSize))) {
         // Unmap CUDA graphics resource
         if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource))) {
+            return false;
+        }
+        if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
             return false;
         }
         return false;
@@ -389,12 +391,15 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
             this->vertexStates_D.Peek(),
             this->vertexIdxOffs_D.Peek(),
             this->activeVertexPos_D.Peek(),
-            activeCellCnt,
+            this->activeCellCnt,
             this->vertexDataOffsPos,  // Array data byte offset
             this->vertexDataStride    // Array data element size
             ))) {
         // Unmap CUDA graphics resource
         if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource))) {
+            return false;
+        }
+        if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
             return false;
         }
         return false;
@@ -424,7 +429,7 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
 
 
 /*
- * DeformableGPUSurfaceMT::computeTriangleMeshMT
+ * DeformableGPUSurfaceMT::computeTriangles
  */
 bool GPUSurfaceMT::ComputeTriangles(float *volume_D, size_t volDim[3],
         float volWSOrg[3], float volWSDelta[3], float isovalue) {
@@ -457,10 +462,19 @@ bool GPUSurfaceMT::ComputeTriangles(float *volume_D, size_t volDim[3],
 
 //    // DEBUG Print vertex map
 //    HostArr<unsigned int> vertexMap;
-//    vertexMap.Validate(activeVertexCount);
+//    vertexMap.Validate(this->vertexCnt);
 //    vertexMap_D.CopyToHost(vertexMap.Peek());
-//    for (int i = 0; i < vertexMap_D.GetSize(); ++i) {
+//    for (int i = 0; i < this->vertexMap_D.GetCount(); ++i) {
 //        printf("Vertex mapping %i: %u\n", i, vertexMap.Peek()[i]);
+//    }
+//    // END DEBUG
+//
+//    // DEBUG Print vertex map
+//    HostArr<unsigned int> vertexMapInv;
+//    vertexMapInv.Validate(this->vertexMapInv_D.GetCount());
+//    vertexMapInv_D.CopyToHost(vertexMapInv.Peek());
+//    for (int i = 0; i < this->vertexMapInv_D.GetCount(); ++i) {
+//        printf("Inverse Vertex mapping %i: %u\n", i, vertexMapInv.Peek()[i]);
 //    }
 //    // END DEBUG
 
@@ -519,6 +533,11 @@ bool GPUSurfaceMT::ComputeTriangles(float *volume_D, size_t volDim[3],
     unsigned int *vboTriangleIdxPt;
     size_t vboTriangleIdxSize;
     if (!CudaSafeCall(cudaGraphicsMapResources(1, &this->triangleIdxResource, 0))) {
+
+        // Unmap CUDA graphics resource
+        if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->triangleIdxResource))) {
+            return false;
+        }
         return false;
     }
 
@@ -526,6 +545,14 @@ bool GPUSurfaceMT::ComputeTriangles(float *volume_D, size_t volDim[3],
             reinterpret_cast<void**>(&vboTriangleIdxPt), // The mapped pointer
             &vboTriangleIdxSize,             // The size of the accessible data
             this->triangleIdxResource))) {                   // The mapped resource
+
+        // Unmap CUDA graphics resource
+        if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->triangleIdxResource))) {
+            return false;
+        }
+        if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->triangleIdxResource))) {
+            return false;
+        }
         return false;
     }
 
@@ -533,6 +560,14 @@ bool GPUSurfaceMT::ComputeTriangles(float *volume_D, size_t volDim[3],
     /* Generate triangles */
 
     if (!CudaSafeCall(cudaMemset(vboTriangleIdxPt, 0x00, vboTriangleIdxSize))) {
+
+        // Unmap CUDA graphics resource
+        if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->triangleIdxResource))) {
+            return false;
+        }
+        if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->triangleIdxResource))) {
+            return false;
+        }
         return false;
     }
 
@@ -546,6 +581,14 @@ bool GPUSurfaceMT::ComputeTriangles(float *volume_D, size_t volDim[3],
             vboTriangleIdxPt,
             this->vertexMapInv_D.Peek(),
             volume_D))) {
+
+        // Unmap CUDA graphics resource
+        if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->triangleIdxResource))) {
+            return false;
+        }
+        if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->triangleIdxResource))) {
+            return false;
+        }
         return false;
     }
 
@@ -573,13 +616,6 @@ bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
 
     /* Init grid parameters */
 
-    if (!CudaSafeCall(InitVolume(
-            make_uint3(volDim[0], volDim[1], volDim[2]),
-            make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
-            make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
-        return false;
-    }
-
     if (!CudaSafeCall(InitVolume_surface_generation(
             make_uint3(volDim[0], volDim[1], volDim[2]),
             make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
@@ -587,12 +623,11 @@ bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
         return false;
     }
 
-    //    printf("Init volume surface generation\n");
-    //    printf("grid size  %u %u %u\n", gridDensMap.size[0], gridDensMap.size[1], gridDensMap.size[2]);
-    //    printf("grid org   %f %f %f\n", gridDensMap.minC[0], gridDensMap.minC[1], gridDensMap.minC[2]);
-    //    printf("grid delta %f %f %f\n", gridDensMap.delta[0], gridDensMap.delta[1], gridDensMap.delta[2]);
+//        printf("Init volume surface generation\n");
+//        printf("grid size  %u %u %u\n", volDim[0], volDim[1], volDim[2]);
+//        printf("grid org   %f %f %f\n", volWSOrg[0], volWSOrg[1], volWSOrg[2]);
+//        printf("grid delta %f %f %f\n", volWSDelta[0], volWSDelta[1], volWSDelta[2]);
 
-    //    printf("Create VBO of size %u\n", activeVertexCount*this->vertexDataStride*sizeof(float));
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
             &this->vertexDataResource, this->vboVtxData,
@@ -608,6 +643,14 @@ bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
             reinterpret_cast<void**>(&vboPt), // The mapped pointer
             &vboSize,             // The size of the accessible data
             this->vertexDataResource));                   // The mapped resource
+
+//    printf("active vertex count %u\n", this->vertexCnt);
+//    printf("active cube count %u\n", this->activeCellCnt);
+//    printf("normals vbo %u\n", vboSize);
+//    printf("vertexMap size %u\n", this->vertexMap_D.GetCount());
+//    printf("vertexMapInv size %u\n", this->vertexMapInv_D.GetCount());
+//    printf("cubeMap_D size %u\n", this->cubeMap_D.GetCount());
+//    printf("cubeMapInv_D size %u\n", this->cubeMapInv_D.GetCount());
 
     if (!CudaSafeCall(ComputeVertexNormals(
             vboPt,
@@ -632,8 +675,6 @@ bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
 
         return false;
     }
-
-    CheckForCudaErrorSync(); // Error check with device sync
 
     // Unmap CUDA graphics resource
     if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource))) {

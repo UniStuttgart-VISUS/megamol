@@ -37,8 +37,8 @@ using namespace megamol::protein;
 
 // Hardcoded parameters for 'quicksurf' class
 const float ComparativeMolSurfaceRenderer::qsParticleRad = 1.0f;
-const float ComparativeMolSurfaceRenderer::qsGaussLim = 10.0f;
-const float ComparativeMolSurfaceRenderer::qsGridSpacing = 1.0f;
+const float ComparativeMolSurfaceRenderer::qsGaussLim = 8.0f;
+const float ComparativeMolSurfaceRenderer::qsGridSpacing = 3.0f;
 const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
 const float ComparativeMolSurfaceRenderer::qsIsoVal = 0.5f;
 
@@ -52,47 +52,36 @@ const Vec3f ComparativeMolSurfaceRenderer::colorMinPotential = Vec3f(1.0f, 0.0f,
 // Maximum RMS value to enable valid mapping
 const float ComparativeMolSurfaceRenderer::maxRMSVal = 10.0f;
 
-
 /*
- * ComparativeMolSurfaceRenderer::applyRMSFitting
+ * ComparativeMolSurfaceRenderer::computeDensityBBox
  */
-bool ComparativeMolSurfaceRenderer::applyRMSFitting(
-        MolecularDataCall *mol,
-        DeformableGPUSurfaceMT *surf) {
+void ComparativeMolSurfaceRenderer::computeDensityBBox(const float *atomPos1,
+        const float *atomPos2, size_t atomCnt1, size_t atomCnt2) {
 
-    // Note: all particles have the same weight
-    Vec3f centroid(0.0f, 0.0f, 0.0f);
-    CudaDevArr<float> rotate_D;
-
-    if (this->fittingMode != RMS_NONE) {
-
-        // Compute centroid
-        for (int cnt = 0; cnt < static_cast<int>(mol->AtomCount()); ++cnt) {
-
-            centroid += Vec3f(mol->AtomPositions()[cnt*3],
-                    mol->AtomPositions()[cnt*3+1],
-                    mol->AtomPositions()[cnt*3+2]);
-        }
-        centroid /= static_cast<float>(mol->AtomCount());
-
-        // Move center to origin
-        float transVec[] = {-centroid.X(), -centroid.Y(), -centroid.Z()};
-        if (!surf->Translate(transVec)) {
-            return false;
-        }
-
-        // Rotate
-        if (!surf->Rotate(this->rmsRotation.PeekComponents())) {
-            return false;
-        }
-
-        // Translate to target center
-        if (!surf->Translate(this->rmsTranslation.PeekComponents())) {
-            return false;
-        }
+    float3 minC, maxC;
+    minC.x = maxC.x = atomPos1[0];
+    minC.y = maxC.y = atomPos1[1];
+    minC.z = maxC.z = atomPos1[2];
+    for (size_t i = 0; i < atomCnt1; ++i) {
+        minC.x = std::min(minC.x, atomPos1[3*i+0]);
+        minC.y = std::min(minC.y, atomPos1[3*i+1]);
+        minC.z = std::min(minC.z, atomPos1[3*i+2]);
+        maxC.x = std::max(maxC.x, atomPos1[3*i+0]);
+        maxC.y = std::max(maxC.y, atomPos1[3*i+1]);
+        maxC.z = std::max(maxC.z, atomPos1[3*i+2]);
+    }
+    for (size_t i = 0; i < atomCnt2; ++i) {
+        minC.x = std::min(minC.x, atomPos2[3*i+0]);
+        minC.y = std::min(minC.y, atomPos2[3*i+1]);
+        minC.z = std::min(minC.z, atomPos2[3*i+2]);
+        maxC.x = std::max(maxC.x, atomPos2[3*i+0]);
+        maxC.y = std::max(maxC.y, atomPos2[3*i+1]);
+        maxC.z = std::max(maxC.z, atomPos2[3*i+2]);
     }
 
-    return true;
+    this->bboxParticles.Set(minC.x, minC.y, minC.z,
+            maxC.x, maxC.y, maxC.z);
+
 }
 
 
@@ -428,14 +417,12 @@ ComparativeMolSurfaceRenderer::~ComparativeMolSurfaceRenderer(void) {
 
 
 /*
- * ComparativeSurfacePotentialRenderer::computeVolumeTex
+ * ComparativeSurfacePotentialRenderer::computeDensityMap
  */
 bool ComparativeMolSurfaceRenderer::computeDensityMap(
+        const float *atomPos,
         const MolecularDataCall *mol,
-        CUDAQuickSurf *cqs,
-        gridParams &gridDensMap,
-        const Cubef &bboxParticles
-        ) {
+        CUDAQuickSurf *cqs) {
 
     using namespace vislib::sys;
     using namespace vislib::math;
@@ -468,9 +455,9 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
                     for (uint at = 0; at < resTmp->AtomCount(); ++at) { // Loop through atoms
                         uint atomIdx = resTmp->FirstAtomIndex() + at;
 
-                        this->gridDataPos.Peek()[4*particleCnt+0] = mol->AtomPositions()[3*atomIdx+0];
-                        this->gridDataPos.Peek()[4*particleCnt+1] = mol->AtomPositions()[3*atomIdx+1];
-                        this->gridDataPos.Peek()[4*particleCnt+2] = mol->AtomPositions()[3*atomIdx+2];
+                        this->gridDataPos.Peek()[4*particleCnt+0] = atomPos[3*atomIdx+0];
+                        this->gridDataPos.Peek()[4*particleCnt+1] = atomPos[3*atomIdx+1];
+                        this->gridDataPos.Peek()[4*particleCnt+2] = atomPos[3*atomIdx+2];
                         if(this->qsSclVanDerWaals) {
                             this->gridDataPos.Peek()[4*particleCnt+3] = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius();
                         }
@@ -491,12 +478,12 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
     padding = this->maxAtomRad*this->qsParticleRad + this->qsGridSpacing*10; // TODO How much makes sense?
 
     // Init grid parameters
-    gridDensMap.minC[0] = bboxParticles.GetLeft()   - padding;
-    gridDensMap.minC[1] = bboxParticles.GetBottom() - padding;
-    gridDensMap.minC[2] = bboxParticles.GetBack()   - padding;
-    gridDensMap.maxC[0] = bboxParticles.GetRight() + padding;
-    gridDensMap.maxC[1] = bboxParticles.GetTop()   + padding;
-    gridDensMap.maxC[2] = bboxParticles.GetFront() + padding;
+    gridDensMap.minC[0] = this->bboxParticles.GetLeft()   - padding;
+    gridDensMap.minC[1] = this->bboxParticles.GetBottom() - padding;
+    gridDensMap.minC[2] = this->bboxParticles.GetBack()   - padding;
+    gridDensMap.maxC[0] = this->bboxParticles.GetRight() + padding;
+    gridDensMap.maxC[1] = this->bboxParticles.GetTop()   + padding;
+    gridDensMap.maxC[2] = this->bboxParticles.GetFront() + padding;
     gridXAxisLen = gridDensMap.maxC[0] - gridDensMap.minC[0];
     gridYAxisLen = gridDensMap.maxC[1] - gridDensMap.minC[1];
     gridZAxisLen = gridDensMap.maxC[2] - gridDensMap.minC[2];
@@ -522,10 +509,16 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
             this->gridDataPos.Peek()[4*cnt+2] -= gridDensMap.minC[2];
     }
 
-//    printf("Grid dim %u %u %u, mol atom count %u, grid: %f, org %f %f %f\n",
-//            gridDensMap.size[0], gridDensMap.size[1], gridDensMap.size[2],
-//            mol->AtomCount(), this->gridDataPos.Peek()[0],
-//            gridDensMap.minC[0], gridDensMap.minC[1], gridDensMap.minC[2]);
+    printf("Grid dim %u %u %u, mol atom count %u, grid: %f, org %f %f %f\n",
+            gridDensMap.size[0], gridDensMap.size[1], gridDensMap.size[2],
+            mol->AtomCount(), this->gridDataPos.Peek()[0],
+            gridDensMap.minC[0], gridDensMap.minC[1], gridDensMap.minC[2]);
+
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
 
     // Compute uniform grid
     int rc = cqs->calc_map(
@@ -540,6 +533,13 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
             this->qsGridSpacing,
             this->qsIsoVal,
             this->qsGaussLim);
+
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'quicksurf':                             %.10f sec\n",
+            dt_ms/1000.0f);
 
     if (rc != 0) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -652,8 +652,9 @@ bool ComparativeMolSurfaceRenderer::create(void) {
 /*
  * ComparativeSurfacePotentialRenderer::fitMoleculeRMS
  */
-bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall *mol0,
-        MolecularDataCall *mol1) {
+bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(
+        MolecularDataCall *mol1,
+        MolecularDataCall *mol2) {
     using namespace vislib::sys;
 
     // Extract positions to be fitted
@@ -669,40 +670,14 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall *mol0,
         this->rmsRotation.SetIdentity();
         this->rmsValue = 0.0f;
     } else {
-
         // Use all particles for RMS fitting
         if (this->fittingMode == RMS_ALL) {
 
-            uint posCnt0=0, posCnt1=0;
+            uint posCnt1=0, posCnt2=0;
 
             // (Re)-allocate memory if necessary
-            this->rmsPosVec0.Validate(mol0->AtomCount()*3);
             this->rmsPosVec1.Validate(mol1->AtomCount()*3);
-
-            // Extracting protein atoms from mol 0
-            for (uint sec = 0; sec < mol0->SecondaryStructureCount(); ++sec) {
-                for (uint acid = 0; acid < mol0->SecondaryStructures()[sec].AminoAcidCount(); ++acid) {
-                    const MolecularDataCall::AminoAcid *aminoAcid =
-                            dynamic_cast<const MolecularDataCall::AminoAcid*>(
-                            (mol0->Residues()[mol0->SecondaryStructures()[sec].
-                                 FirstAminoAcidIndex()+acid]));
-                    if (aminoAcid == NULL) {
-                        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                                "%s: Unable to perform RMSD fitting using all protein atoms (residue mislabeled as 'amino acid')", this->ClassName(),
-        posCnt0, posCnt1);
-                        return false;
-                    }
-                    for (uint at = 0; at < aminoAcid->AtomCount(); ++at) {
-                        this->rmsPosVec0.Peek()[3*posCnt0+0] =
-                                mol0->AtomPositions()[3*(aminoAcid->FirstAtomIndex()+at)+0];
-                        this->rmsPosVec0.Peek()[3*posCnt0+1] =
-                                mol0->AtomPositions()[3*(aminoAcid->FirstAtomIndex()+at)+1];
-                        this->rmsPosVec0.Peek()[3*posCnt0+2] =
-                                mol0->AtomPositions()[3*(aminoAcid->FirstAtomIndex()+at)+2];
-                        posCnt0++;
-                    }
-                }
-            }
+            this->rmsPosVec2.Validate(mol2->AtomCount()*3);
 
             // Extracting protein atoms from mol 1
             for (uint sec = 0; sec < mol1->SecondaryStructureCount(); ++sec) {
@@ -714,7 +689,7 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall *mol0,
                     if (aminoAcid == NULL) {
                         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                                 "%s: Unable to perform RMSD fitting using all protein atoms (residue mislabeled as 'amino acid')", this->ClassName(),
-        posCnt0, posCnt1);
+        posCnt1, posCnt2);
                         return false;
                     }
                     for (uint at = 0; at < aminoAcid->AtomCount(); ++at) {
@@ -729,88 +704,70 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall *mol0,
                 }
             }
 
-            if (posCnt0 != posCnt1) {
+            // Extracting protein atoms from mol 1
+            for (uint sec = 0; sec < mol2->SecondaryStructureCount(); ++sec) {
+                for (uint acid = 0; acid < mol2->SecondaryStructures()[sec].AminoAcidCount(); ++acid) {
+                    const MolecularDataCall::AminoAcid *aminoAcid =
+                            dynamic_cast<const MolecularDataCall::AminoAcid*>(
+                            (mol2->Residues()[mol2->SecondaryStructures()[sec].
+                                 FirstAminoAcidIndex()+acid]));
+                    if (aminoAcid == NULL) {
+                        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                                "%s: Unable to perform RMSD fitting using all protein atoms (residue mislabeled as 'amino acid')", this->ClassName(),
+        posCnt1, posCnt2);
+                        return false;
+                    }
+                    for (uint at = 0; at < aminoAcid->AtomCount(); ++at) {
+                        this->rmsPosVec2.Peek()[3*posCnt2+0] =
+                                mol2->AtomPositions()[3*(aminoAcid->FirstAtomIndex()+at)+0];
+                        this->rmsPosVec2.Peek()[3*posCnt2+1] =
+                                mol2->AtomPositions()[3*(aminoAcid->FirstAtomIndex()+at)+1];
+                        this->rmsPosVec2.Peek()[3*posCnt2+2] =
+                                mol2->AtomPositions()[3*(aminoAcid->FirstAtomIndex()+at)+2];
+                        posCnt2++;
+                    }
+                }
+            }
+
+            if (posCnt1 != posCnt2) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                         "%s: Unable to perform RMSD fitting using all protein atoms (non-equal atom count (%u vs. %u), try backbone instead)", this->ClassName(),
-posCnt0, posCnt1);
+posCnt1, posCnt2);
                 return false;
             }
-            posCnt = posCnt0;
+            posCnt = posCnt1;
 
         } else if (this->fittingMode == RMS_BACKBONE) { // Use backbone atoms for RMS fitting
             // (Re)-allocate memory if necessary
-            this->rmsPosVec0.Validate(mol0->AtomCount()*3);
             this->rmsPosVec1.Validate(mol1->AtomCount()*3);
+            this->rmsPosVec2.Validate(mol2->AtomCount()*3);
 
-            uint posCnt0=0, posCnt1=0;
-
-            // Extracting backbone atoms from mol 0
-            for (uint sec = 0; sec < mol0->SecondaryStructureCount(); ++sec) {
-
-                for (uint acid = 0; acid < mol0->SecondaryStructures()[sec].AminoAcidCount(); ++acid) {
-
-                    uint cAlphaIdx =
-                            ((const MolecularDataCall::AminoAcid*)
-                                (mol0->Residues()[mol0->SecondaryStructures()[sec].
-                                     FirstAminoAcidIndex()+acid]))->CAlphaIndex();
-                    uint cCarbIdx =
-                            ((const MolecularDataCall::AminoAcid*)
-                                (mol0->Residues()[mol0->SecondaryStructures()[sec].
-                                     FirstAminoAcidIndex()+acid]))->CCarbIndex();
-                    uint nIdx =
-                            ((const MolecularDataCall::AminoAcid*)
-                                (mol0->Residues()[mol0->SecondaryStructures()[sec].
-                                     FirstAminoAcidIndex()+acid]))->NIndex();
-                    uint oIdx =
-                            ((const MolecularDataCall::AminoAcid*)
-                                (mol0->Residues()[mol0->SecondaryStructures()[sec].
-                                     FirstAminoAcidIndex()+acid]))->OIndex();
-
-//                    printf("c alpha idx %u, cCarbIdx %u, o idx %u, n idx %u\n",
-//                            cAlphaIdx, cCarbIdx, oIdx, nIdx); // DEBUG
-                    this->rmsPosVec0.Peek()[3*posCnt0+0] = mol0->AtomPositions()[3*cAlphaIdx+0];
-                    this->rmsPosVec0.Peek()[3*posCnt0+1] = mol0->AtomPositions()[3*cAlphaIdx+1];
-                    this->rmsPosVec0.Peek()[3*posCnt0+2] = mol0->AtomPositions()[3*cAlphaIdx+2];
-                    posCnt0++;
-                    this->rmsPosVec0.Peek()[3*posCnt0+0] = mol0->AtomPositions()[3*cCarbIdx+0];
-                    this->rmsPosVec0.Peek()[3*posCnt0+1] = mol0->AtomPositions()[3*cCarbIdx+1];
-                    this->rmsPosVec0.Peek()[3*posCnt0+2] = mol0->AtomPositions()[3*cCarbIdx+2];
-                    posCnt0++;
-                    this->rmsPosVec0.Peek()[3*posCnt0+0] = mol0->AtomPositions()[3*oIdx+0];
-                    this->rmsPosVec0.Peek()[3*posCnt0+1] = mol0->AtomPositions()[3*oIdx+1];
-                    this->rmsPosVec0.Peek()[3*posCnt0+2] = mol0->AtomPositions()[3*oIdx+2];
-                    posCnt0++;
-                    this->rmsPosVec0.Peek()[3*posCnt0+0] = mol0->AtomPositions()[3*nIdx+0];
-                    this->rmsPosVec0.Peek()[3*posCnt0+1] = mol0->AtomPositions()[3*nIdx+1];
-                    this->rmsPosVec0.Peek()[3*posCnt0+2] = mol0->AtomPositions()[3*nIdx+2];
-                    posCnt0++;
-                }
-            }
+            uint posCnt1=0, posCnt2=0;
 
             // Extracting backbone atoms from mol 1
             for (uint sec = 0; sec < mol1->SecondaryStructureCount(); ++sec) {
 
-                MolecularDataCall::SecStructure secStructure = mol1->SecondaryStructures()[sec];
-                for (uint acid = 0; acid < secStructure.AminoAcidCount(); ++acid) {
+                for (uint acid = 0; acid < mol1->SecondaryStructures()[sec].AminoAcidCount(); ++acid) {
 
                     uint cAlphaIdx =
                             ((const MolecularDataCall::AminoAcid*)
-                                (mol1->Residues()[secStructure.
+                                (mol1->Residues()[mol1->SecondaryStructures()[sec].
                                      FirstAminoAcidIndex()+acid]))->CAlphaIndex();
                     uint cCarbIdx =
                             ((const MolecularDataCall::AminoAcid*)
-                                (mol1->Residues()[secStructure.
+                                (mol1->Residues()[mol1->SecondaryStructures()[sec].
                                      FirstAminoAcidIndex()+acid]))->CCarbIndex();
                     uint nIdx =
                             ((const MolecularDataCall::AminoAcid*)
-                                (mol1->Residues()[secStructure.
+                                (mol1->Residues()[mol1->SecondaryStructures()[sec].
                                      FirstAminoAcidIndex()+acid]))->NIndex();
                     uint oIdx =
                             ((const MolecularDataCall::AminoAcid*)
-                                (mol1->Residues()[secStructure.
+                                (mol1->Residues()[mol1->SecondaryStructures()[sec].
                                      FirstAminoAcidIndex()+acid]))->OIndex();
-//                    printf("amino acid idx %u, c alpha idx %u, cCarbIdx %u, o idx %u, n idx %u\n", secStructure.
-//                            FirstAminoAcidIndex()+acid, cAlphaIdx, cCarbIdx, oIdx, nIdx);
+
+//                    printf("c alpha idx %u, cCarbIdx %u, o idx %u, n idx %u\n",
+//                            cAlphaIdx, cCarbIdx, oIdx, nIdx); // DEBUG
                     this->rmsPosVec1.Peek()[3*posCnt1+0] = mol1->AtomPositions()[3*cAlphaIdx+0];
                     this->rmsPosVec1.Peek()[3*posCnt1+1] = mol1->AtomPositions()[3*cAlphaIdx+1];
                     this->rmsPosVec1.Peek()[3*posCnt1+2] = mol1->AtomPositions()[3*cAlphaIdx+2];
@@ -830,6 +787,49 @@ posCnt0, posCnt1);
                 }
             }
 
+            // Extracting backbone atoms from mol 2
+            for (uint sec = 0; sec < mol2->SecondaryStructureCount(); ++sec) {
+
+                MolecularDataCall::SecStructure secStructure = mol2->SecondaryStructures()[sec];
+                for (uint acid = 0; acid < secStructure.AminoAcidCount(); ++acid) {
+
+                    uint cAlphaIdx =
+                            ((const MolecularDataCall::AminoAcid*)
+                                (mol2->Residues()[secStructure.
+                                     FirstAminoAcidIndex()+acid]))->CAlphaIndex();
+                    uint cCarbIdx =
+                            ((const MolecularDataCall::AminoAcid*)
+                                (mol2->Residues()[secStructure.
+                                     FirstAminoAcidIndex()+acid]))->CCarbIndex();
+                    uint nIdx =
+                            ((const MolecularDataCall::AminoAcid*)
+                                (mol2->Residues()[secStructure.
+                                     FirstAminoAcidIndex()+acid]))->NIndex();
+                    uint oIdx =
+                            ((const MolecularDataCall::AminoAcid*)
+                                (mol2->Residues()[secStructure.
+                                     FirstAminoAcidIndex()+acid]))->OIndex();
+//                    printf("amino acid idx %u, c alpha idx %u, cCarbIdx %u, o idx %u, n idx %u\n", secStructure.
+//                            FirstAminoAcidIndex()+acid, cAlphaIdx, cCarbIdx, oIdx, nIdx);
+                    this->rmsPosVec2.Peek()[3*posCnt2+0] = mol2->AtomPositions()[3*cAlphaIdx+0];
+                    this->rmsPosVec2.Peek()[3*posCnt2+1] = mol2->AtomPositions()[3*cAlphaIdx+1];
+                    this->rmsPosVec2.Peek()[3*posCnt2+2] = mol2->AtomPositions()[3*cAlphaIdx+2];
+                    posCnt2++;
+                    this->rmsPosVec2.Peek()[3*posCnt2+0] = mol2->AtomPositions()[3*cCarbIdx+0];
+                    this->rmsPosVec2.Peek()[3*posCnt2+1] = mol2->AtomPositions()[3*cCarbIdx+1];
+                    this->rmsPosVec2.Peek()[3*posCnt2+2] = mol2->AtomPositions()[3*cCarbIdx+2];
+                    posCnt2++;
+                    this->rmsPosVec2.Peek()[3*posCnt2+0] = mol2->AtomPositions()[3*oIdx+0];
+                    this->rmsPosVec2.Peek()[3*posCnt2+1] = mol2->AtomPositions()[3*oIdx+1];
+                    this->rmsPosVec2.Peek()[3*posCnt2+2] = mol2->AtomPositions()[3*oIdx+2];
+                    posCnt2++;
+                    this->rmsPosVec2.Peek()[3*posCnt2+0] = mol2->AtomPositions()[3*nIdx+0];
+                    this->rmsPosVec2.Peek()[3*posCnt2+1] = mol2->AtomPositions()[3*nIdx+1];
+                    this->rmsPosVec2.Peek()[3*posCnt2+2] = mol2->AtomPositions()[3*nIdx+2];
+                    posCnt2++;
+                }
+            }
+
 //            // DEBUG
 //            printf("count0 = %u, count1 = %u\n", posCnt0, posCnt1);
 //
@@ -844,38 +844,21 @@ posCnt0, posCnt1);
 //                        this->rmsPosVec1.Peek()[3*p+2]);
 //            }
 
-            if (posCnt0 != posCnt1) {
+            if (posCnt1 != posCnt2) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                         "%s: Unable to perform RMSD fitting using backbone \
 atoms (non-equal atom count, %u vs. %u), try C alpha \
 atoms instead.",
-                        this->ClassName(), posCnt0, posCnt1);
+                        this->ClassName(), posCnt1, posCnt2);
                 return false;
             }
-            posCnt = posCnt0;
+            posCnt = posCnt1;
         } else if (this->fittingMode == RMS_C_ALPHA) { // Use C alpha atoms for RMS fitting
             // (Re)-allocate memory if necessary
-            this->rmsPosVec0.Validate(mol0->AtomCount()*3);
             this->rmsPosVec1.Validate(mol1->AtomCount()*3);
+            this->rmsPosVec2.Validate(mol2->AtomCount()*3);
 
-            uint posCnt0=0, posCnt1=0;
-
-            // Extracting C alpha atoms from mol 0
-            for (uint sec = 0; sec < mol0->SecondaryStructureCount(); ++sec) {
-                MolecularDataCall::SecStructure secStructure = mol0->SecondaryStructures()[sec];
-                for (uint acid = 0; acid < secStructure.AminoAcidCount(); ++acid) {
-                    uint cAlphaIdx =
-                            ((const MolecularDataCall::AminoAcid*)
-                                (mol0->Residues()[secStructure.
-                                     FirstAminoAcidIndex()+acid]))->CAlphaIndex();
-//                    printf("amino acid idx %u, c alpha idx %u\n", secStructure.
-//                            FirstAminoAcidIndex()+acid, cAlphaIdx);
-                    this->rmsPosVec0.Peek()[3*posCnt0+0] = mol0->AtomPositions()[3*cAlphaIdx+0];
-                    this->rmsPosVec0.Peek()[3*posCnt0+1] = mol0->AtomPositions()[3*cAlphaIdx+1];
-                    this->rmsPosVec0.Peek()[3*posCnt0+2] = mol0->AtomPositions()[3*cAlphaIdx+2];
-                    posCnt0++;
-                }
-            }
+            uint posCnt1=0, posCnt2=0;
 
             // Extracting C alpha atoms from mol 1
             for (uint sec = 0; sec < mol1->SecondaryStructureCount(); ++sec) {
@@ -885,6 +868,8 @@ atoms instead.",
                             ((const MolecularDataCall::AminoAcid*)
                                 (mol1->Residues()[secStructure.
                                      FirstAminoAcidIndex()+acid]))->CAlphaIndex();
+//                    printf("amino acid idx %u, c alpha idx %u\n", secStructure.
+//                            FirstAminoAcidIndex()+acid, cAlphaIdx);
                     this->rmsPosVec1.Peek()[3*posCnt1+0] = mol1->AtomPositions()[3*cAlphaIdx+0];
                     this->rmsPosVec1.Peek()[3*posCnt1+1] = mol1->AtomPositions()[3*cAlphaIdx+1];
                     this->rmsPosVec1.Peek()[3*posCnt1+2] = mol1->AtomPositions()[3*cAlphaIdx+2];
@@ -892,7 +877,22 @@ atoms instead.",
                 }
             }
 
-            posCnt = std::min(posCnt0, posCnt1);
+            // Extracting C alpha atoms from mol 2
+            for (uint sec = 0; sec < mol2->SecondaryStructureCount(); ++sec) {
+                MolecularDataCall::SecStructure secStructure = mol2->SecondaryStructures()[sec];
+                for (uint acid = 0; acid < secStructure.AminoAcidCount(); ++acid) {
+                    uint cAlphaIdx =
+                            ((const MolecularDataCall::AminoAcid*)
+                                (mol2->Residues()[secStructure.
+                                     FirstAminoAcidIndex()+acid]))->CAlphaIndex();
+                    this->rmsPosVec2.Peek()[3*posCnt2+0] = mol2->AtomPositions()[3*cAlphaIdx+0];
+                    this->rmsPosVec2.Peek()[3*posCnt2+1] = mol2->AtomPositions()[3*cAlphaIdx+1];
+                    this->rmsPosVec2.Peek()[3*posCnt2+2] = mol2->AtomPositions()[3*cAlphaIdx+2];
+                    posCnt2++;
+                }
+            }
+
+            posCnt = std::min(posCnt1, posCnt2);
         }
 
         // Do actual RMSD calculations
@@ -912,8 +912,8 @@ atoms instead.",
                 2,                          // Save rotation/translation
                 this->rmsWeights.Peek(),    // Weights for the particles
                 this->rmsMask.Peek(),       // Which particles should be considered
-                this->rmsPosVec1.Peek(),    // Vector to be fit
-                this->rmsPosVec0.Peek(),    // Vector
+                this->rmsPosVec2.Peek(),    // Vector to be fitted
+                this->rmsPosVec1.Peek(),    // Vector
                 rotation,                   // Saves the rotation matrix
                 translation                 // Saves the translation vector
         );
@@ -933,6 +933,42 @@ atoms instead.",
     // Check for sufficiently low rms value
     if (this->rmsValue > this->maxRMSVal) {
         return false;
+    }
+
+
+    /* Fit atom positions of source structure */
+    this->atomPosFitted.Validate(mol2->AtomCount()*3);
+    Vec3f centroid(0.0f, 0.0f, 0.0f);
+
+    if (this->fittingMode != RMS_NONE) {
+
+        // Compute centroid
+        for (int cnt = 0; cnt < static_cast<int>(mol2->AtomCount()); ++cnt) {
+            centroid += Vec3f(
+                    mol2->AtomPositions()[cnt*3+0],
+                    mol2->AtomPositions()[cnt*3+1],
+                    mol2->AtomPositions()[cnt*3+2]);
+        }
+        centroid /= static_cast<float>(mol2->AtomCount());
+
+        // Rotate/translate positions
+#pragma omp parallel for
+        for (int a = 0; a < static_cast<int>(mol2->AtomCount()); ++a) {
+            Vec3f pos(&mol2->AtomPositions()[3*a]);
+            pos -= centroid;
+            pos = this->rmsRotation*pos;
+            pos += this->rmsTranslation;
+            this->atomPosFitted.Peek()[3*a+0] = pos.X();
+            this->atomPosFitted.Peek()[3*a+1] = pos.Y();
+            this->atomPosFitted.Peek()[3*a+2] = pos.Z();
+        }
+    } else {
+#pragma omp parallel for
+        for (int a = 0; a < static_cast<int>(mol2->AtomCount()); ++a) {
+            this->atomPosFitted.Peek()[3*a+0] = mol2->AtomPositions()[3*a+0];
+            this->atomPosFitted.Peek()[3*a+1] = mol2->AtomPositions()[3*a+1];
+            this->atomPosFitted.Peek()[3*a+2] = mol2->AtomPositions()[3*a+2];
+        }
     }
 
     return true;
@@ -1008,32 +1044,6 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
             return false;
         }
     }
-
-    // Calc union of all bounding boxes
-    vislib::math::Cuboid<float> bboxTmp;
-
-    /* Calc particle bounding box */
-
-    // Object space bbox
-    bboxTmp = mol0->AccessBoundingBoxes().ObjectSpaceBBox();
-    bboxTmp.Union(mol1->AccessBoundingBoxes().ObjectSpaceBBox());
-    this->bboxParticles.SetObjectSpaceBBox(bboxTmp);
-
-    // Object space clip box
-    bboxTmp = mol0->AccessBoundingBoxes().ObjectSpaceClipBox();
-    bboxTmp.Union(mol1->AccessBoundingBoxes().ObjectSpaceClipBox());
-    this->bboxParticles.SetObjectSpaceClipBox(bboxTmp);
-
-    // World space bbox
-    bboxTmp = mol0->AccessBoundingBoxes().WorldSpaceBBox();
-    bboxTmp.Union(mol1->AccessBoundingBoxes().WorldSpaceBBox());
-    this->bboxParticles.SetWorldSpaceBBox(bboxTmp);
-
-    // World space clip box
-    bboxTmp = mol0->AccessBoundingBoxes().WorldSpaceClipBox();
-    bboxTmp.Union(mol1->AccessBoundingBoxes().WorldSpaceClipBox());
-    this->bboxParticles.SetWorldSpaceClipBox(bboxTmp);
-
 //    core::BoundingBoxes bboxPotential0 = cmd0->AccessBoundingBoxes();
     core::BoundingBoxes bboxPotential1 = cmd1->AccessBoundingBoxes();
 
@@ -1041,6 +1051,9 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     if (ren != NULL) {
         bbox_external = ren->AccessBoundingBoxes();
     }
+
+    // Calc union of all bounding boxes
+    vislib::math::Cuboid<float> bboxTmp;
 
     //bboxTmp = cmd0->AccessBoundingBoxes().ObjectSpaceBBox();
     //bboxTmp.Union(cmd1->AccessBoundingBoxes().ObjectSpaceBBox());
@@ -1236,10 +1249,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         return false; // Invalid compare mode
     }
 
-#ifdef USE_TIMER
-    t = clock();
-#endif
-
     // Get surface texture of data set #1
     VTIDataCall *vti1 =
             this->volDataSlot1.CallAs<VTIDataCall>();
@@ -1294,11 +1303,20 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 || (mol2->DataHash() != this->datahashParticles2)
                 || (calltime != this->calltimeOld)) {
 
+#ifdef USE_TIMER
+    t = clock();
+#endif
+
         this->datahashParticles1 = mol1->DataHash();
         this->datahashParticles2 = mol2->DataHash();
         this->calltimeOld = calltime;
 
-        if (!this->fitMoleculeRMS(mol2, mol1)) {
+        if (!this->fitMoleculeRMS(mol1, mol2)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute RMSD fitting",
+                    this->ClassName());
+
             return false;
         }
         this->triggerRMSFit = false;
@@ -1309,26 +1327,40 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             this->ClassName(),
             (double(clock()-t)/double(CLOCKS_PER_SEC)));
 #endif
+
+        // (Re)-compute bounding box
+        this->computeDensityBBox(
+                mol1->AtomPositions(),
+                this->atomPosFitted.Peek(),
+                mol1->AtomCount(),
+                mol2->AtomCount());
     }
+
 
     // (Re-)compute volume texture if necessary
     if (this->triggerComputeVolume) {
 
         if (!this->computeDensityMap(
+                mol1->AtomPositions(),
                 mol1,
-                (CUDAQuickSurf*)this->cudaqsurf1,
-                this->gridDensMap,
-                this->bboxParticles.ObjectSpaceBBox()
-                )) {
+                (CUDAQuickSurf*)this->cudaqsurf1)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute density map #1",
+                    this->ClassName());
+
             return false;
         }
 
         if (!this->computeDensityMap(
+                this->atomPosFitted.Peek(),
                 mol2,
-                (CUDAQuickSurf*)this->cudaqsurf2,
-                this->gridDensMap,
-                this->bboxParticles.ObjectSpaceBBox()
-                )) {
+                (CUDAQuickSurf*)this->cudaqsurf2)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute density map #2",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1346,9 +1378,19 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         this->datahashPotential1 = vti1->DataHash();
         this->datahashPotential2 = vti2->DataHash();
         if (!this->initPotentialMap(vti1, this->gridPotential1, this->surfAttribTex1)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not init potential map #1",
+                    this->ClassName());
+
             return false;
         }
         if (!this->initPotentialMap(vti2, this->gridPotential2, this->surfAttribTex2)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not init potential map #2",
+                    this->ClassName());
+
             return false;
         }
         this->triggerInitPotentialTex = false;
@@ -1370,6 +1412,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 &this->gridDensMap.minC[0],
                 &this->gridDensMap.delta[0],
                 this->qsIsoVal)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute vertex positions #1",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1380,6 +1427,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                                 &this->gridDensMap.minC[0],
                                 &this->gridDensMap.delta[0],
                                 this->qsIsoVal)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute vertex triangles #1",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1390,6 +1442,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 &this->gridDensMap.minC[0],
                 &this->gridDensMap.delta[0],
                 this->qsIsoVal)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute vertex connectivity #1",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1406,6 +1463,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->regSpringStiffness,
                 this->regForcesScl,
                 this->regExternalForcesWeight)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not regularize surface #1",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1416,6 +1478,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                                 &this->gridDensMap.minC[0],
                                 &this->gridDensMap.delta[0],
                                 this->qsIsoVal)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute normals #1",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1423,6 +1490,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->deformSurf1.ComputeTexCoords(
                 this->gridPotential1.minC,
                 this->gridPotential1.maxC)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute tex coords #1",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1445,6 +1517,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 &this->gridDensMap.minC[0],
                 &this->gridDensMap.delta[0],
                 this->qsIsoVal)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute vertex positions #2",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1455,6 +1532,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                                 &this->gridDensMap.minC[0],
                                 &this->gridDensMap.delta[0],
                                 this->qsIsoVal)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute triangles #2",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1465,6 +1547,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 &this->gridDensMap.minC[0],
                 &this->gridDensMap.delta[0],
                 this->qsIsoVal)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute vertex connectivity #2",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1481,6 +1568,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->regSpringStiffness,
                 this->regForcesScl,
                 this->regExternalForcesWeight)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not regularize surface #2",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1491,6 +1583,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                                 &this->gridDensMap.minC[0],
                                 &this->gridDensMap.delta[0],
                                 this->qsIsoVal)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute vertex normals #2",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1498,6 +1595,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->deformSurf2.ComputeTexCoords(
                 this->gridPotential2.minC,
                 this->gridPotential2.maxC)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute tex coords #2",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1511,13 +1613,10 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Make deep copy of regularized second surface
         this->deformSurfMapped = this->deformSurf2;
 
-        // Transform vertices
-        this->applyRMSFitting(mol2, &this->deformSurfMapped);
-
-        size_t volDim[3];
-        volDim[0] = static_cast<size_t>(this->gridDensMap.size[0]);
-        volDim[1] = static_cast<size_t>(this->gridDensMap.size[1]);
-        volDim[2] = static_cast<size_t>(this->gridDensMap.size[2]);
+        size_t volDim1[3];
+        volDim1[0] = static_cast<size_t>(this->gridDensMap.size[0]);
+        volDim1[1] = static_cast<size_t>(this->gridDensMap.size[1]);
+        volDim1[2] = static_cast<size_t>(this->gridDensMap.size[2]);
 
         if (this->surfMappedExtForce == GVF) {
 
@@ -1526,7 +1625,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     this->deformSurf1.PeekCubeStates(),
-                    volDim,
+                    volDim1,
                     &this->gridDensMap.minC[0],
                     &this->gridDensMap.delta[0],
                     this->qsIsoVal,
@@ -1538,13 +1637,19 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->surfaceMappingExternalForcesWeightScl,
                     this->surfMappedGVFScl,
                     this->surfMappedGVFIt)) {
+
+
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "%s: could not compute GVF deformation",
+                        this->ClassName());
+
                 return false;
             }
         } else if (this->surfMappedExtForce == METABALLS) {
             // Morph surface #2 to shape #1 using implicit molecular surface
             if (!this->deformSurfMapped.MorphToVolume(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                    volDim,
+                    volDim1,
                     &this->gridDensMap.minC[0],
                     &this->gridDensMap.delta[0],
                     this->qsIsoVal,
@@ -1554,13 +1659,18 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->surfMappedSpringStiffness,
                     this->surfaceMappingForcesScl,
                     this->surfaceMappingExternalForcesWeightScl)) {
+
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "%s: could not compute metaballs deformation",
+                        this->ClassName());
+
                 return false;
             }
         } else if (this->surfMappedExtForce == METABALLS_DISTFIELD) {
             // Morph surface #2 to shape #1 using implicit molecular surface + distance field
             if (!this->deformSurfMapped.MorphToVolumeDistfield(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                    volDim,
+                    volDim1,
                     &this->gridDensMap.minC[0],
                     &this->gridDensMap.delta[0],
                     this->qsIsoVal,
@@ -1571,18 +1681,38 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->surfaceMappingForcesScl,
                     this->surfaceMappingExternalForcesWeightScl,
                     this->distFieldThresh)) {
+
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "%s: could not compute metaballs/distfield deformation",
+                        this->ClassName());
+
                 return false;
             }
         } else if (this->surfMappedExtForce == TWO_WAY_GVF) {
-            // Morph surface #2 to shape #1 using GVF
+            // Morph surface #2 to shape #1 using Two-Way-GVF
+            int3 volsize = make_int3(
+                    this->gridDensMap.size[0],
+                    this->gridDensMap.size[1],
+                    this->gridDensMap.size[2]);
+
+            float3 volOrg = make_float3(
+                    this->gridDensMap.minC[0],
+                    this->gridDensMap.minC[1],
+                    this->gridDensMap.minC[2]);
+
+            float3 volDelta = make_float3(
+                    this->gridDensMap.delta[0],
+                    this->gridDensMap.delta[1],
+                    this->gridDensMap.delta[2]);
+
             if (!this->deformSurfMapped.MorphToVolumeTwoWayGVF(
                     ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     this->deformSurf2.PeekCubeStates(),
                     this->deformSurf1.PeekCubeStates(),
-                    volDim,
-                    &this->gridDensMap.minC[0],
-                    &this->gridDensMap.delta[0],
+                    volsize,
+                    volOrg,
+                    volDelta,
                     this->qsIsoVal,
                     this->interpolMode,
                     this->surfaceMappingMaxIt,
@@ -1592,6 +1722,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->surfaceMappingExternalForcesWeightScl,
                     this->surfMappedGVFScl,
                     this->surfMappedGVFIt)) {
+
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "%s: could not compute Two-Way-GVF deformation",
+                        this->ClassName());
+
                 return false;
             }
         } else {
@@ -1610,6 +1745,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                                 &this->gridDensMap.minC[0],
                                 &this->gridDensMap.delta[0],
                                 this->qsIsoVal)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute normals of mapped surface",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1617,6 +1757,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         if (!this->deformSurfMapped.ComputeTexCoords(
                 this->gridPotential1.minC,
                 this->gridPotential1.maxC)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute tex coords of mapped surface",
+                    this->ClassName());
+
             return false;
         }
 
@@ -1691,6 +1836,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
     // DEBUG Render external forces as lines
     if (!this->renderExternalForces()) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not render external forces",
+                this->ClassName());
         return false;
     }
     // END DEBUG
@@ -1700,6 +1848,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Sort triangles by camera distance
         if (!this->deformSurf1.SortTrianglesByCamDist(camPos)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not sort triangles #1",
+                    this->ClassName());
             return false;
         }
 
@@ -1714,6 +1865,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->surfAttribTex1,
                 this->uniformColorSurf1,
                 this->surf1AlphaScl)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not render surface #1",
+                    this->ClassName());
             return false;
         }
     }
@@ -1721,6 +1875,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     if (this->surface2RM != SURFACE_NONE) {
         // Sort triangles by camera distance
         if (!this->deformSurf2.SortTrianglesByCamDist(camPos)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not sort triangles #2",
+                    this->ClassName());
             return false;
         }
 
@@ -1735,6 +1892,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->surfAttribTex2,
                 this->uniformColorSurf2,
                 this->surf2AlphaScl)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not render surface #2",
+                    this->ClassName());
             return false;
         }
     }
@@ -1743,6 +1903,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Sort triangles by camera distance
         if (!this->deformSurfMapped.SortTrianglesByCamDist(camPos)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not sort triangles of mapped surface",
+                    this->ClassName());
             return false;
         }
 
@@ -1755,9 +1918,19 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->deformSurfMapped.GetTriangleCnt()*3,
                 this->surfaceMappedRM,
                 this->surfaceMappedColorMode)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not render mapped surface",
+                    this->ClassName());
             return false;
         }
     }
+
+//    // DEBUG Show gitted atom positions
+//    glBegin(GL_POINTS);
+//        for(int p = 0; p < this->atomPosFitted.GetCount()/3; ++p)
+//            glVertex3fv(&this->atomPosFitted.Peek()[3*p]);
+//    glEnd();
+//    // DEBUG end
 
     glDisable(GL_TEXTURE_3D);
     glDisable(GL_TEXTURE_2D);
@@ -1789,31 +1962,9 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
     if (this->triggerComputeLines) {
 
         this->gvf.Validate(gridSize*4);
-        if (this->surfMappedExtForce == GVF) {
-            if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
-                    this->deformSurfMapped.PeekGVF(), sizeof(float)*gridSize*4,
-                    cudaMemcpyDeviceToHost))) {
-                return false;
-            }
-        } else if (this->surfMappedExtForce == TWO_WAY_GVF) {
-            if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
-                     this->deformSurfMapped.PeekGVF(), sizeof(float)*gridSize*4,
-                     cudaMemcpyDeviceToHost))) {
-                 return false;
-             }
-        } else if (this->surfMappedExtForce == METABALLS) {
-            if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
-                    this->deformSurfMapped.PeekVolGradient(), sizeof(float)*gridSize*4,
-                    cudaMemcpyDeviceToHost))) {
-                return false;
-            }
-        } else if (this->surfMappedExtForce == METABALLS_DISTFIELD) {
-            if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
-                    this->deformSurfMapped.PeekVolGradient(), sizeof(float)*gridSize*4,
-                    cudaMemcpyDeviceToHost))) {
-                return false;
-            }
-        } else {
+        if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
+                this->deformSurfMapped.PeekExternalForces(), sizeof(float)*gridSize*4,
+                cudaMemcpyDeviceToHost))) {
             return false;
         }
 
@@ -2179,6 +2330,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->fittingModeSlot.ResetDirty();
         this->triggerRMSFit = true;
         this->triggerSurfaceMapping = true;
+        this->triggerComputeLines = true;
     }
 
     // Parameter for the external forces
