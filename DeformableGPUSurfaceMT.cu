@@ -115,6 +115,162 @@ __global__ void FlagCorruptTriangleVertices_D(
 //    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = flag;
 }
 
+__global__ void MeshLaplacian_D(
+        float *in_D,
+        uint inOffs,
+        uint inStride,
+        int *vertexNeighbours_D,
+        uint maxNeighbours,
+        uint vertexCnt,
+        float *out_D,
+        uint outOffs,
+        uint outStride) {
+
+    const uint idx = ::GetThreadIndex();
+    if (idx >= vertexCnt) {
+        return;
+    }
+
+    // Get initial position from global device memory
+     float3 inOwn = make_float3(
+             in_D[inStride*idx+inOffs+0],
+             in_D[inStride*idx+inOffs+1],
+             in_D[inStride*idx+inOffs+2]);
+
+    uint activeNeighbourCnt = 0;
+    float3 out = make_float3(0.0, 0.0, 0.0);
+    for(int i = 0; i < maxNeighbours; ++i) {
+        int isIdxValid = int(vertexNeighbours_D[maxNeighbours*idx+i] >= 0); // Check if idx != -1
+        float3 in;
+        int tmpIdx = isIdxValid*vertexNeighbours_D[maxNeighbours*idx+i]; // Map negative indices to 0
+        in.x = in_D[inStride*tmpIdx+inOffs+0];
+        in.y = in_D[inStride*tmpIdx+inOffs+1];
+        in.z = in_D[inStride*tmpIdx+inOffs+2];
+        out += (in - inOwn)*isIdxValid;
+        activeNeighbourCnt += 1.0f*isIdxValid;
+    }
+    out /= activeNeighbourCnt; // Represents internal force
+}
+
+
+/**
+ * Updates the positions of all vertices based on external and internal forces.
+ * The external force is computed on the fly based on a the given volume.
+ * Samples are aquired using tricubic interpolation.
+ *
+ * @param[in]      targetVolume_D         The volume the isosurface is extracted
+ *                                        from
+ * @param[in,out]  vertexPosMapped_D      The vertex data buffer
+ * @param[in]      vertexExternalForces_D The external force and scale factor
+ *                                        (in 'w') for all vertices
+ * @param[in]      vertexNeighbours_D     The neighbour indices of all vertices
+ * @param[in]      gradient_D             Array with the gradient
+ * @param[in]      vtxNormals_D           The current normals of all vertices
+ * @param[in]      vertexCount            The number of vertices
+ * @param[in]      externalWeight         Weighting factor for the external
+ *                                        forces. The factor for internal forces
+ *                                        is implicitely defined by
+ *                                        1.0-'externalWeight'
+ * @param[in]      forcesScl              General scale factor for the final
+ *                                        combined force
+ * @param[in]      stiffness              The stiffness of the springs defining
+ *                                        the internal forces
+ * @param[in]      isoval                 The isovalue defining the isosurface
+ * @param[in]      minDispl               The minimum displacement for the
+ *                                        vertices to be updated
+ * @param[in]      dataArrOffs            The vertex position offset in the
+ *                                        vertex data buffer
+ * @param[in]      dataArrSize            The stride of the vertex data buffer TODO
+ */
+__global__ void UpdateVtxPosCubic_D(
+        float *targetVolume_D,
+        float *vertexPosMapped_D,
+        float *vertexExternalForcesScl_D,
+        float4 *gradient_D,
+        float3 *laplacian_D,
+        float3 *laplacian2_D,
+        uint vertexCnt,
+        float externalWeight,
+        float forcesScl,
+        float stiffness,
+        float isoval,
+        float minDispl,
+        uint dataArrOffsPos,
+        uint dataArrOffsNormal,
+        uint dataArrSize) {
+
+    const uint idx = GetThreadIndex();
+    if (idx >= vertexCnt) {
+        return;
+    }
+
+    const uint posBaseIdx = dataArrSize*idx+dataArrOffsPos;
+
+    /* Retrieve stuff from global device memory */
+
+    // Get initial position from global device memory
+    float3 posOld = make_float3(
+            vertexPosMapped_D[posBaseIdx+0],
+            vertexPosMapped_D[posBaseIdx+1],
+            vertexPosMapped_D[posBaseIdx+2]);
+
+    // Get initial scale factor for external forces
+    float externalForcesScl = vertexExternalForcesScl_D[idx];
+
+    /* Update position */
+
+    const float sampleDens = ::SampleFieldAtPosTricub_D<float>(posOld, targetVolume_D);
+
+    // Switch sign and scale down if necessary
+    bool negative = externalForcesScl < 0;
+    bool outside = sampleDens <= isoval;
+    int switchSign = int((negative && outside)||(!negative && !outside));
+    externalForcesScl = externalForcesScl*(1.0*(1-switchSign) - 1.0*switchSign);
+    externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
+
+    // Sample gradient by cubic interpolation
+    float4 externalForceTmp = ::SampleFieldAtPosTricub_D(posOld, gradient_D);
+    float3 externalForce;
+    externalForce.x = externalForceTmp.x;
+    externalForce.y = externalForceTmp.y;
+    externalForce.z = externalForceTmp.z;
+
+    externalForce = safeNormalize(externalForce);
+    externalForce *= forcesScl*externalForcesScl*externalWeight;
+//
+////    float3 normal = make_float3(
+////            vertexPosMapped_D[dataArrSize*idx+dataArrOffsNormal+0],
+////            vertexPosMapped_D[dataArrSize*idx+dataArrOffsNormal+1],
+////            vertexPosMapped_D[dataArrSize*idx+dataArrOffsNormal+2]);
+////
+////    if (outside) {
+////        if (dot(normalize(normal), normalize(externalForce)) > 0.0) {
+////            externalForce *= 0.0;
+////            externalWeight = 0.0;
+////        }
+////    } else {
+////        if (dot(normalize(normal), normalize(externalForce)) < 0.0) {
+////            externalForce *= 0.0;
+////            externalWeight = 0.0;
+////        }
+////    }
+//
+
+    float3 laplacian = laplacian_D[idx];
+    float3 laplacian2 = laplacian2_D[idx];
+
+    // Umbrella internal force
+    float3 posNew = posOld + externalForce + (1.0-externalWeight)*forcesScl*
+            ((1.0 - stiffness)*laplacian - stiffness*laplacian2);
+
+    vertexPosMapped_D[posBaseIdx+0] = posNew.x;
+    vertexPosMapped_D[posBaseIdx+1] = posNew.y;
+    vertexPosMapped_D[posBaseIdx+2] = posNew.z;
+
+    // Write external forces scale factor back to global device memory
+    vertexExternalForcesScl_D[idx] = externalForcesScl;
+}
+
 
 /*
  * DeformableGPUSurfaceMT::DeformableGPUSurfaceMT
@@ -150,6 +306,13 @@ DeformableGPUSurfaceMT::DeformableGPUSurfaceMT(const DeformableGPUSurfaceMT& oth
             this->laplacian_D.Peek(),
             other.laplacian_D.PeekConst(),
             this->laplacian_D.GetCount()*sizeof(float3),
+            cudaMemcpyDeviceToDevice));
+
+    CudaSafeCall(this->laplacian2_D.Validate(other.laplacian2_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->laplacian2_D.Peek(),
+            other.laplacian2_D.PeekConst(),
+            this->laplacian2_D.GetCount()*sizeof(float3),
             cudaMemcpyDeviceToDevice));
 
     CudaSafeCall(this->displLen_D.Validate(other.displLen_D.GetCount()));
@@ -1340,6 +1503,13 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
         return false;
     }
 
+    if (!CudaSafeCall(this->laplacian2_D.Validate(this->vertexCnt))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->laplacian2_D.Set(0))) {
+        return false;
+    }
+
     if (!CudaSafeCall(this->displLen_D.Validate(this->vertexCnt))) {
         return false;
     }
@@ -1380,16 +1550,46 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
         }
         CheckForCudaErrorSync();
     } else {
-        for (uint i = 0; i < maxIt; i += UPDATE_VTX_POS_ITERATIONS_PER_KERNEL) {
+        for (uint i = 0; i < maxIt; ++i) {
 
-            // Update position for all vertices
-            if (!CudaSafeCall(UpdateVertexPositionTricubic(
+            printf("it: %i\n", i);
+
+            // Calc laplacian
+            MeshLaplacian_D <<< this->Grid(this->vertexCnt, 256), 256 >>> (
+                    vboPt,
+                    this->vertexDataOffsPos,
+                    this->vertexDataStride,
+                    this->vertexNeighbours_D.Peek(),
+                    18,
+                    this->vertexCnt,
+                    (float*)this->laplacian_D.Peek(),
+                    3,
+                    0);
+
+            ::CheckForCudaErrorSync();
+
+            // Calc laplacian^2
+            MeshLaplacian_D <<< this->Grid(this->vertexCnt, 256), 256 >>> (
+                    (float*)this->laplacian_D.Peek(),
+                    3,
+                    0,
+                    this->vertexNeighbours_D.Peek(),
+                    18,
+                    this->vertexCnt,
+                    (float*)this->laplacian2_D.Peek(),
+                    3,
+                    0);
+
+            ::CheckForCudaErrorSync();
+
+            // Update vertex position
+            UpdateVtxPosCubic_D <<< this->Grid(this->vertexCnt, 256), 256 >>> (
                     volumeTarget_D,
                     vboPt,
                     this->vertexExternalForcesScl_D.Peek(),
-                    this->vertexNeighbours_D.Peek(),
                     (float4*)this->externalForces_D.Peek(),
                     this->laplacian_D.Peek(),
+                    this->laplacian2_D.Peek(),
                     this->vertexCnt,
                     externalForcesWeight,
                     forceScl,
@@ -1398,9 +1598,29 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
                     surfMappedMinDisplScl,
                     this->vertexDataOffsPos,
                     this->vertexDataOffsNormal,
-                    this->vertexDataStride))) {
-                return false;
-            }
+                    this->vertexDataStride);
+
+            ::CheckForCudaErrorSync();
+
+//            // Update position for all vertices
+//            if (!CudaSafeCall(UpdateVertexPositionTricubic(
+//                    volumeTarget_D,
+//                    vboPt,
+//                    this->vertexExternalForcesScl_D.Peek(),
+//                    this->vertexNeighbours_D.Peek(),
+//                    (float4*)this->externalForces_D.Peek(),
+//                    this->laplacian_D.Peek(),
+//                    this->vertexCnt,
+//                    externalForcesWeight,
+//                    forceScl,
+//                    springStiffness,
+//                    isovalue,
+//                    surfMappedMinDisplScl,
+//                    this->vertexDataOffsPos,
+//                    this->vertexDataOffsNormal,
+//                    this->vertexDataStride))) {
+//                return false;
+//            }
         }
     }
 
@@ -1483,6 +1703,13 @@ DeformableGPUSurfaceMT& DeformableGPUSurfaceMT::operator=(const DeformableGPUSur
             this->laplacian_D.GetCount()*sizeof(float3),
             cudaMemcpyDeviceToDevice));
 
+    CudaSafeCall(this->laplacian2_D.Validate(rhs.laplacian2_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->laplacian2_D.Peek(),
+            rhs.laplacian2_D.PeekConst(),
+            this->laplacian2_D.GetCount()*sizeof(float3),
+            cudaMemcpyDeviceToDevice));
+
     CudaSafeCall(this->displLen_D.Validate(rhs.displLen_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->displLen_D.Peek(),
@@ -1561,6 +1788,7 @@ void DeformableGPUSurfaceMT::Release() {
     CudaSafeCall(this->gvfConstData_D.Release());
     CudaSafeCall(this->grad_D.Release());
     CudaSafeCall(this->laplacian_D.Release());
+    CudaSafeCall(this->laplacian2_D.Release());
     CudaSafeCall(this->displLen_D.Release());
     CudaSafeCall(this->distField_D.Release());
     CudaSafeCall(this->externalForces_D.Release());

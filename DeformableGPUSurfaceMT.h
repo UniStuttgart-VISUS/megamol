@@ -214,6 +214,9 @@ private:
     /// Array for laplacian
     CudaDevArr<float3> laplacian_D;
 
+    /// Array for laplacian
+    CudaDevArr<float3> laplacian2_D;
+
     /// Array to safe displacement length
     CudaDevArr<float> displLen_D;
 
