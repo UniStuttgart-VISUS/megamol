@@ -185,7 +185,7 @@ varying vec3 view;
 varying vec3 normalFrag;
 varying vec3 posNewFrag; 
 varying vec3 posOldFrag; 
-//varying float corruptTriangleFlagFrag;
+varying float corruptTriangleFlagFrag;
 //varying float signSwitchedFlag;
 
 void main() {
@@ -204,10 +204,12 @@ void main() {
     
     // Determine color
     if (colorMode == 0) { // Uniform color
+        
         color = vec4(colorUniform, 1.0);
+        
         // Set for corrupt triangles
-        //color = color*(1.0 - corruptTriangleFlagFrag) +       
-        //        vec4(0.8f, 0.8f, 0.0f, 1.0)*corruptTriangleFlagFrag;
+        color = color*(1.0 - corruptTriangleFlagFrag) +       
+                vec4(1.0f, 0.2f, 0.0f, 1.0)*corruptTriangleFlagFrag;
     } else if (colorMode == 1) { // Normal
         lightparams = vec4(1.0, 0.0, 0.0, 1.0);
         color = vec4(normalize(normalFrag), 1.0);
@@ -277,6 +279,7 @@ void main() {
         
         vec3 colDiffMsh = (1.0 - posDiff/maxPosDiff)*colOrangeMsh + (posDiff/maxPosDiff)*colWhiteMsh;
         color = vec4(MSH2RGB(colOrangeMsh.r, colOrangeMsh.g, colOrangeMsh.b), 1.0 - posDiff/maxPosDiff);
+        color.a *= (1.0 - corruptTriangleFlagFrag);
         
     } else if (colorMode == 8) { // Surface potential sign switch
         //lightparams = vec4(0.7, 0.4, 0.0, 1.0);
@@ -329,7 +332,7 @@ void main() {
         // Set for corrupt triangles
         //color = color*(1.0 - corruptTriangleFlagFrag) + 
         //        vec4(1.0, 0.0, 1.0, 1.0)*corruptTriangleFlagFrag;
-        //color.a *= (1.0 - corruptTriangleFlagFrag);
+        color.a *= (1.0 - corruptTriangleFlagFrag);
         //color.rgb *= 1.0 - corruptTriangleFlagFrag;
         
     } else { // Invalid color mode

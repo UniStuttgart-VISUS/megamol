@@ -82,5 +82,5 @@ $(IntDir)/$(CudaReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"NVCC "$(COLORINFO)"$@: "
 	@$(CLEARTERMCMD)
-	$(Q)$(NVCC) -c $(NVCCFLAGS) $< -o $@
+	$(Q)$(NVCC) -c -g -G -lineinfo $(NVCCFLAGS) $< -o $@
 endif

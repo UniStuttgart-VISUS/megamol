@@ -16,8 +16,10 @@
 #include "ogl_error_check.h"
 #include "cuda_error_check.h"
 #include "ComparativeSurfacePotentialRenderer.cuh"
+#include "ComparativeSurfacePotentialRenderer_inline_device_functions.cuh"
 #include "HostArr.h"
 #include "DiffusionSolver.h"
+#include "constantGridParams.cuh"
 
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
@@ -29,10 +31,96 @@ using namespace megamol;
 using namespace megamol::protein;
 
 
+/**
+ * Writes a flag for every vertex that is adjacent to a corrupt triangles.
+ *
+ * @param[in,out] vertexData_D              The buffer with the vertex data
+ * @param[in]     vertexDataStride          The stride for the vertex data
+ *                                          buffer
+ * @param[in]     vertexDataOffsPos         The position offset in the vertex
+ *                                          data buffer
+ * @param[in]     vertexDataOffsCorruptFlag The corruption flag offset in the
+ *                                          vertex data buffer
+ * @param[in]     triangleVtxIdx_D          Array with triangle vertex indices
+ * @param[in]     volume_D                  The target volume defining the
+ *                               iso-surface
+ * @param[in]     externalForcesScl_D       Array with the scale factor for the external force
+ * @param[in]     triangleCnt               The number of triangles
+ * @param[in]     minDispl                  Minimum force scale to keep going
+ * @param[in]     isoval                    The iso-value defining the iso-surface
+ *
+ * TODO
+ */
+__global__ void FlagCorruptTriangleVertices_D(
+        float *vertexFlag_D,
+        float *vertexData_D,
+        uint vertexDataStride,
+        uint vertexDataOffsPos,
+        uint vertexDataOffsNormal,
+        uint *triangleVtxIdx_D,
+        float *targetVol_D,
+        uint triangleCnt,
+        float isoval) {
+
+    const uint idx = GetThreadIndex();
+    if (idx >= triangleCnt) {
+        return;
+    }
+
+    /* Alternative 1: Sample volume at trianglemidpoint */
+
+    const uint baseIdx0 = vertexDataStride*triangleVtxIdx_D[3*idx+0];
+    const uint baseIdx1 = vertexDataStride*triangleVtxIdx_D[3*idx+1];
+    const uint baseIdx2 = vertexDataStride*triangleVtxIdx_D[3*idx+2];
+    const float3 p0 = make_float3(vertexData_D[baseIdx0+vertexDataOffsPos+0],
+                                  vertexData_D[baseIdx0+vertexDataOffsPos+1],
+                                  vertexData_D[baseIdx0+vertexDataOffsPos+2]);
+    const float3 p1 = make_float3(vertexData_D[baseIdx1+vertexDataOffsPos+0],
+                                  vertexData_D[baseIdx1+vertexDataOffsPos+1],
+                                  vertexData_D[baseIdx1+vertexDataOffsPos+2]);
+    const float3 p2 = make_float3(vertexData_D[baseIdx2+vertexDataOffsPos+0],
+                                  vertexData_D[baseIdx2+vertexDataOffsPos+1],
+                                  vertexData_D[baseIdx2+vertexDataOffsPos+2]);
+    // Sample volume at midpoint
+    const float3 midPoint = (p0+p1+p2)/3.0;
+    const float volSampleMidPoint = ::SampleFieldAtPosTricub_D<float>(midPoint, targetVol_D);
+    float flag = float(::fabs(volSampleMidPoint-isoval) > 0.3);
+    vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = flag;
+    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = flag;
+    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = flag;
+
+    /* Alternative 2: calc variance of angle between normals */
+
+//    const uint baseIdx0 = vertexDataStride*triangleVtxIdx_D[3*idx+0];
+//    const uint baseIdx1 = vertexDataStride*triangleVtxIdx_D[3*idx+1];
+//    const uint baseIdx2 = vertexDataStride*triangleVtxIdx_D[3*idx+2];
+//    const float3 n0 = make_float3(vertexData_D[baseIdx0+vertexDataOffsNormal+0],
+//                                  vertexData_D[baseIdx0+vertexDataOffsNormal+1],
+//                                  vertexData_D[baseIdx0+vertexDataOffsNormal+2]);
+//    const float3 n1 = make_float3(vertexData_D[baseIdx1+vertexDataOffsNormal+0],
+//                                  vertexData_D[baseIdx1+vertexDataOffsNormal+1],
+//                                  vertexData_D[baseIdx1+vertexDataOffsNormal+2]);
+//    const float3 n2 = make_float3(vertexData_D[baseIdx2+vertexDataOffsNormal+0],
+//                                  vertexData_D[baseIdx2+vertexDataOffsNormal+1],
+//                                  vertexData_D[baseIdx2+vertexDataOffsNormal+2]);
+//    // Sample volume at midpoint
+//    const float3 avgNormal = (n0+n1+n2)/3.0;
+//    float dot0 = clamp(dot(n0, avgNormal), 0.0, 1.0);
+//    float dot1 = clamp(dot(n1, avgNormal), 0.0, 1.0);
+//    float dot2 = clamp(dot(n2, avgNormal), 0.0, 1.0);
+//    float maxDot = max(dot0, max(dot1, dot2));
+//    float flag = float(maxDot > 0.9);
+//    vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = flag;
+//    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = flag;
+//    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = flag;
+}
+
+
 /*
  * DeformableGPUSurfaceMT::DeformableGPUSurfaceMT
  */
-DeformableGPUSurfaceMT::DeformableGPUSurfaceMT() : GPUSurfaceMT() {
+DeformableGPUSurfaceMT::DeformableGPUSurfaceMT() : GPUSurfaceMT(),
+        vboCorruptTriangleVertexFlag(0) {
 
 }
 
@@ -70,6 +158,35 @@ DeformableGPUSurfaceMT::DeformableGPUSurfaceMT(const DeformableGPUSurfaceMT& oth
             other.displLen_D.PeekConst(),
             this->displLen_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
+
+    /* Make deep copy of corrupt triangle flag buffer */
+
+    if (other.vboCorruptTriangleVertexFlag) {
+        // Destroy if necessary
+        if (this->vboCorruptTriangleVertexFlag) {
+            glBindBufferARB(GL_ARRAY_BUFFER, this->vboCorruptTriangleVertexFlag);
+            glDeleteBuffersARB(1, &this->vboCorruptTriangleVertexFlag);
+            glBindBufferARB(GL_ARRAY_BUFFER, 0);
+            this->vboCorruptTriangleVertexFlag = 0;
+        }
+
+        // Create vertex buffer object for triangle indices
+        glGenBuffersARB(1, &this->vboCorruptTriangleVertexFlag);
+
+        CheckForGLError();
+
+        // Map as copy buffer
+        glBindBufferARB(GL_COPY_READ_BUFFER, other.vboCorruptTriangleVertexFlag);
+        glBindBufferARB(GL_COPY_WRITE_BUFFER, this->vboCorruptTriangleVertexFlag);
+        glBufferDataARB(GL_COPY_WRITE_BUFFER,
+                sizeof(int)*this->vertexCnt*3, 0, GL_DYNAMIC_DRAW);
+        // Copy data
+        glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
+                sizeof(int)*this->vertexCnt*3);
+        glBindBufferARB(GL_COPY_WRITE_BUFFER, 0);
+        glBindBufferARB(GL_COPY_READ_BUFFER, 0);
+        CheckForGLError();
+    }
 }
 
 
@@ -77,6 +194,182 @@ DeformableGPUSurfaceMT::DeformableGPUSurfaceMT(const DeformableGPUSurfaceMT& oth
  * DeformableGPUSurfaceMT::~DeformableGPUSurfaceMT
  */
 DeformableGPUSurfaceMT::~DeformableGPUSurfaceMT() {
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::FlagCorruptTriangleVertices
+ */
+bool DeformableGPUSurfaceMT::FlagCorruptTriangleVertices(
+        float *targetVol_D,
+        int3 volDim,
+        float volWSOrg[3],
+        float volWSDelta[3],
+        float isovalue) {
+
+    if (!this->InitCorruptFlagVBO(this->vertexCnt)) {
+        return false;
+    }
+
+    // Init grid constants
+    if (!this->InitGridParams(
+            make_uint3(volDim.x, volDim.y, volDim.z),
+            make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
+            make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2]))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    cudaGraphicsResource* cudaTokens[3];
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0],
+            this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1],
+            this->vboTriangleIdx,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[2],
+            this->vboCorruptTriangleVertexFlag,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    // Map cuda ressource handles
+    if (!CudaSafeCall(cudaGraphicsMapResources(3, cudaTokens, 0))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    /* Get mapped pointers to the vertex data buffer */
+
+    float *vboFlagPt;
+    float *vboPt;
+    size_t vboSize;
+    unsigned int *vboTriangleIdxPt;
+
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt),
+            &vboSize,
+            cudaTokens[0]))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboTriangleIdxPt),
+            &vboSize,
+            cudaTokens[1]))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboFlagPt),
+            &vboSize,
+            cudaTokens[2]))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    // Call kernel
+    FlagCorruptTriangleVertices_D <<< this->Grid(this->triangleCnt, 256), 256 >>> (
+            vboFlagPt,
+            vboPt,
+            AbstractGPUSurface::vertexDataStride,
+            AbstractGPUSurface::vertexDataOffsPos,
+            AbstractGPUSurface::vertexDataOffsNormal,
+            vboTriangleIdxPt,
+            targetVol_D,
+            this->triangleCnt,
+            isovalue);
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGetLastError())) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(3, cudaTokens, 0))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[2]))) {
+        return false;
+    }
+
+    return true;
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::InitCorruptFlagVBO
+ */
+bool DeformableGPUSurfaceMT::InitCorruptFlagVBO(size_t vertexCnt) {
+
+    // Destroy if necessary
+    if (this->vboCorruptTriangleVertexFlag) {
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, this->vboCorruptTriangleVertexFlag);
+        glDeleteBuffersARB(1, &this->vboCorruptTriangleVertexFlag);
+        this->vboCorruptTriangleVertexFlag = 0;
+    }
+
+    // Create vertex buffer object for corrupt vertex flag
+    glGenBuffersARB(1, &this->vboCorruptTriangleVertexFlag);
+    glBindBufferARB(GL_ARRAY_BUFFER, this->vboCorruptTriangleVertexFlag);
+    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(float)*3*vertexCnt, 0, GL_DYNAMIC_DRAW);
+    glBindBufferARB(GL_ARRAY_BUFFER, 0);
+
+    return CheckForGLError();
+}
+
+/*
+ * DeformableGPUSurfaceMT::InitGridParams
+ */
+bool DeformableGPUSurfaceMT::InitGridParams(uint3 gridSize, float3 org, float3 delta) {
+    cudaMemcpyToSymbol(gridSize_D, &gridSize, sizeof(uint3));
+    cudaMemcpyToSymbol(gridOrg_D, &org, sizeof(float3));
+    cudaMemcpyToSymbol(gridDelta_D, &delta, sizeof(float3));
+//    printf("Init grid with org %f %f %f, delta %f %f %f, dim %u %u %u\n", org.x,
+//            org.y, org.z, delta.x, delta.y, delta.z, gridSize.x, gridSize.y,
+//            gridSize.z);
+    return CudaSafeCall(cudaGetLastError());
 }
 
 
@@ -1224,6 +1517,35 @@ DeformableGPUSurfaceMT& DeformableGPUSurfaceMT::operator=(const DeformableGPUSur
             rhs.distField_D.PeekConst(),
             this->distField_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
+
+    /* Make deep copy of corrupt triangle flag buffer */
+
+    if (rhs.vboCorruptTriangleVertexFlag) {
+        // Destroy if necessary
+        if (this->vboCorruptTriangleVertexFlag) {
+            glBindBufferARB(GL_ARRAY_BUFFER, this->vboCorruptTriangleVertexFlag);
+            glDeleteBuffersARB(1, &this->vboCorruptTriangleVertexFlag);
+            glBindBufferARB(GL_ARRAY_BUFFER, 0);
+            this->vboCorruptTriangleVertexFlag = 0;
+        }
+
+        // Create vertex buffer object for triangle indices
+        glGenBuffersARB(1, &this->vboCorruptTriangleVertexFlag);
+
+        CheckForGLError();
+
+        // Map as copy buffer
+        glBindBufferARB(GL_COPY_READ_BUFFER, rhs.vboCorruptTriangleVertexFlag);
+        glBindBufferARB(GL_COPY_WRITE_BUFFER, this->vboCorruptTriangleVertexFlag);
+        glBufferDataARB(GL_COPY_WRITE_BUFFER,
+                sizeof(int)*this->vertexCnt*3, 0, GL_DYNAMIC_DRAW);
+        // Copy data
+        glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
+                sizeof(int)*this->vertexCnt*3);
+        glBindBufferARB(GL_COPY_WRITE_BUFFER, 0);
+        glBindBufferARB(GL_COPY_READ_BUFFER, 0);
+        CheckForGLError();
+    }
 
     return *this;
 }

@@ -619,6 +619,7 @@ bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
                 this->ClassName());
         return false;
     }
+
     CheckForCudaErrorSync();
 
     /* Init grid parameters */
@@ -670,6 +671,8 @@ bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
                 this->ClassName());
         return false;
     }
+
+
 
 //    int cnt = 0;
 //    // DEBUG Print vertex map
@@ -1258,6 +1261,33 @@ void GPUSurfaceMT::Release() {
     CudaSafeCall(this->verticesPerTetrahedron_D.Release());
     CudaSafeCall(this->tetrahedronVertexOffsets_D.Release());
     CudaSafeCall(this->triangleCamDistance_D.Release());
+}
+
+/**
+ * Returns a 1D grid definition based on the given threadsPerBlock value.
+ *
+ * @param size             The minimum number of threads
+ * @param threadsPerBlock  The number of threads per block
+ * @return The grid dimensions
+ */
+extern "C" dim3 GPUSurfaceMT::Grid(const unsigned int size, const int threadsPerBlock) {
+    //TODO: remove hardcoded hardware capabilities :(
+    // see: http://code.google.com/p/thrust/source/browse/thrust/detail/backend/cuda/arch.inl
+    //   and http://code.google.com/p/thrust/source/browse/thrust/detail/backend/cuda/detail/safe_scan.inl
+    //   for refactoring.
+    // Get maximum grid size of CUDA device.
+    //CUdevice device;
+    //cuDeviceGet(&device, 0);
+    //CUdevprop deviceProps;
+    //cuDeviceGetProperties(&deviceProps, device);
+    //this->gridSize = dim3(deviceProps.maxGridSize[0],
+    //  deviceProps.maxGridSize[1],
+    //  deviceProps.maxGridSize[2]);
+    const dim3 maxGridSize(65535, 65535, 0);
+    const int blocksPerGrid = (size + threadsPerBlock - 1) / threadsPerBlock;
+    dim3 grid(blocksPerGrid, 1, 1);
+
+    return grid;
 }
 
 #endif // WITH_CUDA
