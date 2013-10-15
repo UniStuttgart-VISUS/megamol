@@ -29,6 +29,9 @@ class GPUSurfaceMT : public AbstractGPUSurface {
 
 public:
 
+    /** TODO */
+    static dim3 Grid(const unsigned int size, const int threadsPerBlock);
+
     /**
      * Answer the name of this module.
      *

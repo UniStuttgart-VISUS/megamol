@@ -1231,6 +1231,7 @@ void ComputeVertexNormals_D(
     if (cellOrg.y <= 0) return;
     if (cellOrg.z <= 0) return;
 
+
     float3 normal = make_float3(0.0, 0.0, 0.0);
     float3 pos = make_float3(
             dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsPos+0],

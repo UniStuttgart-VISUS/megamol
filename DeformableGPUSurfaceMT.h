@@ -54,6 +54,35 @@ public:
     virtual ~DeformableGPUSurfaceMT();
 
     /**
+     * Flag vertices adjacent to corrupt triangles in the current mesh. This
+     * is mainly for rendering purposes where vertex attributes are needed.
+     *
+     * TODO
+     *
+     * @return 'True' on success, 'false' otherwise.
+     */
+    bool FlagCorruptTriangleVertices(float *volume_D,
+            int3 volDim,
+            float volWSOrg[3],
+            float volWSDelta[3],
+            float isovalue);
+
+    /**
+     * Answers the GPU handle for the VBO with the vertex data. Needs
+     * the 'ready flag to be true.
+     *
+     * @return The GPU handle for the vertex buffer object or NULL if !ready
+     */
+    GLuint GetCorruptTriangleVtxFlagVBO() const {
+        return this->vboCorruptTriangleVertexFlag;
+    }
+
+    /**
+     * TODO
+     */
+    bool InitCorruptFlagVBO(size_t vertexCnt);
+
+    /**
      * TODO
      */
     bool MorphToVolume(
@@ -134,6 +163,11 @@ public:
             unsigned int gvfIt); // TODO
 
     /**
+     * TODO
+     */
+    bool InitGridParams(uint3 gridSize, float3 org, float3 delta);
+
+    /**
      * Assignment operator (makes deep copy).
      *
      * @param rhs The assigned surface object
@@ -188,6 +222,9 @@ private:
 
     /// Device array for external forces
     CudaDevArr<float> externalForces_D;
+
+    /// Vertex Buffer Object handle for vertex data
+    GLuint vboCorruptTriangleVertexFlag;
 
 };
 
