@@ -1309,18 +1309,24 @@ int CUDAQuickSurf::free_bufs() {
   gpuh->c3f_d=NULL;
 
   //GL
-  cudaGLUnregisterBufferObject( gpuh->v3f_vbo);
-  cudaGLUnregisterBufferObject( gpuh->n3f_vbo);
-  cudaGLUnregisterBufferObject( gpuh->c3f_vbo);
-  glBindBuffer(1, gpuh->v3f_vbo);
-  glDeleteBuffers(1, &gpuh->v3f_vbo);
-  //cudaGraphicsUnregisterResource( gpuh->v3f_res);
-  glBindBuffer(1, gpuh->n3f_vbo);
-  glDeleteBuffers(1, &gpuh->n3f_vbo);
-  //cudaGraphicsUnregisterResource( gpuh->n3f_res);
-  glBindBuffer(1, gpuh->c3f_vbo);
-  glDeleteBuffers(1, &gpuh->c3f_vbo);
-  //cudaGraphicsUnregisterResource( gpuh->c3f_res);
+  if (gpuh->v3f_vbo) {
+      cudaGLUnregisterBufferObject( gpuh->v3f_vbo);
+      glBindBuffer(1, gpuh->v3f_vbo);
+      glDeleteBuffers(1, &gpuh->v3f_vbo);
+      //cudaGraphicsUnregisterResource( gpuh->v3f_res);
+  }
+  if (gpuh->n3f_vbo) {
+      cudaGLUnregisterBufferObject( gpuh->n3f_vbo);
+      glBindBuffer(1, gpuh->n3f_vbo);
+      glDeleteBuffers(1, &gpuh->n3f_vbo);
+      //cudaGraphicsUnregisterResource( gpuh->n3f_res);
+  }
+  if (gpuh->c3f_vbo) {
+      cudaGLUnregisterBufferObject( gpuh->c3f_vbo);
+      glBindBuffer(1, gpuh->c3f_vbo);
+      glDeleteBuffers(1, &gpuh->c3f_vbo);
+      //cudaGraphicsUnregisterResource( gpuh->c3f_res);
+  }
   
   return 0;
 }
@@ -1404,6 +1410,7 @@ int CUDAQuickSurf::check_bufs(long int natoms, int colorperatom,
 
 int CUDAQuickSurf::alloc_bufs(long int natoms, int colorperatom, 
                               int gx, int gy, int gz) {
+
   qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
 
   // early exit from allocation call if we've already got existing
