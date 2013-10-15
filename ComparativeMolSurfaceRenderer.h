@@ -73,6 +73,11 @@ public:
         TWO_WAY_GVF
     };
 
+    enum UncertaintyCriterion {
+        EUCLIDEAN_DISTANCE=0,
+        PATH_DISTANCE
+    };
+
     /**
      * Answer the name of this module.
      *
@@ -331,6 +336,10 @@ private:
     /// External forces for surface mapping
     core::param::ParamSlot surfMappedExtForceSlot;
     ExternalForces surfMappedExtForce;
+
+    /// External forces for surface mapping
+    core::param::ParamSlot uncertaintyCriterionSlot;
+    UncertaintyCriterion uncertaintyCriterion;
 
     /// Weighting for external forces when mapping the surface
     core::param::ParamSlot surfaceMappingExternalForcesWeightSclSlot;

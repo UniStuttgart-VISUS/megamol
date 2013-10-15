@@ -105,6 +105,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         /* Parameters for mapped surface */
         fittingModeSlot("surfMap::RMSDfitting", "RMSD fitting for the mapped surface"),
         surfMappedExtForceSlot("surfMap::externalForces", "External forces for surface mapping"),
+        uncertaintyCriterionSlot("surfMap::uncertainty", "Uncertainty criterion"),
         surfaceMappingExternalForcesWeightSclSlot("surfMap::externalForcesScl","Scale factor for the external forces weighting"),
         surfaceMappingForcesSclSlot("surfMap::sclAll","Overall scale factor for all forces"),
         surfaceMappingMaxItSlot("surfMap::maxIt","Maximum number of iterations for the surface mapping"),
@@ -219,6 +220,14 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     ext->SetTypePair(TWO_WAY_GVF, "Two-Way-GVF");
     this->surfMappedExtForceSlot << ext;
     this->MakeSlotAvailable(&this->surfMappedExtForceSlot);
+
+    // Param slot for uncertainty
+    this->uncertaintyCriterion = EUCLIDEAN_DISTANCE;
+    core::param::EnumParam *uc = new core::param::EnumParam(int(this->uncertaintyCriterion));
+    uc->SetTypePair(EUCLIDEAN_DISTANCE, "Euclidean Distance");
+    uc->SetTypePair(PATH_DISTANCE, "Path Distance");
+    this->uncertaintyCriterionSlot << uc;
+    this->MakeSlotAvailable(&this->uncertaintyCriterionSlot);
 
     // Weighting for external forces when mapping the surface
     this->surfaceMappingExternalForcesWeightScl = 0.5f;
@@ -2465,6 +2474,14 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->surfMappedExtForceSlot.ResetDirty();
         this->triggerSurfaceMapping = true;
         this->triggerComputeLines = true;
+    }
+
+    // Parameter for the external forces
+    if (this->uncertaintyCriterionSlot.IsDirty()) {
+        this->uncertaintyCriterion = static_cast<UncertaintyCriterion>(
+                this->uncertaintyCriterionSlot.Param<core::param::EnumParam>()->Value());
+        this->uncertaintyCriterionSlot.ResetDirty();
+        this->triggerSurfaceMapping = true;
     }
 
     // Weighting for external forces when mapping the surface
