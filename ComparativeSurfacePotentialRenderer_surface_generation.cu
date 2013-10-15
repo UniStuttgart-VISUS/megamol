@@ -12,7 +12,10 @@
 #include "ComparativeSurfacePotentialRenderer_inline_device_functions.cuh"
 #include "constantGridParams.cuh"
 #include "cuda_helper.h"
+#include "cuda_error_check.h"
 #include <cstdio>
+#include <thrust/scan.h>
+#include <thrust/device_ptr.h>
 
 // Toggle performance measurement and respective messages
 //#define USE_TIMER
@@ -831,10 +834,16 @@ cudaError_t GetTetrahedronVertexOffsets(
         uint *verticesPerTetrahedron_D,
         uint tetrahedronCount) {
 
-    ::ComputePrefixSumExclusiveScan(
-            verticesPerTetrahedron_D,
-            tetrahedronVertexOffsets_D,
-            tetrahedronCount-1); // TODO This is unintuitive
+
+    thrust::exclusive_scan(
+            thrust::device_ptr<uint>(verticesPerTetrahedron_D),
+            thrust::device_ptr<uint>(verticesPerTetrahedron_D + tetrahedronCount),
+            thrust::device_ptr<uint>(tetrahedronVertexOffsets_D));
+
+//    ::ComputePrefixSumExclusiveScan(
+//            verticesPerTetrahedron_D,
+//            tetrahedronVertexOffsets_D,
+//            tetrahedronCount); // TODO This is unintuitive
 
     return cudaGetLastError();
 }
@@ -1124,6 +1133,8 @@ void ComputeVertexConnectivity_D(
             vertexNeighbours_D[18*activeVertexIdx+TetrahedronToNeighbourIdx[v][i][j]] = vertexMapInv_D[vertexIdx];
             //vertexNeighbours_D[18*activeVertexIdx+TetrahedronToNeighbourIdx[v][i][j]] = vertexIdx;
         }
+
+
     }
 
 }
@@ -1149,6 +1160,8 @@ cudaError_t ComputeVertexConnectivity(int *vertexNeighbours_D, uint *vertexState
 //    printf("Shared memory per block %u bytes\n", devProp.sharedMemPerBlock);
 //    printf("Number of blocks %u\n", Grid(activeVertexCnt*6, blockSize).x);
 
+//    CheckForCudaErrorSync();
+
     ComputeVertexConnectivity_D <<< Grid(activeVertexCnt*6, blockSize), blockSize >>> (
             vertexNeighbours_D,
             vertexStates_D,
@@ -1160,6 +1173,8 @@ cudaError_t ComputeVertexConnectivity(int *vertexNeighbours_D, uint *vertexState
             cubeStates_D,
             volume_D,
             isoval);
+
+//    CheckForCudaErrorSync();
 
 #ifdef USE_TIMER
     cudaEventRecord(event2, 0);
@@ -1222,6 +1237,8 @@ void ComputeVertexNormals_D(
             dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsPos+1],
             dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsPos+2]);
 
+    int maxIdx = 0;
+
     // Loop through all adjacent tetrahedrons
     for(int tetrahedronIdx = 0; tetrahedronIdx < 6; ++tetrahedronIdx) {
 
@@ -1275,9 +1292,11 @@ void ComputeVertexNormals_D(
                     int vertexIdx1 = vertexMapInv_D[cubeMapInv_D[GetCellIdxByGridCoords(cubeIdx1)]*7 +
                                                     TetrahedronEdgeVertexIdxOffset[tetrahedronIdx][edgeIdx1][3]];
 
+                    maxIdx = max(maxIdx, max(vertexIdx0, vertexIdx1));
+//
 //                    if (vertexIdx0 >= activeVertexCnt) continue;
 //                    if (vertexIdx1 >= activeVertexCnt) continue;
-
+//
                     float3 pos0, pos1;
                     pos0 = make_float3(
                             dataBuffer_D[arrDataSize*vertexIdx0+arrDataOffsPos+0],
@@ -1300,7 +1319,9 @@ void ComputeVertexNormals_D(
     dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsNormals+0] = normal.x;
     dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsNormals+1] = normal.y;
     dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsNormals+2] = normal.z;
-
+//    dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsNormals+0] = maxIdx;
+//    dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsNormals+1] = maxIdx;
+//    dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsNormals+2] = maxIdx;
 }
 
 extern "C"

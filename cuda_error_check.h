@@ -14,6 +14,7 @@
 #define MMPROTEINPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
 
 #include "vislib/Log.h"
+#include "vislib/Exception.h"
 #include <cuda_runtime.h>
 
 #define CUDA_ERROR_CHECK // Toggle CUDA error checking
@@ -23,7 +24,7 @@
 #define CheckForCudaErrorSync() checkForCudaErrorSync( __FILE__, __LINE__ )
 
 /**
- * Utility function, that retrieves the last CUDA error and prints an
+ * Utility function that retrieves the last CUDA error and prints an
  * error message if it is not cudaSuccess.
  *
  * @param file The file in which the failure took place
@@ -43,7 +44,7 @@ inline bool checkForCudaError(const char *file, const int line) {
 }
 
 /**
- * Utility function, that retrieves the last CUDA error and prints an
+ * Utility function that retrieves the last CUDA error and prints an
  * error message if it is not cudaSuccess.
  *
  * @param file The file in which the failure took place

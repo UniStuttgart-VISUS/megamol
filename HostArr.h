@@ -59,7 +59,8 @@ public:
      */
     inline void Release() {
         if (this->pt != NULL) {
-            delete[] this->pt;
+            //delete[] this->pt;
+            free(this->pt);
         }
         this->size = 0;
         this->pt = NULL;
@@ -84,7 +85,8 @@ public:
     inline void Validate(size_t sizeNew) {
         if ((this->pt == NULL) || (sizeNew > this->size)) {
             this->Release();
-            this->pt = new T[sizeNew];
+            //this->pt = new T[sizeNew];
+            this->pt = (T*)malloc(sizeNew*sizeof(T));
             this->size = sizeNew;
         }
         this->count = sizeNew;
