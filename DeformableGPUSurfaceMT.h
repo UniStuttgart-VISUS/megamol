@@ -31,6 +31,15 @@ public:
     // Interpolation mode used when computing external forces based on gradient
     enum InterpolationMode {INTERP_LINEAR=0, INTERP_CUBIC};
 
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char *ClassName(void) {
+        return "DeformableGPUSurfaceMT";
+    }
+
     /** DTor */
     DeformableGPUSurfaceMT();
 
@@ -142,6 +151,11 @@ public:
         return this->externalForces_D.Peek();
     }
 
+    /**
+     * Free all the device memory allocated in this class.
+     */
+    void Release();
+
 protected:
 
 private:
@@ -171,9 +185,6 @@ private:
 
     /// Array for distance field
     CudaDevArr<float> distField_D;
-
-    /// Flag whether the neighbors have been computed
-    bool neighboursReady;
 
     /// Device array for external forces
     CudaDevArr<float> externalForces_D;

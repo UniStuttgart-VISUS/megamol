@@ -37,104 +37,106 @@ GPUSurfaceMT::GPUSurfaceMT() : AbstractGPUSurface() , neighboursReady(false) {
 /*
  * GPUSurfaceMT::GPUSurfaceMT
  */
-GPUSurfaceMT::GPUSurfaceMT(const GPUSurfaceMT& other) : AbstractGPUSurface(other),
-    neighboursReady(false) {
+GPUSurfaceMT::GPUSurfaceMT(const GPUSurfaceMT& other) : AbstractGPUSurface(other) {
 
     // Copy GPU memory
 
-    CudaSafeCall(this->cubeStates_D.Validate(other.cubeStates_D.GetSize()));
+    CudaSafeCall(this->cubeStates_D.Validate(other.cubeStates_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->cubeStates_D.Peek(),
             other.cubeStates_D.PeekConst(),
-            this->cubeStates_D.GetSize()*sizeof(unsigned int),
+            this->cubeStates_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->cubeOffsets_D.Validate(other.cubeOffsets_D.GetSize()));
+    CudaSafeCall(this->cubeOffsets_D.Validate(other.cubeOffsets_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->cubeOffsets_D.Peek(),
             other.cubeOffsets_D.PeekConst(),
-            this->cubeOffsets_D.GetSize()*sizeof(unsigned int),
+            this->cubeOffsets_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->cubeMap_D.Validate(other.cubeMap_D.GetSize()));
+    CudaSafeCall(this->cubeMap_D.Validate(other.cubeMap_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->cubeMap_D.Peek(),
             other.cubeMap_D.PeekConst(),
-            this->cubeMap_D.GetSize()*sizeof(unsigned int),
+            this->cubeMap_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->cubeMapInv_D.Validate(other.cubeMapInv_D.GetSize()));
+    CudaSafeCall(this->cubeMapInv_D.Validate(other.cubeMapInv_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->cubeMapInv_D.Peek(),
             other.cubeMapInv_D.PeekConst(),
-            this->cubeMapInv_D.GetSize()*sizeof(unsigned int),
+            this->cubeMapInv_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->vertexStates_D.Validate(other.vertexStates_D.GetSize()));
+    CudaSafeCall(this->vertexStates_D.Validate(other.vertexStates_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->vertexStates_D.Peek(),
             other.vertexStates_D.PeekConst(),
-            this->vertexStates_D.GetSize()*sizeof(unsigned int),
+            this->vertexStates_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->activeVertexPos_D.Validate(other.activeVertexPos_D.GetSize()));
+    CudaSafeCall(this->activeVertexPos_D.Validate(other.activeVertexPos_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->activeVertexPos_D.Peek(),
             other.activeVertexPos_D.PeekConst(),
-            this->activeVertexPos_D.GetSize()*sizeof(float3),
+            this->activeVertexPos_D.GetCount()*sizeof(float3),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->vertexIdxOffs_D.Validate(other.vertexIdxOffs_D.GetSize()));
+    CudaSafeCall(this->vertexIdxOffs_D.Validate(other.vertexIdxOffs_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->vertexIdxOffs_D.Peek(),
             other.vertexIdxOffs_D.PeekConst(),
-            this->vertexIdxOffs_D.GetSize()*sizeof(unsigned int),
+            this->vertexIdxOffs_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->vertexMap_D.Validate(other.vertexMap_D.GetSize()));
+    CudaSafeCall(this->vertexMap_D.Validate(other.vertexMap_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->vertexMap_D.Peek(),
             other.vertexMap_D.PeekConst(),
-            this->vertexMap_D.GetSize()*sizeof(unsigned int),
+            this->vertexMap_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->vertexMapInv_D.Validate(other.vertexMapInv_D.GetSize()));
+    CudaSafeCall(this->vertexMapInv_D.Validate(other.vertexMapInv_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->vertexMapInv_D.Peek(),
             other.vertexMapInv_D.PeekConst(),
-            this->vertexMapInv_D.GetSize()*sizeof(unsigned int),
+            this->vertexMapInv_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->vertexNeighbours_D.Validate(other.vertexNeighbours_D.GetSize()));
+    CudaSafeCall(this->vertexNeighbours_D.Validate(other.vertexNeighbours_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->vertexNeighbours_D.Peek(),
             other.vertexNeighbours_D.PeekConst(),
-            this->vertexNeighbours_D.GetSize()*sizeof(int),
+            this->vertexNeighbours_D.GetCount()*sizeof(int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->verticesPerTetrahedron_D.Validate(other.verticesPerTetrahedron_D.GetSize()));
+    CudaSafeCall(this->verticesPerTetrahedron_D.Validate(other.verticesPerTetrahedron_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->verticesPerTetrahedron_D.Peek(),
             other.verticesPerTetrahedron_D.PeekConst(),
-            this->verticesPerTetrahedron_D.GetSize()*sizeof(unsigned int),
+            this->verticesPerTetrahedron_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->tetrahedronVertexOffsets_D.Validate(other.tetrahedronVertexOffsets_D.GetSize()));
+    CudaSafeCall(this->tetrahedronVertexOffsets_D.Validate(other.tetrahedronVertexOffsets_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->tetrahedronVertexOffsets_D.Peek(),
             other.tetrahedronVertexOffsets_D.PeekConst(),
-            this->tetrahedronVertexOffsets_D.GetSize()*sizeof(unsigned int),
+            this->tetrahedronVertexOffsets_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->triangleCamDistance_D.Validate(other.triangleCamDistance_D.GetSize()));
+    CudaSafeCall(this->triangleCamDistance_D.Validate(other.triangleCamDistance_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->triangleCamDistance_D.Peek(),
             other.triangleCamDistance_D.PeekConst(),
-            this->triangleCamDistance_D.GetSize()*sizeof(float),
+            this->triangleCamDistance_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
 
     // The number of active cells
     this->activeCellCnt = other.activeCellCnt;
+
+    // Check whether neighbors have been computed
+    this->neighboursReady = other.neighboursReady;
 }
 
 
@@ -173,6 +175,7 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
     }
 
 //    printf("Grid dims %u %u %u\n", volDim[0], volDim[1], volDim[2]);
+//    printf("cell count %u\n", gridCellCnt);
 
 
     /* Find active grid cells */
@@ -247,7 +250,6 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
         return false;
     }
 
-//    printf("Cube map size %u\n", activeCellCnt);
 //
 //    // DEBUG Cube map
 //    HostArr<unsigned int> cubeMap;
@@ -333,6 +335,8 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
     if (!CheckForCudaError()) {
         return false;
     }
+
+//    printf("Vertex Cnt %u\n", this->vertexCnt);
 
     /* Create vertex buffer object and register with CUDA */
 
@@ -508,6 +512,8 @@ bool GPUSurfaceMT::ComputeTriangles(float *volume_D, size_t volDim[3],
         return false;
     }
 
+//    printf("Triangle cnt %u\n", triangleVtxCnt);
+
     this->triangleCnt = triangleVtxCnt/3;
 
     /* Create vertex buffer object and register with CUDA */
@@ -604,11 +610,16 @@ bool GPUSurfaceMT::ComputeTriangles(float *volume_D, size_t volDim[3],
  */
 bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
         float volWSOrg[3], float volWSDelta[3], float isovalue) {
-    if (!this->triangleIdxReady) { // We need the triangles mesh info
-        return false;
-    }
 
     using vislib::sys::Log;
+
+    if (!this->triangleIdxReady) { // We need the triangles mesh info
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: triangles not computed",
+                this->ClassName());
+        return false;
+    }
+    CheckForCudaErrorSync();
 
     /* Init grid parameters */
 
@@ -616,6 +627,11 @@ bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
             make_uint3(volDim[0], volDim[1], volDim[2]),
             make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
             make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
+
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init device constants",
+                this->ClassName());
+
         return false;
     }
 
@@ -628,17 +644,57 @@ bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
             &this->vertexDataResource, this->vboVtxData,
             cudaGraphicsMapFlagsNone))) {
+
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not register vertex buffer",
+                this->ClassName());
+
         return false;
     }
 
     // Get mapped pointer to the vbo
     float *vboPt;
     size_t vboSize;
-    CudaSafeCall(cudaGraphicsMapResources(1, &this->vertexDataResource, 0));
-    CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+    if (!CudaSafeCall(cudaGraphicsMapResources(1, &this->vertexDataResource, 0))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not map resources",
+                this->ClassName());
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
             reinterpret_cast<void**>(&vboPt), // The mapped pointer
             &vboSize,             // The size of the accessible data
-            this->vertexDataResource));                   // The mapped resource
+            this->vertexDataResource))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not acquire mapped pointer",
+                this->ClassName());
+        return false;
+    }
+
+//    int cnt = 0;
+//    // DEBUG Print vertex map
+//    HostArr<unsigned int> vertexMap;
+//    vertexMap.Validate(this->vertexCnt);
+//    if (!CudaSafeCall(vertexMap_D.CopyToHost(vertexMap.Peek()))) {
+//        return false;
+//    }
+//    for (int i = 0; i < this->vertexMap_D.GetCount(); ++i) {
+//        printf("Vertex mapping %i: %u\n", i, vertexMap.Peek()[i]);
+////        cnt += vertexMap.Peek()[i];
+//    }
+//    // END DEBUG
+//
+//    // DEBUG Print vertex map
+//    HostArr<unsigned int> vertexMapInv;
+//    vertexMapInv.Validate(this->vertexMapInv_D.GetCount());
+//    if (!CudaSafeCall(vertexMapInv_D.CopyToHost(vertexMapInv.Peek()))) {
+//        return false;
+//    }
+//    for (int i = 0; i < this->vertexMapInv_D.GetCount(); ++i) {
+//        printf("Inverse Vertex mapping %i: %u\n", i, vertexMapInv.Peek()[i]);
+////        cnt += vertexMapInv.Peek()[i];
+//    }
+//    // END DEBUG
 
 //    printf("active vertex count %u\n", this->vertexCnt);
 //    printf("active cube count %u\n", this->activeCellCnt);
@@ -647,6 +703,31 @@ bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
 //    printf("vertexMapInv size %u\n", this->vertexMapInv_D.GetCount());
 //    printf("cubeMap_D size %u\n", this->cubeMap_D.GetCount());
 //    printf("cubeMapInv_D size %u\n", this->cubeMapInv_D.GetCount());
+
+//        // DEBUG Print buffer content
+//        HostArr<float> vertexBuffer;
+//        vertexBuffer.Validate(this->vertexDataStride*this->vertexCnt*sizeof(float));
+//        if (!CudaSafeCall(cudaMemcpy(vertexBuffer.Peek(), vboPt,
+//                this->vertexDataStride*this->vertexCnt*sizeof(float), cudaMemcpyDeviceToHost))) {
+//            return false;
+//        }
+//        for (int i = 0; i < this->vertexCnt; ++i) {
+//    //        if (uint(abs(vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsNormal+0]))>= this->vertexCnt) {
+//            printf("%i: pos %f %f %f, normal %f %f %f, texcoord %f %f %f\n", i,
+//                    vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsPos+0],
+//                    vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsPos+1],
+//                    vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsPos+2],
+//                    vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsNormal+0],
+//                    vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsNormal+1],
+//                    vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsNormal+2],
+//                    vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsTexCoord+0],
+//                    vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsTexCoord+1],
+//                    vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsTexCoord+2],
+//                    this->vertexCnt);
+//    //        }
+//        }
+//        vertexBuffer.Release();
+//        // end DEBUG
 
     if (!CudaSafeCall(ComputeVertexNormals(
             vboPt,
@@ -661,22 +742,45 @@ bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
             this->vertexDataOffsNormal,
             this->vertexDataStride))) {
 
-        // Unmap CUDA graphics resource
-        if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource))) {
-            return false;
-        }
-        if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
-            return false;
-        }
-
         return false;
     }
+
+//    // DEBUG Print normals
+//    HostArr<float> vertexBuffer;
+//    vertexBuffer.Validate(this->vertexDataStride*this->vertexCnt*sizeof(float));
+//    if (!CudaSafeCall(cudaMemcpy(vertexBuffer.Peek(), vboPt,
+//            this->vertexDataStride*this->vertexCnt*sizeof(float), cudaMemcpyDeviceToHost))) {
+//        return false;
+//    }
+//    for (int i = 0; i < this->vertexCnt; i+=3) {
+////        if (uint(abs(vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsNormal+0]))>= this->vertexCnt) {
+//                    printf("%i: pos %f %f %f, normal %f %f %f, texcoord %f %f %f\n", i,
+//                            vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsPos+0],
+//                            vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsPos+1],
+//                            vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsPos+2],
+//                            vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsNormal+0],
+//                            vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsNormal+1],
+//                            vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsNormal+2],
+//                            vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsTexCoord+0],
+//                            vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsTexCoord+1],
+//                            vertexBuffer.Peek()[this->vertexDataStride*i+this->vertexDataOffsTexCoord+2],
+//                            this->vertexCnt);
+////        }
+//    }
+//    vertexBuffer.Release();
+//    // end DEBUG
 
     // Unmap CUDA graphics resource
     if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not unmap resources",
+                this->ClassName());
         return false;
     }
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not unregister buffers",
+                this->ClassName());
         return false;
     }
 
@@ -942,99 +1046,102 @@ GPUSurfaceMT& GPUSurfaceMT::operator=(const GPUSurfaceMT &rhs) {
 
     // Copy GPU memory
 
-    CudaSafeCall(this->cubeStates_D.Validate(rhs.cubeStates_D.GetSize()));
+    CudaSafeCall(this->cubeStates_D.Validate(rhs.cubeStates_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->cubeStates_D.Peek(),
             rhs.cubeStates_D.PeekConst(),
-            this->cubeStates_D.GetSize()*sizeof(unsigned int),
+            this->cubeStates_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->cubeOffsets_D.Validate(rhs.cubeOffsets_D.GetSize()));
+    CudaSafeCall(this->cubeOffsets_D.Validate(rhs.cubeOffsets_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->cubeOffsets_D.Peek(),
             rhs.cubeOffsets_D.PeekConst(),
-            this->cubeOffsets_D.GetSize()*sizeof(unsigned int),
+            this->cubeOffsets_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->cubeMap_D.Validate(rhs.cubeMap_D.GetSize()));
+    CudaSafeCall(this->cubeMap_D.Validate(rhs.cubeMap_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->cubeMap_D.Peek(),
             rhs.cubeMap_D.PeekConst(),
-            this->cubeMap_D.GetSize()*sizeof(unsigned int),
+            this->cubeMap_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->cubeMapInv_D.Validate(rhs.cubeMapInv_D.GetSize()));
+    CudaSafeCall(this->cubeMapInv_D.Validate(rhs.cubeMapInv_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->cubeMapInv_D.Peek(),
             rhs.cubeMapInv_D.PeekConst(),
-            this->cubeMapInv_D.GetSize()*sizeof(unsigned int),
+            this->cubeMapInv_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->vertexStates_D.Validate(rhs.vertexStates_D.GetSize()));
+    CudaSafeCall(this->vertexStates_D.Validate(rhs.vertexStates_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->vertexStates_D.Peek(),
             rhs.vertexStates_D.PeekConst(),
-            this->vertexStates_D.GetSize()*sizeof(unsigned int),
+            this->vertexStates_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->activeVertexPos_D.Validate(rhs.activeVertexPos_D.GetSize()));
+    CudaSafeCall(this->activeVertexPos_D.Validate(rhs.activeVertexPos_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->activeVertexPos_D.Peek(),
             rhs.activeVertexPos_D.PeekConst(),
-            this->activeVertexPos_D.GetSize()*sizeof(float3),
+            this->activeVertexPos_D.GetCount()*sizeof(float3),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->vertexIdxOffs_D.Validate(rhs.vertexIdxOffs_D.GetSize()));
+    CudaSafeCall(this->vertexIdxOffs_D.Validate(rhs.vertexIdxOffs_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->vertexIdxOffs_D.Peek(),
             rhs.vertexIdxOffs_D.PeekConst(),
-            this->vertexIdxOffs_D.GetSize()*sizeof(unsigned int),
+            this->vertexIdxOffs_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->vertexMap_D.Validate(rhs.vertexMap_D.GetSize()));
+    CudaSafeCall(this->vertexMap_D.Validate(rhs.vertexMap_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->vertexMap_D.Peek(),
             rhs.vertexMap_D.PeekConst(),
-            this->vertexMap_D.GetSize()*sizeof(unsigned int),
+            this->vertexMap_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->vertexMapInv_D.Validate(rhs.vertexMapInv_D.GetSize()));
+    CudaSafeCall(this->vertexMapInv_D.Validate(rhs.vertexMapInv_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->vertexMapInv_D.Peek(),
             rhs.vertexMapInv_D.PeekConst(),
-            this->vertexMapInv_D.GetSize()*sizeof(unsigned int),
+            this->vertexMapInv_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->vertexNeighbours_D.Validate(rhs.vertexNeighbours_D.GetSize()));
+    CudaSafeCall(this->vertexNeighbours_D.Validate(rhs.vertexNeighbours_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->vertexNeighbours_D.Peek(),
             rhs.vertexNeighbours_D.PeekConst(),
-            this->vertexNeighbours_D.GetSize()*sizeof(int),
+            this->vertexNeighbours_D.GetCount()*sizeof(int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->verticesPerTetrahedron_D.Validate(rhs.verticesPerTetrahedron_D.GetSize()));
+    CudaSafeCall(this->verticesPerTetrahedron_D.Validate(rhs.verticesPerTetrahedron_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->verticesPerTetrahedron_D.Peek(),
             rhs.verticesPerTetrahedron_D.PeekConst(),
-            this->verticesPerTetrahedron_D.GetSize()*sizeof(unsigned int),
+            this->verticesPerTetrahedron_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->tetrahedronVertexOffsets_D.Validate(rhs.tetrahedronVertexOffsets_D.GetSize()));
+    CudaSafeCall(this->tetrahedronVertexOffsets_D.Validate(rhs.tetrahedronVertexOffsets_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->tetrahedronVertexOffsets_D.Peek(),
             rhs.tetrahedronVertexOffsets_D.PeekConst(),
-            this->tetrahedronVertexOffsets_D.GetSize()*sizeof(unsigned int),
+            this->tetrahedronVertexOffsets_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
-//    CudaSafeCall(this->triangleCamDistance_D.Validate(rhs.triangleCamDistance_D.GetSize()));
+//    CudaSafeCall(this->triangleCamDistance_D.Validate(rhs.triangleCamDistance_D.GetCount()));
 //    CudaSafeCall(cudaMemcpy(
 //            this->triangleCamDistance_D.Peek(),
 //            rhs.triangleCamDistance_D.PeekConst(),
-//            this->triangleCamDistance_D.GetSize()*sizeof(float),
+//            this->triangleCamDistance_D.GetCount()*sizeof(float),
 //            cudaMemcpyDeviceToDevice));
 
     // The number of active cells
     this->activeCellCnt = rhs.activeCellCnt;
+
+    /// Flag whether the neighbors have been computed
+    this->neighboursReady = rhs.neighboursReady;
 
     return *this;
 
@@ -1048,30 +1155,53 @@ bool GPUSurfaceMT::ComputeConnectivity(float *volume_D,
         size_t volDim[3], float volWSOrg[3], float volWSDelta[3],
         float isovalue) {
 
+    CheckForCudaErrorSync();
+
+    using namespace vislib::sys;
     /* Init grid parameters for all files */
 
     if (!CudaSafeCall(InitVolume(
             make_uint3(volDim[0], volDim[1], volDim[2]),
             make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
             make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
+
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                "%s: could not init device constants",
+                this->ClassName());
         return false;
     }
+
+    CheckForCudaErrorSync();
 
     if (!CudaSafeCall(InitVolume_surface_generation(
             make_uint3(volDim[0], volDim[1], volDim[2]),
             make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
             make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                "%s: could not init device constants",
+                this->ClassName());
         return false;
     }
 
     /* Compute neighbours */
 
+    CheckForCudaErrorSync();
+
     if (!CudaSafeCall(vertexNeighbours_D.Validate(this->vertexCnt*18))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                "%s: could not allocate device memory",
+                this->ClassName());
         return false;
     }
-    if (!CudaSafeCall(vertexNeighbours_D.Set(-1))) {
+    CheckForCudaErrorSync();
+    //if (!CudaSafeCall(vertexNeighbours_D.Set(-1))) {
+    if (!CudaSafeCall(vertexNeighbours_D.Set(0xff))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                "%s: could not init device memory",
+                this->ClassName());
         return false;
     }
+    CheckForCudaErrorSync();
     if (!CudaSafeCall(ComputeVertexConnectivity(
             this->vertexNeighbours_D.Peek(),
             this->vertexStates_D.Peek(),
@@ -1086,9 +1216,9 @@ bool GPUSurfaceMT::ComputeConnectivity(float *volume_D,
 
 //        // DEBUG Print neighbour indices
 //        HostArr<int> vertexNeighbours;
-//        vertexNeighbours.Validate(vertexNeighbours_D.GetSize());
+//        vertexNeighbours.Validate(vertexNeighbours_D.GetCount());
 //        vertexNeighbours_D.CopyToHost(vertexNeighbours.Peek());
-//        for (int i = 0; i < vertexNeighbours_D.GetSize()/18; ++i) {
+//        for (int i = 0; i < vertexNeighbours_D.GetCount()/18; ++i) {
 //            printf("Neighbours vtx #%i: ", i);
 //            for (int j = 0; j < 18; ++j) {
 //                printf("%i ", vertexNeighbours.Peek()[i*18+j]);
@@ -1097,10 +1227,37 @@ bool GPUSurfaceMT::ComputeConnectivity(float *volume_D,
 //        }
 //        // END DEBUG
 
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                "%s: could not compute neighbors",
+                this->ClassName());
+
         return false;
     }
+
+    CheckForCudaErrorSync();
+
     this->neighboursReady = true;
     return true;
+}
+
+
+/*
+ * GPUSurfaceMT::Release
+ */
+void GPUSurfaceMT::Release() {
+    CudaSafeCall(this->cubeStates_D.Release());
+    CudaSafeCall(this->cubeOffsets_D.Release());
+    CudaSafeCall(this->cubeMap_D.Release());
+    CudaSafeCall(this->cubeMapInv_D.Release());
+    CudaSafeCall(this->vertexStates_D.Release());
+    CudaSafeCall(this->activeVertexPos_D.Release());
+    CudaSafeCall(this->vertexIdxOffs_D.Release());
+    CudaSafeCall(this->vertexMap_D.Release());
+    CudaSafeCall(this->vertexMapInv_D.Release());
+    CudaSafeCall(this->vertexNeighbours_D.Release());
+    CudaSafeCall(this->verticesPerTetrahedron_D.Release());
+    CudaSafeCall(this->tetrahedronVertexOffsets_D.Release());
+    CudaSafeCall(this->triangleCamDistance_D.Release());
 }
 
 #endif // WITH_CUDA

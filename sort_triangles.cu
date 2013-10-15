@@ -30,6 +30,7 @@
 
 typedef unsigned int uint;
 
+
 __global__
 void TrianglesCalcDistToCam_D(
         float *dataBuff_D,
@@ -63,7 +64,6 @@ void TrianglesCalcDistToCam_D(
 
     // Alternative 2: Use first vertex
     //float3 trianglePos = vertexPos_D[triangleVtxIdx_D[3*idx]+0];
-
     triangleCamDistance_D[idx] = length(trianglePos - camPos);
 }
 

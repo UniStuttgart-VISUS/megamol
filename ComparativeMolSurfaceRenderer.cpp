@@ -413,6 +413,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
  */
 ComparativeMolSurfaceRenderer::~ComparativeMolSurfaceRenderer(void) {
     this->Release();
+    CudaSafeCall(cudaDeviceReset());
 }
 
 
@@ -1192,6 +1193,17 @@ bool ComparativeMolSurfaceRenderer::initPotentialMap(
  * ComparativeMolSurfaceRenderer::release
  */
 void ComparativeMolSurfaceRenderer::release(void) {
+    if(this->cudaqsurf1 != NULL) {
+        CUDAQuickSurf *cqs = (CUDAQuickSurf *)this->cudaqsurf1;
+        delete cqs;
+    }
+    if(this->cudaqsurf2 != NULL) {
+        CUDAQuickSurf *cqs = (CUDAQuickSurf *)this->cudaqsurf2;
+        delete cqs;
+    }
+    this->deformSurf1.Release();
+    this->deformSurf2.Release();
+    this->deformSurfMapped.Release();
 }
 
 
@@ -1393,6 +1405,14 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     // (Re-)compute triangle mesh for surface #1 using Marching tetrahedra
     if (this->triggerComputeSurfacePoints1) {
 
+
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                "%s: compute surface points #1",
+                this->ClassName());
+
+        CheckForCudaErrorSync();
+
+
         /* Surface #1 */
 
         // Get vertex positions based on the level set
@@ -1414,6 +1434,13 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+        CheckForCudaErrorSync();
+
+
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                "%s: compute triangles #1",
+                this->ClassName());
+
         // Build triangle mesh from vertices
         if (!this->deformSurf1.ComputeTriangles(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
@@ -1428,6 +1455,13 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
             return false;
         }
+
+        CheckForCudaErrorSync();
+
+
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                "%s: compute connectivity points #1",
+                this->ClassName());
 
         // Compute vertex connectivity
         if (!this->deformSurf1.ComputeConnectivity(
@@ -1444,324 +1478,399 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
-        // Regularize the mesh of surface #1
-        if (!this->deformSurf1.MorphToVolume(
-                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                volDim,
-                &this->gridDensMap.minC[0],
-                &this->gridDensMap.delta[0],
-                this->qsIsoVal,
-                this->interpolMode,
-                this->regMaxIt,
-                0.0f, // minDisplScale // TODO ?
-                this->regSpringStiffness,
-                this->regForcesScl,
-                this->regExternalForcesWeight)) {
+        CheckForCudaErrorSync();
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not regularize surface #1",
-                    this->ClassName());
 
-            return false;
-        }
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: regularize surface #1",
+//                this->ClassName());
+//
+//        // Regularize the mesh of surface #1
+//        if (!this->deformSurf1.MorphToVolume(
+//                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+//                volDim,
+//                &this->gridDensMap.minC[0],
+//                &this->gridDensMap.delta[0],
+//                this->qsIsoVal,
+//                this->interpolMode,
+//                this->regMaxIt,
+//                0.0f, // minDisplScale // TODO ?
+//                this->regSpringStiffness,
+//                this->regForcesScl,
+//                this->regExternalForcesWeight)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not regularize surface #1",
+//                    this->ClassName());
+//
+//            return false;
+//        }
 
-        // Compute vertex normals
-        if (!this->deformSurf1.ComputeNormals(
-                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                                volDim,
-                                &this->gridDensMap.minC[0],
-                                &this->gridDensMap.delta[0],
-                                this->qsIsoVal)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not compute normals #1",
-                    this->ClassName());
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: compute normals #1",
+//                this->ClassName());
+//
+//        // Compute vertex normals
+//        if (!this->deformSurf1.ComputeNormals(
+//                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+//                                volDim,
+//                                &this->gridDensMap.minC[0],
+//                                &this->gridDensMap.delta[0],
+//                                this->qsIsoVal)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not compute normals #1",
+//                    this->ClassName());
+//
+//            return false;
+//        }
 
-            return false;
-        }
 
-        // Compute texture coordinates
-        if (!this->deformSurf1.ComputeTexCoords(
-                this->gridPotential1.minC,
-                this->gridPotential1.maxC)) {
-
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not compute tex coords #1",
-                    this->ClassName());
-
-            return false;
-        }
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: compute texture coordinates #1",
+//                this->ClassName());
+//
+//        // Compute texture coordinates
+//        if (!this->deformSurf1.ComputeTexCoords(
+//                this->gridPotential1.minC,
+//                this->gridPotential1.maxC)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not compute tex coords #1",
+//                    this->ClassName());
+//
+//            return false;
+//        }
 
         this->triggerComputeSurfacePoints1 = false;
     }
 
-    // (Re-)compute triangle mesh for surface #2 using Marching tetrahedra
-    if (this->triggerComputeSurfacePoints2) {
-
-        /* Surface #2 */
-
-        // Get vertex positions based on the level set
-        size_t volDim[3];
-        volDim[0] = this->gridDensMap.size[0];
-        volDim[1] = this->gridDensMap.size[1];
-        volDim[2] = this->gridDensMap.size[2];
-        if (!this->deformSurf2.ComputeVertexPositions(
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                volDim,
-                &this->gridDensMap.minC[0],
-                &this->gridDensMap.delta[0],
-                this->qsIsoVal)) {
-
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not compute vertex positions #2",
-                    this->ClassName());
-
-            return false;
-        }
-
-        // Build triangle mesh from vertices
-        if (!this->deformSurf2.ComputeTriangles(
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                                volDim,
-                                &this->gridDensMap.minC[0],
-                                &this->gridDensMap.delta[0],
-                                this->qsIsoVal)) {
-
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not compute triangles #2",
-                    this->ClassName());
-
-            return false;
-        }
-
-        // Compute vertex connectivity
-        if (!this->deformSurf2.ComputeConnectivity(
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                volDim,
-                &this->gridDensMap.minC[0],
-                &this->gridDensMap.delta[0],
-                this->qsIsoVal)) {
-
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not compute vertex connectivity #2",
-                    this->ClassName());
-
-            return false;
-        }
-
-        // Regularize the mesh of surface #2
-        if (!this->deformSurf2.MorphToVolume(
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                volDim,
-                &this->gridDensMap.minC[0],
-                &this->gridDensMap.delta[0],
-                this->qsIsoVal,
-                this->interpolMode,
-                this->regMaxIt,
-                0.0f, // minDisplScale // TODO ?
-                this->regSpringStiffness,
-                this->regForcesScl,
-                this->regExternalForcesWeight)) {
-
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not regularize surface #2",
-                    this->ClassName());
-
-            return false;
-        }
-
-        // Compute vertex normals
-        if (!this->deformSurf2.ComputeNormals(
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                                volDim,
-                                &this->gridDensMap.minC[0],
-                                &this->gridDensMap.delta[0],
-                                this->qsIsoVal)) {
-
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not compute vertex normals #2",
-                    this->ClassName());
-
-            return false;
-        }
-
-        // Compute texture coordinates
-        if (!this->deformSurf2.ComputeTexCoords(
-                this->gridPotential2.minC,
-                this->gridPotential2.maxC)) {
-
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not compute tex coords #2",
-                    this->ClassName());
-
-            return false;
-        }
-
-        this->triggerComputeSurfacePoints2 = false;
-    }
-
-    /* Map surface #2 to surface #1 */
-
-    if (this->triggerSurfaceMapping) {
-
-        // Make deep copy of regularized second surface
-        this->deformSurfMapped = this->deformSurf2;
-
-        size_t volDim1[3];
-        volDim1[0] = static_cast<size_t>(this->gridDensMap.size[0]);
-        volDim1[1] = static_cast<size_t>(this->gridDensMap.size[1]);
-        volDim1[2] = static_cast<size_t>(this->gridDensMap.size[2]);
-
-        if (this->surfMappedExtForce == GVF) {
-
-            // Morph surface #2 to shape #1 using GVF
-            if (!this->deformSurfMapped.MorphToVolumeGVF(
-                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                    this->deformSurf1.PeekCubeStates(),
-                    volDim1,
-                    &this->gridDensMap.minC[0],
-                    &this->gridDensMap.delta[0],
-                    this->qsIsoVal,
-                    this->interpolMode,
-                    this->surfaceMappingMaxIt,
-                    this->surfMappedMinDisplScl,
-                    this->surfMappedSpringStiffness,
-                    this->surfaceMappingForcesScl,
-                    this->surfaceMappingExternalForcesWeightScl,
-                    this->surfMappedGVFScl,
-                    this->surfMappedGVFIt)) {
-
-
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "%s: could not compute GVF deformation",
-                        this->ClassName());
-
-                return false;
-            }
-        } else if (this->surfMappedExtForce == METABALLS) {
-            // Morph surface #2 to shape #1 using implicit molecular surface
-            if (!this->deformSurfMapped.MorphToVolume(
-                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                    volDim1,
-                    &this->gridDensMap.minC[0],
-                    &this->gridDensMap.delta[0],
-                    this->qsIsoVal,
-                    this->interpolMode,
-                    this->surfaceMappingMaxIt,
-                    this->surfMappedMinDisplScl,
-                    this->surfMappedSpringStiffness,
-                    this->surfaceMappingForcesScl,
-                    this->surfaceMappingExternalForcesWeightScl)) {
-
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "%s: could not compute metaballs deformation",
-                        this->ClassName());
-
-                return false;
-            }
-        } else if (this->surfMappedExtForce == METABALLS_DISTFIELD) {
-            // Morph surface #2 to shape #1 using implicit molecular surface + distance field
-            if (!this->deformSurfMapped.MorphToVolumeDistfield(
-                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                    volDim1,
-                    &this->gridDensMap.minC[0],
-                    &this->gridDensMap.delta[0],
-                    this->qsIsoVal,
-                    this->interpolMode,
-                    this->surfaceMappingMaxIt,
-                    this->surfMappedMinDisplScl,
-                    this->surfMappedSpringStiffness,
-                    this->surfaceMappingForcesScl,
-                    this->surfaceMappingExternalForcesWeightScl,
-                    this->distFieldThresh)) {
-
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "%s: could not compute metaballs/distfield deformation",
-                        this->ClassName());
-
-                return false;
-            }
-        } else if (this->surfMappedExtForce == TWO_WAY_GVF) {
-            // Morph surface #2 to shape #1 using Two-Way-GVF
-            int3 volsize = make_int3(
-                    this->gridDensMap.size[0],
-                    this->gridDensMap.size[1],
-                    this->gridDensMap.size[2]);
-
-            float3 volOrg = make_float3(
-                    this->gridDensMap.minC[0],
-                    this->gridDensMap.minC[1],
-                    this->gridDensMap.minC[2]);
-
-            float3 volDelta = make_float3(
-                    this->gridDensMap.delta[0],
-                    this->gridDensMap.delta[1],
-                    this->gridDensMap.delta[2]);
-
-            if (!this->deformSurfMapped.MorphToVolumeTwoWayGVF(
-                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                    this->deformSurf2.PeekCubeStates(),
-                    this->deformSurf1.PeekCubeStates(),
-                    volsize,
-                    volOrg,
-                    volDelta,
-                    this->qsIsoVal,
-                    this->interpolMode,
-                    this->surfaceMappingMaxIt,
-                    this->surfMappedMinDisplScl,
-                    this->surfMappedSpringStiffness,
-                    this->surfaceMappingForcesScl,
-                    this->surfaceMappingExternalForcesWeightScl,
-                    this->surfMappedGVFScl,
-                    this->surfMappedGVFIt)) {
-
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "%s: could not compute Two-Way-GVF deformation",
-                        this->ClassName());
-
-                return false;
-            }
-        } else {
-            return false;
-        }
-
-        size_t volDim2[3];
-        volDim2[0] = static_cast<size_t>(this->gridDensMap.size[0]);
-        volDim2[1] = static_cast<size_t>(this->gridDensMap.size[1]);
-        volDim2[2] = static_cast<size_t>(this->gridDensMap.size[2]);
-
-        // Compute vertex normals
-        if (!this->deformSurfMapped.ComputeNormals(
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                                volDim2,
-                                &this->gridDensMap.minC[0],
-                                &this->gridDensMap.delta[0],
-                                this->qsIsoVal)) {
-
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not compute normals of mapped surface",
-                    this->ClassName());
-
-            return false;
-        }
-
-        // Compute texture coordinates
-        if (!this->deformSurfMapped.ComputeTexCoords(
-                this->gridPotential1.minC,
-                this->gridPotential1.maxC)) {
-
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not compute tex coords of mapped surface",
-                    this->ClassName());
-
-            return false;
-        }
-
-        this->triggerSurfaceMapping = false;
-    }
-
+//    // (Re-)compute triangle mesh for surface #2 using Marching tetrahedra
+//    if (this->triggerComputeSurfacePoints2) {
+//
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: compute vertex positions #2",
+//                this->ClassName());
+//
+//        /* Surface #2 */
+//
+//        // Get vertex positions based on the level set
+//        size_t volDim[3];
+//        volDim[0] = this->gridDensMap.size[0];
+//        volDim[1] = this->gridDensMap.size[1];
+//        volDim[2] = this->gridDensMap.size[2];
+//        if (!this->deformSurf2.ComputeVertexPositions(
+//                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+//                volDim,
+//                &this->gridDensMap.minC[0],
+//                &this->gridDensMap.delta[0],
+//                this->qsIsoVal)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not compute vertex positions #2",
+//                    this->ClassName());
+//
+//            return false;
+//        }
+//
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: compute triangles #2",
+//                this->ClassName());
+//
+//        // Build triangle mesh from vertices
+//        if (!this->deformSurf2.ComputeTriangles(
+//                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+//                                volDim,
+//                                &this->gridDensMap.minC[0],
+//                                &this->gridDensMap.delta[0],
+//                                this->qsIsoVal)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not compute triangles #2",
+//                    this->ClassName());
+//
+//            return false;
+//        }
+//
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: compute vertex connectivity #2",
+//                this->ClassName());
+//
+//        // Compute vertex connectivity
+//        if (!this->deformSurf2.ComputeConnectivity(
+//                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+//                volDim,
+//                &this->gridDensMap.minC[0],
+//                &this->gridDensMap.delta[0],
+//                this->qsIsoVal)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not compute vertex connectivity #2",
+//                    this->ClassName());
+//
+//            return false;
+//        }
+//
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: regularize surface #2",
+//                this->ClassName());
+//
+//        // Regularize the mesh of surface #2
+//        if (!this->deformSurf2.MorphToVolume(
+//                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+//                volDim,
+//                &this->gridDensMap.minC[0],
+//                &this->gridDensMap.delta[0],
+//                this->qsIsoVal,
+//                this->interpolMode,
+//                this->regMaxIt,
+//                0.0f, // minDisplScale // TODO ?
+//                this->regSpringStiffness,
+//                this->regForcesScl,
+//                this->regExternalForcesWeight)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not regularize surface #2",
+//                    this->ClassName());
+//
+//            return false;
+//        }
+//
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: compute normals #2",
+//                this->ClassName());
+//
+//        // Compute vertex normals
+//        if (!this->deformSurf2.ComputeNormals(
+//                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+//                                volDim,
+//                                &this->gridDensMap.minC[0],
+//                                &this->gridDensMap.delta[0],
+//                                this->qsIsoVal)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not compute vertex normals #2",
+//                    this->ClassName());
+//
+//            return false;
+//        }
+//
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: compute texture coordinates #1",
+//                this->ClassName());
+//
+//        // Compute texture coordinates
+//        if (!this->deformSurf2.ComputeTexCoords(
+//                this->gridPotential2.minC,
+//                this->gridPotential2.maxC)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not compute tex coords #2",
+//                    this->ClassName());
+//
+//            return false;
+//        }
+//
+//
+//
+//        this->triggerComputeSurfacePoints2 = false;
+//    }
+//
+//    /* Map surface #2 to surface #1 */
+//
+//    if (this->triggerSurfaceMapping) {
+//
+//        // Make deep copy of regularized second surface
+//        this->deformSurfMapped = this->deformSurf2;
+//
+//        size_t volDim1[3];
+//        volDim1[0] = static_cast<size_t>(this->gridDensMap.size[0]);
+//        volDim1[1] = static_cast<size_t>(this->gridDensMap.size[1]);
+//        volDim1[2] = static_cast<size_t>(this->gridDensMap.size[2]);
+//
+//        if (this->surfMappedExtForce == GVF) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                    "%s: morph to volume gvf",
+//                    this->ClassName());
+//
+//            // Morph surface #2 to shape #1 using GVF
+//            if (!this->deformSurfMapped.MorphToVolumeGVF(
+//                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+//                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+//                    this->deformSurf1.PeekCubeStates(),
+//                    volDim1,
+//                    &this->gridDensMap.minC[0],
+//                    &this->gridDensMap.delta[0],
+//                    this->qsIsoVal,
+//                    this->interpolMode,
+//                    this->surfaceMappingMaxIt,
+//                    this->surfMappedMinDisplScl,
+//                    this->surfMappedSpringStiffness,
+//                    this->surfaceMappingForcesScl,
+//                    this->surfaceMappingExternalForcesWeightScl,
+//                    this->surfMappedGVFScl,
+//                    this->surfMappedGVFIt)) {
+//
+//
+//                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                        "%s: could not compute GVF deformation",
+//                        this->ClassName());
+//
+//                return false;
+//            }
+//        } else if (this->surfMappedExtForce == METABALLS) {
+//
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                    "%s: morph to volume meta balls",
+//                    this->ClassName());
+//
+//            // Morph surface #2 to shape #1 using implicit molecular surface
+//            if (!this->deformSurfMapped.MorphToVolume(
+//                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+//                    volDim1,
+//                    &this->gridDensMap.minC[0],
+//                    &this->gridDensMap.delta[0],
+//                    this->qsIsoVal,
+//                    this->interpolMode,
+//                    this->surfaceMappingMaxIt,
+//                    this->surfMappedMinDisplScl,
+//                    this->surfMappedSpringStiffness,
+//                    this->surfaceMappingForcesScl,
+//                    this->surfaceMappingExternalForcesWeightScl)) {
+//
+//                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                        "%s: could not compute metaballs deformation",
+//                        this->ClassName());
+//
+//                return false;
+//            }
+//        } else if (this->surfMappedExtForce == METABALLS_DISTFIELD) {
+//
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                    "%s: morph to volume distfield",
+//                    this->ClassName());
+//
+//            // Morph surface #2 to shape #1 using implicit molecular surface + distance field
+//            if (!this->deformSurfMapped.MorphToVolumeDistfield(
+//                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+//                    volDim1,
+//                    &this->gridDensMap.minC[0],
+//                    &this->gridDensMap.delta[0],
+//                    this->qsIsoVal,
+//                    this->interpolMode,
+//                    this->surfaceMappingMaxIt,
+//                    this->surfMappedMinDisplScl,
+//                    this->surfMappedSpringStiffness,
+//                    this->surfaceMappingForcesScl,
+//                    this->surfaceMappingExternalForcesWeightScl,
+//                    this->distFieldThresh)) {
+//
+//                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                        "%s: could not compute metaballs/distfield deformation",
+//                        this->ClassName());
+//
+//                return false;
+//            }
+//        } else if (this->surfMappedExtForce == TWO_WAY_GVF) {
+//
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                    "%s: morph to volume two-way-gvf",
+//                    this->ClassName());
+//
+//            // Morph surface #2 to shape #1 using Two-Way-GVF
+//            int3 volsize = make_int3(
+//                    this->gridDensMap.size[0],
+//                    this->gridDensMap.size[1],
+//                    this->gridDensMap.size[2]);
+//
+//            float3 volOrg = make_float3(
+//                    this->gridDensMap.minC[0],
+//                    this->gridDensMap.minC[1],
+//                    this->gridDensMap.minC[2]);
+//
+//            float3 volDelta = make_float3(
+//                    this->gridDensMap.delta[0],
+//                    this->gridDensMap.delta[1],
+//                    this->gridDensMap.delta[2]);
+//
+//            if (!this->deformSurfMapped.MorphToVolumeTwoWayGVF(
+//                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+//                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+//                    this->deformSurf2.PeekCubeStates(),
+//                    this->deformSurf1.PeekCubeStates(),
+//                    volsize,
+//                    volOrg,
+//                    volDelta,
+//                    this->qsIsoVal,
+//                    this->interpolMode,
+//                    this->surfaceMappingMaxIt,
+//                    this->surfMappedMinDisplScl,
+//                    this->surfMappedSpringStiffness,
+//                    this->surfaceMappingForcesScl,
+//                    this->surfaceMappingExternalForcesWeightScl,
+//                    this->surfMappedGVFScl,
+//                    this->surfMappedGVFIt)) {
+//
+//                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                        "%s: could not compute Two-Way-GVF deformation",
+//                        this->ClassName());
+//
+//                return false;
+//            }
+//        } else {
+//            return false;
+//        }
+//
+//        size_t volDim2[3];
+//        volDim2[0] = static_cast<size_t>(this->gridDensMap.size[0]);
+//        volDim2[1] = static_cast<size_t>(this->gridDensMap.size[1]);
+//        volDim2[2] = static_cast<size_t>(this->gridDensMap.size[2]);
+//
+//
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: compute normals of mapped surface",
+//                this->ClassName());
+//
+//        // Compute vertex normals
+//        if (!this->deformSurfMapped.ComputeNormals(
+//                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+//                                volDim2,
+//                                &this->gridDensMap.minC[0],
+//                                &this->gridDensMap.delta[0],
+//                                this->qsIsoVal)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not compute normals of mapped surface",
+//                    this->ClassName());
+//
+//            return false;
+//        }
+//
+//
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: compute texture coordinates of mapped surface",
+//                this->ClassName());
+//
+//        // Compute texture coordinates
+//        if (!this->deformSurfMapped.ComputeTexCoords(
+//                this->gridPotential1.minC,
+//                this->gridPotential1.maxC)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not compute tex coords of mapped surface",
+//                    this->ClassName());
+//
+//            return false;
+//        }
+//
+//        this->triggerSurfaceMapping = false;
+//    }
+//
     // Get camera information
     this->cameraInfo =  dynamic_cast<core::view::AbstractCallRender3D*>(&call)->GetCameraParameters();
 
@@ -1828,103 +1937,103 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //            this->gridDensMap2.size[1], this->gridDensMap2.size[2]);
 
 
-    // DEBUG Render external forces as lines
-    if (!this->renderExternalForces()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: could not render external forces",
-                this->ClassName());
-        return false;
-    }
-    // END DEBUG
+//    // DEBUG Render external forces as lines
+//    if (!this->renderExternalForces()) {
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                "%s: could not render external forces",
+//                this->ClassName());
+//        return false;
+//    }
+//    // END DEBUG
 
 
     if (this->surface1RM != SURFACE_NONE) {
 
-        // Sort triangles by camera distance
-        if (!this->deformSurf1.SortTrianglesByCamDist(camPos)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not sort triangles #1",
-                    this->ClassName());
-            return false;
-        }
+//        // Sort triangles by camera distance
+//        if (!this->deformSurf1.SortTrianglesByCamDist(camPos)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not sort triangles #1",
+//                    this->ClassName());
+//            return false;
+//        }
 
-        // Render surface #1
-        if (!this->renderSurface(
-                this->deformSurf1.GetVtxDataVBO(),
-                this->deformSurf1.GetVertexCnt(),
-                this->deformSurf1.GetTriangleIdxVBO(),
-                this->deformSurf1.GetTriangleCnt()*3,
-                this->surface1RM,
-                this->surface1ColorMode,
-                this->surfAttribTex1,
-                this->uniformColorSurf1,
-                this->surf1AlphaScl)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not render surface #1",
-                    this->ClassName());
-            return false;
-        }
+//        // Render surface #1
+//        if (!this->renderSurface(
+//                this->deformSurf1.GetVtxDataVBO(),
+//                this->deformSurf1.GetVertexCnt(),
+//                this->deformSurf1.GetTriangleIdxVBO(),
+//                this->deformSurf1.GetTriangleCnt()*3,
+//                this->surface1RM,
+//                this->surface1ColorMode,
+//                this->surfAttribTex1,
+//                this->uniformColorSurf1,
+//                this->surf1AlphaScl)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not render surface #1",
+//                    this->ClassName());
+//            return false;
+//        }
     }
 
-    if (this->surface2RM != SURFACE_NONE) {
-        // Sort triangles by camera distance
-        if (!this->deformSurf2.SortTrianglesByCamDist(camPos)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not sort triangles #2",
-                    this->ClassName());
-            return false;
-        }
+//    if (this->surface2RM != SURFACE_NONE) {
+//        // Sort triangles by camera distance
+//        if (!this->deformSurf2.SortTrianglesByCamDist(camPos)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not sort triangles #2",
+//                    this->ClassName());
+//            return false;
+//        }
+//
+//        // Render surface #2
+//        if (!this->renderSurface(
+//                this->deformSurf2.GetVtxDataVBO(),
+//                this->deformSurf2.GetVertexCnt(),
+//                this->deformSurf2.GetTriangleIdxVBO(),
+//                this->deformSurf2.GetTriangleCnt()*3,
+//                this->surface2RM,
+//                this->surface2ColorMode,
+//                this->surfAttribTex2,
+//                this->uniformColorSurf2,
+//                this->surf2AlphaScl)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not render surface #2",
+//                    this->ClassName());
+//            return false;
+//        }
+//    }
+//
+//    if (this->surfaceMappedRM != SURFACE_NONE) {
+//
+//        // Sort triangles by camera distance
+//        if (!this->deformSurfMapped.SortTrianglesByCamDist(camPos)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not sort triangles of mapped surface",
+//                    this->ClassName());
+//            return false;
+//        }
+//
+//        // Render mapped surface
+//        if (!this->renderMappedSurface(
+//                this->deformSurf2.GetVtxDataVBO(),
+//                this->deformSurfMapped.GetVtxDataVBO(),
+//                this->deformSurfMapped.GetVertexCnt(),
+//                this->deformSurfMapped.GetTriangleIdxVBO(),
+//                this->deformSurfMapped.GetTriangleCnt()*3,
+//                this->surfaceMappedRM,
+//                this->surfaceMappedColorMode)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not render mapped surface",
+//                    this->ClassName());
+//            return false;
+//        }
+//    }
 
-        // Render surface #2
-        if (!this->renderSurface(
-                this->deformSurf2.GetVtxDataVBO(),
-                this->deformSurf2.GetVertexCnt(),
-                this->deformSurf2.GetTriangleIdxVBO(),
-                this->deformSurf2.GetTriangleCnt()*3,
-                this->surface2RM,
-                this->surface2ColorMode,
-                this->surfAttribTex2,
-                this->uniformColorSurf2,
-                this->surf2AlphaScl)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not render surface #2",
-                    this->ClassName());
-            return false;
-        }
-    }
-
-    if (this->surfaceMappedRM != SURFACE_NONE) {
-
-        // Sort triangles by camera distance
-        if (!this->deformSurfMapped.SortTrianglesByCamDist(camPos)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not sort triangles of mapped surface",
-                    this->ClassName());
-            return false;
-        }
-
-        // Render mapped surface
-        if (!this->renderMappedSurface(
-                this->deformSurf2.GetVtxDataVBO(),
-                this->deformSurfMapped.GetVtxDataVBO(),
-                this->deformSurfMapped.GetVertexCnt(),
-                this->deformSurfMapped.GetTriangleIdxVBO(),
-                this->deformSurfMapped.GetTriangleCnt()*3,
-                this->surfaceMappedRM,
-                this->surfaceMappedColorMode)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not render mapped surface",
-                    this->ClassName());
-            return false;
-        }
-    }
-
-    // DEBUG Show gitted atom positions
-    glBegin(GL_POINTS);
-        for(int p = 0; p < this->atomPosFitted.GetCount()/3; ++p)
-            glVertex3fv(&this->atomPosFitted.Peek()[3*p]);
-    glEnd();
-    // DEBUG end
+//    // DEBUG Show gitted atom positions
+//    glBegin(GL_POINTS);
+//        for(size_t p = 0; p < this->atomPosFitted.GetCount()/3; ++p)
+//            glVertex3fv(&this->atomPosFitted.Peek()[3*p]);
+//    glEnd();
+//    // DEBUG end
 
     glDisable(GL_TEXTURE_3D);
     glDisable(GL_TEXTURE_2D);

@@ -14,6 +14,7 @@
 #define MMPROTEINPLUGIN_CUDADEVARR_H_INCLUDED
 
 #include "cuda_runtime.h"
+#include "cuda_error_check.h"
 
 namespace megamol {
 namespace protein {
@@ -28,7 +29,6 @@ public:
 
     /** Dtor */
     ~CudaDevArr() {
-        this->Release();
     }
 
     /**
@@ -36,8 +36,8 @@ public:
      * memory.
      */
     inline cudaError_t CopyToHost(T *hostArr) {
-        cudaMemcpy(hostArr, this->pt_D, sizeof(T)*this->count,
-                cudaMemcpyDeviceToHost);
+        CudaSafeCall(cudaMemcpy(hostArr, this->pt_D, sizeof(T)*this->count,
+                cudaMemcpyDeviceToHost));
         return cudaGetLastError();
     }
 
@@ -48,7 +48,7 @@ public:
     T GetAt(size_t idx) {
         ASSERT(idx < this->count);
         T el;
-        cudaMemcpy(&el, this->pt_D + idx, sizeof(T), cudaMemcpyDeviceToHost);
+        CudaSafeCall(cudaMemcpy(&el, this->pt_D + idx, sizeof(T), cudaMemcpyDeviceToHost));
         return el;
     }
 
@@ -94,8 +94,8 @@ public:
      * @return 'cudaSuccess' on success, the respective error value otherwise
      */
     inline cudaError_t Release() {
-        if(this->pt_D != NULL) {
-            cudaFree(this->pt_D);
+        if (this->pt_D != NULL) {
+            CudaSafeCall(cudaFree((void*)(this->pt_D)));
         }
         this->size = 0;
         this->count = 0;
@@ -110,7 +110,7 @@ public:
      * @return 'cudaSuccess' on success, the respective error value otherwise
      */
     inline cudaError_t Set(unsigned char c) {
-        cudaMemset(this->pt_D, c, sizeof(T)*this->size);
+        CudaSafeCall(cudaMemset(this->pt_D, c, sizeof(T)*this->size));
         return cudaGetLastError();
     }
 
@@ -122,9 +122,10 @@ public:
      * @return 'cudaSuccess' on success, the respective error value otherwise
      */
     inline cudaError_t Validate(size_t sizeNew) {
+
         if((this->pt_D == NULL)||(sizeNew > this->size)) {
             this->Release();
-            cudaMalloc((void **)&this->pt_D, sizeof(T)*sizeNew);
+            CudaSafeCall(cudaMalloc((void**)&this->pt_D, sizeof(T)*sizeNew));
             this->size = sizeNew;
         }
         this->count = sizeNew;

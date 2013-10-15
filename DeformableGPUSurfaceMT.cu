@@ -33,6 +33,7 @@ using namespace megamol::protein;
  * DeformableGPUSurfaceMT::DeformableGPUSurfaceMT
  */
 DeformableGPUSurfaceMT::DeformableGPUSurfaceMT() : GPUSurfaceMT() {
+
 }
 
 
@@ -42,36 +43,33 @@ DeformableGPUSurfaceMT::DeformableGPUSurfaceMT() : GPUSurfaceMT() {
 DeformableGPUSurfaceMT::DeformableGPUSurfaceMT(const DeformableGPUSurfaceMT& other) :
     GPUSurfaceMT(other) {
 
-    CudaSafeCall(this->vertexExternalForcesScl_D.Validate(other.vertexExternalForcesScl_D.GetSize()));
+    CudaSafeCall(this->vertexExternalForcesScl_D.Validate(other.vertexExternalForcesScl_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->vertexExternalForcesScl_D.Peek(),
             other.vertexExternalForcesScl_D.PeekConst(),
-            this->vertexExternalForcesScl_D.GetSize()*sizeof(float),
+            this->vertexExternalForcesScl_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->externalForces_D.Validate(other.externalForces_D.GetSize()));
+    CudaSafeCall(this->externalForces_D.Validate(other.externalForces_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->externalForces_D.Peek(),
             other.externalForces_D.PeekConst(),
-            this->externalForces_D.GetSize()*sizeof(float4),
+            this->externalForces_D.GetCount()*sizeof(float4),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->laplacian_D.Validate(other.laplacian_D.GetSize()));
+    CudaSafeCall(this->laplacian_D.Validate(other.laplacian_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->laplacian_D.Peek(),
             other.laplacian_D.PeekConst(),
-            this->laplacian_D.GetSize()*sizeof(float3),
+            this->laplacian_D.GetCount()*sizeof(float3),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->displLen_D.Validate(other.displLen_D.GetSize()));
+    CudaSafeCall(this->displLen_D.Validate(other.displLen_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->displLen_D.Peek(),
             other.displLen_D.PeekConst(),
-            this->displLen_D.GetSize()*sizeof(float),
+            this->displLen_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
-
-    /// Flag whether the neighbors have been computed
-    this->neighboursReady = other.neighboursReady;
 }
 
 
@@ -90,15 +88,25 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
         InterpolationMode interpMode, size_t maxIt, float surfMappedMinDisplScl,
         float springStiffness, float forceScl, float externalForcesWeight) {
 
-    CheckForCudaError();
-
     using vislib::sys::Log;
 
-    if ((!this->triangleIdxReady)||(!this->neighboursReady)) {
+    if (!this->triangleIdxReady) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: triangles not ready",
+                this->ClassName());
+        return false;
+    }
+    if (!this->neighboursReady) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: neighbours not ready",
+                this->ClassName());
         return false;
     }
 
     if (volume_D == NULL) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: volume is zero",
+                this->ClassName());
         return false;
     }
 
@@ -111,6 +119,9 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
             make_uint3(volDim[0], volDim[1], volDim[2]),
             make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
             make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init device constants",
+                this->ClassName());
         return false;
     }
 
@@ -118,6 +129,9 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
             make_uint3(volDim[0], volDim[1], volDim[2]),
             make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
             make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init device constants",
+                this->ClassName());
         return false;
     }
 
@@ -125,18 +139,30 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
             make_uint3(volDim[0], volDim[1], volDim[2]),
             make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
             make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init device constants",
+                this->ClassName());
         return false;
     }
 
     // Compute gradient
     if (!CudaSafeCall(this->externalForces_D.Validate(volSize*4))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not allocate memory",
+                this->ClassName());
         return false;
     }
     if (!CudaSafeCall(this->externalForces_D.Set(0))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init memory",
+                this->ClassName());
         return false;
     }
     if (!CudaSafeCall(CalcVolGradient((float4*)this->externalForces_D.Peek(), volume_D,
-            this->externalForces_D.GetSize()))) {
+            this->externalForces_D.GetCount()))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not calc volume gradient",
+                this->ClassName());
         return false;
     }
 
@@ -144,10 +170,16 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
             &this->vertexDataResource, this->vboVtxData,
             cudaGraphicsMapFlagsNone))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not register buffer",
+                this->ClassName());
         return false;
     }
 
     if (!CudaSafeCall(cudaGraphicsMapResources(1, &this->vertexDataResource, 0))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not map resources",
+                this->ClassName());
         return false;
     }
 
@@ -159,10 +191,16 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
             reinterpret_cast<void**>(&vboPt), // The mapped pointer
             &vboSize,              // The size of the accessible data
             this->vertexDataResource))) {                 // The mapped resource
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not acquire mapped pointer",
+                this->ClassName());
         return false;
     }
 
     if (!CudaSafeCall(this->vertexExternalForcesScl_D.Validate(this->vertexCnt))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not allocate memory",
+                this->ClassName());
         return false;
     }
 
@@ -176,20 +214,35 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
             isovalue,
             this->vertexDataOffsPos,
             this->vertexDataStride))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init external forces",
+                this->ClassName());
         return false;
     }
 
     if (!CudaSafeCall(this->laplacian_D.Validate(this->vertexCnt))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not allocate memory",
+                this->ClassName());
         return false;
     }
     if (!CudaSafeCall(this->laplacian_D.Set(0))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init memory",
+                this->ClassName());
         return false;
     }
 
     if (!CudaSafeCall(this->displLen_D.Validate(this->vertexCnt))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not allocate memory",
+                this->ClassName());
         return false;
     }
     if (!CudaSafeCall(this->displLen_D.Set(0xff))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init memory",
+                this->ClassName());
         return false;
     }
 
@@ -221,6 +274,9 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
                     surfMappedMinDisplScl,
                     this->vertexDataOffsPos,
                     this->vertexDataStride))) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "%s: could not update position with trilinear interpolation",
+                        this->ClassName());
                 return false;
             }
         }
@@ -244,6 +300,9 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
                     this->vertexDataOffsPos,
                     this->vertexDataOffsNormal,
                     this->vertexDataStride))) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "%s: could not update position with tricubic interpolation",
+                        this->ClassName());
                 return false;
             }
         }
@@ -263,9 +322,15 @@ bool DeformableGPUSurfaceMT::MorphToVolume(float *volume_D, size_t volDim[3],
 #endif
 
     if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource, 0))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not unmap resources",
+                this->ClassName());
         return false;
     }
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not unregister buffer",
+                this->ClassName());
         return false;
     }
 
@@ -391,17 +456,17 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(float *volume_D, size_t volD
     }
 //
 //    if (!CudaSafeCall(CalcVolGradient(this->volGradient_D.Peek(), volume_D,
-//            this->volGradient_D.GetSize()))) {
+//            this->volGradient_D.GetCount()))) {
 //        return false;
 //    }
 
 //    // DEBUG Print gradient field
 //    HostArr<float4> gradFieldTest;
-//    gradFieldTest.Validate(this->volGradient_D.GetSize());
+//    gradFieldTest.Validate(this->volGradient_D.GetCount());
 //    if (!CudaSafeCall(this->volGradient_D.CopyToHost(gradFieldTest.Peek()))) {
 //        return false;
 //    }
-//    for (int i = 0; i < this->volGradient_D.GetSize(); ++i) {
+//    for (int i = 0; i < this->volGradient_D.GetCount(); ++i) {
 //        if (gradFieldTest.Peek()[i].x || gradFieldTest.Peek()[i].y|| gradFieldTest.Peek()[i].z) {
 //        printf("%i: Gradient: %f %f %f\n", i,
 //                gradFieldTest.Peek()[i].x,
@@ -640,11 +705,11 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
 
 //    // DEBUG Print gradient field
 //    HostArr<float4> gradFieldTest;
-//    gradFieldTest.Validate(this->volGradient_D.GetSize());
+//    gradFieldTest.Validate(this->volGradient_D.GetCount());
 //    if (!CudaSafeCall(this->volGradient_D.CopyToHost(gradFieldTest.Peek()))) {
 //        return false;
 //    }
-//    for (int i = 0; i < this->volGradient_D.GetSize(); ++i) {
+//    for (int i = 0; i < this->volGradient_D.GetCount(); ++i) {
 //        if (gradFieldTest.Peek()[i].x || gradFieldTest.Peek()[i].y|| gradFieldTest.Peek()[i].z) {
 //        printf("%i: Gradient: %f %f %f\n", i,
 //                gradFieldTest.Peek()[i].x,
@@ -1104,38 +1169,79 @@ DeformableGPUSurfaceMT& DeformableGPUSurfaceMT::operator=(const DeformableGPUSur
     GPUSurfaceMT::operator =(rhs);
 
 
-    CudaSafeCall(this->vertexExternalForcesScl_D.Validate(rhs.vertexExternalForcesScl_D.GetSize()));
+    CudaSafeCall(this->vertexExternalForcesScl_D.Validate(rhs.vertexExternalForcesScl_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->vertexExternalForcesScl_D.Peek(),
             rhs.vertexExternalForcesScl_D.PeekConst(),
-            this->vertexExternalForcesScl_D.GetSize()*sizeof(float),
+            this->vertexExternalForcesScl_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->externalForces_D.Validate(rhs.externalForces_D.GetSize()));
+    CudaSafeCall(this->externalForces_D.Validate(rhs.externalForces_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->externalForces_D.Peek(),
             rhs.externalForces_D.PeekConst(),
-            this->externalForces_D.GetSize()*sizeof(float),
+            this->externalForces_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->laplacian_D.Validate(rhs.laplacian_D.GetSize()));
+    CudaSafeCall(this->laplacian_D.Validate(rhs.laplacian_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->laplacian_D.Peek(),
             rhs.laplacian_D.PeekConst(),
-            this->laplacian_D.GetSize()*sizeof(float3),
+            this->laplacian_D.GetCount()*sizeof(float3),
             cudaMemcpyDeviceToDevice));
 
-    CudaSafeCall(this->displLen_D.Validate(rhs.displLen_D.GetSize()));
+    CudaSafeCall(this->displLen_D.Validate(rhs.displLen_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->displLen_D.Peek(),
             rhs.displLen_D.PeekConst(),
-            this->displLen_D.GetSize()*sizeof(float),
+            this->displLen_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
 
-    /// Flag whether the neighbors have been computed
-    this->neighboursReady = rhs.neighboursReady;
+    CudaSafeCall(this->gvfTmp_D.Validate(rhs.gvfTmp_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->gvfTmp_D.Peek(),
+            rhs.gvfTmp_D.PeekConst(),
+            this->gvfTmp_D.GetCount()*sizeof(float),
+            cudaMemcpyDeviceToDevice));
+
+    CudaSafeCall(this->gvfConstData_D.Validate(rhs.gvfConstData_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->gvfConstData_D.Peek(),
+            rhs.gvfConstData_D.PeekConst(),
+            this->gvfConstData_D.GetCount()*sizeof(float),
+            cudaMemcpyDeviceToDevice));
+
+    CudaSafeCall(this->grad_D.Validate(rhs.grad_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->grad_D.Peek(),
+            rhs.grad_D.PeekConst(),
+            this->grad_D.GetCount()*sizeof(float),
+            cudaMemcpyDeviceToDevice));
+
+    CudaSafeCall(this->distField_D.Validate(rhs.distField_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->distField_D.Peek(),
+            rhs.distField_D.PeekConst(),
+            this->distField_D.GetCount()*sizeof(float),
+            cudaMemcpyDeviceToDevice));
 
     return *this;
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::Release
+ */
+void DeformableGPUSurfaceMT::Release() {
+    GPUSurfaceMT::Release();
+    CudaSafeCall(this->vertexExternalForcesScl_D.Release());
+    CudaSafeCall(this->gvfTmp_D.Release());
+    CudaSafeCall(this->gvfConstData_D.Release());
+    CudaSafeCall(this->grad_D.Release());
+    CudaSafeCall(this->laplacian_D.Release());
+    CudaSafeCall(this->displLen_D.Release());
+    CudaSafeCall(this->distField_D.Release());
+    CudaSafeCall(this->externalForces_D.Release());
 }
 
 #endif // WITH_CUDA

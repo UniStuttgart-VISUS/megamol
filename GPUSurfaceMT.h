@@ -30,6 +30,15 @@ class GPUSurfaceMT : public AbstractGPUSurface {
 public:
 
     /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char *ClassName(void) {
+        return "GPUSurfaceMT";
+    }
+
+    /**
      * TODO
      */
     bool ComputeConnectivity(float *volume_D,
@@ -143,6 +152,11 @@ public:
      */
     bool Translate(float transVec[3]);
 
+    /**
+     * Free all CUDA arrays allocated by this class.
+     */
+    void Release();
+
 protected:
 
 
@@ -196,6 +210,8 @@ protected:
     bool neighboursReady;
 
 private:
+
+
 
 
 };
