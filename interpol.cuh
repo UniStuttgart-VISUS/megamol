@@ -30,12 +30,14 @@ inline __device__ T InterpFieldLin_D(T v0, T v1, float alpha) {
     return v0+alpha*(v1-v0);
 }
 
+
 template <typename T>
 inline __device__ T InterpFieldBilin_D(T v0, T v1, T v2, T v3,
         float alpha, float beta) {
     return InterpFieldLin_D<T>(InterpFieldLin_D<T>(v0, v1, alpha),
             InterpFieldLin_D<T>(v2, v3, alpha), beta);
 }
+
 
 template <typename T>
 inline __device__ T InterpFieldTrilin_D(T v[8], float alpha, float beta,
@@ -44,6 +46,7 @@ inline __device__ T InterpFieldTrilin_D(T v[8], float alpha, float beta,
             InterpFieldBilin_D<T>(v[0], v[1], v[2], v[3], alpha, beta),
             InterpFieldBilin_D<T>(v[4], v[5], v[6], v[7], alpha, beta), gamma);
 }
+
 
 template <typename T>
 inline __device__ T InterpFieldCubic_D(T n[4], float alpha) {
@@ -57,6 +60,7 @@ inline __device__ T InterpFieldCubic_D(T n[4], float alpha) {
 //    return n1 + 0.5*alpha*(n2 - n0 + alpha*(2.0*n0 - 5.0*n1 +
 //            4.0*n2 - n3 + alpha*(3.0*(n1 - n2) + n3 - n0)));
 //}
+
 
 template <typename T>
 inline __device__ T InterpFieldCubicSepArgs_D(T n0, T n1, T n2, T n3, float alpha) {

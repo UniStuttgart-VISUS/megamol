@@ -368,18 +368,18 @@ __global__ void CalcVertexPositions_D(
         uint activeCubeCount,
         float *volume_D) {
 
-    // Thread index (= active cube index)
-    uint globalTetraIdx = ::GetThreadIndex();
-    if (globalTetraIdx >= activeCubeCount*6) {
-        return;
-    }
-
     // Load LUTs to shared memory
     LoadCubeOffsetsToSharedMemory();
     LoadTetrahedronsInACubeToSharedMemory();
     LoadVertexIdxPerTetrahedronIdxToSharedMemory();
     LoadTetrahedronEdgeFlagsAndConnectionsToSharedMemory();
     __syncthreads();
+
+    // Thread index (= active cube index)
+    uint globalTetraIdx = ::GetThreadIndex();
+    if (globalTetraIdx >= activeCubeCount*6) {
+        return;
+    }
 
     uint activeCubeIdx = globalTetraIdx/6;
     uint localTetraIdx = globalTetraIdx%6; // 0 ... 5
@@ -456,10 +456,15 @@ cudaError_t CalcVertexPositions(uint *vertexStates_D, float3 *activeVertexPos_D,
             dt_ms/1000.0);
 #endif
 
-    ::ComputePrefixSumExclusiveScan(
-            vertexStates_D,
-            vertexIdxOffs_D,
-            7*activeCubeCount-1);
+//    ::ComputePrefixSumExclusiveScan(
+//            vertexStates_D,
+//            vertexIdxOffs_D,
+//            7*activeCubeCount-1);
+
+    thrust::exclusive_scan(
+            thrust::device_ptr<uint>(vertexStates_D),
+            thrust::device_ptr<uint>(vertexStates_D + 7*activeCubeCount),
+            thrust::device_ptr<uint>(vertexIdxOffs_D));
 
     return cudaGetLastError();
 }

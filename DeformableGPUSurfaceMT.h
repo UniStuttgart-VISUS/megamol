@@ -63,8 +63,8 @@ public:
      */
     bool FlagCorruptTriangleVertices(float *volume_D,
             int3 volDim,
-            float volWSOrg[3],
-            float volWSDelta[3],
+            float3 volOrg,
+            float3 volDelta,
             float isovalue);
 
     /**
@@ -85,11 +85,11 @@ public:
     /**
      * TODO
      */
-    bool MorphToVolume(
+    bool MorphToVolumeGradient(
             float *volume_D,
-            size_t volDim[3],
-            float volWSOrg[3],
-            float volWSDelta[3],
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
             float isovalue,
             InterpolationMode interpMode,
             size_t maxIt,
@@ -101,24 +101,30 @@ public:
     /**
      * TODO
      */
-    bool MorphToVolumeDistfield(float *volume_D, size_t volDim[3],
-            float volWSOrg[3], float volWSDelta[3], float isovalue,
-            InterpolationMode interpMode, size_t maxIt,
+    bool MorphToVolumeDistfield(
+            float *volume_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float isovalue,
+            InterpolationMode interpMode,
+            size_t maxIt,
             float surfMappedMinDisplScl,
-            float springStiffness, float forceScl,
-            float externalForcesWeight, float distfieldDist); // TODO
+            float springStiffness,
+            float forceScl,
+            float externalForcesWeight,
+            float distfieldDist); // TODO
 
     /**
      * TODO
      */
-    bool MorphToVolumeTwoWayGVF(
+    bool MorphToVolumeGVF(
             float *volumeSource_D,
             float *volumeTarget_D,
-            const unsigned int *sourceCubeStates_D,
             const unsigned int *targetCubeStates_D,
-            size_t volDim[3],
-            float volWSOrg[3],
-            float volWSDelta[3],
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
             float isovalue,
             InterpolationMode interpMode,
             size_t maxIt,
@@ -128,18 +134,6 @@ public:
             float externalForcesWeight,
             float gvfScl,
             unsigned int gvfIt); // TODO
-
-    /**
-     * TODO
-     */
-    bool MorphToVolumeGVF(float *volumeSource_D,
-            float *volumeTarget_D, const unsigned int *targetCubeStates_D,
-            size_t volDim[3],
-            float volWSOrg[3], float volWSDelta[3], float isovalue,
-            InterpolationMode interpMode, size_t maxIt,
-            float surfMappedMinDisplScl,
-            float springStiffness, float forceScl,
-            float externalForcesWeight, float gvfScl, unsigned int gvfIt); // TODO
 
     /**
      * TODO
@@ -167,6 +161,9 @@ public:
      */
     bool InitGridParams(uint3 gridSize, float3 org, float3 delta);
 
+
+
+
     /**
      * Assignment operator (makes deep copy).
      *
@@ -192,6 +189,72 @@ public:
 
 protected:
 
+    /**
+     * TODO
+     */
+    bool initExtForcesGradient(
+            float *volTarget_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta);
+
+    /**
+     * TODO
+     */
+    bool initExtForcesDistfield(
+            float *volume_D,
+            float *vertexBuffer_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float distfieldDist,
+            float isovalue);
+
+    /**
+     * TODO
+     */
+    bool initExtForcesGVF(
+            float *volumeTarget_D,
+            const unsigned int *cellStatesTarget_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float isovalue,
+            float gvfScl,
+            unsigned int gvfIt);
+
+    /**
+     * TODO
+     */
+    bool initExtForcesTwoWayGVF(
+            float *volumeSource_D,
+            float *volumeTarget_D,
+            const unsigned int *cellStatesSource_D,
+            const unsigned int *cellStatesTarget_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float isovalue,
+            float gvfScl,
+            unsigned int gvfIt);
+
+    /**
+     * TODO
+     */
+    bool updateVtxPos(
+            float* volTarget_D,
+            float* vertexBuffer_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float isovalue,
+            bool useCubicInterpolation,
+            size_t maxIt,
+            float surfMappedMinDisplScl,
+            float springStiffness,
+            float forceScl,
+            float externalForcesWeight);
+
 private:
 
     /* Device arrays for external forces */
@@ -204,12 +267,6 @@ private:
 
     /// TODO
     CudaDevArr<float> gvfConstData_D;
-
-    /// TODO
-    CudaDevArr<float> grad_D;
-
-    /// Device pointer to gradient field
-//    CudaDevArr<float4> volGradient_D;
 
     /// Array for laplacian
     CudaDevArr<float3> laplacian_D;
