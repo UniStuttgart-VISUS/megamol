@@ -644,32 +644,32 @@ void ComputeTriangleAreas_kernel(float4 *pos, float *area, unsigned int maxTria)
     area[i] = 0.25f * sqrt( rad);
 }
 
-/*
- * Utility functions.
- */
-dim3 Grid(const uint size, const int threadsPerBlock) {
-    //TODO: remove hardcoded hardware capabilities :(
-    // see: http://code.google.com/p/thrust/source/browse/thrust/detail/backend/cuda/arch.inl
-    //   and http://code.google.com/p/thrust/source/browse/thrust/detail/backend/cuda/detail/safe_scan.inl
-    //   for refactoring.
-    // Get maximum grid size of CUDA device.
-    //CUdevice device;	
-    //cuDeviceGet(&device, 0);
-    //CUdevprop deviceProps;
-    //cuDeviceGetProperties(&deviceProps, device);
-    //this->gridSize = dim3(deviceProps.maxGridSize[0], 
-    //	deviceProps.maxGridSize[1],
-    //	deviceProps.maxGridSize[2]);
-    const dim3 maxGridSize(65535, 65535, 0);
-    const int blocksPerGrid = (size + threadsPerBlock - 1) / threadsPerBlock;
-    dim3 grid(blocksPerGrid, 1, 1);
-    // Test if grid needs to be extended to 2D.
-    while (grid.x > maxGridSize.x) {
-        grid.x /= 2;
-        grid.y *= 2;
-    }
-    return grid;
-}
+///*
+// * Utility functions.
+// */
+//dim3 Grid(const uint size, const int threadsPerBlock) {
+//    //TODO: remove hardcoded hardware capabilities :(
+//    // see: http://code.google.com/p/thrust/source/browse/thrust/detail/backend/cuda/arch.inl
+//    //   and http://code.google.com/p/thrust/source/browse/thrust/detail/backend/cuda/detail/safe_scan.inl
+//    //   for refactoring.
+//    // Get maximum grid size of CUDA device.
+//    //CUdevice device;
+//    //cuDeviceGet(&device, 0);
+//    //CUdevprop deviceProps;
+//    //cuDeviceGetProperties(&deviceProps, device);
+//    //this->gridSize = dim3(deviceProps.maxGridSize[0],
+//    //	deviceProps.maxGridSize[1],
+//    //	deviceProps.maxGridSize[2]);
+//    const dim3 maxGridSize(65535, 65535, 0);
+//    const int blocksPerGrid = (size + threadsPerBlock - 1) / threadsPerBlock;
+//    dim3 grid(blocksPerGrid, 1, 1);
+//    // Test if grid needs to be extended to 2D.
+//    while (grid.x > maxGridSize.x) {
+//        grid.x /= 2;
+//        grid.y *= 2;
+//    }
+//    return grid;
+//}
 
 __global__
 void SetVol_kernel(float* vol)

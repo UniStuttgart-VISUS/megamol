@@ -24,7 +24,7 @@ __constant__ __device__ float3 gridDelta_D;  // The spacing of the volume textur
 /*
  * initGridParams
  */
-bool initGridParams(int3 gridSize, float3 org, float3 delta) {
+inline bool initGridParams(int3 gridSize, float3 org, float3 delta) {
     cudaMemcpyToSymbol(gridSize_D, &gridSize, sizeof(uint3));
     cudaMemcpyToSymbol(gridOrg_D, &org, sizeof(float3));
     cudaMemcpyToSymbol(gridDelta_D, &delta, sizeof(float3));
@@ -298,6 +298,16 @@ inline __device__ T SampleFieldAtPosTricub_D(float3 pos, T *field_D) {
  * @return The index
  */
 inline __device__ uint GetPosIdxByGridCoords(uint3 v0) {
+    return gridSize_D.x*(gridSize_D.y*v0.z + v0.y) + v0.x;
+}
+
+/**
+ * Answers the grid position index associated with the given coordinates.
+ *
+ * @param v0 The coordinates
+ * @return The index
+ */
+inline __device__ uint GetPosIdxByGridCoords(int3 v0) {
     return gridSize_D.x*(gridSize_D.y*v0.z + v0.y) + v0.x;
 }
 

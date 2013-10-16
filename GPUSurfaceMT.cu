@@ -1302,8 +1302,6 @@ extern "C" dim3 GPUSurfaceMT::Grid(const unsigned int size, const int threadsPer
     const int blocksPerGrid = (size + threadsPerBlock - 1) / threadsPerBlock;
     dim3 grid(blocksPerGrid, 1, 1);
 
-    printf("blocksPerGrid %u\n", blocksPerGrid);
-
     return grid;
 }
 

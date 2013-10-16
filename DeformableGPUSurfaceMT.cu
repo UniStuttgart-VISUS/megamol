@@ -434,12 +434,11 @@ __global__ void MeshLaplacian_D(
         out += (in - inOwn)*isIdxValid;
         activeNeighbourCnt += 1.0f*isIdxValid;
     }
-    out /= activeNeighbourCnt; // Represents internal force
+    out /= activeNeighbourCnt;
 
-    out_D[outStride*idx+outOffs+0] = 1;
-    out_D[outStride*idx+outOffs+1] = 1;
-    out_D[outStride*idx+outOffs+2] = 1;
-
+    out_D[outStride*idx+outOffs+0] = out.x;
+    out_D[outStride*idx+outOffs+1] = out.y;
+    out_D[outStride*idx+outOffs+2] = out.z;
 }
 
 
@@ -976,22 +975,14 @@ bool DeformableGPUSurfaceMT::initExtForcesGVF(
         return false;
     }
 
-    // Initialize device constants
-    DiffusionSolver::grid grid_H;
-    grid_H.size = volDim;
-    grid_H.delta = volDelta;
-    grid_H.org = volOrg;
-    if (!CudaSafeCall(DiffusionSolver::InitDevConstants(grid_H, isovalue))) {
-        return false;
-    }
-
     // Use GVF
     if (!DiffusionSolver::CalcGVF(
             volumeTarget_D,
             this->gvfConstData_D.Peek(),
             cellStatesTarget_D,
             volDim,
-            isovalue,
+            volDelta,
+            volOrg,
             this->externalForces_D.Peek(),
             this->gvfTmp_D.Peek(),
             gvfIt,
@@ -1042,15 +1033,6 @@ bool DeformableGPUSurfaceMT::initExtForcesTwoWayGVF(
         return false;
     }
 
-    // Initialize device constants
-    DiffusionSolver::grid grid_H;
-    grid_H.size = volDim;
-    grid_H.delta = volDelta;
-    grid_H.org = volOrg;
-    if (!CudaSafeCall(DiffusionSolver::InitDevConstants(grid_H, isovalue))) {
-        return false;
-    }
-
     // Calculate two way gvf by using isotropic diffusion
     if (!DiffusionSolver::CalcTwoWayGVF(
            volumeSource_D,
@@ -1060,7 +1042,6 @@ bool DeformableGPUSurfaceMT::initExtForcesTwoWayGVF(
            volDim,
            volOrg,
            volDelta,
-           isovalue,
            this->gvfConstData_D.Peek(),
            this->externalForces_D.Peek(),
            this->gvfTmp_D.Peek(),
@@ -1785,7 +1766,6 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
     for (uint i = 0; i < maxIt; ++i) {
 
         // Calc laplacian
-        printf("vertex count %u\n", this->vertexCnt);
         MeshLaplacian_D <<< this->Grid(this->vertexCnt, 256), 256 >>> (
                 vertexBuffer_D,
                 this->vertexDataOffsPos,
@@ -1794,8 +1774,8 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                 18,
                 this->vertexCnt,
                 (float*)this->laplacian_D.Peek(),
-                3,
-                0);
+                0,
+                3);
 
         ::CheckForCudaErrorSync();
 
@@ -1803,7 +1783,8 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
 //        HostArr<float3> laplacian;
 //        laplacian.Validate(this->laplacian_D.GetCount());
 //        this->laplacian_D.CopyToHost(laplacian.Peek());
-//        for (int i = 0; i < this->laplacian_D.GetCount(); ++i) {
+//        //for (int i = 0; i < this->laplacian_D.GetCount(); ++i) {
+//        for (int i = 0; i < 20; ++i) {
 //            printf("laplacian %f %f %f\n", laplacian.Peek()[i].x,
 //                    laplacian.Peek()[i].y,
 //                    laplacian.Peek()[i].z);
@@ -1816,14 +1797,14 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         // Calc laplacian^2
         MeshLaplacian_D <<< this->Grid(this->vertexCnt, 256), 256 >>> (
                 (float*)this->laplacian_D.Peek(),
-                3,
                 0,
+                3,
                 this->vertexNeighbours_D.Peek(),
                 18,
                 this->vertexCnt,
                 (float*)this->laplacian2_D.Peek(),
-                3,
-                0);
+                0,
+                3);
 
         ::CheckForCudaErrorSync();
 

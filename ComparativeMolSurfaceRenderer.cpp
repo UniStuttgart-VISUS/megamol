@@ -1675,9 +1675,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
-
-
         this->triggerComputeSurfacePoints2 = false;
+        this->triggerSurfaceMapping = true;
     }
 
     /* Map surface #2 to surface #1 */
