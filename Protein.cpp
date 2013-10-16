@@ -45,7 +45,6 @@
 #include "GLSLVolumeRenderer.h"
 #include "VolumeMeshRenderer.h"
 #include "ComparativeFieldTopologyRenderer.h"
-#include "ComparativeSurfacePotentialRenderer.h"
 #include "PotentialVolumeRaycaster.h"
 #include "SurfacePotentialRendererSlave.h"
 #include "StreamlineRenderer.h"
@@ -166,7 +165,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
 PROTEIN_API int mmplgModuleCount(void) {
     int moduleCount = 51;
 #ifdef WITH_CUDA
-    moduleCount+=15;
+    moduleCount+=14;
 #endif // WITH_CUDA
 #ifdef WITH_OPENHAPTICS
     moduleCount+=1;
@@ -189,22 +188,21 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         #define HAPTICS_OFFSET 0
 #endif // WITH_OPENHAPTICS
 #ifdef WITH_CUDA
-        case HAPTICS_OFFSET +  0 : return new ModuleAutoDescription<protein::ComparativeSurfacePotentialRenderer>();
-        case HAPTICS_OFFSET +  1 : return new ModuleAutoDescription<protein::PotentialVolumeRaycaster>();
-        case HAPTICS_OFFSET +  2 : return new ModuleAutoDescription<protein::StreamlineRenderer>();
-        case HAPTICS_OFFSET +  3 : return new ModuleAutoDescription<protein::SurfaceMappingTest>();
-        case HAPTICS_OFFSET +  4 : return new ModuleAutoDescription<protein::MoleculeCudaSESRenderer>();
-        case HAPTICS_OFFSET +  5 : return new ModuleAutoDescription<protein::MoleculeCBCudaRenderer>();
-        case HAPTICS_OFFSET +  6 : return new ModuleAutoDescription<protein::QuickSurfRenderer>();
-        case HAPTICS_OFFSET +  7 : return new ModuleAutoDescription<protein::QuickSurfRenderer2>();
-        case HAPTICS_OFFSET +  8 : return new ModuleAutoDescription<protein::QuickSurfMTRenderer>();
-        case HAPTICS_OFFSET +  9 : return new ModuleAutoDescription<protein::MoleculeVolumeCudaRenderer>();
-        case HAPTICS_OFFSET + 10 : return new ModuleAutoDescription<protein::VolumeMeshRenderer>();
-        case HAPTICS_OFFSET + 11 : return new ModuleAutoDescription<protein::DataWriter>();
-        case HAPTICS_OFFSET + 12 : return new ModuleAutoDescription<protein::CrystalStructureVolumeRenderer>();
-        case HAPTICS_OFFSET + 13 : return new ModuleAutoDescription<protein::ComparativeMolSurfaceRenderer>();
-        case HAPTICS_OFFSET + 14 : return new ModuleAutoDescription<protein::ComparativeFieldTopologyRenderer>();
-        #define CUDA_OFFSET 15
+        case HAPTICS_OFFSET +  0 : return new ModuleAutoDescription<protein::PotentialVolumeRaycaster>();
+        case HAPTICS_OFFSET +  1 : return new ModuleAutoDescription<protein::StreamlineRenderer>();
+        case HAPTICS_OFFSET +  2 : return new ModuleAutoDescription<protein::SurfaceMappingTest>();
+        case HAPTICS_OFFSET +  3 : return new ModuleAutoDescription<protein::MoleculeCudaSESRenderer>();
+        case HAPTICS_OFFSET +  4 : return new ModuleAutoDescription<protein::MoleculeCBCudaRenderer>();
+        case HAPTICS_OFFSET +  5 : return new ModuleAutoDescription<protein::QuickSurfRenderer>();
+        case HAPTICS_OFFSET +  6 : return new ModuleAutoDescription<protein::QuickSurfRenderer2>();
+        case HAPTICS_OFFSET +  7 : return new ModuleAutoDescription<protein::QuickSurfMTRenderer>();
+        case HAPTICS_OFFSET +  8 : return new ModuleAutoDescription<protein::MoleculeVolumeCudaRenderer>();
+        case HAPTICS_OFFSET +  9 : return new ModuleAutoDescription<protein::VolumeMeshRenderer>();
+        case HAPTICS_OFFSET + 10 : return new ModuleAutoDescription<protein::DataWriter>();
+        case HAPTICS_OFFSET + 11 : return new ModuleAutoDescription<protein::CrystalStructureVolumeRenderer>();
+        case HAPTICS_OFFSET + 12 : return new ModuleAutoDescription<protein::ComparativeMolSurfaceRenderer>();
+        case HAPTICS_OFFSET + 13 : return new ModuleAutoDescription<protein::ComparativeFieldTopologyRenderer>();
+        #define CUDA_OFFSET 14
 #else
         #define CUDA_OFFSET 0
 #endif // WITH_CUDA
