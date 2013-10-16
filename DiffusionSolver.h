@@ -26,20 +26,23 @@ class DiffusionSolver {
 
 public:
 
-    struct grid {
-        float3 org;
-        float3 delta;
-        int3 size;
-    };
-
     /**
      * CUDA implementation of an iterative method to compute the Gradient
-     * Vector Field (GVF) based on a given vector field.
-     * Note: The input vector field 'v' is also used as output array. TODO
+     * Vector Field (GVF) based on a given volume gradient and a level set.
      *
-     * @param v      The vector field (also used as output)
-     * @param dim    The dimensions of the vector field
-     * @param maxIt  The maximum number of iterations
+     * @param volTarget_D         The target volume texture (device memory)
+     * @param gvfConstData_D      Temporary array for gvf const data (device
+     *                            memory)
+     * @param cellStatesTarget_D  Flags about cell activity for the level set
+     *                            (device memory)
+     * @param volDim              Dimensions of the volume texture
+     * @param volOrg              WS origin of the volume texture
+     * @param volDelta            WS spacing of the volume texture
+     * @param gvfIn_D             Temporary array for gvf (device memory)
+     * @param gvfOut_D            Output array for gvf (device memory)
+     * @param maxIt               The number of iterations for the gvf
+     *                            computation
+     * @param scl                 Scale factor for the gvf
      * @return 'True' on success, 'false' otherwise
      */
     static bool CalcGVF(
@@ -47,7 +50,8 @@ public:
             float *gvfConstData_D,
             const unsigned int *cellStatesTarget_D,
             int3 volDim,
-            float isovalue,
+            float3 volOrg,
+            float3 volDelta,
             float *gvfIn_D,
             float *gvfOut_D,
             unsigned int maxIt,
@@ -55,12 +59,25 @@ public:
 
     /**
      * CUDA implementation of an iterative method to compute the Gradient
-     * Vector Field (GVF) based on a given vector field.
-     * Note: The input vector field 'v' is also used as output array. TODO
+     * Vector Field (GVF) based on a given volume gradient and a level set.
+     * This method applies the diffusion in two directions.
      *
-     * @param v      The vector field (also used as output)
-     * @param dim    The dimensions of the vector field
-     * @param maxIt  The maximum number of iterations
+     * @param volSource_D         The source volume texture (device memory)
+     * @param volTarget_D         The target volume texture (device memory)
+     * @param cellStatesSource_D  Flags about cell activity for the source level
+     *                            set (device memory)
+     * @param cellStatesTarget_D  Flags about cell activity for the target level
+     *                            set (device memory)
+     * @param volDim              Dimensions of the volume texture
+     * @param volOrg              WS origin of the volume texture
+     * @param volDelta            WS spacing of the volume texture
+     * @param gvfConstData_D      Temporary array for gvf const data (device
+     *                            memory)
+     * @param gvfIn_D             Temporary array for gvf (device memory)
+     * @param gvfOut_D            Output array for gvf (device memory)
+     * @param maxIt               The number of iterations for the gvf
+     *                            computation
+     * @param scl                 Scale factor for the gvf
      * @return 'True' on success, 'false' otherwise
      */
     static bool CalcTwoWayGVF(
@@ -71,7 +88,6 @@ public:
             int3 volDim,
             float3 volOrg,
             float3 volDelta,
-            float isovalue,
             float *gvfConstData_D,
             float *gvfIn_D,
             float *gvfOut_D,
@@ -79,35 +95,15 @@ public:
             float scl);
 
     /**
-     * Initializes device constants necessary for the computations. This has to
-     * be called before any other method.
+     * Answer the name of this module.
      *
-     * @param gridHost The grid parameters
-     * @param isoval   The iso value
+     * @return The name of this module.
      */
-    static cudaError_t InitDevConstants(DiffusionSolver::grid gridHost,
-            float isoval);
+    static const char *ClassName(void) {
+        return "DiffusionSolver";
+    }
 
 protected:
-
-    /** TODO */
-    static dim3 Grid(const unsigned int size, const int threadsPerBlock);
-
-    /**
-     * Initializes the texture for the isotropic diffusion used in the
-     * GVF computation.
-     *
-     * @param startVol_D  The initial volume texture provided by the used
-     *                    (device memory). This can be any arbitrary volume
-     *                    texture containing a level set.
-     * @param isovalue    The isovalue defining the level set in 'startVol'.
-     * @param radius      The sampling radius for the volume.
-     * @param gvfVol_D    The resoluting volume that can then be used in the
-     *                    GVF computation.
-     */
-    static bool initGVF(
-            const float *startVol, size_t dim[3], const unsigned int *cellStates_D,
-                    float isovalue, float *grad_D, float *gvfConstData_D);
 
 private:
 

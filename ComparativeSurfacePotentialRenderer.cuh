@@ -39,8 +39,6 @@ typedef unsigned int uint;
 
 extern "C" {
 
-dim3 Grid(const uint size, const int threadsPerBlock);
-
 cudaError_t InitVolume(uint3 gridSize, float3 org, float3 delta);
 
 cudaError_t InitVolume_surface_generation(uint3 gridSize, float3 org,
