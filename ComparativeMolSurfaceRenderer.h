@@ -532,7 +532,7 @@ private:
     gridParams gridPotential1, gridPotential2;
 
     /// The bounding boxes of the density maps
-    gridParams gridDensMap;
+    //gridParams gridDensMap;
 
     /// The data hash for the particle data
     SIZE_T datahashParticles1, datahashParticles2;
@@ -548,6 +548,9 @@ private:
 
     /// Origin of the density volumes
     float3 volOrg;
+
+    /// maximum coordinate of the density volumes
+    float3 volMaxC;
 
     /// Delta for the density volumes
     float3 volDelta;

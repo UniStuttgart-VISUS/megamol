@@ -150,27 +150,31 @@ GPUSurfaceMT::~GPUSurfaceMT() {
 /*
  * DeformableGPUSurfaceMT::ComputeVertexPositions
  */
-bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
-        float volWSOrg[3], float volWSDelta[3], float isovalue) {
+bool GPUSurfaceMT::ComputeVertexPositions(
+        float *volume_D,
+        int3 volDim,
+        float3 volOrg,
+        float3 volDelta,
+        float isovalue) {
 
     using vislib::sys::Log;
 
-    size_t gridCellCnt = (volDim[0]-1)*(volDim[1]-1)*(volDim[2]-1);
+    size_t gridCellCnt = (volDim.x-1)*(volDim.y-1)*(volDim.z-1);
 
 
     /* Init grid parameters */
 
     if (!CudaSafeCall(InitVolume(
-            make_uint3(volDim[0], volDim[1], volDim[2]),
-            make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
-            make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
+            make_uint3(volDim.x, volDim.y, volDim.z),
+            volOrg,
+            volDelta))) {
         return false;
     }
 
     if (!CudaSafeCall(InitVolume_surface_generation(
-            make_uint3(volDim[0], volDim[1], volDim[2]),
-            make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
-            make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
+            make_uint3(volDim.x, volDim.y, volDim.z),
+            volOrg,
+            volDelta))) {
         return false;
     }
 
@@ -238,7 +242,7 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
     if (!CudaSafeCall(this->cubeMapInv_D.Set(0x00))) {
         return false;
     }
-    if (!CudaSafeCall(this->cubeMap_D.Validate(activeCellCnt))) {
+    if (!CudaSafeCall(this->cubeMap_D.Validate(this->activeCellCnt))) {
         return false;
     }
     if (!CudaSafeCall(CalcCubeMap(
@@ -292,18 +296,18 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
             this->activeVertexPos_D.Peek(),
             this->vertexIdxOffs_D.Peek(),
             this->cubeMap_D.Peek(),
-            activeCellCnt,
+            this->activeCellCnt,
             isovalue,
             volume_D))) {
         return false;
     }
 
-//     DEBUG Print active vertex positions
+//    // DEBUG Print active vertex positions
 //    HostArr<float3> activeVertexPos;
 //    HostArr<unsigned int> vertexStates;
 //    HostArr<unsigned int> vertexIdxOffsets;
-//    activeVertexPos.Validate(7*activeCellCnt);
-//    vertexIdxOffsets.Validate(7*activeCellCnt);
+//    activeVertexPos.Validate(7*this->activeCellCnt);
+//    vertexIdxOffsets.Validate(7*this->activeCellCnt);
 //    vertexStates.Validate(7*activeCellCnt);
 //    cudaMemcpy(vertexStates.Peek(), this->vertexStates_D.Peek(), 7*activeCellCnt*sizeof(unsigned int),
 //            cudaMemcpyDeviceToHost);
@@ -311,7 +315,7 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
 //            cudaMemcpyDeviceToHost);
 //    cudaMemcpy(vertexIdxOffsets.Peek(), this->vertexIdxOffs_D.Peek(), 7*activeCellCnt*sizeof(unsigned int),
 //            cudaMemcpyDeviceToHost);
-//    for (int i = 0; i < 7*activeCellCnt; ++i) {
+//    for (int i = 0; i < 7*this->activeCellCnt; ++i) {
 //        printf("#%i: active vertexPos %f %f %f (state = %u)\n", i,
 //                activeVertexPos.Peek()[i].x,
 //                activeVertexPos.Peek()[i].y,
@@ -319,12 +323,12 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
 //                vertexStates.Peek()[i]);
 //    }
 
-//    for (int i = 0; i < 7*activeCellCnt; ++i) {
+//    for (int i = 0; i < 7*this->activeCellCnt; ++i) {
 //        printf("#%i: vertex index offset %u (state %u)\n",i,
 //                vertexIdxOffsets.Peek()[i],
 //                vertexStates.Peek()[i]);
 //    }
-//     END DEBUG
+    // END DEBUG
 
 
     /* Get number of active vertices */
@@ -407,10 +411,10 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
 
 //    // DEBUG Print vertex positions
 //    HostArr<float> vertexPos;
-//    vertexPos.Validate(activeVertexCount*this->vboBuffDataSize);
-//    cudaMemcpy(vertexPos.Peek(), vboPt, activeVertexCount*this->vboBuffDataSize,
+//    vertexPos.Validate(this->vertexCnt*this->vertexDataStride);
+//    cudaMemcpy(vertexPos.Peek(), vboPt, this->vertexCnt*this->vertexDataStride*sizeof(float),
 //            cudaMemcpyDeviceToHost);
-//    for (int i = 0; i < activeVertexCount; ++i) {
+//    for (int i = 0; i < this->vertexCnt; ++i) {
 //        printf("#%i: vertexPos %f %f %f\n", i, vertexPos.Peek()[9*i+0],
 //                vertexPos.Peek()[9*i+1], vertexPos.Peek()[9*i+2]);
 //    }
@@ -431,8 +435,12 @@ bool GPUSurfaceMT::ComputeVertexPositions(float *volume_D, size_t volDim[3],
 /*
  * DeformableGPUSurfaceMT::computeTriangles
  */
-bool GPUSurfaceMT::ComputeTriangles(float *volume_D, size_t volDim[3],
-        float volWSOrg[3], float volWSDelta[3], float isovalue) {
+bool GPUSurfaceMT::ComputeTriangles(
+        float *volume_D,
+        int3 volDim,
+        float3 volOrg,
+        float3 volDelta,
+        float isovalue) {
 
     if (!this->vertexDataReady) { // We need vertex data to generate triangles
         return false;
@@ -608,8 +616,12 @@ bool GPUSurfaceMT::ComputeTriangles(float *volume_D, size_t volDim[3],
 /*
  * GPUSurfaceMT::computeVertexNormals
  */
-bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
-        float volWSOrg[3], float volWSDelta[3], float isovalue) {
+bool GPUSurfaceMT::ComputeNormals(
+        float *volume_D,
+        int3 volDim,
+        float3 volOrg,
+        float3 volDelta,
+        float isovalue) {
 
     using vislib::sys::Log;
 
@@ -625,9 +637,9 @@ bool GPUSurfaceMT::ComputeNormals(float *volume_D, size_t volDim[3],
     /* Init grid parameters */
 
     if (!CudaSafeCall(InitVolume_surface_generation(
-            make_uint3(volDim[0], volDim[1], volDim[2]),
-            make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
-            make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
+            make_uint3(volDim.x, volDim.y, volDim.z),
+            volOrg,
+            volDelta))) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: could not init device constants",
@@ -1154,8 +1166,11 @@ GPUSurfaceMT& GPUSurfaceMT::operator=(const GPUSurfaceMT &rhs) {
 /*
  * GPUSurfaceMT::ComputeConnectivity
  */
-bool GPUSurfaceMT::ComputeConnectivity(float *volume_D,
-        size_t volDim[3], float volWSOrg[3], float volWSDelta[3],
+bool GPUSurfaceMT::ComputeConnectivity(
+        float *volume_D,
+        int3 volDim,
+        float3 volOrg,
+        float3 volDelta,
         float isovalue) {
 
     CheckForCudaErrorSync();
@@ -1164,9 +1179,9 @@ bool GPUSurfaceMT::ComputeConnectivity(float *volume_D,
     /* Init grid parameters for all files */
 
     if (!CudaSafeCall(InitVolume(
-            make_uint3(volDim[0], volDim[1], volDim[2]),
-            make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
-            make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
+            make_uint3(volDim.x, volDim.y, volDim.z),
+            volOrg,
+            volDelta))) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: could not init device constants",
@@ -1177,9 +1192,9 @@ bool GPUSurfaceMT::ComputeConnectivity(float *volume_D,
     CheckForCudaErrorSync();
 
     if (!CudaSafeCall(InitVolume_surface_generation(
-            make_uint3(volDim[0], volDim[1], volDim[2]),
-            make_float3(volWSOrg[0], volWSOrg[1], volWSOrg[2]),
-            make_float3(volWSDelta[0], volWSDelta[1], volWSDelta[2])))) {
+            make_uint3(volDim.x, volDim.y, volDim.z),
+            volOrg,
+            volDelta))) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: could not init device constants",
                 this->ClassName());
@@ -1286,6 +1301,8 @@ extern "C" dim3 GPUSurfaceMT::Grid(const unsigned int size, const int threadsPer
     const dim3 maxGridSize(65535, 65535, 0);
     const int blocksPerGrid = (size + threadsPerBlock - 1) / threadsPerBlock;
     dim3 grid(blocksPerGrid, 1, 1);
+
+    printf("blocksPerGrid %u\n", blocksPerGrid);
 
     return grid;
 }

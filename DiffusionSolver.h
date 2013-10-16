@@ -43,9 +43,15 @@ public:
      * @return 'True' on success, 'false' otherwise
      */
     static bool CalcGVF(
-            const float *startVol, float *gvfConstData_D, const unsigned int *cellStates_D,
-                    float *grad_D, size_t dim[3], float isovalue,
-                    float *gvfIn_D, float *gvfOut_D, unsigned int maxIt, float scl);
+            const float *volTarget_D,
+            float *gvfConstData_D,
+            const unsigned int *cellStatesTarget_D,
+            int3 volDim,
+            float isovalue,
+            float *gvfIn_D,
+            float *gvfOut_D,
+            unsigned int maxIt,
+            float scl);
 
     /**
      * CUDA implementation of an iterative method to compute the Gradient

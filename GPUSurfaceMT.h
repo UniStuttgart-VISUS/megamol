@@ -44,8 +44,11 @@ public:
     /**
      * TODO
      */
-    bool ComputeConnectivity(float *volume_D,
-            size_t volDim[3], float volWSOrg[3], float volWSDelta[3],
+    bool ComputeConnectivity(
+            float *volume_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
             float isovalue);
 
     /**
@@ -61,9 +64,9 @@ public:
      */
     bool ComputeTriangles(
             float *volume_D,
-            size_t volDim[3],
-            float volWSOrg[3],
-            float volWSDelta[3],
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
             float isovalue);
 
     /**
@@ -78,9 +81,9 @@ public:
      */
     bool ComputeNormals(
             float *volume_D,
-            size_t volDim[3],
-            float volWSOrg[3],
-            float volWSDelta[3],
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
             float isovalue);
 
     /**
@@ -96,9 +99,9 @@ public:
      */
     bool ComputeVertexPositions(
             float *volume_D,
-            size_t volDim[3],
-            float volWSOrg[3],
-            float volWSDelta[3],
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
             float isovalue);
 
     /**
@@ -203,6 +206,7 @@ protected:
 
     /// The number of active cells
     size_t activeCellCnt;
+
 
     /* Triangle sorting */
 

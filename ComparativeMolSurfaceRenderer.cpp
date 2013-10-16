@@ -488,35 +488,35 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
     padding = this->maxAtomRad*this->qsParticleRad + this->qsGridSpacing*10; // TODO How much makes sense?
 
     // Init grid parameters
-    gridDensMap.minC[0] = this->bboxParticles.GetLeft()   - padding;
-    gridDensMap.minC[1] = this->bboxParticles.GetBottom() - padding;
-    gridDensMap.minC[2] = this->bboxParticles.GetBack()   - padding;
-    gridDensMap.maxC[0] = this->bboxParticles.GetRight() + padding;
-    gridDensMap.maxC[1] = this->bboxParticles.GetTop()   + padding;
-    gridDensMap.maxC[2] = this->bboxParticles.GetFront() + padding;
-    gridXAxisLen = gridDensMap.maxC[0] - gridDensMap.minC[0];
-    gridYAxisLen = gridDensMap.maxC[1] - gridDensMap.minC[1];
-    gridZAxisLen = gridDensMap.maxC[2] - gridDensMap.minC[2];
-    gridDensMap.size[0] = (int) ceil(gridXAxisLen / this->qsGridSpacing);
-    gridDensMap.size[1] = (int) ceil(gridYAxisLen / this->qsGridSpacing);
-    gridDensMap.size[2] = (int) ceil(gridZAxisLen / this->qsGridSpacing);
-    gridXAxisLen = (gridDensMap.size[0]-1) * this->qsGridSpacing;
-    gridYAxisLen = (gridDensMap.size[1]-1) * this->qsGridSpacing;
-    gridZAxisLen = (gridDensMap.size[2]-1) * this->qsGridSpacing;
-    gridDensMap.maxC[0] = gridDensMap.minC[0] + gridXAxisLen;
-    gridDensMap.maxC[1] = gridDensMap.minC[1] + gridYAxisLen;
-    gridDensMap.maxC[2] = gridDensMap.minC[2] + gridZAxisLen;
-    gridDensMap.delta[0] = this->qsGridSpacing;
-    gridDensMap.delta[1] = this->qsGridSpacing;
-    gridDensMap.delta[2] = this->qsGridSpacing;
-    volSize = gridDensMap.size[0]*gridDensMap.size[1]*gridDensMap.size[2];
+    this->volOrg.x = this->bboxParticles.GetLeft()   - padding;
+    this->volOrg.y = this->bboxParticles.GetBottom() - padding;
+    this->volOrg.z = this->bboxParticles.GetBack()   - padding;
+    this->volMaxC.x = this->bboxParticles.GetRight() + padding;
+    this->volMaxC.y = this->bboxParticles.GetTop()   + padding;
+    this->volMaxC.z = this->bboxParticles.GetFront() + padding;
+    gridXAxisLen = this->volMaxC.x - this->volOrg.x;
+    gridYAxisLen = this->volMaxC.y - this->volOrg.y;
+    gridZAxisLen = this->volMaxC.z - this->volOrg.z;
+    this->volDim.x = (int) ceil(gridXAxisLen / this->qsGridSpacing);
+    this->volDim.y = (int) ceil(gridYAxisLen / this->qsGridSpacing);
+    this->volDim.z = (int) ceil(gridZAxisLen / this->qsGridSpacing);
+    gridXAxisLen = (this->volDim.x-1) * this->qsGridSpacing;
+    gridYAxisLen = (this->volDim.y-1) * this->qsGridSpacing;
+    gridZAxisLen = (this->volDim.z-1) * this->qsGridSpacing;
+    this->volMaxC.x = this->volOrg.x + gridXAxisLen;
+    this->volMaxC.y = this->volOrg.y + gridYAxisLen;
+    this->volMaxC.z = this->volOrg.z + gridZAxisLen;
+    this->volDelta.x = this->qsGridSpacing;
+    this->volDelta.y = this->qsGridSpacing;
+    this->volDelta.z = this->qsGridSpacing;
+    volSize = this->volDim.x*this->volDim.y*this->volDim.z;
 
     // Set particle positions
 #pragma omp parallel for
     for (int cnt = 0; cnt < static_cast<int>(mol->AtomCount()); ++cnt) {
-            this->gridDataPos.Peek()[4*cnt+0] -= gridDensMap.minC[0];
-            this->gridDataPos.Peek()[4*cnt+1] -= gridDensMap.minC[1];
-            this->gridDataPos.Peek()[4*cnt+2] -= gridDensMap.minC[2];
+            this->gridDataPos.Peek()[4*cnt+0] -= this->volOrg.x;
+            this->gridDataPos.Peek()[4*cnt+1] -= this->volOrg.y;
+            this->gridDataPos.Peek()[4*cnt+2] -= this->volOrg.z;
     }
 
 //    printf("Grid dim %u %u %u, mol atom count %u, grid: %f, org %f %f %f\n",
@@ -536,8 +536,8 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
             &this->gridDataPos.Peek()[0],
             NULL,   // Pointer to 'color' array
             false,  // Do not use 'color' array
-            (float*)&gridDensMap.minC,
-            (int*)&gridDensMap.size,
+            (float*)&this->volOrg,
+            (int*)&this->volDim,
             this->maxAtomRad,
             this->qsParticleRad, // Radius scaling
             this->qsGridSpacing,
@@ -1419,21 +1419,17 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 "%s: compute surface points #1",
                 this->ClassName());
 
-        CheckForCudaErrorSync();
+        ::CheckForCudaErrorSync();
 
 
         /* Surface #1 */
 
         // Get vertex positions based on the level set
-        size_t volDim[3];
-        volDim[0] = this->gridDensMap.size[0];
-        volDim[1] = this->gridDensMap.size[1];
-        volDim[2] = this->gridDensMap.size[2];
         if (!this->deformSurf1.ComputeVertexPositions(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                volDim,
-                &this->gridDensMap.minC[0],
-                &this->gridDensMap.delta[0],
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
                 this->qsIsoVal)) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1443,7 +1439,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
-        CheckForCudaErrorSync();
+        ::CheckForCudaErrorSync();
 
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
@@ -1453,10 +1449,10 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Build triangle mesh from vertices
         if (!this->deformSurf1.ComputeTriangles(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                                volDim,
-                                &this->gridDensMap.minC[0],
-                                &this->gridDensMap.delta[0],
-                                this->qsIsoVal)) {
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
+                this->qsIsoVal)) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not compute vertex triangles #1",
@@ -1475,9 +1471,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Compute vertex connectivity
         if (!this->deformSurf1.ComputeConnectivity(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                volDim,
-                &this->gridDensMap.minC[0],
-                &this->gridDensMap.delta[0],
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
                 this->qsIsoVal)) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1495,11 +1491,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->ClassName());
 
         // Regularize the mesh of surface #1
-        if (!this->deformSurf1.MorphToVolume(
+        if (!this->deformSurf1.MorphToVolumeGradient(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                volDim,
-                &this->gridDensMap.minC[0],
-                &this->gridDensMap.delta[0],
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
                 this->qsIsoVal,
                 this->interpolMode,
                 this->regMaxIt,
@@ -1524,10 +1520,10 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Compute vertex normals
         if (!this->deformSurf1.ComputeNormals(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                                volDim,
-                                &this->gridDensMap.minC[0],
-                                &this->gridDensMap.delta[0],
-                                this->qsIsoVal)) {
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
+                this->qsIsoVal)) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not compute normals #1",
@@ -1567,15 +1563,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         /* Surface #2 */
 
         // Get vertex positions based on the level set
-        size_t volDim[3];
-        volDim[0] = this->gridDensMap.size[0];
-        volDim[1] = this->gridDensMap.size[1];
-        volDim[2] = this->gridDensMap.size[2];
         if (!this->deformSurf2.ComputeVertexPositions(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                volDim,
-                &this->gridDensMap.minC[0],
-                &this->gridDensMap.delta[0],
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
                 this->qsIsoVal)) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1592,10 +1584,10 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Build triangle mesh from vertices
         if (!this->deformSurf2.ComputeTriangles(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                                volDim,
-                                &this->gridDensMap.minC[0],
-                                &this->gridDensMap.delta[0],
-                                this->qsIsoVal)) {
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
+                this->qsIsoVal)) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not compute triangles #2",
@@ -1611,9 +1603,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Compute vertex connectivity
         if (!this->deformSurf2.ComputeConnectivity(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                volDim,
-                &this->gridDensMap.minC[0],
-                &this->gridDensMap.delta[0],
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
                 this->qsIsoVal)) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1628,11 +1620,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->ClassName());
 
         // Regularize the mesh of surface #2
-        if (!this->deformSurf2.MorphToVolume(
+        if (!this->deformSurf2.MorphToVolumeGradient(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                volDim,
-                &this->gridDensMap.minC[0],
-                &this->gridDensMap.delta[0],
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
                 this->qsIsoVal,
                 this->interpolMode,
                 this->regMaxIt,
@@ -1655,10 +1647,10 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Compute vertex normals
         if (!this->deformSurf2.ComputeNormals(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                                volDim,
-                                &this->gridDensMap.minC[0],
-                                &this->gridDensMap.delta[0],
-                                this->qsIsoVal)) {
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
+                this->qsIsoVal)) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not compute vertex normals #2",
@@ -1695,11 +1687,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Make deep copy of regularized second surface
         this->deformSurfMapped = this->deformSurf2;
 
-        size_t volDim1[3];
-        volDim1[0] = static_cast<size_t>(this->gridDensMap.size[0]);
-        volDim1[1] = static_cast<size_t>(this->gridDensMap.size[1]);
-        volDim1[2] = static_cast<size_t>(this->gridDensMap.size[2]);
-
         if (this->surfMappedExtForce == GVF) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
@@ -1711,9 +1698,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     this->deformSurf1.PeekCubeStates(),
-                    volDim1,
-                    &this->gridDensMap.minC[0],
-                    &this->gridDensMap.delta[0],
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
                     this->qsIsoVal,
                     this->interpolMode,
                     this->surfaceMappingMaxIt,
@@ -1739,11 +1726,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->ClassName());
 
             // Morph surface #2 to shape #1 using implicit molecular surface
-            if (!this->deformSurfMapped.MorphToVolume(
+            if (!this->deformSurfMapped.MorphToVolumeGradient(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                    volDim1,
-                    &this->gridDensMap.minC[0],
-                    &this->gridDensMap.delta[0],
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
                     this->qsIsoVal,
                     this->interpolMode,
                     this->surfaceMappingMaxIt,
@@ -1768,9 +1755,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             // Morph surface #2 to shape #1 using implicit molecular surface + distance field
             if (!this->deformSurfMapped.MorphToVolumeDistfield(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                    volDim1,
-                    &this->gridDensMap.minC[0],
-                    &this->gridDensMap.delta[0],
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
                     this->qsIsoVal,
                     this->interpolMode,
                     this->surfaceMappingMaxIt,
@@ -1794,29 +1781,15 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->ClassName());
 
             // Morph surface #2 to shape #1 using Two-Way-GVF
-            int3 volsize = make_int3(
-                    this->gridDensMap.size[0],
-                    this->gridDensMap.size[1],
-                    this->gridDensMap.size[2]);
-
-            float3 volOrg = make_float3(
-                    this->gridDensMap.minC[0],
-                    this->gridDensMap.minC[1],
-                    this->gridDensMap.minC[2]);
-
-            float3 volDelta = make_float3(
-                    this->gridDensMap.delta[0],
-                    this->gridDensMap.delta[1],
-                    this->gridDensMap.delta[2]);
 
             if (!this->deformSurfMapped.MorphToVolumeTwoWayGVF(
                     ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     this->deformSurf2.PeekCubeStates(),
                     this->deformSurf1.PeekCubeStates(),
-                    volsize,
-                    volOrg,
-                    volDelta,
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
                     this->qsIsoVal,
                     this->interpolMode,
                     this->surfaceMappingMaxIt,
@@ -1837,12 +1810,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
-        size_t volDim2[3];
-        volDim2[0] = static_cast<size_t>(this->gridDensMap.size[0]);
-        volDim2[1] = static_cast<size_t>(this->gridDensMap.size[1]);
-        volDim2[2] = static_cast<size_t>(this->gridDensMap.size[2]);
-
-
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute normals of mapped surface",
                 this->ClassName());
@@ -1850,10 +1817,10 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Compute vertex normals
         if (!this->deformSurfMapped.ComputeNormals(
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                                volDim2,
-                                &this->gridDensMap.minC[0],
-                                &this->gridDensMap.delta[0],
-                                this->qsIsoVal)) {
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
+                this->qsIsoVal)) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not compute normals of mapped surface",
@@ -1882,9 +1849,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Flag vertices adjacent to corrupt triangles
         if (!this->deformSurfMapped.FlagCorruptTriangleVertices(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                make_int3(this->gridDensMap.size[0],this->gridDensMap.size[1],this->gridDensMap.size[2]),
-                &this->gridDensMap.minC[0],
-                &this->gridDensMap.delta[0],
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
                 this->qsIsoVal)) {
             return false;
         }
@@ -2082,7 +2049,7 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
 
     using namespace vislib::math;
 
-    size_t gridSize = this->gridDensMap.size[0]*this->gridDensMap.size[1]*this->gridDensMap.size[2];
+    size_t gridSize = this->volDim.x*this->volDim.y*this->volDim.z;
     if (this->triggerComputeLines) {
 
         this->gvf.Validate(gridSize*4);
@@ -2094,14 +2061,14 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
 
         this->lines.SetCount(gridSize*6);
         this->lineColors.SetCount(gridSize*6);
-        for (size_t x = 0; x < this->gridDensMap.size[0]; ++x) {
-            for (size_t y = 0; y < this->gridDensMap.size[1]; ++y) {
-                for (size_t z = 0; z < this->gridDensMap.size[2]; ++z) {
-                    unsigned int idx = this->gridDensMap.size[0]*(this->gridDensMap.size[1]*z + y) + x;
+        for (int x = 0; x < this->volDim.x; ++x) {
+            for (int y = 0; y < this->volDim.y; ++y) {
+                for (int z = 0; z < this->volDim.z; ++z) {
+                    unsigned int idx = this->volDim.x*(this->volDim.y*z + y) + x;
 
-                    Vec3f pos(this->gridDensMap.minC[0] + x*this->gridDensMap.delta[0],
-                            this->gridDensMap.minC[1] + y*this->gridDensMap.delta[1],
-                            this->gridDensMap.minC[2] + z*this->gridDensMap.delta[2]);
+                    Vec3f pos(this->volOrg.x + x*this->volDelta.x,
+                            this->volOrg.y + y*this->volDelta.y,
+                            this->volOrg.z + z*this->volDelta.z);
 
                     Vec3f vec(gvf.Peek()[4*idx+0], gvf.Peek()[4*idx+1], gvf.Peek()[4*idx+2]);
 
