@@ -741,7 +741,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangleVertices(
 //    ::CheckForCudaErrorSync();
 
     // Call kernel
-    FlagCorruptTriangleVertices_D <<< this->Grid(this->triangleCnt, 256), 256 >>> (
+    FlagCorruptTriangleVertices_D <<< Grid(this->triangleCnt, 256), 256 >>> (
             vboFlagPt,
             vboPt,
             AbstractGPUSurface::vertexDataStride,
@@ -850,7 +850,7 @@ bool DeformableGPUSurfaceMT::initExtForcesGradient(float *volTarget_D,
 #endif
 
     // Calculate gradient using finite differences
-    calcVolGradient_D <<< this->Grid(volSize, 256), 256 >>> (
+    calcVolGradient_D <<< Grid(volSize, 256), 256 >>> (
             (float4*)this->externalForces_D.Peek(), volTarget_D);
 
 #ifdef USE_CUDA_TIMER
@@ -1766,7 +1766,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
     for (uint i = 0; i < maxIt; ++i) {
 
         // Calc laplacian
-        MeshLaplacian_D <<< this->Grid(this->vertexCnt, 256), 256 >>> (
+        MeshLaplacian_D <<< Grid(this->vertexCnt, 256), 256 >>> (
                 vertexBuffer_D,
                 this->vertexDataOffsPos,
                 this->vertexDataStride,
@@ -1795,7 +1795,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         ::CheckForCudaErrorSync();
 
         // Calc laplacian^2
-        MeshLaplacian_D <<< this->Grid(this->vertexCnt, 256), 256 >>> (
+        MeshLaplacian_D <<< Grid(this->vertexCnt, 256), 256 >>> (
                 (float*)this->laplacian_D.Peek(),
                 0,
                 3,
@@ -1809,7 +1809,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         ::CheckForCudaErrorSync();
 
         // Update vertex position
-        UpdateVtxPos_D <<< this->Grid(this->vertexCnt, 256), 256 >>> (
+        UpdateVtxPos_D <<< Grid(this->vertexCnt, 256), 256 >>> (
                 volTarget_D,
                 vertexBuffer_D,
                 this->vertexExternalForcesScl_D.Peek(),
