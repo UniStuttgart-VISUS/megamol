@@ -439,7 +439,6 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
 
     float gridXAxisLen, gridYAxisLen, gridZAxisLen;
     float padding;
-    uint volSize;
 
     // (Re-)allocate memory for intermediate particle data
     this->gridDataPos.Validate(mol->AtomCount()*4);
@@ -474,6 +473,7 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
                         else {
                             this->gridDataPos.Peek()[4*particleCnt+3] = 1.0f;
                         }
+
                         this->maxAtomRad = std::max(this->maxAtomRad, this->gridDataPos.Peek()[4*particleCnt+3]);
                         this->minAtomRad = std::min(this->minAtomRad, this->gridDataPos.Peek()[4*particleCnt+3]);
 
@@ -509,7 +509,6 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
     this->volDelta.x = this->qsGridSpacing;
     this->volDelta.y = this->qsGridSpacing;
     this->volDelta.z = this->qsGridSpacing;
-    volSize = this->volDim.x*this->volDim.y*this->volDim.z;
 
     // Set particle positions
 #pragma omp parallel for
@@ -519,16 +518,13 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
             this->gridDataPos.Peek()[4*cnt+2] -= this->volOrg.z;
     }
 
-//    printf("Grid dim %u %u %u, mol atom count %u, grid: %f, org %f %f %f\n",
-//            gridDensMap.size[0], gridDensMap.size[1], gridDensMap.size[2],
-//            mol->AtomCount(), this->gridDataPos.Peek()[0],
-//            gridDensMap.minC[0], gridDensMap.minC[1], gridDensMap.minC[2]);
-
-//    float dt_ms;
-//    cudaEvent_t event1, event2;
-//    cudaEventCreate(&event1);
-//    cudaEventCreate(&event2);
-//    cudaEventRecord(event1, 0);
+#ifdef USE_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
+#endif // USE_TIMER
 
     // Compute uniform grid
     int rc = cqs->calc_map(
@@ -544,12 +540,14 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
             this->qsIsoVal,
             this->qsGaussLim);
 
-//    cudaEventRecord(event2, 0);
-//    cudaEventSynchronize(event1);
-//    cudaEventSynchronize(event2);
-//    cudaEventElapsedTime(&dt_ms, event1, event2);
-//    printf("CUDA time for 'quicksurf':                             %.10f sec\n",
-//            dt_ms/1000.0f);
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'quicksurf':                             %.10f sec\n",
+            dt_ms/1000.0f);
+#endif // USE_TIMER
 
     if (rc != 0) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -2237,7 +2235,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
 
     GLint attribLocPosNew, attribLocPosOld;
     GLint attribLocNormal, attribLocCorruptTriangleFlag;
-    GLint attribLocTexCoordNew, attribLocTexCoordOld;
+    GLint attribLocTexCoordNew, attribLocTexCoordOld, attribLocPathLen;
 
     this->pplMappedSurfaceShader.Enable();
     CheckForGLError(); // OpenGL error check
@@ -2251,6 +2249,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     attribLocCorruptTriangleFlag = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "corruptTriangleFlag");
     attribLocTexCoordNew = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "texCoordNew");
     attribLocTexCoordOld = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "texCoordOld");
+    attribLocPathLen = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "pathLen");
     CheckForGLError(); // OpenGL error check
 
     glEnableVertexAttribArrayARB(attribLocPosNew);
@@ -2259,6 +2258,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     glEnableVertexAttribArrayARB(attribLocCorruptTriangleFlag);
     glEnableVertexAttribArrayARB(attribLocTexCoordNew);
     glEnableVertexAttribArrayARB(attribLocTexCoordOld);
+    glEnableVertexAttribArrayARB(attribLocPathLen);
     CheckForGLError(); // OpenGL error check
 
 
@@ -2305,6 +2305,15 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
 
     CheckForGLError(); // OpenGL error check
 
+    // Attribute for vertex path length
+
+    glBindBufferARB(GL_ARRAY_BUFFER, this->deformSurfMapped.GetUncertaintyVBO());
+    CheckForGLError(); // OpenGL error check
+
+    glVertexAttribPointerARB(attribLocPathLen, 1, GL_FLOAT, GL_FALSE, 0, 0);
+
+    CheckForGLError(); // OpenGL error check
+
     /* Render */
 
     // Set uniform vars
@@ -2319,6 +2328,8 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("maxPotential"), 70);
     glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("alphaScl"), this->surfMappedAlphaScl);
     glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("maxPosDiff"), this->surfMaxPosDiff);
+    glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("uncertaintyMeasurement"),static_cast<int>(this->uncertaintyCriterion));
+
 
     glActiveTextureARB(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_3D, this->surfAttribTex2);
@@ -2326,7 +2337,6 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     glActiveTextureARB(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, this->surfAttribTex1);
     CheckForGLError(); // OpenGL error check
-
 
     if (renderMode == SURFACE_FILL) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -2357,6 +2367,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     glDisableVertexAttribArrayARB(attribLocCorruptTriangleFlag);
     glDisableVertexAttribArrayARB(attribLocTexCoordNew);
     glDisableVertexAttribArrayARB(attribLocTexCoordOld);
+    glDisableVertexAttribArrayARB(attribLocPathLen);
     CheckForGLError(); // OpenGL error check
 
     // Switch back to normal pointer operation by binding with 0
@@ -2442,12 +2453,11 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->triggerComputeLines = true;
     }
 
-    // Parameter for the external forces
+    // Parameter for uncertainty criterion
     if (this->uncertaintyCriterionSlot.IsDirty()) {
         this->uncertaintyCriterion = static_cast<UncertaintyCriterion>(
                 this->uncertaintyCriterionSlot.Param<core::param::EnumParam>()->Value());
         this->uncertaintyCriterionSlot.ResetDirty();
-        this->triggerSurfaceMapping = true;
     }
 
     // Weighting for external forces when mapping the surface

@@ -58,7 +58,7 @@ $(IntDir)/$(CudaDebugDir)/%.d: $(InputDir)/%.cu Makefile
 	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@$(CLEARTERMCMD)
 	@echo -n $(dir $@) > $@
-	$(Q)$(NVCC) -M -g $(NVCCFLAGS) $< >> $@
+	$(Q)$(NVCC) -M -g -lineinfo $(NVCCFLAGS) $< >> $@
 # -g debug information for host code
 # -G debug information for device code
 
@@ -76,11 +76,11 @@ $(IntDir)/$(CudaDebugDir)/%.o:
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"NVCC "$(COLORINFO)"$@: "
 	@$(CLEARTERMCMD)
-	$(Q)$(NVCC) -c -g -G $(NVCCFLAGS) $< -o $@
+	$(Q)$(NVCC) -c -lineinfo -g -G $(NVCCFLAGS) $< -o $@
 
 $(IntDir)/$(CudaReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"NVCC "$(COLORINFO)"$@: "
 	@$(CLEARTERMCMD)
-	$(Q)$(NVCC) -c -g -G -lineinfo $(NVCCFLAGS) $< -o $@
+	$(Q)$(NVCC) -c $(NVCCFLAGS) $< -o $@
 endif

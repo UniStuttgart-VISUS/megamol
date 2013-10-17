@@ -1269,10 +1269,7 @@ void ComputeVertexNormals_D(
                                                     TetrahedronEdgeVertexIdxOffset[tetrahedronIdx][edgeIdx1][3]];
 
                     maxIdx = max(maxIdx, max(vertexIdx0, vertexIdx1));
-//
-//                    if (vertexIdx0 >= activeVertexCnt) continue;
-//                    if (vertexIdx1 >= activeVertexCnt) continue;
-//
+
                     float3 pos0, pos1;
                     pos0 = make_float3(
                             dataBuffer_D[arrDataSize*vertexIdx0+arrDataOffsPos+0],
@@ -1295,9 +1292,6 @@ void ComputeVertexNormals_D(
     dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsNormals+0] = normal.x;
     dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsNormals+1] = normal.y;
     dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsNormals+2] = normal.z;
-//    dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsNormals+0] = maxIdx;
-//    dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsNormals+1] = maxIdx;
-//    dataBuffer_D[arrDataSize*activeVertexIdx+arrDataOffsNormals+2] = maxIdx;
 }
 
 extern "C"
