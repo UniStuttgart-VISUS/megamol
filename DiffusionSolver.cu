@@ -22,7 +22,7 @@
 using namespace megamol;
 using namespace megamol::protein;
 
-#define USE_CUDA_TIMER
+//#define USE_CUDA_TIMER
 
 __constant__ __device__ float isoval_D;  // Isovalue defining the level sets
 

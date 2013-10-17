@@ -78,9 +78,23 @@ public:
     }
 
     /**
+     * Answers the OpenGL handle for the vbo holding uncertainty information.
+     *
+     * @return The GPU handle for the vertex buffer object or NULL if !ready
+     */
+    GLuint GetUncertaintyVBO() const {
+        return this->vboUncertainty;
+    }
+
+    /**
      * TODO
      */
     bool InitCorruptFlagVBO(size_t vertexCnt);
+
+    /**
+     * TODO
+     */
+    bool InitUncertaintyVBO(size_t vertexCnt);
 
     /**
      * TODO
@@ -244,6 +258,7 @@ protected:
     bool updateVtxPos(
             float* volTarget_D,
             float* vertexBuffer_D,
+            float* vtxUncertainty_D,
             int3 volDim,
             float3 volOrg,
             float3 volDelta,
@@ -285,6 +300,9 @@ private:
 
     /// Vertex Buffer Object handle for vertex data
     GLuint vboCorruptTriangleVertexFlag;
+
+    /// Vertex buffer object for the vertex uncertainty information
+    GLuint vboUncertainty;
 
 };
 

@@ -475,6 +475,7 @@ __global__ void UpdateVtxPos_D(
         float *targetVolume_D,
         float *vertexPosMapped_D,
         float *vertexExternalForcesScl_D,
+        float *vtxUncertainty_D,
         float4 *gradient_D,
         float3 *laplacian_D,
         float3 *laplacian2_D,
@@ -485,6 +486,7 @@ __global__ void UpdateVtxPos_D(
         float isoval,
         float minDispl,
         bool useCubicInterpolation,
+        bool trackPath,
         uint dataArrOffsPos,
         uint dataArrOffsNormal,
         uint dataArrSize) {
@@ -552,6 +554,12 @@ __global__ void UpdateVtxPos_D(
 
     // Write external forces scale factor back to global device memory
     vertexExternalForcesScl_D[idx] = externalForcesScl;
+
+    // No branching occurs here, since the parameter is set globally
+    if (trackPath) {
+        float3 diff = posNew-posOld;
+        vtxUncertainty_D[idx] += sqrt(diff.x*diff.x+diff.y*diff.y+diff.z*diff.z);
+    }
 }
 
 
@@ -801,7 +809,29 @@ bool DeformableGPUSurfaceMT::InitCorruptFlagVBO(size_t vertexCnt) {
     // Create vertex buffer object for corrupt vertex flag
     glGenBuffersARB(1, &this->vboCorruptTriangleVertexFlag);
     glBindBufferARB(GL_ARRAY_BUFFER, this->vboCorruptTriangleVertexFlag);
-    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(float)*3*vertexCnt, 0, GL_DYNAMIC_DRAW);
+    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(float)*vertexCnt, 0, GL_DYNAMIC_DRAW);
+    glBindBufferARB(GL_ARRAY_BUFFER, 0);
+
+    return CheckForGLError();
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::InitUncertaintyVBO
+ */
+bool DeformableGPUSurfaceMT::InitUncertaintyVBO(size_t vertexCnt) {
+
+    // Destroy if necessary
+    if (this->vboUncertainty) {
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, this->vboUncertainty);
+        glDeleteBuffersARB(1, &this->vboUncertainty);
+        this->vboUncertainty = 0;
+    }
+
+    // Create vertex buffer object for corrupt vertex flag
+    glGenBuffersARB(1, &this->vboUncertainty);
+    glBindBufferARB(GL_ARRAY_BUFFER, this->vboUncertainty);
+    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(float)*vertexCnt, 0, GL_DYNAMIC_DRAW);
     glBindBufferARB(GL_ARRAY_BUFFER, 0);
 
     return CheckForGLError();
@@ -1086,6 +1116,8 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGradient(
 
     using vislib::sys::Log;
 
+    cudaGraphicsResource* cudaTokens[2];
+
     if ((!this->triangleIdxReady)||(!this->neighboursReady)) {
         return false;
     }
@@ -1099,14 +1131,25 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGradient(
         return false;
     }
 
+    // Init vbo with uncertainty information
+    if (!this->InitUncertaintyVBO(this->vertexCnt)) {
+        return false;
+    }
+
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
-            &this->vertexDataResource, this->vboVtxData,
+            &cudaTokens[0], this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1], this->vboUncertainty,
             cudaGraphicsMapFlagsNone))) {
         return false;
     }
 
-    if (!CudaSafeCall(cudaGraphicsMapResources(1, &this->vertexDataResource, 0))) {
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
         return false;
     }
 
@@ -1116,7 +1159,16 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGradient(
     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
             reinterpret_cast<void**>(&vboPt), // The mapped pointer
             &vboSize,              // The size of the accessible data
-            this->vertexDataResource))) {                 // The mapped resource
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboUncertaintyPt;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboUncertaintyPt), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
         return false;
     }
 
@@ -1181,6 +1233,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGradient(
     if (!this->updateVtxPos(
             volume_D,
             vboPt,
+            vboUncertaintyPt,
             volDim,
             volOrg,
             volDelta,
@@ -1194,10 +1247,13 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGradient(
         return false;
     }
 
-    if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource, 0))) {
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
         return false;
     }
-    if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
         return false;
     }
 
@@ -1224,6 +1280,8 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(
 
     using vislib::sys::Log;
 
+    cudaGraphicsResource* cudaTokens[2];
+
     if ((!this->triangleIdxReady)||(!this->neighboursReady)) {
         return false;
     }
@@ -1232,14 +1290,25 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(
         return false;
     }
 
+    // Init vbo with uncertainty information
+    if (!this->InitUncertaintyVBO(this->vertexCnt)) {
+        return false;
+    }
+
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
-            &this->vertexDataResource, this->vboVtxData,
+            &cudaTokens[0], this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1], this->vboUncertainty,
             cudaGraphicsMapFlagsNone))) {
         return false;
     }
 
-    if (!CudaSafeCall(cudaGraphicsMapResources(1, &this->vertexDataResource, 0))) {
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
         return false;
     }
 
@@ -1249,7 +1318,16 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(
     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
             reinterpret_cast<void**>(&vboPt), // The mapped pointer
             &vboSize,              // The size of the accessible data
-            this->vertexDataResource))) {                 // The mapped resource
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboUncertaintyPt;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboUncertaintyPt), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
         return false;
     }
 
@@ -1301,6 +1379,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(
     if (!this->updateVtxPos(
             volume_D,
             vboPt,
+            vboUncertaintyPt,
             volDim,
             volOrg,
             volDelta,
@@ -1314,10 +1393,13 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(
         return false;
     }
 
-    if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource, 0))) {
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
         return false;
     }
-    if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
         return false;
     }
 
@@ -1346,6 +1428,8 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
 
     using vislib::sys::Log;
 
+    cudaGraphicsResource* cudaTokens[2];
+
     if ((!this->triangleIdxReady)||(!this->neighboursReady)) {
         return false;
     }
@@ -1366,14 +1450,25 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
         return false;
     }
 
+    // Init vbo with uncertainty information
+    if (!this->InitUncertaintyVBO(this->vertexCnt)) {
+        return false;
+    }
+
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
-            &this->vertexDataResource, this->vboVtxData,
+            &cudaTokens[0], this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1], this->vboUncertainty,
             cudaGraphicsMapFlagsNone))) {
         return false;
     }
 
-    if (!CudaSafeCall(cudaGraphicsMapResources(1, &this->vertexDataResource, 0))) {
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
         return false;
     }
 
@@ -1383,7 +1478,16 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
             reinterpret_cast<void**>(&vboPt), // The mapped pointer
             &vboSize,              // The size of the accessible data
-            this->vertexDataResource))) {                 // The mapped resource
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboUncertaintyPt;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboUncertaintyPt), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
         return false;
     }
 
@@ -1422,6 +1526,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
     if (!this->updateVtxPos(
             volumeTarget_D,
             vboPt,
+            vboUncertaintyPt,
             volDim,
             volOrg,
             volDelta,
@@ -1435,10 +1540,13 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
         return false;
     }
 
-    if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource, 0))) {
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
         return false;
     }
-    if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
         return false;
     }
 
@@ -1469,6 +1577,8 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
 
     using vislib::sys::Log;
 
+    cudaGraphicsResource* cudaTokens[2];
+
     if ((!this->triangleIdxReady)||(!this->neighboursReady)) {
         return false;
     }
@@ -1487,14 +1597,25 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
         return false;
     }
 
+    // Init vbo with uncertainty information
+    if (!this->InitUncertaintyVBO(this->vertexCnt)) {
+        return false;
+    }
+
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
-            &this->vertexDataResource, this->vboVtxData,
+            &cudaTokens[0], this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1], this->vboUncertainty,
             cudaGraphicsMapFlagsNone))) {
         return false;
     }
 
-    if (!CudaSafeCall(cudaGraphicsMapResources(1, &this->vertexDataResource, 0))) {
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
         return false;
     }
 
@@ -1504,7 +1625,16 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
             reinterpret_cast<void**>(&vboPt), // The mapped pointer
             &vboSize,              // The size of the accessible data
-            this->vertexDataResource))) {                 // The mapped resource
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboUncertaintyPt;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboUncertaintyPt), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
         return false;
     }
 
@@ -1543,6 +1673,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
     if (!this->updateVtxPos(
             volumeTarget_D,
             vboPt,
+            vboUncertaintyPt,
             volDim,
             volOrg,
             volDelta,
@@ -1556,10 +1687,13 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
         return false;
     }
 
-    if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource, 0))) {
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
         return false;
     }
-    if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
         return false;
     }
 
@@ -1685,6 +1819,7 @@ void DeformableGPUSurfaceMT::Release() {
 bool DeformableGPUSurfaceMT::updateVtxPos(
         float* volTarget_D,
         float* vertexBuffer_D,
+        float* vtxUncertainty_D,
         int3 volDim,
         float3 volOrg,
         float3 volDelta,
@@ -1754,6 +1889,11 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         return false;
     }
 
+    // Init uncertainty buffer with zero
+    if (!CudaSafeCall(cudaMemset(vtxUncertainty_D, 0x00, this->vertexCnt*sizeof(float)))) {
+        return false;
+    }
+
 #ifdef USE_TIMER
     float dt_ms;
     cudaEvent_t event1, event2;
@@ -1813,6 +1953,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                 volTarget_D,
                 vertexBuffer_D,
                 this->vertexExternalForcesScl_D.Peek(),
+                vtxUncertainty_D,
                 (float4*)this->externalForces_D.Peek(),
                 this->laplacian_D.Peek(),
                 this->laplacian2_D.Peek(),
@@ -1823,12 +1964,25 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                 isovalue,
                 surfMappedMinDisplScl,
                 useCubicInterpolation,
+                true, // Track path of vertices
                 this->vertexDataOffsPos,
                 this->vertexDataOffsNormal,
                 this->vertexDataStride);
 
         ::CheckForCudaErrorSync();
     }
+
+//    // DEBUG Print path length
+//    HostArr<float> pathLen;
+//    pathLen.Validate(this->vertexCnt);
+//    if (!CudaSafeCall(cudaMemcpy(pathLen.Peek(), vtxUncertainty_D, sizeof(float)*this->vertexCnt, cudaMemcpyDeviceToHost))) {
+//        return false;
+//    }
+//    for (int i = 0; i < this->vertexCnt; ++i) {
+//        printf("Path: %f\n", pathLen.Peek()[i]);
+//    }
+//    pathLen.Release();
+//    // END DEBUG
 
 #ifdef USE_TIMER
     cudaEventRecord(event2, 0);

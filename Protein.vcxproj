@@ -547,7 +547,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="CrystalStructureDataSource.cpp" />
     <ClCompile Include="CrystalStructureVolumeRenderer.cpp" />
     <ClCompile Include="DataWriter.cpp" />
-    <ClCompile Include="DeformableGPUSurfaceMT.cpp" />
     <ClCompile Include="Diagram2DCall.cpp" />
     <ClCompile Include="Diagram2DRenderer.cpp" />
     <ClCompile Include="DiagramCall.cpp" />
@@ -605,7 +604,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="GPUSurfaceMT.cpp" />
     <ClCompile Include="GROLoader.cpp" />
     <ClCompile Include="HapticsMoleculeRenderer.cpp" />
     <ClCompile Include="LinkedView3D.cpp" />
@@ -1015,6 +1013,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <Defines Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">_DEBUG;WIN32;_WIN32</Defines>
       <Defines Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">WIN32;_WIN32</Defines>
     </CudaCompile>
+    <CudaCompile Include="DeformableGPUSurfaceMT.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
     <CudaCompile Include="DiffusionSolver.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CudaCompile>
@@ -1024,6 +1025,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="GPUSurfaceMT.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="PotentialCalculator.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

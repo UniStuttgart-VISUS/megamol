@@ -388,12 +388,6 @@
     <ClCompile Include="AbstractVTKLegacyData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DeformableGPUSurfaceMT.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GPUSurfaceMT.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MolecularBezierData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -943,6 +937,12 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="DiffusionSolver.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="GPUSurfaceMT.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="DeformableGPUSurfaceMT.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
   </ItemGroup>

@@ -112,6 +112,7 @@ attribute vec3 normal;
 attribute vec3 texCoordNew;
 attribute vec3 texCoordOld;
 attribute float corruptTriangleFlag;
+attribute float pathLen;
 
 varying vec3 lightDir;
 varying vec3 view;
@@ -119,7 +120,7 @@ varying vec3 normalFrag;
 varying vec3 posNewFrag; 
 varying vec3 posOldFrag; 
 varying float corruptTriangleFlagFrag;
-//varying float signSwitchedFlag;
+varying float pathLenFrag;
 
 void main() {   
     
@@ -148,10 +149,8 @@ void main() {
     // Flag for corrupt triangles
     corruptTriangleFlagFrag = corruptTriangleFlag;
     
-    // Flag for switched sign
-    //float potOld = texture3D(potentialTex1, gl_TexCoord[1].stp).a;
-    //float potNew = texture3D(potentialTex0, gl_TexCoord[0].stp).a;
-    //signSwitchedFlag = float(potOld*potNew < 0.0);
+    // Path length
+    pathLenFrag = pathLen;
     
 }
 -->
@@ -179,14 +178,15 @@ uniform float minPotential;
 uniform float maxPotential;
 uniform float alphaScl;
 uniform float maxPosDiff;
+uniform int uncertaintyMeasurement;
 
 varying vec3 lightDir;
 varying vec3 view;
 varying vec3 normalFrag;
-varying vec3 posNewFrag; 
-varying vec3 posOldFrag; 
+varying vec3 posNewFrag; // Interpolated WS position
+varying vec3 posOldFrag; // Interpolated WS position
 varying float corruptTriangleFlagFrag;
-//varying float signSwitchedFlag;
+varying float pathLenFrag;
 
 void main() {
     
@@ -217,13 +217,19 @@ void main() {
         lightparams = vec4(1.0, 0.0, 0.0, 1.0);
         //color = vec4(gl_TexCoord[0].stp, 1.0);
         color = vec4(gl_TexCoord[1].stp, 1.0);
-    } else if (colorMode == 4) { // Distance to old position
-        float diff = length(posOldFrag-posNewFrag);
+    } else if (colorMode == 4) { // Uncertainty
+        float diff;
+        if (uncertaintyMeasurement == 0) { // Euclidean distance
+            diff = length(posOldFrag-posNewFrag);
+        } else if (uncertaintyMeasurement == 1) { // Path length
+            diff = pathLenFrag;
+        }
         color = MixColors(diff, 0.0, maxPosDiff*0.5, 
             maxPosDiff, 
             vec4(1.0, 1.0, 1.0, 1.0), 
             vec4(1.0, 1.0, 0.0, 1.0), 
             vec4(1.0, 0.0, 0.0, 1.0));
+
     } else if (colorMode == 5) { // Surface potential 0
             
         // Interpolation in MSH color space
@@ -231,7 +237,6 @@ void main() {
                         minPotential, 0.0, maxPotential);
         color = vec4(MSH2RGB(colMsh.x, colMsh.y, colMsh.z), 1.0);
         
-            
     } else if (colorMode == 6) { // Surface potential 1
             
         // Interpolation in MSH color space
@@ -245,7 +250,12 @@ void main() {
         float potNew = texture3D(potentialTex0, gl_TexCoord[0].stp).a;
         float potDiff = abs(potOld-potNew); 
         // Calc euclidian distance
-        float posDiff = length(posOldFrag-posNewFrag);
+        float posDiff;
+        if (uncertaintyMeasurement == 0) { // Euclidean distance
+            posDiff = length(posOldFrag-posNewFrag);
+        } else if (uncertaintyMeasurement == 1) { // Path length
+            posDiff = pathLenFrag;
+        }
         // Three color mapping
         /*vec3 colDiff = MixColors(potDiff, 
                0.0, 
