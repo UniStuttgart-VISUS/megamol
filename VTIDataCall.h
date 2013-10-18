@@ -20,6 +20,7 @@
 #include "vislib/Vector.h"
 #include "Interpol.h"
 #include "VTKImageData.h"
+typedef vislib::math::Vector<int, 3> Vec3i;
 
 namespace megamol {
 namespace protein {

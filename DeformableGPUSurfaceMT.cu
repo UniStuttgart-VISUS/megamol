@@ -25,8 +25,10 @@
 
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
+#include <thrust/sort.h>
+#include <thrust/device_ptr.h>
 
-#define USE_TIMER
+//#define USE_TIMER
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -357,6 +359,70 @@ __global__ void FlagCorruptTriangleVertices_D(
 }
 
 
+
+/**
+ * Writes a flag for every vertex that is adjacent to a corrupt triangles.
+ *
+ * @param[in,out] vertexData_D              The buffer with the vertex data
+ * @param[in]     vertexDataStride          The stride for the vertex data
+ *                                          buffer
+ * @param[in]     vertexDataOffsPos         The position offset in the vertex
+ *                                          data buffer
+ * @param[in]     vertexDataOffsCorruptFlag The corruption flag offset in the
+ *                                          vertex data buffer
+ * @param[in]     triangleVtxIdx_D          Array with triangle vertex indices
+ * @param[in]     volume_D                  The target volume defining the
+ *                               iso-surface
+ * @param[in]     externalForcesScl_D       Array with the scale factor for the external force
+ * @param[in]     triangleCnt               The number of triangles
+ * @param[in]     minDispl                  Minimum force scale to keep going
+ * @param[in]     isoval                    The iso-value defining the iso-surface
+ *
+ * TODO
+ */
+__global__ void FlagCorruptTriangles_D(
+        float *corruptTriangles_D,
+        float *vertexData_D,
+        uint vertexDataStride,
+        uint vertexDataOffsPos,
+        uint vertexDataOffsNormal,
+        uint *triangleVtxIdx_D,
+        float *targetVol_D,
+        uint triangleCnt,
+        float isoval) {
+
+    const uint idx = ::GetThreadIdx();
+    if (idx >= triangleCnt) {
+        return;
+    }
+
+    /* Alternative 1: Sample volume at triangle midpoint */
+
+    const uint baseIdx0 = vertexDataStride*triangleVtxIdx_D[3*idx+0];
+    const uint baseIdx1 = vertexDataStride*triangleVtxIdx_D[3*idx+1];
+    const uint baseIdx2 = vertexDataStride*triangleVtxIdx_D[3*idx+2];
+
+    const float3 p0 = make_float3(vertexData_D[baseIdx0+vertexDataOffsPos+0],
+                                  vertexData_D[baseIdx0+vertexDataOffsPos+1],
+                                  vertexData_D[baseIdx0+vertexDataOffsPos+2]);
+    const float3 p1 = make_float3(vertexData_D[baseIdx1+vertexDataOffsPos+0],
+                                  vertexData_D[baseIdx1+vertexDataOffsPos+1],
+                                  vertexData_D[baseIdx1+vertexDataOffsPos+2]);
+    const float3 p2 = make_float3(vertexData_D[baseIdx2+vertexDataOffsPos+0],
+                                  vertexData_D[baseIdx2+vertexDataOffsPos+1],
+                                  vertexData_D[baseIdx2+vertexDataOffsPos+2]);
+    // Sample volume at midpoint
+    const float3 midPoint = (p0+p1+p2)/3.0;
+    const float volSampleMidPoint = ::SampleFieldAtPosTricub_D<float>(midPoint, targetVol_D);
+
+
+    float flag = float(::fabs(volSampleMidPoint-isoval) > 0.3);
+    corruptTriangles_D[idx] = flag;
+
+}
+
+
+
 /**
  * Initializes the scale factor for the external forces with either -1.0 (if the
  * starting position of the vector is inside the isosurface, or 1.0 (vice
@@ -399,6 +465,7 @@ __global__ void initExternalForceScl_D (
         arr_D[idx] = -1.0;
     }
 }
+
 
 __global__ void MeshLaplacian_D(
         float *in_D,
@@ -613,6 +680,14 @@ DeformableGPUSurfaceMT::DeformableGPUSurfaceMT(const DeformableGPUSurfaceMT& oth
             this->displLen_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
 
+    CudaSafeCall(this->accTriangleData_D.Validate(other.accTriangleData_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->accTriangleData_D.Peek(),
+            other.accTriangleData_D.PeekConst(),
+            this->accTriangleData_D.GetCount()*sizeof(float),
+            cudaMemcpyDeviceToDevice));
+
+
     /* Make deep copy of corrupt triangle flag buffer */
 
     if (other.vboCorruptTriangleVertexFlag) {
@@ -648,6 +723,137 @@ DeformableGPUSurfaceMT::DeformableGPUSurfaceMT(const DeformableGPUSurfaceMT& oth
  * DeformableGPUSurfaceMT::~DeformableGPUSurfaceMT
  */
 DeformableGPUSurfaceMT::~DeformableGPUSurfaceMT() {
+}
+
+
+/*
+ * ComputeTriangleArea_D
+ */
+__global__ void computeValidTriangleAreas_D(
+        float *trianglesArea_D,
+        float *corruptTriangleFlag_D,
+        float *vertexPos_D,
+        uint *triangleIdx_D,
+        uint triangleCnt) {
+
+    const uint idx = ::GetThreadIdx();
+    if (idx >= triangleCnt) {
+        return;
+    }
+
+    float flag = corruptTriangleFlag_D[idx];
+
+    float3 pos0, pos1, pos2;
+    pos0.x = vertexPos_D[3*triangleIdx_D[3+idx+0]+0];
+    pos0.y = vertexPos_D[3*triangleIdx_D[3+idx+0]+1];
+    pos0.z = vertexPos_D[3*triangleIdx_D[3+idx+0]+2];
+    pos1.x = vertexPos_D[3*triangleIdx_D[3+idx+1]+0];
+    pos1.y = vertexPos_D[3*triangleIdx_D[3+idx+1]+1];
+    pos1.z = vertexPos_D[3*triangleIdx_D[3+idx+1]+2];
+    pos2.x = vertexPos_D[3*triangleIdx_D[3+idx+2]+0];
+    pos2.y = vertexPos_D[3*triangleIdx_D[3+idx+2]+1];
+    pos2.z = vertexPos_D[3*triangleIdx_D[3+idx+2]+2];
+
+    float3 midPnt = (pos0+pos1)*0.5;
+    float3 hVec = pos2 - midPnt;
+    trianglesArea_D[idx] = length(pos0-pos1)*length(hVec)*0.5*(1.0-flag);
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::GetTotalValidSurfArea
+ */
+float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
+    // Compute triangle areas of all (non-corrupt) triangles
+    if (!CudaSafeCall(this->accTriangleArea_D.Validate(this->triangleCnt))) {
+        return false;
+    }
+    cudaGraphicsResource* cudaTokens[2];
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0],
+            this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1],
+            this->vboTriangleIdx,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboPt;
+    size_t vboSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    uint *triangleIdxPt;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&triangleIdxPt), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
+        return false;
+    }
+
+#ifdef USE_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
+#endif
+
+    // Call kernel
+    computeValidTriangleAreas_D <<< Grid(this->triangleCnt, 256), 256 >>> (
+            this->accTriangleArea_D.Peek(),
+            this->corruptTriangles_D.Peek(),
+            vboPt,
+            triangleIdxPt,
+            this->triangleCnt);
+
+    ::CheckForCudaErrorSync();
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'ComputeTriangleArea_D                   %.10f sec\n",
+            dt_ms/1000.0);
+#endif
+
+    // Compute sum of all (non-corrupt) triangle areas
+    float areaValidTriangles = thrust::reduce(
+            thrust::device_ptr<float>(this->accTriangleArea_D.Peek()),
+            thrust::device_ptr<float>(this->accTriangleArea_D.Peek() + this->triangleCnt));
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+
+    return areaValidTriangles;
 }
 
 
@@ -787,6 +993,147 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangleVertices(
 //    ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[2]))) {
+        return false;
+    }
+
+    return true;
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::FlagCorruptTriangles
+ */
+bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
+        float *volume_D,
+        int3 volDim,
+        float3 volOrg,
+        float3 volDelta,
+        float isovalue) {
+
+    using namespace vislib::sys;
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
+
+    // Allocate memory for corrupt triangles
+    if (!CudaSafeCall(this->corruptTriangles_D.Validate(this->triangleCnt))) {
+        return false;
+    }
+    // Init with zero
+    if (!CudaSafeCall(this->corruptTriangles_D.Set(0x00))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    cudaGraphicsResource* cudaTokens[2];
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0],
+            this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1],
+            this->vboTriangleIdx,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    // Map cuda ressource handles
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    /* Get mapped pointers to the vertex data buffer */
+
+    float *vboPt;
+    size_t vboSize;
+    unsigned int *vboTriangleIdxPt;
+
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt),
+            &vboSize,
+            cudaTokens[0]))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboTriangleIdxPt),
+            &vboSize,
+            cudaTokens[1]))) {
+        return false;
+    }
+
+//    // DEBUG Printf triangle indices
+//    HostArr<unsigned int> triangleIdx;
+//    triangleIdx.Validate(this->triangleCnt*3);
+//    cudaMemcpy(triangleIdx.Peek(), vboTriangleIdxPt, sizeof(unsigned int)*this->triangleCnt*3, cudaMemcpyDeviceToHost);
+//    for (int i = 0; i < this->triangleCnt; ++i) {
+//        if ((triangleIdx.Peek()[i*3+0] > this->vertexCnt) ||
+//                (triangleIdx.Peek()[i*3+0] > this->vertexCnt)||
+//                (triangleIdx.Peek()[i*3+0] > this->vertexCnt)) {
+//
+//            printf("wrong vertex index idx %i: %u %u %u (vtxCnt %u\n", i,
+//                    triangleIdx.Peek()[i*3+0],
+//                    triangleIdx.Peek()[i*3+1],
+//                    triangleIdx.Peek()[i*3+2],
+//                    this->vertexCnt);
+//        }
+//    }
+//    // END DEBUG
+
+    ::CheckForCudaErrorSync();
+
+    // Call kernel
+    FlagCorruptTriangles_D <<< Grid(this->triangleCnt, 256), 256 >>> (
+            this->corruptTriangles_D.Peek(),
+            vboPt,
+            AbstractGPUSurface::vertexDataStride,
+            AbstractGPUSurface::vertexDataOffsPos,
+            AbstractGPUSurface::vertexDataOffsNormal,
+            vboTriangleIdxPt,
+            volume_D,
+            this->triangleCnt,
+            isovalue);
+
+    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGetLastError())) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
         return false;
     }
 
@@ -1095,6 +1442,110 @@ bool DeformableGPUSurfaceMT::InitGridParams(uint3 gridSize, float3 org, float3 d
 //            org.y, org.z, delta.x, delta.y, delta.z, gridSize.x, gridSize.y,
 //            gridSize.z);
     return CudaSafeCall(cudaGetLastError());
+}
+
+
+
+/*
+ * IntegrateScalarValueOverTriangles_D
+ */
+__global__ void intOverTriangles_D(
+        float *trianglesAreaWeightedVertexVals_D,
+        float *trianglesArea_D,
+        uint *triangleIdx_D,
+        float *scalarValue_D,
+        uint triangleCnt) {
+
+    const uint idx = ::GetThreadIdx();
+    if (idx >= triangleCnt) {
+        return;
+    }
+
+    // Compute average
+    float avgVal = (scalarValue_D[triangleIdx_D[idx*3+0]] +
+            scalarValue_D[triangleIdx_D[idx*3+1]] +
+            scalarValue_D[triangleIdx_D[idx*3+2]])/3.0;
+
+    trianglesAreaWeightedVertexVals_D[idx] = avgVal*trianglesArea_D[idx];
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::IntOverSurfArea
+ */
+float DeformableGPUSurfaceMT::IntOverSurfArea(float *value_D) {
+
+    // Compute triangle areas of all (non-corrupt) triangles
+    if (!CudaSafeCall(this->accTriangleData_D.Validate(this->triangleCnt))) {
+        return false;
+    }
+    cudaGraphicsResource* cudaTokens[1];
+
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0],
+            this->vboTriangleIdx,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsMapResources(1, cudaTokens, 0))) {
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    uint *triangleIdxPt;
+    size_t vboSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&triangleIdxPt), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+#ifdef USE_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
+#endif
+
+    // Call kernel
+    intOverTriangles_D <<< Grid(this->triangleCnt, 256), 256 >>> (
+            this->accTriangleData_D.Peek(),
+            this->accTriangleArea_D.Peek(),
+            triangleIdxPt,
+            value_D,
+            this->triangleCnt);
+
+    ::CheckForCudaErrorSync();
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'ComputeTriangleArea_D                   %.10f sec\n",
+            dt_ms/1000.0);
+#endif
+
+    // Compute sum of all (non-corrupt) triangle areas
+    float integralVal = thrust::reduce(
+            thrust::device_ptr<float>(this->accTriangleData_D.Peek()),
+            thrust::device_ptr<float>(this->accTriangleData_D.Peek() + this->triangleCnt));
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(1, cudaTokens, 0))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+
+    return integralVal;
+
 }
 
 
@@ -1764,6 +2215,13 @@ DeformableGPUSurfaceMT& DeformableGPUSurfaceMT::operator=(const DeformableGPUSur
             this->distField_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
 
+    CudaSafeCall(this->accTriangleData_D.Validate(rhs.accTriangleData_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->accTriangleData_D.Peek(),
+            rhs.accTriangleData_D.PeekConst(),
+            this->accTriangleData_D.GetCount()*sizeof(float),
+            cudaMemcpyDeviceToDevice));
+
     /* Make deep copy of corrupt triangle flag buffer */
 
     if (rhs.vboCorruptTriangleVertexFlag) {
@@ -1810,6 +2268,8 @@ void DeformableGPUSurfaceMT::Release() {
     CudaSafeCall(this->displLen_D.Release());
     CudaSafeCall(this->distField_D.Release());
     CudaSafeCall(this->externalForces_D.Release());
+    CudaSafeCall(this->accTriangleData_D.Release());
+    CudaSafeCall(this->accTriangleArea_D.Release());
 }
 
 
@@ -1997,5 +2457,197 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
 
     return CudaSafeCall(cudaGetLastError());
 }
+
+/*
+ * ComputeVtxDiffValue0_D
+ */
+__global__ void ComputeVtxDiffValue0_D(
+        float *diff_D,
+        float *tex0_D,
+        float *vtxData0_D,
+        size_t vertexCnt) {
+
+    const uint idx = ::GetThreadIdx();
+    if (idx >= vertexCnt) {
+        return;
+    }
+
+    const int vertexDataStride = 9; // TODO
+    const int vertexDataOffsPos = 0;
+
+    float3 pos;
+    pos.x = vtxData0_D[vertexDataStride*idx + vertexDataOffsPos +0];
+    pos.y = vtxData0_D[vertexDataStride*idx + vertexDataOffsPos +1];
+    pos.z = vtxData0_D[vertexDataStride*idx + vertexDataOffsPos +2];
+
+    diff_D[idx] = ::SampleFieldAtPosTrilin_D<float>(pos, tex0_D);
+
+}
+
+
+/*
+ * ComputeVtxDiffValue1_D
+ */
+__global__ void ComputeVtxDiffValue1_D(
+        float *diff_D,
+        float *tex1_D,
+        float *vtxData1_D,
+        size_t vertexCnt) {
+
+    const uint idx = ::GetThreadIdx();
+    if (idx >= vertexCnt) {
+        return;
+    }
+
+    const int vertexDataStride = 9; // TODO
+    const int vertexDataOffsPos = 0;
+
+    float valFirst = diff_D[idx];
+    float3 pos;
+    pos.x = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +0];
+    pos.y = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +1];
+    pos.z = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +2];
+
+    float valSec = ::SampleFieldAtPosTrilin_D<float>(pos, tex1_D);
+    valSec = abs(valSec-valFirst);
+    diff_D[idx] = valSec;
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::ComputeVtxDiffValue
+ */
+bool DeformableGPUSurfaceMT::ComputeVtxDiffValue(
+        float *diff_D,
+        float *tex0_D,
+        int3 texDim0,
+        float3 texOrg0,
+        float3 texDelta0,
+        float *tex1_D,
+        int3 texDim1,
+        float3 texOrg1,
+        float3 texDelta1,
+        GLuint vtxDataVBO0,
+        GLuint vtxDataVBO1,
+        size_t vertexCnt) {
+
+    using namespace vislib::sys;
+
+    /* Get pointers to vertex data */
+
+    cudaGraphicsResource* cudaTokens[2];
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0], vtxDataVBO0,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1], vtxDataVBO1,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboPt0, *vboPt1;
+    size_t vboSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt0), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboUncertaintyPt;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt1), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
+        return false;
+    }
+
+
+    // Init CUDA grid for texture #0
+    if (!initGridParams(texDim0, texOrg0, texDelta0)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                DeformableGPUSurfaceMT::ClassName());
+        return false;
+    }
+
+    // Call first kernel
+#ifdef USE_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
+#endif
+
+    ComputeVtxDiffValue0_D <<< Grid(vertexCnt, 256), 256 >>> (
+            diff_D,
+            tex0_D,
+            vboPt0,
+            vertexCnt);
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'ComputeVtxDiffValue0_D':                %.10f sec\n",
+            dt_ms/1000.0f);
+#endif
+
+    // Init CUDA grid for texture #1
+    if (!initGridParams(texDim1, texOrg1, texDelta1)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                DeformableGPUSurfaceMT::ClassName());
+        return false;
+    }
+
+    // Call second kernel
+#ifdef USE_TIMER
+    cudaEventRecord(event1, 0);
+#endif
+
+    ComputeVtxDiffValue1_D <<< Grid(vertexCnt, 256), 256 >>> (
+            diff_D,
+            tex1_D,
+            vboPt1,
+            vertexCnt);
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'ComputeVtxDiffValue1_D':                %.10f sec\n",
+            dt_ms/1000.0f);
+#endif
+
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+
+    return true;
+
+}
+
 #endif // WITH_CUDA
 

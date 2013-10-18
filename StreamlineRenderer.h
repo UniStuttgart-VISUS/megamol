@@ -24,6 +24,8 @@
 #include "VBODataCall.h"
 #include "param/ParamSlot.h"
 
+typedef vislib::math::Vector<int, 3> Vec3i;
+
 typedef unsigned int uint;
 
 namespace megamol {

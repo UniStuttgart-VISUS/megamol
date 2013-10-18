@@ -44,9 +44,10 @@ LinkerFlags       := $(LinkerFlags) -L$(CudaInstallPath)/lib64
 # note: cuda include dirs have to be added after vislib include dirs
 IncludeDir := $(IncludeDir) $(CudaInstallPath)/include
 IncludeDir := $(IncludeDir) $(addprefix $(vislibpath)/,$(addsuffix /include,$(VISlibs)))
+IncludeDir := $(IncludeDir) $(mmcorepath)
 
 # cuda
-NVCCFLAGS := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) $(addprefix -I, $(IncludeDir)) -Xcompiler '-DWITH_CUDA -fPIC' -O3 -arch=sm_20 --ftz=true --prec-sqrt=false --prec-div=false
+NVCCFLAGS := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) $(addprefix -I, $(IncludeDir)) -Xcompiler '-DWITH_CUDA -fPIC $(addprefix -I, $(IncludeDir)) $(CPPFLAGS) $(ReleaseCompilerFlags)' -O3 -arch=sm_20 --ftz=true --prec-sqrt=false --prec-div=false
 #--ptxas-options=-v -m64
 CU_DEPS := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.d, $(CU_SOURCES)))\
 	$(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.d, $(CU_SOURCES)))

@@ -7,7 +7,7 @@
 //     Author: scharnkn
 //
 
-//#define WITH_CUDA 0
+#if defined(WITH_CUDA)
 
 #ifndef MMPROTEINPLUGIN_PROTEINVARIANTMATCH_H_INCLUDED
 #define MMPROTEINPLUGIN_PROTEINVARIANTMATCH_H_INCLUDED
@@ -23,15 +23,20 @@
 #include "HostArr.h"
 #include "DiagramCall.h"
 #include "MolecularDataCall.h"
+#include "vislib/Array.h"
+//#include "vislib_vector_typedefs.h"
+#include "vislib/Vector.h"
+#include "vislib/Matrix.h"
+typedef vislib::math::Cuboid<float> Cubef;
+typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
+typedef vislib::math::Vector<float, 3> Vec3f;
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
+
 #include "CUDAQuickSurf.h"
 #include "gridParams.h"
 #include "cuda_error_check.h"
 #include "CudaDevArr.h"
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
-//#define USE_DISTANCE_FIELD // Use distance field in addition to Gaussian volume
+#include "DeformableGPUSurfaceMT.h"
 
 typedef unsigned int uint;
 
@@ -48,9 +53,6 @@ public:
 
     /// Enum describing different ways of using RMS fitting
     enum RMSFittingMode {RMS_ALL=0, RMS_BACKBONE, RMS_C_ALPHA};
-
-    /// Interpolation mode used when computing external forces based on gradient
-    enum InterpolationMode {INTERP_LINEAR=0, INTERP_CUBIC};
 
     /** CTor */
     ProteinVariantMatch(void);
@@ -117,9 +119,25 @@ protected:
      */
     virtual void release(void);
 
-private:
+    /**
+     * Translate and rotate an array of positions according to the current
+     * transformation obtained by RMS fitting (a translation vector and
+     * rotation matrix).
+     *
+     * @param mol                A Molecular data call containing the particle
+     *                           positions of the corresponding data set. This
+     *                           is necessary to compute the centroid of the
+     *                           particles.
+     * @param surf  The surface object
+     * @return 'True' on success, 'false' otherwise
+     */
+//    bool applyRMSFitting(MolecularDataCall *mol, DeformableGPUSurfaceMT *surf);
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
+    /** TODO */
+    void computeDensityBBox(const float *atomPos1, const float *atomPos2,
+            size_t atomCnt1, size_t atomCnt2);
+
+private:
 
     /**
      * Translate and rotate an array of positions according to the current
@@ -144,9 +162,6 @@ private:
             uint vertexCnt,
             float rotation[3][3],
             float translation[3]);
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
-#if (defined(WITH_CUDA) && (WITH_CUDA))
 
     /**
      * (Re-)computes a smooth density map based on an array of givwen particle
@@ -155,36 +170,14 @@ private:
      * @param mol           The data call containing the particle positions
      * @param cqs           The CUDAQuickSurf object used to compute the density
      *                      map
-     * @param gridDensMap   Grid parameters for the resulting density map
+     * @param gridDensMap   Grid parameters for the resulting density map TODO
      *
      * @return 'True' on success, 'false' otherwise
      */
     bool computeDensityMap(
-            MolecularDataCall *mol,
-            CUDAQuickSurf *cqs,
-            gridParams &gridDensMap);
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-#if defined(USE_DISTANCE_FIELD)
-    /**
-     * Computes a distance field based on a given set of vertices. For every
-     * lattice point, the distance to the nearest vertex is stored.
-     *
-     * @param vertexPos_D   Array with the vertex positions (device memory)
-     * @param vertexCnt     The number of vertices
-     * @param distField_D   Array containing the distance field (device memory)
-     * @param gridDistField Grid parameters of the distance field lattice
-     *
-     * @return 'True' on success, 'false' otherwise
-     */
-    bool computeDistField(
-            CudaDevArr<float> &vertexPos_D,
-            uint vertexCnt,
-            CudaDevArr<float> &distField_D,
-            gridParams &gridDistField);
-#endif // defined(USE_DISTANCE_FIELD)
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
+            const float* atomPos,
+            MolecularDataCall* mol,
+            CUDAQuickSurf *cqs);
 
     /**
      * Computes the result of the chosen heuristic when comparing every variant
@@ -192,7 +185,7 @@ private:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool computeMatch();
+    bool computeMatch(core::param::ParamSlot& p);
 
     /**
      * Computes the RMS value between all variants ans stores it to the match
@@ -201,8 +194,6 @@ private:
      * @return 'True' on success, 'false' otherwise
      */
     bool computeMatchRMS();
-
-#if (defined(WITH_CUDA) && (WITH_CUDA))
     /**
      * Quantifies the surface difference between all variants and stores the
      * results in the matching matrices.
@@ -210,7 +201,6 @@ private:
      * @return 'True' on success, 'false' otherwise
      */
     bool computeMatchSurfMapping();
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
     /**
      * Computes the RMS (Root Mean Square) value of two variants.
@@ -250,127 +240,6 @@ private:
     bool getRMSPosArray(MolecularDataCall *mol, HostArr<float> &posArr,
             unsigned int &cnt);
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-    /**
-     * Extracts an isosurface from a given volume texture using Marching
-     * Tetrahedra with the Freudenthal subdivision scheme.
-     *
-     * @param volume_D            The volume data (device memory)
-     * @param cubeMap_D           Array for the cube map (device memory)
-     * @param cubeMapInv_D        Array for the inverse cube map (device memory)
-     * @param vertexMap_D         Array for the vertex map (device memory)
-     * @param vertexMapInv_D      Array for the inverse vertex map (device
-     *                            memory)
-     * @param vertexNeighbours_D  Array containing neighbours of all vertices
-     * @param gridDensMap         Grid parameters for the volume
-     * @param vertexCount         The number of vertices
-     * @param vertexPos_D         Array with vertex positions
-     * @param triangleCount       The number of triangles
-     * @param triangleIdx_D       Array with triangle indices
-     *
-     * @return 'True' on success, 'false' otherwise
-     */
-    bool isosurfComputeVertices(
-            float *volume_D,
-            CudaDevArr<uint> &cubeMap_D,
-            CudaDevArr<uint> &cubeMapInv_D,
-            CudaDevArr<uint> &vertexMap_D,
-            CudaDevArr<uint> &vertexMapInv_D,
-            CudaDevArr<int> &vertexNeighbours_D,
-            gridParams gridDensMap,
-            uint &activeVertexCount,
-            CudaDevArr<float> &vertexPos_D,
-            uint &triangleCount,
-            CudaDevArr<uint> &triangleIdx_D);
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-    /**
-     * Maps an isosurface defined by an array of vertex positions with
-     * connectivity information to a given volumetric isosurface (defined by
-     * a texture and an isovalue). To achieve this a deformable model approach
-     * is used which combines internal spring forces with an external force
-     * obtained from the volume gradient.
-     * The potential used for the external forces is a combination of a distance
-     * field and a density map.
-     *
-     * @param volume_D                The volume the vertices are to be mapped
-     *                                to (device memory)
-     * @param gridDensMap             Grid parameters for the volume
-     * @param triangleIdx_D           Array with triangle indices
-     * @param vertexCnt               The number of vertices
-     * @param triangleCnt             The number of triangles
-     * @param vertexNeighbours_D      Connectivity information of the vertices
-     *                                (device memory)
-     * @param maxIt                   The number of iterations for the mapping
-     * @param springStiffness         The stiffness of the springs defining the
-     *                                internal spring forces
-     * @param forceScl                An overall scaling for the combined force
-     * @param externalForcesWeight    The weighting of the external force. The
-     *                                weight for the internal forces is
-     *                                1.0 - externalForcesWeight
-     * @param interpMode              Detemines whether linear or cubic
-     *                                interpolation is to be used when computing
-     *                                the external forces
-     *
-     * @return 'True' on success, 'false' otherwise
-     */
-    bool mapIsosurfaceToVolume(
-            float *volume_D,
-            gridParams gridDensMap,
-            CudaDevArr<float> &vertexPos_D,
-            CudaDevArr<uint> &triangleIdx_D,
-            uint vertexCnt,
-            uint triangleCnt,
-            CudaDevArr<int> &vertexNeighbours_D,
-            uint maxIt,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            InterpolationMode interpMode);
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-    /**
-     * Maps an isosurface defined by an array of vertex positions with
-     * connectivity information to a given volumetric isosurface (defined by
-     * a texture and an isovalue). To achieve this a deformable model approach
-     * is used which combines internal spring forces with an external force
-     * obtained from the volume gradient.
-     *
-     * @param volume_D                The volume the vertices are to be mapped
-     *                                to (device memory)
-     * @param gridDensMap             Grid parameters for the volume
-     * @param vertexPos_D             Array with vertex positions
-     * @param vertexCnt               The number of vertices
-     * @param vertexNeighbours_D      Connectivity information of the vertices
-     *                                (device memory)
-     * @param maxIt                   The number of iterations for the mapping
-     * @param springStiffness         The stiffness of the springs defining the
-     *                                internal spring forces
-     * @param forceScl                An overall scaling for the combined force
-     * @param externalForcesWeight    The weighting of the external force. The
-     *                                weight for the internal forces is
-     *                                1.0 - externalForcesWeight
-     * @param interpMode              Detemines whether linear or cubic
-     *                                interpolation is to be used when computing
-     *                                the external forces
-     *
-     * @return 'True' on success, 'false' otherwise
-     */
-    bool regularizeSurface(
-            float *volume_D,
-            gridParams gridDensMap,
-            CudaDevArr<float> &vertexPos_D,
-            uint vertexCnt,
-            CudaDevArr<int> &vertexNeighbours_D,
-            uint maxIt,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            InterpolationMode interpMode);
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
     /**
      * Update parameters slots.
      */
@@ -382,10 +251,8 @@ private:
     /// Caller slot for vertex data
     megamol::core::CallerSlot particleDataCallerSlot;
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
     /// Caller slot volume data
     megamol::core::CallerSlot volumeDataCallerSlot;
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
     /// Callee slot for diagram output data
     megamol::core::CalleeSlot diagDataOutCalleeSlot;
@@ -395,6 +262,9 @@ private:
 
 
     /* Parameters slots */
+
+    /// Param to trigger computation
+    core::param::ParamSlot triggerMatchingSlot;
 
     /// Param to chose the heuristic
     core::param::ParamSlot theheuristicSlot;
@@ -409,7 +279,6 @@ private:
     core::param::ParamSlot singleFrameIdxSlot;
     uint singleFrameIdx;
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
     /* Hardcoded parameters for the 'quicksurf' class */
 
     /// Parameter for assumed radius of density grid data
@@ -426,9 +295,7 @@ private:
 
     /// Parameter for iso value for volume rendering
     static const float qsIsoVal;
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
     /* Parameter slots for surface mapping */
 
     /// Maximum number of iterations when mapping the mesh
@@ -442,7 +309,7 @@ private:
     /// Interpolation method used when computing external forces based on
     /// gradient of the scalar field
     core::param::ParamSlot surfMapInterpolModeSlot;
-    InterpolationMode surfMapInterpolMode;
+    DeformableGPUSurfaceMT::InterpolationMode surfMapInterpolMode;
 
     /// Stiffness of the springs defining the spring forces in surface
     core::param::ParamSlot surfMapSpringStiffnessSlot;
@@ -457,7 +324,6 @@ private:
     /// Overall scaling for the forces acting upon the surface
     core::param::ParamSlot surfMapForcesSclSlot;
     float surfMapForcesScl;
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
 
     /* Variant matching */
@@ -470,8 +336,6 @@ private:
 
     /// The maximum match value
     float maxMatchRMSDVal;
-
-#if (defined(WITH_CUDA) && (WITH_CUDA))
 
     /// TODO
     vislib::Array<float> matchSurfacePotential;
@@ -510,8 +374,6 @@ private:
     float maxMatchHausdorffDistanceVal;
 
 
-#endif
-
     /// The number of variants to be compared
     unsigned int nVariants;
 
@@ -529,15 +391,11 @@ private:
     HostArr<float> rmsWeights;  ///> Particle weights
     HostArr<int> rmsMask;       ///> Mask for particles
 
-
-#if (defined(WITH_CUDA) && (WITH_CUDA))
     /* Volume generation */
 
     void *cudaqsurf0, *cudaqsurf1;   ///> Pointer to CUDAQuickSurf objects
     HostArr<float> gridDataPos;      ///> Data array for intermediate calculations
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
     /* Surface mapping */
 
     /// Device pointer to external forces for every vertex
@@ -578,19 +436,22 @@ private:
     /// Vertex index offsets for all tetrahedrons
     CudaDevArr<uint> tetrahedronVertexOffsets_D;
 
-#if defined(USE_DISTANCE_FIELD)
-    /// Array holding the distance field (device memory)
-    CudaDevArr<float> distField_D;
-
-    /// Max dist to use Gaussian volume instead
-    static const float maxGaussianVolumeDist;
-#endif // defined(USE_DISTANCE_FIELD)
-
     /// Array for volume gradient
     CudaDevArr<float4> volGradient_D;
 
     /// The bounding boxes of the density maps
-    gridParams gridDensMap0, gridDensMap1;
+//    gridParams gridDensMap0, gridDensMap1;
+    /// Dimensions of the density volumes
+    int3 volDim;
+
+    /// Origin of the density volumes
+    float3 volOrg;
+
+    /// maximum coordinate of the density volumes
+    float3 volMaxC;
+
+    /// Delta for the density volumes
+    float3 volDelta;
 
     /// The bounding boxes for potential maps
     gridParams gridPotential0, gridPotential1;
@@ -607,10 +468,6 @@ private:
     /// Minimum force to keep going
     static const float minDispl;
 
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
-
-#if  (defined(WITH_CUDA) && (WITH_CUDA))
     /* Surface area summation */
 
     /// The area of all triangles
@@ -636,7 +493,6 @@ private:
 
     /// Per-vertex hausdorff distance
     CudaDevArr<float> vtxHausdorffDist_D;
-#endif //  (defined(WITH_CUDA) && (WITH_CUDA))
 
 
     /* Boolean flags */
@@ -647,7 +503,6 @@ private:
     /// Triggers recomputation of the rmsd based match
     bool triggerComputeMatchRMSD;
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
     /* CUDA arrays holding potential textures */
 
     CudaDevArr<float> potentialTex0_D;
@@ -659,7 +514,20 @@ private:
     /// Array for laplacian
     CudaDevArr<float3> laplacian_D;
 
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
+
+    Mat3f rmsRotation;          ///> Rotation matrix for the fitting
+    Vec3f rmsTranslation;       ///> Translation vector for the fitting
+    HostArr<float> atomPosFitted;
+
+    DeformableGPUSurfaceMT surfStart;
+    DeformableGPUSurfaceMT surfEnd;
+
+    /// The bounding boxes for particle data
+    Cubef bboxParticles;
+
+    float maxAtomRad;
+    float minAtomRad;
+
 
 };
 
@@ -667,3 +535,4 @@ private:
 } // end namespace megamol
 
 #endif // MMPROTEINPLUGIN_PROTEINVARIANTMATCH_H_INCLUDED
+#endif // (defined(WITH_CUDA) && (WITH_CUDA))

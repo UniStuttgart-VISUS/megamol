@@ -19,7 +19,7 @@
 #include "CallerSlot.h"
 #include "vislib/GLSLShader.h"
 #include "view/CallRender3D.h"
-#include "vislib_vector_typedefs.h"
+//#include "vislib_vector_typedefs.h"
 #include "param/ParamSlot.h"
 #include "VBODataCall.h"
 

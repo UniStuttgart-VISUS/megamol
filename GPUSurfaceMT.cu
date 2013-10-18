@@ -895,6 +895,7 @@ void GetTrianglesIdx_D(
                 int edgeIndex = threadIdx.x * 6 + tetrahedronTriangles[tetrahedronFlags][3 * triangleIndex + cornerIndex];
                 uint vertexOffset = vertexOffsets_D[id] + 3 * triangleIndex + cornerIndex;
                 triangleVertexIdx_D[vertexOffset] = vertexMapInv_D[edgeVertexIdx[edgeIndex]];
+                //triangleVertexIdx_D[vertexOffset] = edgeVertexIdx[edgeIndex];
             }
         }
     }
@@ -2245,23 +2246,28 @@ bool GPUSurfaceMT::ComputeTriangles(
             this->vertexStates_D.Peek(),
              7*this->activeCellCnt);
 
-//    // DEBUG Print vertex map
-//    HostArr<unsigned int> vertexMap;
-//    vertexMap.Validate(this->vertexCnt);
-//    vertexMap_D.CopyToHost(vertexMap.Peek());
+    // DEBUG Print vertex map
+    HostArr<unsigned int> vertexMap;
+    vertexMap.Validate(this->vertexCnt);
+    vertexMap_D.CopyToHost(vertexMap.Peek());
 //    for (int i = 0; i < this->vertexMap_D.GetCount(); ++i) {
 //        printf("Vertex mapping %i: %u\n", i, vertexMap.Peek()[i]);
 //    }
-//    // END DEBUG
-//
-//    // DEBUG Print vertex map
-//    HostArr<unsigned int> vertexMapInv;
-//    vertexMapInv.Validate(this->vertexMapInv_D.GetCount());
-//    vertexMapInv_D.CopyToHost(vertexMapInv.Peek());
+    // END DEBUG
+
+    // DEBUG Print vertex map
+    HostArr<unsigned int> vertexMapInv;
+    vertexMapInv.Validate(this->vertexMapInv_D.GetCount());
+    vertexMapInv_D.CopyToHost(vertexMapInv.Peek());
 //    for (int i = 0; i < this->vertexMapInv_D.GetCount(); ++i) {
 //        printf("Inverse Vertex mapping %i: %u\n", i, vertexMapInv.Peek()[i]);
 //    }
-//    // END DEBUG
+//    for (int i = 0; i < this->vertexCnt; ++i) {
+//        printf("MAPPING %i: %u\n", i, vertexMapInv.Peek()[vertexMap.Peek()[i]]);
+//    }
+    // END DEBUG
+
+    ::CheckForCudaErrorSync();
 
 
     /* Flag tetrahedrons */
@@ -2276,16 +2282,20 @@ bool GPUSurfaceMT::ComputeTriangles(
         return false;
     }
 
+    ::CheckForCudaErrorSync();
+
 
     /* Scan tetrahedrons */
 
-    if (!CudaSafeCall(this->tetrahedronVertexOffsets_D.Validate(6*activeCellCnt))) return false;
+    if (!CudaSafeCall(this->tetrahedronVertexOffsets_D.Validate(6*this->activeCellCnt))) return false;
     if (!CudaSafeCall(GetTetrahedronVertexOffsets(
             this->tetrahedronVertexOffsets_D.Peek(),
             this->verticesPerTetrahedron_D.Peek(),
-            activeCellCnt*6))) {
+            this->activeCellCnt*6))) {
         return false;
     }
+
+    ::CheckForCudaErrorSync();
 
 
     /* Get triangle vertex count */
@@ -2296,6 +2306,8 @@ bool GPUSurfaceMT::ComputeTriangles(
     if (!CheckForCudaError()) {
         return false;
     }
+
+    ::CheckForCudaErrorSync();
 
 //    printf("Triangle cnt %u\n", triangleVtxCnt);
 
@@ -2378,6 +2390,35 @@ bool GPUSurfaceMT::ComputeTriangles(
         }
         return false;
     }
+
+    ::CheckForCudaErrorSync();
+
+    // DEBUG Printf triangle indices
+    HostArr<unsigned int> triangleIdx;
+    triangleIdx.Validate(this->triangleCnt*3);
+    cudaMemcpy(triangleIdx.Peek(), vboTriangleIdxPt, sizeof(unsigned int)*this->triangleCnt*3, cudaMemcpyDeviceToHost);
+    //for (int i = 0; i < this->triangleCnt; ++i) {
+    for (int i = 45124; i < 45125; ++i) {
+//        if ((vertexMapInv.Peek()[triangleIdx.Peek()[i*3+0]] > this->vertexCnt) ||
+//                (vertexMapInv.Peek()[triangleIdx.Peek()[i*3+1]] > this->vertexCnt)||
+//                (vertexMapInv.Peek()[triangleIdx.Peek()[i*3+2]] > this->vertexCnt)) {
+                if ((triangleIdx.Peek()[i*3+0] > this->vertexCnt) ||
+                    (triangleIdx.Peek()[i*3+1] > this->vertexCnt)||
+                    (triangleIdx.Peek()[i*3+2] > this->vertexCnt)) {
+//            printf("Gen: vertex index idx %i: %u %u %u (vtxCnt %u)\n", i,
+//                    vertexMapInv.Peek()[triangleIdx.Peek()[i*3+0]],
+//                    vertexMapInv.Peek()[triangleIdx.Peek()[i*3+1]],
+//                    vertexMapInv.Peek()[triangleIdx.Peek()[i*3+2]],
+//                    this->vertexCnt);
+//
+            printf("Gen: vertex index idx %i: %u %u %u (vtxCnt %u)\n", i,
+                    triangleIdx.Peek()[i*3+0],
+                    triangleIdx.Peek()[i*3+1],
+                    triangleIdx.Peek()[i*3+2],
+                    this->vertexCnt);
+        }
+    }
+    // END DEBUG
 
     // Unmap CUDA graphics resource
     if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->triangleIdxResource))) {

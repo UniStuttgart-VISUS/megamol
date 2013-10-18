@@ -28,6 +28,9 @@
 #include <fstream>
 #include <map>
 
+typedef vislib::math::Vector<int, 2> Vec2i;
+typedef vislib::math::Cuboid<float> Cubef;
+
 // TODO handle 'compressor'
 
 typedef unsigned int uint;

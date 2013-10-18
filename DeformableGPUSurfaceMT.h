@@ -40,6 +40,23 @@ public:
         return "DeformableGPUSurfaceMT";
     }
 
+    /**
+     * In this class, because it needs the offsets TODO
+     */
+    static bool ComputeVtxDiffValue(
+            float *diff_D,
+            float *tex0_D,
+            int3 texDim0,
+            float3 texOrg0,
+            float3 texDelta0,
+            float *tex1_D,
+            int3 texDim1,
+            float3 texOrg1,
+            float3 texDelta1,
+            GLuint vtxDataVBO0,
+            GLuint vtxDataVBO1,
+            size_t vertexCnt);
+
     /** DTor */
     DeformableGPUSurfaceMT();
 
@@ -54,6 +71,13 @@ public:
     virtual ~DeformableGPUSurfaceMT();
 
     /**
+     * Compute the total surface area of all valid triangles.
+     *
+     * @return The total area of all valid triangles
+     */
+    float GetTotalValidSurfArea();
+
+    /**
      * Flag vertices adjacent to corrupt triangles in the current mesh. This
      * is mainly for rendering purposes where vertex attributes are needed.
      *
@@ -61,7 +85,21 @@ public:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool FlagCorruptTriangleVertices(float *volume_D,
+    bool FlagCorruptTriangleVertices(
+            float *volume_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float isovalue);
+
+    /**
+     * Flag corrupt triangles in the current mesh.
+     * TODO
+     *
+     * @return 'True' on success, 'false' otherwise.
+     */
+    bool FlagCorruptTriangles(
+            float *volume_D,
             int3 volDim,
             float3 volOrg,
             float3 volDelta,
@@ -95,6 +133,14 @@ public:
      * TODO
      */
     bool InitUncertaintyVBO(size_t vertexCnt);
+
+    /**
+     * Integrate scalar value (given per vertex in value_D) over surface area.
+     *
+     * @param value_D The value to be integrated
+     * @return The integral value
+     */
+    float IntOverSurfArea(float *value_D);
 
     /**
      * TODO
@@ -303,6 +349,15 @@ private:
 
     /// Vertex buffer object for the vertex uncertainty information
     GLuint vboUncertainty;
+
+    // Device array that flags corrupt triangles
+    CudaDevArr<float> corruptTriangles_D;
+
+    /// Device area needed to accumulate triangle data
+    CudaDevArr<float> accTriangleArea_D;
+
+    /// Device area needed to accumulate triangle data
+    CudaDevArr<float> accTriangleData_D;
 
 };
 

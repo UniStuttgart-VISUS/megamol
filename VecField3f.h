@@ -17,12 +17,14 @@
 #include <vector_types.h>
 
 #include "cuda_helper.h"
-//#include <cutil_inline.h>
-//#include <cutil_gl_inline.h>
-#include "cuda_helper.h"
 #include <cuda_gl_interop.h>
 #endif
-#include "vislib_vector_typedefs.h"
+//#include "vislib_vector_typedefs.h"
+#include "vislib/Matrix.h"
+#include "vislib/Vector.h"
+typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
+typedef vislib::math::Vector<float, 3> Vec3f;
+typedef vislib::math::Vector<unsigned int, 3> Vec3u;
 #include "vislib/Array.h"
 
 namespace megamol {

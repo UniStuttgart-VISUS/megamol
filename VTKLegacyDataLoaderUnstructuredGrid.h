@@ -21,6 +21,8 @@
 #include "Call.h"
 #include "CalleeSlot.h"
 #include "param/ParamSlot.h"
+#include "vislib/Cuboid.h"
+typedef vislib::math::Cuboid<float> Cubef;
 
 namespace megamol {
 namespace protein {

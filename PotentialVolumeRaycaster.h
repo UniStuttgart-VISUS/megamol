@@ -28,7 +28,10 @@
 #include "vislib/GLSLShader.h"
 #include "vislib/GLSLGeometryShader.h"
 #include "vislib/Log.h"
-#include "vislib_vector_typedefs.h"
+//#include "vislib_vector_typedefs.h"
+typedef vislib::math::Vector<int, 2> Vec2i;
+typedef vislib::math::Vector<double, 3> Vec3d;
+typedef vislib::math::Cuboid<float> Cubef;
 #include "gridParams.h"
 
 

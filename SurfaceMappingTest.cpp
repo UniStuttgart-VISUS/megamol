@@ -23,7 +23,7 @@
 #include "DiagramCall.h"
 #include "VariantMatchDataCall.h"
 #include "MolecularSurfaceFeature.h"
-#include "vislib_vector_typedefs.h"
+//#include "vislib_vector_typedefs.h"
 #include "param/EnumParam.h"
 #include "param/FloatParam.h"
 #include "param/BoolParam.h"
