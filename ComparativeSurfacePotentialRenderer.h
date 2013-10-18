@@ -30,7 +30,12 @@
 #include "vislib/GLSLGeometryShader.h"
 #include "vislib/Log.h"
 #include "vislib/Cuboid.h"
-#include "vislib_vector_typedefs.h"
+
+//#include "vislib_vector_typedefs.h"
+typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
+typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
+typedef vislib::math::Vector<float, 3> Vec3f;
+
 #include "CudaDevArr.h"
 #include "HostArr.h"
 

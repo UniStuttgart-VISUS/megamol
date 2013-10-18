@@ -14,7 +14,7 @@
 #include "vislib/Vector.h"
 #include "vislib/Array.h"
 #include "VecField3f.h"
-#include "vislib_vector_typedefs.h"
+//#include "vislib_vector_typedefs.h"
 
 namespace megamol {
 namespace protein {

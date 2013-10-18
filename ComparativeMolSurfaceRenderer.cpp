@@ -44,7 +44,7 @@ const float ComparativeMolSurfaceRenderer::qsIsoVal = 0.5f;
 
 // Hardcoded colors for surface rendering
 const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = Vec3f(0.7f, 0.8f, 0.4f);
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = Vec3f(0.8f, 0.8f, 0.0f);
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = Vec3f(0.1f, 0.2f, 1.0f);
 const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurfMapped = Vec3f(0.13f, 0.30f, 0.58f);
 const Vec3f ComparativeMolSurfaceRenderer::colorMaxPotential = Vec3f(0.0f, 0.0f, 1.0f);
 const Vec3f ComparativeMolSurfaceRenderer::colorMinPotential = Vec3f(1.0f, 0.0f, 0.0f);

@@ -13,7 +13,7 @@
 #include "SecPlaneRenderer.h"
 #include "VTIDataCall.h"
 #include "ogl_error_check.h"
-#include "vislib_vector_typedefs.h"
+//#include "vislib_vector_typedefs.h"
 
 #include "view/AbstractCallRender3D.h"
 #include "param/FloatParam.h"

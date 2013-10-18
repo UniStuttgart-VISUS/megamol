@@ -15,7 +15,7 @@
 #include "MolecularDataCall.h"
 #include "VTIDataCall.h"
 #include "VTKImageData.h"
-#include "vislib_vector_typedefs.h"
+//#include "vislib_vector_typedefs.h"
 #include "param/IntParam.h"
 #include "param/FloatParam.h"
 #include "param/EnumParam.h"

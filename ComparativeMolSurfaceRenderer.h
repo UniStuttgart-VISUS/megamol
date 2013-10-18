@@ -21,7 +21,15 @@
 #include "CalleeSlot.h"
 #include "param/ParamSlot.h"
 #include "view/CallRender3D.h"
-#include "vislib_vector_typedefs.h"
+
+//#include "vislib_vector_typedefs.h"
+#include "vislib/Vector.h"
+#include "vislib/Matrix.h"
+#include "vislib/Cuboid.h"
+typedef vislib::math::Cuboid<float> Cubef;
+typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
+typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
+
 #include "MolecularDataCall.h"
 #include "CUDAQuickSurf.h"
 #include "CudaDevArr.h"

@@ -9,6 +9,7 @@
 include common.mk
 include ExtLibs.mk
 
+
 # Target name
 # TODO: Change the name "Template" to the name of your plugin
 TargetName := Protein
@@ -17,6 +18,8 @@ InputRootDir := $(InputDir)
 InputDirs := .
 IncludeDir := $(IncludeDir) $(mmcorepath)
 VISlibs := net gl graphics sys math base
+
+
 
 
 # Additional compiler flags

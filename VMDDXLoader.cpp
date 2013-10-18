@@ -25,7 +25,9 @@
 #include "Base64.h"
 #include <ctype.h>
 #include <cmath>
-#include "vislib_vector_typedefs.h"
+//#include "vislib_vector_typedefs.h"
+#include "vislib/Cuboid.h"
+typedef vislib::math::Cuboid<float> Cubef;
 
 using namespace megamol;
 using namespace megamol::core;
