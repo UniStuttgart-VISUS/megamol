@@ -881,7 +881,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangleVertices(
         return false;
     }
 
-//    ::CheckForCudaErrorSync();
+   ::CheckForCudaErrorSync();
 
     cudaGraphicsResource* cudaTokens[3];
 
@@ -893,7 +893,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangleVertices(
         return false;
     }
 
-//    ::CheckForCudaErrorSync();
+    ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
             &cudaTokens[1],
@@ -902,7 +902,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangleVertices(
         return false;
     }
 
-//    ::CheckForCudaErrorSync();
+    ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
             &cudaTokens[2],
@@ -911,14 +911,14 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangleVertices(
         return false;
     }
 
-//    ::CheckForCudaErrorSync();
+    ::CheckForCudaErrorSync();
 
     // Map cuda ressource handles
     if (!CudaSafeCall(cudaGraphicsMapResources(3, cudaTokens, 0))) {
         return false;
     }
 
-//    ::CheckForCudaErrorSync();
+    ::CheckForCudaErrorSync();
 
     /* Get mapped pointers to the vertex data buffer */
 
@@ -934,7 +934,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangleVertices(
         return false;
     }
 
-//    ::CheckForCudaErrorSync();
+    ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
             reinterpret_cast<void**>(&vboTriangleIdxPt),
@@ -943,7 +943,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangleVertices(
         return false;
     }
 
-//    ::CheckForCudaErrorSync();
+    ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
             reinterpret_cast<void**>(&vboFlagPt),
@@ -952,7 +952,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangleVertices(
         return false;
     }
 
-//    ::CheckForCudaErrorSync();
+    ::CheckForCudaErrorSync();
 
     // Call kernel
     FlagCorruptTriangleVertices_D <<< Grid(this->triangleCnt, 256), 256 >>> (
@@ -966,31 +966,31 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangleVertices(
             this->triangleCnt,
             isovalue);
 
-//    ::CheckForCudaErrorSync();
+    ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaGetLastError())) {
         return false;
     }
 
-//    ::CheckForCudaErrorSync();
+    ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaGraphicsUnmapResources(3, cudaTokens, 0))) {
         return false;
     }
 
-//    ::CheckForCudaErrorSync();
+    ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
         return false;
     }
 
-//    ::CheckForCudaErrorSync();
+    ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
         return false;
     }
 
-//    ::CheckForCudaErrorSync();
+    ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[2]))) {
         return false;

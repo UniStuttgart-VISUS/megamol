@@ -140,30 +140,6 @@ protected:
 private:
 
     /**
-     * Translate and rotate an array of positions according to the current
-     * transformation obtained by RMS fitting (a translation vector and
-     * rotation matrix).
-     *
-     * @param mol          A Molecular data call containing the particle
-     *                     positions of the corresponding data set. This
-     *                     is necessary to compute the centroid of the
-     *                     particles.
-     * @param vertexPos_D  The device array containing the vertex
-     *                     positions to be transformed (device memory)
-     * @param vertexCnt    The number of vertices to be transformed
-     * @param rotation     The rotation matrix
-     * @param translation  The translation matrix
-     *
-     * @return 'True' on success, 'false' otherwise
-     */
-    bool applyRMSFittingToPosArray(
-            MolecularDataCall *mol,
-            CudaDevArr<float> &vertexPos_D,
-            uint vertexCnt,
-            float rotation[3][3],
-            float translation[3]);
-
-    /**
      * (Re-)computes a smooth density map based on an array of givwen particle
      * positions using a CUDA implementation.
      *
@@ -174,9 +150,9 @@ private:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool computeDensityMap(
-            const float* atomPos,
-            MolecularDataCall* mol,
+    bool computeDensityMap( //TODO
+            float* atomPos,
+            size_t atomCnt,
             CUDAQuickSurf *cqs);
 
     /**
@@ -239,6 +215,12 @@ private:
      */
     bool getRMSPosArray(MolecularDataCall *mol, HostArr<float> &posArr,
             unsigned int &cnt);
+
+
+    /**
+     * TODO
+     */
+    void getAtomPosArray(MolecularDataCall *mol, HostArr<float> &posArr, size_t &particleCnt);
 
     /**
      * Update parameters slots.
@@ -518,6 +500,7 @@ private:
     Mat3f rmsRotation;          ///> Rotation matrix for the fitting
     Vec3f rmsTranslation;       ///> Translation vector for the fitting
     HostArr<float> atomPosFitted;
+    HostArr<float> atomPos0;
 
     DeformableGPUSurfaceMT surfStart;
     DeformableGPUSurfaceMT surfEnd;

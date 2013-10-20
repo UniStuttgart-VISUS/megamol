@@ -57,7 +57,7 @@ const float ProteinVariantMatch::minDispl = 0.0f;
 
 // Hardcoded parameters for 'quicksurf' class
 const float ProteinVariantMatch::qsParticleRad = 1.0f;
-const float ProteinVariantMatch::qsGaussLim = 4.0f;
+const float ProteinVariantMatch::qsGaussLim = 8.0f;
 const float ProteinVariantMatch::qsGridSpacing = 1.0f;
 const bool ProteinVariantMatch::qsSclVanDerWaals = true;
 const float ProteinVariantMatch::qsIsoVal = 0.5f;
@@ -250,6 +250,7 @@ void ProteinVariantMatch::release(void) {
     CheckForGLError();
 
     this->atomPosFitted.Release();
+    this->atomPos0.Release();
 }
 
 
@@ -467,120 +468,10 @@ bool ProteinVariantMatch::getMatrixData(core::Call& call) {
     return true;
 }
 
-/*
- * ProteinVariantMatch::applyRMSFittingToPosArray
+/**
+ * TODO
  */
-bool ProteinVariantMatch::applyRMSFittingToPosArray(
-        MolecularDataCall *mol,
-        CudaDevArr<float> &vertexPos_D,
-        uint vertexCnt,
-        float rotation[3][3],
-        float translation[3]) {
-
-    // Note: all particles have the same weight
-    Vec3f centroid(0.0f, 0.0f, 0.0f);
-    CudaDevArr<float> rotate_D;
-
-
-//    // DEBUG Print mapped positions
-//    printf("Apply RMS,  positions before:\n");
-//    HostArr<float> vertexPos;
-//    vertexPos.Validate(vertexCnt*3);
-//    cudaMemcpy(vertexPos.Peek(), vertexPos_D.Peek(),
-//            sizeof(float)*vertexCnt*3,
-//            cudaMemcpyDeviceToHost);
-//    for (int k = 0; k < 10; ++k) {
-//        printf("%i: Vertex position (%f %f %f)\n", k, vertexPos.Peek()[3*k+0],
-//                vertexPos.Peek()[3*k+1], vertexPos.Peek()[3*k+2]);
-//
-//    }
-//    // End DEBUG
-
-
-    // Compute centroid
-    for (int cnt = 0; cnt < static_cast<int>(mol->AtomCount()); ++cnt) {
-
-        centroid += Vec3f(mol->AtomPositions()[cnt*3],
-                mol->AtomPositions()[cnt*3+1],
-                mol->AtomPositions()[cnt*3+2]);
-    }
-    centroid /= static_cast<float>(mol->AtomCount());
-
-    // Move vertex positions to origin (with respect to centroid)
-    if (!CudaSafeCall(TranslatePos(
-            vertexPos_D.Peek(),
-            3,
-            0,
-            make_float3(-centroid.X(), -centroid.Y(), -centroid.Z()),
-            vertexCnt))) {
-        return false;
-    }
-
-    // Rotate for best fit
-    rotate_D.Validate(9);
-    if (!CudaSafeCall(cudaMemcpy((void *)rotate_D.Peek(), rotation,
-            9*sizeof(float), cudaMemcpyHostToDevice))) {
-        return false;
-    }
-    if (!CudaSafeCall(RotatePos(
-            vertexPos_D.Peek(),
-            3,
-            0,
-            rotate_D.Peek(),
-            vertexCnt))) {
-        return false;
-    }
-
-    // Move vertex positions to centroid of second data set
-    if (!CudaSafeCall(TranslatePos(
-            vertexPos_D.Peek(),
-            3,
-            0,
-            make_float3(translation[0],
-                    translation[1],
-                    translation[2]),
-                    vertexCnt))) {
-        return false;
-    }
-
-    // Clean up
-    rotate_D.Release();
-
-//    // DEBUG
-//    printf("RMS centroid %f %f %f\n", centroid.X(), centroid.Y(), centroid.Z());
-//    printf("RMS translation %f %f %f\n", translation[0],
-//            translation[1], translation[2]);
-//    printf("RMS rotation \n %f %f %f\n%f %f %f\n%f %f %f\n",
-//            rotation[0][0], rotation[0][1], rotation[0][2],
-//            rotation[1][0], rotation[1][1], rotation[1][2],
-//            rotation[2][0], rotation[2][1], rotation[2][2]);
-//
-//
-//    // DEBUG Print mapped positions
-//    printf("Apply RMS,  positions after:\n");
-////    HostArr<float> vertexPos;
-//    vertexPos.Validate(vertexCnt*3);
-//    cudaMemcpy(vertexPos.Peek(), vertexPos_D.Peek(),
-//            sizeof(float)*vertexCnt*3,
-//            cudaMemcpyDeviceToHost);
-//    for (int k = 0; k < 10; ++k) {
-//        printf("%i: Vertex position (%f %f %f)\n", k, vertexPos.Peek()[3*k+0],
-//                vertexPos.Peek()[3*k+1], vertexPos.Peek()[3*k+2]);
-//
-//    }
-//    // End DEBUG
-
-
-    return true;
-}
-
-/*
- * ProteinVariantMatch::computeDensityMap
- */
-bool ProteinVariantMatch::computeDensityMap(
-        const float* atomPos,
-        MolecularDataCall* mol,
-        CUDAQuickSurf *cqs) {
+void ProteinVariantMatch::getAtomPosArray(MolecularDataCall *mol, HostArr<float> &posArr, size_t &particleCnt) {
 
     using namespace vislib::sys;
     using namespace vislib::math;
@@ -589,14 +480,10 @@ bool ProteinVariantMatch::computeDensityMap(
     float padding;
 
     // (Re-)allocate memory for intermediate particle data
-    this->gridDataPos.Validate(mol->AtomCount()*4);
-
-    // Set particle radii and compute maximum particle radius
-    this->maxAtomRad = 0.0f;
-    this->minAtomRad = 100000.0f;
+    posArr.Validate(mol->AtomCount()*4);
 
     // Gather atom positions for the density map
-    uint particleCnt = 0;
+    particleCnt = 0;
     for (uint c = 0; c < mol->ChainCount(); ++c) { // Loop through chains
         // Only use non-solvent atoms for density map
         if (mol->Chains()[c].Type() != MolecularDataCall::Chain::SOLVENT) {
@@ -612,18 +499,18 @@ bool ProteinVariantMatch::computeDensityMap(
                     for (uint at = 0; at < resTmp->AtomCount(); ++at) { // Loop through atoms
                         uint atomIdx = resTmp->FirstAtomIndex() + at;
 
-                        this->gridDataPos.Peek()[4*particleCnt+0] = atomPos[3*atomIdx+0];
-                        this->gridDataPos.Peek()[4*particleCnt+1] = atomPos[3*atomIdx+1];
-                        this->gridDataPos.Peek()[4*particleCnt+2] = atomPos[3*atomIdx+2];
+                        posArr.Peek()[4*particleCnt+0] = mol->AtomPositions()[3*atomIdx+0];
+                        posArr.Peek()[4*particleCnt+1] = mol->AtomPositions()[3*atomIdx+1];
+                        posArr.Peek()[4*particleCnt+2] = mol->AtomPositions()[3*atomIdx+2];
                         if(this->qsSclVanDerWaals) {
-                            this->gridDataPos.Peek()[4*particleCnt+3] = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius();
+                            posArr.Peek()[4*particleCnt+3] = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius();
                         }
                         else {
-                            this->gridDataPos.Peek()[4*particleCnt+3] = 1.0f;
+                            posArr.Peek()[4*particleCnt+3] = 1.0f;
                         }
 
-                        this->maxAtomRad = std::max(this->maxAtomRad, this->gridDataPos.Peek()[4*particleCnt+3]);
-                        this->minAtomRad = std::min(this->minAtomRad, this->gridDataPos.Peek()[4*particleCnt+3]);
+                        this->maxAtomRad = std::max(this->maxAtomRad, posArr.Peek()[4*particleCnt+3]);
+                        this->minAtomRad = std::min(this->minAtomRad, posArr.Peek()[4*particleCnt+3]);
 
                         particleCnt++;
                     }
@@ -631,6 +518,24 @@ bool ProteinVariantMatch::computeDensityMap(
             }
         }
     }
+}
+
+
+/*
+ * ProteinVariantMatch::computeDensityMap
+ */
+bool ProteinVariantMatch::computeDensityMap(
+        float* atomPos,
+        size_t atomCnt,
+        CUDAQuickSurf *cqs) {
+
+    printf("Compute density map particleCount %u\n", atomCnt);
+
+    using namespace vislib::sys;
+    using namespace vislib::math;
+
+    float gridXAxisLen, gridYAxisLen, gridZAxisLen;
+    float padding;
 
     // Compute padding for the density map
     padding = this->maxAtomRad*this->qsParticleRad + this->qsGridSpacing*10; // TODO How much makes sense?
@@ -660,11 +565,22 @@ bool ProteinVariantMatch::computeDensityMap(
 
     // Set particle positions
 #pragma omp parallel for
-    for (int cnt = 0; cnt < static_cast<int>(mol->AtomCount()); ++cnt) {
-            this->gridDataPos.Peek()[4*cnt+0] -= this->volOrg.x;
-            this->gridDataPos.Peek()[4*cnt+1] -= this->volOrg.y;
-            this->gridDataPos.Peek()[4*cnt+2] -= this->volOrg.z;
+    for (int cnt = 0; cnt < static_cast<int>(atomCnt); ++cnt) {
+        atomPos[4*cnt+0] -= this->volOrg.x;
+        atomPos[4*cnt+1] -= this->volOrg.y;
+        atomPos[4*cnt+2] -= this->volOrg.z;
     }
+
+
+//    for (int cnt = 0; cnt < static_cast<int>(atomCnt); ++cnt) {
+//        printf("data pos %i %f %f %f\n",cnt,
+//                atomPos[4*cnt+0],
+//                atomPos[4*cnt+1],
+//                atomPos[4*cnt+2]);
+//    }
+
+    printf("volOrg %f %f %f\n", this->volOrg.x,this->volOrg.y,this->volOrg.z);
+    printf("volDim %i %i %i\n", this->volDim.x,this->volDim.y,this->volDim.z);
 
 #ifdef USE_TIMER
     float dt_ms;
@@ -676,8 +592,8 @@ bool ProteinVariantMatch::computeDensityMap(
 
     // Compute uniform grid
     int rc = cqs->calc_map(
-            mol->AtomCount(),
-            &this->gridDataPos.Peek()[0],
+            atomCnt,
+            &atomPos[0],
             NULL,   // Pointer to 'color' array
             false,  // Do not use 'color' array
             (float*)&this->volOrg,
@@ -687,6 +603,8 @@ bool ProteinVariantMatch::computeDensityMap(
             this->qsGridSpacing,
             this->qsIsoVal,
             this->qsGaussLim);
+
+    printf("max atom rad %f\n", this->maxAtomRad);
 
 #ifdef USE_TIMER
     cudaEventRecord(event2, 0);
@@ -703,39 +621,50 @@ bool ProteinVariantMatch::computeDensityMap(
         return false;
     }
 
-    return CheckForGLError();
+    return CheckForCudaErrorSync();
 }
 
 
 /*
  *  ProteinVariantMatch::computeDensityBBox
  */
-void ProteinVariantMatch::computeDensityBBox(const float *atomPos1,
-        const float *atomPos2, size_t atomCnt1, size_t atomCnt2) {
+void ProteinVariantMatch::computeDensityBBox(
+        const float *atomPos1,
+        const float *atomPos2,
+        size_t atomCnt1,
+        size_t atomCnt2) {
 
     float3 minC, maxC;
     minC.x = maxC.x = atomPos1[0];
     minC.y = maxC.y = atomPos1[1];
     minC.z = maxC.z = atomPos1[2];
     for (size_t i = 0; i < atomCnt1; ++i) {
-        minC.x = std::min(minC.x, atomPos1[3*i+0]);
-        minC.y = std::min(minC.y, atomPos1[3*i+1]);
-        minC.z = std::min(minC.z, atomPos1[3*i+2]);
-        maxC.x = std::max(maxC.x, atomPos1[3*i+0]);
-        maxC.y = std::max(maxC.y, atomPos1[3*i+1]);
-        maxC.z = std::max(maxC.z, atomPos1[3*i+2]);
+        minC.x = std::min(minC.x, atomPos1[4*i+0]);
+        minC.y = std::min(minC.y, atomPos1[4*i+1]);
+        minC.z = std::min(minC.z, atomPos1[4*i+2]);
+        maxC.x = std::max(maxC.x, atomPos1[4*i+0]);
+        maxC.y = std::max(maxC.y, atomPos1[4*i+1]);
+        maxC.z = std::max(maxC.z, atomPos1[4*i+2]);
+//        printf("ATOMPOS %i %f %f %f\n", i, atomPos1[3*i+0],atomPos1[3*i+1],atomPos1[3*i+2]);
     }
     for (size_t i = 0; i < atomCnt2; ++i) {
-        minC.x = std::min(minC.x, atomPos2[3*i+0]);
-        minC.y = std::min(minC.y, atomPos2[3*i+1]);
-        minC.z = std::min(minC.z, atomPos2[3*i+2]);
-        maxC.x = std::max(maxC.x, atomPos2[3*i+0]);
-        maxC.y = std::max(maxC.y, atomPos2[3*i+1]);
-        maxC.z = std::max(maxC.z, atomPos2[3*i+2]);
+        minC.x = std::min(minC.x, atomPos2[4*i+0]);
+        minC.y = std::min(minC.y, atomPos2[4*i+1]);
+        minC.z = std::min(minC.z, atomPos2[4*i+2]);
+        maxC.x = std::max(maxC.x, atomPos2[4*i+0]);
+        maxC.y = std::max(maxC.y, atomPos2[4*i+1]);
+        maxC.z = std::max(maxC.z, atomPos2[4*i+2]);
     }
 
     this->bboxParticles.Set(minC.x, minC.y, minC.z,
             maxC.x, maxC.y, maxC.z);
+
+    // DEBUG Print new bounding box
+    printf("bbboxParticles: %f %f %f %f %f %f\n", minC.x, minC.y, minC.z,
+            maxC.x, maxC.y, maxC.z);
+    printf("atomCnt0: %u\n",atomCnt1);
+    printf("atomCnt1: %u\n",atomCnt2);
+    // END DEBUG
 
 }
 
@@ -992,9 +921,9 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
     float translation[3];
     float rmsVal;
 
-    float3 minCOld, minCNew, maxCOld, maxCNew;
     int3 texDim0, texDim1;
     float3 texOrg0, texOrg1, texDelta0, texDelta1;
+    size_t particleCnt0, particleCnt1;
 
 #if defined(OUTPUT_PROGRESS)
     //float steps = (this->nVariants*(this->nVariants+1))*0.5f;
@@ -1006,23 +935,11 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
     time_t t = clock();
 #endif // defined(USE_TIMER)
 
-    // Init matching matrix with zero
-    for (uint i = 0; i < this->matchSurfacePotential.Count(); ++i) {
-        this->matchSurfacePotential[i] = 0.0f;
-    }
-
     // Get particles
-    MolecularDataCall *molCall0 = this->particleDataCallerSlot.CallAs<MolecularDataCall>();
-    if (molCall0 == NULL) {
+    MolecularDataCall *molCall = this->particleDataCallerSlot.CallAs<MolecularDataCall>();
+    if (molCall == NULL) {
         return false;
     }
-
-    // Get particles
-    MolecularDataCall *molCall1 = this->particleDataCallerSlot.CallAs<MolecularDataCall>();
-    if (molCall1 == NULL) {
-        return false;
-    }
-
     // Get potential texture
     VTIDataCall *volCall = this->volumeDataCallerSlot.CallAs<VTIDataCall>();
     if (volCall == NULL) {
@@ -1030,15 +947,14 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
     }
 
     // Loop through all variantsPotentialVal
-    for (unsigned int i = 9; i < this->nVariants; ++i) {
+    //for (unsigned int i = 15; i < this->nVariants; ++i) {
+    for (unsigned int i = 9; i < 16; ++i) {
 
-//        float minC0[3], maxC0[3];
-
-        molCall0->SetFrameID(i, true); // Set frame id and force flag
-        if (!(*molCall0)(MolecularDataCall::CallForGetExtent)) {
+        molCall->SetFrameID(i, true); // Set frame id and force flag
+        if (!(*molCall)(MolecularDataCall::CallForGetExtent)) {
             return false;
         }
-        if (!(*molCall0)(MolecularDataCall::CallForGetData)) {
+        if (!(*molCall)(MolecularDataCall::CallForGetData)) {
             return false;
         }
         volCall->SetFrameID(i, true); // Set frame id and force flag
@@ -1049,8 +965,11 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             return false;
         }
 
-        if (!CudaSafeCall(this->potentialTex0_D.Validate(volCall->GetGridsize().X()*
-                volCall->GetGridsize().Y()*volCall->GetGridsize().Z()))) {
+        // Copy potential texture #0 to device memory
+        if (!CudaSafeCall(this->potentialTex0_D.Validate(
+                volCall->GetGridsize().X()*
+                volCall->GetGridsize().Y()*
+                volCall->GetGridsize().Z()))) {
             return false;
         }
         if (!CudaSafeCall(cudaMemcpy(this->potentialTex0_D.Peek(),
@@ -1061,20 +980,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             return false;
         }
 
-        if (!CudaSafeCall(InitPotentialTexParams(0,
-                make_int3(volCall->GetGridsize().X(), volCall->GetGridsize().Y(), volCall->GetGridsize().Z()),
-                make_float3(volCall->GetOrigin().X(), volCall->GetOrigin().Y(), volCall->GetOrigin().Z()),
-                make_float3(volCall->GetSpacing().X(), volCall->GetSpacing().Y(), volCall->GetSpacing().Z())))) {
-            return false;
-        }
-
-        // Setup bounding box
-//        minC0[0] = volCall->GetBoundingBoxes().ObjectSpaceBBox().Left();
-//        minC0[1] = volCall->GetBoundingBoxes().ObjectSpaceBBox().Bottom();
-//        minC0[2] = volCall->GetBoundingBoxes().ObjectSpaceBBox().Back();
-//        maxC0[0] = volCall->GetBoundingBoxes().ObjectSpaceBBox().Right();
-//        maxC0[1] = volCall->GetBoundingBoxes().ObjectSpaceBBox().Top();
-//        maxC0[2] = volCall->GetBoundingBoxes().ObjectSpaceBBox().Front();
+        // Keep track of potential texture dimensions
         texDim0.x = volCall->GetGridsize().X();
         texDim0.y = volCall->GetGridsize().Y();
         texDim0.z = volCall->GetGridsize().Z();
@@ -1091,15 +997,25 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 //        printf("Max coord %f %f %f\n",
 //                maxCNew.x, maxCNew.y, maxCNew.z);
 
-        this->rmsPosVec0.Validate(molCall0->AtomCount()*3);
-
         // Get rms atom positions
-        if (!this->getRMSPosArray(molCall0, this->rmsPosVec0, posCnt0)) {
+        this->rmsPosVec0.Validate(molCall->AtomCount()*3);
+        if (!this->getRMSPosArray(molCall, this->rmsPosVec0, posCnt0)) {
             return false;
         }
 
+        this->maxAtomRad = 0.0f;
+        this->minAtomRad = 1000000.0f;
+        // Get atom pos vector (dismisses solvent molecules)
+        this->getAtomPosArray(
+                molCall,
+                this->atomPos0,
+                particleCnt0);
+
+        molCall->Unlock(); // Unlock the frame
+        volCall->Unlock(); // Unlock the frame
+
         // Loop through all variants
-        for (unsigned int j = 17; j < this->nVariants; ++j) {
+        for (unsigned int j = 18; j < this->nVariants; ++j) {
 
 //            float minC1[3], maxC1[3];
 
@@ -1109,16 +1025,14 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                     this->ClassName(), i, j);
 #endif // defined(VERBOSE)
 
-            molCall1->SetFrameID(j, true); // Set frame id and force flag
-            if (!(*molCall1)(MolecularDataCall::CallForGetExtent)) {
+            molCall->SetFrameID(j, true); // Set frame id and force flag
+            if (!(*molCall)(MolecularDataCall::CallForGetExtent)) {
                 return false;
             }
 
-            if (!(*molCall1)(MolecularDataCall::CallForGetData)) {
+            if (!(*molCall)(MolecularDataCall::CallForGetData)) {
                 return false;
             }
-
-
             volCall->SetFrameID(j, true); // Set frame id and force flag
             if (!(*volCall)(MolecularDataCall::CallForGetExtent)) {
                 return false;
@@ -1129,11 +1043,13 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             }
 
 
-            if (!CudaSafeCall(this->potentialTex1_D.Validate(volCall->GetGridsize().X()*
-                    volCall->GetGridsize().Y()*volCall->GetGridsize().Z()))) {
+            // Copy potential texture #1 tp device memory
+            if (!CudaSafeCall(this->potentialTex1_D.Validate(
+                    volCall->GetGridsize().X()*
+                    volCall->GetGridsize().Y()*
+                    volCall->GetGridsize().Z()))) {
                 return false;
             }
-
             if (!CudaSafeCall(cudaMemcpy(this->potentialTex1_D.Peek(),
                     (float*)(volCall->GetPointDataByIdx(0,0)),
                     sizeof(float)*volCall->GetGridsize().X()*
@@ -1141,22 +1057,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                     cudaMemcpyHostToDevice))) {
                 return false;
             }
-
-            if (!CudaSafeCall(InitPotentialTexParams(1,
-                    make_int3(volCall->GetGridsize().X(), volCall->GetGridsize().Y(), volCall->GetGridsize().Z()),
-                    make_float3(volCall->GetOrigin().X(), volCall->GetOrigin().Y(), volCall->GetOrigin().Z()),
-                    make_float3(volCall->GetSpacing().X(), volCall->GetSpacing().Y(), volCall->GetSpacing().Z())))) {
-                return false;
-            }
-
-            // Setup bounding box
-//            minC1[0] = volCall->GetBoundingBoxes().ObjectSpaceBBox().Left();
-//            minC1[1] = volCall->GetBoundingBoxes().ObjectSpaceBBox().Bottom();
-//            minC1[2] = volCall->GetBoundingBoxes().ObjectSpaceBBox().Back();
-//            maxC1[0] = volCall->GetBoundingBoxes().ObjectSpaceBBox().Right();
-//            maxC1[1] = volCall->GetBoundingBoxes().ObjectSpaceBBox().Top();
-//            maxC1[2] = volCall->GetBoundingBoxes().ObjectSpaceBBox().Front();
-
+            // Keep track of potential tex dimensions
             texDim1.x = volCall->GetGridsize().X();
             texDim1.y = volCall->GetGridsize().Y();
             texDim1.z = volCall->GetGridsize().Z();
@@ -1176,11 +1077,17 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 //            printf("Max coord %f %f %f\n",
 //                    maxCOld.x, maxCOld.y, maxCOld.z);
 
-            this->rmsPosVec1.Validate(molCall1->AtomCount()*3);
             // Get atom positions
-            if (!this->getRMSPosArray(molCall1, this->rmsPosVec1, posCnt1)) {
+            this->rmsPosVec1.Validate(molCall->AtomCount()*3);
+            if (!this->getRMSPosArray(molCall, this->rmsPosVec1, posCnt1)) {
                 return false;
             }
+
+            // Get atom pos vector (dismisses solvent molecules)
+            this->getAtomPosArray(
+                    molCall,
+                    this->atomPosFitted,
+                    particleCnt1);
 
             // Compute RMS value and transformation
             if (posCnt0 != posCnt1) {
@@ -1189,9 +1096,10 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                 return false;
             }
-            rmsVal = this->getRMS(this->rmsPosVec0.Peek(),
-                    this->rmsPosVec1.Peek(), posCnt0, true, 2, rotation,
-                    translation);
+            rmsVal = this->getRMS(
+                    this->rmsPosVec0.Peek(),
+                    this->rmsPosVec1.Peek(),
+                    posCnt0, true, 2, rotation, translation);
             if (rmsVal > 10.0f) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                         "%s: Unable to perform surface matching (rms val = %f)",
@@ -1199,42 +1107,41 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                 return false;
             }
 
-
-            /* Fit atom positions of source structure */
+            // Fit atom positions of source structure
             Vec3f centroid(0.0f, 0.0f, 0.0f);
-            this->atomPosFitted.Validate(molCall1->AtomCount()*3);
-
+//            this->atomPosFitted.Validate(molCall->AtomCount()*3);
             // Compute centroid
-            for (int cnt = 0; cnt < static_cast<int>(molCall1->AtomCount()); ++cnt) {
+            for (int cnt = 0; cnt < static_cast<int>(particleCnt1); ++cnt) {
                 centroid += Vec3f(
-                        molCall1->AtomPositions()[cnt*3+0],
-                        molCall1->AtomPositions()[cnt*3+1],
-                        molCall1->AtomPositions()[cnt*3+2]);
+                        this->atomPosFitted.Peek()[cnt*4+0],
+                        this->atomPosFitted.Peek()[cnt*4+1],
+                        this->atomPosFitted.Peek()[cnt*4+2]);
             }
-            centroid /= static_cast<float>(molCall1->AtomCount());
-
+            centroid /= static_cast<float>(particleCnt1);
             // Rotate/translate positions
 #pragma omp parallel for
-            for (int a = 0; a < static_cast<int>(molCall1->AtomCount()); ++a) {
-                Vec3f pos(&molCall1->AtomPositions()[3*a]);
+            for (int a = 0; a < static_cast<int>(particleCnt1); ++a) {
+                Vec3f pos(&this->atomPosFitted.Peek()[4*a]);
                 pos -= centroid;
                 pos = this->rmsRotation*pos;
                 pos += this->rmsTranslation;
-                this->atomPosFitted.Peek()[3*a+0] = pos.X();
-                this->atomPosFitted.Peek()[3*a+1] = pos.Y();
-                this->atomPosFitted.Peek()[3*a+2] = pos.Z();
+                this->atomPosFitted.Peek()[4*a+0] = pos.X();
+                this->atomPosFitted.Peek()[4*a+1] = pos.Y();
+                this->atomPosFitted.Peek()[4*a+2] = pos.Z();
             }
 
+//            printf("CALL 1 frame %u\n", molCall->FrameID());
+
             this->computeDensityBBox(
-                    molCall0->AtomPositions(),
+                    this->atomPos0.Peek(),
                     this->atomPosFitted.Peek(),
-                    molCall0->AtomCount(),
-                    molCall1->AtomCount());
+                    particleCnt0,
+                    particleCnt1);
 
             // Compute density map of variant #0
             if (!this->computeDensityMap(
-                    molCall0->AtomPositions(),
-                    molCall0,
+                    this->atomPos0.Peek(),
+                    particleCnt0,
                     (CUDAQuickSurf *)this->cudaqsurf0)) {
                 return false;
             }
@@ -1242,7 +1149,7 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
             // Compute density map of variant #1
             if (!this->computeDensityMap(
                     this->atomPosFitted.Peek(),
-                    molCall1,
+                    particleCnt1,
                     (CUDAQuickSurf *)this->cudaqsurf1)) {
                 return false;
             }
@@ -1391,7 +1298,8 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
             this->maxMatchSurfacePotentialVal =
                     std::max(this->maxMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
 
-            molCall1->Unlock(); // Unlock the frame
+            molCall->Unlock(); // Unlock the frame
+            volCall->Unlock(); // Unlock the frame
 
 #if defined(VERBOSE)
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
@@ -1414,8 +1322,6 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
             }
 #endif // defined(OUTPUT_PROGRESS)
         }
-
-        molCall0->Unlock(); // Unlock target molecule
     }
 
 #if defined(USE_TIMER)
@@ -1488,8 +1394,10 @@ float ProteinVariantMatch::getRMS(
 /*
  * ProteinVariantMatch::getRMSPosArray
  */
-bool ProteinVariantMatch::getRMSPosArray(MolecularDataCall *mol,
-        HostArr<float> &posArr, unsigned int &cnt) {
+bool ProteinVariantMatch::getRMSPosArray(
+        MolecularDataCall *mol,
+        HostArr<float> &posArr,
+        unsigned int &cnt) {
     using namespace vislib::sys;
 
     cnt = 0;

@@ -55,8 +55,11 @@ const float ComparativeMolSurfaceRenderer::maxRMSVal = 10.0f;
 /*
  * ComparativeMolSurfaceRenderer::computeDensityBBox
  */
-void ComparativeMolSurfaceRenderer::computeDensityBBox(const float *atomPos1,
-        const float *atomPos2, size_t atomCnt1, size_t atomCnt2) {
+void ComparativeMolSurfaceRenderer::computeDensityBBox(
+        const float *atomPos1,
+        const float *atomPos2,
+        size_t atomCnt1,
+        size_t atomCnt2) {
 
     float3 minC, maxC;
     minC.x = maxC.x = atomPos1[0];
@@ -69,6 +72,7 @@ void ComparativeMolSurfaceRenderer::computeDensityBBox(const float *atomPos1,
         maxC.x = std::max(maxC.x, atomPos1[3*i+0]);
         maxC.y = std::max(maxC.y, atomPos1[3*i+1]);
         maxC.z = std::max(maxC.z, atomPos1[3*i+2]);
+//        printf("ATOMPOS %i %f %f %f\n", i, atomPos1[3*i+0],atomPos1[3*i+1],atomPos1[3*i+2]);
     }
     for (size_t i = 0; i < atomCnt2; ++i) {
         minC.x = std::min(minC.x, atomPos2[3*i+0]);
@@ -81,6 +85,13 @@ void ComparativeMolSurfaceRenderer::computeDensityBBox(const float *atomPos1,
 
     this->bboxParticles.Set(minC.x, minC.y, minC.z,
             maxC.x, maxC.y, maxC.z);
+
+    // DEBUG Print new bounding box
+    printf("bbboxParticles: %f %f %f %f %f %f\n", minC.x, minC.y, minC.z,
+            maxC.x, maxC.y, maxC.z);
+    printf("atomCnt0: %u\n",atomCnt1);
+    printf("atomCnt1: %u\n",atomCnt2);
+    // END DEBUG
 
 }
 
@@ -484,6 +495,9 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
         }
     }
 
+
+    printf("Compute density map particleCount %u,molcall %u\n", particleCnt,mol->AtomCount());
+
     // Compute padding for the density map
     padding = this->maxAtomRad*this->qsParticleRad + this->qsGridSpacing*10; // TODO How much makes sense?
 
@@ -518,6 +532,17 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
             this->gridDataPos.Peek()[4*cnt+2] -= this->volOrg.z;
     }
 
+
+//    for (int cnt = 0; cnt < static_cast<int>(mol->AtomCount()); ++cnt) {
+//        printf("data pos %i %f %f %f\n",cnt,
+//                this->gridDataPos.Peek()[4*cnt+0],
+//                this->gridDataPos.Peek()[4*cnt+1],
+//                this->gridDataPos.Peek()[4*cnt+2]);
+//    }
+
+    printf("volOrg %f %f %f\n", this->volOrg.x,this->volOrg.y,this->volOrg.z);
+    printf("volDim %i %i %i\n", this->volDim.x,this->volDim.y,this->volDim.z);
+
 #ifdef USE_TIMER
     float dt_ms;
     cudaEvent_t event1, event2;
@@ -539,6 +564,8 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
             this->qsGridSpacing,
             this->qsIsoVal,
             this->qsGaussLim);
+
+    printf("max atom rad %f\n", this->maxAtomRad);
 
 #ifdef USE_TIMER
     cudaEventRecord(event2, 0);
@@ -1337,6 +1364,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             this->ClassName(),
             (double(clock()-t)/double(CLOCKS_PER_SEC)));
 #endif
+
+    printf("CALL 1 frame %u\n", mol1->FrameID());
 
         // (Re)-compute bounding box
         this->computeDensityBBox(
@@ -2405,6 +2434,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->triggerInitPotentialTex = true;
         this->triggerComputeSurfacePoints1 = true;
         this->triggerSurfaceMapping = true;
+        this->triggerComputeLines = true;
     }
 
     // Param for single frame #2
@@ -2416,6 +2446,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->triggerInitPotentialTex = true;
         this->triggerComputeSurfacePoints1 = true;
         this->triggerSurfaceMapping = true;
+        this->triggerComputeLines = true;
     }
 
 
