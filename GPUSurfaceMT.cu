@@ -899,6 +899,8 @@ void GetTrianglesIdx_D(
             }
         }
     }
+
+    __syncthreads();
 }
 
 
@@ -1918,8 +1920,18 @@ bool GPUSurfaceMT::ComputeVertexPositions(
 //        return false;
 //    }
 
-//    printf("Grid dims %u %u %u\n", volDim[0], volDim[1], volDim[2]);
-//    printf("cell count %u\n", gridCellCnt);
+    printf("Grid dims %u %u %u\n", volDim.x, volDim.y, volDim.z);
+    printf("cell count %u\n", gridCellCnt);
+
+//    // DEBUG Print volume
+//    HostArr<float> volume;
+//    volume.Validate(volDim.x*volDim.y*volDim.z);
+//    cudaMemcpy(volume.Peek(),volume_D,sizeof(float)*volDim.x*volDim.y*volDim.z, cudaMemcpyDeviceToHost);
+//    for (int i = 0; i < volDim.x*volDim.y*volDim.z;++i) {
+//        printf("volume %i %f\n", i, volume.Peek()[i]);
+//    }
+//    volume.Release();
+//    // End DEBUG
 
 
     /* Find active grid cells */
@@ -1936,14 +1948,6 @@ bool GPUSurfaceMT::ComputeVertexPositions(
     if (!CudaSafeCall(this->cubeOffsets_D.Set(0x00))) {
         return false;
     }
-//    if (!CudaSafeCall(FindActiveGridCells(
-//            this->cubeStates_D.Peek(),
-//            this->cubeOffsets_D.Peek(),
-//            gridCellCnt,
-//            isovalue,
-//            volume_D))) {
-//        return false;
-//    }
 
 #ifdef USE_TIMER
     cudaEvent_t event1, event2;
@@ -1961,6 +1965,8 @@ bool GPUSurfaceMT::ComputeVertexPositions(
             volume_D,
             isovalue,
             gridCellCnt);
+
+    ::CheckForCudaErrorSync();
 
 #ifdef USE_TIMER
     cudaEventRecord(event2, 0);
@@ -2000,7 +2006,7 @@ bool GPUSurfaceMT::ComputeVertexPositions(
     }
 
 
-//    printf("Active cell count %u\n", activeCellCnt); // DEBUG
+    printf("Active cell count %u\n", activeCellCnt); // DEBUG
 //    printf("Reduction %f\n", 1.0 - static_cast<float>(activeCellCnt)/
 //            static_cast<float>(gridCellCnt)); // DEBUG
 
@@ -2079,12 +2085,12 @@ bool GPUSurfaceMT::ComputeVertexPositions(
 //    HostArr<unsigned int> vertexIdxOffsets;
 //    activeVertexPos.Validate(7*this->activeCellCnt);
 //    vertexIdxOffsets.Validate(7*this->activeCellCnt);
-//    vertexStates.Validate(7*activeCellCnt);
-//    cudaMemcpy(vertexStates.Peek(), this->vertexStates_D.Peek(), 7*activeCellCnt*sizeof(unsigned int),
+//    vertexStates.Validate(7*this->activeCellCnt);
+//    cudaMemcpy(vertexStates.Peek(), this->vertexStates_D.Peek(), 7*this->activeCellCnt*sizeof(unsigned int),
 //            cudaMemcpyDeviceToHost);
-//    cudaMemcpy(activeVertexPos.Peek(), this->activeVertexPos_D.Peek(), 7*activeCellCnt*sizeof(unsigned int),
+//    cudaMemcpy(activeVertexPos.Peek(), this->activeVertexPos_D.Peek(), 7*this->activeCellCnt*sizeof(float3),
 //            cudaMemcpyDeviceToHost);
-//    cudaMemcpy(vertexIdxOffsets.Peek(), this->vertexIdxOffs_D.Peek(), 7*activeCellCnt*sizeof(unsigned int),
+//    cudaMemcpy(vertexIdxOffsets.Peek(), this->vertexIdxOffs_D.Peek(), 7*this->activeCellCnt*sizeof(unsigned int),
 //            cudaMemcpyDeviceToHost);
 //    for (int i = 0; i < 7*this->activeCellCnt; ++i) {
 //        printf("#%i: active vertexPos %f %f %f (state = %u)\n", i,
@@ -2093,13 +2099,13 @@ bool GPUSurfaceMT::ComputeVertexPositions(
 //                activeVertexPos.Peek()[i].z,
 //                vertexStates.Peek()[i]);
 //    }
-
-//    for (int i = 0; i < 7*this->activeCellCnt; ++i) {
-//        printf("#%i: vertex index offset %u (state %u)\n",i,
-//                vertexIdxOffsets.Peek()[i],
-//                vertexStates.Peek()[i]);
-//    }
-    // END DEBUG
+//
+////    for (int i = 0; i < 7*this->activeCellCnt; ++i) {
+////        printf("#%i: vertex index offset %u (state %u)\n",i,
+////                vertexIdxOffsets.Peek()[i],
+////                vertexStates.Peek()[i]);
+////    }
+//    // END DEBUG
 
 
     /* Get number of active vertices */
@@ -2213,6 +2219,35 @@ bool GPUSurfaceMT::ComputeTriangles(
         float3 volDelta,
         float isovalue) {
 
+    using namespace vislib::sys;
+
+    printf("VERTEX COUNT %u\n", this->vertexCnt);
+
+    /* Init grid parameters */
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
+
+//    // DEBUG print grid data
+//    int3 gridSize;
+//    float3 gridOrg;
+//    float3 gridDelta;
+//    cudaMemcpyFromSymbol(&gridSize, gridSize_D, sizeof(int3),0,cudaMemcpyDeviceToHost);
+//    cudaMemcpyFromSymbol(&gridDelta, gridDelta_D, sizeof(float3),0,cudaMemcpyDeviceToHost);
+//    cudaMemcpyFromSymbol(&gridOrg, gridOrg_D, sizeof(float3),0,cudaMemcpyDeviceToHost);
+//    printf("HOST gridSize  %i %i %i\n",gridSize.x,gridSize.y,gridSize.z);
+//    printf("HOST gridOrg   %f %f %f\n",gridOrg.x,gridOrg.y,gridOrg.z);
+//    printf("HOST gridDelta %f %f %f\n",gridDelta.x,gridDelta.y,gridDelta.z);
+//    printf("SHOULD BE gridSize: %i %i %i\n", volDim.x,volDim.y,volDim.z);
+//    printf("SHOULD BE gridDelta: %f %f %f\n", volDelta.x,volDelta.y,volDelta.z);
+//    printf("SHOULD BE gridOrg: %f %f %f\n", volOrg.x,volOrg.y,volOrg.z);
+//    // END DEBUG
+
     if (!this->vertexDataReady) { // We need vertex data to generate triangles
         return false;
     }
@@ -2230,14 +2265,6 @@ bool GPUSurfaceMT::ComputeTriangles(
     if (!CudaSafeCall(this->vertexMapInv_D.Set(0xff))) {
         return false;
     }
-//    if (!CudaSafeCall(CalcVertexMap(
-//            this->vertexMap_D.Peek(),
-//            this->vertexMapInv_D.Peek(),
-//            this->vertexIdxOffs_D.Peek(),
-//            this->vertexStates_D.Peek(),
-//            this->activeCellCnt))) {
-//        return false;
-//    }
 
     CalcVertexMapTODO_D <<< Grid(7*this->activeCellCnt, 256), 256 >>> ( // TODO rename
             this->vertexMap_D.Peek(),
@@ -2370,6 +2397,8 @@ bool GPUSurfaceMT::ComputeTriangles(
         return false;
     }
 
+    ::CheckForCudaErrorSync();
+
     if (!CudaSafeCall(GetTrianglesIdx(
             this->tetrahedronVertexOffsets_D.Peek(),
             this->cubeMap_D.Peek(),
@@ -2397,20 +2426,20 @@ bool GPUSurfaceMT::ComputeTriangles(
     HostArr<unsigned int> triangleIdx;
     triangleIdx.Validate(this->triangleCnt*3);
     cudaMemcpy(triangleIdx.Peek(), vboTriangleIdxPt, sizeof(unsigned int)*this->triangleCnt*3, cudaMemcpyDeviceToHost);
-    //for (int i = 0; i < this->triangleCnt; ++i) {
-    for (int i = 45124; i < 45125; ++i) {
-//        if ((vertexMapInv.Peek()[triangleIdx.Peek()[i*3+0]] > this->vertexCnt) ||
-//                (vertexMapInv.Peek()[triangleIdx.Peek()[i*3+1]] > this->vertexCnt)||
-//                (vertexMapInv.Peek()[triangleIdx.Peek()[i*3+2]] > this->vertexCnt)) {
-                if ((triangleIdx.Peek()[i*3+0] > this->vertexCnt) ||
-                    (triangleIdx.Peek()[i*3+1] > this->vertexCnt)||
-                    (triangleIdx.Peek()[i*3+2] > this->vertexCnt)) {
+    for (int i = 0; i < this->triangleCnt; ++i) {
+//    for (int i = 45124; i < 45125; ++i) {
+//                if ((vertexMapInv.Peek()[triangleIdx.Peek()[i*3+0]] > this->vertexCnt) ||
+//                        (vertexMapInv.Peek()[triangleIdx.Peek()[i*3+1]] > this->vertexCnt)||
+//                        (vertexMapInv.Peek()[triangleIdx.Peek()[i*3+2]] > this->vertexCnt)) {
+        if ((triangleIdx.Peek()[i*3+0] > this->vertexCnt) ||
+                (triangleIdx.Peek()[i*3+1] > this->vertexCnt)||
+                (triangleIdx.Peek()[i*3+2] > this->vertexCnt)) {
 //            printf("Gen: vertex index idx %i: %u %u %u (vtxCnt %u)\n", i,
 //                    vertexMapInv.Peek()[triangleIdx.Peek()[i*3+0]],
 //                    vertexMapInv.Peek()[triangleIdx.Peek()[i*3+1]],
 //                    vertexMapInv.Peek()[triangleIdx.Peek()[i*3+2]],
 //                    this->vertexCnt);
-//
+
             printf("Gen: vertex index idx %i: %u %u %u (vtxCnt %u)\n", i,
                     triangleIdx.Peek()[i*3+0],
                     triangleIdx.Peek()[i*3+1],
