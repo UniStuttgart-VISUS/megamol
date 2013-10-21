@@ -119,6 +119,10 @@ public:
          */
         void UpdateData(const char *data, double min, double max,
                 DataArray::DataType t, vislib::StringA id, size_t nComponents) {
+//
+//            printf("Update data\n");
+//            printf("nComponents %u\n", nComponents);
+
 
             this->type = t;
             this->name = id;
@@ -131,11 +135,18 @@ public:
                     (this->extent.Depth()+1)*
                     (this->extent.Height()+1);
 
+//            printf("nComponents %u\n", gridSize);
+
             size_t nBytesPerElement = nComponents*this->GetByteCntPerDataType(t);
+
+//            printf("needed size %u\n", gridSize*nBytesPerElement);
+//            printf("allocated %u\n", allocated);
 
             // Check whether the memory needs to be (re-)allocated
             if (this->allocated < gridSize*nBytesPerElement) {
+//                printf("allocate new\n");
                 if (this->data != NULL) {
+//                    printf("delete old\n");
                     delete [] this->data;
                 }
                 this->data = new char[gridSize*nBytesPerElement];

@@ -86,12 +86,12 @@ void ComparativeMolSurfaceRenderer::computeDensityBBox(
     this->bboxParticles.Set(minC.x, minC.y, minC.z,
             maxC.x, maxC.y, maxC.z);
 
-    // DEBUG Print new bounding box
-    printf("bbboxParticles: %f %f %f %f %f %f\n", minC.x, minC.y, minC.z,
-            maxC.x, maxC.y, maxC.z);
-    printf("atomCnt0: %u\n",atomCnt1);
-    printf("atomCnt1: %u\n",atomCnt2);
-    // END DEBUG
+//    // DEBUG Print new bounding box
+//    printf("bbboxParticles: %f %f %f %f %f %f\n", minC.x, minC.y, minC.z,
+//            maxC.x, maxC.y, maxC.z);
+//    printf("atomCnt0: %u\n",atomCnt1);
+//    printf("atomCnt1: %u\n",atomCnt2);
+//    // END DEBUG
 
 }
 
@@ -496,7 +496,7 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
     }
 
 
-    printf("Compute density map particleCount %u,molcall %u\n", particleCnt,mol->AtomCount());
+//    printf("Compute density map particleCount %u,molcall %u\n", particleCnt,mol->AtomCount());
 
     // Compute padding for the density map
     padding = this->maxAtomRad*this->qsParticleRad + this->qsGridSpacing*10; // TODO How much makes sense?
@@ -532,16 +532,12 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
             this->gridDataPos.Peek()[4*cnt+2] -= this->volOrg.z;
     }
 
-
 //    for (int cnt = 0; cnt < static_cast<int>(mol->AtomCount()); ++cnt) {
 //        printf("data pos %i %f %f %f\n",cnt,
 //                this->gridDataPos.Peek()[4*cnt+0],
 //                this->gridDataPos.Peek()[4*cnt+1],
 //                this->gridDataPos.Peek()[4*cnt+2]);
 //    }
-
-    printf("volOrg %f %f %f\n", this->volOrg.x,this->volOrg.y,this->volOrg.z);
-    printf("volDim %i %i %i\n", this->volDim.x,this->volDim.y,this->volDim.z);
 
 #ifdef USE_TIMER
     float dt_ms;
@@ -565,7 +561,19 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
             this->qsIsoVal,
             this->qsGaussLim);
 
-    printf("max atom rad %f\n", this->maxAtomRad);
+//    printf("QUICKSURF PARAMETERS");
+//    printf("Particle count %u\n", mol->AtomCount());
+//    printf("Last particle position %f %f %f\n",
+//            this->gridDataPos.Peek()[(mol->AtomCount()-1)*4+0],
+//            this->gridDataPos.Peek()[(mol->AtomCount()-1)*4+1],
+//            this->gridDataPos.Peek()[(mol->AtomCount()-1)*4+2]);
+//    printf("volOrg %f %f %f\n", this->volOrg.x,this->volOrg.y,this->volOrg.z);
+//    printf("************* volDim %i %i %i **************\n", this->volDim.x,this->volDim.y,this->volDim.z);
+//    printf("max atom rad %f\n", this->maxAtomRad);
+//    printf("particle radius scaling %f\n",  this->qsParticleRad);
+//    printf("gridSpacing %f\n", this->qsGridSpacing);
+//    printf("isovalue %f \n", this->qsIsoVal);
+//    printf("Gauss limit %f\n", this->qsGaussLim);
 
 #ifdef USE_TIMER
     cudaEventRecord(event2, 0);
@@ -1195,12 +1203,25 @@ bool ComparativeMolSurfaceRenderer::initPotentialMap(
 //            gridPotentialMap.delta[1],
 //            gridPotentialMap.delta[2]);
 
+//    printf("GRIDSIZE SHOULD BE %u\n",  gridPotentialMap.size[0]* gridPotentialMap.size[1]* gridPotentialMap.size[2]);
+
+//    if (cmd->GetPointDataByIdx(0, 0) == NULL) {
+//        return false;
+//    } else {
+//        for (int i = 0; i < cmd->GetGridsize().X()*cmd->GetGridsize().Y()*cmd->GetGridsize().Z(); ++i) {
+//            if (i%1000 == 0)
+//            printf("potential map %i: %f\n", i, ((float*)cmd->GetPointDataByIdx(0, 0))[i]);
+//        }
+//    }
+
     //  Setup texture
     glEnable(GL_TEXTURE_3D);
     if (!glIsTexture(potentialTex)) {
         glGenTextures(1, &potentialTex);
     }
+
     glBindTexture(GL_TEXTURE_3D, potentialTex);
+
     glTexImage3DEXT(GL_TEXTURE_3D,
             0,
             GL_RGBA32F,
@@ -1211,6 +1232,7 @@ bool ComparativeMolSurfaceRenderer::initPotentialMap(
             GL_ALPHA,
             GL_FLOAT,
             cmd->GetPointDataByIdx(0, 0));
+
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -1365,8 +1387,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             (double(clock()-t)/double(CLOCKS_PER_SEC)));
 #endif
 
-    printf("CALL 1 frame %u\n", mol1->FrameID());
-
         // (Re)-compute bounding box
         this->computeDensityBBox(
                 mol1->AtomPositions(),
@@ -1419,6 +1439,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         this->datahashPotential1 = vti1->DataHash();
         this->datahashPotential2 = vti2->DataHash();
+
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                "%s: init potential texture #1",
+                this->ClassName());
+
         if (!this->initPotentialMap(vti1, this->gridPotential1, this->surfAttribTex1)) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1427,6 +1452,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
             return false;
         }
+
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                "%s: init potential texture #2",
+                this->ClassName());
+
         if (!this->initPotentialMap(vti2, this->gridPotential2, this->surfAttribTex2)) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1450,6 +1480,12 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
 
         /* Surface #1 */
+
+//        printf("COMPUTE SURFACE POINTS PARAMETERS\n");
+//        printf("voldim %i %i %i\n", this->volDim.x, this->volDim.y, this->volDim.z);
+//        printf("voldelta %f %f %f\n", this->volDelta.x, this->volDelta.y, this->volDelta.z);
+//        printf("volorg %f %f %f\n", this->volOrg.x, this->volOrg.y, this->volOrg.z);
+//        printf("isovalue %f\n", this->qsIsoVal);
 
         // Get vertex positions based on the level set
         if (!this->deformSurf1.ComputeVertexPositions(
@@ -2042,10 +2078,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         }
     }
 
-//    // DEBUG Show gitted atom positions
+//    // DEBUG Show atom positions
+//    glColor3f(1.0, 0.0, 0.0);
 //    glBegin(GL_POINTS);
-//        for(size_t p = 0; p < this->atomPosFitted.GetCount()/3; ++p)
-//            glVertex3fv(&this->atomPosFitted.Peek()[3*p]);
+//        for(size_t p = 0; p < mol1->AtomCount(); ++p)
+//            glVertex3fv(&mol1->AtomPositions()[3*p]);
 //    glEnd();
 //    // DEBUG end
 
@@ -2233,7 +2270,7 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
             GL_UNSIGNED_INT,
             reinterpret_cast<void*>(0));
 
-//    glDrawArrays(GL_POINTS, 0, 3*vertexCnt); // DEBUG
+//    glDrawArrays(GL_POINTS, 0, vertexCnt); // DEBUG
     glDisable(GL_CULL_FACE);
 
     this->pplSurfaceShader.Disable();

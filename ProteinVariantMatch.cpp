@@ -659,12 +659,12 @@ void ProteinVariantMatch::computeDensityBBox(
     this->bboxParticles.Set(minC.x, minC.y, minC.z,
             maxC.x, maxC.y, maxC.z);
 
-    // DEBUG Print new bounding box
-    printf("bbboxParticles: %f %f %f %f %f %f\n", minC.x, minC.y, minC.z,
-            maxC.x, maxC.y, maxC.z);
-    printf("atomCnt0: %u\n",atomCnt1);
-    printf("atomCnt1: %u\n",atomCnt2);
-    // END DEBUG
+//    // DEBUG Print new bounding box
+//    printf("bbboxParticles: %f %f %f %f %f %f\n", minC.x, minC.y, minC.z,
+//            maxC.x, maxC.y, maxC.z);
+//    printf("atomCnt0: %u\n",atomCnt1);
+//    printf("atomCnt1: %u\n",atomCnt2);
+//    // END DEBUG
 
 }
 
@@ -697,77 +697,89 @@ bool ProteinVariantMatch::computeMatch(param::ParamSlot& p) {
     if (!(*vtiCall)(VTIDataCall::CallForGetData)) {
         return false;
     }
-//    this->nVariants = std::min(molCall->FrameCount(), vtiCall->FrameCount());
 
-//    printf("Matching %u variants ...\n", this->nVariants); // DEBUG
 
-    // Compute match based on chosen heuristic
-    switch(this->theheuristic) {
-    case SURFACE_POTENTIAL :
-
-        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
-        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
-        this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-        if (this->triggerComputeMatchSurfMapping) {
-            if (!this->computeMatchSurfMapping()) {
-                return false;
-            }
-            this->triggerComputeMatchSurfMapping = false;
-        }
-
-        break;
-    case SURFACE_POTENTIAL_SIGN :
-
-        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
-        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
-        this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-        if (this->triggerComputeMatchSurfMapping) {
-            if (!this->computeMatchSurfMapping()) {
-                return false;
-            }
-            this->triggerComputeMatchSurfMapping = false;
-        }
-
-        break;
-    case MEAN_HAUSDORFF_DIST :
-
-        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
-        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
-        this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-        if (this->triggerComputeMatchSurfMapping) {
-            if (!this->computeMatchSurfMapping()) {
-                return false;
-            }
-            this->triggerComputeMatchSurfMapping = false;
-        }
-
-        break;
-    case HAUSDORFF_DIST :
-
-        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
-        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
-        this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-        if (this->triggerComputeMatchSurfMapping) {
-            if (!this->computeMatchSurfMapping()) {
-                return false;
-            }
-            this->triggerComputeMatchSurfMapping = false;
-        }
-        break;
-    case RMS_VALUE :
-        this->matchRMSD.SetCount(this->nVariants*this->nVariants);
-        if (this->triggerComputeMatchRMSD) {
-            if (!this->computeMatchRMS()) {
-                return false;
-            }
-            this->triggerComputeMatchRMSD = false;
-        }
-        break;
+    this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
+    this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
+    this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
+    this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
+    this->matchRMSD.SetCount(this->nVariants*this->nVariants);
+    if (!this->computeMatchSurfMapping()) {
+        return false;
     }
+
+
+////    this->nVariants = std::min(molCall->FrameCount(), vtiCall->FrameCount());
+//
+////    printf("Matching %u variants ...\n", this->nVariants); // DEBUG
+//
+//    // Compute match based on chosen heuristic
+//    switch(this->theheuristic) {
+//    case SURFACE_POTENTIAL :
+//
+//        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
+//        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
+//        this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
+//        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
+//        if (this->triggerComputeMatchSurfMapping) {
+//            if (!this->computeMatchSurfMapping()) {
+//                return false;
+//            }
+//            this->triggerComputeMatchSurfMapping = false;
+//        }
+//
+//        break;
+//    case SURFACE_POTENTIAL_SIGN :
+//
+//        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
+//        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
+//        this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
+//        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
+//        if (this->triggerComputeMatchSurfMapping) {
+//            if (!this->computeMatchSurfMapping()) {
+//                return false;
+//            }
+//            this->triggerComputeMatchSurfMapping = false;
+//        }
+//
+//        break;
+//    case MEAN_HAUSDORFF_DIST :
+//
+//        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
+//        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
+//        this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
+//        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
+//        if (this->triggerComputeMatchSurfMapping) {
+//            if (!this->computeMatchSurfMapping()) {
+//                return false;
+//            }
+//            this->triggerComputeMatchSurfMapping = false;
+//        }
+//
+//        break;
+//    case HAUSDORFF_DIST :
+//
+//        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
+//        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
+//        this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
+//        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
+//        if (this->triggerComputeMatchSurfMapping) {
+//            if (!this->computeMatchSurfMapping()) {
+//                return false;
+//            }
+//            this->triggerComputeMatchSurfMapping = false;
+//        }
+//        break;
+//    case RMS_VALUE :
+//        this->matchRMSD.SetCount(this->nVariants*this->nVariants);
+//        if (this->triggerComputeMatchRMSD) {
+//            if (!this->computeMatchRMS()) {
+//                return false;
+//            }
+//            this->triggerComputeMatchRMSD = false;
+//        }
+//        break;
+//    }
     return true;
 }
 
@@ -947,8 +959,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
     }
 
     // Loop through all variantsPotentialVal
-    //for (unsigned int i = 15; i < this->nVariants; ++i) {
-    for (unsigned int i = 9; i < 16; ++i) {
+    for (unsigned int i = 0; i < this->nVariants; ++i) {
 
         molCall->SetFrameID(i, true); // Set frame id and force flag
         if (!(*molCall)(MolecularDataCall::CallForGetExtent)) {
@@ -1015,7 +1026,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
         volCall->Unlock(); // Unlock the frame
 
         // Loop through all variants
-        for (unsigned int j = 18; j < this->nVariants; ++j) {
+        for (unsigned int j = 0; j < this->nVariants; ++j) {
 
 //            float minC1[3], maxC1[3];
 
