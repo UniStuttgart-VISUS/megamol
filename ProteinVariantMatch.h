@@ -49,7 +49,7 @@ class ProteinVariantMatch : public core::Module {
 public:
 
     /// Enum defining the differend heuristics
-    enum Heuristic {RMS_VALUE=0, SURFACE_POTENTIAL, SURFACE_POTENTIAL_SIGN, MEAN_HAUSDORFF_DIST, HAUSDORFF_DIST};
+    enum Heuristic {RMS_VALUE=0, SURFACE_POTENTIAL, SURFACE_POTENTIAL_SIGN, MEAN_VERTEX_PATH, HAUSDORFF_DIST};
 
     /// Enum describing different ways of using RMS fitting
     enum RMSFittingMode {RMS_ALL=0, RMS_BACKBONE, RMS_C_ALPHA};
@@ -163,13 +163,6 @@ private:
      */
     bool computeMatch(core::param::ParamSlot& p);
 
-    /**
-     * Computes the RMS value between all variants ans stores it to the match
-     * matrix
-     *
-     * @return 'True' on success, 'false' otherwise
-     */
-    bool computeMatchRMS();
     /**
      * Quantifies the surface difference between all variants and stores the
      * results in the matching matrices.
@@ -338,13 +331,13 @@ private:
     float maxMatchSurfacePotentialSignVal;
 
     /// TODO
-    vislib::Array<float> matchMeanHausdorffDistance;
+    vislib::Array<float> matchMeanVertexPath;
 
     /// The minimum match value
-    float minMatchMeanHausdorffDistanceVal;
+    float minMatchMeanVertexPathVal;
 
     /// The maximum match value
-    float maxMatchMeanHausdorffDistanceVal;
+    float maxMatchMeanVertexPathVal;
 
     /// TODO
     vislib::Array<float> matchHausdorffDistance;
@@ -510,6 +503,10 @@ private:
 
     float maxAtomRad;
     float minAtomRad;
+
+
+    /// Device array to collect haus dorff distance
+    CudaDevArr<float> hausdorffdistVtx_D;
 
 
 };

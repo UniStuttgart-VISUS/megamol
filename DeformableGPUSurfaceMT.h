@@ -41,10 +41,40 @@ public:
     }
 
     /**
+     * Computes the Hausdorff distance from surf1 to surf 2.
+     *
+     * @param surf1 Pointer to the first surface.
+     * @param surf2 Pointer to the second surface.
+     * @return The Hausdorff distance
+     */
+    static float CalcHausdorffDistance(
+            DeformableGPUSurfaceMT *surf1,
+            DeformableGPUSurfaceMT *surf2,
+            float *hausdorffdistVtx_D,
+            bool symmetric=false);
+
+    /**
      * In this class, because it needs the offsets TODO
      */
     static bool ComputeVtxDiffValue(
             float *diff_D,
+            float *tex0_D,
+            int3 texDim0,
+            float3 texOrg0,
+            float3 texDelta0,
+            float *tex1_D,
+            int3 texDim1,
+            float3 texOrg1,
+            float3 texDelta1,
+            GLuint vtxDataVBO0,
+            GLuint vtxDataVBO1,
+            size_t vertexCnt);
+
+    /**
+     * In this class, because it needs the offsets TODO
+     */
+    static bool ComputeVtxSignDiffValue(
+            float *signdiff_D,
             float *tex0_D,
             int3 texDim0,
             float3 texOrg0,
@@ -141,6 +171,13 @@ public:
      * @return The integral value
      */
     float IntOverSurfArea(float *value_D);
+
+    /**
+     * Integrate scalar value (given per vertex in value_D) over surface area.
+     *
+     * @return The integral value
+     */
+    float IntUncertaintyOverSurfArea();
 
     /**
      * TODO
