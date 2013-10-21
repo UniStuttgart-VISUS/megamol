@@ -2305,6 +2305,7 @@ int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f,
   }
 
 
+
   wkf_timerhandle globaltimer = wkf_timer_create();
   wkf_timer_start(globaltimer);
 
@@ -2369,7 +2370,8 @@ int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f,
   // if so, just leave things as they are, and do the computation 
   // using the existing buffers
   if (gpuh->natoms == 0 ||
-      get_chunk_bufs_map(1, natoms, colorperatom,
+      // TODO Make sure the computation stops if not enough memory available!
+      get_chunk_bufs_map(0, natoms, colorperatom,
                      volsz.x, volsz.y, volsz.z,
                      chunksz.x, chunksz.y, chunksz.z,
                      slabsz.x, slabsz.y, slabsz.z, storeNearestAtom) == -1) {
@@ -2396,13 +2398,13 @@ int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f,
     cudaFree(gpuh->safety);
   gpuh->safety = NULL;
 
-#if 0
-  if (chunkiters > 1)
-    printf("  Using GPU chunk size: %d\n", chunksz.z);
-
-  printf("  Accel grid(%d, %d, %d) spacing %f\n",
-         accelcells.x, accelcells.y, accelcells.z, acgridspacing);
-#endif
+//#if 1
+//  if (chunkiters > 1)
+//    printf("  Using GPU chunk size: %d\n", chunksz.z);
+//
+//  printf("  Accel grid(%d, %d, %d) spacing %f\n",
+//         accelcells.x, accelcells.y, accelcells.z, acgridspacing);
+//#endif
 
   cudaMemcpy(gpuh->xyzr_d, xyzr, natoms * sizeof(float4), cudaMemcpyHostToDevice);
   if (colorperatom)
