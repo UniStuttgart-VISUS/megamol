@@ -122,8 +122,8 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
     core::param::EnumParam* fm = new core::param::EnumParam(this->theheuristic);
     fm->SetTypePair(SURFACE_POTENTIAL, "Mean potential diff");
     fm->SetTypePair(SURFACE_POTENTIAL_SIGN, "Mean potential sign diff");
-    fm->SetTypePair(MEAN_HAUSDORFF_DIST, "Mean Hausdorff");
-    fm->SetTypePair(HAUSDORFF_DIST, "Hausdorff");
+    fm->SetTypePair(MEAN_VERTEX_PATH, "Mean vertex path");
+    fm->SetTypePair(HAUSDORFF_DIST, "Hausdorff distance");
     fm->SetTypePair(RMS_VALUE, "RMSD");
     this->theheuristicSlot.SetParameter(fm);
     this->MakeSlotAvailable(&this->theheuristicSlot);
@@ -192,8 +192,8 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
     this->minMatchSurfacePotentialSignVal = 0.0f;
     this->maxMatchSurfacePotentialSignVal = 0.0f;
 
-    this->minMatchMeanHausdorffDistanceVal = 0.0f;
-    this->maxMatchMeanHausdorffDistanceVal = 0.0f;
+    this->minMatchMeanVertexPathVal = 0.0f;
+    this->maxMatchMeanVertexPathVal = 0.0f;
 
     this->minMatchHausdorffDistanceVal = 0.0f;
     this->maxMatchHausdorffDistanceVal = 0.0f;
@@ -381,8 +381,8 @@ bool ProteinVariantMatch::getDiagData(core::Call& call) {
     ms = static_cast<MolecularSurfaceFeature*>(this->featureList[2]->GetMappable());
     for (unsigned int i = 0; i < this->nVariants; ++i) {
         ms->AppendValue(i,
-                this->matchMeanHausdorffDistance[this->singleFrameIdx*this->nVariants+i]/
-                this->maxMatchMeanHausdorffDistanceVal);
+                this->matchMeanVertexPath[this->singleFrameIdx*this->nVariants+i]/
+                this->maxMatchMeanVertexPathVal);
 //        printf("%f ", this->matchMeanHausdorffDistance[this->singleFrameIdx*this->nVariants+i]/
 //                this->maxMatchMeanHausdorffDistanceVal);
     }
@@ -451,9 +451,9 @@ bool ProteinVariantMatch::getMatrixData(core::Call& call) {
         dc->SetMatch(this->matchSurfacePotentialSign.PeekElements());
         dc->SetMatchRange(this->minMatchSurfacePotentialSignVal, this->maxMatchSurfacePotentialSignVal);
         break;
-    case MEAN_HAUSDORFF_DIST :
-        dc->SetMatch(this->matchMeanHausdorffDistance.PeekElements());
-        dc->SetMatchRange(this->minMatchMeanHausdorffDistanceVal, this->maxMatchMeanHausdorffDistanceVal);
+    case MEAN_VERTEX_PATH :
+        dc->SetMatch(this->matchMeanVertexPath.PeekElements());
+        dc->SetMatchRange(this->minMatchMeanVertexPathVal, this->maxMatchMeanVertexPathVal);
         break;
     case HAUSDORFF_DIST :
         dc->SetMatch(this->matchHausdorffDistance.PeekElements());
@@ -529,7 +529,7 @@ bool ProteinVariantMatch::computeDensityMap(
         size_t atomCnt,
         CUDAQuickSurf *cqs) {
 
-    printf("Compute density map particleCount %u\n", atomCnt);
+//    printf("Compute density map particleCount %u\n", atomCnt);
 
     using namespace vislib::sys;
     using namespace vislib::math;
@@ -579,8 +579,8 @@ bool ProteinVariantMatch::computeDensityMap(
 //                atomPos[4*cnt+2]);
 //    }
 
-    printf("volOrg %f %f %f\n", this->volOrg.x,this->volOrg.y,this->volOrg.z);
-    printf("volDim %i %i %i\n", this->volDim.x,this->volDim.y,this->volDim.z);
+//    printf("volOrg %f %f %f\n", this->volOrg.x,this->volOrg.y,this->volOrg.z);
+//    printf("volDim %i %i %i\n", this->volDim.x,this->volDim.y,this->volDim.z);
 
 #ifdef USE_TIMER
     float dt_ms;
@@ -604,7 +604,7 @@ bool ProteinVariantMatch::computeDensityMap(
             this->qsIsoVal,
             this->qsGaussLim);
 
-    printf("max atom rad %f\n", this->maxAtomRad);
+//    printf("max atom rad %f\n", this->maxAtomRad);
 
 #ifdef USE_TIMER
     cudaEventRecord(event2, 0);
@@ -698,220 +698,22 @@ bool ProteinVariantMatch::computeMatch(param::ParamSlot& p) {
         return false;
     }
 
+    this->nVariants = std::min(molCall->FrameCount(), vtiCall->FrameCount());
+    printf("Matching %u variants ...\n", this->nVariants); // DEBUG
+
 
     this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
     this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
-    this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
+    this->matchMeanVertexPath.SetCount(this->nVariants*this->nVariants);
     this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
     this->matchRMSD.SetCount(this->nVariants*this->nVariants);
     if (!this->computeMatchSurfMapping()) {
         return false;
     }
 
-
-////    this->nVariants = std::min(molCall->FrameCount(), vtiCall->FrameCount());
-//
-////    printf("Matching %u variants ...\n", this->nVariants); // DEBUG
-//
-//    // Compute match based on chosen heuristic
-//    switch(this->theheuristic) {
-//    case SURFACE_POTENTIAL :
-//
-//        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
-//        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
-//        this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-//        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-//        if (this->triggerComputeMatchSurfMapping) {
-//            if (!this->computeMatchSurfMapping()) {
-//                return false;
-//            }
-//            this->triggerComputeMatchSurfMapping = false;
-//        }
-//
-//        break;
-//    case SURFACE_POTENTIAL_SIGN :
-//
-//        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
-//        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
-//        this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-//        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-//        if (this->triggerComputeMatchSurfMapping) {
-//            if (!this->computeMatchSurfMapping()) {
-//                return false;
-//            }
-//            this->triggerComputeMatchSurfMapping = false;
-//        }
-//
-//        break;
-//    case MEAN_HAUSDORFF_DIST :
-//
-//        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
-//        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
-//        this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-//        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-//        if (this->triggerComputeMatchSurfMapping) {
-//            if (!this->computeMatchSurfMapping()) {
-//                return false;
-//            }
-//            this->triggerComputeMatchSurfMapping = false;
-//        }
-//
-//        break;
-//    case HAUSDORFF_DIST :
-//
-//        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
-//        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
-//        this->matchMeanHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-//        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-//        if (this->triggerComputeMatchSurfMapping) {
-//            if (!this->computeMatchSurfMapping()) {
-//                return false;
-//            }
-//            this->triggerComputeMatchSurfMapping = false;
-//        }
-//        break;
-//    case RMS_VALUE :
-//        this->matchRMSD.SetCount(this->nVariants*this->nVariants);
-//        if (this->triggerComputeMatchRMSD) {
-//            if (!this->computeMatchRMS()) {
-//                return false;
-//            }
-//            this->triggerComputeMatchRMSD = false;
-//        }
-//        break;
-//    }
     return true;
 }
 
-
-/*
- * ProteinVariantMatch::computeMatchRMS
- */
-bool ProteinVariantMatch::computeMatchRMS() {
-    using namespace vislib::sys;
-
-    unsigned int posCnt0, posCnt1;
-
-#if defined(OUTPUT_PROGRESS)
-    //float steps = (this->nVariants*(this->nVariants+1))*0.5f;
-    float steps = this->nVariants*this->nVariants;
-    float currStep = 0.0f;
-#endif // defined(OUTPUT_PROGRESS)
-
-#if defined(USE_TIMER)
-    time_t t = clock();
-#endif // defined(USE_TIMER)
-
-    MolecularDataCall *molCall = this->particleDataCallerSlot.CallAs<MolecularDataCall>();
-    if (molCall == NULL) {
-        return false;
-    }
-
-    this->minMatchRMSDVal = 1000000.0f;
-    this->maxMatchRMSDVal = 0.0f;
-    float translation[3];
-    float rotation[3][3];
-
-    // Loop through all variants
-    for (unsigned int i = 0; i < this->nVariants; ++i) {
-
-        molCall->SetFrameID(i, true); // Set frame id and force flag
-        if (!(*molCall)(MolecularDataCall::CallForGetData)) {
-            return false;
-        }
-        this->rmsPosVec0.Validate(molCall->AtomCount()*3);
-
-        // Get atom positions
-        if (!this->getRMSPosArray(molCall, this->rmsPosVec0, posCnt0)) {
-            return false;
-        }
-
-        molCall->Unlock();
-
-        // Loop through all variants
-        for (unsigned int j = 0; j < this->nVariants; ++j) {
-
-#if defined(VERBOSE)
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-                    "%s: matching variants %i and %i...",
-                    this->ClassName(), i, j);
-#endif // defined(VERBOSE)
-
-            molCall->SetFrameID(j, true); // Set frame id and force flag
-            if (!(*molCall)(MolecularDataCall::CallForGetData)) {
-                return false;
-            }
-
-            this->rmsPosVec1.Validate(molCall->AtomCount()*3);
-            // Get atom positions
-            if (!this->getRMSPosArray(molCall, this->rmsPosVec1, posCnt1)) {
-                return false;
-            }
-
-            molCall->Unlock();
-
-//            printf("rmsPosVec0: %f %f %f %f %f %f\n",
-//                    this->rmsPosVec0.Peek()[0],
-//                    this->rmsPosVec0.Peek()[1],
-//                    this->rmsPosVec0.Peek()[2],
-//                    this->rmsPosVec0.Peek()[3],
-//                    this->rmsPosVec0.Peek()[4],
-//                    this->rmsPosVec0.Peek()[5]);
-//
-//            printf("rmsPosVec1: %f %f %f %f %f %f\n",
-//                    this->rmsPosVec1.Peek()[0],
-//                    this->rmsPosVec1.Peek()[1],
-//                    this->rmsPosVec1.Peek()[2],
-//                    this->rmsPosVec1.Peek()[3],
-//                    this->rmsPosVec1.Peek()[4],
-//                    this->rmsPosVec1.Peek()[5]);
-
-            if (posCnt0 != posCnt1) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "%s: Unable to perform RMS fitting (non-equal atom \
-count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
-                return false;
-            }
-
-            // Compute RMS value and store it in output matrix
-            // Note: If the actual rms deviation is not computed, the method
-            //       returns the RMS value of the unfitted positions.
-            //       Therefore, the 'fit' flag has to be true here, although
-            //       we do not actually need the translation/rotation
-            this->matchRMSD[this->nVariants*i+j] = this->getRMS(this->rmsPosVec0.Peek(),
-                    this->rmsPosVec1.Peek(), posCnt0, true, 2, rotation, translation);
-
-            if (i != j) {
-                this->minMatchRMSDVal = std::min(this->minMatchRMSDVal, this->matchRMSD[this->nVariants*i+j]);
-                this->maxMatchRMSDVal = std::max(this->maxMatchRMSDVal, this->matchRMSD[this->nVariants*i+j]);
-            }
-
-#if defined(VERBOSE)
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-                    "%s: RMS value %f",
-                    this->ClassName(), this->matchRMSD[this->nVariants*i+j]);
-#endif // defined(VERBOSE)
-
-#if defined(OUTPUT_PROGRESS)
-            // Ouput progress
-            currStep += 1.0f;
-            if (static_cast<unsigned int>(currStep)%100 == 0) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-                        "%s: matching RMS values %3u%%", this->ClassName(),
-                        static_cast<unsigned int>(currStep/steps*100));
-            }
-#endif // defined(OUTPUT_PROGRESS)
-        }
-    }
-
-#if defined(USE_TIMER)
-    vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
-    "%s: time for matching RMS values of %u variants %f sec", this->ClassName(),
-    this->nVariants,(double(clock()-t)/double(CLOCKS_PER_SEC)));
-#endif // defined(USE_TIMER)
-
-    return true;
-}
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 /*
@@ -923,8 +725,8 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
     unsigned int posCnt0, posCnt1;
     this->minMatchSurfacePotentialVal = 1000000.0f;
     this->maxMatchSurfacePotentialVal = 0.0f;
-    this->minMatchMeanHausdorffDistanceVal = 1000000.0f;
-    this->maxMatchMeanHausdorffDistanceVal = 0.0f;
+    this->minMatchMeanVertexPathVal = 1000000.0f;
+    this->maxMatchMeanVertexPathVal = 0.0f;
     this->minMatchHausdorffDistanceVal = 1000000.0f;
     this->maxMatchHausdorffDistanceVal = 0.0f;
     this->minMatchSurfacePotentialSignVal = 1000000.0f;
@@ -1118,6 +920,14 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                 return false;
             }
 
+            // Safe RMSD in matrix
+            this->matchRMSD[i*this->nVariants+j] = rmsVal;
+            this->minMatchRMSDVal =
+                    std::min(this->minMatchRMSDVal, this->matchRMSD[this->nVariants*i+j]);
+            this->maxMatchRMSDVal =
+                    std::max(this->maxMatchRMSDVal, this->matchRMSD[this->nVariants*i+j]);
+
+
             // Fit atom positions of source structure
             Vec3f centroid(0.0f, 0.0f, 0.0f);
 //            this->atomPosFitted.Validate(molCall->AtomCount()*3);
@@ -1234,11 +1044,6 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                 return false;
             }
 
-//            // Compute texture coordinates
-//            if (!this->surfStart.ComputeTexCoords(minC1, maxC1)) {
-//                return false;
-//            }
-
             // Make deep copy of start surface
             this->surfEnd = this->surfStart;
 
@@ -1279,9 +1084,10 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
             // Compute surface area
             float surfArea = this->surfEnd.GetTotalValidSurfArea();
 
+
             /* Compute different metrics on a per-vertex basis */
 
-            // Compute potential difference per vertex
+            // 1. Compute potential difference per vertex
 
             if (!CudaSafeCall(this->vertexPotentialDiff_D.Validate(this->surfEnd.GetVertexCnt()))) {
                 return false;
@@ -1300,28 +1106,64 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                 return false;
             }
 
-            // Integrate over surface area
+            // Integrate over surface area and write to matrix
             float meanPotentialDiff = this->surfEnd.IntOverSurfArea(this->vertexPotentialDiff_D.Peek());
             this->matchSurfacePotential[i*this->nVariants+j] = meanPotentialDiff/surfArea;
-
             this->minMatchSurfacePotentialVal =
                     std::min(this->minMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
             this->maxMatchSurfacePotentialVal =
                     std::max(this->maxMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
 
+            // 2. Compute potential sign difference per vertex
+
+            if (!CudaSafeCall(this->vertexPotentialSignDiff_D.Validate(this->surfEnd.GetVertexCnt()))) {
+                return false;
+            }
+            if (!DeformableGPUSurfaceMT::ComputeVtxSignDiffValue(
+                    this->vertexPotentialSignDiff_D.Peek(),
+                    this->potentialTex0_D.Peek(),
+                    texDim0, texOrg0, texDelta0,
+                    this->potentialTex1_D.Peek(),
+                    texDim1, texOrg1, texDelta1,
+                    this->surfStart.GetVtxDataVBO(),
+                    this->surfEnd.GetVtxDataVBO(),
+                    this->surfStart.GetVertexCnt()
+                    )) {
+                return false;
+            }
+            // Integrate over surface area and write to matrix
+            float meanPotentialSignDiff = this->surfEnd.IntOverSurfArea(this->vertexPotentialSignDiff_D.Peek());
+            this->matchSurfacePotentialSign[i*this->nVariants+j] = meanPotentialSignDiff/surfArea;
+            this->minMatchSurfacePotentialSignVal =
+                    std::min(this->minMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
+            this->maxMatchSurfacePotentialSignVal =
+                    std::max(this->maxMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
+
+            // 3. Compute mean vertex path
+
+            float meanVertexPath = this->surfEnd.IntUncertaintyOverSurfArea();
+            this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/surfArea;
+            this->minMatchMeanVertexPathVal =
+                    std::min(this->minMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
+            this->maxMatchMeanVertexPathVal =
+                    std::max(this->maxMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
+
+            // 4. Compute Hausdorff distance
+
+            if (!CudaSafeCall(this->hausdorffdistVtx_D.Validate(this->surfEnd.GetVertexCnt()))) {
+                return false;
+            }
+            float hausdorffdist = DeformableGPUSurfaceMT::CalcHausdorffDistance(
+                    &this->surfEnd, &this->surfStart, this->hausdorffdistVtx_D.Peek());
+            //this->matchHausdorffDistance[i*this->nVariants+j] = hausdorffdist;
+            this->matchHausdorffDistance[i*this->nVariants+j] = 0.0;
+            this->minMatchHausdorffDistanceVal =
+                    std::min(this->minMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
+            this->maxMatchHausdorffDistanceVal =
+                    std::max(this->maxMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
+
             molCall->Unlock(); // Unlock the frame
             volCall->Unlock(); // Unlock the frame
-
-#if defined(VERBOSE)
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-                    "%s: triangle area sum           %f",
-                    this->ClassName(), surfArea);
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-                    "%s: mean potential difference %f (min %f, max %f)",
-                    this->ClassName(), this->matchSurfacePotential[i*this->nVariants+j],
-                    this->minMatchSurfacePotentialVal,
-                    this->maxMatchSurfacePotentialVal);
-#endif // defined(VERBOSE)
 
 #if defined(OUTPUT_PROGRESS)
             // Ouput progress

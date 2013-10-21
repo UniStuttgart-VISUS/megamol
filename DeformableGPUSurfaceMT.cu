@@ -26,6 +26,7 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include <thrust/sort.h>
+#include <thrust/reduce.h>
 #include <thrust/device_ptr.h>
 
 //#define USE_TIMER
@@ -1549,6 +1550,110 @@ float DeformableGPUSurfaceMT::IntOverSurfArea(float *value_D) {
 }
 
 
+/**
+ * Integrate scalar value (given per vertex in value_D) over surface area.
+ *
+ * @return The integral value
+ */
+float DeformableGPUSurfaceMT::IntUncertaintyOverSurfArea() {
+
+
+    // Compute triangle areas of all (non-corrupt) triangles
+     if (!CudaSafeCall(this->accTriangleData_D.Validate(this->triangleCnt))) {
+         return false;
+     }
+     if (!CudaSafeCall(this->accTriangleData_D.Set(0x00))) {
+         return false;
+     }
+     cudaGraphicsResource* cudaTokens[2];
+
+     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+             &cudaTokens[0],
+             this->vboTriangleIdx,
+             cudaGraphicsMapFlagsNone))) {
+         return false;
+     }
+
+     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+             &cudaTokens[1],
+             this->vboUncertainty,
+             cudaGraphicsMapFlagsNone))) {
+         return false;
+     }
+
+     if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+         return false;
+     }
+
+     // Get mapped pointers to the vertex data buffers
+     uint *triangleIdxPt;
+     size_t vboSize;
+     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+             reinterpret_cast<void**>(&triangleIdxPt), // The mapped pointer
+             &vboSize,              // The size of the accessible data
+             cudaTokens[0]))) {                 // The mapped resource
+         return false;
+     }
+
+     // Get mapped pointers to the vertex data buffers
+     float *uncertaintyPt;
+     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+             reinterpret_cast<void**>(&uncertaintyPt), // The mapped pointer
+             &vboSize,              // The size of the accessible data
+             cudaTokens[1]))) {                 // The mapped resource
+         return false;
+     }
+
+ #ifdef USE_TIMER
+     float dt_ms;
+     cudaEvent_t event1, event2;
+     cudaEventCreate(&event1);
+     cudaEventCreate(&event2);
+     cudaEventRecord(event1, 0);
+ #endif
+
+     // Call kernel
+     intOverTriangles_D <<< Grid(this->triangleCnt, 256), 256 >>> (
+             this->accTriangleData_D.Peek(),
+             this->accTriangleArea_D.Peek(),
+             triangleIdxPt,
+             uncertaintyPt,
+             this->triangleCnt);
+
+     ::CheckForCudaErrorSync();
+
+ #ifdef USE_TIMER
+     cudaEventRecord(event2, 0);
+     cudaEventSynchronize(event1);
+     cudaEventSynchronize(event2);
+     cudaEventElapsedTime(&dt_ms, event1, event2);
+     printf("CUDA time for 'intOverTriangles_D                     %.10f sec\n",
+             dt_ms/1000.0);
+ #endif
+
+     // Compute sum of all (non-corrupt) triangle areas
+     float integralVal = thrust::reduce(
+             thrust::device_ptr<float>(this->accTriangleData_D.Peek()),
+             thrust::device_ptr<float>(this->accTriangleData_D.Peek() + this->triangleCnt));
+
+     if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+         return false;
+     }
+
+ //    ::CheckForCudaErrorSync();
+
+     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+         return false;
+     }
+     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+         return false;
+     }
+
+     return integralVal;
+
+}
+
+
 /*
  * DeformableGPUSurfaceMT::MorphToVolumeGradient
  */
@@ -2515,6 +2620,35 @@ __global__ void ComputeVtxDiffValue1_D(
 
 
 /*
+ * ComputeVtxSignDiffValue1_D
+ */
+__global__ void ComputeVtxSignDiffValue1_D(
+        float *signdiff_D,
+        float *tex1_D,
+        float *vtxData1_D,
+        size_t vertexCnt) {
+
+    const uint idx = ::GetThreadIdx();
+    if (idx >= vertexCnt) {
+        return;
+    }
+
+    const int vertexDataStride = 9; // TODO
+    const int vertexDataOffsPos = 0;
+
+    float valFirst = signdiff_D[idx];
+    float3 pos;
+    pos.x = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +0];
+    pos.y = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +1];
+    pos.z = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +2];
+
+    float valSec = ::SampleFieldAtPosTrilin_D<float>(pos, tex1_D);
+    valSec = float(valSec*valFirst < 0); // TODO Use binary operator
+    signdiff_D[idx] = valSec;
+}
+
+
+/*
  * DeformableGPUSurfaceMT::ComputeVtxDiffValue
  */
 bool DeformableGPUSurfaceMT::ComputeVtxDiffValue(
@@ -2647,6 +2781,283 @@ bool DeformableGPUSurfaceMT::ComputeVtxDiffValue(
 
     return true;
 
+}
+
+
+
+/*
+ * DeformableGPUSurfaceMT::ComputeVtxSignDiffValue
+ */
+bool DeformableGPUSurfaceMT::ComputeVtxSignDiffValue(
+        float *signdiff_D,
+        float *tex0_D,
+        int3 texDim0,
+        float3 texOrg0,
+        float3 texDelta0,
+        float *tex1_D,
+        int3 texDim1,
+        float3 texOrg1,
+        float3 texDelta1,
+        GLuint vtxDataVBO0,
+        GLuint vtxDataVBO1,
+        size_t vertexCnt) {
+
+    using namespace vislib::sys;
+
+    /* Get pointers to vertex data */
+
+    cudaGraphicsResource* cudaTokens[2];
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0], vtxDataVBO0,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1], vtxDataVBO1,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboPt0;
+    size_t vboSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt0), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboPt1;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt1), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
+        return false;
+    }
+
+
+    // Init CUDA grid for texture #0
+    if (!initGridParams(texDim0, texOrg0, texDelta0)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                DeformableGPUSurfaceMT::ClassName());
+        return false;
+    }
+
+    // Call first kernel
+#ifdef USE_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
+#endif
+
+    ComputeVtxDiffValue0_D <<< Grid(vertexCnt, 256), 256 >>> (
+            signdiff_D,
+            tex0_D,
+            vboPt0,
+            vertexCnt);
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'ComputeVtxSignDiffValue0_D':            %.10f sec\n",
+            dt_ms/1000.0f);
+#endif
+
+    // Init CUDA grid for texture #1
+    if (!initGridParams(texDim1, texOrg1, texDelta1)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                DeformableGPUSurfaceMT::ClassName());
+        return false;
+    }
+
+    // Call second kernel
+#ifdef USE_TIMER
+    cudaEventRecord(event1, 0);
+#endif
+
+    ComputeVtxSignDiffValue1_D <<< Grid(vertexCnt, 256), 256 >>> (
+            signdiff_D,
+            tex1_D,
+            vboPt1,
+            vertexCnt);
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'ComputeVtxDiffValue1_D':                %.10f sec\n",
+            dt_ms/1000.0f);
+#endif
+
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+
+    return true;
+
+}
+
+
+// From http://stackoverflow.com/questions/17399119/cant-we-use-atomic-
+//             operations-for-floating-point-variables-in-cuda
+__device__ static float atomicMax(float* address, float val) {
+    int* address_as_i = (int*) address;
+    int old = *address_as_i, assumed;
+    do {
+        assumed = old;
+        old = ::atomicCAS(address_as_i, assumed,
+            __float_as_int(::fmaxf(val, __int_as_float(assumed))));
+    } while (assumed != old);
+    return __int_as_float(old);
+}
+
+/**
+ * calcHausdorffDistance_D
+ */
+__global__ void calcHausdorffDistance_D(
+        float *vtxData1,
+        float *vtxData2,
+        float *hausdorffdistVtx_D,
+        uint vertexCnt1,
+        uint vertexCnt2) {
+
+    const uint posOffs = 0; // TODO Define const device vars
+    const uint stride = 9;
+
+    const uint idx = ::GetThreadIdx();
+
+    if (idx >= vertexCnt1) {
+        return;
+    }
+
+    float3 pos1 = make_float3(
+            vtxData1[stride*idx+posOffs+0],
+            vtxData1[stride*idx+posOffs+1],
+            vtxData1[stride*idx+posOffs+2]);
+
+    float3 pos2;
+    float distSqr;
+    float minDistSqr = 10000000.0;
+    for (int i = 0; i < vertexCnt2; ++i) {
+        pos2 = make_float3(
+                vtxData2[stride*i+posOffs+0],
+                vtxData2[stride*i+posOffs+1],
+                vtxData2[stride*i+posOffs+2]);
+        distSqr = (pos2.x-pos1.x)*(pos2.x-pos1.x) +
+                (pos2.y-pos1.y)*(pos2.y-pos1.y) +
+                (pos2.z-pos1.z)*(pos2.z-pos1.z);
+
+        minDistSqr = min(minDistSqr,distSqr);
+    }
+
+    hausdorffdistVtx_D[idx] = minDistSqr;
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::CalcHausdorffDistance
+ */
+float DeformableGPUSurfaceMT::CalcHausdorffDistance(
+        DeformableGPUSurfaceMT *surf1,
+        DeformableGPUSurfaceMT *surf2,
+        float *hausdorffdistVtx_D,
+        bool symmetric) {
+
+    // TODO Implement symmetric version
+
+
+    /* Get pointers to vertex data */
+
+    cudaGraphicsResource* cudaTokens[2];
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0], surf1->GetVtxDataVBO(),
+            cudaGraphicsMapFlagsNone))) {
+        return 0.0f;
+    }
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1], surf2->GetVtxDataVBO(),
+            cudaGraphicsMapFlagsNone))) {
+        return 0.0f;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+        return 0.0f;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboPt0, *vboPt1;
+    size_t vboSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt0), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return 0.0f;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt1), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
+        return 0.0f;
+    }
+
+
+    // Calc kernel
+    // TODO Implement less lazy and faster version of Hausdorff distance
+    calcHausdorffDistance_D <<< Grid(surf1->GetVertexCnt(), 256), 256 >>> (
+            vboPt0,
+            vboPt1,
+            hausdorffdistVtx_D,
+            surf1->GetVertexCnt(),
+            surf2->GetVertexCnt());
+
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+        return 0.0f;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return 0.0f;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return 0.0f;
+    }
+
+    float res = 0.0;
+
+    res = thrust::reduce(
+            thrust::device_ptr<float>(hausdorffdistVtx_D),
+            thrust::device_ptr<float>(hausdorffdistVtx_D + surf1->GetVertexCnt()),
+            -1.0,
+            thrust::maximum<float>());
+
+    return sqrt(res);
 }
 
 #endif // WITH_CUDA
