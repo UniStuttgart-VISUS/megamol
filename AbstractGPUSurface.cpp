@@ -117,19 +117,6 @@ AbstractGPUSurface::AbstractGPUSurface(const AbstractGPUSurface& other) {
  * AbstractGPUSurface::~AbstractGPUSurface
  */
 AbstractGPUSurface::~AbstractGPUSurface() {
-
-    if (this->vboVtxData) {
-        glBindBufferARB(GL_ARRAY_BUFFER, this->vboVtxData);
-        glDeleteBuffersARB(1, &this->vboVtxData);
-        this->vboVtxData = 0;
-        CheckForGLError();
-    }
-    if (this->vboTriangleIdx) {
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, this->vboTriangleIdx);
-        glDeleteBuffersARB(1, &this->vboTriangleIdx);
-        this->vboTriangleIdx = 0;
-        CheckForGLError();
-    }
 }
 
 
@@ -265,4 +252,29 @@ AbstractGPUSurface& AbstractGPUSurface::operator=(const AbstractGPUSurface &rhs)
 
     return *this;
 
+}
+
+
+/*
+ * AbstractGPUSurface::Release
+ */
+void AbstractGPUSurface::Release() {
+
+    if (this->vboVtxData) {
+        glBindBufferARB(GL_ARRAY_BUFFER, this->vboVtxData);
+        glDeleteBuffersARB(1, &this->vboVtxData);
+        this->vboVtxData = 0;
+        CheckForGLError();
+    }
+    if (this->vboTriangleIdx) {
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, this->vboTriangleIdx);
+        glDeleteBuffersARB(1, &this->vboTriangleIdx);
+        this->vboTriangleIdx = 0;
+        CheckForGLError();
+    }
+
+    this->vertexDataReady = false;
+    this->triangleIdxReady = false;
+    this->vertexCnt = 0;
+    this->triangleCnt = 0;
 }

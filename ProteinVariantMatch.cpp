@@ -53,7 +53,7 @@ using namespace megamol::core;
 // TODO Make diagram renderer react to singleFrame-parameter
 
 /// Minimum force to keep going
-const float ProteinVariantMatch::minDispl = 0.0f;
+const float ProteinVariantMatch::minDispl = 0.000001f;
 
 // Hardcoded parameters for 'quicksurf' class
 const float ProteinVariantMatch::qsParticleRad = 1.0f;
@@ -78,17 +78,19 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
         singleFrameIdxSlot("singleFrame", "Idx of the single frame"),
         /* Parameters for surface mapping */
         surfMapMaxItSlot("surfmap::maxIt", "Number of iterations when mapping the mesh"),
-        surfMapRegMaxItSlot("surfmap::regMaxIt", "Number of iterations when regularizing the mesh"),
         surfMapInterpolModeSlot("surfmap::Interpolation", "Interpolation method used for external forces calculation"),
         surfMapSpringStiffnessSlot("surfmap::stiffness", "Stiffness of the internal springs"),
         surfMapExternalForcesWeightSlot("surfmap::externalForcesWeight", "Weight of the external forces"),
         surfMapForcesSclSlot("surfmap::forcesScl", "Scaling of overall force"),
+        /* Parameters for surface regularization */
+        surfRegMaxItSlot("surfreg::regMaxIt", "Number of iterations when regularizing the mesh"),
+        surfRegInterpolModeSlot("surfreg::Interpolation", "Interpolation method used for external forces calculation"),
+        surfRegSpringStiffnessSlot("surfreg::stiffness", "Stiffness of the internal springs"),
+        surfRegExternalForcesWeightSlot("surfreg::externalForcesWeight", "Weight of the external forces"),
+        surfRegForcesSclSlot("surfreg::forcesScl", "Scaling of overall force"),
         nVariants(0),
         cudaqsurf0(NULL), cudaqsurf1(NULL),
-        vertexCnt0(0), vertexCnt1(0), triangleCnt0(0), triangleCnt1(0),
-        triggerComputeMatch(true),
-        triggerComputeMatchRMSD(true)
-,       triggerComputeMatchSurfMapping(true) {
+        triggerComputeMatch(true) {
 
     // Data caller for particle data
     this->particleDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -142,17 +144,13 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
     this->singleFrameIdxSlot.SetParameter(new core::param::IntParam(this->singleFrameIdx, 0));
     this->MakeSlotAvailable(&this->singleFrameIdxSlot);
 
+
     /* Parameters for surface mapping */
 
     // Maximum number of iterations when mapping the mesh
     this->surfMapMaxIt = 0;
     this->surfMapMaxItSlot.SetParameter(new core::param::IntParam(this->surfMapMaxIt, 0));
     this->MakeSlotAvailable(&this->surfMapMaxItSlot);
-
-    // Maximum number of iterations when regularizing the mesh
-    this->surfMapRegMaxIt = 10;
-    this->surfMapRegMaxItSlot.SetParameter(new core::param::IntParam(this->surfMapRegMaxIt, 0));
-    this->MakeSlotAvailable(&this->surfMapRegMaxItSlot);
 
     // Interpolation method used when computing external forces
     this->surfMapInterpolMode = DeformableGPUSurfaceMT::INTERP_LINEAR;
@@ -163,8 +161,8 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
     this->MakeSlotAvailable(&this->surfMapInterpolModeSlot);
 
     // Stiffness of the springs defining the spring forces in surface #0
-    this->surfMapSpringStiffness = 1.0f;
-    this->surfMapSpringStiffnessSlot.SetParameter(new core::param::FloatParam(this->surfMapSpringStiffness, 0.1f));
+    this->surfMapSpringStiffness = 0.5f;
+    this->surfMapSpringStiffnessSlot.SetParameter(new core::param::FloatParam(this->surfMapSpringStiffness, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->surfMapSpringStiffnessSlot);
 
     // Weighting of the external forces in surface #0, note that the weight
@@ -178,6 +176,39 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
     this->surfMapForcesScl = 1.0f;
     this->surfMapForcesSclSlot.SetParameter(new core::param::FloatParam(this->surfMapForcesScl, 0.0f));
     this->MakeSlotAvailable(&this->surfMapForcesSclSlot);
+
+
+    /* Parameters for surface regularization */
+
+    // Maximum number of iterations when regularizing the mesh
+    this->surfRegMaxIt = 10;
+    this->surfRegMaxItSlot.SetParameter(new core::param::IntParam(this->surfRegMaxIt, 0));
+    this->MakeSlotAvailable(&this->surfRegMaxItSlot);
+
+    // Interpolation method used when computing external forces
+    this->surfRegInterpolMode = DeformableGPUSurfaceMT::INTERP_LINEAR;
+    param::EnumParam *s1i = new core::param::EnumParam(int(this->surfRegInterpolMode));
+    s1i->SetTypePair(DeformableGPUSurfaceMT::INTERP_LINEAR, "Linear");
+    s1i->SetTypePair(DeformableGPUSurfaceMT::INTERP_CUBIC, "Cubic");
+    this->surfRegInterpolModeSlot << s1i;
+    this->MakeSlotAvailable(&this->surfRegInterpolModeSlot);
+
+    // Stiffness of the springs defining the spring forces in surface #0
+    this->surfRegSpringStiffness = 0.5f;
+    this->surfRegSpringStiffnessSlot.SetParameter(new core::param::FloatParam(this->surfRegSpringStiffness, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->surfRegSpringStiffnessSlot);
+
+    // Weighting of the external forces in surface #0, note that the weight
+    // of the internal forces is implicitely defined by
+    // 1.0 - surf0ExternalForcesWeight
+    this->surfRegExternalForcesWeight = 0.0f;
+    this->surfRegExternalForcesWeightSlot.SetParameter(new core::param::FloatParam(this->surfRegExternalForcesWeight, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->surfRegExternalForcesWeightSlot);
+
+    // Overall scaling for the forces acting upon surface #0
+    this->surfRegForcesScl = 1.0f;
+    this->surfRegForcesSclSlot.SetParameter(new core::param::FloatParam(this->surfRegForcesScl, 0.0f));
+    this->MakeSlotAvailable(&this->surfRegForcesSclSlot);
 
 
 
@@ -251,6 +282,18 @@ void ProteinVariantMatch::release(void) {
 
     this->atomPosFitted.Release();
     this->atomPos0.Release();
+    this->gridDataPos.Release();
+    this->rmsPosVec0.Release();
+    this->rmsPosVec1.Release();
+    this->rmsWeights.Release();
+    this->rmsMask.Release();
+
+    CudaSafeCall(this->hausdorffdistVtx_D.Release());
+    CudaSafeCall(this->vertexPotentialDiff_D.Release());
+    CudaSafeCall(this->vertexPotentialSignDiff_D.Release());
+
+    this->surfEnd.Release();
+    this->surfStart.Release();
 }
 
 
@@ -431,6 +474,22 @@ bool ProteinVariantMatch::getMatrixData(core::Call& call) {
     }
     this->nVariants = std::min(molCall->FrameCount(), vtiCall->FrameCount());
 
+    if (this->matchRMSD.Count() < this->nVariants*this->nVariants) {
+        this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
+        this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
+        this->matchMeanVertexPath.SetCount(this->nVariants*this->nVariants);
+        this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
+        this->matchRMSD.SetCount(this->nVariants*this->nVariants);
+#pragma omp for
+        for (int i = 0; i < static_cast<int>(this->nVariants*this->nVariants); ++i) {
+            this->matchSurfacePotential[i] = 0.0f;
+            this->matchSurfacePotentialSign[i] = 0.0f;
+            this->matchMeanVertexPath[i] = 0.0f;
+            this->matchHausdorffDistance[i] = 0.0f;
+            this->matchRMSD[i] = 0.0f;
+        }
+    }
+
     VariantMatchDataCall *dc;
 
     // Update parameter slots
@@ -468,16 +527,14 @@ bool ProteinVariantMatch::getMatrixData(core::Call& call) {
     return true;
 }
 
-/**
- * TODO
+
+/*
+ * ProteinVariantMatch::getAtomPosArray
  */
 void ProteinVariantMatch::getAtomPosArray(MolecularDataCall *mol, HostArr<float> &posArr, size_t &particleCnt) {
 
     using namespace vislib::sys;
     using namespace vislib::math;
-
-    float gridXAxisLen, gridYAxisLen, gridZAxisLen;
-    float padding;
 
     // (Re-)allocate memory for intermediate particle data
     posArr.Validate(mol->AtomCount()*4);
@@ -538,7 +595,7 @@ bool ProteinVariantMatch::computeDensityMap(
     float padding;
 
     // Compute padding for the density map
-    padding = this->maxAtomRad*this->qsParticleRad + this->qsGridSpacing*10; // TODO How much makes sense?
+    padding = this->maxAtomRad*this->qsParticleRad + this->qsGridSpacing*10;
 
     // Init grid parameters
     this->volOrg.x = this->bboxParticles.GetLeft()   - padding;
@@ -673,40 +730,6 @@ void ProteinVariantMatch::computeDensityBBox(
  */
 bool ProteinVariantMatch::computeMatch(param::ParamSlot& p) {
 
-    VTIDataCall *vtiCall = this->volumeDataCallerSlot.CallAs<VTIDataCall>();
-    if (vtiCall == NULL) {
-        return false;
-    }
-
-    MolecularDataCall *molCall = this->particleDataCallerSlot.CallAs<MolecularDataCall>();
-    if (molCall == NULL) {
-        return false;
-    }
-
-    if (!(*molCall)(MolecularDataCall::CallForGetExtent)) {
-        return false;
-    }
-
-    if (!(*molCall)(MolecularDataCall::CallForGetData)) {
-        return false;
-    }
-
-    if (!(*vtiCall)(VTIDataCall::CallForGetExtent)) {
-        return false;
-    }
-    if (!(*vtiCall)(VTIDataCall::CallForGetData)) {
-        return false;
-    }
-
-    this->nVariants = std::min(molCall->FrameCount(), vtiCall->FrameCount());
-    printf("Matching %u variants ...\n", this->nVariants); // DEBUG
-
-
-    this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
-    this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
-    this->matchMeanVertexPath.SetCount(this->nVariants*this->nVariants);
-    this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
-    this->matchRMSD.SetCount(this->nVariants*this->nVariants);
     if (!this->computeMatchSurfMapping()) {
         return false;
     }
@@ -830,12 +853,10 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
         // Loop through all variants
         for (unsigned int j = 0; j < this->nVariants; ++j) {
 
-//            float minC1[3], maxC1[3];
-
 #if defined(VERBOSE)
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-                    "%s: matching variants %i and %i...",
-                    this->ClassName(), i, j);
+                    "%s: matching variants %i and %i (%u variants)",
+                    this->ClassName(), i, j, this->nVariants);
 #endif // defined(VERBOSE)
 
             molCall->SetFrameID(j, true); // Set frame id and force flag
@@ -854,7 +875,6 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             if (!(*volCall)(MolecularDataCall::CallForGetData)) {
                 return false;
             }
-
 
             // Copy potential texture #1 tp device memory
             if (!CudaSafeCall(this->potentialTex1_D.Validate(
@@ -927,11 +947,8 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
             this->maxMatchRMSDVal =
                     std::max(this->maxMatchRMSDVal, this->matchRMSD[this->nVariants*i+j]);
 
-
             // Fit atom positions of source structure
             Vec3f centroid(0.0f, 0.0f, 0.0f);
-//            this->atomPosFitted.Validate(molCall->AtomCount()*3);
-            // Compute centroid
             for (int cnt = 0; cnt < static_cast<int>(particleCnt1); ++cnt) {
                 centroid += Vec3f(
                         this->atomPosFitted.Peek()[cnt*4+0],
@@ -976,7 +993,7 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
             }
 
             // Get vertex positions based on the level set
-            if (!this->surfStart.ComputeVertexPositions(
+            if (!surfStart.ComputeVertexPositions(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     this->volDim,
                     this->volOrg,
@@ -992,7 +1009,7 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
             ::CheckForCudaErrorSync();
 
             // Build triangle mesh from vertices
-            if (!this->surfStart.ComputeTriangles(
+            if (!surfStart.ComputeTriangles(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     this->volDim,
                     this->volOrg,
@@ -1008,7 +1025,7 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
             ::CheckForCudaErrorSync();
 
             // Compute vertex connectivity
-            if (!this->surfStart.ComputeConnectivity(
+            if (!surfStart.ComputeConnectivity(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     this->volDim,
                     this->volOrg,
@@ -1024,18 +1041,18 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
             ::CheckForCudaErrorSync();
 
             // Regularize the mesh of surface #1
-            if (!this->surfStart.MorphToVolumeGradient(
+            if (!surfStart.MorphToVolumeGradient(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     this->volDim,
                     this->volOrg,
                     this->volDelta,
                     this->qsIsoVal,
-                    this->surfMapInterpolMode,
-                    this->surfMapRegMaxIt,
+                    this->surfRegInterpolMode,
+                    this->surfRegMaxIt,
                     ProteinVariantMatch::minDispl,
-                    this->surfMapSpringStiffness,
-                    this->surfMapForcesScl,
-                    this->surfMapExternalForcesWeight)) {
+                    this->surfRegSpringStiffness,
+                    this->surfRegForcesScl,
+                    this->surfRegExternalForcesWeight)) {
 
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                         "%s: could not regularize surface #1",
@@ -1045,15 +1062,15 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
             }
 
             // Make deep copy of start surface
-            this->surfEnd = this->surfStart;
+            surfEnd = surfStart;
 
             // Morph end surface to its final position using two-way gradient
             // vector flow
-            if (!this->surfEnd.MorphToVolumeTwoWayGVF(
+            if (!surfEnd.MorphToVolumeTwoWayGVF(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
-                    this->surfEnd.PeekCubeStates(),
-                    this->surfStart.PeekCubeStates(),
+                    surfEnd.PeekCubeStates(),
+                    surfStart.PeekCubeStates(),
                     this->volDim,
                     this->volOrg,
                     this->volDelta,
@@ -1064,32 +1081,28 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                     this->surfMapSpringStiffness,
                     this->surfMapForcesScl,
                     this->surfMapExternalForcesWeight,
-                    0.08f, // TODO gvfScl
-                    50)) { // TODO gvfIt
+                    0.09f, // TODO gvfScl
+                    35)) { // TODO gvfIt
                 return false;
             }
 
-//            // Compute texture coordinates
-//            if (!this->surfEnd.ComputeTexCoords(minC0, maxC0)) {
-//                return false;
-//            }
-
             // Flag corrupt triangles in end surface
-            if (!this->surfEnd.FlagCorruptTriangles(
-                    ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),this->volDim,
+            if (!surfEnd.FlagCorruptTriangles(
+                    ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(), this->volDim,
                     this->volOrg, this->volDelta, this->qsIsoVal)) {
                 return false;
             }
 
             // Compute surface area
-            float surfArea = this->surfEnd.GetTotalValidSurfArea();
+            float surfArea = surfEnd.GetTotalValidSurfArea();
+//            printf("Surface area %f, vertexCnt %u\n", surfArea, surfEnd.GetVertexCnt());
 
 
             /* Compute different metrics on a per-vertex basis */
 
             // 1. Compute potential difference per vertex
 
-            if (!CudaSafeCall(this->vertexPotentialDiff_D.Validate(this->surfEnd.GetVertexCnt()))) {
+            if (!CudaSafeCall(this->vertexPotentialDiff_D.Validate(surfEnd.GetVertexCnt()))) {
                 return false;
             }
 
@@ -1099,24 +1112,28 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                     texDim0, texOrg0, texDelta0,
                     this->potentialTex1_D.Peek(),
                     texDim1, texOrg1, texDelta1,
-                    this->surfStart.GetVtxDataVBO(),
-                    this->surfEnd.GetVtxDataVBO(),
-                    this->surfStart.GetVertexCnt()
+                    surfStart.GetVtxDataVBO(),
+                    surfEnd.GetVtxDataVBO(),
+                    surfStart.GetVertexCnt()
                     )) {
                 return false;
             }
 
             // Integrate over surface area and write to matrix
-            float meanPotentialDiff = this->surfEnd.IntOverSurfArea(this->vertexPotentialDiff_D.Peek());
+            float meanPotentialDiff = surfEnd.IntOverSurfArea(this->vertexPotentialDiff_D.Peek());
+
+//            printf("Surface area %f\, potentialDiff %f, meanPotentialDiff %f\n", surfArea, meanPotentialDiff, meanPotentialDiff/surfArea);
             this->matchSurfacePotential[i*this->nVariants+j] = meanPotentialDiff/surfArea;
+//            if (i !=j) {
             this->minMatchSurfacePotentialVal =
                     std::min(this->minMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
             this->maxMatchSurfacePotentialVal =
                     std::max(this->maxMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
+//            }
 
             // 2. Compute potential sign difference per vertex
 
-            if (!CudaSafeCall(this->vertexPotentialSignDiff_D.Validate(this->surfEnd.GetVertexCnt()))) {
+            if (!CudaSafeCall(this->vertexPotentialSignDiff_D.Validate(surfEnd.GetVertexCnt()))) {
                 return false;
             }
             if (!DeformableGPUSurfaceMT::ComputeVtxSignDiffValue(
@@ -1125,14 +1142,14 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                     texDim0, texOrg0, texDelta0,
                     this->potentialTex1_D.Peek(),
                     texDim1, texOrg1, texDelta1,
-                    this->surfStart.GetVtxDataVBO(),
-                    this->surfEnd.GetVtxDataVBO(),
-                    this->surfStart.GetVertexCnt()
+                    surfStart.GetVtxDataVBO(),
+                    surfEnd.GetVtxDataVBO(),
+                    surfStart.GetVertexCnt()
                     )) {
                 return false;
             }
             // Integrate over surface area and write to matrix
-            float meanPotentialSignDiff = this->surfEnd.IntOverSurfArea(this->vertexPotentialSignDiff_D.Peek());
+            float meanPotentialSignDiff = surfEnd.IntOverSurfArea(this->vertexPotentialSignDiff_D.Peek());
             this->matchSurfacePotentialSign[i*this->nVariants+j] = meanPotentialSignDiff/surfArea;
             this->minMatchSurfacePotentialSignVal =
                     std::min(this->minMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
@@ -1140,8 +1157,9 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                     std::max(this->maxMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
 
             // 3. Compute mean vertex path
-
-            float meanVertexPath = this->surfEnd.IntUncertaintyOverSurfArea();
+            float meanVertexPath = surfEnd.IntUncertaintyOverSurfArea();
+            printf("--> Surface area %f, accumulated vertex paths %f, mean vertex path %f\n",
+                    surfArea, meanVertexPath, meanVertexPath/surfArea);
             this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/surfArea;
             this->minMatchMeanVertexPathVal =
                     std::min(this->minMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
@@ -1150,13 +1168,13 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
 
             // 4. Compute Hausdorff distance
 
-            if (!CudaSafeCall(this->hausdorffdistVtx_D.Validate(this->surfEnd.GetVertexCnt()))) {
+            if (!CudaSafeCall(this->hausdorffdistVtx_D.Validate(surfEnd.GetVertexCnt()))) {
                 return false;
             }
             float hausdorffdist = DeformableGPUSurfaceMT::CalcHausdorffDistance(
-                    &this->surfEnd, &this->surfStart, this->hausdorffdistVtx_D.Peek());
-            //this->matchHausdorffDistance[i*this->nVariants+j] = hausdorffdist;
-            this->matchHausdorffDistance[i*this->nVariants+j] = 0.0;
+                    &surfEnd, &surfStart, this->hausdorffdistVtx_D.Peek());
+            this->matchHausdorffDistance[i*this->nVariants+j] = hausdorffdist;
+
             this->minMatchHausdorffDistanceVal =
                     std::min(this->minMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
             this->maxMatchHausdorffDistanceVal =
@@ -1174,6 +1192,9 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                         static_cast<unsigned int>(currStep/steps*100));
             }
 #endif // defined(OUTPUT_PROGRESS)
+
+            surfEnd.Release();
+            surfStart.Release(); // TODO Remove
         }
     }
 
@@ -1372,19 +1393,13 @@ void ProteinVariantMatch::updatParams() {
          this->featureList.Clear();
     }
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
+
     /* Parameters for surface mapping */
 
     // Maximum number of iterations when mapping the mesh
     if (this->surfMapMaxItSlot.IsDirty()) {
         this->surfMapMaxIt = this->surfMapMaxItSlot.Param<core::param::IntParam>()->Value();
         this->surfMapMaxItSlot.ResetDirty();
-    }
-
-    // Maximum number of iterations when regularizing the mesh
-    if (this->surfMapRegMaxItSlot.IsDirty()) {
-        this->surfMapRegMaxIt = this->surfMapRegMaxItSlot.Param<core::param::IntParam>()->Value();
-        this->surfMapRegMaxItSlot.ResetDirty();
     }
 
     // Interpolation method used when computing external forces
@@ -1408,11 +1423,53 @@ void ProteinVariantMatch::updatParams() {
         this->surfMapExternalForcesWeightSlot.ResetDirty();
     }
 
+    // Weighting of the external forces in surface #1, note that the weight
+    // of the internal forces is implicitely defined by
+    // 1.0 - surf0ExternalForcesWeight
+    if (this->surfRegExternalForcesWeightSlot.IsDirty()) {
+        this->surfRegExternalForcesWeight = this->surfRegExternalForcesWeightSlot.Param<core::param::FloatParam>()->Value();
+        this->surfRegExternalForcesWeightSlot.ResetDirty();
+    }
+
     // Overall scaling for the forces acting upon surface #1
     if (this->surfMapForcesSclSlot.IsDirty()) {
         this->surfMapForcesScl = this->surfMapForcesSclSlot.Param<core::param::FloatParam>()->Value();
         this->surfMapForcesSclSlot.ResetDirty();
     }
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
+
+    /* Surface regularization parameters */
+
+    // Maximum number of iterations when regularizing the mesh
+    if (this->surfRegMaxItSlot.IsDirty()) {
+        this->surfRegMaxIt = this->surfRegMaxItSlot.Param<core::param::IntParam>()->Value();
+        this->surfRegMaxItSlot.ResetDirty();
+    }
+
+    // Interpolation method used when computing external forces
+    if (this->surfRegInterpolModeSlot.IsDirty()) {
+        this->surfRegInterpolMode = static_cast<DeformableGPUSurfaceMT::InterpolationMode>(
+                this->surfRegInterpolModeSlot.Param<core::param::EnumParam>()->Value());
+        this->surfRegInterpolModeSlot.ResetDirty();
+    }
+
+    // Stiffness of the springs defining the spring forces in the surface
+    if (this->surfRegSpringStiffnessSlot.IsDirty()) {
+        this->surfRegSpringStiffness = this->surfRegSpringStiffnessSlot.Param<core::param::FloatParam>()->Value();
+        this->surfRegSpringStiffnessSlot.ResetDirty();
+    }
+
+    // Weighting of the external forces in surface #1, note that the weight
+    // of the internal forces is implicitely defined by
+    // 1.0 - surf0ExternalForcesWeight
+    if (this->surfRegExternalForcesWeightSlot.IsDirty()) {
+        this->surfRegExternalForcesWeight = this->surfRegExternalForcesWeightSlot.Param<core::param::FloatParam>()->Value();
+        this->surfRegExternalForcesWeightSlot.ResetDirty();
+    }
+
+    // Overall scaling for the forces acting upon surface #1
+    if (this->surfRegForcesSclSlot.IsDirty()) {
+        this->surfRegForcesScl = this->surfRegForcesSclSlot.Param<core::param::FloatParam>()->Value();
+        this->surfRegForcesSclSlot.ResetDirty();
+    }
 }

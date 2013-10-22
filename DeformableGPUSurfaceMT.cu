@@ -442,6 +442,7 @@ __global__ void initExternalForceScl_D (
         float *arr_D,
         float *volume_D,
         float *vertexPos_D,
+        float minDispl,
         uint nElements,
         float isoval,
         uint dataArrOffs,
@@ -461,10 +462,13 @@ __global__ void initExternalForceScl_D (
     // If the sampled value is smaller than isoval, we are outside the
     // isosurface TODO Make this smarter
     if (SampleFieldAtPosTrilin_D<float>(pos, volume_D) <= isoval) {
-        arr_D[idx] = 1.0;
+        arr_D[2*idx+0] = 1.0;
     } else {
-        arr_D[idx] = -1.0;
+        arr_D[2*idx+0] = -1.0;
     }
+
+    // Init last displ scl with something bigger then minDispl;
+    arr_D[2*idx+1] = minDispl + 0.1; // TODO Mult times two by shift
 }
 
 
@@ -559,10 +563,14 @@ __global__ void UpdateVtxPos_D(
         uint dataArrOffsNormal,
         uint dataArrSize) {
 
-    const uint idx = GetThreadIdx();
+    const uint idx = ::GetThreadIdx();
     if (idx >= vertexCnt) {
         return;
     }
+
+    // Check convergence criterion
+    float lastDisplLen = vertexExternalForcesScl_D[2*idx+1];
+    if (lastDisplLen <= minDispl) return; // Vertex is converged
 
     const uint posBaseIdx = dataArrSize*idx+dataArrOffsPos;
 
@@ -576,11 +584,13 @@ __global__ void UpdateVtxPos_D(
             vertexPosMapped_D[posBaseIdx+2]);
 
     // Get initial scale factor for external forces
-    float externalForcesScl = vertexExternalForcesScl_D[idx];
+    float externalForcesScl = vertexExternalForcesScl_D[2*idx];
+    float externalForcesSclOld = externalForcesScl;
 
     // Get partial derivatives
     float3 laplacian = laplacian_D[idx];
     float3 laplacian2 = laplacian2_D[idx];
+
 
     /* Update position */
 
@@ -610,24 +620,32 @@ __global__ void UpdateVtxPos_D(
     externalForce = safeNormalize(externalForce);
     externalForce *= forcesScl*externalForcesScl*externalWeight;
 
+    float3 internalForce = (1.0-externalWeight)*forcesScl*((1.0 - stiffness)*laplacian - stiffness*laplacian2);
+
     // Umbrella internal force
-    float3 posNew = posOld + externalForce +
-            (1.0-externalWeight)*forcesScl*((1.0 - stiffness)*laplacian - stiffness*laplacian2);
+    float3 force = externalForce + internalForce;
+    float3 posNew = posOld + force;
 
     /* Write back to global device memory */
 
+    // New pos
     vertexPosMapped_D[posBaseIdx+0] = posNew.x;
     vertexPosMapped_D[posBaseIdx+1] = posNew.y;
     vertexPosMapped_D[posBaseIdx+2] = posNew.z;
 
     // Write external forces scale factor back to global device memory
-    vertexExternalForcesScl_D[idx] = externalForcesScl;
+    vertexExternalForcesScl_D[2*idx] = externalForcesScl;
 
     // No branching occurs here, since the parameter is set globally
-    if (trackPath) {
-        float3 diff = posNew-posOld;
-        vtxUncertainty_D[idx] += sqrt(diff.x*diff.x+diff.y*diff.y+diff.z*diff.z);
+    float3 diff = posNew-posOld;
+    float diffLen = length(diff);
+    if ((trackPath)&&(abs(externalForcesScl) == 1.0f)) {
+        //float3 diff = externalForce;
+        vtxUncertainty_D[idx] += length(externalForce);
+        //vtxUncertainty_D[idx] += 1.0f;
     }
+    // Displ scl for convergence
+    vertexExternalForcesScl_D[2*idx+1] = diffLen;
 }
 
 
@@ -635,7 +653,7 @@ __global__ void UpdateVtxPos_D(
  * DeformableGPUSurfaceMT::DeformableGPUSurfaceMT
  */
 DeformableGPUSurfaceMT::DeformableGPUSurfaceMT() : GPUSurfaceMT(),
-        vboCorruptTriangleVertexFlag(0) {
+        vboCorruptTriangleVertexFlag(0), vboUncertainty(0) {
 
 }
 
@@ -650,14 +668,14 @@ DeformableGPUSurfaceMT::DeformableGPUSurfaceMT(const DeformableGPUSurfaceMT& oth
     CudaSafeCall(cudaMemcpy(
             this->vertexExternalForcesScl_D.Peek(),
             other.vertexExternalForcesScl_D.PeekConst(),
-            this->vertexExternalForcesScl_D.GetCount()*sizeof(float),
+            this->vertexExternalForcesScl_D.GetCount()*sizeof(float2),
             cudaMemcpyDeviceToDevice));
 
     CudaSafeCall(this->externalForces_D.Validate(other.externalForces_D.GetCount()));
     CudaSafeCall(cudaMemcpy(
             this->externalForces_D.Peek(),
             other.externalForces_D.PeekConst(),
-            this->externalForces_D.GetCount()*sizeof(float4),
+            this->externalForces_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
 
     CudaSafeCall(this->laplacian_D.Validate(other.laplacian_D.GetCount()));
@@ -709,10 +727,39 @@ DeformableGPUSurfaceMT::DeformableGPUSurfaceMT(const DeformableGPUSurfaceMT& oth
         glBindBufferARB(GL_COPY_READ_BUFFER, other.vboCorruptTriangleVertexFlag);
         glBindBufferARB(GL_COPY_WRITE_BUFFER, this->vboCorruptTriangleVertexFlag);
         glBufferDataARB(GL_COPY_WRITE_BUFFER,
-                sizeof(int)*this->vertexCnt*3, 0, GL_DYNAMIC_DRAW);
+                sizeof(float)*this->vertexCnt, 0, GL_DYNAMIC_DRAW);
         // Copy data
         glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
-                sizeof(int)*this->vertexCnt*3);
+                sizeof(float)*this->vertexCnt);
+        glBindBufferARB(GL_COPY_WRITE_BUFFER, 0);
+        glBindBufferARB(GL_COPY_READ_BUFFER, 0);
+        CheckForGLError();
+    }
+
+    /* Make deep copy of uncertainty vbo */
+
+    if (other.vboUncertainty) {
+        // Destroy if necessary
+        if (this->vboUncertainty) {
+            glBindBufferARB(GL_ARRAY_BUFFER, this->vboUncertainty);
+            glDeleteBuffersARB(1, &this->vboUncertainty);
+            glBindBufferARB(GL_ARRAY_BUFFER, 0);
+            this->vboUncertainty = 0;
+        }
+
+        // Create vertex buffer object for triangle indices
+        glGenBuffersARB(1, &this->vboUncertainty);
+
+        CheckForGLError();
+
+        // Map as copy buffer
+        glBindBufferARB(GL_COPY_READ_BUFFER, other.vboUncertainty);
+        glBindBufferARB(GL_COPY_WRITE_BUFFER, this->vboUncertainty);
+        glBufferDataARB(GL_COPY_WRITE_BUFFER,
+                sizeof(float)*this->vertexCnt, 0, GL_DYNAMIC_DRAW);
+        // Copy data
+        glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
+                sizeof(float)*this->vertexCnt);
         glBindBufferARB(GL_COPY_WRITE_BUFFER, 0);
         glBindBufferARB(GL_COPY_READ_BUFFER, 0);
         CheckForGLError();
@@ -742,7 +789,8 @@ __global__ void computeValidTriangleAreas_D(
         return;
     }
 
-    float flag = corruptTriangleFlag_D[idx];
+    //float flag = corruptTriangleFlag_D[idx];
+    float flag = 0.0f;
 
     float3 pos0, pos1, pos2;
     pos0.x = vertexPos_D[3*triangleIdx_D[3+idx+0]+0];
@@ -1171,7 +1219,7 @@ bool DeformableGPUSurfaceMT::InitUncertaintyVBO(size_t vertexCnt) {
 
     // Destroy if necessary
     if (this->vboUncertainty) {
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, this->vboUncertainty);
+        glBindBufferARB(GL_ARRAY_BUFFER, this->vboUncertainty);
         glDeleteBuffersARB(1, &this->vboUncertainty);
         this->vboUncertainty = 0;
     }
@@ -1526,7 +1574,7 @@ float DeformableGPUSurfaceMT::IntOverSurfArea(float *value_D) {
     cudaEventSynchronize(event1);
     cudaEventSynchronize(event2);
     cudaEventElapsedTime(&dt_ms, event1, event2);
-    printf("CUDA time for 'ComputeTriangleArea_D                   %.10f sec\n",
+    printf("CUDA time for 'intOverTriangles_D                      %.10f sec\n",
             dt_ms/1000.0);
 #endif
 
@@ -1768,9 +1816,10 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGradient(
 #endif
 
     initExternalForceScl_D <<< Grid(this->vertexCnt, 256), 256 >>> (
-            this->vertexExternalForcesScl_D.Peek(),
+            (float*)this->vertexExternalForcesScl_D.Peek(),
             volume_D,
             vboPt,
+            surfMappedMinDisplScl,
             this->vertexCnt,
             isovalue,
             this->vertexDataOffsPos,
@@ -1914,9 +1963,10 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(
 #endif
 
     initExternalForceScl_D <<< Grid(this->vertexCnt, 256), 256 >>> (
-            this->vertexExternalForcesScl_D.Peek(),
+            (float*)this->vertexExternalForcesScl_D.Peek(),
             volume_D,
             vboPt,
+            surfMappedMinDisplScl,
             this->vertexCnt,
             isovalue,
             this->vertexDataOffsPos,
@@ -2061,9 +2111,10 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
 #endif
 
     initExternalForceScl_D <<< Grid(this->vertexCnt, 256), 256 >>> (
-            this->vertexExternalForcesScl_D.Peek(),
+            (float*)this->vertexExternalForcesScl_D.Peek(),
             volumeTarget_D,
             vboPt,
+            surfMappedMinDisplScl,
             this->vertexCnt,
             isovalue,
             this->vertexDataOffsPos,
@@ -2208,9 +2259,10 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
 #endif
 
     initExternalForceScl_D <<< Grid(this->vertexCnt, 256), 256 >>> (
-            this->vertexExternalForcesScl_D.Peek(),
+            (float*)this->vertexExternalForcesScl_D.Peek(),
             volumeTarget_D,
             vboPt,
+            surfMappedMinDisplScl,
             this->vertexCnt,
             isovalue,
             this->vertexDataOffsPos,
@@ -2268,7 +2320,7 @@ DeformableGPUSurfaceMT& DeformableGPUSurfaceMT::operator=(const DeformableGPUSur
     CudaSafeCall(cudaMemcpy(
             this->vertexExternalForcesScl_D.Peek(),
             rhs.vertexExternalForcesScl_D.PeekConst(),
-            this->vertexExternalForcesScl_D.GetCount()*sizeof(float),
+            this->vertexExternalForcesScl_D.GetCount()*sizeof(float2),
             cudaMemcpyDeviceToDevice));
 
     CudaSafeCall(this->externalForces_D.Validate(rhs.externalForces_D.GetCount()));
@@ -2327,6 +2379,21 @@ DeformableGPUSurfaceMT& DeformableGPUSurfaceMT::operator=(const DeformableGPUSur
             this->accTriangleData_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
 
+    CudaSafeCall(this->corruptTriangles_D.Validate(rhs.corruptTriangles_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->corruptTriangles_D.Peek(),
+            rhs.corruptTriangles_D.PeekConst(),
+            this->corruptTriangles_D.GetCount()*sizeof(float),
+            cudaMemcpyDeviceToDevice));
+
+    CudaSafeCall(this->accTriangleArea_D.Validate(rhs.accTriangleArea_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->accTriangleArea_D.Peek(),
+            rhs.accTriangleArea_D.PeekConst(),
+            this->accTriangleArea_D.GetCount()*sizeof(float),
+            cudaMemcpyDeviceToDevice));
+
+
     /* Make deep copy of corrupt triangle flag buffer */
 
     if (rhs.vboCorruptTriangleVertexFlag) {
@@ -2347,10 +2414,40 @@ DeformableGPUSurfaceMT& DeformableGPUSurfaceMT::operator=(const DeformableGPUSur
         glBindBufferARB(GL_COPY_READ_BUFFER, rhs.vboCorruptTriangleVertexFlag);
         glBindBufferARB(GL_COPY_WRITE_BUFFER, this->vboCorruptTriangleVertexFlag);
         glBufferDataARB(GL_COPY_WRITE_BUFFER,
-                sizeof(int)*this->vertexCnt*3, 0, GL_DYNAMIC_DRAW);
+                sizeof(float)*this->vertexCnt, 0, GL_DYNAMIC_DRAW);
         // Copy data
         glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
-                sizeof(int)*this->vertexCnt*3);
+                sizeof(float)*this->vertexCnt);
+        glBindBufferARB(GL_COPY_WRITE_BUFFER, 0);
+        glBindBufferARB(GL_COPY_READ_BUFFER, 0);
+        CheckForGLError();
+    }
+
+
+    /* Make deep copy of uncertainty vbo */
+
+    if (rhs.vboUncertainty) {
+        // Destroy if necessary
+        if (this->vboUncertainty) {
+            glBindBufferARB(GL_ARRAY_BUFFER, this->vboUncertainty);
+            glDeleteBuffersARB(1, &this->vboUncertainty);
+            glBindBufferARB(GL_ARRAY_BUFFER, 0);
+            this->vboUncertainty = 0;
+        }
+
+        // Create vertex buffer object for triangle indices
+        glGenBuffersARB(1, &this->vboUncertainty);
+
+        CheckForGLError();
+
+        // Map as copy buffer
+        glBindBufferARB(GL_COPY_READ_BUFFER, rhs.vboUncertainty);
+        glBindBufferARB(GL_COPY_WRITE_BUFFER, this->vboUncertainty);
+        glBufferDataARB(GL_COPY_WRITE_BUFFER,
+                sizeof(float)*this->vertexCnt, 0, GL_DYNAMIC_DRAW);
+        // Copy data
+        glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
+                sizeof(float)*this->vertexCnt);
         glBindBufferARB(GL_COPY_WRITE_BUFFER, 0);
         glBindBufferARB(GL_COPY_READ_BUFFER, 0);
         CheckForGLError();
@@ -2375,6 +2472,23 @@ void DeformableGPUSurfaceMT::Release() {
     CudaSafeCall(this->externalForces_D.Release());
     CudaSafeCall(this->accTriangleData_D.Release());
     CudaSafeCall(this->accTriangleArea_D.Release());
+    CudaSafeCall(this->corruptTriangles_D.Release());
+
+    if (this->vboCorruptTriangleVertexFlag) {
+        glBindBufferARB(GL_ARRAY_BUFFER, this->vboCorruptTriangleVertexFlag);
+        glDeleteBuffersARB(1, &this->vboCorruptTriangleVertexFlag);
+        glBindBufferARB(GL_ARRAY_BUFFER, 0);
+        this->vboCorruptTriangleVertexFlag = 0;
+    }
+
+    if (this->vboUncertainty) {
+        glBindBufferARB(GL_ARRAY_BUFFER, this->vboUncertainty);
+        glDeleteBuffersARB(1, &this->vboUncertainty);
+        glBindBufferARB(GL_ARRAY_BUFFER, 0);
+        this->vboUncertainty = 0;
+    }
+
+    ::CheckForGLError();
 }
 
 
@@ -2517,7 +2631,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         UpdateVtxPos_D <<< Grid(this->vertexCnt, 256), 256 >>> (
                 volTarget_D,
                 vertexBuffer_D,
-                this->vertexExternalForcesScl_D.Peek(),
+                (float*)this->vertexExternalForcesScl_D.Peek(),
                 vtxUncertainty_D,
                 (float4*)this->externalForces_D.Peek(),
                 this->laplacian_D.Peek(),
@@ -2534,20 +2648,19 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                 this->vertexDataOffsNormal,
                 this->vertexDataStride);
 
+//        // DEBUG Print uncertainty
+//        HostArr<float> uncertainty;
+//        uncertainty.Validate(this->vertexCnt);
+//        cudaMemcpy(uncertainty.Peek(), vtxUncertainty_D, sizeof(float)*this->vertexCnt, cudaMemcpyDeviceToHost);
+////        for (int i = 0; i < this->vertexCnt; ++i) {
+//        for (int i = 0; i < 100; ++i) {
+//            printf("uncertainty %i: %f\n", i, uncertainty.Peek()[i]);
+//        }
+//        uncertainty.Release();
+//        // END DEBUG
+
         ::CheckForCudaErrorSync();
     }
-
-//    // DEBUG Print path length
-//    HostArr<float> pathLen;
-//    pathLen.Validate(this->vertexCnt);
-//    if (!CudaSafeCall(cudaMemcpy(pathLen.Peek(), vtxUncertainty_D, sizeof(float)*this->vertexCnt, cudaMemcpyDeviceToHost))) {
-//        return false;
-//    }
-//    for (int i = 0; i < this->vertexCnt; ++i) {
-//        printf("Path: %f\n", pathLen.Peek()[i]);
-//    }
-//    pathLen.Release();
-//    // END DEBUG
 
 #ifdef USE_TIMER
     cudaEventRecord(event2, 0);
@@ -2562,6 +2675,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
 
     return CudaSafeCall(cudaGetLastError());
 }
+
 
 /*
  * ComputeVtxDiffValue0_D
@@ -2586,7 +2700,6 @@ __global__ void ComputeVtxDiffValue0_D(
     pos.z = vtxData0_D[vertexDataStride*idx + vertexDataOffsPos +2];
 
     diff_D[idx] = ::SampleFieldAtPosTrilin_D<float>(pos, tex0_D);
-
 }
 
 

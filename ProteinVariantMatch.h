@@ -277,10 +277,6 @@ private:
     core::param::ParamSlot surfMapMaxItSlot;
     uint surfMapMaxIt;
 
-    /// Maximum number of iterations when regularizing the mesh
-    core::param::ParamSlot surfMapRegMaxItSlot;
-    uint surfMapRegMaxIt;
-
     /// Interpolation method used when computing external forces based on
     /// gradient of the scalar field
     core::param::ParamSlot surfMapInterpolModeSlot;
@@ -299,6 +295,32 @@ private:
     /// Overall scaling for the forces acting upon the surface
     core::param::ParamSlot surfMapForcesSclSlot;
     float surfMapForcesScl;
+
+
+    /* Parameter slots for surface regularization */
+
+    /// Maximum number of iterations when regularizing the mesh
+    core::param::ParamSlot surfRegMaxItSlot;
+    uint surfRegMaxIt;
+
+    /// Interpolation method used when computing external forces based on
+    /// gradient of the scalar field
+    core::param::ParamSlot surfRegInterpolModeSlot;
+    DeformableGPUSurfaceMT::InterpolationMode surfRegInterpolMode;
+
+    /// Stiffness of the springs defining the spring forces in surface
+    core::param::ParamSlot surfRegSpringStiffnessSlot;
+    float surfRegSpringStiffness;
+
+    /// Weighting of the external forces, note that the weight
+    /// of the internal forces is implicitely defined by
+    /// 1.0 - surf0ExternalForcesWeight
+    core::param::ParamSlot surfRegExternalForcesWeightSlot;
+    float surfRegExternalForcesWeight;
+
+    /// Overall scaling for the forces acting upon the surface
+    core::param::ParamSlot surfRegForcesSclSlot;
+    float surfRegForcesScl;
 
 
     /* Variant matching */
@@ -371,51 +393,6 @@ private:
     void *cudaqsurf0, *cudaqsurf1;   ///> Pointer to CUDAQuickSurf objects
     HostArr<float> gridDataPos;      ///> Data array for intermediate calculations
 
-    /* Surface mapping */
-
-    /// Device pointer to external forces for every vertex
-    CudaDevArr<float> vertexExternalForcesScl_D;
-
-    /// Array containing activity information for all grid cells (device memory)
-    CudaDevArr<uint> cubeStates_D;
-
-    /// Array containing activity information for all grid cells (device memory)
-    CudaDevArr<uint> cubeOffsets_D;
-
-    /// Mapping from list of active cells to generall cell list (and vice versa)
-    CudaDevArr<uint> cubeMap0_D, cubeMapInv0_D;
-    CudaDevArr<uint> cubeMap1_D, cubeMapInv1_D;
-
-    /// Activity of vertices
-    CudaDevArr<uint> vertexStates_D;
-
-    /// Positions of active vertices
-    CudaDevArr<float> vertexPos0_D, vertexPos1_D, vertexPosMapped_D, vertexPosRMSTransformed_D;
-
-    /// Positions of active vertices (holds intermediate results)
-    CudaDevArr<float3> activeVertexPos_D;
-
-    /// Index offsets for active vertices
-    CudaDevArr<uint> vertexIdxOffs_D;
-
-    /// Mapping from active vertex indices to general index list (and vice versa)
-    CudaDevArr<uint> vertexMap0_D, vertexMapInv0_D;
-    CudaDevArr<uint> vertexMap1_D, vertexMapInv1_D;
-
-    /// Connectivity information for all vertices (at most 18 neighbours per vertex)
-    CudaDevArr<int> vertexNeighbours0_D, vertexNeighbours1_D;
-
-    /// Array containing number of vertices for each tetrahedron
-    CudaDevArr<uint> verticesPerTetrahedron_D;
-
-    /// Vertex index offsets for all tetrahedrons
-    CudaDevArr<uint> tetrahedronVertexOffsets_D;
-
-    /// Array for volume gradient
-    CudaDevArr<float4> volGradient_D;
-
-    /// The bounding boxes of the density maps
-//    gridParams gridDensMap0, gridDensMap1;
     /// Dimensions of the density volumes
     int3 volDim;
 
@@ -431,31 +408,11 @@ private:
     /// The bounding boxes for potential maps
     gridParams gridPotential0, gridPotential1;
 
-    /// Triangle indices
-    CudaDevArr<uint> triangleIdx0_D, triangleIdx1_D;
-
-    /// The number of active vertices
-    uint vertexCnt0, vertexCnt1;
-
-    /// The number of triangle indices
-    uint triangleCnt0, triangleCnt1;
-
     /// Minimum force to keep going
     static const float minDispl;
 
+
     /* Surface area summation */
-
-    /// The area of all triangles
-    CudaDevArr<float> trianglesArea_D;
-
-    /// The averaged vertex values for all triangles (potential difference)
-    CudaDevArr<float> trianglesAreaWeightedPotentialDiff_D;
-
-    /// The averaged vertex values for all triangles (hausdorff distance)
-    CudaDevArr<float> trianglesAreaWeightedHausdorffDist_D;
-
-    /// The averaged vertex values for all triangles (potential sign)
-    CudaDevArr<float> trianglesAreaWeightedPotentialSign_D;
 
     /// Distance between new and old potential values
     CudaDevArr<float> vertexPotentialDiff_D;
@@ -463,11 +420,8 @@ private:
     /// Flags whether the sign has changed
     CudaDevArr<float> vertexPotentialSignDiff_D;
 
-    /// Flag for corrupt triangles
-    CudaDevArr<float> corruptTriangleFlag_D;
-
-    /// Per-vertex hausdorff distance
-    CudaDevArr<float> vtxHausdorffDist_D;
+    /// Device array to collect haus dorff distance
+    CudaDevArr<float> hausdorffdistVtx_D;
 
 
     /* Boolean flags */
@@ -475,19 +429,10 @@ private:
     /// Triggers recomputation of the match
     bool triggerComputeMatch;
 
-    /// Triggers recomputation of the rmsd based match
-    bool triggerComputeMatchRMSD;
-
     /* CUDA arrays holding potential textures */
 
     CudaDevArr<float> potentialTex0_D;
     CudaDevArr<float> potentialTex1_D;
-
-    /// Triggers recomputation of the surface potential based match
-    bool triggerComputeMatchSurfMapping;
-
-    /// Array for laplacian
-    CudaDevArr<float3> laplacian_D;
 
 
     Mat3f rmsRotation;          ///> Rotation matrix for the fitting
@@ -503,11 +448,6 @@ private:
 
     float maxAtomRad;
     float minAtomRad;
-
-
-    /// Device array to collect haus dorff distance
-    CudaDevArr<float> hausdorffdistVtx_D;
-
 
 };
 

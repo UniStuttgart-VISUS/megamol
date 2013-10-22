@@ -155,6 +155,11 @@ public:
      */
     AbstractGPUSurface& operator=(const AbstractGPUSurface &rhs);
 
+    /**
+     * Deallocate all allocated memory.
+     */
+    void Release();
+
 protected:
 
     /// Flag that tells whether the vertex data VBO has been initialized

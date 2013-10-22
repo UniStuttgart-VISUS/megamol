@@ -358,7 +358,8 @@ private:
     /* Device arrays for external forces */
 
     /// Device pointer to external forces for every vertex
-    CudaDevArr<float> vertexExternalForcesScl_D;
+    /// Also contains last displacement
+    CudaDevArr<float2> vertexExternalForcesScl_D;
 
     /// TODO
     CudaDevArr<float> gvfTmp_D;
