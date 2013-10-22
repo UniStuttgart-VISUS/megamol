@@ -8,7 +8,7 @@
 //     Author: scharnkn
 //
 
-#define VERBOSE // Toggle debugging messages
+//#define VERBOSE // Toggle debugging messages
 
 #include "stdafx.h"
 #include "VTILoader.h"
@@ -368,8 +368,10 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
         }
         pattern.Append('.');
         pattern.Append(this->filenamesSuffix);
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: %u frame file(s) found using pattern %s",
                 this->ClassName(), this->nFrames, pattern.PeekBuffer());
+#endif
     } else { // Single file
         this->nFrames = 1;
     }
@@ -378,12 +380,16 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
     File::FileSize fileSize =
             File::GetSize(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
 
+#ifdef VERBOSE
     time_t t = clock(); // DEBUG
+#endif // VERBOSE
 
+#ifdef VERBOSE
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Parsing file '%s' (%u Bytes) ...",
             this->ClassName(),
             this->filenameSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer(),
             fileSize); // DEBUG
+#endif
 
     // Read data file to char buffer
     char *buffer = new char[fileSize];
@@ -524,9 +530,11 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
     }
     delete[] buffer;
 
-//    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: ... done (%f s), found %u pieces",
-//            this->ClassName(),
-//            (double(clock()-t)/double(CLOCKS_PER_SEC)), this->nPieces); // DEBUG
+#ifdef VERBOSE
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: ... done (%f s), found %u pieces",
+            this->ClassName(),
+            (double(clock()-t)/double(CLOCKS_PER_SEC)), this->nPieces); // DEBUG
+#endif // VERBOSE
 
     // Set number of frames
     this->setFrameCount(std::min(

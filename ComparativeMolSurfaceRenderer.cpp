@@ -13,7 +13,8 @@
 
 #ifdef WITH_CUDA
 
-#define USE_TIMER
+//#define USE_TIMER
+//#define VERBOSE
 
 #include "VBODataCall.h"
 #include "VTIDataCall.h"
@@ -113,6 +114,8 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         singleFrame2Slot("singleFrame2", "Param for single frame #2"),
         /* Global mapping options */
         interpolModeSlot("interpolation", "Change interpolation method"),
+        maxPotentialSlot("maxPotential", "Maximum potential value for color mapping"),
+        minPotentialSlot("minPotential", "Minimum potential value for color mapping"),
         /* Parameters for mapped surface */
         fittingModeSlot("surfMap::RMSDfitting", "RMSD fitting for the mapped surface"),
         surfMappedExtForceSlot("surfMap::externalForces", "External forces for surface mapping"),
@@ -130,6 +133,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         regSpringStiffnessSlot("surfReg::stiffness", "Spring stiffness"),
         regExternalForcesWeightSlot("surfReg::externalForcesWeight", "Weight of the external forces"),
         regForcesSclSlot("surfReg::forcesScl", "Scaling of overall force"),
+        surfregMinDisplSclSlot("surfReg::minDisplScl", "Minimum displacement for vertices"),
         /* Surface rendering */
         surface1RMSlot("surf1::render", "Render mode for the first surface"),
         surface1ColorModeSlot("surf1::color", "Color mode for the first surface"),
@@ -208,6 +212,18 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     smi->SetTypePair(DeformableGPUSurfaceMT::INTERP_CUBIC, "Cubic");
     this->interpolModeSlot << smi;
     this->MakeSlotAvailable(&this->interpolModeSlot);
+
+    // Maximum potential
+    this->maxPotential = 1.0f;
+    this->maxPotentialSlot.SetParameter(
+            new core::param::FloatParam(this->maxPotential));
+    this->MakeSlotAvailable(&this->maxPotentialSlot);
+
+    // Minimum potential
+    this->minPotential = -1.0f;
+    this->minPotentialSlot.SetParameter(
+            new core::param::FloatParam(this->minPotential));
+    this->MakeSlotAvailable(&this->minPotentialSlot);
 
 
     /* Parameters for mapped surface */
@@ -305,6 +321,11 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->regForcesScl = 1.0f;
     this->regForcesSclSlot.SetParameter(new core::param::FloatParam(this->regForcesScl, 0.0f));
     this->MakeSlotAvailable(&this->regForcesSclSlot);
+
+    // Minimum displacement
+    this->surfregMinDisplScl = 0.1;
+    this->surfregMinDisplSclSlot.SetParameter(new core::param::FloatParam(this->surfregMinDisplScl, 0.0f));
+    this->MakeSlotAvailable(&this->surfregMinDisplSclSlot);
 
 
     /* Rendering options of surface #1 and #2 */
@@ -499,7 +520,7 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
 //    printf("Compute density map particleCount %u,molcall %u\n", particleCnt,mol->AtomCount());
 
     // Compute padding for the density map
-    padding = this->maxAtomRad*this->qsParticleRad + this->qsGridSpacing*10; // TODO How much makes sense?
+    padding = this->maxAtomRad*this->qsParticleRad + this->qsGridSpacing*10;
 
     // Init grid parameters
     this->volOrg.x = this->bboxParticles.GetLeft()   - padding;
@@ -1440,22 +1461,28 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         this->datahashPotential1 = vti1->DataHash();
         this->datahashPotential2 = vti2->DataHash();
 
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: init potential texture #1",
                 this->ClassName());
+#endif // VERBOSE
 
         if (!this->initPotentialMap(vti1, this->gridPotential1, this->surfAttribTex1)) {
 
+#ifdef VERBOSE
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not init potential map #1",
                     this->ClassName());
+#endif // VERBOSE
 
             return false;
         }
 
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: init potential texture #2",
                 this->ClassName());
+#endif // VERBOSE
 
         if (!this->initPotentialMap(vti2, this->gridPotential2, this->surfAttribTex2)) {
 
@@ -1471,21 +1498,16 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     // (Re-)compute triangle mesh for surface #1 using Marching tetrahedra
     if (this->triggerComputeSurfacePoints1) {
 
-
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute surface points #1",
                 this->ClassName());
+#endif // VERBOSE
 
         ::CheckForCudaErrorSync();
 
 
         /* Surface #1 */
-
-//        printf("COMPUTE SURFACE POINTS PARAMETERS\n");
-//        printf("voldim %i %i %i\n", this->volDim.x, this->volDim.y, this->volDim.z);
-//        printf("voldelta %f %f %f\n", this->volDelta.x, this->volDelta.y, this->volDelta.z);
-//        printf("volorg %f %f %f\n", this->volOrg.x, this->volOrg.y, this->volOrg.z);
-//        printf("isovalue %f\n", this->qsIsoVal);
 
         // Get vertex positions based on the level set
         if (!this->deformSurf1.ComputeVertexPositions(
@@ -1504,10 +1526,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         ::CheckForCudaErrorSync();
 
-
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute triangles #1",
                 this->ClassName());
+#endif // VERBOSE
 
         // Build triangle mesh from vertices
         if (!this->deformSurf1.ComputeTriangles(
@@ -1526,10 +1549,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         CheckForCudaErrorSync();
 
-
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute connectivity points #1",
                 this->ClassName());
+#endif // VERBOSE
 
         // Compute vertex connectivity
         if (!this->deformSurf1.ComputeConnectivity(
@@ -1548,10 +1572,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         CheckForCudaErrorSync();
 
-
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: regularize surface #1",
                 this->ClassName());
+#endif // VERBOSE
 
         // Regularize the mesh of surface #1
         if (!this->deformSurf1.MorphToVolumeGradient(
@@ -1562,7 +1587,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->qsIsoVal,
                 this->interpolMode,
                 this->regMaxIt,
-                0.0f, // minDisplScale // TODO ?
+                this->surfregMinDisplScl,
                 this->regSpringStiffness,
                 this->regForcesScl,
                 this->regExternalForcesWeight)) {
@@ -1576,9 +1601,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         CheckForCudaErrorSync();
 
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute normals #1",
                 this->ClassName());
+#endif // VERBOSE
 
         // Compute vertex normals
         if (!this->deformSurf1.ComputeNormals(
@@ -1597,9 +1624,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         CheckForCudaErrorSync();
 
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute texture coordinates #1",
                 this->ClassName());
+#endif // VERBOSE
 
         // Compute texture coordinates
         if (!this->deformSurf1.ComputeTexCoords(
@@ -1619,9 +1648,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     // (Re-)compute triangle mesh for surface #2 using Marching tetrahedra
     if (this->triggerComputeSurfacePoints2) {
 
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute vertex positions #2",
                 this->ClassName());
+#endif // VERBOSE
 
         /* Surface #2 */
 
@@ -1640,9 +1671,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute triangles #2",
                 this->ClassName());
+#endif // VERBOSE
 
         // Build triangle mesh from vertices
         if (!this->deformSurf2.ComputeTriangles(
@@ -1659,9 +1692,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute vertex connectivity #2",
                 this->ClassName());
+#endif // VERBOSE
 
         // Compute vertex connectivity
         if (!this->deformSurf2.ComputeConnectivity(
@@ -1678,9 +1713,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: regularize surface #2",
                 this->ClassName());
+#endif // VERBOSE
 
         // Regularize the mesh of surface #2
         if (!this->deformSurf2.MorphToVolumeGradient(
@@ -1691,7 +1728,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->qsIsoVal,
                 this->interpolMode,
                 this->regMaxIt,
-                0.0f, // minDisplScale // TODO ?
+                this->surfregMinDisplScl,
                 this->regSpringStiffness,
                 this->regForcesScl,
                 this->regExternalForcesWeight)) {
@@ -1703,9 +1740,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute normals #2",
                 this->ClassName());
+#endif // VERBOSE
 
         // Compute vertex normals
         if (!this->deformSurf2.ComputeNormals(
@@ -1722,9 +1761,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute texture coordinates #1",
                 this->ClassName());
+#endif // VERBOSE
 
         // Compute texture coordinates
         if (!this->deformSurf2.ComputeTexCoords(
@@ -1751,9 +1792,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         if (this->surfMappedExtForce == GVF) {
 
+#ifdef VERBOSE
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                     "%s: morph to volume gvf",
                     this->ClassName());
+#endif // VERBOSE
 
             // Morph surface #2 to shape #1 using GVF
             if (!this->deformSurfMapped.MorphToVolumeGVF(
@@ -1782,10 +1825,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             }
         } else if (this->surfMappedExtForce == METABALLS) {
 
-
+#ifdef VERBOSE
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                     "%s: morph to volume meta balls",
                     this->ClassName());
+#endif // VERBOSE
 
             // Morph surface #2 to shape #1 using implicit molecular surface
             if (!this->deformSurfMapped.MorphToVolumeGradient(
@@ -1809,10 +1853,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             }
         } else if (this->surfMappedExtForce == METABALLS_DISTFIELD) {
 
-
+#ifdef VERBOSE
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                     "%s: morph to volume distfield",
                     this->ClassName());
+#endif // VERBOSE
 
             // Morph surface #2 to shape #1 using implicit molecular surface + distance field
             if (!this->deformSurfMapped.MorphToVolumeDistfield(
@@ -1837,10 +1882,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             }
         } else if (this->surfMappedExtForce == TWO_WAY_GVF) {
 
-
+#ifdef VERBOSE
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                     "%s: morph to volume two-way-gvf",
                     this->ClassName());
+#endif // VERBOSE
 
             // Morph surface #2 to shape #1 using Two-Way-GVF
 
@@ -1872,9 +1918,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute normals of mapped surface",
                 this->ClassName());
+#endif // VERBOSE
 
         // Compute vertex normals
         if (!this->deformSurfMapped.ComputeNormals(
@@ -1891,10 +1939,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
-
+#ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute texture coordinates of mapped surface",
                 this->ClassName());
+#endif // vERBOSE
 
         // Compute texture coordinates
         if (!this->deformSurfMapped.ComputeTexCoords(
@@ -1979,14 +2028,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     camPos[1] = modelMatrix.GetAt(1, 3);
     camPos[2] = modelMatrix.GetAt(2, 3);
 
-//    printf("volsize 1 %u %u %u (%u), volsize 2 %u %u %u\n",
-//            this->gridDensMap1.size[0], this->gridDensMap1.size[1],
-//            this->gridDensMap1.size[2],
-//            this->gridDensMap1.size[0]*this->gridDensMap1.size[1]*this->gridDensMap1.size[2],
-//            this->gridDensMap2.size[0],
-//            this->gridDensMap2.size[1], this->gridDensMap2.size[2]);
-
-
     // DEBUG Render external forces as lines
     if (!this->renderExternalForces()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1995,7 +2036,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         return false;
     }
     // END DEBUG
-
 
     if (this->surface1RM != SURFACE_NONE) {
 
@@ -2244,8 +2284,8 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
     glUniform3fvARB(this->pplSurfaceShader.ParameterLocation("colorMin"), 1, this->colorMinPotential.PeekComponents());
     glUniform3fvARB(this->pplSurfaceShader.ParameterLocation("colorMax"), 1, this->colorMaxPotential.PeekComponents());
     glUniform3fvARB(this->pplSurfaceShader.ParameterLocation("colorUniform"), 1, uniformColor.PeekComponents());
-    glUniform1fARB(this->pplSurfaceShader.ParameterLocation("minPotential"), -50); // TODO param
-    glUniform1fARB(this->pplSurfaceShader.ParameterLocation("maxPotential"), 50); // TODO param
+    glUniform1fARB(this->pplSurfaceShader.ParameterLocation("minPotential"), this->minPotential);
+    glUniform1fARB(this->pplSurfaceShader.ParameterLocation("maxPotential"), this->maxPotential);
     glUniform1fARB(this->pplSurfaceShader.ParameterLocation("alphaScl"), alphaScl);
 
     glActiveTextureARB(GL_TEXTURE0);
@@ -2499,6 +2539,18 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->triggerComputeSurfacePoints2 = true;
     }
 
+    // Maximum potential
+    if (this->maxPotentialSlot.IsDirty()) {
+        this->maxPotential = this->maxPotentialSlot.Param<core::param::FloatParam>()->Value();
+        this->maxPotentialSlot.ResetDirty();
+    }
+
+    // Minimum potential
+    if (this->minPotentialSlot.IsDirty()) {
+        this->minPotential = this->minPotentialSlot.Param<core::param::FloatParam>()->Value();
+        this->minPotentialSlot.ResetDirty();
+    }
+
 
     /* Parameters for the mapped surface */
 
@@ -2552,7 +2604,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
 
     // Param for minimum vertex displacement
     if (this->surfMappedMinDisplSclSlot.IsDirty()) {
-        this->surfMappedMinDisplScl = this->surfMappedMinDisplSclSlot.Param<core::param::FloatParam>()->Value()/1000.0f;
+        this->surfMappedMinDisplScl = 1.0f/this->surfMappedMinDisplSclSlot.Param<core::param::FloatParam>()->Value();
         this->surfMappedMinDisplSclSlot.ResetDirty();
         this->triggerSurfaceMapping = true;
     }
@@ -2565,8 +2617,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->triggerSurfaceMapping = true;
     }
 
-
-    /// GVF scale factor
+    // GVF scale factor
     if (this->surfMappedGVFSclSlot.IsDirty()) {
         this->surfMappedGVFScl =
                 this->surfMappedGVFSclSlot.Param<core::param::FloatParam>()->Value();
@@ -2575,7 +2626,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->triggerComputeLines = true;
     }
 
-    /// GVF iterations
+    // GVF iterations
     if (this->surfMappedGVFItSlot.IsDirty()) {
         this->surfMappedGVFIt =
                 this->surfMappedGVFItSlot.Param<core::param::IntParam>()->Value();
@@ -2584,7 +2635,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->triggerComputeLines = true;
     }
 
-    /// Distance field threshold
+    // Distance field threshold
     if (this->distFieldThreshSlot.IsDirty()) {
         this->distFieldThresh =
                 this->distFieldThreshSlot.Param<core::param::FloatParam>()->Value();
@@ -2631,6 +2682,14 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->triggerComputeSurfacePoints2 = true;
     }
 
+    // Param for minimum vertex displacement
+    if (this->surfregMinDisplSclSlot.IsDirty()) {
+        this->surfregMinDisplScl = 1.0/this->surfregMinDisplSclSlot.Param<core::param::FloatParam>()->Value();
+        this->surfregMinDisplSclSlot.ResetDirty();
+        this->triggerComputeSurfacePoints1 = true;
+        this->triggerComputeSurfacePoints2 = true;
+        this->triggerSurfaceMapping = true;
+    }
 
     /* Rendering of surface #1 and #2 */
 

@@ -16,6 +16,7 @@
 #include <param/FloatParam.h>
 #include <CoreInstance.h>
 #include <vislib/SimpleFont.h>
+#include <vislib/OutlineFont.h>
 #include <vislib/ShaderSource.h>
 #include <vislib/Log.h>
 
@@ -169,15 +170,11 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
 //    printf("Variant count %u\n", vmc->GetVariantCnt());
 //    for (int i = 0; i < vmc->GetVariantCnt(); ++i) {
 //        for (int j = 0; j < vmc->GetVariantCnt(); ++j) {
-//            printf("%.2f ", vmc->GetMatch()[i*vmc->GetVariantCnt() + j]);
+//            printf("%.2f ", vmc->GetMatch()[j*vmc->GetVariantCnt() + i]);
 //        }
 //        printf("\n");
 //    }
 //    // END DEBUG
-
-//     DEBUG Print labels
-//     TODO
-//     END DEBUG
 
     ::glMatrixMode(GL_PROJECTION);
     ::glPushMatrix();

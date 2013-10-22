@@ -282,8 +282,8 @@ void main() {
         //vec3 colOrangeMsh = vec3(109.81, 0.9746, 0.8968);
         
         
-        vec3 colOrangeMsh = vec3(100, 0.9746*potDiff/maxPotential, 0.8968);
-        vec3 colYellowMsh = vec3(100, 0.81*potDiff/maxPotential, 1.7951);
+        vec3 colOrangeMsh = vec3(100, 0.9746*potDiff/(maxPotential-minPotential), 0.8968);
+        vec3 colYellowMsh = vec3(100, 0.81*potDiff/(maxPotential-minPotential), 1.7951);
         
         
         

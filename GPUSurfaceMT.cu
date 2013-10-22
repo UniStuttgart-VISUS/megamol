@@ -3175,6 +3175,7 @@ bool GPUSurfaceMT::ComputeConnectivity(
  * GPUSurfaceMT::Release
  */
 void GPUSurfaceMT::Release() {
+    AbstractGPUSurface::Release();
     CudaSafeCall(this->cubeStates_D.Release());
     CudaSafeCall(this->cubeOffsets_D.Release());
     CudaSafeCall(this->cubeMap_D.Release());
@@ -3188,6 +3189,9 @@ void GPUSurfaceMT::Release() {
     CudaSafeCall(this->verticesPerTetrahedron_D.Release());
     CudaSafeCall(this->tetrahedronVertexOffsets_D.Release());
     CudaSafeCall(this->triangleCamDistance_D.Release());
+
+    this->neighboursReady = false;
+    this->activeCellCnt = 0;
 }
 
 #endif // WITH_CUDA

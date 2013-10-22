@@ -327,12 +327,20 @@ private:
     int singleFrame2;
 
 
-    /* Global mapping options */
+    /* Global options */
 
     /// Interpolation method used when computing external forces based on
     /// gradient of the scalar field
     core::param::ParamSlot interpolModeSlot;
     DeformableGPUSurfaceMT::InterpolationMode interpolMode;
+
+    /// Maximum potential value for color mapping
+    core::param::ParamSlot maxPotentialSlot;
+    float maxPotential;
+
+    /// Minimum potential value for color mapping
+    core::param::ParamSlot minPotentialSlot;
+    float minPotential;
 
 
     /* Parameters for the surface mapping */
@@ -402,6 +410,11 @@ private:
     /// Overall scaling for the forces acting upon surface #0
     core::param::ParamSlot regForcesSclSlot;
     float regForcesScl;
+
+    /// Minimum displacement when mapping (this prevents unneeded computations
+    /// for vertices that will not move anymore)
+    core::param::ParamSlot surfregMinDisplSclSlot;
+    float surfregMinDisplScl;
 
 
     /* Surface rendering options for surface #1 and #2 */
