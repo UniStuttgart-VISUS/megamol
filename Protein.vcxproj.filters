@@ -307,9 +307,6 @@
     <ClCompile Include="ComparativeFieldTopologyRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ComparativeSurfacePotentialRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="VariantMatchRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -323,9 +320,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CallCamParams.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SurfaceMappingTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PotentialVolumeRaycaster.cpp">
@@ -702,9 +696,6 @@
     <ClInclude Include="ComparativeFieldTopologyRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ComparativeSurfacePotentialRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="VariantMatchRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -718,9 +709,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CallCamParams.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SurfaceMappingTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PotentialVolumeRaycaster.h">
@@ -860,12 +848,6 @@
     <None Include="interpol.cuh">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="ComparativeSurfacePotentialRenderer.cuh">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="ComparativeSurfacePotentialRenderer_inline_device_functions.cuh">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="CUDAFieldTopology.cuh">
       <Filter>Header Files</Filter>
     </None>
@@ -910,21 +892,6 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="VolumeMeshRenderer.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="ComparativeSurfacePotentialRenderer.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="ComparativeSurfacePotentialRenderer_metric.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="ComparativeSurfacePotentialRenderer_surface_generation.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="ComparativeSurfacePotentialRenderer_surface_mapping.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="ComparativeSurfacePotentialRenderer_thrust_stuff.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="CUDAFieldTopology.cu">
