@@ -30,7 +30,8 @@ using namespace megamol::protein;
 VariantMatchRenderer::VariantMatchRenderer(void) : Renderer2DModule () ,
         dataCallerSlot("getData", "Connects the rendering with data storage" ),
         labelSpaceSlot("labelSpace", "Fraction of the screen that is used to render labels" ),
-        labelSizeSlot("labelSize", "Font size used to render labels" ), matrixTex(0) {
+        labelSizeSlot("labelSize", "Font size used to render labels" ), matrixTex(0),
+        thefont(vislib::graphics::gl::FontInfo_Verdana) {
 
     // Data caller slot to get matching matrix
     this->dataCallerSlot.SetCompatibleCall<VariantMatchDataCallDescription>();
@@ -166,15 +167,15 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
             0, GL_ALPHA, GL_FLOAT,
             vmc->GetMatch());
 
-//    // DEBUG Print matrix values
-//    printf("Variant count %u\n", vmc->GetVariantCnt());
-//    for (int i = 0; i < vmc->GetVariantCnt(); ++i) {
-//        for (int j = 0; j < vmc->GetVariantCnt(); ++j) {
-//            printf("%.2f ", vmc->GetMatch()[j*vmc->GetVariantCnt() + i]);
-//        }
-//        printf("\n");
-//    }
-//    // END DEBUG
+    // DEBUG Print matrix values
+    printf("Variant count %u\n", vmc->GetVariantCnt());
+    for (int i = 0; i < vmc->GetVariantCnt(); ++i) {
+        for (int j = 0; j < vmc->GetVariantCnt(); ++j) {
+            printf("%.2f ", vmc->GetMatch()[j*vmc->GetVariantCnt() + i]);
+        }
+        printf("\n");
+    }
+    // END DEBUG
 
     ::glMatrixMode(GL_PROJECTION);
     ::glPushMatrix();
@@ -235,16 +236,16 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
 
 
     glColor3f(0.0, 0.0, 0.0);
-    vislib::graphics::gl::SimpleFont f;
+//    vislib::graphics::gl::SimpleFont f;
     vislib::StringA str;
-    if (!f.Initialise()) {
+    if (!this->thefont.Initialise()) {
         return false;
     }
 //    f.SetSize(0.5f);
     // Draw vertical labels
     for (int i = 1; i <= static_cast<int>(vmc->GetVariantCnt()); ++i) {
         str.Format("Variant %2i", static_cast<int>(vmc->GetVariantCnt()) - i);
-        f.DrawString(-1.0 + this->labelSpace*0.5, gridStep*i-1.0 - gridHalfStep,
+        this->thefont.DrawString(-1.0 + this->labelSpace*0.5, gridStep*i-1.0 - gridHalfStep,
                 this->labelSize,
                 true,
                 str.PeekBuffer(),
@@ -258,7 +259,7 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
         ::glTranslatef((this->labelSpace+gridStep*i)-1.0+ gridHalfStep, 1.0 - this->labelSpace*0.5, 0.0);
         ::glRotatef(80, 0.0, 0.0, 1.0);
         str.Format("Variant %2i", i);
-        f.DrawString(
+        this->thefont.DrawString(
                 //(this->labelSpace+gridStep*i)-1.0+ gridHalfStep,
                 0.0, 0.0,
                 //1.0 - gridHalfStep,

@@ -559,6 +559,7 @@ void ProteinVariantMatch::getAtomPosArray(MolecularDataCall *mol, HostArr<float>
                         posArr.Peek()[4*particleCnt+0] = mol->AtomPositions()[3*atomIdx+0];
                         posArr.Peek()[4*particleCnt+1] = mol->AtomPositions()[3*atomIdx+1];
                         posArr.Peek()[4*particleCnt+2] = mol->AtomPositions()[3*atomIdx+2];
+
                         if(this->qsSclVanDerWaals) {
                             posArr.Peek()[4*particleCnt+3] = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius();
                         }
@@ -587,6 +588,8 @@ bool ProteinVariantMatch::computeDensityMap(
         CUDAQuickSurf *cqs) {
 
 //    printf("Compute density map particleCount %u\n", atomCnt);
+
+    this->atomPosTmp.Validate(atomCnt*4);
 
     using namespace vislib::sys;
     using namespace vislib::math;
@@ -623,11 +626,11 @@ bool ProteinVariantMatch::computeDensityMap(
     // Set particle positions
 #pragma omp parallel for
     for (int cnt = 0; cnt < static_cast<int>(atomCnt); ++cnt) {
-        atomPos[4*cnt+0] -= this->volOrg.x;
-        atomPos[4*cnt+1] -= this->volOrg.y;
-        atomPos[4*cnt+2] -= this->volOrg.z;
+        this->atomPosTmp.Peek()[4*cnt+0] = atomPos[4*cnt+0] - this->volOrg.x;
+        this->atomPosTmp.Peek()[4*cnt+1] = atomPos[4*cnt+1] - this->volOrg.y;
+        this->atomPosTmp.Peek()[4*cnt+2] = atomPos[4*cnt+2] - this->volOrg.z;
+        this->atomPosTmp.Peek()[4*cnt+3] = atomPos[4*cnt+3];
     }
-
 
 //    for (int cnt = 0; cnt < static_cast<int>(atomCnt); ++cnt) {
 //        printf("data pos %i %f %f %f\n",cnt,
@@ -650,7 +653,7 @@ bool ProteinVariantMatch::computeDensityMap(
     // Compute uniform grid
     int rc = cqs->calc_map(
             atomCnt,
-            &atomPos[0],
+            this->atomPosTmp.Peek(),
             NULL,   // Pointer to 'color' array
             false,  // Do not use 'color' array
             (float*)&this->volOrg,
@@ -702,7 +705,6 @@ void ProteinVariantMatch::computeDensityBBox(
         maxC.x = std::max(maxC.x, atomPos1[4*i+0]);
         maxC.y = std::max(maxC.y, atomPos1[4*i+1]);
         maxC.z = std::max(maxC.z, atomPos1[4*i+2]);
-//        printf("ATOMPOS %i %f %f %f\n", i, atomPos1[3*i+0],atomPos1[3*i+1],atomPos1[3*i+2]);
     }
     for (size_t i = 0; i < atomCnt2; ++i) {
         minC.x = std::min(minC.x, atomPos2[4*i+0]);
@@ -713,11 +715,13 @@ void ProteinVariantMatch::computeDensityBBox(
         maxC.z = std::max(maxC.z, atomPos2[4*i+2]);
     }
 
-    this->bboxParticles.Set(minC.x, minC.y, minC.z,
+    this->bboxParticles.Set(
+            minC.x, minC.y, minC.z,
             maxC.x, maxC.y, maxC.z);
-
+//
 //    // DEBUG Print new bounding box
-//    printf("bbboxParticles: %f %f %f %f %f %f\n", minC.x, minC.y, minC.z,
+//    printf("bbboxParticles: %f %f %f %f %f %f\n",
+//            minC.x, minC.y, minC.z,
 //            maxC.x, maxC.y, maxC.z);
 //    printf("atomCnt0: %u\n",atomCnt1);
 //    printf("atomCnt1: %u\n",atomCnt2);
@@ -956,10 +960,14 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                         this->atomPosFitted.Peek()[cnt*4+2]);
             }
             centroid /= static_cast<float>(particleCnt1);
+
             // Rotate/translate positions
 #pragma omp parallel for
             for (int a = 0; a < static_cast<int>(particleCnt1); ++a) {
-                Vec3f pos(&this->atomPosFitted.Peek()[4*a]);
+
+                Vec3f pos(this->atomPosFitted.Peek()[4*a+0],
+                          this->atomPosFitted.Peek()[4*a+1],
+                          this->atomPosFitted.Peek()[4*a+2]);
                 pos -= centroid;
                 pos = this->rmsRotation*pos;
                 pos += this->rmsTranslation;
@@ -1158,13 +1166,13 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
 
             // 3. Compute mean vertex path
             float meanVertexPath = surfEnd.IntUncertaintyOverSurfArea();
-            printf("--> Surface area %f, accumulated vertex paths %f, mean vertex path %f\n",
-                    surfArea, meanVertexPath, meanVertexPath/surfArea);
             this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/surfArea;
-            this->minMatchMeanVertexPathVal =
-                    std::min(this->minMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
-            this->maxMatchMeanVertexPathVal =
-                    std::max(this->maxMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
+            if (i != j) {
+                this->minMatchMeanVertexPathVal =
+                        std::min(this->minMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
+                this->maxMatchMeanVertexPathVal =
+                        std::max(this->maxMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
+            }
 
             // 4. Compute Hausdorff distance
 
@@ -1175,10 +1183,12 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                     &surfEnd, &surfStart, this->hausdorffdistVtx_D.Peek());
             this->matchHausdorffDistance[i*this->nVariants+j] = hausdorffdist;
 
-            this->minMatchHausdorffDistanceVal =
-                    std::min(this->minMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
-            this->maxMatchHausdorffDistanceVal =
-                    std::max(this->maxMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
+            if (i != j) {
+                this->minMatchHausdorffDistanceVal =
+                        std::min(this->minMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
+                this->maxMatchHausdorffDistanceVal =
+                        std::max(this->maxMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
+            }
 
             molCall->Unlock(); // Unlock the frame
             volCall->Unlock(); // Unlock the frame
@@ -1258,8 +1268,6 @@ float ProteinVariantMatch::getRMS(
         this->rmsRotation.SetAt(2, 1, rotation[2][1]);
         this->rmsRotation.SetAt(2, 2, rotation[2][2]);
     }
-
-//    printf("RMS value %f\n", rmsValue);
 
     return rmsValue;
 }

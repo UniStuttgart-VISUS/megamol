@@ -449,6 +449,8 @@ private:
     float maxAtomRad;
     float minAtomRad;
 
+    HostArr<float> atomPosTmp;
+
 };
 
 } // end namespace protein
