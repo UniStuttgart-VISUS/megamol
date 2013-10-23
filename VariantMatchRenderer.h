@@ -18,6 +18,8 @@
 #include "CallerSlot.h"
 #include "view/Renderer2DModule.h"
 #include "vislib/GLSLShader.h"
+#include "vislib/OutlineFont.h"
+#include "vislib/Verdana.inc"
 
 
 namespace megamol {
@@ -121,6 +123,9 @@ private:
 
     /// The matix texture handle
     GLuint matrixTex;
+
+    /// The outline font
+    vislib::graphics::gl::OutlineFont thefont;
 
 };
 

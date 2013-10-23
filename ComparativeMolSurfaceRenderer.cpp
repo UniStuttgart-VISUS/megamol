@@ -73,7 +73,7 @@ void ComparativeMolSurfaceRenderer::computeDensityBBox(
         maxC.x = std::max(maxC.x, atomPos1[3*i+0]);
         maxC.y = std::max(maxC.y, atomPos1[3*i+1]);
         maxC.z = std::max(maxC.z, atomPos1[3*i+2]);
-//        printf("ATOMPOS %i %f %f %f\n", i, atomPos1[3*i+0],atomPos1[3*i+1],atomPos1[3*i+2]);
+        if (i < 10) printf("ATOMPOS %i %f %f %f\n", i, atomPos1[3*i+0],atomPos1[3*i+1],atomPos1[3*i+2]);
     }
     for (size_t i = 0; i < atomCnt2; ++i) {
         minC.x = std::min(minC.x, atomPos2[3*i+0]);
@@ -82,6 +82,7 @@ void ComparativeMolSurfaceRenderer::computeDensityBBox(
         maxC.x = std::max(maxC.x, atomPos2[3*i+0]);
         maxC.y = std::max(maxC.y, atomPos2[3*i+1]);
         maxC.z = std::max(maxC.z, atomPos2[3*i+2]);
+        if (i < 10) printf("ATOMPOS %i %f %f %f\n", i, atomPos2[3*i+0],atomPos2[3*i+1],atomPos2[3*i+2]);
     }
 
     this->bboxParticles.Set(minC.x, minC.y, minC.z,

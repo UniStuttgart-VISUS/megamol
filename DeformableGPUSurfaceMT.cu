@@ -1309,6 +1309,17 @@ bool DeformableGPUSurfaceMT::initExtForcesDistfield(
 
     int volSize = volDim.x*volDim.y*volDim.z;
 
+    /* Init grid parameters */
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
+
+
     // Compute distance field
     if (!CudaSafeCall(this->distField_D.Validate(volSize))) {
         return false;
@@ -1379,6 +1390,19 @@ bool DeformableGPUSurfaceMT::initExtForcesGVF(
         float gvfScl,
         unsigned int gvfIt) {
 
+    using namespace vislib::sys;
+
+    /* Init grid parameters */
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
+
+
     int volSize = volDim.x*volDim.y*volDim.z;
 
     // Compute external forces
@@ -1434,6 +1458,19 @@ bool DeformableGPUSurfaceMT::initExtForcesTwoWayGVF(
         float isovalue,
         float gvfScl,
         unsigned int gvfIt) {
+
+    using namespace vislib::sys;
+
+    /* Init grid parameters */
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
+
 
     using namespace vislib::sys;
 
@@ -1720,6 +1757,17 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGradient(
 
     using vislib::sys::Log;
 
+    /* Init grid parameters */
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
+
+
     cudaGraphicsResource* cudaTokens[2];
 
     if ((!this->triangleIdxReady)||(!this->neighboursReady)) {
@@ -1885,6 +1933,17 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(
 
     using vislib::sys::Log;
 
+    /* Init grid parameters */
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
+
+
     cudaGraphicsResource* cudaTokens[2];
 
     if ((!this->triangleIdxReady)||(!this->neighboursReady)) {
@@ -2031,6 +2090,19 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
         float externalForcesWeight,
         float gvfScl,
         unsigned int gvfIt) {
+
+    using namespace vislib::sys;
+
+    /* Init grid parameters */
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
+
 
     using vislib::sys::Log;
 
@@ -2183,6 +2255,16 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
         unsigned int gvfIt) {
 
     using vislib::sys::Log;
+
+    /* Init grid parameters */
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
 
     cudaGraphicsResource* cudaTokens[2];
 
@@ -2538,6 +2620,22 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
 //    vertexBuffer.Release();
 //    // end DEBUG
 
+//    // DEBUG Print volume dimensions
+//    printf("VOLDIM %i %i %i\n", volDim.x,volDim.y, volDim.z);
+//    printf("VOLDELTA %f %f %f\n", volDelta.x,volDelta.y, volDelta.z);
+//    printf("VOLORG %f %f %f\n", volOrg.x,volOrg.y, volOrg.z);
+//    // END DEBUG
+//
+//    // DEBUG Print volume
+//    HostArr<float> volume;
+//    volume.Validate(volDim.x*volDim.y*volDim.z);
+//    cudaMemcpy(volume.Peek(), volTarget_D, sizeof(float)*volume.GetSize(), cudaMemcpyDeviceToHost);
+//    for (int i = 100053; i < 100067; ++i) {
+//        printf("VOLUME %i %f\n", i, volume.Peek()[i]);
+//    }
+//    volume.Release();
+//    // End DEBUG
+
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
@@ -2653,7 +2751,8 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
 //        uncertainty.Validate(this->vertexCnt);
 //        cudaMemcpy(uncertainty.Peek(), vtxUncertainty_D, sizeof(float)*this->vertexCnt, cudaMemcpyDeviceToHost);
 ////        for (int i = 0; i < this->vertexCnt; ++i) {
-//        for (int i = 0; i < 100; ++i) {
+//        printf("---------------------------------------------\n");
+//        for (int i = 300; i < 310; ++i) {
 //            printf("uncertainty %i: %f\n", i, uncertainty.Peek()[i]);
 //        }
 //        uncertainty.Release();
@@ -2812,7 +2911,6 @@ bool DeformableGPUSurfaceMT::ComputeVtxDiffValue(
     }
 
     // Get mapped pointers to the vertex data buffers
-    float *vboUncertaintyPt;
     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
             reinterpret_cast<void**>(&vboPt1), // The mapped pointer
             &vboSize,              // The size of the accessible data
@@ -3033,19 +3131,6 @@ bool DeformableGPUSurfaceMT::ComputeVtxSignDiffValue(
 
 }
 
-
-// From http://stackoverflow.com/questions/17399119/cant-we-use-atomic-
-//             operations-for-floating-point-variables-in-cuda
-__device__ static float atomicMax(float* address, float val) {
-    int* address_as_i = (int*) address;
-    int old = *address_as_i, assumed;
-    do {
-        assumed = old;
-        old = ::atomicCAS(address_as_i, assumed,
-            __float_as_int(::fmaxf(val, __int_as_float(assumed))));
-    } while (assumed != old);
-    return __int_as_float(old);
-}
 
 /**
  * calcHausdorffDistance_D
