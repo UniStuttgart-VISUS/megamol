@@ -13,13 +13,11 @@
 #include <glh/glh_extensions.h>
 #include "DeformableGPUSurfaceMT.h"
 #ifdef WITH_CUDA
+
 #include "ogl_error_check.h"
 #include "cuda_error_check.h"
-//#include "ComparativeSurfacePotentialRenderer.cuh"
-//#include "ComparativeSurfacePotentialRenderer_inline_device_functions.cuh"
 #include "HostArr.h"
 #include "DiffusionSolver.h"
-//#include "constantGridParams.cuh"
 #include "CUDAGrid.cuh"
 #include "cuda_helper.h"
 
