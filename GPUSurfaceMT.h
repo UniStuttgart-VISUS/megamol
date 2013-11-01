@@ -171,8 +171,8 @@ protected:
     /// Array containing activity information for all grid cells (device memory)
     CudaDevArr<unsigned int> cubeOffsets_D;
 
-    /// Mapping from list of active cells to general cell list (and vice versa)
-    CudaDevArr<unsigned int> cubeMap_D, cubeMapInv_D;
+    /// Mapping from list of active cells to general cell list (device memory)
+    CudaDevArr<unsigned int> cubeMap_D;
 
     /// Activity of vertices
     CudaDevArr<unsigned int> vertexStates_D;
@@ -184,7 +184,7 @@ protected:
     CudaDevArr<unsigned int> vertexIdxOffs_D;
 
     /// Mapping from active vertex indices to general index list (and vice versa)
-    CudaDevArr<unsigned int> vertexMap_D, vertexMapInv_D;
+    CudaDevArr<unsigned int> vertexMap_D;
 
     /// Connectivity information for all vertices (at most 18 neighbours per vertex)
     CudaDevArr<int> vertexNeighbours_D;
