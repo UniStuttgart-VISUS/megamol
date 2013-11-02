@@ -25,9 +25,6 @@
 #include <thrust/scan.h>
 #include <thrust/device_ptr.h>
 
-// For profiling
-#include <cuda_profiler_api.h>
-
 using namespace megamol;
 using namespace megamol::protein;
 
@@ -1390,8 +1387,6 @@ bool GPUSurfaceMT::ComputeNormals(
         float3 volDelta,
         float isovalue) {
 
-    cudaProfilerStart(); // DEBUG Start profiler
-
     using vislib::sys::Log;
 
     if (!this->triangleIdxReady) { // We need the triangles mesh info
@@ -1494,8 +1489,6 @@ bool GPUSurfaceMT::ComputeNormals(
                 this->ClassName());
         return false;
     }
-
-    cudaProfilerStop(); // DEBUG End profiler
 
     return true;
 }

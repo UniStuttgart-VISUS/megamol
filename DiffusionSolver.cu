@@ -1,5 +1,5 @@
 //
-// DiffusionSolver.cpp
+// DiffusionSolver.cu
 //
 // Copyright (C) 2013 by University of Stuttgart (VISUS).
 // All rights reserved.
@@ -27,9 +27,9 @@ using namespace megamol::protein;
 __constant__ __device__ float isoval_D;  // Isovalue defining the level sets
 
 /*
- * initGVF_D
+ * DiffusionSolver_InitGVF_D
  */
-__global__ void initGVF_D(
+__global__ void DiffusionSolver_InitGVF_D(
         const float *volTarget_D,
         const unsigned int *cellStatesTarget_D,
         float *gvfConstData_D) {
@@ -159,9 +159,9 @@ __global__ void initGVF_D(
 
 
 /*
- * initTwoWayGVF_D
+ * DiffusionSolver_InitTwoWayGVF_D
  */
-__global__ void initTwoWayGVF_D(
+__global__ void DiffusionSolver_InitTwoWayGVF_D(
         const float *volSource_D,
         const float *volTarget_D,
         const unsigned int *cellStatesSource_D,
@@ -384,9 +384,9 @@ __global__ void initTwoWayGVF_D(
 
 
 /*
- * updateGVF_D
+ * DiffusionSolver_UpdateGVF_D
  */
-__global__ void updateGVF_D(
+__global__ void DiffusionSolver_UpdateGVF_D(
         float *gvfIn_D,
         float *gvfOut_D,
         float *gvfConstData_D, // b, c1, c2, c3
@@ -398,8 +398,16 @@ __global__ void updateGVF_D(
     uint volsize = gridSize_D.x*gridSize_D.y*gridSize_D.z;
     if (idx >= volsize) return;
 
+
+    /// Get const data from global device memory ///
+
+    float b = gvfConstData_D[4*idx+0];
+    float c1 = gvfConstData_D[4*idx+1];
+    float c2 = gvfConstData_D[4*idx+2];
+    float c3 = gvfConstData_D[4*idx+3];
+
     float3 gvf, gvfOld, gvfAdj[6];
-    uint idxAdj[6];
+    //uint idxAdj[6];
 
     // Get grid coordinates
     int3 gridC = make_int3(
@@ -407,30 +415,23 @@ __global__ void updateGVF_D(
            (idx / gridSize_D.x) % gridSize_D.y,
            (idx / gridSize_D.x) / gridSize_D.y);
 
-    // Get const data
-    float b = gvfConstData_D[4*idx+0];
-    float c1 = gvfConstData_D[4*idx+1];
-    float c2 = gvfConstData_D[4*idx+2];
-    float c3 = gvfConstData_D[4*idx+3];
 
-    /* Update isotropic diffusion for all vector components */
-
-    // Get indices of adjacent values
-    idxAdj[0] = ::GetPosIdxByGridCoords(make_int3(clamp(int(gridC.x)-1, 0, int(gridSize_D.x-1)), gridC.y, gridC.z));
-    idxAdj[1] = ::GetPosIdxByGridCoords(make_int3(clamp(int(gridC.x)+1, 0, int(gridSize_D.x-1)), gridC.y, gridC.z));
-    idxAdj[2] = ::GetPosIdxByGridCoords(make_int3(gridC.x, uint(clamp(int(gridC.y)-1, 0, int(gridSize_D.y-1))), gridC.z));
-    idxAdj[3] = ::GetPosIdxByGridCoords(make_int3(gridC.x, uint(clamp(int(gridC.y)+1, 0, int(gridSize_D.y-1))), gridC.z));
-    idxAdj[4] = ::GetPosIdxByGridCoords(make_int3(gridC.x, gridC.y, uint(clamp(int(gridC.z)-1, 0, int(gridSize_D.z-1)))));
-    idxAdj[5] = ::GetPosIdxByGridCoords(make_int3(gridC.x, gridC.y, uint(clamp(int(gridC.z)+1, 0, int(gridSize_D.z-1)))));
+    /// Update isotropic diffusion for all vector components ///
 
     // Get adjacent gvf values
     gvfOld = make_float3(gvfIn_D[4*idx+0], gvfIn_D[4*idx+1], gvfIn_D[4*idx+2]);
-    gvfAdj[0] = make_float3(gvfIn_D[4*idxAdj[0]+0], gvfIn_D[4*idxAdj[0]+1], gvfIn_D[4*idxAdj[0]+2]);
-    gvfAdj[1] = make_float3(gvfIn_D[4*idxAdj[1]+0], gvfIn_D[4*idxAdj[1]+1], gvfIn_D[4*idxAdj[1]+2]);
-    gvfAdj[2] = make_float3(gvfIn_D[4*idxAdj[2]+0], gvfIn_D[4*idxAdj[2]+1], gvfIn_D[4*idxAdj[2]+2]);
-    gvfAdj[3] = make_float3(gvfIn_D[4*idxAdj[3]+0], gvfIn_D[4*idxAdj[3]+1], gvfIn_D[4*idxAdj[3]+2]);
-    gvfAdj[4] = make_float3(gvfIn_D[4*idxAdj[4]+0], gvfIn_D[4*idxAdj[4]+1], gvfIn_D[4*idxAdj[4]+2]);
-    gvfAdj[5] = make_float3(gvfIn_D[4*idxAdj[5]+0], gvfIn_D[4*idxAdj[5]+1], gvfIn_D[4*idxAdj[5]+2]);
+    uint idxAdj = ::GetPosIdxByGridCoords(make_int3(clamp(int(gridC.x)-1, 0, int(gridSize_D.x-1)), gridC.y, gridC.z));
+    gvfAdj[0] = make_float3(gvfIn_D[4*idxAdj+0], gvfIn_D[4*idxAdj+1], gvfIn_D[4*idxAdj+2]);
+    idxAdj = ::GetPosIdxByGridCoords(make_int3(clamp(int(gridC.x)+1, 0, int(gridSize_D.x-1)), gridC.y, gridC.z));
+    gvfAdj[1] = make_float3(gvfIn_D[4*idxAdj+0], gvfIn_D[4*idxAdj+1], gvfIn_D[4*idxAdj+2]);
+    idxAdj = ::GetPosIdxByGridCoords(make_int3(gridC.x, uint(clamp(int(gridC.y)-1, 0, int(gridSize_D.y-1))), gridC.z));
+    gvfAdj[2] = make_float3(gvfIn_D[4*idxAdj+0], gvfIn_D[4*idxAdj+1], gvfIn_D[4*idxAdj+2]);
+    idxAdj = ::GetPosIdxByGridCoords(make_int3(gridC.x, uint(clamp(int(gridC.y)+1, 0, int(gridSize_D.y-1))), gridC.z));
+    gvfAdj[3] = make_float3(gvfIn_D[4*idxAdj+0], gvfIn_D[4*idxAdj+1], gvfIn_D[4*idxAdj+2]);
+    idxAdj = ::GetPosIdxByGridCoords(make_int3(gridC.x, gridC.y, uint(clamp(int(gridC.z)-1, 0, int(gridSize_D.z-1)))));
+    gvfAdj[4] = make_float3(gvfIn_D[4*idxAdj+0], gvfIn_D[4*idxAdj+1], gvfIn_D[4*idxAdj+2]);
+    idxAdj = ::GetPosIdxByGridCoords(make_int3(gridC.x, gridC.y, uint(clamp(int(gridC.z)+1, 0, int(gridSize_D.z-1)))));
+    gvfAdj[5] = make_float3(gvfIn_D[4*idxAdj+0], gvfIn_D[4*idxAdj+1], gvfIn_D[4*idxAdj+2]);
 
     // Compute diffusion
     gvf.x = (1.0-b)*gvfOld.x;
@@ -451,7 +452,6 @@ __global__ void updateGVF_D(
     float len = length(gvf);
     if (len > 0.0f) gvf /= len;
 
-    //__syncthreads();
     gvfOut_D[4*idx+0] = gvf.x;
     gvfOut_D[4*idx+1] = gvf.y;
     gvfOut_D[4*idx+2] = gvf.z;
@@ -495,7 +495,7 @@ bool DiffusionSolver::CalcGVF(
 #endif
 
     // Init diffusion by calculating cont data
-    initGVF_D <<< Grid(volsize, 256), 256 >>> (
+        DiffusionSolver_InitGVF_D <<< Grid(volsize, 256), 256 >>> (
             volTarget_D,
             cellStatesTarget_D,
             gvfConstData_D);
@@ -517,7 +517,7 @@ bool DiffusionSolver::CalcGVF(
 
         if (it%2 == 0) {
             // Update diffusion
-            updateGVF_D <<< Grid(volsize, 256), 256 >>> (
+            DiffusionSolver_UpdateGVF_D <<< Grid(volsize, 256), 256 >>> (
                     gvfIn_D, gvfOut_D, gvfConstData_D, scl);
 
             if (cudaGetLastError() != cudaSuccess) {
@@ -525,7 +525,7 @@ bool DiffusionSolver::CalcGVF(
             }
         } else {
             // Update diffusion
-            updateGVF_D <<< Grid(volsize, 256), 256 >>> (
+            DiffusionSolver_UpdateGVF_D <<< Grid(volsize, 256), 256 >>> (
                     gvfOut_D, gvfIn_D, gvfConstData_D, scl);
 
             if (cudaGetLastError() != cudaSuccess) {
@@ -586,7 +586,7 @@ bool DiffusionSolver::CalcTwoWayGVF(
 #endif
 
     // Init diffusion by calculating cont data
-    initTwoWayGVF_D <<< Grid(volsize, 256), 256 >>> (
+        DiffusionSolver_InitTwoWayGVF_D <<< Grid(volsize, 256), 256 >>> (
             volSource_D, volTarget_D, cellStatesSource_D, cellStatesTarget_D,
             gvfConstData_D);
 
@@ -607,7 +607,7 @@ bool DiffusionSolver::CalcTwoWayGVF(
 #endif
         if (it%2 == 0) {
             // Update diffusion
-            updateGVF_D <<< Grid(volsize, 256), 256 >>> (
+            DiffusionSolver_UpdateGVF_D <<< Grid(volsize, 256), 256 >>> (
                     gvfIn_D, gvfOut_D, gvfConstData_D, scl);
 
             if (cudaGetLastError() != cudaSuccess) {
@@ -615,7 +615,7 @@ bool DiffusionSolver::CalcTwoWayGVF(
             }
         } else {
             // Update diffusion
-            updateGVF_D <<< Grid(volsize, 256), 256 >>> (
+            DiffusionSolver_UpdateGVF_D <<< Grid(volsize, 256), 256 >>> (
                     gvfOut_D, gvfIn_D, gvfConstData_D, scl);
 
             if (cudaGetLastError() != cudaSuccess) {
