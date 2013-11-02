@@ -204,6 +204,27 @@ protected:
     virtual bool GetExtents(core::Call& call);
 
     /**
+     * The get extent callback for vbo data.
+     *
+     * @return 'True' on success, 'false' otherwise
+     */
+    bool getVBOExtent(core::Call& call);
+
+    /**
+     * The get data callback for vbo data of data set #0
+     *
+     * @return 'True' on success, 'false' otherwise
+     */
+    bool getVBOData1(core::Call& call);
+
+    /**
+     * The get data callback for vbo data of data set #1
+     *
+     * @return 'True' on success, 'false' otherwise
+     */
+    bool getVBOData2(core::Call& call);
+
+    /**
      * Initializes a texture associated with potential map
      *
      * @param cmd              The data call containing the potential map
@@ -295,9 +316,11 @@ private:
 
     /* Data caller/callee slots */
 
-    /// Callee slot to output the initial external forces (representing the
-    /// target shape)
-    core::CalleeSlot volOutputSlot;
+    /// Callee slot for slave renderer #1
+    core::CalleeSlot vboSlaveSlot1;
+
+    /// Callee slot for slave renderer #2
+    core::CalleeSlot vboSlaveSlot2;
 
     /// Caller slot for input molecule #1
     core::CallerSlot molDataSlot1;
@@ -308,8 +331,11 @@ private:
     /// Data caller slot for surface attributes of both data sets
     core::CallerSlot volDataSlot1, volDataSlot2;
 
-    /// Caller slot for additional render module
-    core::CallerSlot rendererCallerSlot;
+    /// Caller slot for first additional render module
+    core::CallerSlot rendererCallerSlot1;
+
+    /// Caller slot for second additional render module
+    core::CallerSlot rendererCallerSlot2;
 
 
     /* Parameters for frame-by-frame comparison */
@@ -612,7 +638,9 @@ private:
     HostArr<int> rmsMask;       ///> Mask for particles
     float rmsValue;             ///> The calculated RMS value
     Mat3f rmsRotation;          ///> Rotation matrix for the fitting
+    Mat4f rmsRotationMatrix;    ///> Rotation matrix for the fitting
     Vec3f rmsTranslation;       ///> Translation vector for the fitting
+    Vec3f rmsCentroid;          ///> Centroid of the second data set
     static const float maxRMSVal;  ///> Maximum RMS value to enable fitting
     HostArr<float> atomPosFitted;  ///> The rotated/translated atom positions
 

@@ -31,13 +31,16 @@
 #include "param/FloatParam.h"
 #include "param/IntParam.h"
 
+// For profiling
+#include <cuda_profiler_api.h>
+
 #include <cmath>
 
 using namespace megamol;
 using namespace megamol::protein;
 
 // Hardcoded parameters for 'quicksurf' class
-const float ComparativeMolSurfaceRenderer::qsParticleRad = 1.0f;
+const float ComparativeMolSurfaceRenderer::qsParticleRad = 0.8f;
 const float ComparativeMolSurfaceRenderer::qsGaussLim = 8.0f;
 const float ComparativeMolSurfaceRenderer::qsGridSpacing = 1.0f;
 const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
@@ -101,12 +104,14 @@ void ComparativeMolSurfaceRenderer::computeDensityBBox(
  */
 ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         Renderer3DModuleDS(),
-        volOutputSlot("volOut", "Initial external forces representing the target shape"),
+        vboSlaveSlot1("vboOut1", "Provides access to the vbo containing data for data set #1"),
+        vboSlaveSlot2("vboOut2", "Provides access to the vbo containing data for data set #2"),
         molDataSlot1("molIn1", "Input molecule #1"),
         molDataSlot2("molIn2", "Input molecule #2"),
         volDataSlot1("volIn1", "Connects the rendering with data storage"),
         volDataSlot2("volIn2", "Connects the rendering with data storage"),
-        rendererCallerSlot("protren", "Connects the renderer with another render module"),
+        rendererCallerSlot1("protren1", "Connects the renderer with another render module"),
+        rendererCallerSlot2("protren2", "Connects the renderer with another render module"),
         /* Parameters for frame by frame comparison */
         cmpModeSlot("cmpMode", "Param slot for compare mode"),
         singleFrame1Slot("singleFrame1", "Param for single frame #1"),
@@ -158,6 +163,22 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
 
     /* Make data caller/callee slots available */
 
+    this->vboSlaveSlot1.SetCallback(VBODataCall::ClassName(),
+            VBODataCall::FunctionName(VBODataCall::CallForGetExtent),
+            &ComparativeMolSurfaceRenderer::getVBOExtent);
+    this->vboSlaveSlot1.SetCallback(VBODataCall::ClassName(),
+            VBODataCall::FunctionName(VBODataCall::CallForGetData),
+            &ComparativeMolSurfaceRenderer::getVBOData1);
+    this->MakeSlotAvailable(&this->vboSlaveSlot1);
+
+    this->vboSlaveSlot2.SetCallback(VBODataCall::ClassName(),
+            VBODataCall::FunctionName(VBODataCall::CallForGetExtent),
+            &ComparativeMolSurfaceRenderer::getVBOExtent);
+    this->vboSlaveSlot2.SetCallback(VBODataCall::ClassName(),
+            VBODataCall::FunctionName(VBODataCall::CallForGetData),
+            &ComparativeMolSurfaceRenderer::getVBOData2);
+    this->MakeSlotAvailable(&this->vboSlaveSlot2);
+
     // Molecular data input #1
     this->molDataSlot1.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataSlot1);
@@ -174,9 +195,13 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->volDataSlot2.SetCompatibleCall<VTIDataCallDescription>();
     this->MakeSlotAvailable(&this->volDataSlot2);
 
-    // Renderer caller slot
-    this->rendererCallerSlot.SetCompatibleCall<core::view::CallRender3DDescription>();
-    this->MakeSlotAvailable(&this->rendererCallerSlot);
+    // Renderer caller slot #1
+    this->rendererCallerSlot1.SetCompatibleCall<core::view::CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->rendererCallerSlot1);
+
+    // Renderer caller slot #2
+    this->rendererCallerSlot2.SetCompatibleCall<core::view::CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->rendererCallerSlot2);
 
 
     /* Parameters for frame-by-frame comparison */
@@ -983,6 +1008,21 @@ atoms instead.",
         this->rmsRotation.SetAt(2, 0, rotation[2][0]);
         this->rmsRotation.SetAt(2, 1, rotation[2][1]);
         this->rmsRotation.SetAt(2, 2, rotation[2][2]);
+
+
+        this->rmsRotationMatrix.SetAt(0, 0, rotation[0][0]);
+        this->rmsRotationMatrix.SetAt(0, 1, rotation[0][1]);
+        this->rmsRotationMatrix.SetAt(0, 2, rotation[0][2]);
+        this->rmsRotationMatrix.SetAt(0, 3, 0.0f);
+        this->rmsRotationMatrix.SetAt(1, 0, rotation[1][0]);
+        this->rmsRotationMatrix.SetAt(1, 1, rotation[1][1]);
+        this->rmsRotationMatrix.SetAt(1, 2, rotation[1][2]);
+        this->rmsRotationMatrix.SetAt(2, 3, 0.0f);
+        this->rmsRotationMatrix.SetAt(2, 0, rotation[2][0]);
+        this->rmsRotationMatrix.SetAt(2, 1, rotation[2][1]);
+        this->rmsRotationMatrix.SetAt(2, 2, rotation[2][2]);
+        this->rmsRotationMatrix.SetAt(2, 3, 0.0f);
+        this->rmsRotationMatrix.SetAt(3, 3, 1.0f);
     }
 
     // Check for sufficiently low rms value
@@ -993,24 +1033,24 @@ atoms instead.",
 
     /* Fit atom positions of source structure */
     this->atomPosFitted.Validate(mol2->AtomCount()*3);
-    Vec3f centroid(0.0f, 0.0f, 0.0f);
+    this->rmsCentroid.Set(0.0f, 0.0f, 0.0f);
 
     if (this->fittingMode != RMS_NONE) {
 
         // Compute centroid
         for (int cnt = 0; cnt < static_cast<int>(mol2->AtomCount()); ++cnt) {
-            centroid += Vec3f(
+            this->rmsCentroid += Vec3f(
                     mol2->AtomPositions()[cnt*3+0],
                     mol2->AtomPositions()[cnt*3+1],
                     mol2->AtomPositions()[cnt*3+2]);
         }
-        centroid /= static_cast<float>(mol2->AtomCount());
+        this->rmsCentroid /= static_cast<float>(mol2->AtomCount());
 
         // Rotate/translate positions
 #pragma omp parallel for
         for (int a = 0; a < static_cast<int>(mol2->AtomCount()); ++a) {
             Vec3f pos(&mol2->AtomPositions()[3*a]);
-            pos -= centroid;
+            pos -= this->rmsCentroid;
             pos = this->rmsRotation*pos;
             pos += this->rmsTranslation;
             this->atomPosFitted.Peek()[3*a+0] = pos.X();
@@ -1092,19 +1132,29 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
         return false;
     }
 
-    // Get a pointer to the outgoing render call
-    core::view::CallRender3D *ren = this->rendererCallerSlot.CallAs<core::view::CallRender3D>();
-    if (ren != NULL) {
-        if (!(*ren)(1)) {
+    // Get a pointer to the outgoing render calls
+    core::view::CallRender3D *ren1 = this->rendererCallerSlot1.CallAs<core::view::CallRender3D>();
+    if (ren1 != NULL) {
+        if (!(*ren1)(1)) {
             return false;
         }
     }
+    core::view::CallRender3D *ren2 = this->rendererCallerSlot2.CallAs<core::view::CallRender3D>();
+    if (ren2 != NULL) {
+        if (!(*ren2)(1)) {
+            return false;
+        }
+    }
+
 //    core::BoundingBoxes bboxPotential0 = cmd0->AccessBoundingBoxes();
     core::BoundingBoxes bboxPotential1 = cmd1->AccessBoundingBoxes();
 
-    core::BoundingBoxes bbox_external;
-    if (ren != NULL) {
-        bbox_external = ren->AccessBoundingBoxes();
+    core::BoundingBoxes bbox_external1, bbox_external2;
+    if (ren1 != NULL) {
+        bbox_external1 = ren1->AccessBoundingBoxes();
+    }
+    if (ren2 != NULL) {
+        bbox_external2 = ren2->AccessBoundingBoxes();
     }
 
     // Calc union of all bounding boxes
@@ -1114,8 +1164,11 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     //bboxTmp.Union(cmd1->AccessBoundingBoxes().ObjectSpaceBBox());
     bboxTmp = mol0->AccessBoundingBoxes().ObjectSpaceBBox();
     bboxTmp.Union(mol1->AccessBoundingBoxes().ObjectSpaceBBox());
-    if (ren != NULL) {
-        bboxTmp.Union(bbox_external.ObjectSpaceBBox());
+    if (ren1 != NULL) {
+        bboxTmp.Union(bbox_external1.ObjectSpaceBBox());
+    }
+    if (ren2 != NULL) {
+        bboxTmp.Union(bbox_external2.ObjectSpaceBBox());
     }
     this->bbox.SetObjectSpaceBBox(bboxTmp);
 
@@ -1123,8 +1176,11 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
 //    bboxTmp.Union(cmd1->AccessBoundingBoxes().ObjectSpaceClipBox());
     bboxTmp = mol0->AccessBoundingBoxes().ObjectSpaceClipBox();
     bboxTmp.Union(mol1->AccessBoundingBoxes().ObjectSpaceClipBox());
-    if (ren != NULL) {
-        bboxTmp.Union(bbox_external.ObjectSpaceClipBox());
+    if (ren1 != NULL) {
+        bboxTmp.Union(bbox_external1.ObjectSpaceClipBox());
+    }
+    if (ren2 != NULL) {
+        bboxTmp.Union(bbox_external2.ObjectSpaceClipBox());
     }
     this->bbox.SetObjectSpaceClipBox(bboxTmp);
 
@@ -1132,8 +1188,11 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
 //    bboxTmp.Union(cmd1->AccessBoundingBoxes().WorldSpaceBBox());
     bboxTmp = mol0->AccessBoundingBoxes().WorldSpaceBBox();
     bboxTmp.Union(mol1->AccessBoundingBoxes().WorldSpaceBBox());
-    if (ren != NULL) {
-        bboxTmp.Union(bbox_external.WorldSpaceBBox());
+    if (ren1 != NULL) {
+        bboxTmp.Union(bbox_external1.WorldSpaceBBox());
+    }
+    if (ren2 != NULL) {
+        bboxTmp.Union(bbox_external2.WorldSpaceBBox());
     }
     this->bbox.SetWorldSpaceBBox(bboxTmp);
 
@@ -1141,8 +1200,11 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
 //    bboxTmp.Union(cmd1->AccessBoundingBoxes().WorldSpaceClipBox());
     bboxTmp = mol0->AccessBoundingBoxes().WorldSpaceClipBox();
     bboxTmp.Union(mol1->AccessBoundingBoxes().WorldSpaceClipBox());
-    if (ren != NULL) {
-        bboxTmp.Union(bbox_external.WorldSpaceClipBox());
+    if (ren1 != NULL) {
+        bboxTmp.Union(bbox_external1.WorldSpaceClipBox());
+    }
+    if (ren2 != NULL) {
+        bboxTmp.Union(bbox_external2.WorldSpaceClipBox());
     }
     this->bbox.SetWorldSpaceClipBox(bboxTmp);
 
@@ -1183,6 +1245,122 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
 //            this->bbox.ObjectSpaceBBox().Right(),
 //            this->bbox.ObjectSpaceBBox().Top(),
 //            this->bbox.ObjectSpaceBBox().Front());
+
+    return true;
+}
+
+
+/*
+ * ComparativeMolSurfaceRenderer::getVBOExtent
+ */
+bool ComparativeMolSurfaceRenderer::getVBOExtent(core::Call& call) {
+
+    VBODataCall *c = dynamic_cast<VBODataCall*>(&call);
+
+    if (c == NULL) {
+        return false;
+    }
+
+    c->SetBBox(this->bbox);
+
+    // Get pointer to potential map data call
+    protein::VTIDataCall *cmd0 =
+            this->volDataSlot1.CallAs<protein::VTIDataCall>();
+    if (cmd0 == NULL) {
+        return false;
+    }
+    if (!(*cmd0)(VTIDataCall::CallForGetExtent)) {
+        return false;
+    }
+    protein::VTIDataCall *cmd1 =
+            this->volDataSlot2.CallAs<protein::VTIDataCall>();
+    if (cmd1 == NULL) {
+        return false;
+    }
+    if (!(*cmd1)(VTIDataCall::CallForGetExtent)) {
+        return false;
+    }
+
+    // The available frame count is determined by the 'compareFrames' parameter
+    if (this->cmpMode == COMPARE_1_1) {
+        // One by one frame comparison
+        c->SetFrameCnt(1);
+    } else if (this->cmpMode == COMPARE_1_N) {
+        // One frame of data set #0 is compared to all frames of data set #1
+        c->SetFrameCnt(cmd1->FrameCount());
+    } else if (this->cmpMode == COMPARE_N_1) {
+        // One frame of data set #1 is compared to all frames of data set #0
+        c->SetFrameCnt(cmd0->FrameCount());
+    } else if (this->cmpMode == COMPARE_N_N) {
+        // Frame by frame comparison
+        // Note: The data set with lesser frames is truncated
+        c->SetFrameCnt(std::min(cmd0->FrameCount(), cmd1->FrameCount()));
+    } else {
+        return false; // Invalid compare mode
+    }
+
+    return true;
+}
+
+
+/*
+ * ComparativeMolSurfaceRenderer::getVBOData1
+ */
+bool ComparativeMolSurfaceRenderer::getVBOData1(core::Call& call) {
+    VBODataCall *c = dynamic_cast<VBODataCall*>(&call);
+
+    if (c == NULL) {
+        return false;
+    }
+
+    // Set vertex data
+    c->SetVbo(this->deformSurf1.GetVtxDataVBO());
+    c->SetDataStride(DeformableGPUSurfaceMT::vertexDataStride);
+    c->SetDataOffs(
+            DeformableGPUSurfaceMT::vertexDataOffsPos,
+            DeformableGPUSurfaceMT::vertexDataOffsNormal,
+            DeformableGPUSurfaceMT::vertexDataOffsTexCoord);
+    c->SetVertexCnt(this->deformSurf1.GetVertexCnt());
+
+    // Set triangles
+    c->SetVboTriangleIdx(this->deformSurf1.GetTriangleIdxVBO());
+    c->SetTriangleCnt(this->deformSurf1.GetTriangleCnt());
+
+    // Set potential texture
+    c->SetTex(this->surfAttribTex1);
+    c->SetTexValRange(this->minPotential, this->maxPotential);
+
+    return true;
+}
+
+
+/*
+ * ComparativeMolSurfaceRenderer::getVBOData2
+ */
+bool ComparativeMolSurfaceRenderer::getVBOData2(core::Call& call) {
+
+    VBODataCall *c = dynamic_cast<VBODataCall*>(&call);
+
+    if (c == NULL) {
+        return false;
+    }
+
+    // Set vertex data
+    c->SetVbo(this->deformSurf2.GetVtxDataVBO());
+    c->SetDataStride(DeformableGPUSurfaceMT::vertexDataStride);
+    c->SetDataOffs(
+            DeformableGPUSurfaceMT::vertexDataOffsPos,
+            DeformableGPUSurfaceMT::vertexDataOffsNormal,
+            DeformableGPUSurfaceMT::vertexDataOffsTexCoord);
+    c->SetVertexCnt(this->deformSurf2.GetVertexCnt());
+
+    // Set triangles
+    c->SetVboTriangleIdx(this->deformSurf2.GetTriangleIdxVBO());
+    c->SetTriangleCnt(this->deformSurf2.GetTriangleCnt());
+
+    // Set potential texture
+    c->SetTex(this->surfAttribTex2);
+    c->SetTexValRange(this->minPotential, this->maxPotential);
 
     return true;
 }
@@ -1913,6 +2091,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
                 return false;
             }
+
         } else {
             return false;
         }
@@ -1987,23 +2166,52 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     glScalef(scaleCombined, scaleCombined, scaleCombined);
     //printf("scale master %f\n", scaleCombined);
 
-    // Call external renderer if possible
-    core::view::CallRender3D *ren = this->rendererCallerSlot.CallAs<core::view::CallRender3D>();
-    if (ren != NULL) {
+    // Call external renderer #1 if possible
+    core::view::CallRender3D *ren1 = this->rendererCallerSlot1.CallAs<core::view::CallRender3D>();
+    if (ren1 != NULL) {
         // Call additional renderer
-        ren->SetCameraParameters(this->cameraInfo);
-        ren->SetTime(cr3d->Time());
+        ren1->SetCameraParameters(this->cameraInfo);
+        ren1->SetTime(static_cast<float>(frameIdx1));
         glPushMatrix();
         // Revert scaling done by external renderer in advance
         float scaleRevert;
-        if (!vislib::math::IsEqual(ren->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-            scaleRevert = 2.0f/ren->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        if (!vislib::math::IsEqual(ren1->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
+            scaleRevert = 2.0f/ren1->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
         } else {
             scaleRevert = 1.0f;
         }
         scaleRevert = 1.0f/scaleRevert;
         glScalef(scaleRevert, scaleRevert, scaleRevert);
-        (*ren)(0); // Render call to external renderer
+        (*ren1)(0); // Render call to external renderer
+        glPopMatrix();
+        CheckForGLError();
+    }
+
+    // Call external renderer #2 if possible
+    core::view::CallRender3D *ren2 = this->rendererCallerSlot2.CallAs<core::view::CallRender3D>();
+    if (ren2 != NULL) {
+        // Call additional renderer
+        ren2->SetCameraParameters(this->cameraInfo);
+        ren2->SetTime(static_cast<float>(frameIdx2));
+        glPushMatrix();
+
+        // Perform RMSD translation/rotation to fit the surface rendering
+        glTranslatef(this->rmsTranslation.X(), this->rmsTranslation.Y(), this->rmsTranslation.Z());
+        glMultMatrixf(this->rmsRotationMatrix.PeekComponents());
+        glTranslatef(-this->rmsCentroid.X(), -this->rmsCentroid.Y(), -this->rmsCentroid.Z());
+
+
+        // Revert scaling done by external renderer in advance
+        float scaleRevert;
+        if (!vislib::math::IsEqual(ren2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
+            scaleRevert = 2.0f/ren2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        } else {
+            scaleRevert = 1.0f;
+        }
+        scaleRevert = 1.0f/scaleRevert;
+        glScalef(scaleRevert, scaleRevert, scaleRevert);
+
+        (*ren2)(0); // Render call to external renderer
         glPopMatrix();
         CheckForGLError();
     }
@@ -2027,14 +2235,14 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     camPos[1] = modelMatrix.GetAt(1, 3);
     camPos[2] = modelMatrix.GetAt(2, 3);
 
-    // DEBUG Render external forces as lines
-    if (!this->renderExternalForces()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: could not render external forces",
-                this->ClassName());
-        return false;
-    }
-    // END DEBUG
+//    // DEBUG Render external forces as lines
+//    if (!this->renderExternalForces()) {
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                "%s: could not render external forces",
+//                this->ClassName());
+//        return false;
+//    }
+//    // END DEBUG
 
     if (this->surface1RM != SURFACE_NONE) {
 

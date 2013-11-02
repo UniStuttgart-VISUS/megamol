@@ -351,7 +351,8 @@ protected:
             float surfMappedMinDisplScl,
             float springStiffness,
             float forceScl,
-            float externalForcesWeight);
+            float externalForcesWeight,
+            bool externalForcesOnly=false);
 
 private:
 
