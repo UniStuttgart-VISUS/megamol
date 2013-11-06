@@ -2136,8 +2136,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         }
 
         // Flag vertices adjacent to corrupt triangles
-        if (!this->deformSurfMapped.FlagCorruptTriangleVertices(
+        if (!this->deformSurfMapped.FlagCorruptTriangles(
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                this->deformSurf1.PeekCubeStates(),
                 this->volDim,
                 this->volOrg,
                 this->volDelta,
@@ -2235,14 +2236,14 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     camPos[1] = modelMatrix.GetAt(1, 3);
     camPos[2] = modelMatrix.GetAt(2, 3);
 
-//    // DEBUG Render external forces as lines
-//    if (!this->renderExternalForces()) {
-//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                "%s: could not render external forces",
-//                this->ClassName());
-//        return false;
-//    }
-//    // END DEBUG
+    // DEBUG Render external forces as lines
+    if (!this->renderExternalForces()) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not render external forces",
+                this->ClassName());
+        return false;
+    }
+    // END DEBUG
 
     if (this->surface1RM != SURFACE_NONE) {
 
@@ -2553,7 +2554,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     this->pplMappedSurfaceShader.Enable();
     CheckForGLError(); // OpenGL error check
 
-    // Note: glGetAttribLocation returns -1 if the attribute if not used in
+    // Note: glGetAttribLocation returns -1 if an attribute if not used in
     // the shader code, because in this case the attribute is optimized out by
     // the compiler
     attribLocPosNew = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "posNew");
@@ -3017,5 +3018,4 @@ void ComparativeMolSurfaceRenderer::updateParams() {
 
 
 #endif // WITH_CUDA
-
 

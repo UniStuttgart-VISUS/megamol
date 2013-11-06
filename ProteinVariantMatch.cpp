@@ -1000,6 +1000,22 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                 return false;
             }
 
+
+            // Get vertex positions based on the level set
+            if (!surfTarget.ComputeVertexPositions(
+                    ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
+                    this->qsIsoVal)) {
+
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "%s: could not compute vertex positions #1",
+                        this->ClassName());
+
+                return false;
+            }
+
             // Get vertex positions based on the level set
             if (!surfStart.ComputeVertexPositions(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
@@ -1096,8 +1112,12 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
 
             // Flag corrupt triangles in end surface
             if (!surfEnd.FlagCorruptTriangles(
-                    ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(), this->volDim,
-                    this->volOrg, this->volDelta, this->qsIsoVal)) {
+                    ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
+                    this->surfTarget.PeekCubeStates(),
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
+                    this->qsIsoVal)) {
                 return false;
             }
 
@@ -1165,30 +1185,35 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                     std::max(this->maxMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
 
             // 3. Compute mean vertex path
-            float meanVertexPath = surfEnd.IntUncertaintyOverSurfArea();
+
+            float meanVertexPath = this->surfEnd.IntUncertaintyOverSurfArea();
+
             this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/surfArea;
-            if (i != j) {
+//            if (i != j) {
                 this->minMatchMeanVertexPathVal =
                         std::min(this->minMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
                 this->maxMatchMeanVertexPathVal =
                         std::max(this->maxMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
-            }
+//            }
+//            printf("Mean vertex path: min %f, max %f\n",
+//                    this->minMatchMeanVertexPathVal,
+//                    this->maxMatchMeanVertexPathVal);
 
             // 4. Compute Hausdorff distance
 
-            if (!CudaSafeCall(this->hausdorffdistVtx_D.Validate(surfEnd.GetVertexCnt()))) {
+            if (!CudaSafeCall(this->hausdorffdistVtx_D.Validate(this->surfEnd.GetVertexCnt()))) {
                 return false;
             }
             float hausdorffdist = DeformableGPUSurfaceMT::CalcHausdorffDistance(
-                    &surfEnd, &surfStart, this->hausdorffdistVtx_D.Peek());
+                    &this->surfEnd, &this->surfStart, this->hausdorffdistVtx_D.Peek());
             this->matchHausdorffDistance[i*this->nVariants+j] = hausdorffdist;
 
-            if (i != j) {
+//            if (i != j) {
                 this->minMatchHausdorffDistanceVal =
                         std::min(this->minMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
                 this->maxMatchHausdorffDistanceVal =
                         std::max(this->maxMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
-            }
+//            }
 
             molCall->Unlock(); // Unlock the frame
             volCall->Unlock(); // Unlock the frame
@@ -1203,8 +1228,6 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
             }
 #endif // defined(OUTPUT_PROGRESS)
 
-            surfEnd.Release();
-            surfStart.Release(); // TODO Remove
         }
     }
 

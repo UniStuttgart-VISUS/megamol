@@ -285,22 +285,25 @@ __global__ void DeformableGPUSurfaceMT_ComputeDistField_D(
  *                                          vertex data buffer
  * @param[in]     triangleVtxIdx_D          Array with triangle vertex indices
  * @param[in]     volume_D                  The target volume defining the
- *                               iso-surface
- * @param[in]     externalForcesScl_D       Array with the scale factor for the external force
+ *                                          iso-surface
+ * @param[in]     externalForcesScl_D       Array with the scale factor for the
+ *                                          external force
  * @param[in]     triangleCnt               The number of triangles
  * @param[in]     minDispl                  Minimum force scale to keep going
  * @param[in]     isoval                    The iso-value defining the iso-surface
  *
  * TODO
  */
-__global__ void DeformableGPUSurfaceMT_FlagCorruptTriangleVertices_D(
+__global__ void DeformableGPUSurfaceMT_FlagCorruptTriangles_D(
         float *vertexFlag_D,
+        float *corruptTriangles_D,
         float *vertexData_D,
         uint vertexDataStride,
         uint vertexDataOffsPos,
         uint vertexDataOffsNormal,
         uint *triangleVtxIdx_D,
         float *targetVol_D,
+        const unsigned int *targetActiveCells_D,
         uint triangleCnt,
         float isoval) {
 
@@ -311,25 +314,25 @@ __global__ void DeformableGPUSurfaceMT_FlagCorruptTriangleVertices_D(
 
     /* Alternative 1: Sample volume at triangle midpoint */
 
-    const uint baseIdx0 = vertexDataStride*triangleVtxIdx_D[3*idx+0];
-    const uint baseIdx1 = vertexDataStride*triangleVtxIdx_D[3*idx+1];
-    const uint baseIdx2 = vertexDataStride*triangleVtxIdx_D[3*idx+2];
-    const float3 p0 = make_float3(vertexData_D[baseIdx0+vertexDataOffsPos+0],
-                                  vertexData_D[baseIdx0+vertexDataOffsPos+1],
-                                  vertexData_D[baseIdx0+vertexDataOffsPos+2]);
-    const float3 p1 = make_float3(vertexData_D[baseIdx1+vertexDataOffsPos+0],
-                                  vertexData_D[baseIdx1+vertexDataOffsPos+1],
-                                  vertexData_D[baseIdx1+vertexDataOffsPos+2]);
-    const float3 p2 = make_float3(vertexData_D[baseIdx2+vertexDataOffsPos+0],
-                                  vertexData_D[baseIdx2+vertexDataOffsPos+1],
-                                  vertexData_D[baseIdx2+vertexDataOffsPos+2]);
-    // Sample volume at midpoint
-    const float3 midPoint = (p0+p1+p2)/3.0;
-    const float volSampleMidPoint = ::SampleFieldAtPosTricub_D<float>(midPoint, targetVol_D);
-    float flag = float(::fabs(volSampleMidPoint-isoval) > 0.3);
-    vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = flag;
-    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = flag;
-    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = flag;
+//    const uint baseIdx0 = vertexDataStride*triangleVtxIdx_D[3*idx+0];
+//    const uint baseIdx1 = vertexDataStride*triangleVtxIdx_D[3*idx+1];
+//    const uint baseIdx2 = vertexDataStride*triangleVtxIdx_D[3*idx+2];
+//    const float3 p0 = make_float3(vertexData_D[baseIdx0+vertexDataOffsPos+0],
+//                                  vertexData_D[baseIdx0+vertexDataOffsPos+1],
+//                                  vertexData_D[baseIdx0+vertexDataOffsPos+2]);
+//    const float3 p1 = make_float3(vertexData_D[baseIdx1+vertexDataOffsPos+0],
+//                                  vertexData_D[baseIdx1+vertexDataOffsPos+1],
+//                                  vertexData_D[baseIdx1+vertexDataOffsPos+2]);
+//    const float3 p2 = make_float3(vertexData_D[baseIdx2+vertexDataOffsPos+0],
+//                                  vertexData_D[baseIdx2+vertexDataOffsPos+1],
+//                                  vertexData_D[baseIdx2+vertexDataOffsPos+2]);
+//    // Sample volume at midpoint
+//    const float3 midPoint = (p0+p1+p2)/3.0;
+//    const float volSampleMidPoint = ::SampleFieldAtPosTricub_D<float>(midPoint, targetVol_D);
+//    float flag = float(::fabs(volSampleMidPoint-isoval) > 0.3);
+//    vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = flag;
+//    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = flag;
+//    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = flag;
 
     /* Alternative 2: calc variance of angle between normals */
 
@@ -355,70 +358,109 @@ __global__ void DeformableGPUSurfaceMT_FlagCorruptTriangleVertices_D(
 //    vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = flag;
 //    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = flag;
 //    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = flag;
-}
 
-
-
-/**
- * Writes a flag for every vertex that is adjacent to a corrupt triangles.
- *
- * @param[in,out] vertexData_D              The buffer with the vertex data
- * @param[in]     vertexDataStride          The stride for the vertex data
- *                                          buffer
- * @param[in]     vertexDataOffsPos         The position offset in the vertex
- *                                          data buffer
- * @param[in]     vertexDataOffsCorruptFlag The corruption flag offset in the
- *                                          vertex data buffer
- * @param[in]     triangleVtxIdx_D          Array with triangle vertex indices
- * @param[in]     volume_D                  The target volume defining the
- *                               iso-surface
- * @param[in]     externalForcesScl_D       Array with the scale factor for the external force
- * @param[in]     triangleCnt               The number of triangles
- * @param[in]     minDispl                  Minimum force scale to keep going
- * @param[in]     isoval                    The iso-value defining the iso-surface
- *
- * TODO
- */
-__global__ void DeformableGPUSurfaceMT_FlagCorruptTriangles_D(
-        float *corruptTriangles_D,
-        float *vertexData_D,
-        uint vertexDataStride,
-        uint vertexDataOffsPos,
-        uint vertexDataOffsNormal,
-        uint *triangleVtxIdx_D,
-        float *targetVol_D,
-        uint triangleCnt,
-        float isoval) {
-
-    const uint idx = ::getThreadIdx();
-    if (idx >= triangleCnt) {
-        return;
-    }
-
-    /* Alternative 1: Sample volume at triangle midpoint */
+    /* Alternative 3 Check whether the vertex lies in a active cell of the
+       target volume */
 
     const uint baseIdx0 = vertexDataStride*triangleVtxIdx_D[3*idx+0];
     const uint baseIdx1 = vertexDataStride*triangleVtxIdx_D[3*idx+1];
     const uint baseIdx2 = vertexDataStride*triangleVtxIdx_D[3*idx+2];
+    const float3 p0 = make_float3(
+            vertexData_D[baseIdx0+vertexDataOffsPos+0],
+            vertexData_D[baseIdx0+vertexDataOffsPos+1],
+            vertexData_D[baseIdx0+vertexDataOffsPos+2]);
+    const float3 p1 = make_float3(
+            vertexData_D[baseIdx1+vertexDataOffsPos+0],
+            vertexData_D[baseIdx1+vertexDataOffsPos+1],
+            vertexData_D[baseIdx1+vertexDataOffsPos+2]);
+    const float3 p2 = make_float3(
+            vertexData_D[baseIdx2+vertexDataOffsPos+0],
+            vertexData_D[baseIdx2+vertexDataOffsPos+1],
+            vertexData_D[baseIdx2+vertexDataOffsPos+2]);
 
-    const float3 p0 = make_float3(vertexData_D[baseIdx0+vertexDataOffsPos+0],
-                                  vertexData_D[baseIdx0+vertexDataOffsPos+1],
-                                  vertexData_D[baseIdx0+vertexDataOffsPos+2]);
-    const float3 p1 = make_float3(vertexData_D[baseIdx1+vertexDataOffsPos+0],
-                                  vertexData_D[baseIdx1+vertexDataOffsPos+1],
-                                  vertexData_D[baseIdx1+vertexDataOffsPos+2]);
-    const float3 p2 = make_float3(vertexData_D[baseIdx2+vertexDataOffsPos+0],
-                                  vertexData_D[baseIdx2+vertexDataOffsPos+1],
-                                  vertexData_D[baseIdx2+vertexDataOffsPos+2]);
     // Sample volume at midpoint
-    const float3 midPoint = (p0+p1+p2)/3.0;
-    const float volSampleMidPoint = ::SampleFieldAtPosTricub_D<float>(midPoint, targetVol_D);
+    const float3 midpoint = (p0+p1+p2)/3.0;
 
+    // Get integer cell index
+    int3 coords;
+    coords.x = int((midpoint.x-gridOrg_D.x)/gridDelta_D.x);
+    coords.y = int((midpoint.y-gridOrg_D.y)/gridDelta_D.y);
+    coords.z = int((midpoint.z-gridOrg_D.z)/gridDelta_D.z);
 
-    float flag = float(::fabs(volSampleMidPoint-isoval) > 0.3);
-    corruptTriangles_D[idx] = flag;
+    int cellIDx = ::GetCellIdxByGridCoords(coords);
+    uint cellState = targetActiveCells_D[cellIDx];
 
+    if (cellState == 0) {
+        vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = 1.0;
+        vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = 1.0;
+        vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = 1.0;
+    }
+
+    corruptTriangles_D[idx] = float(1-cellState);
 }
+
+
+
+///**
+// * Writes a flag for every vertex that is adjacent to a corrupt triangles.
+// *
+// * @param[in,out] vertexData_D              The buffer with the vertex data
+// * @param[in]     vertexDataStride          The stride for the vertex data
+// *                                          buffer
+// * @param[in]     vertexDataOffsPos         The position offset in the vertex
+// *                                          data buffer
+// * @param[in]     vertexDataOffsCorruptFlag The corruption flag offset in the
+// *                                          vertex data buffer
+// * @param[in]     triangleVtxIdx_D          Array with triangle vertex indices
+// * @param[in]     volume_D                  The target volume defining the
+// *                               iso-surface
+// * @param[in]     externalForcesScl_D       Array with the scale factor for the external force
+// * @param[in]     triangleCnt               The number of triangles
+// * @param[in]     minDispl                  Minimum force scale to keep going
+// * @param[in]     isoval                    The iso-value defining the iso-surface
+// *
+// * TODO
+// */
+//__global__ void DeformableGPUSurfaceMT_FlagCorruptTriangles_D(
+//        float *corruptTriangles_D,
+//        float *vertexData_D,
+//        uint vertexDataStride,
+//        uint vertexDataOffsPos,
+//        uint vertexDataOffsNormal,
+//        uint *triangleVtxIdx_D,
+//        float *targetVol_D,
+//        uint triangleCnt,
+//        float isoval) {
+//
+//    const uint idx = ::getThreadIdx();
+//    if (idx >= triangleCnt) {
+//        return;
+//    }
+//
+//    /* Alternative 1: Sample volume at triangle midpoint */
+//
+//    const uint baseIdx0 = vertexDataStride*triangleVtxIdx_D[3*idx+0];
+//    const uint baseIdx1 = vertexDataStride*triangleVtxIdx_D[3*idx+1];
+//    const uint baseIdx2 = vertexDataStride*triangleVtxIdx_D[3*idx+2];
+//
+//    const float3 p0 = make_float3(vertexData_D[baseIdx0+vertexDataOffsPos+0],
+//                                  vertexData_D[baseIdx0+vertexDataOffsPos+1],
+//                                  vertexData_D[baseIdx0+vertexDataOffsPos+2]);
+//    const float3 p1 = make_float3(vertexData_D[baseIdx1+vertexDataOffsPos+0],
+//                                  vertexData_D[baseIdx1+vertexDataOffsPos+1],
+//                                  vertexData_D[baseIdx1+vertexDataOffsPos+2]);
+//    const float3 p2 = make_float3(vertexData_D[baseIdx2+vertexDataOffsPos+0],
+//                                  vertexData_D[baseIdx2+vertexDataOffsPos+1],
+//                                  vertexData_D[baseIdx2+vertexDataOffsPos+2]);
+//    // Sample volume at midpoint
+//    const float3 midPoint = (p0+p1+p2)/3.0;
+//    const float volSampleMidPoint = ::SampleFieldAtPosTricub_D<float>(midPoint, targetVol_D);
+//
+//
+//    float flag = float(::fabs(volSampleMidPoint-isoval) > 0.3);
+//    corruptTriangles_D[idx] = flag;
+//
+//}
 
 
 
@@ -583,7 +625,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPos_D(
 
     // Get initial scale factor for external forces
     float externalForcesScl = vertexExternalForcesScl_D[2*idx];
-//    float externalForcesSclOld = externalForcesScl;
+    float externalForcesSclOld = externalForcesScl;
 
     // Get partial derivatives
     float3 laplacian = laplacian_D[idx];
@@ -615,7 +657,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPos_D(
     externalForce.y = externalForceTmp.y;
     externalForce.z = externalForceTmp.z;
 
-    externalForce = safeNormalize(externalForce);
+   // externalForce = safeNormalize(externalForce);
     externalForce *= forcesScl*externalForcesScl*externalWeight;
 
     float3 internalForce = (1.0-externalWeight)*forcesScl*((1.0 - stiffness)*laplacian - stiffness*laplacian2);
@@ -1017,153 +1059,11 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
 
 
 /*
- * DeformableGPUSurfaceMT::FlagCorruptTriangleVertices
- */
-bool DeformableGPUSurfaceMT::FlagCorruptTriangleVertices(
-        float *targetVol_D,
-        int3 volDim,
-        float3 volOrg,
-        float3 volDelta,
-        float isovalue) {
-
-    using namespace vislib::sys;
-
-    if (!this->InitCorruptFlagVBO(this->vertexCnt)) {
-        return false;
-    }
-
-    // Init constant device params
-    if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: could not init constant device params",
-                this->ClassName());
-        return false;
-    }
-
-   ::CheckForCudaErrorSync();
-
-    cudaGraphicsResource* cudaTokens[3];
-
-    // Register memory with CUDA
-    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
-            &cudaTokens[0],
-            this->vboVtxData,
-            cudaGraphicsMapFlagsNone))) {
-        return false;
-    }
-
-    ::CheckForCudaErrorSync();
-
-    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
-            &cudaTokens[1],
-            this->vboTriangleIdx,
-            cudaGraphicsMapFlagsNone))) {
-        return false;
-    }
-
-    ::CheckForCudaErrorSync();
-
-    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
-            &cudaTokens[2],
-            this->vboCorruptTriangleVertexFlag,
-            cudaGraphicsMapFlagsNone))) {
-        return false;
-    }
-
-    ::CheckForCudaErrorSync();
-
-    // Map cuda ressource handles
-    if (!CudaSafeCall(cudaGraphicsMapResources(3, cudaTokens, 0))) {
-        return false;
-    }
-
-    ::CheckForCudaErrorSync();
-
-    /* Get mapped pointers to the vertex data buffer */
-
-    float *vboFlagPt;
-    float *vboPt;
-    size_t vboSize;
-    unsigned int *vboTriangleIdxPt;
-
-    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
-            reinterpret_cast<void**>(&vboPt),
-            &vboSize,
-            cudaTokens[0]))) {
-        return false;
-    }
-
-    ::CheckForCudaErrorSync();
-
-    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
-            reinterpret_cast<void**>(&vboTriangleIdxPt),
-            &vboSize,
-            cudaTokens[1]))) {
-        return false;
-    }
-
-    ::CheckForCudaErrorSync();
-
-    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
-            reinterpret_cast<void**>(&vboFlagPt),
-            &vboSize,
-            cudaTokens[2]))) {
-        return false;
-    }
-
-    ::CheckForCudaErrorSync();
-
-    // Call kernel
-    DeformableGPUSurfaceMT_FlagCorruptTriangleVertices_D <<< Grid(this->triangleCnt, 256), 256 >>> (
-            vboFlagPt,
-            vboPt,
-            AbstractGPUSurface::vertexDataStride,
-            AbstractGPUSurface::vertexDataOffsPos,
-            AbstractGPUSurface::vertexDataOffsNormal,
-            vboTriangleIdxPt,
-            targetVol_D,
-            this->triangleCnt,
-            isovalue);
-
-    ::CheckForCudaErrorSync();
-
-    if (!CudaSafeCall(cudaGetLastError())) {
-        return false;
-    }
-
-    ::CheckForCudaErrorSync();
-
-    if (!CudaSafeCall(cudaGraphicsUnmapResources(3, cudaTokens, 0))) {
-        return false;
-    }
-
-    ::CheckForCudaErrorSync();
-
-    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
-        return false;
-    }
-
-    ::CheckForCudaErrorSync();
-
-    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
-        return false;
-    }
-
-    ::CheckForCudaErrorSync();
-
-    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[2]))) {
-        return false;
-    }
-
-    return true;
-}
-
-
-/*
  * DeformableGPUSurfaceMT::FlagCorruptTriangles
  */
 bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
         float *volume_D,
+        const uint *targetActiveCells,
         int3 volDim,
         float3 volOrg,
         float3 volDelta,
@@ -1176,6 +1076,10 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: could not init constant device params",
                 this->ClassName());
+        return false;
+    }
+
+    if (!this->InitCorruptFlagVBO(this->vertexCnt)) {
         return false;
     }
 
@@ -1190,7 +1094,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
 
 //    ::CheckForCudaErrorSync();
 
-    cudaGraphicsResource* cudaTokens[2];
+    cudaGraphicsResource* cudaTokens[3];
 
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
@@ -1209,10 +1113,17 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
         return false;
     }
 
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[2],
+            this->vboCorruptTriangleVertexFlag,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
 //    ::CheckForCudaErrorSync();
 
     // Map cuda ressource handles
-    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+    if (!CudaSafeCall(cudaGraphicsMapResources(3, cudaTokens, 0))) {
         return false;
     }
 
@@ -1222,6 +1133,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
 
     float *vboPt;
     size_t vboSize;
+    float* vboFlagPt;
     unsigned int *vboTriangleIdxPt;
 
     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
@@ -1237,6 +1149,13 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
             reinterpret_cast<void**>(&vboTriangleIdxPt),
             &vboSize,
             cudaTokens[1]))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboFlagPt),
+            &vboSize,
+            cudaTokens[2]))) {
         return false;
     }
 
@@ -1260,8 +1179,13 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
 
     ::CheckForCudaErrorSync();
 
+    if (!CudaSafeCall(cudaMemset(vboFlagPt, 0x00, this->vertexCnt*sizeof(float)))) {
+        return false;
+    }
+
     // Call kernel
     DeformableGPUSurfaceMT_FlagCorruptTriangles_D <<< Grid(this->triangleCnt, 256), 256 >>> (
+            vboFlagPt,
             this->corruptTriangles_D.Peek(),
             vboPt,
             AbstractGPUSurface::vertexDataStride,
@@ -1269,6 +1193,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
             AbstractGPUSurface::vertexDataOffsNormal,
             vboTriangleIdxPt,
             volume_D,
+            targetActiveCells,
             this->triangleCnt,
             isovalue);
 
@@ -1280,7 +1205,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
 
 //    ::CheckForCudaErrorSync();
 
-    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(3, cudaTokens, 0))) {
         return false;
     }
 
@@ -1293,6 +1218,10 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
 //    ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[2]))) {
         return false;
     }
 
@@ -3313,4 +3242,3 @@ float DeformableGPUSurfaceMT::CalcHausdorffDistance(
 }
 
 #endif // WITH_CUDA
-

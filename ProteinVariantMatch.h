@@ -442,6 +442,7 @@ private:
 
     DeformableGPUSurfaceMT surfStart;
     DeformableGPUSurfaceMT surfEnd;
+    DeformableGPUSurfaceMT surfTarget;
 
     /// The bounding boxes for particle data
     Cubef bboxParticles;

@@ -450,7 +450,7 @@ __global__ void DiffusionSolver_UpdateGVF_D(
     gvf.z += c3;
 
     float len = length(gvf);
-    if (len > 0.0f) gvf /= len;
+    //if (len > 0.0f) gvf /= len;
 
     gvfOut_D[4*idx+0] = gvf.x;
     gvfOut_D[4*idx+1] = gvf.y;
