@@ -108,21 +108,6 @@ public:
     float GetTotalValidSurfArea();
 
     /**
-     * Flag vertices adjacent to corrupt triangles in the current mesh. This
-     * is mainly for rendering purposes where vertex attributes are needed.
-     *
-     * TODO
-     *
-     * @return 'True' on success, 'false' otherwise.
-     */
-    bool FlagCorruptTriangleVertices(
-            float *volume_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue);
-
-    /**
      * Flag corrupt triangles in the current mesh.
      * TODO
      *
@@ -130,6 +115,7 @@ public:
      */
     bool FlagCorruptTriangles(
             float *volume_D,
+            const uint *targetActiveCells,
             int3 volDim,
             float3 volOrg,
             float3 volDelta,
