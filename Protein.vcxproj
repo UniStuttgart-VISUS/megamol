@@ -687,6 +687,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="View3DSpaceMouse.cpp" />
     <ClCompile Include="VMDDXLoader.cpp" />
+    <ClCompile Include="VolumeDirectionRenderer.cpp" />
     <ClCompile Include="VolumeMeshRenderer.cpp" />
     <ClCompile Include="VolumeSliceCall.cpp" />
     <ClCompile Include="VolumeSliceRenderer.cpp" />
@@ -823,6 +824,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="View3DSpaceMouse.h" />
     <ClInclude Include="vislib_vector_typedefs.h" />
     <ClInclude Include="VMDDXLoader.h" />
+    <ClInclude Include="VolumeDirectionRenderer.h" />
     <ClInclude Include="VolumeMeshRenderer.h" />
     <ClInclude Include="VolumeSliceCall.h" />
     <ClInclude Include="VolumeSliceRenderer.h" />

@@ -122,7 +122,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModuleDS (),
     this->MakeSlotAvailable( &this->stickRadiusParam);
 
     // fill color table with default values and set the filename param
-    this->probeRadiusParam.SetParameter(new param::FloatParam( 1.4f, 0.0f));
+    this->probeRadiusParam.SetParameter(new param::FloatParam(1.4f));
     this->MakeSlotAvailable( &this->probeRadiusParam);
 
     // the color for the minimum value (gradient coloring

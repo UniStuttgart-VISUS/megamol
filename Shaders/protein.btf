@@ -14495,6 +14495,7 @@ void main() {
         //float col = float((abs(val-isoval)/isoDistribution) < isoThresh);
         float col = float(abs(val-isoval)/isoDistribution - float(int(abs(val-isoval)/isoDistribution)) < isoThresh);
         gl_FragColor = vec4(MSH2RGB(colMsh.x, colMsh.y, colMsh.z)*col, col);
+		if( abs(col) < 0.001 ) discard;
     } else { // Invalid color mode
         gl_FragColor = vec4(0.5, 1.0, 0.0, 1.0);
     }    

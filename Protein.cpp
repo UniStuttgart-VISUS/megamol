@@ -51,6 +51,7 @@
 #include "SecPlaneRenderer.h"
 #include "ComparativeMolSurfaceRenderer.h"
 #include "UnstructuredGridRenderer.h"
+#include "VolumeDirectionRenderer.h"
 
 // 2D renderers
 #include "VolumeSliceRenderer.h"
@@ -162,9 +163,9 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 51;
+    int moduleCount = 52;
 #ifdef WITH_CUDA
-    moduleCount+=14;
+    moduleCount+=13;
 #endif // WITH_CUDA
 #ifdef WITH_OPENHAPTICS
     moduleCount+=1;
@@ -255,6 +256,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 49 : return new ModuleAutoDescription<protein::MolecularBezierData>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 50 : return new ModuleAutoDescription<protein::MultiParticleDataFilter>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 51 : return new ModuleAutoDescription<protein::VolumeDirectionRenderer>();
         default: return NULL;
     }
     return NULL;
