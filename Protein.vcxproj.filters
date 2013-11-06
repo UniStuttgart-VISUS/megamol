@@ -388,6 +388,9 @@
     <ClCompile Include="MultiParticleDataFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VolumeDirectionRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSpline.h">
@@ -790,6 +793,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MultiParticleDataFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VolumeDirectionRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

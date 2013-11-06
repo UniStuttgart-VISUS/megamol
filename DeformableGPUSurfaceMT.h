@@ -115,7 +115,7 @@ public:
      */
     bool FlagCorruptTriangles(
             float *volume_D,
-            const uint *targetActiveCells,
+            const unsigned int *targetActiveCells,
             int3 volDim,
             float3 volOrg,
             float3 volDelta,

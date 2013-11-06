@@ -818,6 +818,18 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
             rangeMax = rangeMax.Substring(0, rangeMax.Find("\"", 0));
             max = this->string2float(rangeMax);
 //            printf("    Max  : %f\n", max); // DEBUG
+            
+            // Try to get number of components
+            // TODO look for a better, more robust solution! NumberOfCom is sometimes missing.
+            vislib::StringA numComp;
+            unsigned int numComponents = 0;
+            StringA::Size numCompIdx = entity.Find("NumberOfComponents", 0);
+            if( numCompIdx != StringA::INVALID_POS ) {
+                numComp = entity.Substring(numCompIdx+20);
+                numComp = numComp.Substring(0, numComp.Find("\"", 0));
+                numComponents = atoi(numComp.PeekBuffer());
+            }
+            if( numComponents == 0 ) numComponents = 1;
 
             pt_end++; // Omit next '>'
 
@@ -825,7 +837,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
             uint gridSize =
                     (fr->GetPieceExtent(pieceCounter-1).Width()+1)*
                     (fr->GetPieceExtent(pieceCounter-1).Depth()+1)*
-                    (fr->GetPieceExtent(pieceCounter-1).Height()+1);
+                    (fr->GetPieceExtent(pieceCounter-1).Height()+1) * numComponents;
 
             float *data;
             if(f == VTKImageData::VTISOURCE_ASCII) {
@@ -844,7 +856,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
                         (const char*)(dataplus), min, max,
                         VTKImageData::DataArray::VTI_FLOAT,
                         name,
-                        1, pieceCounter-1); // TODO Use real ID AND NUMBER OF COMPONENTS!!
+                        numComponents, pieceCounter-1); // TODO Use real ID AND NUMBER OF COMPONENTS!!
 
 //                // DEBUG print texture values
 //                for (int i = 0; i < fr->GetPiecePointArraySize(0, 0); ++i) {
