@@ -360,4 +360,25 @@ inline __device__ float3 TransformToWorldSpace(float3 pos) { // TODO Renameand t
                        gridOrg_D.z + pos.z*gridDelta_D.z);
 }
 
+/**
+ * Checks whether a given WS position is inside the grid.
+ *
+ * @param pos The world space position
+ * @return 'True' if the position is inside the grid
+ */
+inline __device__ bool IsValidGridpos(float3 pos) {
+    /*printf("IsValidGridPos: %f %f %f\n", pos.X(), pos.Y(), pos.Z());
+    printf("Min %f %f %f\n", this->orgX, this->orgY, this->orgZ);
+    printf("Max %f %f %f\n", (this->orgX + (this->dimX-1)*this->spacingX),
+            (this->orgY + (this->dimY-1)*this->spacingY),
+            (this->orgZ + (this->dimZ-1)*this->spacingZ));*/
+    if (pos.x < gridOrg_D.x) return false;
+    if (pos.y < gridOrg_D.y) return false;
+    if (pos.z < gridOrg_D.z) return false;
+    if (pos.x >= (gridOrg_D.x + (gridSize_D.x-1)*gridDelta_D.x)) return false;
+    if (pos.y >= (gridOrg_D.y + (gridSize_D.y-1)*gridDelta_D.y)) return false;
+    if (pos.z >= (gridOrg_D.z + (gridSize_D.z-1)*gridDelta_D.z)) return false;
+    return true;
+}
+
 #endif // MMPROTEINPLUGIN_CUDAGRID_CUH_INCLUDED

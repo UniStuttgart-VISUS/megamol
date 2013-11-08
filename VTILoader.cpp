@@ -198,7 +198,7 @@ bool VTILoader::getData(core::Call& call) {
  */
 bool VTILoader::getExtent(core::Call& call) {
 
-    //printf("Getextent started\n");
+//    printf("Getextent started\n");
 
     using namespace vislib::sys;
 

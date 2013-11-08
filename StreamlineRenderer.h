@@ -23,9 +23,11 @@
 #include "VTIDataCall.h"
 #include "VBODataCall.h"
 #include "param/ParamSlot.h"
+#include "CUDAStreamlines.h"
+#include "vislib/GLSLGeometryShader.h"
+#include "vislib/GLSLShader.h"
 
 typedef vislib::math::Vector<int, 3> Vec3i;
-
 typedef unsigned int uint;
 
 namespace megamol {
@@ -80,27 +82,6 @@ protected:
     virtual bool create(void);
 
     /**
-     * Creates a vertex buffer object of size s
-     *
-     * @param vbo    The vertex buffer object
-     * @param size   The size of the vertex buffer object
-     * @param target The target enum, can either be GL_ARRAY_BUFFER or
-     *               GL_ELEMENT_ARRAY_BUFFER
-     *
-     * @return 'True' on success, 'false' otherwise
-     */
-    bool createVbo(GLuint* vbo, size_t s, GLuint target);
-
-    /**
-     * Destroys the vertex buffer object 'vbo'
-     *
-     * @param vbo    The vertex buffer object
-     * @param target The target enum, can either be GL_ARRAY_BUFFER or
-     *               GL_ELEMENT_ARRAY_BUFFER
-     */
-    void destroyVbo(GLuint* vbo, GLuint target);
-
-    /**
      * Implementation of 'release'.
      */
     virtual void release(void);
@@ -137,32 +118,17 @@ protected:
 private:
 
     /**
-     * Calculate the gradient field of the given volume data
+     * Fills up the seed point array based on given clipping plane z values
+     * and matching isovalues.
      *
-     * @return 'True' on success, 'false' otherwise
+     * @param vti                                 The data call with the density
+     *                                            values
+     * @param zClip0, zClip1, zClip2, zClip3      The clipping plane z values
+     * @param isoval0, isoval1, isoval2, isoval3  The iso values
      */
-    bool computeGradient(VTIDataCall *vtiCall);
-
-    /**
-     * Calculate the streamlines
-     *
-     * @return 'True' on success, 'false' otherwise
-     */
-    bool computeStreamlines(VBODataCall *vboCall, VTIDataCall *vtiCall);
-
-    /**
-     * Renders a streamline bundle around the manually set seed point.
-     *
-     * @return 'True' on success, 'false' otherwise
-     */
-    bool renderStreamlineBundleManual();
-
-    /**
-     * Renders a streamline bundle around the manually set seed point.
-     *
-     * @return 'True' on success, 'false' otherwise
-     */
-    bool renderStreamlines();
+    void genSeedPoints(VTIDataCall *vti,
+            float zClip0, float zClip1, float zClip2, float zClip3,
+            float isoval0, float isoval1, float isoval2, float isoval3);
 
     /**
      * Update all parameters and set boolean flags accordingly.
@@ -172,14 +138,15 @@ private:
 
     /* Data caller slots */
 
-    /// Caller slot for vertex data
-    megamol::core::CallerSlot vertexDataCallerSlot;
-
     /// Caller slot volume data
-    megamol::core::CallerSlot volumeDataCallerSlot;
+    megamol::core::CallerSlot fieldDataCallerSlot;
 
 
     /* Streamline integration parameters */
+
+    /// Parameter for streamline maximum steps
+    core::param::ParamSlot nStreamlinesSlot;
+    unsigned int nStreamlines;
 
     /// Parameter for streamline maximum steps
     core::param::ParamSlot streamlineMaxStepsSlot;
@@ -193,29 +160,29 @@ private:
     core::param::ParamSlot streamlineEpsSlot;
     float streamlineEps;
 
+    /// Parameter to set the trickness of the streamtubes
+    core::param::ParamSlot streamtubesThicknessSlot;
+    float streamtubesThickness;
+
+    /// Parameter for minimum color
+    core::param::ParamSlot minColSlot;
+    float minCol;
+
+    /// Parameter for maximum color
+    core::param::ParamSlot maxColSlot;
+    float maxCol;
+
 
     /* Field data */
-
-    /// The volume data (device memory)
-    CudaDevArr<float> scalarField_D;
-
-    /// The volumes gradient (device memory)
-    CudaDevArr<float> gradientField_D;
 
     /// The bounding boxes (union of both data sets)
     core::BoundingBoxes bbox;
 
+    /// The streamlines object
+    CUDAStreamlines strLines;
 
-    /* Streamline vertex positions */
-
-    /// Cuda graphics ressource associated with streamline vbo
-    struct cudaGraphicsResource *vboResource[2];
-
-    /// Vertex buffer object for triangle indices of surface #0
-    GLuint vbo;
-
-    // Current size of the vbo in byte
-    size_t vboSize;
+    /// Array with sedd points
+    vislib::Array<float> seedPoints;
 
 
     /* Boolean flags */
@@ -225,6 +192,15 @@ private:
 
     /// Triggers recomputation of the streamlines
     bool triggerComputeStreamlines;
+
+
+    /* Rendering */
+
+    // Shader for stream tubes
+    vislib::graphics::gl::GLSLGeometryShader tubeShader;
+
+    // Shader for illuminated streamlines
+    vislib::graphics::gl::GLSLGeometryShader illumShader;
 
 };
 

@@ -21,16 +21,20 @@
 
 #include "vislib/GLSLShader.h"
 #include "vislib/Cuboid.h"
+#include "vislib/Vector.h"
 
+#include "CoreInstance.h"
 #include "param/FloatParam.h"
 #include "param/IntParam.h"
 
 #include <cuda_gl_interop.h>
-
+#include <cstdlib>
 
 using namespace megamol;
 using namespace megamol::protein;
 using namespace megamol::core;
+
+typedef vislib::math::Vector<float, 3> Vec3f;
 
 
 /*
@@ -38,25 +42,28 @@ using namespace megamol::core;
  */
 StreamlineRenderer::StreamlineRenderer(void) : Renderer3DModuleDS(),
         /* Caller slots */
-        vertexDataCallerSlot("getVertexData", "Connects the renderer with the vertex data"),
-        volumeDataCallerSlot("getVolumeData", "Connects the renderer with the volume data"),
+        fieldDataCallerSlot("getFieldData", "Connects the renderer with the field data"),
         /* Streamline integration parameters */
+        nStreamlinesSlot("streamlines::nStreamlines", "Set the number of streamlines"),
         streamlineMaxStepsSlot("streamlines::nSteps", "Set the number of steps for streamline integration"),
         streamlineStepSlot("streamlines::step","Set stepsize for the streamline integration"),
         streamlineEpsSlot("streamlines::eps","Set epsilon for the termination of the streamline integration"),
-        vbo(0), vboSize(0),
+        streamtubesThicknessSlot("streamlines::tubesScl","The scale factor for the streamtubes thickness"),
+        minColSlot("streamlines::minCol","Minimum color value"),
+        maxColSlot("streamlines::maxCol","Maximum color value"),
         triggerComputeGradientField(true), triggerComputeStreamlines(true) {
 
-    // Data caller for vertex data
-    this->vertexDataCallerSlot.SetCompatibleCall<VBODataCallDescription>();
-    this->MakeSlotAvailable(&this->vertexDataCallerSlot);
-
     // Data caller for volume data
-    this->volumeDataCallerSlot.SetCompatibleCall<VTIDataCallDescription>();
-    this->MakeSlotAvailable(&this->volumeDataCallerSlot);
+    this->fieldDataCallerSlot.SetCompatibleCall<VTIDataCallDescription>();
+    this->MakeSlotAvailable(&this->fieldDataCallerSlot);
 
 
     /* Streamline integration parameters */
+
+    // Set the number of streamlines
+    this->nStreamlines = 10;
+    this->nStreamlinesSlot.SetParameter(new core::param::IntParam(this->nStreamlines, 0));
+    this->MakeSlotAvailable(&this->nStreamlinesSlot);
 
     // Set the number of steps for streamline integration
     this->streamlineMaxSteps = 10;
@@ -72,6 +79,21 @@ StreamlineRenderer::StreamlineRenderer(void) : Renderer3DModuleDS(),
     this->streamlineEps = 0.01f;
     this->streamlineEpsSlot.SetParameter(new core::param::FloatParam(this->streamlineEps, 0.0f));
     this->MakeSlotAvailable(&this->streamlineEpsSlot);
+
+    // Set the streamtubes thickness slot
+    this->streamtubesThickness = 1.0f;
+    this->streamtubesThicknessSlot.SetParameter(new core::param::FloatParam(this->streamtubesThickness, 0.0f));
+    this->MakeSlotAvailable(&this->streamtubesThicknessSlot);
+
+    // Set the streamtubes min color
+    this->minCol = -1.0f;
+    this->minColSlot.SetParameter(new core::param::FloatParam(this->minCol));
+    this->MakeSlotAvailable(&this->minColSlot);
+
+    // Set the streamtubes max color
+    this->maxCol = 1.0f;
+    this->maxColSlot.SetParameter(new core::param::FloatParam(this->maxCol));
+    this->MakeSlotAvailable(&this->maxColSlot);
 }
 
 
@@ -92,14 +114,79 @@ bool StreamlineRenderer::create(void) {
     using namespace vislib::graphics::gl;
 
     // Init extensions
-    if (!glh_init_extensions("\
-            GL_VERSION_2_0 GL_EXT_texture3D \
-            GL_EXT_framebuffer_object \
+    if (!glh_init_extensions(
+            "GL_ARB_vertex_shader \
+            GL_ARB_vertex_program \
+            GL_ARB_shader_objects \
+            GL_EXT_gpu_shader4 \
+            GL_EXT_geometry_shader4 \
+            GL_EXT_bindable_uniform \
+            GL_VERSION_2_0 \
             GL_ARB_draw_buffers \
+            GL_ARB_copy_buffer \
             GL_ARB_vertex_buffer_object")) {
         return false;
     }
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+        return false;
+    }
+    if (!vislib::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
+        return false;
+    }
+
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+    glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+    glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
+
+    ShaderSource vertSrc;
+    ShaderSource fragSrc;
+    ShaderSource geomSrc;
+
+    // Load the shader source for the tube shader
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::tube::vertex", vertSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::tube::geometry", geomSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for tube shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::tube::fragment", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
+        return false;
+    }
+    this->tubeShader.Compile(vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+    this->tubeShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT , GL_LINES_ADJACENCY);
+    this->tubeShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+    this->tubeShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+    if (!this->tubeShader.Link()) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to link the streamtube shader");
+        return false;
+    }
+
+    // Load the shader source for the illuminated streamlines
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::illuminated::vertex", vertSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for illuminated streamlines");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::illuminated::geometry", geomSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for illuminated streamlines");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::illuminated::fragment", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for illuminated streamlines");
+        return false;
+    }
+    this->illumShader.Compile(vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+
+    this->illumShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT , GL_LINES_ADJACENCY);
+    this->illumShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
+    this->illumShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+    if (!this->illumShader.Link()) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to link the illuminated streamlines shader");
         return false;
     }
 
@@ -107,35 +194,13 @@ bool StreamlineRenderer::create(void) {
 }
 
 
-/*
- * StreamlineRenderer::createVbo
- */
-bool StreamlineRenderer::createVbo(GLuint* vbo, size_t s, GLuint target) {
-    glGenBuffersARB(1, vbo);
-    glBindBufferARB(target, *vbo);
-    glBufferDataARB(target, s, 0, GL_DYNAMIC_DRAW);
-    glBindBufferARB(target, 0);
-    return CheckForGLError();
-}
-
-/*
- * ComparativeSurfacePotentialRenderer::destroyVbo
- */
-void StreamlineRenderer::destroyVbo(GLuint* vbo, GLuint target) {
-    glBindBufferARB(target, *vbo);
-    glDeleteBuffersARB(1, vbo);
-    *vbo = 0;
-    CheckForGLError();
-}
-
 
 /*
  * StreamlineRenderer::release
  */
 void StreamlineRenderer::release(void) {
-    if (!this->vbo) {
-        this->destroyVbo(&this->vbo, GL_ARRAY_BUFFER);
-    }
+    this->tubeShader.Release();
+    this->illumShader.Release();
 }
 
 
@@ -167,24 +232,9 @@ bool StreamlineRenderer::GetExtents(core::Call& call) {
         return false;
     }
 
-    if (cr3d == NULL) {
-        return false;
-    }
-
-    // Extent of vertex data
-
-    VBODataCall *vboCall = this->vertexDataCallerSlot.CallAs<VBODataCall>();
-    if (vboCall == NULL) {
-        return false;
-    }
-
-    if (!(*vboCall)(VBODataCall::CallForGetExtent)) {
-        return false;
-    }
-
     // Extent of volume data
 
-    VTIDataCall *vtiCall = this->volumeDataCallerSlot.CallAs<VTIDataCall>();
+    VTIDataCall *vtiCall = this->fieldDataCallerSlot.CallAs<VTIDataCall>();
     if (vtiCall == NULL) {
         return false;
     }
@@ -193,21 +243,23 @@ bool StreamlineRenderer::GetExtents(core::Call& call) {
          return false;
     }
 
-    // Unite both bounding boxes and make scaled worl bounding box
+    vtiCall->SetCalltime(cr3d->Time());
+    vtiCall->SetFrameID(static_cast<int>(cr3d->Time()));
+    if (!(*vtiCall)(VTIDataCall::CallForGetData)) {
+         return false;
+    }
 
-    vislib::math::Cuboid<float> tempBox0 = vboCall->GetBBox().ObjectSpaceBBox();
-    vislib::math::Cuboid<float> tempBox1(vtiCall->GetWholeExtent());
-    tempBox0.Union(tempBox1);
-    this->bbox.SetObjectSpaceBBox(tempBox0);
     float scale;
+    this->bbox.SetObjectSpaceBBox(vtiCall->GetWholeExtent());
     if(!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
         scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
     } else {
         scale = 1.0f;
     }
-    this->bbox.MakeScaledWorld(scale);
-    cr3d->AccessBoundingBoxes() = this->bbox;
-    cr3d->SetTimeFramesCount(std::min(vboCall->GetFrameCnt(), vtiCall->FrameCount()));
+    //this->bbox.MakeScaledWorld(scale);
+    cr3d->AccessBoundingBoxes() = vtiCall->AccessBoundingBoxes();
+    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
+    cr3d->SetTimeFramesCount(vtiCall->FrameCount());
 
     return true;
 }
@@ -226,7 +278,7 @@ bool StreamlineRenderer::Render(core::Call& call) {
         return false;
     }
 
-    VTIDataCall *vtiCall = this->volumeDataCallerSlot.CallAs<VTIDataCall>();
+    VTIDataCall *vtiCall = this->fieldDataCallerSlot.CallAs<VTIDataCall>();
     if (vtiCall == NULL) {
         return false;
     }
@@ -237,214 +289,172 @@ bool StreamlineRenderer::Render(core::Call& call) {
          return false;
     }
 
-    VBODataCall *vboCall = this->vertexDataCallerSlot.CallAs<VBODataCall>();
-    if (vboCall == NULL) {
-        return false;
-    }
 
-    // Get vertex data
-    if (!(*vboCall)(VTIDataCall::CallForGetData)) {
-         return false;
-    }
-
-    // (Re)compute gradient field if necessary
-    if (this->triggerComputeGradientField) {
-       if (!this->computeGradient(vtiCall)) {
-           return false;
-       }
-       this->triggerComputeGradientField = false;
-    }
+    float scale;
 
     // (Re)compute streamlines if necessary
     if (this->triggerComputeStreamlines) {
-        if (!this->computeStreamlines(vboCall, vtiCall)) {
+
+//        float posZ = vtiCall->GetOrigin().GetZ() + vtiCall->GetSpacing().GetZ()*1; // Start slightly above the lower boundary
+//        float xMax = vtiCall->GetOrigin().GetX() + vtiCall->GetSpacing().GetX()*(vtiCall->GetGridsize().GetX()-1);
+//        float yMax = vtiCall->GetOrigin().GetY() + vtiCall->GetSpacing().GetY()*(vtiCall->GetGridsize().GetY()-1);
+//        //float zMax = vtiCall->GetOrigin().GetZ() + vtiCall->GetSpacing().GetZ()*(vtiCall->GetGridsize().GetZ()-1);
+//        float xMin = vtiCall->GetOrigin().GetX();
+//        float yMin = vtiCall->GetOrigin().GetY();
+        //float zMin = vtiCall->GetOrigin().GetZ();
+
+//        printf("min %f %f %f, max %f %f %f\n",
+//                vtiCall->GetOrigin().GetX(),
+//                vtiCall->GetOrigin().GetY(),
+//                vtiCall->GetOrigin().GetZ(),
+//                xMax, yMax, zMax);
+
+//        // Initialize random seed
+//        srand (time(NULL));
+//        this->seedPoints.SetCount(0);
+//        for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
+//            Vec3f pos;
+//            pos.SetX(vtiCall->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
+//            pos.SetY(vtiCall->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
+//            pos.SetZ(posZ);
+////            printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
+//
+//            // Sample density value
+//            this->seedPoints.Add(pos.GetX());
+//            this->seedPoints.Add(pos.GetY());
+//            this->seedPoints.Add(pos.GetZ());
+//        }
+        this->genSeedPoints(vtiCall, 1.0, 2.0, 3.0, 4.0, 0.0, 0.2, 0.4, 0.6);
+
+//        for (int i = 0; i < this->seedPoints.Count()/3; ++i) {
+//            printf("*seedpoint #%i %f %f %f\n", i,
+//                    this->seedPoints.PeekElements()[i*3+0],
+//                    this->seedPoints.PeekElements()[i*3+1],
+//                    this->seedPoints.PeekElements()[i*3+2]);
+//        }
+
+        if (!this->strLines.InitStreamlines(this->streamlineMaxSteps, this->nStreamlines, CUDAStreamlines::FORWARD)) {
             return false;
         }
+
+        // Integrate streamlines
+        if (!this->strLines.IntegrateRK4(
+                this->seedPoints.PeekElements(),
+                this->streamlineStep,
+                (float*)vtiCall->GetPointDataByIdx(1, 0), // TODO Do not hardcode array
+                make_int3(vtiCall->GetGridsize().GetX(),
+                        vtiCall->GetGridsize().GetY(),
+                        vtiCall->GetGridsize().GetZ()),
+                make_float3(vtiCall->GetOrigin().GetX(),
+                        vtiCall->GetOrigin().GetY(),
+                        vtiCall->GetOrigin().GetZ()),
+                make_float3(vtiCall->GetSpacing().GetX(),
+                                vtiCall->GetSpacing().GetY(),
+                                vtiCall->GetSpacing().GetZ()))) {
+            return false;
+        }
+
+        // Sample the density field to the alpha component
+        if (!this->strLines.SampleScalarFieldToAlpha(
+                (float*)vtiCall->GetPointDataByIdx(0, 0), // TODO do not hardcode array
+                make_int3(vtiCall->GetGridsize().GetX(),
+                        vtiCall->GetGridsize().GetY(),
+                        vtiCall->GetGridsize().GetZ()),
+                        make_float3(vtiCall->GetOrigin().GetX(),
+                                vtiCall->GetOrigin().GetY(),
+                                vtiCall->GetOrigin().GetZ()),
+                                make_float3(vtiCall->GetSpacing().GetX(),
+                                        vtiCall->GetSpacing().GetY(),
+                                        vtiCall->GetSpacing().GetZ()))) {
+            return false;
+        }
+
+        // Set RGB color value
+//        if (!this->strLines.SetUniformRGBColor(make_float3(1.0, 0.0, 1.0))) {
+//            return false;
+//        }
+
+        if (!this->strLines.SampleVecFieldToRGB(
+                (float*)vtiCall->GetPointDataByIdx(1, 0), // TODO do not hardcode array
+                make_int3(vtiCall->GetGridsize().GetX(),
+                                        vtiCall->GetGridsize().GetY(),
+                                        vtiCall->GetGridsize().GetZ()),
+                                        make_float3(vtiCall->GetOrigin().GetX(),
+                                                vtiCall->GetOrigin().GetY(),
+                                                vtiCall->GetOrigin().GetZ()),
+                                                make_float3(vtiCall->GetSpacing().GetX(),
+                                                        vtiCall->GetSpacing().GetY(),
+                                                        vtiCall->GetSpacing().GetZ()))) {
+            return false;
+        }
+
         this->triggerComputeStreamlines = false;
     }
 
-    return true;
-}
 
+    glPushMatrix();
 
-/*
- * StreamlineRenderer::computeGradient
- */
-bool StreamlineRenderer::computeGradient(VTIDataCall *vtiCall) {
-
-    uint volSize = vtiCall->GetGridsize().X()*vtiCall->GetGridsize().Y()*
-            vtiCall->GetGridsize().Z();
-
-    // (Re)allocate device memory if necessary
-    if (!CudaSafeCall(this->scalarField_D.Validate(volSize))) {
-        return false;
+    // Compute scale factor and scale world
+    if( !vislib::math::IsEqual( this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
+        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
+    } else {
+        scale = 1.0f;
     }
-    if (!CudaSafeCall(this->gradientField_D.Validate(volSize*3))) {
-        return false;
-    }
+    glScalef( scale, scale, scale);
 
-    // Copy volume data to device memory
-    if (!CudaSafeCall(cudaMemcpy(
-            this->scalarField_D.Peek(),
-            (const void*)vtiCall->GetPointDataByIdx(0, 0),
-            sizeof(float)*volSize,
-            cudaMemcpyHostToDevice))) {
+
+    // Render streamlines
+    glDisable(GL_LINE_SMOOTH);
+    glColor3f(0.0f, 1.0f, 1.0f);
+
+    this->tubeShader.Enable();
+    glUniform1fARB(this->tubeShader.ParameterLocation("streamTubeThicknessScl"), this->streamtubesThickness);
+    glUniform1fARB(this->tubeShader.ParameterLocation("minColTexValue"), this->minCol); // TODO Parameter?
+    glUniform1fARB(this->tubeShader.ParameterLocation("maxColTexValue"), this->maxCol); // TODO Paremeter?
+
+    if (!this->strLines.RenderLineStrip()) {
         return false;
     }
 
-    // Init grid parameters
-    if (!CudaSafeCall(SetGridParams(
-            make_uint3(vtiCall->GetGridsize().X(),
-                    vtiCall->GetGridsize().Y(),
-                    vtiCall->GetGridsize().Z()),
-            make_float3(vtiCall->GetOrigin().X(),
-                    vtiCall->GetOrigin().Y(),
-                    vtiCall->GetOrigin().Z()),
-            make_float3(vtiCall->GetOrigin().X()+(vtiCall->GetGridsize().X()-1)*vtiCall->GetSpacing().X(),
-                        vtiCall->GetOrigin().Y()+(vtiCall->GetGridsize().Y()-1)*vtiCall->GetSpacing().Y(),
-                        vtiCall->GetOrigin().Z()+(vtiCall->GetGridsize().Z()-1)*vtiCall->GetSpacing().Z()),
-            make_float3(vtiCall->GetSpacing().X(),
-                        vtiCall->GetSpacing().Y(),
-                        vtiCall->GetSpacing().Z())))){
-        return false;
-    }
+    this->tubeShader.Disable();
 
-    // Init with zero and compute gradient
-    if (!CudaSafeCall(this->gradientField_D.Set(0x00))) {
-        return false;
-    }
-    if (!CudaSafeCall(CalcGradient(
-            this->scalarField_D.Peek(),
-            this->gradientField_D.Peek(),
-            volSize))) {
-        return false;
-    }
+    glPopMatrix();
 
     return true;
 }
 
 
 /*
- * StreamlineRenderer::computeStreamlines
+ * StreamlineRenderer::genSeedPoints
  */
-bool StreamlineRenderer::computeStreamlines(VBODataCall *vboCall, VTIDataCall *vtiCall) {
+void StreamlineRenderer::genSeedPoints(
+        VTIDataCall *vti,
+        float zClip0, float zClip1, float zClip2, float zClip3,
+        float isoval0, float isoval1, float isoval2, float isoval3) {
 
-    // Calculate the theoretically needed size for the vbo
-    size_t sizeVbo = vboCall->GetVertexCnt()*
-            this->streamlineMaxSteps*2*3*sizeof(float) +
-            3*sizeof(float); // This makes the cuda kernel less complicated
+    float posZ = vti->GetOrigin().GetZ() + vti->GetSpacing().GetZ()*1; // Start slightly above the lower boundary
+    float xMax = vti->GetOrigin().GetX() + vti->GetSpacing().GetX()*(vti->GetGridsize().GetX()-1);
+    float yMax = vti->GetOrigin().GetY() + vti->GetSpacing().GetY()*(vti->GetGridsize().GetY()-1);
+    //float zMax = vti->GetOrigin().GetZ() + vtiCall->GetSpacing().GetZ()*(vtiCall->GetGridsize().GetZ()-1);
+    float xMin = vti->GetOrigin().GetX();
+    float yMin = vti->GetOrigin().GetY();
 
-    // (Re)create vbo if necessary
-    if (sizeVbo > this->vboSize) {
-        if (!this->vbo) {
-            this->destroyVbo(&this->vbo, GL_ARRAY_BUFFER);
-        }
-        // Create empty vbo to hold data for the surface
-        if (!this->createVbo(&this->vbo, sizeVbo, GL_ARRAY_BUFFER)) {
-            return false;
-        }
+    // Initialize random seed
+    srand (time(NULL));
+    this->seedPoints.SetCount(0);
+    for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
+        Vec3f pos;
+        pos.SetX(vti->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
+        pos.SetY(vti->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
+        pos.SetZ(posZ);
+//            printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
 
-        // Register memory with CUDA
-        if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(&this->vboResource[0],
-                this->vbo,
-                cudaGraphicsMapFlagsNone))) {
-            return false;
-        }
-        this->vboSize = sizeVbo;
+        // Sample density value
+        this->seedPoints.Add(pos.GetX());
+        this->seedPoints.Add(pos.GetY());
+        this->seedPoints.Add(pos.GetZ());
     }
 
-    // Map both ressources
-//    this->vboResource[1] = *(vboCall->GetCudaRessourceHandle()); // <- TODO This causes stack overflow (?)
-//    if (!CudaSafeCall(cudaGraphicsMapResources(2, this->vboResource, 0))) {
-//        return false;
-//    }
-
-
-//    // Get mapped pointers to the vbos
-//    float *vboPt_D, *vboStreamlinesPt_D;
-//    size_t vboSize, vboStreamlinesSize;
-//    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
-//            reinterpret_cast<void**>(&vboPt_D), // The mapped pointer
-//            &vboSize,             // The size of the accessible data
-//            this->vboResource[0]))) {                   // The mapped resource
-//        return false;
-//    }
-//    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
-//            reinterpret_cast<void**>(&vboStreamlinesPt_D), // The mapped pointer
-//            &vboStreamlinesSize,             // The size of the accessible data
-//            this->vboResource[1]))) {                   // The mapped resource
-//        return false;
-//    }
-//
-//    // Init some const values
-//    if (!CudaSafeCall(SetStreamlineParams(this->streamlineStep, this->streamlineMaxSteps))) {
-//        return false;
-//    }
-//    if (!CudaSafeCall(SetNumberOfPos(vboCall->GetVertexCnt()))) {
-//        return false;
-//    }
-//    if (!CudaSafeCall(SetGridParams(
-//            make_uint3(vtiCall->GetGridsize().X(),
-//                    vtiCall->GetGridsize().Y(),
-//                    vtiCall->GetGridsize().Z()),
-//            make_float3(vtiCall->GetOrigin().X(),
-//                    vtiCall->GetOrigin().Y(),
-//                    vtiCall->GetOrigin().Z()),
-//            make_float3(vtiCall->GetOrigin().X()+(vtiCall->GetGridsize().X()-1)*vtiCall->GetSpacing().X(),
-//                        vtiCall->GetOrigin().Y()+(vtiCall->GetGridsize().Y()-1)*vtiCall->GetSpacing().Y(),
-//                        vtiCall->GetOrigin().Z()+(vtiCall->GetGridsize().Z()-1)*vtiCall->GetSpacing().Z()),
-//            make_float3(vtiCall->GetSpacing().X(),
-//                        vtiCall->GetSpacing().Y(),
-//                        vtiCall->GetSpacing().Z())))){
-//        return false;
-//    }
-//
-//    // Init positions
-//    if (!CudaSafeCall(cudaMemset((void*)vboStreamlinesPt_D, 0, sizeVbo))) {
-//        return false;
-//    }
-////    if (!CudaSafeCall(InitStartPos(
-////            vboPt_D,
-////            vboStreamlinesPt_D,
-////            vboCall->GetDataStride(),
-////            vboCall->GetDataOffsPosition(),
-////            vboCall->GetVertexCnt()))) {
-////        return false;
-////    }
-//    // Compute streamline using RK4
-//    for (uint i = 0; i < this->streamlineMaxSteps; ++i) {
-////        if (!CudaSafeCall(UpdateStreamlinePos(
-////                vboStreamlinesPt_D,
-////                this->gradientField_D.Peek(),
-////                vboCall->GetVertexCnt(),
-////                i))) {
-////            return false;
-////        }
-//    }
-//
-
-//    // Unmap both ressources
-//    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, this->vboResource, 0))) {
-//        return false;
-//    }
-
-    return true;
-}
-
-
-/*
- * StreamlineRenderer::renderStreamlineBundleManual
- */
-bool StreamlineRenderer::renderStreamlineBundleManual() {
-    return true;
-}
-
-
-/*
- * StreamlineRenderer::renderStreamlines
- */
-bool StreamlineRenderer::renderStreamlines() {
-    return true;
 }
 
 
@@ -454,6 +464,13 @@ bool StreamlineRenderer::renderStreamlines() {
 void StreamlineRenderer::updateParams() {
 
     /* Streamline integration parameters */
+
+    // Set the number of steps for streamline integration
+    if (this->nStreamlinesSlot.IsDirty()) {
+        this->nStreamlines = this->nStreamlinesSlot.Param<core::param::IntParam>()->Value();
+        this->nStreamlinesSlot.ResetDirty();
+        this->triggerComputeStreamlines = true;
+    }
 
     // Set the number of steps for streamline integration
     if (this->streamlineMaxStepsSlot.IsDirty()) {
@@ -474,6 +491,24 @@ void StreamlineRenderer::updateParams() {
         this->streamlineEps = this->streamlineEpsSlot.Param<core::param::FloatParam>()->Value();
         this->streamlineEpsSlot.ResetDirty();
         this->triggerComputeStreamlines = true;
+    }
+
+    // Set the streamtubes thickness slot
+    if (this->streamtubesThicknessSlot.IsDirty()) {
+        this->streamtubesThickness = this->streamtubesThicknessSlot.Param<core::param::FloatParam>()->Value();
+        this->streamtubesThicknessSlot.ResetDirty();
+    }
+
+    // Set minimum color value
+    if (this->minColSlot.IsDirty()) {
+        this->minCol = this->minColSlot.Param<core::param::FloatParam>()->Value();
+        this->minColSlot.ResetDirty();
+    }
+
+    // Set maximum color value
+    if (this->maxColSlot.IsDirty()) {
+        this->maxCol = this->maxColSlot.Param<core::param::FloatParam>()->Value();
+        this->maxColSlot.ResetDirty();
     }
 
 }
