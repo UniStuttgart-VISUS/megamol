@@ -37,6 +37,8 @@ class StreamlineRenderer : public core::view::Renderer3DModuleDS {
 
 public:
 
+    enum RenderModes {NONE=0, LINES, ILLUMINATED_LINES, TUBES};
+
     /** CTor */
     StreamlineRenderer(void);
 
@@ -115,20 +117,26 @@ protected:
      */
     virtual bool Render(core::Call& call);
 
+    /**
+     * Callback called when the clipping plane is requested.
+     *
+     * @param call The calling call
+     *
+     * @return 'true' on success
+     */
+    bool requestPlane(core::Call& call);
+
 private:
 
     /**
      * Fills up the seed point array based on given clipping plane z values
      * and matching isovalues.
      *
-     * @param vti                                 The data call with the density
-     *                                            values
-     * @param zClip0, zClip1, zClip2, zClip3      The clipping plane z values
-     * @param isoval0, isoval1, isoval2, isoval3  The iso values
+     * @param vti     The data call with the density values
+     * @param zClip   The clipping plane z values
+     * @param isoval  The iso values
      */
-    void genSeedPoints(VTIDataCall *vti,
-            float zClip0, float zClip1, float zClip2, float zClip3,
-            float isoval0, float isoval1, float isoval2, float isoval3);
+    void genSeedPoints(VTIDataCall *vti, float zClip, float isoval);
 
     /**
      * Samples the field at a given position using linear interpolation.
@@ -150,6 +158,9 @@ private:
     /// Caller slot volume data
     megamol::core::CallerSlot fieldDataCallerSlot;
 
+    /// Caller slot for clipping plane
+    megamol::core::CalleeSlot getClipPlaneSlot;
+
 
     /* Streamline integration parameters */
 
@@ -166,8 +177,19 @@ private:
     float streamlineStep;
 
     /// Parameter to set the epsilon for stream line terminations
-    core::param::ParamSlot streamlineEpsSlot;
-    float streamlineEps;
+    core::param::ParamSlot seedClipZSlot;
+    float seedClipZ;
+
+    /// Parameter to set the epsilon for stream line terminations
+    core::param::ParamSlot seedIsoSlot;
+    float seedIso;
+
+
+    /* Streamlines rendering parameters */
+
+    /// Parameter to set the trickness of the streamtubes
+    core::param::ParamSlot renderModeSlot;
+    RenderModes renderMode;
 
     /// Parameter to set the trickness of the streamtubes
     core::param::ParamSlot streamtubesThicknessSlot;
@@ -211,6 +233,11 @@ private:
     // Shader for illuminated streamlines
     vislib::graphics::gl::GLSLGeometryShader illumShader;
 
+    /// The uniform color for surface #1
+    static const Vec3f uniformColor;
+
+    /// Variable to store the last position of the clipping plane
+    vislib::math::Plane<float> clipPlane;
 };
 
 

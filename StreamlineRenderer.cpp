@@ -26,8 +26,10 @@
 #include "vislib/mathfunctions.h"
 
 #include "CoreInstance.h"
+#include "view/CallClipPlane.h"
 #include "param/FloatParam.h"
 #include "param/IntParam.h"
+#include "param/EnumParam.h"
 
 #include <cuda_gl_interop.h>
 #include <cstdlib>
@@ -37,6 +39,7 @@ using namespace megamol::protein;
 using namespace megamol::core;
 
 typedef vislib::math::Vector<float, 3> Vec3f;
+const Vec3f StreamlineRenderer::uniformColor = Vec3f(0.88f, 0.86f, 0.39f);
 
 
 /*
@@ -45,19 +48,28 @@ typedef vislib::math::Vector<float, 3> Vec3f;
 StreamlineRenderer::StreamlineRenderer(void) : Renderer3DModuleDS(),
         /* Caller slots */
         fieldDataCallerSlot("getFieldData", "Connects the renderer with the field data"),
+        getClipPlaneSlot("getClipPlane", "Provides the clip plane"),
         /* Streamline integration parameters */
-        nStreamlinesSlot("streamlines::nStreamlines", "Set the number of streamlines"),
-        streamlineMaxStepsSlot("streamlines::nSteps", "Set the number of steps for streamline integration"),
-        streamlineStepSlot("streamlines::step","Set stepsize for the streamline integration"),
-        streamlineEpsSlot("streamlines::eps","Set epsilon for the termination of the streamline integration"),
-        streamtubesThicknessSlot("streamlines::tubesScl","The scale factor for the streamtubes thickness"),
-        minColSlot("streamlines::minCol","Minimum color value"),
-        maxColSlot("streamlines::maxCol","Maximum color value"),
+        nStreamlinesSlot("nStreamlines", "Set the number of streamlines"),
+        streamlineMaxStepsSlot("nSteps", "Set the number of steps for streamline integration"),
+        streamlineStepSlot("step","Set stepsize for the streamline integration"),
+        seedClipZSlot("seedClipZ","Starting z value for the clipping plane"),
+        seedIsoSlot("seedIso","Iso value for the seed point"),
+        renderModeSlot("renderMode", "Set rendermode for the streamlines"),
+        streamtubesThicknessSlot("tubesScl","The scale factor for the streamtubes thickness"),
+        minColSlot("minCol","Minimum color value"),
+        maxColSlot("maxCol","Maximum color value"),
         triggerComputeGradientField(true), triggerComputeStreamlines(true) {
 
     // Data caller for volume data
     this->fieldDataCallerSlot.SetCompatibleCall<VTIDataCallDescription>();
     this->MakeSlotAvailable(&this->fieldDataCallerSlot);
+
+    // Data caller for clipping plane
+    view::CallClipPlaneDescription ccpd;
+    this->getClipPlaneSlot.SetCallback(ccpd.ClassName(), ccpd.FunctionName(0),
+        &StreamlineRenderer::requestPlane);
+    this->MakeSlotAvailable(&this->getClipPlaneSlot);
 
 
     /* Streamline integration parameters */
@@ -78,9 +90,26 @@ StreamlineRenderer::StreamlineRenderer(void) : Renderer3DModuleDS(),
     this->MakeSlotAvailable(&this->streamlineStepSlot);
 
     // Set the step size for streamline integration
-    this->streamlineEps = 0.01f;
-    this->streamlineEpsSlot.SetParameter(new core::param::FloatParam(this->streamlineEps, 0.0f));
-    this->MakeSlotAvailable(&this->streamlineEpsSlot);
+    this->seedClipZ = 0.5f;
+    this->seedClipZSlot.SetParameter(new core::param::FloatParam(this->seedClipZ, 0.0f));
+    this->MakeSlotAvailable(&this->seedClipZSlot);
+
+    // Set the step size for streamline integration
+    this->seedIso = 0.5f;
+    this->seedIsoSlot.SetParameter(new core::param::FloatParam(this->seedIso));
+    this->MakeSlotAvailable(&this->seedIsoSlot);
+
+
+    /* Streamline render parameters */
+
+    this->renderMode = NONE;
+    param::EnumParam *rm = new param::EnumParam(int(this->renderMode));
+    rm->SetTypePair(NONE, "None");
+    rm->SetTypePair(LINES, "Lines");
+    rm->SetTypePair(ILLUMINATED_LINES, "Illuminated lines" );
+    rm->SetTypePair(TUBES, "Stream tubes");
+    this->renderModeSlot << rm;
+    this->MakeSlotAvailable(&this->renderModeSlot);
 
     // Set the streamtubes thickness slot
     this->streamtubesThickness = 1.0f;
@@ -237,10 +266,6 @@ bool StreamlineRenderer::GetExtents(core::Call& call) {
     // Extent of volume data
 
     VTIDataCall *vtiCall = this->fieldDataCallerSlot.CallAs<VTIDataCall>();
-    if (vtiCall == NULL) {
-        return false;
-    }
-
     if (!(*vtiCall)(VTIDataCall::CallForGetExtent)) {
          return false;
     }
@@ -291,21 +316,18 @@ bool StreamlineRenderer::Render(core::Call& call) {
          return false;
     }
 
-
     float scale;
 
     // (Re)compute streamlines if necessary
     if (this->triggerComputeStreamlines) {
 
         float zHeight = (vtiCall->GetGridsize().GetZ()-1)*vtiCall->GetSpacing().GetZ();
-        this->genSeedPoints(vtiCall,
-                zHeight*0.1, zHeight*0.3, zHeight*0.5, zHeight*0.8, // clipping planes
-                0.3, 0.5, 0.7, 0.9); // Isovalues
+        this->genSeedPoints(vtiCall, zHeight*this->seedClipZ, this->seedIso); // Isovalues
 
         //printf("height: %f, clip %f %f %f %f\n", zHeight, zHeight*0.2, zHeight*0.4, zHeight*0.6,zHeight*0.8);
 
         if (!this->strLines.InitStreamlines(this->streamlineMaxSteps,
-                this->nStreamlines*4, CUDAStreamlines::BIDIRECTIONAL)) {
+                this->nStreamlines, CUDAStreamlines::BIDIRECTIONAL)) {
             return false;
         }
 
@@ -372,23 +394,35 @@ bool StreamlineRenderer::Render(core::Call& call) {
     } else {
         scale = 1.0f;
     }
-    glScalef( scale, scale, scale);
-
+    glScalef(scale, scale, scale);
 
     // Render streamlines
     glDisable(GL_LINE_SMOOTH);
     glColor3f(0.0f, 1.0f, 1.0f);
 
-    this->tubeShader.Enable();
-    glUniform1fARB(this->tubeShader.ParameterLocation("streamTubeThicknessScl"), this->streamtubesThickness);
-    glUniform1fARB(this->tubeShader.ParameterLocation("minColTexValue"), this->minCol); // TODO Parameter?
-    glUniform1fARB(this->tubeShader.ParameterLocation("maxColTexValue"), this->maxCol); // TODO Paremeter?
-
-    if (!this->strLines.RenderLineStrip()) {
-        return false;
+    if (this->renderMode == TUBES) {
+        this->tubeShader.Enable();
+        glUniform1fARB(this->tubeShader.ParameterLocation("streamTubeThicknessScl"), this->streamtubesThickness);
+        glUniform1fARB(this->tubeShader.ParameterLocation("minColTexValue"), this->minCol); // TODO Parameter?
+        glUniform1fARB(this->tubeShader.ParameterLocation("maxColTexValue"), this->maxCol); // TODO Paremeter?
+        if (!this->strLines.RenderLineStripWithColor()) {
+            return false;
+        }
+        this->tubeShader.Disable();
+    } else if (this->renderMode == LINES) {
+        glColor3f(StreamlineRenderer::uniformColor.GetX(),
+                StreamlineRenderer::uniformColor.GetY(),
+                StreamlineRenderer::uniformColor.GetZ());
+        if (!this->strLines.RenderLineStrip()) {
+            return false;
+        }
+    } else if (this->renderMode == ILLUMINATED_LINES) {
+        this->illumShader.Enable();
+        if (!this->strLines.RenderLineStripWithColor()) {
+            return false;
+        }
+        this->illumShader.Disable();
     }
-
-    this->tubeShader.Disable();
 
     glPopMatrix();
 
@@ -400,21 +434,10 @@ bool StreamlineRenderer::Render(core::Call& call) {
  * StreamlineRenderer::genSeedPoints
  */
 void StreamlineRenderer::genSeedPoints(
-        VTIDataCall *vti,
-        float zClip0, float zClip1, float zClip2, float zClip3,
-        float isoval0, float isoval1, float isoval2, float isoval3) {
+        VTIDataCall *vti, float zClip, float isoval) {
 
 
-    float posZ[4];
-    posZ[0]= vti->GetOrigin().GetZ() + zClip0; // Start above the lower boundary
-    posZ[1]= vti->GetOrigin().GetZ() + zClip1; // Start above the lower boundary
-    posZ[2]= vti->GetOrigin().GetZ() + zClip2; // Start above the lower boundary
-    posZ[3]= vti->GetOrigin().GetZ() + zClip3; // Start above the lower boundary
-
-
-//    printf("clip %f %f %f %f\n", zClip0, zClip1, zClip2, zClip3);
-
-
+    float posZ= vti->GetOrigin().GetZ() + zClip; // Start above the lower boundary
 
     float xMax = vti->GetOrigin().GetX() + vti->GetSpacing().GetX()*(vti->GetGridsize().GetX()-1);
     float yMax = vti->GetOrigin().GetY() + vti->GetSpacing().GetY()*(vti->GetGridsize().GetY()-1);
@@ -430,81 +453,20 @@ void StreamlineRenderer::genSeedPoints(
         Vec3f pos;
         pos.SetX(vti->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
         pos.SetY(vti->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
-        pos.SetZ(posZ[0]);
-//            printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
+        pos.SetZ(posZ);
+        //printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
 
         float sample = this->sampleFieldAtPosTrilin(
                 vti, make_float3(pos.GetX(),
                         pos.GetY(), pos.GetZ()), (float*)vti->GetPointDataByIdx(0, 0));
 
         // Sample density value
-        if (vislib::math::Abs(sample - isoval0) < 0.05) {
+        if (vislib::math::Abs(sample - isoval) < 0.05) {
             this->seedPoints.Add(pos.GetX());
             this->seedPoints.Add(pos.GetY());
             this->seedPoints.Add(pos.GetZ());
         }
     }
-
-    //for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
-    while (this->seedPoints.Count()/3 < 2*this->nStreamlines) {
-        Vec3f pos;
-        pos.SetX(vti->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
-        pos.SetY(vti->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
-        pos.SetZ(posZ[1]);
-//            printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
-
-        float sample = this->sampleFieldAtPosTrilin(
-                vti, make_float3(pos.GetX(),
-                        pos.GetY(), pos.GetZ()), (float*)vti->GetPointDataByIdx(0, 0));
-
-        // Sample density value
-        if (vislib::math::Abs(sample - isoval1) < 0.05) {
-            this->seedPoints.Add(pos.GetX());
-            this->seedPoints.Add(pos.GetY());
-            this->seedPoints.Add(pos.GetZ());
-        }
-    }
-
-    //for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
-    while (this->seedPoints.Count()/3 < 3*this->nStreamlines) {
-        Vec3f pos;
-        pos.SetX(vti->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
-        pos.SetY(vti->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
-        pos.SetZ(posZ[2]);
-//            printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
-
-        float sample = this->sampleFieldAtPosTrilin(
-                vti, make_float3(pos.GetX(),
-                        pos.GetY(), pos.GetZ()), (float*)vti->GetPointDataByIdx(0, 0));
-
-        // Sample density value
-        if (vislib::math::Abs(sample - isoval2) < 0.05) {
-            this->seedPoints.Add(pos.GetX());
-            this->seedPoints.Add(pos.GetY());
-            this->seedPoints.Add(pos.GetZ());
-        }
-    }
-
-    //for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
-    while (this->seedPoints.Count()/3 < 4*this->nStreamlines) {
-        Vec3f pos;
-        pos.SetX(vti->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
-        pos.SetY(vti->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
-        pos.SetZ(posZ[3]);
-//            printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
-
-        float sample = this->sampleFieldAtPosTrilin(
-                vti, make_float3(pos.GetX(),
-                        pos.GetY(), pos.GetZ()), (float*)vti->GetPointDataByIdx(0, 0));
-
-        // Sample density value
-        if (vislib::math::Abs(sample - isoval3) < 0.05) {
-            this->seedPoints.Add(pos.GetX());
-            this->seedPoints.Add(pos.GetY());
-            this->seedPoints.Add(pos.GetZ());
-        }
-    }
-
 }
 
 
@@ -559,6 +521,24 @@ float StreamlineRenderer::sampleFieldAtPosTrilin(VTIDataCall *vtiCall, float3 po
 
 
 /*
+ * StreamlineRenderer::requestPlane
+ */
+bool StreamlineRenderer::requestPlane(Call& call) {
+    view::CallClipPlane *ccp = dynamic_cast<view::CallClipPlane*>(&call);
+
+    if (ccp == NULL) return false;
+
+    this->clipPlane.Set(vislib::math::Point<float, 3>(0.0, 0.0, this->seedClipZ), Vec3f(0.0, 0.0, 1.0));
+    this->clipPlane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f));
+
+    ccp->SetColour(0.0, 0.0, 0.0, 0.0);
+    ccp->SetPlane(this->clipPlane);
+
+    return true;
+}
+
+
+/*
  * StreamlineRenderer::updateParams
  */
 void StreamlineRenderer::updateParams() {
@@ -587,10 +567,27 @@ void StreamlineRenderer::updateParams() {
     }
 
     // Set the epsilon for the streamline termination
-    if (this->streamlineEpsSlot.IsDirty()) {
-        this->streamlineEps = this->streamlineEpsSlot.Param<core::param::FloatParam>()->Value();
-        this->streamlineEpsSlot.ResetDirty();
+    if (this->seedClipZSlot.IsDirty()) {
+        this->seedClipZ = this->seedClipZSlot.Param<core::param::FloatParam>()->Value();
+        this->seedClipZSlot.ResetDirty();
         this->triggerComputeStreamlines = true;
+    }
+
+    // Set the epsilon for the streamline termination
+    if (this->seedIsoSlot.IsDirty()) {
+        this->seedIso = this->seedIsoSlot.Param<core::param::FloatParam>()->Value();
+        this->seedIsoSlot.ResetDirty();
+        this->triggerComputeStreamlines = true;
+    }
+
+
+    /* Streamlines render mode */
+
+    // parameter refresh
+    if (this->renderModeSlot.IsDirty()) {
+        this->renderMode =
+                static_cast<RenderModes>(int(this->renderModeSlot.Param<param::EnumParam>()->Value()));
+        this->renderModeSlot.ResetDirty();
     }
 
     // Set the streamtubes thickness slot

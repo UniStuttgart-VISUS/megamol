@@ -79,6 +79,14 @@ public:
     bool RenderLineStrip();
 
     /**
+     * Render the streamlines using GL_Line_Strip, while setting the color
+     * pointer.
+     *
+     * @return 'True' on success, 'false' otherwise
+     */
+    bool RenderLineStripWithColor();
+
+    /**
      * Samples a given scalar field and stores the value in the alpha component
      * of the RGBA color value in the VBO.
      *
