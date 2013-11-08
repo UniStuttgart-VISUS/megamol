@@ -2,7 +2,7 @@
 <btf type="MegaMolGLSLShader" version="1.0" namespace="protein">
   <include file="common"/>
   <include file="colormaps"/>
-  <include file="electrostatics"/>
+  <!--<include file="electrostatics"/>-->
 
   <snippet name="commondefines" type="string">
     <!-- 
