@@ -444,6 +444,34 @@ bool CUDAStreamlines::RenderLineStrip() {
     glBindBufferARB(GL_ARRAY_BUFFER, this->lineStripVBO);
 
     glEnableClientState(GL_VERTEX_ARRAY);
+    ::CheckForGLError();
+
+    // Draw stream lines using the line strip buffer
+    for (int cnt = 0; cnt < this->nStreamlines; ++cnt) {
+        int offs = cnt*CUDAStreamlines::vboStride*(this->nSegments+1)*sizeof(float);
+        glVertexPointer(3, GL_FLOAT,
+                CUDAStreamlines::vboStride*sizeof(float),
+                (const GLvoid*)((long int)(offs))); // last param is offset, not ptr
+
+        glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, this->nSegments+1);
+        ::CheckForGLError(); // OpenGL error check
+    }
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glBindBufferARB(GL_ARRAY_BUFFER, 0);
+
+    return ::CheckForGLError();
+}
+
+
+/*
+ * CUDAStreamlines::RenderLineStripWithColor
+ */
+bool CUDAStreamlines::RenderLineStripWithColor() {
+
+    glBindBufferARB(GL_ARRAY_BUFFER, this->lineStripVBO);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     ::CheckForGLError();
 
