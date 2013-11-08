@@ -131,6 +131,15 @@ private:
             float isoval0, float isoval1, float isoval2, float isoval3);
 
     /**
+     * Samples the field at a given position using linear interpolation.
+     *
+     * @param The data call with the grid information
+     * @param pos The position
+     * @return The sampled value of the field
+     */
+    float sampleFieldAtPosTrilin(VTIDataCall *vtiCall, float3 pos, float *field_D);
+
+    /**
      * Update all parameters and set boolean flags accordingly.
      */
     void updateParams();

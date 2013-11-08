@@ -18,10 +18,12 @@
 #include "cuda_error_check.h"
 #include "ogl_error_check.h"
 #include "CUDAFieldTopology.cuh"
+#include "Interpol.h"
 
 #include "vislib/GLSLShader.h"
 #include "vislib/Cuboid.h"
 #include "vislib/Vector.h"
+#include "vislib/mathfunctions.h"
 
 #include "CoreInstance.h"
 #include "param/FloatParam.h"
@@ -295,45 +297,15 @@ bool StreamlineRenderer::Render(core::Call& call) {
     // (Re)compute streamlines if necessary
     if (this->triggerComputeStreamlines) {
 
-//        float posZ = vtiCall->GetOrigin().GetZ() + vtiCall->GetSpacing().GetZ()*1; // Start slightly above the lower boundary
-//        float xMax = vtiCall->GetOrigin().GetX() + vtiCall->GetSpacing().GetX()*(vtiCall->GetGridsize().GetX()-1);
-//        float yMax = vtiCall->GetOrigin().GetY() + vtiCall->GetSpacing().GetY()*(vtiCall->GetGridsize().GetY()-1);
-//        //float zMax = vtiCall->GetOrigin().GetZ() + vtiCall->GetSpacing().GetZ()*(vtiCall->GetGridsize().GetZ()-1);
-//        float xMin = vtiCall->GetOrigin().GetX();
-//        float yMin = vtiCall->GetOrigin().GetY();
-        //float zMin = vtiCall->GetOrigin().GetZ();
+        float zHeight = (vtiCall->GetGridsize().GetZ()-1)*vtiCall->GetSpacing().GetZ();
+        this->genSeedPoints(vtiCall,
+                zHeight*0.1, zHeight*0.3, zHeight*0.5, zHeight*0.8, // clipping planes
+                0.3, 0.5, 0.7, 0.9); // Isovalues
 
-//        printf("min %f %f %f, max %f %f %f\n",
-//                vtiCall->GetOrigin().GetX(),
-//                vtiCall->GetOrigin().GetY(),
-//                vtiCall->GetOrigin().GetZ(),
-//                xMax, yMax, zMax);
+        //printf("height: %f, clip %f %f %f %f\n", zHeight, zHeight*0.2, zHeight*0.4, zHeight*0.6,zHeight*0.8);
 
-//        // Initialize random seed
-//        srand (time(NULL));
-//        this->seedPoints.SetCount(0);
-//        for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
-//            Vec3f pos;
-//            pos.SetX(vtiCall->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
-//            pos.SetY(vtiCall->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
-//            pos.SetZ(posZ);
-////            printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
-//
-//            // Sample density value
-//            this->seedPoints.Add(pos.GetX());
-//            this->seedPoints.Add(pos.GetY());
-//            this->seedPoints.Add(pos.GetZ());
-//        }
-        this->genSeedPoints(vtiCall, 1.0, 2.0, 3.0, 4.0, 0.0, 0.2, 0.4, 0.6);
-
-//        for (int i = 0; i < this->seedPoints.Count()/3; ++i) {
-//            printf("*seedpoint #%i %f %f %f\n", i,
-//                    this->seedPoints.PeekElements()[i*3+0],
-//                    this->seedPoints.PeekElements()[i*3+1],
-//                    this->seedPoints.PeekElements()[i*3+2]);
-//        }
-
-        if (!this->strLines.InitStreamlines(this->streamlineMaxSteps, this->nStreamlines, CUDAStreamlines::FORWARD)) {
+        if (!this->strLines.InitStreamlines(this->streamlineMaxSteps,
+                this->nStreamlines*4, CUDAStreamlines::BIDIRECTIONAL)) {
             return false;
         }
 
@@ -432,7 +404,18 @@ void StreamlineRenderer::genSeedPoints(
         float zClip0, float zClip1, float zClip2, float zClip3,
         float isoval0, float isoval1, float isoval2, float isoval3) {
 
-    float posZ = vti->GetOrigin().GetZ() + vti->GetSpacing().GetZ()*1; // Start slightly above the lower boundary
+
+    float posZ[4];
+    posZ[0]= vti->GetOrigin().GetZ() + zClip0; // Start above the lower boundary
+    posZ[1]= vti->GetOrigin().GetZ() + zClip1; // Start above the lower boundary
+    posZ[2]= vti->GetOrigin().GetZ() + zClip2; // Start above the lower boundary
+    posZ[3]= vti->GetOrigin().GetZ() + zClip3; // Start above the lower boundary
+
+
+//    printf("clip %f %f %f %f\n", zClip0, zClip1, zClip2, zClip3);
+
+
+
     float xMax = vti->GetOrigin().GetX() + vti->GetSpacing().GetX()*(vti->GetGridsize().GetX()-1);
     float yMax = vti->GetOrigin().GetY() + vti->GetSpacing().GetY()*(vti->GetGridsize().GetY()-1);
     //float zMax = vti->GetOrigin().GetZ() + vtiCall->GetSpacing().GetZ()*(vtiCall->GetGridsize().GetZ()-1);
@@ -442,19 +425,136 @@ void StreamlineRenderer::genSeedPoints(
     // Initialize random seed
     srand (time(NULL));
     this->seedPoints.SetCount(0);
-    for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
+    //for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
+    while (this->seedPoints.Count()/3 < this->nStreamlines) {
         Vec3f pos;
         pos.SetX(vti->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
         pos.SetY(vti->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
-        pos.SetZ(posZ);
+        pos.SetZ(posZ[0]);
 //            printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
 
+        float sample = this->sampleFieldAtPosTrilin(
+                vti, make_float3(pos.GetX(),
+                        pos.GetY(), pos.GetZ()), (float*)vti->GetPointDataByIdx(0, 0));
+
         // Sample density value
-        this->seedPoints.Add(pos.GetX());
-        this->seedPoints.Add(pos.GetY());
-        this->seedPoints.Add(pos.GetZ());
+        if (vislib::math::Abs(sample - isoval0) < 0.05) {
+            this->seedPoints.Add(pos.GetX());
+            this->seedPoints.Add(pos.GetY());
+            this->seedPoints.Add(pos.GetZ());
+        }
     }
 
+    //for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
+    while (this->seedPoints.Count()/3 < 2*this->nStreamlines) {
+        Vec3f pos;
+        pos.SetX(vti->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
+        pos.SetY(vti->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
+        pos.SetZ(posZ[1]);
+//            printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
+
+        float sample = this->sampleFieldAtPosTrilin(
+                vti, make_float3(pos.GetX(),
+                        pos.GetY(), pos.GetZ()), (float*)vti->GetPointDataByIdx(0, 0));
+
+        // Sample density value
+        if (vislib::math::Abs(sample - isoval1) < 0.05) {
+            this->seedPoints.Add(pos.GetX());
+            this->seedPoints.Add(pos.GetY());
+            this->seedPoints.Add(pos.GetZ());
+        }
+    }
+
+    //for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
+    while (this->seedPoints.Count()/3 < 3*this->nStreamlines) {
+        Vec3f pos;
+        pos.SetX(vti->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
+        pos.SetY(vti->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
+        pos.SetZ(posZ[2]);
+//            printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
+
+        float sample = this->sampleFieldAtPosTrilin(
+                vti, make_float3(pos.GetX(),
+                        pos.GetY(), pos.GetZ()), (float*)vti->GetPointDataByIdx(0, 0));
+
+        // Sample density value
+        if (vislib::math::Abs(sample - isoval2) < 0.05) {
+            this->seedPoints.Add(pos.GetX());
+            this->seedPoints.Add(pos.GetY());
+            this->seedPoints.Add(pos.GetZ());
+        }
+    }
+
+    //for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
+    while (this->seedPoints.Count()/3 < 4*this->nStreamlines) {
+        Vec3f pos;
+        pos.SetX(vti->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
+        pos.SetY(vti->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
+        pos.SetZ(posZ[3]);
+//            printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
+
+        float sample = this->sampleFieldAtPosTrilin(
+                vti, make_float3(pos.GetX(),
+                        pos.GetY(), pos.GetZ()), (float*)vti->GetPointDataByIdx(0, 0));
+
+        // Sample density value
+        if (vislib::math::Abs(sample - isoval3) < 0.05) {
+            this->seedPoints.Add(pos.GetX());
+            this->seedPoints.Add(pos.GetY());
+            this->seedPoints.Add(pos.GetZ());
+        }
+    }
+
+}
+
+
+/*
+ * StreamlineRenderer::sampleFieldAtPosTrilin
+ */
+float StreamlineRenderer::sampleFieldAtPosTrilin(VTIDataCall *vtiCall, float3 pos, float *field_D) {
+
+    int3 c;
+    float3 f;
+
+    int3 gridSize_D = make_int3(vtiCall->GetGridsize().GetX(),
+            vtiCall->GetGridsize().GetY(),
+            vtiCall->GetGridsize().GetZ());
+    float3 gridOrg_D =  make_float3(vtiCall->GetOrigin().GetX(),
+            vtiCall->GetOrigin().GetY(),
+            vtiCall->GetOrigin().GetZ());
+    float3 gridDelta_D = make_float3(vtiCall->GetSpacing().GetX(),
+            vtiCall->GetSpacing().GetY(),
+            vtiCall->GetSpacing().GetZ());
+
+    // Get id of the cell containing the given position and interpolation
+    // coefficients
+    f.x = (pos.x-gridOrg_D.x)/gridDelta_D.x;
+    f.y = (pos.y-gridOrg_D.y)/gridDelta_D.y;
+    f.z = (pos.z-gridOrg_D.z)/gridDelta_D.z;
+    c.x = (int)(f.x);
+    c.y = (int)(f.y);
+    c.z = (int)(f.z);
+    f.x = f.x-(float)c.x; // alpha
+    f.y = f.y-(float)c.y; // beta
+    f.z = f.z-(float)c.z; // gamma
+
+    c.x = vislib::math::Clamp(c.x, int(0), gridSize_D.x-2);
+    c.y = vislib::math::Clamp(c.y, int(0), gridSize_D.y-2);
+    c.z = vislib::math::Clamp(c.z, int(0), gridSize_D.z-2);
+
+    // Get values at corners of current cell
+    float s[8];
+    s[0] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+0) + (c.y+0))+c.x+0];
+    s[1] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+0) + (c.y+0))+c.x+1];
+    s[2] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+0) + (c.y+1))+c.x+0];
+    s[3] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+0) + (c.y+1))+c.x+1];
+    s[4] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+0))+c.x+0];
+    s[5] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+0))+c.x+1];
+    s[6] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+1))+c.x+0];
+    s[7] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+1))+c.x+1];
+
+    // Use trilinear interpolation to sample the volume
+   return Interpol::Trilin(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], f.x, f.y, f.z);
 }
 
 
