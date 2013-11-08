@@ -391,6 +391,9 @@
     <ClCompile Include="VolumeDirectionRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LayeredIsosurfaceRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSpline.h">
@@ -799,6 +802,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CUDAStreamlines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LayeredIsosurfaceRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
