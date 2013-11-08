@@ -137,6 +137,12 @@ namespace protein {
         core::param::ParamSlot zResParam;
         unsigned int zRes;
         unsigned int arrowCount;
+        /** arrow lenght scale parameter slots */
+        core::param::ParamSlot lengthScaleParam;
+        /** lenght filter param slot */
+        core::param::ParamSlot lengthFilterParam;
+        /** lenght filter param slot */
+        core::param::ParamSlot minDensityFilterParam;
 
         /** camera information */
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
@@ -151,7 +157,14 @@ namespace protein {
         vislib::Array<float> vertexArray;
         vislib::Array<float> colorArray;
         vislib::Array<float> dirArray;
-
+        float minC, maxC;
+        
+        /** The call for Transfer function */
+        megamol::core::CallerSlot getTFSlot;
+        
+        /** A simple black-to-white transfer function texture as fallback */
+        unsigned int greyTF;
+        
     };
 
 

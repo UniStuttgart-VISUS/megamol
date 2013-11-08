@@ -724,6 +724,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CUDAKernels.h" />
     <ClInclude Include="CUDAMarchingCubes.h" />
     <ClInclude Include="CUDAQuickSurf.h" />
+    <ClInclude Include="CUDAStreamlines.h" />
     <ClInclude Include="cuda_helper.h" />
     <ClInclude Include="DataWriter.h" />
     <ClInclude Include="DeformableGPUSurfaceMT.h" />
@@ -994,6 +995,12 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <Defines Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">WIN32;_WIN32</Defines>
       <Defines Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">_DEBUG;WIN32;_WIN32</Defines>
       <Defines Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">WIN32;_WIN32</Defines>
+    </CudaCompile>
+    <CudaCompile Include="CUDAStreamlines.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="DeformableGPUSurfaceMT.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>

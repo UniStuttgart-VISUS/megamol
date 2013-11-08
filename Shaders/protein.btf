@@ -2,7 +2,7 @@
 <btf type="MegaMolGLSLShader" version="1.0" namespace="protein">
   <include file="common"/>
   <include file="colormaps"/>
-  <!--<include file="electrostatics"/>-->
+  <include file="electrostatics"/>
 
   <snippet name="commondefines" type="string">
     <!-- 
@@ -764,6 +764,7 @@ if(puxels_use != 0)
 #endif
 
     //gl_FragColor.rgb = normal;
+    //gl_FragColor.rgb = lightPos.xyz;
 }
 -->
       </snippet>
@@ -3438,8 +3439,6 @@ void main(void) {
 #ifndef CLIP
     }
 #endif // CLIP
-
-//    gl_FragColor.rgb *= ;
 
 #endif // DEPTH
 

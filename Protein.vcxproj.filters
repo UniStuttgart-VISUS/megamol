@@ -798,6 +798,9 @@
     <ClInclude Include="VolumeDirectionRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CUDAStreamlines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="common.mk">
@@ -916,6 +919,9 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="DeformableGPUSurfaceMT.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDAStreamlines.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
   </ItemGroup>
