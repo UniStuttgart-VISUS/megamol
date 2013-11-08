@@ -387,6 +387,7 @@ bool VolumeDirectionRenderer::Render(Call& call) {
     
     // unlock the current frame
     vti->Unlock();
+    glPopMatrix();
     return true;
 }
 

@@ -605,6 +605,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="GROLoader.cpp" />
     <ClCompile Include="HapticsMoleculeRenderer.cpp" />
+    <ClCompile Include="LayeredIsosurfaceRenderer.cpp" />
     <ClCompile Include="LinkedView3D.cpp" />
     <ClCompile Include="MappableCategoryFloat.cpp" />
     <ClCompile Include="MappableFloatPair.cpp" />
@@ -749,6 +750,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="GROLoader.h" />
     <ClInclude Include="HapticsMoleculeRenderer.h" />
     <ClInclude Include="BindingSiteDataSource.h" />
+    <ClInclude Include="LayeredIsosurfaceRenderer.h" />
     <ClInclude Include="LIC.h" />
     <ClInclude Include="LinkedView3D.h" />
     <ClInclude Include="MappableCategoryFloat.h" />
