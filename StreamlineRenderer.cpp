@@ -277,7 +277,8 @@ bool StreamlineRenderer::GetExtents(core::Call& call) {
     }
 
     float scale;
-    this->bbox.SetObjectSpaceBBox(vtiCall->GetWholeExtent());
+    //this->bbox.SetObjectSpaceBBox(vtiCall->GetWholeExtent());
+    this->bbox.SetObjectSpaceBBox(vtiCall->AccessBoundingBoxes().ObjectSpaceBBox());
     if(!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
         scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
     } else {
@@ -528,7 +529,7 @@ bool StreamlineRenderer::requestPlane(Call& call) {
 
     if (ccp == NULL) return false;
 
-    this->clipPlane.Set(vislib::math::Point<float, 3>(0.0, 0.0, this->seedClipZ), Vec3f(0.0, 0.0, 1.0));
+    this->clipPlane.Set(vislib::math::Point<float, 3>(0.0, 0.0, this->seedClipZ * this->bbox.ObjectSpaceBBox().Depth()), Vec3f(0.0, 0.0, 1.0));
     this->clipPlane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f));
 
     ccp->SetColour(0.0, 0.0, 0.0, 0.0);
