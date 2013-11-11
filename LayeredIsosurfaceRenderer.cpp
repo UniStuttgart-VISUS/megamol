@@ -294,16 +294,17 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
 
     BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
     bbox.SetObjectSpaceBBox(boundingBox);
-    bbox.SetWorldSpaceBBox(
-        (boundingBox.Left() + xoff) * scale,
-        (boundingBox.Bottom() + yoff) * scale,
-        (boundingBox.Back() + zoff) * scale,
-        (boundingBox.Right() + xoff) * scale,
-        (boundingBox.Top() + yoff) * scale,
-        (boundingBox.Front() + zoff) * scale);
+//    bbox.SetWorldSpaceBBox(
+//        (boundingBox.Left() + xoff) * scale,
+//        (boundingBox.Bottom() + yoff) * scale,
+//        (boundingBox.Back() + zoff) * scale,
+//        (boundingBox.Right() + xoff) * scale,
+//        (boundingBox.Top() + yoff) * scale,
+//        (boundingBox.Front() + zoff) * scale);
+    bbox.SetWorldSpaceBBox(boundingBox);
     bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
     bbox.SetWorldSpaceClipBox(bbox.WorldSpaceBBox());
-    //bbox.MakeScaledWorld( scale);
+    bbox.MakeScaledWorld( scale);
 
     // get the pointer to CallRender3D (protein renderer)
     view::CallRender3D *rencr3d = this->rendererCallerSlot.CallAs<view::CallRender3D>();
@@ -381,15 +382,33 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
     this->opaqueFBO.Enable();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Apply scaling based on combined bounding box
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    float scale;
+    if (!vislib::math::IsEqual(cr3d->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
+        scale = 2.0f/cr3d->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    } else {
+        scale = 1.0f;
+    }
+    glScalef(scale, scale, scale);
+
     // TODO
     // get the pointer to CallRender3D (protein renderer)
     view::CallRender3D *rencr3d = this->rendererCallerSlot.CallAs<view::CallRender3D>();
     if (rencr3d) {
-        // setup and call protein renderer
+        rencr3d->SetCameraParameters(cr3d->GetCameraParameters());
         glPushMatrix();
-        glTranslatef(this->renTranslate.X(), this->renTranslate.Y(), this->renTranslate.Z());
-        //glScalef(this->renScale, this->renScale, this->renScale);
-        *rencr3d = *cr3d;
+        // Revert scaling done by external renderer in advance
+        float scaleRevert;
+        if (!vislib::math::IsEqual(rencr3d->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
+            scaleRevert = 2.0f/rencr3d->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        } else {
+            scaleRevert = 1.0f;
+        }
+        scaleRevert = 1.0f/scaleRevert;
+        glScalef(scaleRevert, scaleRevert, scaleRevert);
+        //*rencr3d = *cr3d;
         rencr3d->SetOutputBuffer(&this->opaqueFBO); // TODO: Handle incoming buffers!
         (*rencr3d)();
         glPopMatrix();
@@ -419,6 +438,8 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
         retval = this->RenderVolumeData(cr3d, vti);
     }
     
+    glPopMatrix();
+
     // unlock the current frame
     if (volume) {
         volume->Unlock();
@@ -442,7 +463,7 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, core:
     if (volume->FrameCount() == 0)
         return false;
 
-    glPushMatrix();
+   // glPushMatrix();
 
     // translate scene for volume ray casting
     this->scale = 2.0f / vislib::math::Max(vislib::math::Max(
@@ -450,7 +471,7 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, core:
         volume->BoundingBox().Depth());
     vislib::math::Vector<float, 3> trans(volume->BoundingBox().GetSize().PeekDimension());
     trans *= -this->scale*0.5f;
-    glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
+//    glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
 
     // ------------------------------------------------------------
     // --- Volume Rendering                                     ---
@@ -490,7 +511,7 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, core:
 
     glDisable (GL_DEPTH_TEST);
     
-    glPopMatrix();
+  //  glPopMatrix();
 
     return true;
 }
@@ -516,9 +537,10 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, VTIDa
     } else {
         scale = 1.0f;
     }
-    vislib::math::Vector<float, 3> trans(bbox.GetSize().PeekDimension());
-    trans *= -this->scale*0.5f;
-    glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
+//    vislib::math::Vector<float, 3> trans(bbox.GetSize().PeekDimension());
+//    trans *= -this->scale*0.5f;
+//    glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
+    glScalef(scale, scale, scale);
 
     // ------------------------------------------------------------
     // --- Volume Rendering                                     ---
