@@ -44,17 +44,21 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
         volDataCallerSlot ("getData", "Connects the volume rendering with data storage"),
         //protRendererCallerSlot ("renderProtein", "Connects the volume rendering with a protein renderer"),
         clipPlane0Slot("clipPlane0", "Connects the rendering with a clip plane"),
-        volIsoValueParam("volIsoValue", "Isovalue for isosurface rendering"),
+        clipPlane1Slot("clipPlane1", "Connects the rendering with a clip plane"),
+        clipPlane2Slot("clipPlane2", "Connects the rendering with a clip plane"),
+        volIsoValue0Param("volIsoValue0", "Isovalue 1 for isosurface rendering"),
+        volIsoValue1Param("volIsoValue1", "Isovalue 2 for isosurface rendering"),
+        volIsoValue2Param("volIsoValue2", "Isovalue 3 for isosurface rendering"),
         volIsoOpacityParam("volIsoOpacity", "Opacity of isosurface"),
         volClipPlaneFlagParam("volClipPlane", "Enable volume clipping"),
-        volClipPlaneOpacityParam("clipPlaneOpacity", "Volume clipping plane opacity"),
         volumeTex(0), currentFrameId(-1), volFBO(0), width(0), height(0), volRayTexWidth(0), 
         volRayTexHeight(0), volRayStartTex(0), volRayLengthTex(0), volRayDistTex(0),
-        renderIsometric(true), meanDensityValue(0.0f), isoValue(0.5f), 
-        volIsoOpacity(0.4f), volClipPlaneFlag(false), volClipPlaneOpacity(0.4f)
+        renderIsometric(true), meanDensityValue(0.0f), isoValue0(0.5f), isoValue1(0.5f), isoValue2(0.5f), 
+        volIsoOpacity(0.4f), volClipPlaneFlag(false)
 {
     // set caller slot for different data calls
     this->volDataCallerSlot.SetCompatibleCall<core::moldyn::VolumeDataCallDescription>();
+    this->volDataCallerSlot.SetCompatibleCall<VTIDataCallDescription>();
     this->MakeSlotAvailable (&this->volDataCallerSlot);
 
     // set renderer caller slot
@@ -65,10 +69,24 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
     // set caller slot for clip plane calls
     this->clipPlane0Slot.SetCompatibleCall<view::CallClipPlaneDescription>();
     this->MakeSlotAvailable (&this->clipPlane0Slot);
+    // set caller slot for clip plane calls
+    this->clipPlane1Slot.SetCompatibleCall<view::CallClipPlaneDescription>();
+    this->MakeSlotAvailable (&this->clipPlane1Slot);
+    // set caller slot for clip plane calls
+    this->clipPlane2Slot.SetCompatibleCall<view::CallClipPlaneDescription>();
+    this->MakeSlotAvailable (&this->clipPlane2Slot);
+    
+    // --- set up parameters for isovalue 0 ---
+    this->volIsoValue0Param.SetParameter(new param::FloatParam(this->isoValue0));
+    this->MakeSlotAvailable(&this->volIsoValue0Param);
 
-    // --- set up parameters for isovalues ---
-    this->volIsoValueParam.SetParameter(new param::FloatParam(this->isoValue));
-    this->MakeSlotAvailable(&this->volIsoValueParam);
+    // --- set up parameters for isovalue 1 ---
+    this->volIsoValue1Param.SetParameter(new param::FloatParam(this->isoValue1));
+    this->MakeSlotAvailable(&this->volIsoValue1Param);
+
+    // --- set up parameters for isovalue 2 ---
+    this->volIsoValue2Param.SetParameter(new param::FloatParam(this->isoValue2));
+    this->MakeSlotAvailable(&this->volIsoValue2Param);
 
     // --- set up parameter for isosurface opacity ---
     this->volIsoOpacityParam.SetParameter(new param::FloatParam(this->volIsoOpacity, 0.0f, 1.0f));
@@ -76,16 +94,14 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
 
     // set default clipping plane
     this->volClipPlane.Clear();
-    this->volClipPlane.Add(vislib::math::Vector<double, 4>(0.0, 1.0, 0.0, 0.0));
+    this->volClipPlane.Add(vislib::math::Vector<float, 4>(1.0, 0.0, 0.0, 1.0));
+    this->volClipPlane.Add(vislib::math::Vector<float, 4>(0.0, 1.0, 0.0, 1.0));
+    this->volClipPlane.Add(vislib::math::Vector<float, 4>(0.0, 0.0, 1.0, 1.0));
 
     // --- set up parameter for volume clipping ---
     this->volClipPlaneFlagParam.SetParameter(new param::BoolParam(this->volClipPlaneFlag));
     this->MakeSlotAvailable(&this->volClipPlaneFlagParam);
 
-    // --- set up parameter for clipping plane opacity ---
-    this->volClipPlaneOpacityParam.SetParameter(new param::FloatParam(this->volClipPlaneOpacity, 0.0f, 1.0f));
-    this->MakeSlotAvailable(&this->volClipPlaneOpacityParam);
-    
 }
 
 
@@ -185,11 +201,11 @@ bool LayeredIsosurfaceRenderer::create (void) {
     }
 
     // Load volume rendering shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ("volumerenderer::std::volumeVertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ("layeredisosurfaces::isosurfaces::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg (Log::LEVEL_ERROR, "%: Unable to load vertex shader source for volume rendering shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ("volumerenderer::std::volumeFragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ("layeredisosurfaces::isosurfaces::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg (Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for volume rendering shader", this->ClassName());
         return false;
     }
@@ -231,26 +247,50 @@ bool LayeredIsosurfaceRenderer::GetCapabilities(Call& call) {
 bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
-
-    core::moldyn::VolumeDataCall *volume = this->volDataCallerSlot.CallAs<core::moldyn::VolumeDataCall>();
-
+    
     float scale, xoff, yoff, zoff;
     vislib::math::Cuboid<float> boundingBox;
     vislib::math::Point<float, 3> bbc;
 
-    // try to call the volume data
-    if (!(*volume)(core::moldyn::VolumeDataCall::CallForGetExtent)) return false;
-    // get bounding box
-    boundingBox = volume->BoundingBox();
+    core::moldyn::VolumeDataCall *volume = this->volDataCallerSlot.CallAs<core::moldyn::VolumeDataCall>();
+    if( volume ) {
+        // try to call the volume data
+        if (!(*volume)(core::moldyn::VolumeDataCall::CallForGetExtent)) return false;
+        // get bounding box
+        boundingBox = volume->BoundingBox();
 
-    bbc = boundingBox.CalcCenter();
-    xoff = -bbc.X();
-    yoff = -bbc.Y();
-    zoff = -bbc.Z();
-    if (!vislib::math::IsEqual(boundingBox.LongestEdge(), 0.0f)) { 
-        scale = 2.0f / boundingBox.LongestEdge();
+        bbc = boundingBox.CalcCenter();
+        xoff = -bbc.X();
+        yoff = -bbc.Y();
+        zoff = -bbc.Z();
+        if (!vislib::math::IsEqual(boundingBox.LongestEdge(), 0.0f)) { 
+            scale = 2.0f / boundingBox.LongestEdge();
+        } else {
+            scale = 1.0f;
+        }
     } else {
-        scale = 1.0f;
+        VTIDataCall *vti = this->volDataCallerSlot.CallAs<VTIDataCall>();
+        if( vti == NULL ) return false;
+        // set call time
+        vti->SetCalltime(cr3d->Time());
+        vti->SetFrameID(static_cast<int>(cr3d->Time()));
+        // try to call for extent
+        if (!(*vti)(VTIDataCall::CallForGetExtent)) return false;
+        // try to call for data
+        if (!(*vti)(VTIDataCall::CallForGetData)) return false;
+        
+        // get bounding box
+        boundingBox = vti->AccessBoundingBoxes().ObjectSpaceBBox();
+
+        bbc = boundingBox.CalcCenter();
+        xoff = -bbc.X();
+        yoff = -bbc.Y();
+        zoff = -bbc.Z();
+        if (!vislib::math::IsEqual(boundingBox.LongestEdge(), 0.0f)) { 
+            scale = 2.0f / boundingBox.LongestEdge();
+        } else {
+            scale = 1.0f;
+        }
     }
 
     BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
@@ -293,9 +333,11 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>(&call);
     if (!cr3d) return false;
-
+    
     // get pointer to core::moldyn::VolumeDataCall
     core::moldyn::VolumeDataCall *volume = this->volDataCallerSlot.CallAs<core::moldyn::VolumeDataCall>();
+    // get pointer to core::moldyn::VolumeDataCall
+    VTIDataCall *vti = this->volDataCallerSlot.CallAs<VTIDataCall>();
     
     // set frame ID and call data
     if (volume) {
@@ -303,6 +345,13 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
         if (!(*volume)(core::moldyn::VolumeDataCall::CallForGetData)) {
             return false;
         }
+    } else if (vti) {
+        // set call time
+        vti->SetCalltime(cr3d->Time());
+        // set frame ID
+        vti->SetFrameID(static_cast<int>(cr3d->Time()));
+        // try to call for data
+        if (!(*vti)(VTIDataCall::CallForGetData)) return false;
     } else {
         return false;
     }
@@ -352,10 +401,12 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
     // =============== Refresh all parameters ===============
     this->ParameterRefresh(cr3d);
     
+    /*
     unsigned int cpCnt;
     for (cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt) {
         glClipPlane(GL_CLIP_PLANE0+cpCnt, this->volClipPlane[cpCnt].PeekComponents());
     }
+    */
 
     // =============== Volume Rendering ===============
     bool retval = false;
@@ -363,17 +414,22 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
     // try to start volume rendering using volume data
     if (volume) {
         retval = this->RenderVolumeData(cr3d, volume);
+    } else if (vti) {
+        retval = this->RenderVolumeData(cr3d, vti);
     }
     
     // unlock the current frame
     if (volume) {
         volume->Unlock();
     }
+    if (vti) {
+        vti->Unlock();
+    }
     
     return retval;
 }
 
-
+ 
 /*
  * Volume rendering using volume data.
  */
@@ -409,21 +465,90 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, core:
     //this->opaqueFBO.DrawColourTexture();
     CHECK_FOR_OGL_ERROR();
     
+    /*
     unsigned int cpCnt;
     if (this->volClipPlaneFlag) {
         for (cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt) {
             glEnable(GL_CLIP_PLANE0+cpCnt);
         }
     }
+    */
 
     this->RenderVolume(volume->BoundingBox());
     CHECK_FOR_OGL_ERROR();
     
+    /*
     if (this->volClipPlaneFlag) {
         for (cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt) {
             glDisable(GL_CLIP_PLANE0+cpCnt);
         }
     }
+    */
+
+    glDisable (GL_VERTEX_PROGRAM_POINT_SIZE);
+
+    glDisable (GL_DEPTH_TEST);
+    
+    glPopMatrix();
+
+    return true;
+}
+
+/*
+ * Volume rendering using volume data.
+ */
+bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, VTIDataCall *volume) {
+    glEnable (GL_DEPTH_TEST);
+    glEnable (GL_VERTEX_PROGRAM_POINT_SIZE);
+
+    // test for volume data
+    if (volume->FrameCount() == 0)
+        return false;
+
+    glPushMatrix();
+
+    vislib::math::Cuboid<float> bbox = volume->AccessBoundingBoxes().ObjectSpaceBBox();
+
+    // translate scene for volume ray casting
+    this->scale = 2.0f / vislib::math::Max(vislib::math::Max(
+        bbox.Width(), bbox.Height()), bbox.Depth());
+    vislib::math::Vector<float, 3> trans(bbox.GetSize().PeekDimension());
+    trans *= -this->scale*0.5f;
+    glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
+
+    // ------------------------------------------------------------
+    // --- Volume Rendering                                     ---
+    // --- update & render the volume                           ---
+    // ------------------------------------------------------------
+    if (static_cast<int>(volume->FrameID()) != this->currentFrameId) {
+        this->currentFrameId = static_cast<int>(volume->FrameID());
+        this->UpdateVolumeTexture(volume);
+        CHECK_FOR_OGL_ERROR();
+    }
+
+    // reenable second renderer
+    //this->opaqueFBO.DrawColourTexture();
+    CHECK_FOR_OGL_ERROR();
+    
+    /*
+    unsigned int cpCnt;
+    if (this->volClipPlaneFlag) {
+        for (cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt) {
+            glEnable(GL_CLIP_PLANE0+cpCnt);
+        }
+    }
+    */
+
+    this->RenderVolume(bbox);
+    CHECK_FOR_OGL_ERROR();
+    
+    /*
+    if (this->volClipPlaneFlag) {
+        for (cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt) {
+            glDisable(GL_CLIP_PLANE0+cpCnt);
+        }
+    }
+    */
 
     glDisable (GL_VERTEX_PROGRAM_POINT_SIZE);
 
@@ -440,9 +565,17 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, core:
 void LayeredIsosurfaceRenderer::ParameterRefresh(view::CallRender3D *call) {
     
     // volume parameters
-    if (this->volIsoValueParam.IsDirty()) {
-        this->isoValue = this->volIsoValueParam.Param<param::FloatParam>()->Value();
-        this->volIsoValueParam.ResetDirty();
+    if (this->volIsoValue0Param.IsDirty()) {
+        this->isoValue0 = this->volIsoValue0Param.Param<param::FloatParam>()->Value();
+        this->volIsoValue0Param.ResetDirty();
+    }
+    if (this->volIsoValue1Param.IsDirty()) {
+        this->isoValue1 = this->volIsoValue1Param.Param<param::FloatParam>()->Value();
+        this->volIsoValue1Param.ResetDirty();
+    }
+    if (this->volIsoValue2Param.IsDirty()) {
+        this->isoValue2 = this->volIsoValue2Param.Param<param::FloatParam>()->Value();
+        this->volIsoValue2Param.ResetDirty();
     }
     if (this->volIsoOpacityParam.IsDirty()) {
         this->volIsoOpacity = this->volIsoOpacityParam.Param<param::FloatParam>()->Value();
@@ -452,8 +585,8 @@ void LayeredIsosurfaceRenderer::ParameterRefresh(view::CallRender3D *call) {
         this->volClipPlaneFlag = this->volClipPlaneFlagParam.Param<param::BoolParam>()->Value();
         this->volClipPlaneFlagParam.ResetDirty();
     }
-
-    // get the clip plane
+    
+    // get the clip plane 0
     view::CallClipPlane *ccp = this->clipPlane0Slot.CallAs<view::CallClipPlane>();
     float clipDat[4];
     if ((ccp != NULL) && (*ccp)()) {
@@ -465,16 +598,37 @@ void LayeredIsosurfaceRenderer::ParameterRefresh(view::CallRender3D *call) {
     } else {
         clipDat[0] = clipDat[1] = clipDat[2] = clipDat[3] = 0.0f;
     }
-
-    // set clip plane normal and distance to current clip plane
+    // set clip plane 0 normal and distance to current clip plane
     this->volClipPlane[0].Set(clipDat[0], clipDat[1], clipDat[2], clipDat[3]);
-
-    // check clip plane opacity parameter
-    if (this->volClipPlaneOpacityParam.IsDirty()) {
-        this->volClipPlaneOpacity = this->volClipPlaneOpacityParam.Param<param::FloatParam>()->Value();
-        this->volClipPlaneOpacityParam.ResetDirty();
+    
+    // get the clip plane 1
+    ccp = this->clipPlane1Slot.CallAs<view::CallClipPlane>();
+    if ((ccp != NULL) && (*ccp)()) {
+        clipDat[0] = ccp->GetPlane().Normal().X();
+        clipDat[1] = ccp->GetPlane().Normal().Y();
+        clipDat[2] = ccp->GetPlane().Normal().Z();
+        vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
+        clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
+    } else {
+        clipDat[0] = clipDat[1] = clipDat[2] = clipDat[3] = 0.0f;
     }
-
+    // set clip plane 1 normal and distance to current clip plane
+    this->volClipPlane[1].Set(clipDat[0], clipDat[1], clipDat[2], clipDat[3]);
+    
+    // get the clip plane 2
+    ccp = this->clipPlane2Slot.CallAs<view::CallClipPlane>();
+    if ((ccp != NULL) && (*ccp)()) {
+        clipDat[0] = ccp->GetPlane().Normal().X();
+        clipDat[1] = ccp->GetPlane().Normal().Y();
+        clipDat[2] = ccp->GetPlane().Normal().Z();
+        vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
+        clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
+    } else {
+        clipDat[0] = clipDat[1] = clipDat[2] = clipDat[3] = 0.0f;
+    }
+    // set clip plane 2 normal and distance to current clip plane
+    this->volClipPlane[2].Set(clipDat[0], clipDat[1], clipDat[2], clipDat[3]);
+    
 }
 
 /*
@@ -525,6 +679,56 @@ void LayeredIsosurfaceRenderer::UpdateVolumeTexture(const core::moldyn::VolumeDa
 }
 
 /*
+ * Create a volume containing the voxel map
+ */
+void LayeredIsosurfaceRenderer::UpdateVolumeTexture(const VTIDataCall *volume) {
+    // generate volume, if necessary
+    if (!glIsTexture(this->volumeTex)) {
+        glGenTextures(1, &this->volumeTex);
+    }
+    // get data pointer
+    const float *densityData = (const float*)(volume->GetPointDataByIdx(0, 0));
+    vislib::math::Vector<float, 3> gridSize = volume->GetGridsize();
+    // set voxel map to volume texture
+    glBindTexture(GL_TEXTURE_3D, this->volumeTex);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE32F_ARB, 
+        gridSize.X(), 
+        gridSize.Y(), 
+        gridSize.Z(), 0, GL_LUMINANCE, GL_FLOAT, 
+        densityData);
+    GLint param = GL_LINEAR;
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, param);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, param);
+    //GLint mode = GL_CLAMP_TO_EDGE;
+    GLint mode = GL_REPEAT;
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, mode);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, mode);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, mode);
+    glBindTexture(GL_TEXTURE_3D, 0);
+    CHECK_FOR_OGL_ERROR();
+
+    // generate FBO, if necessary
+    if (!glIsFramebufferEXT(this->volFBO)) {
+        glGenFramebuffersEXT(1, &this->volFBO);
+        CHECK_FOR_OGL_ERROR();
+    }
+    CHECK_FOR_OGL_ERROR();
+    
+    // scale[i] = 1/extent[i] --- extent = size of the bbox
+    this->volScale[0] = 1.0f / (volume->GetBoundingBoxes().ObjectSpaceBBox().Width() * this->scale);
+    this->volScale[1] = 1.0f / (volume->GetBoundingBoxes().ObjectSpaceBBox().Height() * this->scale);
+    this->volScale[2] = 1.0f / (volume->GetBoundingBoxes().ObjectSpaceBBox().Depth() * this->scale);
+    // scaleInv = 1 / scale = extend
+    this->volScaleInv[0] = 1.0f / this->volScale[0];
+    this->volScaleInv[1] = 1.0f / this->volScale[1];
+    this->volScaleInv[2] = 1.0f / this->volScale[2];
+
+    // set volume size
+    this->volumeSize = vislib::math::Max<unsigned int>(gridSize.Z(),
+        vislib::math::Max<unsigned int>(gridSize.Y(), gridSize.X()));
+}
+
+/*
  * draw the volume
  */
 void LayeredIsosurfaceRenderer::RenderVolume(vislib::math::Cuboid<float> boundingbox) {
@@ -563,10 +767,30 @@ void LayeredIsosurfaceRenderer::RenderVolume(vislib::math::Cuboid<float> boundin
     glUniform1i(this->volumeShader.ParameterLocation("transferRGBASampler"), 1);
     glUniform1i(this->volumeShader.ParameterLocation("rayStartSampler"), 2);
     glUniform1i(this->volumeShader.ParameterLocation("rayLengthSampler"), 3);
-
-    glUniform1f(this->volumeShader.ParameterLocation("isoValue"), this->isoValue);
+    
+    glUniform3f(this->volumeShader.ParameterLocation("isoValues"), this->isoValue0, this->isoValue1, this->isoValue2);
     glUniform1f(this->volumeShader.ParameterLocation("isoOpacity"), this->volIsoOpacity);
-    glUniform1f(this->volumeShader.ParameterLocation("clipPlaneOpacity"), this->volClipPlaneOpacity);
+
+    if( this->volClipPlaneFlag ) {
+        for( unsigned int i = 0; i < vislib::math::Min( 3U, static_cast<unsigned int>(this->volClipPlane.Count())); i++ ) {
+            float cp[4] = { 
+                static_cast<float>(this->volClipPlane[i].X()), 
+                static_cast<float>(this->volClipPlane[i].Y()),  
+                static_cast<float>(this->volClipPlane[i].Z()),  
+                static_cast<float>(this->volClipPlane[i].W()) };
+            vislib::StringA cpPN;
+            cpPN.Format( "clipPlane%i", i);
+            glUniform4fv(this->volumeShader.ParameterLocation(cpPN.PeekBuffer()), 1, cp);
+        }
+    } else {
+        for( unsigned int i = 0; i < 3U; i++ ) {
+            vislib::StringA cpPN;
+            cpPN.Format( "clipPlane%i", i);
+            glUniform4f(this->volumeShader.ParameterLocation(cpPN.PeekBuffer()), 0.0f, 0.0f, 0.0f, 0.0f);
+        }
+    }
+    // set bbox
+    glUniform3f(this->volumeShader.ParameterLocation("osbboxdim"), boundingbox.GetSize().Width(), boundingbox.GetSize().Height(), boundingbox.GetSize().Depth());
 
     // transfer function
     glActiveTexture(GL_TEXTURE1);
@@ -891,6 +1115,7 @@ void LayeredIsosurfaceRenderer::drawClippedPolygon(vislib::math::Cuboid<float> b
     position *= this->scale;
 
     // check for each clip plane
+    /*
     float vcpd;
     for (int i = 0; i < static_cast<int>(this->volClipPlane.Count()); ++i) {
         slices.setupSingleSlice(this->volClipPlane[i].PeekComponents(), position.PeekComponents());
@@ -900,5 +1125,6 @@ void LayeredIsosurfaceRenderer::drawClippedPolygon(vislib::math::Cuboid<float> b
         slices.drawSingleSlice(-(-d + vcpd - 0.0001f));
         glEnd();
     }
+    */
 }
 
