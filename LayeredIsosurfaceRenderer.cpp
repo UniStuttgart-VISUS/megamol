@@ -42,7 +42,7 @@ using namespace megamol::protein;
  */
 LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (),
         volDataCallerSlot ("getData", "Connects the volume rendering with data storage"),
-        //protRendererCallerSlot ("renderProtein", "Connects the volume rendering with a protein renderer"),
+        rendererCallerSlot ("renderer", "Connects the volume rendering with another renderer"),
         clipPlane0Slot("clipPlane0", "Connects the rendering with a clip plane"),
         clipPlane1Slot("clipPlane1", "Connects the rendering with a clip plane"),
         clipPlane2Slot("clipPlane2", "Connects the rendering with a clip plane"),
@@ -62,9 +62,8 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
     this->MakeSlotAvailable (&this->volDataCallerSlot);
 
     // set renderer caller slot
-    // TODO
-    //this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
-    //this->MakeSlotAvailable(&this->protRendererCallerSlot);
+    this->rendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->rendererCallerSlot);
     
     // set caller slot for clip plane calls
     this->clipPlane0Slot.SetCompatibleCall<view::CallClipPlaneDescription>();
@@ -304,23 +303,23 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
         (boundingBox.Front() + zoff) * scale);
     bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
     bbox.SetWorldSpaceClipBox(bbox.WorldSpaceBBox());
+    //bbox.MakeScaledWorld( scale);
 
     // get the pointer to CallRender3D (protein renderer)
-    // TODO
-    //view::CallRender3D *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
-    //vislib::math::Point<float, 3> protrenbbc;
-    //if (protrencr3d) {
-    //    (*protrencr3d)(1); // GetExtents
-    //    BoundingBoxes &protrenbb = protrencr3d->AccessBoundingBoxes();
-    //    this->protrenScale =  protrenbb.ObjectSpaceBBox().Width() / boundingBox.Width();
-    //    //this->protrenTranslate = (protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
-    //    if (mol) {
-    //        this->protrenTranslate.Set(xoff, yoff, zoff);
-    //        this->protrenTranslate *= scale;
-    //    } else {
-    //        this->protrenTranslate = (protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
-    //    }
-    //}
+    view::CallRender3D *rencr3d = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    vislib::math::Point<float, 3> protrenbbc;
+    if (rencr3d) {
+        (*rencr3d)(1); // GetExtents
+        BoundingBoxes &renbb = rencr3d->AccessBoundingBoxes();
+        this->renScale = renbb.ObjectSpaceBBox().Width() / boundingBox.Width();
+        this->renTranslate = (renbb.ObjectSpaceBBox().CalcCenter() - bbc) * this->renScale;
+        //if (mol) {
+        //    this->renTranslate.Set(xoff, yoff, zoff);
+        //    this->renTranslate *= scale;
+        //} else {
+        //    this->renTranslate = (protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
+        //}
+    }
 
     return true;
 }
@@ -383,16 +382,18 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // TODO
-    //if (protrencr3d) {
-    //    // setup and call protein renderer
-    //    glPushMatrix();
-    //    glTranslatef(this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
-    //    //glScalef(this->protrenScale, this->protrenScale, this->protrenScale);
-    //    *protrencr3d = *cr3d;
-    //    protrencr3d->SetOutputBuffer(&this->opaqueFBO); // TODO: Handle incoming buffers!
-    //    (*protrencr3d)();
-    //    glPopMatrix();
-    //}
+    // get the pointer to CallRender3D (protein renderer)
+    view::CallRender3D *rencr3d = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if (rencr3d) {
+        // setup and call protein renderer
+        glPushMatrix();
+        glTranslatef(this->renTranslate.X(), this->renTranslate.Y(), this->renTranslate.Z());
+        //glScalef(this->renScale, this->renScale, this->renScale);
+        *rencr3d = *cr3d;
+        rencr3d->SetOutputBuffer(&this->opaqueFBO); // TODO: Handle incoming buffers!
+        (*rencr3d)();
+        glPopMatrix();
+    }
     // stop rendering to the FBO for protein rendering
     this->opaqueFBO.Disable();
     // re-enable the output buffer
@@ -462,7 +463,7 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, core:
     }
 
     // reenable second renderer
-    //this->opaqueFBO.DrawColourTexture();
+    this->opaqueFBO.DrawColourTexture();
     CHECK_FOR_OGL_ERROR();
     
     /*
@@ -510,8 +511,11 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, VTIDa
     vislib::math::Cuboid<float> bbox = volume->AccessBoundingBoxes().ObjectSpaceBBox();
 
     // translate scene for volume ray casting
-    this->scale = 2.0f / vislib::math::Max(vislib::math::Max(
-        bbox.Width(), bbox.Height()), bbox.Depth());
+    if (!vislib::math::IsEqual(bbox.LongestEdge(), 0.0f)) { 
+        scale = 2.0f / bbox.LongestEdge();
+    } else {
+        scale = 1.0f;
+    }
     vislib::math::Vector<float, 3> trans(bbox.GetSize().PeekDimension());
     trans *= -this->scale*0.5f;
     glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
@@ -527,7 +531,7 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, VTIDa
     }
 
     // reenable second renderer
-    //this->opaqueFBO.DrawColourTexture();
+    this->opaqueFBO.DrawColourTexture();
     CHECK_FOR_OGL_ERROR();
     
     /*
@@ -916,7 +920,7 @@ void LayeredIsosurfaceRenderer::RayParamTextures(vislib::math::Cuboid<float> bou
     this->volRayStartEyeShader.Enable();
 
     float u = this->cameraInfo->NearClip() * tan(this->cameraInfo->ApertureAngle() * float(vislib::math::PI_DOUBLE) / 360.0f);
-    float r = (this->width / this->height)*u;
+    float r = (static_cast<float>(this->width) / static_cast<float>(this->height))*u;
 
     glBegin(GL_QUADS);
         //glVertex3f(-r, -u, -_nearClip);
