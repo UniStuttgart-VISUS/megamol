@@ -294,33 +294,7 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
 
     BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
     bbox.SetObjectSpaceBBox(boundingBox);
-//    bbox.SetWorldSpaceBBox(
-//        (boundingBox.Left() + xoff) * scale,
-//        (boundingBox.Bottom() + yoff) * scale,
-//        (boundingBox.Back() + zoff) * scale,
-//        (boundingBox.Right() + xoff) * scale,
-//        (boundingBox.Top() + yoff) * scale,
-//        (boundingBox.Front() + zoff) * scale);
-    bbox.SetWorldSpaceBBox(boundingBox);
-    bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
-    bbox.SetWorldSpaceClipBox(bbox.WorldSpaceBBox());
     bbox.MakeScaledWorld( scale);
-
-    // get the pointer to CallRender3D (protein renderer)
-    view::CallRender3D *rencr3d = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    vislib::math::Point<float, 3> protrenbbc;
-    if (rencr3d) {
-        (*rencr3d)(1); // GetExtents
-        BoundingBoxes &renbb = rencr3d->AccessBoundingBoxes();
-        this->renScale = renbb.ObjectSpaceBBox().Width() / boundingBox.Width();
-        this->renTranslate = (renbb.ObjectSpaceBBox().CalcCenter() - bbc) * this->renScale;
-        //if (mol) {
-        //    this->renTranslate.Set(xoff, yoff, zoff);
-        //    this->renTranslate *= scale;
-        //} else {
-        //    this->renTranslate = (protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
-        //}
-    }
 
     return true;
 }
@@ -408,6 +382,7 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
         }
         scaleRevert = 1.0f/scaleRevert;
         glScalef(scaleRevert, scaleRevert, scaleRevert);
+        glScalef(2,2,2); // QUICK FIX/HACK for MUX-Renderer
         //*rencr3d = *cr3d;
         rencr3d->SetOutputBuffer(&this->opaqueFBO); // TODO: Handle incoming buffers!
         (*rencr3d)();
@@ -417,6 +392,8 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
     this->opaqueFBO.Disable();
     // re-enable the output buffer
     cr3d->EnableOutputBuffer();
+    
+    glScalef( 1.0f/scale, 1.0f/scale, 1.0f/scale);
 
     // =============== Refresh all parameters ===============
     this->ParameterRefresh(cr3d);
@@ -463,15 +440,20 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, core:
     if (volume->FrameCount() == 0)
         return false;
 
-   // glPushMatrix();
+    glPushMatrix();
+    
+    vislib::math::Cuboid<float> bbox = volume->AccessBoundingBoxes().ObjectSpaceBBox();
 
     // translate scene for volume ray casting
-    this->scale = 2.0f / vislib::math::Max(vislib::math::Max(
-        volume->BoundingBox().Width(),volume->BoundingBox().Height()),
-        volume->BoundingBox().Depth());
-    vislib::math::Vector<float, 3> trans(volume->BoundingBox().GetSize().PeekDimension());
-    trans *= -this->scale*0.5f;
-//    glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
+    if (!vislib::math::IsEqual(bbox.LongestEdge(), 0.0f)) { 
+        scale = 2.0f / bbox.LongestEdge();
+    } else {
+        scale = 1.0f;
+    }
+    vislib::math::Vector<float, 3> trans;
+    trans.Set( bbox.Left(), bbox.Bottom(), bbox.Back());
+    trans *= scale;
+    glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
 
     // ------------------------------------------------------------
     // --- Volume Rendering                                     ---
@@ -511,7 +493,7 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, core:
 
     glDisable (GL_DEPTH_TEST);
     
-  //  glPopMatrix();
+    glPopMatrix();
 
     return true;
 }
@@ -537,10 +519,10 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, VTIDa
     } else {
         scale = 1.0f;
     }
-//    vislib::math::Vector<float, 3> trans(bbox.GetSize().PeekDimension());
-//    trans *= -this->scale*0.5f;
-//    glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
-    glScalef(scale, scale, scale);
+    vislib::math::Vector<float, 3> trans;
+    trans.Set( bbox.Left(), bbox.Bottom(), bbox.Back());
+    trans *= scale;
+    glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
 
     // ------------------------------------------------------------
     // --- Volume Rendering                                     ---

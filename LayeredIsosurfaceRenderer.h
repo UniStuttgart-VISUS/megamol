@@ -240,9 +240,6 @@ namespace protein {
         // the opacity of the isosurface
         float volIsoOpacity;
 
-        vislib::math::Vector<float, 3> renTranslate;
-        float renScale;
-
         // flag wether clipping planes are enabled
         bool volClipPlaneFlag;
         // the array of clipping planes
