@@ -13,6 +13,7 @@
 
 #include "slicing.h"
 #include "moldyn/VolumeDataCall.h"
+#include "VTIDataCall.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "view/Renderer3DModule.h"
@@ -119,6 +120,11 @@ namespace protein {
         bool RenderVolumeData(megamol::core::view::CallRender3D *call, core::moldyn::VolumeDataCall *volume);
         
         /**
+         * Volume rendering using volume data.
+        */
+        bool RenderVolumeData(megamol::core::view::CallRender3D *call, VTIDataCall *volume);
+        
+        /**
          * Refresh all parameters.
         */
         void ParameterRefresh(megamol::core::view::CallRender3D *call);
@@ -145,6 +151,13 @@ namespace protein {
         void UpdateVolumeTexture(const core::moldyn::VolumeDataCall *volume);
 
         /**
+         * Create a volume containing the voxel map.
+         *
+         * @param volume The data interface.
+         */
+        void UpdateVolumeTexture(const VTIDataCall *volume);
+
+        /**
          * Draw the bounding box of the protein around the origin.
          *
          * @param boundingbox The bounding box.
@@ -169,6 +182,10 @@ namespace protein {
         //megamol::core::CallerSlot protRendererCallerSlot;
         /** caller slot for clip plane 0 */
         megamol::core::CallerSlot clipPlane0Slot;
+        /** caller slot for clip plane 0 */
+        megamol::core::CallerSlot clipPlane1Slot;
+        /** caller slot for clip plane 0 */
+        megamol::core::CallerSlot clipPlane2Slot;
 
         // camera information
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
@@ -178,10 +195,11 @@ namespace protein {
         vislib::math::Vector<float, 3> translation;
         
         // parameters for the volume rendering
-        megamol::core::param::ParamSlot volIsoValueParam;
+        megamol::core::param::ParamSlot volIsoValue0Param;
+        megamol::core::param::ParamSlot volIsoValue1Param;
+        megamol::core::param::ParamSlot volIsoValue2Param;
         megamol::core::param::ParamSlot volIsoOpacityParam;
         megamol::core::param::ParamSlot volClipPlaneFlagParam;
-        megamol::core::param::ParamSlot volClipPlaneOpacityParam;
         // shader for volume rendering
         vislib::graphics::gl::GLSLShader volumeShader;
         vislib::graphics::gl::GLSLShader volRayStartShader;
@@ -215,7 +233,11 @@ namespace protein {
         // the average density value of the volume
         float meanDensityValue;
         // the first iso value
-        float isoValue;
+        float isoValue0;
+        // the second iso value
+        float isoValue1;
+        // the third iso value
+        float isoValue2;
         // the opacity of the isosurface
         float volIsoOpacity;
 
@@ -225,11 +247,9 @@ namespace protein {
         // flag wether clipping planes are enabled
         bool volClipPlaneFlag;
         // the array of clipping planes
-        vislib::Array<vislib::math::Vector<double, 4> > volClipPlane;
+        vislib::Array<vislib::math::Vector<float, 4> > volClipPlane;
         // view aligned slicing
         ViewSlicing slices;
-        // the opacity of the clipping plane
-        float volClipPlaneOpacity;
     
     };
 
