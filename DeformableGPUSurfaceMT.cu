@@ -941,8 +941,8 @@ __global__ void DeformableGPUSurfaceMT_ComputeValidTriangleAreas_D(
         return;
     }
 
-    //float flag = corruptTriangleFlag_D[idx];
-    float flag = 0.0f;
+    float flag = corruptTriangleFlag_D[idx];
+    //float flag = 0.0f;
 
     float3 pos0, pos1, pos2;
     pos0.x = vertexPos_D[3*triangleIdx_D[3+idx+0]+0];
