@@ -645,7 +645,8 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPos_D(
     bool outside = sampleDens <= isoval;
     int switchSign = int((negative && outside)||(!negative && !outside));
     externalForcesScl = externalForcesScl*(1.0*(1-switchSign) - 1.0*switchSign);
-    externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
+    //externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
+    externalForcesScl *= (1.0*(1-switchSign) + (switchSign));
 
     // Sample gradient by cubic interpolation
     float4 externalForceTmp = useCubicInterpolation
