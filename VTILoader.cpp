@@ -114,8 +114,8 @@ bool VTILoader::getData(core::Call& call) {
 //    printf("Frame requested: %u\n", dc->FrameID()); // DEBUG
 
     if (dc->FrameID() >= this->FrameCount()) {
-//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Frame %u requested (nFrames %u)",
-//                this->ClassName(), dc->FrameID(), this->FrameCount());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Frame %u requested (nFrames %u)",
+                this->ClassName(), dc->FrameID(), this->FrameCount());
         return false;
     }
 
@@ -782,7 +782,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
             vislib::StringA name;
             name = entity.Substring(entity.Find("Name", 0)+6);
             name = name.Substring(0, name.Find("\"", 0));
-            //printf("    Name  : %s\n", name.PeekBuffer()); // DEBUG
+//            printf("    Name  : %s\n", name.PeekBuffer()); // DEBUG
 
             // Format
             vislib::StringA format;

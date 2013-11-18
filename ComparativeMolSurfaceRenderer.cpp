@@ -48,7 +48,7 @@ const float ComparativeMolSurfaceRenderer::qsIsoVal = 0.5f;
 
 // Hardcoded colors for surface rendering
 const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = Vec3f(0.7f, 0.8f, 0.4f);
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = Vec3f(0.1f, 0.2f, 1.0f);
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = Vec3f(0.0f, 0.3f, 0.8f);
 const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurfMapped = Vec3f(0.13f, 0.30f, 0.58f);
 const Vec3f ComparativeMolSurfaceRenderer::colorMaxPotential = Vec3f(0.0f, 0.0f, 1.0f);
 const Vec3f ComparativeMolSurfaceRenderer::colorMinPotential = Vec3f(1.0f, 0.0f, 0.0f);
@@ -2503,6 +2503,7 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
     if (renderMode == SURFACE_FILL) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     } else if (renderMode == SURFACE_WIREFRAME) {
+        glLineWidth(3.0f);
         glCullFace(GL_BACK);
         glEnable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -2638,8 +2639,8 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     glUniform3fvARB(this->pplMappedSurfaceShader.ParameterLocation("colorMin"), 1, this->colorMinPotential.PeekComponents());
     glUniform3fvARB(this->pplMappedSurfaceShader.ParameterLocation("colorMax"), 1, this->colorMaxPotential.PeekComponents());
     glUniform3fvARB(this->pplMappedSurfaceShader.ParameterLocation("colorUniform"), 1, this->uniformColorSurfMapped.PeekComponents());
-    glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("minPotential"), -70);
-    glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("maxPotential"), 70);
+    glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("minPotential"), this->minPotential);
+    glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("maxPotential"), this->maxPotential);
     glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("alphaScl"), this->surfMappedAlphaScl);
     glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("maxPosDiff"), this->surfMaxPosDiff);
     glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("uncertaintyMeasurement"),static_cast<int>(this->uncertaintyCriterion));
