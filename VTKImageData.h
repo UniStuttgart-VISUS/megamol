@@ -925,7 +925,7 @@ public:
          * @return The name of the point data array.
          */
         inline vislib::StringA GetPointDataArrayId(unsigned int dataIdx) const {
-            return this->cellData.GetArrayId(dataIdx);
+            return this->pointData.GetArrayId(dataIdx);
         }
 
     private:
@@ -1293,7 +1293,7 @@ public:
      */
     inline vislib::StringA GetPointDataArrayId(unsigned int dataIdx,
             unsigned int pieceIdx) const {
-        return this->pieces[pieceIdx].GetCellDataArrayId(dataIdx);
+        return this->pieces[pieceIdx].GetPointDataArrayId(dataIdx);
     }
 
     /**

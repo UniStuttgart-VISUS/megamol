@@ -352,8 +352,14 @@ void main() {
    
    // Alpha scaling by the user
     color.a *= alphaScl;
+    vec3 n = normalFrag;
+    //if (dot(normalFrag, view) > 0) {
+        //n *= -1.0;
+        //color.a = 1.0;
+        //color.rgb = vec3(0.0, 0.0, 0.5);
+    //}
     
-    gl_FragColor = vec4(LocalLighting(normalize(view), normalize(normalFrag), 
+    gl_FragColor = vec4(LocalLighting(normalize(view), normalize(n), 
             normalize(lightDir), color.rgb, lightparams), color.a);
             
 

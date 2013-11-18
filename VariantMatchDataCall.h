@@ -45,7 +45,7 @@ public:
      * @return A human readable description of the module.
      */
     static const char *Description(void) {
-        return "Call to transmit varian match data";
+        return "Call to transmit variant match data";
     }
 
     /**
@@ -81,7 +81,7 @@ public:
     /**
      * TODO
      */
-    inline const vislib::TString *GetLabels() {
+    inline const vislib::StringA *GetLabels() {
         return this->labels;
     }
 
@@ -116,7 +116,7 @@ public:
     /**
      * TODO
      */
-    void SetLabels(const vislib::TString *labels) {
+    void SetLabels(const vislib::StringA *labels) {
         this->labels = labels;
     }
 
@@ -151,7 +151,7 @@ private:
     unsigned int variantCnt;
 
     /// The labels of all variants
-    const vislib::TString *labels;
+    const vislib::StringA *labels;
 
     /// The matching value matrix
     const float *match;

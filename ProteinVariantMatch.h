@@ -24,7 +24,6 @@
 #include "DiagramCall.h"
 #include "MolecularDataCall.h"
 #include "vislib/Array.h"
-//#include "vislib_vector_typedefs.h"
 #include "vislib/Vector.h"
 #include "vislib/Matrix.h"
 typedef vislib::math::Cuboid<float> Cubef;
@@ -254,6 +253,10 @@ private:
     core::param::ParamSlot singleFrameIdxSlot;
     uint singleFrameIdx;
 
+    /// Maximum number of variants
+    core::param::ParamSlot maxVariantsSlot;
+    int maxVariants;
+
     /* Hardcoded parameters for the 'quicksurf' class */
 
     /// Parameter for assumed radius of density grid data
@@ -451,6 +454,8 @@ private:
     float minAtomRad;
 
     HostArr<float> atomPosTmp;
+
+    vislib::Array<vislib::StringA> labels;
 
 };
 

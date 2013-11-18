@@ -28,7 +28,7 @@
 using namespace megamol;
 using namespace megamol::protein;
 
-#define USE_TIMER // Toggle performance measurements
+//#define USE_TIMER // Toggle performance measurements
 
 /**
  * @return Returns the thread index based on the current CUDA grid dimensions

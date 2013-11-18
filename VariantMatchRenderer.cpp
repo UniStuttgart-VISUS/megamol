@@ -14,6 +14,7 @@
 #include "ogl_error_check.h"
 
 #include <param/FloatParam.h>
+#include <param/IntParam.h>
 #include <CoreInstance.h>
 #include <vislib/SimpleFont.h>
 #include <vislib/OutlineFont.h>
@@ -29,24 +30,24 @@ using namespace megamol::protein;
  */
 VariantMatchRenderer::VariantMatchRenderer(void) : Renderer2DModule () ,
         dataCallerSlot("getData", "Connects the rendering with data storage" ),
-        labelSpaceSlot("labelSpace", "Fraction of the screen that is used to render labels" ),
-        labelSizeSlot("labelSize", "Font size used to render labels" ), matrixTex(0),
+        minColSlot("minCol", "..." ),
+        maxColSlot("maxCol", "..." ),
+        matrixTex(0),
         thefont(vislib::graphics::gl::FontInfo_Verdana) {
 
     // Data caller slot to get matching matrix
     this->dataCallerSlot.SetCompatibleCall<VariantMatchDataCallDescription>();
     this->MakeSlotAvailable(&this->dataCallerSlot);
 
-    // Parameter for label space
-    this->labelSpace = 0.25f;
-    this->labelSpaceSlot.SetParameter(new core::param::FloatParam(this->labelSpace, 0.0f, 2.0f));
-    this->MakeSlotAvailable(&this->labelSpaceSlot);
+    // Parameter for minimum color
+    this->minCol = 0.0f;
+    this->minColSlot.SetParameter(new core::param::FloatParam(this->minCol));
+    this->MakeSlotAvailable(&this->minColSlot);
 
-    // Parameter for label size
-    this->labelSize = 0.1f;
-    this->labelSizeSlot.SetParameter(new core::param::FloatParam(this->labelSize, 0.0f));
-    this->MakeSlotAvailable(&this->labelSizeSlot);
-
+    // Parameter for maximum color
+    this->maxCol = 1.0f;
+    this->maxColSlot.SetParameter(new core::param::FloatParam(this->maxCol));
+    this->MakeSlotAvailable(&this->maxColSlot);
 }
 
 
@@ -110,6 +111,7 @@ bool VariantMatchRenderer::create(void) {
  * VariantMatchRenderer::GetExtents
  */
 bool VariantMatchRenderer::GetExtents(megamol::core::view::CallRender2D& call) {
+    call.SetBoundingBox(-1.0f, -1.0f, 1.0f, 1.0f);
     return true;
 }
 
@@ -132,7 +134,7 @@ void VariantMatchRenderer::release(void) {
  */
 bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
 
-    float gridStep, gridHalfStep;
+    float gridHalfStep;
 
     // Update parameters
     this->updateParams();
@@ -177,16 +179,16 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
 //    }
 //    // END DEBUG
 
-    ::glMatrixMode(GL_PROJECTION);
-    ::glPushMatrix();
-    ::glLoadIdentity();
+//    ::glMatrixMode(GL_PROJECTION);
+//    ::glPushMatrix();
+//    ::glLoadIdentity();
 
-    ::glMatrixMode(GL_MODELVIEW);
-    ::glPushMatrix();
-    ::glLoadIdentity();
+//    ::glMatrixMode(GL_MODELVIEW);
+//    ::glPushMatrix();
+//    ::glLoadIdentity();
 
-    gridStep = (2.0 - this->labelSpace)/static_cast<float>(vmc->GetVariantCnt());
-    gridHalfStep = gridStep*0.5f;
+    //gridStep = (2.0 - this->labelSpace)/static_cast<float>(vmc->GetVariantCnt());
+    //gridHalfStep = gridStep*0.5f;
 
 //    printf("Min %f, max %f\n", vmc->GetMin(), vmc->GetMax());
 
@@ -194,22 +196,17 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
 //    ::glColor3f(0.0f, 0.6f, 0.6f);
     this->matrixTexShader.Enable();
     glUniform1iARB(this->matrixTexShader.ParameterLocation("matrixTex"), 0);
-    glUniform1fARB(this->matrixTexShader.ParameterLocation("minVal"), vmc->GetMin());
-    glUniform1fARB(this->matrixTexShader.ParameterLocation("maxVal"), vmc->GetMax());
+    glUniform1fARB(this->matrixTexShader.ParameterLocation("minVal"), this->minCol);
+    glUniform1fARB(this->matrixTexShader.ParameterLocation("maxVal"), this->maxCol);
     ::glBegin(GL_QUADS);
-
         ::glTexCoord2f(1.0f, 0.0f);
-        ::glVertex2f(-1.0 + this->labelSpace, -1.0);
-
+        ::glVertex2f(-1.0, -1.0);
         ::glTexCoord2f(1.0f, 1.0f);
         ::glVertex2f( 1.0, -1.0);
-
         ::glTexCoord2f(0.0f, 1.0f);
-        ::glVertex2f( 1.0f,  1.0f - this->labelSpace);
-
+        ::glVertex2f( 1.0f,  1.0f);
         ::glTexCoord2f(0.0f, 0.0f);
-        ::glVertex2f(-1.0 + this->labelSpace,  1.0f - this->labelSpace);
-
+        ::glVertex2f(-1.0,  1.0f);
     ::glEnd();
     this->matrixTexShader.Disable();
 
@@ -219,17 +216,18 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
     ::glColor3f(1.0f, 1.0f, 1.0f);
     ::glLineWidth(3);
     // Draw vertical lines
+    float gridStep = 2.0f/static_cast<float>(vmc->GetVariantCnt());
     ::glBegin(GL_LINES);
         for (int i = 0; i < static_cast<int>(vmc->GetVariantCnt()); ++i) {
-            ::glVertex2f((this->labelSpace+gridStep*i)-1.0, -1.0);
-            ::glVertex2f((this->labelSpace+gridStep*i)-1.0,  1.0-this->labelSpace);
+            ::glVertex2f(gridStep*i-1.0, -1.0);
+            ::glVertex2f(gridStep*i-1.0,  1.0);
         }
     ::glEnd();
 
     // Draw horizontal lines
     ::glBegin(GL_LINES);
         for (int i = 1; i <= static_cast<int>(vmc->GetVariantCnt()); ++i) {
-            ::glVertex2f(-1.0+this->labelSpace, gridStep*i-1.0);
+            ::glVertex2f(-1.0, gridStep*i-1.0);
             ::glVertex2f( 1.0, gridStep*i-1.0);
         }
     ::glEnd();
@@ -241,39 +239,55 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
     if (!this->thefont.Initialise()) {
         return false;
     }
+    float fontSize = std::min(2.0f/static_cast<float>(vmc->GetVariantCnt()), 0.1f);
+    float lineHeight = this->thefont.LineHeight(2.0f/static_cast<float>(vmc->GetVariantCnt()));
+    float maxLineWidth = 0.0f;
+    for (int i = 0; i < static_cast<int>(vmc->GetVariantCnt()); ++i) {
+        maxLineWidth = std::max(maxLineWidth, this->thefont.LineWidth(fontSize, vmc->GetLabels()[i].PeekBuffer()));
+    }
+
 //    f.SetSize(0.5f);
     // Draw vertical labels
-    for (int i = 1; i <= static_cast<int>(vmc->GetVariantCnt()); ++i) {
-        str.Format("Variant %2i", static_cast<int>(vmc->GetVariantCnt()) - i);
-        this->thefont.DrawString(-1.0 + this->labelSpace*0.5, gridStep*i-1.0 - gridHalfStep,
-                this->labelSize,
-                true,
-                str.PeekBuffer(),
-                vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+    for (int i = 0; i < static_cast<int>(vmc->GetVariantCnt()); ++i) {
+        //printf("LABEL %s\n", vmc->GetLabels()[i].PeekBuffer());
+        //str.Format("Variant %2i", static_cast<int>(vmc->GetVariantCnt()) - i);
+        this->thefont.DrawString(
+                -1.0 - maxLineWidth, // Left coordinate of the rectangle
+                1.0 - lineHeight*(i+1),     // Upper coordinate of the rectangle
+                maxLineWidth,        // The width of the rectangle
+                lineHeight,                       // The height of the rectangle
+                fontSize,                       // The font size
+                true,                    // Flip y
+                vmc->GetLabels()[i].PeekBuffer(),    // The label
+                vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
     }
     // Draw horizontal labels
     ::glMatrixMode(GL_MODELVIEW);
     for (int i = 0; i < static_cast<int>(vmc->GetVariantCnt()); ++i) {
         ::glPushMatrix();
-        ::glLoadIdentity();
-        ::glTranslatef((this->labelSpace+gridStep*i)-1.0+ gridHalfStep, 1.0 - this->labelSpace*0.5, 0.0);
-        ::glRotatef(80, 0.0, 0.0, 1.0);
-        str.Format("Variant %2i", i);
+//        ::glLoadIdentity();
+        //        ::glTranslatef(
+        //                (this->labelSpace+gridStep*(i))-1.0 + gridHalfStep,
+        //                1.0 - this->labelSpace*0.5,
+        //                0.0);
+        ::glRotatef(90, 0.0, 0.0, 1.0);
+        //str.Format("Variant %2i", i);
         this->thefont.DrawString(
-                //(this->labelSpace+gridStep*i)-1.0+ gridHalfStep,
-                0.0, 0.0,
-                //1.0 - gridHalfStep,
-                this->labelSize,
-                true,
-                str.PeekBuffer(),
-                vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+                1.0, // Left coordinate of the rectangle
+                1.0 - lineHeight*(i+1),     // Upper coordinate of the rectangle
+                maxLineWidth,        // The width of the rectangle
+                lineHeight,                       // The height of the rectangle
+                fontSize,                       // The font size
+                true,                    // Flip y
+                vmc->GetLabels()[i].PeekBuffer(),    // The label
+                vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
         ::glPopMatrix();
     }
 
-    ::glPopMatrix();
-
-    ::glMatrixMode(GL_PROJECTION);
-    ::glPopMatrix();
+//    ::glPopMatrix();
+//
+//    ::glMatrixMode(GL_PROJECTION);
+//    ::glPopMatrix();
 
 
     return true;
@@ -285,16 +299,16 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
  */
 void VariantMatchRenderer::updateParams() {
 
-    // Label space
-    if (this->labelSpaceSlot.IsDirty()) {
-        this->labelSpace = this->labelSpaceSlot.Param<core::param::FloatParam>()->Value();
-        this->labelSpaceSlot.ResetDirty();
+    // Min color
+    if (this->minColSlot.IsDirty()) {
+        this->minCol = this->minColSlot.Param<core::param::FloatParam>()->Value();
+        this->minColSlot.ResetDirty();
     }
 
-    // Label size
-    if (this->labelSizeSlot.IsDirty()) {
-        this->labelSize = this->labelSizeSlot.Param<core::param::FloatParam>()->Value();
-        this->labelSizeSlot.ResetDirty();
+    // Max color
+    if (this->maxColSlot.IsDirty()) {
+        this->maxCol = this->maxColSlot.Param<core::param::FloatParam>()->Value();
+        this->maxColSlot.ResetDirty();
     }
 
 }

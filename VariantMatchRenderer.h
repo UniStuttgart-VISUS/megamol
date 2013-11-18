@@ -109,14 +109,13 @@ private:
 
     /* Parameter slots */
 
-    /// Space in the final rendering that is used to show the labels (fraction
-    /// of two)
-    core::param::ParamSlot labelSpaceSlot;
-    float labelSpace;
+    /// Minimum value for color
+    core::param::ParamSlot minColSlot;
+    float minCol;
 
-    /// Font size used to render the labels
-    core::param::ParamSlot labelSizeSlot;
-    float labelSize;
+    /// Maximum value for color
+    core::param::ParamSlot maxColSlot;
+    float maxCol;
 
     /// The texturing shader
     vislib::graphics::gl::GLSLShader matrixTexShader;

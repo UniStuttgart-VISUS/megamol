@@ -645,8 +645,8 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPos_D(
     bool outside = sampleDens <= isoval;
     int switchSign = int((negative && outside)||(!negative && !outside));
     externalForcesScl = externalForcesScl*(1.0*(1-switchSign) - 1.0*switchSign);
-    //externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
-    externalForcesScl *= (1.0*(1-switchSign) + (switchSign));
+    externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
+    //externalForcesScl *= (1.0*(1-switchSign) + (switchSign));
 
     // Sample gradient by cubic interpolation
     float4 externalForceTmp = useCubicInterpolation
@@ -681,9 +681,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPos_D(
     float3 diff = posNew-posOld;
     float diffLen = length(diff);
     if ((trackPath)&&(abs(externalForcesScl) == 1.0f)) {
-        //float3 diff = externalForce;
         vtxUncertainty_D[idx] += length(externalForce);
-        //vtxUncertainty_D[idx] += 1.0f;
     }
     // Displ scl for convergence
     vertexExternalForcesScl_D[2*idx+1] = diffLen;

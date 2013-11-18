@@ -8,13 +8,13 @@
 //
 
 // Toggle performance measurement and the respective messages
-//#define USE_TIMER
+#define USE_TIMER
 
 // Toggle output messages about progress of computations
 #define OUTPUT_PROGRESS
 
 // Toggle more detailed output messages
-#define VERBOSE
+//#define VERBOSE
 
 #include "stdafx.h"
 #include "ProteinVariantMatch.h"
@@ -76,6 +76,7 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
         theheuristicSlot("heuristic", "Chose the heuristic the matching is based on"),
         fittingModeSlot("rmsMode", "RMS fitting mode"),
         singleFrameIdxSlot("singleFrame", "Idx of the single frame"),
+        maxVariantsSlot("maxVariants", "..." ),
         /* Parameters for surface mapping */
         surfMapMaxItSlot("surfmap::maxIt", "Number of iterations when mapping the mesh"),
         surfMapInterpolModeSlot("surfmap::Interpolation", "Interpolation method used for external forces calculation"),
@@ -111,6 +112,11 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
             VariantMatchDataCall::FunctionName(VariantMatchDataCall::CallForGetData),
             &ProteinVariantMatch::getMatrixData);
     this->MakeSlotAvailable(&this->matrixDataOutCalleeSlot);
+
+    // Parameter for label size
+    this->maxVariants = 10;
+    this->maxVariantsSlot.SetParameter(new core::param::IntParam(1));
+    this->MakeSlotAvailable(&this->maxVariantsSlot);
 
 
     /* Global mapping parameters */
@@ -462,19 +468,20 @@ bool ProteinVariantMatch::getMatrixData(core::Call& call) {
         return false;
     }
 
-    if (!(*molCall)(MolecularDataCall::CallForGetData)) {
-        return false;
-    }
+//    if (!(*molCall)(MolecularDataCall::CallForGetData)) {
+//        return false;
+//    }
 
     if (!(*vtiCall)(VTIDataCall::CallForGetExtent)) {
         return false;
     }
-    if (!(*vtiCall)(VTIDataCall::CallForGetData)) {
-        return false;
-    }
+//    if (!(*vtiCall)(VTIDataCall::CallForGetData)) {
+//        return false;
+//    }
     this->nVariants = std::min(molCall->FrameCount(), vtiCall->FrameCount());
+    this->nVariants = std::min(static_cast<unsigned int>(this->maxVariants), this->nVariants);
 
-    if (this->matchRMSD.Count() < this->nVariants*this->nVariants) {
+    if (this->matchRMSD.Count() != this->nVariants*this->nVariants) {
         this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
         this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
         this->matchMeanVertexPath.SetCount(this->nVariants*this->nVariants);
@@ -487,6 +494,20 @@ bool ProteinVariantMatch::getMatrixData(core::Call& call) {
             this->matchMeanVertexPath[i] = 0.0f;
             this->matchHausdorffDistance[i] = 0.0f;
             this->matchRMSD[i] = 0.0f;
+        }
+        // Loop through files to obtain labels
+        this->labels.SetCount(this->nVariants);
+        for (unsigned int v = 0; v < this->nVariants; ++v) {
+            vtiCall->SetFrameID(v);
+            if (!(*vtiCall)(VTIDataCall::CallForGetExtent)) {
+                printf("call for get extent fail\n");
+                return false;
+            }
+            if (!(*vtiCall)(VTIDataCall::CallForGetData)) {
+                printf("call for get data fail\n");
+                return false;
+            }
+            this->labels[v] = vtiCall->GetPointDataArrayId(0, 0);
         }
     }
 
@@ -523,6 +544,9 @@ bool ProteinVariantMatch::getMatrixData(core::Call& call) {
         dc->SetMatchRange(this->minMatchRMSDVal, this->maxMatchRMSDVal);
         break;
     }
+
+    // Set labels
+    dc->SetLabels(this->labels.PeekElements());
 
     return true;
 }
@@ -642,13 +666,13 @@ bool ProteinVariantMatch::computeDensityMap(
 //    printf("volOrg %f %f %f\n", this->volOrg.x,this->volOrg.y,this->volOrg.z);
 //    printf("volDim %i %i %i\n", this->volDim.x,this->volDim.y,this->volDim.z);
 
-#ifdef USE_TIMER
-    float dt_ms;
-    cudaEvent_t event1, event2;
-    cudaEventCreate(&event1);
-    cudaEventCreate(&event2);
-    cudaEventRecord(event1, 0);
-#endif // USE_TIMER
+//#ifdef USE_TIMER
+//    float dt_ms;
+//    cudaEvent_t event1, event2;
+//    cudaEventCreate(&event1);
+//    cudaEventCreate(&event2);
+//    cudaEventRecord(event1, 0);
+//#endif // USE_TIMER
 
     // Compute uniform grid
     int rc = cqs->calc_map(
@@ -666,14 +690,14 @@ bool ProteinVariantMatch::computeDensityMap(
 
 //    printf("max atom rad %f\n", this->maxAtomRad);
 
-#ifdef USE_TIMER
-    cudaEventRecord(event2, 0);
-    cudaEventSynchronize(event1);
-    cudaEventSynchronize(event2);
-    cudaEventElapsedTime(&dt_ms, event1, event2);
-    printf("CUDA time for 'quicksurf':                             %.10f sec\n",
-            dt_ms/1000.0f);
-#endif // USE_TIMER
+//#ifdef VERBOSE
+//    cudaEventRecord(event2, 0);
+//    cudaEventSynchronize(event1);
+//    cudaEventSynchronize(event2);
+//    cudaEventElapsedTime(&dt_ms, event1, event2);
+//    printf("CUDA time for 'quicksurf':                             %.10f sec\n",
+//            dt_ms/1000.0f);
+//#endif // USE_TIMER
 
     if (rc != 0) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1221,11 +1245,11 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
 #if defined(OUTPUT_PROGRESS)
             // Ouput progress
             currStep += 1.0f;
-            if (static_cast<unsigned int>(currStep)%10 == 0) {
+           // if (static_cast<unsigned int>(currStep)%10 == 0) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                         "%s: matching surfaces %3u%%", this->ClassName(),
                         static_cast<unsigned int>(currStep/steps*100));
-            }
+           // }
 #endif // defined(OUTPUT_PROGRESS)
 
         }
@@ -1422,6 +1446,12 @@ void ProteinVariantMatch::updatParams() {
          this->singleFrameIdxSlot.ResetDirty();
          // Single frame has changed, so the feature lists have to be cleared
          this->featureList.Clear();
+    }
+
+    // Max variants
+    if (this->maxVariantsSlot.IsDirty()) {
+        this->maxVariants = this->maxVariantsSlot.Param<core::param::IntParam>()->Value();
+        this->maxVariantsSlot.ResetDirty();
     }
 
 
