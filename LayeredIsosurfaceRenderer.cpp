@@ -51,10 +51,15 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
         volIsoValue2Param("volIsoValue2", "Isovalue 3 for isosurface rendering"),
         volIsoOpacityParam("volIsoOpacity", "Opacity of isosurface"),
         volClipPlaneFlagParam("volClipPlane", "Enable volume clipping"),
-        volumeTex(0), currentFrameId(-1), volFBO(0), width(0), height(0), volRayTexWidth(0), 
+        volLicDirSclParam("lic::volLicDirScl", "..."),
+        volLicLenParam("lic::volLicLen", "..."),
+        volLicContrastStretchingParam("lic::volLicContrast", "Change the contrast of the LIC output image"),
+        volLicBrightParam("lic::volLicBright", "..."),
+        volLicTCSclParam("lic::volLicTCScl", "Scale factor for texture coordinates."),
+        volumeTex(0), vectorfieldTex(0), currentFrameId(-1), volFBO(0), width(0), height(0), volRayTexWidth(0), 
         volRayTexHeight(0), volRayStartTex(0), volRayLengthTex(0), volRayDistTex(0),
         renderIsometric(true), meanDensityValue(0.0f), isoValue0(0.5f), isoValue1(0.5f), isoValue2(0.5f), 
-        volIsoOpacity(0.4f), volClipPlaneFlag(false)
+        volIsoOpacity(0.4f), volClipPlaneFlag(false), randNoiseTex(0)
 {
     // set caller slot for different data calls
     this->volDataCallerSlot.SetCompatibleCall<core::moldyn::VolumeDataCallDescription>();
@@ -100,6 +105,26 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
     // --- set up parameter for volume clipping ---
     this->volClipPlaneFlagParam.SetParameter(new param::BoolParam(this->volClipPlaneFlag));
     this->MakeSlotAvailable(&this->volClipPlaneFlagParam);
+    
+    // Scale the direction vector when computing LIC on isosurface
+    this->volLicDirSclParam.SetParameter(new core::param::FloatParam(1.0f, 0.0f));
+    this->MakeSlotAvailable(&this->volLicDirSclParam);
+
+    // Scale the direction vector when computing LIC on isosurface
+    this->volLicLenParam.SetParameter(new core::param::IntParam(10, 1));
+    this->MakeSlotAvailable(&this->volLicLenParam);
+
+    // Change LIC contrast
+    this->volLicContrastStretchingParam.SetParameter(new core::param::FloatParam(0.25f, 0.0f, 0.5f));
+    this->MakeSlotAvailable(&this->volLicContrastStretchingParam);
+
+    // Change LIC brightness
+    this->volLicBrightParam.SetParameter(new core::param::FloatParam(1.0f, 0.0f));
+    this->MakeSlotAvailable(&this->volLicBrightParam);
+
+    // Volume LIC texture coordinates
+    this->volLicTCSclParam.SetParameter(new core::param::FloatParam(1.0f, 0.0f));
+    this->MakeSlotAvailable(&this->volLicTCSclParam);
 
 }
 
@@ -216,6 +241,9 @@ bool LayeredIsosurfaceRenderer::create (void) {
         Log::DefaultLog.WriteMsg (Log::LEVEL_ERROR, "%s: Unable to create volume rendering shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
+
+    // initialize 3D texture for shader-based LIC
+    this->InitLIC(16);
 
     return true;
 }
@@ -665,13 +693,6 @@ void LayeredIsosurfaceRenderer::UpdateVolumeTexture(const core::moldyn::VolumeDa
     glBindTexture(GL_TEXTURE_3D, 0);
     CHECK_FOR_OGL_ERROR();
 
-    // generate FBO, if necessary
-    if (!glIsFramebufferEXT(this->volFBO)) {
-        glGenFramebuffersEXT(1, &this->volFBO);
-        CHECK_FOR_OGL_ERROR();
-    }
-    CHECK_FOR_OGL_ERROR();
-    
     // scale[i] = 1/extent[i] --- extent = size of the bbox
     this->volScale[0] = 1.0f / (volume->BoundingBox().Width() * this->scale);
     this->volScale[1] = 1.0f / (volume->BoundingBox().Height() * this->scale);
@@ -709,6 +730,35 @@ void LayeredIsosurfaceRenderer::UpdateVolumeTexture(const VTIDataCall *volume) {
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, param);
     //GLint mode = GL_CLAMP_TO_EDGE;
     GLint mode = GL_REPEAT;
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, mode);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, mode);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, mode);
+    glBindTexture(GL_TEXTURE_3D, 0);
+    CHECK_FOR_OGL_ERROR();
+
+    // generate FBO, if necessary
+    if (!glIsFramebufferEXT(this->volFBO)) {
+        glGenFramebuffersEXT(1, &this->volFBO);
+        CHECK_FOR_OGL_ERROR();
+    }
+    CHECK_FOR_OGL_ERROR();
+    
+    
+    // generate vector field texture, if necessary
+    if (!glIsTexture(this->vectorfieldTex)) {
+        glGenTextures(1, &this->vectorfieldTex);
+    }
+    // get data pointer
+    const float *vectorData = (const float*)(volume->GetPointDataByIdx(1, 0));
+    // set voxel map to volume texture
+    glBindTexture(GL_TEXTURE_3D, this->vectorfieldTex);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB32F_ARB,
+        gridSize.X(), 
+        gridSize.Y(), 
+        gridSize.Z(), 0, GL_RGB, GL_FLOAT, 
+        vectorData);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, param);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, param);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, mode);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, mode);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, mode);
@@ -775,6 +825,13 @@ void LayeredIsosurfaceRenderer::RenderVolume(vislib::math::Cuboid<float> boundin
     glUniform1i(this->volumeShader.ParameterLocation("transferRGBASampler"), 1);
     glUniform1i(this->volumeShader.ParameterLocation("rayStartSampler"), 2);
     glUniform1i(this->volumeShader.ParameterLocation("rayLengthSampler"), 3);
+    glUniform1i(this->volumeShader.ParameterLocation("vectorSampler"), 4);
+    glUniform1i(this->volumeShader.ParameterLocation("randNoiseTex"), 5);
+    glUniform1f(this->volumeShader.ParameterLocation("licDirScl"), this->volLicDirSclParam.Param<param::FloatParam>()->Value());
+    glUniform1i(this->volumeShader.ParameterLocation("licLen"), this->volLicLenParam.Param<param::IntParam>()->Value());
+    glUniform1f(this->volumeShader.ParameterLocation("licTCScl"), this->volLicTCSclParam.Param<param::FloatParam>()->Value());
+    glUniform1f(this->volumeShader.ParameterLocation("licContrast"), this->volLicContrastStretchingParam.Param<param::FloatParam>()->Value());
+    glUniform1f(this->volumeShader.ParameterLocation("licBright"), this->volLicBrightParam.Param<param::FloatParam>()->Value());
     
     glUniform3f(this->volumeShader.ParameterLocation("isoValues"), this->isoValue0, this->isoValue1, this->isoValue2);
     glUniform1f(this->volumeShader.ParameterLocation("isoOpacity"), this->volIsoOpacity);
@@ -809,10 +866,20 @@ void LayeredIsosurfaceRenderer::RenderVolume(vislib::math::Cuboid<float> boundin
     // ray direction and length
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, this->volRayLengthTex);
-
+    
     // volume texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, this->volumeTex);
+    CHECK_FOR_OGL_ERROR();
+    
+    // vector field texture
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_3D, this->vectorfieldTex);
+    CHECK_FOR_OGL_ERROR();
+
+    // 3D noise texture
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_3D, this->randNoiseTex);
     CHECK_FOR_OGL_ERROR();
 
     // draw a screen-filling quad
@@ -828,6 +895,53 @@ void LayeredIsosurfaceRenderer::RenderVolume(vislib::math::Cuboid<float> boundin
 
     // restore depth buffer
     //glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->opaqueFBO.GetDepthTextureID(), 0);
+    CHECK_FOR_OGL_ERROR();
+}
+
+/*
+ *  protein::CrystalStructureVolumeRenderer::initLIC
+ */
+void LayeredIsosurfaceRenderer::InitLIC(unsigned int licRandBuffSize) {
+    using namespace vislib::sys;
+    
+    // Init random number generator
+    srand((unsigned)time(0));
+
+    // Create randbuffer
+    unsigned int buffSize = licRandBuffSize * licRandBuffSize * licRandBuffSize;
+    this->licRandBuff.AssertCapacity( buffSize);
+    for(unsigned int i = 0; i < buffSize; i++) {
+        float randVal = (float)rand()/float(RAND_MAX);
+        this->licRandBuff.Add(randVal);
+    }
+
+    // Setup random noise texture
+    glEnable(GL_TEXTURE_3D);
+    if(glIsTexture(this->randNoiseTex))
+        glDeleteTextures(1, &this->randNoiseTex);
+    glGenTextures(1, &this->randNoiseTex);
+    glBindTexture(GL_TEXTURE_3D, this->randNoiseTex);
+
+    glTexImage3D(GL_TEXTURE_3D,
+        0,
+        GL_ALPHA,
+        licRandBuffSize,
+        licRandBuffSize,
+        licRandBuffSize,
+        0,
+        GL_ALPHA,
+        GL_FLOAT,
+        this->licRandBuff.PeekElements());
+
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+    glBindTexture(GL_TEXTURE_3D, 0);
+    glDisable(GL_TEXTURE_3D);
+
+    // Check for opengl error
     CHECK_FOR_OGL_ERROR();
 }
 
