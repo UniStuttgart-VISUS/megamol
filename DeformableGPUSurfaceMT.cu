@@ -400,70 +400,6 @@ __global__ void DeformableGPUSurfaceMT_FlagCorruptTriangles_D(
 }
 
 
-
-///**
-// * Writes a flag for every vertex that is adjacent to a corrupt triangles.
-// *
-// * @param[in,out] vertexData_D              The buffer with the vertex data
-// * @param[in]     vertexDataStride          The stride for the vertex data
-// *                                          buffer
-// * @param[in]     vertexDataOffsPos         The position offset in the vertex
-// *                                          data buffer
-// * @param[in]     vertexDataOffsCorruptFlag The corruption flag offset in the
-// *                                          vertex data buffer
-// * @param[in]     triangleVtxIdx_D          Array with triangle vertex indices
-// * @param[in]     volume_D                  The target volume defining the
-// *                               iso-surface
-// * @param[in]     externalForcesScl_D       Array with the scale factor for the external force
-// * @param[in]     triangleCnt               The number of triangles
-// * @param[in]     minDispl                  Minimum force scale to keep going
-// * @param[in]     isoval                    The iso-value defining the iso-surface
-// *
-// * TODO
-// */
-//__global__ void DeformableGPUSurfaceMT_FlagCorruptTriangles_D(
-//        float *corruptTriangles_D,
-//        float *vertexData_D,
-//        uint vertexDataStride,
-//        uint vertexDataOffsPos,
-//        uint vertexDataOffsNormal,
-//        uint *triangleVtxIdx_D,
-//        float *targetVol_D,
-//        uint triangleCnt,
-//        float isoval) {
-//
-//    const uint idx = ::getThreadIdx();
-//    if (idx >= triangleCnt) {
-//        return;
-//    }
-//
-//    /* Alternative 1: Sample volume at triangle midpoint */
-//
-//    const uint baseIdx0 = vertexDataStride*triangleVtxIdx_D[3*idx+0];
-//    const uint baseIdx1 = vertexDataStride*triangleVtxIdx_D[3*idx+1];
-//    const uint baseIdx2 = vertexDataStride*triangleVtxIdx_D[3*idx+2];
-//
-//    const float3 p0 = make_float3(vertexData_D[baseIdx0+vertexDataOffsPos+0],
-//                                  vertexData_D[baseIdx0+vertexDataOffsPos+1],
-//                                  vertexData_D[baseIdx0+vertexDataOffsPos+2]);
-//    const float3 p1 = make_float3(vertexData_D[baseIdx1+vertexDataOffsPos+0],
-//                                  vertexData_D[baseIdx1+vertexDataOffsPos+1],
-//                                  vertexData_D[baseIdx1+vertexDataOffsPos+2]);
-//    const float3 p2 = make_float3(vertexData_D[baseIdx2+vertexDataOffsPos+0],
-//                                  vertexData_D[baseIdx2+vertexDataOffsPos+1],
-//                                  vertexData_D[baseIdx2+vertexDataOffsPos+2]);
-//    // Sample volume at midpoint
-//    const float3 midPoint = (p0+p1+p2)/3.0;
-//    const float volSampleMidPoint = ::SampleFieldAtPosTricub_D<float>(midPoint, targetVol_D);
-//
-//
-//    float flag = float(::fabs(volSampleMidPoint-isoval) > 0.3);
-//    corruptTriangles_D[idx] = flag;
-//
-//}
-
-
-
 /**
  * Initializes the scale factor for the external forces with either -1.0 (if the
  * starting position of the vector is inside the isosurface, or 1.0 (vice
@@ -476,10 +412,11 @@ __global__ void DeformableGPUSurfaceMT_FlagCorruptTriangles_D(
  * @param[in] isoval      The isovalue that defines the isosurface
  * @param[in] dataArrOffs The offset for vertex positions in the vertex
  *                        data buffer
- * @param[in] dataArrSize The stride of the vertex data buffer
+ * @param[in] dataArrSize The stride of the vertex data buffer TODO
  */
 __global__ void DeformableGPUSurfaceMT_InitExternalForceScl_D (
         float *arr_D,
+        float *displLen_D,
         float *volume_D,
         float *vertexPos_D,
         float minDispl,
@@ -502,13 +439,13 @@ __global__ void DeformableGPUSurfaceMT_InitExternalForceScl_D (
     // If the sampled value is smaller than isoval, we are outside the
     // isosurface TODO Make this smarter
     if (SampleFieldAtPosTrilin_D<float>(pos, volume_D) <= isoval) {
-        arr_D[2*idx+0] = 1.0;
+        arr_D[idx] = 1.0;
     } else {
-        arr_D[2*idx+0] = -1.0;
+        arr_D[idx] = -1.0;
     }
 
     // Init last displ scl with something bigger then minDispl;
-    arr_D[2*idx+1] = minDispl + 0.1; // TODO Mult times two by shift
+    displLen_D[idx] = minDispl + 0.1;
 }
 
 
@@ -587,6 +524,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPos_D(
         float *targetVolume_D,
         float *vertexPosMapped_D,
         float *vertexExternalForcesScl_D,
+        float *displLen_D,
         float *vtxUncertainty_D,
         float4 *gradient_D,
         float3 *laplacian_D,
@@ -609,7 +547,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPos_D(
     }
 
     // Check convergence criterion
-    float lastDisplLen = vertexExternalForcesScl_D[2*idx+1];
+    float lastDisplLen = displLen_D[idx];
     if (lastDisplLen <= minDispl) return; // Vertex is converged
 
     const uint posBaseIdx = dataArrSize*idx+dataArrOffsPos;
@@ -624,7 +562,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPos_D(
             vertexPosMapped_D[posBaseIdx+2]);
 
     // Get initial scale factor for external forces
-    float externalForcesScl = vertexExternalForcesScl_D[2*idx];
+    float externalForcesScl = vertexExternalForcesScl_D[idx];
     float externalForcesSclOld = externalForcesScl;
 
     // Get partial derivatives
@@ -675,16 +613,18 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPos_D(
     vertexPosMapped_D[posBaseIdx+2] = posNew.z;
 
     // Write external forces scale factor back to global device memory
-    vertexExternalForcesScl_D[2*idx] = externalForcesScl;
+    vertexExternalForcesScl_D[idx] = externalForcesScl;
 
     // No branching occurs here, since the parameter is set globally
     float3 diff = posNew-posOld;
     float diffLen = length(diff);
+    //float diffLenInternal = length(forcesScl*((1.0 - stiffness)*laplacian - stiffness*laplacian2));
     if ((trackPath)&&(abs(externalForcesScl) == 1.0f)) {
-        vtxUncertainty_D[idx] += length(externalForce);
+        //vtxUncertainty_D[idx] += length(externalForce);
+        vtxUncertainty_D[idx] += diffLen;
     }
     // Displ scl for convergence
-    vertexExternalForcesScl_D[2*idx+1] = diffLen;
+    displLen_D[idx] = diffLen;
 }
 
 
@@ -712,6 +652,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
         float *targetVolume_D,
         float *vertexPosMapped_D,
         float *vertexExternalForcesScl_D,
+        float *displLen_D,
         float *vtxUncertainty_D,
         float4 *gradient_D,
         uint vertexCnt,
@@ -730,7 +671,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     }
 
     // Check convergence criterion
-    float lastDisplLen = vertexExternalForcesScl_D[2*idx+1];
+    float lastDisplLen = displLen_D[idx];
     if (lastDisplLen <= minDispl) return; // Vertex is converged
 
     const uint posBaseIdx = dataArrSize*idx+dataArrOffsPos;
@@ -745,7 +686,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
             vertexPosMapped_D[posBaseIdx+2]);
 
     // Get initial scale factor for external forces
-    float externalForcesScl = vertexExternalForcesScl_D[2*idx];
+    float externalForcesScl = vertexExternalForcesScl_D[idx];
 
     /* Update position */
 
@@ -785,7 +726,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     vertexPosMapped_D[posBaseIdx+2] = posNew.z;
 
     // Write external forces scale factor back to global device memory
-    vertexExternalForcesScl_D[2*idx] = externalForcesScl;
+    vertexExternalForcesScl_D[idx] = externalForcesScl;
 
     // No branching occurs here, since the parameter is set globally
     float3 diff = posNew-posOld;
@@ -796,7 +737,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
         //vtxUncertainty_D[idx] += 1.0f;
     }
     // Displ scl for convergence
-    vertexExternalForcesScl_D[2*idx+1] = diffLen;
+    displLen_D[idx] = diffLen;
 }
 
 
@@ -1867,6 +1808,9 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGradient(
     if (!CudaSafeCall(this->vertexExternalForcesScl_D.Validate(this->vertexCnt))) {
         return false;
     }
+    if (!CudaSafeCall(this->displLen_D.Validate(this->vertexCnt))) {
+        return false;
+    }
 #ifdef USE_TIMER
     float dt_ms;
     cudaEvent_t event1, event2;
@@ -1877,6 +1821,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGradient(
 
     DeformableGPUSurfaceMT_InitExternalForceScl_D <<< Grid(this->vertexCnt, 256), 256 >>> (
             (float*)this->vertexExternalForcesScl_D.Peek(),
+            this->displLen_D.Peek(),
             volume_D,
             vboPt,
             surfMappedMinDisplScl,
@@ -2025,6 +1970,9 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(
     if (!CudaSafeCall(this->vertexExternalForcesScl_D.Validate(this->vertexCnt))) {
         return false;
     }
+    if (!CudaSafeCall(this->displLen_D.Validate(this->vertexCnt))) {
+        return false;
+    }
 #ifdef USE_TIMER
     float dt_ms;
     cudaEvent_t event1, event2;
@@ -2035,6 +1983,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(
 
     DeformableGPUSurfaceMT_InitExternalForceScl_D <<< Grid(this->vertexCnt, 256), 256 >>> (
             (float*)this->vertexExternalForcesScl_D.Peek(),
+            this->displLen_D.Peek(),
             volume_D,
             vboPt,
             surfMappedMinDisplScl,
@@ -2186,6 +2135,9 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
     if (!CudaSafeCall(this->vertexExternalForcesScl_D.Validate(this->vertexCnt))) {
         return false;
     }
+    if (!CudaSafeCall(this->displLen_D.Validate(this->vertexCnt))) {
+        return false;
+    }
 #ifdef USE_TIMER
     float dt_ms;
     cudaEvent_t event1, event2;
@@ -2196,6 +2148,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
 
     DeformableGPUSurfaceMT_InitExternalForceScl_D <<< Grid(this->vertexCnt, 256), 256 >>> (
             (float*)this->vertexExternalForcesScl_D.Peek(),
+            this->displLen_D.Peek(),
             volumeTarget_D,
             vboPt,
             surfMappedMinDisplScl,
@@ -2344,6 +2297,9 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
     if (!CudaSafeCall(this->vertexExternalForcesScl_D.Validate(this->vertexCnt))) {
         return false;
     }
+    if (!CudaSafeCall(this->displLen_D.Validate(this->vertexCnt))) {
+        return false;
+    }
 #ifdef USE_TIMER
     float dt_ms;
     cudaEvent_t event1, event2;
@@ -2354,6 +2310,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
 
     DeformableGPUSurfaceMT_InitExternalForceScl_D <<< Grid(this->vertexCnt, 256), 256 >>> (
             (float*)this->vertexExternalForcesScl_D.Peek(),
+            this->displLen_D.Peek(),
             volumeTarget_D,
             vboPt,
             surfMappedMinDisplScl,
@@ -2415,7 +2372,14 @@ DeformableGPUSurfaceMT& DeformableGPUSurfaceMT::operator=(const DeformableGPUSur
     CudaSafeCall(cudaMemcpy(
             this->vertexExternalForcesScl_D.Peek(),
             rhs.vertexExternalForcesScl_D.PeekConst(),
-            this->vertexExternalForcesScl_D.GetCount()*sizeof(float2),
+            this->vertexExternalForcesScl_D.GetCount()*sizeof(float),
+            cudaMemcpyDeviceToDevice));
+
+    CudaSafeCall(this->displLen_D.Validate(rhs.displLen_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->displLen_D.Peek(),
+            rhs.displLen_D.PeekConst(),
+            this->displLen_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
 
     CudaSafeCall(this->externalForces_D.Validate(rhs.externalForces_D.GetCount()));
@@ -2437,13 +2401,6 @@ DeformableGPUSurfaceMT& DeformableGPUSurfaceMT::operator=(const DeformableGPUSur
             this->laplacian2_D.Peek(),
             rhs.laplacian2_D.PeekConst(),
             this->laplacian2_D.GetCount()*sizeof(float3),
-            cudaMemcpyDeviceToDevice));
-
-    CudaSafeCall(this->displLen_D.Validate(rhs.displLen_D.GetCount()));
-    CudaSafeCall(cudaMemcpy(
-            this->displLen_D.Peek(),
-            rhs.displLen_D.PeekConst(),
-            this->displLen_D.GetCount()*sizeof(float),
             cudaMemcpyDeviceToDevice));
 
     CudaSafeCall(this->gvfTmp_D.Validate(rhs.gvfTmp_D.GetCount()));
@@ -2630,25 +2587,27 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         return false;
     }
 
-    if (!CudaSafeCall(this->displLen_D.Validate(this->vertexCnt))) {
-        return false;
-    }
-    if (!CudaSafeCall(this->displLen_D.Set(0xff))) {
-        return false;
-    }
+//    if (!CudaSafeCall(this->displLen_D.Validate(this->vertexCnt))) {
+//        return false;
+//    }
+//    if (!CudaSafeCall(this->displLen_D.Set(0xff))) {
+//        return false;
+//    }
 
     // Init uncertainty buffer with zero
     if (!CudaSafeCall(cudaMemset(vtxUncertainty_D, 0x00, this->vertexCnt*sizeof(float)))) {
         return false;
     }
 
-#ifdef USE_TIMER
+//#ifdef USE_TIMER
     float dt_ms;
     cudaEvent_t event1, event2;
     cudaEventCreate(&event1);
     cudaEventCreate(&event2);
     cudaEventRecord(event1, 0);
-#endif
+//#endif
+
+    int iterationsNeeded = maxIt;
 
     if (!externalForcesOnly) {
 
@@ -2688,6 +2647,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                     volTarget_D,
                     vertexBuffer_D,
                     (float*)this->vertexExternalForcesScl_D.Peek(),
+                    this->displLen_D.Peek(),
                     vtxUncertainty_D,
                     (float4*)this->externalForces_D.Peek(),
                     this->laplacian_D.Peek(),
@@ -2704,17 +2664,21 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                     this->vertexDataOffsNormal,
                     this->vertexDataStride);
 
-            //        // DEBUG Print uncertainty
-            //        HostArr<float> uncertainty;
-            //        uncertainty.Validate(this->vertexCnt);
-            //        cudaMemcpy(uncertainty.Peek(), vtxUncertainty_D, sizeof(float)*this->vertexCnt, cudaMemcpyDeviceToHost);
-            ////        for (int i = 0; i < this->vertexCnt; ++i) {
-            //        printf("---------------------------------------------\n");
-            //        for (int i = 300; i < 310; ++i) {
-            //            printf("uncertainty %i: %f\n", i, uncertainty.Peek()[i]);
-            //        }
-            //        uncertainty.Release();
-            //        // END DEBUG
+            // Accumulate displacement length of this iteration step
+            float avgDisplLen = 0.0f;
+            avgDisplLen = thrust::reduce(
+                    thrust::device_ptr<float>(this->displLen_D.Peek()),
+                    thrust::device_ptr<float>(this->displLen_D.Peek() + this->vertexCnt));
+            if (!CudaSafeCall(cudaGetLastError())) {
+                return false;
+            }
+            avgDisplLen /= static_cast<float>(this->vertexCnt);
+            //if (i%100 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            //printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            if (avgDisplLen < surfMappedMinDisplScl) {
+                iterationsNeeded =i+1;
+                break;
+            }
 
             ::CheckForCudaErrorSync();
         }
@@ -2727,6 +2691,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                     volTarget_D,
                     vertexBuffer_D,
                     (float*)this->vertexExternalForcesScl_D.Peek(),
+                    this->displLen_D.Peek(),
                     vtxUncertainty_D,
                     (float4*)this->externalForces_D.Peek(),
                     this->vertexCnt,
@@ -2739,11 +2704,26 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                     this->vertexDataOffsNormal,
                     this->vertexDataStride);
 
+            // Accumulate displacement length of this iteration step
+            float avgDisplLen = 0.0f;
+            avgDisplLen = thrust::reduce(
+                    thrust::device_ptr<float>(this->displLen_D.Peek()),
+                    thrust::device_ptr<float>(this->displLen_D.Peek() + this->vertexCnt));
+            if (!CudaSafeCall(cudaGetLastError())) {
+                return false;
+            }
+            avgDisplLen /= static_cast<float>(this->vertexCnt);
+            //if (i%1000 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            if (avgDisplLen < surfMappedMinDisplScl) {
+                iterationsNeeded =i+1;
+                break;
+            }
+
             ::CheckForCudaErrorSync();
         }
     }
 
-#ifdef USE_TIMER
+//#ifdef USE_TIMER
     cudaEventRecord(event2, 0);
     cudaEventSynchronize(event1);
     cudaEventSynchronize(event2);
@@ -2751,8 +2731,8 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
             "%s: Time for mapping (%u iterations, %u vertices): %f sec\n",
             "DeformableGPUSurfaceMT",
-            maxIt, this->vertexCnt, dt_ms/1000.0f);
-#endif
+            iterationsNeeded, this->vertexCnt, dt_ms/1000.0f);
+//#endif
 
     return CudaSafeCall(cudaGetLastError());
 }

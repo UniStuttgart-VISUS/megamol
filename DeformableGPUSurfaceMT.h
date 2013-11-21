@@ -345,8 +345,7 @@ private:
     /* Device arrays for external forces */
 
     /// Device pointer to external forces for every vertex
-    /// Also contains last displacement
-    CudaDevArr<float2> vertexExternalForcesScl_D;
+    CudaDevArr<float> vertexExternalForcesScl_D;
 
     /// TODO
     CudaDevArr<float> gvfTmp_D;
@@ -360,7 +359,7 @@ private:
     /// Array for laplacian
     CudaDevArr<float3> laplacian2_D;
 
-    /// Array to safe displacement length
+    /// Array to store displacement length
     CudaDevArr<float> displLen_D;
 
     /// Array for distance field

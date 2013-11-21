@@ -302,9 +302,9 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->MakeSlotAvailable(&this->surfMappedSpringStiffnessSlot);
 
     // Minimum displacement
-    this->surfMappedMinDisplScl = 0.1;
+    this->surfMappedMinDisplScl = ComparativeMolSurfaceRenderer::qsGridSpacing/100.0f*this->surfaceMappingForcesScl;
     this->surfMappedMinDisplSclSlot.SetParameter(new core::param::FloatParam(this->surfMappedMinDisplScl, 0.0f));
-    this->MakeSlotAvailable(&this->surfMappedMinDisplSclSlot);
+    //this->MakeSlotAvailable(&this->surfMappedMinDisplSclSlot);
 
     /// GVF scale factor
     this->surfMappedGVFScl = 1.0f;
@@ -347,9 +347,9 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->MakeSlotAvailable(&this->regForcesSclSlot);
 
     // Minimum displacement
-    this->surfregMinDisplScl = 0.1;
+    this->surfregMinDisplScl = ComparativeMolSurfaceRenderer::qsGridSpacing/100.0f*this->regForcesScl;
     this->surfregMinDisplSclSlot.SetParameter(new core::param::FloatParam(this->surfregMinDisplScl, 0.0f));
-    this->MakeSlotAvailable(&this->surfregMinDisplSclSlot);
+    //this->MakeSlotAvailable(&this->surfregMinDisplSclSlot);
 
 
     /* Rendering options of surface #1 and #2 */
@@ -2282,19 +2282,38 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
-        // Render surface #2
-        if (!this->renderSurface(
+//        // Render surface #2
+//        if (!this->renderSurface(
+//                this->deformSurf2.GetVtxDataVBO(),
+//                this->deformSurf2.GetVertexCnt(),
+//                this->deformSurf2.GetTriangleIdxVBO(),
+//                this->deformSurf2.GetTriangleCnt()*3,
+//                this->surface2RM,
+//                this->surface2ColorMode,
+//                this->surfAttribTex2,
+//                this->uniformColorSurf2,
+//                this->surf2AlphaScl)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not render surface #2",
+//                    this->ClassName());
+//            return false;
+//        }
+
+        // Render mapped surface
+        if (!this->renderMappedSurface(
                 this->deformSurf2.GetVtxDataVBO(),
-                this->deformSurf2.GetVertexCnt(),
-                this->deformSurf2.GetTriangleIdxVBO(),
-                this->deformSurf2.GetTriangleCnt()*3,
+//                this->deformSurfMapped.GetVtxDataVBO(),
+//                this->deformSurfMapped.GetVertexCnt(),
+//                this->deformSurfMapped.GetTriangleIdxVBO(),
+//                this->deformSurfMapped.GetTriangleCnt()*3,
+                this->deformSurf2.GetVtxDataVBO(),
+                 this->deformSurf2.GetVertexCnt(),
+                 this->deformSurf2.GetTriangleIdxVBO(),
+                 this->deformSurf2.GetTriangleCnt()*3,
                 this->surface2RM,
-                this->surface2ColorMode,
-                this->surfAttribTex2,
-                this->uniformColorSurf2,
-                this->surf2AlphaScl)) {
+                this->surfaceMappedColorMode)) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not render surface #2",
+                    "%s: could not render mapped surface",
                     this->ClassName());
             return false;
         }
@@ -2382,6 +2401,8 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
                             this->volOrg.z + z*this->volDelta.z);
 
                     Vec3f vec(gvf.Peek()[4*idx+0], gvf.Peek()[4*idx+1], gvf.Peek()[4*idx+2]);
+                    vec *= this->surfaceMappingExternalForcesWeightScl;
+                    vec *= this->surfaceMappingForcesScl;
 
                     if ((pos.X() <= this->posXMax)&&(pos.X() >= this->posXMin)
                       &&(pos.Y() <= this->posYMax)&&(pos.Y() >= this->posYMin)
@@ -2801,6 +2822,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
     if (this->surfaceMappingForcesSclSlot.IsDirty()) {
         this->surfaceMappingForcesScl = this->surfaceMappingForcesSclSlot.Param<core::param::FloatParam>()->Value();
         this->surfaceMappingForcesSclSlot.ResetDirty();
+        this->surfMappedMinDisplScl = ComparativeMolSurfaceRenderer::qsGridSpacing/100.0f*this->surfaceMappingForcesScl;
         this->triggerSurfaceMapping = true;
     }
 
@@ -2887,6 +2909,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
     if (this->regForcesSclSlot.IsDirty()) {
         this->regForcesScl = this->regForcesSclSlot.Param<core::param::FloatParam>()->Value();
         this->regForcesSclSlot.ResetDirty();
+        this->surfregMinDisplScl = ComparativeMolSurfaceRenderer::qsGridSpacing/100.0f*this->regForcesScl;
         this->triggerComputeSurfacePoints1 = true;
         this->triggerComputeSurfacePoints2 = true;
     }
