@@ -638,6 +638,140 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPos_D(
  * @param[in,out]  vertexPosMapped_D      The vertex data buffer
  * @param[in]      vertexExternalForces_D The external force and scale factor
  *                                        (in 'w') for all vertices
+ * @param[in]      vertexNeighbours_D     The neighbour indices of all vertices
+ * @param[in]      gradient_D             Array with the gradient
+ * @param[in]      vtxNormals_D           The current normals of all vertices
+ * @param[in]      vertexCount            The number of vertices
+ * @param[in]      externalWeight         Weighting factor for the external
+ *                                        forces. The factor for internal forces
+ *                                        is implicitely defined by
+ *                                        1.0-'externalWeight'
+ * @param[in]      forcesScl              General scale factor for the final
+ *                                        combined force
+ * @param[in]      stiffness              The stiffness of the springs defining
+ *                                        the internal forces
+ * @param[in]      isoval                 The isovalue defining the isosurface
+ * @param[in]      minDispl               The minimum displacement for the
+ *                                        vertices to be updated
+ * @param[in]      dataArrOffs            The vertex position offset in the
+ *                                        vertex data buffer
+ * @param[in]      dataArrSize            The stride of the vertex data buffer TODO
+ */
+__global__ void DeformableGPUSurfaceMT_UpdateVtxPosNoThinPlate_D(
+        float *targetVolume_D,
+        float *vertexPosMapped_D,
+        float *vertexExternalForcesScl_D,
+        float *displLen_D,
+        float *vtxUncertainty_D,
+        float4 *gradient_D,
+        float3 *laplacian_D,
+        uint vertexCnt,
+        float externalWeight,
+        float forcesScl,
+        float isoval,
+        float minDispl,
+        bool useCubicInterpolation,
+        bool trackPath,
+        uint dataArrOffsPos,
+        uint dataArrOffsNormal,
+        uint dataArrSize) {
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= vertexCnt) {
+        return;
+    }
+
+    // Check convergence criterion
+    float lastDisplLen = displLen_D[idx];
+    if (lastDisplLen <= minDispl) return; // Vertex is converged
+
+    const uint posBaseIdx = dataArrSize*idx+dataArrOffsPos;
+
+
+    /* Retrieve stuff from global device memory */
+
+    // Get initial position from global device memory
+    float3 posOld = make_float3(
+            vertexPosMapped_D[posBaseIdx+0],
+            vertexPosMapped_D[posBaseIdx+1],
+            vertexPosMapped_D[posBaseIdx+2]);
+
+    // Get initial scale factor for external forces
+    float externalForcesScl = vertexExternalForcesScl_D[idx];
+    float externalForcesSclOld = externalForcesScl;
+
+    // Get partial derivatives
+    float3 laplacian = laplacian_D[idx];
+
+
+    /* Update position */
+
+    // No warp divergence here, since useCubicInterpolation is the same for all
+    // threads
+    const float sampleDens = useCubicInterpolation
+                    ? SampleFieldAtPosTricub_D<float>(posOld, targetVolume_D)
+                    : SampleFieldAtPosTrilin_D<float>(posOld, targetVolume_D);
+
+    // Switch sign and scale down if necessary
+    bool negative = externalForcesScl < 0;
+    bool outside = sampleDens <= isoval;
+    int switchSign = int((negative && outside)||(!negative && !outside));
+    externalForcesScl = externalForcesScl*(1.0*(1-switchSign) - 1.0*switchSign);
+    externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
+    //externalForcesScl *= (1.0*(1-switchSign) + (switchSign));
+
+    // Sample gradient by cubic interpolation
+    float4 externalForceTmp = useCubicInterpolation
+            ? SampleFieldAtPosTricub_D<float4>(posOld, gradient_D)
+            : SampleFieldAtPosTrilin_D<float4>(posOld, gradient_D);
+
+    float3 externalForce;
+    externalForce.x = externalForceTmp.x;
+    externalForce.y = externalForceTmp.y;
+    externalForce.z = externalForceTmp.z;
+
+   // externalForce = safeNormalize(externalForce);
+    externalForce *= forcesScl*externalForcesScl*externalWeight;
+
+    float3 internalForce = (1.0-externalWeight)*forcesScl*laplacian;
+
+    // Umbrella internal force
+    float3 force = externalForce + internalForce;
+    float3 posNew = posOld + force;
+
+    /* Write back to global device memory */
+
+    // New pos
+    vertexPosMapped_D[posBaseIdx+0] = posNew.x;
+    vertexPosMapped_D[posBaseIdx+1] = posNew.y;
+    vertexPosMapped_D[posBaseIdx+2] = posNew.z;
+
+    // Write external forces scale factor back to global device memory
+    vertexExternalForcesScl_D[idx] = externalForcesScl;
+
+    // No branching occurs here, since the parameter is set globally
+    float3 diff = posNew-posOld;
+    float diffLen = length(diff);
+    //float diffLenInternal = length(forcesScl*((1.0 - stiffness)*laplacian - stiffness*laplacian2));
+    if ((trackPath)&&(abs(externalForcesScl) == 1.0f)) {
+        //vtxUncertainty_D[idx] += length(externalForce);
+        vtxUncertainty_D[idx] += diffLen;
+    }
+    // Displ scl for convergence
+    displLen_D[idx] = diffLen;
+}
+
+
+/**
+ * Updates the positions of all vertices based on external and internal forces.
+ * The external force is computed on the fly based on a the given volume.
+ * Samples are aquired using tricubic interpolation.
+ *
+ * @param[in]      targetVolume_D         The volume the isosurface is extracted
+ *                                        from
+ * @param[in,out]  vertexPosMapped_D      The vertex data buffer
+ * @param[in]      vertexExternalForces_D The external force and scale factor
+ *                                        (in 'w') for all vertices
  * @param[in]      vertexCount            The number of vertices
  * @param[in]      forcesScl              General scale factor for the final
  *                                        combined force
@@ -687,6 +821,8 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
 
     // Get initial scale factor for external forces
     float externalForcesScl = vertexExternalForcesScl_D[idx];
+    float externalForcesSclOld = externalForcesScl;
+
 
     /* Update position */
 
@@ -702,6 +838,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     int switchSign = int((negative && outside)||(!negative && !outside));
     externalForcesScl = externalForcesScl*(1.0*(1-switchSign) - 1.0*switchSign);
     externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
+    //externalForcesScl *= (1.0*(1-switchSign) + (switchSign));
 
     // Sample gradient by cubic interpolation
     float4 externalForceTmp = useCubicInterpolation
@@ -713,10 +850,12 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     externalForce.y = externalForceTmp.y;
     externalForce.z = externalForceTmp.z;
 
-    externalForce = safeNormalize(externalForce);
+   // externalForce = safeNormalize(externalForce);
     externalForce *= forcesScl*externalForcesScl;
 
-    float3 posNew = posOld + externalForce;
+    // Umbrella internal force
+    float3 force = externalForce;
+    float3 posNew = posOld + force;
 
     /* Write back to global device memory */
 
@@ -731,10 +870,10 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     // No branching occurs here, since the parameter is set globally
     float3 diff = posNew-posOld;
     float diffLen = length(diff);
+    //float diffLenInternal = length(forcesScl*((1.0 - stiffness)*laplacian - stiffness*laplacian2));
     if ((trackPath)&&(abs(externalForcesScl) == 1.0f)) {
-        //float3 diff = externalForce;
-        vtxUncertainty_D[idx] += length(externalForce);
-        //vtxUncertainty_D[idx] += 1.0f;
+        //vtxUncertainty_D[idx] += length(externalForce);
+        vtxUncertainty_D[idx] += diffLen;
     }
     // Displ scl for convergence
     displLen_D[idx] = diffLen;
@@ -1453,6 +1592,14 @@ bool DeformableGPUSurfaceMT::initExtForcesTwoWayGVF(
 
     using namespace vislib::sys;
 
+    //#ifdef USE_TIMER
+        float dt_ms;
+        cudaEvent_t event1, event2;
+        cudaEventCreate(&event1);
+        cudaEventCreate(&event2);
+        cudaEventRecord(event1, 0);
+    //#endif
+
     int volSize = volDim.x*volDim.y*volDim.z;
 
     // Compute external forces
@@ -1491,6 +1638,16 @@ bool DeformableGPUSurfaceMT::initExtForcesTwoWayGVF(
            gvfScl)) {
         return false;
     }
+
+    //#ifdef USE_TIMER
+        cudaEventRecord(event2, 0);
+        cudaEventSynchronize(event1);
+        cudaEventSynchronize(event2);
+        cudaEventElapsedTime(&dt_ms, event1, event2);
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                "%s: Time for bi-directional diffusion %f\n",
+                "DeformableGPUSurfaceMT", dt_ms/1000.0f);
+    //#endif
 
     return true;
 }
@@ -1853,7 +2010,9 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGradient(
             surfMappedMinDisplScl,
             springStiffness,
             forceScl,
-            externalForcesWeight)) {
+            externalForcesWeight,
+            false,
+            false)) {
         return false;
     }
 
@@ -2343,7 +2502,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
             springStiffness,
             forceScl,
             externalForcesWeight,
-            false)) { // use external and internal forces
+            true)) { // Use external forces only
         return false;
     }
 
@@ -2561,7 +2720,8 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         float springStiffness,
         float forceScl,
         float externalForcesWeight,
-        bool externalForcesOnly) {
+        bool externalForcesOnly,
+        bool useThinPlate) {
 
     using namespace vislib::sys;
 
@@ -2586,13 +2746,6 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
     if (!CudaSafeCall(this->laplacian2_D.Set(0))) {
         return false;
     }
-
-//    if (!CudaSafeCall(this->displLen_D.Validate(this->vertexCnt))) {
-//        return false;
-//    }
-//    if (!CudaSafeCall(this->displLen_D.Set(0xff))) {
-//        return false;
-//    }
 
     // Init uncertainty buffer with zero
     if (!CudaSafeCall(cudaMemset(vtxUncertainty_D, 0x00, this->vertexCnt*sizeof(float)))) {
@@ -2628,41 +2781,64 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
 
             ::CheckForCudaErrorSync();
 
-            // Calc laplacian^2
-            DeformableGPUSurfaceMT_MeshLaplacian_D <<< Grid(this->vertexCnt, 256), 256 >>> (
-                    (float*)this->laplacian_D.Peek(),
-                    0,
-                    3,
-                    this->vertexNeighbours_D.Peek(),
-                    18,
-                    this->vertexCnt,
-                    (float*)this->laplacian2_D.Peek(),
-                    0,
-                    3);
+            if (useThinPlate) {
 
-            ::CheckForCudaErrorSync();
+                // Calc laplacian^2
+                DeformableGPUSurfaceMT_MeshLaplacian_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+                        (float*)this->laplacian_D.Peek(),
+                        0,
+                        3,
+                        this->vertexNeighbours_D.Peek(),
+                        18,
+                        this->vertexCnt,
+                        (float*)this->laplacian2_D.Peek(),
+                        0,
+                        3);
 
-            // Update vertex position
-            DeformableGPUSurfaceMT_UpdateVtxPos_D <<< Grid(this->vertexCnt, 256), 256 >>> (
-                    volTarget_D,
-                    vertexBuffer_D,
-                    (float*)this->vertexExternalForcesScl_D.Peek(),
-                    this->displLen_D.Peek(),
-                    vtxUncertainty_D,
-                    (float4*)this->externalForces_D.Peek(),
-                    this->laplacian_D.Peek(),
-                    this->laplacian2_D.Peek(),
-                    this->vertexCnt,
-                    externalForcesWeight,
-                    forceScl,
-                    springStiffness,
-                    isovalue,
-                    surfMappedMinDisplScl,
-                    useCubicInterpolation,
-                    true, // Track path of vertices
-                    this->vertexDataOffsPos,
-                    this->vertexDataOffsNormal,
-                    this->vertexDataStride);
+                ::CheckForCudaErrorSync();
+
+                // Update vertex position
+                DeformableGPUSurfaceMT_UpdateVtxPos_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+                        volTarget_D,
+                        vertexBuffer_D,
+                        (float*)this->vertexExternalForcesScl_D.Peek(),
+                        this->displLen_D.Peek(),
+                        vtxUncertainty_D,
+                        (float4*)this->externalForces_D.Peek(),
+                        this->laplacian_D.Peek(),
+                        this->laplacian2_D.Peek(),
+                        this->vertexCnt,
+                        externalForcesWeight,
+                        forceScl,
+                        springStiffness,
+                        isovalue,
+                        surfMappedMinDisplScl,
+                        useCubicInterpolation,
+                        true, // Track path of vertices
+                        this->vertexDataOffsPos,
+                        this->vertexDataOffsNormal,
+                        this->vertexDataStride);
+            } else { // No thin plate aspect
+                // Update vertex position
+                DeformableGPUSurfaceMT_UpdateVtxPosNoThinPlate_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+                        volTarget_D,
+                        vertexBuffer_D,
+                        (float*)this->vertexExternalForcesScl_D.Peek(),
+                        this->displLen_D.Peek(),
+                        vtxUncertainty_D,
+                        (float4*)this->externalForces_D.Peek(),
+                        this->laplacian_D.Peek(),
+                        this->vertexCnt,
+                        externalForcesWeight,
+                        forceScl,
+                        isovalue,
+                        surfMappedMinDisplScl,
+                        useCubicInterpolation,
+                        true, // Track path of vertices
+                        this->vertexDataOffsPos,
+                        this->vertexDataOffsNormal,
+                        this->vertexDataStride);
+            }
 
             // Accumulate displacement length of this iteration step
             float avgDisplLen = 0.0f;
@@ -2673,8 +2849,8 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                 return false;
             }
             avgDisplLen /= static_cast<float>(this->vertexCnt);
-            //if (i%100 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-            //printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+//            if (i%100 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+//            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
@@ -2713,7 +2889,8 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                 return false;
             }
             avgDisplLen /= static_cast<float>(this->vertexCnt);
-            //if (i%1000 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+//            if (i%100 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            //printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;

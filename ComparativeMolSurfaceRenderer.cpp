@@ -2401,8 +2401,8 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
                             this->volOrg.z + z*this->volDelta.z);
 
                     Vec3f vec(gvf.Peek()[4*idx+0], gvf.Peek()[4*idx+1], gvf.Peek()[4*idx+2]);
-                    vec *= this->surfaceMappingExternalForcesWeightScl;
-                    vec *= this->surfaceMappingForcesScl;
+                    //vec *= this->surfaceMappingExternalForcesWeightScl;
+                    //vec *= this->surfaceMappingForcesScl;
 
                     if ((pos.X() <= this->posXMax)&&(pos.X() >= this->posXMin)
                       &&(pos.Y() <= this->posYMax)&&(pos.Y() >= this->posYMin)

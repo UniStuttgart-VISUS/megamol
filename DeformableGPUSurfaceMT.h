@@ -338,7 +338,8 @@ protected:
             float springStiffness,
             float forceScl,
             float externalForcesWeight,
-            bool externalForcesOnly=false);
+            bool externalForcesOnly=false,
+            bool useThinPlate=true);
 
 private:
 
