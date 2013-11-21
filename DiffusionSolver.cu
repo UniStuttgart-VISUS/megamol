@@ -433,24 +433,28 @@ __global__ void DiffusionSolver_UpdateGVF_D(
     idxAdj = ::GetPosIdxByGridCoords(make_int3(gridC.x, gridC.y, uint(clamp(int(gridC.z)+1, 0, int(gridSize_D.z-1)))));
     gvfAdj[5] = make_float3(gvfIn_D[4*idxAdj+0], gvfIn_D[4*idxAdj+1], gvfIn_D[4*idxAdj+2]);
 
+    // Calculate maximum time step to ensure conversion
+    float dt = gridDelta_D.x*gridDelta_D.y*gridDelta_D.z/(scl*6);
+    dt /= 2;
+
     // Compute diffusion
-    gvf.x = (1.0-b)*gvfOld.x;
+    gvf.x = (1.0-b*dt)*gvfOld.x;
     gvf.x += (gvfAdj[0].x + gvfAdj[1].x + gvfAdj[2].x + gvfAdj[3].x +
               gvfAdj[4].x + gvfAdj[5].x -6*gvfOld.x)*scl;
-    gvf.x += c1;
+    gvf.x += c1*dt;
 
-    gvf.y = (1.0-b)*gvfOld.y;
+    gvf.y = (1.0-b*dt)*gvfOld.y;
     gvf.y += (gvfAdj[0].y + gvfAdj[1].y + gvfAdj[2].y + gvfAdj[3].y +
             gvfAdj[4].y + gvfAdj[5].y -6*gvfOld.y)*scl;
-    gvf.y += c2;
+    gvf.y += c2*dt;
 
-    gvf.z = (1.0-b)*gvfOld.z;
+    gvf.z = (1.0-b*dt)*gvfOld.z;
     gvf.z += (gvfAdj[0].z + gvfAdj[1].z + gvfAdj[2].z + gvfAdj[3].z +
             gvfAdj[4].z + gvfAdj[5].z -6*gvfOld.z)*scl;
-    gvf.z += c3;
+    gvf.z += c3*dt;
 
     float len = length(gvf);
-    if (len > 0.0f) gvf /= len; // TODO: How does this affect the result?
+    //if (len > 0.0f) gvf /= len; // TODO: How does this affect the result?
 
     gvfOut_D[4*idx+0] = gvf.x;
     gvfOut_D[4*idx+1] = gvf.y;
