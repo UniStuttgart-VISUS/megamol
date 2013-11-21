@@ -125,6 +125,13 @@ namespace protein {
         bool RenderVolumeData(megamol::core::view::CallRender3D *call, VTIDataCall *volume);
         
         /**
+         * Initialize parameters for the LIC calculation and setup random texture.
+         *
+         * @return 'True' on success, 'false' otherwise
+         */
+        void InitLIC(unsigned int licRandBuffSize);
+
+        /**
          * Refresh all parameters.
         */
         void ParameterRefresh(megamol::core::view::CallRender3D *call);
@@ -199,6 +206,12 @@ namespace protein {
         megamol::core::param::ParamSlot volIsoValue2Param;
         megamol::core::param::ParamSlot volIsoOpacityParam;
         megamol::core::param::ParamSlot volClipPlaneFlagParam;
+        // parameters for shader-based LIC
+        megamol::core::param::ParamSlot volLicDirSclParam;
+        megamol::core::param::ParamSlot volLicLenParam;
+        megamol::core::param::ParamSlot volLicContrastStretchingParam;
+        megamol::core::param::ParamSlot volLicBrightParam;
+        megamol::core::param::ParamSlot volLicTCSclParam;
         // shader for volume rendering
         vislib::graphics::gl::GLSLShader volumeShader;
         vislib::graphics::gl::GLSLShader volRayStartShader;
@@ -207,9 +220,11 @@ namespace protein {
                 
         // FBO for rendering opaque
         vislib::graphics::gl::FramebufferObject opaqueFBO;
-
+        
         // volume texture
         GLuint volumeTex;
+        // volume texture for vector field
+        GLuint vectorfieldTex;
         unsigned int volumeSize;
         int currentFrameId;
         // FBO for volume generation
@@ -246,7 +261,12 @@ namespace protein {
         vislib::Array<vislib::math::Vector<float, 4> > volClipPlane;
         // view aligned slicing
         ViewSlicing slices;
-    
+            
+        /// Uniform grid containing random buffer
+        vislib::Array<float> licRandBuff;
+        /// Random noise texture
+        GLuint randNoiseTex;
+
     };
 
 } /* end namespace protein */

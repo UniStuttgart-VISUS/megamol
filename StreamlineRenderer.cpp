@@ -398,6 +398,8 @@ bool StreamlineRenderer::Render(core::Call& call) {
     glScalef(scale, scale, scale);
 
     // Render streamlines
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
     glDisable(GL_LINE_SMOOTH);
     glColor3f(0.0f, 1.0f, 1.0f);
 

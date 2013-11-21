@@ -30,6 +30,9 @@ using namespace megamol::core;
 using namespace megamol::protein;
 
 
+#define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
+
+
 /*
  * protein::VolumeDirectionRenderer::VolumeDirectionRenderer (CTOR)
  */
@@ -232,9 +235,9 @@ bool VolumeDirectionRenderer::Render(Call& call) {
         vislib::math::Vector<float, 3> gridSize = vti->GetGridsize();
         //this->arrowCount = xRes * yRes * zRes;
         this->arrowCount = gridSize.X() * gridSize.Y() * gridSize.Z();
-        this->vertexArray.SetCount( arrowCount * 4);
-        this->colorArray.SetCount( arrowCount);
-        this->dirArray.SetCount( arrowCount * 3);
+        this->vertexArray.SetCount(arrowCount * 4);
+        this->colorArray.SetCount(arrowCount);
+        this->dirArray.SetCount(arrowCount * 3);
         
         float deltaX = vti->AccessBoundingBoxes().ObjectSpaceBBox().Width() / static_cast<float>(xRes+1);
         float deltaY = vti->AccessBoundingBoxes().ObjectSpaceBBox().Height() / static_cast<float>(yRes+1);
@@ -276,20 +279,7 @@ bool VolumeDirectionRenderer::Render(Call& call) {
                 //for( unsigned int zIdx = 0; zIdx < zRes; zIdx++) {
                 for( unsigned int zIdx = 0; zIdx < gridSize.Z(); zIdx++) {
                     zPos += deltaZ;
-                    // set position
-                    this->vertexArray[idx*4+0] = xPos;
-                    this->vertexArray[idx*4+1] = yPos;
-                    this->vertexArray[idx*4+2] = zPos;
-                    this->vertexArray[idx*4+3] = 0.1f;
                     // set direction
-                    vislib::math::Vector<float, 3> posn(
-                        (xPos - vti->AccessBoundingBoxes().ObjectSpaceBBox().Left()) / vti->AccessBoundingBoxes().ObjectSpaceBBox().Width(),
-                        (yPos - vti->AccessBoundingBoxes().ObjectSpaceBBox().Bottom()) / vti->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
-                        (zPos - vti->AccessBoundingBoxes().ObjectSpaceBBox().Back()) / vti->AccessBoundingBoxes().ObjectSpaceBBox().Depth());
-                    posn *= gridSize;
-                    posn.SetX( floorf(posn.X() + 0.5f));
-                    posn.SetY( floorf(posn.Y() + 0.5f));
-                    posn.SetZ( floorf(posn.Z() + 0.5f));
                     //unsigned int gridIdx = static_cast<unsigned int>(gridSize.X() * (gridSize.Y() * posn.Z() + posn.Y()) + posn.X());
                     //vislib::math::Vector<float, 3> dir( dirData[3*gridIdx], dirData[3*gridIdx+1], dirData[3*gridIdx+2]);
                     //this->dirArray[idx*3+0] = dir.X();
@@ -297,9 +287,7 @@ bool VolumeDirectionRenderer::Render(Call& call) {
                     //this->dirArray[idx*3+2] = dir.Z();
                     unsigned int gridIdx = static_cast<unsigned int>(gridSize.X() * (gridSize.Y() * zIdx + yIdx) + xIdx);
                     vislib::math::Vector<float, 3> dir( dirData[3*gridIdx], dirData[3*gridIdx+1], dirData[3*gridIdx+2]);
-                    this->dirArray[idx*3+0] = dir.X();
-                    this->dirArray[idx*3+1] = dir.Y();
-                    this->dirArray[idx*3+2] = dir.Z();
+                    // set position
                     this->vertexArray[idx*4+0] = (float(xIdx)/float(gridSize.X())) * vti->AccessBoundingBoxes().ObjectSpaceBBox().Width() + vti->AccessBoundingBoxes().ObjectSpaceBBox().Left();
                     this->vertexArray[idx*4+1] = (float(yIdx)/float(gridSize.Y())) * vti->AccessBoundingBoxes().ObjectSpaceBBox().Height() + vti->AccessBoundingBoxes().ObjectSpaceBBox().Bottom();
                     this->vertexArray[idx*4+2] = (float(zIdx)/float(gridSize.Z())) * vti->AccessBoundingBoxes().ObjectSpaceBBox().Depth() + vti->AccessBoundingBoxes().ObjectSpaceBBox().Back();
@@ -308,6 +296,12 @@ bool VolumeDirectionRenderer::Render(Call& call) {
                         ((dir.Length() - this->minC) / (this->maxC - this->minC)) * 
                         ((densityData[gridIdx] - minDensity) / (maxDensity - minDensity)) *
                         this->lengthScaleParam.Param<param::FloatParam>()->Value() * test;
+                    dir.Normalise();
+                    dir *= this->vertexArray[idx*4+3];
+                    // set direction
+                    this->dirArray[idx*3+0] = dir.X();
+                    this->dirArray[idx*3+1] = dir.Y();
+                    this->dirArray[idx*3+2] = dir.Z();
                     // set color
                     this->colorArray[idx] = dir.Length();
                     idx++;
@@ -340,7 +334,6 @@ bool VolumeDirectionRenderer::Render(Call& call) {
     glUniform3fvARB(this->arrowShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
     glUniform3fvARB(this->arrowShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
     this->arrowShader.SetParameter("lengthScale", this->lengthScaleParam.Param<param::FloatParam>()->Value());
-    //this->arrowShader.SetParameter("lengthFilter", lengthFilter);
     this->arrowShader.SetParameter("lengthFilter", this->lengthFilterParam.Param<param::FloatParam>()->Value());
 
     unsigned int cial = glGetAttribLocationARB(this->arrowShader, "colIdx");
@@ -348,11 +341,10 @@ bool VolumeDirectionRenderer::Render(Call& call) {
     unsigned int colTabSize = 0;
     
     // colour
-    //glEnableClientState(GL_COLOR_ARRAY);
-    //glColorPointer(3, GL_FLOAT, 0, this->colorArray.PeekElements());
     glEnableVertexAttribArrayARB(cial);
     glVertexAttribPointerARB(cial, 1, GL_FLOAT, GL_FALSE, 0, this->colorArray.PeekElements());
     glEnable(GL_TEXTURE_1D);
+    glActiveTexture(GL_TEXTURE0);
     view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if ((cgtf != NULL) && ((*cgtf)())) {
         glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
@@ -374,9 +366,10 @@ bool VolumeDirectionRenderer::Render(Call& call) {
     
     glUniform4fARB(this->arrowShader.ParameterLocation("inConsts1"), -1.0f, this->minC, this->maxC, float(colTabSize));
 
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(this->arrowCount-1));
+    CHECK_FOR_OGL_ERROR();
 
-    //glDisableClientState(GL_COLOR_ARRAY);
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(this->arrowCount));
+
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableVertexAttribArrayARB(cial);
     glDisableVertexAttribArrayARB(tpal);

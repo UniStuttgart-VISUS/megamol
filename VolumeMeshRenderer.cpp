@@ -281,10 +281,13 @@ bool VolumeMeshRenderer::create(void) {
     using vislib::sys::Log;
     using namespace vislib::graphics::gl;
 
-    if (glh_init_extensions("GL_VERSION_2_0 GL_ARB_vertex_buffer_object") != GL_TRUE) {
+    if (glh_init_extensions("GL_VERSION_2_0 GL_ARB_vertex_buffer_object GL_EXT_framebuffer_object") != GL_TRUE) {
         return false;
     }
     if  (!vislib::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
+        return false;
+    }
+    if  (!vislib::graphics::gl::FramebufferObject::InitialiseExtensions()) {
         return false;
     }
 
@@ -949,6 +952,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
                     glColor3f( 0.0f, 1.0f, 1.0f);
                 if( nodes->isStartNode )
                     glColor3f( 1.0f, 1.0f, 1.0f);
+                else continue; // DRAW ONLY START AND END NODES OF THE CENTERLINE
                 glVertex3fv( nodes->p.PeekComponents());
                 curClnCnt++;
             }
@@ -2350,7 +2354,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     // ========================================================================
     // Phase 8: Compute center lines for all features
     // ========================================================================
-
+#if 1
     // List the beginning and end of each surface feature
     //uint *vl = new uint[this->vertexCount];
     //uint2 *se = new uint2[centroidCount];
@@ -2438,7 +2442,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
         INT64 t1 = perf.Difference();
         Log::DefaultLog.WriteInfo( 1, "Time to compute centerline for feature %3i (%5i tria): %.5f", fCnt, fLength, (vislib::sys::PerformanceCounter::ToMillis(t1) + time) / 1000.0);
     }
-
+#endif
     // ========================================================================
     // Phase 9: Colorize vertices
     // ========================================================================
