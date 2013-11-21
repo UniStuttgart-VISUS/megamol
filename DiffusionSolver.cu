@@ -398,7 +398,6 @@ __global__ void DiffusionSolver_UpdateGVF_D(
     uint volsize = gridSize_D.x*gridSize_D.y*gridSize_D.z;
     if (idx >= volsize) return;
 
-
     /// Get const data from global device memory ///
 
     float b = gvfConstData_D[4*idx+0];
@@ -453,7 +452,7 @@ __global__ void DiffusionSolver_UpdateGVF_D(
             gvfAdj[4].z + gvfAdj[5].z -6*gvfOld.z)*scl;
     gvf.z += c3*dt;
 
-    float len = length(gvf);
+    //float len = length(gvf);
     //if (len > 0.0f) gvf /= len; // TODO: How does this affect the result?
 
     gvfOut_D[4*idx+0] = gvf.x;

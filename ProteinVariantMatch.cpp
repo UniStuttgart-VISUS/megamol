@@ -131,7 +131,7 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
     fm->SetTypePair(SURFACE_POTENTIAL, "Mean potential diff");
     fm->SetTypePair(SURFACE_POTENTIAL_SIGN, "Mean potential sign diff");
     fm->SetTypePair(MEAN_VERTEX_PATH, "Mean vertex path");
-    fm->SetTypePair(HAUSDORFF_DIST, "Hausdorff distance");
+//    fm->SetTypePair(HAUSDORFF_DIST, "Hausdorff distance");
     fm->SetTypePair(RMS_VALUE, "RMSD");
     this->theheuristicSlot.SetParameter(fm);
     this->MakeSlotAvailable(&this->theheuristicSlot);
@@ -1097,7 +1097,7 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                     this->qsIsoVal,
                     this->surfRegInterpolMode,
                     this->surfRegMaxIt,
-                    ProteinVariantMatch::minDispl,
+                    ProteinVariantMatch::qsGridSpacing/100.0f*this->surfRegForcesScl,
                     this->surfRegSpringStiffness,
                     this->surfRegForcesScl,
                     this->surfRegExternalForcesWeight)) {
@@ -1125,12 +1125,12 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
                     this->qsIsoVal,
                     this->surfMapInterpolMode,
                     this->surfMapMaxIt,
-                    ProteinVariantMatch::minDispl,
+                    ProteinVariantMatch::qsGridSpacing/100.0f*this->surfMapForcesScl,
                     this->surfMapSpringStiffness,
                     this->surfMapForcesScl,
                     this->surfMapExternalForcesWeight,
-                    0.09f, // TODO gvfScl
-                    35)) { // TODO gvfIt
+                    0.1f,
+                    300)) {
                 return false;
             }
 
@@ -1223,21 +1223,21 @@ count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
 //                    this->minMatchMeanVertexPathVal,
 //                    this->maxMatchMeanVertexPathVal);
 
-            // 4. Compute Hausdorff distance
-
-            if (!CudaSafeCall(this->hausdorffdistVtx_D.Validate(this->surfEnd.GetVertexCnt()))) {
-                return false;
-            }
-            float hausdorffdist = DeformableGPUSurfaceMT::CalcHausdorffDistance(
-                    &this->surfEnd, &this->surfStart, this->hausdorffdistVtx_D.Peek());
-            this->matchHausdorffDistance[i*this->nVariants+j] = hausdorffdist;
-
-//            if (i != j) {
-                this->minMatchHausdorffDistanceVal =
-                        std::min(this->minMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
-                this->maxMatchHausdorffDistanceVal =
-                        std::max(this->maxMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
+//            // 4. Compute Hausdorff distance
+//
+//            if (!CudaSafeCall(this->hausdorffdistVtx_D.Validate(this->surfEnd.GetVertexCnt()))) {
+//                return false;
 //            }
+//            float hausdorffdist = DeformableGPUSurfaceMT::CalcHausdorffDistance(
+//                    &this->surfEnd, &this->surfStart, this->hausdorffdistVtx_D.Peek());
+//            this->matchHausdorffDistance[i*this->nVariants+j] = hausdorffdist;
+//
+////            if (i != j) {
+//                this->minMatchHausdorffDistanceVal =
+//                        std::min(this->minMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
+//                this->maxMatchHausdorffDistanceVal =
+//                        std::max(this->maxMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
+////            }
 
             molCall->Unlock(); // Unlock the frame
             volCall->Unlock(); // Unlock the frame
