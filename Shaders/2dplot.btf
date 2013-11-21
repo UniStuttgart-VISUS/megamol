@@ -74,7 +74,8 @@ uniform float minVal;
 uniform float maxVal;
 
 void main() {   
-    vec3 colOrangeMsh = vec3(109.81, 0.9746*(max(minVal, texture2D(matrixTex, gl_TexCoord[0].st).a)-minVal)/(maxVal-minVal), 0.8968);
+    float val = clamp(texture2D(matrixTex, gl_TexCoord[0].st).a, minVal, maxVal);
+    vec3 colOrangeMsh = vec3(109.81, 0.9746*(val-minVal)/(maxVal-minVal), 0.8968);
     gl_FragColor = vec4(MSH2RGB(colOrangeMsh.r, colOrangeMsh.g, colOrangeMsh.b), 1.0);
 }
 -->
