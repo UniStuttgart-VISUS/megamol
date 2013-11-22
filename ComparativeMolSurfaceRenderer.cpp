@@ -303,6 +303,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
 
     // Minimum displacement
     this->surfMappedMinDisplScl = ComparativeMolSurfaceRenderer::qsGridSpacing/100.0f*this->surfaceMappingForcesScl;
+    //this->surfMappedMinDisplScl = ComparativeMolSurfaceRenderer::qsGridSpacing/100.0f;
     this->surfMappedMinDisplSclSlot.SetParameter(new core::param::FloatParam(this->surfMappedMinDisplScl, 0.0f));
     //this->MakeSlotAvailable(&this->surfMappedMinDisplSclSlot);
 
@@ -2403,6 +2404,7 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
                     Vec3f vec(gvf.Peek()[4*idx+0], gvf.Peek()[4*idx+1], gvf.Peek()[4*idx+2]);
                     //vec *= this->surfaceMappingExternalForcesWeightScl;
                     //vec *= this->surfaceMappingForcesScl;
+                    vec.Normalise();
 
                     if ((pos.X() <= this->posXMax)&&(pos.X() >= this->posXMin)
                       &&(pos.Y() <= this->posYMax)&&(pos.Y() >= this->posYMin)

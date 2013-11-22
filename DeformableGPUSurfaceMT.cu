@@ -683,7 +683,10 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosNoThinPlate_D(
 
     // Check convergence criterion
     float lastDisplLen = displLen_D[idx];
-    if (lastDisplLen <= minDispl) return; // Vertex is converged
+    if (lastDisplLen <= minDispl) {
+        displLen_D[idx] = 0.0;
+        return; // Vertex is converged
+    }
 
     const uint posBaseIdx = dataArrSize*idx+dataArrOffsPos;
 
@@ -806,7 +809,10 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
 
     // Check convergence criterion
     float lastDisplLen = displLen_D[idx];
-    if (lastDisplLen <= minDispl) return; // Vertex is converged
+    if (lastDisplLen <= minDispl) {
+        displLen_D[idx] = 0.0;
+        return; // Vertex is converged
+    }
 
     const uint posBaseIdx = dataArrSize*idx+dataArrOffsPos;
 
@@ -850,12 +856,11 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     externalForce.y = externalForceTmp.y;
     externalForce.z = externalForceTmp.z;
 
-   // externalForce = safeNormalize(externalForce);
+    externalForce = safeNormalize(externalForce);
     externalForce *= forcesScl*externalForcesScl;
 
     // Umbrella internal force
-    float3 force = externalForce;
-    float3 posNew = posOld + force;
+    float3 posNew = posOld + externalForce;
 
     /* Write back to global device memory */
 
@@ -870,9 +875,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     // No branching occurs here, since the parameter is set globally
     float3 diff = posNew-posOld;
     float diffLen = length(diff);
-    //float diffLenInternal = length(forcesScl*((1.0 - stiffness)*laplacian - stiffness*laplacian2));
     if ((trackPath)&&(abs(externalForcesScl) == 1.0f)) {
-        //vtxUncertainty_D[idx] += length(externalForce);
         vtxUncertainty_D[idx] += diffLen;
     }
     // Displ scl for convergence
@@ -2889,7 +2892,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                 return false;
             }
             avgDisplLen /= static_cast<float>(this->vertexCnt);
-//            if (i%100 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            if (i%100 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             //printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
