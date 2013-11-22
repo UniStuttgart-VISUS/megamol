@@ -196,6 +196,8 @@ namespace protein {
         megamol::core::param::ParamSlot radscaleParam;
         megamol::core::param::ParamSlot gridspacingParam;
         megamol::core::param::ParamSlot isovalParam;
+        // paramater to turn two sided lighting on and off
+        megamol::core::param::ParamSlot twoSidedLightParam;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;

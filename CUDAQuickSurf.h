@@ -75,6 +75,13 @@ struct Vertex
                 int &numverts, float *&v, float *&n, float *&c,
                 int &numfacets, int *&f);
 
+  int calc_surf(long int natoms, const float *xyzr, const float *colors,
+                int colorperatom, float *origin, int* numvoxels, float maxrad,
+                float radscale, float3 gridspacing,
+                float isovalue, float gausslim,
+                int &numverts, float *&v, float *&n, float *&c,
+                int &numfacets, int *&f);
+
   int calc_map(long int natoms, const float *xyzr, const float *colors,
                int colorperatom, float *origin, int* numvoxels, float maxrad,
                float radscale, float gridspacing,

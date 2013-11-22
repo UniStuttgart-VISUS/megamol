@@ -55,6 +55,7 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
     radscaleParam( "quicksurf::radscale", "Radius scale" ),
     gridspacingParam( "quicksurf::gridspacing", "Grid spacing" ),
     isovalParam( "quicksurf::isoval", "Isovalue" ),
+    twoSidedLightParam( "twoSidedLight", "Turns two-sided lighting on and off" ),
     m_hPos(0)
 {
     this->molDataCallerSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
@@ -108,9 +109,12 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
 
     this->gridspacingParam.SetParameter( new param::FloatParam( 1.0f, 0.0f));
     this->MakeSlotAvailable( &this->gridspacingParam);
-
+    
     this->isovalParam.SetParameter( new param::FloatParam( 0.5f, 0.0f));
     this->MakeSlotAvailable( &this->isovalParam);
+
+    this->twoSidedLightParam.SetParameter( new param::BoolParam(false));
+    this->MakeSlotAvailable( &this->twoSidedLightParam);
 
     volmap = NULL;
     voltexmap = NULL;
@@ -213,11 +217,11 @@ bool QuickSurfRenderer2::create(void) {
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
     // vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::perpixellight::vertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::perpixellightVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::perpixellight::fragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::perpixellightFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
         return false;
     }
@@ -369,6 +373,9 @@ bool QuickSurfRenderer2::Render(Call& call) {
     glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
     glEnable( GL_COLOR_MATERIAL);
 
+    glDisable(GL_CULL_FACE);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
+
     // TODO
     /*
     glBegin( GL_POINTS);
@@ -384,6 +391,7 @@ bool QuickSurfRenderer2::Render(Call& call) {
         cudaqsurf = new CUDAQuickSurf();
     }
     this->lightShader.Enable();
+    glUniform1i(this->lightShader.ParameterLocation("twoSidedLight"), this->twoSidedLightParam.Param<param::BoolParam>()->Value());
     this->calcSurf( c2, m_hPos, 
         this->qualityParam.Param<param::IntParam>()->Value(),
         this->radscaleParam.Param<param::FloatParam>()->Value(),
@@ -432,55 +440,25 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     float minrad, maxrad;
     int i;
     float mincoord[3], maxcoord[3];
-
-    minx = maxx = posInter[0];
-    miny = maxy = posInter[1];
-    minz = maxz = posInter[2];
-    //minrad = maxrad = mol->AtomTypes()[mol->AtomTypeIndices()[0]].Radius();
-    minrad = maxrad = minGradColorParam.Param<param::FloatParam>()->Value();
-    /*
-    for ( i = 0; i < numParticles; i++) {
-#ifdef COMPUTE_BBOX
-        int ind = i * 3;
-        float tmpx = posInter[ind  ];
-        float tmpy = posInter[ind+1];
-        float tmpz = posInter[ind+2];
-
-        minx = (tmpx < minx) ? tmpx : minx;
-        maxx = (tmpx > maxx) ? tmpx : maxx;
-
-        miny = (tmpy < miny) ? tmpy : miny;
-        maxy = (tmpy > maxy) ? tmpy : maxy;
-
-        minz = (tmpz < minz) ? tmpz : minz;
-        maxz = (tmpz > maxz) ? tmpz : maxz;
-#endif
-  
-        float r = mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius();
-        minrad = (r < minrad) ? r : minrad;
-        maxrad = (r > maxrad) ? r : maxrad;
-    }
-    */
-    mincoord[0] = minx;
-    mincoord[1] = miny;
-    mincoord[2] = minz;
-    maxcoord[0] = maxx;
-    maxcoord[1] = maxy;
-    maxcoord[2] = maxz;
-
+    
     // crude estimate of the grid padding we require to prevent the
     // resulting isosurface from being clipped
+#ifdef PADDING
     float gridpadding = radscale * maxrad * 1.5;
     float padrad = gridpadding;
     padrad = 0.4 * sqrt(4.0/3.0*M_PI*padrad*padrad*padrad);
     gridpadding = std::max(gridpadding, padrad);
+    gridpadding *= 2.0f;
+#else
+    float gridpadding = 0.0f;
+#endif
 
 #if VERBOSE
     printf("  Padding radius: %.3f  (minrad: %.3f maxrad: %.3f)\n", 
         gridpadding, minrad, maxrad);
 #endif
-    gridpadding *= 2.0f,
 
+#ifdef USE_BOUNDING_BOX
     // kroneml
     mincoord[0] = mol->AccessBoundingBoxes().ObjectSpaceBBox().Left();
     mincoord[1] = mol->AccessBoundingBoxes().ObjectSpaceBBox().Bottom();
@@ -519,7 +497,54 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
 
     printf("  Grid size: (%d %d %d)\n",
         numvoxels[0], numvoxels[1], numvoxels[2]);
-#endif
+#endif // VERBOSE
+#else // USE_BOUNDING_BOX
+    minx = maxx = posInter[0];
+    miny = maxy = posInter[1];
+    minz = maxz = posInter[2];
+    //minrad = maxrad = mol->AtomTypes()[mol->AtomTypeIndices()[0]].Radius();
+    //minrad = maxrad = minGradColorParam.Param<param::FloatParam>()->Value();
+    minrad = FLT_MAX;
+    maxrad = FLT_MIN;
+    // get min and max radius
+    for (unsigned int i = 0; i < mol->GetParticleListCount(); i++) {
+        megamol::core::moldyn::MultiParticleDataCall::Particles &parts = mol->AccessParticles(i);
+        if( minrad > parts.GetGlobalRadius() ) minrad = parts.GetGlobalRadius();
+        if( maxrad < parts.GetGlobalRadius() ) maxrad = parts.GetGlobalRadius();
+    }
+
+    for ( i = 0; i < numParticles; i++) {
+        float tmpx = posInter[i * 3    ];
+        float tmpy = posInter[i * 3 + 1];
+        float tmpz = posInter[i * 3 + 2];
+
+        minx = (tmpx < minx) ? tmpx : minx;
+        maxx = (tmpx > maxx) ? tmpx : maxx;
+
+        miny = (tmpy < miny) ? tmpy : miny;
+        maxy = (tmpy > maxy) ? tmpy : maxy;
+
+        minz = (tmpz < minz) ? tmpz : minz;
+        maxz = (tmpz > maxz) ? tmpz : maxz;
+    }
+    mincoord[0] = minx;
+    mincoord[1] = miny;
+    mincoord[2] = minz;
+    maxcoord[0] = maxx;
+    maxcoord[1] = maxy;
+    maxcoord[2] = maxz;
+#endif // USE_BOUNDING_BOX
+    
+    // update grid spacing
+    float bBoxDim[3] = {maxcoord[0] - mincoord[0], maxcoord[1] - mincoord[1], maxcoord[2] - mincoord[2]};
+    float gridDim[3] = {ceilf(bBoxDim[0] / gridspacing), ceilf(bBoxDim[1] / gridspacing), ceilf(bBoxDim[2] / gridspacing)};
+    float3 gridSpacing3D;
+    gridSpacing3D.x = bBoxDim[0] / gridDim[0];
+    gridSpacing3D.y = bBoxDim[1] / gridDim[1];
+    gridSpacing3D.z = bBoxDim[2] / gridDim[2];
+    numvoxels[0] = static_cast<int>(ceilf(bBoxDim[0] / gridSpacing3D.x));
+    numvoxels[1] = static_cast<int>(ceilf(bBoxDim[1] / gridSpacing3D.y));
+    numvoxels[2] = static_cast<int>(ceilf(bBoxDim[2] / gridSpacing3D.z));
 
     //vec_copy(origin, mincoord);
     origin[0] = mincoord[0];
@@ -589,7 +614,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     int rc = cqs->calc_surf( numParticles, &xyzr[0],
         (useCol) ? &colors[0] : &this->atomColorTable[0],
         useCol, origin, numvoxels, maxrad,
-        radscale, gridspacing, isovalue, gausslim,
+        radscale, gridSpacing3D, isovalue, gausslim,
         gpunumverts, gv, gn, gc, gpunumfacets, gf);
 
     if (rc == 0) {
