@@ -567,6 +567,9 @@ CUDAMarchingCubes::CUDAMarchingCubes() {
     setdata = false;
     cudadevice = 0;
     cudacomputemajor = 0;
+    d_areas = 0;
+    areaMemSize = 0;
+    totalArea = 0.0f;
 
     // Query GPU device attributes so we can launch the best kernel type
     cudaDeviceProp deviceProp;
@@ -781,7 +784,7 @@ void CUDAMarchingCubes::computeIsosurface( float3* vertOut, float3* normOut, flo
     //cudaEventElapsedTime(&time, start, stop);
     //printf ("Time for the generateTriangles kernel: %f ms\n", time);
     //totalTime += time;
-
+    
     //printf (" CUDA MC: Total kernel runtime time: %f ms = %.3f fps\n", totalTime, 1000.0f/totalTime);
     // check for errors
     //cudaThreadSynchronize();
@@ -1000,15 +1003,23 @@ float CUDAMarchingCubes::computeSurfaceArea( float3 *verts, unsigned int triaCou
     if(triaCount <= 0) return 0.0f;
 
     // initialize and allocate device arrays
-    float *d_areas;
-    unsigned long memSize = sizeof(float) * triaCount;
-    if (cudaMalloc((void**) &d_areas, memSize) != cudaSuccess) {
-        return -1.0f;
+    size_t memSize = sizeof(float) * triaCount;
+    if (memSize > this->areaMemSize ) {
+        if (this->areaMemSize > 0) {
+            // clean up
+            cudaFree(this->d_areas);
+            // check for errors
+            cudaThreadSynchronize();
+        }
+        //printf( "cudaFree: %s\n", cudaGetErrorString( cudaGetLastError()));
+        if (cudaMalloc((void**) &this->d_areas, memSize) != cudaSuccess) {
+            return -1.0f;
+        }
+        this->areaMemSize = memSize;
+        // check for errors
+        cudaThreadSynchronize();
+        //printf( "cudaMalloc: %s\n", cudaGetErrorString( cudaGetLastError()));
     }
-
-    // check for errors
-    cudaThreadSynchronize();
-    //printf( "cudaMalloc: %s\n", cudaGetErrorString( cudaGetLastError()));
 
     // compute area for each triangle
     int threads = 256;
@@ -1024,29 +1035,22 @@ float CUDAMarchingCubes::computeSurfaceArea( float3 *verts, unsigned int triaCou
         grid.z *= 2;
     }
 
-    computeTriangleAreas<<<grid, threads>>>(verts, d_areas, triaCount);
+    computeTriangleAreas<<<grid, threads>>>(verts, this->d_areas, triaCount);
     // check for errors
     cudaThreadSynchronize();
     //printf( "launch_computeTriangleAreas: %s\n", cudaGetErrorString( cudaGetLastError()));
 
     // use prefix sum to compute total surface area
-    ThrustScanWrapperArea( d_areas, d_areas, triaCount);
+    ThrustScanWrapperArea(this->d_areas, this->d_areas, triaCount);
     // check for errors
     cudaThreadSynchronize();
     //printf( "ThrustScanWrapperArea: %s\n", cudaGetErrorString( cudaGetLastError()));
 
     // readback total surface area
-    float totalArea;
-    cudaMemcpy((void *)&totalArea, (void *)(d_areas + triaCount - 1), sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy((void *)&this->totalArea, (void *)(this->d_areas + triaCount - 1), sizeof(float), cudaMemcpyDeviceToHost);
     // check for errors
     cudaThreadSynchronize();
     //printf( "cudaMemcpy: %s\n", cudaGetErrorString( cudaGetLastError()));
-
-    // clean up
-    cudaFree(d_areas);
-    // check for errors
-    cudaThreadSynchronize();
-    //printf( "cudaFree: %s\n", cudaGetErrorString( cudaGetLastError()));
 
     // return result
     return totalArea;

@@ -213,6 +213,9 @@ private:
     float *d_volume;           ///< input volumetric map
     float *d_colors;           ///< input volumetric texture 
     float ownCudaDataArrays;   ///< ownership of cuda arraysCleanup()
+    float *d_areas;
+    size_t areaMemSize;
+    float totalArea;
 
     cudaArray *d_volumeArray;  ///< volumetric map in device memory
     uint2 *d_voxelVerts;       ///< per-voxel vertex counts for scan calls
