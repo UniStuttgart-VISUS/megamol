@@ -468,9 +468,6 @@ __global__ void DiffusionSolver_UpdateGVF_D(
     gvf.z = c3 + (1.0-b)*(gvfOld.z + dt*(gvfAdj[0].z + gvfAdj[1].z + gvfAdj[2].z + gvfAdj[3].z +
             gvfAdj[4].z + gvfAdj[5].z -6*gvfOld.z));
 
-    //float len = length(gvf);
-    //if (len > 0.0f) gvf /= len; // TODO: How does this affect the result?
-
     gvfOut_D[4*idx+0] = gvf.x;
     gvfOut_D[4*idx+1] = gvf.y;
     gvfOut_D[4*idx+2] = gvf.z;
