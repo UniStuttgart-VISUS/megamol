@@ -33,6 +33,7 @@
 #include "glh/glh_extensions.h"
 #include <GL/glu.h>
 #include <omp.h>
+#include <cfloat>
 
 using namespace megamol;
 using namespace megamol::core;
