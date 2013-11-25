@@ -297,7 +297,13 @@ void main() {
         float potNew = texture3D(potentialTex0, gl_TexCoord[0].stp).a;
         //float potDiff = abs(potOld-potNew); 
         // Calc euclidian distance
-        float posDiff = length(posOldFrag-posNewFrag);
+        // Calc euclidian distance
+        float posDiff;
+        if (uncertaintyMeasurement == 0) { // Euclidean distance
+            posDiff = length(posOldFrag-posNewFrag);
+        } else if (uncertaintyMeasurement == 1) { // Path length
+            posDiff = pathLenFrag;
+        }
         // Three color mapping
         /*vec3 colDiff = MixColors(potDiff, 
                0.0, 

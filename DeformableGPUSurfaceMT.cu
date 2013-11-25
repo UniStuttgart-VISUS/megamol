@@ -2892,7 +2892,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                 return false;
             }
             avgDisplLen /= static_cast<float>(this->vertexCnt);
-            if (i%100 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            //if (i%100 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             //printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
