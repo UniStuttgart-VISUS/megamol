@@ -47,16 +47,13 @@ using namespace megamol::core::moldyn;
 QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
     molDataCallerSlot( "getData", "Connects the molecule rendering with molecule data storage"),
     colorTableFileParam( "color::colorTableFilename", "The filename of the color table."),
-    coloringModeParam( "color::coloringMode", "The first coloring mode."),
-    minGradColorParam( "color::minGradColor", "The color for the minimum value for gradient coloring" ),
-    midGradColorParam( "color::midGradColor", "The color for the middle value for gradient coloring" ),
-    maxGradColorParam( "color::maxGradColor", "The color for the maximum value for gradient coloring" ),
     interpolParam( "posInterpolation", "Enable positional interpolation between frames" ),
     qualityParam( "quicksurf::quality", "Quality" ),
     radscaleParam( "quicksurf::radscale", "Radius scale" ),
     gridspacingParam( "quicksurf::gridspacing", "Grid spacing" ),
     isovalParam( "quicksurf::isoval", "Isovalue" ),
     twoSidedLightParam( "twoSidedLight", "Turns two-sided lighting on and off" ),
+    surfaceColorParam( "surfaceColor", "The color of the surface" ),
     m_hPos(0)
 {
     this->molDataCallerSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
@@ -67,33 +64,6 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
     Color::ReadColorTableFromFile( filename, this->colorLookupTable);
     this->colorTableFileParam.SetParameter(new param::StringParam( A2T( filename)));
     this->MakeSlotAvailable( &this->colorTableFileParam);
-
-    // coloring mode #0
-    this->currentColoringMode = Color::CHAIN;
-    param::EnumParam *cm0 = new param::EnumParam(int(this->currentColoringMode));
-    cm0->SetTypePair( Color::ELEMENT, "Element");
-    cm0->SetTypePair( Color::RESIDUE, "Residue");
-    cm0->SetTypePair( Color::STRUCTURE, "Structure");
-    cm0->SetTypePair( Color::BFACTOR, "BFactor");
-    cm0->SetTypePair( Color::CHARGE, "Charge");
-    cm0->SetTypePair( Color::OCCUPANCY, "Occupancy");
-    cm0->SetTypePair( Color::CHAIN, "Chain");
-    cm0->SetTypePair( Color::MOLECULE, "Molecule");
-    cm0->SetTypePair( Color::RAINBOW, "Rainbow");
-    this->coloringModeParam << cm0;
-    this->MakeSlotAvailable( &this->coloringModeParam);
-
-    // the color for the minimum value (gradient coloring
-    this->minGradColorParam.SetParameter(new param::FloatParam( 0.5f, 0.0f));
-    this->MakeSlotAvailable( &this->minGradColorParam);
-
-    // the color for the middle value (gradient coloring
-    this->midGradColorParam.SetParameter(new param::StringParam( "#f0f0f0"));
-    this->MakeSlotAvailable( &this->midGradColorParam);
-
-    // the color for the maximum value (gradient coloring
-    this->maxGradColorParam.SetParameter(new param::StringParam( "#ae3b32"));
-    this->MakeSlotAvailable( &this->maxGradColorParam);
 
     // en-/disable positional interpolation
     this->interpolParam.SetParameter(new param::BoolParam( true));
@@ -116,6 +86,10 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
 
     this->twoSidedLightParam.SetParameter( new param::BoolParam(false));
     this->MakeSlotAvailable( &this->twoSidedLightParam);
+
+    // the surface color
+    this->surfaceColorParam.SetParameter(new param::StringParam( "#7092be"));
+    this->MakeSlotAvailable( &this->surfaceColorParam);
 
     volmap = NULL;
     voltexmap = NULL;
@@ -352,14 +326,18 @@ bool QuickSurfRenderer2::Render(Call& call) {
     this->UpdateParameters( c2);
 
     // recompute color table, if necessary
-    if( this->atomColorTable.Count()/3 < numParticles ) {
+    if(this->atomColorTable.Count()/3 < numParticles || this->surfaceColorParam.IsDirty()) {
+        float r, g, b;
+        utility::ColourParser::FromString( this->surfaceColorParam.Param<param::StringParam>()->Value(), r, g, b);
         // Use one coloring mode
         this->atomColorTable.AssertCapacity( numParticles * 3);
+        this->atomColorTable.Clear();
         for( unsigned int i = 0; i < numParticles; i++ ) {
-            this->atomColorTable.Add( 112.0f/255.0f);
-            this->atomColorTable.Add( 146.0f/255.0f);
-            this->atomColorTable.Add( 190.0f/255.0f);
+            this->atomColorTable.Add( r);
+            this->atomColorTable.Add( g);
+            this->atomColorTable.Add( b);
         }
+        this->surfaceColorParam.ResetDirty();
     }
 
     // ---------- render ----------
@@ -503,8 +481,6 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     minx = maxx = posInter[0];
     miny = maxy = posInter[1];
     minz = maxz = posInter[2];
-    //minrad = maxrad = mol->AtomTypes()[mol->AtomTypeIndices()[0]].Radius();
-    //minrad = maxrad = minGradColorParam.Param<param::FloatParam>()->Value();
     minrad = FLT_MAX;
     maxrad = FLT_MIN;
     // get min and max radius
@@ -528,24 +504,27 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
         minz = (tmpz < minz) ? tmpz : minz;
         maxz = (tmpz > maxz) ? tmpz : maxz;
     }
-    mincoord[0] = minx;
-    mincoord[1] = miny;
-    mincoord[2] = minz;
-    maxcoord[0] = maxx;
-    maxcoord[1] = maxy;
-    maxcoord[2] = maxz;
+    mincoord[0] = minx - maxrad * 0.0f;
+    mincoord[1] = miny - maxrad * 0.0f;
+    mincoord[2] = minz - maxrad * 0.0f;
+    maxcoord[0] = maxx + maxrad * 0.0f;
+    maxcoord[1] = maxy + maxrad * 0.0f;
+    maxcoord[2] = maxz + maxrad * 0.0f;
 #endif // USE_BOUNDING_BOX
     
     // update grid spacing
     float bBoxDim[3] = {maxcoord[0] - mincoord[0], maxcoord[1] - mincoord[1], maxcoord[2] - mincoord[2]};
-    float gridDim[3] = {ceilf(bBoxDim[0] / gridspacing), ceilf(bBoxDim[1] / gridspacing), ceilf(bBoxDim[2] / gridspacing)};
+    float gridDim[3] = {
+        ceilf(bBoxDim[0] / gridspacing) + 1, 
+        ceilf(bBoxDim[1] / gridspacing) + 1, 
+        ceilf(bBoxDim[2] / gridspacing) + 1};
     float3 gridSpacing3D;
-    gridSpacing3D.x = bBoxDim[0] / gridDim[0];
-    gridSpacing3D.y = bBoxDim[1] / gridDim[1];
-    gridSpacing3D.z = bBoxDim[2] / gridDim[2];
-    numvoxels[0] = static_cast<int>(ceilf(bBoxDim[0] / gridSpacing3D.x));
-    numvoxels[1] = static_cast<int>(ceilf(bBoxDim[1] / gridSpacing3D.y));
-    numvoxels[2] = static_cast<int>(ceilf(bBoxDim[2] / gridSpacing3D.z));
+    gridSpacing3D.x = bBoxDim[0] / (gridDim[0] - 1.0f);
+    gridSpacing3D.y = bBoxDim[1] / (gridDim[1] - 1.0f);
+    gridSpacing3D.z = bBoxDim[2] / (gridDim[2] - 1.0f);
+    numvoxels[0] = static_cast<int>(ceilf(bBoxDim[0] / gridSpacing3D.x)) + 1;
+    numvoxels[1] = static_cast<int>(ceilf(bBoxDim[1] / gridSpacing3D.y)) + 1;
+    numvoxels[2] = static_cast<int>(ceilf(bBoxDim[2] / gridSpacing3D.z)) + 1;
 
     //vec_copy(origin, mincoord);
     origin[0] = mincoord[0];
@@ -610,6 +589,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     pretime = wkf_timer_timenow(timer);
 
     CUDAQuickSurf *cqs = (CUDAQuickSurf *) cudaqsurf;
+    cqs->useGaussKernel = false;
 
     // compute both density map and floating point color texture map
     int rc = cqs->calc_surf( numParticles, &xyzr[0],

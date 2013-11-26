@@ -181,14 +181,6 @@ namespace protein {
 
         /** parameter slot for color table filename */
         megamol::core::param::ParamSlot colorTableFileParam;
-        /** parameter slot for coloring mode */
-        megamol::core::param::ParamSlot coloringModeParam;
-        /** parameter slot for min color of gradient color mode */
-        megamol::core::param::ParamSlot minGradColorParam;
-        /** parameter slot for mid color of gradient color mode */
-        megamol::core::param::ParamSlot midGradColorParam;
-        /** parameter slot for max color of gradient color mode */
-        megamol::core::param::ParamSlot maxGradColorParam;
         /** parameter slot for positional interpolation */
         megamol::core::param::ParamSlot interpolParam;
         // QuickSurf parameters
@@ -198,6 +190,8 @@ namespace protein {
         megamol::core::param::ParamSlot isovalParam;
         // paramater to turn two sided lighting on and off
         megamol::core::param::ParamSlot twoSidedLightParam;
+        // paramater to turn two sided lighting on and off
+        megamol::core::param::ParamSlot surfaceColorParam;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;

@@ -51,6 +51,8 @@
 // (limited by shared memory size)
 #define NTHREADS 48
 
+#define USE_CUDA_3D_TEXTURE
+
 //
 // Various math operators for vector types not already 
 // provided by the regular CUDA headers
@@ -400,6 +402,57 @@ __global__ void generateTriangleNormals(float3 *pos, float3 *norm, float3 gridSi
 }
 
 
+inline __host__ __device__ float3 cross(float3 a, float3 b) {
+    return make_float3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x); 
+}
+
+// version that calculates the surface normal for each triangle vertex
+__global__ void generateTriangleNormalsNo3DTex(float3 *pos, float3 *norm, float *volume, uint3 gridSize, float3 voxelSize, unsigned int numVerts) {
+    unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
+    unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
+    unsigned int i = zOffset + (blockId * blockDim.x) + threadIdx.x;
+
+    if (i > numVerts - 1)
+      return;
+    
+    float3 n;
+    float3 p1, p2, p3;
+    p1 = pos[3*i+0];
+    p2 = pos[3*i+1] - p1;
+    p3 = pos[3*i+2] - p1;
+    n = cross(p2, p3);
+    /*
+    float3 p;
+    p = pos[i];
+    // compute position in 3d grid
+    uint3 gridPos = make_uint3(
+        (unsigned int)(p.x / voxelSize.x),
+        (unsigned int)(p.y / voxelSize.y),
+        (unsigned int)(p.z / voxelSize.z));
+    
+    float field[6];
+    field[0] = sampleVolume(volume, gridPos + make_uint3(1, 0, 0), gridSize);
+    field[1] = sampleVolume(volume, gridPos - make_uint3(1, 0, 0), gridSize);
+    field[2] = sampleVolume(volume, gridPos + make_uint3(0, 1, 0), gridSize);
+    field[3] = sampleVolume(volume, gridPos - make_uint3(0, 1, 0), gridSize);
+    field[4] = sampleVolume(volume, gridPos + make_uint3(0, 0, 1), gridSize);
+    field[5] = sampleVolume(volume, gridPos - make_uint3(0, 0, 1), gridSize);
+    // normal calculation using central differences
+    n.x = field[1] - field[0];
+    n.y = field[3] - field[2];
+    n.z = field[5] - field[4];
+    */
+    float lenN = length(n);
+    n.x = n.x / lenN;
+    n.y = n.y / lenN;
+    n.z = n.z / lenN;
+    
+    norm[3*i+0] = n;
+    norm[3*i+1] = n;
+    norm[3*i+2] = n;
+}
+
+
 // version that calculates the surface normal and color for each triangle vertex
 __global__ void generateTriangleColorNormal(float3 *pos, float3 *col, float3 *norm, float3 *colors, uint3 gridSize, float3 gridSizeInv, float3 bBoxInv, unsigned int numVerts) {
     unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
@@ -462,6 +515,72 @@ __global__ void generateTriangleColorNormal(float3 *pos, float3 *col, float3 *no
 
     norm[i] = n;
     col[i] = c;
+}
+
+// version that calculates the surface normal and color for each triangle vertex
+__global__ void generateTriangleColorNormalNo3DTex(float3 *pos, float3 *col, float3 *norm, float *volume, float3 *colors, uint3 gridSize, float3 voxelSize, float3 bBoxInv, unsigned int numVerts) {
+    unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
+    unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
+    unsigned int i = zOffset + (blockId * blockDim.x) + threadIdx.x;
+
+    if (i > numVerts - 1)
+      return;
+
+    float3 p = pos[3*i+0];
+    p.x *= bBoxInv.x;
+    p.y *= bBoxInv.y;
+    p.z *= bBoxInv.z;
+    // color computation
+    float3 gridPosF = p;
+    gridPosF.x *= float( gridSize.x);
+    gridPosF.y *= float( gridSize.y);
+    gridPosF.z *= float( gridSize.z);
+    float3 gridPosFloor;
+    // Without the offset, rounding errors can occur
+    // TODO why do we need the offset??
+    gridPosFloor.x = floorf(gridPosF.x + 0.0001f);
+    gridPosFloor.y = floorf(gridPosF.y + 0.0001f);
+    gridPosFloor.z = floorf(gridPosF.z + 0.0001f);
+    float3 gridPosCeil;
+    // Without the offset, rounding errors can occur
+    // TODO why do we need the offset??
+    gridPosCeil.x = ceilf(gridPosF.x - 0.0001f);
+    gridPosCeil.y = ceilf(gridPosF.y - 0.0001f);
+    gridPosCeil.z = ceilf(gridPosF.z - 0.0001f);
+    uint3 gridPos0;
+    gridPos0.x = gridPosFloor.x;
+    gridPos0.y = gridPosFloor.y;
+    gridPos0.z = gridPosFloor.z;
+    uint3 gridPos1;
+    gridPos1.x = gridPosCeil.x;
+    gridPos1.y = gridPosCeil.y;
+    gridPos1.z = gridPosCeil.z;
+
+    float3 field[2];
+    field[0] = sampleColors(colors, gridPos0, gridSize);
+    field[1] = sampleColors(colors, gridPos1, gridSize);
+
+    float3 tmp = gridPosF - gridPosFloor;
+    float a = max( max( tmp.x, tmp.y), tmp.z);
+    float3 c = lerp( field[0], field[1], a);
+    
+    float3 n;
+    float3 p1, p2, p3;
+    p1 = pos[3*i+0];
+    p2 = pos[3*i+1] - p1;
+    p3 = pos[3*i+2] - p1;
+    n = cross(p2, p3);
+    float lenN = length(n);
+    n.x = n.x / lenN;
+    n.y = n.y / lenN;
+    n.z = n.z / lenN;
+    
+    norm[3*i+0] = n;
+    norm[3*i+1] = n;
+    norm[3*i+2] = n;
+    col[3*i+0] = c;
+    col[3*i+1] = c;
+    col[3*i+2] = c;
 }
 
 
@@ -763,11 +882,20 @@ void CUDAMarchingCubes::computeIsosurface( float3* vertOut, float3* normOut, flo
 
     float3 gridSizeInv = make_float3( 1.0f / float( gridSize.x), 1.0f / float( gridSize.y), 1.0f / float( gridSize.z));
     float3 bBoxInv = make_float3( 1.0f / bBox.x, 1.0f / bBox.y, 1.0f / bBox.z);
+#ifdef USE_CUDA_3D_TEXTURE
     if( this->useColor ) {
         generateTriangleColorNormal<<<grid3, threads>>>(vertOut, colOut, normOut, (float3*)d_colors, this->gridSize, gridSizeInv, bBoxInv, totalVerts);
     } else {
         generateTriangleNormals<<<grid3, threads>>>(vertOut, normOut, gridSizeInv, bBoxInv, totalVerts);
     }
+#else
+    if( this->useColor ) {
+        //generateTriangleColorNormal<<<grid3, threads>>>(vertOut, colOut, normOut, (float3*)d_colors, this->gridSize, gridSizeInv, bBoxInv, totalVerts);
+        generateTriangleColorNormalNo3DTex<<<grid3, threads>>>(vertOut, colOut, normOut, d_volume, (float3*)d_colors, gridSize, voxelSize, bBoxInv, totalVerts/3);
+    } else {
+        generateTriangleNormalsNo3DTex<<<grid3, threads>>>(vertOut, normOut, d_volume, gridSize, voxelSize, totalVerts/3);
+    }
+#endif // USE_CUDA_3D_TEXTURE
 
     // check for errors
     cudaThreadSynchronize();
@@ -929,6 +1057,7 @@ bool CUDAMarchingCubes::SetVolumeData(float *volume, float *colors, uint3 gridsi
     d_volumeArray = NULL;
   }
 
+#ifdef USE_CUDA_3D_TEXTURE
   // allocate the 3D array if needed
   if (!d_volumeArray) { 
     // create 3D array
@@ -952,6 +1081,7 @@ bool CUDAMarchingCubes::SetVolumeData(float *volume, float *colors, uint3 gridsi
 
   // bind the array to a volume texture
   bindVolumeTexture(d_volumeArray, channelDesc);
+#endif
 
   // success
   setdata = true;

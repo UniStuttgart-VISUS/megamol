@@ -39,6 +39,7 @@ VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid() :
         frameStartSlot("frameStart", "The first frame to be loaded"),
         maxCacheSizeSlot("maxCacheSize", "The maximum size of the cache"),
         mpdcAttributeSlot("mpdcAttribute", "The name of the point data attribute to be sent with MultiParticleDataCall"),
+        globalRadiusParam("globalRadius", "The global radius to be sent with MultiParticleDataCall"),
         hash(0), nFrames(0), readPointData(false), readCellData(false),
         bbox(0.0, 0.0, 0.0, 0.0, 0.0, 0.0) {
 
@@ -75,9 +76,12 @@ VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid() :
 
     this->maxCacheSizeSlot.SetParameter(new core::param::IntParam(10, 1));
     this->MakeSlotAvailable(&this->maxCacheSizeSlot);
-
+    
     this->mpdcAttributeSlot.SetParameter(new core::param::StringParam(""));
     this->MakeSlotAvailable(&this->mpdcAttributeSlot);
+
+    this->globalRadiusParam.SetParameter(new core::param::FloatParam(1.0f, 0.0f));
+    this->MakeSlotAvailable(&this->globalRadiusParam);
 
 }
 
@@ -206,7 +210,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
             // Loop through all particle lists
 
             // Set global radius to 1 TODO ?
-            mpdc->AccessParticles(0).SetGlobalRadius(1.0f);
+            mpdc->AccessParticles(0).SetGlobalRadius(this->globalRadiusParam.Param<core::param::FloatParam>()->Value());
             // Set number of frames
             mpdc->AccessParticles(0).SetCount(fr->GetNumberOfPoints());
             // Set particle type
