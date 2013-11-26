@@ -26,7 +26,6 @@
 #endif
 #include "glh/glh_extensions.h"
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,6 +46,14 @@
 //
 // multi-threaded direct summation implementation
 //
+
+inline __host__ __device__ float dot(float3 a, float3 b) { 
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+inline __host__ __device__ float length(float3 v){
+    return sqrtf(dot(v, v));
+}
 
 typedef struct {
   float isovalue;
@@ -1537,6 +1544,403 @@ __global__ static void gaussdensity_fast(int natoms,
 }
 
 
+__global__ static void wendlanddensity_fast(int natoms,
+                                         const float4 *sorted_xyzr, 
+                                         int3 numvoxels,
+                                         int3 acncells,
+                                         float acgridspacing,
+                                         float invacgridspacing,
+                                         const uint2 * cellStartEnd,
+                                         float3 gridspacing, unsigned int z, 
+                                         float *densitygrid,
+                                         bool storeNearestNeighbor,
+                                         int* nearestNeighbor,
+                                         unsigned int* atomIndex) {
+  unsigned int xindex  = (blockIdx.x * blockDim.x) + threadIdx.x;
+  unsigned int yindex  = (blockIdx.y * blockDim.y) + threadIdx.y;
+  unsigned int zindex  = ((blockIdx.z * blockDim.z) + threadIdx.z) * GUNROLL;
+  unsigned int outaddr = zindex * numvoxels.x * numvoxels.y + 
+                         yindex * numvoxels.x + 
+                         xindex;
+
+  // early exit if this thread is outside of the grid bounds
+  if (xindex >= numvoxels.x || yindex >= numvoxels.y || zindex >= numvoxels.z)
+    return;
+
+  zindex += z;
+
+  // compute ac grid index of lower corner minus gaussian radius
+  int xabmin = ((blockIdx.x * blockDim.x) * gridspacing.x - acgridspacing) * invacgridspacing;
+  int yabmin = ((blockIdx.y * blockDim.y) * gridspacing .y- acgridspacing) * invacgridspacing;
+  int zabmin = ((z + blockIdx.z * blockDim.z * GUNROLL) * gridspacing.z - acgridspacing) * invacgridspacing;
+
+  // compute ac grid index of upper corner plus gaussian radius
+  int xabmax = (((blockIdx.x+1) * blockDim.x) * gridspacing.x + acgridspacing) * invacgridspacing;
+  int yabmax = (((blockIdx.y+1) * blockDim.y) * gridspacing.y + acgridspacing) * invacgridspacing;
+  int zabmax = ((z + (blockIdx.z+1) * blockDim.z * GUNROLL) * gridspacing.z + acgridspacing) * invacgridspacing;
+
+  xabmin = (xabmin < 0) ? 0 : xabmin;
+  yabmin = (yabmin < 0) ? 0 : yabmin;
+  zabmin = (zabmin < 0) ? 0 : zabmin;
+  xabmax = (xabmax >= acncells.x-1) ? acncells.x-1 : xabmax;
+  yabmax = (yabmax >= acncells.y-1) ? acncells.y-1 : yabmax;
+  zabmax = (zabmax >= acncells.z-1) ? acncells.z-1 : zabmax;
+
+  float coorx = gridspacing.x * xindex;
+  float coory = gridspacing.y * yindex;
+  float coorz = gridspacing.z * zindex;
+
+  float densityval1=0.0f;
+#if GUNROLL >= 2
+  float densityval2=0.0f;
+#endif
+#if GUNROLL >= 4
+  float densityval3=0.0f;
+  float densityval4=0.0f;
+#endif
+  
+  // the minimum distance to the next atom
+  float minDist1 = 1000000.0f;
+#if GTEXUNROLL >= 2
+  float minDist2 = minDist1;
+#endif
+#if GTEXUNROLL >= 4
+  float minDist3 = minDist1;
+  float minDist4 = minDist1;
+#endif
+  // the index of the next atom
+  int neighbor1 = -1;
+#if GTEXUNROLL >= 2
+  int neighbor2 = -1;
+#endif
+#if GTEXUNROLL >= 4
+  int neighbor3 = -1;
+  int neighbor4 = -1;
+#endif
+
+  int acplanesz = acncells.x * acncells.y;
+  int xab, yab, zab;
+  for (zab=zabmin; zab<=zabmax; zab++) {
+    for (yab=yabmin; yab<=yabmax; yab++) {
+      for (xab=xabmin; xab<=xabmax; xab++) {
+        int abcellidx = zab * acplanesz + yab * acncells.x + xab;
+        uint2 atomstartend = cellStartEnd[abcellidx];
+        if (atomstartend.x != GRID_CELL_EMPTY) {
+          unsigned int atomid;
+          for (atomid=atomstartend.x; atomid<atomstartend.y; atomid++) {
+            float4 atom = sorted_xyzr[atomid];
+            float dx = coorx - atom.x;
+            float dy = coory - atom.y;
+            float dxy2 = dx*dx + dy*dy;
+            float dz = coorz - atom.z;
+            float r = length( make_float3( dx, dy, dz));
+
+            // TODO fix this!
+            float cutoff = 3.1; // Einheit: Partikelabstaende!
+            float h=cutoff/2.0;
+            float q=r/h;
+            float pi = 3.141592653589793f;
+
+            if(r<=cutoff)
+                densityval1 += 21.0f/16.0f/pi/h/h/h * (1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(2.0f*q+1.0f);
+
+            // store nearest neighbor
+            if( (dxy2 + dz*dz) < minDist1 ) {
+                minDist1 = (dxy2 + dz*dz);
+                neighbor1 = atomid;
+            }
+
+#if GUNROLL >= 2
+            float dz2 = dz + gridspacing.z;
+            r = length( make_float3( dx, dy, dz2));
+            q = r/h;
+            if(r<=cutoff)
+                densityval2 += 21.0f/16.0f/pi/h/h/h * (1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(2.0f*q+1.0f);
+            // store nearest neighbor
+            if( (dxy2 + dz2*dz2) < minDist2 ) {
+                minDist2 = (dxy2 + dz2*dz2);
+                neighbor2 = atomid;
+            }
+#endif
+#if GUNROLL >= 4
+            float dz3 = dz2 + gridspacing.z;
+            r = length( make_float3( dx, dy, dz3));
+            q = r/h;
+            if(r<=cutoff)
+                densityval3 += 21.0f/16.0f/pi/h/h/h * (1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(2.0f*q+1.0f);
+            // store nearest neighbor
+            if( (dxy2 + dz3*dz3) < minDist3 ) {
+                minDist3 = (dxy2 + dz3*dz3);
+                neighbor3 = atomid;
+            }
+
+            float dz4 = dz3 + gridspacing.z;
+            r = length( make_float3( dx, dy, dz4));
+            q = r/h;
+            if(r<=cutoff)
+                densityval4 += 21.0f/16.0f/pi/h/h/h * (1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(2.0f*q+1.0f);
+            // store nearest neighbor
+            if( (dxy2 + dz4*dz4) < minDist4 ) {
+                minDist4 = (dxy2 + dz4*dz4);
+                neighbor4 = atomid;
+            }
+#endif
+          }
+        }
+      }
+    }
+  }
+  
+  densitygrid[outaddr            ] = densityval1;
+#if GUNROLL >= 2
+  int planesz = numvoxels.x * numvoxels.y;
+  densitygrid[outaddr +   planesz] = densityval2;
+#endif
+#if GUNROLL >= 4
+  densitygrid[outaddr + 2*planesz] = densityval3;
+  densitygrid[outaddr + 3*planesz] = densityval4;
+#endif
+  
+  if( storeNearestNeighbor ) {
+    nearestNeighbor[outaddr          ] = atomIndex[neighbor1];
+#if GUNROLL >= 2
+    int planesz = numvoxels.x * numvoxels.y;
+    nearestNeighbor[outaddr + planesz] = atomIndex[neighbor2];
+#endif
+#if GUNROLL >= 4
+    nearestNeighbor[outaddr + 2*planesz] = atomIndex[neighbor3];
+    nearestNeighbor[outaddr + 3*planesz] = atomIndex[neighbor4];
+#endif
+  }
+}
+
+__global__ static void wendlanddensity_fast_tex(int natoms,
+                                         const float4 *sorted_xyzr, 
+                                         const float4 *sorted_color, 
+                                         int3 numvoxels,
+                                         int3 acncells,
+                                         float acgridspacing,
+                                         float invacgridspacing,
+                                         const uint2 * cellStartEnd,
+                                         float3 gridspacing, unsigned int z, 
+                                         float *densitygrid,
+                                         float3 *voltexmap,
+                                         float invisovalue,
+                                         bool storeNearestNeighbor,
+                                         int* nearestNeighbor,
+                                         unsigned int* atomIndex) {
+  unsigned int xindex  = (blockIdx.x * blockDim.x) + threadIdx.x;
+  unsigned int yindex  = (blockIdx.y * blockDim.y) + threadIdx.y;
+  unsigned int zindex  = ((blockIdx.z * blockDim.z) + threadIdx.z) * GTEXUNROLL;
+
+  // shave register use slightly
+  unsigned int outaddr = zindex * numvoxels.x * numvoxels.y + 
+                         yindex * numvoxels.x + xindex;
+
+  // early exit if this thread is outside of the grid bounds
+  if (xindex >= numvoxels.x || yindex >= numvoxels.y || zindex >= numvoxels.z)
+    return;
+
+  zindex += z;
+
+  // compute ac grid index of lower corner minus gaussian radius
+  int xabmin = ((blockIdx.x * blockDim.x) * gridspacing.x - acgridspacing) * invacgridspacing;
+  int yabmin = ((blockIdx.y * blockDim.y) * gridspacing.y - acgridspacing) * invacgridspacing;
+  int zabmin = ((z + blockIdx.z * blockDim.z * GTEXUNROLL) * gridspacing.z - acgridspacing) * invacgridspacing;
+
+  // compute ac grid index of upper corner plus gaussian radius
+  int xabmax = (((blockIdx.x+1) * blockDim.x) * gridspacing.x + acgridspacing) * invacgridspacing;
+  int yabmax = (((blockIdx.y+1) * blockDim.y) * gridspacing.y + acgridspacing) * invacgridspacing;
+  int zabmax = ((z + (blockIdx.z+1) * blockDim.z * GTEXUNROLL) * gridspacing.z + acgridspacing) * invacgridspacing;
+
+  xabmin = (xabmin < 0) ? 0 : xabmin;
+  yabmin = (yabmin < 0) ? 0 : yabmin;
+  zabmin = (zabmin < 0) ? 0 : zabmin;
+  xabmax = (xabmax >= acncells.x-1) ? acncells.x-1 : xabmax;
+  yabmax = (yabmax >= acncells.y-1) ? acncells.y-1 : yabmax;
+  zabmax = (zabmax >= acncells.z-1) ? acncells.z-1 : zabmax;
+
+  float coorx = gridspacing.x * xindex;
+  float coory = gridspacing.y * yindex;
+  float coorz = gridspacing.z * zindex;
+
+  float densityval1=0.0f;
+  float3 densitycol1=make_float3(0.0f, 0.0f, 0.0f);
+#if GTEXUNROLL >= 2
+  float densityval2=0.0f;
+  float3 densitycol2=densitycol1;
+#endif
+#if GTEXUNROLL >= 4
+  float densityval3=0.0f;
+  float3 densitycol3=densitycol1;
+  float densityval4=0.0f;
+  float3 densitycol4=densitycol1;
+#endif
+
+  // the minimum distance to the next atom
+  float minDist1 = 1000000.0f;
+#if GTEXUNROLL >= 2
+  float minDist2 = minDist1;
+#endif
+#if GTEXUNROLL >= 4
+  float minDist3 = minDist1;
+  float minDist4 = minDist1;
+#endif
+  // the index of the next atom
+  int neighbor1 = -1;
+#if GTEXUNROLL >= 2
+  int neighbor2 = -1;
+#endif
+#if GTEXUNROLL >= 4
+  int neighbor3 = -1;
+  int neighbor4 = -1;
+#endif
+
+  int acplanesz = acncells.x * acncells.y;
+  int xab, yab, zab;
+  for (zab=zabmin; zab<=zabmax; zab++) {
+    for (yab=yabmin; yab<=yabmax; yab++) {
+      for (xab=xabmin; xab<=xabmax; xab++) {
+        int abcellidx = zab * acplanesz + yab * acncells.x + xab;
+        uint2 atomstartend = cellStartEnd[abcellidx];
+        if (atomstartend.x != GRID_CELL_EMPTY) {
+          unsigned int atomid;
+          for (atomid=atomstartend.x; atomid<atomstartend.y; atomid++) {
+            float4 atom  = sorted_xyzr[atomid];
+            float4 color = sorted_color[atomid];
+            float dx = coorx - atom.x;
+            float dy = coory - atom.y;
+            float dxy2 = dx*dx + dy*dy;
+            float dz = coorz - atom.z;
+            
+            float r = length( make_float3( dx, dy, dz));
+
+            // TODO fix this!
+            float cutoff = 3.1; // Einheit: Partikelabstaende!
+            float h=cutoff/2.0;
+            float q=r/h;
+            float pi = 3.141592653589793f;
+            float tmp1;
+
+            if(r<=cutoff)
+                tmp1 = 21.0f/16.0f/pi/h/h/h * (1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(2.0f*q+1.0f);
+            else
+                tmp1 = 0.0f;
+
+            densityval1 += tmp1;
+            tmp1 *= invisovalue;
+            densitycol1.x += tmp1 * color.x;
+            densitycol1.y += tmp1 * color.y;
+            densitycol1.z += tmp1 * color.z;
+            // store nearest neighbor
+            if( (dxy2 + dz*dz) < minDist1 ) {
+                minDist1 = (dxy2 + dz*dz);
+                neighbor1 = atomid;
+            }
+
+#if GTEXUNROLL >= 2
+            float dz2 = dz + gridspacing.z;
+            float tmp2;
+            r = length( make_float3( dx, dy, dz2));
+            q = r/h;
+            if(r<=cutoff)
+                tmp2 = 21.0f/16.0f/pi/h/h/h * (1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(2.0f*q+1.0f);
+            else
+                tmp2 = 0.0f;
+            densityval2 += tmp2;
+            tmp2 *= invisovalue;
+            densitycol2.x += tmp2 * color.x;
+            densitycol2.y += tmp2 * color.y;
+            densitycol2.z += tmp2 * color.z;
+            // store nearest neighbor
+            if( (dxy2 + dz2*dz2) < minDist2 ) {
+                minDist2 = (dxy2 + dz2*dz2);
+                neighbor2 = atomid;
+            }
+#endif
+#if GTEXUNROLL >= 4
+            float dz3 = dz2 + gridspacing.z;
+            float tmp3;
+            r = length( make_float3( dx, dy, dz3));
+            q = r/h;
+            if(r<=cutoff)
+                tmp3 = 21.0f/16.0f/pi/h/h/h * (1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(2.0f*q+1.0f);
+            else
+                tmp3 = 0.0f;
+            densityval3 += tmp3;
+            tmp3 *= invisovalue;
+            densitycol3.x += tmp3 * color.x;
+            densitycol3.y += tmp3 * color.y;
+            densitycol3.z += tmp3 * color.z;
+            // store nearest neighbor
+            if( (dxy2 + dz3*dz3) < minDist3 ) {
+                minDist3 = (dxy2 + dz3*dz3);
+                neighbor3 = atomid;
+            }
+
+            float dz4 = dz3 + gridspacing.z;
+            float tmp4;
+            r = length( make_float3( dx, dy, dz4));
+            q = r/h;
+            if(r<=cutoff)
+                tmp4 = 21.0f/16.0f/pi/h/h/h * (1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(2.0f*q+1.0f);
+            else
+                tmp4 = 0.0f;
+            densityval4 += tmp4;
+            tmp4 *= invisovalue;
+            densitycol4.x += tmp4 * color.x;
+            densitycol4.y += tmp4 * color.y;
+            densitycol4.z += tmp4 * color.z;
+            // store nearest neighbor
+            if( (dxy2 + dz4*dz4) < minDist4 ) {
+                minDist4 = (dxy2 + dz4*dz4);
+                neighbor4 = atomid;
+            }
+#endif
+          }
+        }
+      }
+    }
+  }
+
+  densitygrid[outaddr          ] = densityval1;
+  voltexmap[outaddr          ].x = densitycol1.x;
+  voltexmap[outaddr          ].y = densitycol1.y;
+  voltexmap[outaddr          ].z = densitycol1.z;
+
+#if GTEXUNROLL >= 2
+  int planesz = numvoxels.x * numvoxels.y;
+  densitygrid[outaddr + planesz] = densityval2;
+  voltexmap[outaddr + planesz].x = densitycol2.x;
+  voltexmap[outaddr + planesz].y = densitycol2.y;
+  voltexmap[outaddr + planesz].z = densitycol2.z;
+#endif
+#if GTEXUNROLL >= 4
+  densitygrid[outaddr + 2*planesz] = densityval3;
+  voltexmap[outaddr + 2*planesz].x = densitycol3.x;
+  voltexmap[outaddr + 2*planesz].y = densitycol3.y;
+  voltexmap[outaddr + 2*planesz].z = densitycol3.z;
+
+  densitygrid[outaddr + 3*planesz] = densityval4;
+  voltexmap[outaddr + 3*planesz].x = densitycol4.x;
+  voltexmap[outaddr + 3*planesz].y = densitycol4.y;
+  voltexmap[outaddr + 3*planesz].z = densitycol4.z;
+#endif
+  
+  if( storeNearestNeighbor ) {
+    nearestNeighbor[outaddr          ] = atomIndex[neighbor1];
+#if GUNROLL >= 2
+    int planesz = numvoxels.x * numvoxels.y;
+    nearestNeighbor[outaddr + planesz] = atomIndex[neighbor2];
+#endif
+#if GUNROLL >= 4
+    nearestNeighbor[outaddr + 2*planesz] = atomIndex[neighbor3];
+    nearestNeighbor[outaddr + 3*planesz] = atomIndex[neighbor4];
+#endif
+  }
+}
+
+
 // per-GPU handle with various memory buffer pointers, etc.
 typedef struct {
   /// max grid sizes and attributes the current allocations will support
@@ -1579,6 +1983,7 @@ typedef struct {
 
 CUDAQuickSurf::CUDAQuickSurf() {
   voidgpu = calloc(1, sizeof(qsurf_gpuhandle));
+  useGaussKernel = true;
 //  qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
 }
 
@@ -2274,8 +2679,9 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
   }
 
 #ifdef WRITE_FILE
-  FILE *vertexFile = fopen( "vertices.dat", "wb");
-  FILE *indexFile = fopen( "indices.dat", "wb");
+  //FILE *vertexFile = fopen( "vertices.dat", "wb");
+  //FILE *indexFile = fopen( "indices.dat", "wb");
+  FILE *objFile = fopen( "frame.obj", "w");
   unsigned int globalIndexCounter = 0;
 #endif // WRITE_FILE
 
@@ -2518,40 +2924,60 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
 #ifdef WRITE_FILE
     float *v, *n, *c;
     v = new float[3 * chunknumverts];
-    n = new float[3 * chunknumverts];
-    c = new float[3 * chunknumverts];
-    Vertex *vb = new Vertex[chunknumverts];
-    unsigned int *ib = new unsigned int[chunknumverts];
+    //n = new float[3 * chunknumverts];
+    //c = new float[3 * chunknumverts];
+    //Vertex *vb = new Vertex[chunknumverts];
+    //unsigned int *ib = new unsigned int[chunknumverts];
     // copy
     cudaMemcpy( v, gpuh->v3f_d, chunkvertsz, cudaMemcpyDeviceToHost);
-    cudaMemcpy( n, gpuh->n3f_d, chunkvertsz, cudaMemcpyDeviceToHost);
-    cudaMemcpy( c, gpuh->c3f_d, chunkvertsz, cudaMemcpyDeviceToHost);
+    //cudaMemcpy( n, gpuh->n3f_d, chunkvertsz, cudaMemcpyDeviceToHost);
+    //cudaMemcpy( c, gpuh->c3f_d, chunkvertsz, cudaMemcpyDeviceToHost);
     cudaDeviceSynchronize();
-
+    
     for( unsigned int i = 0; i < chunknumverts; i++ ) {
-        vb[i].pos[0] = v[i*3+0];
-        vb[i].pos[1] = v[i*3+1];
-        vb[i].pos[2] = v[i*3+2];
-        vb[i].normal[0] = n[i*3+0];
-        vb[i].normal[1] = n[i*3+1];
-        vb[i].normal[2] = n[i*3+2];
-        vb[i].color[0] = c[i*3+0];
-        vb[i].color[1] = c[i*3+1];
-        vb[i].color[2] = c[i*3+2];
-        vb[i].color[3] = 0.1f;
-        ib[i] = globalIndexCounter;
-        globalIndexCounter++;
+        //vb[i].pos[0] = v[i*3+0];
+        //vb[i].pos[1] = v[i*3+1];
+        //vb[i].pos[2] = v[i*3+2];
+        //vb[i].normal[0] = n[i*3+0];
+        //vb[i].normal[1] = n[i*3+1];
+        //vb[i].normal[2] = n[i*3+2];
+        //vb[i].color[0] = c[i*3+0];
+        //vb[i].color[1] = c[i*3+1];
+        //vb[i].color[2] = c[i*3+2];
+        //vb[i].color[3] = 0.1f;
+        //ib[i] = globalIndexCounter;
+        //globalIndexCounter++;
+        fprintf( objFile, "v %f %f %f\n", v[i*3+0], v[i*3+1], v[i*3+2]);
+    }
+    for( unsigned int i = 0; i < chunknumverts / 3; i++ ) {
+        //vb[i].pos[0] = v[i*3+0];
+        //vb[i].pos[1] = v[i*3+1];
+        //vb[i].pos[2] = v[i*3+2];
+        //vb[i].normal[0] = n[i*3+0];
+        //vb[i].normal[1] = n[i*3+1];
+        //vb[i].normal[2] = n[i*3+2];
+        //vb[i].color[0] = c[i*3+0];
+        //vb[i].color[1] = c[i*3+1];
+        //vb[i].color[2] = c[i*3+2];
+        //vb[i].color[3] = 0.1f;
+        //ib[i] = globalIndexCounter;
+        fprintf( objFile, "f %i %i %i\n", globalIndexCounter+1, globalIndexCounter+2, globalIndexCounter+3);
+        globalIndexCounter+=3;
     }
     unsigned int sizeofvertex = sizeof(Vertex);
-    fwrite( vb, sizeof(Vertex), chunknumverts, vertexFile);
-    fflush( vertexFile);
-    unsigned int writtenBytes = fwrite( ib, sizeof(unsigned int), chunknumverts, indexFile); 
-    fflush( indexFile);
+    //fwrite( vb, sizeof(Vertex), chunknumverts, vertexFile);
+    //fflush( vertexFile);
+    //fwrite( vb, sizeof(Vertex), chunknumverts, objFile);
+    //fflush( objFile);
+    //unsigned int writtenBytes = fwrite( ib, sizeof(unsigned int), chunknumverts, indexFile); 
+    //fflush( indexFile);
+    //fwrite( ib, sizeof(unsigned int), chunknumverts, objFile); 
+    fflush( objFile);
     delete[] v;
-    delete[] n;
-    delete[] c;
-    delete[] vb;
-    delete[] ib;
+    //delete[] n;
+    //delete[] c;
+    //delete[] vb;
+    //delete[] ib;
 #endif // WRITE_FILE
 
     // unmap VBOs
@@ -2597,8 +3023,9 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
   }
   
 #ifdef WRITE_FILE
-  fclose( vertexFile);
-  fclose( indexFile);
+  //fclose( vertexFile);
+  //fclose( indexFile);
+  fclose( objFile);
 #endif
 
   // catch any errors that may have occured so that at the very least,
@@ -2831,8 +3258,9 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
   }
 
 #ifdef WRITE_FILE
-  FILE *vertexFile = fopen( "vertices.dat", "wb");
-  FILE *indexFile = fopen( "indices.dat", "wb");
+  //FILE *vertexFile = fopen( "vertices.dat", "wb");
+  //FILE *indexFile = fopen( "indices.dat", "wb");
+  FILE *objFile = fopen( "frame.obj", "w");
   unsigned int globalIndexCounter = 0;
 #endif // WRITE_FILE
 
@@ -2896,16 +3324,31 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
 
       if (colorperatom) {
         float *texslice_d = texslab_d + lzinc * slabplanesz * 3;
-        gaussdensity_fast_tex<<<Gszslice, Bsz, 0>>>(natoms, 
-            gpuh->sorted_xyzr_d, gpuh->sorted_color_d, 
-            curslab, accelcells, acgridspacing,
-            1.0f / acgridspacing, gpuh->cellStartEnd_d, gridspacing, z+lzinc,
-            volslice_d, (float3 *) texslice_d, 1.0f / isovalue, false, 0, 0);
+        if (useGaussKernel) {
+          gaussdensity_fast_tex<<<Gszslice, Bsz, 0>>>(natoms, 
+              gpuh->sorted_xyzr_d, gpuh->sorted_color_d, 
+              curslab, accelcells, acgridspacing,
+              1.0f / acgridspacing, gpuh->cellStartEnd_d, gridspacing, z+lzinc,
+              volslice_d, (float3 *) texslice_d, 1.0f / isovalue, false, 0, 0);
+        } else {
+          wendlanddensity_fast_tex<<<Gszslice, Bsz, 0>>>(natoms, 
+              gpuh->sorted_xyzr_d, gpuh->sorted_color_d, 
+              curslab, accelcells, acgridspacing,
+              1.0f / acgridspacing, gpuh->cellStartEnd_d, gridspacing, z+lzinc,
+              volslice_d, (float3 *) texslice_d, 1.0f / isovalue, false, 0, 0);
+        }
       } else {
-        gaussdensity_fast<<<Gszslice, Bsz, 0>>>(natoms, 
-            gpuh->sorted_xyzr_d, 
-            curslab, accelcells, acgridspacing, 1.0f / acgridspacing, 
-            gpuh->cellStartEnd_d, gridspacing, z+lzinc, volslice_d, false, 0, 0);
+        if (useGaussKernel) {
+          gaussdensity_fast<<<Gszslice, Bsz, 0>>>(natoms, 
+              gpuh->sorted_xyzr_d, 
+              curslab, accelcells, acgridspacing, 1.0f / acgridspacing, 
+              gpuh->cellStartEnd_d, gridspacing, z+lzinc, volslice_d, false, 0, 0);
+        } else {
+          wendlanddensity_fast<<<Gszslice, Bsz, 0>>>(natoms, 
+              gpuh->sorted_xyzr_d, 
+              curslab, accelcells, acgridspacing, 1.0f / acgridspacing, 
+              gpuh->cellStartEnd_d, gridspacing, z+lzinc, volslice_d, false, 0, 0);
+        }
       }
     }
     cudaThreadSynchronize(); 
@@ -3075,38 +3518,38 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
 #ifdef WRITE_FILE
     float *v, *n, *c;
     v = new float[3 * chunknumverts];
-    n = new float[3 * chunknumverts];
-    c = new float[3 * chunknumverts];
+    //n = new float[3 * chunknumverts];
+    //c = new float[3 * chunknumverts];
     Vertex *vb = new Vertex[chunknumverts];
     unsigned int *ib = new unsigned int[chunknumverts];
     // copy
     cudaMemcpy( v, gpuh->v3f_d, chunkvertsz, cudaMemcpyDeviceToHost);
-    cudaMemcpy( n, gpuh->n3f_d, chunkvertsz, cudaMemcpyDeviceToHost);
-    cudaMemcpy( c, gpuh->c3f_d, chunkvertsz, cudaMemcpyDeviceToHost);
+    //cudaMemcpy( n, gpuh->n3f_d, chunkvertsz, cudaMemcpyDeviceToHost);
+    //cudaMemcpy( c, gpuh->c3f_d, chunkvertsz, cudaMemcpyDeviceToHost);
     cudaDeviceSynchronize();
 
     for( unsigned int i = 0; i < chunknumverts; i++ ) {
         vb[i].pos[0] = v[i*3+0];
         vb[i].pos[1] = v[i*3+1];
         vb[i].pos[2] = v[i*3+2];
-        vb[i].normal[0] = n[i*3+0];
-        vb[i].normal[1] = n[i*3+1];
-        vb[i].normal[2] = n[i*3+2];
-        vb[i].color[0] = c[i*3+0];
-        vb[i].color[1] = c[i*3+1];
-        vb[i].color[2] = c[i*3+2];
-        vb[i].color[3] = 0.1f;
+        //vb[i].normal[0] = n[i*3+0];
+        //vb[i].normal[1] = n[i*3+1];
+        //vb[i].normal[2] = n[i*3+2];
+        //vb[i].color[0] = c[i*3+0];
+        //vb[i].color[1] = c[i*3+1];
+        //vb[i].color[2] = c[i*3+2];
+        //vb[i].color[3] = 0.1f;
         ib[i] = globalIndexCounter;
         globalIndexCounter++;
     }
     unsigned int sizeofvertex = sizeof(Vertex);
-    fwrite( vb, sizeof(Vertex), chunknumverts, vertexFile);
-    fflush( vertexFile);
-    unsigned int writtenBytes = fwrite( ib, sizeof(unsigned int), chunknumverts, indexFile); 
-    fflush( indexFile);
+    //fwrite( vb, sizeof(Vertex), chunknumverts, vertexFile);
+    //fflush( vertexFile);
+    //unsigned int writtenBytes = fwrite( ib, sizeof(unsigned int), chunknumverts, indexFile); 
+    //fflush( indexFile);
     delete[] v;
-    delete[] n;
-    delete[] c;
+    //delete[] n;
+    //delete[] c;
     delete[] vb;
     delete[] ib;
 #endif // WRITE_FILE
@@ -3154,8 +3597,9 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
   }
   
 #ifdef WRITE_FILE
-  fclose( vertexFile);
-  fclose( indexFile);
+  //fclose( vertexFile);
+  //fclose( indexFile);
+  fclose(objFile);
 #endif
 
   // catch any errors that may have occured so that at the very least,
@@ -3181,7 +3625,7 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
          totalruntime, sorttime, densitytime, mctime, copytime);
 #endif
 
-  printf("Total surface area: %.0f\n", surfaceArea);
+  printf("Total surface area (%4i x %4i x %4i): %.0f\n", numvoxels[0], numvoxels[1], numvoxels[2], surfaceArea);
 
   return 0;
 }

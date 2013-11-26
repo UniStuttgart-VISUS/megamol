@@ -451,7 +451,9 @@ private:
 
     /// Parameter slot for the name of the data set to be sent with MultiparticleDataCall
     core::param::ParamSlot mpdcAttributeSlot;
-
+    
+    /// Parameter slot for the global radius of all particles to be sent with MultiparticleDataCall
+    core::param::ParamSlot globalRadiusParam;
 
     /* The data set */
 
