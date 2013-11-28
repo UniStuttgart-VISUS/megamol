@@ -14,6 +14,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "moldyn/MultiParticleDataCall.h"
+#include "DiagramCall.h"
 #include "Color.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
@@ -168,6 +169,14 @@ namespace protein {
          */
         void UpdateParameters( const megamol::core::moldyn::MultiParticleDataCall *mol);
 
+        /**
+         * The callback that returns the data for the area diagram.
+         * 
+         * @param call The calling call.
+         */
+        virtual bool GetAreaDiagramData(core::Call& call);
+
+        bool recomputeAreaDiagramCallback(core::param::ParamSlot& slot);
 
         /**********************************************************************
          * variables
@@ -175,6 +184,9 @@ namespace protein {
 
         /** caller slot */
         megamol::core::CallerSlot molDataCallerSlot;
+        
+        /** callee slot */
+        megamol::core::CalleeSlot areaDiagramCalleeSlot;
 
         /** camera information */
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
@@ -192,6 +204,8 @@ namespace protein {
         megamol::core::param::ParamSlot twoSidedLightParam;
         // paramater to turn two sided lighting on and off
         megamol::core::param::ParamSlot surfaceColorParam;
+        // paramater to recompute the area array
+        megamol::core::param::ParamSlot recomputeAreaDiagramParam;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;
@@ -247,7 +261,13 @@ namespace protein {
         
         // CPU data
         float* m_hPos;              // particle positions
+        size_t m_hPosSize;
         UINT64 numParticles;
+        float currentSurfaceArea;
+        bool recomputeAreaDiagram;
+        float callTime;
+        /** array for surface area */
+        DiagramCall::DiagramSeries *areaDiagramData;
     };
 
 

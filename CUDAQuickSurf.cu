@@ -1984,6 +1984,7 @@ typedef struct {
 CUDAQuickSurf::CUDAQuickSurf() {
   voidgpu = calloc(1, sizeof(qsurf_gpuhandle));
   useGaussKernel = true;
+  surfaceArea = 0.0f;
 //  qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
 }
 
@@ -2687,7 +2688,7 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
 
   int z;
   int chunkcount=0;
-  float surfaceArea = 0.0f;
+  this->surfaceArea = 0.0f;
   for (z=0; z<volsz.z; z+=slabsz.z) {
     int3 curslab = slabsz;
     if (z+curslab.z > volsz.z)
@@ -2860,7 +2861,7 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
     chunknumverts = gpuh->mc->GetVertexCount();
     
     // TEST compute surface area
-    surfaceArea += gpuh->mc->computeSurfaceArea((float3*)gpuh->v3f_d, chunknumverts/3);
+    this->surfaceArea += gpuh->mc->computeSurfaceArea((float3*)gpuh->v3f_d, chunknumverts/3);
 
 //#ifndef CUDA_ARRAY
 //    // unmap VBOs
@@ -3049,9 +3050,10 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
   printf("  GPU time (%s): %.3f [sort: %.3f density %.3f mcubes: %.3f copy: %.3f]\n", 
          (deviceProp.major == 1 && deviceProp.minor == 3) ? "SM 1.3" : "SM 2.x",
          totalruntime, sorttime, densitytime, mctime, copytime);
+
+  printf("  Total surface area: %.0f\n", this->surfaceArea);
 #endif
 
-  printf("Total surface area: %.0f\n", surfaceArea);
 
   return 0;
 }
@@ -3266,7 +3268,7 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
 
   int z;
   int chunkcount=0;
-  float surfaceArea = 0.0f;
+  this->surfaceArea = 0.0f;
   for (z=0; z<volsz.z; z+=slabsz.z) {
     int3 curslab = slabsz;
     if (z+curslab.z > volsz.z)
@@ -3454,7 +3456,7 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
     chunknumverts = gpuh->mc->GetVertexCount();
     
     // TEST compute surface area
-    surfaceArea += gpuh->mc->computeSurfaceArea((float3*)gpuh->v3f_d, chunknumverts/3);
+    this->surfaceArea += gpuh->mc->computeSurfaceArea((float3*)gpuh->v3f_d, chunknumverts/3);
 
 //#ifndef CUDA_ARRAY
 //    // unmap VBOs
@@ -3623,9 +3625,9 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
   printf("  GPU time (%s): %.3f [sort: %.3f density %.3f mcubes: %.3f copy: %.3f]\n", 
          (deviceProp.major == 1 && deviceProp.minor == 3) ? "SM 1.3" : "SM 2.x",
          totalruntime, sorttime, densitytime, mctime, copytime);
-#endif
 
-  printf("Total surface area (%4i x %4i x %4i): %.0f\n", numvoxels[0], numvoxels[1], numvoxels[2], surfaceArea);
+  printf("  Total surface area (%4i x %4i x %4i): %.0f\n", numvoxels[0], numvoxels[1], numvoxels[2], surfaceArea);
+#endif
 
   return 0;
 }
