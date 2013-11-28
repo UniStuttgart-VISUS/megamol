@@ -12,6 +12,7 @@
 #define _USE_MATH_DEFINES 1
 
 #include "QuickSurfRenderer2.h"
+#include "MolecularSurfaceFeature.h"
 #include "CoreInstance.h"
 #include "Color.h"
 #include "utility/ShaderSourceFactory.h"
@@ -20,6 +21,7 @@
 #include "param/EnumParam.h"
 #include "param/FloatParam.h"
 #include "param/BoolParam.h"
+#include "param/ButtonParam.h"
 #include "param/IntParam.h"
 #include "vislib/assert.h"
 #include "vislib/String.h"
@@ -46,6 +48,7 @@ using namespace megamol::core::moldyn;
  */
 QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
     molDataCallerSlot( "getData", "Connects the molecule rendering with molecule data storage"),
+    areaDiagramCalleeSlot ("areadiagramout", "Provides data for the area line graph"),
     colorTableFileParam( "color::colorTableFilename", "The filename of the color table."),
     interpolParam( "posInterpolation", "Enable positional interpolation between frames" ),
     qualityParam( "quicksurf::quality", "Quality" ),
@@ -54,10 +57,15 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
     isovalParam( "quicksurf::isoval", "Isovalue" ),
     twoSidedLightParam( "twoSidedLight", "Turns two-sided lighting on and off" ),
     surfaceColorParam( "surfaceColor", "The color of the surface" ),
-    m_hPos(0)
+    recomputeAreaDiagramParam( "recomputeAreaDiagram", "Recompute the area diagram"),
+    m_hPos(0), m_hPosSize(0), numParticles(0), currentSurfaceArea(0.0f), recomputeAreaDiagram(true),
+    areaDiagramData(0), callTime(0.0f)
 {
     this->molDataCallerSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable( &this->molDataCallerSlot);
+    
+    this->areaDiagramCalleeSlot.SetCallback(DiagramCall::ClassName(), DiagramCall::FunctionName(DiagramCall::CallForGetData), &QuickSurfRenderer2::GetAreaDiagramData);
+    this->MakeSlotAvailable(&this->areaDiagramCalleeSlot);
 
     // fill color table with default values and set the filename param
     vislib::StringA filename( "colors.txt");
@@ -88,8 +96,13 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
     this->MakeSlotAvailable( &this->twoSidedLightParam);
 
     // the surface color
-    this->surfaceColorParam.SetParameter(new param::StringParam( "#7092be"));
-    this->MakeSlotAvailable( &this->surfaceColorParam);
+    this->surfaceColorParam.SetParameter(new param::StringParam("#7092be"));
+    this->MakeSlotAvailable(&this->surfaceColorParam);
+
+    // the recompute area diagram button
+    this->recomputeAreaDiagramParam.SetParameter( new param::ButtonParam());
+    this->recomputeAreaDiagramParam.SetUpdateCallback(&QuickSurfRenderer2::recomputeAreaDiagramCallback);
+    this->MakeSlotAvailable(&this->recomputeAreaDiagramParam);
 
     volmap = NULL;
     voltexmap = NULL;
@@ -242,7 +255,7 @@ bool QuickSurfRenderer2::GetExtents(Call& call) {
     cr3d->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
     cr3d->AccessBoundingBoxes().MakeScaledWorld( scale);
     cr3d->SetTimeFramesCount( mol->FrameCount());
-
+    
     return true;
 }
 
@@ -263,7 +276,7 @@ bool QuickSurfRenderer2::Render(Call& call) {
     // get camera information
     this->cameraInfo = cr3d->GetCameraParameters();
 
-    float callTime = cr3d->Time();
+    callTime = cr3d->Time();
 
     // get pointer to MultiParticleDataCall
     MultiParticleDataCall *c2 = this->molDataCallerSlot.CallAs<MultiParticleDataCall>();
@@ -283,9 +296,12 @@ bool QuickSurfRenderer2::Render(Call& call) {
     }
     
     // allocate host storage
-    if( m_hPos )
-        delete[] m_hPos;
-    m_hPos = new float[numParticles*3];
+    if (m_hPosSize < numParticles*3) {
+        if (m_hPos)
+            delete[] m_hPos;
+        m_hPos = new float[numParticles*3];
+        this->m_hPosSize = numParticles*3;
+    }
     memset(m_hPos, 0, numParticles*3*sizeof(float));
 
     UINT64 particleCnt = 0;
@@ -393,6 +409,127 @@ bool QuickSurfRenderer2::Render(Call& call) {
  */
 void QuickSurfRenderer2::UpdateParameters( const MultiParticleDataCall *mol) {
 
+}
+
+
+bool QuickSurfRenderer2::recomputeAreaDiagramCallback(core::param::ParamSlot& slot) {
+    this->recomputeAreaDiagram = true;
+    return true;
+}
+
+
+bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
+
+    DiagramCall *dc = dynamic_cast<DiagramCall*>(&call);
+    if (dc == NULL) return false;    
+    
+    // get pointer to MultiParticleDataCall
+    MultiParticleDataCall *parts = this->molDataCallerSlot.CallAs<MultiParticleDataCall>();
+    if( parts == NULL) return false;
+    // call extent
+    if (!(*parts)(1)) return false;
+    
+    
+    // set diagram data series if it was not yet set
+    if (dc->GetSeriesCount() == 0) {
+        this->areaDiagramData = new DiagramCall::DiagramSeries( "Surface Area", 
+            new MolecularSurfaceFeature(log(static_cast<float>(parts->FrameCount()))));
+        dc->AddSeries( this->areaDiagramData);
+    }
+
+    // check if the data has to be recomputed
+    if (this->recomputeAreaDiagram) {
+        // delete old data series and create new one
+        dc->DeleteSeries(this->areaDiagramData);
+        delete this->areaDiagramData;
+        this->areaDiagramData = new DiagramCall::DiagramSeries( "Surface Area", 
+            new MolecularSurfaceFeature(log(static_cast<float>(parts->FrameCount()))));
+        float r, g, b;
+        utility::ColourParser::FromString( this->surfaceColorParam.Param<param::StringParam>()->Value(), r, g, b);
+        this->areaDiagramData->SetColor(r, g, b);
+        dc->AddSeries( this->areaDiagramData);
+        // loop over all frames
+        for (unsigned int i = 1; i < parts->FrameCount(); i++) {
+            parts->SetFrameID(i, true);            
+            if (!(*parts)(0)) return false;
+            // set number of particles
+            numParticles = 0;
+            for( unsigned int i = 0; i < parts->GetParticleListCount(); i++ ) {
+                numParticles += parts->AccessParticles(i).GetCount();
+            }
+            // allocate host storage
+            if (m_hPosSize < numParticles*3) {
+                if (m_hPos)
+                    delete[] m_hPos;
+                m_hPos = new float[numParticles*3];
+                this->m_hPosSize = numParticles*3;
+            }
+            memset(m_hPos, 0, numParticles*3*sizeof(float));
+            UINT64 particleCnt = 0;
+            for (unsigned int i = 0; i < parts->GetParticleListCount(); i++) {
+                megamol::core::moldyn::MultiParticleDataCall::Particles &particles = parts->AccessParticles(i);
+                const float *pos = static_cast<const float*>(particles.GetVertexData());
+                unsigned int posStride = particles.GetVertexDataStride();
+                bool useGlobRad = (particles.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+                if (particles.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+                    continue;
+                }
+                if (useGlobRad) {
+                    if (posStride < 12) posStride = 12;
+                } else {
+                    if (posStride < 16) posStride = 16;
+                }
+                for (UINT64 j = 0; j < particles.GetCount(); j++,
+                        pos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride)) {
+                    m_hPos[particleCnt*3+0] = pos[0];
+                    m_hPos[particleCnt*3+1] = pos[1];
+                    m_hPos[particleCnt*3+2] = pos[2];
+                    particleCnt++;
+                }
+            }
+            // recompute color table, if necessary
+            if(this->atomColorTable.Count()/3 < numParticles || this->surfaceColorParam.IsDirty()) {
+                float r, g, b;
+                utility::ColourParser::FromString( this->surfaceColorParam.Param<param::StringParam>()->Value(), r, g, b);
+                // Use one coloring mode
+                this->atomColorTable.AssertCapacity( numParticles * 3);
+                this->atomColorTable.Clear();
+                for( unsigned int i = 0; i < numParticles; i++ ) {
+                    this->atomColorTable.Add( r);
+                    this->atomColorTable.Add( g);
+                    this->atomColorTable.Add( b);
+                }
+                this->surfaceColorParam.ResetDirty();
+            }
+            // calculate the surface
+            if( !cudaqsurf ) {
+                cudaqsurf = new CUDAQuickSurf();
+            }
+            this->calcSurf (parts, m_hPos, 
+                this->qualityParam.Param<param::IntParam>()->Value(),
+                this->radscaleParam.Param<param::FloatParam>()->Value(),
+                this->gridspacingParam.Param<param::FloatParam>()->Value(),
+                this->isovalParam.Param<param::FloatParam>()->Value(),
+                true);
+            // set surface area to diagram
+            static_cast<MolecularSurfaceFeature*>(this->areaDiagramData->GetMappable())->AppendValue( 
+                log(static_cast<float>(i)), this->currentSurfaceArea);
+
+        }
+
+        this->recomputeAreaDiagram = false;
+    }
+
+    // set current call time for sliding guide line
+    if (parts != NULL) {
+        if (dc->GetGuideCount() == 0) {
+            dc->AddGuide(log(callTime), DiagramCall::DIAGRAM_GUIDE_VERTICAL);
+        } else {
+            dc->GetGuide(0)->SetPosition(log(callTime));
+        }
+    }
+
+    return true;
 }
 
 
@@ -597,6 +734,8 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
         useCol, origin, numvoxels, maxrad,
         radscale, gridSpacing3D, isovalue, gausslim,
         gpunumverts, gv, gn, gc, gpunumfacets, gf);
+
+    this->currentSurfaceArea = cqs->surfaceArea;
 
     if (rc == 0) {
         gpuvertexarray = 1;

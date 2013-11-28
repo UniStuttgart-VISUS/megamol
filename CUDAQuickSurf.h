@@ -99,6 +99,7 @@ struct Vertex
   float* getColorMap();
   int* getNeighborMap();
   bool useGaussKernel;
+  float surfaceArea;
 
   //void setDensFilterVals(float rad, int minN);
 
