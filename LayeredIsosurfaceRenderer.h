@@ -267,6 +267,8 @@ namespace protein {
         /// Random noise texture
         GLuint randNoiseTex;
 
+        size_t lastHash;
+
     };
 
 } /* end namespace protein */
