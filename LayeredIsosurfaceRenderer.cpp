@@ -562,6 +562,7 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, VTIDa
         this->currentFrameId = static_cast<int>(volume->FrameID());
         this->UpdateVolumeTexture(volume);
         CHECK_FOR_OGL_ERROR();
+        this->lastHash = volume->DataHash();
     }
 
     // reenable second renderer
