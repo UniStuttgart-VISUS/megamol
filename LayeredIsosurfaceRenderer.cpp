@@ -59,7 +59,7 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
         volumeTex(0), vectorfieldTex(0), currentFrameId(-1), volFBO(0), width(0), height(0), volRayTexWidth(0), 
         volRayTexHeight(0), volRayStartTex(0), volRayLengthTex(0), volRayDistTex(0),
         renderIsometric(true), meanDensityValue(0.0f), isoValue0(0.5f), isoValue1(0.5f), isoValue2(0.5f), 
-        volIsoOpacity(0.4f), volClipPlaneFlag(false), randNoiseTex(0)
+        volIsoOpacity(0.4f), volClipPlaneFlag(false), randNoiseTex(0), lastHash(-1)
 {
     // set caller slot for different data calls
     this->volDataCallerSlot.SetCompatibleCall<core::moldyn::VolumeDataCallDescription>();
@@ -332,6 +332,8 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
  * LayeredIsosurfaceRenderer::Render
  */
 bool LayeredIsosurfaceRenderer::Render(Call& call) {
+
+
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>(&call);
     if (!cr3d) return false;
@@ -556,7 +558,7 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, VTIDa
     // --- Volume Rendering                                     ---
     // --- update & render the volume                           ---
     // ------------------------------------------------------------
-    if (static_cast<int>(volume->FrameID()) != this->currentFrameId) {
+    if ((static_cast<int>(volume->FrameID()) != this->currentFrameId)||(this->lastHash != volume->DataHash())) {
         this->currentFrameId = static_cast<int>(volume->FrameID());
         this->UpdateVolumeTexture(volume);
         CHECK_FOR_OGL_ERROR();
