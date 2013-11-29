@@ -238,6 +238,7 @@ bool ToonRendererDeferred::GetExtents(megamol::core::Call& call) {
     // Set extends of for incoming render call
     crIn->AccessBoundingBoxes() = crOut->GetBoundingBoxes();
     crIn->SetLastFrameTime(crOut->LastFrameTime());
+    crIn->SetTimeFramesCount(crOut->TimeFramesCount());
 
     return true;
 }
