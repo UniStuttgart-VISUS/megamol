@@ -951,17 +951,18 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                     particleCnt1);
 
             // Compute RMS value and transformation
-            if (posCnt0 != posCnt1) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "%s: Unable to perform RMS fitting (non-equal atom \
-count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
-                return false;
-            }
+            int posCnt = std::min(posCnt0, posCnt1);
+//            if (posCnt0 != posCnt1) {
+//                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                        "%s: Unable to perform RMS fitting (non-equal atom \
+//count (%u vs. %u))", this->ClassName(), posCnt0, posCnt1);
+//                return false;
+//            }
             rmsVal = this->getRMS(
                     this->rmsPosVec0.Peek(),
                     this->rmsPosVec1.Peek(),
-                    posCnt0, true, 2, rotation, translation);
-            if (rmsVal > 10.0f) {
+                    posCnt, true, 2, rotation, translation);
+            if (rmsVal > 100.0f) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                         "%s: Unable to perform surface matching (rms val = %f)",
                         this->ClassName(), rmsVal);
