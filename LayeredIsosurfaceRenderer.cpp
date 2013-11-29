@@ -295,6 +295,7 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
         } else {
             scale = 1.0f;
         }
+        cr3d->SetTimeFramesCount(volume->FrameCount());
     } else {
         VTIDataCall *vti = this->volDataCallerSlot.CallAs<VTIDataCall>();
         if( vti == NULL ) return false;
@@ -318,6 +319,7 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
         } else {
             scale = 1.0f;
         }
+        cr3d->SetTimeFramesCount(vti->FrameCount());
     }
 
     BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();

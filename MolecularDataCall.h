@@ -1408,6 +1408,7 @@ namespace protein {
         void SetFilter(const int* atomFilter);
 
         inline MolecularDataCall& operator=(const MolecularDataCall& s) {
+            AbstractGetData3DCall::operator=(s);
             this->SetFrameID( s.FrameID() );
             this->SetDataHash( s.DataHash() );
             this->atomCount = s.atomCount;
