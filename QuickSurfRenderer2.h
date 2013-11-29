@@ -208,7 +208,8 @@ namespace protein {
         megamol::core::param::ParamSlot recomputeAreaDiagramParam;
 
         // Parameter to google offscreen rendering
-        megamol::core::param::ParamSlot toggleOffscreenRenderingParam;
+        // TODO
+        //megamol::core::param::ParamSlot toggleOffscreenRenderingParam;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;
