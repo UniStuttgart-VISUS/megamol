@@ -58,6 +58,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
         maxGradColorParam( "color::maxGradColor", "The color for the maximum value for gradient coloring" ),
         stickRadiusParam( "stickRadius", "The radius for stick rendering"),
         offscreenRenderingParam( "offscreenRendering", "Toggle offscreen rendering"),
+        interpolParam( "posInterpolation", "Enable positional interpolation between frames" ),
         currentFrameId( 0), atomCount( 0) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -181,6 +182,10 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
 
     // fill rainbow color table
     Color::MakeRainbowColorTable( 100, this->rainbowColors);
+
+    // en-/disable positional interpolation
+    this->interpolParam.SetParameter(new param::BoolParam( true));
+    this->MakeSlotAvailable( &this->interpolParam);
 }
 
 
@@ -719,7 +724,9 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
     float *pos0 = new float[mol->AtomCount() * 3];
     memcpy( pos0, mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
 
-    if( ( static_cast<unsigned int>( callTime) + 1) < mol->FrameCount() )
+    // set next frame ID and get positions of the second frame
+    if( ( ( static_cast<int>( callTime) + 1) < int( mol->FrameCount()) ) &&
+            this->interpolParam.Param<param::BoolParam>()->Value() )
         mol->SetFrameID(static_cast<int>( callTime) + 1);
     else
         mol->SetFrameID(static_cast<int>( callTime));
