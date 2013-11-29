@@ -848,7 +848,7 @@ bool PDBLoader::getData( core::Call& call) {
             this->atomResidueIdx.PeekElements(),
             this->data[dc->FrameID()]->AtomBFactor(),
             this->data[dc->FrameID()]->AtomCharge(),
-            this->data[dc->FrameID()]->AtomOccupancy());
+            this->data[0]->AtomOccupancy());
 
         dc->SetBFactorRange( this->data[dc->FrameID()]->MinBFactor(),
             this->data[dc->FrameID()]->MaxBFactor());

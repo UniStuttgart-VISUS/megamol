@@ -24,6 +24,7 @@
 #include "view/AnimDataModule.h"
 #include "MDDriverConnector.h"
 #include <fstream>
+#include "MultiPDBLoader.h"
 
 
 
@@ -37,7 +38,9 @@ namespace protein {
     class PDBLoader : public megamol::core::view::AnimDataModule
     {
     public:
-
+        // AquariaLoader needs access to Callbacks
+        friend class MultiPDBLoader;
+        
         /** Ctor */
         PDBLoader(void);
 

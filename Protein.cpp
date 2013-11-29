@@ -80,6 +80,7 @@
 #include "ResidueSelection.h"
 #include "VTKLegacyDataLoaderUnstructuredGrid.h"
 #include "MolecularBezierData.h"
+#include "MultiPDBLoader.h"
 
 // data interfaces (calls)
 #include "SolPathDataCall.h"
@@ -164,7 +165,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 53;
+    int moduleCount = 54;
 #ifdef WITH_CUDA
     moduleCount+=13;
 #endif // WITH_CUDA
@@ -259,6 +260,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case CUDA_OFFSET + HAPTICS_OFFSET + 50 : return new ModuleAutoDescription<protein::MultiParticleDataFilter>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 51 : return new ModuleAutoDescription<protein::VolumeDirectionRenderer>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 52 : return new ModuleAutoDescription<protein::LayeredIsosurfaceRenderer>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 53 : return new ModuleAutoDescription<protein::MultiPDBLoader>();
         default: return NULL;
     }
     return NULL;

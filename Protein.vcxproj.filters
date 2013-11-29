@@ -394,6 +394,9 @@
     <ClCompile Include="LayeredIsosurfaceRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MultiPDBLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSpline.h">
@@ -805,6 +808,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LayeredIsosurfaceRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MultiPDBLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
