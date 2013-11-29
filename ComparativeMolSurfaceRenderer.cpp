@@ -54,7 +54,7 @@ const Vec3f ComparativeMolSurfaceRenderer::colorMaxPotential = Vec3f(0.0f, 0.0f,
 const Vec3f ComparativeMolSurfaceRenderer::colorMinPotential = Vec3f(1.0f, 0.0f, 0.0f);
 
 // Maximum RMS value to enable valid mapping
-const float ComparativeMolSurfaceRenderer::maxRMSVal = 10.0f;
+const float ComparativeMolSurfaceRenderer::maxRMSVal = 100.0f;
 
 /*
  * ComparativeMolSurfaceRenderer::computeDensityBBox
@@ -1028,6 +1028,7 @@ atoms instead.",
 
     // Check for sufficiently low rms value
     if (this->rmsValue > this->maxRMSVal) {
+        printf("RMSD value bigger then max value (%f)\n", this->rmsValue);
         return false;
     }
 
