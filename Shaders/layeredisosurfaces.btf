@@ -236,7 +236,7 @@ void main(void) {
 
                 float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
                 src = vec4(surfaceColor0, min(1.0, isoOpacity + 1.5*(1.0-tmp)));
-				src.rgb *= lic; // TEST
+				//src.rgb *= lic; // TEST
                 src.rgb = calcIllum(posWorld, gradient, dirWorld, src.rgb);
                 
                 // draw interior darker
@@ -282,7 +282,7 @@ void main(void) {
 
                 float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
                 src = vec4(surfaceColor1, min(1.0, isoOpacity + 1.5*(1.0-tmp)));
-				src.rgb *= lic; // TEST
+				//src.rgb *= lic; // TEST
                 src.rgb = calcIllum(posWorld, gradient, dirWorld, src.rgb);
                 
                 // draw interior darker
@@ -328,13 +328,13 @@ void main(void) {
 
                 float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
                 src = vec4(surfaceColor2, min(1.0, isoOpacity + 1.5*(1.0-tmp)));
-				src.rgb *= lic; // TEST
+				//src.rgb *= lic; // TEST
                 src.rgb = calcIllum(posWorld, gradient, dirWorld, src.rgb);
                 
                 // draw interior darker
                 //if (isoDiffOld > 0.0)
                 //    src.xyz *= 0.5;
-                
+                //src.a*= lic;
                 // perform blending
                 src.rgb *= src.a;
                 dest = (1.0 - dest.a) * src + dest;

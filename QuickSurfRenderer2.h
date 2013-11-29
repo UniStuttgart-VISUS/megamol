@@ -207,10 +207,14 @@ namespace protein {
         // paramater to recompute the area array
         megamol::core::param::ParamSlot recomputeAreaDiagramParam;
 
+        // Parameter to google offscreen rendering
+        megamol::core::param::ParamSlot toggleOffscreenRenderingParam;
+
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;
         // shader for per pixel lighting (polygonal view)
         vislib::graphics::gl::GLSLShader lightShader;
+        vislib::graphics::gl::GLSLShader lightShaderOR;
         
         /** The current coloring mode */
         Color::ColoringMode currentColoringMode;
