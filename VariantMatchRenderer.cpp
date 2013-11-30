@@ -245,12 +245,14 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
     for (int i = 0; i < static_cast<int>(vmc->GetVariantCnt()); ++i) {
         maxLineWidth = std::max(maxLineWidth, this->thefont.LineWidth(fontSize, vmc->GetLabels()[i].PeekBuffer()));
     }
+    maxLineWidth += this->thefont.LineWidth(fontSize, "000 : ");
 
 //    f.SetSize(0.5f);
     // Draw vertical labels
     for (int i = 0; i < static_cast<int>(vmc->GetVariantCnt()); ++i) {
         //printf("LABEL %s\n", vmc->GetLabels()[i].PeekBuffer());
-        //str.Format("Variant %2i", static_cast<int>(vmc->GetVariantCnt()) - i);
+        str.Format("%3i : ", i);
+        str.Append(vmc->GetLabels()[i].PeekBuffer());
         this->thefont.DrawString(
                 -1.0 - maxLineWidth, // Left coordinate of the rectangle
                 1.0 - lineHeight*(i+1),     // Upper coordinate of the rectangle
@@ -258,7 +260,8 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
                 lineHeight,                       // The height of the rectangle
                 fontSize,                       // The font size
                 true,                    // Flip y
-                vmc->GetLabels()[i].PeekBuffer(),    // The label
+                //vmc->GetLabels()[i].PeekBuffer(),    // The label
+                str.PeekBuffer(),
                 vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
     }
     // Draw horizontal labels
@@ -271,7 +274,8 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
         //                1.0 - this->labelSpace*0.5,
         //                0.0);
         ::glRotatef(90, 0.0, 0.0, 1.0);
-        //str.Format("Variant %2i", i);
+        str.Format("%3i : ", i);
+        str.Append(vmc->GetLabels()[i].PeekBuffer());
         this->thefont.DrawString(
                 1.0, // Left coordinate of the rectangle
                 1.0 - lineHeight*(i+1),     // Upper coordinate of the rectangle
@@ -279,7 +283,8 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
                 lineHeight,                       // The height of the rectangle
                 fontSize,                       // The font size
                 true,                    // Flip y
-                vmc->GetLabels()[i].PeekBuffer(),    // The label
+                //vmc->GetLabels()[i].PeekBuffer(),    // The label
+                str.PeekBuffer(),    // The label
                 vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
         ::glPopMatrix();
     }
