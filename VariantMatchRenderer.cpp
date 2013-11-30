@@ -103,6 +103,27 @@ bool VariantMatchRenderer::create(void) {
         return false;
     }
 
+    // Try to load the ssao shader
+    if(!ci->ShaderSourceFactory().MakeShaderSource("2dplot::variantMatrix::vertexCM", vertSrc)) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "%s: Unable to load variant matrix vertex shader source", this->ClassName() );
+        return false;
+    }
+    if(!ci->ShaderSourceFactory().MakeShaderSource("2dplot::variantMatrix::fragmentCM", fragSrc)) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "%s: Unable to load variant matrix fragment shader source", this->ClassName() );
+        return false;
+    }
+    try {
+        if(!this->colorMapShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+    }
+    catch(vislib::Exception &e){
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
+        return false;
+    }
+
     return true;
 }
 
@@ -135,6 +156,10 @@ void VariantMatchRenderer::release(void) {
 bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
 
     float gridHalfStep;
+
+    if (!this->thefont.Initialise()) {
+        return false;
+    }
 
     // Update parameters
     this->updateParams();
@@ -210,7 +235,11 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
     ::glEnd();
     this->matrixTexShader.Disable();
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // Draw color map
+    if (!this->drawColorMap()) {
+        return false;
+    }
+
     glDisable(GL_TEXTURE_2D);
 
     ::glColor3f(1.0f, 1.0f, 1.0f);
@@ -236,10 +265,7 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
     glColor3f(0.0, 0.0, 0.0);
 //    vislib::graphics::gl::SimpleFont f;
     vislib::StringA str;
-    if (!this->thefont.Initialise()) {
-        return false;
-    }
-    float fontSize = std::min(2.0f/static_cast<float>(vmc->GetVariantCnt()), 0.1f);
+    this->fontSize = std::min(2.0f/static_cast<float>(vmc->GetVariantCnt()), 0.1f);
     float lineHeight = this->thefont.LineHeight(2.0f/static_cast<float>(vmc->GetVariantCnt()));
     float maxLineWidth = 0.0f;
     for (int i = 0; i < static_cast<int>(vmc->GetVariantCnt()); ++i) {
@@ -294,6 +320,58 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
 //    ::glMatrixMode(GL_PROJECTION);
 //    ::glPopMatrix();
 
+
+    return true;
+}
+
+
+/*
+ * VariantMatchRenderer::drawColorMap
+ */
+bool VariantMatchRenderer::drawColorMap() {
+
+    // Draw color gradient
+
+    this->colorMapShader.Enable();
+    glUniform1fARB(this->colorMapShader.ParameterLocation("minVal"), this->minCol);
+    glUniform1fARB(this->colorMapShader.ParameterLocation("maxVal"), this->maxCol);
+
+    ::glBegin(GL_QUADS);
+        ::glVertex2f(-1.0f, -1.2f);
+        ::glVertex2f( 1.0f, -1.2f);
+        ::glVertex2f( 1.0f, -1.1f);
+        ::glVertex2f(-1.0f, -1.1f);
+    ::glEnd();
+    this->colorMapShader.Disable();
+
+    ::glBegin(GL_LINE_STRIP);
+        ::glVertex2f(-1.0f, -1.2f);
+        ::glVertex2f( 1.0f, -1.2f);
+        ::glVertex2f( 1.0f, -1.1f);
+        ::glVertex2f(-1.0f, -1.1f);
+        ::glVertex2f(-1.0f, -1.2f);
+    ::glEnd();
+
+    // Draw labels
+
+    vislib::StringA str;
+    str.Format("%.3f", this->minCol);
+    this->thefont.DrawString(
+            -1.0, // Left coordinate of the rectangle
+            -1.32,     // Upper coordinate of the rectangle
+            this->fontSize,                       // The font size
+            true,                    // Flip y
+            str.PeekBuffer(),
+            vislib::graphics::AbstractFont::ALIGN_CENTER_BOTTOM);
+
+    str.Format("%.3f", this->maxCol);
+    this->thefont.DrawString(
+            1.0, // Left coordinate of the rectangle
+            -1.32,     // Upper coordinate of the rectangle
+            this->fontSize,                       // The font size
+            true,                    // Flip y
+            str.PeekBuffer(),
+            vislib::graphics::AbstractFont::ALIGN_CENTER_BOTTOM);
 
     return true;
 }

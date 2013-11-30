@@ -103,6 +103,13 @@ protected:
 
 private:
 
+    /**
+     * Draw the color map using the current min/max values.
+     *
+     * @return 'True' on success, 'false' otherwise
+     */
+    bool drawColorMap();
+
     /// The data caller slot
     core::CallerSlot dataCallerSlot;
 
@@ -120,11 +127,16 @@ private:
     /// The texturing shader
     vislib::graphics::gl::GLSLShader matrixTexShader;
 
+    /// The texturing shader
+    vislib::graphics::gl::GLSLShader colorMapShader;
+
     /// The matix texture handle
     GLuint matrixTex;
 
     /// The outline font
     vislib::graphics::gl::OutlineFont thefont;
+
+    float fontSize;
 
 };
 

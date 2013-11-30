@@ -1243,8 +1243,17 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
         scale = 1.0f;
     }
 
-    this->bbox.MakeScaledWorld(scale);
-    cr3d->AccessBoundingBoxes() = this->bbox;
+    float scale2;
+    if(!vislib::math::IsEqual(mol0->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
+        scale2 = 2.0f /mol0->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    } else {
+        scale2 = 1.0f;
+    }
+
+    this->bbox.SetObjectSpaceBBox(mol0->AccessBoundingBoxes().ObjectSpaceBBox());
+    this->bbox.MakeScaledWorld(scale2);
+    cr3d->AccessBoundingBoxes() = mol0->AccessBoundingBoxes();
+    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale2);
 
     // The available frame count is determined by the 'compareFrames' parameter
     if (this->cmpMode == COMPARE_1_1) {
