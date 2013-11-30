@@ -80,7 +80,44 @@ void main() {
 }
 -->
         </snippet>
-        </shader> <!-- end shader variantMatrix::vertex -->
+        </shader> <!-- end shader variantMatrix::fragment -->
+        
+        
+            <shader name="vertexCM">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<!--
+attribute float val;
+uniform float minVal;
+uniform float maxVal;
+varying float valFrag;
+void main() {   
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    if (gl_Position.x<0) valFrag = minVal;
+    else  valFrag = maxVal;
+}
+-->
+        </snippet>
+    </shader> <!-- end shader variantMatrix::vertexCM -->
+        
+            <shader name="fragmentCM">
+        <snippet type="version">120</snippet>
+        <snippet name="Heatmap" />
+        <snippet name="colormaps::MSH2RGB" />
+        <snippet type="string">
+<!--
+uniform float minVal;
+uniform float maxVal;
+varying float valFrag;
+
+void main() {   
+    vec3 colOrangeMsh = vec3(109.81, 0.9746*(valFrag-minVal)/(maxVal-minVal), 0.8968);
+    gl_FragColor = vec4(MSH2RGB(colOrangeMsh.r, colOrangeMsh.g, colOrangeMsh.b), 1.0);
+    //gl_FragColor = vec4(valFrag,0.0,0.0, 1.0);
+}
+-->
+        </snippet>
+        </shader> <!-- end shader variantMatrix::fragmentCM -->
     
     </namespace> <!-- end namespace variantMatrix -->
 
