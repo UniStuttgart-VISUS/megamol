@@ -111,6 +111,22 @@ public:
      */
     bool ComputeTexCoords(float minCoords[3], float maxCoords[3]);
 
+    /**
+     * Computes texture coordinates based on the given texture dimensions and
+     * world space information. Needs 'ready' to be true.
+     * Takes into account, that the positions are RMSD fitted.
+     *
+     * @param minCoords The minimum world space coordinates of the texture
+     * @param minCoords The maximum world space coordinates of the texture
+     * @return 'True' on success, 'false' otherwise
+     */
+    bool ComputeTexCoordsOfRMSDFittedPositions(
+            float minCoords[3],
+            float maxCoords[3],
+            float centroid[3],
+            float rotMat[9],
+            float transVec[3]);
+
     /** DTor */
     GPUSurfaceMT();
 

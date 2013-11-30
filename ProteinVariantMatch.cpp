@@ -1153,14 +1153,24 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 
             /* Compute different metrics on a per-vertex basis */
 
+            // Compute texture coordinates
+            Mat3f rmsRotInv(this->rmsRotation);
+            if (!rmsRotInv.Invert()) {
+                printf("Could not invert rotation matrix\n");
+                return false;
+            }
+
             // 1. Compute potential difference per vertex
 
             if (!CudaSafeCall(this->vertexPotentialDiff_D.Validate(surfEnd.GetVertexCnt()))) {
                 return false;
             }
 
-            if (!DeformableGPUSurfaceMT::ComputeVtxDiffValue(
+            if (!DeformableGPUSurfaceMT::ComputeVtxDiffValueFitted(
                     this->vertexPotentialDiff_D.Peek(),
+                    centroid.PeekComponents(),
+                    rmsRotInv.PeekComponents(),
+                    this->rmsTranslation.PeekComponents(),
                     this->potentialTex0_D.Peek(),
                     texDim0, texOrg0, texDelta0,
                     this->potentialTex1_D.Peek(),
@@ -1189,8 +1199,11 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             if (!CudaSafeCall(this->vertexPotentialSignDiff_D.Validate(surfEnd.GetVertexCnt()))) {
                 return false;
             }
-            if (!DeformableGPUSurfaceMT::ComputeVtxSignDiffValue(
+            if (!DeformableGPUSurfaceMT::ComputeVtxSignDiffValueFitted(
                     this->vertexPotentialSignDiff_D.Peek(),
+                    centroid.PeekComponents(),
+                    rmsRotInv.PeekComponents(),
+                    this->rmsTranslation.PeekComponents(),
                     this->potentialTex0_D.Peek(),
                     texDim0, texOrg0, texDelta0,
                     this->potentialTex1_D.Peek(),

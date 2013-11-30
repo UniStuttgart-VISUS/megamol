@@ -914,6 +914,63 @@ __global__ void GPUSurfaceMT_ComputeVertexTexCoords_D(float *dataBuff_D,
 
 
 /*
+ * GPUSurfaceMT_ComputeVertexTexCoordsOfFittedPos_D
+ */
+__global__ void GPUSurfaceMT_ComputeVertexTexCoordsOfFittedPos_D(
+        float *dataBuff_D,
+        float *rotation_D,
+        float3 translation,
+        float3 centroid,
+        float volMinX, float volMinY, float volMinZ,
+        float volMaxX, float volMaxY, float volMaxZ,
+        uint activeVertexCnt,
+        uint arrDataOffsPos,
+        uint arrDataOffsTexCoords,
+        uint arrDataSize) {
+
+    // Get thread index
+    uint activeVertexIdx = getThreadIdx();
+    if (activeVertexIdx >= activeVertexCnt) {
+        return;
+    }
+
+    float3 pos = make_float3(
+            dataBuff_D[arrDataSize*activeVertexIdx+arrDataOffsPos+0],
+            dataBuff_D[arrDataSize*activeVertexIdx+arrDataOffsPos+1],
+            dataBuff_D[arrDataSize*activeVertexIdx+arrDataOffsPos+2]);
+
+    // Revert translation to move to origin
+    pos.x -= translation.x;
+    pos.y -= translation.y;
+    pos.z -= translation.z;
+
+    // Revert rotation
+    float3 posRot;
+    posRot.x = rotation_D[0] * pos.x +
+            rotation_D[3] * pos.y +
+            rotation_D[6] * pos.z;
+    posRot.y = rotation_D[1] * pos.x +
+            rotation_D[4] * pos.y +
+            rotation_D[7] * pos.z;
+    posRot.z = rotation_D[2] * pos.x +
+            rotation_D[5] * pos.y +
+            rotation_D[8] * pos.z;
+
+    // Move to old centroid
+    posRot.x += centroid.x;
+    posRot.y += centroid.y;
+    posRot.z += centroid.z;
+
+    dataBuff_D[arrDataSize*activeVertexIdx+arrDataOffsTexCoords+0] =
+            (posRot.x - volMinX) / (volMaxX-volMinX);
+    dataBuff_D[arrDataSize*activeVertexIdx+arrDataOffsTexCoords+1] =
+            (posRot.y - volMinY) / (volMaxY-volMinY);
+    dataBuff_D[arrDataSize*activeVertexIdx+arrDataOffsTexCoords+2] =
+            (posRot.z - volMinZ) / (volMaxZ-volMinZ);
+}
+
+
+/*
  * GPUSurfaceMT_FlagGridCells_D
  */
 __global__ void GPUSurfaceMT_FlagGridCells_D(
@@ -1545,6 +1602,74 @@ bool GPUSurfaceMT::ComputeTexCoords(float minCoords[3], float maxCoords[3]) {
 
 
 /*
+ * GPUSurfaceMT::ComputeTexCoordsOfRMSDFittedPositions
+ */
+bool GPUSurfaceMT::ComputeTexCoordsOfRMSDFittedPositions(
+        float minCoords[3],
+        float maxCoords[3],
+        float centroid[3],
+        float rotMat[9],
+        float transVec[3]) {
+
+    CudaDevArr<float> rotate_D;
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &this->vertexDataResource, this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+    // Get mapped pointer to the vbo
+    float *vboPt;
+    size_t vboSize;
+    CudaSafeCall(cudaGraphicsMapResources(1, &this->vertexDataResource, 0));
+    CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt), // The mapped pointer
+            &vboSize,             // The size of the accessible data
+            this->vertexDataResource));                   // The mapped resource
+
+    // Rotate for best fit
+    rotate_D.Validate(9);
+    if (!CudaSafeCall(cudaMemcpy((void *)rotate_D.Peek(), &rotMat[0],
+            9*sizeof(float), cudaMemcpyHostToDevice))) {
+        return false;
+    }
+
+    GPUSurfaceMT_ComputeVertexTexCoordsOfFittedPos_D <<< Grid(this->vertexCnt, 256), 256 >>>(
+            vboPt,
+            rotate_D.Peek(),
+            make_float3(transVec[0],transVec[1],transVec[2]),
+            make_float3(centroid[0],centroid[1],centroid[2]),
+            minCoords[0],
+            minCoords[1],
+            minCoords[2],
+            maxCoords[0],
+            maxCoords[1],
+            maxCoords[2],
+            this->vertexCnt,
+            this->vertexDataOffsPos,
+            this->vertexDataOffsTexCoord,
+            this->vertexDataStride);
+
+    // Unmap CUDA graphics resource
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(rotate_D.Release())) {
+        return false;
+    }
+
+    return true;
+
+}
+
+
+/*
  * GPUSurfaceMT::computeTriangles
  */
 bool GPUSurfaceMT::ComputeTriangles(
@@ -2088,6 +2213,7 @@ bool GPUSurfaceMT::ComputeVertexPositions(
 
     return ::CheckForCudaErrorSync();
 }
+
 
 /*
  * GPUSurfaceMT::Rotate

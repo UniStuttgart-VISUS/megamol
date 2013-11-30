@@ -2974,6 +2974,65 @@ __global__ void DeformableGPUSurfaceMT_ComputeVtxDiffValue1_D(
 
 
 /*
+ * ComputeVtxDiffValue1_D
+ */
+__global__ void DeformableGPUSurfaceMT_ComputeVtxDiffValue1Fitted_D(
+        float *diff_D,
+        float *tex1_D,
+        float *vtxData1_D,
+        float *rotation_D,
+        float3 translation,
+        float3 centroid,
+        size_t vertexCnt) {
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= vertexCnt) {
+        return;
+    }
+
+    const int vertexDataStride = 9; // TODO
+    const int vertexDataOffsPos = 0;
+
+    float valFirst = diff_D[idx];
+//    float3 pos;
+//    pos.x = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +0];
+//    pos.y = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +1];
+//    pos.z = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +2];
+
+    float3 pos;
+    pos.x = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +0];
+    pos.y = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +1];
+    pos.z = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +2];
+
+    // Revert translation to move to origin
+    pos.x -= translation.x;
+    pos.y -= translation.y;
+    pos.z -= translation.z;
+
+    // Revert rotation
+    float3 posRot;
+    posRot.x = rotation_D[0] * pos.x +
+            rotation_D[3] * pos.y +
+            rotation_D[6] * pos.z;
+    posRot.y = rotation_D[1] * pos.x +
+            rotation_D[4] * pos.y +
+            rotation_D[7] * pos.z;
+    posRot.z = rotation_D[2] * pos.x +
+            rotation_D[5] * pos.y +
+            rotation_D[8] * pos.z;
+
+    // Move to old centroid
+    posRot.x += centroid.x;
+    posRot.y += centroid.y;
+    posRot.z += centroid.z;
+
+    float valSec = ::SampleFieldAtPosTrilin_D<float>(posRot, tex1_D);
+    valSec = abs(valSec-valFirst);
+    diff_D[idx] = valSec;
+}
+
+
+/*
  * ComputeVtxSignDiffValue1_D
  */
 __global__ void DeformableGPUSurfaceMT_ComputeVtxSignDiffValue1_D(
@@ -2996,7 +3055,67 @@ __global__ void DeformableGPUSurfaceMT_ComputeVtxSignDiffValue1_D(
     pos.y = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +1];
     pos.z = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +2];
 
+
     float valSec = ::SampleFieldAtPosTrilin_D<float>(pos, tex1_D);
+    valSec = float(valSec*valFirst < 0); // TODO Use binary operator
+    signdiff_D[idx] = valSec;
+}
+
+
+/*
+ * ComputeVtxSignDiffValue1_D
+ */
+__global__ void DeformableGPUSurfaceMT_ComputeVtxSignDiffValue1Fitted_D(
+        float *signdiff_D,
+        float *tex1_D,
+        float *vtxData1_D,
+        float *rotation_D,
+        float3 translation,
+        float3 centroid,
+        size_t vertexCnt) {
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= vertexCnt) {
+        return;
+    }
+
+    const int vertexDataStride = 9; // TODO
+    const int vertexDataOffsPos = 0;
+
+    float valFirst = signdiff_D[idx];
+//    float3 pos;
+//    pos.x = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +0];
+//    pos.y = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +1];
+//    pos.z = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +2];
+
+    float3 pos;
+    pos.x = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +0];
+    pos.y = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +1];
+    pos.z = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +2];
+
+       // Revert translation to move to origin
+       pos.x -= translation.x;
+       pos.y -= translation.y;
+       pos.z -= translation.z;
+
+       // Revert rotation
+       float3 posRot;
+       posRot.x = rotation_D[0] * pos.x +
+               rotation_D[3] * pos.y +
+               rotation_D[6] * pos.z;
+       posRot.y = rotation_D[1] * pos.x +
+               rotation_D[4] * pos.y +
+               rotation_D[7] * pos.z;
+       posRot.z = rotation_D[2] * pos.x +
+               rotation_D[5] * pos.y +
+               rotation_D[8] * pos.z;
+
+       // Move to old centroid
+       posRot.x += centroid.x;
+       posRot.y += centroid.y;
+       posRot.z += centroid.z;
+
+    float valSec = ::SampleFieldAtPosTrilin_D<float>(posRot, tex1_D);
     valSec = float(valSec*valFirst < 0); // TODO Use binary operator
     signdiff_D[idx] = valSec;
 }
@@ -3137,6 +3256,160 @@ bool DeformableGPUSurfaceMT::ComputeVtxDiffValue(
 }
 
 
+/*
+ * DeformableGPUSurfaceMT::ComputeVtxDiffValueFitted
+ */
+bool DeformableGPUSurfaceMT::ComputeVtxDiffValueFitted(
+        float *diff_D,
+        float centroid[3],
+        float rotMat[9],
+        float transVec[3],
+        float *tex0_D,
+        int3 texDim0,
+        float3 texOrg0,
+        float3 texDelta0,
+        float *tex1_D,
+        int3 texDim1,
+        float3 texOrg1,
+        float3 texDelta1,
+        GLuint vtxDataVBO0,
+        GLuint vtxDataVBO1,
+        size_t vertexCnt) {
+
+    CudaDevArr<float> rotate_D;
+
+    // Rotate for best fit
+    rotate_D.Validate(9);
+    if (!CudaSafeCall(cudaMemcpy((void *)rotate_D.Peek(), &rotMat[0],
+            9*sizeof(float), cudaMemcpyHostToDevice))) {
+        return false;
+    }
+
+    using namespace vislib::sys;
+
+    /* Get pointers to vertex data */
+
+    cudaGraphicsResource* cudaTokens[2];
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0], vtxDataVBO0,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1], vtxDataVBO1,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboPt0, *vboPt1;
+    size_t vboSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt0), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt1), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
+        return false;
+    }
+
+
+    // Init CUDA grid for texture #0
+    if (!initGridParams(texDim0, texOrg0, texDelta0)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                DeformableGPUSurfaceMT::ClassName());
+        return false;
+    }
+
+    // Call first kernel
+#ifdef USE_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
+#endif
+
+    DeformableGPUSurfaceMT_ComputeVtxDiffValue0_D <<< Grid(vertexCnt, 256), 256 >>> (
+            diff_D,
+            tex0_D,
+            vboPt0,
+            vertexCnt);
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'ComputeVtxDiffValue0_D':                %.10f sec\n",
+            dt_ms/1000.0f);
+#endif
+
+    // Init CUDA grid for texture #1
+    if (!initGridParams(texDim1, texOrg1, texDelta1)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                DeformableGPUSurfaceMT::ClassName());
+        return false;
+    }
+
+    // Call second kernel
+#ifdef USE_TIMER
+    cudaEventRecord(event1, 0);
+#endif
+
+    DeformableGPUSurfaceMT_ComputeVtxDiffValue1Fitted_D <<< Grid(vertexCnt, 256), 256 >>> (
+            diff_D,
+            tex1_D,
+            vboPt1,
+            rotate_D.Peek(),
+            make_float3(transVec[0],transVec[1],transVec[2]),
+            make_float3(centroid[0],centroid[1],centroid[2]),
+            vertexCnt);
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'ComputeVtxDiffValue1_D':                %.10f sec\n",
+            dt_ms/1000.0f);
+#endif
+
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(rotate_D.Release())) {
+        return false;
+    }
+
+    return true;
+
+}
+
+
 
 /*
  * DeformableGPUSurfaceMT::ComputeVtxSignDiffValue
@@ -3266,6 +3539,160 @@ bool DeformableGPUSurfaceMT::ComputeVtxSignDiffValue(
         return false;
     }
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+
+    return true;
+
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::ComputeVtxSignDiffValueFitted
+ */
+bool DeformableGPUSurfaceMT::ComputeVtxSignDiffValueFitted(
+        float *signdiff_D,
+        float centroid[3],
+        float rotMat[9],
+        float transVec[3],
+        float *tex0_D,
+        int3 texDim0,
+        float3 texOrg0,
+        float3 texDelta0,
+        float *tex1_D,
+        int3 texDim1,
+        float3 texOrg1,
+        float3 texDelta1,
+        GLuint vtxDataVBO0,
+        GLuint vtxDataVBO1,
+        size_t vertexCnt) {
+
+    CudaDevArr<float> rotate_D;
+    // Rotate for best fit
+    rotate_D.Validate(9);
+    if (!CudaSafeCall(cudaMemcpy((void *)rotate_D.Peek(), &rotMat[0],
+            9*sizeof(float), cudaMemcpyHostToDevice))) {
+        return false;
+    }
+
+    using namespace vislib::sys;
+
+    /* Get pointers to vertex data */
+
+    cudaGraphicsResource* cudaTokens[2];
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0], vtxDataVBO0,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1], vtxDataVBO1,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboPt0;
+    size_t vboSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt0), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboPt1;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt1), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
+        return false;
+    }
+
+
+    // Init CUDA grid for texture #0
+    if (!initGridParams(texDim0, texOrg0, texDelta0)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                DeformableGPUSurfaceMT::ClassName());
+        return false;
+    }
+
+    // Call first kernel
+#ifdef USE_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
+#endif
+
+    DeformableGPUSurfaceMT_ComputeVtxDiffValue0_D <<< Grid(vertexCnt, 256), 256 >>> (
+            signdiff_D,
+            tex0_D,
+            vboPt0,
+            vertexCnt);
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'ComputeVtxSignDiffValue0_D':            %.10f sec\n",
+            dt_ms/1000.0f);
+#endif
+
+    // Init CUDA grid for texture #1
+    if (!initGridParams(texDim1, texOrg1, texDelta1)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                DeformableGPUSurfaceMT::ClassName());
+        return false;
+    }
+
+    // Call second kernel
+#ifdef USE_TIMER
+    cudaEventRecord(event1, 0);
+#endif
+
+    DeformableGPUSurfaceMT_ComputeVtxSignDiffValue1Fitted_D <<< Grid(vertexCnt, 256), 256 >>> (
+            signdiff_D,
+            tex1_D,
+            vboPt1,
+            rotate_D.Peek(),
+            make_float3(transVec[0],transVec[1],transVec[2]),
+            make_float3(centroid[0],centroid[1],centroid[2]),
+            vertexCnt);
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'ComputeVtxDiffValue1_D':                %.10f sec\n",
+            dt_ms/1000.0f);
+#endif
+
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(rotate_D.Release())) {
         return false;
     }
 

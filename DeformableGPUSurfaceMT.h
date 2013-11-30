@@ -87,6 +87,47 @@ public:
             GLuint vtxDataVBO1,
             size_t vertexCnt);
 
+
+    /**
+     * In this class, because it needs the offsets TODO
+     */
+    static bool ComputeVtxDiffValueFitted(
+            float *diff_D,
+            float centroid[3],
+            float rotMat[9],
+            float transVec[3],
+            float *tex0_D,
+            int3 texDim0,
+            float3 texOrg0,
+            float3 texDelta0,
+            float *tex1_D,
+            int3 texDim1,
+            float3 texOrg1,
+            float3 texDelta1,
+            GLuint vtxDataVBO0,
+            GLuint vtxDataVBO1,
+            size_t vertexCnt);
+
+    /**
+     * In this class, because it needs the offsets TODO
+     */
+    static bool ComputeVtxSignDiffValueFitted(
+            float *signdiff_D,
+            float centroid[3],
+            float rotMat[9],
+            float transVec[3],
+            float *tex0_D,
+            int3 texDim0,
+            float3 texOrg0,
+            float3 texDelta0,
+            float *tex1_D,
+            int3 texDim1,
+            float3 texOrg1,
+            float3 texDelta1,
+            GLuint vtxDataVBO0,
+            GLuint vtxDataVBO1,
+            size_t vertexCnt);
+
     /** DTor */
     DeformableGPUSurfaceMT();
 

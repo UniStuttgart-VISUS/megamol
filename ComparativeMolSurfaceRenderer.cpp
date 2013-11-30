@@ -1947,9 +1947,17 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 #endif // VERBOSE
 
         // Compute texture coordinates
-        if (!this->deformSurf2.ComputeTexCoords(
+        Mat3f rmsRotInv(this->rmsRotation);
+        if (!rmsRotInv.Invert()) {
+            printf("Could not invert rotation matrix\n");
+            return false;
+        }
+        if (!this->deformSurf2.ComputeTexCoordsOfRMSDFittedPositions(
                 this->gridPotential2.minC,
-                this->gridPotential2.maxC)) {
+                this->gridPotential2.maxC,
+                this->rmsCentroid.PeekComponents(),
+                rmsRotInv.PeekComponents(),
+                this->rmsTranslation.PeekComponents())) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not compute tex coords #2",
