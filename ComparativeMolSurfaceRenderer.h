@@ -516,6 +516,21 @@ private:
     float posZMin;
 
 
+    /* Quicksurf parameters */
+
+    /// Parameter slot for atom radius scaling
+    megamol::core::param::ParamSlot qsRadSclSlot;
+    float qsRadScl;
+
+    /// Parameter for grid spacing
+    megamol::core::param::ParamSlot qsGridDeltaSlot;
+    float qsGridDelta;
+
+    /// Parameter for isovalue
+    megamol::core::param::ParamSlot qsIsoValSlot;
+    float qsIsoVal;
+
+
     /* Volume generation */
 
     /// Pointer to CUDAQuickSurf objects
@@ -534,19 +549,19 @@ private:
     /* Hardcoded parameters for the 'quicksurf' class */
 
     /// Parameter for assumed radius of density grid data
-    static const float qsParticleRad;
+    //static const float qsParticleRad;
 
     /// Parameter for the cutoff radius for the gaussian kernel
     static const float qsGaussLim;
 
     /// Parameter for assumed radius of density grid data
-    static const float qsGridSpacing;
+    //static const float qsGridSpacing;
 
     /// Parameter to toggle scaling by van der Waals radius
     static const bool qsSclVanDerWaals;
 
     /// Parameter for iso value for volume rendering
-    static const float qsIsoVal;
+    //static const float qsIsoVal;
 
 
     /* Hardcoded colors for surface rendering */

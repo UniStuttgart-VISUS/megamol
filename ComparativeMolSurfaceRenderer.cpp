@@ -40,11 +40,11 @@ using namespace megamol;
 using namespace megamol::protein;
 
 // Hardcoded parameters for 'quicksurf' class
-const float ComparativeMolSurfaceRenderer::qsParticleRad = 0.8f;
+//const float ComparativeMolSurfaceRenderer::qsParticleRad = 0.8f;
 const float ComparativeMolSurfaceRenderer::qsGaussLim = 8.0f;
-const float ComparativeMolSurfaceRenderer::qsGridSpacing = 1.0f;
+//const float ComparativeMolSurfaceRenderer::qsGridSpacing = 1.0f;
 const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
-const float ComparativeMolSurfaceRenderer::qsIsoVal = 0.5f;
+//const float ComparativeMolSurfaceRenderer::qsIsoVal = 0.5f;
 
 // Hardcoded colors for surface rendering
 const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = Vec3f(0.7f, 0.8f, 0.4f);
@@ -156,6 +156,11 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         filterXMinParam("posFilter::XMin", "The minimum position in x-direction"),
         filterYMinParam("posFilter::YMin", "The minimum position in y-direction"),
         filterZMinParam("posFilter::ZMin", "The minimum position in z-direction"),
+        /* Quicksurf parameters */
+        /// Parameter slot for atom radius scaling
+        qsRadSclSlot("quicksurf::qsRadScl","..."),
+        qsGridDeltaSlot("quicksurf::qsGridDelta","..."),
+        qsIsoValSlot("quicksurf::qsIsoVal","..."),
         cudaqsurf1(NULL), cudaqsurf2(NULL),
         triggerComputeVolume(true), triggerInitPotentialTex(true),
         triggerComputeSurfacePoints1(true), triggerComputeSurfacePoints2(true),
@@ -302,7 +307,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->MakeSlotAvailable(&this->surfMappedSpringStiffnessSlot);
 
     // Minimum displacement
-    this->surfMappedMinDisplScl = ComparativeMolSurfaceRenderer::qsGridSpacing/100.0f*this->surfaceMappingForcesScl;
+    this->surfMappedMinDisplScl = this->qsGridDelta/100.0f*this->surfaceMappingForcesScl;
     //this->surfMappedMinDisplScl = ComparativeMolSurfaceRenderer::qsGridSpacing/100.0f;
     this->surfMappedMinDisplSclSlot.SetParameter(new core::param::FloatParam(this->surfMappedMinDisplScl, 0.0f));
     //this->MakeSlotAvailable(&this->surfMappedMinDisplSclSlot);
@@ -348,7 +353,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->MakeSlotAvailable(&this->regForcesSclSlot);
 
     // Minimum displacement
-    this->surfregMinDisplScl = ComparativeMolSurfaceRenderer::qsGridSpacing/100.0f*this->regForcesScl;
+    this->surfregMinDisplScl = this->qsGridDelta/100.0f*this->regForcesScl;
     this->surfregMinDisplSclSlot.SetParameter(new core::param::FloatParam(this->surfregMinDisplScl, 0.0f));
     //this->MakeSlotAvailable(&this->surfregMinDisplSclSlot);
 
@@ -471,6 +476,27 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->posZMin = -10.0f;
     this->filterZMinParam.SetParameter(new core::param::FloatParam(this->posZMin, -1000.0f, 1000.0f));
     this->MakeSlotAvailable(&this->filterZMinParam);
+
+
+    /* Quicksurf parameter */
+
+    // Quicksurf radius scale
+    this->qsRadScl = 1.0f;
+    this->qsRadSclSlot.SetParameter(
+            new core::param::FloatParam(this->qsRadScl));
+    this->MakeSlotAvailable(&this->qsRadSclSlot);
+
+    // Quicksurf grid scaling
+    this->qsGridDelta = 2.0f;
+    this->qsGridDeltaSlot.SetParameter(
+            new core::param::FloatParam(this->qsGridDelta));
+    this->MakeSlotAvailable(&this->qsGridDeltaSlot);
+
+    // Quicksurf isovalue
+    this->qsIsoVal = 0.5f;
+    this->qsIsoValSlot.SetParameter(
+            new core::param::FloatParam(this->qsIsoVal));
+    this->MakeSlotAvailable(&this->qsIsoValSlot);
 }
 
 
@@ -545,7 +571,7 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
 //    printf("Compute density map particleCount %u,molcall %u\n", particleCnt,mol->AtomCount());
 
     // Compute padding for the density map
-    padding = this->maxAtomRad*this->qsParticleRad + this->qsGridSpacing*10;
+    padding = this->maxAtomRad*this->qsRadScl + this->qsGridDelta*10;
 
     // Init grid parameters
     this->volOrg.x = this->bboxParticles.GetLeft()   - padding;
@@ -557,18 +583,18 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
     gridXAxisLen = this->volMaxC.x - this->volOrg.x;
     gridYAxisLen = this->volMaxC.y - this->volOrg.y;
     gridZAxisLen = this->volMaxC.z - this->volOrg.z;
-    this->volDim.x = (int) ceil(gridXAxisLen / this->qsGridSpacing);
-    this->volDim.y = (int) ceil(gridYAxisLen / this->qsGridSpacing);
-    this->volDim.z = (int) ceil(gridZAxisLen / this->qsGridSpacing);
-    gridXAxisLen = (this->volDim.x-1) * this->qsGridSpacing;
-    gridYAxisLen = (this->volDim.y-1) * this->qsGridSpacing;
-    gridZAxisLen = (this->volDim.z-1) * this->qsGridSpacing;
+    this->volDim.x = (int) ceil(gridXAxisLen / this->qsGridDelta);
+    this->volDim.y = (int) ceil(gridYAxisLen / this->qsGridDelta);
+    this->volDim.z = (int) ceil(gridZAxisLen / this->qsGridDelta);
+    gridXAxisLen = (this->volDim.x-1) * this->qsGridDelta;
+    gridYAxisLen = (this->volDim.y-1) * this->qsGridDelta;
+    gridZAxisLen = (this->volDim.z-1) * this->qsGridDelta;
     this->volMaxC.x = this->volOrg.x + gridXAxisLen;
     this->volMaxC.y = this->volOrg.y + gridYAxisLen;
     this->volMaxC.z = this->volOrg.z + gridZAxisLen;
-    this->volDelta.x = this->qsGridSpacing;
-    this->volDelta.y = this->qsGridSpacing;
-    this->volDelta.z = this->qsGridSpacing;
+    this->volDelta.x = this->qsGridDelta;
+    this->volDelta.y = this->qsGridDelta;
+    this->volDelta.z = this->qsGridDelta;
 
     // Set particle positions
 #pragma omp parallel for
@@ -602,8 +628,8 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
             (float*)&this->volOrg,
             (int*)&this->volDim,
             this->maxAtomRad,
-            this->qsParticleRad, // Radius scaling
-            this->qsGridSpacing,
+            this->qsRadScl, // Radius scaling
+            this->qsGridDelta,
             this->qsIsoVal,
             this->qsGaussLim);
 
@@ -2833,7 +2859,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
     if (this->surfaceMappingForcesSclSlot.IsDirty()) {
         this->surfaceMappingForcesScl = this->surfaceMappingForcesSclSlot.Param<core::param::FloatParam>()->Value();
         this->surfaceMappingForcesSclSlot.ResetDirty();
-        this->surfMappedMinDisplScl = ComparativeMolSurfaceRenderer::qsGridSpacing/100.0f*this->surfaceMappingForcesScl;
+        this->surfMappedMinDisplScl = this->qsGridDelta/100.0f*this->surfaceMappingForcesScl;
         this->triggerSurfaceMapping = true;
     }
 
@@ -2920,7 +2946,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
     if (this->regForcesSclSlot.IsDirty()) {
         this->regForcesScl = this->regForcesSclSlot.Param<core::param::FloatParam>()->Value();
         this->regForcesSclSlot.ResetDirty();
-        this->surfregMinDisplScl = ComparativeMolSurfaceRenderer::qsGridSpacing/100.0f*this->regForcesScl;
+        this->surfregMinDisplScl = this->qsGridDelta/100.0f*this->regForcesScl;
         this->triggerComputeSurfacePoints1 = true;
         this->triggerComputeSurfacePoints2 = true;
     }
@@ -3048,6 +3074,32 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->posZMin = this->filterZMinParam.Param<core::param::FloatParam>()->Value();
         this->filterZMinParam.ResetDirty();
         this->triggerComputeLines = true;
+    }
+
+
+    /* Quicksurf parameter */
+
+    // Quicksurf radius scale
+    if (this->qsRadSclSlot.IsDirty()) {
+        this->qsRadScl = this->qsRadSclSlot.Param<core::param::FloatParam>()->Value();
+        this->qsRadSclSlot.ResetDirty();
+        this->triggerComputeVolume = true;
+    }
+
+    // Quicksurf grid scaling
+    if (this->qsGridDeltaSlot.IsDirty()) {
+        this->qsGridDelta = this->qsGridDeltaSlot.Param<core::param::FloatParam>()->Value();
+        this->qsGridDeltaSlot.ResetDirty();
+        this->surfregMinDisplScl = this->qsGridDelta/100.0f*this->regForcesScl;
+        this->surfMappedMinDisplScl = this->qsGridDelta/100.0f*this->surfaceMappingForcesScl;
+        this->triggerComputeVolume = true;
+    }
+
+    // Quicksurf isovalue
+    if (this->qsIsoValSlot.IsDirty()) {
+        this->qsIsoVal = this->qsIsoValSlot.Param<core::param::FloatParam>()->Value();
+        this->qsIsoValSlot.ResetDirty();
+        this->triggerComputeVolume = true;
     }
 }
 

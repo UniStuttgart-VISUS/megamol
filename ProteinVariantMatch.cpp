@@ -56,11 +56,11 @@ using namespace megamol::core;
 const float ProteinVariantMatch::minDispl = 0.000001f;
 
 // Hardcoded parameters for 'quicksurf' class
-const float ProteinVariantMatch::qsParticleRad = 1.0f;
+//const float ProteinVariantMatch::qsParticleRad = 1.0f;
 const float ProteinVariantMatch::qsGaussLim = 8.0f;
-const float ProteinVariantMatch::qsGridSpacing = 1.0f;
+//const float ProteinVariantMatch::qsGridSpacing = 1.0f;
 const bool ProteinVariantMatch::qsSclVanDerWaals = true;
-const float ProteinVariantMatch::qsIsoVal = 0.5f;
+//const float ProteinVariantMatch::qsIsoVal = 0.5f;
 
 
 /*
@@ -89,6 +89,11 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
         surfRegSpringStiffnessSlot("surfreg::stiffness", "Stiffness of the internal springs"),
         surfRegExternalForcesWeightSlot("surfreg::externalForcesWeight", "Weight of the external forces"),
         surfRegForcesSclSlot("surfreg::forcesScl", "Scaling of overall force"),
+        /* Quicksurf parameters */
+        /// Parameter slot for atom radius scaling
+        qsRadSclSlot("quicksurf::qsRadScl","..."),
+        qsGridDeltaSlot("quicksurf::qsGridDelta","..."),
+        qsIsoValSlot("quicksurf::qsIsoVal","..."),
         nVariants(0),
         cudaqsurf0(NULL), cudaqsurf1(NULL),
         triggerComputeMatch(true) {
@@ -216,6 +221,26 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
     this->surfRegForcesSclSlot.SetParameter(new core::param::FloatParam(this->surfRegForcesScl, 0.0f));
     this->MakeSlotAvailable(&this->surfRegForcesSclSlot);
 
+
+    /* Quicksurf parameter */
+
+    // Quicksurf radius scale
+    this->qsRadScl = 1.0f;
+    this->qsRadSclSlot.SetParameter(
+            new core::param::FloatParam(this->qsRadScl));
+    this->MakeSlotAvailable(&this->qsRadSclSlot);
+
+    // Quicksurf grid scaling
+    this->qsGridDelta = 2.0f;
+    this->qsGridDeltaSlot.SetParameter(
+            new core::param::FloatParam(this->qsGridDelta));
+    this->MakeSlotAvailable(&this->qsGridDeltaSlot);
+
+    // Quicksurf isovalue
+    this->qsIsoVal = 0.5f;
+    this->qsIsoValSlot.SetParameter(
+            new core::param::FloatParam(this->qsIsoVal));
+    this->MakeSlotAvailable(&this->qsIsoValSlot);
 
 
     // Inititalize min/max values
@@ -622,7 +647,7 @@ bool ProteinVariantMatch::computeDensityMap(
     float padding;
 
     // Compute padding for the density map
-    padding = this->maxAtomRad*this->qsParticleRad + this->qsGridSpacing*10;
+    padding = this->maxAtomRad*this->qsRadScl + this->qsGridDelta*10;
 
     // Init grid parameters
     this->volOrg.x = this->bboxParticles.GetLeft()   - padding;
@@ -634,18 +659,18 @@ bool ProteinVariantMatch::computeDensityMap(
     gridXAxisLen = this->volMaxC.x - this->volOrg.x;
     gridYAxisLen = this->volMaxC.y - this->volOrg.y;
     gridZAxisLen = this->volMaxC.z - this->volOrg.z;
-    this->volDim.x = (int) ceil(gridXAxisLen / this->qsGridSpacing);
-    this->volDim.y = (int) ceil(gridYAxisLen / this->qsGridSpacing);
-    this->volDim.z = (int) ceil(gridZAxisLen / this->qsGridSpacing);
-    gridXAxisLen = (this->volDim.x-1) * this->qsGridSpacing;
-    gridYAxisLen = (this->volDim.y-1) * this->qsGridSpacing;
-    gridZAxisLen = (this->volDim.z-1) * this->qsGridSpacing;
+    this->volDim.x = (int) ceil(gridXAxisLen / this->qsGridDelta);
+    this->volDim.y = (int) ceil(gridYAxisLen / this->qsGridDelta);
+    this->volDim.z = (int) ceil(gridZAxisLen / this->qsGridDelta);
+    gridXAxisLen = (this->volDim.x-1) * this->qsGridDelta;
+    gridYAxisLen = (this->volDim.y-1) * this->qsGridDelta;
+    gridZAxisLen = (this->volDim.z-1) * this->qsGridDelta;
     this->volMaxC.x = this->volOrg.x + gridXAxisLen;
     this->volMaxC.y = this->volOrg.y + gridYAxisLen;
     this->volMaxC.z = this->volOrg.z + gridZAxisLen;
-    this->volDelta.x = this->qsGridSpacing;
-    this->volDelta.y = this->qsGridSpacing;
-    this->volDelta.z = this->qsGridSpacing;
+    this->volDelta.x = this->qsGridDelta;
+    this->volDelta.y = this->qsGridDelta;
+    this->volDelta.z = this->qsGridDelta;
 
     // Set particle positions
 #pragma omp parallel for
@@ -683,8 +708,8 @@ bool ProteinVariantMatch::computeDensityMap(
             (float*)&this->volOrg,
             (int*)&this->volDim,
             this->maxAtomRad,
-            this->qsParticleRad, // Radius scaling
-            this->qsGridSpacing,
+            this->qsRadScl, // Radius scaling
+            this->qsGridDelta,
             this->qsIsoVal,
             this->qsGaussLim);
 
@@ -1098,7 +1123,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                     this->qsIsoVal,
                     this->surfRegInterpolMode,
                     this->surfRegMaxIt,
-                    ProteinVariantMatch::qsGridSpacing/100.0f*this->surfRegForcesScl,
+                    qsGridDelta/100.0f*this->surfRegForcesScl,
                     this->surfRegSpringStiffness,
                     this->surfRegForcesScl,
                     this->surfRegExternalForcesWeight)) {
@@ -1126,7 +1151,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                     this->qsIsoVal,
                     this->surfMapInterpolMode,
                     this->surfMapMaxIt,
-                    ProteinVariantMatch::qsGridSpacing/100.0f*this->surfMapForcesScl,
+                    qsGridDelta/100.0f*this->surfMapForcesScl,
                     this->surfMapSpringStiffness,
                     this->surfMapForcesScl,
                     this->surfMapExternalForcesWeight,
@@ -1546,5 +1571,26 @@ void ProteinVariantMatch::updatParams() {
     if (this->surfRegForcesSclSlot.IsDirty()) {
         this->surfRegForcesScl = this->surfRegForcesSclSlot.Param<core::param::FloatParam>()->Value();
         this->surfRegForcesSclSlot.ResetDirty();
+    }
+
+
+    /* Quicksurf parameter */
+
+    // Quicksurf radius scale
+    if (this->qsRadSclSlot.IsDirty()) {
+        this->qsRadScl = this->qsRadSclSlot.Param<core::param::FloatParam>()->Value();
+        this->qsRadSclSlot.ResetDirty();
+    }
+
+    // Quicksurf grid scaling
+    if (this->qsGridDeltaSlot.IsDirty()) {
+        this->qsGridDelta = this->qsGridDeltaSlot.Param<core::param::FloatParam>()->Value();
+        this->qsGridDeltaSlot.ResetDirty();
+    }
+
+    // Quicksurf isovalue
+    if (this->qsIsoValSlot.IsDirty()) {
+        this->qsIsoVal = this->qsIsoValSlot.Param<core::param::FloatParam>()->Value();
+        this->qsIsoValSlot.ResetDirty();
     }
 }
