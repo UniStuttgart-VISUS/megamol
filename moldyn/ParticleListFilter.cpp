@@ -11,6 +11,7 @@
 #include "param/StringParam.h"
 #include "param/BoolParam.h"
 #include <climits>
+#include <cfloat>
 #include "vislib/StringTokeniser.h"
 
 using namespace megamol::core;

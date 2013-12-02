@@ -13,6 +13,7 @@
 
 #include "ModuleDescription.h"
 #include "vislib/Log.h"
+#include <typeinfo>
 
 
 namespace megamol {
