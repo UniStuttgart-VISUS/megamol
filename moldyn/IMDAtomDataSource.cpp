@@ -16,6 +16,7 @@
 #include "param/FloatParam.h"
 #include "param/FilePathParam.h"
 #include "param/StringParam.h"
+#include "param/Vector3fParam.h"
 #include "utility/ColourParser.h"
 #include "vislib/Array.h"
 #include "vislib/forceinline.h"
@@ -796,6 +797,9 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
         dirmaxColumnValSlot("dir::maxColumnValue", "The maximum value for the colour mapping of the column"),
         dirradiusSlot("dir::radius", "The radius to be used for the data"),
         dirNormDirSlot("dir::normalise", ""),
+		bboxEnabledSlot("bbox::enable", ""),
+        bboxMinSlot("bbox::min", ""), 
+        bboxMaxSlot("bbox::max", ""), 
         posData(), colData(), headerMinX(0.0f), headerMinY(0.0f),
         headerMinZ(0.0f), headerMaxX(1.0f), headerMaxY(1.0f),
         headerMaxZ(1.0f), minX(0.0f), minY(0.0f), minZ(0.0f), maxX(1.0f),
@@ -804,6 +808,17 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
 
     this->filenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
+	
+	this->bboxEnabledSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->bboxEnabledSlot);
+	vislib::math::Vector<float, 3> vMin;
+	vMin.Set(0.0f, 0.0f, 0.0f);
+	vislib::math::Vector<float, 3> vMax;
+	vMin.Set(1.0f, 1.0f, 1.0f);
+	this->bboxMinSlot << new param::Vector3fParam(vMin);
+    this->MakeSlotAvailable(&this->bboxMinSlot);
+	this->bboxMaxSlot << new param::Vector3fParam(vMax);
+    this->MakeSlotAvailable(&this->bboxMaxSlot);
 
     this->getDataSlot.SetCallback("MultiParticleDataCall", "GetData", &IMDAtomDataSource::getDataCallback);
     this->getDataSlot.SetCallback("MultiParticleDataCall", "GetExtent", &IMDAtomDataSource::getExtentCallback);
@@ -1088,6 +1103,15 @@ bool moldyn::IMDAtomDataSource::getExtentCallback(Call& caller) {
         mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
             this->minX - rad, this->minY - rad, this->minZ - rad,
             this->maxX + rad, this->maxY + rad, this->maxZ + rad);
+
+			if(this->bboxEnabledSlot.Param<param::BoolParam>()->Value())
+			{
+				vislib::math::Vector<float, 3>  minP(this->bboxMinSlot.Param<param::Vector3fParam>()->Value()),
+												maxP(this->bboxMaxSlot.Param<param::Vector3fParam>()->Value());
+				mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
+				mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
+			}
+
     } else if (dpdc != NULL) {
         dpdc->SetDataHash(this->datahash);
         dpdc->SetFrameCount(1);
@@ -1099,7 +1123,15 @@ bool moldyn::IMDAtomDataSource::getExtentCallback(Call& caller) {
         dpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
             this->minX - rad, this->minY - rad, this->minZ - rad,
             this->maxX + rad, this->maxY + rad, this->maxZ + rad);
-    }
+
+			if(this->bboxEnabledSlot.Param<param::BoolParam>()->Value())
+			{
+				vislib::math::Vector<float, 3>  minP(this->bboxMinSlot.Param<param::Vector3fParam>()->Value()),
+												maxP(this->bboxMaxSlot.Param<param::Vector3fParam>()->Value());
+				dpdc->AccessBoundingBoxes().SetObjectSpaceBBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
+				dpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
+			}
+	}
 
     return true;
 }
@@ -1137,6 +1169,9 @@ void moldyn::IMDAtomDataSource::assertData(void) {
             && !this->dircolourModeSlot.IsDirty()
             && !this->dircolourColumnSlot.IsDirty()
             && !this->typeColumnSlot.IsDirty()
+			&& !this->bboxEnabledSlot.IsDirty()
+			&& !this->bboxMaxSlot.IsDirty()
+			&& !this->bboxMinSlot.IsDirty()
         ) return;
     this->filenameSlot.ResetDirty();
     this->colourModeSlot.ResetDirty();
@@ -1148,6 +1183,9 @@ void moldyn::IMDAtomDataSource::assertData(void) {
     this->dircolourModeSlot.ResetDirty();
     this->dircolourColumnSlot.ResetDirty();
     this->typeColumnSlot.ResetDirty();
+	this->bboxEnabledSlot.ResetDirty();
+	this->bboxMaxSlot.ResetDirty();
+	this->bboxMinSlot.ResetDirty();
 
     this->clear();
 
@@ -1819,6 +1857,19 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
         }
 
         if (!fail) {
+
+			if(this->bboxEnabledSlot.Param<param::BoolParam>()->Value())
+			{
+				vislib::math::Vector<float, 3> p(x,y,z),
+					                           minP(this->bboxMinSlot.Param<param::Vector3fParam>()->Value()),
+											   maxP(this->bboxMaxSlot.Param<param::Vector3fParam>()->Value());
+				if( (p.GetX() < minP.GetX() || p.GetY() < minP.GetY() || p.GetZ() < minP.GetZ() ) ||
+					(p.GetX() > maxP.GetX() || p.GetY() > maxP.GetY() || p.GetZ() > maxP.GetZ() )) 
+					continue;
+			
+			}
+
+			
             int rawIdx = 0;
             if ((rawIdx = static_cast<int>(typeData.IndexOf(static_cast<unsigned int>(t)))) == static_cast<int>(vislib::Array<unsigned int>::INVALID_POS)) {
                 typeData.Append(static_cast<unsigned int>(t));

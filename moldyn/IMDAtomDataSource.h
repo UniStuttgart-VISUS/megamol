@@ -212,6 +212,15 @@ namespace moldyn {
         /** The file name */
         param::ParamSlot filenameSlot;
 
+		/** enable bbox */
+		param::ParamSlot bboxEnabledSlot;
+
+		/** filter boundingbox min */
+        param::ParamSlot bboxMinSlot;
+
+		/** filter boundingbox max */
+        param::ParamSlot bboxMaxSlot;
+
         /** The slot for requesting data */
         CalleeSlot getDataSlot;
 
