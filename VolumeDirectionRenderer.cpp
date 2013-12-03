@@ -38,30 +38,19 @@ using namespace megamol::protein;
  */
 VolumeDirectionRenderer::VolumeDirectionRenderer(void) : Renderer3DModuleDS (),
     vtiDataCallerSlot("getData", "Connects the arrow rendering with volume data storage"),
-    xResParam("numArrXAxis", "Number of arrows along X axis"),
-    yResParam("numArrYAxis", "Number of arrows along Y axis"),
-    zResParam("numArrZAxis", "Number of arrows along Z axis"),
     lengthScaleParam("arrowLengthScale", "Length scale factor for the arrows"),
     lengthFilterParam("lengthFilter", "Lenght filter for arrow glyphs"),
     minDensityFilterParam("minDensityFilter", "Filter arrow glyphs by minimum density"),
     arrowCount(0), triggerArrowComputation(true),
     getTFSlot("getTransferFunction", "Connects to the transfer function module"),
-    greyTF(0)
+    greyTF(0), datahash(-1)
 {
     this->vtiDataCallerSlot.SetCompatibleCall<VTIDataCallDescription>();
     this->MakeSlotAvailable( &this->vtiDataCallerSlot);
     
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
-
-    this->xRes = this->yRes = this->zRes = 5;
-    this->xResParam.SetParameter(new param::IntParam(this->xRes, 0));
-    this->MakeSlotAvailable( &this->xResParam);
-    this->yResParam.SetParameter(new param::IntParam(this->yRes, 0));
-    this->MakeSlotAvailable( &this->yResParam);
-    this->zResParam.SetParameter(new param::IntParam(this->zRes, 0));
-    this->MakeSlotAvailable( &this->zResParam);
-    
+        
     this->lengthScaleParam.SetParameter(new param::FloatParam( 10.0f, 0.0f));
     this->MakeSlotAvailable( &this->lengthScaleParam);
     
@@ -229,9 +218,15 @@ bool VolumeDirectionRenderer::Render(Call& call) {
 
     // ---------- update parameters ----------
     this->UpdateParameters(vti);
-    
+
+    // trigger computation if another data set was loaded
+    if (this->datahash != vti->DataHash()) {
+        this->triggerArrowComputation = true;
+        this->datahash = vti->DataHash();
+    }
+
     // ---------- prepare data ---------- 
-    if( this->triggerArrowComputation ) {
+    if (this->triggerArrowComputation) {
         vislib::math::Vector<float, 3> gridSize = vti->GetGridsize();
         //this->arrowCount = xRes * yRes * zRes;
         this->arrowCount = gridSize.X() * gridSize.Y() * gridSize.Z();
@@ -239,14 +234,6 @@ bool VolumeDirectionRenderer::Render(Call& call) {
         this->colorArray.SetCount(arrowCount);
         this->dirArray.SetCount(arrowCount * 3);
         
-        float deltaX = vti->AccessBoundingBoxes().ObjectSpaceBBox().Width() / static_cast<float>(xRes+1);
-        float deltaY = vti->AccessBoundingBoxes().ObjectSpaceBBox().Height() / static_cast<float>(yRes+1);
-        float deltaZ = vti->AccessBoundingBoxes().ObjectSpaceBBox().Depth() / static_cast<float>(zRes+1);
-        
-        float xPos = vti->AccessBoundingBoxes().ObjectSpaceBBox().Left();
-        float yPos = vti->AccessBoundingBoxes().ObjectSpaceBBox().Bottom();
-        float zPos = vti->AccessBoundingBoxes().ObjectSpaceBBox().Back();
-
         /*
         unsigned int numPieces = vti->GetNumberOfPieces();
         unsigned int numArrays = vti->GetArrayCntOfPiecePointData(0);
@@ -266,19 +253,18 @@ bool VolumeDirectionRenderer::Render(Call& call) {
 
         const float *dirData = (const float*)(vti->GetPointDataByIdx(1, 0));
         
-        this->minC = vti->GetPointDataArrayMin( 1, 0);
-        this->maxC = vti->GetPointDataArrayMax( 1, 0);
+        //this->minC = vti->GetPointDataArrayMin( 1, 0);
+        //this->maxC = vti->GetPointDataArrayMax( 1, 0);
+        this->minC = FLT_MAX;
+        this->minC = FLT_MIN;
 
         unsigned int idx = 0;
         //for( unsigned int xIdx = 0; xIdx < xRes; xIdx++) {
         for( unsigned int xIdx = 0; xIdx < gridSize.X(); xIdx++) {
-            xPos += deltaX;
             //for( unsigned int yIdx = 0; yIdx < yRes; yIdx++) {
             for( unsigned int yIdx = 0; yIdx < gridSize.Y(); yIdx++) {
-                yPos += deltaY;
                 //for( unsigned int zIdx = 0; zIdx < zRes; zIdx++) {
                 for( unsigned int zIdx = 0; zIdx < gridSize.Z(); zIdx++) {
-                    zPos += deltaZ;
                     // set direction
                     //unsigned int gridIdx = static_cast<unsigned int>(gridSize.X() * (gridSize.Y() * posn.Z() + posn.Y()) + posn.X());
                     //vislib::math::Vector<float, 3> dir( dirData[3*gridIdx], dirData[3*gridIdx+1], dirData[3*gridIdx+2]);
@@ -292,23 +278,29 @@ bool VolumeDirectionRenderer::Render(Call& call) {
                     this->vertexArray[idx*4+1] = (float(yIdx)/float(gridSize.Y())) * vti->AccessBoundingBoxes().ObjectSpaceBBox().Height() + vti->AccessBoundingBoxes().ObjectSpaceBBox().Bottom();
                     this->vertexArray[idx*4+2] = (float(zIdx)/float(gridSize.Z())) * vti->AccessBoundingBoxes().ObjectSpaceBBox().Depth() + vti->AccessBoundingBoxes().ObjectSpaceBBox().Back();
                     float test = (densityData[gridIdx] < this->minDensityFilterParam.Param<param::FloatParam>()->Value()) ? 0.0f : 1.0f;
-                    this->vertexArray[idx*4+3] = 1.0f * 
-                        ((dir.Length() - this->minC) / (this->maxC - this->minC)) * 
-                        ((densityData[gridIdx] - minDensity) / (maxDensity - minDensity)) *
+                    this->vertexArray[idx*4+3] = 
+                        //((dir.Length() - this->minC) / (this->maxC - this->minC)) * 
+                        //((densityData[gridIdx] - minDensity) / (maxDensity - minDensity)) *
+                        dir.Length() * 
                         this->lengthScaleParam.Param<param::FloatParam>()->Value() * test;
+                    // set color
+                    this->colorArray[idx] = dir.Length();
+                    // get min and max values
+                    if (this->minC > this->colorArray[idx]) {
+                        this->minC = this->colorArray[idx];
+                    }
+                    if (this->maxC < this->colorArray[idx]) {
+                        this->maxC = this->colorArray[idx];
+                    }
                     dir.Normalise();
                     dir *= this->vertexArray[idx*4+3];
                     // set direction
                     this->dirArray[idx*3+0] = dir.X();
                     this->dirArray[idx*3+1] = dir.Y();
                     this->dirArray[idx*3+2] = dir.Z();
-                    // set color
-                    this->colorArray[idx] = dir.Length();
                     idx++;
                 }
-                zPos = vti->AccessBoundingBoxes().ObjectSpaceBBox().Back();
             }
-            yPos = vti->AccessBoundingBoxes().ObjectSpaceBBox().Bottom();
         }
         
         this->triggerArrowComputation = false;
@@ -389,21 +381,6 @@ bool VolumeDirectionRenderer::Render(Call& call) {
  * update parameters
  */
 void VolumeDirectionRenderer::UpdateParameters(const VTIDataCall *vti) {
-    if( this->xResParam.IsDirty() ) {
-        this->xRes = this->xResParam.Param<param::IntParam>()->Value();
-        this->xResParam.ResetDirty();
-        this->triggerArrowComputation = true;
-    }
-    if( this->yResParam.IsDirty() ) {
-        this->yRes = this->yResParam.Param<param::IntParam>()->Value();
-        this->yResParam.ResetDirty();
-        this->triggerArrowComputation = true;
-    }
-    if( this->zResParam.IsDirty() ) {
-        this->zRes = this->zResParam.Param<param::IntParam>()->Value();
-        this->zResParam.ResetDirty();
-        this->triggerArrowComputation = true;
-    }
     if( this->minDensityFilterParam.IsDirty() ) {
         this->minDensityFilterParam.ResetDirty();
         this->triggerArrowComputation = true;

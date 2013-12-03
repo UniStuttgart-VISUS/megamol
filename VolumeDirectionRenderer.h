@@ -130,12 +130,6 @@ namespace protein {
         megamol::core::CallerSlot vtiDataCallerSlot;
 
         /** parameter slots */
-        core::param::ParamSlot xResParam;
-        unsigned int xRes;
-        core::param::ParamSlot yResParam;
-        unsigned int yRes;
-        core::param::ParamSlot zResParam;
-        unsigned int zRes;
         unsigned int arrowCount;
         /** arrow lenght scale parameter slots */
         core::param::ParamSlot lengthScaleParam;
@@ -165,6 +159,7 @@ namespace protein {
         /** A simple black-to-white transfer function texture as fallback */
         unsigned int greyTF;
         
+        int datahash;
     };
 
 
