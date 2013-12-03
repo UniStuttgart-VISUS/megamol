@@ -111,6 +111,10 @@ bool VTILoader::getData(core::Call& call) {
         return false;
     }
 
+    if (!(*dc)(VTIDataCall::CallForGetExtent)) {
+        return false;
+    }
+
 //    printf("Frame requested: %u\n", dc->FrameID()); // DEBUG
 
     if (dc->FrameID() >= this->FrameCount()) {

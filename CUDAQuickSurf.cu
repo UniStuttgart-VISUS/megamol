@@ -19,6 +19,8 @@
  *
  ***************************************************************************/
 
+//#define VERBOSE 1
+//#define CUDA_TIMER
 
 // includes for windows!
 #ifdef _WIN32
@@ -2519,6 +2521,14 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
   wkf_timerhandle globaltimer = wkf_timer_create();
   wkf_timer_start(globaltimer);
 
+#ifdef CUDA_TIMER
+    cudaEvent_t start, stop;
+    float time;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord( start, 0);
+#endif
+
   cudaError_t err;
   cudaDeviceProp deviceProp;
   int dev;
@@ -2760,9 +2770,21 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
     }
     cudaThreadSynchronize(); 
     densitykerneltime = wkf_timer_timenow(globaltimer);
+    
+#ifdef CUDA_TIMER		
+    cudaDeviceSynchronize();
+    cudaEventRecord( stop, 0);
+    cudaEventSynchronize( stop);
+    cudaEventElapsedTime(&time, start, stop);
+    printf ("Time for sort + density: %f ms\n", time);
+#endif
 
 #if VERBOSE
     printf("  CUDA mcubes..."); fflush(stdout);
+#endif
+
+#ifdef CUDA_TIMER
+    cudaEventRecord( start, 0);
 #endif
 
     int vsz[3];
@@ -3053,6 +3075,14 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
 
   printf("  Total surface area: %.0f\n", this->surfaceArea);
 #endif
+  
+#ifdef CUDA_TIMER
+    cudaDeviceSynchronize();
+    cudaEventRecord( stop, 0);
+    cudaEventSynchronize( stop);
+    cudaEventElapsedTime(&time, start, stop);
+    printf ("Time for MC: %f ms\n", time);
+#endif
 
 
   return 0;
@@ -3097,6 +3127,14 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
 
   wkf_timerhandle globaltimer = wkf_timer_create();
   wkf_timer_start(globaltimer);
+  
+#ifdef CUDA_TIMER
+    cudaEvent_t start, stop;
+    float time;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord( start, 0);
+#endif
 
   cudaError_t err;
   cudaDeviceProp deviceProp;
@@ -3355,9 +3393,21 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
     }
     cudaThreadSynchronize(); 
     densitykerneltime = wkf_timer_timenow(globaltimer);
+    
+#ifdef CUDA_TIMER		
+    cudaDeviceSynchronize();
+    cudaEventRecord( stop, 0);
+    cudaEventSynchronize( stop);
+    cudaEventElapsedTime(&time, start, stop);
+    printf ("Time for sort + density: %f ms\n", time);
+#endif
 
 #if VERBOSE
     printf("  CUDA mcubes..."); fflush(stdout);
+#endif
+
+#ifdef CUDA_TIMER
+    cudaEventRecord( start, 0);
 #endif
 
     int vsz[3];
@@ -3627,6 +3677,15 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
          totalruntime, sorttime, densitytime, mctime, copytime);
 
   printf("  Total surface area (%4i x %4i x %4i): %.0f\n", numvoxels[0], numvoxels[1], numvoxels[2], surfaceArea);
+#endif
+  
+  
+#ifdef CUDA_TIMER
+    cudaDeviceSynchronize();
+    cudaEventRecord( stop, 0);
+    cudaEventSynchronize( stop);
+    cudaEventElapsedTime(&time, start, stop);
+    printf ("Time for MC: %f ms\n", time);
 #endif
 
   return 0;

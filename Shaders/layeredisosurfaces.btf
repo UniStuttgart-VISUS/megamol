@@ -183,6 +183,7 @@ void main(void) {
 
 	vec3 cpTest;
 	float lic;
+	vec3 tv;
 	
     for (int j=0; (!outside && (j<numIterations)); ++j) {
         for (int i=0; i<numIterations; ++i) {
@@ -228,7 +229,8 @@ void main(void) {
                 gradient = normalize(gradient);
 				
 				// vector field LIC
-				lic = CalcLIC(licLen, isoPos);
+				//lic = CalcLIC(licLen, isoPos);
+				tv = texture3D(vectorSampler, isoPos).xyz;
 				
                 // illumination
                 vec3 posWorld = isoPos * scaleVolInv.xyz;
@@ -237,6 +239,13 @@ void main(void) {
                 float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
                 src = vec4(surfaceColor0, min(1.0, isoOpacity + 1.5*(1.0-tmp)));
 				//src.rgb *= lic; // TEST
+				if( dot( gradient, tv) > 0.001 ) {
+					src.rgb = vec3( 1.0, 0.0, 0.0);
+				} else if( dot( gradient, tv) < -0.001 ) {
+					src.rgb = vec3( 0.0, 0.0, 1.0);
+				} else {
+					src.rgb = vec3( 0.3, 0.3, 0.3);
+				}
                 src.rgb = calcIllum(posWorld, gradient, dirWorld, src.rgb);
                 
                 // draw interior darker
