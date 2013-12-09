@@ -456,7 +456,8 @@ void StreamlineRenderer::genSeedPoints(
         Vec3f pos;
         pos.SetX(vti->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
         pos.SetY(vti->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
-        pos.SetZ(posZ);
+        pos.SetZ(posZ + (float(rand() % 10000)/10000.0f)*(10));
+//        pos.SetZ(posZ);
         //printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
 
         float sample = this->sampleFieldAtPosTrilin(
@@ -464,7 +465,8 @@ void StreamlineRenderer::genSeedPoints(
                         pos.GetY(), pos.GetZ()), (float*)vti->GetPointDataByIdx(0, 0));
 
         // Sample density value
-        if (vislib::math::Abs(sample - isoval) < 0.05) {
+        //if (vislib::math::Abs(sample - isoval) < 0.05) {
+        if ((sample - isoval) > 0.00) {
             this->seedPoints.Add(pos.GetX());
             this->seedPoints.Add(pos.GetY());
             this->seedPoints.Add(pos.GetZ());

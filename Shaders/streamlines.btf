@@ -204,9 +204,12 @@ void main(void) {
     //float scale = length(gl_FrontColorIn[0].rgb)*gl_FrontColorIn[1].a*streamTubeThicknessScl;
     //float scale = 0.3;
     //float stretch1 = gl_FrontColorIn[1].y;
-    float stretch1 = length(gl_FrontColorIn[1].rgb)*gl_FrontColorIn[1].a*streamTubeThicknessScl;
+    //float stretch1 = length(gl_FrontColorIn[1].rgb)*gl_FrontColorIn[1].a*streamTubeThicknessScl;
     //float stretch2 = gl_FrontColorIn[1].z;
-    float stretch2 = length(gl_FrontColorIn[2].rgb)*gl_FrontColorIn[2].a*streamTubeThicknessScl;;
+    //float stretch2 = length(gl_FrontColorIn[2].rgb)*gl_FrontColorIn[2].a*streamTubeThicknessScl;
+    float stretch1 = streamTubeThicknessScl/100.;
+    float stretch2 = streamTubeThicknessScl/100.;
+
 
     vec3 ortho1 = normalize(dir20 + dir32);
     vec3 ortho2 = normalize(dir32 + dir53);
