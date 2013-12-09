@@ -287,14 +287,17 @@ bool VolumeDirectionRenderer::Render(Call& call) {
                         dir.Length() * 
                         this->lengthScaleParam.Param<param::FloatParam>()->Value() * test;
                     // set color
-                    this->colorArray[idx] = dir.Length();
+                    //this->colorArray[idx] = dir.Length();
+                    this->colorArray[idx] = dir.Dot( vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f)) < 0.0 ? -1.0f : 1.0f;
                     // get min and max values
-                    if (this->minC > this->colorArray[idx]) {
-                        this->minC = this->colorArray[idx];
-                    }
-                    if (this->maxC < this->colorArray[idx]) {
-                        this->maxC = this->colorArray[idx];
-                    }
+                    //if (this->minC > this->colorArray[idx]) {
+                    //    this->minC = this->colorArray[idx];
+                    //}
+                    //if (this->maxC < this->colorArray[idx]) {
+                    //    this->maxC = this->colorArray[idx];
+                    //}
+                    this->minC = -1.0f;
+                    this->maxC = 1.0f;
                     dir.Normalise();
                     dir *= this->vertexArray[idx*4+3];
                     // set direction

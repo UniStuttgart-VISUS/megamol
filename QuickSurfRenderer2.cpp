@@ -9,6 +9,8 @@
 
 #ifdef WITH_CUDA
 
+#define WRITE_DIAGRAM_FILE
+
 #define _USE_MATH_DEFINES 1
 
 #include "QuickSurfRenderer2.h"
@@ -209,7 +211,7 @@ bool QuickSurfRenderer2::create(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::perpixellightFragmentOR", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::perpixellightFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
         return false;
     }
@@ -277,6 +279,7 @@ bool QuickSurfRenderer2::Render(Call& call) {
     this->cameraInfo = cr3d->GetCameraParameters();
 
     callTime = cr3d->Time();
+    if (callTime < 1.0f) callTime = 1.0f;
 
     // get pointer to MultiParticleDataCall
     MultiParticleDataCall *c2 = this->molDataCallerSlot.CallAs<MultiParticleDataCall>();
@@ -414,6 +417,76 @@ void QuickSurfRenderer2::UpdateParameters( const MultiParticleDataCall *mol) {
 
 bool QuickSurfRenderer2::recomputeAreaDiagramCallback(core::param::ParamSlot& slot) {
     this->recomputeAreaDiagram = true;
+    
+#ifdef WRITE_DIAGRAM_FILE
+    // get pointer to MultiParticleDataCall
+    MultiParticleDataCall *parts = this->molDataCallerSlot.CallAs<MultiParticleDataCall>();
+    if( parts == NULL) return false;
+    // call extent
+    if (!(*parts)(1)) return false;
+    
+    // check if the data has to be recomputed
+    if (this->recomputeAreaDiagram) {
+        FILE *areaFile = fopen( "areas.txt", "w");
+        // loop over all frames
+        for (unsigned int i = 1; i < parts->FrameCount(); i++) {
+            parts->SetFrameID(i);            
+            if (!(*parts)(0)) {
+                fclose( areaFile);
+                return false;
+            }
+            // set number of particles
+            numParticles = 0;
+            for( unsigned int j = 0; j < parts->GetParticleListCount(); j++ ) {
+                numParticles += parts->AccessParticles(j).GetCount();
+            }
+            // allocate host storage
+            if (m_hPosSize < numParticles*3) {
+                if (m_hPos)
+                    delete[] m_hPos;
+                m_hPos = new float[numParticles*3];
+                this->m_hPosSize = numParticles*3;
+            }
+            memset(m_hPos, 0, numParticles*3*sizeof(float));
+            UINT64 particleCnt = 0;
+            for (unsigned int k = 0; k < parts->GetParticleListCount(); k++) {
+                megamol::core::moldyn::MultiParticleDataCall::Particles &particles = parts->AccessParticles(k);
+                const float *pos = static_cast<const float*>(particles.GetVertexData());
+                unsigned int posStride = particles.GetVertexDataStride();
+                bool useGlobRad = (particles.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+                if (particles.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+                    continue;
+                }
+                if (useGlobRad) {
+                    if (posStride < 12) posStride = 12;
+                } else {
+                    if (posStride < 16) posStride = 16;
+                }
+                for (UINT64 j = 0; j < particles.GetCount(); j++,
+                        pos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride)) {
+                    m_hPos[particleCnt*3+0] = pos[0];
+                    m_hPos[particleCnt*3+1] = pos[1];
+                    m_hPos[particleCnt*3+2] = pos[2];
+                    particleCnt++;
+                }
+            }
+            // calculate the surface
+            if( !cudaqsurf ) {
+                cudaqsurf = new CUDAQuickSurf();
+            }
+            this->calcSurf (parts, m_hPos, 
+                this->qualityParam.Param<param::IntParam>()->Value(),
+                this->radscaleParam.Param<param::FloatParam>()->Value(),
+                this->gridspacingParam.Param<param::FloatParam>()->Value(),
+                this->isovalParam.Param<param::FloatParam>()->Value(),
+                true);
+            // write surface area to file
+            fprintf( areaFile, "%f\n", this->currentSurfaceArea);
+        }
+        fclose( areaFile);
+    }
+#endif
+
     return true;
 }
 
@@ -423,6 +496,13 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
     DiagramCall *dc = dynamic_cast<DiagramCall*>(&call);
     if (dc == NULL) return false;    
     
+    // set current call time for sliding guide line
+    if (dc->GetGuideCount() == 0) {
+        dc->AddGuide(log(callTime), DiagramCall::DIAGRAM_GUIDE_VERTICAL);
+    } else {
+        dc->GetGuide(0)->SetPosition(log(callTime));
+    }
+
     // get pointer to MultiParticleDataCall
     MultiParticleDataCall *parts = this->molDataCallerSlot.CallAs<MultiParticleDataCall>();
     if( parts == NULL) return false;
@@ -450,7 +530,7 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
         dc->AddSeries( this->areaDiagramData);
         // loop over all frames
         for (unsigned int i = 1; i < parts->FrameCount(); i++) {
-            parts->SetFrameID(i, true);            
+            parts->SetFrameID(i);            
             if (!(*parts)(0)) return false;
             // set number of particles
             numParticles = 0;
@@ -514,19 +594,9 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
             // set surface area to diagram
             static_cast<MolecularSurfaceFeature*>(this->areaDiagramData->GetMappable())->AppendValue( 
                 log(static_cast<float>(i)), this->currentSurfaceArea);
-
         }
 
         this->recomputeAreaDiagram = false;
-    }
-
-    // set current call time for sliding guide line
-    if (parts != NULL) {
-        if (dc->GetGuideCount() == 0) {
-            dc->AddGuide(log(callTime), DiagramCall::DIAGRAM_GUIDE_VERTICAL);
-        } else {
-            dc->GetGuide(0)->SetPosition(log(callTime));
-        }
     }
 
     return true;
