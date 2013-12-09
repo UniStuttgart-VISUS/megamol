@@ -23,6 +23,9 @@
 #include <GL/glu.h>
 #include <omp.h>
 #include <cmath>
+#include <climits>
+#include <float.h>
+
 
 
 using namespace megamol;

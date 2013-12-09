@@ -17,6 +17,8 @@ using namespace megamol::protein;
 void Streamline::IntegrateRK4(Vec3f start, VecField3f &v, unsigned int maxLength,
         float step, float eps, Direction dir) {
 
+    step/=10;
+
     using namespace vislib::math;
     using namespace vislib;
 

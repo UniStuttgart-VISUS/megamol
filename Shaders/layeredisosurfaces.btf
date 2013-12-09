@@ -238,14 +238,22 @@ void main(void) {
 
                 float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
                 src = vec4(surfaceColor0, min(1.0, isoOpacity + 1.5*(1.0-tmp)));
-				//src.rgb *= lic; // TEST
-				if( dot( gradient, tv) > 0.001 ) {
-					src.rgb = vec3( 1.0, 0.0, 0.0);
-				} else if( dot( gradient, tv) < -0.001 ) {
-					src.rgb = vec3( 0.0, 0.0, 1.0);
-				} else {
-					src.rgb = vec3( 0.3, 0.3, 0.3);
-				}
+        //src.rgb *= lic; // TEST
+        
+        float scale=0.010;
+        float value=dot( gradient, tv);
+        if( value < 0.000 ) {
+          src.rgb = vec3( 0.3-0.7*value/scale, 0.3+0.3*value/scale, 0.3+0.3*value/scale);
+        } else {
+          src.rgb = vec3( 0.3+0.3*value/scale, 0.3-0.3*value/scale, 0.3+0.7*value/scale);
+        }
+//				if( dot( gradient, tv) > 0.001 ) {
+//					src.rgb = vec3( 1.0, 0.0, 0.0);
+//				} else if( dot( gradient, tv) < -0.001 ) {
+//					src.rgb = vec3( 0.0, 0.0, 1.0);
+//				} else {
+//					src.rgb = vec3( 0.3, 0.3, 0.3);
+//				}
                 src.rgb = calcIllum(posWorld, gradient, dirWorld, src.rgb);
                 
                 // draw interior darker
