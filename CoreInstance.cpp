@@ -506,6 +506,28 @@ megamol::core::CoreInstance::FindViewDescription(const char *name) {
     return d;
 }
 
+/*
+ * megamol::core::CoreInstance::EnumViewDescriptions
+ */
+void megamol::core::CoreInstance::EnumViewDescriptions(mmcEnumStringAFunction func, void *data, bool getBuiltinToo)
+{
+	assert(func);
+
+	auto it = this->projViewDescs.GetIterator();
+	while( it.HasNext() ){
+		auto vd = it.Next();
+		func(vd->ClassName(), data);
+	}
+
+	if( getBuiltinToo ) {
+		it = this->builtinViewDescs.GetIterator();
+		while( it.HasNext() ){
+			auto vd = it.Next();
+			func(vd->ClassName(), data);
+		}
+	}
+
+}
 
 /*
  * megamol::core::CoreInstance::FindJobDescription
@@ -958,6 +980,22 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
     return NULL;
 }
 
+/*
+* megamol::core::CoreInstance::FindParameter
+*/
+vislib::SmartPtr<megamol::core::param::AbstractParam>
+megamol::core::CoreInstance::FindParameterIndirect(const vislib::StringA& name, bool quiet)
+{
+	vislib::StringA paramName(name);
+	vislib::SmartPtr<core::param::AbstractParam> param;
+	vislib::SmartPtr<core::param::AbstractParam> lastParam;
+	while ((param = this->FindParameter(paramName)) != nullptr)
+	{
+		lastParam = param;
+		paramName = param->ValueString();
+	}
+	return lastParam;
+}
 
 /*
  * megamol::core::CoreInstance::FindParameter
@@ -970,10 +1008,18 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
     vislib::sys::AutoLock lock(locker);
 
     vislib::Array<vislib::StringA> path = vislib::StringTokeniserA::Split(name, "::", true);
-    vislib::StringA slotName = path.Last();
-    path.RemoveLast();
-    vislib::StringA modName = path.Last();
-    path.RemoveLast();
+	vislib::StringA slotName("");
+	if (path.Count() > 0)
+	{
+		slotName = path.Last();
+		path.RemoveLast();
+	}
+	vislib::StringA modName("");
+	if (path.Count() > 0)
+	{
+		modName = path.Last();
+		path.RemoveLast();
+	}
 
     ModuleNamespace *mn = NULL;
     // parameter slots may have namespace operators in their names!

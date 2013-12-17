@@ -141,6 +141,18 @@ namespace core {
          */
         ViewDescription* FindViewDescription(const char *name);
 
+		/**
+         * Enumerates all view descriptions. The callback function is called for each
+         * view description.
+         *
+         * @param func The callback function.
+         * @param data The user specified pointer to be passed to the callback
+         *             function.
+		 * @param getBuiltinToo true to also retreive the builtin view descriptions
+		 *					    else false
+         */
+        void EnumViewDescriptions(mmcEnumStringAFunction func, void *data, bool getBuiltinToo = false);
+
         /**
          * Searches for an view description object with the given name.
          *
@@ -231,6 +243,20 @@ namespace core {
          */
         vislib::SmartPtr<param::AbstractParam> FindParameter(
             const vislib::StringA& name, bool quiet = false);
+
+		/**
+		* Returns a pointer to the parameter with the given name.
+		* If the parameter value is the name of a valid parameter, it follows the path..
+		*
+		* @param name The name of the parameter to find.
+		* @param quiet Flag controlling the error output if the parameter is
+		*              not found.
+		*
+		* @return The found parameter or NULL if no parameter with this name
+		*         exists.
+		*/
+		vislib::SmartPtr<param::AbstractParam> FindParameterIndirect(
+			const vislib::StringA& name, bool quiet = false);
 
         /**
          * Returns a pointer to the parameter with the given name.
