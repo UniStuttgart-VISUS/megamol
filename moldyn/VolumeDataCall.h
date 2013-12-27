@@ -205,6 +205,24 @@ namespace moldyn {
         }
 
         /**
+         * Set the components per voxel.
+         *
+         * @param The components per voxel.
+         */
+        inline void SetComponents(unsigned int components) {
+            this->components = components;
+        }
+
+        /**
+         * Answer the components per voxel.
+         *
+         * @return The components per voxel.
+         */
+        inline unsigned int Components(void) const {
+            return this->components;
+        }
+
+        /**
          * Sets a pointer to the voxel map array.
          * The memory pointed to will remain owned by the caller and the caller
          * must ensure it remains valid as long as it is used through this
