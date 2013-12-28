@@ -235,6 +235,22 @@ namespace core {
         virtual ~CallVolumeData(void);
 
         /**
+         * Sets the idxth attribute.
+         *
+         * @param name The nameof the attribute
+         * @param type The type of the data
+         * @param data Pointer to the raw data
+         */
+        void SetData(size_t idx, const char* name, DataType t, void* data) {
+            if (this->attributes.Count() <= idx) {
+                this->attributes.SetCount(idx+1);
+            }
+            this->attributes[idx].SetName(name);
+            this->attributes[idx].SetType(t);
+            this->attributes[idx].SetData(data);
+        }
+
+        /**
          * Gets the idx-th attribute
          *
          * @param idx The zero-based index
