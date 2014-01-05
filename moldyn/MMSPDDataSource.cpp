@@ -1115,12 +1115,27 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
     BYTE headerID[9];
     _ASSERT_READFILE(headerID, 9);
     bool jmpBk, text, unicode, bigEndian;
-    if ((text = (::memcmp(headerID, "MMSPDb", 6) != 0))
-            && (unicode = (::memcmp(headerID, "MMSPDa", 6) != 0))
-            && (::memcmp(headerID, "MMSPDu", 6) != 0)
-            && (jmpBk = (::memcmp(headerID, "\xEF\xBB\xBFMMSPDu", 9) != 0))) {
+    
+    // scharnkn: I'm pretty sure the code below does not work due to the short 
+    // circuit evaluation of conditional statements in C++. The execution stops
+    // once the result of the conditional statement is clear, meaning for
+    // headerID == "MMSPDb", jmpBk is not set to true and consequently the file
+    // loading will fail.
+    //if ((text = (::memcmp(headerID, "MMSPDb", 6) != 0))
+    //        && (unicode = (::memcmp(headerID, "MMSPDa", 6) != 0))
+    //        && (::memcmp(headerID, "MMSPDu", 6) != 0)
+    //       && (jmpBk = (::memcmp(headerID, "\xEF\xBB\xBFMMSPDu", 9) != 0))) {
+    //    _ERROR_OUT("MMSPD format marker not found");
+    //}
+    // FIX
+    text = (::memcmp(headerID, "MMSPDb", 6) != 0);
+    unicode = (::memcmp(headerID, "MMSPDa", 6) != 0);
+    bool retVal = (::memcmp(headerID, "MMSPDu", 6) != 0);
+    jmpBk = (::memcmp(headerID, "\xEF\xBB\xBFMMSPDu", 9) != 0);
+    if (text && unicode && retVal && jmpBk) {
         _ERROR_OUT("MMSPD format marker not found");
     }
+
     if (jmpBk) {
         this->file->Seek(-3, vislib::sys::File::CURRENT);
     }
@@ -1367,6 +1382,7 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
         _ASSERT_READFILE(&timeCount, 4);
         _ASSERT_READFILE(&typeCount, 4);
         _ASSERT_READFILE(&partCount, 8);
+        
 
         // now I am confident enough to start setting data
         this->dataHeader.BoundingBox().Set(minX, minY, minZ, maxX, maxY, maxZ);
@@ -1477,6 +1493,7 @@ bool moldyn::MMSPDDataSource::filenameChanged(param::ParamSlot& slot) {
     }
 
     // reading frames
+     
     //  index generation and size estimation
     this->frameIdx = new UINT64[this->dataHeader.GetTimeCount() + 1];
     ZeroMemory(this->frameIdx, sizeof(UINT64) * (this->dataHeader.GetTimeCount() + 1));
