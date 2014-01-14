@@ -28,6 +28,7 @@
 #include "CallVolumeData.h"
 #include "moldyn/VolumeDataCall.h"
 #include "misc/BezierCurvesListDataCall.h"
+#include "misc/VolumetricDataCall.h"
 
 using namespace megamol::core;
 
@@ -77,6 +78,7 @@ void CallDescriptionManager::registerObjects(CallDescriptionManager *instance) {
         instance->registerAutoDescription<CallVolumeData>();
         instance->registerAutoDescription<moldyn::VolumeDataCall>();
         instance->registerAutoDescription<misc::BezierCurvesListDataCall>();
+        instance->registerAutoDescription<misc::VolumetricDataCall>();
     //}
     //return instance;
 }
