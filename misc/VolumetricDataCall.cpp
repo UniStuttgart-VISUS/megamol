@@ -94,6 +94,15 @@ size_t megamol::core::misc::VolumetricDataCall::GetComponents(void) const {
 
 
 /*
+ * megamol::core::misc::VolumetricDataCall::GetFrames
+ */
+size_t megamol::core::misc::VolumetricDataCall::GetFrames(void) const {
+    VLAUTOSTACKTRACE;
+    return (this->metadata != nullptr) ? this->metadata->NumberOfFrames : 0;
+}
+
+
+/*
  * megamol::core::misc::VolumetricDataCall::GetGridType
  */
 megamol::core::misc::VolumetricDataCall::GridType

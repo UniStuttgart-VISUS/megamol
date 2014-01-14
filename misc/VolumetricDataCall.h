@@ -14,6 +14,8 @@
 #include "AbstractGetData3DCall.h"
 #include "CallAutoDescription.h"
 
+#include "misc/VolumetricDataCallTypes.h"
+
 #include "vislib/Array.h"
 #include "vislib/StackTrace.h"
 
@@ -30,59 +32,13 @@ namespace misc {
     public:
 
         /** Possible type of grids. */
-        enum class GridType {
-            NONE,
-            CARTESIAN,
-            RECTILINEAR,
-            TETRAHEDRAL
-        };
+        typedef megamol::core::misc::GridType GridType;
 
         /** Possible types of scalars. */
-        enum class ScalarType {
-            UNKNOWN,
-            SIGNED_INTEGER,
-            UNSIGNED_INTEGER,
-            FLOATING_POINT,
-            BITS
-        };
+        typedef megamol::core::misc::ScalarType ScalarType;
 
         /** Structure containing all required metadata about a data set. */
-        typedef struct Metadata_t {
-
-            /** Initialise a new instance. */
-            inline Metadata_t(void) {
-                ::ZeroMemory(this->Resolution, sizeof(this->Resolution));
-                ::ZeroMemory(this->SliceDists, sizeof(this->SliceDists));
-                ::ZeroMemory(this->IsUniform, sizeof(this->IsUniform));
-            };
-
-            /** The type of the grid. */
-            GridType GridType;
-
-            /** The resolution of the three dimensions. */
-            size_t Resolution[3];
-
-            /** The type of a scalar. */
-            ScalarType ScalarType;
-
-            /** The length of a scalar in bytes. */
-            size_t ScalarLength;
-
-            /** The number of components per grid point. */
-            size_t Components;
-
-            /**
-             * The distance between slices each of the three dimensions. The
-             * data source providing the metadata remains owner of the arrays.
-             */
-            float *SliceDists[3];
-
-            /**
-             * Determines whether SliceDists[i] is uniform and has only one
-             * entry.
-             */
-            bool IsUniform[3];
-        } Metadata;
+        typedef megamol::core::misc::VolumetricMetadata Metadata;
 
         /**
          * Answer the name of this module.
@@ -145,6 +101,16 @@ namespace misc {
         virtual ~VolumetricDataCall(void);
 
         /**
+         * Gets the number of frames starting at GetData().
+         *
+         * @return The number of frames loaded.
+         */
+        inline size_t GetAvailableFrames(void) const {
+            VLAUTOSTACKTRACE;
+            return this->cntFrames;
+        }
+
+        /**
          * Gets the number of components per grid point.
          *
          * @return The number of components per grid point.
@@ -160,6 +126,13 @@ namespace misc {
             VLAUTOSTACKTRACE;
             return this->data;
         }
+
+        /**
+         * Gets the total number of frames in the data set.
+         *
+         * @return The total number of frames.
+         */
+        size_t GetFrames(void) const;
 
         /**
          * Gets the size of a single frame in bytes.
@@ -179,13 +152,13 @@ namespace misc {
         GridType GetGridType(void) const;
 
         /**
-         * Gets the number of frames starting at GetData().
+         * Gets the metadata record.
          *
-         * @return The number of frames loaded.
+         * @return The metadata record if available.
          */
-        inline size_t GetNumberOfFrames(void) const {
+        inline const Metadata *GetMetadata(void) const {
             VLAUTOSTACKTRACE;
-            return this->cntFrames;
+            return this->metadata;
         }
 
         /**

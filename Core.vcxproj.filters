@@ -1322,6 +1322,9 @@
     <ClInclude Include="misc\VolumetricDataCall.h">
       <Filter>misc\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="misc\VolumetricDataCallTypes.h">
+      <Filter>misc\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icons.rc">

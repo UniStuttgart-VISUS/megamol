@@ -557,6 +557,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="misc\TestSpheresDataSource.h" />
     <ClInclude Include="misc\VolumeCache.h" />
     <ClInclude Include="misc\VolumetricDataCall.h" />
+    <ClInclude Include="misc\VolumetricDataCallTypes.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="ModuleAutoDescription.h" />
     <ClInclude Include="ModuleDescription.h" />
