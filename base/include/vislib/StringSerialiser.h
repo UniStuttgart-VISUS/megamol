@@ -304,28 +304,28 @@ namespace vislib {
         virtual void Serialise(const INT64 value,
                 const char *name = NULL) {
             vislib::StringA s;
-            s.Format("%"_I64_PRINTF"d", value);
+            s.Format("%" _I64_PRINTF "d", value);
             this->Serialise(s, name);
         }
 
         virtual void Serialise(const INT64 value,
                 const wchar_t *name) {
             vislib::StringA s;
-            s.Format("%"_I64_PRINTF"d", value);
+            s.Format("%" _I64_PRINTF "d", value);
             this->Serialise(s, name);
         }
 
         virtual void Serialise(const UINT64 value,
                 const char *name = NULL) {
             vislib::StringA s;
-            s.Format("%"_I64_PRINTF"u", value);
+            s.Format("%" _I64_PRINTF "u", value);
             this->Serialise(s, name);
         }
 
         virtual void Serialise(const UINT64 value,
                 const wchar_t *name) {
             vislib::StringA s;
-            s.Format("%"_I64_PRINTF"u", value);
+            s.Format("%" _I64_PRINTF "u", value);
             this->Serialise(s, name);
         }
 
