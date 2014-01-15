@@ -19,24 +19,24 @@ namespace core {
 namespace misc {
 
     /** Possible type of grids. */
-    typedef enum GridType_t {
+    enum GridType_t {
         NONE,
         CARTESIAN,
         RECTILINEAR,
         TETRAHEDRAL
-    } GridType;
+    };
 
     /** Possible types of scalars. */
-    typedef enum ScalarType_t {
+    enum ScalarType_t {
         UNKNOWN,
         SIGNED_INTEGER,
         UNSIGNED_INTEGER,
         FLOATING_POINT,
         BITS
-    } ScalarType;
+    };
 
     /** Structure containing all required metadata about a data set. */
-    typedef struct VolumetricMetadata_t {
+    struct VolumetricMetadata_t {
 
         /** Initialise a new instance. */
         inline VolumetricMetadata_t(void) {
@@ -47,13 +47,13 @@ namespace misc {
         };
 
         /** The type of the grid. */
-        GridType GridType;
+        enum GridType_t GridType;
 
         /** The resolution of the three dimensions. */
         size_t Resolution[3];
 
         /** The type of a scalar. */
-        ScalarType ScalarType;
+        enum ScalarType_t ScalarType;
 
         /** The length of a scalar in bytes. */
         size_t ScalarLength;
@@ -81,7 +81,7 @@ namespace misc {
          * might have different distances.
          */
         float Extents[3];
-    } VolumetricMetadata;
+    };
 
 } /* end namespace misc */
 } /* end namespace core */

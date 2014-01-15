@@ -32,13 +32,13 @@ namespace misc {
     public:
 
         /** Possible type of grids. */
-        typedef megamol::core::misc::GridType GridType;
+        typedef enum megamol::core::misc::GridType_t GridType;
 
         /** Possible types of scalars. */
-        typedef megamol::core::misc::ScalarType ScalarType;
+        typedef enum megamol::core::misc::ScalarType_t ScalarType;
 
         /** Structure containing all required metadata about a data set. */
-        typedef megamol::core::misc::VolumetricMetadata Metadata;
+        typedef struct megamol::core::misc::VolumetricMetadata_t Metadata;
 
         /**
          * Answer the name of this module.
