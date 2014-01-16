@@ -83,6 +83,12 @@ namespace misc {
         /** Index of the function retrieving the meta data (dat content). */
         static const unsigned int IDX_GET_METADATA;
 
+        /** Index of the function enabling asynchronous loading. */
+        static const unsigned int IDX_START_ASYNC;
+
+        /** Index of the function disabling asynchronous loading. */
+        static const unsigned int IDX_STOP_ASYNC;
+
         /**
          * Initialises a new instance.
          */
@@ -263,7 +269,7 @@ namespace misc {
         typedef AbstractGetData3DCall Base;
 
         /** The functions that are provided by the call. */
-        static const char *FUNCTIONS[3];
+        static const char *FUNCTIONS[5];
 
         /** The number of frames that 'data' designates. */
         size_t cntFrames;

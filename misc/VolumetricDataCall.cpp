@@ -58,6 +58,18 @@ const unsigned int megamol::core::misc::VolumetricDataCall::IDX_GET_METADATA = 2
 
 
 /*
+ * megamol::core::misc::VolumetricDataCall::IDX_START_ASYNC
+ */
+const unsigned int megamol::core::misc::VolumetricDataCall::IDX_START_ASYNC = 3;
+
+
+/*
+ * megamol::core::misc::VolumetricDataCall::IDX_STOP_ASYNC
+ */
+const unsigned int megamol::core::misc::VolumetricDataCall::IDX_STOP_ASYNC = 4;
+
+
+/*
  * megamol::core::misc::VolumetricDataCall::VolumetricDataCall
  */
 megamol::core::misc::VolumetricDataCall::VolumetricDataCall(void)
@@ -225,5 +237,7 @@ megamol::core::misc::VolumetricDataCall::operator =(const VolumetricDataCall& rh
 const char *megamol::core::misc::VolumetricDataCall::FUNCTIONS[] = {
     "GetExtents",
     "GetData",
-    "GetMetadata"
+    "GetMetadata",
+    "StartAsync",
+    "StopAsync"
 };
