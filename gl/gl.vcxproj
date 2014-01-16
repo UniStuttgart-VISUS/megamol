@@ -491,6 +491,7 @@
     <ClCompile Include="src\GLSLComputeShader.cpp" />
     <ClCompile Include="src\GLSLGeometryShader.cpp" />
     <ClCompile Include="src\GLSLShader.cpp" />
+    <ClCompile Include="src\GLSLTesselationShader.cpp" />
     <ClCompile Include="src\GlutMouseInteractionAdapter.cpp" />
     <ClCompile Include="src\glverify.cpp" />
     <ClCompile Include="src\OpenGLException.cpp" />
@@ -580,6 +581,7 @@
     <ClInclude Include="include\vislib\GLSLComputeShader.h" />
     <ClInclude Include="include\vislib\GLSLGeometryShader.h" />
     <ClInclude Include="include\vislib\GLSLShader.h" />
+    <ClInclude Include="include\vislib\GLSLTesselationShader.h" />
     <ClInclude Include="include\vislib\GlutMouseInteractionAdapter.h" />
     <ClInclude Include="include\vislib\glverify.h" />
     <ClInclude Include="include\vislib\OpenGLException.h" />
