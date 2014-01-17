@@ -989,7 +989,7 @@ megamol::core::CoreInstance::FindParameterIndirect(const vislib::StringA& name, 
 	vislib::StringA paramName(name);
 	vislib::SmartPtr<core::param::AbstractParam> param;
 	vislib::SmartPtr<core::param::AbstractParam> lastParam;
-	while ((param = this->FindParameter(paramName)) != nullptr)
+	while ((param = this->FindParameter(paramName, quiet)) != nullptr)
 	{
 		lastParam = param;
 		paramName = param->ValueString();

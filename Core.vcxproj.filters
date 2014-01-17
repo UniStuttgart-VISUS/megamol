@@ -726,6 +726,9 @@
     <ClCompile Include="profiler\Connection.cpp">
       <Filter>profiler\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="view\TransferFunctionRenderer.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="misc\VolumetricDataCall.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
@@ -1318,6 +1321,9 @@
     </ClInclude>
     <ClInclude Include="AbstractDataWriterBase.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\TransferFunctionRenderer.h">
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="misc\VolumetricDataCall.h">
       <Filter>misc\Header Files</Filter>

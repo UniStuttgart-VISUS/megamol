@@ -50,6 +50,7 @@
 //#include "special/ColStereoDisplay.h"
 #include "view/ClipPlane.h"
 #include "view/LinearTransferFunction.h"
+#include "view/TransferFunctionRenderer.h"
 #include "view/MuxRenderer3D.h"
 #include "view/special/AnaglyphStereoView.h"
 #include "view/special/ChronoGraph.h"
@@ -146,6 +147,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         //instance->registerAutoDescription<special::ColStereoDisplay>();
         instance->registerAutoDescription<view::ClipPlane>();
         instance->registerAutoDescription<view::LinearTransferFunction>();
+        instance->registerAutoDescription<view::TransferFunctionRenderer>();
         instance->registerAutoDescription<view::MuxRenderer3D<2> >();
         instance->registerAutoDescription<view::MuxRenderer3D<3> >();
         instance->registerAutoDescription<view::MuxRenderer3D<4> >();
