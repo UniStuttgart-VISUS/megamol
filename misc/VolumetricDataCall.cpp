@@ -70,6 +70,13 @@ const unsigned int megamol::core::misc::VolumetricDataCall::IDX_STOP_ASYNC = 4;
 
 
 /*
+ * megamol::core::misc::VolumetricDataCall::IDX_TRY_GET_DATA
+ */
+const unsigned int megamol::core::misc::VolumetricDataCall::IDX_TRY_GET_DATA
+    = 5;
+
+
+/*
  * megamol::core::misc::VolumetricDataCall::VolumetricDataCall
  */
 megamol::core::misc::VolumetricDataCall::VolumetricDataCall(void)
@@ -239,5 +246,6 @@ const char *megamol::core::misc::VolumetricDataCall::FUNCTIONS[] = {
     "GetData",
     "GetMetadata",
     "StartAsync",
-    "StopAsync"
+    "StopAsync",
+    "TryGetData"
 };

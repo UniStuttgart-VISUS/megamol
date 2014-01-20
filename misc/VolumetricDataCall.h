@@ -45,7 +45,7 @@ namespace misc {
          *
          * @return The name of this module.
          */
-        static inline const char *ClassName(void)  {
+        static inline const char *ClassName(void) {
             return "VolumetricDataCall";
         }
 
@@ -89,6 +89,9 @@ namespace misc {
         /** Index of the function disabling asynchronous loading. */
         static const unsigned int IDX_STOP_ASYNC;
 
+        /** Index of the function retrieving data that might be unavailable. */
+        static const unsigned int IDX_TRY_GET_DATA;
+
         /**
          * Initialises a new instance.
          */
@@ -129,6 +132,16 @@ namespace misc {
          * @return The raw data.
          */
         inline const void *GetData(void) const {
+            VLAUTOSTACKTRACE;
+            return this->data;
+        }
+
+        /**
+         * Gets the pointer to the raw data.
+         *
+         * @return The raw data.
+         */
+        inline void *GetData(void) {
             VLAUTOSTACKTRACE;
             return this->data;
         }
@@ -240,7 +253,7 @@ namespace misc {
          * @param data
          * @param cntFrames
          */
-        void SetData(const void *data, const size_t cntFrames = 1) {
+        void SetData(void *data, const size_t cntFrames = 1) {
             VLAUTOSTACKTRACE;
             this->data = data;
             this->cntFrames = cntFrames;
@@ -269,13 +282,13 @@ namespace misc {
         typedef AbstractGetData3DCall Base;
 
         /** The functions that are provided by the call. */
-        static const char *FUNCTIONS[5];
+        static const char *FUNCTIONS[6];
 
         /** The number of frames that 'data' designates. */
         size_t cntFrames;
 
         /** The pointer to the raw data. The call does not own this memory! */
-        const void *data;
+        void *data;
 
         /** Pointer to the metadata descriptor of the data set. */
         const Metadata *metadata;
