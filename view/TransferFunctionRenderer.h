@@ -11,6 +11,7 @@
 #include "api/MegaMolCore.std.h"
 #include "Renderer2DModule.h"
 #include "CallerSlot.h"
+#include "vislib/SimpleFont.h"
 
 namespace megamol {
 namespace core {
@@ -95,6 +96,8 @@ public:
 	
     /** The render callee slot */
 	CallerSlot getTFSlot;
+	vislib::graphics::gl::SimpleFont *ctFont;
+
 };
 
 }

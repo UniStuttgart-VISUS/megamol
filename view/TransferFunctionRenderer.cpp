@@ -21,6 +21,8 @@ view::TransferFunctionRenderer::TransferFunctionRenderer(void) : Renderer2DModul
 {
 	getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
 	this->MakeSlotAvailable(&this->getTFSlot);
+
+	ctFont = new vislib::graphics::gl::SimpleFont();
 }
 
 
@@ -30,7 +32,7 @@ view::TransferFunctionRenderer::~TransferFunctionRenderer(void)
 
 bool view::TransferFunctionRenderer::create(void)
 {
-	return true;
+	return ctFont->Initialise();
 }
 
 void view::TransferFunctionRenderer::release(void)
@@ -61,12 +63,17 @@ bool view::TransferFunctionRenderer::Render(CallRender2D& call)
 		
 		::glColor4ub(255, 255, 255, 255);
         ::glBegin(GL_QUADS);
-			::glTexCoord2f(1.0f, 1.0f); ::glVertex2f(-1.0f,-1.0f);
+			::glTexCoord2f(1.0f, 1.0f); ::glVertex2f(-1.0f,-0.8f);
 			::glTexCoord2f(0.0f, 1.0f); ::glVertex2f(-1.0f, 1.0f);
 			::glTexCoord2f(0.0f, 0.0f); ::glVertex2f( 1.0f, 1.0f);
-			::glTexCoord2f(1.0f, 0.0f); ::glVertex2f( 1.0f,-1.0f);
+			::glTexCoord2f(1.0f, 0.0f); ::glVertex2f( 1.0f,-.8f);
         ::glEnd();
 		glDisable(GL_TEXTURE_1D);
+
+		vislib::StringA ctStr = cgtf->PeekCalleeSlot()->Parent()->Name();
+		if( ctFont->IsInitialised() ) {
+			ctFont->DrawString(  0.0, -1.0f, 0.2, true, ctStr.PeekBuffer(), vislib::graphics::AbstractFont::ALIGN_CENTER_BOTTOM);
+		}
 	}
 
 	return true;
