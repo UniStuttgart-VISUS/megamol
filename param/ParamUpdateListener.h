@@ -22,7 +22,7 @@ namespace param {
     /**
      * Abstract base class for all parameter objects
      */
-    class ParamUpdateListener {
+    class MEGAMOLCORE_API ParamUpdateListener {
     public:
 
         /** Ctor */

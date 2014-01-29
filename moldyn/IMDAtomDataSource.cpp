@@ -797,7 +797,7 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
         dirmaxColumnValSlot("dir::maxColumnValue", "The maximum value for the colour mapping of the column"),
         dirradiusSlot("dir::radius", "The radius to be used for the data"),
         dirNormDirSlot("dir::normalise", ""),
-        bboxEnabledSlot("bbox::enable", ""),
+		bboxEnabledSlot("bbox::enable", ""),
         bboxMinSlot("bbox::min", ""), 
         bboxMaxSlot("bbox::max", ""), 
         posData(), colData(), headerMinX(0.0f), headerMinY(0.0f),
@@ -808,16 +808,16 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
 
     this->filenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
-    
-    this->bboxEnabledSlot << new param::BoolParam(false);
+	
+	this->bboxEnabledSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->bboxEnabledSlot);
-    vislib::math::Vector<float, 3> vMin;
-    vMin.Set(0.0f, 0.0f, 0.0f);
-    vislib::math::Vector<float, 3> vMax;
-    vMin.Set(1.0f, 1.0f, 1.0f);
-    this->bboxMinSlot << new param::Vector3fParam(vMin);
+	vislib::math::Vector<float, 3> vMin;
+	vMin.Set(0.0f, 0.0f, 0.0f);
+	vislib::math::Vector<float, 3> vMax;
+	vMin.Set(1.0f, 1.0f, 1.0f);
+	this->bboxMinSlot << new param::Vector3fParam(vMin);
     this->MakeSlotAvailable(&this->bboxMinSlot);
-    this->bboxMaxSlot << new param::Vector3fParam(vMax);
+	this->bboxMaxSlot << new param::Vector3fParam(vMax);
     this->MakeSlotAvailable(&this->bboxMaxSlot);
 
     this->getDataSlot.SetCallback("MultiParticleDataCall", "GetData", &IMDAtomDataSource::getDataCallback);
@@ -1095,43 +1095,49 @@ bool moldyn::IMDAtomDataSource::getExtentCallback(Call& caller) {
     if (mpdc != NULL) {
         mpdc->SetDataHash(this->datahash);
         mpdc->SetFrameCount(1);
-        mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
-            this->headerMinX, this->headerMinY, this->headerMinZ,
-            this->headerMaxX, this->headerMaxY, this->headerMaxZ);
-            //this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
-            //this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
-        mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
-            this->minX - rad, this->minY - rad, this->minZ - rad,
-            this->maxX + rad, this->maxY + rad, this->maxZ + rad);
-
-            if(this->bboxEnabledSlot.Param<param::BoolParam>()->Value())
-            {
-                vislib::math::Vector<float, 3>  minP(this->bboxMinSlot.Param<param::Vector3fParam>()->Value()),
-                                                maxP(this->bboxMaxSlot.Param<param::Vector3fParam>()->Value());
-                mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
-                mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
-            }
+		
+		if(this->bboxEnabledSlot.Param<param::BoolParam>()->Value())
+		{
+			vislib::math::Vector<float, 3>  minP(this->bboxMinSlot.Param<param::Vector3fParam>()->Value()),
+											maxP(this->bboxMaxSlot.Param<param::Vector3fParam>()->Value());
+			mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
+			mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
+		}
+		else
+		{
+			mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
+				this->headerMinX, this->headerMinY, this->headerMinZ,
+				this->headerMaxX, this->headerMaxY, this->headerMaxZ);
+				//this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
+				//this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
+			mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
+				this->minX - rad, this->minY - rad, this->minZ - rad,
+				this->maxX + rad, this->maxY + rad, this->maxZ + rad);
+		}
 
     } else if (dpdc != NULL) {
         dpdc->SetDataHash(this->datahash);
         dpdc->SetFrameCount(1);
-        dpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
-            this->headerMinX, this->headerMinY, this->headerMinZ,
-            this->headerMaxX, this->headerMaxY, this->headerMaxZ);
-            //this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
-            //this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
-        dpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
-            this->minX - rad, this->minY - rad, this->minZ - rad,
-            this->maxX + rad, this->maxY + rad, this->maxZ + rad);
+		if(this->bboxEnabledSlot.Param<param::BoolParam>()->Value())
+		{
+			vislib::math::Vector<float, 3>  minP(this->bboxMinSlot.Param<param::Vector3fParam>()->Value()),
+											maxP(this->bboxMaxSlot.Param<param::Vector3fParam>()->Value());
+			dpdc->AccessBoundingBoxes().SetObjectSpaceBBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
+			dpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
+		}
+		else
+		{
+			dpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
+				this->headerMinX, this->headerMinY, this->headerMinZ,
+				this->headerMaxX, this->headerMaxY, this->headerMaxZ);
+				//this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
+				//this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
+			dpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
+				this->minX - rad, this->minY - rad, this->minZ - rad,
+				this->maxX + rad, this->maxY + rad, this->maxZ + rad);
+		}
 
-            if(this->bboxEnabledSlot.Param<param::BoolParam>()->Value())
-            {
-                vislib::math::Vector<float, 3>  minP(this->bboxMinSlot.Param<param::Vector3fParam>()->Value()),
-                                                maxP(this->bboxMaxSlot.Param<param::Vector3fParam>()->Value());
-                dpdc->AccessBoundingBoxes().SetObjectSpaceBBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
-                dpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
-            }
-    }
+	}
 
     return true;
 }
@@ -1169,9 +1175,9 @@ void moldyn::IMDAtomDataSource::assertData(void) {
             && !this->dircolourModeSlot.IsDirty()
             && !this->dircolourColumnSlot.IsDirty()
             && !this->typeColumnSlot.IsDirty()
-            && !this->bboxEnabledSlot.IsDirty()
-            && !this->bboxMaxSlot.IsDirty()
-            && !this->bboxMinSlot.IsDirty()
+			&& !this->bboxEnabledSlot.IsDirty()
+			&& !this->bboxMaxSlot.IsDirty()
+			&& !this->bboxMinSlot.IsDirty()
         ) return;
     this->filenameSlot.ResetDirty();
     this->colourModeSlot.ResetDirty();
@@ -1183,9 +1189,9 @@ void moldyn::IMDAtomDataSource::assertData(void) {
     this->dircolourModeSlot.ResetDirty();
     this->dircolourColumnSlot.ResetDirty();
     this->typeColumnSlot.ResetDirty();
-    this->bboxEnabledSlot.ResetDirty();
-    this->bboxMaxSlot.ResetDirty();
-    this->bboxMinSlot.ResetDirty();
+	this->bboxEnabledSlot.ResetDirty();
+	this->bboxMaxSlot.ResetDirty();
+	this->bboxMinSlot.ResetDirty();
 
     this->clear();
 
@@ -1284,19 +1290,6 @@ void moldyn::IMDAtomDataSource::assertData(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%d Atoms loaded\n", cnt);
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Data bounding box = (%f, %f, %f) ... (%f, %f, %f)\n", 
             this->minX, this->minY, this->minZ, this->maxX, this->maxY, this->maxZ);
-        if (this->dircolourModeSlot.Param<param::EnumParam>()->Value() == 1) { // column color mode
-            for (int idx = 0; idx < static_cast<int>(this->posData.Count()); idx++) {
-                /*if (this->autoColumnRangeSlot.Param<param::BoolParam>()->Value()) {
-                    mpdc->AccessParticles(idx).SetColourMapIndexValues(this->minC[idx], this->maxC[idx]);
-                } else {
-                    mpdc->AccessParticles(idx).SetColourMapIndexValues(
-                        this->minColumnValSlot.Param<param::FloatParam>()->Value(),
-                        this->maxColumnValSlot.Param<param::FloatParam>()->Value());
-                }*/
-                Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Color column value range %d = [%f, %f]\n",
-                    idx, this->minC[idx], this->maxC[idx]);
-            }
-        }
 
         //this->datahash = (this->datahash << (sizeof(SIZE_T) / 2))
         //    || (this->datahash >> (sizeof(SIZE_T) / 2));
@@ -1871,18 +1864,18 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
 
         if (!fail) {
 
-            if(this->bboxEnabledSlot.Param<param::BoolParam>()->Value())
-            {
-                vislib::math::Vector<float, 3> p(x,y,z),
-                                               minP(this->bboxMinSlot.Param<param::Vector3fParam>()->Value()),
-                                               maxP(this->bboxMaxSlot.Param<param::Vector3fParam>()->Value());
-                if( (p.GetX() < minP.GetX() || p.GetY() < minP.GetY() || p.GetZ() < minP.GetZ() ) ||
-                    (p.GetX() > maxP.GetX() || p.GetY() > maxP.GetY() || p.GetZ() > maxP.GetZ() )) 
-                    continue;
-            
-            }
+			if(this->bboxEnabledSlot.Param<param::BoolParam>()->Value())
+			{
+				vislib::math::Vector<float, 3> p(x,y,z),
+					                           minP(this->bboxMinSlot.Param<param::Vector3fParam>()->Value()),
+											   maxP(this->bboxMaxSlot.Param<param::Vector3fParam>()->Value());
+				if( (p.GetX() < minP.GetX() || p.GetY() < minP.GetY() || p.GetZ() < minP.GetZ() ) ||
+					(p.GetX() > maxP.GetX() || p.GetY() > maxP.GetY() || p.GetZ() > maxP.GetZ() )) 
+					continue;
+			
+			}
 
-            
+			
             int rawIdx = 0;
             if ((rawIdx = static_cast<int>(typeData.IndexOf(static_cast<unsigned int>(t)))) == static_cast<int>(vislib::Array<unsigned int>::INVALID_POS)) {
                 typeData.Append(static_cast<unsigned int>(t));

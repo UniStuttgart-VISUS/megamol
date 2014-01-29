@@ -124,7 +124,7 @@ namespace moldyn {
         
         /** Scaling factor for arrow lengths */
         param::ParamSlot lengthScaleSlot;
-
+		
         /** Length filter for arrow lengths */
         param::ParamSlot lengthFilterSlot;
 

@@ -29,7 +29,7 @@ namespace view {
     /**
      * Call for registering a module at the cluster display
      */
-    class CallRenderView : public AbstractCallRender, public RenderOutput {
+    class MEGAMOLCORE_API CallRenderView : public AbstractCallRender, public RenderOutput {
     public:
 
         /**

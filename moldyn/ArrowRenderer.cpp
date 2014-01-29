@@ -40,7 +40,7 @@ moldyn::ArrowRenderer::ArrowRenderer(void) : Renderer3DModule(),
     
     this->lengthScaleSlot << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->lengthScaleSlot);
-
+	
     this->lengthFilterSlot << new param::FloatParam( 0.0f, 0.0);
     this->MakeSlotAvailable(&this->lengthFilterSlot);
 }
@@ -192,8 +192,8 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     } else {
         return false;
     }
-    
-    float lengthScale = this->lengthScaleSlot.Param<param::FloatParam>()->Value();
+  
+	float lengthScale = this->lengthScaleSlot.Param<param::FloatParam>()->Value();
     float lengthFilter = this->lengthFilterSlot.Param<param::FloatParam>()->Value();
 
     //view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
@@ -238,7 +238,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     //glUniform4fvARB(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);
     //glUniform3fvARB(this->arrowShader.ParameterLocation("clipCol"), 1, clipCol);
 
-    glScalef(scaling, scaling, scaling);
+	glScalef(scaling, scaling, scaling);
 
     if (c2 != NULL) {
         unsigned int cial = glGetAttribLocationARB(this->arrowShader, "colIdx");

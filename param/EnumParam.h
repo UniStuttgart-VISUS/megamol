@@ -131,6 +131,15 @@ namespace param {
             return this->val;
         }
 
+		/**
+         * Answers the number of currently owned typepairs
+         *
+         * @return The number of currently owned typepairs
+         */
+        inline size_t ContentCount() const {
+			return typepairs.Count();
+        }
+
     private:
 
         /** The value of the parameter */
