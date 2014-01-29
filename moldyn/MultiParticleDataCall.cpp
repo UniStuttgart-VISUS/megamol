@@ -66,6 +66,7 @@ moldyn::SimpleSphericalParticles::operator=(
     this->maxColI = rhs.maxColI;
     this->minColI = rhs.minColI;
     this->radius = rhs.radius;
+    this->particleType = rhs.particleType;
     this->vertDataType = rhs.vertDataType;
     this->vertPtr = rhs.vertPtr;
     this->vertStride = rhs.vertStride;

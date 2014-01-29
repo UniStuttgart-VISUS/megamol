@@ -23,7 +23,7 @@ using namespace megamol::core;
 moldyn::ParticleListFilter::ParticleListFilter(void) : Module(),
         inParticlesDataSlot("inPartData", "Input for (oriented) particle data"),
         outParticlesDataSlot("outPartData", "Output of (oriented) particle data"),
-        includedListsSlot("includedLists", "Comma-separated list of particle types to include"),
+        includedListsSlot("includedTypes", "Comma-separated list of particle types to include"),
         includeAllSlot("includeAll", "Button to populate includedLists from available data"),
         globalColorMapComputationSlot("globalMap", "Compute color map min/max from all particle lists (false: compute them per list)"),
         includeHiddenInColorMapSlot("includeHidden", "Include hidden particle lists in color map min/max computation"),
