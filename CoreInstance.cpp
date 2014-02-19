@@ -31,6 +31,7 @@
 #include "ModuleDescription.h"
 #include "ModuleDescriptionManager.h"
 #include "param/ParamSlot.h"
+#include "param/StringParam.h"
 #include "utility/APIValueUtil.h"
 #include "utility/ProjectParser.h"
 #include "utility/xml/XmlReader.h"
@@ -1001,7 +1002,7 @@ megamol::core::CoreInstance::FindParameterIndirect(const vislib::StringA& name, 
  * megamol::core::CoreInstance::FindParameter
  */
 vislib::SmartPtr<megamol::core::param::AbstractParam>
-megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool quiet) {
+megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool quiet, bool create) {
     using vislib::sys::Log;
     VLSTACKTRACE("FindParameter", __FILE__, __LINE__);
     AbstractNamedObject::GraphLocker locker(&this->namespaceRoot, false);
@@ -1031,41 +1032,97 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
                 modName = path.Last();
                 path.RemoveLast();
             } else {
-                if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "Cannot find parameter \"%s\": namespace not found",
-                    name.PeekBuffer());
-                return NULL;
+				if(create)
+				{
+					param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
+					*slotNew << new param::StringParam("");
+					slotNew->MakeAvailable();
+					this->namespaceRoot.AddChild(slotNew);
+				}
+				else
+				{
+					if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+						"Cannot find parameter \"%s\": namespace not found",
+						name.PeekBuffer());
+					return NULL;
+				}
             }
         }
     }
 
     Module *mod = dynamic_cast<Module *>(mn->FindChild(modName));
     if (mod == NULL) {
-        if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Cannot find parameter \"%s\": module not found",
-            name.PeekBuffer());
-        return NULL;
+		if(create)
+		{
+			param::ParamSlot *slot = new param::ParamSlot(name, "newly inserted");
+			*slot << new param::StringParam("");
+			slot->MakeAvailable();
+			this->namespaceRoot.AddChild(slot);
+			mod = dynamic_cast<Module *>(mn->FindChild(modName));
+		}
+		else
+		{
+			if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+				"Cannot find parameter \"%s\": module not found",
+				name.PeekBuffer());
+	        return NULL;
+		}
     }
 
     param::ParamSlot *slot = dynamic_cast<param::ParamSlot*>(mod->FindChild(slotName));
     if (slot == NULL) {
-        if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Cannot find parameter \"%s\": slot not found",
-            name.PeekBuffer());
-        return NULL;
+		if(create)
+		{
+			param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
+			*slotNew << new param::StringParam("");
+			slotNew->MakeAvailable();
+			this->namespaceRoot.AddChild(slotNew);
+			slot = slotNew;
+		}
+		else
+		{
+			if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+				"Cannot find parameter \"%s\": slot not found",
+				name.PeekBuffer());
+			return NULL;
+		}
     }
     if (slot->GetStatus() == AbstractSlot::STATUS_UNAVAILABLE) {
-        if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Cannot find parameter \"%s\": slot is not available",
-            name.PeekBuffer());
-        return NULL;
+        if(create)
+		{
+			param::ParamSlot *slotNew = new param::ParamSlot(slotName, "newly inserted");
+			*slotNew << new param::StringParam("");
+			slotNew->MakeAvailable();
+			this->namespaceRoot.AddChild(slotNew);
+			slot = slotNew;
+		}
+		else
+		{
+			if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+				"Cannot find parameter \"%s\": slot is not available",
+				name.PeekBuffer());
+			return NULL;
+		}
     }
     if (slot->Parameter().IsNull()) {
-        if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Cannot find parameter \"%s\": slot has no parameter",
-            name.PeekBuffer());
-        return NULL;
+        if(create)
+		{
+			param::ParamSlot *slotNew = new param::ParamSlot(slotName, "newly inserted");
+			*slotNew << new param::StringParam("");
+			slotNew->MakeAvailable();
+			this->namespaceRoot.AddChild(slotNew);
+			slot = slotNew;
+		}
+		else
+		{
+			if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+				"Cannot find parameter \"%s\": slot has no parameter",
+				name.PeekBuffer());
+			return NULL;
+		}
     }
+
+
 
     return slot->Parameter();
 }

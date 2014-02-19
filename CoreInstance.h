@@ -237,12 +237,13 @@ namespace core {
          * @param name The name of the parameter to find.
          * @param quiet Flag controlling the error output if the parameter is
          *              not found.
+		 * @param create create a StringParam if name is not found
          *
          * @return The found parameter or NULL if no parameter with this name
          *         exists.
          */
         vislib::SmartPtr<param::AbstractParam> FindParameter(
-            const vislib::StringA& name, bool quiet = false);
+            const vislib::StringA& name, bool quiet = false, bool create = false);
 
 		/**
 		* Returns a pointer to the parameter with the given name.
@@ -264,14 +265,15 @@ namespace core {
          * @param name The name of the parameter to find.
          * @param quiet Flag controlling the error output if the parameter is
          *              not found.
+		 * @param create create a StringParam if name is not found
          *
          * @return The found parameter or NULL if no parameter with this name
          *         exists.
          */
         inline vislib::SmartPtr<param::AbstractParam> FindParameter(
-                const vislib::StringW& name, bool quiet = false) {
+                const vislib::StringW& name, bool quiet = false, bool create = false) {
             // absolutly sufficient, since module namespaces use ANSI strings
-            return this->FindParameter(vislib::StringA(name), quiet);
+            return this->FindParameter(vislib::StringA(name), quiet, create);
         }
 
         /**

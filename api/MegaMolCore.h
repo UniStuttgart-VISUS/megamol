@@ -654,6 +654,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectW(void *hCore,
  * @param hCode The core instance handle.
  * @param name The full name of the parameter to return its handle.
  * @param hParam Pointer to the memory receiving the parameter handle.
+ * @param bCreate Create a StringParam if the name is not found
  *
  * @return 'true' if the operation was successful and hParam now holds a valid
  *         handle. 'false' if the operation failed. In that case hParam does
@@ -670,14 +671,14 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectW(void *hCore,
  * @see mmcGetParameter
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterA(void *hCore,
-    const char *name, void *hParam);
+    const char *name, void *hParam, bool bCreate = false);
 
 /**
  * Unicode Implementation of mmcGetParameter
  * @see mmcGetParameter
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterW(void *hCore,
-    const wchar_t *name, void *hParam);
+    const wchar_t *name, void *hParam, bool bCreate = false);
 
 /**
  * Gets the value of a parameter. The memory of the returned pointer remains

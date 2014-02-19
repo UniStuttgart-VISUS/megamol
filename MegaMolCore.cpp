@@ -831,7 +831,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectW(void *hCore,
  * mmcGetParameterA
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterA(void *hCore,
-        const char *name, void *hParam) {
+        const char *name, void *hParam, bool bCreate) {
     VLSTACKTRACE("mmcGetParameterA", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
@@ -839,7 +839,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterA(void *hCore,
     if (core == NULL) return false;
 
     vislib::SmartPtr<megamol::core::param::AbstractParam>
-        param = core->FindParameter(name);
+        param = core->FindParameter(name, false, bCreate);
     if (param.IsNull()) return false;
 
     if (mmcIsHandleValid(hParam) != 0) {
@@ -858,7 +858,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterA(void *hCore,
  * mmcGetParameterW
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterW(void *hCore,
-        const wchar_t *name, void *hParam) {
+        const wchar_t *name, void *hParam, bool bCreate) {
     VLSTACKTRACE("mmcGetParameterW", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
@@ -866,7 +866,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterW(void *hCore,
     if (core == NULL) return false;
 
     vislib::SmartPtr<megamol::core::param::AbstractParam>
-        param = core->FindParameter(name);
+        param = core->FindParameter(name, false, bCreate);
     if (param.IsNull()) return false;
 
     if (mmcIsHandleValid(hParam) != 0) {
