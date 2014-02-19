@@ -408,7 +408,7 @@ void readParameterFile(void) {
         vislib::StringA value = line.Substring(pos + 1);
         {
             ::megamol::console::CoreHandle hParam;
-            if (::mmcGetParameterA(hCore, name, hParam)) {
+            if (::mmcGetParameterA(hCore, name, hParam, true)) {
 
                 if (useRelativeFileNames && !value.IsEmpty()) {
                     // resolve potential relative paths :-/
