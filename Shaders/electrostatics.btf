@@ -136,7 +136,8 @@ void main() {
     
     // Get the direction of the light
     // Note: is already transformed using the modelview matrix when calling glLight
-    lightDir = gl_LightSource[0].position.xyz-view;
+    //lightDir = gl_LightSource[0].position.xyz-view;
+    lightDir = gl_LightSource[0].position.xyz;
     
     // Texture coordinates
     gl_TexCoord[0].stp = texCoordNew;
@@ -256,6 +257,7 @@ void main() {
         } else if (uncertaintyMeasurement == 1) { // Path length
             posDiff = pathLenFrag;
         }
+        float signSwitchedFlag = float(potOld*potNew < 0.0);
         // Three color mapping
         /*vec3 colDiff = MixColors(potDiff, 
                0.0, 
@@ -284,11 +286,16 @@ void main() {
         
         vec3 colOrangeMsh = vec3(100, 0.9746*potDiff/(maxPotential-minPotential), 0.8968);
         vec3 colYellowMsh = vec3(100, 0.81*potDiff/(maxPotential-minPotential), 1.7951);
+        vec3 blueMsh = vec3(90, 1.08*potDiff/(maxPotential-minPotential), -1.1);
         
         
-        
-        vec3 colDiffMsh = (1.0 - posDiff/maxPosDiff)*colOrangeMsh + (posDiff/maxPosDiff)*colWhiteMsh;
-        color = vec4(MSH2RGB(colOrangeMsh.r, colOrangeMsh.g, colOrangeMsh.b), 1.0 - posDiff/maxPosDiff);
+        //vec3 colDiffMsh = (1.0 - posDiff/maxPosDiff)*colOrangeMsh + (posDiff/maxPosDiff)*colWhiteMsh;
+        if (signSwitchedFlag > 0) {
+            color = vec4(MSH2RGB(colOrangeMsh.r, colOrangeMsh.g, colOrangeMsh.b), 1.0 - posDiff/maxPosDiff);
+        } else {
+            color = vec4(MSH2RGB(blueMsh.r, blueMsh.g, blueMsh.b), 1.0 - posDiff/maxPosDiff);
+        }
+color = vec4(MSH2RGB(colOrangeMsh.r, colOrangeMsh.g, colOrangeMsh.b), 1.0 - posDiff/maxPosDiff);
         color.a *= (1.0 - corruptTriangleFlagFrag);
         
     } else if (colorMode == 8) { // Surface potential sign switch
@@ -334,7 +341,14 @@ void main() {
         
         //vec3 colTurquoiseMsh = vec3(109.81, 0.9746*signSwitchedFlag, 0.8968);
         //vec3 colDiffMsh = (1.0 - posDiff/maxPosDiff)*colOrangeMsh + (posDiff/maxPosDiff)*colWhiteMsh;
-        vec3 colorSign = vec3(0.57, 0.76, 0.0)*signSwitchedFlag + (1.0-signSwitchedFlag)*vec3(1.0, 1.0, 1.0);
+        
+        // Green
+        //vec3 colorSign = vec3(0.57, 0.76, 0.0)*signSwitchedFlag + (1.0-signSwitchedFlag)*vec3(1.0, 1.0, 1.0);
+        
+        // Yellow
+        //vec3 colorSign = vec3(1.0, 0.84, 0.0)*signSwitchedFlag + (1.0-signSwitchedFlag)*vec3(1.0, 1.0, 1.0);
+        vec3 colorSign = vec3(0.96, 0.74, 0.06)*signSwitchedFlag + (1.0-signSwitchedFlag)*vec3(1.0, 1.0, 1.0);
+
         color = vec4(colorSign, 1.0 - posDiff/maxPosDiff);
         
         // Draw interior darker
@@ -401,7 +415,8 @@ void main() {
     normalFrag = gl_NormalMatrix*normal;
     
     // Get the direction of the light
-    lightDir = vec3(gl_LightSource[0].position)-view;
+    //lightDir = vec3(gl_LightSource[0].position)-view;
+    lightDir = gl_LightSource[0].position.xyz;
     
     // Texture coordinate
     gl_TexCoord[0].stp = texCoord;

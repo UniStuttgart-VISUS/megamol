@@ -14,6 +14,10 @@
 #include "DeformableGPUSurfaceMT.h"
 #ifdef WITH_CUDA
 
+//#ifndef CUDA_NO_SM_11_ATOMIC_INTRINSICS
+//    printf("WARNING! Not using atomics!\n");
+//#endif
+
 #include "ogl_error_check.h"
 #include "cuda_error_check.h"
 #include "HostArr.h"
@@ -27,10 +31,141 @@
 #include <thrust/reduce.h>
 #include <thrust/device_ptr.h>
 
+#include "vislib/Array.h"
+
+//#include "Interpol.h"
+
 //#define USE_TIMER
 
 using namespace megamol;
 using namespace megamol::protein;
+
+
+/**
+ * Samples the field at a given position using linear interpolation.
+ *
+ * @param pos The position
+ * @return The sampled value of the field
+ */
+float4 SampleFieldAtPosTrilin(
+        float pos[3],
+        float4 *field,
+        float gridOrg[3],
+        float gridDelta[3],
+        int gridSize[3]) {
+
+    int cell[3];
+    float x[3];
+
+    // Get id of the cell containing the given position and interpolation
+    // coefficients
+    x[0] = (pos[0]-gridOrg[0])/gridDelta[0];
+    x[1] = (pos[1]-gridOrg[1])/gridDelta[1];
+    x[2] = (pos[2]-gridOrg[2])/gridDelta[2];
+    cell[0] = (int)(x[0]);
+    cell[1] = (int)(x[1]);
+    cell[2] = (int)(x[2]);
+    x[0] = x[0]-(float)cell[0]; // alpha
+    x[1] = x[1]-(float)cell[1]; // beta
+    x[2] = x[2]-(float)cell[2]; // gamma
+
+    float alpha = x[0];
+    float beta = x[1];
+    float gamma = x[2];
+
+    cell[0] = std::min(std::max(cell[0], int(0)), gridSize[0]-2);
+    cell[1] = std::min(std::max(cell[1], int(0)), gridSize[1]-2);
+    cell[2] = std::min(std::max(cell[2], int(0)), gridSize[2]-2);
+
+    // Get values at corners of current cell
+    float4 n0, n1, n2, n3, n4, n5, n6, n7;
+//    printf("dim %i %i %i\n", gridSize[0], gridSize[1], gridSize[2]);
+//    printf("cell %i %i %i\n", cell[0], cell[1], cell[2]);
+
+    size_t fieldSize =gridSize[0]*gridSize[1]*gridSize[2];
+    if (gridSize[0]*(gridSize[1]*(cell[2]+0) + (cell[1]+0))+cell[0]+0 > fieldSize) {
+        printf("Overflow %i\n", gridSize[0]*(gridSize[1]*(cell[2]+0) + (cell[1]+0))+cell[0]+0);
+    }
+    n0 = field[gridSize[0]*(gridSize[1]*(cell[2]+0) + (cell[1]+0))+cell[0]+0];
+    n1 = field[gridSize[0]*(gridSize[1]*(cell[2]+0) + (cell[1]+0))+cell[0]+1];
+    n2 = field[gridSize[0]*(gridSize[1]*(cell[2]+0) + (cell[1]+1))+cell[0]+0];
+    n3 = field[gridSize[0]*(gridSize[1]*(cell[2]+0) + (cell[1]+1))+cell[0]+1];
+    n4 = field[gridSize[0]*(gridSize[1]*(cell[2]+1) + (cell[1]+0))+cell[0]+0];
+    n5 = field[gridSize[0]*(gridSize[1]*(cell[2]+1) + (cell[1]+0))+cell[0]+1];
+    n6 = field[gridSize[0]*(gridSize[1]*(cell[2]+1) + (cell[1]+1))+cell[0]+0];
+    n7 = field[gridSize[0]*(gridSize[1]*(cell[2]+1) + (cell[1]+1))+cell[0]+1];
+
+    float4 a, b, c, d, e, f, g, h;
+    a = n0;
+    b = n1 - n0;
+    c = n2 - n0;
+    d = n3 - n1 - n2 + n0;
+    e = n4 - n0;
+    f = n5 - n1 - n4 + n0;
+    g = n6 - n2 - n4 + n0;
+    h = n7 - n3 - n5 - n6 + n1 + n2 + n4 - n0;
+
+    return a + b*alpha + c*beta + d*alpha*beta + e*gamma + f*alpha*gamma
+            + g*beta*gamma + h*alpha*beta*gamma;
+
+}
+
+
+float SampleFieldAtPosTrilin(
+        float pos[3],
+        float *field,
+        float gridOrg[3],
+        float gridDelta[3],
+        int gridSize[3]) {
+
+    int cell[3];
+    float x[3];
+
+    // Get id of the cell containing the given position and interpolation
+    // coefficients
+    x[0] = (pos[0]-gridOrg[0])/gridDelta[0];
+    x[1] = (pos[1]-gridOrg[1])/gridDelta[1];
+    x[2] = (pos[2]-gridOrg[2])/gridDelta[2];
+    cell[0] = (int)(x[0]);
+    cell[1] = (int)(x[1]);
+    cell[2] = (int)(x[2]);
+    x[0] = x[0]-(float)cell[0]; // alpha
+    x[1] = x[1]-(float)cell[1]; // beta
+    x[2] = x[2]-(float)cell[2]; // gamma
+
+    float alpha = x[0];
+    float beta = x[1];
+    float gamma = x[2];
+
+    cell[0] = std::min(std::max(cell[0], int(0)), gridSize[0]-2);
+    cell[1] = std::min(std::max(cell[1], int(0)), gridSize[1]-2);
+    cell[2] = std::min(std::max(cell[2], int(0)), gridSize[2]-2);
+
+    // Get values at corners of current cell
+    float n0, n1, n2, n3, n4, n5, n6, n7;
+    n0 = field[gridSize[0]*(gridSize[1]*(cell[2]+0) + (cell[1]+0))+cell[0]+0];
+    n1 = field[gridSize[0]*(gridSize[1]*(cell[2]+0) + (cell[1]+0))+cell[0]+1];
+    n2 = field[gridSize[0]*(gridSize[1]*(cell[2]+0) + (cell[1]+1))+cell[0]+0];
+    n3 = field[gridSize[0]*(gridSize[1]*(cell[2]+0) + (cell[1]+1))+cell[0]+1];
+    n4 = field[gridSize[0]*(gridSize[1]*(cell[2]+1) + (cell[1]+0))+cell[0]+0];
+    n5 = field[gridSize[0]*(gridSize[1]*(cell[2]+1) + (cell[1]+0))+cell[0]+1];
+    n6 = field[gridSize[0]*(gridSize[1]*(cell[2]+1) + (cell[1]+1))+cell[0]+0];
+    n7 = field[gridSize[0]*(gridSize[1]*(cell[2]+1) + (cell[1]+1))+cell[0]+1];
+
+    float a, b, c, d, e, f, g, h;
+    a = n0;
+    b = n1 - n0;
+    c = n2 - n0;
+    d = n3 - n1 - n2 + n0;
+    e = n4 - n0;
+    f = n5 - n1 - n4 + n0;
+    g = n6 - n2 - n4 + n0;
+    h = n7 - n3 - n5 - n6 + n1 + n2 + n4 - n0;
+
+    return a + b*alpha + c*beta + d*alpha*beta + e*gamma + f*alpha*gamma
+            + g*beta*gamma + h*alpha*beta*gamma;
+
+}
 
 
 /**
@@ -39,7 +174,7 @@ using namespace megamol::protein;
  * @param x The input value
  * @return The inverse sqrt if x>0, 0.0 otherwise
  */
-inline __device__ float safeRsqrtf(float x) {
+inline __host__ __device__ float safeRsqrtf(float x) {
     if (x > 0.0) {
         return 1.0f/sqrtf(x);
     } else {
@@ -74,7 +209,7 @@ inline __device__ float2 safeNormalize(float2 v) {
  * @param v The input vector to be normalized
  * @return The normalized vector v
  */
-inline __device__ float3 safeNormalize(float3 v) {
+inline __host__ __device__ float3 safeNormalize(float3 v) {
     float invLen = safeRsqrtf(dot(v, v));
     return v * invLen;
 }
@@ -334,30 +469,61 @@ __global__ void DeformableGPUSurfaceMT_FlagCorruptTriangles_D(
 //    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = flag;
 //    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = flag;
 
-    /* Alternative 2: calc variance of angle between normals */
+    /* Alternative 2: use area and angles */
 
 //    const uint baseIdx0 = vertexDataStride*triangleVtxIdx_D[3*idx+0];
 //    const uint baseIdx1 = vertexDataStride*triangleVtxIdx_D[3*idx+1];
 //    const uint baseIdx2 = vertexDataStride*triangleVtxIdx_D[3*idx+2];
-//    const float3 n0 = make_float3(vertexData_D[baseIdx0+vertexDataOffsNormal+0],
-//                                  vertexData_D[baseIdx0+vertexDataOffsNormal+1],
-//                                  vertexData_D[baseIdx0+vertexDataOffsNormal+2]);
-//    const float3 n1 = make_float3(vertexData_D[baseIdx1+vertexDataOffsNormal+0],
-//                                  vertexData_D[baseIdx1+vertexDataOffsNormal+1],
-//                                  vertexData_D[baseIdx1+vertexDataOffsNormal+2]);
-//    const float3 n2 = make_float3(vertexData_D[baseIdx2+vertexDataOffsNormal+0],
-//                                  vertexData_D[baseIdx2+vertexDataOffsNormal+1],
-//                                  vertexData_D[baseIdx2+vertexDataOffsNormal+2]);
-//    // Sample volume at midpoint
-//    const float3 avgNormal = (n0+n1+n2)/3.0;
-//    float dot0 = clamp(dot(n0, avgNormal), 0.0, 1.0);
-//    float dot1 = clamp(dot(n1, avgNormal), 0.0, 1.0);
-//    float dot2 = clamp(dot(n2, avgNormal), 0.0, 1.0);
-//    float maxDot = max(dot0, max(dot1, dot2));
-//    float flag = float(maxDot > 0.9);
-//    vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = flag;
-//    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = flag;
-//    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = flag;
+//    const float3 p0 = make_float3(
+//            vertexData_D[baseIdx0+vertexDataOffsPos+0],
+//            vertexData_D[baseIdx0+vertexDataOffsPos+1],
+//            vertexData_D[baseIdx0+vertexDataOffsPos+2]);
+//    const float3 p1 = make_float3(
+//            vertexData_D[baseIdx1+vertexDataOffsPos+0],
+//            vertexData_D[baseIdx1+vertexDataOffsPos+1],
+//            vertexData_D[baseIdx1+vertexDataOffsPos+2]);
+//    const float3 p2 = make_float3(
+//            vertexData_D[baseIdx2+vertexDataOffsPos+0],
+//            vertexData_D[baseIdx2+vertexDataOffsPos+1],
+//            vertexData_D[baseIdx2+vertexDataOffsPos+2]);
+//
+//    float3 v01 = (p0-p1);
+//    float3 v02 = (p0-p2);
+//    float3 v10 = (p1-p0);
+//    float3 v12 = (p1-p2);
+//    float3 v21 = (p2-p1);
+//    float3 v20 = (p2-p0);
+//
+//    // Compute minimum angle
+//    float dot0 = acos(dot(normalize(v01), normalize(v02)));
+//    float dot1 = acos(dot(normalize(v10), normalize(v12)));
+//    float dot2 = acos(dot(normalize(v21), normalize(v20)));
+//    float minDot = min(dot0, min(dot1, dot2));
+//
+//    // Compute area of the triangle
+//    float3 midPnt = (p0+p1)*0.5;
+//    float3 hVec = p2 - midPnt;
+//    float area = length(p0-p1)*length(hVec)*0.5;
+//    area = gridDelta_D.x*gridDelta_D.y-1;
+//
+//    float maxCellFaceArea = gridDelta_D.x*gridDelta_D.y; // Find max grid delta
+//
+//    //float flag = float((minDot < 0.1)||(area > maxCellFaceArea));
+//    float flag = float(minDot < 0.2);
+//
+//    // TODO Is there no atomic write?
+////    vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = float(bool(currFlag0) || bool(flag));
+////    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = float(bool(currFlag1) || bool(flag));
+////    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = float(bool(currFlag2) || bool(flag));
+//
+//    // DEBUG
+//    if (flag == 1.0) {
+//        vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = 1.0;
+//        vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = 1.0;
+//        vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = 1.0;
+//    }
+//    // END DEBUG
+//    corruptTriangles_D[idx] = flag;
 
     /* Alternative 3 Check whether the vertex lies in a active cell of the
        target volume */
@@ -390,13 +556,270 @@ __global__ void DeformableGPUSurfaceMT_FlagCorruptTriangles_D(
     int cellIDx = ::GetCellIdxByGridCoords(coords);
     uint cellState = targetActiveCells_D[cellIDx];
 
-    if (cellState == 0) {
+    corruptTriangles_D[idx] = float(1-cellState);
+
+    // DEBUG
+    if (cellState == 0.0) {
         vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = 1.0;
         vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = 1.0;
         vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = 1.0;
     }
+    // END DEBUG
+}
 
-    corruptTriangles_D[idx] = float(1-cellState);
+/**
+ * TODO
+ * @return Position and path length addition
+ */
+__device__ float4 UpdateVtxPosSingle_D (
+        float3 posStart,                // Starting position
+        float4 *gradient_D,             // External forces
+        float *targetVol_D,             // The target volume
+        float minDisplScl,              // Minimum displacement for convergence
+        float forcesScl,                // General scaling factor for forces
+        float isovalue) {               // Isovalue
+
+    float3 pos = posStart;
+
+    float sample = SampleFieldAtPosTrilin_D<float>(pos, targetVol_D);
+    bool outside = sample <= isovalue;
+    float extForcesScl;
+
+    if (outside) extForcesScl = 1.0;
+    else extForcesScl = -1.0;
+    float len = 0.0f;
+    bool converged = false;
+    int steps = 0;
+    const int maxSteps = 3;
+    do {
+        // Get volume sample
+        float sample = SampleFieldAtPosTrilin_D<float>(pos, targetVol_D);
+
+        // Switch sign and scale down if necessary
+        bool negative = extForcesScl < 0;
+        bool outside = sample <= isovalue;
+        int switchSign = int((negative && outside)||(!negative && !outside));
+        extForcesScl = extForcesScl*(1.0*(1-switchSign) - 1.0*switchSign);
+        extForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
+
+        // Get external forces sample and scale
+        float4 extForceTmp = SampleFieldAtPosTrilin_D<float4>(pos, gradient_D);
+        float3 extForce = make_float3(extForceTmp.x, extForceTmp.y, extForceTmp.z);
+        extForce = safeNormalize(extForce);
+        // Accumulate path
+        len += extForcesScl*forcesScl;
+        extForce *= extForcesScl*forcesScl;
+
+        // Propagate vertex and increase path length
+        pos += extForce;
+
+
+        if (length(extForce) <= minDisplScl) {
+            converged = true;
+        }
+        steps++;
+
+    } while (!converged || steps < maxSteps);
+
+    return make_float4(pos.x, pos.y, pos.z, len);
+}
+
+
+/**
+ * TODO
+ */
+__device__ float DeformableGPUSurfaceMT_IntUncertaintyOverCorruptAreaRec_D(
+        float3 pos1, float3 pos2, float3 pos3, // Vertex positions of the triangle
+        float len1, float len2, float len3,    // Vertex path lengths of the triangle
+        float4 *gradient_D,                    // External forces
+        float *targetVol_D,                    // The target volume
+        unsigned int *targetActiveCells_D,     // Active cells of the target volume
+        float minDisplScl,                     // Minimum displacement for convergence
+        float forcesScl,                       // General scaling factor for forces
+        float isovalue,                        // Isovalue
+        float &triArea,
+        uint depth
+        ) {
+
+    const uint maxDepth = 2;
+
+    // 1. Propagate vertices until they converge to a fixed position
+
+    float4 newPosLen1, newPosLen2, newPosLen3;
+    newPosLen1 = UpdateVtxPosSingle_D (pos1, gradient_D, targetVol_D,
+            minDisplScl, forcesScl, isovalue);
+    newPosLen2 = UpdateVtxPosSingle_D (pos2, gradient_D, targetVol_D,
+            minDisplScl, forcesScl, isovalue);
+    newPosLen3 = UpdateVtxPosSingle_D (pos3, gradient_D, targetVol_D,
+            minDisplScl, forcesScl, isovalue);
+    float3 newPos1, newPos2, newPos3;
+    newPos1 = make_float3(newPosLen1.x, newPosLen1.y, newPosLen1.z);
+    newPos2 = make_float3(newPosLen2.x, newPosLen2.y, newPosLen2.z);
+    newPos3 = make_float3(newPosLen3.x, newPosLen3.y, newPosLen3.z);
+
+    // 2. Check whether the resulting triangle is valid
+
+    float3 midpoint = (newPos1+newPos2+newPos3)/3.0;
+    int3 coords;
+    coords.x = int((midpoint.x-gridOrg_D.x)/gridDelta_D.x);
+    coords.y = int((midpoint.y-gridOrg_D.y)/gridDelta_D.y);
+    coords.z = int((midpoint.z-gridOrg_D.z)/gridDelta_D.z);
+    int cellIDx = ::GetCellIdxByGridCoords(coords);
+    uint cellState = targetActiveCells_D[cellIDx];
+
+    if ((cellState == 1)||(depth >= maxDepth)) {
+
+//        printf("%.16f;%.16f;%.16f;%.16f;%.16f;%.16f;%.16f;%.16f;%.16f\n",
+//                newPos1.x, newPos1.y, newPos1.z,
+//                newPos2.x, newPos2.y, newPos2.z,
+//                newPos3.x, newPos3.y, newPos3.z);
+
+//        if (depth >= 2) printf("Thread %u, depth %u\n",::getThreadIdx(), depth);
+
+        // 3a. Cell is active, therefore triangle is valid
+        // --> Compute integrated uncertainty value
+        // Get triangle area
+        float a = length(newPos1 - newPos2);
+        float b = length(newPos1 - newPos3);
+        float c = length(newPos2 - newPos3);
+
+        // Compute area (Heron's formula)
+        float rad = (a + b - c)*(c + a - b)*(a + b + c)*(b + c - a);
+        // Make sure radicand is not negative
+        rad = rad > 0.0f ? rad : 0.0f;
+        float area = 0.25f*sqrt(rad);
+        triArea = area;
+
+        // Get average value
+        float avgValue = (len1+newPosLen1.w+len2+newPosLen2.w+len3+newPosLen3.w)/3.0f;
+
+        // Approximate integration
+        return triArea*avgValue;
+    } else {
+        float triArea1, triArea2, triArea3, triArea4;
+        // 3b. Cell is not active, therefore, triangle is not valid
+        // --> Subdivide and call recursively
+
+        float3 p12 = (newPos1+newPos2)/2.0;
+        float3 p13 = (newPos1+newPos3)/2.0;
+        float3 p32 = (newPos3+newPos2)/2.0;
+        float l12 = (len1+newPosLen1.w+len2+newPosLen2.w)/2.0;
+        float l13 = (len1+newPosLen1.w+len3+newPosLen3.w)/2.0;
+        float l32 = (len3+newPosLen3.w+len2+newPosLen2.w)/2.0;
+
+        float intUncertainty1 =
+                DeformableGPUSurfaceMT_IntUncertaintyOverCorruptAreaRec_D(
+                        newPos1, p12, p13,
+                        len1+newPosLen1.w, l12, l13,
+                        gradient_D, targetVol_D, targetActiveCells_D,
+                        minDisplScl, forcesScl, isovalue, triArea1,
+                        depth+1);
+
+        float intUncertainty2 =
+                DeformableGPUSurfaceMT_IntUncertaintyOverCorruptAreaRec_D(
+                        p13, p32, newPos3,
+                        l13, l32, len3+newPosLen3.w,
+                        gradient_D, targetVol_D, targetActiveCells_D,
+                        minDisplScl, forcesScl, isovalue, triArea2,
+                        depth+1);
+
+        float intUncertainty3 =
+                DeformableGPUSurfaceMT_IntUncertaintyOverCorruptAreaRec_D(
+                        p12, p13, p32,
+                        l12, l13, l32,
+                        gradient_D, targetVol_D, targetActiveCells_D,
+                        minDisplScl, forcesScl, isovalue, triArea3,
+                        depth+1);
+
+        float intUncertainty4 =
+                DeformableGPUSurfaceMT_IntUncertaintyOverCorruptAreaRec_D(
+                        p12, p32, newPos2,
+                        l12, l32, len2+newPosLen2.w,
+                        gradient_D, targetVol_D, targetActiveCells_D,
+                        minDisplScl, forcesScl, isovalue, triArea4,
+                        depth+1);
+
+
+        triArea = triArea1 + triArea2 + triArea3 + triArea4;
+
+        return intUncertainty1 + intUncertainty2 + intUncertainty3 + intUncertainty4;
+    }
+}
+
+
+/**
+ * TODO
+ */
+__global__ void DeformableGPUSurfaceMT_IntUncertaintyOverCorruptArea_D(
+        float *corruptTriangles_D,
+        float *vertexData_D,
+        float *vertexPathLen_D,
+        uint vertexDataStride,
+        uint vertexDataOffsPos,
+        uint vertexDataOffsNormal,
+        uint *triangleVtxIdx_D,
+        float *targetVol_D,
+        float4 *gradient_D,
+        unsigned int *targetActiveCells_D,
+        uint triangleCnt,
+        float isovalue,
+        float minDisplScl,
+        float forcesScl,
+        float *corruptTrianglesIntUncertainty_D,
+        float *trianglesArea_D) {
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= triangleCnt) {
+        return;
+    }
+
+    // Triangle is not corrupt
+    if (corruptTriangles_D[idx] == 0) {
+        return;
+    }
+
+    // Get initial positions from main memory
+    uint baseIdx0 = vertexDataStride*triangleVtxIdx_D[3*idx+0];
+    uint baseIdx1 = vertexDataStride*triangleVtxIdx_D[3*idx+1];
+    uint baseIdx2 = vertexDataStride*triangleVtxIdx_D[3*idx+2];
+    float3 pos1 = make_float3(
+            vertexData_D[baseIdx0+vertexDataOffsPos+0],
+            vertexData_D[baseIdx0+vertexDataOffsPos+1],
+            vertexData_D[baseIdx0+vertexDataOffsPos+2]);
+    float3 pos2 = make_float3(
+            vertexData_D[baseIdx1+vertexDataOffsPos+0],
+            vertexData_D[baseIdx1+vertexDataOffsPos+1],
+            vertexData_D[baseIdx1+vertexDataOffsPos+2]);
+    float3 pos3 = make_float3(
+            vertexData_D[baseIdx2+vertexDataOffsPos+0],
+            vertexData_D[baseIdx2+vertexDataOffsPos+1],
+            vertexData_D[baseIdx2+vertexDataOffsPos+2]);
+
+    // Get initial path lengths from previous morphing
+    float len1 = vertexPathLen_D[triangleVtxIdx_D[3*idx+0]];
+    float len2 = vertexPathLen_D[triangleVtxIdx_D[3*idx+1]];
+    float len3 = vertexPathLen_D[triangleVtxIdx_D[3*idx+2]];
+
+    float triArea = 0.0;
+
+    // Integrate path lengths
+    float intUncertainty = DeformableGPUSurfaceMT_IntUncertaintyOverCorruptAreaRec_D(
+            pos1, pos2, pos3,        // Vertex positions of the triangle
+            len1, len2, len3,        // Vertex path lengths of the triangle
+            gradient_D,              // External forces
+            targetVol_D,             // The target volume
+            targetActiveCells_D,     // Active cells of the target volume
+            minDisplScl,             // Minimum displacement for convergence
+            forcesScl,               // General scaling factor for forces
+            isovalue,                // Isovalue
+            triArea,                 // Area associated with this triangle
+            0                        // Initial recursion depth
+    );
+
+    corruptTrianglesIntUncertainty_D[idx] = intUncertainty;
+    trianglesArea_D[idx] = triArea;
+
+
 }
 
 
@@ -1012,34 +1435,70 @@ DeformableGPUSurfaceMT::~DeformableGPUSurfaceMT() {
  * ComputeTriangleArea_D
  */
 __global__ void DeformableGPUSurfaceMT_ComputeValidTriangleAreas_D(
+        float *vertexFlag_D,
         float *trianglesArea_D,
         float *corruptTriangleFlag_D,
-        float *vertexPos_D,
+        float *vertexData_D,
         uint *triangleIdx_D,
         uint triangleCnt) {
 
+    const int vertexDataOffsPos = 0;
+    const int vertexDataOffsNormal = 3;
+    const int vertexDataOffsTexCoord = 6;
+    const int vertexDataStride = 9;
+
+
+
     const uint idx = ::getThreadIdx();
+
     if (idx >= triangleCnt) {
         return;
     }
 
     float flag = corruptTriangleFlag_D[idx];
-    //float flag = 0.0f;
 
     float3 pos0, pos1, pos2;
-    pos0.x = vertexPos_D[3*triangleIdx_D[3+idx+0]+0];
-    pos0.y = vertexPos_D[3*triangleIdx_D[3+idx+0]+1];
-    pos0.z = vertexPos_D[3*triangleIdx_D[3+idx+0]+2];
-    pos1.x = vertexPos_D[3*triangleIdx_D[3+idx+1]+0];
-    pos1.y = vertexPos_D[3*triangleIdx_D[3+idx+1]+1];
-    pos1.z = vertexPos_D[3*triangleIdx_D[3+idx+1]+2];
-    pos2.x = vertexPos_D[3*triangleIdx_D[3+idx+2]+0];
-    pos2.y = vertexPos_D[3*triangleIdx_D[3+idx+2]+1];
-    pos2.z = vertexPos_D[3*triangleIdx_D[3+idx+2]+2];
+    pos0.x = vertexData_D[vertexDataStride*triangleIdx_D[3*idx+0]+vertexDataOffsPos+0];
+    pos0.y = vertexData_D[vertexDataStride*triangleIdx_D[3*idx+0]+vertexDataOffsPos+1];
+    pos0.z = vertexData_D[vertexDataStride*triangleIdx_D[3*idx+0]+vertexDataOffsPos+2];
 
-    float3 midPnt = (pos0+pos1)*0.5;
-    float3 hVec = pos2 - midPnt;
-    trianglesArea_D[idx] = length(pos0-pos1)*length(hVec)*0.5*(1.0-flag);
+    pos1.x = vertexData_D[vertexDataStride*triangleIdx_D[3*idx+1]+vertexDataOffsPos+0];
+    pos1.y = vertexData_D[vertexDataStride*triangleIdx_D[3*idx+1]+vertexDataOffsPos+1];
+    pos1.z = vertexData_D[vertexDataStride*triangleIdx_D[3*idx+1]+vertexDataOffsPos+2];
+
+    pos2.x = vertexData_D[vertexDataStride*triangleIdx_D[3*idx+2]+vertexDataOffsPos+0];
+    pos2.y = vertexData_D[vertexDataStride*triangleIdx_D[3*idx+2]+vertexDataOffsPos+1];
+    pos2.z = vertexData_D[vertexDataStride*triangleIdx_D[3*idx+2]+vertexDataOffsPos+2];
+
+    // compute edge lengths
+    float a = length(pos0 - pos1);
+    float b = length(pos0 - pos2);
+    float c = length(pos1 - pos2);
+
+    // Compute area (Heron's formula)
+    float rad = (a + b - c)*(c + a - b)*(a + b + c)*(b + c - a);
+    // Make sure radicand is not negative
+    rad = rad > 0.0f ? rad : 0.0f;
+    float area = 0.25f*sqrt(rad)*(1.0-flag);
+    trianglesArea_D[idx] = area;
+//    printf("Triangle %i: pos1 %f %f %f, pos2 %f %f %f, pos3 %f %f %f, %f\n", idx,
+//            pos0.x, pos0.y, pos0.z, pos1.x, pos1.y, pos1.z, pos2.x, pos2.y, pos2.z, area);
+
+//    if (idx < 30) {
+//        printf("Triangle %u: %u %u %u\n", idx,
+//                triangleIdx_D[3*idx+0],
+//                triangleIdx_D[3*idx+1],
+//                triangleIdx_D[3*idx+2]);
+//    }
+
+//    // DEBUG!!!! Remove later TODO
+//    if (area > 5) {
+//        vertexFlag_D[triangleIdx_D[3+idx+0]] = 1.0;
+//        vertexFlag_D[triangleIdx_D[3+idx+1]] = 1.0;
+//        vertexFlag_D[triangleIdx_D[3+idx+2]] = 1.0;
+//    }
+//    // END DEBUG
+
 }
 
 
@@ -1051,7 +1510,10 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
     if (!CudaSafeCall(this->accTriangleArea_D.Validate(this->triangleCnt))) {
         return false;
     }
-    cudaGraphicsResource* cudaTokens[2];
+    if (!CudaSafeCall(this->accTriangleArea_D.Set(0x00))) {
+        return false;
+    }
+    cudaGraphicsResource* cudaTokens[3];
 
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
@@ -1068,7 +1530,14 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
         return false;
     }
 
-    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[2],
+            this->vboCorruptTriangleVertexFlag,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsMapResources(3, cudaTokens, 0))) {
         return false;
     }
 
@@ -1091,6 +1560,14 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
         return false;
     }
 
+    float *vboFlagPt;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboFlagPt),
+            &vboSize,
+            cudaTokens[2]))) {
+        return false;
+    }
+
 #ifdef USE_TIMER
     float dt_ms;
     cudaEvent_t event1, event2;
@@ -1101,6 +1578,7 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
 
     // Call kernel
     DeformableGPUSurfaceMT_ComputeValidTriangleAreas_D <<< Grid(this->triangleCnt, 256), 256 >>> (
+            vboFlagPt,
             this->accTriangleArea_D.Peek(),
             this->corruptTriangles_D.Peek(),
             vboPt,
@@ -1118,16 +1596,18 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
             dt_ms/1000.0);
 #endif
 
-    // Compute sum of all (non-corrupt) triangle areas
-    float areaValidTriangles = thrust::reduce(
-            thrust::device_ptr<float>(this->accTriangleArea_D.Peek()),
-            thrust::device_ptr<float>(this->accTriangleArea_D.Peek() + this->triangleCnt));
+//    // Compute sum of all (non-corrupt) triangle areas
+//    float areaValidTriangles = thrust::reduce(
+//            thrust::device_ptr<float>(this->accTriangleArea_D.Peek()),
+//            thrust::device_ptr<float>(this->accTriangleArea_D.Peek() + this->triangleCnt),
+//            0.0f);
 
-    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+
+    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(3, cudaTokens, 0))) {
         return false;
     }
-
-//    ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
         return false;
@@ -1135,8 +1615,23 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
         return false;
     }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[2]))) {
+        return false;
+    }
 
-    return areaValidTriangles;
+    // DEBUG Copy back and accumuluate
+    HostArr<float> accTriangleArea;
+    accTriangleArea.Validate(this->accTriangleArea_D.GetCount());
+    this->accTriangleArea_D.CopyToHost(accTriangleArea.Peek());
+    float sum = 0.0f;
+    for (int i = 0; i < this->accTriangleArea_D.GetCount(); ++i) {
+        sum = sum + accTriangleArea.Peek()[i];
+    }
+    printf("sum: %f, triangles %i\n", sum, this->triangleCnt);
+    return sum;
+    // END DEBUG
+
+    //return areaValidTriangles;
 }
 
 
@@ -1264,6 +1759,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
     if (!CudaSafeCall(cudaMemset(vboFlagPt, 0x00, this->vertexCnt*sizeof(float)))) {
         return false;
     }
+
 
     // Call kernel
     DeformableGPUSurfaceMT_FlagCorruptTriangles_D <<< Grid(this->triangleCnt, 256), 256 >>> (
@@ -1647,10 +2143,12 @@ bool DeformableGPUSurfaceMT::initExtForcesTwoWayGVF(
         cudaEventSynchronize(event1);
         cudaEventSynchronize(event2);
         cudaEventElapsedTime(&dt_ms, event1, event2);
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-                "%s: Time for bi-directional diffusion %f\n",
-                "DeformableGPUSurfaceMT", dt_ms/1000.0f);
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: Time for bi-directional diffusion %f\n",
+//                "DeformableGPUSurfaceMT", dt_ms/1000.0f);
     //#endif
+//        printf("GVF : %.10f\n",
+//                dt_ms/1000.0f);
 
     return true;
 }
@@ -1875,6 +2373,542 @@ float DeformableGPUSurfaceMT::IntUncertaintyOverSurfArea() {
 
      return integralVal;
 
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::IntOverCorruptSurfArea
+ */
+float DeformableGPUSurfaceMT::IntOverCorruptSurfArea() {
+    return 0.0f;
+}
+
+
+/**
+ * TODO
+ * @return Position and path length addition
+ */
+float4 UpdateVtxPosSingle (
+        float3 posStart,              // Starting position
+        float4 *gradient,             // External forces
+        float *targetVol,             // The target volume
+        float minDisplScl,            // Minimum displacement for convergence
+        float forcesScl,              // General scaling factor for forces
+        float isovalue,
+        float org[3], float delta[3], int dim[3],
+        int maxSteps,
+        int maxLevel,
+        float initStepSize) {             // Isovalue
+
+    float3 pos = posStart;
+
+    float sample = SampleFieldAtPosTrilin((float*)(&pos), targetVol, org, delta, dim);
+    bool outside = sample <= isovalue;
+    float extForcesScl;
+
+    if (outside) extForcesScl = 1.0;
+    else extForcesScl = -1.0;
+    float len = 0.0f;
+    bool converged = false;
+    int steps = 0;
+    do {
+//        printf("current pos: %f %f %f\n", pos.x, pos.y, pos.z);
+        // Get volume sample
+        float sample = SampleFieldAtPosTrilin((float*)(&pos), targetVol, org, delta, dim);
+
+        // Switch sign and scale down if necessary
+        bool negative = extForcesScl < 0;
+        bool outside = sample <= isovalue;
+        int switchSign = int((negative && outside)||(!negative && !outside));
+        extForcesScl = extForcesScl*(1.0*(1-switchSign) - 1.0*switchSign);
+        extForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
+
+        // Get external forces sample and scale
+        float4 extForceTmp = SampleFieldAtPosTrilin((float*)(&pos), gradient, org, delta, dim);
+        float3 extForce = make_float3(extForceTmp.x, extForceTmp.y, extForceTmp.z);
+        extForce = safeNormalize(extForce);
+        // Accumulate path
+        len += extForcesScl*forcesScl;
+        extForce *= extForcesScl*forcesScl;
+
+        // Propagate vertex and increase path length
+        pos += extForce;
+
+
+        if (length(extForce) <= minDisplScl) {
+            converged = true;
+        }
+        steps++;
+    } while (!converged && steps < maxSteps);
+
+    return make_float4(pos.x, pos.y, pos.z, len);
+}
+
+
+
+/**
+ * TODO
+ */
+float DeformableGPUSurfaceMT::IntUncertaintyOverCorruptAreaRec(
+        float3 pos1, float3 pos2, float3 pos3, // Vertex positions of the triangle
+        float len1, float len2, float len3,    // Vertex path lengths of the triangle
+        float4 *gradient,                      // External forces
+        float *targetVol,                      // The target volume
+        unsigned int *targetActiveCells,       // Active cells of the target volume
+        float minDisplScl,                     // Minimum displacement for convergence
+        float forcesScl,                       // General scaling factor for forces
+        float isovalue,                        // Isovalue
+        float &triArea,
+        uint depth,
+        float org[3], float delta[3], int dim[3],
+        vislib::Array<float> &triArr,
+        int maxSteps,
+        int maxLevel,
+        float initStepSize) {
+
+//    printf("depth: %i\n", depth);
+
+    // 1. Propagate vertices until they converge to a fixed position
+
+    float4 newPosLen1, newPosLen2, newPosLen3;
+    newPosLen1 = UpdateVtxPosSingle(pos1, gradient, targetVol,
+            minDisplScl, forcesScl, isovalue, org, delta, dim,
+            maxSteps,
+            maxLevel,
+            initStepSize);
+    newPosLen2 = UpdateVtxPosSingle(pos2, gradient, targetVol,
+            minDisplScl, forcesScl, isovalue, org, delta, dim,
+            maxSteps,
+            maxLevel,
+            initStepSize);
+    newPosLen3 = UpdateVtxPosSingle(pos3, gradient, targetVol,
+            minDisplScl, forcesScl, isovalue, org, delta, dim,
+            maxSteps,
+            maxLevel,
+            initStepSize);
+    float3 newPos1, newPos2, newPos3;
+    newPos1 = make_float3(newPosLen1.x, newPosLen1.y, newPosLen1.z);
+    newPos2 = make_float3(newPosLen2.x, newPosLen2.y, newPosLen2.z);
+    newPos3 = make_float3(newPosLen3.x, newPosLen3.y, newPosLen3.z);
+
+    // 2. Check whether the resulting triangle is valid
+
+    float3 midpoint = (newPos1+newPos2+newPos3)/3.0;
+    int3 coords;
+    coords.x = int((midpoint.x-org[0])/delta[0]);
+    coords.y = int((midpoint.y-org[1])/delta[1]);
+    coords.z = int((midpoint.z-org[2])/delta[2]);
+    //int cellIDx = ::GetCellIdxByGridCoords(coords);
+    int cellIdx = (dim[0]-1)*((dim[1]-1)*coords.z + coords.y) + coords.x;
+    uint cellState = targetActiveCells[cellIdx];
+
+    if ((cellState == 1)||(depth >= maxLevel)) {
+
+        triArr.Add(newPos1.x);
+        triArr.Add(newPos1.y);
+        triArr.Add(newPos1.z);
+
+        triArr.Add(newPos2.x);
+        triArr.Add(newPos2.y);
+        triArr.Add(newPos2.z);
+
+        triArr.Add(newPos3.x);
+        triArr.Add(newPos3.y);
+        triArr.Add(newPos3.z);
+
+//        printf("%.16f;%.16f;%.16f;%.16f;%.16f;%.16f;%.16f;%.16f;%.16f\n",
+//                newPos1.x, newPos1.y, newPos1.z,
+//                newPos2.x, newPos2.y, newPos2.z,
+//                newPos3.x, newPos3.y, newPos3.z);
+
+        // 3a. Cell is active, therefore triangle is valid
+        // --> Compute integrated uncertainty value
+        // Get triangle area
+        float a = length(newPos1 - newPos2);
+        float b = length(newPos1 - newPos3);
+        float c = length(newPos2 - newPos3);
+
+        // Compute area (Heron's formula)
+        float rad = (a + b - c)*(c + a - b)*(a + b + c)*(b + c - a);
+        // Make sure radicand is not negative
+        rad = rad > 0.0f ? rad : 0.0f;
+        float area = 0.25f*sqrt(rad);
+        triArea = area;
+
+        // Get average value
+        float avgValue = (len1+newPosLen1.w+len2+newPosLen2.w+len3+newPosLen3.w)/3.0f;
+
+        // Approximate integration
+        return triArea*avgValue;
+    } else {
+        float triArea1, triArea2, triArea3, triArea4;
+        // 3b. Cell is not active, therefore, triangle is not valid
+        // --> Subdivide and call recursively
+
+        float3 p12 = (newPos1+newPos2)/2.0;
+        float3 p13 = (newPos1+newPos3)/2.0;
+        float3 p32 = (newPos3+newPos2)/2.0;
+        float l12 = (len1+newPosLen1.w+len2+newPosLen2.w)/2.0;
+        float l13 = (len1+newPosLen1.w+len3+newPosLen3.w)/2.0;
+        float l32 = (len3+newPosLen3.w+len2+newPosLen2.w)/2.0;
+
+        float intUncertainty1 =
+                DeformableGPUSurfaceMT::IntUncertaintyOverCorruptAreaRec(
+                        newPos1, p12, p13,
+                        len1+newPosLen1.w, l12, l13,
+                        gradient, targetVol, targetActiveCells,
+                        minDisplScl, forcesScl, isovalue, triArea1,
+                        depth+1, org, delta, dim, triArr,
+                        maxSteps,
+                        maxLevel,
+                        initStepSize);
+
+        float intUncertainty2 =
+                DeformableGPUSurfaceMT::IntUncertaintyOverCorruptAreaRec(
+                        p13, p32, newPos3,
+                        l13, l32, len3+newPosLen3.w,
+                        gradient, targetVol, targetActiveCells,
+                        minDisplScl, forcesScl, isovalue, triArea2,
+                        depth+1, org, delta, dim, triArr,
+                        maxSteps,
+                        maxLevel,
+                        initStepSize);
+
+        float intUncertainty3 =
+                DeformableGPUSurfaceMT::IntUncertaintyOverCorruptAreaRec(
+                        p12, p13, p32,
+                        l12, l13, l32,
+                        gradient, targetVol, targetActiveCells,
+                        minDisplScl, forcesScl, isovalue, triArea3,
+                        depth+1, org, delta, dim, triArr,
+                        maxSteps,
+                        maxLevel,
+                        initStepSize);
+
+        float intUncertainty4 =
+                DeformableGPUSurfaceMT::IntUncertaintyOverCorruptAreaRec(
+                        p12, p32, newPos2,
+                        l12, l32, len2+newPosLen2.w,
+                        gradient, targetVol, targetActiveCells,
+                        minDisplScl, forcesScl, isovalue, triArea4,
+                        depth+1, org, delta, dim, triArr,
+                        maxSteps,
+                        maxLevel,
+                        initStepSize);
+
+
+        triArea = triArea1 + triArea2 + triArea3 + triArea4;
+
+        return intUncertainty1 + intUncertainty2 + intUncertainty3 + intUncertainty4;
+    }
+}
+
+
+
+/*
+ * DeformableGPUSurfaceMT::IntUncertaintyOverCorruptSurfArea
+ */
+float DeformableGPUSurfaceMT::IntUncertaintyOverCorruptSurfArea(
+        float &corruptArea,
+        float minDisplScl,
+        float isovalue,
+        float forcesScl,
+        unsigned int *targetActiveCells_D,
+        float *targetVol_D,
+        int3 volDim,
+        float3 volOrg,
+        float3 volDelta,
+        vislib::Array<float> &triArr,
+        int maxDepth,
+        int maxLevel,
+        float initStepSize) {
+    using namespace vislib::sys;
+
+    size_t fieldSize = volDim.x*volDim.y*volDim.z;
+    size_t cellCnt = (volDim.x-1)*(volDim.y-1)*(volDim.z-1);
+
+//    // Allocate memory for corrupt triangles
+//    if (!CudaSafeCall(this->intUncertaintyCorrupt_D.Validate(this->triangleCnt))) {
+//        return false;
+//    }
+//    // Init with zero
+//    if (!CudaSafeCall(this->intUncertaintyCorrupt_D.Set(0x00))) {
+//        return false;
+//    }
+//
+//    if (!CudaSafeCall(this->accTriangleArea_D.Validate(this->triangleCnt))) {
+//        return false;
+//    }
+//    if (!CudaSafeCall(this->accTriangleArea_D.Set(0x00))){
+//        return false;
+//    }
+//
+//    // Init constant device params
+//    if (!initGridParams(volDim, volOrg, volDelta)) {
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                "%s: could not init constant device params",
+//                this->ClassName());
+//        return false;
+//    }
+//
+    cudaGraphicsResource* cudaTokens[3];
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0],
+            this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1],
+            this->vboTriangleIdx,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[2],
+            this->vboUncertainty,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    // Map cuda ressource handles
+    if (!CudaSafeCall(cudaGraphicsMapResources(3, cudaTokens, 0))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    /* Get mapped pointers to the vertex data buffer */
+
+    float *vboPt;
+    size_t vboSize;
+    float* vboUncertaintyPt;
+    unsigned int *vboTriangleIdxPt;
+
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt),
+            &vboSize,
+            cudaTokens[0]))) {
+        return false;
+    }
+
+    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboTriangleIdxPt),
+            &vboSize,
+            cudaTokens[1]))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboUncertaintyPt),
+            &vboSize,
+            cudaTokens[2]))) {
+        return false;
+    }
+//
+//#ifdef USE_TIMER
+//    float dt_ms;
+//    cudaEvent_t event1, event2;
+//    cudaEventCreate(&event1);
+//    cudaEventCreate(&event2);
+//    cudaEventRecord(event1, 0);
+//#endif
+//
+//    ::CheckForCudaErrorSync();
+//
+//    // Call kernel
+//    DeformableGPUSurfaceMT_IntUncertaintyOverCorruptArea_D <<< Grid(this->triangleCnt, 256), 256 >>> (
+//            this->corruptTriangles_D.Peek(),
+//            vboPt,
+//            vboUncertaintyPt,
+//            this->vertexDataStride,
+//            this->vertexDataOffsPos,
+//            this->vertexDataOffsNormal,
+//            vboTriangleIdxPt,
+//            targetVol_D,
+//            (float4*)this->externalForces_D.Peek(),
+//            targetActiveCells_D,
+//            this->triangleCnt,
+//            isovalue,
+//            minDisplScl,
+//            forcesScl,
+//            this->intUncertaintyCorrupt_D.Peek(),
+//            this->accTriangleArea_D.Peek());
+//
+//    ::CheckForCudaErrorSync();
+//
+//#ifdef USE_TIMER
+//    cudaEventRecord(event2, 0);
+//    cudaEventSynchronize(event1);
+//    cudaEventSynchronize(event2);
+//    cudaEventElapsedTime(&dt_ms, event1, event2);
+//    printf("CUDA time for 'intOverTriangles_D                     %.10f sec\n",
+//            dt_ms/1000.0);
+//#endif
+//
+//    // Compute sum of all (non-corrupt) triangle areas
+//    float integralVal = thrust::reduce(
+//            thrust::device_ptr<float>(this->intUncertaintyCorrupt_D.Peek()),
+//            thrust::device_ptr<float>(this->intUncertaintyCorrupt_D.Peek() + this->triangleCnt));
+//
+//    corruptArea = thrust::reduce(
+//            thrust::device_ptr<float>(this->accTriangleArea_D.Peek()),
+//            thrust::device_ptr<float>(this->accTriangleArea_D.Peek() + this->triangleCnt));
+//
+//    ::CheckForCudaErrorSync();
+//
+//    if (!CudaSafeCall(cudaGetLastError())) {
+//        return false;
+//    }
+
+
+    float integralVal = 0.0f;
+    corruptArea = 0.0f;
+
+    // Get necessary data from GPU
+    HostArr<float> corruptTriangles;
+    HostArr<float> vertexBuffer;
+    HostArr<unsigned int> triangleIdx;
+    HostArr<float> uncertainty;
+    HostArr<float> gradient;
+    HostArr<float> targetVol;
+    HostArr<unsigned int> targetActiveCells;
+
+    corruptTriangles.Validate(this->corruptTriangles_D.GetCount());
+    vertexBuffer.Validate(this->vertexDataStride*this->vertexCnt);
+    triangleIdx.Validate(this->triangleCnt*3);
+    uncertainty.Validate(this->vertexCnt);
+    gradient.Validate(fieldSize*4);
+    targetVol.Validate(fieldSize);
+    targetActiveCells.Validate(cellCnt);
+
+    if (!CudaSafeCall(cudaMemcpy(corruptTriangles.Peek(), this->corruptTriangles_D.Peek(),
+            corruptTriangles.GetCount()*sizeof(float), cudaMemcpyDeviceToHost))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaMemcpy(vertexBuffer.Peek(), vboPt,
+            vertexBuffer.GetCount()*sizeof(float), cudaMemcpyDeviceToHost))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaMemcpy(triangleIdx.Peek(), vboTriangleIdxPt,
+            triangleIdx.GetCount()*sizeof(unsigned int), cudaMemcpyDeviceToHost))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaMemcpy(uncertainty.Peek(), vboUncertaintyPt,
+            uncertainty.GetCount()*sizeof(float), cudaMemcpyDeviceToHost))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaMemcpy(gradient.Peek(), this->externalForces_D.Peek(),
+            gradient.GetCount()*sizeof(float), cudaMemcpyDeviceToHost))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaMemcpy(targetVol.Peek(), targetVol_D,
+            targetVol.GetCount()*sizeof(float), cudaMemcpyDeviceToHost))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaMemcpy(targetActiveCells.Peek(), targetActiveCells_D,
+            targetActiveCells.GetCount()*sizeof(float), cudaMemcpyDeviceToHost))) {
+        return false;
+    }
+
+
+    // Loop over all corrupt triangles
+    for (int idx = 0; idx < this->triangleCnt; ++idx) {
+        // Check whether the triangle is corrupt
+        if (corruptTriangles.Peek()[idx] == 1.0f) {
+
+            // Get initial positions from main memory
+            uint baseIdx0 = vertexDataStride*triangleIdx.Peek()[3*idx+0];
+            uint baseIdx1 = vertexDataStride*triangleIdx.Peek()[3*idx+1];
+            uint baseIdx2 = vertexDataStride*triangleIdx.Peek()[3*idx+2];
+            float3 pos1 = make_float3(
+                    vertexBuffer.Peek()[baseIdx0+vertexDataOffsPos+0],
+                    vertexBuffer.Peek()[baseIdx0+vertexDataOffsPos+1],
+                    vertexBuffer.Peek()[baseIdx0+vertexDataOffsPos+2]);
+            float3 pos2 = make_float3(
+                    vertexBuffer.Peek()[baseIdx1+vertexDataOffsPos+0],
+                    vertexBuffer.Peek()[baseIdx1+vertexDataOffsPos+1],
+                    vertexBuffer.Peek()[baseIdx1+vertexDataOffsPos+2]);
+            float3 pos3 = make_float3(
+                    vertexBuffer.Peek()[baseIdx2+vertexDataOffsPos+0],
+                    vertexBuffer.Peek()[baseIdx2+vertexDataOffsPos+1],
+                    vertexBuffer.Peek()[baseIdx2+vertexDataOffsPos+2]);
+
+            // Get initial path lengths from previous morphing
+            float len1 = uncertainty.Peek()[triangleIdx.Peek()[3*idx+0]];
+            float len2 = uncertainty.Peek()[triangleIdx.Peek()[3*idx+1]];
+            float len3 = uncertainty.Peek()[triangleIdx.Peek()[3*idx+2]];
+
+            integralVal += this->IntUncertaintyOverCorruptAreaRec(
+                    pos1, pos2, pos3, // Vertex positions of the triangle
+                    len1, len2, len3,    // Vertex path lengths of the triangle
+                    (float4*)(gradient.Peek()),                      // External forces
+                    targetVol.Peek(),                      // The target volume
+                    targetActiveCells.Peek(),       // Active cells of the target volume
+                    minDisplScl,                           // Minimum displacement for convergence
+                    forcesScl,                             // General scaling factor for forces
+                    isovalue,                              // Isovalue
+                    corruptArea,
+                    0,
+                    (float*)&volOrg,
+                    (float*)&volDelta,
+                    (int*)&volDim,
+                    triArr,
+                    maxDepth,
+                    maxLevel,
+                    initStepSize);
+        }
+    }
+
+    // Cleanup
+    vertexBuffer.Release();
+    corruptTriangles.Release();
+    triangleIdx.Release();
+    uncertainty.Release();
+    gradient.Release();
+    targetVol.Release();
+    targetActiveCells.Release();
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(3, cudaTokens, 0))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+
+//    ::CheckForCudaErrorSync();
+
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[2]))) {
+        return false;
+    }
+
+
+    return integralVal;
 }
 
 
@@ -2852,7 +3886,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                 return false;
             }
             avgDisplLen /= static_cast<float>(this->vertexCnt);
-//            if (i%100 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+//            if (i%5 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
 //            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
@@ -2892,7 +3926,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                 return false;
             }
             avgDisplLen /= static_cast<float>(this->vertexCnt);
-            //if (i%100 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+//            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             //printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
@@ -2912,6 +3946,8 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             "%s: Time for mapping (%u iterations, %u vertices): %f sec\n",
             "DeformableGPUSurfaceMT",
             iterationsNeeded, this->vertexCnt, dt_ms/1000.0f);
+    //printf("Mapping : %.10f\n",
+    //        dt_ms/1000.0f);
 //#endif
 
     return CudaSafeCall(cudaGetLastError());

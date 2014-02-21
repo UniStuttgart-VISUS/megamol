@@ -1904,6 +1904,16 @@ bool GPUSurfaceMT::ComputeTriangles(
         return false;
     }
 
+//    // DEBUG print triangle indices
+//    HostArr<unsigned int> vboTriangleIdx;
+//    vboTriangleIdx.Validate(this->triangleCnt*3);
+//    cudaMemcpy(vboTriangleIdx.Peek(), vboTriangleIdxPt, vboTriangleIdxSize, cudaMemcpyDeviceToHost);
+//    for (int t = 0; t < 30; ++t) {
+//        printf("TRIANGLE %i: %u %u %u\n", t, vboTriangleIdx.Peek()[3*t+0],
+//                vboTriangleIdx.Peek()[3*t+1], vboTriangleIdx.Peek()[3*t+2]);
+//    }
+//    // END DEBUG
+
     // Unmap CUDA graphics resource
     if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->triangleIdxResource))) {
         return false;
