@@ -13,8 +13,8 @@
 
 #ifdef WITH_CUDA
 
-//#define USE_TIMER
-//#define VERBOSE
+#define USE_TIMER
+#define VERBOSE
 
 #include "VBODataCall.h"
 #include "VTIDataCall.h"
@@ -30,11 +30,15 @@
 #include "param/EnumParam.h"
 #include "param/FloatParam.h"
 #include "param/IntParam.h"
+#include "param/BoolParam.h"
 
 // For profiling
 #include <cuda_profiler_api.h>
 
 #include <cmath>
+#include <sstream>
+
+#include "vislib/ASCIIFileBuffer.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -47,9 +51,11 @@ const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
 //const float ComparativeMolSurfaceRenderer::qsIsoVal = 0.5f;
 
 // Hardcoded colors for surface rendering
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = Vec3f(0.7f, 0.8f, 0.4f);
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = Vec3f(0.0f, 0.3f, 0.8f);
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurfMapped = Vec3f(0.13f, 0.30f, 0.58f);
+//const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = Vec3f(0.7f, 0.8f, 0.4f);
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = Vec3f(0.7f, 0.8f, 0.4f);
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = Vec3f(0.0f, 0.3f, 0.8f);
+//const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = Vec3f(0.0f, 0.3f, 0.8f);
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurfMapped = Vec3f(0.7f, 0.8f, 0.4f);
 const Vec3f ComparativeMolSurfaceRenderer::colorMaxPotential = Vec3f(0.0f, 0.0f, 1.0f);
 const Vec3f ComparativeMolSurfaceRenderer::colorMinPotential = Vec3f(1.0f, 0.0f, 0.0f);
 
@@ -161,10 +167,15 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         qsRadSclSlot("quicksurf::qsRadScl","..."),
         qsGridDeltaSlot("quicksurf::qsGridDelta","..."),
         qsIsoValSlot("quicksurf::qsIsoVal","..."),
+        /* Subdivision */
+        showSubdivSlot("subdiv::show", "Parameter to toggle rendering of subdivided triangles"),
+        maxSubdivLevelSlot("subdiv::maxLevel", "Parameter for maximum subdivision level"),
+        maxSubdivStepsSlot("subdiv::maxSteps", "Parameter for maximum morphing steps"),
+        initSubDivStepSizeSlot("subdiv::initStepSize", "Initial stepsize"), triggerComputeSubdiv(true),
         cudaqsurf1(NULL), cudaqsurf2(NULL),
         triggerComputeVolume(true), triggerInitPotentialTex(true),
         triggerComputeSurfacePoints1(true), triggerComputeSurfacePoints2(true),
-        triggerSurfaceMapping(true), triggerRMSFit(true), triggerComputeLines(true) {
+        triggerSurfaceMapping(true), triggerRMSFit(true), triggerComputeLines(true), oldCalltime(-1.0){
 
     /* Make data caller/callee slots available */
 
@@ -497,6 +508,30 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->qsIsoValSlot.SetParameter(
             new core::param::FloatParam(this->qsIsoVal));
     this->MakeSlotAvailable(&this->qsIsoValSlot);
+
+    /* Subdivision parameters */
+
+    // Parameter to toggle rendering of subdivided triangles
+    this->showSubdiv = false;
+    this->showSubdivSlot.SetParameter(
+                new core::param::BoolParam(this->showSubdiv));
+    this->MakeSlotAvailable(&this->showSubdivSlot);
+
+    // Parameter for maximum subdivision level
+    this->maxSubdivLevel = 0;
+    this->maxSubdivLevelSlot.SetParameter(new core::param::IntParam(this->maxSubdivLevel, 0));
+    this->MakeSlotAvailable(&this->maxSubdivLevelSlot);
+
+    // Parameter for maximum morphing steps
+    this->maxSubdivSteps = 0;
+    this->maxSubdivStepsSlot.SetParameter(new core::param::IntParam(this->maxSubdivSteps, 0));
+    this->MakeSlotAvailable(&this->maxSubdivStepsSlot);
+
+    // Parameter for initial stepsize
+    this->initSubDivStepSize = 1.0f;
+    this->initSubDivStepSizeSlot.SetParameter(
+            new core::param::FloatParam(this->initSubDivStepSize));
+    this->MakeSlotAvailable(&this->initSubDivStepSizeSlot);
 }
 
 
@@ -1002,6 +1037,56 @@ atoms instead.",
             posCnt = std::min(posCnt1, posCnt2);
         }
 
+//        for (int i = 0; i < posCnt; ++i) {
+//            printf("pos1 %f %f %f, pos2 %f %f %f\n",
+//                    this->rmsPosVec1.Peek()[3*i+0],
+//                    this->rmsPosVec1.Peek()[3*i+1],
+//                    this->rmsPosVec1.Peek()[3*i+2],
+//                    this->rmsPosVec2.Peek()[3*i+0],
+//                    this->rmsPosVec2.Peek()[3*i+1],
+//                    this->rmsPosVec2.Peek()[3*i+2]);
+//        }
+
+//        // Compute centroid 1
+//        Vec3f centroid1;
+//        centroid1.Set(0,0,0);
+//        for (int cnt = 0; cnt < static_cast<int>(posCnt); ++cnt) {
+//            centroid1 += Vec3f(
+//                    this->rmsPosVec1.Peek()[cnt*3+0],
+//                    this->rmsPosVec1.Peek()[cnt*3+1],
+//                    this->rmsPosVec1.Peek()[cnt*3+2]);
+//        }
+//        centroid1 /= static_cast<float>(posCnt);
+//
+//        printf("centroid1 %.10f %.10f %.10f\n",
+//                centroid1.PeekComponents()[0],
+//                centroid1.PeekComponents()[1],
+//                centroid1.PeekComponents()[2]);
+
+
+        // Compute centroid
+        for (int cnt = 0; cnt < static_cast<int>(posCnt); ++cnt) {
+            this->rmsCentroid += Vec3f(
+                    this->rmsPosVec2.Peek()[cnt*3+0],
+                    this->rmsPosVec2.Peek()[cnt*3+1],
+                    this->rmsPosVec2.Peek()[cnt*3+2]);
+        }
+        this->rmsCentroid /= static_cast<float>(posCnt);
+//        printf("posCnt %u\n", posCnt);
+
+//        for (int cnt = 0; cnt < static_cast<int>(mol2->AtomCount()); ++cnt) {
+//            this->rmsCentroid += Vec3f(
+//                    mol2->AtomPositions()[cnt*3+0],
+//                    mol2->AtomPositions()[cnt*3+1],
+//                    mol2->AtomPositions()[cnt*3+2]);
+//        }
+//        this->rmsCentroid /= static_cast<float>(mol2->AtomCount());
+
+//        printf("centroid2   %.10f %.10f %.10f\n",
+//                this->rmsCentroid.PeekComponents()[0],
+//                this->rmsCentroid.PeekComponents()[1],
+//                this->rmsCentroid.PeekComponents()[2]);
+
         // Do actual RMSD calculations
         this->rmsMask.Validate(posCnt);
         this->rmsWeights.Validate(posCnt);
@@ -1036,6 +1121,12 @@ atoms instead.",
         this->rmsRotation.SetAt(2, 1, rotation[2][1]);
         this->rmsRotation.SetAt(2, 2, rotation[2][2]);
 
+//        printf("translation %.10f %.10f %.10f\n", translation[0],translation[1],translation[2]);
+//        printf("rotation %.10f %.10f %.10f \n %.10f %.10f %.10f \n %.10f %.10f %.10f\n",
+//                rotation[0][0], rotation[0][1], rotation[0][2],
+//                rotation[1][0], rotation[1][1], rotation[1][2],
+//                rotation[2][0], rotation[2][1], rotation[2][2]);
+
 
         this->rmsRotationMatrix.SetAt(0, 0, rotation[0][0]);
         this->rmsRotationMatrix.SetAt(0, 1, rotation[0][1]);
@@ -1061,18 +1152,8 @@ atoms instead.",
 
     /* Fit atom positions of source structure */
     this->atomPosFitted.Validate(mol2->AtomCount()*3);
-    this->rmsCentroid.Set(0.0f, 0.0f, 0.0f);
 
     if (this->fittingMode != RMS_NONE) {
-
-        // Compute centroid
-        for (int cnt = 0; cnt < static_cast<int>(mol2->AtomCount()); ++cnt) {
-            this->rmsCentroid += Vec3f(
-                    mol2->AtomPositions()[cnt*3+0],
-                    mol2->AtomPositions()[cnt*3+1],
-                    mol2->AtomPositions()[cnt*3+2]);
-        }
-        this->rmsCentroid /= static_cast<float>(mol2->AtomCount());
 
         // Rotate/translate positions
 #pragma omp parallel for
@@ -1093,6 +1174,16 @@ atoms instead.",
             this->atomPosFitted.Peek()[3*a+2] = mol2->AtomPositions()[3*a+2];
         }
     }
+
+//    for (int a = 0; a <  mol1->AtomCount(); ++a) {
+//    printf("pos1 %f %f %f, pos2 (fitted) %f %f %f\n",
+//            mol1->AtomPositions()[3*a+0],
+//            mol1->AtomPositions()[3*a+1],
+//            mol1->AtomPositions()[3*a+2],
+//            this->atomPosFitted.Peek()[3*a+0],
+//            this->atomPosFitted.Peek()[3*a+1],
+//            this->atomPosFitted.Peek()[3*a+2]);
+//    }
 
     return true;
 }
@@ -1495,6 +1586,13 @@ void ComparativeMolSurfaceRenderer::release(void) {
     this->deformSurf1.Release();
     this->deformSurf2.Release();
     this->deformSurfMapped.Release();
+
+#ifdef USE_PROCEDURAL_DATA
+    this->procField1D.Release();
+    this->procField2D.Release();
+    this->procField1.Release();
+    this->procField2.Release();
+#endif // USE_PROCEDURAL_DATA
 }
 
 
@@ -1520,6 +1618,15 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     }
 
     float calltime = cr3d->Time();
+
+    if (this->oldCalltime != calltime) {
+        this->triggerRMSFit = true;
+        this->triggerComputeVolume = true;
+        this->triggerInitPotentialTex = true;
+        this->triggerComputeSurfacePoints1 = true;
+        this->triggerSurfaceMapping = true;
+        this->triggerComputeLines = true;
+    }
     int frameIdx1, frameIdx2;
 
     // Determine frame indices to be loaded based on 'compareFrames' parameter
@@ -1531,6 +1638,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // One frame of data set #0 is compared to all frames of data set #1
         frameIdx1 = this->singleFrame1;
         frameIdx2 = static_cast<int>(calltime);
+
     } else if (this->cmpMode == COMPARE_N_1) {
         // One frame of data set #1 is compared to all frames of data set #0
         frameIdx1 = static_cast<int>(calltime);
@@ -1543,6 +1651,10 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     } else {
         return false; // Invalid compare mode
     }
+
+    //printf("Frame1 %u, frame2 %u\n", frameIdx1, frameIdx2);
+
+
 
     // Get surface texture of data set #1
     VTIDataCall *vti1 =
@@ -1566,6 +1678,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     if (!(*vti2)(VTIDataCall::CallForGetData)) {
         return false;
     }
+
 
     // Get the particle data calls
     MolecularDataCall *mol1 = this->molDataSlot1.CallAs<MolecularDataCall>();
@@ -1661,6 +1774,15 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+#ifdef USE_PROCEDURAL_DATA
+        if (!this->initProcFieldData()) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute procedural field data",
+                    this->ClassName());
+            return false;
+        }
+#endif
+
         this->triggerComputeVolume = false;
         this->triggerComputeSurfacePoints1 = true;
         this->triggerComputeSurfacePoints2 = true;
@@ -1725,7 +1847,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Get vertex positions based on the level set
         if (!this->deformSurf1.ComputeVertexPositions(
+#ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField1D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                 this->volDim,
                 this->volOrg,
                 this->volDelta,
@@ -1748,7 +1874,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Build triangle mesh from vertices
         if (!this->deformSurf1.ComputeTriangles(
+#ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField1D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                 this->volDim,
                 this->volOrg,
                 this->volDelta,
@@ -1771,7 +1901,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Compute vertex connectivity
         if (!this->deformSurf1.ComputeConnectivity(
+#ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField1D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                 this->volDim,
                 this->volOrg,
                 this->volDelta,
@@ -1794,7 +1928,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Regularize the mesh of surface #1
         if (!this->deformSurf1.MorphToVolumeGradient(
+#ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField1D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                 this->volDim,
                 this->volOrg,
                 this->volDelta,
@@ -1823,7 +1961,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Compute vertex normals
         if (!this->deformSurf1.ComputeNormals(
+#ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField1D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                 this->volDim,
                 this->volOrg,
                 this->volDelta,
@@ -1872,7 +2014,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Get vertex positions based on the level set
         if (!this->deformSurf2.ComputeVertexPositions(
+#ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                 this->volDim,
                 this->volOrg,
                 this->volDelta,
@@ -1893,7 +2039,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Build triangle mesh from vertices
         if (!this->deformSurf2.ComputeTriangles(
+#ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                 this->volDim,
                 this->volOrg,
                 this->volDelta,
@@ -1914,7 +2064,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Compute vertex connectivity
         if (!this->deformSurf2.ComputeConnectivity(
+#ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                 this->volDim,
                 this->volOrg,
                 this->volDelta,
@@ -1935,7 +2089,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Regularize the mesh of surface #2
         if (!this->deformSurf2.MorphToVolumeGradient(
+#ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                 this->volDim,
                 this->volOrg,
                 this->volDelta,
@@ -1962,7 +2120,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Compute vertex normals
         if (!this->deformSurf2.ComputeNormals(
+#ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                 this->volDim,
                 this->volOrg,
                 this->volDelta,
@@ -2022,8 +2184,16 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
             // Morph surface #2 to shape #1 using GVF
             if (!this->deformSurfMapped.MorphToVolumeGVF(
-                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField1D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                     this->deformSurf1.PeekCubeStates(),
                     this->volDim,
                     this->volOrg,
@@ -2055,7 +2225,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
             // Morph surface #2 to shape #1 using implicit molecular surface
             if (!this->deformSurfMapped.MorphToVolumeGradient(
-                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField1D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                     this->volDim,
                     this->volOrg,
                     this->volDelta,
@@ -2083,7 +2257,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
             // Morph surface #2 to shape #1 using implicit molecular surface + distance field
             if (!this->deformSurfMapped.MorphToVolumeDistfield(
-                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField1D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                     this->volDim,
                     this->volOrg,
                     this->volDelta,
@@ -2113,8 +2291,16 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             // Morph surface #2 to shape #1 using Two-Way-GVF
 
             if (!this->deformSurfMapped.MorphToVolumeTwoWayGVF(
-                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField1D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                     this->deformSurf2.PeekCubeStates(),
                     this->deformSurf1.PeekCubeStates(),
                     this->volDim,
@@ -2149,7 +2335,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Compute vertex normals
         if (!this->deformSurfMapped.ComputeNormals(
+#ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                 this->volDim,
                 this->volOrg,
                 this->volDelta,
@@ -2182,7 +2372,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Flag vertices adjacent to corrupt triangles
         if (!this->deformSurfMapped.FlagCorruptTriangles(
+#ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField1D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
                 this->deformSurf1.PeekCubeStates(),
                 this->volDim,
                 this->volOrg,
@@ -2192,7 +2386,16 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         }
 
         this->triggerSurfaceMapping = false;
+        this->triggerComputeSubdiv = true;
     }
+
+    // DEBUG
+    if (this->triggerComputeSubdiv) {
+    if (!this->computeSurfaceInfo()) {
+        return false;
+    }
+    }
+    // END DEBUG
 
     // Get camera information
     this->cameraInfo =  dynamic_cast<core::view::AbstractCallRender3D*>(&call)->GetCameraParameters();
@@ -2242,10 +2445,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         glPushMatrix();
 
         // Perform RMSD translation/rotation to fit the surface rendering
-        glTranslatef(this->rmsTranslation.X(), this->rmsTranslation.Y(), this->rmsTranslation.Z());
-        glMultMatrixf(this->rmsRotationMatrix.PeekComponents());
-        glTranslatef(-this->rmsCentroid.X(), -this->rmsCentroid.Y(), -this->rmsCentroid.Z());
-
+        if (this->fittingMode != RMS_NONE) {
+            glTranslatef(this->rmsTranslation.X(), this->rmsTranslation.Y(), this->rmsTranslation.Z());
+            glMultMatrixf(this->rmsRotationMatrix.PeekComponents());
+            glTranslatef(-this->rmsCentroid.X(), -this->rmsCentroid.Y(), -this->rmsCentroid.Z());
+        }
 
         // Revert scaling done by external renderer in advance
         float scaleRevert;
@@ -2290,6 +2494,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     }
     // END DEBUG
 
+
     if (this->surface1RM != SURFACE_NONE) {
 
         // Sort triangles by camera distance
@@ -2327,41 +2532,41 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
-//        // Render surface #2
-//        if (!this->renderSurface(
-//                this->deformSurf2.GetVtxDataVBO(),
-//                this->deformSurf2.GetVertexCnt(),
-//                this->deformSurf2.GetTriangleIdxVBO(),
-//                this->deformSurf2.GetTriangleCnt()*3,
-//                this->surface2RM,
-//                this->surface2ColorMode,
-//                this->surfAttribTex2,
-//                this->uniformColorSurf2,
-//                this->surf2AlphaScl)) {
-//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                    "%s: could not render surface #2",
-//                    this->ClassName());
-//            return false;
-//        }
-
-        // Render mapped surface
-        if (!this->renderMappedSurface(
+        // Render surface #2
+        if (!this->renderSurface(
                 this->deformSurf2.GetVtxDataVBO(),
-//                this->deformSurfMapped.GetVtxDataVBO(),
-//                this->deformSurfMapped.GetVertexCnt(),
-//                this->deformSurfMapped.GetTriangleIdxVBO(),
-//                this->deformSurfMapped.GetTriangleCnt()*3,
-                this->deformSurf2.GetVtxDataVBO(),
-                 this->deformSurf2.GetVertexCnt(),
-                 this->deformSurf2.GetTriangleIdxVBO(),
-                 this->deformSurf2.GetTriangleCnt()*3,
+                this->deformSurf2.GetVertexCnt(),
+                this->deformSurf2.GetTriangleIdxVBO(),
+                this->deformSurf2.GetTriangleCnt()*3,
                 this->surface2RM,
-                this->surfaceMappedColorMode)) {
+                this->surface2ColorMode,
+                this->surfAttribTex2,
+                this->uniformColorSurf2,
+                this->surf2AlphaScl)) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not render mapped surface",
+                    "%s: could not render surface #2",
                     this->ClassName());
             return false;
         }
+
+//        // Render mapped surface
+//        if (!this->renderMappedSurface(
+//                this->deformSurf2.GetVtxDataVBO(),
+////                this->deformSurfMapped.GetVtxDataVBO(),
+////                this->deformSurfMapped.GetVertexCnt(),
+////                this->deformSurfMapped.GetTriangleIdxVBO(),
+////                this->deformSurfMapped.GetTriangleCnt()*3,
+//                this->deformSurf2.GetVtxDataVBO(),
+//                 this->deformSurf2.GetVertexCnt(),
+//                 this->deformSurf2.GetTriangleIdxVBO(),
+//                 this->deformSurf2.GetTriangleCnt()*3,
+//                this->surface2RM,
+//                this->surfaceMappedColorMode)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not render mapped surface",
+//                    this->ClassName());
+//            return false;
+//        }
     }
 
     if (this->surfaceMappedRM != SURFACE_NONE) {
@@ -2398,6 +2603,23 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //    glEnd();
 //    // DEBUG end
 
+    // DEBUG Show subdivided triangles
+    if (this->showSubdiv) {
+        glLineWidth(2.0f);
+        glDisable(GL_CULL_FACE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glColor3f(1.0, 1.0, 1.0);
+        glBegin(GL_TRIANGLES);
+        for (size_t t = 0; t < this->subDivTris.Count()/9; ++t) {
+            glVertex3f(this->subDivTris[9*t+0], this->subDivTris[9*t+1], this->subDivTris[9*t+2]);
+            glVertex3f(this->subDivTris[9*t+3], this->subDivTris[9*t+4], this->subDivTris[9*t+5]);
+            glVertex3f(this->subDivTris[9*t+6], this->subDivTris[9*t+7], this->subDivTris[9*t+8]);
+        }
+        glEnd();
+    }
+    // END DEBUG
+
+
     glDisable(GL_TEXTURE_3D);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
@@ -2413,6 +2635,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     vti1->Unlock();
     vti2->Unlock();
 
+    this->oldCalltime = calltime;
     return CheckForGLError();
 }
 
@@ -2570,7 +2793,7 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
     if (renderMode == SURFACE_FILL) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     } else if (renderMode == SURFACE_WIREFRAME) {
-        glLineWidth(3.0f);
+        glLineWidth(1.0f);
         glCullFace(GL_BACK);
         glEnable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -3110,8 +3333,193 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->qsIsoValSlot.ResetDirty();
         this->triggerComputeVolume = true;
     }
+
+    /* Subdivision */
+
+    /// Parameter to toggle rendering of subdivided triangles
+    if (this->showSubdivSlot.IsDirty()) {
+        this->showSubdiv = this->showSubdivSlot.Param<core::param::BoolParam>()->Value();
+        this->showSubdivSlot.ResetDirty();
+        this->triggerComputeSubdiv = true;
+    }
+
+    /// Parameter for maximum subdivision level
+    if (this->maxSubdivLevelSlot.IsDirty()) {
+        this->maxSubdivLevel = this->maxSubdivLevelSlot.Param<core::param::IntParam>()->Value();
+        this->maxSubdivLevelSlot.ResetDirty();
+        this->triggerComputeSubdiv = true;
+    }
+
+    /// Parameter for maximum morphing steps
+    if (this->maxSubdivStepsSlot.IsDirty()) {
+        this->maxSubdivSteps = this->maxSubdivStepsSlot.Param<core::param::IntParam>()->Value();
+        this->maxSubdivStepsSlot.ResetDirty();
+        this->triggerComputeSubdiv = true;
+    }
+
+    /// Parameter for initial stepsize
+    if (this->initSubDivStepSizeSlot.IsDirty()) {
+        this->initSubDivStepSize = this->initSubDivStepSizeSlot.Param<core::param::FloatParam>()->Value();
+        this->initSubDivStepSizeSlot.ResetDirty();
+        this->triggerComputeSubdiv = true;
+    }
 }
 
+#ifdef USE_PROCEDURAL_DATA
+/*
+ * ComparativeMolSurfaceRenderer::initProcFieldData
+ */
+bool ComparativeMolSurfaceRenderer::initProcFieldData() {
+    typedef vislib::math::Vector<float, 3> Vec3f;
+
+//    printf("vol dim %i %i %i\n", this->volDim.x, this->volDim.y, this->volDim.z);
+    size_t fieldSize = this->volDim.x*this->volDim.y*this->volDim.z;
+    // Allocate memory
+    if (!CudaSafeCall(this->procField1D.Validate(fieldSize))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->procField2D.Validate(fieldSize))) {
+        return false;
+    }
+    this->procField1.Validate(fieldSize);
+    this->procField2.Validate(fieldSize);
+    this->procField1.Set(0x00);
+    this->procField2.Set(0x00);
+
+    HostArr<float> testField1;
+    HostArr<float> testField2;
+
+    testField1.Validate(fieldSize);
+    testField2.Validate(fieldSize);
+    testField1.Set(0x00);
+    testField2.Set(0x00);
+
+    // Copy to device array
+    if (!CudaSafeCall(cudaMemcpy(testField1.Peek(),
+            ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                                 sizeof(float)*fieldSize,
+                                 cudaMemcpyDeviceToHost))) {
+        return false;
+    }
+    // Copy to device array
+    if (!CudaSafeCall(cudaMemcpy(testField2.Peek(),
+            ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                                 sizeof(float)*fieldSize,
+                                 cudaMemcpyDeviceToHost))) {
+        return false;
+    }
+
+    /* Alternative 1: Generate two spheres with different radii */
+
+    const float rad1 = 15.0f;
+    const float rad2 = 20.0f;
+    Vec3f center(
+            this->volOrg.x + (this->volMaxC.x-this->volOrg.x)*0.5,
+            this->volOrg.y + (this->volMaxC.y-this->volOrg.y)*0.5,
+            this->volOrg.z + (this->volMaxC.z-this->volOrg.z)*0.5);
+    // Loop through all grid points
+    for (int x = 0; x < static_cast<int>(this->volDim.x); ++x) {
+        for (int y = 0; y < static_cast<int>(this->volDim.y); ++y) {
+            for (int z = 0; z < static_cast<int>(this->volDim.z); ++z) {
+                Vec3f pos(this->volOrg.x + x*this->volDelta.x,
+                          this->volOrg.y + y*this->volDelta.y,
+                          this->volOrg.z + z*this->volDelta.z);
+
+                float a1 = 1.0;
+                float c1 = 250.0;
+                float a2 = 1.0;
+                float c2 = 120.0;
+                float len = (pos-center).Length();
+                float lenSqrt = len*len;
+//                this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = a1*std::exp(lenSqrt/(4.0*c1));
+//                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = a2*std::exp(lenSqrt/(4.0*c2));
+
+                this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = std::exp(-lenSqrt/(4.0*c1));
+                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = std::exp(-lenSqrt/(4.0*c2));
+
+//                printf("f1: %f, f2: %f\n",
+//                        this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x],
+//                        this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x]);
+
+//                if ((pos-center).Length() <= rad1) {
+//                    this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = this->qsIsoVal+1.0;
+//                } else {
+//                    this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = this->qsIsoVal-1.0;
+//                }
+//                if ((pos-center).Length() <= rad2) {
+//                    this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = this->qsIsoVal+1.0;
+//                } else {
+//                    this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = this->qsIsoVal-1.0;
+//                }
+            }
+        }
+    }
+
+    // Copy to device array
+    if (!CudaSafeCall(cudaMemcpy(this->procField1D.Peek(),
+                                 this->procField1.Peek(),
+                                 sizeof(float)*fieldSize,
+                                 cudaMemcpyHostToDevice))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaMemcpy(this->procField2D.Peek(),
+                                 this->procField2.Peek(),
+                                 sizeof(float)*fieldSize,
+                                 cudaMemcpyHostToDevice))) {
+        return false;
+    }
+
+
+    testField1.Release();
+    testField2.Release();
+    return true;
+}
+#endif // USE_PROCEDUAL_DATA
+
+
+/*
+ * ComparativeMolSurfaceRenderer::computeSurfaceInfo
+ */
+bool ComparativeMolSurfaceRenderer::computeSurfaceInfo() {
+
+    this->subDivTris.SetCount(0);
+
+    //    // DEBUG NEW: Treatment of corrupt triangle areas using virtual subdivision
+    // Compute surface area
+    float validSurfArea = this->deformSurfMapped.GetTotalValidSurfArea();
+    float corruptArea;
+    float meanVertexPath = this->deformSurfMapped.IntUncertaintyOverSurfArea();
+    float corruptSubdivUncertainty = this->deformSurfMapped.IntUncertaintyOverCorruptSurfArea(
+            corruptArea, // Corrupt area
+            this->qsGridDelta/100.0f*this->surfaceMappingForcesScl, // minDisplScl
+            this->qsIsoVal,
+            this->surfaceMappingForcesScl,
+            const_cast<unsigned int*>(this->deformSurfMapped.PeekCubeStates()),
+#ifndef USE_PROCEDURAL_DATA
+            ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#else
+            this->procField1D.Peek(),
+#endif
+            this->volDim,
+            this->volOrg,
+            this->volDelta,
+            this->subDivTris,
+            this->maxSubdivSteps,
+            this->maxSubdivLevel,
+            this->initSubDivStepSize);
+
+//    printf("Surface area %f\n", validSurfArea);
+//    printf("Corrupt area %.16f\n", corruptArea);
+//    printf("Mean vertex path %f\n", meanVertexPath);
+//    printf("Original uncertainty %f\n", meanVertexPath/(corruptArea+validSurfArea));
+//    printf("Additional uncertainty %.16f\n", corruptSubdivUncertainty/(corruptArea+validSurfArea));
+//    printf("Radius should be %f\n", std::sqrt(validSurfArea/(4.0*M_PI)));
+
+    this->triggerComputeSubdiv = false;
+
+    return true;
+}
 
 #endif // WITH_CUDA
+
 

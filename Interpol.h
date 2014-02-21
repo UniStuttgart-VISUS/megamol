@@ -13,6 +13,12 @@
 
 #include "vislib/Matrix.h"
 
+#ifdef WITH_CUDA
+#include "cuda_helper.h"
+#include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
+#endif
+
 namespace megamol {
 namespace protein {
 
@@ -27,7 +33,7 @@ public:
      * @param alpha, beta, gamma The coordinates inside the cell
      */
     template <class T>
-    static T Lin(const T n0, const T n1, float alpha);
+    inline static T Lin(const T n0, const T n1, float alpha);
 
     /**
      * Executes bilinear interpolation based on four neighbor values and
@@ -37,7 +43,7 @@ public:
      * @param alpha, beta, gamma The coordinates inside the cell
      */
     template <class T>
-    static T Bilin(const T n0, const T n1, const T n2, const T n3,
+    inline static T Bilin(const T n0, const T n1, const T n2, const T n3,
             float alpha, float beta);
 
     /**
@@ -49,7 +55,7 @@ public:
      * @param alpha, beta, gamma The coordinates inside the cell
      */
     template <class T>
-    static T Trilin(const T n0, const T n1, const T n2, const T n3,
+    inline static T Trilin(const T n0, const T n1, const T n2, const T n3,
             const T n4, const T n5, const T n6, const T n7, float alpha,
             float beta, float gamma);
 
@@ -61,7 +67,7 @@ public:
      * @param alpha, beta, gamma The coordinates inside the cell
      */
     template <class T>
-    static T Cubic(T n[4], float alpha);
+    inline static T Cubic(T n[4], float alpha);
 
     /**
      * Executes bicubic interpolation based on 16 neighbor values and
@@ -71,7 +77,7 @@ public:
      * @param alpha, beta, gamma The coordinates inside the cell
      */
     template <class T>
-    static T Bicubic(T n[4][4], float alpha, float beta);
+    inline static T Bicubic(T n[4][4], float alpha, float beta);
 
     /**
      * Executes tricubic interpolation based on 64 neighbor values and
@@ -82,7 +88,7 @@ public:
      * @param alpha, beta, gamma The coordinates inside the cell
      */
     template <class T>
-    static T Tricubic(T n[4][4][4], float alpha, float beta,
+    inline static T Tricubic(T n[4][4][4], float alpha, float beta,
             float gamma);
 };
 
@@ -91,7 +97,7 @@ public:
  * Interpol::LinInterp
  */
 template <class T>
-T Interpol::Lin(const T n0, const T n1, float alpha) {
+inline T Interpol::Lin(const T n0, const T n1, float alpha) {
     return (1.0f - alpha)*n0 + alpha*n1;
 }
 
@@ -100,7 +106,7 @@ T Interpol::Lin(const T n0, const T n1, float alpha) {
  * Interpol::BilinInterp
  */
 template <class T>
-T Interpol::Bilin(const T n0, const T n1, const T n2,
+inline T Interpol::Bilin(const T n0, const T n1, const T n2,
         const T n3, float alpha, float beta) {
 
     T a, b, c, d;
@@ -117,7 +123,7 @@ T Interpol::Bilin(const T n0, const T n1, const T n2,
  * Interpol::TrilinInterp
  */
 template <class T>
-T Interpol::Trilin(const T n0, const T n1, const T n2, const T n3,
+inline T Interpol::Trilin(const T n0, const T n1, const T n2, const T n3,
         const T n4, const T n5, const T n6, const T n7, float alpha,
         float beta, float gamma) {
 
@@ -140,7 +146,7 @@ T Interpol::Trilin(const T n0, const T n1, const T n2, const T n3,
  * Interpol::CubInterp
  */
 template <class T>
-T Interpol::Cubic(T n[4], float alpha) {
+inline T Interpol::Cubic(T n[4], float alpha) {
     //  see http://www.paulinternet.nl/?page=bicubic
     return n[1] + 0.5*alpha*(n[2] - n[0] + alpha*(2.0*n[0] - 5.0*n[1] +
             4.0*n[2] - n[3] + alpha*(3.0*(n[1] - n[2]) + n[3] - n[0])));
@@ -151,7 +157,7 @@ T Interpol::Cubic(T n[4], float alpha) {
  * Interpol::BicubInterp
  */
 template <class T>
-T Interpol::Bicubic(T n[4][4], float alpha, float beta) {
+inline T Interpol::Bicubic(T n[4][4], float alpha, float beta) {
     // see http://www.paulinternet.nl/?page=bicubic
     double arr[4];
     arr[0] = Interpol::Cubic(n[0], beta);
@@ -166,7 +172,7 @@ T Interpol::Bicubic(T n[4][4], float alpha, float beta) {
  * Interpol::TricubInterp
  */
 template <class T>
-T Interpol::Tricubic(T n[4][4][4], float alpha, float beta, float gamma) {
+inline T Interpol::Tricubic(T n[4][4][4], float alpha, float beta, float gamma) {
     // see http://www.paulinternet.nl/?page=bicubic
     double arr[4];
     arr[0] = Interpol::Bicubic(n[0], beta, gamma);
@@ -174,6 +180,55 @@ T Interpol::Tricubic(T n[4][4][4], float alpha, float beta, float gamma) {
     arr[2] = Interpol::Bicubic(n[2], beta, gamma);
     arr[3] = Interpol::Bicubic(n[3], beta, gamma);
     return Interpol::Cubic(arr, alpha);
+}
+
+/**
+ * Samples the field at a given position using linear interpolation.
+ *
+ * @param pos The position
+ * @return The sampled value of the field
+ */
+template <typename T>
+inline T SampleFieldAtPosTrilin(
+        float pos[3],
+        T *field,
+        float gridOrg[3],
+        float gridDelta[3],
+        int gridSize[3]) {
+
+    int c[3];
+    float f[3];
+
+    // Get id of the cell containing the given position and interpolation
+    // coefficients
+    f[0] = (pos[0]-gridOrg[0])/gridDelta[0];
+    f[1] = (pos[1]-gridOrg[1])/gridDelta[1];
+    f[2] = (pos[2]-gridOrg[2])/gridDelta[2];
+    c[0] = (int)(f[0]);
+    c[1] = (int)(f[1]);
+    c[2] = (int)(f[2]);
+    f[0] = f[0]-(float)c[0]; // alpha
+    f[1] = f[1]-(float)c[1]; // beta
+    f[2] = f[2]-(float)c[2]; // gamma
+
+    c[0] = std::min(std::max(c[0], int(0)), gridSize[0]-2);
+    c[1] = std::min(std::max(c[1], int(0)), gridSize[1]-2);
+    c[2] = std::min(std::max(c[2], int(0)), gridSize[2]-2);
+
+    // Get values at corners of current cell
+    T s[8];
+    s[0] = field[gridSize[0]*(gridSize[1]*(c[2]+0) + (c[1]+0))+c[0]+0];
+    s[1] = field[gridSize[0]*(gridSize[1]*(c[2]+0) + (c[1]+0))+c[0]+1];
+    s[2] = field[gridSize[0]*(gridSize[1]*(c[2]+0) + (c[1]+1))+c[0]+0];
+    s[3] = field[gridSize[0]*(gridSize[1]*(c[2]+0) + (c[1]+1))+c[0]+1];
+    s[4] = field[gridSize[0]*(gridSize[1]*(c[2]+1) + (c[1]+0))+c[0]+0];
+    s[5] = field[gridSize[0]*(gridSize[1]*(c[2]+1) + (c[1]+0))+c[0]+1];
+    s[6] = field[gridSize[0]*(gridSize[1]*(c[2]+1) + (c[1]+1))+c[0]+0];
+    s[7] = field[gridSize[0]*(gridSize[1]*(c[2]+1) + (c[1]+1))+c[0]+1];
+
+    // Use trilinear interpolation to sample the volume
+   return Interpol::Trilin<T>(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], f[0],
+           f[1], f[2]);
 }
 
 } // end namespace protein

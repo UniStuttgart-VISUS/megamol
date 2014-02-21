@@ -17,6 +17,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "GPUSurfaceMT.h"
+#include "vislib/Array.h"
 
 namespace megamol {
 namespace protein {
@@ -207,6 +208,36 @@ public:
     float IntUncertaintyOverSurfArea();
 
     /**
+     * Integrate scalar value over corrupt surface area by using virtual
+     * subdivision.
+     *
+     * TODO
+     * @return The integral value
+     */
+    float IntOverCorruptSurfArea();
+
+    /**
+     * Integrate uncertainty value over corrupt surface area.
+     *
+     * TODO
+     * @return The integral value
+     */
+    float IntUncertaintyOverCorruptSurfArea(
+            float &corruptArea,
+            float minDisplScl,
+            float isovalue,
+            float forcesScl,
+            unsigned int *targetActiveCells_D,
+            float *targetVol_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            vislib::Array<float> &triArr,
+            int maxSteps,
+            int maxLevel,
+            float initStepSize);
+
+    /**
      * TODO
      */
     bool MorphToVolumeGradient(
@@ -382,6 +413,23 @@ protected:
             bool externalForcesOnly=false,
             bool useThinPlate=true);
 
+    float IntUncertaintyOverCorruptAreaRec(
+            float3 pos1, float3 pos2, float3 pos3, // Vertex positions of the triangle
+            float len1, float len2, float len3,    // Vertex path lengths of the triangle
+            float4 *gradient,                      // External forces
+            float *targetVol,                      // The target volume
+            unsigned int *targetActiveCells,       // Active cells of the target volume
+            float minDisplScl,                     // Minimum displacement for convergence
+            float forcesScl,                       // General scaling factor for forces
+            float isovalue,                        // Isovalue
+            float &triArea,
+            uint depth,
+            float org[3], float delta[3], int dim[3],
+            vislib::Array<float> &triArr,
+            int maxSteps,
+            int maxLevel,
+            float initStepSize);
+
 private:
 
     /* Device arrays for external forces */
@@ -425,6 +473,8 @@ private:
     /// Device area needed to accumulate triangle data
     CudaDevArr<float> accTriangleData_D;
 
+    // Device array that flags corrupt triangles
+    CudaDevArr<float> intUncertaintyCorrupt_D;
 };
 
 } // namespace protein

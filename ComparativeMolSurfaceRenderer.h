@@ -16,6 +16,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+// Toggle the use of procedural volume fields for debugging purposes
+//#define USE_PROCEDURAL_DATA
+
 #include "view/Renderer3DModuleDS.h"
 #include "CallerSlot.h"
 #include "CalleeSlot.h"
@@ -314,6 +317,17 @@ protected:
 
 private:
 
+#ifdef USE_PROCEDURAL_DATA
+    /**
+     * Initializes procedural fields for debugging purposes
+     *
+     * @return 'true' on success, 'false' otherwise
+     */
+    bool initProcFieldData();
+#endif
+
+    bool computeSurfaceInfo();
+
     /* Data caller/callee slots */
 
     /// Callee slot for slave renderer #1
@@ -530,6 +544,27 @@ private:
     megamol::core::param::ParamSlot qsIsoValSlot;
     float qsIsoVal;
 
+    /* Parameters for subdivision */
+
+    /// Parameter to toggle rendering of subdivided triangles
+    megamol::core::param::ParamSlot showSubdivSlot;
+    bool showSubdiv;
+
+    /// Parameter for maximum subdivision level
+    megamol::core::param::ParamSlot maxSubdivLevelSlot;
+    int maxSubdivLevel;
+
+    /// Parameter for maximum morphing steps
+    megamol::core::param::ParamSlot maxSubdivStepsSlot;
+    int maxSubdivSteps;
+
+    /// Parameter for initial stepsize
+    megamol::core::param::ParamSlot initSubDivStepSizeSlot;
+    float initSubDivStepSize;
+
+    /// Boolean flag that triggers recomputation of the subdivision
+    bool triggerComputeSubdiv;
+
 
     /* Volume generation */
 
@@ -562,6 +597,8 @@ private:
 
     /// Parameter for iso value for volume rendering
     //static const float qsIsoVal;
+
+
 
 
     /* Hardcoded colors for surface rendering */
@@ -682,6 +719,18 @@ private:
     vislib::Array<float> lineColors;
     bool triggerComputeLines;
     HostArr<float> gvf;
+
+    float oldCalltime;
+
+#ifdef USE_PROCEDURAL_DATA
+    CudaDevArr<float> procField1D;
+    CudaDevArr<float> procField2D;
+    HostArr<float> procField1;
+    HostArr<float> procField2;
+#endif
+
+    /// Array containing corrupt subdivided triangles
+    vislib::Array<float> subDivTris;
 
 };
 
