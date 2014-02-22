@@ -24,13 +24,13 @@
 /**
  * Major version number of the vislib
  */
-#define VISLIB_VERSION_MAJOR 0
+#define VISLIB_VERSION_MAJOR 1
 
 
 /**
  * Minor version number of the vislib
  */
-#define VISLIB_VERSION_MINOR 3
+#define VISLIB_VERSION_MINOR 1
 
 
 /**
