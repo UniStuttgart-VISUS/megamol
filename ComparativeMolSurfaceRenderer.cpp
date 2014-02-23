@@ -2081,6 +2081,24 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+
+        if (!this->deformSurf2.ComputeTriangleNeighbors(
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
+                this->qsIsoVal)) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute triangle neighborsd #2",
+                    this->ClassName());
+            return false;
+        }
+
         // Compute edge list (this needs to be dine before any deformation happens
         if (!this->deformSurf2.ComputeEdgeList(
 #ifndef  USE_PROCEDURAL_DATA
