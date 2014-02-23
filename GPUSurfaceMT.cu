@@ -87,7 +87,6 @@ inline __device__ float3 safeNormalize(float3 v) {
     return v * invLen;
 }
 
-
 __device__ __shared__ char tetrahedronTriangles_S[16][6];
 __device__ __constant__ char tetrahedronTriangles[16][6] = {
     {-1, -1, -1, -1, -1, -1}, // #0
@@ -370,7 +369,7 @@ inline __device__ uint getTetrahedronEdgeVertexIdx_D(
     uint cubeIdx = cubeMap_D[activeCubeIndex];
     uint offset = (gridSize_D.x-1)*(
             (gridSize_D.y-1)*TetrahedronEdgeVertexIdxOffset[tetrahedronIdx][edgeIdx][2] // Global cube index
-            + TetrahedronEdgeVertexIdxOffset[tetrahedronIdx][edgeIdx][1])           // Global cube index
+                    + TetrahedronEdgeVertexIdxOffset[tetrahedronIdx][edgeIdx][1])           // Global cube index
             + TetrahedronEdgeVertexIdxOffset[tetrahedronIdx][edgeIdx][0];
     uint cubeIdxNew = cubeOffs_D[cubeIdx + offset];
     return 7*cubeIdxNew + TetrahedronEdgeVertexIdxOffset[tetrahedronIdx][edgeIdx][3];
@@ -539,6 +538,305 @@ __global__ void GPUSurfaceMT_CalcVertexPositions_D(
             activeVertexPos_D[activeCubeIdx*7+localVtxIdx] = TransformToWorldSpace(vertex);
         }
     }
+}
+
+//   9 == undefined
+//   4 == diagonal
+__constant__ __device__ int faceIdxbyEdgeIndices[6][6] = {
+      //  0, 1, 2, 3, 4, 5
+        { 9, 3, 3, 0, 0, 4 }, // 0
+        { 3, 9, 3, 4, 1, 1 }, // 1
+        { 3, 3, 9, 2, 4, 2 }, // 2
+        { 0, 4, 2, 9, 0, 2 }, // 3
+        { 0, 1, 4, 0, 9, 1 }, // 4
+        { 4, 1, 2, 2, 1, 9 }  // 5
+};
+
+// Faces defined by edge indices
+__constant__ __device__ uint TetrahedronFaces_C [4][3] = {
+        {0, 3, 4}, // 0
+        {1, 4, 5}, // 1
+        {2, 3, 5}, // 2
+        {0, 1, 2}  // 3
+};
+
+// [localTetraIdx][tetraFaceIdx][offs.x, offs.y, offs.z, localTetraIdx, faceIdx]
+__constant__ __device__ int GetAdjTetraFace_C[6][4][5] = {
+        { // local tetrahedron #0
+                { 0, 0, 0, 5, 2}, // local face #0
+                { 1, 0, 0, 4, 3}, // local face #1
+                { 0, 0, 0, 1, 0}, // local face #2
+                { 0,-1, 0, 2, 1}, // local face #3
+        },
+        { // local tetrahedron #1
+                { 0, 0, 0, 0, 2}, // local face #0
+                { 1, 0, 0, 3, 3}, // local face #1
+                { 0, 0, 0, 2, 0}, // local face #2
+                { 0, 0,-1, 5, 1}, // local face #3
+        },
+        { // local tetrahedron #2
+                { 0, 0, 0, 1, 2}, // local face #0
+                { 0, 1, 0, 0, 3}, // local face #1
+                { 0, 0, 0, 3, 0}, // local face #2
+                { 0, 0,-1, 4, 1}, // local face #3
+        },
+        { // local tetrahedron #3
+                { 0, 0, 0, 2, 2}, // local face #0
+                { 0, 1, 0, 0, 3}, // local face #1
+                { 0, 0, 0, 4, 0}, // local face #2
+                {-1, 0, 0, 1, 1}, // local face #3
+        },
+        { // local tetrahedron #4
+                { 0, 0, 0, 3, 2}, // local face #0
+                { 0, 0, 1, 5, 3}, // local face #1
+                { 0, 0, 0, 5, 0}, // local face #2
+                {-1, 0, 0, 0, 1}, // local face #3
+        },
+        { // local tetrahedron #5
+                { 0, 0, 0, 4, 2}, // local face #0
+                { 0, 0, 1, 1, 3}, // local face #1
+                { 0, 0, 0, 0, 0}, // local face #2
+                { 0,-1, 0, 3, 1}, // local face #3
+        }
+};
+
+
+// Each tetrahedron contains either one or two triangles. This LUT answers
+// whether the triangle a tetrahedron face is adjacent to none, the first or the
+// second defined triangle (-1, 0, 1)
+__constant__ __device__ int IsFaceAdjacentToTri_C[16][4] = {
+            {-1, -1, -1, -1}, // #0
+            { 0, -1,  0,  0}, // #1
+            { 0,  0, -1,  0}, // #2
+            { 1,  0,  1,  0}, // #3
+            {-1,  0,  0,  0}, // #4
+            { 0,  1,  0,  1}, // #5
+            { 1,  1,  0,  0}, // #6
+            { 0,  0,  0, -1}, // #7
+            { 0,  0,  0, -1}, // #8
+            { 0,  0,  1,  1}, // #9
+            { 1,  0,  1,  0}, // #10
+            {-1,  0,  0,  0}, // #11
+            { 0,  1,  0,  1}, // #12
+            { 0,  0, -1,  0}, // #13
+            { 0, -1,  0,  0}, // #14
+            {-1, -1, -1, -1}  // #15
+};
+
+
+/*
+ * GPUSurfaceMT_ComputeTriangleNeighbors_D
+ */
+__global__ void GPUSurfaceMT_ComputeTriangleNeighbors_D (
+        uint *triangleNeighbors_D,
+        uint* vertexOffsets_D,
+        uint* cubeMap_D,
+        uint* cubeMapInv_D,
+        float isoval,
+        uint *vertexMapInv_D,
+        float *volume_D,
+        uint activeCellCnt) {
+
+    const uint id = getThreadIdx();
+
+    // Load cube vertex offsets into shared memory
+    if (threadIdx.x < 32) {
+        const int clampedThreadIdx = min(threadIdx.x, 7);
+        cubeVertexOffsets_S[clampedThreadIdx][0] = cubeVertexOffsets[clampedThreadIdx][0];
+        cubeVertexOffsets_S[clampedThreadIdx][1] = cubeVertexOffsets[clampedThreadIdx][1];
+        cubeVertexOffsets_S[clampedThreadIdx][2] = cubeVertexOffsets[clampedThreadIdx][2];
+    }
+
+    // Load tetrahedrons in a cube to shared memory
+    if (threadIdx.x >= 32 && threadIdx.x < 64) {
+        const int clampedThreadIdx = min(threadIdx.x, 37) - 32;
+        tetrahedronsInACube_S[clampedThreadIdx][0] = tetrahedronsInACube[clampedThreadIdx][0];
+        tetrahedronsInACube_S[clampedThreadIdx][1] = tetrahedronsInACube[clampedThreadIdx][1];
+        tetrahedronsInACube_S[clampedThreadIdx][2] = tetrahedronsInACube[clampedThreadIdx][2];
+        tetrahedronsInACube_S[clampedThreadIdx][3] = tetrahedronsInACube[clampedThreadIdx][3];
+    }
+    __syncthreads();
+
+    if (id >= activeCellCnt*6) {
+        return;
+    }
+
+    const uint activeCellIndex = id / 6;
+    const int tetrahedronIndex = id % 6;
+    const uint3 cellOrg = ::GetGridCoordsByCellIdx(cubeMap_D[activeCellIndex]);
+
+//    if (id == 0) {
+//        printf("cellOrg %u %u %u\n",
+//                cellOrg.x, cellOrg.y, cellOrg.z);
+//    }
+
+    // Get bitmap to classify the tetrahedron
+    unsigned char tetrahedronFlags = tetrahedronFlags_D(cellOrg,
+            tetrahedronIndex, isoval, volume_D);
+
+    uint vertexBaseOffset = vertexOffsets_D[id];
+
+//    if (id == 0) {
+//        printf("localTetraIdx %i, flags %i\n", tetrahedronIndex, tetrahedronFlags);
+//    }
+
+    const uint edges[6][2] = {
+            {0, 1}, {1, 2}, {2, 0}, {3, 4}, {4, 5}, {5, 3}
+    };
+
+    // Loop through all 6 possible edges
+    for (int i = 0; i < 6; ++i) {
+
+        uint idx0 = edges[i][0];
+        uint idx1 = edges[i][1];
+
+        if (tetrahedronTriangles[tetrahedronFlags][idx0] < 0) continue; // No second triangle
+
+        // Get local tetrahedron edge indices describing that edge
+        uint localTetraEdgeIdx0 = tetrahedronTriangles[tetrahedronFlags][idx0];
+        uint localTetraEdgeIdx1 = tetrahedronTriangles[tetrahedronFlags][idx1];
+
+//        if (id == 0) {
+//            printf("edge %i: %u %u\n", i, localTetraEdgeIdx0, localTetraEdgeIdx1);
+//        }
+
+        // Obtain face on which the edge lays
+        uint localFaceIdx = faceIdxbyEdgeIndices[localTetraEdgeIdx0][localTetraEdgeIdx1];
+
+//        if (id == 0) {
+//            printf("face Idx %u\n", localFaceIdx);
+//        }
+
+        if (localFaceIdx == 4) { // 4 means diagonal
+
+            // In this case, the adjacent triangle is simply the other triangle
+            // in this tetrahedron
+            // TODO Special treatment necessary?
+            triangleNeighbors_D[vertexBaseOffset + i] =
+                    vertexBaseOffset/3 + int(i <= 2);
+        } else {
+            // Get adjacent face
+            int3 cellOffs;
+            cellOffs.x =       GetAdjTetraFace_C[tetrahedronIndex][localFaceIdx][0];
+            cellOffs.y =       GetAdjTetraFace_C[tetrahedronIndex][localFaceIdx][1];
+            cellOffs.z =       GetAdjTetraFace_C[tetrahedronIndex][localFaceIdx][2];
+            uint adjTetraIdx = GetAdjTetraFace_C[tetrahedronIndex][localFaceIdx][3];
+            uint adjFaceIdx =  GetAdjTetraFace_C[tetrahedronIndex][localFaceIdx][4];
+
+//            if (id == 0) {
+//                printf("offs %i %i %i, adjTetra %u, adjFace %u\n",
+//                        cellOffs.x, cellOffs.y, cellOffs.z,
+//                        adjTetraIdx, adjFaceIdx);
+//            }
+
+            int3 adjCell = make_int3(cellOrg.x + cellOffs.x,
+                                     cellOrg.y + cellOffs.y,
+                                     cellOrg.z + cellOffs.z);
+
+//            if (id == 0) {
+//                printf("adjCell %i %i %i\n",
+//                        adjCell.x, adjCell.y, adjCell.z);
+//            }
+
+            uint adjCellIdx = ::GetCellIdxByGridCoords(adjCell);
+            uint adjActiveCellIdx = cubeMapInv_D[adjCellIdx];
+
+//            if (id == 0) {
+//                printf("adjCellIdx %u\n", adjCellIdx);
+//            }
+
+//            if (id == 0) {
+//                printf("adjActiveCellIdx %u\n", adjActiveCellIdx);
+//            }
+
+
+            // Compute global tetrahedron index of the adjacent tetrahedron
+            uint globalAdjTetraIdx = adjActiveCellIdx*6 + adjTetraIdx;
+
+//            if (id == 0) {
+//                printf("globalAdjTetraIdx %u\n", globalAdjTetraIdx);
+//            }
+
+            unsigned char adjTetrahedronFlags =  tetrahedronFlags_D(
+                    make_uint3(adjCell.x, adjCell.y, adjCell.z),
+                    adjTetraIdx, isoval, volume_D);
+
+            // Get triangle index offset
+            // Note: this should never be negative
+            int triOffs = IsFaceAdjacentToTri_C[adjTetrahedronFlags][adjFaceIdx];
+
+//            if (id == 0) {
+//                printf("triOffs %i\n", triOffs);
+//            }
+
+            // Write to global dev memory
+            triangleNeighbors_D[vertexBaseOffset + i] = vertexOffsets_D[globalAdjTetraIdx] / 3 + triOffs;
+//            if (id == 0) {
+//                printf("ADD NEIGHBOR %i\n",
+//                        vertexOffsets_D[globalAdjTetraIdx] / 3 + triOffs);
+//            }
+        }
+    }
+}
+
+
+/*
+ * GPUSurfaceMT::ComputeTriangleNeighbors
+ */
+bool GPUSurfaceMT::ComputeTriangleNeighbors(
+        float *volume_D,
+        int3 volDim,
+        float3 volOrg,
+        float3 volDelta,
+        float isovalue) {
+
+    using namespace vislib::sys;
+
+    /// Init grid parameters for all files ///
+
+    const uint blocksize = 256;
+
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
+
+    if (!CudaSafeCall(this->triangleNeighbors_D.Validate(this->triangleCnt*3))) {
+        return false;
+    }
+    // Initialize triangle index array
+    GPUSurfaceMT_ComputeTriangleNeighbors_D <<< Grid(this->activeCellCnt*6, blocksize), blocksize >>> (
+            this->triangleNeighbors_D.Peek(),
+            this->tetrahedronVertexOffsets_D.Peek(),
+            this->cubeMap_D.Peek(),
+            this->cubeOffsets_D.Peek(),
+            isovalue,
+            this->vertexIdxOffs_D.Peek(),
+            volume_D,
+            this->activeCellCnt);
+
+    if (!CheckForCudaError()) {
+        return false;
+    }
+
+//    // DEBUG print edge list
+//    HostArr<unsigned int> triangleNeighbors;
+//    triangleNeighbors.Validate(this->triangleNeighbors_D.GetCount());
+//    if (!CudaSafeCall(this->triangleNeighbors_D.CopyToHost(triangleNeighbors.Peek()))){
+//        return false;
+//    }
+//    for (int e = 0; e < this->triangleCnt; ++e) {
+//        printf("TRIANGLE NEIGHBORS %i: %u %u %u\n", e,
+//                triangleNeighbors.Peek()[3*e+0],
+//                triangleNeighbors.Peek()[3*e+1],
+//                triangleNeighbors.Peek()[3*e+2]);
+//    }
+//    triangleNeighbors.Release();
+//    // END DEBUG
+
+    return true;
 }
 
 
@@ -1882,15 +2180,15 @@ bool GPUSurfaceMT::ComputeEdgeList(
             dt_ms/1000.0);
 #endif
 
-    // DEBUG print edge list
-    this->edges.Validate(this->edges_D.GetCount());
-    if (!CudaSafeCall(this->edges_D.CopyToHost(edges.Peek()))){
-        return false;
-    }
-    for (int e = 0; e < edgeCnt; ++e) {
-        printf("EDGE %i: %u %u\n", e, this->edges.Peek()[2*e+0], this->edges.Peek()[2*e+1]);
-    }
-    // END DEBUG
+//    // DEBUG print edge list
+//    this->edges.Validate(this->edges_D.GetCount());
+//    if (!CudaSafeCall(this->edges_D.CopyToHost(edges.Peek()))){
+//        return false;
+//    }
+//    for (int e = 0; e < edgeCnt; ++e) {
+//        printf("EDGE %i: %u %u\n", e, this->edges.Peek()[2*e+0], this->edges.Peek()[2*e+1]);
+//    }
+//    // END DEBUG
 
     return true;
 }
@@ -2368,15 +2666,15 @@ bool GPUSurfaceMT::ComputeTriangles(
         return false;
     }
 
-    // DEBUG print triangle indices
-    HostArr<unsigned int> vboTriangleIdx;
-    vboTriangleIdx.Validate(this->triangleCnt*3);
-    cudaMemcpy(vboTriangleIdx.Peek(), vboTriangleIdxPt, vboTriangleIdxSize, cudaMemcpyDeviceToHost);
-    for (int t = 0; t < this->triangleCnt; ++t) {
-        printf("TRIANGLE %i: %u %u %u\n", t, vboTriangleIdx.Peek()[3*t+0],
-                vboTriangleIdx.Peek()[3*t+1], vboTriangleIdx.Peek()[3*t+2]);
-    }
-    // END DEBUG
+//    // DEBUG print triangle indices
+//    HostArr<unsigned int> vboTriangleIdx;
+//    vboTriangleIdx.Validate(this->triangleCnt*3);
+//    cudaMemcpy(vboTriangleIdx.Peek(), vboTriangleIdxPt, vboTriangleIdxSize, cudaMemcpyDeviceToHost);
+//    for (int t = 0; t < this->triangleCnt; ++t) {
+//        printf("TRIANGLE %i: %u %u %u\n", t, vboTriangleIdx.Peek()[3*t+0],
+//                vboTriangleIdx.Peek()[3*t+1], vboTriangleIdx.Peek()[3*t+2]);
+//    }
+//    // END DEBUG
 
     // Unmap CUDA graphics resource
     if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->triangleIdxResource))) {
@@ -3081,6 +3379,13 @@ GPUSurfaceMT& GPUSurfaceMT::operator=(const GPUSurfaceMT &rhs) {
             this->tetraEdgeIdxOffsets_D.Peek(),
             rhs.tetraEdgeIdxOffsets_D.PeekConst(),
             this->tetraEdgeIdxOffsets_D.GetCount()*sizeof(unsigned int),
+            cudaMemcpyDeviceToDevice));
+
+    CudaSafeCall(this->triangleNeighbors_D.Validate(rhs.triangleNeighbors_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->triangleNeighbors_D.Peek(),
+            rhs.triangleNeighbors_D.PeekConst(),
+            this->triangleNeighbors_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
     // The number of active cells

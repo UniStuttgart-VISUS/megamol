@@ -192,6 +192,13 @@ public:
         return this->edges.Peek();
     }
 
+    bool ComputeTriangleNeighbors(
+            float *volume_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float isovalue);
+
 protected:
 
 
@@ -258,6 +265,8 @@ protected:
 
     /// Array to cound number of edges associated with each cell
     CudaDevArr<unsigned int> edgesPerTetrahedron_D;
+
+    CudaDevArr<unsigned int> triangleNeighbors_D;
 
 private:
 
