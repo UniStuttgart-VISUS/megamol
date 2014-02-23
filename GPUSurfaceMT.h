@@ -18,6 +18,8 @@
 
 #include "AbstractGPUSurface.h"
 #include "CudaDevArr.h"
+#include "HostArr.h"
+#include "vislib/Array.h"
 
 namespace megamol {
 namespace protein {
@@ -47,6 +49,16 @@ public:
             float3 volOrg,
             float3 volDelta,
             float isovalue);
+
+    /**
+     * TODO
+     */
+    bool ComputeEdgeList(
+            float *volume_D,
+            float isoval,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta);
 
     /**
      * Computes the vertex positions based on a given level set using the
@@ -176,6 +188,10 @@ public:
      */
     void Release();
 
+    unsigned int *PeekEdges() {
+        return this->edges.Peek();
+    }
+
 protected:
 
 
@@ -228,6 +244,20 @@ protected:
 
     /// Flag to tell whether the connectivity information has been computed yet
     bool neighboursReady;
+
+    /* Edge list */
+
+    /// Array defining an edge list based on the vertex indices
+    CudaDevArr<unsigned int> edges_D;
+
+    /// Array defining an edge list based on the vertex indices
+    HostArr<unsigned int> edges;
+
+    /// Array for edge index offsets for all tetrahedrons
+    CudaDevArr<unsigned int> tetraEdgeIdxOffsets_D;
+
+    /// Array to cound number of edges associated with each cell
+    CudaDevArr<unsigned int> edgesPerTetrahedron_D;
 
 private:
 

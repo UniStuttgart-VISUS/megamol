@@ -32,7 +32,7 @@ public:
      *
      * @return The number of elements
      */
-    inline size_t GetCount() {
+    inline size_t GetCount() const {
         return this->count;
     }
 
@@ -51,6 +51,15 @@ public:
      * @return The pointer to the device memory.
      */
     inline T *Peek() {
+        return this->pt;
+    }
+
+    /**
+     * Returns the actual (non const) device pointer.
+     *
+     * @return The pointer to the device memory.
+     */
+    inline const T *PeekConst() const {
         return this->pt;
     }
 

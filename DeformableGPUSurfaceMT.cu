@@ -557,14 +557,6 @@ __global__ void DeformableGPUSurfaceMT_FlagCorruptTriangles_D(
     uint cellState = targetActiveCells_D[cellIDx];
 
     corruptTriangles_D[idx] = float(1-cellState);
-
-    // DEBUG
-    if (cellState == 0.0) {
-        vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = 1.0;
-        vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = 1.0;
-        vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = 1.0;
-    }
-    // END DEBUG
 }
 
 /**

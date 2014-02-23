@@ -10,15 +10,15 @@
 #include "Protein.h"
 #include "api/MegaMolCore.std.h"
 
-// jobs
-#include "DataWriter.h"
-#include "PDBWriter.h"
-#include "VTIWriter.h"
-
 // views
 #include "View3DSpaceMouse.h"
 #include "View3DMouse.h"
 #include "LinkedView3D.h"
+
+// jobs
+#include "DataWriter.h"
+#include "PDBWriter.h"
+#include "VTIWriter.h"
 
 // 3D renderers
 #include "ProteinVolumeRenderer.h"
