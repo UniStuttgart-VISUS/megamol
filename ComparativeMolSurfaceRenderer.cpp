@@ -2176,7 +2176,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
 #ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-                "%s: compute texture coordinates #1",
+                "%s: compute texture coordinates #2",
                 this->ClassName());
 #endif // VERBOSE
 
@@ -2364,6 +2364,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+
 #ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute normals of mapped surface",
@@ -2384,6 +2385,27 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not compute normals of mapped surface",
+                    this->ClassName());
+
+            return false;
+        }
+
+        // Refine the mesh
+        if (this->deformSurfMapped.RefineMesh(
+                1,
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
+                this->qsIsoVal,
+                this->volDim.x*2) < 0) { // TODO Whats a good maximum edge length?
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not refine mesh",
                     this->ClassName());
 
             return false;
