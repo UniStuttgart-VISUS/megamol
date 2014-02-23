@@ -19,16 +19,19 @@
 #include "CUDAGrid.cuh"
 #include "cuda_helper.h"
 
+#include "LUT_TriEdgeIdxByTetrahedronFlags.h"
+
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 
 #include <thrust/scan.h>
 #include <thrust/device_ptr.h>
+#include <thrust/reduce.h>
 
 using namespace megamol;
 using namespace megamol::protein;
 
-//#define USE_TIMER // Toggle performance measurements
+#define USE_TIMER // Toggle performance measurements
 
 /**
  * @return Returns the thread index based on the current CUDA grid dimensions
@@ -572,6 +575,269 @@ __global__ void GPUSurfaceMT_CompactActiveVertexPositions_D(
         vertexPos_D[outputArrDataSize*vertexIdxOffs_D[idx]+outputArrOffs+1] = activeVertexPos_D[idx].y;
         vertexPos_D[outputArrDataSize*vertexIdxOffs_D[idx]+outputArrOffs+2] = activeVertexPos_D[idx].z;
     }
+}
+
+
+/// Answers the two vertices that build an edge associated with a tetrahedron
+/// based on its local tetrahedron index (0...5) and its tetrahedron flags (0...15)
+/// The vertices are defined by their tetrahedron edge indices (0...5), -1
+/// indicates undefined values
+// TODO Use shared memory?
+__constant__ __device__ int EdgesByTetraFlags_C[16][6][4][2] = {
+
+{{{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}}}, // #0  // 0000
+
+{{{ 0, 2}, { 2, 3}, { 3, 0}, {-1,-1}},
+ {{ 0, 2}, { 2, 3}, {-1,-1}, {-1,-1}},
+ {{ 0, 2}, { 2, 3}, {-1,-1}, {-1,-1}},
+ {{ 0, 2}, { 2, 3}, {-1,-1}, {-1,-1}},
+ {{ 0, 2}, { 2, 3}, {-1,-1}, {-1,-1}},
+ {{ 0, 2}, {-1,-1}, {-1,-1}, {-1,-1}}}, // #1  // 0001
+
+{{{ 0, 1}, { 4, 0}, {-1,-1}, {-1,-1}},
+ {{ 0, 1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 0, 1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 0, 1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 0, 1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 0, 1}, {-1,-1}, {-1,-1}, {-1,-1}}}, // #2  // 0010
+
+{{{ 2, 3}, { 4, 2}, { 1, 2}, { 3, 4}},
+ {{ 2, 3}, { 4, 2}, { 1, 2}, {-1,-1}},
+ {{ 2, 3}, { 4, 2}, { 1, 2}, {-1,-1}},
+ {{ 2, 3}, { 4, 2}, { 1, 2}, {-1,-1}},
+ {{ 2, 3}, { 4, 2}, { 1, 2}, {-1,-1}},
+ {{ 1, 2}, { 4, 2}, {-1,-1}, {-1,-1}}}, // #3  // 0011
+
+{{{ 5, 2}, { 2, 1}, {-1,-1}, {-1,-1}},
+ {{ 5, 2}, { 2, 1}, {-1,-1}, {-1,-1}},
+ {{ 5, 2}, { 2, 1}, {-1,-1}, {-1,-1}},
+ {{ 5, 2}, { 2, 1}, {-1,-1}, {-1,-1}},
+ {{ 5, 2}, { 2, 1}, {-1,-1}, {-1,-1}},
+ {{ 1, 2}, {-1,-1}, {-1,-1}, {-1,-1}}}, // #4  // 0100
+
+{{{ 0, 1}, { 5, 3}, { 0, 5}, { 3, 0}},
+ {{ 0, 1}, { 5, 3}, { 0, 5}, {-1,-1}},
+ {{ 0, 1}, { 5, 3}, { 0, 5}, {-1,-1}},
+ {{ 0, 1}, { 5, 3}, { 0, 5}, {-1,-1}},
+ {{ 0, 1}, { 5, 3}, { 0, 5}, {-1,-1}},
+ {{ 0, 1}, { 0, 5}, {-1,-1}, {-1,-1}}}, // #5  // 0101
+
+{{{ 0, 2}, { 2, 5}, { 0, 5}, { 4, 0}},
+ {{ 0, 2}, { 2, 5}, { 0, 5}, {-1,-1}},
+ {{ 0, 2}, { 2, 5}, { 0, 5}, {-1,-1}},
+ {{ 0, 2}, { 2, 5}, { 0, 5}, {-1,-1}},
+ {{ 0, 2}, { 2, 5}, { 0, 5}, {-1,-1}},
+ {{ 0, 2}, { 0, 5}, {-1,-1}, {-1,-1}}}, // #6  // 0110
+
+{{{ 5, 3}, { 3, 4}, {-1,-1}, {-1,-1}},
+ {{ 5, 3}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 5, 3}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 5, 3}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 5, 3}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}}}, // #7  // 0111
+
+{{{ 5, 3}, { 3, 4}, {-1,-1}, {-1,-1}},
+ {{ 5, 3}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 5, 3}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 5, 3}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 5, 3}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}}}, // #8  // 1000
+
+{{{ 0, 2}, { 2, 5}, { 0, 5}, { 4, 0}},
+ {{ 0, 2}, { 2, 5}, { 0, 5}, {-1,-1}},
+ {{ 0, 2}, { 2, 5}, { 0, 5}, {-1,-1}},
+ {{ 0, 2}, { 2, 5}, { 0, 5}, {-1,-1}},
+ {{ 0, 2}, { 2, 5}, { 0, 5}, {-1,-1}},
+ {{ 0, 2}, { 0, 5}, {-1,-1}, {-1,-1}}}, // #9  // 1001
+
+{{{ 0, 1}, { 5, 3}, { 0, 5}, { 3, 0}},
+ {{ 0, 1}, { 5, 3}, { 0, 5}, {-1,-1}},
+ {{ 0, 1}, { 5, 3}, { 0, 5}, {-1,-1}},
+ {{ 0, 1}, { 5, 3}, { 0, 5}, {-1,-1}},
+ {{ 0, 1}, { 5, 3}, { 0, 5}, {-1,-1}},
+ {{ 0, 1}, { 0, 5}, {-1,-1}, {-1,-1}}}, // #10 // 1010
+
+{{{ 5, 2}, { 2, 1}, {-1,-1}, {-1,-1}},
+ {{ 5, 2}, { 2, 1}, {-1,-1}, {-1,-1}},
+ {{ 5, 2}, { 2, 1}, {-1,-1}, {-1,-1}},
+ {{ 5, 2}, { 2, 1}, {-1,-1}, {-1,-1}},
+ {{ 5, 2}, { 2, 1}, {-1,-1}, {-1,-1}},
+ {{ 1, 2}, {-1,-1}, {-1,-1}, {-1,-1}}}, // #11 // 1011
+
+{{{ 2, 3}, { 4, 2}, { 1, 2}, { 3, 4}},
+ {{ 2, 3}, { 4, 2}, { 1, 2}, {-1,-1}},
+ {{ 2, 3}, { 4, 2}, { 1, 2}, {-1,-1}},
+ {{ 2, 3}, { 4, 2}, { 1, 2}, {-1,-1}},
+ {{ 2, 3}, { 4, 2}, { 1, 2}, {-1,-1}},
+ {{ 1, 2}, { 4, 2}, {-1,-1}, {-1,-1}}}, // #12 // 1100
+
+{{{ 0, 1}, { 4, 0}, {-1,-1}, {-1,-1}},
+ {{ 0, 1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 0, 1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 0, 1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 0, 1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{ 0, 1}, {-1,-1}, {-1,-1}, {-1,-1}}}, // #13 // 1101
+
+{{{ 0, 2}, { 2, 3}, { 3, 0}, {-1,-1}},
+ {{ 0, 2}, { 2, 3}, {-1,-1}, {-1,-1}},
+ {{ 0, 2}, { 2, 3}, {-1,-1}, {-1,-1}},
+ {{ 0, 2}, { 2, 3}, {-1,-1}, {-1,-1}},
+ {{ 0, 2}, { 2, 3}, {-1,-1}, {-1,-1}},
+ {{ 0, 2}, {-1,-1}, {-1,-1}, {-1,-1}}}, // #14 // 1110
+
+{{{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}},
+ {{-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}}}  // #15 // 1111
+
+};
+
+
+/*
+ * TODO
+ */
+__global__ void GPUSurfaceMT_ComputeEdgeList_D(
+        uint *edges_D,
+        uint *tetraEdgeIdxOffsets_D,
+        uint *edgesPerTetrahedron_D,
+        uint *vertexMapInv_D,
+        uint* cubeMap_D,
+        uint* cubeMapInv_D,
+        float thresholdValue,
+        float *volume_D,
+        uint activeCubeCount) {
+
+    // Thread index (= tetrahedron index)
+    const uint id = getThreadIdx();
+
+    // Load cube vertex offsets into shared memory
+    if (threadIdx.x < 32) {
+        const int clampedThreadIdx = min(threadIdx.x, 7);
+        cubeVertexOffsets_S[clampedThreadIdx][0] = cubeVertexOffsets[clampedThreadIdx][0];
+        cubeVertexOffsets_S[clampedThreadIdx][1] = cubeVertexOffsets[clampedThreadIdx][1];
+        cubeVertexOffsets_S[clampedThreadIdx][2] = cubeVertexOffsets[clampedThreadIdx][2];
+    }
+
+    // Load tetrahedrons in a cube to shared memory
+    if (threadIdx.x >= 32 && threadIdx.x < 64) {
+        const int clampedThreadIdx = min(threadIdx.x, 37) - 32;
+        tetrahedronsInACube_S[clampedThreadIdx][0] = tetrahedronsInACube[clampedThreadIdx][0];
+        tetrahedronsInACube_S[clampedThreadIdx][1] = tetrahedronsInACube[clampedThreadIdx][1];
+        tetrahedronsInACube_S[clampedThreadIdx][2] = tetrahedronsInACube[clampedThreadIdx][2];
+        tetrahedronsInACube_S[clampedThreadIdx][3] = tetrahedronsInACube[clampedThreadIdx][3];
+    }
+    __syncthreads();
+
+    if (id >= activeCubeCount*6) {
+        return;
+    }
+
+    const uint activeCubeIndex = id / 6;
+    const int tetrahedronIndex = id % 6;
+    const uint3 cellOrg = ::GetGridCoordsByCellIdx(cubeMap_D[activeCubeIndex]);
+
+    // Get bitmap to classify the tetrahedron
+    unsigned char tetrahedronFlags = tetrahedronFlags_D(cellOrg,
+            tetrahedronIndex, thresholdValue, volume_D);
+
+    const uint nEdges = edgesPerTetrahedron_D[id];
+    const uint idxOffs = tetraEdgeIdxOffsets_D[id];
+
+    // Loop through all edges associated with this tetratedron
+    for (int e = 0; e < nEdges; ++e) {
+
+        // First vertex TODO
+        int edgeIndex0 = EdgesByTetraFlags_C[tetrahedronFlags][tetrahedronIndex][e][0];
+        if (edgeIndex0 < 0) {
+            edges_D[2*(idxOffs+e)+0] = 0;
+            edges_D[2*(idxOffs+e)+1] = 0;
+            continue;
+        }
+        int vertexIdx0 = getTetrahedronEdgeVertexIdx_D(
+                activeCubeIndex, tetrahedronIndex, edgeIndex0, cubeMap_D,
+                cubeMapInv_D);
+
+        // Second vertex TODO
+        int edgeIndex1 = EdgesByTetraFlags_C[tetrahedronFlags][tetrahedronIndex][e][1];
+        if (edgeIndex1 < 0) {
+            edges_D[2*(idxOffs+e)+0] = 0;
+            edges_D[2*(idxOffs+e)+1] = 0;
+            continue;
+        }
+        int vertexIdx1 = getTetrahedronEdgeVertexIdx_D(
+                activeCubeIndex, tetrahedronIndex, edgeIndex1, cubeMap_D,
+                cubeMapInv_D);
+
+        edges_D[2*(idxOffs+e)+0] = vertexMapInv_D[vertexIdx0];
+        edges_D[2*(idxOffs+e)+1] = vertexMapInv_D[vertexIdx1];
+    }
+}
+
+
+/// Answers the number of edges associated with a tetrahedron based on its local
+/// tetrahedron index (0...5) and its tetrahedron flags (0...15)
+// TODO Use shared memory?
+__constant__ __device__ unsigned int EdgeCntByTetraFlags_C[16][6] = {
+        {0, 0, 0, 0, 0, 0}, // #0  // 0000
+        {3, 2, 2, 2, 2, 1}, // #1  // 0001
+        {2, 1, 1, 1, 1, 1}, // #2  // 0010
+        {4, 3, 3, 3, 3, 2}, // #3  // 0011
+        {2, 2, 2, 2, 2, 1}, // #4  // 0100
+        {4, 3, 3, 3, 3, 2}, // #5  // 0101
+        {4, 3, 3, 3, 3, 2}, // #6  // 0110
+        {2, 1, 1, 1, 1, 0}, // #7  // 0111
+        {2, 1, 1, 1, 1, 0}, // #8  // 1000
+        {4, 3, 3, 3, 3, 2}, // #9  // 1001
+        {4, 3, 3, 3, 3, 2}, // #10 // 1010
+        {2, 2, 2, 2, 2, 1}, // #11 // 1011
+        {4, 3, 3, 3, 3, 2}, // #12 // 1100
+        {2, 1, 1, 1, 1, 1}, // #13 // 1101
+        {3, 2, 2, 2, 2, 1}, // #14 // 1110
+        {0, 0, 0, 0, 0, 0}  // #15 // 1111
+};
+
+
+/*
+ * TODO
+ */
+__global__ void GPUSurfaceMT_ComputeEdgesPerTetrahedron_D(
+        uint *edgesPerTetrahedron_D,
+        float *volume_D,
+        uint *cubeMap_D,
+        float isoval,
+        uint activeCubeCount) {
+
+    // Load LUTs to shared memory
+    // TODO Which of those are necessary
+    LoadCubeOffsetsToSharedMemory();
+    LoadTetrahedronsInACubeToSharedMemory();
+    LoadVertexIdxPerTetrahedronIdxToSharedMemory();
+    LoadTetrahedronEdgeFlagsAndConnectionsToSharedMemory();
+    __syncthreads();
+
+    // Thread index
+    uint globalTetraIdx = ::getThreadIdx();
+    if (globalTetraIdx >= activeCubeCount*6) {
+        return;
+    }
+
+    uint activeCubeIdx = globalTetraIdx/6;
+    uint localTetraIdx = globalTetraIdx%6; // 0 ... 5
+
+    // Compute cell origin
+    const uint3 cellOrg = GetGridCoordsByCellIdx(cubeMap_D[activeCubeIdx]);
+
+    // Get bitmap to classify the tetrahedron
+    unsigned char tetrahedronFlags = tetrahedronFlags_D(cellOrg, localTetraIdx, isoval, volume_D);
+
+    edgesPerTetrahedron_D[globalTetraIdx] = EdgeCntByTetraFlags_C[tetrahedronFlags][localTetraIdx];
 }
 
 
@@ -1435,6 +1701,204 @@ bool GPUSurfaceMT::ComputeConnectivity(
 
 
 /*
+ * GPUSurfaceMT::ComputeEdgeList
+ */
+bool GPUSurfaceMT::ComputeEdgeList(
+        float *volume_D,
+        float isoval,
+        int3 volDim,
+        float3 volOrg,
+        float3 volDelta) {
+
+    using namespace vislib::sys;
+
+    const uint blockSize = 256;
+    const uint cellCnt = (volDim.x-1)*(volDim.y-1)*(volDim.z-1);
+
+    /* Init grid parameters for all files */
+
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName(),
+                __FILE__,
+                __LINE__);
+        return false;
+    }
+
+
+    /* Obtain number of edges associated with each cell */
+
+#ifdef USE_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
+#endif
+
+    if (this->cubeMap_D.GetCount() != this->activeCellCnt) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: need cube map to compute edges (%s:%i)",
+                this->ClassName(),
+                __FILE__,
+                __LINE__);
+        return false;
+    }
+
+    //(Re-)allocate memory to count number of edges per cell
+    if (!CudaSafeCall(this->edgesPerTetrahedron_D.Validate(this->activeCellCnt*6))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not allocate device memory (%s:%i)",
+                this->ClassName(),
+                __FILE__,
+                __LINE__);
+        return false;
+    }
+    // Init with zero
+    if (!CudaSafeCall(this->edgesPerTetrahedron_D.Set(0x00))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init device memory (%s:%i)",
+                this->ClassName(),
+                __FILE__,
+                __LINE__);
+        return false;
+    }
+
+    GPUSurfaceMT_ComputeEdgesPerTetrahedron_D <<< Grid(this->activeCellCnt*6, blockSize), blockSize >>> (
+           this->edgesPerTetrahedron_D.Peek(),
+           volume_D,
+           this->cubeMap_D.Peek(),
+           isoval,
+           this->activeCellCnt);
+
+    if (!CheckForCudaError()) {
+        return false;
+    }
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'GPUSurfaceMT_ComputeEdgesPerCell_D' :   %.10f sec\n",
+            dt_ms/1000.0);
+    cudaEventRecord(event1, 0);
+#endif
+
+    /* Compute prefix sum to obtain index offsets for edges */
+
+    //(Re-)allocate memory to count number of edges per cell
+    if (!CudaSafeCall(this->tetraEdgeIdxOffsets_D.Validate(this->activeCellCnt*6))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not allocate device memory (%s:%i)",
+                this->ClassName(),
+                __FILE__,
+                __LINE__);
+        return false;
+    }
+    thrust::exclusive_scan(
+            thrust::device_ptr<unsigned int>(this->edgesPerTetrahedron_D.Peek()),
+            thrust::device_ptr<unsigned int>(this->edgesPerTetrahedron_D.Peek() + 6*this->activeCellCnt),
+            thrust::device_ptr<unsigned int>(this->tetraEdgeIdxOffsets_D.Peek()));
+
+    if (!CheckForCudaError()) {
+        return false;
+    }
+
+//    // DEBUG print prefix list
+//    HostArr<unsigned int> tetraEdgeIdxOffsets;
+//    tetraEdgeIdxOffsets.Validate(this->tetraEdgeIdxOffsets_D.GetCount());
+//    if (!CudaSafeCall(this->tetraEdgeIdxOffsets_D.CopyToHost(tetraEdgeIdxOffsets.Peek()))){
+//        return false;
+//    }
+//    HostArr<unsigned int> edgesPerTetrahedron;
+//    edgesPerTetrahedron.Validate(this->edgesPerTetrahedron_D.GetCount());
+//    if (!CudaSafeCall(this->edgesPerTetrahedron_D.CopyToHost(edgesPerTetrahedron.Peek()))){
+//        return false;
+//    }
+//    for (int e = 0; e < 6*this->activeCellCnt; ++e) {
+//        printf("%i: edgeCnt %u, index %u\n", e,
+//                edgesPerTetrahedron.Peek()[e],
+//                tetraEdgeIdxOffsets.Peek()[e]);
+//    }
+//    tetraEdgeIdxOffsets.Release();
+//    edgesPerTetrahedron.Release();
+//    // END DEBUG
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'thrust::exclusive_scan' :               %.10f sec\n",
+            dt_ms/1000.0);
+    cudaEventRecord(event1, 0);
+#endif
+
+    // Compute actual edges
+    unsigned int edgeCnt = this->triangleCnt*3/2;
+
+    //(Re-)allocate memory to count number of edges per cell
+    if (!CudaSafeCall(this->edges_D.Validate(edgeCnt*2))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not allocate device memory (%s:%i)",
+                this->ClassName(),
+                __FILE__,
+                __LINE__);
+        return false;
+    }
+    // Init with zero
+    if (!CudaSafeCall(this->edges_D.Set(0x00))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init device memory (%s:%i)",
+                this->ClassName(),
+                __FILE__,
+                __LINE__);
+        return false;
+    }
+
+    GPUSurfaceMT_ComputeEdgeList_D <<< Grid(this->activeCellCnt*6, blockSize), blockSize >>> (
+            this->edges_D.Peek(),
+            this->tetraEdgeIdxOffsets_D.Peek(),
+            this->edgesPerTetrahedron_D.Peek(),
+            this->vertexIdxOffs_D.Peek(),
+            this->cubeMap_D.Peek(),
+            this->cubeOffsets_D.Peek(),
+            isoval,
+            volume_D,
+            this->activeCellCnt);
+
+    if (!CheckForCudaErrorSync()) {
+        return false;
+    }
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'GPUSurfaceMT_ComputeEdgeList_D' :       %.10f sec\n",
+            dt_ms/1000.0);
+#endif
+
+    // DEBUG print edge list
+    this->edges.Validate(this->edges_D.GetCount());
+    if (!CudaSafeCall(this->edges_D.CopyToHost(edges.Peek()))){
+        return false;
+    }
+    for (int e = 0; e < edgeCnt; ++e) {
+        printf("EDGE %i: %u %u\n", e, this->edges.Peek()[2*e+0], this->edges.Peek()[2*e+1]);
+    }
+    // END DEBUG
+
+    return true;
+}
+
+
+
+
+/*
  * GPUSurfaceMT::computeVertexNormals
  */
 bool GPUSurfaceMT::ComputeNormals(
@@ -1904,15 +2368,15 @@ bool GPUSurfaceMT::ComputeTriangles(
         return false;
     }
 
-//    // DEBUG print triangle indices
-//    HostArr<unsigned int> vboTriangleIdx;
-//    vboTriangleIdx.Validate(this->triangleCnt*3);
-//    cudaMemcpy(vboTriangleIdx.Peek(), vboTriangleIdxPt, vboTriangleIdxSize, cudaMemcpyDeviceToHost);
-//    for (int t = 0; t < 30; ++t) {
-//        printf("TRIANGLE %i: %u %u %u\n", t, vboTriangleIdx.Peek()[3*t+0],
-//                vboTriangleIdx.Peek()[3*t+1], vboTriangleIdx.Peek()[3*t+2]);
-//    }
-//    // END DEBUG
+    // DEBUG print triangle indices
+    HostArr<unsigned int> vboTriangleIdx;
+    vboTriangleIdx.Validate(this->triangleCnt*3);
+    cudaMemcpy(vboTriangleIdx.Peek(), vboTriangleIdxPt, vboTriangleIdxSize, cudaMemcpyDeviceToHost);
+    for (int t = 0; t < this->triangleCnt; ++t) {
+        printf("TRIANGLE %i: %u %u %u\n", t, vboTriangleIdx.Peek()[3*t+0],
+                vboTriangleIdx.Peek()[3*t+1], vboTriangleIdx.Peek()[3*t+2]);
+    }
+    // END DEBUG
 
     // Unmap CUDA graphics resource
     if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->triangleIdxResource))) {
@@ -2461,9 +2925,57 @@ void GPUSurfaceMT::Release() {
     CudaSafeCall(this->verticesPerTetrahedron_D.Release());
     CudaSafeCall(this->tetrahedronVertexOffsets_D.Release());
     CudaSafeCall(this->triangleCamDistance_D.Release());
+    CudaSafeCall(this->edges_D.Release());
+    CudaSafeCall(this->edgesPerTetrahedron_D.Release());
+    CudaSafeCall(this->tetraEdgeIdxOffsets_D.Release());
 
     this->neighboursReady = false;
     this->activeCellCnt = 0;
+}
+
+/*
+ * GPUSurfaceMT_SetSubdivVertexFlag
+ */
+__global__ void GPUSurfaceMT_SetSubdivVertexFlag(
+        bool *subdivFlag_D,    // Output
+        float *vertexBuffer_D, // Input
+        uint *edges_D,         // Input
+        float maxEdgeLenSqrt,  // Input
+        uint edgeCnt)          // Input
+{
+    const uint vertexBufferStride = 9;
+    const uint vertexBufferPosOffs = 0;
+
+    const uint edgeIdx = ::getThreadIdx();
+    if (edgeIdx >= edgeCnt) return;
+
+    uint idx0 = edges_D[2*edgeIdx+0];
+    uint idx1 = edges_D[2*edgeIdx+1];
+
+    float3 pos0;
+    pos0.x = vertexBuffer_D[vertexBufferStride*idx0 + vertexBufferPosOffs + 0];
+    pos0.y = vertexBuffer_D[vertexBufferStride*idx0 + vertexBufferPosOffs + 1];
+    pos0.z = vertexBuffer_D[vertexBufferStride*idx0 + vertexBufferPosOffs + 2];
+
+    float3 pos1;
+    pos1.x = vertexBuffer_D[vertexBufferStride*idx1 + vertexBufferPosOffs + 0];
+    pos1.y = vertexBuffer_D[vertexBufferStride*idx1 + vertexBufferPosOffs + 1];
+    pos1.z = vertexBuffer_D[vertexBufferStride*idx1 + vertexBufferPosOffs + 2];
+
+    float lenSqrt = (pos0.x-pos1.x)*(pos0.x-pos1.x) +
+                    (pos0.y-pos1.y)*(pos0.y-pos1.y) +
+                    (pos0.z-pos1.z)*(pos0.z-pos1.z);
+
+    if (lenSqrt > maxEdgeLenSqrt) {
+        subdivFlag_D[idx0] = true;
+        subdivFlag_D[idx1] = true;
+    }
+
+    if (edgeIdx < 1) {
+        subdivFlag_D[idx0] = true;
+        subdivFlag_D[idx1] = true;
+    }
+
 }
 
 
@@ -2543,6 +3055,32 @@ GPUSurfaceMT& GPUSurfaceMT::operator=(const GPUSurfaceMT &rhs) {
             this->tetrahedronVertexOffsets_D.Peek(),
             rhs.tetrahedronVertexOffsets_D.PeekConst(),
             this->tetrahedronVertexOffsets_D.GetCount()*sizeof(unsigned int),
+            cudaMemcpyDeviceToDevice));
+
+    CudaSafeCall(this->edges_D.Validate(rhs.edges_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->edges_D.Peek(),
+            rhs.edges_D.PeekConst(),
+            this->edges_D.GetCount()*sizeof(unsigned int),
+            cudaMemcpyDeviceToDevice));
+
+    this->edges.Validate(rhs.edges.GetCount());
+    memcpy(this->edges.Peek(),
+            rhs.edges.PeekConst(),
+            this->edges.GetCount()*sizeof(unsigned int));
+
+    CudaSafeCall(this->edgesPerTetrahedron_D.Validate(rhs.edgesPerTetrahedron_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->edgesPerTetrahedron_D.Peek(),
+            rhs.edgesPerTetrahedron_D.PeekConst(),
+            this->edgesPerTetrahedron_D.GetCount()*sizeof(unsigned int),
+            cudaMemcpyDeviceToDevice));
+
+    CudaSafeCall(this->tetraEdgeIdxOffsets_D.Validate(rhs.tetraEdgeIdxOffsets_D.GetCount()));
+    CudaSafeCall(cudaMemcpy(
+            this->tetraEdgeIdxOffsets_D.Peek(),
+            rhs.tetraEdgeIdxOffsets_D.PeekConst(),
+            this->tetraEdgeIdxOffsets_D.GetCount()*sizeof(unsigned int),
             cudaMemcpyDeviceToDevice));
 
     // The number of active cells

@@ -2081,6 +2081,25 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+        // Compute edge list (this needs to be dine before any deformation happens
+        if (!this->deformSurf2.ComputeEdgeList(
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
+                this->qsIsoVal,
+                this->volDim,
+                this->volOrg,
+                this->volDelta)) {
+#ifdef VERBOSE
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute edge list",
+                    this->ClassName());
+#endif // VERBOSE
+            return false;
+        }
+
 #ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: regularize surface #2",
@@ -2389,13 +2408,13 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         this->triggerComputeSubdiv = true;
     }
 
-    // DEBUG
-    if (this->triggerComputeSubdiv) {
-    if (!this->computeSurfaceInfo()) {
-        return false;
-    }
-    }
-    // END DEBUG
+//    // DEBUG
+//    if (this->triggerComputeSubdiv) {
+//    if (!this->computeSurfaceInfo()) {
+//        return false;
+//    }
+//    }
+//    // END DEBUG
 
     // Get camera information
     this->cameraInfo =  dynamic_cast<core::view::AbstractCallRender3D*>(&call)->GetCameraParameters();
@@ -2603,21 +2622,25 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //    glEnd();
 //    // DEBUG end
 
-    // DEBUG Show subdivided triangles
-    if (this->showSubdiv) {
-        glLineWidth(2.0f);
-        glDisable(GL_CULL_FACE);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glColor3f(1.0, 1.0, 1.0);
-        glBegin(GL_TRIANGLES);
-        for (size_t t = 0; t < this->subDivTris.Count()/9; ++t) {
-            glVertex3f(this->subDivTris[9*t+0], this->subDivTris[9*t+1], this->subDivTris[9*t+2]);
-            glVertex3f(this->subDivTris[9*t+3], this->subDivTris[9*t+4], this->subDivTris[9*t+5]);
-            glVertex3f(this->subDivTris[9*t+6], this->subDivTris[9*t+7], this->subDivTris[9*t+8]);
-        }
-        glEnd();
-    }
-    // END DEBUG
+//    // DEBUG Show subdivided triangles
+//    if (this->showSubdiv) {
+//        glLineWidth(2.0f);
+//        glDisable(GL_CULL_FACE);
+//        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//        glColor3f(1.0, 1.0, 1.0);
+//        glBegin(GL_TRIANGLES);
+//        for (size_t t = 0; t < this->subDivTris.Count()/9; ++t) {
+//            glVertex3f(this->subDivTris[9*t+0], this->subDivTris[9*t+1], this->subDivTris[9*t+2]);
+//            glVertex3f(this->subDivTris[9*t+3], this->subDivTris[9*t+4], this->subDivTris[9*t+5]);
+//            glVertex3f(this->subDivTris[9*t+6], this->subDivTris[9*t+7], this->subDivTris[9*t+8]);
+//        }
+//        glEnd();
+//    }
+//    // END DEBUG
+
+//    if (!this->renderEdges()) {
+//        return false;
+//    }
 
 
     glDisable(GL_TEXTURE_3D);
@@ -2636,6 +2659,44 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     vti2->Unlock();
 
     this->oldCalltime = calltime;
+    return CheckForGLError();
+}
+
+
+/*
+ * ComparativeMolSurfaceRenderer::renderEdges
+ */
+bool ComparativeMolSurfaceRenderer::renderEdges() {
+
+    unsigned int edgeCnt = this->deformSurfMapped.GetTriangleCnt()*3/2;
+
+    glDisable(GL_LIGHTING);
+    glColor3f(0.0, 1.0, 0.0);
+
+    // Create vertex buffer object for triangle indices
+    glBindBufferARB(GL_ARRAY_BUFFER, this->deformSurfMapped.GetVtxDataVBO());
+
+    //Establish array contains vertices (not normals, colours, texture coords etc)
+    glEnableClientState(GL_VERTEX_ARRAY);
+    //Draw Triangle from VBO - do each time window, view point or data changes
+    //Establish its 3 coordinates per vertex with zero stride in this array; necessary here
+    glVertexPointer(3, GL_FLOAT, this->deformSurfMapped.vertexDataStride*sizeof(float),
+            reinterpret_cast<void*>(0));
+
+    glDrawElements(GL_LINES,
+                edgeCnt*2,
+                GL_UNSIGNED_INT,
+                this->deformSurfMapped.PeekEdges());
+
+    //Force display to be drawn now
+    glFlush();
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+
+    glBindBufferARB(GL_ARRAY_BUFFER, 0);
+
+    glEnable(GL_LIGHTING);
+
     return CheckForGLError();
 }
 
@@ -2946,7 +3007,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     if (renderMode == SURFACE_FILL) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     } else if (renderMode == SURFACE_WIREFRAME) {
-        glCullFace(GL_BACK);
+//        glCullFace(GL_BACK);
         glEnable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else if (renderMode == SURFACE_POINTS){

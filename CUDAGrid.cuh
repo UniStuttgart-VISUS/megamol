@@ -322,6 +322,16 @@ inline __device__ uint GetCellIdxByGridCoords(int3 v0) {
 }
 
 /**
+ * Answers the cell index associated with the given coordinates.
+ *
+ * @param v0 The coordinates
+ * @return The index
+ */
+inline __device__ uint GetCellIdxByGridCoords(uint3 v0) {
+    return (gridSize_D.x-1)*((gridSize_D.y-1)*v0.z + v0.y) + v0.x;
+}
+
+/**
  * Answers the grid position coordinates associated with a given cell index.
  * The returned position is the left/lower/back corner of the cell
  *

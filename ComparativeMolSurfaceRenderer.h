@@ -17,7 +17,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 // Toggle the use of procedural volume fields for debugging purposes
-//#define USE_PROCEDURAL_DATA
+#define USE_PROCEDURAL_DATA
 
 #include "view/Renderer3DModuleDS.h"
 #include "CallerSlot.h"
@@ -251,6 +251,11 @@ protected:
      * @return The return value of the function.
      */
     virtual bool Render(core::Call& call);
+
+    /**
+     * TODO
+     */
+    bool renderEdges();
 
     /**
      * Renders the mapped isosurface using different rendering modes and surface
