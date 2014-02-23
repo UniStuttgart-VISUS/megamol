@@ -316,9 +316,6 @@ public:
      */
     bool InitGridParams(uint3 gridSize, float3 org, float3 delta);
 
-
-
-
     /**
      * Assignment operator (makes deep copy).
      *
@@ -336,6 +333,23 @@ public:
     const float *PeekExternalForces() {
         return this->externalForces_D.Peek();
     }
+
+    /**
+     * Attention: this is potentially slow, since it performs the subdivison
+     * on the CPU and copies all the data back to the GPU!
+     *
+     * @param maxSubdivLevel The maximum number of subdivisions to be performed
+     * TODO
+     * @return The number of newly created triangles or '-1' if something went
+     *         wrong.
+     */
+    int RefineMesh(uint maxSubdivLevel,
+            float *volume_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float isovalue,
+            float maxEdgeLen);
 
     /**
      * Free all the device memory allocated in this class.

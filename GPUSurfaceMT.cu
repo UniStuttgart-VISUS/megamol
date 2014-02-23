@@ -2180,11 +2180,12 @@ bool GPUSurfaceMT::ComputeEdgeList(
             dt_ms/1000.0);
 #endif
 
+    this->edges.Validate(this->edges_D.GetCount());
+    if (!CudaSafeCall(this->edges_D.CopyToHost(edges.Peek()))){
+        return false;
+    }
+
 //    // DEBUG print edge list
-//    this->edges.Validate(this->edges_D.GetCount());
-//    if (!CudaSafeCall(this->edges_D.CopyToHost(edges.Peek()))){
-//        return false;
-//    }
 //    for (int e = 0; e < edgeCnt; ++e) {
 //        printf("EDGE %i: %u %u\n", e, this->edges.Peek()[2*e+0], this->edges.Peek()[2*e+1]);
 //    }

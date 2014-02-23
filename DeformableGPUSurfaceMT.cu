@@ -7,7 +7,6 @@
 // Created on : Sep 17, 2013
 // Author     : scharnkn
 //
-
 #include "stdafx.h"
 
 #include <glh/glh_extensions.h>
@@ -3694,6 +3693,232 @@ DeformableGPUSurfaceMT& DeformableGPUSurfaceMT::operator=(const DeformableGPUSur
     }
 
     return *this;
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::RefineMesh
+ */
+int DeformableGPUSurfaceMT::RefineMesh(uint maxSubdivLevel,
+        float *volume_D,
+        int3 volDim,
+        float3 volOrg,
+        float3 volDelta,
+        float isovalue,
+        float maxEdgeLen) {
+
+    printf("Refine mesh\n");
+
+    using vislib::sys::Log;
+
+    // Init grid parameters
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return -1;
+    }
+
+    cudaGraphicsResource* cudaTokens[2];
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0], this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+
+        return -1;
+    }
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1], this->vboTriangleIdx,
+            cudaGraphicsMapFlagsNone))) {
+
+        return -1;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+        return -1;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboPt;
+    size_t vboSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return -1;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    unsigned int *vboTriIdxPt;
+    size_t vboTriSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboTriIdxPt), // The mapped pointer
+            &vboTriSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
+        return -1;
+    }
+
+    HostArr<float> vertexBuffer;
+    vertexBuffer.Validate(this->vertexDataStride*this->vertexCnt);
+    if (!CudaSafeCall(cudaMemcpy(vertexBuffer.Peek(), vboPt, vboSize, cudaMemcpyDeviceToHost))) {
+        return -1;
+    }
+
+
+    /* 1. Flag long edges */
+
+    const uint edgeCnt = (this->triangleCnt*3)/2;
+    if (this->edges.GetCount() != edgeCnt*2) {
+        return -1; // We need precomputed edges
+    }
+    HostArr<bool> vertexFlag; // 'true' = adjacent to overlong edge
+    vertexFlag.Validate(this->vertexCnt);
+    vertexFlag.Set(0x00); // Set all to false
+    float maxLenSqrt = maxEdgeLen*maxEdgeLen;
+    uint overlongEdgeCnt = 0;
+    // Loop through all edges
+    for (int e = 0; e < edgeCnt; ++e) {
+        uint idx0 = this->edges.Peek()[2*e+0];
+        uint idx1 = this->edges.Peek()[2*e+1];
+        float3 pos0 = make_float3(
+                vertexBuffer.Peek()[this->vertexDataStride*idx0 + 0],
+                vertexBuffer.Peek()[this->vertexDataStride*idx0 + 1],
+                vertexBuffer.Peek()[this->vertexDataStride*idx0 + 2]);
+        float3 pos1 = make_float3(
+                vertexBuffer.Peek()[this->vertexDataStride*idx1 + 0],
+                vertexBuffer.Peek()[this->vertexDataStride*idx1 + 1],
+                vertexBuffer.Peek()[this->vertexDataStride*idx1 + 2]);
+
+        float distSqrt = (pos0.x-pos1.x)*(pos0.x-pos1.x) +
+                         (pos0.y-pos1.y)*(pos0.y-pos1.y) +
+                         (pos0.z-pos1.z)*(pos0.z-pos1.z);
+
+        if (distSqrt > maxLenSqrt) {
+            vertexFlag.Peek()[idx0] = true;
+            vertexFlag.Peek()[idx1] = true;
+            overlongEdgeCnt++;
+        }
+    }
+
+    printf("Found %u over-long edges\n", overlongEdgeCnt);
+
+
+    /* 2. Determine number of new triangles and flag invalid ones */
+
+    HostArr<unsigned int> triangleIdx;
+    triangleIdx.Validate(this->triangleCnt*3);
+    if (!CudaSafeCall(cudaMemcpy(triangleIdx.Peek(), vboTriIdxPt, vboTriSize,
+            cudaMemcpyDeviceToHost))) {
+        return -1;
+    }
+    HostArr<unsigned int> triangleNeighbors;
+    triangleNeighbors.Validate(this->triangleCnt*3);
+    if (!CudaSafeCall(this->triangleNeighbors_D.CopyToHost(triangleNeighbors.Peek()))) {
+        return -1;
+    }
+    uint newTriangleCnt = 0;
+    vislib::Array<unsigned int> newTriangles;
+    vislib::Array<float> newVertices;
+    for (int t = 0; t < this->triangleCnt; ++t) {
+        uint idx0 = triangleIdx.Peek()[3*t+0];
+        uint idx1 = triangleIdx.Peek()[3*t+1];
+        uint idx2 = triangleIdx.Peek()[3*t+2];
+
+        bool flag0 = vertexFlag.Peek()[idx0] && vertexFlag.Peek()[idx1]; // edge 0
+        bool flag1 = vertexFlag.Peek()[idx1] && vertexFlag.Peek()[idx2]; // edge 1
+        bool flag2 = vertexFlag.Peek()[idx0] && vertexFlag.Peek()[idx2]; // edge 2
+
+        if (!(flag0 || flag1 || flag2)) continue; // No sibdivision
+
+        float3 pos0 = make_float3(
+                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx0+0],
+                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx0+1],
+                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx0+2]);
+
+        float3 pos1 = make_float3(
+                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx1+0],
+                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx1+1],
+                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx1+2]);
+
+        float3 pos2 = make_float3(
+                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx2+0],
+                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx2+1],
+                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx2+2]);
+
+        if (flag0 && flag1 && flag2) { // All edges need subdivision
+
+            float3 pos01 = (pos0+pos1)*0.5;
+            float3 pos12 = (pos1+pos2)*0.5;
+            float3 pos02 = (pos0+pos2)*0.5;
+
+            // Create three new vertices
+            newVertices.Append(pos01.x);
+            newVertices.Append(pos01.y);
+            newVertices.Append(pos01.z);
+            uint v0 = this->vertexCnt + newVertices.Count()/3-1;
+
+            newVertices.Append(pos12.x);
+            newVertices.Append(pos12.y);
+            newVertices.Append(pos12.z);
+            uint v1 = this->vertexCnt + newVertices.Count()/3-1;
+
+            newVertices.Append(pos02.x);
+            newVertices.Append(pos02.y);
+            newVertices.Append(pos02.z);
+            uint v2 = this->vertexCnt + newVertices.Count()/3-1;
+
+            // Create 4 new triangles
+            newTriangles.Add(idx0);
+            newTriangles.Add(v0);
+            newTriangles.Add(v2);
+
+            newTriangles.Add(idx1);
+            newTriangles.Add(v0);
+            newTriangles.Add(v1);
+
+            newTriangles.Add(idx2);
+            newTriangles.Add(v1);
+            newTriangles.Add(v2);
+
+            newTriangles.Add(v0);
+            newTriangles.Add(v1);
+            newTriangles.Add(v2);
+
+        }
+    }
+    // TODO
+
+
+    /* 3. Create new triangles, vertices */
+
+    // TODO
+
+
+    /* 4. Update VBOs for vertex data and triangle indices */
+
+    // TODO
+
+    // Cleanup
+    vertexBuffer.Release();
+    vertexFlag.Release();
+    triangleIdx.Release();
+    triangleNeighbors.Release();
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+        return -1;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return -1;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return -1;
+    }
+
+    return newTriangleCnt;
 }
 
 
