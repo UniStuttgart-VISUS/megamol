@@ -489,6 +489,12 @@ private:
 
     // Device array that flags corrupt triangles
     CudaDevArr<float> intUncertaintyCorrupt_D;
+
+
+    /* Subdivision */
+
+    CudaDevArr<int> triangleEdgeOffs_D;
+    CudaDevArr<uint> triangleEdgeList_D;
 };
 
 } // namespace protein

@@ -3697,6 +3697,207 @@ DeformableGPUSurfaceMT& DeformableGPUSurfaceMT::operator=(const DeformableGPUSur
 
 
 /*
+ * DeformableGPUSurfaceMT_GetTriangleEdgeCnt_D
+ */
+__global__ void DeformableGPUSurfaceMT_GetTriangleEdgeCnt_D (
+        int *triangleEdgeOffs_D,
+        uint *triangleNeighbors_D,
+        uint triangleCnt) {
+
+    const uint triIdx = ::getThreadIdx();
+    if (triIdx > triangleCnt) return;
+
+    uint cnt = 0;
+    uint n0 = triangleNeighbors_D[3*triIdx+0];
+    cnt = cnt + int(n0 > triIdx);
+    uint n1 = triangleNeighbors_D[3*triIdx+1];
+    cnt = cnt + int(n1 > triIdx);
+    uint n2 = triangleNeighbors_D[3*triIdx+2];
+    cnt = cnt + int(n2 > triIdx);
+
+    triangleEdgeOffs_D[triIdx] = cnt;
+}
+
+
+__device__ uint2 getAdjEdge_D (uint v0, uint v1, uint v2,
+                               uint w0, uint w1, uint w2) {
+
+    int idx0=-1, idx1=-1;
+    int v[3], w[3];
+    v[0] = v0; v[1] = v1; v[2] = v2;
+    w[0] = w0; w[1] = w1; w[2] = w2;
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (v[i] == w[j]) {
+                if (idx0 < 0) {
+                    idx0 = v[i];
+                } else {
+                    if (v[i] != idx0) {
+                        idx1 = v[i];
+                    }
+                }
+            }
+        }
+    }
+
+   return make_uint2(idx0, idx1);
+}
+
+
+/*
+ * DeformableGPUSurfaceMT_BuildEdgeList_D
+ */
+__global__ void DeformableGPUSurfaceMT_BuildEdgeList_D (
+        uint *edgeList_D,
+        int *triangleEdgeOffs_D,
+        uint *triangleNeighbors_D,
+        uint *triangleIdx_D,
+        uint triangleCnt) {
+
+    const uint triIdx = ::getThreadIdx();
+    if (triIdx >= triangleCnt) return;
+
+    uint3 idx = make_uint3(triangleIdx_D[3*triIdx+0],
+                           triangleIdx_D[3*triIdx+1],
+                           triangleIdx_D[3*triIdx+2]);
+
+
+
+    uint cnt = 0;
+    uint n0 = triangleNeighbors_D[3*triIdx+0];
+    uint offs = triangleEdgeOffs_D[triIdx];
+    // TODO Comparing all three vertex indices necessary? Use only two?
+    if (n0 > triIdx) {
+        uint3 nIdx = make_uint3(triangleIdx_D[3*n0+0],
+                               triangleIdx_D[3*n0+1],
+                               triangleIdx_D[3*n0+2]);
+        uint2 e = getAdjEdge_D(idx.x, idx.y, idx.z, nIdx.x, nIdx.y, nIdx.z);
+//        printf("%u %u: %u %u %u, %u %u %u\n", e.x, e.y, idx.x, idx.y, idx.z, nIdx.x, nIdx.y, nIdx.z);
+        edgeList_D[2*offs+0] = e.x;
+        edgeList_D[2*offs+1] = e.y;
+//        printf("edge %u %u\n", e.x, e.y);
+        cnt++;
+    }
+    uint n1 = triangleNeighbors_D[3*triIdx+1];
+    if (n1 > triIdx) {
+        uint3 nIdx = make_uint3(triangleIdx_D[3*n1+0],
+                                triangleIdx_D[3*n1+1],
+                                triangleIdx_D[3*n1+2]);
+        uint2 e = getAdjEdge_D(idx.x, idx.y, idx.z, nIdx.x, nIdx.y, nIdx.z);
+        edgeList_D[2*(offs+cnt)+0] = e.x;
+        edgeList_D[2*(offs+cnt)+1] = e.y;
+        cnt++;
+    }
+    uint n2 = triangleNeighbors_D[3*triIdx+2];
+    if (n2 > triIdx) {
+        uint3 nIdx = make_uint3(triangleIdx_D[3*n2+0],
+                                triangleIdx_D[3*n2+1],
+                                triangleIdx_D[3*n2+2]);
+        uint2 e = getAdjEdge_D(idx.x, idx.y, idx.z, nIdx.x, nIdx.y, nIdx.z);
+        edgeList_D[2*(offs+cnt)+0] = e.x;
+        edgeList_D[2*(offs+cnt)+1] = e.y;
+    }
+}
+
+
+__device__ uint getLocalEdgeOffsInTriangle_D(
+        uint i0,
+        uint i1,
+        uint *triangleNeighbors_D,
+        uint *triangleIdx_D,
+        uint triIdx) {
+
+    uint cnt = 0;
+
+    uint v[3];
+    v[0] = triangleIdx_D[3*triIdx+0];
+    v[1] = triangleIdx_D[3*triIdx+1];
+    v[2] = triangleIdx_D[3*triIdx+2];
+
+    uint n[3];
+    n[0] = triangleNeighbors_D[3*triIdx+0];
+    n[1] = triangleNeighbors_D[3*triIdx+1];
+    n[2] = triangleNeighbors_D[3*triIdx+2];
+
+    for (int i = 0; i < 3; ++i) {
+        if (n[i] < triIdx) continue; // This edge is not associated with this triangle
+        if ((v[i] == i0)&&(v[(i+1)%3] == i1)||
+            (v[i] == i1)&&(v[(i+1)%3] == i0)) {
+            cnt++;
+            break;
+        } else {
+            cnt++;
+        }
+    }
+
+    return cnt-1;
+}
+
+
+/*
+ * DeformableGPUSurfaceMT_ComputeTriEdgeList_D
+ */
+__global__ void DeformableGPUSurfaceMT_ComputeTriEdgeList_D (
+        uint *triEdgeList_D,
+        int *triangleEdgeOffs_D,
+        uint *triangleNeighbors_D,
+        uint *triangleIdx_D,
+        uint triangleCnt) {
+
+    const uint triIdx = ::getThreadIdx();
+    if (triIdx >= triangleCnt) return;
+
+    uint3 idx = make_uint3(triangleIdx_D[3*triIdx+0],
+                           triangleIdx_D[3*triIdx+1],
+                           triangleIdx_D[3*triIdx+2]);
+
+    uint offs = triangleEdgeOffs_D[triIdx];
+
+    // Get first edge
+    uint n0 = triangleNeighbors_D[3*triIdx+0];
+    uint nGlobalOffs;
+    uint nLocalOffs;
+    if (n0 < triIdx) { // Edge is associated with neighbor
+        nGlobalOffs = triangleEdgeOffs_D[n0];
+        nLocalOffs = getLocalEdgeOffsInTriangle_D(idx.x, idx.y,
+                triangleNeighbors_D, triangleIdx_D, n0);
+    } else { // Egde is associated with self
+        nGlobalOffs = triangleEdgeOffs_D[triIdx];
+        nLocalOffs = getLocalEdgeOffsInTriangle_D(idx.x, idx.y,
+                triangleNeighbors_D, triangleIdx_D, triIdx);
+    }
+    triEdgeList_D[3*triIdx+0] = nGlobalOffs + nLocalOffs;
+
+    // Get second edge
+    uint n1 = triangleNeighbors_D[3*triIdx+1];
+    if (n1 < triIdx) { // Edge is associated with neighbor
+        nGlobalOffs = triangleEdgeOffs_D[n1];
+        nLocalOffs = getLocalEdgeOffsInTriangle_D(idx.y, idx.z,
+                triangleNeighbors_D, triangleIdx_D, n1);
+    } else { // Egde is associated with self
+        nGlobalOffs = triangleEdgeOffs_D[triIdx];
+        nLocalOffs = getLocalEdgeOffsInTriangle_D(idx.y, idx.z,
+                triangleNeighbors_D, triangleIdx_D, triIdx);
+    }
+    triEdgeList_D[3*triIdx+1] = nGlobalOffs + nLocalOffs;
+
+    // Get third edge
+    uint n2 = triangleNeighbors_D[3*triIdx+2];
+    if (n2 < triIdx) { // Edge is associated with neighbor
+        nGlobalOffs = triangleEdgeOffs_D[n2];
+        nLocalOffs = getLocalEdgeOffsInTriangle_D(idx.z, idx.x,
+                triangleNeighbors_D, triangleIdx_D, n2);
+    } else { // Egde is associated with self
+        nGlobalOffs = triangleEdgeOffs_D[triIdx];
+        nLocalOffs = getLocalEdgeOffsInTriangle_D(idx.z, idx.x,
+                triangleNeighbors_D, triangleIdx_D, triIdx);
+    }
+    triEdgeList_D[3*triIdx+2] = nGlobalOffs + nLocalOffs;
+}
+
+
+/*
  * DeformableGPUSurfaceMT::RefineMesh
  */
 int DeformableGPUSurfaceMT::RefineMesh(uint maxSubdivLevel,
@@ -3707,9 +3908,11 @@ int DeformableGPUSurfaceMT::RefineMesh(uint maxSubdivLevel,
         float isovalue,
         float maxEdgeLen) {
 
-    printf("Refine mesh\n");
-
     using vislib::sys::Log;
+
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+            "%s: Refine mesh",
+            this->ClassName());
 
     // Init grid parameters
 
@@ -3769,144 +3972,129 @@ int DeformableGPUSurfaceMT::RefineMesh(uint maxSubdivLevel,
     }
 
 
-    /* 1. Flag long edges */
+    /* 1. Compute edge list */
 
     const uint edgeCnt = (this->triangleCnt*3)/2;
-    if (this->edges.GetCount() != edgeCnt*2) {
-        return -1; // We need precomputed edges
+
+    // Get the number of edges associated with each triangle
+    if (!CudaSafeCall(this->triangleEdgeOffs_D.Validate(this->triangleCnt))) {
+        return false;
     }
-    HostArr<bool> vertexFlag; // 'true' = adjacent to overlong edge
-    vertexFlag.Validate(this->vertexCnt);
-    vertexFlag.Set(0x00); // Set all to false
-    float maxLenSqrt = maxEdgeLen*maxEdgeLen;
-    uint overlongEdgeCnt = 0;
-    // Loop through all edges
+    if (!CudaSafeCall(this->triangleEdgeOffs_D.Set(0x00))) {
+        return false;
+    }
+    // Check whether triangle neighbors have been computed
+    if (this->triangleNeighbors_D.GetCount() != this->triangleCnt*3) {
+        return false;
+    }
+    DeformableGPUSurfaceMT_GetTriangleEdgeCnt_D <<< Grid(this->triangleCnt, 256), 256 >>>(
+           this->triangleEdgeOffs_D.Peek(),
+           this->triangleNeighbors_D.Peek(),
+           this->triangleCnt);
+    if (!CheckForCudaError()) {
+        return false;
+    }
+
+    // Compute prefix sum
+    thrust::exclusive_scan(
+            thrust::device_ptr<int>(this->triangleEdgeOffs_D.Peek()),
+            thrust::device_ptr<int>(this->triangleEdgeOffs_D.Peek() + this->triangleCnt),
+            thrust::device_ptr<int>(this->triangleEdgeOffs_D.Peek()));
+
+    if (!CheckForCudaError()) {
+        return false;
+    }
+
+    // Build up edge list based on the offsets
+    if (!CudaSafeCall(this->edges_D.Validate(edgeCnt*2))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->edges_D.Set(0x00))) {
+        return false;
+    }
+    DeformableGPUSurfaceMT_BuildEdgeList_D <<< Grid(this->triangleCnt, 256), 256 >>>(
+            this->edges_D.Peek(),
+            this->triangleEdgeOffs_D.Peek(),
+            this->triangleNeighbors_D.Peek(),
+            vboTriIdxPt,
+            this->triangleCnt);
+    if (!CheckForCudaError()) {
+        return false;
+    }
+
+    // DEBUG Print edges
+    this->edges.Validate(this->edges_D.GetCount());
+    if (!CudaSafeCall(this->edges_D.CopyToHost(this->edges.Peek()))){
+        return false;
+    }
     for (int e = 0; e < edgeCnt; ++e) {
-        uint idx0 = this->edges.Peek()[2*e+0];
-        uint idx1 = this->edges.Peek()[2*e+1];
-        float3 pos0 = make_float3(
-                vertexBuffer.Peek()[this->vertexDataStride*idx0 + 0],
-                vertexBuffer.Peek()[this->vertexDataStride*idx0 + 1],
-                vertexBuffer.Peek()[this->vertexDataStride*idx0 + 2]);
-        float3 pos1 = make_float3(
-                vertexBuffer.Peek()[this->vertexDataStride*idx1 + 0],
-                vertexBuffer.Peek()[this->vertexDataStride*idx1 + 1],
-                vertexBuffer.Peek()[this->vertexDataStride*idx1 + 2]);
-
-        float distSqrt = (pos0.x-pos1.x)*(pos0.x-pos1.x) +
-                         (pos0.y-pos1.y)*(pos0.y-pos1.y) +
-                         (pos0.z-pos1.z)*(pos0.z-pos1.z);
-
-        if (distSqrt > maxLenSqrt) {
-            vertexFlag.Peek()[idx0] = true;
-            vertexFlag.Peek()[idx1] = true;
-            overlongEdgeCnt++;
-        }
+        printf("EDGE %i: %u %u\n", e,
+                this->edges.Peek()[2*e+0],
+                this->edges.Peek()[2*e+1]);
     }
-
-    printf("Found %u over-long edges\n", overlongEdgeCnt);
-
-
-    /* 2. Determine number of new triangles and flag invalid ones */
-
-    HostArr<unsigned int> triangleIdx;
-    triangleIdx.Validate(this->triangleCnt*3);
-    if (!CudaSafeCall(cudaMemcpy(triangleIdx.Peek(), vboTriIdxPt, vboTriSize,
-            cudaMemcpyDeviceToHost))) {
-        return -1;
-    }
-    HostArr<unsigned int> triangleNeighbors;
-    triangleNeighbors.Validate(this->triangleCnt*3);
-    if (!CudaSafeCall(this->triangleNeighbors_D.CopyToHost(triangleNeighbors.Peek()))) {
-        return -1;
-    }
-    uint newTriangleCnt = 0;
-    vislib::Array<unsigned int> newTriangles;
-    vislib::Array<float> newVertices;
-    for (int t = 0; t < this->triangleCnt; ++t) {
-        uint idx0 = triangleIdx.Peek()[3*t+0];
-        uint idx1 = triangleIdx.Peek()[3*t+1];
-        uint idx2 = triangleIdx.Peek()[3*t+2];
-
-        bool flag0 = vertexFlag.Peek()[idx0] && vertexFlag.Peek()[idx1]; // edge 0
-        bool flag1 = vertexFlag.Peek()[idx1] && vertexFlag.Peek()[idx2]; // edge 1
-        bool flag2 = vertexFlag.Peek()[idx0] && vertexFlag.Peek()[idx2]; // edge 2
-
-        if (!(flag0 || flag1 || flag2)) continue; // No sibdivision
-
-        float3 pos0 = make_float3(
-                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx0+0],
-                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx0+1],
-                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx0+2]);
-
-        float3 pos1 = make_float3(
-                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx1+0],
-                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx1+1],
-                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx1+2]);
-
-        float3 pos2 = make_float3(
-                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx2+0],
-                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx2+1],
-                vertexBuffer.Peek()[GPUSurfaceMT::vertexDataStride*idx2+2]);
-
-        if (flag0 && flag1 && flag2) { // All edges need subdivision
-
-            float3 pos01 = (pos0+pos1)*0.5;
-            float3 pos12 = (pos1+pos2)*0.5;
-            float3 pos02 = (pos0+pos2)*0.5;
-
-            // Create three new vertices
-            newVertices.Append(pos01.x);
-            newVertices.Append(pos01.y);
-            newVertices.Append(pos01.z);
-            uint v0 = this->vertexCnt + newVertices.Count()/3-1;
-
-            newVertices.Append(pos12.x);
-            newVertices.Append(pos12.y);
-            newVertices.Append(pos12.z);
-            uint v1 = this->vertexCnt + newVertices.Count()/3-1;
-
-            newVertices.Append(pos02.x);
-            newVertices.Append(pos02.y);
-            newVertices.Append(pos02.z);
-            uint v2 = this->vertexCnt + newVertices.Count()/3-1;
-
-            // Create 4 new triangles
-            newTriangles.Add(idx0);
-            newTriangles.Add(v0);
-            newTriangles.Add(v2);
-
-            newTriangles.Add(idx1);
-            newTriangles.Add(v0);
-            newTriangles.Add(v1);
-
-            newTriangles.Add(idx2);
-            newTriangles.Add(v1);
-            newTriangles.Add(v2);
-
-            newTriangles.Add(v0);
-            newTriangles.Add(v1);
-            newTriangles.Add(v2);
-
-        }
-    }
-    // TODO
+    // END DEBUG
 
 
-    /* 3. Create new triangles, vertices */
+    /* 2. Flag long edges and determine number of newly created vertices */
 
     // TODO
 
 
-    /* 4. Update VBOs for vertex data and triangle indices */
+    /* 3. Interpolate new vertex positions associated with the flagged edges */
+
+    // TODO
+
+
+    /* 4. Build triangle-edge-list */
+
+    if (!CudaSafeCall(this->triangleEdgeList_D.Validate(this->triangleCnt*3))) {
+        return false;
+    }
+    DeformableGPUSurfaceMT_ComputeTriEdgeList_D  <<< Grid(this->triangleCnt, 256), 256 >>> (
+            this->triangleEdgeList_D.Peek(),
+            this->triangleEdgeOffs_D.Peek(),
+            this->triangleNeighbors_D.Peek(),
+            vboTriIdxPt,
+            this->triangleCnt);
+    if (!CheckForCudaError()) {
+        return false;
+    }
+
+//    // DEBUG Triangle edge list
+//    HostArr<unsigned int> triangleEdgeList;
+//    triangleEdgeList.Validate(this->triangleEdgeList_D.GetCount());
+//    if (!CudaSafeCall(this->triangleEdgeList_D.CopyToHost(triangleEdgeList.Peek()))){
+//        return false;
+//    }
+//    for (int e = 0; e < this->triangleCnt; ++e) {
+//        printf("Tri %i, edges: %u %u %u\n", e,
+//                triangleEdgeList.Peek()[3*e+0],
+//                triangleEdgeList.Peek()[3*e+1],
+//                triangleEdgeList.Peek()[3*e+2]);
+//    }
+//    triangleEdgeList.Release();
+//    // END DEBUG
+
+
+    /* 5. Determine number of newly created triangles */
+
+    // TODO
+
+
+    /* 6. Create new triangles, vertices */
+
+    // TODO
+
+
+    /* 7. Update VBOs for vertex data and triangle indices */
 
     // TODO
 
     // Cleanup
     vertexBuffer.Release();
-    vertexFlag.Release();
-    triangleIdx.Release();
-    triangleNeighbors.Release();
+//    vertexFlag.Release();
+//    triangleIdx.Release();
+//    triangleNeighbors.Release();
 
     if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
         return -1;
@@ -3918,7 +4106,8 @@ int DeformableGPUSurfaceMT::RefineMesh(uint maxSubdivLevel,
         return -1;
     }
 
-    return newTriangleCnt;
+//    return newTriangleCnt;
+    return 0;
 }
 
 

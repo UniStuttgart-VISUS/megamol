@@ -2402,7 +2402,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->volOrg,
                 this->volDelta,
                 this->qsIsoVal,
-                this->volDim.x*2) < 0) { // TODO Whats a good maximum edge length?
+                this->volDelta.x) < 0) { // TODO Whats a good maximum edge length?
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not refine mesh",

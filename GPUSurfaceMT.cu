@@ -19,8 +19,6 @@
 #include "CUDAGrid.cuh"
 #include "cuda_helper.h"
 
-#include "LUT_TriEdgeIdxByTetrahedronFlags.h"
-
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 
@@ -582,13 +580,13 @@ __constant__ __device__ int GetAdjTetraFace_C[6][4][5] = {
         },
         { // local tetrahedron #3
                 { 0, 0, 0, 2, 2}, // local face #0
-                { 0, 1, 0, 0, 3}, // local face #1
+                { 0, 1, 0, 5, 3}, // local face #1
                 { 0, 0, 0, 4, 0}, // local face #2
                 {-1, 0, 0, 1, 1}, // local face #3
         },
         { // local tetrahedron #4
                 { 0, 0, 0, 3, 2}, // local face #0
-                { 0, 0, 1, 5, 3}, // local face #1
+                { 0, 0, 1, 2, 3}, // local face #1
                 { 0, 0, 0, 5, 0}, // local face #2
                 {-1, 0, 0, 0, 1}, // local face #3
         },
@@ -665,18 +663,13 @@ __global__ void GPUSurfaceMT_ComputeTriangleNeighbors_D (
     const int tetrahedronIndex = id % 6;
     const uint3 cellOrg = ::GetGridCoordsByCellIdx(cubeMap_D[activeCellIndex]);
 
-//    if (id == 0) {
-//        printf("cellOrg %u %u %u\n",
-//                cellOrg.x, cellOrg.y, cellOrg.z);
-//    }
-
     // Get bitmap to classify the tetrahedron
     unsigned char tetrahedronFlags = tetrahedronFlags_D(cellOrg,
             tetrahedronIndex, isoval, volume_D);
 
     uint vertexBaseOffset = vertexOffsets_D[id];
 
-//    if (id == 0) {
+//    if (vertexBaseOffset == 7*3) {
 //        printf("localTetraIdx %i, flags %i\n", tetrahedronIndex, tetrahedronFlags);
 //    }
 
@@ -696,14 +689,14 @@ __global__ void GPUSurfaceMT_ComputeTriangleNeighbors_D (
         uint localTetraEdgeIdx0 = tetrahedronTriangles[tetrahedronFlags][idx0];
         uint localTetraEdgeIdx1 = tetrahedronTriangles[tetrahedronFlags][idx1];
 
-//        if (id == 0) {
+//        if (vertexBaseOffset == 7*3) {
 //            printf("edge %i: %u %u\n", i, localTetraEdgeIdx0, localTetraEdgeIdx1);
 //        }
 
         // Obtain face on which the edge lays
         uint localFaceIdx = faceIdxbyEdgeIndices[localTetraEdgeIdx0][localTetraEdgeIdx1];
 
-//        if (id == 0) {
+//        if (vertexBaseOffset == 7*3) {
 //            printf("face Idx %u\n", localFaceIdx);
 //        }
 
@@ -723,7 +716,7 @@ __global__ void GPUSurfaceMT_ComputeTriangleNeighbors_D (
             uint adjTetraIdx = GetAdjTetraFace_C[tetrahedronIndex][localFaceIdx][3];
             uint adjFaceIdx =  GetAdjTetraFace_C[tetrahedronIndex][localFaceIdx][4];
 
-//            if (id == 0) {
+//            if (vertexBaseOffset == 7*3) {
 //                printf("offs %i %i %i, adjTetra %u, adjFace %u\n",
 //                        cellOffs.x, cellOffs.y, cellOffs.z,
 //                        adjTetraIdx, adjFaceIdx);
@@ -733,7 +726,7 @@ __global__ void GPUSurfaceMT_ComputeTriangleNeighbors_D (
                                      cellOrg.y + cellOffs.y,
                                      cellOrg.z + cellOffs.z);
 
-//            if (id == 0) {
+//            if (vertexBaseOffset == 7*3) {
 //                printf("adjCell %i %i %i\n",
 //                        adjCell.x, adjCell.y, adjCell.z);
 //            }
@@ -741,11 +734,11 @@ __global__ void GPUSurfaceMT_ComputeTriangleNeighbors_D (
             uint adjCellIdx = ::GetCellIdxByGridCoords(adjCell);
             uint adjActiveCellIdx = cubeMapInv_D[adjCellIdx];
 
-//            if (id == 0) {
+//            if (vertexBaseOffset == 7*3) {
 //                printf("adjCellIdx %u\n", adjCellIdx);
 //            }
-
-//            if (id == 0) {
+//
+//            if (vertexBaseOffset == 7*3) {
 //                printf("adjActiveCellIdx %u\n", adjActiveCellIdx);
 //            }
 
@@ -753,7 +746,7 @@ __global__ void GPUSurfaceMT_ComputeTriangleNeighbors_D (
             // Compute global tetrahedron index of the adjacent tetrahedron
             uint globalAdjTetraIdx = adjActiveCellIdx*6 + adjTetraIdx;
 
-//            if (id == 0) {
+//            if (vertexBaseOffset == 7*3) {
 //                printf("globalAdjTetraIdx %u\n", globalAdjTetraIdx);
 //            }
 
@@ -765,13 +758,13 @@ __global__ void GPUSurfaceMT_ComputeTriangleNeighbors_D (
             // Note: this should never be negative
             int triOffs = IsFaceAdjacentToTri_C[adjTetrahedronFlags][adjFaceIdx];
 
-//            if (id == 0) {
+//            if (vertexBaseOffset == 7*3) {
 //                printf("triOffs %i\n", triOffs);
 //            }
 
             // Write to global dev memory
             triangleNeighbors_D[vertexBaseOffset + i] = vertexOffsets_D[globalAdjTetraIdx] / 3 + triOffs;
-//            if (id == 0) {
+//            if (vertexBaseOffset == 7*3) {
 //                printf("ADD NEIGHBOR %i\n",
 //                        vertexOffsets_D[globalAdjTetraIdx] / 3 + triOffs);
 //            }
@@ -821,20 +814,20 @@ bool GPUSurfaceMT::ComputeTriangleNeighbors(
         return false;
     }
 
-//    // DEBUG print edge list
-//    HostArr<unsigned int> triangleNeighbors;
-//    triangleNeighbors.Validate(this->triangleNeighbors_D.GetCount());
-//    if (!CudaSafeCall(this->triangleNeighbors_D.CopyToHost(triangleNeighbors.Peek()))){
-//        return false;
-//    }
-//    for (int e = 0; e < this->triangleCnt; ++e) {
-//        printf("TRIANGLE NEIGHBORS %i: %u %u %u\n", e,
-//                triangleNeighbors.Peek()[3*e+0],
-//                triangleNeighbors.Peek()[3*e+1],
-//                triangleNeighbors.Peek()[3*e+2]);
-//    }
-//    triangleNeighbors.Release();
-//    // END DEBUG
+    // DEBUG print triangle neighbors
+    HostArr<unsigned int> triangleNeighbors;
+    triangleNeighbors.Validate(this->triangleNeighbors_D.GetCount());
+    if (!CudaSafeCall(this->triangleNeighbors_D.CopyToHost(triangleNeighbors.Peek()))){
+        return false;
+    }
+    for (int e = 0; e < this->triangleCnt; ++e) {
+        printf("TRIANGLE NEIGHBORS %i: %u %u %u\n", e,
+                triangleNeighbors.Peek()[3*e+0],
+                triangleNeighbors.Peek()[3*e+1],
+                triangleNeighbors.Peek()[3*e+2]);
+    }
+    triangleNeighbors.Release();
+    // END DEBUG
 
     return true;
 }
@@ -2667,15 +2660,15 @@ bool GPUSurfaceMT::ComputeTriangles(
         return false;
     }
 
-//    // DEBUG print triangle indices
-//    HostArr<unsigned int> vboTriangleIdx;
-//    vboTriangleIdx.Validate(this->triangleCnt*3);
-//    cudaMemcpy(vboTriangleIdx.Peek(), vboTriangleIdxPt, vboTriangleIdxSize, cudaMemcpyDeviceToHost);
-//    for (int t = 0; t < this->triangleCnt; ++t) {
-//        printf("TRIANGLE %i: %u %u %u\n", t, vboTriangleIdx.Peek()[3*t+0],
-//                vboTriangleIdx.Peek()[3*t+1], vboTriangleIdx.Peek()[3*t+2]);
-//    }
-//    // END DEBUG
+    // DEBUG print triangle indices
+    HostArr<unsigned int> vboTriangleIdx;
+    vboTriangleIdx.Validate(this->triangleCnt*3);
+    cudaMemcpy(vboTriangleIdx.Peek(), vboTriangleIdxPt, vboTriangleIdxSize, cudaMemcpyDeviceToHost);
+    for (int t = 0; t < this->triangleCnt; ++t) {
+        printf("TRIANGLE %i: %u %u %u\n", t, vboTriangleIdx.Peek()[3*t+0],
+                vboTriangleIdx.Peek()[3*t+1], vboTriangleIdx.Peek()[3*t+2]);
+    }
+    // END DEBUG
 
     // Unmap CUDA graphics resource
     if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->triangleIdxResource))) {
