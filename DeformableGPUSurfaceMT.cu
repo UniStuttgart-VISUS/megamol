@@ -3408,6 +3408,8 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
 
     using vislib::sys::Log;
 
+    printf("MORPH!!");
+
     /* Init grid parameters */
 
     // Init constant device params

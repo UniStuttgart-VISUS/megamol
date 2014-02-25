@@ -2392,6 +2392,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Perform subdivision with subsequent deformation to create a fine
         // target mesh enough
+        float initialStep = 1.0;
         for (int i = 0; i < this->maxSubdivLevel; ++i) {
             if (this->deformSurfMapped.RefineMesh(
                     1,
@@ -2404,7 +2405,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->volOrg,
                     this->volDelta,
                     this->qsIsoVal,
-                    this->volDelta.x*0.2) < 0) { // TODO Whats a good maximum edge length?
+                    this->volDelta.x) < 0) { // TODO Whats a good maximum edge length?
 
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                         "%s: could not refine mesh",
@@ -2415,6 +2416,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
             // Perform morphing
             // Morph surface #2 to shape #1 using Two-Way-GVF
+
+            initialStep*=0.1f;
 
             if (!this->deformSurfMapped.MorphToVolumeTwoWayGVF(
 #ifndef  USE_PROCEDURAL_DATA
@@ -2437,7 +2440,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->surfaceMappingMaxIt,
                     this->surfMappedMinDisplScl,
                     this->surfMappedSpringStiffness,
-                    this->surfaceMappingForcesScl*0.1,
+                    this->surfaceMappingForcesScl,
                     this->surfaceMappingExternalForcesWeightScl,
                     this->surfMappedGVFScl,
                     this->surfMappedGVFIt)) {
@@ -2953,7 +2956,7 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
         glDisable(GL_LIGHTING);
         glLineWidth(1.0f);
         glCullFace(GL_BACK);
-//        glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else if (renderMode == SURFACE_POINTS){
         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
