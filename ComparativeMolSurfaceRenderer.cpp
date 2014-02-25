@@ -2429,20 +2429,20 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
-        // Flag vertices adjacent to corrupt triangles
-        if (!this->deformSurfMapped.FlagCorruptTriangles(
-#ifndef  USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-#else //  USE_PROCEDURAL_DATA
-                this->procField1D.Peek(),
-#endif //  USE_PROCEDURAL_DATA
-                this->deformSurf1.PeekCubeStates(),
-                this->volDim,
-                this->volOrg,
-                this->volDelta,
-                this->qsIsoVal)) {
-            return false;
-        }
+//        // Flag vertices adjacent to corrupt triangles
+//        if (!this->deformSurfMapped.FlagCorruptTriangles(
+//#ifndef  USE_PROCEDURAL_DATA
+//                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+//#else //  USE_PROCEDURAL_DATA
+//                this->procField1D.Peek(),
+//#endif //  USE_PROCEDURAL_DATA
+//                this->deformSurf1.PeekCubeStates(),
+//                this->volDim,
+//                this->volOrg,
+//                this->volDelta,
+//                this->qsIsoVal)) {
+//            return false;
+//        }
 
         this->triggerSurfaceMapping = false;
         this->triggerComputeSubdiv = true;
@@ -2544,14 +2544,14 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     camPos[1] = modelMatrix.GetAt(1, 3);
     camPos[2] = modelMatrix.GetAt(2, 3);
 
-    // DEBUG Render external forces as lines
-    if (!this->renderExternalForces()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: could not render external forces",
-                this->ClassName());
-        return false;
-    }
-    // END DEBUG
+//    // DEBUG Render external forces as lines
+//    if (!this->renderExternalForces()) {
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                "%s: could not render external forces",
+//                this->ClassName());
+//        return false;
+//    }
+//    // END DEBUG
 
 
     if (this->surface1RM != SURFACE_NONE) {
@@ -2630,23 +2630,40 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
     if (this->surfaceMappedRM != SURFACE_NONE) {
 
-        // Sort triangles by camera distance
-        if (!this->deformSurfMapped.SortTrianglesByCamDist(camPos)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not sort triangles of mapped surface",
-                    this->ClassName());
-            return false;
-        }
+//        // Sort triangles by camera distance
+//        if (!this->deformSurfMapped.SortTrianglesByCamDist(camPos)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not sort triangles of mapped surface",
+//                    this->ClassName());
+//            return false;
+//        }
 
-        // Render mapped surface
-        if (!this->renderMappedSurface(
-                this->deformSurf2.GetVtxDataVBO(),
+//        // Render mapped surface
+//        if (!this->renderMappedSurface(
+//                this->deformSurf2.GetVtxDataVBO(),
+//                this->deformSurfMapped.GetVtxDataVBO(),
+//                this->deformSurfMapped.GetVertexCnt(),
+//                this->deformSurfMapped.GetTriangleIdxVBO(),
+//                this->deformSurfMapped.GetTriangleCnt()*3,
+//                this->surfaceMappedRM,
+//                this->surfaceMappedColorMode)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not render mapped surface",
+//                    this->ClassName());
+//            return false;
+//        }
+
+        // Render mapped surface as normal surface
+        if (!this->renderSurface(
                 this->deformSurfMapped.GetVtxDataVBO(),
                 this->deformSurfMapped.GetVertexCnt(),
                 this->deformSurfMapped.GetTriangleIdxVBO(),
                 this->deformSurfMapped.GetTriangleCnt()*3,
                 this->surfaceMappedRM,
-                this->surfaceMappedColorMode)) {
+                this->surface2ColorMode,
+                this->surfAttribTex2,
+                this->uniformColorSurf2,
+                this->surf2AlphaScl)) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not render mapped surface",
                     this->ClassName());
@@ -2894,9 +2911,10 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
     if (renderMode == SURFACE_FILL) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     } else if (renderMode == SURFACE_WIREFRAME) {
+        glDisable(GL_LIGHTING);
         glLineWidth(1.0f);
         glCullFace(GL_BACK);
-        glEnable(GL_CULL_FACE);
+//        glEnable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else if (renderMode == SURFACE_POINTS){
         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
@@ -2915,6 +2933,14 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
 
     this->pplSurfaceShader.Disable();
 
+//    glColor3f(1.0, 0.0, 0.0);
+//
+//    glDrawElements(GL_TRIANGLES,
+//            //triangleVertexCnt,
+//            3*24,
+//            GL_UNSIGNED_INT,
+//            reinterpret_cast<void*>(36*sizeof(unsigned int)));
+
     glDisableVertexAttribArrayARB(attribLocPos);
     glDisableVertexAttribArrayARB(attribLocNormal);
     glDisableVertexAttribArrayARB(attribLocTexCoord);
@@ -2923,6 +2949,7 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
     // Switch back to normal pointer operation by binding with 0
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    glEnable(GL_LIGHTING);
 
     return CheckForGLError(); // OpenGL error check
 }

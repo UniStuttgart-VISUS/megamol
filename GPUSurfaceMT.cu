@@ -814,20 +814,20 @@ bool GPUSurfaceMT::ComputeTriangleNeighbors(
         return false;
     }
 
-    // DEBUG print triangle neighbors
-    HostArr<unsigned int> triangleNeighbors;
-    triangleNeighbors.Validate(this->triangleNeighbors_D.GetCount());
-    if (!CudaSafeCall(this->triangleNeighbors_D.CopyToHost(triangleNeighbors.Peek()))){
-        return false;
-    }
-    for (int e = 0; e < this->triangleCnt; ++e) {
-        printf("TRIANGLE NEIGHBORS %i: %u %u %u\n", e,
-                triangleNeighbors.Peek()[3*e+0],
-                triangleNeighbors.Peek()[3*e+1],
-                triangleNeighbors.Peek()[3*e+2]);
-    }
-    triangleNeighbors.Release();
-    // END DEBUG
+//    // DEBUG print triangle neighbors
+//    HostArr<unsigned int> triangleNeighbors;
+//    triangleNeighbors.Validate(this->triangleNeighbors_D.GetCount());
+//    if (!CudaSafeCall(this->triangleNeighbors_D.CopyToHost(triangleNeighbors.Peek()))){
+//        return false;
+//    }
+//    for (int e = 0; e < this->triangleCnt; ++e) {
+//        printf("TRIANGLE NEIGHBORS %i: %u %u %u\n", e,
+//                triangleNeighbors.Peek()[3*e+0],
+//                triangleNeighbors.Peek()[3*e+1],
+//                triangleNeighbors.Peek()[3*e+2]);
+//    }
+//    triangleNeighbors.Release();
+//    // END DEBUG
 
     return true;
 }
@@ -2660,15 +2660,15 @@ bool GPUSurfaceMT::ComputeTriangles(
         return false;
     }
 
-    // DEBUG print triangle indices
-    HostArr<unsigned int> vboTriangleIdx;
-    vboTriangleIdx.Validate(this->triangleCnt*3);
-    cudaMemcpy(vboTriangleIdx.Peek(), vboTriangleIdxPt, vboTriangleIdxSize, cudaMemcpyDeviceToHost);
-    for (int t = 0; t < this->triangleCnt; ++t) {
-        printf("TRIANGLE %i: %u %u %u\n", t, vboTriangleIdx.Peek()[3*t+0],
-                vboTriangleIdx.Peek()[3*t+1], vboTriangleIdx.Peek()[3*t+2]);
-    }
-    // END DEBUG
+//    // DEBUG print triangle indices
+//    HostArr<unsigned int> vboTriangleIdx;
+//    vboTriangleIdx.Validate(this->triangleCnt*3);
+//    cudaMemcpy(vboTriangleIdx.Peek(), vboTriangleIdxPt, vboTriangleIdxSize, cudaMemcpyDeviceToHost);
+//    for (int t = 0; t < this->triangleCnt; ++t) {
+//        printf("TRIANGLE %i: %u %u %u\n", t, vboTriangleIdx.Peek()[3*t+0],
+//                vboTriangleIdx.Peek()[3*t+1], vboTriangleIdx.Peek()[3*t+2]);
+//    }
+//    // END DEBUG
 
     // Unmap CUDA graphics resource
     if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->triangleIdxResource))) {
