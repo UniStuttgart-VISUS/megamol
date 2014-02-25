@@ -4028,7 +4028,11 @@ __global__ void ComputeSubdiv_D(
         uint *edgeFlag_D,
         uint *edges_D,
         uint *subDivEdgeIdxOffs_D,
+        uint *oldSubDivLevels_D,
+        uint *subDivLevels_D,
+        uint *oldTrianglesIdxOffsets_D,
         uint vertexCntOld,
+        uint keptTrianglesCnt,
         uint triangleCnt) {
 
     const uint idx = ::getThreadIdx();
@@ -4075,6 +4079,14 @@ __global__ void ComputeSubdiv_D(
         newTriangles[3*triIdxOffs+10] = vNew1;
         newTriangles[3*triIdxOffs+11] = vNew2;
 
+        // Write subdiv levels
+        uint parentSubdiv = oldSubDivLevels_D[idx];
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+0] = parentSubdiv + 1;
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+1] = parentSubdiv + 1;
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+2] = parentSubdiv + 1;
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+3] = parentSubdiv + 1;
+
+
     } else if (flag0 && flag1) { // Spawn 3 new triangles
 
         uint vNew0 = vertexCntOld + subDivEdgeIdxOffs_D[e0];
@@ -4092,6 +4104,12 @@ __global__ void ComputeSubdiv_D(
         newTriangles[3*triIdxOffs+6] = v2;
         newTriangles[3*triIdxOffs+7] = v0;
         newTriangles[3*triIdxOffs+8] = vNew1;
+
+        // Write subdiv levels
+        uint parentSubdiv = oldSubDivLevels_D[idx];
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+0] = parentSubdiv + 1;
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+1] = parentSubdiv + 1;
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+2] = parentSubdiv + 1;
 
     } else if (flag1 && flag2) { // Spawn 3 new triangles
 
@@ -4111,6 +4129,12 @@ __global__ void ComputeSubdiv_D(
         newTriangles[3*triIdxOffs+7] = v1;
         newTriangles[3*triIdxOffs+8] = vNew1;
 
+        // Write subdiv levels
+        uint parentSubdiv = oldSubDivLevels_D[idx];
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+0] = parentSubdiv + 1;
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+1] = parentSubdiv + 1;
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+2] = parentSubdiv + 1;
+
     } else if (flag2 && flag0) { // Spawn 3 new triangles
 
         uint vNew2 = vertexCntOld + subDivEdgeIdxOffs_D[e2];
@@ -4129,6 +4153,12 @@ __global__ void ComputeSubdiv_D(
         newTriangles[3*triIdxOffs+7] = v2;
         newTriangles[3*triIdxOffs+8] = vNew0;
 
+        // Write subdiv levels
+        uint parentSubdiv = oldSubDivLevels_D[idx];
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+0] = parentSubdiv + 1;
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+1] = parentSubdiv + 1;
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+2] = parentSubdiv + 1;
+
     } else if (flag0) { // Spawn 2 new triangles
 
         uint vNew0 = vertexCntOld + subDivEdgeIdxOffs_D[e0];
@@ -4141,6 +4171,11 @@ __global__ void ComputeSubdiv_D(
         newTriangles[3*triIdxOffs+3] = v1;
         newTriangles[3*triIdxOffs+4] = v2;
         newTriangles[3*triIdxOffs+5] = vNew0;
+
+        // Write subdiv levels
+        uint parentSubdiv = oldSubDivLevels_D[idx];
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+0] = parentSubdiv + 1;
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+1] = parentSubdiv + 1;
 
     } else if (flag1) { // Spawn 2 new triangles
 
@@ -4155,6 +4190,11 @@ __global__ void ComputeSubdiv_D(
         newTriangles[3*triIdxOffs+4] = v2;
         newTriangles[3*triIdxOffs+5] = vNew1;
 
+        // Write subdiv levels
+        uint parentSubdiv = oldSubDivLevels_D[idx];
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+0] = parentSubdiv + 1;
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+1] = parentSubdiv + 1;
+
     } else if (flag2) { // Spawn 2 new triangles
 
         uint vNew2 = vertexCntOld + subDivEdgeIdxOffs_D[e2];
@@ -4167,6 +4207,14 @@ __global__ void ComputeSubdiv_D(
         newTriangles[3*triIdxOffs+3] = v1;
         newTriangles[3*triIdxOffs+4] = v2;
         newTriangles[3*triIdxOffs+5] = vNew2;
+
+        // Write subdiv levels
+        uint parentSubdiv = oldSubDivLevels_D[idx];
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+0] = parentSubdiv + 1;
+        subDivLevels_D[keptTrianglesCnt+triIdxOffs+1] = parentSubdiv + 1;
+    } else {
+        // Write back subdiv level
+        subDivLevels_D[oldTrianglesIdxOffsets_D[idx]] = oldSubDivLevels_D[idx];
     }
 }
 
@@ -5553,10 +5601,41 @@ int DeformableGPUSurfaceMT::RefineMesh(
     newTrianglesCnt += accTmp;
     printf("Need %i new triangles\n", newTrianglesCnt);
 
+    uint nOldTriangles = thrust::reduce(
+            thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek()),
+            thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek() + this->triangleCnt));
 
+    thrust::exclusive_scan(
+             thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek()),
+             thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek() + this->triangleCnt),
+             thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek()));
 
+     printf("Keep %i old triangles\n", nOldTriangles);
 
     /* 6. Create new triangles with respective vertex indices */
+
+    if (this->subDivLevels_D.GetCount() != this->triangleCnt) {
+        // This is the first subdivision
+        if (!CudaSafeCall(this->oldSubDivLevels_D.Validate(this->triangleCnt))) {
+            return -1;
+        }
+        if (!CudaSafeCall(this->oldSubDivLevels_D.Set(0x00))) {
+            return -1;
+        }
+    } else { // Store old subdivision levels
+        if (!CudaSafeCall(this->oldSubDivLevels_D.Validate(this->triangleCnt))) {
+            return -1;
+        }
+        if (!CudaSafeCall(cudaMemcpy(this->oldSubDivLevels_D.Peek(),
+                this->subDivLevels_D.Peek(), sizeof(unsigned int)*this->triangleCnt,
+                cudaMemcpyDeviceToDevice))){
+            return -1;
+        }
+    }
+    // Allocate memory for new subdivision levels (old and new triangles)
+    if (!CudaSafeCall(this->subDivLevels_D.Validate(nOldTriangles+newTrianglesCnt))) {
+        return -1;
+    }
 
     if (!CudaSafeCall(this->newTriangles_D.Validate(newTrianglesCnt*3))) {
         return -1;
@@ -5569,7 +5648,11 @@ int DeformableGPUSurfaceMT::RefineMesh(
             this->subDivEdgeFlag_D.Peek(),
             this->edges_D.Peek(),
             this->subDivEdgeIdxOffs_D.Peek(),
+            this->oldSubDivLevels_D.Peek(),
+            this->subDivLevels_D.Peek(),
+            this->oldTrianglesIdxOffs_D.Peek(),
             this->vertexCnt,
+            nOldTriangles,
             this->triangleCnt);
 
     if (!CheckForCudaErrorSync()) {
@@ -5589,18 +5672,18 @@ int DeformableGPUSurfaceMT::RefineMesh(
 //    newTriangles.Release();
 //    // END DEBUG
 
+//    // DEBUG Print subdivision levels
+//    HostArr<uint> subDivisionLevels;
+//    subDivisionLevels.Validate(this->subDivLevels_D.GetCount());
+//    this->subDivLevels_D.CopyToHost(subDivisionLevels.Peek());
+//    for (int i = 0; i < this->subDivLevels_D.GetCount(); ++i) {
+//        printf("SUBDIV LVL %i: %u \n", i,
+//                subDivisionLevels.Peek()[i]);
+//    }
+//    subDivisionLevels.Release();
+//    // END DEBUG
+
     /* 7. (Re-)compute triangle neighbors */
-
-    uint nOldTriangles = thrust::reduce(
-            thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek()),
-            thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek() + this->triangleCnt));
-
-    thrust::exclusive_scan(
-            thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek()),
-            thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek() + this->triangleCnt),
-            thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek()));
-
-    printf("Keep %i old triangles\n", nOldTriangles);
 
     if (!CudaSafeCall(this->newTriangleNeighbors_D.Validate((nOldTriangles+newTrianglesCnt)*3))) {
         return -1;

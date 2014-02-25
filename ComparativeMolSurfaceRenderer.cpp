@@ -2404,10 +2404,46 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->volOrg,
                     this->volDelta,
                     this->qsIsoVal,
-                    this->volDelta.x) < 0) { // TODO Whats a good maximum edge length?
+                    this->volDelta.x*0.2) < 0) { // TODO Whats a good maximum edge length?
 
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                         "%s: could not refine mesh",
+                        this->ClassName());
+
+                return false;
+            }
+
+            // Perform morphing
+            // Morph surface #2 to shape #1 using Two-Way-GVF
+
+            if (!this->deformSurfMapped.MorphToVolumeTwoWayGVF(
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField1D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
+                    this->deformSurf2.PeekCubeStates(),
+                    this->deformSurf1.PeekCubeStates(),
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
+                    this->qsIsoVal,
+                    this->interpolMode,
+                    this->surfaceMappingMaxIt,
+                    this->surfMappedMinDisplScl,
+                    this->surfMappedSpringStiffness,
+                    this->surfaceMappingForcesScl*0.1,
+                    this->surfaceMappingExternalForcesWeightScl,
+                    this->surfMappedGVFScl,
+                    this->surfMappedGVFIt)) {
+
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "%s: could not compute Two-Way-GVF deformation",
                         this->ClassName());
 
                 return false;
