@@ -17,7 +17,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 // Toggle the use of procedural volume fields for debugging purposes
-//#define USE_PROCEDURAL_DATA
+#define USE_PROCEDURAL_DATA
 
 #include "view/Renderer3DModuleDS.h"
 #include "CallerSlot.h"
@@ -298,6 +298,34 @@ protected:
      * @return 'True' on success, 'false' otherwise
      */
     bool renderSurface(
+            GLuint vbo,
+            uint vertexCnt,
+            GLuint vboTriangleIdx,
+            uint triangleVertexCnt,
+            SurfaceRenderMode renderMode,
+            SurfaceColorMode colorMode,
+            GLuint potentialTex,
+            Vec3f uniformColor,
+            float alphaScl);
+
+    /**
+     * Renders the isosurface using different rendering modes and surface
+     * colorings. This shows the subdivision levels of all triangles using
+     * a heatmap.
+     *
+     * @param vbo                Vertex buffer object containing all vertex data
+     * @param vertexCnt          The number of vertices on the isosurface
+     * @param vboTriangleIdx     Vertex buffer object containing triangle
+     *                           indices
+     * @param renderMode         The surface render mode
+     * @param colorMode          The surface coloring mode
+     * @param potentialTex       Texture containing potential map
+     * @param uniformColor       Color to be used as uniform coloring
+     * @param alphaScl           Opacity scaling for the rendering
+     *
+     * @return 'True' on success, 'false' otherwise
+     */
+    bool renderSurfaceShowSubDiv(
             GLuint vbo,
             uint vertexCnt,
             GLuint vboTriangleIdx,
