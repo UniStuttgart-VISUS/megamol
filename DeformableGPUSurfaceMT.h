@@ -504,6 +504,7 @@ private:
     CudaDevArr<uint> subDivCnt_D;
     CudaDevArr<uint> newTrianglesIdxOffs_D;
     CudaDevArr<uint> oldTrianglesIdxOffs_D;
+    CudaDevArr<uint> newTriangleNeighbors_D;
 };
 
 } // namespace protein

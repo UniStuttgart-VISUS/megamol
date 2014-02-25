@@ -3745,6 +3745,35 @@ __device__ uint2 getAdjEdge_D (uint v0, uint v1, uint v2,
 }
 
 
+__device__ bool hasAdjEdge_D (uint v0, uint v1, uint v2,
+                               uint w0, uint w1, uint w2) {
+
+    int cnt = 0;
+    int idx0 = -1;
+    int v[3], w[3];
+    v[0] = v0; v[1] = v1; v[2] = v2;
+    w[0] = w0; w[1] = w1; w[2] = w2;
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (v[i] == w[j]) {
+                if (idx0 < 0) {
+                    idx0 = v[i];
+                    cnt++;
+                } else {
+                    if (v[i] != idx0) {
+                        cnt++;
+                    }
+                }
+            }
+        }
+    }
+
+    if (cnt >=2) return true;
+    else return false;
+}
+
+
 /*
  * DeformableGPUSurfaceMT_BuildEdgeList_D
  */
@@ -3920,7 +3949,7 @@ __global__ void FlagLongEdges_D(
                 (pos0.z - pos1.z)*(pos0.z - pos1.z);
 
     edgeFlag_D[idx] = uint(lenSqrt > maxLenSqrt);
-//    printf("%u\n", edgeFlag_D[idx]);
+
 }
 
 
@@ -3990,7 +4019,6 @@ __global__ void ComputeSubdivCnt_D(
 }
 
 
-// TODO Also store neighbor triangles etc. ...
 // TODO Orientation of new triangles should match neighbor triangles
 __global__ void ComputeSubdiv_D(
         uint *newTriangles,
@@ -4143,6 +4171,1039 @@ __global__ void ComputeSubdiv_D(
 }
 
 
+// TODO: !!! This method assumed a certain ordering in the three neighbors of
+//       !!! a triangle. Is this actually true?
+__global__ void ComputeSubdivTriNeighbors_D (
+        uint *newTriangleNeighbors_D,
+        uint *oldTriangleNeighbors_D,
+        uint *newTriangleIdxOffsets,
+        uint *triangleEdgeList_D,
+        uint *triangleIdx_D,
+        uint *edgeFlag_D,
+        uint *edges_D,
+        uint *subDivEdgeIdxOffs_D,
+        uint *subdivCnt_D,
+        uint *oldTriangleIdxOffset,
+        uint *newTriangles_D,
+        uint vertexCntOld,
+        uint numberOfKeptTriangles,
+        uint oldTriangleCnt) {
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= oldTriangleCnt) return;
+
+    uint edgeIdx0 = triangleEdgeList_D[3*idx+0];
+    uint edgeIdx1 = triangleEdgeList_D[3*idx+1];
+    uint edgeIdx2 = triangleEdgeList_D[3*idx+2];
+
+    bool flag0 = bool(edgeFlag_D[edgeIdx0]);
+    bool flag1 = bool(edgeFlag_D[edgeIdx1]);
+    bool flag2 = bool(edgeFlag_D[edgeIdx2]);
+
+    uint v0 = triangleIdx_D[3*idx+0];
+    uint v1 = triangleIdx_D[3*idx+1];
+    uint v2 = triangleIdx_D[3*idx+2];
+
+    uint e0 = triangleEdgeList_D[3*idx+0];
+    uint e1 = triangleEdgeList_D[3*idx+1];
+    uint e2 = triangleEdgeList_D[3*idx+2];
+
+    uint triIdxOffs = newTriangleIdxOffsets[idx];
+
+    if (!(flag0 || flag1 || flag2)) { // No subdivision
+
+        uint newIdx = oldTriangleIdxOffset[idx];
+
+        uint oldN0 = oldTriangleNeighbors_D[3*idx+0];
+        uint oldN1 = oldTriangleNeighbors_D[3*idx+1];
+        uint oldN2 = oldTriangleNeighbors_D[3*idx+2];
+
+        uint subDivCntN0 = subdivCnt_D[oldN0];
+        if (subDivCntN0 > 0) {
+            for (int i = 0; i < subDivCntN0; ++i) {
+                uint u0, u1, u2;
+                u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+0];
+                u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+1];
+                u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+2];
+                if (hasAdjEdge_D (v0, v1, v2, u0, u1, u2)) {
+                    newTriangleNeighbors_D[3*newIdx+0] =
+                            numberOfKeptTriangles + newTriangleIdxOffsets[oldN0]+i;
+                }
+            }
+        } else {
+            newTriangleNeighbors_D[3*newIdx+0] = oldTriangleIdxOffset[oldN0];
+        }
+
+        uint subDivCntN1 = subdivCnt_D[oldN1];
+        if (subDivCntN1 > 0) {
+            for (int i = 0; i < subDivCntN1; ++i) {
+                uint u0, u1, u2;
+                u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+0];
+                u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+1];
+                u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+2];
+                if (hasAdjEdge_D (v0, v1, v2, u0, u1, u2)) {
+                    newTriangleNeighbors_D[3*newIdx+1]=
+                            numberOfKeptTriangles + newTriangleIdxOffsets[oldN1]+i;
+                }
+            }
+        } else {
+            newTriangleNeighbors_D[3*newIdx+1] = oldTriangleIdxOffset[oldN1];
+        }
+
+        uint subDivCntN2 = subdivCnt_D[oldN2];
+        if (subDivCntN2 > 0) {
+            for (int i = 0; i < subDivCntN2; ++i) {
+                uint u0, u1, u2;
+                u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+0];
+                u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+1];
+                u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+2];
+                if (hasAdjEdge_D (v0, v1, v2, u0, u1, u2)) {
+                    newTriangleNeighbors_D[3*newIdx+2]=
+                            numberOfKeptTriangles + newTriangleIdxOffsets[oldN2]+i;
+                }
+            }
+        } else {
+            newTriangleNeighbors_D[3*newIdx+2] = oldTriangleIdxOffset[oldN2];
+        }
+
+    } else if (flag0 && !flag1 && !flag2) { // 2 new triangles have been spawned
+
+        uint vNew0 = vertexCntOld + subDivEdgeIdxOffs_D[e0];
+
+        // Get index of neighbors of old triangle
+        uint oldN0 = oldTriangleNeighbors_D[3*idx+0];
+        uint oldN1 = oldTriangleNeighbors_D[3*idx+1];
+        uint oldN2 = oldTriangleNeighbors_D[3*idx+2];
+
+
+        /* Get neighbors of triangle #0 */
+
+        // Get respective vertex indices of this triangle
+        uint w0 = v0;
+        uint w1 = v2;
+        uint w2 = vNew0;
+
+        // This neighbor has to be determined by comparing vertex indices
+        uint subDivCntN2 = subdivCnt_D[oldN2];
+        if (subDivCntN2 > 0) {
+            for (int i = 0; i < subDivCntN2; ++i) {
+                uint u0, u1, u2;
+                u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+0];
+                u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+1];
+                u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+2];
+                if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                    newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0]=
+                            numberOfKeptTriangles + newTriangleIdxOffsets[oldN2]+i;
+                }
+            }
+        } else {
+            newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0]=
+                    oldTriangleIdxOffset[oldN2];
+        }
+
+        // This neighbor is the other subdivision
+        newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+1] =
+                numberOfKeptTriangles+triIdxOffs+1;
+
+        // This neighbor has to be determined by comparing vertex indices
+        uint subDivCntN0 = subdivCnt_D[oldN0];
+        if (subDivCntN0 > 0) {
+            for (int i = 0; i < subDivCntN0; ++i) {
+                uint u0, u1, u2;
+                u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+0];
+                u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+1];
+                u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+2];
+                if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                    newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2]=
+                            numberOfKeptTriangles + newTriangleIdxOffsets[oldN0]+i;
+                }
+            }
+        } else {
+            newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2]=
+                    oldTriangleIdxOffset[oldN0];
+        }
+
+        /* Get neighbors of triangle #1 */
+
+        // Get respective vertex indices of this triangle
+        w0 = v1;
+        w1 = v2;
+        w2 = vNew0;
+
+        // This neighbor has to be determined by comparing vertex indices
+        uint subDivCntN1 = subdivCnt_D[oldN1];
+        if (subDivCntN1 > 0) {
+            for (int i = 0; i < subDivCntN1; ++i) {
+                uint u0, u1, u2;
+                u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+0];
+                u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+1];
+                u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+2];
+                if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                    newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+3]=
+                            numberOfKeptTriangles + newTriangleIdxOffsets[oldN1]+i;
+                }
+            }
+        } else {
+            newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+3]=
+                    oldTriangleIdxOffset[oldN1];
+        }
+
+        // This neighbor is the other subdivision
+        newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+4] =
+                numberOfKeptTriangles+triIdxOffs;
+
+        // This neighbor has to be determined by comparing vertex indices
+        subDivCntN0 = subdivCnt_D[oldN0];
+        if (subDivCntN0 > 0) {
+            for (int i = 0; i < subDivCntN0; ++i) {
+                uint u0, u1, u2;
+                u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+0];
+                u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+1];
+                u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+2];
+                if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                    newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+5]=
+                            numberOfKeptTriangles + newTriangleIdxOffsets[oldN0]+i;
+                }
+            }
+        } else {
+            newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+5]=
+                    oldTriangleIdxOffset[oldN0];
+        }
+
+    } else if (!flag0 && flag1 && !flag2) { // 2 new triangles have been spawned
+
+        uint vNew1 = vertexCntOld + subDivEdgeIdxOffs_D[e1];
+
+        // Get index of neighbors of old triangle
+        uint oldN0 = oldTriangleNeighbors_D[3*idx+0];
+        uint oldN1 = oldTriangleNeighbors_D[3*idx+1];
+        uint oldN2 = oldTriangleNeighbors_D[3*idx+2];
+
+        // #0
+        uint w0 = v0;
+        uint w1 = v1;
+        uint w2 = vNew1;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+        uint subDivCntN0 = subdivCnt_D[oldN0];
+        if (subDivCntN0 > 0) {
+            for (int i = 0; i < subDivCntN0; ++i) {
+                uint u0, u1, u2;
+                u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+0];
+                u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+1];
+                u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+2];
+                if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                    newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0]=
+                            numberOfKeptTriangles + newTriangleIdxOffsets[oldN0]+i;
+                }
+            }
+        } else {
+            newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0]=
+                    oldTriangleIdxOffset[oldN0];
+        }
+
+        // This neighbor has to be determined by comparing vertex indices
+        uint subDivCntN1 = subdivCnt_D[oldN1];
+        if (subDivCntN1 > 0) {
+            for (int i = 0; i < subDivCntN1; ++i) {
+                uint u0, u1, u2;
+                u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+0];
+                u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+1];
+                u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+2];
+                if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                    newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+1]=
+                            numberOfKeptTriangles + newTriangleIdxOffsets[oldN1]+i;
+                }
+            }
+        } else {
+            newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+1]=
+                    oldTriangleIdxOffset[oldN1];
+        }
+
+        // This neighbor is the other subdivision
+        newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2] =
+                numberOfKeptTriangles+triIdxOffs+1;
+
+
+        // #1
+        w0 = v0;
+        w1 = v2;
+        w2 = vNew1;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN2 = subdivCnt_D[oldN2];
+         if (subDivCntN2 > 0) {
+             for (int i = 0; i < subDivCntN2; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+3]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN2]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+3]=
+                     oldTriangleIdxOffset[oldN2];
+         }
+
+         // This neighbor has to be determined by comparing vertex indices
+         subDivCntN1 = subdivCnt_D[oldN1];
+         if (subDivCntN1 > 0) {
+             for (int i = 0; i < subDivCntN1; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+4]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN1]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+4]=
+                     oldTriangleIdxOffset[oldN1];
+         }
+
+         // This neighbor is the other subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+5] =
+                 numberOfKeptTriangles+triIdxOffs;
+
+    } else if (!flag0 && !flag1 && flag2) { // 2 new triangles have been spawned
+
+        uint vNew2 = vertexCntOld + subDivEdgeIdxOffs_D[e2];
+
+        // Get index of neighbors of old triangle
+        uint oldN0 = oldTriangleNeighbors_D[3*idx+0];
+        uint oldN1 = oldTriangleNeighbors_D[3*idx+1];
+        uint oldN2 = oldTriangleNeighbors_D[3*idx+2];
+
+        // #0
+        uint w0 = v0;
+        uint w1 = v1;
+        uint w2 = vNew2;
+
+        // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN0 = subdivCnt_D[oldN0];
+         if (subDivCntN0 > 0) {
+             for (int i = 0; i < subDivCntN0; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN0]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0]=
+                     oldTriangleIdxOffset[oldN0];
+         }
+
+         // This neighbor is the other subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+1] =
+                 numberOfKeptTriangles+triIdxOffs + 1;
+
+         // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN2 = subdivCnt_D[oldN2];
+         if (subDivCntN2 > 0) {
+             for (int i = 0; i < subDivCntN2; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN2]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2]=
+                     oldTriangleIdxOffset[oldN2];
+         }
+
+        // #1
+        w0 = v1;
+        w1 = v2;
+        w2 = vNew2;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN1 = subdivCnt_D[oldN1];
+         if (subDivCntN1 > 0) {
+             for (int i = 0; i < subDivCntN1; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+3]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN1]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+3]=
+                     oldTriangleIdxOffset[oldN1];
+         }
+
+         // This neighbor has to be determined by comparing vertex indices
+         subDivCntN2 = subdivCnt_D[oldN2];
+         if (subDivCntN2 > 0) {
+             for (int i = 0; i < subDivCntN2; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+4]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN2]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+4]=
+                     oldTriangleIdxOffset[oldN2];
+         }
+
+         // This neighbor is the other subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+5] =
+                 numberOfKeptTriangles+triIdxOffs;
+
+    } else if (flag0 && flag1 && !flag2) { // 3 new triangles have been spawned
+
+        if (numberOfKeptTriangles+triIdxOffs == 8233) {
+            printf("FLAG11\n");
+        }
+        if (numberOfKeptTriangles+triIdxOffs+1 == 8233) {
+            printf("FLAG12\n");
+        }
+        if (numberOfKeptTriangles+triIdxOffs+2 == 8233) {
+            printf("FLAG13\n");
+        }
+
+
+        uint vNew0 = vertexCntOld + subDivEdgeIdxOffs_D[e0];
+        uint vNew1 = vertexCntOld + subDivEdgeIdxOffs_D[e1];
+
+        // Get index of neighbors of old triangle
+        uint oldN0 = oldTriangleNeighbors_D[3*idx+0];
+        uint oldN1 = oldTriangleNeighbors_D[3*idx+1];
+        uint oldN2 = oldTriangleNeighbors_D[3*idx+2];
+
+        // #0
+        uint w0 = v1;
+        uint w1 = vNew0;
+        uint w2 = vNew1;
+
+        // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN0 = subdivCnt_D[oldN0];
+         if (subDivCntN0 > 0) {
+             for (int i = 0; i < subDivCntN0; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN0]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0] =
+                     oldTriangleIdxOffset[oldN0];
+         }
+
+         // This neighbor is the other subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+1] =
+                 numberOfKeptTriangles+triIdxOffs + 1;
+
+         // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN1 = subdivCnt_D[oldN1];
+         if (subDivCntN1 > 0) {
+             for (int i = 0; i < subDivCntN1; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN1]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2]=
+                     oldTriangleIdxOffset[oldN1];
+         }
+
+
+
+
+        // #1
+        w0 = v0;
+        w1 = vNew0;
+        w2 = vNew1;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+         subDivCntN0 = subdivCnt_D[oldN0];
+         if (subDivCntN0 > 0) {
+             for (int i = 0; i < subDivCntN0; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+3]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN0]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+3] =
+                     oldTriangleIdxOffset[oldN0];
+         }
+
+         // This neighbor is the other subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+4] =
+                 numberOfKeptTriangles+triIdxOffs;
+
+         // This neighbor is the other subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+5] =
+                 numberOfKeptTriangles+triIdxOffs + 2;
+
+
+
+        // #2
+        w0 = v2;
+        w1 = v0;
+        w2 = vNew1;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN2 = subdivCnt_D[oldN2];
+         if (subDivCntN2 > 0) {
+             for (int i = 0; i < subDivCntN2; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+6]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN2]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+6] =
+                     oldTriangleIdxOffset[oldN2];
+         }
+
+         // This neighbor is the other subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs) + 7] =
+                 numberOfKeptTriangles+triIdxOffs + 1;
+
+         // This neighbor has to be determined by comparing vertex indices
+          subDivCntN1 = subdivCnt_D[oldN1];
+          if (subDivCntN1 > 0) {
+              for (int i = 0; i < subDivCntN1; ++i) {
+                  uint u0, u1, u2;
+                  u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+0];
+                  u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+1];
+                  u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+2];
+                  if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                      newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+8]=
+                              numberOfKeptTriangles + newTriangleIdxOffsets[oldN1]+i;
+                  }
+              }
+          } else {
+              newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+8] =
+                      oldTriangleIdxOffset[oldN1];
+          }
+
+
+    } else if (!flag0 && flag1 && flag2) { // 3 new triangles have been spawned
+
+        if (numberOfKeptTriangles+triIdxOffs == 8233) {
+            printf("FLAG21\n");
+        }
+        if (numberOfKeptTriangles+triIdxOffs+1 == 8233) {
+            printf("FLAG22\n");
+        }
+        if (numberOfKeptTriangles+triIdxOffs+2 == 8233) {
+            printf("FLAG23\n");
+        }
+
+        uint vNew1 = vertexCntOld + subDivEdgeIdxOffs_D[e1];
+        uint vNew2 = vertexCntOld + subDivEdgeIdxOffs_D[e2];
+
+        // Get index of neighbors of old triangle
+        uint oldN0 = oldTriangleNeighbors_D[3*idx+0];
+        uint oldN1 = oldTriangleNeighbors_D[3*idx+1];
+        uint oldN2 = oldTriangleNeighbors_D[3*idx+2];
+
+        // #0
+        uint w0 = v2;
+        uint w1 = vNew1;
+        uint w2 = vNew2;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN1 = subdivCnt_D[oldN1];
+         if (subDivCntN1 > 0) {
+             for (int i = 0; i < subDivCntN1; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN1]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0] =
+                     oldTriangleIdxOffset[oldN1];
+         }
+
+         // This neighbor is the other subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs) + 1] =
+                 numberOfKeptTriangles+triIdxOffs + 1;
+
+         // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN2 = subdivCnt_D[oldN2];
+          if (subDivCntN2 > 0) {
+              for (int i = 0; i < subDivCntN2; ++i) {
+                  uint u0, u1, u2;
+                  u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+0];
+                  u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+1];
+                  u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+2];
+                  if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                      newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2]=
+                              numberOfKeptTriangles + newTriangleIdxOffsets[oldN2]+i;
+                  }
+              }
+          } else {
+              newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2] =
+                      oldTriangleIdxOffset[oldN2];
+          }
+
+
+
+
+        // #1
+        w0 = v0;
+        w1 = vNew1;
+        w2 = vNew2;
+
+        // This neighbor is the other subdivision
+        newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs) + 3] =
+                numberOfKeptTriangles+triIdxOffs + 2;
+
+        // This neighbor is the other subdivision
+        newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs) + 4] =
+                numberOfKeptTriangles+triIdxOffs;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+         subDivCntN2 = subdivCnt_D[oldN2];
+         if (subDivCntN2 > 0) {
+             for (int i = 0; i < subDivCntN2; ++i) {
+
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+2];
+                 if (numberOfKeptTriangles+triIdxOffs+1 == 8233) {
+                     printf("Trying to find edge between %u %u %u amd %u %u %u\n",
+                             w0, w1, w2, u0, u1, u2);
+                 }
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     if (numberOfKeptTriangles+triIdxOffs+1 == 8233) {
+                                      printf("HAS ADJCACENT EDGE\n");
+                     }
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+5]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN2]+i;
+                 }
+             }
+             if (numberOfKeptTriangles+triIdxOffs+1 == 8233) {
+                 printf("n : %u, kepTris %u, newTriOffs %u\n",
+                         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+5],
+                         numberOfKeptTriangles, newTriangleIdxOffsets[oldN2]);
+             }
+         } else {
+             if (numberOfKeptTriangles+triIdxOffs+1 == 8233) {
+                 printf("NO SUBDIV\n");
+             }
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+5] =
+                     oldTriangleIdxOffset[oldN2];
+         }
+
+
+
+        // #2
+        w0 = v0;
+        w1 = v1;
+        w2 = vNew1;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN0 = subdivCnt_D[oldN0];
+         if (subDivCntN0 > 0) {
+             for (int i = 0; i < subDivCntN0; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+6]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN0]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+6] =
+                     oldTriangleIdxOffset[oldN0];
+         }
+
+         // This neighbor has to be determined by comparing vertex indices
+          subDivCntN1 = subdivCnt_D[oldN1];
+          if (subDivCntN1 > 0) {
+              for (int i = 0; i < subDivCntN1; ++i) {
+                  uint u0, u1, u2;
+                  u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+0];
+                  u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+1];
+                  u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+2];
+                  if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                      newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+7]=
+                              numberOfKeptTriangles + newTriangleIdxOffsets[oldN1]+i;
+                  }
+              }
+          } else {
+              newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+7] =
+                      oldTriangleIdxOffset[oldN1];
+          }
+
+         // This neighbor is the other subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs) + 8] =
+                 numberOfKeptTriangles+triIdxOffs + 1;
+
+
+
+    } else if (flag0 && !flag1 && flag2) { // 3 new triangles have been spawned
+
+        if (numberOfKeptTriangles+triIdxOffs == 8233) {
+            printf("FLAG31\n");
+        }
+        if (numberOfKeptTriangles+triIdxOffs+1 == 8233) {
+            printf("FLAG32\n");
+        }
+        if (numberOfKeptTriangles+triIdxOffs+2 == 8233) {
+            printf("FLAG33\n");
+        }
+
+        // Get index of neighbors of old triangle
+        uint oldN0 = oldTriangleNeighbors_D[3*idx+0];
+        uint oldN1 = oldTriangleNeighbors_D[3*idx+1];
+        uint oldN2 = oldTriangleNeighbors_D[3*idx+2];
+
+        uint vNew2 = vertexCntOld + subDivEdgeIdxOffs_D[e2];
+        uint vNew0 = vertexCntOld + subDivEdgeIdxOffs_D[e0];
+
+        // #0
+        uint w0 = v0;
+        uint w1 = vNew0;
+        uint w2 = vNew2;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+        // TODO DEBUG!!
+        uint subDivCntN0 = subdivCnt_D[oldN0];
+        if (subDivCntN0 > 0) {
+            for (int i = 0; i < subDivCntN0; ++i) {
+                uint u0, u1, u2;
+                u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+0];
+                u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+1];
+                u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+2];
+                if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                    newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0]=
+                            numberOfKeptTriangles + newTriangleIdxOffsets[oldN0]+i;
+                }
+            }
+        } else {
+            newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0] =
+                    oldTriangleIdxOffset[oldN0];
+        }
+
+         // This neighbor is the other subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs) + 1] =
+                 numberOfKeptTriangles+triIdxOffs + 1;
+
+         // This neighbor has to be determined by comparing vertex indices
+          uint subDivCntN2 = subdivCnt_D[oldN2];
+          if (subDivCntN2 > 0) {
+              for (int i = 0; i < subDivCntN2; ++i) {
+                  uint u0, u1, u2;
+                  u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+0];
+                  u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+1];
+                  u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+2];
+                  if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                      newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2]=
+                              numberOfKeptTriangles + newTriangleIdxOffsets[oldN2]+i;
+                  }
+              }
+          } else {
+              newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2] =
+                      oldTriangleIdxOffset[oldN2];
+          }
+
+
+        // #1
+        w0 = v2;
+        w1 = vNew0;
+        w2 = vNew2;
+
+        // This neighbor is the other subdivision
+        newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs) + 3] =
+                numberOfKeptTriangles+triIdxOffs + 2;
+
+        newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs) + 4] =
+                 numberOfKeptTriangles+triIdxOffs;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+         subDivCntN2 = subdivCnt_D[oldN2];
+         if (subDivCntN2 > 0) {
+             for (int i = 0; i < subDivCntN2; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+5]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN2]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+5] =
+                     oldTriangleIdxOffset[oldN2];
+         }
+
+
+        // #2
+        w0 = v1;
+        w1 = v2;
+        w2 = vNew0;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN1 = subdivCnt_D[oldN1];
+         if (subDivCntN1 > 0) {
+             for (int i = 0; i < subDivCntN1; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+6]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN1]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+6] =
+                     oldTriangleIdxOffset[oldN1];
+         }
+
+         // This neighbor is the other subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs) + 7] =
+                 numberOfKeptTriangles+triIdxOffs + 1;
+
+         subDivCntN0 = subdivCnt_D[oldN0];
+         if (subDivCntN0 > 0) {
+             for (int i = 0; i < subDivCntN0; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+8]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN0]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+8] =
+                     oldTriangleIdxOffset[oldN0];
+         }
+
+    } else if (flag0 && flag1 && flag2) { // 4 new triangles have been spawned
+
+        uint vNew0 = vertexCntOld + subDivEdgeIdxOffs_D[e0];
+        uint vNew1 = vertexCntOld + subDivEdgeIdxOffs_D[e1];
+        uint vNew2 = vertexCntOld + subDivEdgeIdxOffs_D[e2];
+
+        // Get index of neighbors of old triangle
+        uint oldN0 = oldTriangleNeighbors_D[3*idx+0];
+        uint oldN1 = oldTriangleNeighbors_D[3*idx+1];
+        uint oldN2 = oldTriangleNeighbors_D[3*idx+2];
+
+        // #0
+        uint w0 = v0;
+        uint w1 = vNew0;
+        uint w2 = vNew2;
+
+        // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN0 = subdivCnt_D[oldN0];
+         if (subDivCntN0 > 0) {
+             for (int i = 0; i < subDivCntN0; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN0]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+0]=
+                     oldTriangleIdxOffset[oldN0];
+         }
+
+         // This neighbor is the middle subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+1] =
+                 numberOfKeptTriangles+triIdxOffs + 3;
+
+         // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN2 = subdivCnt_D[oldN2];
+         if (subDivCntN2 > 0) {
+             for (int i = 0; i < subDivCntN2; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN2]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2]=
+                     oldTriangleIdxOffset[oldN2];
+         }
+
+        // #1
+        w0 = v1;
+        w1 = vNew0;
+        w2 = vNew1;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+        subDivCntN0 = subdivCnt_D[oldN0];
+         if (subDivCntN0 > 0) {
+             for (int i = 0; i < subDivCntN0; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN0]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+3]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN0]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+3]=
+                     oldTriangleIdxOffset[oldN0];
+         }
+
+         // This neighbor is the middle subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+4] =
+                 numberOfKeptTriangles+triIdxOffs + 3;
+
+         // This neighbor has to be determined by comparing vertex indices
+         uint subDivCntN1 = subdivCnt_D[oldN1];
+         if (subDivCntN1 > 0) {
+             for (int i = 0; i < subDivCntN1; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+5]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN1]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+5]=
+                     oldTriangleIdxOffset[oldN1];
+         }
+
+
+
+        // #2
+        w0 = v2;
+        w1 = vNew1;
+        w2 = vNew2;
+
+
+        // This neighbor has to be determined by comparing vertex indices
+        subDivCntN1 = subdivCnt_D[oldN1];
+         if (subDivCntN1 > 0) {
+             for (int i = 0; i < subDivCntN1; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN1]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+6]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN1]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+6]=
+                     oldTriangleIdxOffset[oldN1];
+         }
+
+         // This neighbor is the middle subdivision
+         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+7] =
+                 numberOfKeptTriangles+triIdxOffs + 3;
+
+         // This neighbor has to be determined by comparing vertex indices
+         subDivCntN2 = subdivCnt_D[oldN2];
+         if (subDivCntN2 > 0) {
+             for (int i = 0; i < subDivCntN2; ++i) {
+                 uint u0, u1, u2;
+                 u0 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+0];
+                 u1 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+1];
+                 u2 = newTriangles_D[3*(newTriangleIdxOffsets[oldN2]+i)+2];
+                 if (hasAdjEdge_D (w0, w1, w2, u0, u1, u2)) {
+                     newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+8]=
+                             numberOfKeptTriangles + newTriangleIdxOffsets[oldN2]+i;
+                 }
+             }
+         } else {
+             newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+8]=
+                     oldTriangleIdxOffset[oldN2];
+         }
+
+        // #3 This is the middle triangle
+        w0 = vNew0;
+        w1 = vNew1;
+        w2 = vNew2;
+
+        // This neighbor is the middle subdivision
+        newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+9] =
+                numberOfKeptTriangles+triIdxOffs + 1;
+
+        // This neighbor is the middle subdivision
+        newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+10] =
+                numberOfKeptTriangles+triIdxOffs + 2;
+
+        // This neighbor is the middle subdivision
+        newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+11] =
+                numberOfKeptTriangles+triIdxOffs + 0;
+    }
+}
+
+
 __global__ void CopyNewDataToVertexBuffer_D(
         float *newVertices_D,
         float *newBuffer_D,
@@ -4218,18 +5279,25 @@ int DeformableGPUSurfaceMT::RefineMesh(
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
             &cudaTokens[0], this->vboVtxData,
             cudaGraphicsMapFlagsNone))) {
-
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could register buffer",
+                this->ClassName());
         return -1;
     }
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
             &cudaTokens[1], this->vboTriangleIdx,
             cudaGraphicsMapFlagsNone))) {
-
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not register buffer",
+                this->ClassName());
         return -1;
     }
 
     if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not map recources",
+                this->ClassName());
         return -1;
     }
 
@@ -4240,6 +5308,9 @@ int DeformableGPUSurfaceMT::RefineMesh(
             reinterpret_cast<void**>(&vboPt), // The mapped pointer
             &vboSize,              // The size of the accessible data
             cudaTokens[0]))) {                 // The mapped resource
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not obtian device pointer",
+                this->ClassName());
         return -1;
     }
 
@@ -4263,6 +5334,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
     /* 1. Compute edge list */
 
     const uint edgeCnt = (this->triangleCnt*3)/2;
+    printf("EDGE COUNT %u\n", edgeCnt);
 
     // Get the number of edges associated with each triangle
     if (!CudaSafeCall(this->triangleEdgeOffs_D.Validate(this->triangleCnt))) {
@@ -4273,6 +5345,9 @@ int DeformableGPUSurfaceMT::RefineMesh(
     }
     // Check whether triangle neighbors have been computed
     if (this->triangleNeighbors_D.GetCount() != this->triangleCnt*3) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: need triangle neighbors",
+                this->ClassName());
         return -1;
     }
     DeformableGPUSurfaceMT_GetTriangleEdgeCnt_D <<< Grid(this->triangleCnt, 256), 256 >>>(
@@ -4332,7 +5407,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
     if (!CudaSafeCall(this->subDivEdgeFlag_D.Set(0x00))) { // Set to 'false'
         return -1;
     }
-    FlagLongEdges_D <<< Grid(this->triangleCnt, 256), 256 >>> (
+    FlagLongEdges_D <<< Grid(edgeCnt, 256), 256 >>> (
             this->subDivEdgeFlag_D.Peek(),
             this->edges_D.Peek(),
             vboPt,
@@ -4365,7 +5440,17 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
     newVertexCnt += accTmp;
-    printf("Need %i new vertices\n", newVertexCnt);
+    printf("Need %i new vertices (old triangle count %u)\n", newVertexCnt, this->triangleCnt);
+
+//    // DEBUG print edge flag
+//    HostArr<uint> edgeFlag;
+//    edgeFlag.Validate(this->subDivEdgeFlag_D.GetCount());
+//    this->subDivEdgeFlag_D.CopyToHost(edgeFlag.Peek());
+//    for (int i = 0; i < edgeCnt; ++i) {
+//        printf("EDGEFLAG %i %u\n", i, edgeFlag.Peek()[i]);
+//    }
+//    edgeFlag.Release();
+//    // END DEBUG
 
 
     /* 3. Interpolate new vertex positions associated with the flagged edges */
@@ -4384,9 +5469,14 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
 
-    printf("3\n");
 
     /* 4. Build triangle-edge-list */
+
+    if (this->triangleNeighbors_D.GetCount() != this->triangleCnt*3) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: need triangle neighbors",
+                this->ClassName());
+    }
 
     if (!CudaSafeCall(this->triangleEdgeList_D.Validate(this->triangleCnt*3))) {
         return -1;
@@ -4443,8 +5533,6 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
 
-
-
     // Compute prefix sum
 
     thrust::exclusive_scan(
@@ -4464,6 +5552,8 @@ int DeformableGPUSurfaceMT::RefineMesh(
     }
     newTrianglesCnt += accTmp;
     printf("Need %i new triangles\n", newTrianglesCnt);
+
+
 
 
     /* 6. Create new triangles with respective vertex indices */
@@ -4499,10 +5589,9 @@ int DeformableGPUSurfaceMT::RefineMesh(
 //    newTriangles.Release();
 //    // END DEBUG
 
+    /* 7. (Re-)compute triangle neighbors */
 
-    /* 7. Update VBOs for vertex data and triangle indices */
-
-    uint oldTrianglesCnt = thrust::reduce(
+    uint nOldTriangles = thrust::reduce(
             thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek()),
             thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek() + this->triangleCnt));
 
@@ -4511,7 +5600,43 @@ int DeformableGPUSurfaceMT::RefineMesh(
             thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek() + this->triangleCnt),
             thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek()));
 
-    printf("Keep %i old triangles\n", oldTrianglesCnt);
+    printf("Keep %i old triangles\n", nOldTriangles);
+
+    if (!CudaSafeCall(this->newTriangleNeighbors_D.Validate((nOldTriangles+newTrianglesCnt)*3))) {
+        return -1;
+    }
+    if (!CudaSafeCall(this->newTriangleNeighbors_D.Set(0x00))) {
+        return -1;
+    }
+    ComputeSubdivTriNeighbors_D <<< Grid(this->triangleCnt, 256), 256 >>> (
+            this->newTriangleNeighbors_D.Peek(),
+            this->triangleNeighbors_D.Peek(),
+            this->newTrianglesIdxOffs_D.Peek(),
+            this->triangleEdgeList_D.Peek(),
+            vboTriIdxPt,
+            this->subDivEdgeFlag_D.Peek(),
+            this->edges_D.Peek(),
+            this->subDivEdgeIdxOffs_D.Peek(),
+            this->subDivCnt_D.Peek(),
+            this->oldTrianglesIdxOffs_D.Peek(),
+            this->newTriangles_D.Peek(),
+            this->vertexCnt,
+            nOldTriangles,
+            this->triangleCnt);
+
+    // Reallocate old array TODO Simply swap pointers?
+    if (!CudaSafeCall(this->triangleNeighbors_D.Validate(this->newTriangleNeighbors_D.GetCount()))) {
+        return -1;
+    }
+    if (!CudaSafeCall(cudaMemcpy(
+            this->triangleNeighbors_D.Peek(),
+            this->newTriangleNeighbors_D.Peek(),
+            this->newTriangleNeighbors_D.GetCount()*sizeof(unsigned int),
+            cudaMemcpyDeviceToDevice))) {
+        return -1;
+    }
+
+    /* 7. Update VBOs for vertex data and triangle indices */
 
 //    // DEBUG Print oldTriangles index offset and subdivision count
 //    HostArr<unsigned int> oldTrianglesIdxOffs;
@@ -4598,7 +5723,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
     uint oldVertexCnt = this->vertexCnt;
     this->vertexCnt += newVertexCnt;
     uint oldTriangleCount = this->triangleCnt;
-    this->triangleCnt = oldTrianglesCnt + newTrianglesCnt;
+    this->triangleCnt = nOldTriangles + newTrianglesCnt;
     this->InitTriangleIdxVBO(this->triangleCnt);
     this->InitVertexDataVBO(this->vertexCnt);
 
@@ -4683,26 +5808,110 @@ int DeformableGPUSurfaceMT::RefineMesh(
             oldTriangleCount);
     // Copy new data to triangle VBO
     if (!CudaSafeCall(cudaMemcpy(
-            vboTriIdxPt + 3*oldTrianglesCnt, // New data starts after old data
+            vboTriIdxPt + 3*nOldTriangles, // New data starts after old data
             this->newTriangles_D.Peek(),
             sizeof(uint)*this->newTriangles_D.GetCount(),
             cudaMemcpyDeviceToDevice))) {
         return -1;
     }
 
-//    // DEBUG print old triangle index buffer
-//    triangleBuffer;
+
+    // DEBUG Print new triangle neighbors
+    HostArr<uint> triNeighbors;
+    triNeighbors.Validate(this->triangleNeighbors_D.GetCount());
+    HostArr<uint> triangleBuffer;
+    triangleBuffer.Validate(3*this->triangleCnt);
+    cudaMemcpy(triangleBuffer.Peek(), vboTriIdxPt,
+            triangleBuffer.GetCount()*sizeof(uint), cudaMemcpyDeviceToHost);
+    if (!CudaSafeCall(this->triangleNeighbors_D.CopyToHost(triNeighbors.Peek()))) {
+        return -1;
+    }
+    for (int i = 0; i < this->triangleNeighbors_D.GetCount()/3; ++i) {
+
+//        printf("TRI NEIGHBORS %i: %u %u %u\n", i,
+//                triNeighbors.Peek()[3*i+0],
+//                triNeighbors.Peek()[3*i+1],
+//                triNeighbors.Peek()[3*i+2]);
+
+        // Check neighbor consistency
+        uint v0 = triangleBuffer.Peek()[3*i+0];
+        uint v1 = triangleBuffer.Peek()[3*i+1];
+        uint v2 = triangleBuffer.Peek()[3*i+2];
+
+        uint n00 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+0]+0];
+        uint n01 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+0]+1];
+        uint n02 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+0]+2];
+
+        uint n10 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+1]+0];
+        uint n11 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+1]+1];
+        uint n12 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+1]+2];
+
+        uint n20 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+2]+0];
+        uint n21 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+2]+1];
+        uint n22 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+2]+2];
+
+//        printf("n0 %u %u %u, n1 %u %u %u, n2 %u %u %u\n",
+//                n00, n01, n02, n10, n11, n12, n20, n21, n22);
+
+        uint cnt = 0;
+        bool flag0=false, flag1=false, flag2=false;
+        if (v0 == n00) cnt++; if (v0 == n01) cnt++; if (v0 == n02) cnt++;
+        if (v1 == n00) cnt++; if (v1 == n01) cnt++; if (v1 == n02) cnt++;
+        if (v2 == n00) cnt++; if (v2 == n01) cnt++; if (v2 == n02) cnt++;
+        if (cnt < 2) {
+            flag0 = true;
+
+        }
+
+        cnt = 0;
+        if (v0 == n10) cnt++; if (v0 == n11) cnt++; if (v0 == n12) cnt++;
+        if (v1 == n10) cnt++; if (v1 == n11) cnt++; if (v1 == n12) cnt++;
+        if (v2 == n10) cnt++; if (v2 == n11) cnt++; if (v2 == n12) cnt++;
+        if (cnt < 2) {
+            flag1 = true;
+        }
+
+        cnt = 0;
+        if (v0 == n20) cnt++; if (v0 == n21) cnt++; if (v0 == n22) cnt++;
+        if (v1 == n20) cnt++; if (v1 == n21) cnt++; if (v1 == n22) cnt++;
+        if (v2 == n20) cnt++; if (v2 == n21) cnt++; if (v2 == n22) cnt++;
+        if (cnt < 2) {
+            flag2 = true;
+        }
+
+        if (flag0||flag1||flag2) {
+            printf("TRI NEIGHBORS %i: %u %u %u\n", i,
+                    triNeighbors.Peek()[3*i+0],
+                    triNeighbors.Peek()[3*i+1],
+                    triNeighbors.Peek()[3*i+2]);
+        }
+        if (flag0) printf("----> %u inconsistent\n", triNeighbors.Peek()[3*i+0]);
+        if (flag1) printf("----> %u inconsistent\n", triNeighbors.Peek()[3*i+1]);
+        if (flag2) printf("----> %u inconsistent\n", triNeighbors.Peek()[3*i+2]);
+
+    }
+    triangleBuffer.Release();
+    triNeighbors.Release();
+    // END DEBUG
+
+//    // DEBUG print new triangle index buffer
+////    HostArr<uint> triangleBuffer;
 //    triangleBuffer.Validate(3*this->triangleCnt);
 //    cudaMemcpy(triangleBuffer.Peek(), vboTriIdxPt,
 //            triangleBuffer.GetCount()*sizeof(uint), cudaMemcpyDeviceToHost);
 //    for (int i = 0; i < this->triangleCnt; ++i) {
-//        printf("New Triangle Buffer %i: %u %u %u\n", i,
+//    if ((i > 8200)&&(i < 8300)) {
+//        printf("New Triangle Buffer %i: %u %u %u (vertex count %u)\n", i,
 //                triangleBuffer.Peek()[3*i+0],
 //                triangleBuffer.Peek()[3*i+1],
-//                triangleBuffer.Peek()[3*i+2]);
+//                triangleBuffer.Peek()[3*i+2],
+//                this->vertexCnt);
+//       }
 //    }
 //    triangleBuffer.Release();
 //    // END DEBUG
+
+    // Cleanup
 
     if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
         return -1;

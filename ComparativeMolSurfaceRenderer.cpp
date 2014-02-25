@@ -2390,25 +2390,28 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
-        // Refine the mesh
-        if (this->deformSurfMapped.RefineMesh(
-                1,
+        // Perform subdivision with subsequent deformation to create a fine
+        // target mesh enough
+        for (int i = 0; i < this->maxSubdivLevel; ++i) {
+            if (this->deformSurfMapped.RefineMesh(
+                    1,
 #ifndef  USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
 #else //  USE_PROCEDURAL_DATA
-                this->procField2D.Peek(),
+                    this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
-                this->volDim,
-                this->volOrg,
-                this->volDelta,
-                this->qsIsoVal,
-                this->volDelta.x) < 0) { // TODO Whats a good maximum edge length?
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
+                    this->qsIsoVal,
+                    this->volDelta.x) < 0) { // TODO Whats a good maximum edge length?
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not refine mesh",
-                    this->ClassName());
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "%s: could not refine mesh",
+                        this->ClassName());
 
-            return false;
+                return false;
+            }
         }
 
 #ifdef VERBOSE
@@ -3476,6 +3479,9 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->maxSubdivLevel = this->maxSubdivLevelSlot.Param<core::param::IntParam>()->Value();
         this->maxSubdivLevelSlot.ResetDirty();
         this->triggerComputeSubdiv = true;
+        this->triggerSurfaceMapping = true;
+        this->triggerComputeSurfacePoints1 = true;
+        this->triggerComputeSurfacePoints2 = true;
     }
 
     /// Parameter for maximum morphing steps
