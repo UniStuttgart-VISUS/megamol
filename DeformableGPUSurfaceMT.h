@@ -495,6 +495,15 @@ private:
 
     CudaDevArr<int> triangleEdgeOffs_D;
     CudaDevArr<uint> triangleEdgeList_D;
+    CudaDevArr<uint> subDivEdgeFlag_D;
+    CudaDevArr<uint> subDivEdgeIdxOffs_D;
+    CudaDevArr<float> newVertices_D;
+    CudaDevArr<uint> newTriangles_D;
+    CudaDevArr<uint> oldTriangles_D;
+    CudaDevArr<uint> oldVertexData_D;
+    CudaDevArr<uint> subDivCnt_D;
+    CudaDevArr<uint> newTrianglesIdxOffs_D;
+    CudaDevArr<uint> oldTrianglesIdxOffs_D;
 };
 
 } // namespace protein
