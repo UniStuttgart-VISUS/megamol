@@ -1032,14 +1032,14 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
                 modName = path.Last();
                 path.RemoveLast();
             } else {
-				if(create)
+			/*	if(create)
 				{
 					param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
 					*slotNew << new param::StringParam("");
 					slotNew->MakeAvailable();
 					this->namespaceRoot.AddChild(slotNew);
 				}
-				else
+				else*/
 				{
 					if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 						"Cannot find parameter \"%s\": namespace not found",
@@ -1052,15 +1052,16 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
 
     Module *mod = dynamic_cast<Module *>(mn->FindChild(modName));
     if (mod == NULL) {
-		if(create)
+	/*	if(create)
 		{
 			param::ParamSlot *slot = new param::ParamSlot(name, "newly inserted");
 			*slot << new param::StringParam("");
 			slot->MakeAvailable();
 			this->namespaceRoot.AddChild(slot);
-			mod = dynamic_cast<Module *>(mn->FindChild(modName));
+			//mod = dynamic_cast<Module *>(this->namespaceRoot.FindChild(modName));
+			return FindParameter(name, quiet, false);
 		}
-		else
+		else*/
 		{
 			if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"Cannot find parameter \"%s\": module not found",
@@ -1071,7 +1072,7 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
 
     param::ParamSlot *slot = dynamic_cast<param::ParamSlot*>(mod->FindChild(slotName));
     if (slot == NULL) {
-		if(create)
+	/*	if(create)
 		{
 			param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
 			*slotNew << new param::StringParam("");
@@ -1079,7 +1080,7 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
 			this->namespaceRoot.AddChild(slotNew);
 			slot = slotNew;
 		}
-		else
+		else*/
 		{
 			if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"Cannot find parameter \"%s\": slot not found",
@@ -1088,7 +1089,7 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
 		}
     }
     if (slot->GetStatus() == AbstractSlot::STATUS_UNAVAILABLE) {
-        if(create)
+    /*    if(create)
 		{
 			param::ParamSlot *slotNew = new param::ParamSlot(slotName, "newly inserted");
 			*slotNew << new param::StringParam("");
@@ -1096,7 +1097,7 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
 			this->namespaceRoot.AddChild(slotNew);
 			slot = slotNew;
 		}
-		else
+		else*/
 		{
 			if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"Cannot find parameter \"%s\": slot is not available",
@@ -1105,7 +1106,7 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
 		}
     }
     if (slot->Parameter().IsNull()) {
-        if(create)
+    /*    if(create)
 		{
 			param::ParamSlot *slotNew = new param::ParamSlot(slotName, "newly inserted");
 			*slotNew << new param::StringParam("");
@@ -1113,7 +1114,7 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
 			this->namespaceRoot.AddChild(slotNew);
 			slot = slotNew;
 		}
-		else
+		else*/
 		{
 			if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 				"Cannot find parameter \"%s\": slot has no parameter",
