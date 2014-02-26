@@ -2753,28 +2753,28 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
     if (this->surfaceMappedRM != SURFACE_NONE) {
 
-//        // Sort triangles by camera distance
-//        if (!this->deformSurfMapped.SortTrianglesByCamDist(camPos)) {
-//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                    "%s: could not sort triangles of mapped surface",
-//                    this->ClassName());
-//            return false;
-//        }
+        // Sort triangles by camera distance
+        if (!this->deformSurfMapped.SortTrianglesByCamDist(camPos)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not sort triangles of mapped surface",
+                    this->ClassName());
+            return false;
+        }
 
-//        // Render mapped surface
-//        if (!this->renderMappedSurface(
-//                this->deformSurf2.GetVtxDataVBO(),
-//                this->deformSurfMapped.GetVtxDataVBO(),
-//                this->deformSurfMapped.GetVertexCnt(),
-//                this->deformSurfMapped.GetTriangleIdxVBO(),
-//                this->deformSurfMapped.GetTriangleCnt()*3,
-//                this->surfaceMappedRM,
-//                this->surfaceMappedColorMode)) {
-//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                    "%s: could not render mapped surface",
-//                    this->ClassName());
-//            return false;
-//        }
+        // Render mapped surface
+        if (!this->renderMappedSurface(
+                this->deformSurf2.GetVtxDataVBO(),
+                this->deformSurfMapped.GetVtxDataVBO(),
+                this->deformSurfMapped.GetVertexCnt(),
+                this->deformSurfMapped.GetTriangleIdxVBO(),
+                this->deformSurfMapped.GetTriangleCnt()*3,
+                this->surfaceMappedRM,
+                this->surfaceMappedColorMode)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not render mapped surface",
+                    this->ClassName());
+            return false;
+        }
 
 //        // Render mapped surface as normal surface
 //        if (!this->renderSurface(
@@ -2793,18 +2793,14 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //            return false;
 //        }
 
-        if (!this->renderSurfaceWithSubdivFlag(this->deformSurfMapped)) {
-            return false;
-        }
+//        if (!this->renderSurfaceWithSubdivFlag(this->deformSurfMapped)) {
+//            return false;
+//        }
 
 //        if (!this->renderSurfaceWithUncertainty(this->deformSurfMapped)) {
 //            return false;
 //        }
     }
-
-//    if (!this->renderEdges()) {
-//        return false;
-//    }
 
 
 //    // DEBUG Render backwards mapped subdivision vertices
@@ -2834,25 +2830,23 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //    // END DEBUG
 
     // DEBUG Compute mean vertex path of deformed surface
-    // Update uncertainty VBO for new vertices
-    if (!this->deformSurfMapped.ComputeUncertaintyForSubdivVertices(
-#ifndef  USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-#else //  USE_PROCEDURAL_DATA
-                this->procField2D.Peek(),
-#endif //  USE_PROCEDURAL_DATA
-            this->volDim,
-            this->volOrg,
-            this->volDelta,
-            this->surfaceMappingForcesScl,
-            this->qsGridDelta/100.0f*this->surfaceMappingForcesScl,
-            this->qsIsoVal,
-            this->surfaceMappingMaxIt)) {
-        return false;
-    }
-    float surfArea = this->deformSurfMapped.GetTotalSurfArea();
-    float meanVertexPath = this->deformSurfMapped.IntUncertaintyOverSurfArea();
-    meanVertexPath /= surfArea;
+//    float surfArea = this->deformSurfMapped.GetTotalSurfArea();
+//    float meanVertexPath = this->deformSurfMapped.IntUncertaintyOverSurfArea();
+//    meanVertexPath /= surfArea;
+//    printf("SURFACE AREA %f\n", surfArea);
+//    printf("MEAN PATH    %f\n", meanVertexPath);
+//    float3 minC, maxC;
+//    this->deformSurf2.ComputeMinMaxCoords(minC, maxC);
+//    printf("min %f %f %f, max %f %f %f\n", minC.x, minC.y, minC.z,
+//            maxC.x, maxC.y, maxC.z);
+//    float radius = std::abs(maxC.x-minC.x)/2.0;
+//    printf("RADIUS %f\n", radius);
+//    radius = std::abs(maxC.y-minC.y)/2.0;
+//    printf("RADIUS %f\n", radius);
+//    radius = std::abs(maxC.z-minC.z)/2.0;
+//    printf("RADIUS %f\n", radius);
+//    float area = M_PI*radius*radius*4;
+//    printf("SURFACE AREA should be %f\n", area);
     // END DEBUG
 
 
@@ -3310,20 +3304,20 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     // the shader code, because in this case the attribute is optimized out by
     // the compiler
     attribLocPosNew = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "posNew");
-    attribLocPosOld = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "posOld");
+//    attribLocPosOld = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "posOld");
     attribLocNormal = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "normal");
-    attribLocCorruptTriangleFlag = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "corruptTriangleFlag");
+//    attribLocCorruptTriangleFlag = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "corruptTriangleFlag");
     attribLocTexCoordNew = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "texCoordNew");
-    attribLocTexCoordOld = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "texCoordOld");
+//    attribLocTexCoordOld = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "texCoordOld");
     attribLocPathLen = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "pathLen");
     CheckForGLError(); // OpenGL error check
 
     glEnableVertexAttribArrayARB(attribLocPosNew);
-    glEnableVertexAttribArrayARB(attribLocPosOld);
+//    glEnableVertexAttribArrayARB(attribLocPosOld);
     glEnableVertexAttribArrayARB(attribLocNormal);
-    glEnableVertexAttribArrayARB(attribLocCorruptTriangleFlag);
+//    glEnableVertexAttribArrayARB(attribLocCorruptTriangleFlag);
     glEnableVertexAttribArrayARB(attribLocTexCoordNew);
-    glEnableVertexAttribArrayARB(attribLocTexCoordOld);
+//    glEnableVertexAttribArrayARB(attribLocTexCoordOld);
     glEnableVertexAttribArrayARB(attribLocPathLen);
     CheckForGLError(); // OpenGL error check
 
@@ -3349,25 +3343,25 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
 
     // Attributes old surface
 
-    glBindBufferARB(GL_ARRAY_BUFFER, vboOld);
-    CheckForGLError(); // OpenGL error check
-
-    glVertexAttribPointerARB(attribLocPosOld, 3, GL_FLOAT, GL_FALSE,
-            DeformableGPUSurfaceMT::vertexDataStride*sizeof(float),
-            reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsPos*sizeof(float)));
-
-    glVertexAttribPointerARB(attribLocTexCoordOld, 3, GL_FLOAT, GL_FALSE,
-            DeformableGPUSurfaceMT::vertexDataStride*sizeof(float),
-            reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsTexCoord*sizeof(float)));
+//    glBindBufferARB(GL_ARRAY_BUFFER, vboOld);
+//    CheckForGLError(); // OpenGL error check
+//
+//    glVertexAttribPointerARB(attribLocPosOld, 3, GL_FLOAT, GL_FALSE,
+//            DeformableGPUSurfaceMT::vertexDataStride*sizeof(float),
+//            reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsPos*sizeof(float)));
+//
+//    glVertexAttribPointerARB(attribLocTexCoordOld, 3, GL_FLOAT, GL_FALSE,
+//            DeformableGPUSurfaceMT::vertexDataStride*sizeof(float),
+//            reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsTexCoord*sizeof(float)));
 
     CheckForGLError(); // OpenGL error check
 
     // Attribute for corrupt triangles
-
-    glBindBufferARB(GL_ARRAY_BUFFER, this->deformSurfMapped.GetCorruptTriangleVtxFlagVBO());
-    CheckForGLError(); // OpenGL error check
-
-    glVertexAttribPointerARB(attribLocCorruptTriangleFlag, 1, GL_FLOAT, GL_FALSE, 0, 0);
+//
+//    glBindBufferARB(GL_ARRAY_BUFFER, this->deformSurfMapped.GetCorruptTriangleVtxFlagVBO());
+//    CheckForGLError(); // OpenGL error check
+//
+//    glVertexAttribPointerARB(attribLocCorruptTriangleFlag, 1, GL_FLOAT, GL_FALSE, 0, 0);
 
     CheckForGLError(); // OpenGL error check
 
@@ -3428,11 +3422,11 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     this->pplMappedSurfaceShader.Disable();
 
     glDisableVertexAttribArrayARB(attribLocPosNew);
-    glDisableVertexAttribArrayARB(attribLocPosOld);
+//    glDisableVertexAttribArrayARB(attribLocPosOld);
     glDisableVertexAttribArrayARB(attribLocNormal);
-    glDisableVertexAttribArrayARB(attribLocCorruptTriangleFlag);
+//    glDisableVertexAttribArrayARB(attribLocCorruptTriangleFlag);
     glDisableVertexAttribArrayARB(attribLocTexCoordNew);
-    glDisableVertexAttribArrayARB(attribLocTexCoordOld);
+//    glDisableVertexAttribArrayARB(attribLocTexCoordOld);
     glDisableVertexAttribArrayARB(attribLocPathLen);
     CheckForGLError(); // OpenGL error check
 

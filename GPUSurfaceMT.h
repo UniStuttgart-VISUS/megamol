@@ -31,6 +31,8 @@ class GPUSurfaceMT : public AbstractGPUSurface {
 
 public:
 
+        void ComputeMinMaxCoords(float3 &minC, float3 &maxC);
+
     /**
      * Answer the name of this module.
      *

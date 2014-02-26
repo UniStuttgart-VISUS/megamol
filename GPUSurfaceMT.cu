@@ -29,6 +29,62 @@
 using namespace megamol;
 using namespace megamol::protein;
 
+
+
+void GPUSurfaceMT::ComputeMinMaxCoords(float3 &minC, float3 &maxC) {
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &this->vertexDataResource, this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return;
+    }
+
+    // Get mapped pointer to the vbo
+    float *vboPt;
+    size_t vboSize;
+    if (!CudaSafeCall(cudaGraphicsMapResources(1, &this->vertexDataResource, 0))) {
+        return;
+    }
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt), // The mapped pointer
+            &vboSize,             // The size of the accessible data
+            this->vertexDataResource))) {                   // The mapped resource
+        return;
+    }
+
+    HostArr<float> vertexBuffer;
+    vertexBuffer.Validate(this->vertexCnt*this->vertexDataStride);
+    CudaSafeCall(cudaMemcpy(vertexBuffer.Peek(), vboPt, vboSize, cudaMemcpyDeviceToHost));
+
+    // Unmap CUDA graphics resource
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource))) {
+        return;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
+        return;
+    }
+
+    minC.x = vertexBuffer.Peek()[0];
+    minC.y = vertexBuffer.Peek()[1];
+    minC.z = vertexBuffer.Peek()[2];
+    maxC.x = vertexBuffer.Peek()[0];
+    maxC.y = vertexBuffer.Peek()[1];
+    maxC.z = vertexBuffer.Peek()[2];
+    for (int i = 0; i < this->vertexCnt; ++i) {
+        minC.x = std::min(vertexBuffer.Peek()[9*i + 0], minC.x);
+        minC.y = std::min(vertexBuffer.Peek()[9*i + 1], minC.y);
+        minC.z = std::min(vertexBuffer.Peek()[9*i + 2], minC.z);
+        maxC.x = std::max(vertexBuffer.Peek()[9*i + 0], maxC.x);
+        maxC.y = std::max(vertexBuffer.Peek()[9*i + 1], maxC.y);
+        maxC.z = std::max(vertexBuffer.Peek()[9*i + 2], maxC.z);
+//        printf("min %f %f %f, max %f %f %f\n", minC.x, minC.y, minC.z,
+//                maxC.x, maxC.y, maxC.z);
+    }
+
+    vertexBuffer.Release();
+}
+
 //#define USE_TIMER // Toggle performance measurements
 
 /**

@@ -1204,6 +1204,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
         float *displLen_D,
         float *vtxUncertainty_D,
         float4 *gradient_D,
+        int *accumPath_D,
         uint vertexCnt,
         float forcesScl,
         float isoval,
@@ -1258,6 +1259,12 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
     //externalForcesScl *= (1.0*(1-switchSign) + (switchSign));
 
+    if (bool(switchSign) && (accumPath_D[idx] != 0)) {
+        accumPath_D[idx] = 0;
+    } else if (bool(switchSign) && (accumPath_D[idx] == 0)) {
+        accumPath_D[idx] = 1;
+    }
+
     // Sample gradient by cubic interpolation
     float4 externalForceTmp = useCubicInterpolation
             ? SampleFieldAtPosTricub_D<float4>(posOld, gradient_D)
@@ -1291,7 +1298,11 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
 //        vtxUncertainty_D[idx] += diffLen;
 //    }
     if (trackPath) {
-        vtxUncertainty_D[idx] += diffLen;
+        if (accumPath_D[idx] == 0) {
+            vtxUncertainty_D[idx] += diffLen;
+        } else if(accumPath_D[idx] != 0) {
+            vtxUncertainty_D[idx] -= diffLen;
+        }
     }
     // Displ scl for convergence
     displLen_D[idx] = diffLen;
@@ -1546,11 +1557,9 @@ float DeformableGPUSurfaceMT::GetTotalSurfArea() {
 #endif
 
     // Compute sum of all (non-corrupt) triangle areas
-    float areaValidTriangles = thrust::reduce(
+    float totalArea = thrust::reduce(
             thrust::device_ptr<float>(this->accTriangleArea_D.Peek()),
-            thrust::device_ptr<float>(this->accTriangleArea_D.Peek() + this->triangleCnt),
-            0.0f);
-
+            thrust::device_ptr<float>(this->accTriangleArea_D.Peek() + this->triangleCnt));
 
     ::CheckForCudaErrorSync();
 
@@ -1577,7 +1586,7 @@ float DeformableGPUSurfaceMT::GetTotalSurfArea() {
 //    return sum;
 //    // END DEBUG
 
-    return areaValidTriangles;
+    return totalArea;
 }
 
 
@@ -2132,8 +2141,8 @@ __global__ void DeformableGPUSurfaceMT_IntOverTriangles_D(
 
     // Compute average
     float avgVal = (scalarValue_D[triangleIdx_D[idx*3+0]] +
-            scalarValue_D[triangleIdx_D[idx*3+1]] +
-            scalarValue_D[triangleIdx_D[idx*3+2]])/3.0;
+                    scalarValue_D[triangleIdx_D[idx*3+1]] +
+                    scalarValue_D[triangleIdx_D[idx*3+2]])/3.0;
 
     trianglesAreaWeightedVertexVals_D[idx] = avgVal*trianglesArea_D[idx];
 }
@@ -2255,19 +2264,20 @@ float DeformableGPUSurfaceMT::IntUncertaintyOverSurfArea() {
 
      // Get mapped pointers to the vertex data buffers
      uint *triangleIdxPt;
-     size_t vboSize;
+     size_t vboSizeTri;
      if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
              reinterpret_cast<void**>(&triangleIdxPt), // The mapped pointer
-             &vboSize,              // The size of the accessible data
+             &vboSizeTri,              // The size of the accessible data
              cudaTokens[0]))) {                 // The mapped resource
          return false;
      }
 
      // Get mapped pointers to the vertex data buffers
      float *uncertaintyPt;
+     size_t vboSizeUncertainty;
      if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
              reinterpret_cast<void**>(&uncertaintyPt), // The mapped pointer
-             &vboSize,              // The size of the accessible data
+             &vboSizeUncertainty,              // The size of the accessible data
              cudaTokens[1]))) {                 // The mapped resource
          return false;
      }
@@ -6158,6 +6168,13 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         return false;
     }
 
+    if (!CudaSafeCall(this->accumPath_D.Validate(this->vertexCnt))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->accumPath_D.Set(0x00))) {
+        return false;
+    }
+
     // Init uncertainty buffer with zero
     if (trackPath) {
         if (!CudaSafeCall(cudaMemset(vtxUncertainty_D, 0x00, this->vertexCnt*sizeof(float)))) {
@@ -6283,6 +6300,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                     this->displLen_D.Peek(),
                     vtxUncertainty_D,
                     (float4*)this->externalForces_D.Peek(),
+                    this->accumPath_D.Peek(),
                     this->vertexCnt,
                     forceScl,
                     isovalue,
@@ -7272,6 +7290,7 @@ __global__ void GetUncertaintyOfSubdivVertices_D(
         float *displLen_D,
         float *vtxUncertainty_D,
         float4 *gradient_D,
+        int *accumPath_D,
         uint vertexCnt,
         float forcesScl,
         float isoval,
@@ -7324,6 +7343,12 @@ __global__ void GetUncertaintyOfSubdivVertices_D(
     externalForcesScl = externalForcesScl*(1.0*(1-switchSign) - 1.0*switchSign);
     externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
 
+    if (bool(switchSign) && (accumPath_D[idx] != 0)) {
+        accumPath_D[idx] = 0;
+    } else if (bool(switchSign) && (accumPath_D[idx] == 0)) {
+        accumPath_D[idx] = 1;
+    }
+
     // Sample gradient
     //float4 externalForceTmp = SampleFieldAtPosTrilin_D<float4>(posOld, gradient_D);
     float4 externalForceTmp = SampleFieldAtPosTricub_D<float4>(posOld, gradient_D);
@@ -7350,9 +7375,16 @@ __global__ void GetUncertaintyOfSubdivVertices_D(
 
     float3 diff = posNew-posOld;
     float diffLen = length(diff);
-    if ((abs(externalForcesScl) == 1.0f)) {
+//    if ((abs(externalForcesScl) == 1.0f)) {
+//        vtxUncertainty_D[idx] += diffLen;
+//    }
+
+    if (accumPath_D[idx] == 0) {
         vtxUncertainty_D[idx] += diffLen;
+    } else if(accumPath_D[idx] != 0) {
+        vtxUncertainty_D[idx] -= diffLen;
     }
+
     // Displ scl for convergence
     displLen_D[idx] = diffLen;
     vertexData_D[9*idx+3] = 1.0;
@@ -7524,6 +7556,13 @@ bool DeformableGPUSurfaceMT::ComputeUncertaintyForSubdivVertices(
         }
     }
 
+
+    if (!CudaSafeCall(this->accumPath_D.Validate(this->vertexCnt))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->accumPath_D.Set(0x00))) {
+        return false;
+    }
     uint iterationsNeeded = 0;
     for (uint i = 0; i < maxIt; ++i) {
 
@@ -7536,6 +7575,7 @@ bool DeformableGPUSurfaceMT::ComputeUncertaintyForSubdivVertices(
                 this->displLen_D.Peek(),
                 uncertaintyPt,
                 (float4*)(this->externalForces_D.Peek()),
+                this->accumPath_D.Peek(),
                 this->vertexCnt,
                 forcesScl,
                 isoval,
