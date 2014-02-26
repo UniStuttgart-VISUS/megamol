@@ -1825,6 +1825,8 @@ bool DeformableGPUSurfaceMT::InitCorruptFlagVBO(size_t vertexCnt) {
  */
 bool DeformableGPUSurfaceMT::InitUncertaintyVBO(size_t vertexCnt) {
 
+    printf("Init Uncertainty Vbo!\n");
+
     // Destroy if necessary
     if (this->vboUncertainty) {
         glBindBufferARB(GL_ARRAY_BUFFER, this->vboUncertainty);
@@ -3202,7 +3204,8 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(
             surfMappedMinDisplScl,
             springStiffness,
             forceScl,
-            externalForcesWeight)) {
+            externalForcesWeight,
+            true)) {
         return false;
     }
 
@@ -3367,7 +3370,8 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
             surfMappedMinDisplScl,
             springStiffness,
             forceScl,
-            externalForcesWeight)) {
+            externalForcesWeight,
+            true)) {
         return false;
     }
 
@@ -3404,7 +3408,8 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
         float forceScl,
         float externalForcesWeight,
         float gvfScl,
-        unsigned int gvfIt) {
+        unsigned int gvfIt,
+        bool trackPath) {
 
     using vislib::sys::Log;
 
@@ -3440,9 +3445,11 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
         return false;
     }
 
-    // Init vbo with uncertainty information
-    if (!this->InitUncertaintyVBO(this->vertexCnt)) {
-        return false;
+    if (trackPath) {
+        // Init vbo with uncertainty information
+        if (!this->InitUncertaintyVBO(this->vertexCnt)) {
+            return false;
+        }
     }
 
     // Register memory with CUDA
@@ -3532,6 +3539,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
             springStiffness,
             forceScl,
             externalForcesWeight,
+            trackPath, // Track path
             true)) { // Use external forces only
         return false;
     }
@@ -3957,10 +3965,12 @@ __global__ void FlagLongEdges_D(
 
 __global__ void ComputeNewVertices(
         float *newVertices_D,
+        float *vertexFlag_D,
         uint *subDivEdgeIdxOffs_D,
         uint *edgeFlag_D,
         uint *edges_D,
         float *vertexData_D,
+        uint oldVertexCnt,
         uint edgeCnt) {
 
     const uint idx = ::getThreadIdx();
@@ -3982,6 +3992,7 @@ __global__ void ComputeNewVertices(
     newVertices_D[3*edgeIdxOffs+0] = posNew.x;
     newVertices_D[3*edgeIdxOffs+1] = posNew.y;
     newVertices_D[3*edgeIdxOffs+2] = posNew.z;
+    vertexFlag_D[oldVertexCnt+edgeIdxOffs] = 1.0; // mark this vertex as new
 //    printf("Vertex %f %f %f\n", posNew.x, posNew.y, posNew.z);
 }
 
@@ -4474,7 +4485,6 @@ __global__ void ComputeSubdivTriNeighbors_D (
         // This neighbor is the other subdivision
         newTriangleNeighbors_D[3*(numberOfKeptTriangles+triIdxOffs)+2] =
                 numberOfKeptTriangles+triIdxOffs+1;
-
 
         // #1
         w0 = v0;
@@ -5277,7 +5287,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
 
-    cudaGraphicsResource* cudaTokens[2];
+    cudaGraphicsResource* cudaTokens[3];
 
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
@@ -5433,17 +5443,17 @@ int DeformableGPUSurfaceMT::RefineMesh(
             thrust::device_ptr<uint>(this->subDivEdgeFlag_D.Peek() + edgeCnt),
             thrust::device_ptr<uint>(this->subDivEdgeIdxOffs_D.Peek()));
 
-    uint newVertexCnt, accTmp;
+    uint accTmp;
     if (!CudaSafeCall(cudaMemcpy(&accTmp, this->subDivEdgeFlag_D.Peek()+(edgeCnt-1), sizeof(uint),
             cudaMemcpyDeviceToHost))) {
         return -1;
     }
-    newVertexCnt = accTmp;
+    this->newVertexCnt = accTmp;
     if (!CudaSafeCall(cudaMemcpy(&accTmp, this->subDivEdgeIdxOffs_D.Peek()+(edgeCnt-1), sizeof(uint),
             cudaMemcpyDeviceToHost))) {
         return -1;
     }
-    newVertexCnt += accTmp;
+    this->newVertexCnt += accTmp;
     printf("Need %i new vertices (old triangle count %u)\n", newVertexCnt, this->triangleCnt);
 
 //    // DEBUG print edge flag
@@ -5462,12 +5472,46 @@ int DeformableGPUSurfaceMT::RefineMesh(
     if (!CudaSafeCall(this->newVertices_D.Validate(newVertexCnt*3))) {
         return -1;
     }
+    if (this->vertexFlag_D.GetCount() != this->vertexCnt) { // First subdivision round
+        if (!CudaSafeCall(this->vertexFlag_D.Validate(newVertexCnt + this->vertexCnt))) {
+            return -1;
+        }
+        if (!CudaSafeCall(this->vertexFlag_D.Set(0x00))) {
+            return -1;
+        }
+    } else { // Need to save old flags
+        if (!CudaSafeCall(this->vertexFlagTmp_D.Validate(this->vertexFlag_D.GetCount()))) {
+            return -1;
+        }
+        if (!CudaSafeCall(cudaMemcpy(
+                this->vertexFlagTmp_D.Peek(),
+                this->vertexFlag_D.Peek(),
+                sizeof(float)*this->vertexFlag_D.GetCount(),
+                cudaMemcpyDeviceToDevice))) {
+            return -1;
+        }
+        if (!CudaSafeCall(this->vertexFlag_D.Validate(newVertexCnt + this->vertexCnt))) {
+            return -1;
+        }
+        if (!CudaSafeCall(this->vertexFlag_D.Set(0x00))) {
+            return -1;
+        }
+        if (!CudaSafeCall(cudaMemcpy(
+                this->vertexFlag_D.Peek(),
+                this->vertexFlagTmp_D.Peek(),
+                sizeof(float)*this->vertexFlagTmp_D.GetCount(),
+                cudaMemcpyDeviceToDevice))) {
+            return -1;
+        }
+    }
     ComputeNewVertices <<< Grid(edgeCnt, 256), 256 >>> (
             this->newVertices_D.Peek(),
+            this->vertexFlag_D.Peek(),
             this->subDivEdgeIdxOffs_D.Peek(),
             this->subDivEdgeFlag_D.Peek(),
             this->edges_D.Peek(),
             vboPt,
+            this->vertexCnt,
             edgeCnt);
     if (!CheckForCudaError()) {
         return -1;
@@ -5983,6 +6027,24 @@ void DeformableGPUSurfaceMT::Release() {
     CudaSafeCall(this->accTriangleArea_D.Release());
     CudaSafeCall(this->corruptTriangles_D.Release());
 
+    CudaSafeCall(triangleEdgeOffs_D.Release());
+    CudaSafeCall(triangleEdgeList_D.Release());
+    CudaSafeCall(subDivEdgeFlag_D.Release());
+    CudaSafeCall(subDivEdgeIdxOffs_D.Release());
+    CudaSafeCall(newVertices_D.Release());
+    CudaSafeCall(newTriangles_D.Release());
+    CudaSafeCall(oldTriangles_D.Release());
+    CudaSafeCall(oldVertexData_D.Release());
+    CudaSafeCall(subDivCnt_D.Release());
+    CudaSafeCall(newTrianglesIdxOffs_D.Release());
+    CudaSafeCall(oldTrianglesIdxOffs_D.Release());
+    CudaSafeCall(newTriangleNeighbors_D.Release());
+    CudaSafeCall(subDivLevels_D.Release());
+    CudaSafeCall(oldSubDivLevels_D.Release());
+    CudaSafeCall(vertexFlag_D.Release());
+    CudaSafeCall(vertexFlagTmp_D.Release());
+    CudaSafeCall(vertexUncertaintyTmp_D.Release());
+
     if (this->vboCorruptTriangleVertexFlag) {
         glBindBufferARB(GL_ARRAY_BUFFER, this->vboCorruptTriangleVertexFlag);
         glDeleteBuffersARB(1, &this->vboCorruptTriangleVertexFlag);
@@ -6018,6 +6080,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         float springStiffness,
         float forceScl,
         float externalForcesWeight,
+        bool trackPath,
         bool externalForcesOnly,
         bool useThinPlate) {
 
@@ -6046,8 +6109,10 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
     }
 
     // Init uncertainty buffer with zero
-    if (!CudaSafeCall(cudaMemset(vtxUncertainty_D, 0x00, this->vertexCnt*sizeof(float)))) {
-        return false;
+    if (trackPath) {
+        if (!CudaSafeCall(cudaMemset(vtxUncertainty_D, 0x00, this->vertexCnt*sizeof(float)))) {
+            return false;
+        }
     }
 
 //#ifdef USE_TIMER
@@ -6112,7 +6177,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                         isovalue,
                         surfMappedMinDisplScl,
                         useCubicInterpolation,
-                        true, // Track path of vertices
+                        trackPath, // Track path of vertices
                         this->vertexDataOffsPos,
                         this->vertexDataOffsNormal,
                         this->vertexDataStride);
@@ -6132,7 +6197,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                         isovalue,
                         surfMappedMinDisplScl,
                         useCubicInterpolation,
-                        true, // Track path of vertices
+                        trackPath, // Track path of vertices
                         this->vertexDataOffsPos,
                         this->vertexDataOffsNormal,
                         this->vertexDataStride);
@@ -6173,7 +6238,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                     isovalue,
                     surfMappedMinDisplScl,
                     useCubicInterpolation,
-                    true, // Track path of vertices
+                    trackPath, // Track path of vertices
                     this->vertexDataOffsPos,
                     this->vertexDataOffsNormal,
                     this->vertexDataStride);
@@ -7122,6 +7187,347 @@ float DeformableGPUSurfaceMT::CalcHausdorffDistance(
             thrust::maximum<float>());
 
     return sqrt(res);
+}
+
+
+/*
+ * TODO Do not start for all vertices, only new ones
+ */
+__global__ void GetUncertaintyOfSubdivVertices_D(
+        float *vertexUncertainty_D,
+        float *newVertexPos_D, //
+        float *volume_D, // This is the volume of the
+        float *vertexFlag_D,
+        float4 *externalForces_D,
+        uint oldVertexCnt,
+        uint vertexCnt) { // New vertex count
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= vertexCnt) return;
+
+    // Else trace back path until it
+    float3 currPos = make_float3(newVertexPos_D[3*idx+0],
+                                 newVertexPos_D[3*idx+1],
+                                 newVertexPos_D[3*idx+2]);
+
+
+}
+
+
+__global__ void GetUncertaintyOfSubdivVertices_D(
+        float *sourceVolume_D,
+        float *vertexData_D,
+        float *vertexFlag_D,
+        float *vertexExternalForcesScl_D,
+        float *displLen_D,
+        float *vtxUncertainty_D,
+        float4 *gradient_D,
+        uint vertexCnt,
+        float forcesScl,
+        float isoval,
+        float minDispl) {
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= vertexCnt) {
+        return;
+    }
+    if (vertexFlag_D[idx] == 0.0) {
+        vertexData_D[9*idx+3] = 0.0;
+        vertexData_D[9*idx+4] = 1.0;
+        vertexData_D[9*idx+5] = 0.0;
+        displLen_D[idx] = 0.0; // Old vertices are per definition converged
+        return; // This is an old vertex
+    }
+
+    // Check convergence criterion
+    float lastDisplLen = displLen_D[idx];
+    if (lastDisplLen <= minDispl) {
+        displLen_D[idx] = 0.0;
+        return; // Vertex is converged
+    }
+
+
+    /* Retrieve stuff from global device memory */
+
+    // Get initial position from global device memory
+    float3 posOld = make_float3(
+            vertexData_D[9*idx+0],
+            vertexData_D[9*idx+1],
+            vertexData_D[9*idx+2]);
+
+    // Get initial scale factor for external forces
+    float externalForcesScl = vertexExternalForcesScl_D[idx];
+    float externalForcesSclOld = externalForcesScl;
+
+
+    /* Update position */
+
+    // No warp divergence here, since useCubicInterpolation is the same for all
+    // threads
+    //const float sampleDens = SampleFieldAtPosTrilin_D<float>(posOld, sourceVolume_D);
+    const float sampleDens = SampleFieldAtPosTricub_D<float>(posOld, sourceVolume_D);
+
+    // Switch sign and scale down if necessary
+    bool negative = externalForcesScl < 0;
+    bool outside = sampleDens <= isoval;
+    int switchSign = int((negative && outside)||(!negative && !outside));
+    externalForcesScl = externalForcesScl*(1.0*(1-switchSign) - 1.0*switchSign);
+    externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
+
+    // Sample gradient
+    //float4 externalForceTmp = SampleFieldAtPosTrilin_D<float4>(posOld, gradient_D);
+    float4 externalForceTmp = SampleFieldAtPosTricub_D<float4>(posOld, gradient_D);
+
+    float3 externalForce;
+    externalForce.x = externalForceTmp.x;
+    externalForce.y = externalForceTmp.y;
+    externalForce.z = externalForceTmp.z;
+
+    externalForce = safeNormalize(externalForce);
+    externalForce *= forcesScl*externalForcesScl;
+
+    float3 posNew = posOld + externalForce; // Integrate backwards
+
+    /* Write back to global device memory */
+
+    // New pos
+    vertexData_D[9*idx+0] = posNew.x;
+    vertexData_D[9*idx+1] = posNew.y;
+    vertexData_D[9*idx+2] = posNew.z;
+
+    // Write external forces scale factor back to global device memory
+    vertexExternalForcesScl_D[idx] = externalForcesScl;
+
+    float3 diff = posNew-posOld;
+    float diffLen = length(diff);
+    if ((abs(externalForcesScl) == 1.0f)) {
+        vtxUncertainty_D[idx] += diffLen;
+    }
+    // Displ scl for convergence
+    displLen_D[idx] = diffLen;
+    vertexData_D[9*idx+3] = 1.0;
+    vertexData_D[9*idx+4] = 0.0;
+    vertexData_D[9*idx+5] = 1.0;
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::ComputeUncertaintyForSubdivVertices
+ */
+bool DeformableGPUSurfaceMT::ComputeUncertaintyForSubdivVertices(
+        float *sourceVolume_D,
+        int3 volDim,
+        float3 volOrg,
+        float3 volDelta,
+        float forcesScl,
+        float minDispl,
+        float isoval,
+        uint maxIt) {
+
+    using namespace vislib::sys;
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
+
+    /* 1. Reinitialize VBO and copy back uncertainty values */
+
+    cudaGraphicsResource* cudaTokens[1];
+    cudaGraphicsResource* cudaTokens2[2];
+
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0],
+            this->vboUncertainty,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsMapResources(1, cudaTokens, 0))) {
+        return false;
+    }
+    // Get mapped pointers to the vertex data buffers
+    float *uncertaintyPt;
+    size_t vboUncertaintySize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&uncertaintyPt), // The mapped pointer
+            &vboUncertaintySize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Copy old values to temporary array
+    if (!CudaSafeCall(this->vertexUncertaintyTmp_D.Validate(vboUncertaintySize/sizeof(float)))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaMemcpy(
+            this->vertexUncertaintyTmp_D.Peek(),
+            uncertaintyPt,
+            vboUncertaintySize,
+            cudaMemcpyDeviceToDevice))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(1, cudaTokens, 0))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+
+    // Re-initiaize VBO
+    if (!this->InitUncertaintyVBO(this->vertexCnt)) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens2[0],
+            this->vboUncertainty,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens2[1],
+            this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens2, 0))) {
+        return false;
+    }
+
+    float *vboVertexPt;
+    size_t vboVertexSize;
+    // Get mapped pointers to the vertex data buffers
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&uncertaintyPt), // The mapped pointer
+            &vboUncertaintySize,                      // The size of the accessible data
+            cudaTokens2[0]))) {                        // The mapped resource
+        return false;
+    }
+    // Get mapped pointers to the vertex data buffers
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboVertexPt), // The mapped pointer
+            &vboVertexSize,                      // The size of the accessible data
+            cudaTokens2[1]))) {                        // The mapped resource
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaMemset(uncertaintyPt, 0x00, vboUncertaintySize))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaMemcpy(
+            uncertaintyPt,
+            this->vertexUncertaintyTmp_D.Peek(),
+            sizeof(float)*this->vertexUncertaintyTmp_D.GetCount(),
+            cudaMemcpyDeviceToDevice))) {
+        return false;
+    }
+
+
+    /* 2. Write uncertainty values of new vertices */
+
+    // Get copy of vertex buffer
+    if (!CudaSafeCall(this->oldVertexData_D.Validate(this->vertexCnt*this->vertexDataStride))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaMemcpy(this->oldVertexData_D.Peek(),
+            vboVertexPt,
+            vboVertexSize,
+            cudaMemcpyDeviceToDevice))) {
+        return false;
+    }
+    // Check/prepare necessary arrays
+    if (sourceVolume_D == NULL) {
+        return false;
+    }
+    if (!CudaSafeCall(this->displLen_D.Validate(this->vertexCnt))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->displLen_D.Set(0x00))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(this->vertexExternalForcesScl_D.Validate(this->vertexCnt))) {
+        return false;
+    }
+    DeformableGPUSurfaceMT_InitExternalForceScl_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+            (float*)this->vertexExternalForcesScl_D.Peek(),
+            this->displLen_D.Peek(),
+            sourceVolume_D,
+            this->oldVertexData_D.Peek(),
+            minDispl,
+            this->vertexCnt,
+            isoval,
+            this->vertexDataOffsPos,
+            this->vertexDataStride);
+    if (!CheckForCudaError()) {
+        return false;
+    }
+
+    if (this->vertexFlag_D.GetCount() != this->vertexCnt) {
+        if (!CudaSafeCall(this->vertexFlag_D.Validate(this->vertexCnt))) {
+            return -1;
+        }
+        if (!CudaSafeCall(this->vertexFlag_D.Set(0x00))) {
+            return -1;
+        }
+        return false;
+    }
+
+    uint iterationsNeeded = 0;
+    for (uint i = 0; i < maxIt; ++i) {
+
+        // Update vertex position
+        GetUncertaintyOfSubdivVertices_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+                sourceVolume_D,
+                this->oldVertexData_D.Peek(),
+                this->vertexFlag_D.Peek(),
+                this->vertexExternalForcesScl_D.Peek(),
+                this->displLen_D.Peek(),
+                uncertaintyPt,
+                (float4*)(this->externalForces_D.Peek()),
+                this->vertexCnt,
+                forcesScl,
+                isoval,
+                minDispl);
+        if (!CheckForCudaError()) {
+            return false;
+        }
+
+        // Accumulate displacement length of this iteration step
+        float avgDisplLen = 0.0f;
+        avgDisplLen = thrust::reduce(
+                thrust::device_ptr<float>(this->displLen_D.Peek()),
+                thrust::device_ptr<float>(this->displLen_D.Peek() + this->vertexCnt));
+        if (!CudaSafeCall(cudaGetLastError())) {
+            return false;
+        }
+        avgDisplLen /= static_cast<float>(this->vertexCnt);
+        if (i%10 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, minDispl);
+        //printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+        if (avgDisplLen < minDispl) {
+            iterationsNeeded = i+1;
+            break;
+        }
+
+        ::CheckForCudaErrorSync();
+    }
+
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens2, 0))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens2[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens2[1]))) {
+        return false;
+    }
+
+    return CheckForCudaError();
 }
 
 #endif // WITH_CUDA

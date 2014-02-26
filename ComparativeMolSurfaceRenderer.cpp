@@ -787,6 +787,52 @@ bool ComparativeMolSurfaceRenderer::create(void) {
         return false;
     }
 
+
+    // Load shader for per pixel lighting of the surface
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("electrostatics::pplsurface::vertexWithFlag", vertSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader",
+                this->ClassName());
+        return false;
+    }
+    // Load ppl fragment shader
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("electrostatics::pplsurface::fragmentWithFlag", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader",
+                this->ClassName());
+        return false;
+    }
+    try {
+        if(!this->pplSurfaceShaderVertexFlag.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__ );
+        }
+    }
+    catch(vislib::Exception &e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create the ppl shader (vertex flag): %s\n", this->ClassName(), e.GetMsgA());
+        return false;
+    }
+
+
+    // Load shader for per pixel lighting of the surface
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("electrostatics::pplsurface::vertexUncertainty", vertSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader",
+                this->ClassName());
+        return false;
+    }
+    // Load ppl fragment shader
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("electrostatics::pplsurface::fragmentUncertainty", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader",
+                this->ClassName());
+        return false;
+    }
+    try {
+        if(!this->pplSurfaceShaderUncertainty.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__ );
+        }
+    }
+    catch(vislib::Exception &e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create the ppl shader (vertex flag): %s\n", this->ClassName(), e.GetMsgA());
+        return false;
+    }
+
     return true;
 }
 
@@ -2443,7 +2489,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->surfaceMappingForcesScl,
                     this->surfaceMappingExternalForcesWeightScl,
                     this->surfMappedGVFScl,
-                    this->surfMappedGVFIt)) {
+                    this->surfMappedGVFIt,
+                    false)) {
 
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                         "%s: could not compute Two-Way-GVF deformation",
@@ -2451,6 +2498,38 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
                 return false;
             }
+        }
+
+
+        // Copy vertex flags to host
+
+        this->mappedSurfVertexFlags.Validate(this->deformSurfMapped.GetVertexCnt());
+        this->mappedSurfVertexFlags.Set(0x00);
+        if (this->maxSubdivLevel > 0) {
+            if (!CudaSafeCall(cudaMemcpy(
+                    this->mappedSurfVertexFlags.Peek(),
+                    this->deformSurfMapped.PeekVertexFlagDevPt(),
+                    sizeof(float)*this->deformSurfMapped.GetVertexCnt(),
+                    cudaMemcpyDeviceToHost))) {
+                return false;
+            }
+        }
+
+        // Update uncertainty VBO for new vertices
+        if (!this->deformSurfMapped.ComputeUncertaintyForSubdivVertices(
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
+                this->volDim,
+                this->volOrg,
+                this->volDelta,
+                this->surfaceMappingForcesScl,
+                this->surfMappedMinDisplScl,
+                this->qsIsoVal,
+                this->surfaceMappingMaxIt)) {
+            return false;
         }
 
 #ifdef VERBOSE
@@ -2490,13 +2569,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         this->triggerComputeSubdiv = true;
     }
 
-//    // DEBUG
-//    if (this->triggerComputeSubdiv) {
-//    if (!this->computeSurfaceInfo()) {
-//        return false;
-//    }
-//    }
-//    // END DEBUG
 
     // Get camera information
     this->cameraInfo =  dynamic_cast<core::view::AbstractCallRender3D*>(&call)->GetCameraParameters();
@@ -2695,51 +2767,62 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //            return false;
 //        }
 
-        // Render mapped surface as normal surface
-        if (!this->renderSurface(
-                this->deformSurfMapped.GetVtxDataVBO(),
-                this->deformSurfMapped.GetVertexCnt(),
-                this->deformSurfMapped.GetTriangleIdxVBO(),
-                this->deformSurfMapped.GetTriangleCnt()*3,
-                this->surfaceMappedRM,
-                this->surface2ColorMode,
-                this->surfAttribTex2,
-                this->uniformColorSurf2,
-                this->surf2AlphaScl)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not render mapped surface",
-                    this->ClassName());
+//        // Render mapped surface as normal surface
+//        if (!this->renderSurface(
+//                this->deformSurfMapped.GetVtxDataVBO(),
+//                this->deformSurfMapped.GetVertexCnt(),
+//                this->deformSurfMapped.GetTriangleIdxVBO(),
+//                this->deformSurfMapped.GetTriangleCnt()*3,
+//                this->surfaceMappedRM,
+//                this->surface2ColorMode,
+//                this->surfAttribTex2,
+//                this->uniformColorSurf2,
+//                this->surf2AlphaScl)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not render mapped surface",
+//                    this->ClassName());
+//            return false;
+//        }
+
+//        if (!this->renderSurfaceWithSubdivFlag(this->deformSurfMapped)) {
+//            return false;
+//        }
+
+        if (!this->renderSurfaceWithUncertainty(this->deformSurfMapped)) {
             return false;
         }
     }
 
-//    // DEBUG Show atom positions
-//    glColor3f(1.0, 0.0, 0.0);
-//    glBegin(GL_POINTS);
-//        for(size_t p = 0; p < mol1->AtomCount(); ++p)
-//            glVertex3fv(&mol1->AtomPositions()[3*p]);
-//    glEnd();
-//    // DEBUG end
-
-//    // DEBUG Show subdivided triangles
-//    if (this->showSubdiv) {
-//        glLineWidth(2.0f);
-//        glDisable(GL_CULL_FACE);
-//        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-//        glColor3f(1.0, 1.0, 1.0);
-//        glBegin(GL_TRIANGLES);
-//        for (size_t t = 0; t < this->subDivTris.Count()/9; ++t) {
-//            glVertex3f(this->subDivTris[9*t+0], this->subDivTris[9*t+1], this->subDivTris[9*t+2]);
-//            glVertex3f(this->subDivTris[9*t+3], this->subDivTris[9*t+4], this->subDivTris[9*t+5]);
-//            glVertex3f(this->subDivTris[9*t+6], this->subDivTris[9*t+7], this->subDivTris[9*t+8]);
-//        }
-//        glEnd();
-//    }
-//    // END DEBUG
-
 //    if (!this->renderEdges()) {
 //        return false;
 //    }
+
+
+    // DEBUG Render backwards mapped subdivision vertices
+    glColor3f(0.0, 1.0, 0.0);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_BLEND);
+    glPointSize(1.5);
+    HostArr<float> oldVertexData;
+    oldVertexData.Validate(9*this->deformSurfMapped.GetVertexCnt());
+    CudaSafeCall(cudaMemcpy(oldVertexData.Peek(),
+            this->deformSurfMapped.PeekOldVertexDataDevPt(),
+            sizeof(float)*9*this->deformSurfMapped.GetVertexCnt(),
+            cudaMemcpyDeviceToHost));
+//    for (int i = 0; i < this->deformSurfMapped.GetVertexCnt(); ++i) {
+//        printf("%i %f %f %f\n", i, oldVertexData.Peek()[9*i+0],
+//                oldVertexData.Peek()[9*i+1],
+//                oldVertexData.Peek()[9*i+2]);
+//    }
+    glEnableClientState(GL_VERTEX_ARRAY); // Enable Vertex Arrays
+    glEnableClientState(GL_COLOR_ARRAY); // Enable Vertex Arrays
+    glVertexPointer(3, GL_FLOAT, 9*sizeof(float), oldVertexData.Peek()); // Set The Vertex Pointer To Vertex Data
+    glColorPointer(3, GL_FLOAT, 9*sizeof(float), oldVertexData.Peek() + 3);
+    glDrawArrays(GL_POINTS, 0, this->deformSurfMapped.GetVertexCnt()); //Draw the vertices
+    glDisableClientState(GL_VERTEX_ARRAY); // Enable Vertex Arrays
+    glDisableClientState(GL_COLOR_ARRAY); // Enable Vertex Arrays
+    glEnable(GL_LIGHTING);
+    // END DEBUG
 
 
     glDisable(GL_TEXTURE_3D);
@@ -2994,6 +3077,183 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
     glEnable(GL_LIGHTING);
 
     return CheckForGLError(); // OpenGL error check
+}
+
+
+/*
+ * ComparativeMolSurfaceRenderer::renderSurfaceWithSubdivFlag
+ */
+bool ComparativeMolSurfaceRenderer::renderSurfaceWithSubdivFlag(
+        DeformableGPUSurfaceMT &surf) {
+
+    if (!surf.GetVtxDataVBO()) {
+        printf("No vertex data VBO!!!\n");
+        return false;
+    }
+
+    // Note: This method does not check whether the vertexFlag array is filled
+
+    GLint attribLocPos, attribLocNormal, attribLocFlag;
+
+
+    /* Get vertex attributes from vbo */
+
+    glBindBufferARB(GL_ARRAY_BUFFER, surf.GetVtxDataVBO());
+    CheckForGLError(); // OpenGL error check
+
+    this->pplSurfaceShaderVertexFlag.Enable();
+    CheckForGLError(); // OpenGL error check
+
+    // Note: glGetAttribLocation returnes -1 if the attribute if not used in
+    // the shader code, because in this case the attribute is optimized out by
+    // the compiler
+    attribLocPos = glGetAttribLocationARB(this->pplSurfaceShaderVertexFlag.ProgramHandle(), "pos");
+//    attribLocNormal = glGetAttribLocationARB(this->pplSurfaceShaderVertexFlag.ProgramHandle(), "normal");
+    CheckForGLError(); // OpenGL error check
+
+    glEnableVertexAttribArrayARB(attribLocPos);
+//    glEnableVertexAttribArrayARB(attribLocNormal);
+    CheckForGLError(); // OpenGL error check
+
+    glVertexAttribPointerARB(attribLocPos, 3, GL_FLOAT, GL_FALSE,
+            DeformableGPUSurfaceMT::vertexDataStride*sizeof(float),
+            reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsPos*sizeof(float)));
+//    glVertexAttribPointerARB(attribLocNormal, 3, GL_FLOAT, GL_FALSE,
+//            DeformableGPUSurfaceMT::vertexDataStride*sizeof(float),
+//            reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsNormal*sizeof(float)));
+    CheckForGLError(); // OpenGL error check
+
+
+    // Vertex flag
+
+    glBindBufferARB(GL_ARRAY_BUFFER, 0);
+    attribLocFlag = glGetAttribLocationARB(this->pplSurfaceShaderVertexFlag.ProgramHandle(), "flag");
+    glEnableVertexAttribArrayARB(attribLocFlag);
+    glVertexAttribPointerARB(attribLocFlag, 1, GL_FLOAT, GL_FALSE,
+            0, this->mappedSurfVertexFlags.Peek());
+    CheckForGLError(); // OpenGL error check
+
+//    for (uint i = 0; i < surf.GetVertexCnt(); ++i) {
+//        printf("%i: %f\n", i, this->mappedSurfVertexFlags.Peek()[i]);
+//    }
+
+    /* Render */
+
+    glDisable(GL_LIGHTING);
+    glLineWidth(1.0f);
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, surf.GetTriangleIdxVBO());
+    CheckForGLError(); // OpenGL error check
+
+    glDrawElements(GL_TRIANGLES,
+            surf.GetTriangleCnt()*3,
+            GL_UNSIGNED_INT,
+            reinterpret_cast<void*>(0));
+
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_LIGHTING);
+
+    this->pplSurfaceShaderVertexFlag.Disable();
+
+    glDisableVertexAttribArrayARB(attribLocPos);
+//    glDisableVertexAttribArrayARB(attribLocNormal);
+    glDisableVertexAttribArrayARB(attribLocFlag);
+    CheckForGLError(); // OpenGL error check
+
+    // Switch back to normal pointer operation by binding with 0
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+
+    return ::CheckForGLError();
+}
+
+
+/*
+ * ComparativeMolSurfaceRenderer::renderSurfaceWithUncertainty
+ */
+bool ComparativeMolSurfaceRenderer::renderSurfaceWithUncertainty(
+        DeformableGPUSurfaceMT &surf) {
+    if (!surf.GetVtxDataVBO()) {
+        printf("No vertex data VBO!!!\n");
+        return false;
+    }
+
+    // Note: This method does not check whether the vertexFlag array is filled
+
+    GLint attribLocPos, attribLocNormal, attribLocUncertainty;
+
+
+    /* Get vertex attributes from vbo */
+
+    glBindBufferARB(GL_ARRAY_BUFFER, surf.GetVtxDataVBO());
+    CheckForGLError(); // OpenGL error check
+
+    this->pplSurfaceShaderUncertainty.Enable();
+    glUniform1fARB(this->pplSurfaceShaderUncertainty.ParameterLocation("maxUncertainty"), this->surfMaxPosDiff);
+    CheckForGLError(); // OpenGL error check
+
+    // Note: glGetAttribLocation returnes -1 if the attribute if not used in
+    // the shader code, because in this case the attribute is optimized out by
+    // the compiler
+    attribLocPos = glGetAttribLocationARB(this->pplSurfaceShaderUncertainty.ProgramHandle(), "pos");
+//    attribLocNormal = glGetAttribLocationARB(this->pplSurfaceShaderUncertainty.ProgramHandle(), "normal");
+    CheckForGLError(); // OpenGL error check
+
+    glEnableVertexAttribArrayARB(attribLocPos);
+//    glEnableVertexAttribArrayARB(attribLocNormal);
+    CheckForGLError(); // OpenGL error check
+
+    glVertexAttribPointerARB(attribLocPos, 3, GL_FLOAT, GL_FALSE,
+            DeformableGPUSurfaceMT::vertexDataStride*sizeof(float),
+            reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsPos*sizeof(float)));
+//    glVertexAttribPointerARB(attribLocNormal, 3, GL_FLOAT, GL_FALSE,
+//            DeformableGPUSurfaceMT::vertexDataStride*sizeof(float),
+//            reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsNormal*sizeof(float)));
+    CheckForGLError(); // OpenGL error check
+
+
+    // Vertex flag
+
+    glBindBufferARB(GL_ARRAY_BUFFER, surf.GetUncertaintyVBO());
+    attribLocUncertainty = glGetAttribLocationARB(this->pplSurfaceShaderUncertainty.ProgramHandle(), "uncertainty");
+    glEnableVertexAttribArrayARB(attribLocUncertainty);
+    glVertexAttribPointerARB(attribLocUncertainty, 1, GL_FLOAT, GL_FALSE,
+            0,  reinterpret_cast<void*>(0));
+    CheckForGLError(); // OpenGL error check
+
+    /* Render */
+
+    glDisable(GL_LIGHTING);
+    glLineWidth(1.0f);
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, surf.GetTriangleIdxVBO());
+    CheckForGLError(); // OpenGL error check
+
+    glDrawElements(GL_TRIANGLES,
+            surf.GetTriangleCnt()*3,
+            GL_UNSIGNED_INT,
+            reinterpret_cast<void*>(0));
+
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_LIGHTING);
+
+    this->pplSurfaceShaderUncertainty.Disable();
+
+    glDisableVertexAttribArrayARB(attribLocPos);
+//    glDisableVertexAttribArrayARB(attribLocNormal);
+    glDisableVertexAttribArrayARB(attribLocUncertainty);
+    CheckForGLError(); // OpenGL error check
+
+    // Switch back to normal pointer operation by binding with 0
+    glBindBufferARB(GL_ARRAY_BUFFER, 0);
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+
+    return ::CheckForGLError();
 }
 
 
@@ -3648,50 +3908,6 @@ bool ComparativeMolSurfaceRenderer::initProcFieldData() {
     return true;
 }
 #endif // USE_PROCEDUAL_DATA
-
-
-/*
- * ComparativeMolSurfaceRenderer::computeSurfaceInfo
- */
-bool ComparativeMolSurfaceRenderer::computeSurfaceInfo() {
-
-    this->subDivTris.SetCount(0);
-
-    //    // DEBUG NEW: Treatment of corrupt triangle areas using virtual subdivision
-    // Compute surface area
-    float validSurfArea = this->deformSurfMapped.GetTotalValidSurfArea();
-    float corruptArea;
-    float meanVertexPath = this->deformSurfMapped.IntUncertaintyOverSurfArea();
-    float corruptSubdivUncertainty = this->deformSurfMapped.IntUncertaintyOverCorruptSurfArea(
-            corruptArea, // Corrupt area
-            this->qsGridDelta/100.0f*this->surfaceMappingForcesScl, // minDisplScl
-            this->qsIsoVal,
-            this->surfaceMappingForcesScl,
-            const_cast<unsigned int*>(this->deformSurfMapped.PeekCubeStates()),
-#ifndef USE_PROCEDURAL_DATA
-            ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-#else
-            this->procField1D.Peek(),
-#endif
-            this->volDim,
-            this->volOrg,
-            this->volDelta,
-            this->subDivTris,
-            this->maxSubdivSteps,
-            this->maxSubdivLevel,
-            this->initSubDivStepSize);
-
-//    printf("Surface area %f\n", validSurfArea);
-//    printf("Corrupt area %.16f\n", corruptArea);
-//    printf("Mean vertex path %f\n", meanVertexPath);
-//    printf("Original uncertainty %f\n", meanVertexPath/(corruptArea+validSurfArea));
-//    printf("Additional uncertainty %.16f\n", corruptSubdivUncertainty/(corruptArea+validSurfArea));
-//    printf("Radius should be %f\n", std::sqrt(validSurfArea/(4.0*M_PI)));
-
-    this->triggerComputeSubdiv = false;
-
-    return true;
-}
 
 #endif // WITH_CUDA
 
