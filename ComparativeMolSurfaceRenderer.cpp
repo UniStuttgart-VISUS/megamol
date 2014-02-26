@@ -13,8 +13,8 @@
 
 #ifdef WITH_CUDA
 
-#define USE_TIMER
-#define VERBOSE
+//#define USE_TIMER
+//#define VERBOSE
 
 #include "VBODataCall.h"
 #include "VTIDataCall.h"
@@ -2145,7 +2145,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
-        // Compute edge list (this needs to be dine before any deformation happens
+        // Compute edge list (this needs to be done before any deformation happens
         if (!this->deformSurf2.ComputeEdgeList(
 #ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
@@ -2397,7 +2397,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->surfaceMappingForcesScl,
                     this->surfaceMappingExternalForcesWeightScl,
                     this->surfMappedGVFScl,
-                    this->surfMappedGVFIt)) {
+                    this->surfMappedGVFIt,
+                    true,
+                    true)) {
 
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                         "%s: could not compute Two-Way-GVF deformation",
@@ -2439,8 +2441,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Perform subdivision with subsequent deformation to create a fine
         // target mesh enough
         float initialStep = 1.0;
+        int newTris;
         for (int i = 0; i < this->maxSubdivLevel; ++i) {
-            if (this->deformSurfMapped.RefineMesh(
+            //printf("SUBDIV #%i\n", i);
+
+            newTris = this->deformSurfMapped.RefineMesh(
                     1,
 #ifndef  USE_PROCEDURAL_DATA
                     ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
@@ -2451,7 +2456,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->volOrg,
                     this->volDelta,
                     this->qsIsoVal,
-                    this->volDelta.x) < 0) { // TODO Whats a good maximum edge length?
+                    this->volDelta.x);
+
+           if (newTris < 0) { // TODO Whats a good maximum edge length?
 
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                         "%s: could not refine mesh",
@@ -2459,6 +2466,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
                 return false;
             }
+           if (newTris == 0) break;
 
             // Perform morphing
             // Morph surface #2 to shape #1 using Two-Way-GVF
@@ -2486,10 +2494,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->surfaceMappingMaxIt,
                     this->surfMappedMinDisplScl,
                     this->surfMappedSpringStiffness,
-                    this->surfaceMappingForcesScl,
+                    this->surfaceMappingForcesScl*initialStep,
                     this->surfaceMappingExternalForcesWeightScl,
                     this->surfMappedGVFScl,
                     this->surfMappedGVFIt,
+                    false,
                     false)) {
 
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -2784,13 +2793,13 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //            return false;
 //        }
 
-//        if (!this->renderSurfaceWithSubdivFlag(this->deformSurfMapped)) {
-//            return false;
-//        }
-
-        if (!this->renderSurfaceWithUncertainty(this->deformSurfMapped)) {
+        if (!this->renderSurfaceWithSubdivFlag(this->deformSurfMapped)) {
             return false;
         }
+
+//        if (!this->renderSurfaceWithUncertainty(this->deformSurfMapped)) {
+//            return false;
+//        }
     }
 
 //    if (!this->renderEdges()) {
@@ -2798,30 +2807,52 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //    }
 
 
-    // DEBUG Render backwards mapped subdivision vertices
-    glColor3f(0.0, 1.0, 0.0);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_BLEND);
-    glPointSize(1.5);
-    HostArr<float> oldVertexData;
-    oldVertexData.Validate(9*this->deformSurfMapped.GetVertexCnt());
-    CudaSafeCall(cudaMemcpy(oldVertexData.Peek(),
-            this->deformSurfMapped.PeekOldVertexDataDevPt(),
-            sizeof(float)*9*this->deformSurfMapped.GetVertexCnt(),
-            cudaMemcpyDeviceToHost));
-//    for (int i = 0; i < this->deformSurfMapped.GetVertexCnt(); ++i) {
-//        printf("%i %f %f %f\n", i, oldVertexData.Peek()[9*i+0],
-//                oldVertexData.Peek()[9*i+1],
-//                oldVertexData.Peek()[9*i+2]);
-//    }
-    glEnableClientState(GL_VERTEX_ARRAY); // Enable Vertex Arrays
-    glEnableClientState(GL_COLOR_ARRAY); // Enable Vertex Arrays
-    glVertexPointer(3, GL_FLOAT, 9*sizeof(float), oldVertexData.Peek()); // Set The Vertex Pointer To Vertex Data
-    glColorPointer(3, GL_FLOAT, 9*sizeof(float), oldVertexData.Peek() + 3);
-    glDrawArrays(GL_POINTS, 0, this->deformSurfMapped.GetVertexCnt()); //Draw the vertices
-    glDisableClientState(GL_VERTEX_ARRAY); // Enable Vertex Arrays
-    glDisableClientState(GL_COLOR_ARRAY); // Enable Vertex Arrays
-    glEnable(GL_LIGHTING);
+//    // DEBUG Render backwards mapped subdivision vertices
+//    glColor3f(0.0, 1.0, 0.0);
+//    glDisable(GL_LIGHTING);
+//    glDisable(GL_BLEND);
+//    glPointSize(1.5);
+//    HostArr<float> oldVertexData;
+//    oldVertexData.Validate(9*this->deformSurfMapped.GetVertexCnt());
+//    CudaSafeCall(cudaMemcpy(oldVertexData.Peek(),
+//            this->deformSurfMapped.PeekOldVertexDataDevPt(),
+//            sizeof(float)*9*this->deformSurfMapped.GetVertexCnt(),
+//            cudaMemcpyDeviceToHost));
+////    for (int i = 0; i < this->deformSurfMapped.GetVertexCnt(); ++i) {
+////        printf("%i %f %f %f\n", i, oldVertexData.Peek()[9*i+0],
+////                oldVertexData.Peek()[9*i+1],
+////                oldVertexData.Peek()[9*i+2]);
+////    }
+//    glEnableClientState(GL_VERTEX_ARRAY); // Enable Vertex Arrays
+//    glEnableClientState(GL_COLOR_ARRAY); // Enable Vertex Arrays
+//    glVertexPointer(3, GL_FLOAT, 9*sizeof(float), oldVertexData.Peek()); // Set The Vertex Pointer To Vertex Data
+//    glColorPointer(3, GL_FLOAT, 9*sizeof(float), oldVertexData.Peek() + 3);
+//    glDrawArrays(GL_POINTS, 0, this->deformSurfMapped.GetVertexCnt()); //Draw the vertices
+//    glDisableClientState(GL_VERTEX_ARRAY); // Enable Vertex Arrays
+//    glDisableClientState(GL_COLOR_ARRAY); // Enable Vertex Arrays
+//    glEnable(GL_LIGHTING);
+//    // END DEBUG
+
+    // DEBUG Compute mean vertex path of deformed surface
+    // Update uncertainty VBO for new vertices
+    if (!this->deformSurfMapped.ComputeUncertaintyForSubdivVertices(
+#ifndef  USE_PROCEDURAL_DATA
+                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+#else //  USE_PROCEDURAL_DATA
+                this->procField2D.Peek(),
+#endif //  USE_PROCEDURAL_DATA
+            this->volDim,
+            this->volOrg,
+            this->volDelta,
+            this->surfaceMappingForcesScl,
+            this->qsGridDelta/100.0f*this->surfaceMappingForcesScl,
+            this->qsIsoVal,
+            this->surfaceMappingMaxIt)) {
+        return false;
+    }
+    float surfArea = this->deformSurfMapped.GetTotalSurfArea();
+    float meanVertexPath = this->deformSurfMapped.IntUncertaintyOverSurfArea();
+    meanVertexPath /= surfArea;
     // END DEBUG
 
 

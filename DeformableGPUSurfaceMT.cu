@@ -32,8 +32,6 @@
 
 #include "vislib/Array.h"
 
-//#include "Interpol.h"
-
 //#define USE_TIMER
 
 using namespace megamol;
@@ -1289,7 +1287,10 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     // No branching occurs here, since the parameter is set globally
     float3 diff = posNew-posOld;
     float diffLen = length(diff);
-    if ((trackPath)&&(abs(externalForcesScl) == 1.0f)) {
+//    if ((trackPath)&&(abs(externalForcesScl) == 1.0f)) {
+//        vtxUncertainty_D[idx] += diffLen;
+//    }
+    if (trackPath) {
         vtxUncertainty_D[idx] += diffLen;
     }
     // Displ scl for convergence
@@ -1425,10 +1426,8 @@ DeformableGPUSurfaceMT::~DeformableGPUSurfaceMT() {
 /*
  * ComputeTriangleArea_D
  */
-__global__ void DeformableGPUSurfaceMT_ComputeValidTriangleAreas_D(
-        float *vertexFlag_D,
+__global__ void DeformableGPUSurfaceMT_ComputeTriangleAreas_D(
         float *trianglesArea_D,
-        float *corruptTriangleFlag_D,
         float *vertexData_D,
         uint *triangleIdx_D,
         uint triangleCnt) {
@@ -1438,15 +1437,11 @@ __global__ void DeformableGPUSurfaceMT_ComputeValidTriangleAreas_D(
     const int vertexDataOffsTexCoord = 6;
     const int vertexDataStride = 9;
 
-
-
     const uint idx = ::getThreadIdx();
 
     if (idx >= triangleCnt) {
         return;
     }
-
-    float flag = corruptTriangleFlag_D[idx];
 
     float3 pos0, pos1, pos2;
     pos0.x = vertexData_D[vertexDataStride*triangleIdx_D[3*idx+0]+vertexDataOffsPos+0];
@@ -1470,33 +1465,15 @@ __global__ void DeformableGPUSurfaceMT_ComputeValidTriangleAreas_D(
     float rad = (a + b - c)*(c + a - b)*(a + b + c)*(b + c - a);
     // Make sure radicand is not negative
     rad = rad > 0.0f ? rad : 0.0f;
-    float area = 0.25f*sqrt(rad)*(1.0-flag);
+    float area = 0.25f*sqrt(rad);
     trianglesArea_D[idx] = area;
-//    printf("Triangle %i: pos1 %f %f %f, pos2 %f %f %f, pos3 %f %f %f, %f\n", idx,
-//            pos0.x, pos0.y, pos0.z, pos1.x, pos1.y, pos1.z, pos2.x, pos2.y, pos2.z, area);
-
-//    if (idx < 30) {
-//        printf("Triangle %u: %u %u %u\n", idx,
-//                triangleIdx_D[3*idx+0],
-//                triangleIdx_D[3*idx+1],
-//                triangleIdx_D[3*idx+2]);
-//    }
-
-//    // DEBUG!!!! Remove later TODO
-//    if (area > 5) {
-//        vertexFlag_D[triangleIdx_D[3+idx+0]] = 1.0;
-//        vertexFlag_D[triangleIdx_D[3+idx+1]] = 1.0;
-//        vertexFlag_D[triangleIdx_D[3+idx+2]] = 1.0;
-//    }
-//    // END DEBUG
-
 }
 
 
 /*
  * DeformableGPUSurfaceMT::GetTotalValidSurfArea
  */
-float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
+float DeformableGPUSurfaceMT::GetTotalSurfArea() {
     // Compute triangle areas of all (non-corrupt) triangles
     if (!CudaSafeCall(this->accTriangleArea_D.Validate(this->triangleCnt))) {
         return false;
@@ -1504,7 +1481,7 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
     if (!CudaSafeCall(this->accTriangleArea_D.Set(0x00))) {
         return false;
     }
-    cudaGraphicsResource* cudaTokens[3];
+    cudaGraphicsResource* cudaTokens[2];
 
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
@@ -1513,22 +1490,13 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
             cudaGraphicsMapFlagsNone))) {
         return false;
     }
-
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
             &cudaTokens[1],
             this->vboTriangleIdx,
             cudaGraphicsMapFlagsNone))) {
         return false;
     }
-
-    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
-            &cudaTokens[2],
-            this->vboCorruptTriangleVertexFlag,
-            cudaGraphicsMapFlagsNone))) {
-        return false;
-    }
-
-    if (!CudaSafeCall(cudaGraphicsMapResources(3, cudaTokens, 0))) {
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
         return false;
     }
 
@@ -1551,14 +1519,6 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
         return false;
     }
 
-    float *vboFlagPt;
-    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
-            reinterpret_cast<void**>(&vboFlagPt),
-            &vboSize,
-            cudaTokens[2]))) {
-        return false;
-    }
-
 #ifdef USE_TIMER
     float dt_ms;
     cudaEvent_t event1, event2;
@@ -1568,10 +1528,8 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
 #endif
 
     // Call kernel
-    DeformableGPUSurfaceMT_ComputeValidTriangleAreas_D <<< Grid(this->triangleCnt, 256), 256 >>> (
-            vboFlagPt,
+    DeformableGPUSurfaceMT_ComputeTriangleAreas_D <<< Grid(this->triangleCnt, 256), 256 >>> (
             this->accTriangleArea_D.Peek(),
-            this->corruptTriangles_D.Peek(),
             vboPt,
             triangleIdxPt,
             this->triangleCnt);
@@ -1587,16 +1545,16 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
             dt_ms/1000.0);
 #endif
 
-//    // Compute sum of all (non-corrupt) triangle areas
-//    float areaValidTriangles = thrust::reduce(
-//            thrust::device_ptr<float>(this->accTriangleArea_D.Peek()),
-//            thrust::device_ptr<float>(this->accTriangleArea_D.Peek() + this->triangleCnt),
-//            0.0f);
+    // Compute sum of all (non-corrupt) triangle areas
+    float areaValidTriangles = thrust::reduce(
+            thrust::device_ptr<float>(this->accTriangleArea_D.Peek()),
+            thrust::device_ptr<float>(this->accTriangleArea_D.Peek() + this->triangleCnt),
+            0.0f);
 
 
     ::CheckForCudaErrorSync();
 
-    if (!CudaSafeCall(cudaGraphicsUnmapResources(3, cudaTokens, 0))) {
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
         return false;
     }
 
@@ -1606,23 +1564,20 @@ float DeformableGPUSurfaceMT::GetTotalValidSurfArea() {
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
         return false;
     }
-    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[2]))) {
-        return false;
-    }
 
-    // DEBUG Copy back and accumuluate
-    HostArr<float> accTriangleArea;
-    accTriangleArea.Validate(this->accTriangleArea_D.GetCount());
-    this->accTriangleArea_D.CopyToHost(accTriangleArea.Peek());
-    float sum = 0.0f;
-    for (int i = 0; i < this->accTriangleArea_D.GetCount(); ++i) {
-        sum = sum + accTriangleArea.Peek()[i];
-    }
-    printf("sum: %f, triangles %i\n", sum, this->triangleCnt);
-    return sum;
-    // END DEBUG
+//    // DEBUG Copy back and accumuluate
+//    HostArr<float> accTriangleArea;
+//    accTriangleArea.Validate(this->accTriangleArea_D.GetCount());
+//    this->accTriangleArea_D.CopyToHost(accTriangleArea.Peek());
+//    float sum = 0.0f;
+//    for (int i = 0; i < this->accTriangleArea_D.GetCount(); ++i) {
+//        sum = sum + accTriangleArea.Peek()[i];
+//    }
+//    printf("sum: %f, triangles %i\n", sum, this->triangleCnt);
+//    return sum;
+//    // END DEBUG
 
-    //return areaValidTriangles;
+    return areaValidTriangles;
 }
 
 
@@ -1824,8 +1779,6 @@ bool DeformableGPUSurfaceMT::InitCorruptFlagVBO(size_t vertexCnt) {
  * DeformableGPUSurfaceMT::InitUncertaintyVBO
  */
 bool DeformableGPUSurfaceMT::InitUncertaintyVBO(size_t vertexCnt) {
-
-    printf("Init Uncertainty Vbo!\n");
 
     // Destroy if necessary
     if (this->vboUncertainty) {
@@ -3409,11 +3362,10 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
         float externalForcesWeight,
         float gvfScl,
         unsigned int gvfIt,
-        bool trackPath) {
+        bool trackPath,
+        bool recomputeGVF) {
 
     using vislib::sys::Log;
-
-    printf("MORPH!!");
 
     /* Init grid parameters */
 
@@ -3435,14 +3387,16 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
         return false;
     }
 
-    if (!this->initExtForcesTwoWayGVF(
-            volumeSource_D,
-            volumeTarget_D,
-            cellStatesSource_D,
-            cellStatesTarget_D,
-            volDim, volOrg, volDelta,
-            isovalue, gvfScl, gvfIt)) {
-        return false;
+    if (recomputeGVF) {
+        if (!this->initExtForcesTwoWayGVF(
+                volumeSource_D,
+                volumeTarget_D,
+                cellStatesSource_D,
+                cellStatesTarget_D,
+                volDim, volOrg, volDelta,
+                isovalue, gvfScl, gvfIt)) {
+            return false;
+        }
     }
 
     if (trackPath) {
@@ -5275,8 +5229,6 @@ int DeformableGPUSurfaceMT::RefineMesh(
 
     using vislib::sys::Log;
 
-    printf("REFINE MESH\n");
-
     // Init grid parameters
 
     // Init constant device params
@@ -5338,17 +5290,22 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
 
-//    HostArr<float> vertexBuffer;
-//    vertexBuffer.Validate(this->vertexDataStride*this->vertexCnt);
-//    if (!CudaSafeCall(cudaMemcpy(vertexBuffer.Peek(), vboPt, vboSize, cudaMemcpyDeviceToHost))) {
-//        return -1;
-//    }
-
 
     /* 1. Compute edge list */
 
+#ifdef USE_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2, eventStart, eventEnd;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventCreate(&eventStart);
+    cudaEventCreate(&eventEnd);
+    cudaEventRecord(event1, 0);
+    cudaEventRecord(eventStart, 0);
+#endif
+
     const uint edgeCnt = (this->triangleCnt*3)/2;
-    printf("EDGE COUNT %u\n", edgeCnt);
+//    printf("EDGE COUNT %u\n", edgeCnt);
 
     // Get the number of edges associated with each triangle
     if (!CudaSafeCall(this->triangleEdgeOffs_D.Validate(this->triangleCnt))) {
@@ -5411,6 +5368,16 @@ int DeformableGPUSurfaceMT::RefineMesh(
 //    }
 //    // END DEBUG
 
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for computing edge list:                     %.10f sec\n",
+            dt_ms/1000.0f);
+    cudaEventRecord(event1, 0);
+#endif
+
 
     /* 2. Flag long edges and determine number of newly created vertices */
 
@@ -5454,7 +5421,8 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
     this->newVertexCnt += accTmp;
-    printf("Need %i new vertices (old triangle count %u)\n", newVertexCnt, this->triangleCnt);
+    if (this->newVertexCnt == 0) return 0;
+//    printf("Need %i new vertices (old triangle count %u)\n", newVertexCnt, this->triangleCnt);
 
 //    // DEBUG print edge flag
 //    HostArr<uint> edgeFlag;
@@ -5465,6 +5433,16 @@ int DeformableGPUSurfaceMT::RefineMesh(
 //    }
 //    edgeFlag.Release();
 //    // END DEBUG
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for flagging edges and thrust reduce:        %.10f sec\n",
+            dt_ms/1000.0f);
+    cudaEventRecord(event1, 0);
+#endif
 
 
     /* 3. Interpolate new vertex positions associated with the flagged edges */
@@ -5517,6 +5495,16 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
 
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for interpolating new vertices:              %.10f sec\n",
+            dt_ms/1000.0f);
+    cudaEventRecord(event1, 0);
+#endif
+
 
     /* 4. Build triangle-edge-list */
 
@@ -5553,6 +5541,16 @@ int DeformableGPUSurfaceMT::RefineMesh(
 //    }
 //    triangleEdgeList.Release();
 //    // END DEBUG
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for triangle edge list:                      %.10f sec\n",
+            dt_ms/1000.0f);
+    cudaEventRecord(event1, 0);
+#endif
 
 
     /* 5. Determine number of newly created triangles */
@@ -5599,7 +5597,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
     newTrianglesCnt += accTmp;
-    printf("Need %i new triangles\n", newTrianglesCnt);
+//    printf("Need %i new triangles\n", newTrianglesCnt);
 
     uint nOldTriangles = thrust::reduce(
             thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek()),
@@ -5610,7 +5608,18 @@ int DeformableGPUSurfaceMT::RefineMesh(
              thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek() + this->triangleCnt),
              thrust::device_ptr<uint>(this->oldTrianglesIdxOffs_D.Peek()));
 
-     printf("Keep %i old triangles\n", nOldTriangles);
+//     printf("Keep %i old triangles\n", nOldTriangles);
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for computing number of new  triangles:      %.10f sec\n",
+            dt_ms/1000.0f);
+    cudaEventRecord(event1, 0);
+#endif
+
 
     /* 6. Create new triangles with respective vertex indices */
 
@@ -5683,6 +5692,17 @@ int DeformableGPUSurfaceMT::RefineMesh(
 //    subDivisionLevels.Release();
 //    // END DEBUG
 
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for computing new  triangles:                %.10f sec\n",
+            dt_ms/1000.0f);
+    cudaEventRecord(event1, 0);
+#endif
+
+
     /* 7. (Re-)compute triangle neighbors */
 
     if (!CudaSafeCall(this->newTriangleNeighbors_D.Validate((nOldTriangles+newTrianglesCnt)*3))) {
@@ -5718,6 +5738,17 @@ int DeformableGPUSurfaceMT::RefineMesh(
             cudaMemcpyDeviceToDevice))) {
         return -1;
     }
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for updating triangle neighbors:             %.10f sec\n",
+            dt_ms/1000.0f);
+    cudaEventRecord(event1, 0);
+#endif
+
 
     /* 7. Update VBOs for vertex data and triangle indices */
 
@@ -5790,7 +5821,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
             cudaMemcpyDeviceToDevice))) {
         return -1;
     }
-    printf("Copied old data\n");
+
     // !! Unmap/registers vbos because they will be reinitialized
     if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
         return -1;
@@ -5899,100 +5930,119 @@ int DeformableGPUSurfaceMT::RefineMesh(
     }
 
 
-    // DEBUG Print new triangle neighbors
-    HostArr<uint> triNeighbors;
-    triNeighbors.Validate(this->triangleNeighbors_D.GetCount());
-    HostArr<uint> triangleBuffer;
-    triangleBuffer.Validate(3*this->triangleCnt);
-    cudaMemcpy(triangleBuffer.Peek(), vboTriIdxPt,
-            triangleBuffer.GetCount()*sizeof(uint), cudaMemcpyDeviceToHost);
-    if (!CudaSafeCall(this->triangleNeighbors_D.CopyToHost(triNeighbors.Peek()))) {
-        return -1;
-    }
-    for (int i = 0; i < this->triangleNeighbors_D.GetCount()/3; ++i) {
-
-//        printf("TRI NEIGHBORS %i: %u %u %u\n", i,
-//                triNeighbors.Peek()[3*i+0],
-//                triNeighbors.Peek()[3*i+1],
-//                triNeighbors.Peek()[3*i+2]);
-
-        // Check neighbor consistency
-        uint v0 = triangleBuffer.Peek()[3*i+0];
-        uint v1 = triangleBuffer.Peek()[3*i+1];
-        uint v2 = triangleBuffer.Peek()[3*i+2];
-
-        uint n00 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+0]+0];
-        uint n01 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+0]+1];
-        uint n02 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+0]+2];
-
-        uint n10 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+1]+0];
-        uint n11 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+1]+1];
-        uint n12 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+1]+2];
-
-        uint n20 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+2]+0];
-        uint n21 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+2]+1];
-        uint n22 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+2]+2];
-
-//        printf("n0 %u %u %u, n1 %u %u %u, n2 %u %u %u\n",
-//                n00, n01, n02, n10, n11, n12, n20, n21, n22);
-
-        uint cnt = 0;
-        bool flag0=false, flag1=false, flag2=false;
-        if (v0 == n00) cnt++; if (v0 == n01) cnt++; if (v0 == n02) cnt++;
-        if (v1 == n00) cnt++; if (v1 == n01) cnt++; if (v1 == n02) cnt++;
-        if (v2 == n00) cnt++; if (v2 == n01) cnt++; if (v2 == n02) cnt++;
-        if (cnt < 2) {
-            flag0 = true;
-
-        }
-
-        cnt = 0;
-        if (v0 == n10) cnt++; if (v0 == n11) cnt++; if (v0 == n12) cnt++;
-        if (v1 == n10) cnt++; if (v1 == n11) cnt++; if (v1 == n12) cnt++;
-        if (v2 == n10) cnt++; if (v2 == n11) cnt++; if (v2 == n12) cnt++;
-        if (cnt < 2) {
-            flag1 = true;
-        }
-
-        cnt = 0;
-        if (v0 == n20) cnt++; if (v0 == n21) cnt++; if (v0 == n22) cnt++;
-        if (v1 == n20) cnt++; if (v1 == n21) cnt++; if (v1 == n22) cnt++;
-        if (v2 == n20) cnt++; if (v2 == n21) cnt++; if (v2 == n22) cnt++;
-        if (cnt < 2) {
-            flag2 = true;
-        }
-
-        if (flag0||flag1||flag2) {
-            printf("TRI NEIGHBORS %i: %u %u %u\n", i,
-                    triNeighbors.Peek()[3*i+0],
-                    triNeighbors.Peek()[3*i+1],
-                    triNeighbors.Peek()[3*i+2]);
-        }
-        if (flag0) printf("----> %u inconsistent\n", triNeighbors.Peek()[3*i+0]);
-        if (flag1) printf("----> %u inconsistent\n", triNeighbors.Peek()[3*i+1]);
-        if (flag2) printf("----> %u inconsistent\n", triNeighbors.Peek()[3*i+2]);
-
-    }
-    triangleBuffer.Release();
-    triNeighbors.Release();
-    // END DEBUG
-
-//    // DEBUG print new triangle index buffer
-////    HostArr<uint> triangleBuffer;
+//    // DEBUG Print new triangle neighbors
+//    HostArr<uint> triNeighbors;
+//    triNeighbors.Validate(this->triangleNeighbors_D.GetCount());
+//    HostArr<uint> triangleBuffer;
 //    triangleBuffer.Validate(3*this->triangleCnt);
 //    cudaMemcpy(triangleBuffer.Peek(), vboTriIdxPt,
 //            triangleBuffer.GetCount()*sizeof(uint), cudaMemcpyDeviceToHost);
-//    for (int i = 0; i < this->triangleCnt; ++i) {
-//    if ((i > 8200)&&(i < 8300)) {
-//        printf("New Triangle Buffer %i: %u %u %u (vertex count %u)\n", i,
-//                triangleBuffer.Peek()[3*i+0],
-//                triangleBuffer.Peek()[3*i+1],
-//                triangleBuffer.Peek()[3*i+2],
-//                this->vertexCnt);
-//       }
+//    if (!CudaSafeCall(this->triangleNeighbors_D.CopyToHost(triNeighbors.Peek()))) {
+//        return -1;
+//    }
+//    for (int i = 0; i < this->triangleNeighbors_D.GetCount()/3; ++i) {
+//
+////        printf("TRI NEIGHBORS %i: %u %u %u\n", i,
+////                triNeighbors.Peek()[3*i+0],
+////                triNeighbors.Peek()[3*i+1],
+////                triNeighbors.Peek()[3*i+2]);
+//
+//        // Check neighbor consistency
+//        uint v0 = triangleBuffer.Peek()[3*i+0];
+//        uint v1 = triangleBuffer.Peek()[3*i+1];
+//        uint v2 = triangleBuffer.Peek()[3*i+2];
+//
+//        uint n00 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+0]+0];
+//        uint n01 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+0]+1];
+//        uint n02 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+0]+2];
+//
+//        uint n10 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+1]+0];
+//        uint n11 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+1]+1];
+//        uint n12 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+1]+2];
+//
+//        uint n20 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+2]+0];
+//        uint n21 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+2]+1];
+//        uint n22 = triangleBuffer.Peek()[3*triNeighbors.Peek()[3*i+2]+2];
+//
+////        printf("n0 %u %u %u, n1 %u %u %u, n2 %u %u %u\n",
+////                n00, n01, n02, n10, n11, n12, n20, n21, n22);
+//
+//        uint cnt = 0;
+//        bool flag0=false, flag1=false, flag2=false;
+//        if (v0 == n00) cnt++; if (v0 == n01) cnt++; if (v0 == n02) cnt++;
+//        if (v1 == n00) cnt++; if (v1 == n01) cnt++; if (v1 == n02) cnt++;
+//        if (v2 == n00) cnt++; if (v2 == n01) cnt++; if (v2 == n02) cnt++;
+//        if (cnt < 2) {
+//            flag0 = true;
+//
+//        }
+//
+//        cnt = 0;
+//        if (v0 == n10) cnt++; if (v0 == n11) cnt++; if (v0 == n12) cnt++;
+//        if (v1 == n10) cnt++; if (v1 == n11) cnt++; if (v1 == n12) cnt++;
+//        if (v2 == n10) cnt++; if (v2 == n11) cnt++; if (v2 == n12) cnt++;
+//        if (cnt < 2) {
+//            flag1 = true;
+//        }
+//
+//        cnt = 0;
+//        if (v0 == n20) cnt++; if (v0 == n21) cnt++; if (v0 == n22) cnt++;
+//        if (v1 == n20) cnt++; if (v1 == n21) cnt++; if (v1 == n22) cnt++;
+//        if (v2 == n20) cnt++; if (v2 == n21) cnt++; if (v2 == n22) cnt++;
+//        if (cnt < 2) {
+//            flag2 = true;
+//        }
+//
+//        if (flag0||flag1||flag2) {
+//            printf("TRI NEIGHBORS %i: %u %u %u\n", i,
+//                    triNeighbors.Peek()[3*i+0],
+//                    triNeighbors.Peek()[3*i+1],
+//                    triNeighbors.Peek()[3*i+2]);
+//        }
+//        if (flag0) printf("----> %u inconsistent\n", triNeighbors.Peek()[3*i+0]);
+//        if (flag1) printf("----> %u inconsistent\n", triNeighbors.Peek()[3*i+1]);
+//        if (flag2) printf("----> %u inconsistent\n", triNeighbors.Peek()[3*i+2]);
+//
 //    }
 //    triangleBuffer.Release();
+//    triNeighbors.Release();
 //    // END DEBUG
+//
+////    // DEBUG print new triangle index buffer
+//////    HostArr<uint> triangleBuffer;
+////    triangleBuffer.Validate(3*this->triangleCnt);
+////    cudaMemcpy(triangleBuffer.Peek(), vboTriIdxPt,
+////            triangleBuffer.GetCount()*sizeof(uint), cudaMemcpyDeviceToHost);
+////    for (int i = 0; i < this->triangleCnt; ++i) {
+////    if ((i > 8200)&&(i < 8300)) {
+////        printf("New Triangle Buffer %i: %u %u %u (vertex count %u)\n", i,
+////                triangleBuffer.Peek()[3*i+0],
+////                triangleBuffer.Peek()[3*i+1],
+////                triangleBuffer.Peek()[3*i+2],
+////                this->vertexCnt);
+////       }
+////    }
+////    triangleBuffer.Release();
+////    // END DEBUG
+
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for updating VBOs:                           %.10f sec\n",
+            dt_ms/1000.0f);
+    cudaEventRecord(event1, 0);
+
+    cudaEventRecord(eventEnd, 0);
+    cudaEventSynchronize(eventStart);
+    cudaEventSynchronize(eventEnd);
+    cudaEventElapsedTime(&dt_ms, eventStart, eventEnd);
+    printf("==> Total CUDA time for mesh refinement:               %.10f sec\n",
+            dt_ms/1000.0f);
+
+#endif
 
     // Cleanup
 
@@ -6263,7 +6313,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         }
     }
 
-//#ifdef USE_TIMER
+#ifdef USE_TIMER
     cudaEventRecord(event2, 0);
     cudaEventSynchronize(event1);
     cudaEventSynchronize(event2);
@@ -6274,7 +6324,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             iterationsNeeded, this->vertexCnt, dt_ms/1000.0f);
     //printf("Mapping : %.10f\n",
     //        dt_ms/1000.0f);
-//#endif
+#endif
 
     return CudaSafeCall(cudaGetLastError());
 }
@@ -7425,7 +7475,6 @@ bool DeformableGPUSurfaceMT::ComputeUncertaintyForSubdivVertices(
         return false;
     }
 
-
     /* 2. Write uncertainty values of new vertices */
 
     // Get copy of vertex buffer
@@ -7473,7 +7522,6 @@ bool DeformableGPUSurfaceMT::ComputeUncertaintyForSubdivVertices(
         if (!CudaSafeCall(this->vertexFlag_D.Set(0x00))) {
             return -1;
         }
-        return false;
     }
 
     uint iterationsNeeded = 0;
@@ -7505,7 +7553,7 @@ bool DeformableGPUSurfaceMT::ComputeUncertaintyForSubdivVertices(
             return false;
         }
         avgDisplLen /= static_cast<float>(this->vertexCnt);
-        if (i%10 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, minDispl);
+//        if (i%10 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, minDispl);
         //printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
         if (avgDisplLen < minDispl) {
             iterationsNeeded = i+1;

@@ -1149,11 +1149,25 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             }
             ::CheckForCudaErrorSync();
 
+
+            if (!this->surfStart.ComputeTriangleNeighbors(
+                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
+                    this->qsIsoVal)) {
+
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "%s: could not compute triangle neighbors #2",
+                        this->ClassName());
+                return false;
+            }
+
             // print vertex count
             //printf("%u\n", surfStart.GetVertexCnt());
 
             // Regularize the mesh of surface #1
-            if (!surfStart.MorphToVolumeGradient(
+            if (!this->surfStart.MorphToVolumeGradient(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     this->volDim,
                     this->volOrg,
@@ -1194,15 +1208,15 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 //#endif // COMPUTE_RUNTIME
 
             // Make deep copy of start surface
-            surfEnd = surfStart;
+            this->surfEnd = this->surfStart;
 
             // Morph end surface to its final position using two-way gradient
             // vector flow
-            if (!surfEnd.MorphToVolumeTwoWayGVF(
+            if (!this->surfEnd.MorphToVolumeTwoWayGVF(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
-                    surfEnd.PeekCubeStates(),
-                    surfStart.PeekCubeStates(),
+                    this->surfEnd.PeekCubeStates(),
+                    this->surfStart.PeekCubeStates(),
                     this->volDim,
                     this->volOrg,
                     this->volDelta,
@@ -1214,20 +1228,74 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                     this->surfMapForcesScl,
                     this->surfMapExternalForcesWeight,
                     0.1f,
-                    100)) { // TODO Change back
+                    100,
+                    true,
+                    true)) { // TODO Change back
                 return false;
             }
 
-            // Flag corrupt triangles in end surface
-            if (!surfEnd.FlagCorruptTriangles(
-                    ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
-                    this->surfTarget.PeekCubeStates(),
-                    this->volDim,
-                    this->volOrg,
-                    this->volDelta,
-                    this->qsIsoVal)) {
-                return false;
+            // Refine mesh
+            // Perform subdivision with subsequent deformation to create a fine
+            // target mesh enough
+            float initialStep = 1.0;
+            const uint maxSubdivLevel = 10;
+            int newTris;
+            for (uint i = 0; i < maxSubdivLevel; ++i) {
+                printf("SUBDIV #%i\n", i);
+
+                newTris = this->surfEnd.RefineMesh(
+                        1,
+                        ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                        this->volDim,
+                        this->volOrg,
+                        this->volDelta,
+                        this->qsIsoVal,
+                        this->volDelta.x*2); // TODO Whats a good maximum edge length?
+
+                if (newTris < 0) {
+
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                            "%s: could not refine mesh",
+                            this->ClassName());
+
+                    return false;
+                }
+
+                if (newTris == 0) break; // No more subdivisions needed
+
+                // Perform morphing
+                // Morph surface #2 to shape #1 using Two-Way-GVF
+
+                initialStep*=0.1f;
+
+                if (!this->surfEnd.MorphToVolumeTwoWayGVF( // TODo DO not compute GVF every time
+                        ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                        ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
+                        this->surfStart.PeekCubeStates(),
+                        this->surfEnd.PeekCubeStates(),
+                        this->volDim,
+                        this->volOrg,
+                        this->volDelta,
+                        this->qsIsoVal,
+                        this->surfMapInterpolMode,
+                        this->surfMapMaxIt,
+                        this->qsGridDelta/100.0f*this->surfMapForcesScl,
+                        this->surfMapSpringStiffness,
+                        this->surfMapForcesScl*initialStep,
+                        this->surfMapExternalForcesWeight,
+                        0.1f,
+                        100,  // TODO Change back to 30 or so?
+                        false,
+                        false)) {
+
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                            "%s: could not compute Two-Way-GVF deformation",
+                            this->ClassName());
+
+                    return false;
+                }
             }
+
 
 #ifdef COMPUTE_RUNTIME
             cudaEventRecord(event2, 0);
@@ -1240,9 +1308,8 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 #endif // COMPUTE_RUNTIME
 
             // Compute surface area
-            float validSurfArea = surfEnd.GetTotalValidSurfArea();
-            printf("Surface area %f, vertexCnt %u\n", validSurfArea, surfEnd.GetVertexCnt());
-
+            float surfArea = this->surfEnd.GetTotalSurfArea();
+            printf("Surface area %f, vertexCnt %u\n", surfArea, this->surfEnd.GetVertexCnt());
 
             /* Compute different metrics on a per-vertex basis */
 
@@ -1255,110 +1322,91 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 
             // 1. Compute potential difference per vertex
 
-            if (!CudaSafeCall(this->vertexPotentialDiff_D.Validate(surfEnd.GetVertexCnt()))) {
-                return false;
-            }
-
-            if (!DeformableGPUSurfaceMT::ComputeVtxDiffValueFitted(
-                    this->vertexPotentialDiff_D.Peek(),
-                    centroid.PeekComponents(),
-                    rmsRotInv.PeekComponents(),
-                    this->rmsTranslation.PeekComponents(),
-                    this->potentialTex0_D.Peek(),
-                    texDim0, texOrg0, texDelta0,
-                    this->potentialTex1_D.Peek(),
-                    texDim1, texOrg1, texDelta1,
-                    surfStart.GetVtxDataVBO(),
-                    surfEnd.GetVtxDataVBO(),
-                    surfStart.GetVertexCnt()
-                    )) {
-                return false;
-            }
-
-            // Integrate over surface area and write to matrix
-            float meanPotentialDiff = surfEnd.IntOverSurfArea(this->vertexPotentialDiff_D.Peek());
-
-//            printf("Surface area %f\, potentialDiff %f, meanPotentialDiff %f\n", surfArea, meanPotentialDiff, meanPotentialDiff/surfArea);
-            this->matchSurfacePotential[i*this->nVariants+j] = meanPotentialDiff/validSurfArea;
-
-            /** NEW: Treatment of corrupt triangle areas using virtual subdivision **/
-            float corruptSubdivPotentialDiff = this->surfEnd.IntOverCorruptSurfArea();
-            this->matchSurfacePotential[i*this->nVariants+j] += corruptSubdivPotentialDiff;
-            /************************************************************************/
-
-
-//            if (i !=j) {
-            this->minMatchSurfacePotentialVal =
-                    std::min(this->minMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
-            this->maxMatchSurfacePotentialVal =
-                    std::max(this->maxMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
+//            if (!CudaSafeCall(this->vertexPotentialDiff_D.Validate(surfEnd.GetVertexCnt()))) {
+//                return false;
 //            }
+//
+//            if (!DeformableGPUSurfaceMT::ComputeVtxDiffValueFitted(
+//                    this->vertexPotentialDiff_D.Peek(),
+//                    centroid.PeekComponents(),
+//                    rmsRotInv.PeekComponents(),
+//                    this->rmsTranslation.PeekComponents(),
+//                    this->potentialTex0_D.Peek(),
+//                    texDim0, texOrg0, texDelta0,
+//                    this->potentialTex1_D.Peek(),
+//                    texDim1, texOrg1, texDelta1,
+//                    surfStart.GetVtxDataVBO(),
+//                    surfEnd.GetVtxDataVBO(),
+//                    surfStart.GetVertexCnt()
+//                    )) {
+//                return false;
+//            }
+//
+//            // Integrate over surface area and write to matrix
+//            float meanPotentialDiff = surfEnd.IntOverSurfArea(this->vertexPotentialDiff_D.Peek());
+//
+////            printf("Surface area %f\, potentialDiff %f, meanPotentialDiff %f\n", surfArea, meanPotentialDiff, meanPotentialDiff/surfArea);
+//            this->matchSurfacePotential[i*this->nVariants+j] = meanPotentialDiff/surfArea;
+//
+//
+////            if (i !=j) {
+//            this->minMatchSurfacePotentialVal =
+//                    std::min(this->minMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
+//            this->maxMatchSurfacePotentialVal =
+//                    std::max(this->maxMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
+////            }
 
             // 2. Compute potential sign difference per vertex
 
-            if (!CudaSafeCall(this->vertexPotentialSignDiff_D.Validate(surfEnd.GetVertexCnt()))) {
-                return false;
-            }
-            if (!DeformableGPUSurfaceMT::ComputeVtxSignDiffValueFitted(
-                    this->vertexPotentialSignDiff_D.Peek(),
-                    centroid.PeekComponents(),
-                    rmsRotInv.PeekComponents(),
-                    this->rmsTranslation.PeekComponents(),
-                    this->potentialTex0_D.Peek(),
-                    texDim0, texOrg0, texDelta0,
-                    this->potentialTex1_D.Peek(),
-                    texDim1, texOrg1, texDelta1,
-                    surfStart.GetVtxDataVBO(),
-                    surfEnd.GetVtxDataVBO(),
-                    surfStart.GetVertexCnt()
-                    )) {
-                return false;
-            }
-            // Integrate over surface area and write to matrix
-            float meanPotentialSignDiff = surfEnd.IntOverSurfArea(this->vertexPotentialSignDiff_D.Peek());
-            this->matchSurfacePotentialSign[i*this->nVariants+j] = meanPotentialSignDiff/validSurfArea;
+//            if (!CudaSafeCall(this->vertexPotentialSignDiff_D.Validate(surfEnd.GetVertexCnt()))) {
+//                return false;
+//            }
+//            if (!DeformableGPUSurfaceMT::ComputeVtxSignDiffValueFitted(
+//                    this->vertexPotentialSignDiff_D.Peek(),
+//                    centroid.PeekComponents(),
+//                    rmsRotInv.PeekComponents(),
+//                    this->rmsTranslation.PeekComponents(),
+//                    this->potentialTex0_D.Peek(),
+//                    texDim0, texOrg0, texDelta0,
+//                    this->potentialTex1_D.Peek(),
+//                    texDim1, texOrg1, texDelta1,
+//                    surfStart.GetVtxDataVBO(),
+//                    surfEnd.GetVtxDataVBO(),
+//                    surfStart.GetVertexCnt()
+//                    )) {
+//                return false;
+//            }
+//            // Integrate over surface area and write to matrix
+//            float meanPotentialSignDiff = surfEnd.IntOverSurfArea(this->vertexPotentialSignDiff_D.Peek());
+//            this->matchSurfacePotentialSign[i*this->nVariants+j] = meanPotentialSignDiff/surfArea;
+//
+//            this->minMatchSurfacePotentialSignVal =
+//                    std::min(this->minMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
+//            this->maxMatchSurfacePotentialSignVal =
+//                    std::max(this->maxMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
 
-            /** NEW: Treatment of corrupt triangle areas using virtual subdivision **/
-            float corruptSubdivPotentialSignDiff = this->surfEnd.IntOverCorruptSurfArea();
-            this->matchSurfacePotentialSign[i*this->nVariants+j] += corruptSubdivPotentialSignDiff;
-            /************************************************************************/
-
-            this->minMatchSurfacePotentialSignVal =
-                    std::min(this->minMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
-            this->maxMatchSurfacePotentialSignVal =
-                    std::max(this->maxMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
 
             // 3. Compute mean vertex path
 
-            float meanVertexPath = this->surfEnd.IntUncertaintyOverSurfArea();
+            printf("COMPUTE MEAN VERTEX PATH\n");
 
-            this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath;
-
-
-            /** NEW: Treatment of corrupt triangle areas using virtual subdivision **/
-            vislib::Array<float> triArr;
-            float corruptArea;
-            float corruptSubdivUncertainty = this->surfEnd.IntUncertaintyOverCorruptSurfArea(
-                    corruptArea, // Corrupt area
-                    this->qsGridDelta/100.0f*this->surfMapForcesScl, // minDisplScl
-                    this->qsIsoVal,
-                    this->surfMapForcesScl,
-                    const_cast<unsigned int*>(this->surfTarget.PeekCubeStates()),
-                    ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
+            // Compute uncertainty for new vertices
+            // Update uncertainty VBO for new vertices
+            if (!this->surfEnd.ComputeUncertaintyForSubdivVertices(
+                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     this->volDim,
                     this->volOrg,
                     this->volDelta,
-                    triArr,
-                    10, // TODO Exchange with parameters!!!!
-                    5,
-                    1.0f);
-            printf("Corrupt area %.16f\n", corruptArea);
-            this->matchMeanVertexPath[i*this->nVariants+j] += corruptSubdivUncertainty;
-            this->matchMeanVertexPath[i*this->nVariants+j] /= (corruptArea+validSurfArea);
-//            this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/validSurfArea;
-            printf("Additional uncertainty %.16f\n", corruptSubdivUncertainty/(corruptArea+validSurfArea));
-            printf("Original uncertainty %f\n", meanVertexPath/(corruptArea+validSurfArea));
-            /************************************************************************/
+                    this->surfMapForcesScl,
+                    this->qsGridDelta/100.0f*this->surfMapForcesScl,
+                    this->qsIsoVal,
+                    this->surfMapMaxIt)) {
+                return false;
+            }
+
+            float meanVertexPath = this->surfEnd.IntUncertaintyOverSurfArea();
+
+            this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/surfArea;
 
 //            if (i != j) {
                 this->minMatchMeanVertexPathVal =
@@ -1366,9 +1414,9 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                 this->maxMatchMeanVertexPathVal =
                         std::max(this->maxMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
 //            }
-//            printf("Mean vertex path: min %f, max %f\n",
-//                    this->minMatchMeanVertexPathVal,
-//                    this->maxMatchMeanVertexPathVal);
+            printf("Mean vertex path: min %f, max %f\n",
+                    this->minMatchMeanVertexPathVal,
+                    this->maxMatchMeanVertexPathVal);
 
 #ifdef COMPUTE_RUNTIME
             cudaEventRecord(event2, 0);
@@ -1377,22 +1425,6 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             cudaEventElapsedTime(&dt_ms, event1, event2);
             printf("metrics : %.10f\n", dt_ms/1000.0f);
 #endif // COMPUTE_RUNTIME
-
-//            // 4. Compute Hausdorff distance
-//
-//            if (!CudaSafeCall(this->hausdorffdistVtx_D.Validate(this->surfEnd.GetVertexCnt()))) {
-//                return false;
-//            }
-//            float hausdorffdist = DeformableGPUSurfaceMT::CalcHausdorffDistance(
-//                    &this->surfEnd, &this->surfStart, this->hausdorffdistVtx_D.Peek());
-//            this->matchHausdorffDistance[i*this->nVariants+j] = hausdorffdist;
-//
-////            if (i != j) {
-//                this->minMatchHausdorffDistanceVal =
-//                        std::min(this->minMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
-//                this->maxMatchHausdorffDistanceVal =
-//                        std::max(this->maxMatchHausdorffDistanceVal, this->matchHausdorffDistance[this->nVariants*i+j]);
-////            }
 
             molCall->Unlock(); // Unlock the frame
             volCall->Unlock(); // Unlock the frame
