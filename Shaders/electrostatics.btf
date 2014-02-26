@@ -501,6 +501,158 @@ void main() {
 -->
             </snippet>
         </shader>
+        
+                <shader name="vertexWithFlag">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<!--
+attribute vec3 pos;
+attribute float flag;
+
+varying vec3 lightDir;
+varying vec3 view;
+varying vec3 posWS;
+varying float flagFrag;
+
+void main() {   
+    
+    // Vertex positions
+    gl_Position = gl_ModelViewProjectionMatrix*vec4(pos, 1.0);
+    posWS = pos;
+    
+    // Get view vector in eye space
+    view = (gl_ModelViewMatrix*vec4(pos, 1.0)).xyz;
+    
+    // Transformation of normal into eye space
+    //normalFrag = gl_NormalMatrix*normal;
+    
+    // Get the direction of the light
+    //lightDir = vec3(gl_LightSource[0].position)-view;
+    lightDir = gl_LightSource[0].position.xyz;
+    
+    // Vertex flag
+    flagFrag = flag;
+}
+-->
+        </snippet>
+        </shader>
+
+        <shader name="fragmentWithFlag">
+        <snippet type="version">120</snippet>
+        <snippet name="colorMix" />
+        <snippet name="ppLighting" />
+        <snippet name="colormaps::RGB2MSH" />
+        <snippet name="colormaps::MSH2RGB" />
+        <snippet name="colormaps::COOLWARM" />
+        <snippet name="colormaps::HSV2RGB" />
+        <snippet type="string">
+<!--
+varying vec3 lightDir;
+varying vec3 view;
+varying vec3 posWS;
+varying float flagFrag;
+
+void main() {
+    
+    vec4 lightparams;
+    vec3 color;
+
+    lightparams = vec4(1.0, 0.0, 0.0, 1.0);
+    
+    color = flagFrag*(vec3(1.0, 0.0, 0.0)) + (1.0-flagFrag)*vec3(0.7, 0.8, 1.0);
+    //color = vec3(1.0, 0.0, 0.0);
+    
+    //gl_FragColor = vec4(LocalLighting(normalize(view), normalize(normalFrag), 
+    //        normalize(lightDir), color.rgb, lightparams), 1.0);
+    
+            
+    gl_FragColor = vec4(color.rgb, 1.0);
+}
+
+-->
+            </snippet>
+        </shader>
+        
+        
+        
+    <shader name="vertexUncertainty">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<!--
+attribute vec3 pos;
+attribute vec3 normal;
+attribute float uncertainty;
+
+varying vec3 lightDir;
+varying vec3 view;
+varying vec3 posWS;
+varying float uncertaintyFrag;
+varying vec3 normalFrag; 
+
+void main() {   
+    
+    // Vertex positions
+    gl_Position = gl_ModelViewProjectionMatrix*vec4(pos, 1.0);
+    posWS = pos;
+    
+    // Get view vector in eye space
+    view = (gl_ModelViewMatrix*vec4(pos, 1.0)).xyz;
+    
+    // Transformation of normal into eye space
+    normalFrag = gl_NormalMatrix*normal;
+    
+    // Get the direction of the light
+    //lightDir = vec3(gl_LightSource[0].position)-view;
+    lightDir = gl_LightSource[0].position.xyz;
+    
+    // Vertex flag
+    uncertaintyFrag = uncertainty;
+}
+-->
+        </snippet>
+        </shader>
+
+        <shader name="fragmentUncertainty">
+        <snippet type="version">120</snippet>
+        <snippet name="colorMix" />
+        <snippet name="ppLighting" />
+        <snippet name="colormaps::RGB2MSH" />
+        <snippet name="colormaps::MSH2RGB" />
+        <snippet name="colormaps::COOLWARM" />
+        <snippet name="colormaps::HSV2RGB" />
+        <snippet type="string">
+<!--
+varying vec3 lightDir;
+varying vec3 view;
+varying vec3 posWS;
+varying float uncertaintyFrag;
+varying vec3 normalFrag; 
+
+uniform float maxUncertainty;
+
+void main() {
+    
+    vec4 lightparams;
+    vec3 color;
+
+    //lightparams = vec4(0.2, 0.8, 0.0, 10.0);
+    //lightparams = vec4(0.2, 0.0, 0.0, 10.0);
+    
+    vec3 colMsh = CoolWarmMsh(uncertaintyFrag, 0.0, maxUncertainty/2.0, maxUncertainty);
+    color = MSH2RGB(colMsh.x, colMsh.y, colMsh.z);
+    
+    //gl_FragColor = vec4(LocalLighting(normalize(view), normalize(normalFrag), 
+    //        normalize(lightDir), color.rgb, lightparams), 1.0);
+    
+    gl_FragColor = vec4(color, 1.0);
+
+}
+
+-->
+            </snippet>
+        </shader>
+        
+        
     </namespace>
     
     <namespace name="streamline">

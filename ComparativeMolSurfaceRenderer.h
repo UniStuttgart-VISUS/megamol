@@ -309,6 +309,16 @@ protected:
             float alphaScl);
 
     /**
+     *TODO
+     */
+    bool renderSurfaceWithSubdivFlag(DeformableGPUSurfaceMT &surf);
+
+    /**
+     *TODO
+     */
+    bool renderSurfaceWithUncertainty(DeformableGPUSurfaceMT &surf);
+
+    /**
      * Renders the isosurface using different rendering modes and surface
      * colorings. This shows the subdivision levels of all triangles using
      * a heatmap.
@@ -358,8 +368,6 @@ private:
      */
     bool initProcFieldData();
 #endif
-
-    bool computeSurfaceInfo();
 
     /* Data caller/callee slots */
 
@@ -709,6 +717,12 @@ private:
     vislib::graphics::gl::GLSLShader pplSurfaceShader;
 
     /// Shader implementing per pixel lighting
+    vislib::graphics::gl::GLSLShader pplSurfaceShaderVertexFlag;
+
+    /// Shader implementing per pixel lighting
+    vislib::graphics::gl::GLSLShader pplSurfaceShaderUncertainty;
+
+    /// Shader implementing per pixel lighting
     vislib::graphics::gl::GLSLShader pplMappedSurfaceShader;
 
     /// The textures holding surface attributes (e.g. surface potential)
@@ -763,7 +777,10 @@ private:
 #endif
 
     /// Array containing corrupt subdivided triangles
-    vislib::Array<float> subDivTris;
+//    vislib::Array<float> subDivTris;
+
+    /// Array for vertex flags of the mapped surface
+    HostArr<float> mappedSurfVertexFlags;
 
 };
 

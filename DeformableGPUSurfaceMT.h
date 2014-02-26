@@ -309,7 +309,8 @@ public:
             float forceScl,
             float externalForcesWeight,
             float gvfScl,
-            unsigned int gvfIt); // TODO
+            unsigned int gvfIt,
+            bool trackPath=true); // TODO
 
     /**
      * TODO
@@ -355,6 +356,33 @@ public:
      * Free all the device memory allocated in this class.
      */
     void Release();
+
+    /**
+     * TODO
+     */
+    float *PeekVertexFlagDevPt() {
+        return this->vertexFlag_D.Peek();
+    }
+
+    /**
+     * TODO
+     */
+    float *PeekOldVertexDataDevPt() {
+        return this->oldVertexData_D.Peek();
+    }
+
+    /**
+     * TODO
+     */
+    bool ComputeUncertaintyForSubdivVertices(
+            float *sourceVolume_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float forcesScl,
+            float minDispl,
+            float isoval,
+            uint maxIt);
 
 protected:
 
@@ -424,6 +452,7 @@ protected:
             float springStiffness,
             float forceScl,
             float externalForcesWeight,
+            bool trackPath,
             bool externalForcesOnly=false,
             bool useThinPlate=true);
 
@@ -500,13 +529,17 @@ private:
     CudaDevArr<float> newVertices_D;
     CudaDevArr<uint> newTriangles_D;
     CudaDevArr<uint> oldTriangles_D;
-    CudaDevArr<uint> oldVertexData_D;
+    CudaDevArr<float> oldVertexData_D;
     CudaDevArr<uint> subDivCnt_D;
     CudaDevArr<uint> newTrianglesIdxOffs_D;
     CudaDevArr<uint> oldTrianglesIdxOffs_D;
     CudaDevArr<uint> newTriangleNeighbors_D;
     CudaDevArr<uint> subDivLevels_D;
     CudaDevArr<uint> oldSubDivLevels_D;
+    CudaDevArr<float> vertexFlag_D;
+    CudaDevArr<float> vertexFlagTmp_D;
+    CudaDevArr<float> vertexUncertaintyTmp_D;
+    uint newVertexCnt;
 };
 
 } // namespace protein
