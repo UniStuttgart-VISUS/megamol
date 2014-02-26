@@ -143,11 +143,11 @@ public:
     virtual ~DeformableGPUSurfaceMT();
 
     /**
-     * Compute the total surface area of all valid triangles.
+     * Compute the total surface area of all triangles.
      *
      * @return The total area of all valid triangles
      */
-    float GetTotalValidSurfArea();
+    float GetTotalSurfArea();
 
     /**
      * Flag corrupt triangles in the current mesh.
@@ -310,7 +310,8 @@ public:
             float externalForcesWeight,
             float gvfScl,
             unsigned int gvfIt,
-            bool trackPath=true); // TODO
+            bool trackPath,
+            bool recomputeGVF); // TODO
 
     /**
      * TODO

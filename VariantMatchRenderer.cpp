@@ -194,15 +194,15 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
             0, GL_ALPHA, GL_FLOAT,
             vmc->GetMatch());
 
-//    // DEBUG Print matrix values
-//    printf("Variant count %u\n", vmc->GetVariantCnt());
-//    for (int i = 0; i < vmc->GetVariantCnt(); ++i) {
-//        for (int j = 0; j < vmc->GetVariantCnt(); ++j) {
-//            printf("%.2f ", vmc->GetMatch()[j*vmc->GetVariantCnt() + i]);
-//        }
-//        printf("\n");
-//    }
-//    // END DEBUG
+    // DEBUG Print matrix values
+    printf("Variant count %u\n", vmc->GetVariantCnt());
+    for (size_t i = 0; i < vmc->GetVariantCnt(); ++i) {
+        for (size_t j = 0; j < vmc->GetVariantCnt(); ++j) {
+            printf("%.2f ", vmc->GetMatch()[j*vmc->GetVariantCnt() + i]);
+        }
+        printf("\n");
+    }
+    // END DEBUG
 
 //    ::glMatrixMode(GL_PROJECTION);
 //    ::glPushMatrix();
