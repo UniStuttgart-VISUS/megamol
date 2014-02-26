@@ -520,6 +520,9 @@ private:
     // Device array that flags corrupt triangles
     CudaDevArr<float> intUncertaintyCorrupt_D;
 
+    /// Device array to remember whether to accumulate or to decrease the path
+    CudaDevArr<int> accumPath_D;
+
 
     /* Subdivision */
 
@@ -541,6 +544,7 @@ private:
     CudaDevArr<float> vertexFlagTmp_D;
     CudaDevArr<float> vertexUncertaintyTmp_D;
     uint newVertexCnt;
+    uint oldVertexCnt;
 };
 
 } // namespace protein
