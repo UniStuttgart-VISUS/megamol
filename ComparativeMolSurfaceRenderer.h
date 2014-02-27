@@ -17,7 +17,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 // Toggle the use of procedural volume fields for debugging purposes
-#define USE_PROCEDURAL_DATA
+//#define USE_PROCEDURAL_DATA
 
 #include "view/Renderer3DModuleDS.h"
 #include "CallerSlot.h"
@@ -233,11 +233,13 @@ protected:
      * @param cmd              The data call containing the potential map
      * @param gridPotentialMap Grid parameters of the potential map
      * @param potentialTex     The texture handle for the potential map
+     * TODO
      *
      * @return 'True' on success, 'false' otherwise
      */
     bool initPotentialMap(VTIDataCall *cmd, gridParams &gridPotentialMap,
-                    GLuint &potentialTex);
+                    GLuint &potentialTex, CudaDevArr<float> &tex_D,
+                    int3 &dim, float3 &org, float3 &delta);
 
     /**
      * Implementation of 'release'.
@@ -641,6 +643,12 @@ private:
 
 
 
+    int3 texDim1, texDim2;
+    float3 texOrg1, texOrg2;
+    float3 texDelta1, texDelta2;
+
+
+
 
     /* Hardcoded colors for surface rendering */
 
@@ -727,6 +735,9 @@ private:
 
     /// The textures holding surface attributes (e.g. surface potential)
     GLuint surfAttribTex1, surfAttribTex2;
+
+    /// Device arrays for surface attribute textures
+    CudaDevArr<float> surfAttribTex1_D, surfAttribTex2_D;
 
 
     /* RMSD fitting */

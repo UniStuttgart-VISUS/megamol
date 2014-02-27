@@ -1546,7 +1546,9 @@ bool ComparativeMolSurfaceRenderer::getVBOData2(core::Call& call) {
 bool ComparativeMolSurfaceRenderer::initPotentialMap(
         VTIDataCall *cmd,
         gridParams &gridPotentialMap,
-        GLuint &potentialTex) {
+        GLuint &potentialTex,
+        CudaDevArr<float> &tex_D,
+        int3 &dim, float3 &org, float3 &delta) {
     using namespace vislib::sys;
 
     // Setup grid parameters
@@ -1562,6 +1564,18 @@ bool ComparativeMolSurfaceRenderer::initPotentialMap(
     gridPotentialMap.delta[0] = cmd->GetSpacing().X();
     gridPotentialMap.delta[1] = cmd->GetSpacing().Y();
     gridPotentialMap.delta[2] = cmd->GetSpacing().Z();
+
+    dim.x = cmd->GetGridsize().X();
+    dim.y = cmd->GetGridsize().Y();
+    dim.z = cmd->GetGridsize().Z();
+
+    org.x = cmd->AccessBoundingBoxes().ObjectSpaceBBox().GetLeft();
+    org.y = cmd->AccessBoundingBoxes().ObjectSpaceBBox().GetBottom();
+    org.z = cmd->AccessBoundingBoxes().ObjectSpaceBBox().GetBack();
+
+    delta.x = cmd->GetSpacing().X();
+    delta.y = cmd->GetSpacing().Y();
+    delta.z = cmd->GetSpacing().Z();
 
 //    printf("Init potential map, frame %u\n", cmd->FrameID());
 //    printf("Min coord %f %f %f\n",
@@ -1585,6 +1599,14 @@ bool ComparativeMolSurfaceRenderer::initPotentialMap(
 //            printf("potential map %i: %f\n", i, ((float*)cmd->GetPointDataByIdx(0, 0))[i]);
 //        }
 //    }
+
+    if (!CudaSafeCall(tex_D.Validate(cmd->GetGridsize().X()*cmd->GetGridsize().Y()*cmd->GetGridsize().Z()))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaMemcpy(tex_D.Peek(), cmd->GetPointDataByIdx(0, 0),
+            sizeof(float)*tex_D.GetCount(), cudaMemcpyHostToDevice))) {
+        return false;
+    }
 
     //  Setup texture
     glEnable(GL_TEXTURE_3D);
@@ -1849,7 +1871,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->ClassName());
 #endif // VERBOSE
 
-        if (!this->initPotentialMap(vti1, this->gridPotential1, this->surfAttribTex1)) {
+        if (!this->initPotentialMap(vti1, this->gridPotential1, this->surfAttribTex1,
+                this->surfAttribTex1_D, this->texDim1, this->texOrg1, this->texDelta1)) {
 
 #ifdef VERBOSE
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1866,7 +1889,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->ClassName());
 #endif // VERBOSE
 
-        if (!this->initPotentialMap(vti2, this->gridPotential2, this->surfAttribTex2)) {
+        if (!this->initPotentialMap(vti2, this->gridPotential2, this->surfAttribTex2,
+                this->surfAttribTex2_D, this->texDim2, this->texOrg2, this->texDelta2)) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not init potential map #2",
@@ -2443,7 +2467,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         float initialStep = 1.0;
         int newTris;
         for (int i = 0; i < this->maxSubdivLevel; ++i) {
-            //printf("SUBDIV #%i\n", i);
+            printf("SUBDIV #%i\n", i);
 
             newTris = this->deformSurfMapped.RefineMesh(
                     1,
@@ -2492,7 +2516,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->qsIsoVal,
                     this->interpolMode,
                     this->surfaceMappingMaxIt,
-                    this->surfMappedMinDisplScl,
+                    this->surfMappedMinDisplScl*initialStep,
                     this->surfMappedSpringStiffness,
                     this->surfaceMappingForcesScl*initialStep,
                     this->surfaceMappingExternalForcesWeightScl,
@@ -2524,8 +2548,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             }
         }
 
-        // Update uncertainty VBO for new vertices
-        if (!this->deformSurfMapped.ComputeUncertaintyForSubdivVertices(
+        // Update vertex path VBO for new vertices
+        if (!this->deformSurfMapped.TrackPathSubdivVertices(
 #ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
 #else //  USE_PROCEDURAL_DATA
@@ -2540,6 +2564,23 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->surfaceMappingMaxIt)) {
             return false;
         }
+
+//        // Compute texture difference per vertex
+//        if (!this->deformSurfMapped.ComputeSurfAttribDiff(
+//                this->deformSurf2,
+//                this->rmsCentroid.PeekComponents(), // In case the start surface has been fitted using RMSD
+//                this->rmsRotation.PeekComponents(),
+//                this->rmsTranslation.PeekComponents(),
+//                this->surfAttribTex1_D.Peek(),
+//                texDim1,
+//                texOrg1,
+//                texDelta1,
+//                this->surfAttribTex2_D.Peek(),
+//                texDim2,
+//                texOrg2,
+//                texDelta2)) {
+//            return false;
+//        }
 
 #ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
@@ -3241,7 +3282,7 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithUncertainty(
 
     // Vertex flag
 
-    glBindBufferARB(GL_ARRAY_BUFFER, surf.GetUncertaintyVBO());
+    glBindBufferARB(GL_ARRAY_BUFFER, surf.GetVtxPathVBO());
     attribLocUncertainty = glGetAttribLocationARB(this->pplSurfaceShaderUncertainty.ProgramHandle(), "uncertainty");
     glEnableVertexAttribArrayARB(attribLocUncertainty);
     glVertexAttribPointerARB(attribLocUncertainty, 1, GL_FLOAT, GL_FALSE,
@@ -3367,7 +3408,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
 
     // Attribute for vertex path length
 
-    glBindBufferARB(GL_ARRAY_BUFFER, this->deformSurfMapped.GetUncertaintyVBO());
+    glBindBufferARB(GL_ARRAY_BUFFER, this->deformSurfMapped.GetVtxPathVBO());
     CheckForGLError(); // OpenGL error check
 
     glVertexAttribPointerARB(attribLocPathLen, 1, GL_FLOAT, GL_FALSE, 0, 0);
