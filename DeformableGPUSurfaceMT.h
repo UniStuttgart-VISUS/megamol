@@ -178,19 +178,29 @@ public:
      *
      * @return The GPU handle for the vertex buffer object or NULL if !ready
      */
-    GLuint GetUncertaintyVBO() const {
-        return this->vboUncertainty;
+    GLuint GetVtxPathVBO() const {
+        return this->vboVtxPath;
+    }
+
+    /**
+     * Answers the OpenGL handle for the vbo holding uncertainty information.
+     *
+     * @return The GPU handle for the vertex buffer object or NULL if !ready
+     */
+    GLuint GetVtxAttribVBO() const {
+        return this->vboVtxAttr;
     }
 
     /**
      * TODO
      */
-    bool InitCorruptFlagVBO(size_t vertexCnt);
+    bool InitVtxPathVBO(size_t vertexCnt);
 
     /**
      * TODO
      */
-    bool InitUncertaintyVBO(size_t vertexCnt);
+    bool InitVtxAttribVBO(size_t vertexCnt);
+
 
     /**
      * Integrate scalar value (given per vertex in value_D) over surface area.
@@ -205,7 +215,14 @@ public:
      *
      * @return The integral value
      */
-    float IntUncertaintyOverSurfArea();
+    float IntVtxPathOverSurfArea();
+
+    /**
+     * Integrate scalar value (given per vertex in value_D) over surface area.
+     *
+     * @return The integral value
+     */
+    float IntVtxAttribOverSurfArea();
 
     /**
      * Integrate scalar value over corrupt surface area by using virtual
@@ -369,13 +386,13 @@ public:
      * TODO
      */
     float *PeekOldVertexDataDevPt() {
-        return this->oldVertexData_D.Peek();
+        return this->trackedSubdivVertexData_D.Peek();
     }
 
     /**
      * TODO
      */
-    bool ComputeUncertaintyForSubdivVertices(
+    bool TrackPathSubdivVertices(
             float *sourceVolume_D,
             int3 volDim,
             float3 volOrg,
@@ -384,6 +401,19 @@ public:
             float minDispl,
             float isoval,
             uint maxIt);
+
+    bool ComputeSurfAttribDiff( DeformableGPUSurfaceMT &surfStart,
+            float centroid[3], // In case the start surface has been fitted using RMSD
+            float rotMat[9],
+            float transVec[3],
+            float *tex0_D,
+            int3 texDim0,
+            float3 texOrg0,
+            float3 texDelta0,
+            float *tex1_D,
+            int3 texDim1,
+            float3 texOrg1,
+            float3 texDelta1);
 
 protected:
 
@@ -506,7 +536,10 @@ private:
     GLuint vboCorruptTriangleVertexFlag;
 
     /// Vertex buffer object for the vertex uncertainty information
-    GLuint vboUncertainty;
+    GLuint vboVtxPath;
+
+    /// Vertex buffer object for an arbitrary vertex attribute (scalar)
+    GLuint vboVtxAttr;
 
     // Device array that flags corrupt triangles
     CudaDevArr<float> corruptTriangles_D;
@@ -533,7 +566,7 @@ private:
     CudaDevArr<float> newVertices_D;
     CudaDevArr<uint> newTriangles_D;
     CudaDevArr<uint> oldTriangles_D;
-    CudaDevArr<float> oldVertexData_D;
+    CudaDevArr<float> trackedSubdivVertexData_D;
     CudaDevArr<uint> subDivCnt_D;
     CudaDevArr<uint> newTrianglesIdxOffs_D;
     CudaDevArr<uint> oldTrianglesIdxOffs_D;
