@@ -3396,7 +3396,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
 
     using vislib::sys::Log;
 
-    printf("MORPH\n");
+//    printf("MORPH\n");
 
     /* Init grid parameters */
 
@@ -7695,7 +7695,7 @@ __global__ void DeformableGPUSurfaceMT_ComputeSurfAttribDiff1_D (
     posRot.y += centroid.y;
     posRot.z += centroid.z;
 
-    vertexAttrib_D[idx] = vertexAttrib_D[idx] - ::SampleFieldAtPosTrilin_D<float>(posRot, tex1_D);
+    vertexAttrib_D[idx] = abs(vertexAttrib_D[idx] - ::SampleFieldAtPosTrilin_D<float>(posRot, tex1_D));
 }
 
 
@@ -7727,7 +7727,7 @@ bool DeformableGPUSurfaceMT::ComputeSurfAttribDiff(
     cudaGraphicsResource* cudaTokens[3];
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
             &cudaTokens[0],
-            this->vboVtxPath,
+            this->vboVtxAttr,
             cudaGraphicsMapFlagsNone))) {
         return false;
     }
