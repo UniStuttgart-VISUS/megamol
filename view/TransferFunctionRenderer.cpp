@@ -46,6 +46,7 @@ bool view::TransferFunctionRenderer::GetCapabilities(CallRender2D& call)
 
 bool view::TransferFunctionRenderer::GetExtents(CallRender2D& call)
 {
+	call.SetBoundingBox( 0.0f, 0.0f, 1.0f, 5.0f);
 	return true;
 }
 
@@ -54,25 +55,28 @@ bool view::TransferFunctionRenderer::Render(CallRender2D& call)
 	view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
 	if ((cgtf != NULL) && ((*cgtf)())){
 		
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
 		glEnable(GL_TEXTURE_1D);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_LIGHTING);
+		glDisable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
+		
 		glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
 		
 		::glColor4ub(255, 255, 255, 255);
         ::glBegin(GL_QUADS);
-			::glTexCoord2f(1.0f, 1.0f); ::glVertex2f(-1.0f,-0.8f);
-			::glTexCoord2f(0.0f, 1.0f); ::glVertex2f(-1.0f, 1.0f);
-			::glTexCoord2f(0.0f, 0.0f); ::glVertex2f( 1.0f, 1.0f);
-			::glTexCoord2f(1.0f, 0.0f); ::glVertex2f( 1.0f,-.8f);
+			::glTexCoord2f(1.0f, 1.0f); ::glVertex2f( 0.0f, 1.0f);
+			::glTexCoord2f(0.0f, 1.0f); ::glVertex2f( 0.0f, 5.0f);
+			::glTexCoord2f(0.0f, 0.0f); ::glVertex2f( 1.0f, 5.0f);
+			::glTexCoord2f(1.0f, 0.0f); ::glVertex2f( 1.0f, 1.0f);
         ::glEnd();
+		
+		glBindTexture(GL_TEXTURE_1D, 0);
 		glDisable(GL_TEXTURE_1D);
 
 		vislib::StringA ctStr = cgtf->PeekCalleeSlot()->Parent()->Name();
 		if( ctFont->IsInitialised() ) {
-			ctFont->DrawString(  0.0, -1.0f, 0.2, true, ctStr.PeekBuffer(), vislib::graphics::AbstractFont::ALIGN_CENTER_BOTTOM);
+			ctFont->DrawString( 0.5f, 0.0f, 0.6f, true, ctStr.PeekBuffer(), vislib::graphics::AbstractFont::ALIGN_CENTER_BOTTOM);
 		}
 	}
 
