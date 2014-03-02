@@ -1175,6 +1175,7 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosNoThinPlate_D(
 }
 
 
+
 /**
  * Updates the positions of all vertices based on external and internal forces.
  * The external force is computed on the fly based on a the given volume.
@@ -1221,6 +1222,139 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     // Check convergence criterion
     float lastDisplLen = displLen_D[idx];
     if (lastDisplLen <= minDispl) {
+        displLen_D[idx] = 0.0;
+        return; // Vertex is converged
+    }
+
+    const uint posBaseIdx = dataArrSize*idx+dataArrOffsPos;
+
+
+    /* Retrieve stuff from global device memory */
+
+    // Get initial position from global device memory
+    float3 posOld = make_float3(
+            vertexPosMapped_D[posBaseIdx+0],
+            vertexPosMapped_D[posBaseIdx+1],
+            vertexPosMapped_D[posBaseIdx+2]);
+
+    // Get initial scale factor for external forces
+    float externalForcesScl = vertexExternalForcesScl_D[idx];
+
+
+    /* Update position */
+
+    // No warp divergence here, since useCubicInterpolation is the same for all
+    // threads
+    const float sampleDens = useCubicInterpolation
+                    ? SampleFieldAtPosTricub_D<float>(posOld, targetVolume_D)
+                    : SampleFieldAtPosTrilin_D<float>(posOld, targetVolume_D);
+
+    // Switch sign and scale down if necessary
+    bool negative = externalForcesScl < 0;
+    bool outside = sampleDens <= isoval;
+    int switchSign = int((negative && outside)||(!negative && !outside));
+    externalForcesScl = externalForcesScl*(1.0*(1-switchSign) - 1.0*switchSign);
+    externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
+    //externalForcesScl *= (1.0*(1-switchSign) + (switchSign));
+
+    if (bool(switchSign) && (accumPath_D[idx] != 0)) {
+        accumPath_D[idx] = 0;
+    } else if (bool(switchSign) && (accumPath_D[idx] == 0)) {
+        accumPath_D[idx] = 1;
+    }
+
+    // Sample gradient by cubic interpolation
+    float4 externalForceTmp = useCubicInterpolation
+            ? SampleFieldAtPosTricub_D<float4>(posOld, gradient_D)
+            : SampleFieldAtPosTrilin_D<float4>(posOld, gradient_D);
+
+    float3 externalForce;
+    externalForce.x = externalForceTmp.x;
+    externalForce.y = externalForceTmp.y;
+    externalForce.z = externalForceTmp.z;
+
+    externalForce = safeNormalize(externalForce);
+    externalForce *= forcesScl*externalForcesScl;
+
+    // Umbrella internal force
+    float3 posNew = posOld + externalForce;
+
+    /* Write back to global device memory */
+
+    // New pos
+    vertexPosMapped_D[posBaseIdx+0] = posNew.x;
+    vertexPosMapped_D[posBaseIdx+1] = posNew.y;
+    vertexPosMapped_D[posBaseIdx+2] = posNew.z;
+
+    // Write external forces scale factor back to global device memory
+    vertexExternalForcesScl_D[idx] = externalForcesScl;
+
+    // No branching occurs here, since the parameter is set globally
+    float3 diff = posNew-posOld;
+    float diffLen = length(diff);
+//    if ((trackPath)&&(abs(externalForcesScl) == 1.0f)) {
+//        vtxUncertainty_D[idx] += diffLen;
+//    }
+    if (trackPath) {
+        if (accumPath_D[idx] == 0) {
+            vtxUncertainty_D[idx] += diffLen;
+        } else if(accumPath_D[idx] != 0) {
+            vtxUncertainty_D[idx] -= diffLen;
+        }
+    }
+    // Displ scl for convergence
+    displLen_D[idx] = diffLen;
+}
+
+
+
+/**
+ * Updates the positions of all vertices based on external and internal forces.
+ * The external force is computed on the fly based on a the given volume.
+ * Samples are aquired using tricubic interpolation.
+ *
+ * @param[in]      targetVolume_D         The volume the isosurface is extracted
+ *                                        from
+ * @param[in,out]  vertexPosMapped_D      The vertex data buffer
+ * @param[in]      vertexExternalForces_D The external force and scale factor
+ *                                        (in 'w') for all vertices
+ * @param[in]      vertexCount            The number of vertices
+ * @param[in]      forcesScl              General scale factor for the final
+ *                                        combined force
+ * @param[in]      isoval                 The isovalue defining the isosurface
+ * @param[in]      minDispl               The minimum displacement for the
+ *                                        vertices to be updated
+ * @param[in]      dataArrOffs            The vertex position offset in the
+ *                                        vertex data buffer
+ * @param[in]      dataArrSize            The stride of the vertex data buffer TODO
+ */
+__global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnlySubdiv_D(
+        float *targetVolume_D,
+        float *vertexPosMapped_D,
+        float *vertexExternalForcesScl_D,
+        float *displLen_D,
+        float *vtxUncertainty_D,
+        float4 *gradient_D,
+        int *accumPath_D,
+        float *vertexFlag_D,
+        uint vertexCnt,
+        float forcesScl,
+        float isoval,
+        float minDispl,
+        bool useCubicInterpolation,
+        bool trackPath,
+        uint dataArrOffsPos,
+        uint dataArrOffsNormal,
+        uint dataArrSize) {
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= vertexCnt) {
+        return;
+    }
+
+    // Check convergence criterion
+    float lastDisplLen = displLen_D[idx];
+    if ((lastDisplLen <= minDispl)||(vertexFlag_D[idx] == 0.0)) {
         displLen_D[idx] = 0.0;
         return; // Vertex is converged
     }
@@ -3511,6 +3645,179 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
 
     // Iterations for new position
     if (!this->updateVtxPos(
+            volumeTarget_D,
+            vboPt,
+            vboVtxPathPt,
+            volDim,
+            volOrg,
+            volDelta,
+            isovalue,
+            (interpMode == INTERP_CUBIC),
+            maxIt,
+            surfMappedMinDisplScl,
+            springStiffness,
+            forceScl,
+            externalForcesWeight,
+            trackPath, // Track path
+            true)) { // Use external forces only
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+
+    return true;
+}
+
+
+
+/*
+ * DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF
+ */
+bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVFSubdiv(
+        float *volumeSource_D,
+        float *volumeTarget_D,
+        const unsigned int *cellStatesSource_D,
+        const unsigned int *cellStatesTarget_D,
+        int3 volDim,
+        float3 volOrg,
+        float3 volDelta,
+        float isovalue,
+        InterpolationMode interpMode,
+        size_t maxIt,
+        float surfMappedMinDisplScl,
+        float springStiffness,
+        float forceScl,
+        float externalForcesWeight,
+        float gvfScl,
+        unsigned int gvfIt,
+        bool trackPath,
+        bool recomputeGVF) {
+
+    using vislib::sys::Log;
+
+//    printf("MORPH\n");
+
+    /* Init grid parameters */
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
+
+    cudaGraphicsResource* cudaTokens[2];
+
+    if ((!this->triangleIdxReady)||(!this->neighboursReady)) {
+        return false;
+    }
+
+    if ((volumeTarget_D == NULL)||(volumeSource_D == NULL)) {
+        return false;
+    }
+
+    if (recomputeGVF) {
+        if (!this->initExtForcesTwoWayGVF(
+                volumeSource_D,
+                volumeTarget_D,
+                cellStatesSource_D,
+                cellStatesTarget_D,
+                volDim, volOrg, volDelta,
+                isovalue, gvfScl, gvfIt)) {
+            return false;
+        }
+    }
+
+    if (trackPath) {
+        // Init vbo with uncertainty information
+        if (!this->InitVtxPathVBO(this->vertexCnt)) {
+            return false;
+        }
+    }
+
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0], this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    // Register memory with CUDA
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1], this->vboVtxPath,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboPt;
+    size_t vboSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboPt), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vboVtxPathPt;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vboVtxPathPt), // The mapped pointer
+            &vboSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Init forces scale factor with -1 or 1, depending on whether they start
+    // outside or inside the isosurface
+    if (!CudaSafeCall(this->vertexExternalForcesScl_D.Validate(this->vertexCnt))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->displLen_D.Validate(this->vertexCnt))) {
+        return false;
+    }
+#ifdef USE_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
+#endif
+
+    DeformableGPUSurfaceMT_InitExternalForceScl_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+            (float*)this->vertexExternalForcesScl_D.Peek(),
+            this->displLen_D.Peek(),
+            volumeTarget_D,
+            vboPt,
+            surfMappedMinDisplScl,
+            this->vertexCnt,
+            isovalue,
+            this->vertexDataOffsPos,
+            this->vertexDataStride);
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for 'InitExternalForceScl_D':                %.10f sec\n",
+            dt_ms/1000.0f);
+#endif
+
+    // Iterations for new position
+    if (!this->updateVtxPosSubdiv(
             volumeTarget_D,
             vboPt,
             vboVtxPathPt,
@@ -6126,6 +6433,13 @@ void DeformableGPUSurfaceMT::Release() {
     CudaSafeCall(vertexFlagTmp_D.Release());
     CudaSafeCall(vertexUncertaintyTmp_D.Release());
 
+    CudaSafeCall(triangleFaceNormals_D.Release());
+    CudaSafeCall(triangleIdxTmp_D.Release());
+    CudaSafeCall(outputArrayTmp_D.Release());
+    CudaSafeCall(reducedVertexKeysTmp_D.Release());
+    CudaSafeCall(reducedNormalsTmp_D.Release());
+    CudaSafeCall(vertexNormalsIndxOffs_D.Release());
+
     if (this->vboCorruptTriangleVertexFlag) {
         glBindBufferARB(GL_ARRAY_BUFFER, this->vboCorruptTriangleVertexFlag);
         glDeleteBuffersARB(1, &this->vboCorruptTriangleVertexFlag);
@@ -6342,7 +6656,233 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             }
             avgDisplLen /= static_cast<float>(this->vertexCnt);
 //            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            if (avgDisplLen < surfMappedMinDisplScl) {
+                iterationsNeeded =i+1;
+                break;
+            }
+
+            ::CheckForCudaErrorSync();
+        }
+    }
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+            "%s: Time for mapping (%u iterations, %u vertices): %f sec\n",
+            "DeformableGPUSurfaceMT",
+            iterationsNeeded, this->vertexCnt, dt_ms/1000.0f);
+    //printf("Mapping : %.10f\n",
+    //        dt_ms/1000.0f);
+#endif
+
+    return CudaSafeCall(cudaGetLastError());
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::updateVtxPos
+ */
+bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
+        float* volTarget_D,
+        float* vertexBuffer_D,
+        float* vtxUncertainty_D,
+        int3 volDim,
+        float3 volOrg,
+        float3 volDelta,
+        float isovalue,
+        bool useCubicInterpolation,
+        size_t maxIt,
+        float surfMappedMinDisplScl,
+        float springStiffness,
+        float forceScl,
+        float externalForcesWeight,
+        bool trackPath,
+        bool externalForcesOnly,
+        bool useThinPlate) {
+
+    using namespace vislib::sys;
+
+    // Init constant device params
+    if (!initGridParams(volDim, volOrg, volDelta)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                this->ClassName());
+        return false;
+    }
+
+    if (!CudaSafeCall(this->laplacian_D.Validate(this->vertexCnt))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->laplacian_D.Set(0))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(this->laplacian2_D.Validate(this->vertexCnt))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->laplacian2_D.Set(0))) {
+        return false;
+    }
+
+    if (!CudaSafeCall(this->accumPath_D.Validate(this->vertexCnt))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->accumPath_D.Set(0x00))) {
+        return false;
+    }
+
+    // Init uncertainty buffer with zero
+    if (trackPath) {
+        if (!CudaSafeCall(cudaMemset(vtxUncertainty_D, 0x00, this->vertexCnt*sizeof(float)))) {
+            return false;
+        }
+    }
+
+//#ifdef USE_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
+//#endif
+
+    int iterationsNeeded = maxIt;
+
+    if (!externalForcesOnly) {
+
+        // TODO Timer
+        for (uint i = 0; i < maxIt; ++i) {
+
+            // Calc laplacian
+            DeformableGPUSurfaceMT_MeshLaplacian_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+                    vertexBuffer_D,
+                    this->vertexDataOffsPos,
+                    this->vertexDataStride,
+                    this->vertexNeighbours_D.Peek(),
+                    18,
+                    this->vertexCnt,
+                    (float*)this->laplacian_D.Peek(),
+                    0,
+                    3);
+
+            ::CheckForCudaErrorSync();
+
+            if (useThinPlate) {
+
+                // Calc laplacian^2
+                DeformableGPUSurfaceMT_MeshLaplacian_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+                        (float*)this->laplacian_D.Peek(),
+                        0,
+                        3,
+                        this->vertexNeighbours_D.Peek(),
+                        18,
+                        this->vertexCnt,
+                        (float*)this->laplacian2_D.Peek(),
+                        0,
+                        3);
+
+                ::CheckForCudaErrorSync();
+
+                // Update vertex position
+                DeformableGPUSurfaceMT_UpdateVtxPos_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+                        volTarget_D,
+                        vertexBuffer_D,
+                        (float*)this->vertexExternalForcesScl_D.Peek(),
+                        this->displLen_D.Peek(),
+                        vtxUncertainty_D,
+                        (float4*)this->externalForces_D.Peek(),
+                        this->laplacian_D.Peek(),
+                        this->laplacian2_D.Peek(),
+                        this->vertexCnt,
+                        externalForcesWeight,
+                        forceScl,
+                        springStiffness,
+                        isovalue,
+                        surfMappedMinDisplScl,
+                        useCubicInterpolation,
+                        trackPath, // Track path of vertices
+                        this->vertexDataOffsPos,
+                        this->vertexDataOffsNormal,
+                        this->vertexDataStride);
+            } else { // No thin plate aspect
+                // Update vertex position
+                DeformableGPUSurfaceMT_UpdateVtxPosNoThinPlate_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+                        volTarget_D,
+                        vertexBuffer_D,
+                        (float*)this->vertexExternalForcesScl_D.Peek(),
+                        this->displLen_D.Peek(),
+                        vtxUncertainty_D,
+                        (float4*)this->externalForces_D.Peek(),
+                        this->laplacian_D.Peek(),
+                        this->vertexCnt,
+                        externalForcesWeight,
+                        forceScl,
+                        isovalue,
+                        surfMappedMinDisplScl,
+                        useCubicInterpolation,
+                        trackPath, // Track path of vertices
+                        this->vertexDataOffsPos,
+                        this->vertexDataOffsNormal,
+                        this->vertexDataStride);
+            }
+
+            // Accumulate displacement length of this iteration step
+            float avgDisplLen = 0.0f;
+            avgDisplLen = thrust::reduce(
+                    thrust::device_ptr<float>(this->displLen_D.Peek()),
+                    thrust::device_ptr<float>(this->displLen_D.Peek() + this->vertexCnt));
+            if (!CudaSafeCall(cudaGetLastError())) {
+                return false;
+            }
+            avgDisplLen /= static_cast<float>(this->vertexCnt);
+//            if (i%5 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
 //            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            if (avgDisplLen < surfMappedMinDisplScl) {
+                iterationsNeeded =i+1;
+                break;
+            }
+
+            ::CheckForCudaErrorSync();
+        }
+    } else {
+        // TODO Timer
+        for (uint i = 0; i < maxIt; ++i) {
+
+            // Update vertex position
+            DeformableGPUSurfaceMT_UpdateVtxPosExternalOnlySubdiv_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+                    volTarget_D,
+                    vertexBuffer_D,
+                    (float*)this->vertexExternalForcesScl_D.Peek(),
+                    this->displLen_D.Peek(),
+                    vtxUncertainty_D,
+                    (float4*)this->externalForces_D.Peek(),
+                    this->accumPath_D.Peek(),
+                    this->vertexFlag_D.Peek(),
+                    this->vertexCnt,
+                    forceScl,
+                    isovalue,
+                    surfMappedMinDisplScl,
+                    useCubicInterpolation,
+                    trackPath, // Track path of vertices
+                    this->vertexDataOffsPos,
+                    this->vertexDataOffsNormal,
+                    this->vertexDataStride);
+
+            // Accumulate displacement length of this iteration step
+            float avgDisplLen = 0.0f;
+            avgDisplLen = thrust::reduce(
+                    thrust::device_ptr<float>(this->displLen_D.Peek()),
+                    thrust::device_ptr<float>(this->displLen_D.Peek() + this->vertexCnt));
+            if (!CudaSafeCall(cudaGetLastError())) {
+                return false;
+            }
+            avgDisplLen /= static_cast<float>(this->newVertexCnt);
+//            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
