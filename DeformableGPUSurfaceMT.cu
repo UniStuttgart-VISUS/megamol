@@ -7840,6 +7840,284 @@ bool DeformableGPUSurfaceMT::ComputeSurfAttribDiff(
         return false;
     }
 
+    return true;
+}
+
+
+__global__ void DeformableGPUSurfaceMT_ComputeTriangleFaceNormal_D(
+        float3 *triFaceNormals_D,
+        float *vertexData_D,
+        uint *triangleidx_D,
+        uint triangleCnt) {
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= triangleCnt) {
+        return;
+    }
+
+    float3 pos0 = make_float3(
+            vertexData_D[9*triangleidx_D[3*idx+0]+0],
+            vertexData_D[9*triangleidx_D[3*idx+0]+1],
+            vertexData_D[9*triangleidx_D[3*idx+0]+2]);
+
+    float3 pos1 = make_float3(
+            vertexData_D[9*triangleidx_D[3*idx+1]+0],
+            vertexData_D[9*triangleidx_D[3*idx+1]+1],
+            vertexData_D[9*triangleidx_D[3*idx+1]+2]);
+
+    float3 pos2 = make_float3(
+            vertexData_D[9*triangleidx_D[3*idx+2]+0],
+            vertexData_D[9*triangleidx_D[3*idx+2]+1],
+            vertexData_D[9*triangleidx_D[3*idx+2]+2]);
+
+    float3 vec0 = (pos1 - pos0);
+    float3 vec1 = (pos2 - pos0);
+
+    float3 norm = normalize(cross(vec0, vec1));
+
+    // Write normal
+    triFaceNormals_D[idx*3+0] = norm;
+    triFaceNormals_D[idx*3+1] = norm;
+    triFaceNormals_D[idx*3+2] = norm;
+}
+
+
+__global__ void DeformableGPUSurfaceMT_CheckTriNormals_D(
+        float3 *triFaceNormals_D,
+        uint *triangleNeighbors_D,
+        uint triangleCnt) {
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= triangleCnt) {
+        return;
+    }
+
+    uint n0 = triangleNeighbors_D[3*idx+0];
+    uint n1 = triangleNeighbors_D[3*idx+1];
+    uint n2 = triangleNeighbors_D[3*idx+2];
+
+    float3 norm = normalize(triFaceNormals_D[idx]);
+    float3 norm0 = normalize(triFaceNormals_D[n0]);
+    float3 norm1 = normalize(triFaceNormals_D[n1]);
+    float3 norm2 = normalize(triFaceNormals_D[n2]);
+    float3 avgNorm = (norm0+norm1+norm2)*0.3;
+
+    __syncthreads();
+
+    if ((dot(norm, avgNorm) < 0)) {
+        triFaceNormals_D[idx] = make_float3(0.0, 0.0, 0.0);
+    }
+
+}
+
+
+
+__global__ void DeformableGPUSurfaceMT_ComputeNormalsSubdiv_D(
+        float *vertexData_D,
+        float3 *normals_D,
+        uint vertexCnt) {
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= vertexCnt) {
+        return;
+    }
+
+    float3 norm = normalize(normals_D[idx]);
+
+    // Write normal
+    vertexData_D[idx*9+3] = norm.x;
+    vertexData_D[idx*9+4] = norm.y;
+    vertexData_D[idx*9+5] = norm.z;
+}
+
+
+/*
+ * see http://blog.csdn.net/newtonbear/article/details/12768377
+ */
+template <typename Key, typename Value>
+int reduce_by_key_with_raw_pointers(Key* d_key, Key* d_key_last, Value* d_value,
+        Key* d_okey, Value* d_ovalue) {
+    thrust::device_ptr<Key> d_keyp = thrust::device_pointer_cast(d_key);
+    thrust::device_ptr<Key> d_key_lastp = thrust::device_pointer_cast(d_key_last);
+    thrust::device_ptr<Value> d_valuep = thrust::device_pointer_cast(d_value);
+    thrust::device_ptr<Key> d_okeyp = thrust::device_pointer_cast(d_okey);
+    thrust::device_ptr<Value> d_ovaluep = thrust::device_pointer_cast(d_ovalue);
+    thrust::pair<thrust::device_ptr<Key>, thrust::device_ptr<Value> > new_end;
+    new_end = thrust::reduce_by_key(d_keyp, d_key_lastp, d_valuep, d_okeyp, d_ovaluep);
+    return new_end.first - d_okeyp;
+}
+
+
+void OutputDevArrayUint(uint* d_array, int count, const char* name) {
+    // DEBUG Print
+    HostArr<uint> h_array;
+    h_array.Validate(count);
+    if (!CudaSafeCall(cudaMemcpy(h_array.Peek(), d_array, sizeof(uint)*count, cudaMemcpyDeviceToHost))) {
+        return;
+    }
+    for (int i = 0; i < count; ++i) {
+        printf("%s %i: %u\n", name, i, h_array.Peek()[i]);
+    }
+    h_array.Release();
+    // END DEBUG
+}
+
+
+void OutputDevArrayFloat3(float3* d_array, int count, const char* name) {
+    // DEBUG Print
+    HostArr<float3> h_array;
+    h_array.Validate(count);
+    if (!CudaSafeCall(cudaMemcpy(h_array.Peek(), d_array, sizeof(float3)*count,
+            cudaMemcpyDeviceToHost))) {
+        return;
+    }
+    for (int i = 0; i < count; ++i) {
+        printf("%s %i: %f %f %f\n", name, i,
+                h_array.Peek()[i].x,
+                h_array.Peek()[i].y,
+                h_array.Peek()[i].z);
+    }
+    h_array.Release();
+    // END DEBUG
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::ComputeNormalsSubdiv
+ */
+bool DeformableGPUSurfaceMT::ComputeNormalsSubdiv() {
+
+    // Get pointer to vertex attribute array
+    cudaGraphicsResource* cudaTokens[2];
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0],
+            this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1],
+            this->vboTriangleIdx,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+    // Get mapped pointers to the vertex data buffers
+    float *vertexBuffer_D;
+    size_t vboVertexBufferSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vertexBuffer_D), // The mapped pointer
+            &vboVertexBufferSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+    // Get mapped pointers to the vertex data buffers
+    unsigned int *triIdx_D;
+    size_t vboTriIdxSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&triIdx_D), // The mapped pointer
+            &vboTriIdxSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
+        return false;
+    }
+
+    // 1. Compute triangle face normals
+    if (!CudaSafeCall(this->triangleFaceNormals_D.Validate(this->triangleCnt*3))) {
+        return false;
+    }
+    DeformableGPUSurfaceMT_ComputeTriangleFaceNormal_D <<< Grid(this->triangleCnt, 256), 256 >>> (
+            this->triangleFaceNormals_D.Peek(),
+            vertexBuffer_D,
+            triIdx_D,
+            this->triangleCnt);
+    if (!CheckForCudaError()) {
+        return false;
+    }
+
+//    // DEBUG CHECK FACE NORMALS
+//    DeformableGPUSurfaceMT_CheckTriNormals_D <<< Grid(this->triangleCnt, 256), 256 >>> (
+//            this->triangleFaceNormals_D.Peek(),
+//            this->triangleNeighbors_D.Peek(),
+//            this->triangleCnt);
+
+    // 2. Sort triangle normals by key
+    // Copy triangle indices
+    if (!CudaSafeCall(this->triangleIdxTmp_D.Validate(this->triangleCnt*3))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaMemcpy(this->triangleIdxTmp_D.Peek(), triIdx_D,
+            sizeof(uint)*this->triangleCnt*3, cudaMemcpyDeviceToDevice))) {
+        return false;
+    }
+
+    thrust::sort_by_key(
+            thrust::device_ptr<uint>(this->triangleIdxTmp_D.Peek()),
+            thrust::device_ptr<uint>(this->triangleIdxTmp_D.Peek() + this->triangleCnt*3),
+            thrust::device_ptr<float3>(this->triangleFaceNormals_D.Peek()));
+    if (!CheckForCudaError()) {
+        return false;
+    }
+//    OutputDevArrayUint(this->triangleIdxTmp_D.Peek(), this->triangleCnt*3, "TRI IDX");
+
+    // 3. Reduce vertex normals by key
+//    if (!CudaSafeCall(this->vertexNormalsIndxOffs_D.Validate(this->triangleCnt*3))) {
+//        return false;
+//    }
+//    if (!CudaSafeCall(this->reducedVertexKeysTmp_D.Validate(this->vertexCnt))) {
+//        return false;
+//    }
+//    thrust::device_ptr<uint> D = thrust::device_ptr<uint>(this->vertexNormalsIndxOffs_D.Peek());
+//    thrust::fill(D, D + this->vertexCnt, 1);
+//    thrust::device_ptr<uint> dev_ptr(this->vertexNormalsIndxOffs_D.Peek());
+//    thrust::fill(dev_ptr, dev_ptr + this->triangleCnt*3, 1);
+
+//    int n = reduce_by_key_with_raw_pointers<uint, uint>(
+//            this->triangleIdxTmp_D.Peek(),
+//            this->triangleIdxTmp_D.Peek() + this->triangleCnt*3,
+//            this->vertexNormalsIndxOffs_D.Peek(),
+//            this->triangleIdxTmp_D.Peek(),
+//            this->reducedVertexKeysTmp_D.Peek());
+
+    //OutputDevArrayUint(this->reducedVertexKeysTmp_D.Peek(), this->vertexCnt, "NORMAL CNT");
+
+    if (!CudaSafeCall(this->reducedNormalsTmp_D.Validate(this->vertexCnt))) {
+        return false;
+    }
+    if (!CudaSafeCall(this->outputArrayTmp_D.Validate(this->vertexCnt))) {
+        return false;
+    }
+
+    int n = reduce_by_key_with_raw_pointers<uint, float3>(
+            this->triangleIdxTmp_D.Peek(),
+            this->triangleIdxTmp_D.Peek() + this->triangleCnt*3,
+            this->triangleFaceNormals_D.Peek(),
+            this->outputArrayTmp_D.Peek(),
+            this->reducedNormalsTmp_D.Peek());
+
+//    OutputDevArrayFloat3(this->reducedNormalsTmp_D.Peek(), this->vertexCnt, "NORMAL ");
+//    printf("N %u, vertexCnt %u\n", n, this->vertexCnt);
+
+    // Compute actual normals
+    DeformableGPUSurfaceMT_ComputeNormalsSubdiv_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+            vertexBuffer_D,
+            this->reducedNormalsTmp_D.Peek(),
+            this->vertexCnt);
+    if (!CheckForCudaError()) {
+        return false;
+    }
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+    return ::CheckForCudaError();
 }
 
 #endif // WITH_CUDA

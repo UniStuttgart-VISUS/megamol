@@ -55,6 +55,15 @@ public:
             bool symmetric=false);
 
     /**
+     * Compute normals if subdivision has been performed.
+     *
+     * TODO
+     *
+     * @return 'true' on success, 'false' otherwise
+     */
+    bool ComputeNormalsSubdiv();
+
+    /**
      * In this class, because it needs the offsets TODO
      */
     static bool ComputeVtxDiffValue(
@@ -578,6 +587,13 @@ private:
     CudaDevArr<float> vertexUncertaintyTmp_D;
     uint newVertexCnt;
     uint oldVertexCnt;
+
+    CudaDevArr<float3> triangleFaceNormals_D;
+    CudaDevArr<uint> triangleIdxTmp_D;
+    CudaDevArr<uint> outputArrayTmp_D;
+    CudaDevArr<uint> reducedVertexKeysTmp_D;
+    CudaDevArr<float3> reducedNormalsTmp_D;
+    CudaDevArr<uint> vertexNormalsIndxOffs_D;
 };
 
 } // namespace protein

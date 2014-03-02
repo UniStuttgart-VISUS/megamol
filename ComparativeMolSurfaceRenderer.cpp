@@ -2443,24 +2443,24 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->ClassName());
 #endif // VERBOSE
 
-        // Compute vertex normals
-        if (!this->deformSurfMapped.ComputeNormals(
-#ifndef  USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-#else //  USE_PROCEDURAL_DATA
-                this->procField2D.Peek(),
-#endif //  USE_PROCEDURAL_DATA
-                this->volDim,
-                this->volOrg,
-                this->volDelta,
-                this->qsIsoVal)) {
-
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not compute normals of mapped surface",
-                    this->ClassName());
-
-            return false;
-        }
+//        // Compute vertex normals
+//        if (!this->deformSurfMapped.ComputeNormals(
+//#ifndef  USE_PROCEDURAL_DATA
+//                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+//#else //  USE_PROCEDURAL_DATA
+//                this->procField2D.Peek(),
+//#endif //  USE_PROCEDURAL_DATA
+//                this->volDim,
+//                this->volOrg,
+//                this->volDelta,
+//                this->qsIsoVal)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not compute normals of mapped surface",
+//                    this->ClassName());
+//
+//            return false;
+//        }
 
         // Perform subdivision with subsequent deformation to create a fine
         // target mesh enough
@@ -2595,6 +2595,16 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not compute tex coords of mapped surface",
+                    this->ClassName());
+
+            return false;
+        }
+
+        // Compute vertex normals
+        if (!this->deformSurfMapped.ComputeNormalsSubdiv()) {
+
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "%s: could not compute normals of mapped surface",
                     this->ClassName());
 
             return false;
