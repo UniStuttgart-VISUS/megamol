@@ -342,6 +342,29 @@ public:
     /**
      * TODO
      */
+    bool MorphToVolumeTwoWayGVFSubdiv(
+            float *volumeSource_D,
+            float *volumeTarget_D,
+            const unsigned int *cellStatesSource_D,
+            const unsigned int *cellStatesTarget_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float isovalue,
+            InterpolationMode interpMode,
+            size_t maxIt,
+            float surfMappedMinDisplScl,
+            float springStiffness,
+            float forceScl,
+            float externalForcesWeight,
+            float gvfScl,
+            unsigned int gvfIt,
+            bool trackPath,
+            bool recomputeGVF); // TODO
+
+    /**
+     * TODO
+     */
     bool InitGridParams(uint3 gridSize, float3 org, float3 delta);
 
     /**
@@ -479,6 +502,27 @@ protected:
      * TODO
      */
     bool updateVtxPos(
+            float* volTarget_D,
+            float* vertexBuffer_D,
+            float* vtxUncertainty_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float isovalue,
+            bool useCubicInterpolation,
+            size_t maxIt,
+            float surfMappedMinDisplScl,
+            float springStiffness,
+            float forceScl,
+            float externalForcesWeight,
+            bool trackPath,
+            bool externalForcesOnly=false,
+            bool useThinPlate=true);
+
+    /**
+     * TODO
+     */
+    bool updateVtxPosSubdiv(
             float* volTarget_D,
             float* vertexBuffer_D,
             float* vtxUncertainty_D,

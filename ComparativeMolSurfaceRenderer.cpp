@@ -2495,9 +2495,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             // Perform morphing
             // Morph surface #2 to shape #1 using Two-Way-GVF
 
-            initialStep*=0.1f;
+            //initialStep*=0.5f;
 
-            if (!this->deformSurfMapped.MorphToVolumeTwoWayGVF(
+            if (!this->deformSurfMapped.MorphToVolumeTwoWayGVFSubdiv(
 #ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
 #else //  USE_PROCEDURAL_DATA
@@ -2515,7 +2515,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->volDelta,
                     this->qsIsoVal,
                     this->interpolMode,
-                    this->surfaceMappingMaxIt,
+                    this->maxSubdivSteps,
                     this->surfMappedMinDisplScl*initialStep,
                     this->surfMappedSpringStiffness,
                     this->surfaceMappingForcesScl*initialStep,
@@ -2610,21 +2610,6 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
-//        // Flag vertices adjacent to corrupt triangles
-//        if (!this->deformSurfMapped.FlagCorruptTriangles(
-//#ifndef  USE_PROCEDURAL_DATA
-//                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-//#else //  USE_PROCEDURAL_DATA
-//                this->procField1D.Peek(),
-//#endif //  USE_PROCEDURAL_DATA
-//                this->deformSurf1.PeekCubeStates(),
-//                this->volDim,
-//                this->volOrg,
-//                this->volDelta,
-//                this->qsIsoVal)) {
-//            return false;
-//        }
-
         this->triggerSurfaceMapping = false;
         this->triggerComputeSubdiv = true;
     }
@@ -2718,14 +2703,14 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     camPos[1] = modelMatrix.GetAt(1, 3);
     camPos[2] = modelMatrix.GetAt(2, 3);
 
-//    // DEBUG Render external forces as lines
-//    if (!this->renderExternalForces()) {
-//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                "%s: could not render external forces",
-//                this->ClassName());
-//        return false;
-//    }
-//    // END DEBUG
+    // DEBUG Render external forces as lines
+    if (!this->renderExternalForces()) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not render external forces",
+                this->ClassName());
+        return false;
+    }
+    // END DEBUG
 
 
     if (this->surface1RM != SURFACE_NONE) {
@@ -2843,7 +2828,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //                    this->ClassName());
 //            return false;
 //        }
-
+//
 //        if (!this->renderSurfaceWithSubdivFlag(this->deformSurfMapped)) {
 //            return false;
 //        }
@@ -3841,6 +3826,9 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->maxSubdivSteps = this->maxSubdivStepsSlot.Param<core::param::IntParam>()->Value();
         this->maxSubdivStepsSlot.ResetDirty();
         this->triggerComputeSubdiv = true;
+        this->triggerSurfaceMapping = true;
+        this->triggerComputeSurfacePoints1 = true;
+        this->triggerComputeSurfacePoints2 = true;
     }
 
     /// Parameter for initial stepsize
