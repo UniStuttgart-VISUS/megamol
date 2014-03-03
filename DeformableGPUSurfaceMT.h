@@ -631,6 +631,7 @@ private:
     CudaDevArr<float> vertexUncertaintyTmp_D;
     uint newVertexCnt;
     uint oldVertexCnt;
+    uint nFlaggedVertices;
 
     CudaDevArr<float3> triangleFaceNormals_D;
     CudaDevArr<uint> triangleIdxTmp_D;
