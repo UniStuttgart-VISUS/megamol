@@ -2443,93 +2443,76 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 this->ClassName());
 #endif // VERBOSE
 
-//        // Compute vertex normals
-//        if (!this->deformSurfMapped.ComputeNormals(
-//#ifndef  USE_PROCEDURAL_DATA
-//                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-//#else //  USE_PROCEDURAL_DATA
-//                this->procField2D.Peek(),
-//#endif //  USE_PROCEDURAL_DATA
-//                this->volDim,
-//                this->volOrg,
-//                this->volDelta,
-//                this->qsIsoVal)) {
-//
-//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                    "%s: could not compute normals of mapped surface",
-//                    this->ClassName());
-//
-//            return false;
-//        }
-
         // Perform subdivision with subsequent deformation to create a fine
         // target mesh enough
-        float initialStep = 1.0;
         int newTris;
+        unsigned int nSubLevels = 3;
         for (int i = 0; i < this->maxSubdivLevel; ++i) {
-//            printf("SUBDIV #%i\n", i);
 
-            newTris = this->deformSurfMapped.RefineMesh(
-                    1,
+            for (unsigned int j = 0; j < nSubLevels; ++j) {
+                printf("SUBDIV #%i\n", i);
+
+                newTris = this->deformSurfMapped.RefineMesh(
+                        1,
 #ifndef  USE_PROCEDURAL_DATA
-                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                        ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
 #else //  USE_PROCEDURAL_DATA
-                    this->procField2D.Peek(),
+                        this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
-                    this->volDim,
-                    this->volOrg,
-                    this->volDelta,
-                    this->qsIsoVal,
-                    this->volDelta.x);
+                        this->volDim,
+                        this->volOrg,
+                        this->volDelta,
+                        this->qsIsoVal,
+                        this->volDelta.x);  // TODO Whats a good maximum edge length?
 
-           if (newTris < 0) { // TODO Whats a good maximum edge length?
+                if (newTris < 0) {
 
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "%s: could not refine mesh",
-                        this->ClassName());
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                            "%s: could not refine mesh",
+                            this->ClassName());
 
-                return false;
+                    return false;
+                }
+                if (newTris == 0) break;
             }
-           if (newTris == 0) break;
 
             // Perform morphing
-            // Morph surface #2 to shape #1 using Two-Way-GVF
-
-            //initialStep*=0.5f;
-
-            if (!this->deformSurfMapped.MorphToVolumeTwoWayGVFSubdiv(
+            if (this->maxSubdivLevel > 0) {
+                // Morph surface #2 to shape #1 using Two-Way-GVF
+                if (!this->deformSurfMapped.MorphToVolumeTwoWayGVFSubdiv(
 #ifndef  USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                        ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
 #else //  USE_PROCEDURAL_DATA
-                this->procField2D.Peek(),
+                        this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
 #ifndef  USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                        ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
 #else //  USE_PROCEDURAL_DATA
-                this->procField1D.Peek(),
+                        this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
-                    this->deformSurf2.PeekCubeStates(),
-                    this->deformSurf1.PeekCubeStates(),
-                    this->volDim,
-                    this->volOrg,
-                    this->volDelta,
-                    this->qsIsoVal,
-                    this->interpolMode,
-                    this->maxSubdivSteps,
-                    this->surfMappedMinDisplScl*initialStep,
-                    this->surfMappedSpringStiffness,
-                    this->surfaceMappingForcesScl*initialStep,
-                    this->surfaceMappingExternalForcesWeightScl,
-                    this->surfMappedGVFScl,
-                    this->surfMappedGVFIt,
-                    false,
-                    false)) {
+                        this->deformSurf2.PeekCubeStates(),
+                        this->deformSurf1.PeekCubeStates(),
+                        this->volDim,
+                        this->volOrg,
+                        this->volDelta,
+                        this->qsIsoVal,
+                        this->interpolMode,
+                        this->maxSubdivSteps,
+                        this->surfMappedMinDisplScl,
+                        this->surfMappedSpringStiffness,
+                        this->surfaceMappingForcesScl,
+                        this->surfaceMappingExternalForcesWeightScl,
+                        this->surfMappedGVFScl,
+                        this->surfMappedGVFIt,
+                        false,
+                        false)) {
 
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "%s: could not compute Two-Way-GVF deformation",
-                        this->ClassName());
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                            "%s: could not compute Two-Way-GVF deformation",
+                            this->ClassName());
 
-                return false;
+                    return false;
+                }
             }
         }
 
@@ -2549,20 +2532,22 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         }
 
         // Update vertex path VBO for new vertices
-        if (!this->deformSurfMapped.TrackPathSubdivVertices(
+        if (this->maxSubdivLevel > 0) {
+            if (!this->deformSurfMapped.TrackPathSubdivVertices(
 #ifndef  USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
 #else //  USE_PROCEDURAL_DATA
-                this->procField2D.Peek(),
+                    this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
-                this->volDim,
-                this->volOrg,
-                this->volDelta,
-                this->surfaceMappingForcesScl,
-                this->surfMappedMinDisplScl,
-                this->qsIsoVal,
-                this->surfaceMappingMaxIt)) {
-            return false;
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
+                    this->surfaceMappingForcesScl,
+                    this->surfMappedMinDisplScl,
+                    this->qsIsoVal,
+                    this->surfaceMappingMaxIt)) {
+                return false;
+            }
         }
 
         // Compute texture difference per vertex
@@ -3099,8 +3084,8 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
     } else if (renderMode == SURFACE_WIREFRAME) {
         glDisable(GL_LIGHTING);
         glLineWidth(1.0f);
-        glCullFace(GL_BACK);
-        glEnable(GL_CULL_FACE);
+//        glCullFace(GL_BACK);
+//        glEnable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else if (renderMode == SURFACE_POINTS){
         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);

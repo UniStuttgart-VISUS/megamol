@@ -32,7 +32,7 @@
 
 #include "vislib/Array.h"
 
-#define USE_TIMER
+//#define USE_TIMER
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -1444,7 +1444,8 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnlySubdiv_D(
  * DeformableGPUSurfaceMT::DeformableGPUSurfaceMT
  */
 DeformableGPUSurfaceMT::DeformableGPUSurfaceMT() : GPUSurfaceMT(),
-        vboCorruptTriangleVertexFlag(0), vboVtxPath(0) {
+        vboCorruptTriangleVertexFlag(0), vboVtxPath(0), vboVtxAttr(0),
+        nFlaggedVertices(0) {
 
 }
 
@@ -5759,6 +5760,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
     this->newVertexCnt += accTmp;
+    this->nFlaggedVertices += this->newVertexCnt;
     if (this->newVertexCnt == 0) return 0;
 //    printf("Need %i new vertices (old triangle count %u)\n", newVertexCnt, this->triangleCnt);
 
@@ -5785,17 +5787,20 @@ int DeformableGPUSurfaceMT::RefineMesh(
 
     /* 3. Interpolate new vertex positions associated with the flagged edges */
 
-    if (!CudaSafeCall(this->newVertices_D.Validate(newVertexCnt*3))) {
+    if (!CudaSafeCall(this->newVertices_D.Validate(this->newVertexCnt*3))) {
         return -1;
     }
+    printf("1 vertex flag count %u\n", this->vertexFlag_D.GetCount());
     if (this->vertexFlag_D.GetCount() != this->vertexCnt) { // First subdivision round
-        if (!CudaSafeCall(this->vertexFlag_D.Validate(newVertexCnt + this->vertexCnt))) {
+        printf("2 vertex flag count %u\n", this->vertexFlag_D.GetCount());
+        if (!CudaSafeCall(this->vertexFlag_D.Validate(this->newVertexCnt + this->vertexCnt))) {
             return -1;
         }
         if (!CudaSafeCall(this->vertexFlag_D.Set(0x00))) {
             return -1;
         }
     } else { // Need to save old flags
+        printf("3 vertex flag count %u\n", this->vertexFlag_D.GetCount());
         if (!CudaSafeCall(this->vertexFlagTmp_D.Validate(this->vertexFlag_D.GetCount()))) {
             return -1;
         }
@@ -5806,7 +5811,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
                 cudaMemcpyDeviceToDevice))) {
             return -1;
         }
-        if (!CudaSafeCall(this->vertexFlag_D.Validate(newVertexCnt + this->vertexCnt))) {
+        if (!CudaSafeCall(this->vertexFlag_D.Validate(this->newVertexCnt + this->vertexCnt))) {
             return -1;
         }
         if (!CudaSafeCall(this->vertexFlag_D.Set(0x00))) {
@@ -5820,6 +5825,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
             return -1;
         }
     }
+    printf("4 vertex flag count %u\n", this->vertexFlag_D.GetCount());
     ComputeNewVertices <<< Grid(edgeCnt, 256), 256 >>> (
             this->newVertices_D.Peek(),
             this->vertexFlag_D.Peek(),
@@ -6454,6 +6460,13 @@ void DeformableGPUSurfaceMT::Release() {
         this->vboVtxPath = 0;
     }
 
+    if (this->vboVtxAttr) {
+        glBindBufferARB(GL_ARRAY_BUFFER, this->vboVtxAttr);
+        glDeleteBuffersARB(1, &this->vboVtxAttr);
+        glBindBufferARB(GL_ARRAY_BUFFER, 0);
+        this->vboVtxAttr = 0;
+    }
+
     ::CheckForGLError();
 }
 
@@ -6656,7 +6669,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             }
             avgDisplLen /= static_cast<float>(this->vertexCnt);
 //            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+//            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
@@ -6749,6 +6762,10 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
     cudaEventCreate(&event2);
     cudaEventRecord(event1, 0);
 //#endif
+
+
+    printf("Vertex Count %u, vertex flag array %u\n", this->vertexCnt,
+            this->vertexFlag_D.GetCount());
 
     int iterationsNeeded = maxIt;
 
@@ -6882,7 +6899,7 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
             }
             avgDisplLen /= static_cast<float>(this->newVertexCnt);
 //            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+//            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
@@ -8346,6 +8363,15 @@ bool DeformableGPUSurfaceMT::ComputeSurfAttribDiff(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;
+    }
+
+    if (this->vertexFlag_D.GetCount() == 0) {
+        if (!CudaSafeCall(this->vertexFlag_D.Validate(this->vertexCnt))) {
+            return false;
+        }
+        if (!CudaSafeCall(this->vertexFlag_D.Set(0x00))) {
+            return false;
+        }
     }
 
     // Compute difference for new and old vertices (after subdivision)
