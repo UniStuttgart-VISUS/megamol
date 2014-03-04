@@ -1348,7 +1348,6 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 
             // Compute uncertainty for new vertices
             // Update uncertainty VBO for new vertices
-            printf("Track back vertices START\n");
             if (!surfEnd.TrackPathSubdivVertices(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     this->volDim,
@@ -1360,11 +1359,11 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                     this->surfMapMaxIt)) {
                 return false;
             }
-            printf("Track back vertices END\n");
 
             float meanVertexPath = surfEnd.IntVtxPathOverSurfArea();
 
-            this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/surfArea;
+            //this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/surfArea;
+            this->matchMeanVertexPath[i*this->nVariants+j] = surfArea;
 
             //            if (i != j) {
             this->minMatchMeanVertexPathVal =
