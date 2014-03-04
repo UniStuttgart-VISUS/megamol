@@ -2866,11 +2866,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //    // END DEBUG
 
 //    // DEBUG Compute mean vertex path of deformed surface
-//    float surfArea = this->deformSurfMapped.GetTotalSurfArea();
-//    float meanVertexPath = this->deformSurfMapped.IntVtxPathOverSurfArea();
-//    meanVertexPath /= surfArea;
-//    printf("SURFACE AREA %f\n", surfArea);
-//    printf("MEAN PATH    %f\n", meanVertexPath);
+    float surfArea = this->deformSurfMapped.GetTotalSurfArea();
+    float meanVertexPath = this->deformSurfMapped.IntVtxPathOverSurfArea();
+    meanVertexPath /= surfArea;
+    printf("SURFACE AREA %f\n", surfArea);
+    printf("MEAN PATH    %f\n", meanVertexPath);
 //    float3 minC, maxC;
 //    //this->deformSurf2.ComputeMinMaxCoords(minC, maxC);
 //    printf("min %f %f %f, max %f %f %f\n", minC.x, minC.y, minC.z,
