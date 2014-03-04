@@ -457,9 +457,9 @@ private:
     HostArr<float> atomPosFitted;
     HostArr<float> atomPos0;
 
-    DeformableGPUSurfaceMT surfStart;
-    DeformableGPUSurfaceMT surfEnd;
-    DeformableGPUSurfaceMT surfTarget;
+//    DeformableGPUSurfaceMT surfStart;
+//    DeformableGPUSurfaceMT surfEnd;
+//    DeformableGPUSurfaceMT surfTarget;
 
     /// The bounding boxes for particle data
     Cubef bboxParticles;

@@ -447,6 +447,19 @@ public:
             float3 texOrg1,
             float3 texDelta1);
 
+    bool ComputeSurfAttribSignDiff( DeformableGPUSurfaceMT &surfStart,
+            float centroid[3], // In case the start surface has been fitted using RMSD
+            float rotMat[9],
+            float transVec[3],
+            float *tex0_D,
+            int3 texDim0,
+            float3 texOrg0,
+            float3 texDelta0,
+            float *tex1_D,
+            int3 texDim1,
+            float3 texOrg1,
+            float3 texDelta1);
+
 protected:
 
     /**

@@ -86,14 +86,14 @@ __global__ void CUDAStreamlines_IntegrateRK4Step(
 
     // Find new position using fourth order Runge-Kutta method
     // Sample vector field at current position
-    v0  = ::SampleFieldAtPosTrilin_D<float3>(x0, (float3*)vecField_D)*dir;
+    v0  = ::SampleFieldAtPosTrilin_D<float3, false>(x0, (float3*)vecField_D)*dir;
     v0 = normalize(v0);
     v0 *= step;
 
 
     x1 = x0 + 0.5*v0;
     if (::IsValidGridpos(x1)) {
-        v1 = ::SampleFieldAtPosTrilin_D<float3>(x1, (float3*)vecField_D)*dir;
+        v1 = ::SampleFieldAtPosTrilin_D<float3, false>(x1, (float3*)vecField_D)*dir;
         v1 = normalize(v1);
         v1 *= step;
     } else {
@@ -105,7 +105,7 @@ __global__ void CUDAStreamlines_IntegrateRK4Step(
 
     x2 = x0 + 0.5*v1;
     if (::IsValidGridpos(x2)) {
-        v2 = ::SampleFieldAtPosTrilin_D<float3>(x2, (float3*)vecField_D)*dir;
+        v2 = ::SampleFieldAtPosTrilin_D<float3, false>(x2, (float3*)vecField_D)*dir;
         v2 = normalize(v2);
         v2 *= step;
     } else {
@@ -117,7 +117,7 @@ __global__ void CUDAStreamlines_IntegrateRK4Step(
 
     x3 = x0 + v2;
     if (::IsValidGridpos(x3)) {
-        v3 = ::SampleFieldAtPosTrilin_D<float3>(x3, (float3*)vecField_D)*dir;
+        v3 = ::SampleFieldAtPosTrilin_D<float3, false>(x3, (float3*)vecField_D)*dir;
         v3 = normalize(v3);
         v3 *= step;
     } else {
@@ -158,7 +158,7 @@ __global__ void CUDAStreamlines_SampleScalarFieldToAlpha_D(
             lineStrip_D[idx*vboStride+vboPosOffs+1],
             lineStrip_D[idx*vboStride+vboPosOffs+2]);
 
-    float sample = ::SampleFieldAtPosTrilin_D<float>(pos, field_D);
+    float sample = ::SampleFieldAtPosTrilin_D<float, false>(pos, field_D);
     lineStrip_D[idx*vboStride+vboColOffs+3] = sample;
 }
 
@@ -184,7 +184,7 @@ __global__ void CUDAStreamlines_SampleVecFieldToRGB_D(
             lineStrip_D[idx*vboStride+vboPosOffs+1],
             lineStrip_D[idx*vboStride+vboPosOffs+2]);
 
-    float3 sample = ::SampleFieldAtPosTrilin_D<float3>(pos, (float3*)field_D);
+    float3 sample = ::SampleFieldAtPosTrilin_D<float3, false>(pos, (float3*)field_D);
     lineStrip_D[idx*vboStride+vboColOffs+0] = sample.x;
     lineStrip_D[idx*vboStride+vboColOffs+1] = sample.y;
     lineStrip_D[idx*vboStride+vboColOffs+2] = sample.z;
