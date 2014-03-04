@@ -226,10 +226,10 @@ void main() {
         
     } else if (colorMode == 6) { // Surface potential 1
             
-    /*    // Interpolation in MSH color space
-        vec3 colMsh = CoolWarmMsh(texture3D(potentialTex1, gl_TexCoord[1].stp).a, 
+        // Interpolation in MSH color space
+        vec3 colMsh = CoolWarmMsh(surfAttribFrag, 
               minPotential, 0.0, maxPotential);
-        color = vec4(MSH2RGB(colMsh.x, colMsh.y, colMsh.z), 1.0);*/
+        color = vec4(MSH2RGB(colMsh.x, colMsh.y, colMsh.z), 1.0);
 
     } else if (colorMode == 7) { // Surface potential difference
       

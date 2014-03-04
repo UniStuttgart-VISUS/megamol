@@ -5631,7 +5631,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
 
 
     /* 1. Compute edge list */
-
+#define USE_TIMER
 #ifdef USE_TIMER
     float dt_ms;
     cudaEvent_t event1, event2, eventStart, eventEnd;
@@ -5790,9 +5790,9 @@ int DeformableGPUSurfaceMT::RefineMesh(
     if (!CudaSafeCall(this->newVertices_D.Validate(this->newVertexCnt*3))) {
         return -1;
     }
-    printf("1 vertex flag count %u\n", this->vertexFlag_D.GetCount());
+
     if (this->vertexFlag_D.GetCount() != this->vertexCnt) { // First subdivision round
-        printf("2 vertex flag count %u\n", this->vertexFlag_D.GetCount());
+
         if (!CudaSafeCall(this->vertexFlag_D.Validate(this->newVertexCnt + this->vertexCnt))) {
             return -1;
         }
@@ -5800,7 +5800,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
             return -1;
         }
     } else { // Need to save old flags
-        printf("3 vertex flag count %u\n", this->vertexFlag_D.GetCount());
+
         if (!CudaSafeCall(this->vertexFlagTmp_D.Validate(this->vertexFlag_D.GetCount()))) {
             return -1;
         }
@@ -5825,7 +5825,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
             return -1;
         }
     }
-    printf("4 vertex flag count %u\n", this->vertexFlag_D.GetCount());
+
     ComputeNewVertices <<< Grid(edgeCnt, 256), 256 >>> (
             this->newVertices_D.Peek(),
             this->vertexFlag_D.Peek(),
@@ -6385,7 +6385,6 @@ int DeformableGPUSurfaceMT::RefineMesh(
     cudaEventElapsedTime(&dt_ms, eventStart, eventEnd);
     printf("==> Total CUDA time for mesh refinement:               %.10f sec\n",
             dt_ms/1000.0f);
-
 #endif
 
     // Cleanup
@@ -6401,6 +6400,8 @@ int DeformableGPUSurfaceMT::RefineMesh(
     }
 
     return newTrianglesCnt;
+
+#undef USE_TIMER
 }
 
 
@@ -6538,6 +6539,13 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
     cudaEventRecord(event1, 0);
 //#endif
 
+    //#ifdef USE_TIMER
+    cudaEvent_t eventStart, eventEnd;
+    cudaEventCreate(&eventStart);
+    cudaEventCreate(&eventEnd);
+
+    //#endif
+
     int iterationsNeeded = maxIt;
 
     if (!externalForcesOnly) {
@@ -6628,7 +6636,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             }
             avgDisplLen /= static_cast<float>(this->vertexCnt);
 //            if (i%5 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-//            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
@@ -6639,6 +6647,8 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
     } else {
         // TODO Timer
         for (uint i = 0; i < maxIt; ++i) {
+
+            cudaEventRecord(eventStart, 0);
 
             // Update vertex position
             DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D <<< Grid(this->vertexCnt, 256), 256 >>> (
@@ -6659,6 +6669,17 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                     this->vertexDataOffsNormal,
                     this->vertexDataStride);
 
+            cudaEventRecord(eventEnd, 0);
+            cudaEventSynchronize(eventEnd);
+            cudaEventSynchronize(eventStart);
+            cudaEventElapsedTime(&dt_ms, eventStart, eventEnd);
+            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                    "%s: Time for iteration (%u vertices): %f sec\n",
+                    "DeformableGPUSurfaceMT",
+                    this->vertexCnt,
+                    dt_ms/1000.0f);
+            cudaEventRecord(eventStart, 0);
+
             // Accumulate displacement length of this iteration step
             float avgDisplLen = 0.0f;
             avgDisplLen = thrust::reduce(
@@ -6667,9 +6688,18 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             if (!CudaSafeCall(cudaGetLastError())) {
                 return false;
             }
+            cudaEventRecord(eventEnd, 0);
+            cudaEventSynchronize(eventEnd);
+            cudaEventSynchronize(eventStart);
+            cudaEventElapsedTime(&dt_ms, eventStart, eventEnd);
+            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                    "%s: Time for thrust::reduce (%u vertices): %f sec\n",
+                    "DeformableGPUSurfaceMT",
+                    this->vertexCnt,
+                    dt_ms/1000.0f);
             avgDisplLen /= static_cast<float>(this->vertexCnt);
 //            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-//            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
@@ -6679,7 +6709,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         }
     }
 
-#ifdef USE_TIMER
+//#ifdef USE_TIMER
     cudaEventRecord(event2, 0);
     cudaEventSynchronize(event1);
     cudaEventSynchronize(event2);
@@ -6690,7 +6720,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             iterationsNeeded, this->vertexCnt, dt_ms/1000.0f);
     //printf("Mapping : %.10f\n",
     //        dt_ms/1000.0f);
-#endif
+//#endif
 
     return CudaSafeCall(cudaGetLastError());
 }
@@ -6764,9 +6794,6 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
 //#endif
 
 
-    printf("Vertex Count %u, vertex flag array %u\n", this->vertexCnt,
-            this->vertexFlag_D.GetCount());
-
     int iterationsNeeded = maxIt;
 
     if (!externalForcesOnly) {
@@ -6857,7 +6884,7 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
             }
             avgDisplLen /= static_cast<float>(this->vertexCnt);
 //            if (i%5 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-//            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
@@ -6899,7 +6926,7 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
             }
             avgDisplLen /= static_cast<float>(this->newVertexCnt);
 //            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-//            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
@@ -6982,7 +7009,7 @@ __global__ void DeformableGPUSurfaceMT_ComputeVtxDiffValue1_D(
 
 
 /*
- * ComputeVtxDiffValue1_D
+ * DeformableGPUSurfaceMT_ComputeVtxDiffValue1Fitted_D
  */
 __global__ void DeformableGPUSurfaceMT_ComputeVtxDiffValue1Fitted_D(
         float *diff_D,
@@ -7002,11 +7029,6 @@ __global__ void DeformableGPUSurfaceMT_ComputeVtxDiffValue1Fitted_D(
     const int vertexDataOffsPos = 0;
 
     float valFirst = diff_D[idx];
-//    float3 pos;
-//    pos.x = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +0];
-//    pos.y = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +1];
-//    pos.z = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +2];
-
     float3 pos;
     pos.x = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +0];
     pos.y = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +1];
@@ -7020,14 +7042,14 @@ __global__ void DeformableGPUSurfaceMT_ComputeVtxDiffValue1Fitted_D(
     // Revert rotation
     float3 posRot;
     posRot.x = rotation_D[0] * pos.x +
-            rotation_D[3] * pos.y +
-            rotation_D[6] * pos.z;
+               rotation_D[3] * pos.y +
+               rotation_D[6] * pos.z;
     posRot.y = rotation_D[1] * pos.x +
-            rotation_D[4] * pos.y +
-            rotation_D[7] * pos.z;
+               rotation_D[4] * pos.y +
+               rotation_D[7] * pos.z;
     posRot.z = rotation_D[2] * pos.x +
-            rotation_D[5] * pos.y +
-            rotation_D[8] * pos.z;
+               rotation_D[5] * pos.y +
+               rotation_D[8] * pos.z;
 
     // Move to old centroid
     posRot.x += centroid.x;
@@ -7035,8 +7057,9 @@ __global__ void DeformableGPUSurfaceMT_ComputeVtxDiffValue1Fitted_D(
     posRot.z += centroid.z;
 
     float valSec = ::SampleFieldAtPosTrilin_D<float>(posRot, tex1_D);
-    valSec = abs(valSec-valFirst);
+    //valSec = abs(valSec-valFirst);
     diff_D[idx] = valSec;
+    printf("%f\n", valSec);
 }
 
 
@@ -8252,7 +8275,8 @@ __global__ void DeformableGPUSurfaceMT_ComputeSurfAttribDiff1_D (
     posRot.y += centroid.y;
     posRot.z += centroid.z;
 
-    vertexAttrib_D[idx] = abs(vertexAttrib_D[idx] - ::SampleFieldAtPosTrilin_D<float>(posRot, tex1_D));
+    //vertexAttrib_D[idx] = abs(vertexAttrib_D[idx] - ::SampleFieldAtPosTrilin_D<float>(posRot, tex1_D));
+    vertexAttrib_D[idx] = ::SampleFieldAtPosTrilin_D<float>(posRot, tex1_D);
 }
 
 
