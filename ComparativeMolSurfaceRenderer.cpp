@@ -1116,6 +1116,13 @@ atoms instead.",
                     this->rmsPosVec2.Peek()[cnt*3+0],
                     this->rmsPosVec2.Peek()[cnt*3+1],
                     this->rmsPosVec2.Peek()[cnt*3+2]);
+
+            if (cnt < 20) {
+                printf("%f %f %f\n",
+                        this->rmsPosVec2.Peek()[3*cnt+0],
+                        this->rmsPosVec2.Peek()[3*cnt+1],
+                        this->rmsPosVec2.Peek()[3*cnt+2]);
+            }
         }
         this->rmsCentroid /= static_cast<float>(posCnt);
 //        printf("posCnt %u\n", posCnt);
@@ -2550,19 +2557,25 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         }
 
         // Compute texture difference per vertex
+        // Compute texture coordinates
+        Mat3f rmsRotInv(this->rmsRotation);
+        if (!rmsRotInv.Invert()) {
+            printf("Could not invert rotation matrix\n");
+            return false;
+        }
         if (!this->deformSurfMapped.ComputeSurfAttribDiff(
                 this->deformSurf2,
                 this->rmsCentroid.PeekComponents(), // In case the start surface has been fitted using RMSD
-                this->rmsRotation.PeekComponents(),
+                rmsRotInv.PeekComponents(),
                 this->rmsTranslation.PeekComponents(),
                 this->surfAttribTex1_D.Peek(),
-                texDim1,
-                texOrg1,
-                texDelta1,
+                this->texDim1,
+                this->texOrg1,
+                this->texDelta1,
                 this->surfAttribTex2_D.Peek(),
-                texDim2,
-                texOrg2,
-                texDelta2)) {
+                this->texDim2,
+                this->texOrg2,
+                this->texDelta2)) {
             return false;
         }
 
@@ -2687,14 +2700,14 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     camPos[1] = modelMatrix.GetAt(1, 3);
     camPos[2] = modelMatrix.GetAt(2, 3);
 
-    // DEBUG Render external forces as lines
-    if (!this->renderExternalForces()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: could not render external forces",
-                this->ClassName());
-        return false;
-    }
-    // END DEBUG
+//    // DEBUG Render external forces as lines
+//    if (!this->renderExternalForces()) {
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                "%s: could not render external forces",
+//                this->ClassName());
+//        return false;
+//    }
+//    // END DEBUG
 
 
     if (this->surface1RM != SURFACE_NONE) {
@@ -2822,8 +2835,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //        }
     }
 
-
+//
 //    // DEBUG Render backwards mapped subdivision vertices
+//    if (this->deformSurfMapped.PeekOldVertexDataDevPt() != NULL) {
 //    glColor3f(0.0, 1.0, 0.0);
 //    glDisable(GL_LIGHTING);
 //    glDisable(GL_BLEND);
@@ -2847,15 +2861,17 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //    glDisableClientState(GL_VERTEX_ARRAY); // Enable Vertex Arrays
 //    glDisableClientState(GL_COLOR_ARRAY); // Enable Vertex Arrays
 //    glEnable(GL_LIGHTING);
+//    oldVertexData.Release();
+//    }
 //    // END DEBUG
 
-    // DEBUG Compute mean vertex path of deformed surface
-    float surfArea = this->deformSurfMapped.GetTotalSurfArea();
-    float meanVertexPath = this->deformSurfMapped.IntVtxPathOverSurfArea();
-    meanVertexPath /= surfArea;
-    printf("SURFACE AREA %f\n", surfArea);
-    printf("MEAN PATH    %f\n", meanVertexPath);
-    float3 minC, maxC;
+//    // DEBUG Compute mean vertex path of deformed surface
+//    float surfArea = this->deformSurfMapped.GetTotalSurfArea();
+//    float meanVertexPath = this->deformSurfMapped.IntVtxPathOverSurfArea();
+//    meanVertexPath /= surfArea;
+//    printf("SURFACE AREA %f\n", surfArea);
+//    printf("MEAN PATH    %f\n", meanVertexPath);
+//    float3 minC, maxC;
 //    //this->deformSurf2.ComputeMinMaxCoords(minC, maxC);
 //    printf("min %f %f %f, max %f %f %f\n", minC.x, minC.y, minC.z,
 //            maxC.x, maxC.y, maxC.z);

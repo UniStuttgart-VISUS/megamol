@@ -41,8 +41,14 @@ inline bool initGridParams(int3 gridSize, float3 org, float3 delta) {
  * @param x,y,z Coordinates of the position
  * @return The sampled value of the field
  */
-template <typename T>
+template <typename T, bool W>
 inline __device__ T SampleFieldAt_D(uint x, uint y, uint z, T *field_D) {
+    // Texture wrapping
+    if (W) { // W should be a global parameter to avoid branching
+        x = x%gridSize_D.x;
+        y = y%gridSize_D.y;
+        z = z%gridSize_D.z;
+    }
     return field_D[gridSize_D.x*(gridSize_D.y*z+y)+x];
 }
 
@@ -52,9 +58,9 @@ inline __device__ T SampleFieldAt_D(uint x, uint y, uint z, T *field_D) {
  * @param index The position
  * @return The sampled value of the field
  */
-template <typename T>
+template <typename T, bool W>
 inline __device__ T SampleFieldAt_D(uint3 index, T *field_D) {
-    return SampleFieldAt_D<T>(index.x, index.y, index.z, field_D);
+    return SampleFieldAt_D<T, W>(index.x, index.y, index.z, field_D);
 }
 
 
@@ -64,9 +70,9 @@ inline __device__ T SampleFieldAt_D(uint3 index, T *field_D) {
  * @param pos The position
  * @return The sampled value of the field
  */
-template <typename T>
+template <typename T, bool W>
 inline __device__ T SampleFieldAtPosTrilin_D(float x, float y, float z, T *field_D) {
-    ::SampleFieldAtPosTrilin_D<T>(make_float3(x, y, z));
+    ::SampleFieldAtPosTrilin_D<T, W>(make_float3(x, y, z));
 }
 
 
@@ -76,10 +82,10 @@ inline __device__ T SampleFieldAtPosTrilin_D(float x, float y, float z, T *field
  * @param pos The position
  * @return The sampled value of the field
  */
-template <typename T>
+template <typename T, bool W>
 inline __device__ T SampleFieldAtPosTrilin_D(float3 pos, T *field_D) {
 
-    int3 c;
+    int3 c, c1;
     float3 f;
 
     // Get id of the cell containing the given position and interpolation
@@ -94,23 +100,44 @@ inline __device__ T SampleFieldAtPosTrilin_D(float3 pos, T *field_D) {
     f.y = f.y-(float)c.y; // beta
     f.z = f.z-(float)c.z; // gamma
 
-    c.x = clamp(c.x, int(0), gridSize_D.x-2);
-    c.y = clamp(c.y, int(0), gridSize_D.y-2);
-    c.z = clamp(c.z, int(0), gridSize_D.z-2);
+    if (W) { // Wrap coordinates
+        c.x = c.x%gridSize_D.x;
+        c.y = c.y%gridSize_D.y;
+        c.z = c.z%gridSize_D.z;
+        c1.x = (c.x+1)%gridSize_D.x;
+        c1.y = (c.y+1)%gridSize_D.y;
+        c1.z = (c.z+1)%gridSize_D.z;
+    } else {
+        c.x = clamp(c.x, int(0), gridSize_D.x-2);
+        c.y = clamp(c.y, int(0), gridSize_D.y-2);
+        c.z = clamp(c.z, int(0), gridSize_D.z-2);
+        c1.x = clamp(c.x+1, int(0), gridSize_D.x-1);
+        c1.y = clamp(c.y+1, int(0), gridSize_D.y-1);
+        c1.z = clamp(c.z+1, int(0), gridSize_D.z-1);
+    }
 
     // Get values at corners of current cell
     T s[8];
-    s[0] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+0) + (c.y+0))+c.x+0];
-    s[1] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+0) + (c.y+0))+c.x+1];
-    s[2] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+0) + (c.y+1))+c.x+0];
-    s[3] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+0) + (c.y+1))+c.x+1];
-    s[4] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+0))+c.x+0];
-    s[5] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+0))+c.x+1];
-    s[6] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+1))+c.x+0];
-    s[7] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+1))+c.x+1];
+    s[0] = field_D[gridSize_D.x*(gridSize_D.y*(c.z) + (c.y))+c.x];
+    s[1] = field_D[gridSize_D.x*(gridSize_D.y*(c.z) + (c.y))+c1.x];
+    s[2] = field_D[gridSize_D.x*(gridSize_D.y*(c.z) + (c1.y))+c.x];
+    s[3] = field_D[gridSize_D.x*(gridSize_D.y*(c.z) + (c1.y))+c1.x];
+    s[4] = field_D[gridSize_D.x*(gridSize_D.y*(c1.z) + (c.y))+c.x];
+    s[5] = field_D[gridSize_D.x*(gridSize_D.y*(c1.z) + (c.y))+c1.x];
+    s[6] = field_D[gridSize_D.x*(gridSize_D.y*(c1.z) + (c1.y))+c.x];
+    s[7] = field_D[gridSize_D.x*(gridSize_D.y*(c1.z) + (c1.y))+c1.x];
+
+//    s[0] = SampleFieldAt_D<T, true>(make_uint3(c.x+0, c.y+0, c.z+0), field_D);
+//    s[1] = SampleFieldAt_D<T, true>(make_uint3(c.x+1, c.y+0, c.z+0), field_D);
+//    s[2] = SampleFieldAt_D<T, true>(make_uint3(c.x+0, c.y+1, c.z+0), field_D);
+//    s[3] = SampleFieldAt_D<T, true>(make_uint3(c.x+1, c.y+1, c.z+0), field_D);
+//    s[4] = SampleFieldAt_D<T, true>(make_uint3(c.x+0, c.y+0, c.z+1), field_D);
+//    s[5] = SampleFieldAt_D<T, true>(make_uint3(c.x+1, c.y+0, c.z+1), field_D);
+//    s[6] = SampleFieldAt_D<T, true>(make_uint3(c.x+0, c.y+1, c.z+1), field_D);
+//    s[7] = SampleFieldAt_D<T, true>(make_uint3(c.x+1, c.y+1, c.z+1), field_D);
 
     // Use trilinear interpolation to sample the volume
-   return InterpFieldTrilin_D(s, f.x, f.y, f.z);
+   return InterpFieldTrilin_D<T>(s, f.x, f.y, f.z);
 }
 
 /**
@@ -119,9 +146,9 @@ inline __device__ T SampleFieldAtPosTrilin_D(float3 pos, T *field_D) {
  * @param pos The position
  * @return The sampled value of the field
  */
-template <typename T>
+template <typename T, bool W>
 inline __device__ T SampleFieldAtPosTricub_D(float x, float y, float z, T *field_D) {
-    ::SampleFieldAtPosTricub_D<T>(make_float3(x, y, z));
+    ::SampleFieldAtPosTricub_D<T, W>(make_float3(x, y, z));
 }
 
 /**
@@ -130,7 +157,7 @@ inline __device__ T SampleFieldAtPosTricub_D(float x, float y, float z, T *field
  * @param pos The position
  * @return The sampled value of the field
  */
-template <typename T>
+template <typename T, bool W>
 inline __device__ T SampleFieldAtPosTricub_D(float3 pos, T *field_D) {
 
     int3 c;
@@ -162,121 +189,121 @@ inline __device__ T SampleFieldAtPosTricub_D(float3 pos, T *field_D) {
 
 
     T sX0 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y - one, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y - one, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y - one, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y - one, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y - one, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y - one, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y - one, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y - one, c.z + 2), field_D),
             f.z);
 
     T sX1 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y, c.z + 2), field_D),
             f.z);
 
     T sX2  = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y + one, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y + one, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y + one, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y + one, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y + one, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y + one, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y + one, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y + one, c.z + 2), field_D),
             f.z);
 
     T sX3 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y + 2, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y + 2, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y + 2, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x - one, c.y + 2, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y + 2, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y + 2, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y + 2, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x - one, c.y + 2, c.z + 2), field_D),
             f.z);
 
     T s0 = ::InterpFieldCubicSepArgs_D<T>(sX0, sX1, sX2, sX3, f.y);
 
     sX0 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y - one, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y - one, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y - one, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y - one, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y - one, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y - one, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y - one, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y - one, c.z + 2), field_D),
             f.z);
 
     sX1 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y, c.z + 2), field_D),
             f.z);
 
     sX2 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y + one, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y + one, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y + one, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y + one, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y + one, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y + one, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y + one, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y + one, c.z + 2), field_D),
             f.z);
 
     sX3 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y + 2, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y + 2, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y + 2, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x, c.y + 2, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y + 2, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y + 2, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y + 2, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x, c.y + 2, c.z + 2), field_D),
             f.z);
 
     T s1 = ::InterpFieldCubicSepArgs_D<T>(sX0, sX1, sX2, sX3, f.y);
 
     sX0 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y - one, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y - one, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y - one, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y - one, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y - one, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y - one, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y - one, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y - one, c.z + 2), field_D),
             f.z);
 
     sX1 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y, c.z + 2), field_D),
             f.z);
 
     sX2 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y + one, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y + one, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y + one, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y + one, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y + one, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y + one, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y + one, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y + one, c.z + 2), field_D),
             f.z);
 
     sX3 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y + 2, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y + 2, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y + 2, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + one, c.y + 2, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y + 2, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y + 2, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y + 2, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + one, c.y + 2, c.z + 2), field_D),
             f.z);
 
     T s2 = ::InterpFieldCubicSepArgs_D<T>(sX0, sX1, sX2, sX3, f.y);
 
     sX0 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y - one, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y - one, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y - one, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y - one, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y - one, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y - one, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y - one, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y - one, c.z + 2), field_D),
             f.z);
 
     sX1 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y, c.z + 2), field_D),
             f.z);
 
     sX2 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y + one, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y + one, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y + one, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y + one, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y + one, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y + one, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y + one, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y + one, c.z + 2), field_D),
             f.z);
 
     sX3 = ::InterpFieldCubicSepArgs_D<T>(
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y + 2, c.z - one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y + 2, c.z), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y + 2, c.z + one), field_D),
-            SampleFieldAt_D<T>(make_uint3(c.x + 2, c.y + 2, c.z + 2), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y + 2, c.z - one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y + 2, c.z), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y + 2, c.z + one), field_D),
+            SampleFieldAt_D<T, W>(make_uint3(c.x + 2, c.y + 2, c.z + 2), field_D),
             f.z);
 
     T s3 = ::InterpFieldCubicSepArgs_D<T>(sX0, sX1, sX2, sX3, f.y);

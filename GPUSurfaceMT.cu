@@ -454,7 +454,7 @@ inline __device__ unsigned char tetrahedronFlags_D(
                 cubeVertexOffsets_S[tetrahedronsInACube_S[tetrahedronIndex][idx]][0],
                 cubeVertexOffsets_S[tetrahedronsInACube_S[tetrahedronIndex][idx]][1],
                 cubeVertexOffsets_S[tetrahedronsInACube_S[tetrahedronIndex][idx]][2]);
-        if(::SampleFieldAt_D<float>(cubeVertex0 + cubeVertexOffset, volume_D) <= thresholdValue) {
+        if(::SampleFieldAt_D<float, false>(cubeVertex0 + cubeVertexOffset, volume_D) <= thresholdValue) {
             flags |= 1 << static_cast<unsigned char>(idx);
         }
     }
@@ -581,8 +581,8 @@ __global__ void GPUSurfaceMT_CalcVertexPositions_D(
                     cubeVertexOffsets_S[tetrahedronsInACube_S[localTetraIdx][tetrahedronEdgeConnections_S[edgeIdx][1]]][2]);
 
             // Linear interpolation
-            const float f0 = ::SampleFieldAt_D<float>(v0, volume_D);
-            const float f1 = ::SampleFieldAt_D<float>(v1, volume_D);
+            const float f0 = ::SampleFieldAt_D<float, false>(v0, volume_D);
+            const float f1 = ::SampleFieldAt_D<float, false>(v1, volume_D);
             const float interpolator = (isoval - f0) / (f1 - f0);
             float3 vertex = lerp(make_float3(v0.x, v0.y, v0.z),
                     make_float3(v1.x, v1.y, v1.z), interpolator);
@@ -1613,7 +1613,7 @@ __global__ void GPUSurfaceMT_FlagGridCells_D(
     };
 
     // Add vertex states of a cube (0: inactive, 1: active)
-    float volSample = ::SampleFieldAt_D<float>(cellOrg, volume_D);
+    float volSample = ::SampleFieldAt_D<float, false>(cellOrg, volume_D);
     unsigned char cubeFlags = static_cast<uint>(volSample <= isoval);
 
 #pragma unroll
@@ -1622,7 +1622,7 @@ __global__ void GPUSurfaceMT_FlagGridCells_D(
                 cellOrg.x + cellVertexOffsets[v][0],
                 cellOrg.y + cellVertexOffsets[v][1],
                 cellOrg.z + cellVertexOffsets[v][2]);
-        volSample = ::SampleFieldAt_D<float>(pos, volume_D);
+        volSample = ::SampleFieldAt_D<float, false>(pos, volume_D);
         cubeFlags += (unsigned char)(volSample <= isoval);
     }
 

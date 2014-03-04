@@ -301,8 +301,8 @@ __global__ void DeformableGPUSurfaceMT_CalcVolGradientWithDistField_D(float4 *gr
     if (gridCoord.y >= gridSize_D.y - 1) return;
     if (gridCoord.z >= gridSize_D.z - 1) return;
 
-    float distSample = ::SampleFieldAt_D<float>(gridCoord, distField_D);
-    float volSample = ::SampleFieldAt_D<float>(gridCoord, field_D);
+    float distSample = ::SampleFieldAt_D<float, false>(gridCoord, distField_D);
+    float volSample = ::SampleFieldAt_D<float, false>(gridCoord, field_D);
 
     float3 grad = make_float3(0.0, 0.0, 0.0);
 
@@ -570,7 +570,7 @@ __device__ float4 UpdateVtxPosSingle_D (
 
     float3 pos = posStart;
 
-    float sample = SampleFieldAtPosTrilin_D<float>(pos, targetVol_D);
+    float sample = SampleFieldAtPosTrilin_D<float, false>(pos, targetVol_D);
     bool outside = sample <= isovalue;
     float extForcesScl;
 
@@ -582,7 +582,7 @@ __device__ float4 UpdateVtxPosSingle_D (
     const int maxSteps = 3;
     do {
         // Get volume sample
-        float sample = SampleFieldAtPosTrilin_D<float>(pos, targetVol_D);
+        float sample = SampleFieldAtPosTrilin_D<float, false>(pos, targetVol_D);
 
         // Switch sign and scale down if necessary
         bool negative = extForcesScl < 0;
@@ -592,7 +592,7 @@ __device__ float4 UpdateVtxPosSingle_D (
         extForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
 
         // Get external forces sample and scale
-        float4 extForceTmp = SampleFieldAtPosTrilin_D<float4>(pos, gradient_D);
+        float4 extForceTmp = SampleFieldAtPosTrilin_D<float4, false>(pos, gradient_D);
         float3 extForce = make_float3(extForceTmp.x, extForceTmp.y, extForceTmp.z);
         extForce = safeNormalize(extForce);
         // Accumulate path
@@ -850,7 +850,7 @@ __global__ void DeformableGPUSurfaceMT_InitExternalForceScl_D (
 
     // If the sampled value is smaller than isoval, we are outside the
     // isosurface TODO Make this smarter
-    if (SampleFieldAtPosTrilin_D<float>(pos, volume_D) <= isoval) {
+    if (SampleFieldAtPosTrilin_D<float, false>(pos, volume_D) <= isoval) {
         arr_D[idx] = 1.0;
     } else {
         arr_D[idx] = -1.0;
@@ -986,8 +986,8 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPos_D(
     // No warp divergence here, since useCubicInterpolation is the same for all
     // threads
     const float sampleDens = useCubicInterpolation
-                    ? SampleFieldAtPosTricub_D<float>(posOld, targetVolume_D)
-                    : SampleFieldAtPosTrilin_D<float>(posOld, targetVolume_D);
+                    ? SampleFieldAtPosTricub_D<float, false>(posOld, targetVolume_D)
+                    : SampleFieldAtPosTrilin_D<float, false>(posOld, targetVolume_D);
 
     // Switch sign and scale down if necessary
     bool negative = externalForcesScl < 0;
@@ -999,8 +999,8 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPos_D(
 
     // Sample gradient by cubic interpolation
     float4 externalForceTmp = useCubicInterpolation
-            ? SampleFieldAtPosTricub_D<float4>(posOld, gradient_D)
-            : SampleFieldAtPosTrilin_D<float4>(posOld, gradient_D);
+            ? SampleFieldAtPosTricub_D<float4, false>(posOld, gradient_D)
+            : SampleFieldAtPosTrilin_D<float4, false>(posOld, gradient_D);
 
     float3 externalForce;
     externalForce.x = externalForceTmp.x;
@@ -1122,8 +1122,8 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosNoThinPlate_D(
     // No warp divergence here, since useCubicInterpolation is the same for all
     // threads
     const float sampleDens = useCubicInterpolation
-                    ? SampleFieldAtPosTricub_D<float>(posOld, targetVolume_D)
-                    : SampleFieldAtPosTrilin_D<float>(posOld, targetVolume_D);
+                    ? SampleFieldAtPosTricub_D<float, false>(posOld, targetVolume_D)
+                    : SampleFieldAtPosTrilin_D<float, false>(posOld, targetVolume_D);
 
     // Switch sign and scale down if necessary
     bool negative = externalForcesScl < 0;
@@ -1135,8 +1135,8 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosNoThinPlate_D(
 
     // Sample gradient by cubic interpolation
     float4 externalForceTmp = useCubicInterpolation
-            ? SampleFieldAtPosTricub_D<float4>(posOld, gradient_D)
-            : SampleFieldAtPosTrilin_D<float4>(posOld, gradient_D);
+            ? SampleFieldAtPosTricub_D<float4, false>(posOld, gradient_D)
+            : SampleFieldAtPosTrilin_D<float4, false>(posOld, gradient_D);
 
     float3 externalForce;
     externalForce.x = externalForceTmp.x;
@@ -1240,14 +1240,17 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     // Get initial scale factor for external forces
     float externalForcesScl = vertexExternalForcesScl_D[idx];
 
+    // Check whether the difflen is to be subtracted or added
+    int accumFactorOld = accumPath_D[idx];
+
 
     /* Update position */
 
     // No warp divergence here, since useCubicInterpolation is the same for all
     // threads
     const float sampleDens = useCubicInterpolation
-                    ? SampleFieldAtPosTricub_D<float>(posOld, targetVolume_D)
-                    : SampleFieldAtPosTrilin_D<float>(posOld, targetVolume_D);
+                    ? SampleFieldAtPosTricub_D<float, false>(posOld, targetVolume_D)
+                    : SampleFieldAtPosTrilin_D<float, false>(posOld, targetVolume_D);
 
     // Switch sign and scale down if necessary
     bool negative = externalForcesScl < 0;
@@ -1255,25 +1258,28 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     int switchSign = int((negative && outside)||(!negative && !outside));
     externalForcesScl = externalForcesScl*(1.0*(1-switchSign) - 1.0*switchSign);
     externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
-    //externalForcesScl *= (1.0*(1-switchSign) + (switchSign));
 
-    if (bool(switchSign) && (accumPath_D[idx] != 0)) {
-        accumPath_D[idx] = 0;
-    } else if (bool(switchSign) && (accumPath_D[idx] == 0)) {
-        accumPath_D[idx] = 1;
-    }
+//    if (bool(switchSign) && (accumPath_D[idx] != 0)) {
+//        accumPath_D[idx] = 0;
+//    } else if (bool(switchSign) && (accumPath_D[idx] == 0)) {
+//        accumPath_D[idx] = 1;
+//    }
+    // Change to zero if one and to one if zero
+    int accumFactorNew = (1-accumFactorOld);
+    int accumFactor = switchSign*accumFactorNew + (1-switchSign)*accumFactorOld;
+
 
     // Sample gradient by cubic interpolation
     float4 externalForceTmp = useCubicInterpolation
-            ? SampleFieldAtPosTricub_D<float4>(posOld, gradient_D)
-            : SampleFieldAtPosTrilin_D<float4>(posOld, gradient_D);
-
+            ? SampleFieldAtPosTricub_D<float4, false>(posOld, gradient_D)
+            : SampleFieldAtPosTrilin_D<float4, false>(posOld, gradient_D);
     float3 externalForce;
     externalForce.x = externalForceTmp.x;
     externalForce.y = externalForceTmp.y;
     externalForce.z = externalForceTmp.z;
 
-    externalForce = safeNormalize(externalForce);
+    //externalForce = safeNormalize(externalForce);
+    externalForce = normalize(externalForce);
     externalForce *= forcesScl*externalForcesScl;
 
     // Umbrella internal force
@@ -1289,19 +1295,22 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D(
     // Write external forces scale factor back to global device memory
     vertexExternalForcesScl_D[idx] = externalForcesScl;
 
-    // No branching occurs here, since the parameter is set globally
-    float3 diff = posNew-posOld;
-    float diffLen = length(diff);
-//    if ((trackPath)&&(abs(externalForcesScl) == 1.0f)) {
-//        vtxUncertainty_D[idx] += diffLen;
-//    }
+    //float3 diff = posNew-posOld;
+    //float diffLen = length(diff);
+    float diffLen = abs(forcesScl*externalForcesScl);
+
+    accumPath_D[idx] = accumFactor;
+
+    // No branching since trackpath is equal for all threads
     if (trackPath) {
-        if (accumPath_D[idx] == 0) {
-            vtxUncertainty_D[idx] += diffLen;
-        } else if(accumPath_D[idx] != 0) {
-            vtxUncertainty_D[idx] -= diffLen;
-        }
+//        if (accumPath_D[idx] == 0) {
+//            vtxUncertainty_D[idx] += diffLen;
+//        } else if(accumPath_D[idx] != 0) {
+//            vtxUncertainty_D[idx] -= diffLen;
+//        }
+        vtxUncertainty_D[idx] += (1-accumFactor)*diffLen - accumFactor*diffLen;
     }
+
     // Displ scl for convergence
     displLen_D[idx] = diffLen;
 }
@@ -1373,14 +1382,17 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnlySubdiv_D(
     // Get initial scale factor for external forces
     float externalForcesScl = vertexExternalForcesScl_D[idx];
 
+    // Check whether the difflen is to be subtracted or added
+    int accumFactorOld = accumPath_D[idx];
+
 
     /* Update position */
 
     // No warp divergence here, since useCubicInterpolation is the same for all
     // threads
     const float sampleDens = useCubicInterpolation
-                    ? SampleFieldAtPosTricub_D<float>(posOld, targetVolume_D)
-                    : SampleFieldAtPosTrilin_D<float>(posOld, targetVolume_D);
+                    ? SampleFieldAtPosTricub_D<float, false>(posOld, targetVolume_D)
+                    : SampleFieldAtPosTrilin_D<float, false>(posOld, targetVolume_D);
 
     // Switch sign and scale down if necessary
     bool negative = externalForcesScl < 0;
@@ -1390,16 +1402,19 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnlySubdiv_D(
     externalForcesScl *= (1.0*(1-switchSign) + 0.5*(switchSign));
     //externalForcesScl *= (1.0*(1-switchSign) + (switchSign));
 
-    if (bool(switchSign) && (accumPath_D[idx] != 0)) {
-        accumPath_D[idx] = 0;
-    } else if (bool(switchSign) && (accumPath_D[idx] == 0)) {
-        accumPath_D[idx] = 1;
-    }
+    //    if (bool(switchSign) && (accumPath_D[idx] != 0)) {
+    //        accumPath_D[idx] = 0;
+    //    } else if (bool(switchSign) && (accumPath_D[idx] == 0)) {
+    //        accumPath_D[idx] = 1;
+    //    }
+    // Change to zero if one and to one if zero
+    int accumFactorNew = (1-accumFactorOld);
+    int accumFactor = switchSign*accumFactorNew + (1-switchSign)*accumFactorOld;
 
     // Sample gradient by cubic interpolation
     float4 externalForceTmp = useCubicInterpolation
-            ? SampleFieldAtPosTricub_D<float4>(posOld, gradient_D)
-            : SampleFieldAtPosTrilin_D<float4>(posOld, gradient_D);
+            ? SampleFieldAtPosTricub_D<float4, false>(posOld, gradient_D)
+            : SampleFieldAtPosTrilin_D<float4, false>(posOld, gradient_D);
 
     float3 externalForce;
     externalForce.x = externalForceTmp.x;
@@ -1422,18 +1437,20 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnlySubdiv_D(
     // Write external forces scale factor back to global device memory
     vertexExternalForcesScl_D[idx] = externalForcesScl;
 
-    // No branching occurs here, since the parameter is set globally
-    float3 diff = posNew-posOld;
-    float diffLen = length(diff);
-//    if ((trackPath)&&(abs(externalForcesScl) == 1.0f)) {
-//        vtxUncertainty_D[idx] += diffLen;
-//    }
+    //float3 diff = posNew-posOld;
+    //float diffLen = length(diff);
+    float diffLen = abs(forcesScl*externalForcesScl);
+
+    accumPath_D[idx] = accumFactor;
+
+    // No branching since trackpath is equal for all threads
     if (trackPath) {
-        if (accumPath_D[idx] == 0) {
-            vtxUncertainty_D[idx] += diffLen;
-        } else if(accumPath_D[idx] != 0) {
-            vtxUncertainty_D[idx] -= diffLen;
-        }
+//        if (accumPath_D[idx] == 0) {
+//            vtxUncertainty_D[idx] += diffLen;
+//        } else if(accumPath_D[idx] != 0) {
+//            vtxUncertainty_D[idx] -= diffLen;
+//        }
+        vtxUncertainty_D[idx] += (1-accumFactor)*diffLen - accumFactor*diffLen;
     }
     // Displ scl for convergence
     displLen_D[idx] = diffLen;
@@ -2388,6 +2405,7 @@ float DeformableGPUSurfaceMT::IntOverSurfArea(float *value_D) {
  */
 float DeformableGPUSurfaceMT::IntVtxPathOverSurfArea() {
 
+    // TODO Assumes triangle area to be computed
 
     // Device array for accumulated data
      if (!CudaSafeCall(this->accTriangleData_D.Validate(this->triangleCnt))) {
@@ -2450,6 +2468,113 @@ float DeformableGPUSurfaceMT::IntVtxPathOverSurfArea() {
              this->accTriangleArea_D.Peek(),
              triangleIdxPt,
              uncertaintyPt,
+             this->triangleCnt);
+
+     ::CheckForCudaErrorSync();
+
+ #ifdef USE_TIMER
+     cudaEventRecord(event2, 0);
+     cudaEventSynchronize(event1);
+     cudaEventSynchronize(event2);
+     cudaEventElapsedTime(&dt_ms, event1, event2);
+     printf("CUDA time for 'intOverTriangles_D                     %.10f sec\n",
+             dt_ms/1000.0);
+ #endif
+
+     // Compute sum of all (non-corrupt) triangle areas
+     float integralVal = thrust::reduce(
+             thrust::device_ptr<float>(this->accTriangleData_D.Peek()),
+             thrust::device_ptr<float>(this->accTriangleData_D.Peek() + this->triangleCnt));
+
+     if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+         return false;
+     }
+
+ //    ::CheckForCudaErrorSync();
+
+     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+         return false;
+     }
+     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+         return false;
+     }
+
+     return integralVal;
+
+}
+
+
+/**
+ * Integrate scalar value (given per vertex in value_D) over surface area.
+ *
+ * @return The integral value
+ */
+float DeformableGPUSurfaceMT::IntVtxAttribOverSurfArea() {
+
+    // TODO Assumes triangle area to be computed
+
+
+    // Device array for accumulated data
+     if (!CudaSafeCall(this->accTriangleData_D.Validate(this->triangleCnt))) {
+         return false;
+     }
+     if (!CudaSafeCall(this->accTriangleData_D.Set(0x00))) {
+         return false;
+     }
+     cudaGraphicsResource* cudaTokens[2];
+
+     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+             &cudaTokens[0],
+             this->vboTriangleIdx,
+             cudaGraphicsMapFlagsNone))) {
+         return false;
+     }
+
+     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+             &cudaTokens[1],
+             this->vboVtxAttr,
+             cudaGraphicsMapFlagsNone))) {
+         return false;
+     }
+
+     if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+         return false;
+     }
+
+     // Get mapped pointers to the vertex data buffers
+     uint *triangleIdxPt;
+     size_t vboSizeTri;
+     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+             reinterpret_cast<void**>(&triangleIdxPt), // The mapped pointer
+             &vboSizeTri,              // The size of the accessible data
+             cudaTokens[0]))) {                 // The mapped resource
+         return false;
+     }
+
+     // Get mapped pointers to the vertex data buffers
+     float *vertexAttrPt;
+     size_t vboVertexAttrSize;
+     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+             reinterpret_cast<void**>(&vertexAttrPt), // The mapped pointer
+             &vboVertexAttrSize,              // The size of the accessible data
+             cudaTokens[1]))) {                 // The mapped resource
+         return false;
+     }
+
+ #ifdef USE_TIMER
+     float dt_ms;
+     cudaEvent_t event1, event2;
+     cudaEventCreate(&event1);
+     cudaEventCreate(&event2);
+     cudaEventRecord(event1, 0);
+ #endif
+
+     // Call kernel
+     DeformableGPUSurfaceMT_IntOverTriangles_D <<< Grid(this->triangleCnt, 256), 256 >>> (
+             this->accTriangleData_D.Peek(),
+             this->accTriangleArea_D.Peek(),
+             triangleIdxPt,
+             vertexAttrPt,
              this->triangleCnt);
 
      ::CheckForCudaErrorSync();
@@ -5839,6 +5964,11 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
 
+    // Compute number of flagged vertices
+    this->nFlaggedVertices = thrust::reduce(
+            thrust::device_ptr<float>(this->vertexFlag_D.Peek()),
+            thrust::device_ptr<float>(this->vertexFlag_D.Peek() + this->vertexCnt));
+
 #ifdef USE_TIMER
     cudaEventRecord(event2, 0);
     cudaEventSynchronize(event1);
@@ -6673,11 +6803,11 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             cudaEventSynchronize(eventEnd);
             cudaEventSynchronize(eventStart);
             cudaEventElapsedTime(&dt_ms, eventStart, eventEnd);
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-                    "%s: Time for iteration (%u vertices): %f sec\n",
-                    "DeformableGPUSurfaceMT",
-                    this->vertexCnt,
-                    dt_ms/1000.0f);
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                    "%s: Time for iteration (%u vertices): %f sec\n",
+//                    "DeformableGPUSurfaceMT",
+//                    this->vertexCnt,
+//                    dt_ms/1000.0f);
             cudaEventRecord(eventStart, 0);
 
             // Accumulate displacement length of this iteration step
@@ -6692,11 +6822,11 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             cudaEventSynchronize(eventEnd);
             cudaEventSynchronize(eventStart);
             cudaEventElapsedTime(&dt_ms, eventStart, eventEnd);
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-                    "%s: Time for thrust::reduce (%u vertices): %f sec\n",
-                    "DeformableGPUSurfaceMT",
-                    this->vertexCnt,
-                    dt_ms/1000.0f);
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                    "%s: Time for thrust::reduce (%u vertices): %f sec\n",
+//                    "DeformableGPUSurfaceMT",
+//                    this->vertexCnt,
+//                    dt_ms/1000.0f);
             avgDisplLen /= static_cast<float>(this->vertexCnt);
 //            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
@@ -6924,7 +7054,8 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
             if (!CudaSafeCall(cudaGetLastError())) {
                 return false;
             }
-            avgDisplLen /= static_cast<float>(this->newVertexCnt);
+            avgDisplLen /= static_cast<float>(this->nFlaggedVertices);
+            printf("New vertex count %u\n", this->nFlaggedVertices);
 //            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
@@ -6975,7 +7106,7 @@ __global__ void DeformableGPUSurfaceMT_ComputeVtxDiffValue0_D(
     pos.y = vtxData0_D[vertexDataStride*idx + vertexDataOffsPos +1];
     pos.z = vtxData0_D[vertexDataStride*idx + vertexDataOffsPos +2];
 
-    diff_D[idx] = ::SampleFieldAtPosTrilin_D<float>(pos, tex0_D);
+    diff_D[idx] = ::SampleFieldAtPosTrilin_D<float, true>(pos, tex0_D);
 }
 
 
@@ -7002,7 +7133,7 @@ __global__ void DeformableGPUSurfaceMT_ComputeVtxDiffValue1_D(
     pos.y = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +1];
     pos.z = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +2];
 
-    float valSec = ::SampleFieldAtPosTrilin_D<float>(pos, tex1_D);
+    float valSec = ::SampleFieldAtPosTrilin_D<float, true>(pos, tex1_D);
     valSec = abs(valSec-valFirst);
     diff_D[idx] = valSec;
 }
@@ -7056,7 +7187,7 @@ __global__ void DeformableGPUSurfaceMT_ComputeVtxDiffValue1Fitted_D(
     posRot.y += centroid.y;
     posRot.z += centroid.z;
 
-    float valSec = ::SampleFieldAtPosTrilin_D<float>(posRot, tex1_D);
+    float valSec = ::SampleFieldAtPosTrilin_D<float, true>(posRot, tex1_D);
     //valSec = abs(valSec-valFirst);
     diff_D[idx] = valSec;
     printf("%f\n", valSec);
@@ -7087,7 +7218,7 @@ __global__ void DeformableGPUSurfaceMT_ComputeVtxSignDiffValue1_D(
     pos.z = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +2];
 
 
-    float valSec = ::SampleFieldAtPosTrilin_D<float>(pos, tex1_D);
+    float valSec = ::SampleFieldAtPosTrilin_D<float, true>(pos, tex1_D);
     valSec = float(valSec*valFirst < 0); // TODO Use binary operator
     signdiff_D[idx] = valSec;
 }
@@ -7146,7 +7277,7 @@ __global__ void DeformableGPUSurfaceMT_ComputeVtxSignDiffValue1Fitted_D(
        posRot.y += centroid.y;
        posRot.z += centroid.z;
 
-    float valSec = ::SampleFieldAtPosTrilin_D<float>(posRot, tex1_D);
+    float valSec = ::SampleFieldAtPosTrilin_D<float, true>(posRot, tex1_D);
     valSec = float(valSec*valFirst < 0); // TODO Use binary operator
     signdiff_D[idx] = valSec;
 }
@@ -7910,7 +8041,7 @@ __global__ void TrackPathSubdivVertices_D(
     // No warp divergence here, since useCubicInterpolation is the same for all
     // threads
     //const float sampleDens = SampleFieldAtPosTrilin_D<float>(posOld, sourceVolume_D);
-    const float sampleDens = SampleFieldAtPosTricub_D<float>(posOld, sourceVolume_D);
+    const float sampleDens = SampleFieldAtPosTricub_D<float, false>(posOld, sourceVolume_D);
 
     // Switch sign and scale down if necessary
     bool negative = externalForcesScl < 0;
@@ -7927,7 +8058,7 @@ __global__ void TrackPathSubdivVertices_D(
 
     // Sample gradient
     //float4 externalForceTmp = SampleFieldAtPosTrilin_D<float4>(posOld, gradient_D);
-    float4 externalForceTmp = SampleFieldAtPosTricub_D<float4>(posOld, gradient_D);
+    float4 externalForceTmp = SampleFieldAtPosTricub_D<float4, false>(posOld, gradient_D);
 
     float3 externalForce;
     externalForce.x = externalForceTmp.x;
@@ -7949,8 +8080,9 @@ __global__ void TrackPathSubdivVertices_D(
     // Write external forces scale factor back to global device memory
     vertexExternalForcesScl_D[idx] = externalForcesScl;
 
-    float3 diff = posNew-posOld;
-    float diffLen = length(diff);
+//    float3 diff = posNew-posOld;
+//    float diffLen = length(diff);
+    float diffLen = abs(forcesScl*externalForcesScl);
 //    if ((abs(externalForcesScl) == 1.0f)) {
 //        vtxUncertainty_D[idx] += diffLen;
 //    }
@@ -7963,6 +8095,7 @@ __global__ void TrackPathSubdivVertices_D(
 
     // Displ scl for convergence
     displLen_D[idx] = diffLen;
+    //displLen_D[idx] = 0.1;
     vertexData_D[9*idx+3] = 1.0;
     vertexData_D[9*idx+4] = 0.0;
     vertexData_D[9*idx+5] = 1.0;
@@ -8132,7 +8265,6 @@ bool DeformableGPUSurfaceMT::TrackPathSubdivVertices(
         }
     }
 
-
     if (!CudaSafeCall(this->accumPath_D.Validate(this->vertexCnt))) {
         return false;
     }
@@ -8168,9 +8300,10 @@ bool DeformableGPUSurfaceMT::TrackPathSubdivVertices(
         if (!CudaSafeCall(cudaGetLastError())) {
             return false;
         }
-        avgDisplLen /= static_cast<float>(this->vertexCnt);
+        printf("Number of flagged vertices %u, %f\n", this->nFlaggedVertices, avgDisplLen);
+        avgDisplLen /= static_cast<float>(this->nFlaggedVertices);
 //        if (i%10 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, minDispl);
-        //printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+        printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, minDispl);
         if (avgDisplLen < minDispl) {
             iterationsNeeded = i+1;
             break;
@@ -8178,7 +8311,6 @@ bool DeformableGPUSurfaceMT::TrackPathSubdivVertices(
 
         ::CheckForCudaErrorSync();
     }
-
 
     if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens2, 0))) {
         return false;
@@ -8192,6 +8324,246 @@ bool DeformableGPUSurfaceMT::TrackPathSubdivVertices(
     }
 
     return CheckForCudaError();
+}
+
+
+/*
+ * DeformableGPUSurfaceMT_ComputeSurfAttribDiff0_D
+ */
+__global__ void DeformableGPUSurfaceMT_ComputeSurfAttribSignDiff0_D (
+        float *vertexAttrib_D,
+        float *vertexDataEnd_D,
+        float *tex0_D,
+        uint vertexCnt) {
+    const uint idx = ::getThreadIdx();
+    if (idx >= vertexCnt) {
+        return;
+    }
+
+    const int vertexDataStride = 9; // TODO
+    const int vertexDataOffsPos = 0;
+
+    float3 pos;
+    pos.x = vertexDataEnd_D[vertexDataStride*idx + vertexDataOffsPos +0];
+    pos.y = vertexDataEnd_D[vertexDataStride*idx + vertexDataOffsPos +1];
+    pos.z = vertexDataEnd_D[vertexDataStride*idx + vertexDataOffsPos +2];
+
+    vertexAttrib_D[idx] = ::SampleFieldAtPosTrilin_D<float, true>(pos, tex0_D);
+}
+
+
+/*
+ * DeformableGPUSurfaceMT_ComputeSurfAttribDiff1_D
+ */
+__global__ void DeformableGPUSurfaceMT_ComputeSurfAttribSignDiff1_D (
+        float *vertexAttrib_D,
+        float *vertexDataStart_D,
+        float *vertexDataTrackedBack_D,
+        float *vertexFlag_D,
+        float *tex1_D,
+        float *rotation_D,
+        float3 translation,
+        float3 centroid,
+        uint vertexCnt) {
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= vertexCnt) {
+        return;
+    }
+
+    const int vertexDataStride = 9; // TODO
+    const int vertexDataOffsPos = 0;
+
+    float3 pos;
+    if (vertexFlag_D[idx] == 1.0) {
+        pos.x = vertexDataTrackedBack_D[vertexDataStride*idx + vertexDataOffsPos +0];
+        pos.y = vertexDataTrackedBack_D[vertexDataStride*idx + vertexDataOffsPos +1];
+        pos.z = vertexDataTrackedBack_D[vertexDataStride*idx + vertexDataOffsPos +2];
+    } else {
+        pos.x = vertexDataStart_D[vertexDataStride*idx + vertexDataOffsPos +0];
+        pos.y = vertexDataStart_D[vertexDataStride*idx + vertexDataOffsPos +1];
+        pos.z = vertexDataStart_D[vertexDataStride*idx + vertexDataOffsPos +2];
+    }
+
+    // Revert translation to move to origin
+    pos.x -= translation.x;
+    pos.y -= translation.y;
+    pos.z -= translation.z;
+
+    // Revert rotation
+    float3 posRot;
+    posRot.x = rotation_D[0] * pos.x +
+            rotation_D[3] * pos.y +
+            rotation_D[6] * pos.z;
+    posRot.y = rotation_D[1] * pos.x +
+            rotation_D[4] * pos.y +
+            rotation_D[7] * pos.z;
+    posRot.z = rotation_D[2] * pos.x +
+            rotation_D[5] * pos.y +
+            rotation_D[8] * pos.z;
+
+    // Move to old centroid
+    posRot.x += centroid.x;
+    posRot.y += centroid.y;
+    posRot.z += centroid.z;
+
+    float attribOld = vertexAttrib_D[idx];
+    float attribNew = ::SampleFieldAtPosTrilin_D<float, true>(posRot, tex1_D);
+    vertexAttrib_D[idx] = int(attribOld*attribNew < 0); // 1.0 or 0.0
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::ComputeSurfAttribSignDiff
+ */
+bool DeformableGPUSurfaceMT::ComputeSurfAttribSignDiff(
+        DeformableGPUSurfaceMT &surfStart,
+        float centroid[3], // In case the start surface has been fitted using RMSD
+        float rotMat[9],
+        float transVec[3],
+        float *tex0_D,
+        int3 texDim0,
+        float3 texOrg0,
+        float3 texDelta0,
+        float *tex1_D,
+        int3 texDim1,
+        float3 texOrg1,
+        float3 texDelta1) {
+
+    using namespace vislib::sys;
+
+
+    if (!this->InitVtxAttribVBO(this->vertexCnt)) {
+        return false;
+    }
+
+    // Get pointer to vertex attribute array
+    cudaGraphicsResource* cudaTokens[3];
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0],
+            this->vboVtxAttr,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1],
+            this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[2],
+            surfStart.GetVtxDataVBO(),
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsMapResources(3, cudaTokens, 0))) {
+        return false;
+    }
+    // Get mapped pointers to the vertex data buffers
+    float *vertexAttrib_D;
+    size_t vboVtxAttribSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vertexAttrib_D), // The mapped pointer
+            &vboVtxAttribSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+    // Get mapped pointers to the vertex data buffers
+    float *vertexDataEnd_D;
+    size_t vboEndSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vertexDataEnd_D), // The mapped pointer
+            &vboEndSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
+        return false;
+    }
+    // Get mapped pointers to the vertex data buffers
+    float *vertexDataStart_D;
+    size_t vboStartSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vertexDataStart_D), // The mapped pointer
+            &vboStartSize,              // The size of the accessible data
+            cudaTokens[2]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Init grid params
+    // Init CUDA grid for texture #0
+    if (!initGridParams(texDim0, texOrg0, texDelta0)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                DeformableGPUSurfaceMT::ClassName());
+        return false;
+    }
+
+    // Compute difference for new and old vertices (after subdivision)
+    // Part one: sample value for new vertices
+    DeformableGPUSurfaceMT_ComputeSurfAttribSignDiff0_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+            vertexAttrib_D,
+            vertexDataEnd_D,
+            tex0_D,
+            this->vertexCnt);
+
+    CudaDevArr<float> rotate_D;
+    // Rotate for best fit
+    rotate_D.Validate(9);
+    if (!CudaSafeCall(cudaMemcpy((void *)rotate_D.Peek(), &rotMat[0],
+            9*sizeof(float), cudaMemcpyHostToDevice))) {
+        return false;
+    }
+
+    // Init grid params
+    // Init CUDA grid for texture #0
+    if (!initGridParams(texDim1, texOrg1, texDelta1)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not init constant device params",
+                DeformableGPUSurfaceMT::ClassName());
+        return false;
+    }
+
+    if (this->vertexFlag_D.GetCount() == 0) {
+        if (!CudaSafeCall(this->vertexFlag_D.Validate(this->vertexCnt))) {
+            return false;
+        }
+        if (!CudaSafeCall(this->vertexFlag_D.Set(0x00))) {
+            return false;
+        }
+    }
+
+    // Compute difference for new and old vertices (after subdivision)
+    // Part two: sample value for old/tracked back vertices
+    DeformableGPUSurfaceMT_ComputeSurfAttribSignDiff1_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+            vertexAttrib_D,
+            vertexDataStart_D,
+            this->trackedSubdivVertexData_D.Peek(), // Tracked back vertices, needed for sampling
+            this->vertexFlag_D.Peek(),
+            tex1_D,
+            rotate_D.Peek(),
+            make_float3(transVec[0],transVec[1],transVec[2]),
+            make_float3(centroid[0],centroid[1],centroid[2]),
+            this->vertexCnt);
+
+    if (!CheckForCudaError()) {
+        return false;
+    }
+
+    rotate_D.Release();
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(3, cudaTokens, 0))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[2]))) {
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -8216,7 +8588,7 @@ __global__ void DeformableGPUSurfaceMT_ComputeSurfAttribDiff0_D (
     pos.y = vertexDataEnd_D[vertexDataStride*idx + vertexDataOffsPos +1];
     pos.z = vertexDataEnd_D[vertexDataStride*idx + vertexDataOffsPos +2];
 
-    vertexAttrib_D[idx] = ::SampleFieldAtPosTrilin_D<float>(pos, tex0_D);
+    vertexAttrib_D[idx] = ::SampleFieldAtPosTrilin_D<float, true>(pos, tex0_D);
 }
 
 
@@ -8275,8 +8647,8 @@ __global__ void DeformableGPUSurfaceMT_ComputeSurfAttribDiff1_D (
     posRot.y += centroid.y;
     posRot.z += centroid.z;
 
-    //vertexAttrib_D[idx] = abs(vertexAttrib_D[idx] - ::SampleFieldAtPosTrilin_D<float>(posRot, tex1_D));
-    vertexAttrib_D[idx] = ::SampleFieldAtPosTrilin_D<float>(posRot, tex1_D);
+    vertexAttrib_D[idx] = abs(vertexAttrib_D[idx] - ::SampleFieldAtPosTrilin_D<float, true>(posRot, tex1_D));
+    //vertexAttrib_D[idx] = ::SampleFieldAtPosTrilin_D<float, true>(posRot, tex1_D);
 }
 
 
@@ -8381,7 +8753,7 @@ bool DeformableGPUSurfaceMT::ComputeSurfAttribDiff(
     }
 
     // Init grid params
-    // Init CUDA grid for texture #0
+    // Init CUDA grid for texture #1
     if (!initGridParams(texDim1, texOrg1, texDelta1)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: could not init constant device params",
