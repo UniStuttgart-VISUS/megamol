@@ -171,7 +171,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         showSubdivSlot("subdiv::show", "Parameter to toggle rendering of subdivided triangles"),
         maxSubdivLevelSlot("subdiv::maxLevel", "Parameter for maximum subdivision level"),
         maxSubdivStepsSlot("subdiv::maxSteps", "Parameter for maximum morphing steps"),
-        initSubDivStepSizeSlot("subdiv::initStepSize", "Initial stepsize"), triggerComputeSubdiv(true),
+        subStepLevelSlot("subdiv::initStepSize", "Initial stepsize"), triggerComputeSubdiv(true),
         cudaqsurf1(NULL), cudaqsurf2(NULL),
         triggerComputeVolume(true), triggerInitPotentialTex(true),
         triggerComputeSurfacePoints1(true), triggerComputeSurfacePoints2(true),
@@ -528,10 +528,10 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->MakeSlotAvailable(&this->maxSubdivStepsSlot);
 
     // Parameter for initial stepsize
-    this->initSubDivStepSize = 1.0f;
-    this->initSubDivStepSizeSlot.SetParameter(
-            new core::param::FloatParam(this->initSubDivStepSize));
-    this->MakeSlotAvailable(&this->initSubDivStepSizeSlot);
+    this->subStepLevel = 1;
+    this->subStepLevelSlot.SetParameter(
+            new core::param::IntParam(this->subStepLevel));
+    this->MakeSlotAvailable(&this->subStepLevelSlot);
 }
 
 
@@ -1128,10 +1128,10 @@ atoms instead.",
 //        }
 //        this->rmsCentroid /= static_cast<float>(mol2->AtomCount());
 
-//        printf("centroid2   %.10f %.10f %.10f\n",
-//                this->rmsCentroid.PeekComponents()[0],
-//                this->rmsCentroid.PeekComponents()[1],
-//                this->rmsCentroid.PeekComponents()[2]);
+        printf("centroid2   %.10f %.10f %.10f\n",
+                this->rmsCentroid.PeekComponents()[0],
+                this->rmsCentroid.PeekComponents()[1],
+                this->rmsCentroid.PeekComponents()[2]);
 
         // Do actual RMSD calculations
         this->rmsMask.Validate(posCnt);
@@ -1167,11 +1167,11 @@ atoms instead.",
         this->rmsRotation.SetAt(2, 1, rotation[2][1]);
         this->rmsRotation.SetAt(2, 2, rotation[2][2]);
 
-//        printf("translation %.10f %.10f %.10f\n", translation[0],translation[1],translation[2]);
-//        printf("rotation %.10f %.10f %.10f \n %.10f %.10f %.10f \n %.10f %.10f %.10f\n",
-//                rotation[0][0], rotation[0][1], rotation[0][2],
-//                rotation[1][0], rotation[1][1], rotation[1][2],
-//                rotation[2][0], rotation[2][1], rotation[2][2]);
+        printf("translation %.10f %.10f %.10f\n", translation[0],translation[1],translation[2]);
+        printf("rotation %.10f %.10f %.10f \n %.10f %.10f %.10f \n %.10f %.10f %.10f\n",
+                rotation[0][0], rotation[0][1], rotation[0][2],
+                rotation[1][0], rotation[1][1], rotation[1][2],
+                rotation[2][0], rotation[2][1], rotation[2][2]);
 
 
         this->rmsRotationMatrix.SetAt(0, 0, rotation[0][0]);
@@ -2446,10 +2446,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Perform subdivision with subsequent deformation to create a fine
         // target mesh enough
         int newTris;
-        unsigned int nSubLevels = 3;
         for (int i = 0; i < this->maxSubdivLevel; ++i) {
 
-            for (unsigned int j = 0; j < nSubLevels; ++j) {
+            for (int j = 0; j < this->subStepLevel; ++j) {
                 printf("SUBDIV #%i\n", i);
 
                 newTris = this->deformSurfMapped.RefineMesh(
@@ -2851,13 +2850,13 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //    // END DEBUG
 
     // DEBUG Compute mean vertex path of deformed surface
-//    float surfArea = this->deformSurfMapped.GetTotalSurfArea();
-//    float meanVertexPath = this->deformSurfMapped.IntUncertaintyOverSurfArea();
-//    meanVertexPath /= surfArea;
-//    printf("SURFACE AREA %f\n", surfArea);
-//    printf("MEAN PATH    %f\n", meanVertexPath);
-//    float3 minC, maxC;
-//    this->deformSurf2.ComputeMinMaxCoords(minC, maxC);
+    float surfArea = this->deformSurfMapped.GetTotalSurfArea();
+    float meanVertexPath = this->deformSurfMapped.IntVtxPathOverSurfArea();
+    meanVertexPath /= surfArea;
+    printf("SURFACE AREA %f\n", surfArea);
+    printf("MEAN PATH    %f\n", meanVertexPath);
+    float3 minC, maxC;
+//    //this->deformSurf2.ComputeMinMaxCoords(minC, maxC);
 //    printf("min %f %f %f, max %f %f %f\n", minC.x, minC.y, minC.z,
 //            maxC.x, maxC.y, maxC.z);
 //    float radius = std::abs(maxC.x-minC.x)/2.0;
@@ -3083,9 +3082,9 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     } else if (renderMode == SURFACE_WIREFRAME) {
         glDisable(GL_LIGHTING);
-        glLineWidth(1.0f);
-//        glCullFace(GL_BACK);
-//        glEnable(GL_CULL_FACE);
+        glLineWidth(2.0f);
+        glCullFace(GL_BACK);
+        glEnable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else if (renderMode == SURFACE_POINTS){
         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
@@ -3817,10 +3816,13 @@ void ComparativeMolSurfaceRenderer::updateParams() {
     }
 
     /// Parameter for initial stepsize
-    if (this->initSubDivStepSizeSlot.IsDirty()) {
-        this->initSubDivStepSize = this->initSubDivStepSizeSlot.Param<core::param::FloatParam>()->Value();
-        this->initSubDivStepSizeSlot.ResetDirty();
+    if (this->subStepLevelSlot.IsDirty()) {
+        this->subStepLevel = this->subStepLevelSlot.Param<core::param::IntParam>()->Value();
+        this->subStepLevelSlot.ResetDirty();
         this->triggerComputeSubdiv = true;
+        this->triggerSurfaceMapping = true;
+        this->triggerComputeSurfacePoints1 = true;
+        this->triggerComputeSurfacePoints2 = true;
     }
 }
 

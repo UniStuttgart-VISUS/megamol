@@ -1016,15 +1016,29 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             this->maxMatchRMSDVal =
                     std::max(this->maxMatchRMSDVal, this->matchRMSD[this->nVariants*i+j]);
 
+//            // Fit atom positions of source structure
+//            Vec3f centroid(0.0f, 0.0f, 0.0f);
+//            for (int cnt = 0; cnt < static_cast<int>(particleCnt1); ++cnt) {
+//                centroid += Vec3f(
+//                        this->atomPosFitted.Peek()[cnt*4+0],
+//                        this->atomPosFitted.Peek()[cnt*4+1],
+//                        this->atomPosFitted.Peek()[cnt*4+2]);
+//            }
+//            centroid /= static_cast<float>(particleCnt1);
+
             // Fit atom positions of source structure
             Vec3f centroid(0.0f, 0.0f, 0.0f);
-            for (int cnt = 0; cnt < static_cast<int>(particleCnt1); ++cnt) {
+            for (int cnt = 0; cnt < static_cast<int>(posCnt); ++cnt) {
                 centroid += Vec3f(
-                        this->atomPosFitted.Peek()[cnt*4+0],
-                        this->atomPosFitted.Peek()[cnt*4+1],
-                        this->atomPosFitted.Peek()[cnt*4+2]);
+                        this->rmsPosVec1.Peek()[cnt*3+0],
+                        this->rmsPosVec1.Peek()[cnt*3+1],
+                        this->rmsPosVec1.Peek()[cnt*3+2]);
             }
-            centroid /= static_cast<float>(particleCnt1);
+            centroid /= static_cast<float>(posCnt);
+
+//            printf("centroid %f %f %f\n", centroid.GetX(),
+//                    centroid.GetY(),
+//                    centroid.GetZ());
 
             // Rotate/translate positions
 #pragma omp parallel for
@@ -1043,15 +1057,15 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 
 //            printf("CALL 1 frame %u\n", molCall->FrameID());
 
-//#ifdef COMPUTE_RUNTIME
-//            cudaEventRecord(event2, 0);
-//            cudaEventSynchronize(event1);
-//            cudaEventSynchronize(event2);
-//            cudaEventElapsedTime(&dt_ms, event1, event2);
-//            printf("RMSD : %.10f\n",
-//                    dt_ms/1000.0f);
-//            cudaEventRecord(event1, 0);
-//#endif // COMPUTE_RUNTIME
+#ifdef COMPUTE_RUNTIME
+            cudaEventRecord(event2, 0);
+            cudaEventSynchronize(event1);
+            cudaEventSynchronize(event2);
+            cudaEventElapsedTime(&dt_ms, event1, event2);
+            printf("RMSD : %.10f\n",
+                    dt_ms/1000.0f);
+            cudaEventRecord(event1, 0);
+#endif // COMPUTE_RUNTIME
 
             this->computeDensityBBox(
                     this->atomPos0.Peek(),
@@ -1163,8 +1177,15 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                 return false;
             }
 
-            // print vertex count
-            //printf("%u\n", surfStart.GetVertexCnt());
+#ifdef COMPUTE_RUNTIME
+            cudaEventRecord(event2, 0);
+            cudaEventSynchronize(event1);
+            cudaEventSynchronize(event2);
+            cudaEventElapsedTime(&dt_ms, event1, event2);
+            printf("Triangulation : %.10f\n",
+                    dt_ms/1000.0f);
+            cudaEventRecord(event1, 0);
+#endif // COMPUTE_RUNTIME
 
             // Regularize the mesh of surface #1
             if (!this->surfStart.MorphToVolumeGradient(
@@ -1192,7 +1213,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             cudaEventSynchronize(event1);
             cudaEventSynchronize(event2);
             cudaEventElapsedTime(&dt_ms, event1, event2);
-            printf("Mesh : %.10f\n",
+            printf("Regularization : %.10f\n",
                     dt_ms/1000.0f);
             cudaEventRecord(event1, 0);
 #endif // COMPUTE_RUNTIME
@@ -1237,38 +1258,41 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             // Refine mesh
             // Perform subdivision with subsequent deformation to create a fine
             // target mesh enough
-            float initialStep = 1.0;
-            const uint maxSubdivLevel = 10;
+            const uint maxSubdivLevel = 2;
+            const uint subdivSubLevel = 5;
+            const uint deformIt = 25;
             int newTris;
             for (uint i = 0; i < maxSubdivLevel; ++i) {
                 printf("SUBDIV #%i\n", i);
 
-                newTris = this->surfEnd.RefineMesh(
-                        1,
-                        ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-                        this->volDim,
-                        this->volOrg,
-                        this->volDelta,
-                        this->qsIsoVal,
-                        this->volDelta.x*2); // TODO Whats a good maximum edge length?
+                for (int j = 0; j < subdivSubLevel; ++j) {
 
-                if (newTris < 0) {
+                    newTris = this->surfEnd.RefineMesh(
+                            1,
+                            ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                            this->volDim,
+                            this->volOrg,
+                            this->volDelta,
+                            this->qsIsoVal,
+                            this->volDelta.x); // TODO Whats a good maximum edge length?
 
-                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                            "%s: could not refine mesh",
-                            this->ClassName());
+                    if (newTris < 0) {
 
-                    return false;
+                        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                                "%s: could not refine mesh",
+                                this->ClassName());
+
+                        return false;
+                    }
+
+                    if (newTris == 0) break; // No more subdivisions needed
+
                 }
-
-                if (newTris == 0) break; // No more subdivisions needed
 
                 // Perform morphing
                 // Morph surface #2 to shape #1 using Two-Way-GVF
 
-                initialStep*=0.1f;
-
-                if (!this->surfEnd.MorphToVolumeTwoWayGVF( // TODo DO not compute GVF every time
+                if (!this->surfEnd.MorphToVolumeTwoWayGVF( // TODO DO not compute GVF every time
                         ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                         ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
                         this->surfStart.PeekCubeStates(),
@@ -1278,13 +1302,13 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                         this->volDelta,
                         this->qsIsoVal,
                         this->surfMapInterpolMode,
-                        this->surfMapMaxIt,
-                        this->qsGridDelta/100.0f*this->surfMapForcesScl*initialStep,
+                        deformIt,
+                        this->qsGridDelta/100.0f*this->surfMapForcesScl,
                         this->surfMapSpringStiffness,
-                        this->surfMapForcesScl*initialStep,
+                        this->surfMapForcesScl,
                         this->surfMapExternalForcesWeight,
                         0.1f,
-                        100,  // TODO Change back to 30 or so?
+                        50,  // TODO Change back to 30 or so?
                         false,
                         false)) {
 
@@ -1486,6 +1510,12 @@ float ProteinVariantMatch::getRMS(
             rotation,                    // Saves the rotation matrix
             translation                  // Saves the translation vector
     );
+
+//    printf("translation %.10f %.10f %.10f\n", translation[0],translation[1],translation[2]);
+//    printf("rotation %.10f %.10f %.10f \n %.10f %.10f %.10f \n %.10f %.10f %.10f\n",
+//            rotation[0][0], rotation[0][1], rotation[0][2],
+//            rotation[1][0], rotation[1][1], rotation[1][2],
+//            rotation[2][0], rotation[2][1], rotation[2][2]);
 
     if (rotation != NULL) {
 

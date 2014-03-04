@@ -602,8 +602,8 @@ private:
     int maxSubdivSteps;
 
     /// Parameter for initial stepsize
-    megamol::core::param::ParamSlot initSubDivStepSizeSlot;
-    float initSubDivStepSize;
+    megamol::core::param::ParamSlot subStepLevelSlot;
+    int subStepLevel;
 
     /// Boolean flag that triggers recomputation of the subdivision
     bool triggerComputeSubdiv;
