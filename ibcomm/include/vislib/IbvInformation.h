@@ -18,7 +18,7 @@
 #include "vislib/Socket.h"      // Must be first!
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 
 #include "rdma/winverbs.h"
 
@@ -62,7 +62,7 @@ namespace ib {
              * @return The WV_PORT_ATTRIBUTES of the device.
              */
             inline const WV_PORT_ATTRIBUTES& GetAttributes(void) const {
-                VLSTACKTRACE("Port::GetAttributes", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return this->attributes;
             }
 
@@ -72,7 +72,7 @@ namespace ib {
              * @return The port GUID and prefix GID.
              */
             inline const WV_GID& GetGid(void) const {
-                VLSTACKTRACE("Port::GetGid", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return this->gid;
             }
 
@@ -86,7 +86,7 @@ namespace ib {
              *         port.
              */
             inline UINT8 GetPhysicalState(void) const {
-                VLSTACKTRACE("Port::GetPhysicalState", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return this->attributes.PhysicalState;
             }
 
@@ -96,7 +96,7 @@ namespace ib {
              * @return A description of the physical port state.
              */
             inline StringA GetPhysicalStateA(void) const {
-                VLSTACKTRACE("Port::GetPhysicalStateA", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return PHYSICAL_STATES[this->attributes.PhysicalState];
             }
 
@@ -106,7 +106,7 @@ namespace ib {
              * @return A description of the physical port state.
              */
             inline StringW GetPhysicalStateW(void) const {
-                VLSTACKTRACE("Port::GetPhysicalStateW", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return StringW(PHYSICAL_STATES[this->attributes.PhysicalState]);
             }
 
@@ -116,7 +116,7 @@ namespace ib {
              * @return The port GUID.
              */
             inline NET64 GetPortGuid(void) const {
-                VLSTACKTRACE("Port::GetPortGuid", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return *(reinterpret_cast<const NET64 *>(&this->gid) + 1);
             }
 
@@ -140,7 +140,7 @@ namespace ib {
              * @return The state of the port.
              */
             inline WV_PORT_STATE GetState(void) const {
-                VLSTACKTRACE("Port::GetState", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return this->attributes.State;
             }
 
@@ -150,7 +150,7 @@ namespace ib {
              * @return The state of the port.
              */
             inline StringA GetStateA(void) const {
-                VLSTACKTRACE("Port::GetStateA", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return STATES[this->attributes.State];
             }
 
@@ -160,7 +160,7 @@ namespace ib {
              * @return The state of the port.
              */             
             inline StringW GetStateW(void) const {
-                VLSTACKTRACE("Port::GetStateW", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return StringW(STATES[this->attributes.State]);
             }
 
@@ -192,7 +192,7 @@ namespace ib {
              *          false otherwise.
              */
             inline bool operator !=(const Port& rhs) const {
-                VLSTACKTRACE("Port::operator !=", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return !(*this == rhs);
             }
 
@@ -276,7 +276,7 @@ namespace ib {
              * @return The WV_DEVICE_ATTRIBUTES of the device.
              */
             inline const WV_DEVICE_ATTRIBUTES& GetAttributes(void) const {
-                VLSTACKTRACE("Device::GetAttributes", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return this->attributes;
             }
 
@@ -286,7 +286,7 @@ namespace ib {
              * @return The node GUID.
              */
             inline NET64 GetNodeGuid(void) const {
-                VLSTACKTRACE("Device::GetNodeGuid", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return this->attributes.NodeGuid;
             }
 
@@ -324,7 +324,7 @@ namespace ib {
              * @return Lost of ports.
              */
             inline const PortList& GetPorts(void) const {
-                VLSTACKTRACE("Device::GetPorts", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return this->ports;
             }
 
@@ -334,7 +334,7 @@ namespace ib {
              * @return The number of ports the device has.
              */
             inline int GetPortCount(void) const {
-                VLSTACKTRACE("Device::GetPortCount", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return (int) this->attributes.PhysPortCount;
             }
 
@@ -344,7 +344,7 @@ namespace ib {
              * @return The system image GUID.
              */
             inline NET64 GetSystemImageGuid(void) const {
-                VLSTACKTRACE("Device::GetSystemImageGuid", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return this->attributes.SystemImageGuid;
             }
 
@@ -390,7 +390,7 @@ namespace ib {
              *          false otherwise.
              */
             inline bool operator !=(const Device& rhs) const {
-                VLSTACKTRACE("Device::operator !=", __FILE__, __LINE__);
+                THE_STACK_TRACE;
                 return !(*this == rhs);
             }
 

@@ -27,7 +27,7 @@
  * vislib::net::ib::IbvInformation::Port::Port
  */
 vislib::net::ib::IbvInformation::Port::Port(const Port& rhs) {
-    VLSTACKTRACE("Port::Port", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     *this = rhs;
 }
 
@@ -36,7 +36,7 @@ vislib::net::ib::IbvInformation::Port::Port(const Port& rhs) {
  * vislib::net::ib::IbvInformation::Port::~Port
  */
 vislib::net::ib::IbvInformation::Port::~Port(void) {
-    VLSTACKTRACE("Port::~Port", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -45,7 +45,7 @@ vislib::net::ib::IbvInformation::Port::~Port(void) {
  */
 vislib::StringA vislib::net::ib::IbvInformation::Port::GetPortGuidA(
         void) const {
-    VLSTACKTRACE("Port::GetPortGuidA", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     NET64 guid = this->GetPortGuid();
     return BytesToHexStringA(reinterpret_cast<const BYTE *>(&guid), 
         sizeof(guid));
@@ -57,7 +57,7 @@ vislib::StringA vislib::net::ib::IbvInformation::Port::GetPortGuidA(
  */
 vislib::StringW vislib::net::ib::IbvInformation::Port::GetPortGuidW(
         void) const {
-    VLSTACKTRACE("Port::GetPortGuidW", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     NET64 guid = this->GetPortGuid();
     return BytesToHexStringW(reinterpret_cast<const BYTE *>(&guid), 
         sizeof(guid));
@@ -69,7 +69,7 @@ vislib::StringW vislib::net::ib::IbvInformation::Port::GetPortGuidW(
  */
 vislib::net::ib::IbvInformation::Port& 
 vislib::net::ib::IbvInformation::Port::operator =(const Port& rhs) {
-    VLSTACKTRACE("Port::operator =", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     if (this != &rhs) {
         ::memcpy(&this->attributes, &rhs.attributes, sizeof(this->attributes));
@@ -85,7 +85,7 @@ vislib::net::ib::IbvInformation::Port::operator =(const Port& rhs) {
  */
 bool vislib::net::ib::IbvInformation::Port::operator ==(
         const Port& rhs) const {
-    VLSTACKTRACE("Port::operator =", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     if (this == &rhs) {
         return true;
@@ -130,7 +130,7 @@ const char *vislib::net::ib::IbvInformation::Port::STATES[] = {
  * vislib::net::ib::IbvInformation::Port::Port
  */
 vislib::net::ib::IbvInformation::Port::Port(void) {
-    VLSTACKTRACE("Port::Port", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     ::ZeroMemory(&this->attributes, sizeof(this->attributes));
 }
 
@@ -140,7 +140,7 @@ vislib::net::ib::IbvInformation::Port::Port(void) {
  */
 vislib::net::ib::IbvInformation::Port::Port(IWVDevice *device, 
         const UINT8 port) {
-    VLSTACKTRACE("Port::Port", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     HRESULT hr = S_OK;
 
     ::ZeroMemory(&this->attributes, sizeof(this->attributes));
@@ -179,7 +179,7 @@ vislib::net::ib::IbvInformation::Port::Port(IWVDevice *device,
  * vislib::net::ib::IbvInformation::Device::Device
  */
 vislib::net::ib::IbvInformation::Device::Device(const Device& rhs) {
-    VLSTACKTRACE("Device::Device", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     *this = rhs;
 }
 
@@ -188,7 +188,7 @@ vislib::net::ib::IbvInformation::Device::Device(const Device& rhs) {
  * vislib::net::ib::IbvInformation::Device::~Device
  */
 vislib::net::ib::IbvInformation::Device::~Device(void) {
-    VLSTACKTRACE("Device::~Device", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Releasing IB device object...\n");
     sys::SafeRelease(this->device);
 }
@@ -199,7 +199,7 @@ vislib::net::ib::IbvInformation::Device::~Device(void) {
  */
 vislib::StringA vislib::net::ib::IbvInformation::Device::GetNodeGuidA(
         void) const {
-    VLSTACKTRACE("Device::GetNodeGuidA", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return BytesToHexStringA(reinterpret_cast<const BYTE *>(
         &this->attributes.NodeGuid), sizeof(this->attributes.NodeGuid));
 }
@@ -210,7 +210,7 @@ vislib::StringA vislib::net::ib::IbvInformation::Device::GetNodeGuidA(
  */
 vislib::StringW vislib::net::ib::IbvInformation::Device::GetNodeGuidW(
         void) const {
-    VLSTACKTRACE("Device::GetNodeGuidW", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return BytesToHexStringW(reinterpret_cast<const BYTE *>(
         &this->attributes.NodeGuid), sizeof(this->attributes.NodeGuid));
 }
@@ -221,7 +221,7 @@ vislib::StringW vislib::net::ib::IbvInformation::Device::GetNodeGuidW(
  */
 const vislib::net::ib::IbvInformation::Port& 
 vislib::net::ib::IbvInformation::Device::GetPort(const SIZE_T idx) const {
-    VLSTACKTRACE("Device::GetPort", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     if ((idx < 0) || (idx > this->ports.Count() - 1)) {
         throw OutOfRangeException(idx, 0, this->ports.Count() - 1, __FILE__, 
             __LINE__);
@@ -236,7 +236,7 @@ vislib::net::ib::IbvInformation::Device::GetPort(const SIZE_T idx) const {
  */
 vislib::StringA 
 vislib::net::ib::IbvInformation::Device::GetSystemImageGuidA(void) const {
-    VLSTACKTRACE("Device::GetSystemImageGuidA", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return BytesToHexStringA(reinterpret_cast<const BYTE *>(
         &this->attributes.SystemImageGuid), 
         sizeof(this->attributes.SystemImageGuid));
@@ -249,7 +249,7 @@ vislib::net::ib::IbvInformation::Device::GetSystemImageGuidW
  */
 vislib::StringW 
 vislib::net::ib::IbvInformation::Device::GetSystemImageGuidW(void) const {
-    VLSTACKTRACE("Device::GetSystemImageGuidW", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return BytesToHexStringW(reinterpret_cast<const BYTE *>(
         &this->attributes.SystemImageGuid), 
         sizeof(this->attributes.SystemImageGuid));
@@ -261,7 +261,7 @@ vislib::net::ib::IbvInformation::Device::GetSystemImageGuidW(void) const {
  */
 vislib::net::ib::IbvInformation::Device& 
 vislib::net::ib::IbvInformation::Device::operator =(const Device& rhs) {
-    VLSTACKTRACE("Device::operator =", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     if (this != &rhs) {
         ::memcpy(&this->attributes, &rhs.attributes, sizeof(this->attributes));
@@ -279,7 +279,7 @@ vislib::net::ib::IbvInformation::Device::operator =(const Device& rhs) {
  */
 bool vislib::net::ib::IbvInformation::Device::operator ==(
         const Device& rhs) const {
-    VLSTACKTRACE("Device::operator =", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     if (this == &rhs) {
         return true;
@@ -297,7 +297,7 @@ bool vislib::net::ib::IbvInformation::Device::operator ==(
  */
 vislib::net::ib::IbvInformation::Device::Device(void) 
         : device(NULL), ports(NULL) {
-    VLSTACKTRACE("Device::Device", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     ::ZeroMemory(&this->attributes, sizeof(this->attributes));
 }
 
@@ -307,7 +307,7 @@ vislib::net::ib::IbvInformation::Device::Device(void)
  */
 vislib::net::ib::IbvInformation::Device::Device(IWVProvider *wvProvider,
         const NET64& guid) : device(NULL), ports(NULL) {
-    VLSTACKTRACE("Device::Device", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     HRESULT hr = S_OK;
 
     ::ZeroMemory(&this->attributes, sizeof(this->attributes));
@@ -349,7 +349,7 @@ vislib::net::ib::IbvInformation::Device::Device(IWVProvider *wvProvider,
  */
 vislib::net::ib::IbvInformation& 
 vislib::net::ib::IbvInformation::GetInstance(void) {
-    VLSTACKTRACE("IbvInformation::GetInstance", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     static IbvInformation instance;
     return instance;
 }
@@ -360,7 +360,7 @@ vislib::net::ib::IbvInformation::GetInstance(void) {
  */
 bool vislib::net::ib::IbvInformation::IsNullGid(const WV_GID& gid,
         const bool ignoreSubnetPrefix) {
-    VLSTACKTRACE("IbvInformation::IsNullGid", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     int cntElements = sizeof(gid.Raw) / sizeof(gid.Raw[0]);
 
     for (int i = ignoreSubnetPrefix ? 8 : 0; i < cntElements; i++) {
@@ -377,7 +377,7 @@ bool vislib::net::ib::IbvInformation::IsNullGid(const WV_GID& gid,
  * vislib::net::ib::IbvInformation::DiscardCache
  */ 
 void vislib::net::ib::IbvInformation::DiscardCache(const bool reread) {
-    VLSTACKTRACE("IbvInformation::DiscardCache", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     sys::AutoLock(this->lock);
     this->devices.Clear();
 
@@ -392,7 +392,7 @@ void vislib::net::ib::IbvInformation::DiscardCache(const bool reread) {
  */
 SIZE_T vislib::net::ib::IbvInformation::GetDevices(
         DeviceList& outDevices) const {
-    VLSTACKTRACE("IbvInformation::GetDevices", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     sys::AutoLock(this->lock);
     this->cacheDevices();
@@ -405,7 +405,7 @@ SIZE_T vislib::net::ib::IbvInformation::GetDevices(
  * vislib::net::ib::IbvInformation::IbvInformation
  */
 vislib::net::ib::IbvInformation::IbvInformation(void) : wvProvider(NULL) {
-    VLSTACKTRACE("IbvInformation::IbvInformation", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     HRESULT hr = S_OK;
 
     VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Acquiring WinVerbs "
@@ -425,7 +425,7 @@ vislib::net::ib::IbvInformation::IbvInformation(void) : wvProvider(NULL) {
  */
 vislib::net::ib::IbvInformation::IbvInformation(const IbvInformation& rhs) 
         : wvProvider(NULL) {
-    VLSTACKTRACE("IbvInformation::IbvInformation", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     throw UnsupportedOperationException("IbvInformation::IbvInformation",
         __FILE__, __LINE__);
 }
@@ -435,7 +435,7 @@ vislib::net::ib::IbvInformation::IbvInformation(const IbvInformation& rhs)
  * vislib::net::ib::IbvInformation::~IbvInformation
  */
 vislib::net::ib::IbvInformation::~IbvInformation(void) {
-    VLSTACKTRACE("IbvInformation::~IbvInformation", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Releasing WinVerbs "
         "provider...\n");
     sys::SafeRelease(this->wvProvider);
@@ -446,7 +446,7 @@ vislib::net::ib::IbvInformation::~IbvInformation(void) {
  * vislib::net::ib::IbvInformation::cacheDevices
  */
 bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
-    VLSTACKTRACE("IbvInformation::cacheDevices", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     RawStorage guids;       // Receives GUIDs of devices.
     SIZE_T size = 0;        // Receives size of GUIDs in bytes.
@@ -495,7 +495,7 @@ bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
  */
 vislib::net::ib::IbvInformation& 
 vislib::net::ib::IbvInformation::operator =(const IbvInformation& rhs) {
-    VLSTACKTRACE("IbvInformation::operator =", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     if (this != &rhs) {
         throw IllegalParamException("rhs", __FILE__, __LINE__);
     }

@@ -19,7 +19,7 @@
 #include "vislib/AbstractCommServerChannel.h"
 #include "vislib/IbRdmaCommClientChannel.h"
 #include "vislib/IbRdmaException.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 
 #include "rdma/rdma_cma.h"
 #include "rdma/rdma_verbs.h"

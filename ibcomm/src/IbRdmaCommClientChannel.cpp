@@ -21,7 +21,7 @@
 vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
 vislib::net::ib::IbRdmaCommClientChannel::Create(const SIZE_T cntBufRecv, 
         const SIZE_T cntBufSend) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::Create", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return IbRdmaCommClientChannel::Create(NULL, cntBufRecv, NULL, 
         cntBufSend);
 }
@@ -32,7 +32,7 @@ vislib::net::ib::IbRdmaCommClientChannel::Create(const SIZE_T cntBufRecv,
  */
 vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
 vislib::net::ib::IbRdmaCommClientChannel::Create(const SIZE_T cntBuf) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::Create", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return IbRdmaCommClientChannel::Create(NULL, cntBuf, NULL, cntBuf);
 }
 
@@ -43,7 +43,7 @@ vislib::net::ib::IbRdmaCommClientChannel::Create(const SIZE_T cntBuf) {
 vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
 vislib::net::ib::IbRdmaCommClientChannel::Create(BYTE *bufRecv, 
         const SIZE_T cntBufRecv, BYTE *bufSend, const SIZE_T cntBufSend) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::Create", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SmartRef<IbRdmaCommClientChannel> retval(new IbRdmaCommClientChannel(), 
         false);
     retval->setBuffers(bufRecv, cntBufRecv, bufSend, cntBufSend);
@@ -55,7 +55,7 @@ vislib::net::ib::IbRdmaCommClientChannel::Create(BYTE *bufRecv,
  * vislib::net::ib::IbRdmaCommClientChannel::Close
  */
 void vislib::net::ib::IbRdmaCommClientChannel::Close(void) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::Close", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     int result = 0;                     // RDMA API results.
 
@@ -87,7 +87,7 @@ void vislib::net::ib::IbRdmaCommClientChannel::Close(void) {
  */
 void vislib::net::ib::IbRdmaCommClientChannel::Connect(
         SmartRef<AbstractCommEndPoint> endPoint) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::Connect", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     int result = 0;                     // RDMA API results.
     StringA node;                       // The address as string.
@@ -150,7 +150,7 @@ void vislib::net::ib::IbRdmaCommClientChannel::Connect(
  */
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::ib::IbRdmaCommClientChannel::GetLocalEndPoint(void) const {
-    VLSTACKTRACE("IbRdmaCommClientChannel::GetLocalEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     WV_CONNECT_ATTRIBUTES attribs;
     this->id->ep.connect->Query(&attribs);
     return IPCommEndPoint::Create(attribs.LocalAddress.Sin);
@@ -162,7 +162,7 @@ vislib::net::ib::IbRdmaCommClientChannel::GetLocalEndPoint(void) const {
  */
 vislib::SmartRef<vislib::net::AbstractCommEndPoint>
 vislib::net::ib::IbRdmaCommClientChannel::GetRemoteEndPoint(void) const {
-    VLSTACKTRACE("IbRdmaCommClientChannel::GetRemoteEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     WV_CONNECT_ATTRIBUTES attribs;
     this->id->ep.connect->Query(&attribs);
     return IPCommEndPoint::Create(attribs.PeerAddress.Sin);
@@ -174,7 +174,7 @@ vislib::net::ib::IbRdmaCommClientChannel::GetRemoteEndPoint(void) const {
  */
 SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData, 
         const SIZE_T cntBytes, const UINT timeout, const bool forceReceive) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::Receive", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     int result = 0;                     // RDMA API results.
     struct ibv_wc wc;                   // Receives the completion parameters.
@@ -308,7 +308,7 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
  */
 SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data, 
         const SIZE_T cntBytes, const UINT timeout,  const bool forceSend) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::Send", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     int result = 0;                     // RDMA API results.
     struct ibv_wc wc;                   // Receives the completion parameters.
@@ -411,8 +411,7 @@ vislib::net::ib::IbRdmaCommClientChannel::IbRdmaCommClientChannel(void)
         : bufRecv(NULL), bufRecvEnd(NULL), bufSend(NULL), bufSendEnd(NULL), 
         cntBufRecv(0), cntBufSend(0), cntRemRecv(0), id(NULL), 
         mrRecv(NULL), mrSend(NULL), remRecv(NULL) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::IbRdmaCommClientChannel", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -420,8 +419,7 @@ vislib::net::ib::IbRdmaCommClientChannel::IbRdmaCommClientChannel(void)
  * vislib::net::ib::IbRdmaCommClientChannel::~IbRdmaCommClientChannel
  */
 vislib::net::ib::IbRdmaCommClientChannel::~IbRdmaCommClientChannel(void) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::~IbRdmaCommClientChannel", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
     //try {
     //    this->Close();
     //} catch (...) {
@@ -437,7 +435,7 @@ vislib::net::ib::IbRdmaCommClientChannel::~IbRdmaCommClientChannel(void) {
  * vislib::net::ib::IbRdmaCommClientChannel::postReceive
  */
 void vislib::net::ib::IbRdmaCommClientChannel::postReceive(void) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::postReceive", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Posting RDMA receive of %d "
         "bytes into %p...\n", this->cntBufRecv, this->bufRecv);
     if (this->id == NULL) {
@@ -455,8 +453,7 @@ void vislib::net::ib::IbRdmaCommClientChannel::postReceive(void) {
  * vislib::net::ib::IbRdmaCommClientChannel::registerBuffers
  */
 void vislib::net::ib::IbRdmaCommClientChannel::registerBuffers(void) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::registerBuffers", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
     ASSERT(this->id != NULL);
     ASSERT(this->mrRecv == NULL);
     ASSERT(this->bufRecv != NULL);
@@ -482,7 +479,7 @@ void vislib::net::ib::IbRdmaCommClientChannel::registerBuffers(void) {
  */
 void vislib::net::ib::IbRdmaCommClientChannel::setBuffers(BYTE *bufRecv, 
         const SIZE_T cntBufRecv, BYTE *bufSend, const SIZE_T cntBufSend) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::setBuffers", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     
     /* If there is a current buffer and if it is owned by us, delete it. */
     if (!this->IsZeroCopyReceive()) {

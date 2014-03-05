@@ -18,7 +18,7 @@
 #include "vislib/Socket.h"                      // Must be first!
 #include "vislib/AbstractCommClientChannel.h"
 #include "vislib/IbRdmaException.h"
- #include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 
 #include "rdma/rdma_cma.h"
 #include "rdma/rdma_verbs.h"
@@ -106,8 +106,7 @@ namespace ib {
          * @return
          */
         inline bool IsZeroCopyReceive(void) const {
-            VLSTACKTRACE("IbRdmaCommClientChannel::IsZeroCopyReceive",
-                __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return (this->bufRecvEnd != NULL);
         }
 
@@ -118,8 +117,7 @@ namespace ib {
          * @return
          */
         inline bool IsZeroCopySend(void) const {
-            VLSTACKTRACE("IbRdmaCommClientChannel::IsZeroCopySend", 
-                __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return (this->bufSendEnd != NULL);
         }
 

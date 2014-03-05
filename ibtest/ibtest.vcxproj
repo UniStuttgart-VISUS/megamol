@@ -35,12 +35,14 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug64.props" />
+    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
     <Import Project="..\ibcomm\ofedsdk.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease64.props" />
+    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
     <Import Project="..\ibcomm\ofedsdk.props" />
   </ImportGroup>
@@ -67,7 +69,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(OfedSdkDir)Lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(OfedSdkDir)Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>winverbs.lib;librdmacm.lib;libibverbs.lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibibcomm$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -87,7 +89,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(OfedSdkDir)Lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(OfedSdkDir)Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>winverbs.lib;librdmacm.lib;libibverbs.lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibibcomm$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

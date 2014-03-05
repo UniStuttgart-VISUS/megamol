@@ -30,19 +30,31 @@
     <ClInclude Include="include\vislib\IbRdmaCommClientChannel.h" />
     <ClInclude Include="include\vislib\IbRdmaCommServerChannel.h" />
     <ClInclude Include="include\vislib\IbRdmaException.h" />
-    <ClInclude Include="include\vislib\IbvCommChannel.h" />
-    <ClInclude Include="include\vislib\IbvCommServerChannel.h" />
+    <ClInclude Include="include\vislib\IbvCommChannel.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\vislib\IbvCommServerChannel.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="include\vislib\IbvInformation.h" />
-    <ClInclude Include="include\vislib\IbvShared.h" />
+    <ClInclude Include="include\vislib\IbvShared.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\IbRdmaCommClientChannel.cpp" />
     <ClCompile Include="src\IbRdmaCommServerChannel.cpp" />
     <ClCompile Include="src\IbRdmaException.cpp" />
-    <ClCompile Include="src\IbvCommChannel.cpp" />
-    <ClCompile Include="src\IbvCommServerChannel.cpp" />
+    <ClCompile Include="src\IbvCommChannel.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\IbvCommServerChannel.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\IbvInformation.cpp" />
-    <ClCompile Include="src\IbvShared.cpp" />
+    <ClCompile Include="src\IbvShared.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{59DEB5CE-352F-43B4-B250-60BD6D19201C}</ProjectGuid>
@@ -92,6 +104,7 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug64.props" />
+    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
     <Import Project="ofedsdk.props" />
   </ImportGroup>
@@ -99,6 +112,7 @@
     <Import Project="..\VSProps\vislibSymbolExport.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug64.props" />
+    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
     <Import Project="ofedsdk.props" />
   </ImportGroup>
@@ -106,12 +120,14 @@
     <Import Project="..\VSProps\vislibSymbolImport.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug64.props" />
+    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
     <Import Project="ofedsdk.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease64.props" />
+    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
     <Import Project="ofedsdk.props" />
   </ImportGroup>
@@ -119,12 +135,14 @@
     <Import Project="..\VSProps\vislibSymbolExport.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease64.props" />
+    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
     <Import Project="ofedsdk.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|x64'">
     <Import Project="..\VSProps\vislibSymbolImport.props" />
     <Import Project="..\VSProps\TargetRelease64.props" />
+    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
     <Import Project="ofedsdk.props" />
   </ImportGroup>

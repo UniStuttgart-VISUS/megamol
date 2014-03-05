@@ -21,7 +21,7 @@
 vislib::SmartRef<vislib::net::ib::IbRdmaCommServerChannel> 
 vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBufRecv,
         const SIZE_T cntBufSend) {
-    VLSTACKTRACE("IbRdmaCommServerChannel::Create", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return SmartRef<IbRdmaCommServerChannel>(new IbRdmaCommServerChannel(
         cntBufRecv, cntBufSend), false);
 }
@@ -32,7 +32,7 @@ vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBufRecv,
  */
 vislib::SmartRef<vislib::net::ib::IbRdmaCommServerChannel> 
 vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBuf) {
-    VLSTACKTRACE("IbRdmaCommServerChannel::Create", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return SmartRef<IbRdmaCommServerChannel>(new IbRdmaCommServerChannel(
         cntBuf, cntBuf), false);
 }
@@ -43,7 +43,7 @@ vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBuf) {
  */
 vislib::SmartRef<vislib::net::AbstractCommClientChannel> 
 vislib::net::ib::IbRdmaCommServerChannel::Accept(void) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::Accept", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     SmartRef<IbRdmaCommClientChannel> retval = this->Accept(
         NULL, this->cntBufRecv, NULL, this->cntBufSend);
@@ -57,7 +57,7 @@ vislib::net::ib::IbRdmaCommServerChannel::Accept(void) {
 vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
 vislib::net::ib::IbRdmaCommServerChannel::Accept(BYTE *bufRecv, 
         const SIZE_T cntBufRecv, BYTE *bufSend, const SIZE_T cntBufSend) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::Accept", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     int result = 0;                             // RDMA API results.
     SmartRef<IbRdmaCommClientChannel> retval;   // Client channel.
@@ -116,7 +116,7 @@ vislib::net::ib::IbRdmaCommServerChannel::Accept(BYTE *bufRecv,
  */
 void vislib::net::ib::IbRdmaCommServerChannel::Bind(
         SmartRef<AbstractCommEndPoint> endPoint) {
-    VLSTACKTRACE("IbRdmaCommClientChannel::Bind", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     int result = 0;                     // RDMA API results.
     StringA node;                       // The address as string.
@@ -157,7 +157,7 @@ void vislib::net::ib::IbRdmaCommServerChannel::Bind(
  * vislib::net::ib::IbRdmaCommServerChannel::Close
  */
 void vislib::net::ib::IbRdmaCommServerChannel::Close(void) {
-    VLSTACKTRACE("IbRdmaCommServerChannel::Close", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     int result = 0;                     // RDMA API results.
 
@@ -179,7 +179,7 @@ void vislib::net::ib::IbRdmaCommServerChannel::Close(void) {
  */
 vislib::SmartRef<vislib::net::AbstractCommEndPoint>
 vislib::net::ib::IbRdmaCommServerChannel::GetLocalEndPoint(void) const {
-    VLSTACKTRACE("IbRdmaCommServerChannel::GetLocalEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     WV_CONNECT_ATTRIBUTES attribs;
     this->id->ep.connect->Query(&attribs);
     return IPCommEndPoint::Create(attribs.LocalAddress.Sin);
@@ -190,7 +190,7 @@ vislib::net::ib::IbRdmaCommServerChannel::GetLocalEndPoint(void) const {
  * vislib::net::ib::IbRdmaCommClientChannel::Listen
  */
 void vislib::net::ib::IbRdmaCommServerChannel::Listen(const int backlog) {
-    VLSTACKTRACE("IbRdmaCommServerChannel::Listen", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     int result = 0;                     // RDMA API results.
 
@@ -208,8 +208,7 @@ void vislib::net::ib::IbRdmaCommServerChannel::Listen(const int backlog) {
 vislib::net::ib::IbRdmaCommServerChannel::IbRdmaCommServerChannel(
         const SIZE_T cntBufRecv, const SIZE_T cntBufSend) 
         : Super(), cntBufRecv(cntBufRecv), cntBufSend(cntBufSend), id(NULL) {
-    VLSTACKTRACE("IbRdmaCommServerChannel::IbRdmaCommServerChannel", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     // TODO: Move this?
     ::ZeroMemory(&this->qpAttr, sizeof(this->qpAttr));
@@ -226,8 +225,7 @@ vislib::net::ib::IbRdmaCommServerChannel::IbRdmaCommServerChannel(
  * vislib::net::ib::IbRdmaCommServerChannel::~IbRdmaCommServerChannel
  */
 vislib::net::ib::IbRdmaCommServerChannel::~IbRdmaCommServerChannel(void) {
-    VLSTACKTRACE("IbRdmaCommServerChannel::~IbRdmaCommServerChannel", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
     //try {
     //    this->Close();
     //} catch (...) {
