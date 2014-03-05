@@ -21,6 +21,10 @@ LINK = icpc
 endif
 
 
+# Include project default configuration.
+include ../ExtLibs.mk
+
+
 # Set Verbosity
 ifndef VISLIB_VERBOSE
     VISLIB_VERBOSE = 0
@@ -65,7 +69,7 @@ BITSEX := $(BITS)_clib$(CLIBVER)
 InputDir := ./src
 
 # The default include directories:
-IncludeDir := ./include
+IncludeDir := ./include $(thelibpath)include
 
 # List of system include directories:
 SystemIncludeDir := /usr/include/g++ /usr/include/g++/bits /usr/include/g++/ext
@@ -112,12 +116,12 @@ ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 
 # Common linker flags
-LinkerFlags := -lX11 -lXext -lXxf86vm -lm 
+LinkerFlags := -lX11 -lXext -lXxf86vm -lm
 ifneq ($(VISLIB_ICC), 0)
 	# Katrin says this is required ...
 	LinkerFlags += -lstdc++
 endif
 
 # Additional linker flags for special configurations
-DebugLinkerFlags :=
-ReleaseLinkerFlags :=
+DebugLinkerFlags := $(thelibpath)debug/libthelib.a
+ReleaseLinkerFlags := $(thelibpath)release/libthelib.a

@@ -43,8 +43,8 @@ CompilerFlagsRelease := -O3 -g0
 
 # Additional linker flags
 LinkerFlags := -lX11 -lXext -lXxf86vm -lm -lpthread -lGLU -lGL -lncurses
-LinkerFlagsDebug :=
-LinkerFlagsRelease :=
+LinkerFlagsDebug := $(DebugLinkerFlags)
+LinkerFlagsRelease := $(ReleaseLinkerFlags)
 
 
 # Input directory
