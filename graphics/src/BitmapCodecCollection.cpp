@@ -13,7 +13,6 @@
 #include "vislib/Path.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/vislibsymbolimportexport.inl"
 
 #include "vislib/BmpBitmapCodec.h"
 #include "vislib/PpmBitmapCodec.h"

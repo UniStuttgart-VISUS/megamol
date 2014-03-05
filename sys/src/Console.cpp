@@ -33,7 +33,6 @@
 #include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/Thread.h"
-#include "vislib/vislibsymbolimportexport.inl"
 
 
 /*

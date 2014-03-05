@@ -370,9 +370,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="include\vislib\vislibsymbolimportexport.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="implementDelegate.pl" />
   </ItemGroup>
   <ItemGroup>

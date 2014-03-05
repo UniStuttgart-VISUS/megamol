@@ -13,7 +13,6 @@
 #include "vislib/memutils.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/UnsupportedOperationException.h"
-#include "vislib/vislibsymbolimportexport.inl"
 
 #ifdef _WIN32
 #include <WinError.h>

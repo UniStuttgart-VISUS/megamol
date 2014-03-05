@@ -10,7 +10,6 @@
 #include "vislib/CameraParameterLimits.h"
 #include "vislib/Float16.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/vislibsymbolimportexport.inl"
 
 
 /*
