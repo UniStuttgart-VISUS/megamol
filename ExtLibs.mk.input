@@ -1,0 +1,10 @@
+#
+# ExtLib.mk.input
+# VISlib
+#
+# Copyright (C) 2006 - 2014 by Universitaet Stuttgart (VIS) and TU Dresden (CGV).
+# Alle Rechte vorbehalten.
+#
+
+# Paths to external libraries
+thelibpath := %thelib%
