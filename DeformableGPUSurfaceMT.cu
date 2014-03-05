@@ -1943,6 +1943,7 @@ bool DeformableGPUSurfaceMT::InitVtxPathVBO(size_t vertexCnt) {
         glBindBufferARB(GL_ARRAY_BUFFER, this->vboVtxPath);
         glDeleteBuffersARB(1, &this->vboVtxPath);
         this->vboVtxPath = 0;
+        glBindBufferARB(GL_ARRAY_BUFFER, 0);
     }
 
     // Create vertex buffer object for corrupt vertex flag
@@ -1950,6 +1951,8 @@ bool DeformableGPUSurfaceMT::InitVtxPathVBO(size_t vertexCnt) {
     glBindBufferARB(GL_ARRAY_BUFFER, this->vboVtxPath);
     glBufferDataARB(GL_ARRAY_BUFFER, sizeof(float)*vertexCnt, 0, GL_DYNAMIC_DRAW);
     glBindBufferARB(GL_ARRAY_BUFFER, 0);
+
+//    printf("InitVtxPathVBO: %u bytes\n", sizeof(float)*vertexCnt);
 
     return CheckForGLError();
 }
@@ -1965,6 +1968,7 @@ bool DeformableGPUSurfaceMT::InitVtxAttribVBO(size_t vertexCnt) {
         glBindBufferARB(GL_ARRAY_BUFFER, this->vboVtxAttr);
         glDeleteBuffersARB(1, &this->vboVtxAttr);
         this->vboVtxAttr = 0;
+        glBindBufferARB(GL_ARRAY_BUFFER, 0);
     }
 
     // Create vertex buffer object for corrupt vertex flag
@@ -1972,6 +1976,8 @@ bool DeformableGPUSurfaceMT::InitVtxAttribVBO(size_t vertexCnt) {
     glBindBufferARB(GL_ARRAY_BUFFER, this->vboVtxAttr);
     glBufferDataARB(GL_ARRAY_BUFFER, sizeof(float)*vertexCnt, 0, GL_DYNAMIC_DRAW);
     glBindBufferARB(GL_ARRAY_BUFFER, 0);
+
+//    printf("InitVtxPathVBO: %u bytes\n", sizeof(float)*vertexCnt);
 
     return CheckForGLError();
 }
@@ -5703,7 +5709,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
 
-    cudaGraphicsResource* cudaTokens[3];
+    cudaGraphicsResource* cudaTokens[2];
 
     // Register memory with CUDA
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
@@ -5724,7 +5730,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
 
-    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens))) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: could not map recources",
                 this->ClassName());
@@ -5739,7 +5745,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
             &vboSize,              // The size of the accessible data
             cudaTokens[0]))) {                 // The mapped resource
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: could not obtian device pointer",
+                "%s: could not obtain device pointer",
                 this->ClassName());
         return -1;
     }
@@ -5751,9 +5757,11 @@ int DeformableGPUSurfaceMT::RefineMesh(
             reinterpret_cast<void**>(&vboTriIdxPt), // The mapped pointer
             &vboTriSize,              // The size of the accessible data
             cudaTokens[1]))) {                 // The mapped resource
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not obtain device pointer",
+                this->ClassName());
         return -1;
     }
-
 
     /* 1. Compute edge list */
 //#define USE_TIMER
@@ -5986,6 +5994,11 @@ int DeformableGPUSurfaceMT::RefineMesh(
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: need triangle neighbors",
                 this->ClassName());
+        // !! Unmap/registers vbos because they will be reinitialized
+        CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0));
+        CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]));
+        CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]));
+        return -1;
     }
 
     if (!CudaSafeCall(this->triangleEdgeList_D.Validate(this->triangleCnt*3))) {
@@ -6176,7 +6189,6 @@ int DeformableGPUSurfaceMT::RefineMesh(
     cudaEventRecord(event1, 0);
 #endif
 
-
     /* 7. (Re-)compute triangle neighbors */
 
     if (!CudaSafeCall(this->newTriangleNeighbors_D.Validate((nOldTriangles+newTrianglesCnt)*3))) {
@@ -6224,7 +6236,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
 #endif
 
 
-    /* 7. Update VBOs for vertex data and triangle indices */
+    /* 8. Update VBOs for vertex data and triangle indices */
 
 //    // DEBUG Print oldTriangles index offset and subdivision count
 //    HostArr<unsigned int> oldTrianglesIdxOffs;
@@ -6552,6 +6564,8 @@ void DeformableGPUSurfaceMT::Release() {
     CudaSafeCall(this->accTriangleArea_D.Release());
     CudaSafeCall(this->corruptTriangles_D.Release());
 
+    CudaSafeCall(this->intUncertaintyCorrupt_D.Release());
+    CudaSafeCall(this->accumPath_D.Release());
     CudaSafeCall(triangleEdgeOffs_D.Release());
     CudaSafeCall(triangleEdgeList_D.Release());
     CudaSafeCall(subDivEdgeFlag_D.Release());
@@ -6577,11 +6591,14 @@ void DeformableGPUSurfaceMT::Release() {
     CudaSafeCall(reducedNormalsTmp_D.Release());
     CudaSafeCall(vertexNormalsIndxOffs_D.Release());
 
+
     if (this->vboCorruptTriangleVertexFlag) {
         glBindBufferARB(GL_ARRAY_BUFFER, this->vboCorruptTriangleVertexFlag);
         glDeleteBuffersARB(1, &this->vboCorruptTriangleVertexFlag);
         glBindBufferARB(GL_ARRAY_BUFFER, 0);
         this->vboCorruptTriangleVertexFlag = 0;
+        glBindBufferARB(GL_ARRAY_BUFFER, 0);
+        CheckForGLError();
     }
 
     if (this->vboVtxPath) {
@@ -6589,6 +6606,8 @@ void DeformableGPUSurfaceMT::Release() {
         glDeleteBuffersARB(1, &this->vboVtxPath);
         glBindBufferARB(GL_ARRAY_BUFFER, 0);
         this->vboVtxPath = 0;
+        glBindBufferARB(GL_ARRAY_BUFFER, 0);
+        CheckForGLError();
     }
 
     if (this->vboVtxAttr) {
@@ -6596,6 +6615,8 @@ void DeformableGPUSurfaceMT::Release() {
         glDeleteBuffersARB(1, &this->vboVtxAttr);
         glBindBufferARB(GL_ARRAY_BUFFER, 0);
         this->vboVtxAttr = 0;
+        glBindBufferARB(GL_ARRAY_BUFFER, 0);
+        CheckForGLError();
     }
 
     ::CheckForGLError();
@@ -6661,20 +6682,19 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         }
     }
 
-//#ifdef USE_TIMER
+#ifdef USE_TIMER
     float dt_ms;
     cudaEvent_t event1, event2;
     cudaEventCreate(&event1);
     cudaEventCreate(&event2);
     cudaEventRecord(event1, 0);
-//#endif
+#endif
 
-    //#ifdef USE_TIMER
+#ifdef USE_TIMER
     cudaEvent_t eventStart, eventEnd;
     cudaEventCreate(&eventStart);
     cudaEventCreate(&eventEnd);
-
-    //#endif
+#endif
 
     int iterationsNeeded = maxIt;
 
@@ -6808,7 +6828,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
 //            }
 //            // END DEBUG
 
-            cudaEventRecord(eventStart, 0);
+//            cudaEventRecord(eventStart, 0);
 
             // Update vertex position
             DeformableGPUSurfaceMT_UpdateVtxPosExternalOnly_D <<< Grid(this->vertexCnt, 256), 256 >>> (
@@ -6829,16 +6849,16 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
                     this->vertexDataOffsNormal,
                     this->vertexDataStride);
 
-            cudaEventRecord(eventEnd, 0);
-            cudaEventSynchronize(eventEnd);
-            cudaEventSynchronize(eventStart);
-            cudaEventElapsedTime(&dt_ms, eventStart, eventEnd);
-//            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-//                    "%s: Time for iteration (%u vertices): %f sec\n",
-//                    "DeformableGPUSurfaceMT",
-//                    this->vertexCnt,
-//                    dt_ms/1000.0f);
-            cudaEventRecord(eventStart, 0);
+//            cudaEventRecord(eventEnd, 0);
+//            cudaEventSynchronize(eventEnd);
+//            cudaEventSynchronize(eventStart);
+//            cudaEventElapsedTime(&dt_ms, eventStart, eventEnd);
+////            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+////                    "%s: Time for iteration (%u vertices): %f sec\n",
+////                    "DeformableGPUSurfaceMT",
+////                    this->vertexCnt,
+////                    dt_ms/1000.0f);
+//            cudaEventRecord(eventStart, 0);
 
             // Accumulate displacement length of this iteration step
             float avgDisplLen = 0.0f;
@@ -6848,10 +6868,10 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             if (!CudaSafeCall(cudaGetLastError())) {
                 return false;
             }
-            cudaEventRecord(eventEnd, 0);
-            cudaEventSynchronize(eventEnd);
-            cudaEventSynchronize(eventStart);
-            cudaEventElapsedTime(&dt_ms, eventStart, eventEnd);
+//            cudaEventRecord(eventEnd, 0);
+//            cudaEventSynchronize(eventEnd);
+//            cudaEventSynchronize(eventStart);
+//            cudaEventElapsedTime(&dt_ms, eventStart, eventEnd);
 //            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
 //                    "%s: Time for thrust::reduce (%u vertices): %f sec\n",
 //                    "DeformableGPUSurfaceMT",
@@ -6869,7 +6889,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         }
     }
 
-//#ifdef USE_TIMER
+#ifdef USE_TIMER
     cudaEventRecord(event2, 0);
     cudaEventSynchronize(event1);
     cudaEventSynchronize(event2);
@@ -6880,7 +6900,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             iterationsNeeded, this->vertexCnt, dt_ms/1000.0f);
     //printf("Mapping : %.10f\n",
     //        dt_ms/1000.0f);
-//#endif
+#endif
 
     return CudaSafeCall(cudaGetLastError());
 }

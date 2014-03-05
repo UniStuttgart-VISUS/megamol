@@ -787,9 +787,6 @@ private:
     HostArr<float> procField2;
 #endif
 
-    /// Array containing corrupt subdivided triangles
-//    vislib::Array<float> subDivTris;
-
     /// Array for vertex flags of the mapped surface
     HostArr<float> mappedSurfVertexFlags;
 

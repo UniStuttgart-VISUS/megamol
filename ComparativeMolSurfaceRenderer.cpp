@@ -107,12 +107,12 @@ void ComparativeMolSurfaceRenderer::computeDensityBBox(
     this->bboxParticles.Set(minC.x, minC.y, minC.z,
             maxC.x, maxC.y, maxC.z);
 
-    // DEBUG Print new bounding box
-    printf("bbboxParticles: %f %f %f %f %f %f\n", minC.x, minC.y, minC.z,
-            maxC.x, maxC.y, maxC.z);
-    printf("atomCnt0: %u\n",atomCnt1);
-    printf("atomCnt1: %u\n",atomCnt2);
-    // END DEBUG
+//    // DEBUG Print new bounding box
+//    printf("bbboxParticles: %f %f %f %f %f %f\n", minC.x, minC.y, minC.z,
+//            maxC.x, maxC.y, maxC.z);
+//    printf("atomCnt0: %u\n",atomCnt1);
+//    printf("atomCnt1: %u\n",atomCnt2);
+//    // END DEBUG
 
 }
 
@@ -1060,8 +1060,6 @@ atoms instead.",
 
             uint posCnt1=0, posCnt2=0;
 
-            printf("mol frame %u \n", mol1->FrameID());
-
             // Extracting C alpha atoms from mol 1
 //            for (uint sec = 0; sec < mol1->SecondaryStructureCount(); ++sec) {
 //                printf("sec %u of %u\n", sec, mol1->SecondaryStructureCount());
@@ -1728,6 +1726,26 @@ void ComparativeMolSurfaceRenderer::release(void) {
     this->procField1.Release();
     this->procField2.Release();
 #endif // USE_PROCEDURAL_DATA
+
+    this->gridDataPos.Release();
+
+    this->pplSurfaceShader.Release();
+    this->pplSurfaceShaderVertexFlag.Release();
+    this->pplSurfaceShaderUncertainty.Release();
+    this->pplMappedSurfaceShader.Release();
+
+    CudaSafeCall(this->surfAttribTex1_D.Release());
+    CudaSafeCall(this->surfAttribTex2_D.Release());
+
+    this->rmsPosVec1.Release();
+    this->rmsPosVec2.Release();
+    this->rmsWeights.Release();
+    this->rmsMask.Release();
+
+    this->atomPosFitted.Release();
+
+    this->gvf.Release();
+    this->mappedSurfVertexFlags.Release();
 }
 
 
@@ -2566,10 +2584,13 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Perform subdivision with subsequent deformation to create a fine
         // target mesh enough
         int newTris;
-        for (int i = 0; i < this->maxSubdivLevel; ++i) {
+//        for (int i = 0; i < this->maxSubdivLevel; ++i) {
+            for (int i = 0; i < 1; ++i) {
 
             for (int j = 0; j < this->subStepLevel; ++j) {
-                printf("SUBDIV #%i\n", i);
+//                for (int j = 0; j < 1; ++j) {
+
+//               printf("SUBDIV #%i\n", i);
 
                 newTris = this->deformSurfMapped.RefineMesh(
                         1,
@@ -2595,130 +2616,130 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                 if (newTris == 0) break;
             }
 
-            // Perform morphing
-            if (this->maxSubdivLevel > 0) {
-                // Morph surface #2 to shape #1 using Two-Way-GVF
-                if (!this->deformSurfMapped.MorphToVolumeTwoWayGVFSubdiv(
-#ifndef  USE_PROCEDURAL_DATA
-                        ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-#else //  USE_PROCEDURAL_DATA
-                        this->procField2D.Peek(),
-#endif //  USE_PROCEDURAL_DATA
-#ifndef  USE_PROCEDURAL_DATA
-                        ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-#else //  USE_PROCEDURAL_DATA
-                        this->procField1D.Peek(),
-#endif //  USE_PROCEDURAL_DATA
-                        this->deformSurf2.PeekCubeStates(),
-                        this->deformSurf1.PeekCubeStates(),
-                        this->volDim,
-                        this->volOrg,
-                        this->volDelta,
-                        this->qsIsoVal,
-                        this->interpolMode,
-                        this->maxSubdivSteps,
-                        this->surfMappedMinDisplScl,
-                        this->surfMappedSpringStiffness,
-                        this->surfaceMappingForcesScl,
-                        this->surfaceMappingExternalForcesWeightScl,
-                        this->surfMappedGVFScl,
-                        this->surfMappedGVFIt,
-                        false,
-                        false)) {
-
-                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                            "%s: could not compute Two-Way-GVF deformation",
-                            this->ClassName());
-
-                    return false;
-                }
-            }
+//            // Perform morphing
+//            if (this->maxSubdivLevel > 0) {
+//                // Morph surface #2 to shape #1 using Two-Way-GVF
+//                if (!this->deformSurfMapped.MorphToVolumeTwoWayGVFSubdiv(
+//#ifndef  USE_PROCEDURAL_DATA
+//                        ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+//#else //  USE_PROCEDURAL_DATA
+//                        this->procField2D.Peek(),
+//#endif //  USE_PROCEDURAL_DATA
+//#ifndef  USE_PROCEDURAL_DATA
+//                        ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+//#else //  USE_PROCEDURAL_DATA
+//                        this->procField1D.Peek(),
+//#endif //  USE_PROCEDURAL_DATA
+//                        this->deformSurf2.PeekCubeStates(),
+//                        this->deformSurf1.PeekCubeStates(),
+//                        this->volDim,
+//                        this->volOrg,
+//                        this->volDelta,
+//                        this->qsIsoVal,
+//                        this->interpolMode,
+//                        this->maxSubdivSteps,
+//                        this->surfMappedMinDisplScl,
+//                        this->surfMappedSpringStiffness,
+//                        this->surfaceMappingForcesScl,
+//                        this->surfaceMappingExternalForcesWeightScl,
+//                        this->surfMappedGVFScl,
+//                        this->surfMappedGVFIt,
+//                        false,
+//                        false)) {
+//
+//                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                            "%s: could not compute Two-Way-GVF deformation",
+//                            this->ClassName());
+//
+//                    return false;
+//                }
+//            }
         }
-
-
-        // Copy vertex flags to host
-
-        this->mappedSurfVertexFlags.Validate(this->deformSurfMapped.GetVertexCnt());
-        this->mappedSurfVertexFlags.Set(0x00);
-        if (this->maxSubdivLevel > 0) {
-            if (!CudaSafeCall(cudaMemcpy(
-                    this->mappedSurfVertexFlags.Peek(),
-                    this->deformSurfMapped.PeekVertexFlagDevPt(),
-                    sizeof(float)*this->deformSurfMapped.GetVertexCnt(),
-                    cudaMemcpyDeviceToHost))) {
-                return false;
-            }
-        }
-
-        // Update vertex path VBO for new vertices
-        if (this->maxSubdivLevel > 0) {
-            if (!this->deformSurfMapped.TrackPathSubdivVertices(
-#ifndef  USE_PROCEDURAL_DATA
-                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
-#else //  USE_PROCEDURAL_DATA
-                    this->procField2D.Peek(),
-#endif //  USE_PROCEDURAL_DATA
-                    this->volDim,
-                    this->volOrg,
-                    this->volDelta,
-                    this->surfaceMappingForcesScl,
-                    this->surfMappedMinDisplScl,
-                    this->qsIsoVal,
-                    this->surfaceMappingMaxIt)) {
-                return false;
-            }
-        }
-
-        // Compute texture difference per vertex
-        // Compute texture coordinates
-        Mat3f rmsRotInv(this->rmsRotation);
-        if (!rmsRotInv.Invert()) {
-            printf("Could not invert rotation matrix\n");
-            return false;
-        }
-        if (!this->deformSurfMapped.ComputeSurfAttribDiff(
-                this->deformSurf2,
-                this->rmsCentroid.PeekComponents(), // In case the start surface has been fitted using RMSD
-                rmsRotInv.PeekComponents(),
-                this->rmsTranslation.PeekComponents(),
-                this->surfAttribTex1_D.Peek(),
-                this->texDim1,
-                this->texOrg1,
-                this->texDelta1,
-                this->surfAttribTex2_D.Peek(),
-                this->texDim2,
-                this->texOrg2,
-                this->texDelta2)) {
-            return false;
-        }
-
-#ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-                "%s: compute texture coordinates of mapped surface",
-                this->ClassName());
-#endif // vERBOSE
-
-        // Compute texture coordinates
-        if (!this->deformSurfMapped.ComputeTexCoords(
-                this->gridPotential1.minC,
-                this->gridPotential1.maxC)) {
-
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not compute tex coords of mapped surface",
-                    this->ClassName());
-
-            return false;
-        }
-
-        // Compute vertex normals
-        if (!this->deformSurfMapped.ComputeNormalsSubdiv()) {
-
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not compute normals of mapped surface",
-                    this->ClassName());
-
-            return false;
-        }
+//
+//
+//        // Copy vertex flags to host
+//
+//        this->mappedSurfVertexFlags.Validate(this->deformSurfMapped.GetVertexCnt());
+//        this->mappedSurfVertexFlags.Set(0x00);
+//        if (this->maxSubdivLevel > 0) {
+//            if (!CudaSafeCall(cudaMemcpy(
+//                    this->mappedSurfVertexFlags.Peek(),
+//                    this->deformSurfMapped.PeekVertexFlagDevPt(),
+//                    sizeof(float)*this->deformSurfMapped.GetVertexCnt(),
+//                    cudaMemcpyDeviceToHost))) {
+//                return false;
+//            }
+//        }
+//
+//        // Update vertex path VBO for new vertices
+//        if (this->maxSubdivLevel > 0) {
+//            if (!this->deformSurfMapped.TrackPathSubdivVertices(
+//#ifndef  USE_PROCEDURAL_DATA
+//                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+//#else //  USE_PROCEDURAL_DATA
+//                    this->procField2D.Peek(),
+//#endif //  USE_PROCEDURAL_DATA
+//                    this->volDim,
+//                    this->volOrg,
+//                    this->volDelta,
+//                    this->surfaceMappingForcesScl,
+//                    this->surfMappedMinDisplScl,
+//                    this->qsIsoVal,
+//                    this->surfaceMappingMaxIt)) {
+//                return false;
+//            }
+//        }
+//
+//        // Compute texture difference per vertex
+//        // Compute texture coordinates
+//        Mat3f rmsRotInv(this->rmsRotation);
+//        if (!rmsRotInv.Invert()) {
+//            printf("Could not invert rotation matrix\n");
+//            return false;
+//        }
+//        if (!this->deformSurfMapped.ComputeSurfAttribDiff(
+//                this->deformSurf2,
+//                this->rmsCentroid.PeekComponents(), // In case the start surface has been fitted using RMSD
+//                rmsRotInv.PeekComponents(),
+//                this->rmsTranslation.PeekComponents(),
+//                this->surfAttribTex1_D.Peek(),
+//                this->texDim1,
+//                this->texOrg1,
+//                this->texDelta1,
+//                this->surfAttribTex2_D.Peek(),
+//                this->texDim2,
+//                this->texOrg2,
+//                this->texDelta2)) {
+//            return false;
+//        }
+//
+//#ifdef VERBOSE
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//                "%s: compute texture coordinates of mapped surface",
+//                this->ClassName());
+//#endif // vERBOSE
+//
+//        // Compute texture coordinates
+//        if (!this->deformSurfMapped.ComputeTexCoords(
+//                this->gridPotential1.minC,
+//                this->gridPotential1.maxC)) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not compute tex coords of mapped surface",
+//                    this->ClassName());
+//
+//            return false;
+//        }
+//
+//        // Compute vertex normals
+//        if (!this->deformSurfMapped.ComputeNormalsSubdiv()) {
+//
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not compute normals of mapped surface",
+//                    this->ClassName());
+//
+//            return false;
+//        }
 
         this->triggerSurfaceMapping = false;
         this->triggerComputeSubdiv = true;
@@ -2823,130 +2844,130 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //    // END DEBUG
 
 
-    if (this->surface1RM != SURFACE_NONE) {
-
-        // Sort triangles by camera distance
-        if (!this->deformSurf1.SortTrianglesByCamDist(camPos)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not sort triangles #1",
-                    this->ClassName());
-            return false;
-        }
-
-        // Render surface #1
-        if (!this->renderSurface(
-                this->deformSurf1.GetVtxDataVBO(),
-                this->deformSurf1.GetVertexCnt(),
-                this->deformSurf1.GetTriangleIdxVBO(),
-                this->deformSurf1.GetTriangleCnt()*3,
-                this->surface1RM,
-                this->surface1ColorMode,
-                this->surfAttribTex1,
-                this->uniformColorSurf1,
-                this->surf1AlphaScl)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not render surface #1",
-                    this->ClassName());
-            return false;
-        }
-    }
-
-    if (this->surface2RM != SURFACE_NONE) {
-        // Sort triangles by camera distance
-        if (!this->deformSurf2.SortTrianglesByCamDist(camPos)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not sort triangles #2",
-                    this->ClassName());
-            return false;
-        }
-
-        // Render surface #2
-        if (!this->renderSurface(
-                this->deformSurf2.GetVtxDataVBO(),
-                this->deformSurf2.GetVertexCnt(),
-                this->deformSurf2.GetTriangleIdxVBO(),
-                this->deformSurf2.GetTriangleCnt()*3,
-                this->surface2RM,
-                this->surface2ColorMode,
-                this->surfAttribTex2,
-                this->uniformColorSurf2,
-                this->surf2AlphaScl)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not render surface #2",
-                    this->ClassName());
-            return false;
-        }
-
+//    if (this->surface1RM != SURFACE_NONE) {
+//
+//        // Sort triangles by camera distance
+//        if (!this->deformSurf1.SortTrianglesByCamDist(camPos)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not sort triangles #1",
+//                    this->ClassName());
+//            return false;
+//        }
+//
+//        // Render surface #1
+//        if (!this->renderSurface(
+//                this->deformSurf1.GetVtxDataVBO(),
+//                this->deformSurf1.GetVertexCnt(),
+//                this->deformSurf1.GetTriangleIdxVBO(),
+//                this->deformSurf1.GetTriangleCnt()*3,
+//                this->surface1RM,
+//                this->surface1ColorMode,
+//                this->surfAttribTex1,
+//                this->uniformColorSurf1,
+//                this->surf1AlphaScl)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not render surface #1",
+//                    this->ClassName());
+//            return false;
+//        }
+//    }
+//
+//    if (this->surface2RM != SURFACE_NONE) {
+//        // Sort triangles by camera distance
+//        if (!this->deformSurf2.SortTrianglesByCamDist(camPos)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not sort triangles #2",
+//                    this->ClassName());
+//            return false;
+//        }
+//
+//        // Render surface #2
+//        if (!this->renderSurface(
+//                this->deformSurf2.GetVtxDataVBO(),
+//                this->deformSurf2.GetVertexCnt(),
+//                this->deformSurf2.GetTriangleIdxVBO(),
+//                this->deformSurf2.GetTriangleCnt()*3,
+//                this->surface2RM,
+//                this->surface2ColorMode,
+//                this->surfAttribTex2,
+//                this->uniformColorSurf2,
+//                this->surf2AlphaScl)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not render surface #2",
+//                    this->ClassName());
+//            return false;
+//        }
+//
+////        // Render mapped surface
+////        if (!this->renderMappedSurface(
+////                this->deformSurf2.GetVtxDataVBO(),
+//////                this->deformSurfMapped.GetVtxDataVBO(),
+//////                this->deformSurfMapped.GetVertexCnt(),
+//////                this->deformSurfMapped.GetTriangleIdxVBO(),
+//////                this->deformSurfMapped.GetTriangleCnt()*3,
+////                this->deformSurf2.GetVtxDataVBO(),
+////                 this->deformSurf2.GetVertexCnt(),
+////                 this->deformSurf2.GetTriangleIdxVBO(),
+////                 this->deformSurf2.GetTriangleCnt()*3,
+////                this->surface2RM,
+////                this->surfaceMappedColorMode)) {
+////            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+////                    "%s: could not render mapped surface",
+////                    this->ClassName());
+////            return false;
+////        }
+//    }
+//
+//    if (this->surfaceMappedRM != SURFACE_NONE) {
+//
+//        // Sort triangles by camera distance
+//        if (!this->deformSurfMapped.SortTrianglesByCamDist(camPos)) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "%s: could not sort triangles of mapped surface",
+//                    this->ClassName());
+//            return false;
+//        }
+//
 //        // Render mapped surface
 //        if (!this->renderMappedSurface(
 //                this->deformSurf2.GetVtxDataVBO(),
-////                this->deformSurfMapped.GetVtxDataVBO(),
-////                this->deformSurfMapped.GetVertexCnt(),
-////                this->deformSurfMapped.GetTriangleIdxVBO(),
-////                this->deformSurfMapped.GetTriangleCnt()*3,
-//                this->deformSurf2.GetVtxDataVBO(),
-//                 this->deformSurf2.GetVertexCnt(),
-//                 this->deformSurf2.GetTriangleIdxVBO(),
-//                 this->deformSurf2.GetTriangleCnt()*3,
-//                this->surface2RM,
+//                this->deformSurfMapped.GetVtxDataVBO(),
+//                this->deformSurfMapped.GetVertexCnt(),
+//                this->deformSurfMapped.GetTriangleIdxVBO(),
+//                this->deformSurfMapped.GetTriangleCnt()*3,
+//                this->surfaceMappedRM,
 //                this->surfaceMappedColorMode)) {
 //            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 //                    "%s: could not render mapped surface",
 //                    this->ClassName());
 //            return false;
 //        }
-    }
-
-    if (this->surfaceMappedRM != SURFACE_NONE) {
-
-        // Sort triangles by camera distance
-        if (!this->deformSurfMapped.SortTrianglesByCamDist(camPos)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not sort triangles of mapped surface",
-                    this->ClassName());
-            return false;
-        }
-
-        // Render mapped surface
-        if (!this->renderMappedSurface(
-                this->deformSurf2.GetVtxDataVBO(),
-                this->deformSurfMapped.GetVtxDataVBO(),
-                this->deformSurfMapped.GetVertexCnt(),
-                this->deformSurfMapped.GetTriangleIdxVBO(),
-                this->deformSurfMapped.GetTriangleCnt()*3,
-                this->surfaceMappedRM,
-                this->surfaceMappedColorMode)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s: could not render mapped surface",
-                    this->ClassName());
-            return false;
-        }
-
-//        // Render mapped surface as normal surface
-//        if (!this->renderSurface(
-//                this->deformSurfMapped.GetVtxDataVBO(),
-//                this->deformSurfMapped.GetVertexCnt(),
-//                this->deformSurfMapped.GetTriangleIdxVBO(),
-//                this->deformSurfMapped.GetTriangleCnt()*3,
-//                this->surfaceMappedRM,
-//                this->surface2ColorMode,
-//                this->surfAttribTex2,
-//                this->uniformColorSurf2,
-//                this->surf2AlphaScl)) {
-//            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                    "%s: could not render mapped surface",
-//                    this->ClassName());
-//            return false;
-//        }
 //
-//        if (!this->renderSurfaceWithSubdivFlag(this->deformSurfMapped)) {
-//            return false;
-//        }
-
-//        if (!this->renderSurfaceWithUncertainty(this->deformSurfMapped)) {
-//            return false;
-//        }
-    }
+////        // Render mapped surface as normal surface
+////        if (!this->renderSurface(
+////                this->deformSurfMapped.GetVtxDataVBO(),
+////                this->deformSurfMapped.GetVertexCnt(),
+////                this->deformSurfMapped.GetTriangleIdxVBO(),
+////                this->deformSurfMapped.GetTriangleCnt()*3,
+////                this->surfaceMappedRM,
+////                this->surface2ColorMode,
+////                this->surfAttribTex2,
+////                this->uniformColorSurf2,
+////                this->surf2AlphaScl)) {
+////            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+////                    "%s: could not render mapped surface",
+////                    this->ClassName());
+////            return false;
+////        }
+////
+////        if (!this->renderSurfaceWithSubdivFlag(this->deformSurfMapped)) {
+////            return false;
+////        }
+//
+////        if (!this->renderSurfaceWithUncertainty(this->deformSurfMapped)) {
+////            return false;
+////        }
+//    }
 
 //
 //    // DEBUG Render backwards mapped subdivision vertices
@@ -2979,11 +3000,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //    // END DEBUG
 
 //    // DEBUG Compute mean vertex path of deformed surface
-    float surfArea = this->deformSurfMapped.GetTotalSurfArea();
-    float meanVertexPath = this->deformSurfMapped.IntVtxPathOverSurfArea();
-    meanVertexPath /= surfArea;
-    printf("SURFACE AREA %f\n", surfArea);
-    printf("MEAN PATH    %f\n", meanVertexPath);
+//    float surfArea = this->deformSurfMapped.GetTotalSurfArea();
+//    float meanVertexPath = this->deformSurfMapped.IntVtxPathOverSurfArea();
+//    meanVertexPath /= surfArea;
+//    printf("SURFACE AREA %f\n", surfArea);
+//    printf("MEAN PATH    %f\n", meanVertexPath);
 //    float3 minC, maxC;
 //    //this->deformSurf2.ComputeMinMaxCoords(minC, maxC);
 //    printf("min %f %f %f, max %f %f %f\n", minC.x, minC.y, minC.z,
