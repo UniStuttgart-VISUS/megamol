@@ -48,8 +48,7 @@
 vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(
         const char *propName, const char *file,  const int line) 
         : Exception(file, line) {
-    VLSTACKTRACE("NoConfidenceException::NoConfidenceException", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
     this->formatMsg("Property '%s' is invalid.", propName);
 }
 
@@ -60,8 +59,7 @@ vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(
 vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(
         const wchar_t *propName, const char *file, const int line) 
         : Exception(file, line) {
-    VLSTACKTRACE("NoConfidenceException::NoConfidenceException", __FILE__, 
-        __LINE__);  
+    THE_STACK_TRACE;  
     this->formatMsg(L"Property '%s' is invalid.", propName);
 }
 
@@ -72,8 +70,7 @@ vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(
 vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(
         const NoConfidenceException& rhs) 
         : Exception(rhs) {
-    VLSTACKTRACE("NoConfidenceException::NoConfidenceException", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -82,8 +79,7 @@ vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(
  */
 vislib::net::NetworkInformation::NoConfidenceException::~NoConfidenceException(
         void) {
-    VLSTACKTRACE("NoConfidenceException::~NoConfidenceException", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -93,7 +89,7 @@ vislib::net::NetworkInformation::NoConfidenceException::~NoConfidenceException(
 vislib::net::NetworkInformation::NoConfidenceException& 
 vislib::net::NetworkInformation::NoConfidenceException::operator =(
         const NoConfidenceException& rhs) {
-    VLSTACKTRACE("NoConfidenceException::operator =", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     Exception::operator =(rhs);
     return *this;
 }
@@ -193,14 +189,14 @@ UnicastAddressInformation(const IPEndPoint endPoint,
  * vislib::net::NetworkInformation::Adapter::Adapter
  */
 vislib::net::NetworkInformation::Adapter::Adapter(void) {
-    VLSTACKTRACE("Adapter::Adapter", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 /*
  * vislib::net::NetworkInformation::Adapter::Adapter
  */
 vislib::net::NetworkInformation::Adapter::Adapter(const Adapter& rhs) {
-    VLSTACKTRACE("Adapter::Adapter", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     *this = rhs;
 }
 
@@ -209,7 +205,7 @@ vislib::net::NetworkInformation::Adapter::Adapter(const Adapter& rhs) {
  * vislib::net::NetworkInformation::Adapter::~Adapter
  */
 vislib::net::NetworkInformation::Adapter::~Adapter(void) {
-    VLSTACKTRACE("Adapter::~Adapter", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -218,7 +214,7 @@ vislib::net::NetworkInformation::Adapter::~Adapter(void) {
  */
 vislib::StringA 
 vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressA(void) const {
-    VLSTACKTRACE("Adapter::FormatPhysicalAddressA", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     StringA retval;
     StringA tmp;
 
@@ -242,7 +238,7 @@ vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressA(void) const {
  */
 vislib::StringW
 vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressW(void) const {
-    VLSTACKTRACE("Adapter::FormatPhysicalAddressW", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     StringW retval;
     StringW tmp;
 
@@ -267,7 +263,7 @@ vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressW(void) const {
 const vislib::Array<BYTE>& 
 vislib::net::NetworkInformation::Adapter::GetPhysicalAddress(
         Confidence *outConfidence) const {
-    VLSTACKTRACE("Adapter::GetPhysicalAddress", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     if (outConfidence != NULL) {
         *outConfidence = (this->physicalAddress.IsEmpty()) ? INVALID : VALID;
@@ -284,7 +280,7 @@ vislib::net::NetworkInformation::Adapter::GetPhysicalAddress(
 const vislib::net::IPAgnosticAddress 
 vislib::net::NetworkInformation::Adapter::GetUnicastAddress(
         const IPAgnosticAddress::AddressFamily preferredFamily) const {
-    VLSTACKTRACE("Adapter::GetUnicastAddress", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     UnicastAddressList addrs = this->GetUnicastAddresses();
 
     for (SIZE_T i = 0; i < addrs.Count(); i++) {
@@ -302,7 +298,7 @@ vislib::net::NetworkInformation::Adapter::GetUnicastAddress(
  */
 vislib::net::NetworkInformation::Adapter& 
 vislib::net::NetworkInformation::Adapter::operator =(const Adapter& rhs) {
-    VLSTACKTRACE("Adapter::operator =", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     if (this != &rhs) {
         this->anycastAddresses = rhs.anycastAddresses;
@@ -327,7 +323,7 @@ vislib::net::NetworkInformation::Adapter::operator =(const Adapter& rhs) {
  */
 bool vislib::net::NetworkInformation::Adapter::operator ==(
         const Adapter& rhs) const {
-    VLSTACKTRACE("Adapter::operator ==", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 #define CHECK_MEMBER_NEQ(m) if (this->m != rhs.m) { return false; }
 
     CHECK_MEMBER_NEQ(anycastAddresses);
@@ -354,7 +350,7 @@ bool vislib::net::NetworkInformation::Adapter::operator ==(
  * vislib::net::NetworkInformation::CountAdapters
  */
 SIZE_T vislib::net::NetworkInformation::CountAdapters() {
-    VLSTACKTRACE("NetworkInformation::CountAdapters", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     NetworkInformation::lockAdapters.Lock();
     try {
@@ -374,7 +370,7 @@ SIZE_T vislib::net::NetworkInformation::CountAdapters() {
  * vislib::net::NetworkInformation::DiscardCache
  */
 void vislib::net::NetworkInformation::DiscardCache(const bool reread) {
-    VLSTACKTRACE("NetworkInformation::DiscardCache", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     NetworkInformation::lockAdapters.Lock();
     try {
@@ -396,7 +392,7 @@ void vislib::net::NetworkInformation::DiscardCache(const bool reread) {
  */
 void vislib::net::NetworkInformation::EnumerateAdapters(
         EnumerateAdaptersCallback cb, void *userContext) {
-    VLSTACKTRACE("NetworkInformation::EnumerateAdapters", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     /* Sanity checks. */
     if (cb == NULL) {
@@ -433,7 +429,7 @@ void vislib::net::NetworkInformation::EnumerateAdapters(
  */
 vislib::net::NetworkInformation::Adapter 
 vislib::net::NetworkInformation::GetAdapter(const SIZE_T idx) {
-    VLSTACKTRACE("NetworkInformation::GetAdapter", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     NetworkInformation::lockAdapters.Lock();
     try {
@@ -452,7 +448,7 @@ vislib::net::NetworkInformation::GetAdapter(const SIZE_T idx) {
  */
 bool vislib::net::NetworkInformation::GetAdapterForID(
         Adapter& outAdapter, const char *id) {
-    VLSTACKTRACE("NetworkInformation::GetAdapterForID", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     NetworkInformation::lockAdapters.Lock();
     try {
@@ -485,8 +481,7 @@ bool vislib::net::NetworkInformation::GetAdapterForID(
  */
 SIZE_T vislib::net::NetworkInformation::GetAdaptersForPredicate(
         AdapterList& outAdapters, SelectAdapterCallback cb, void *userContext) {
-    VLSTACKTRACE("NetworkInformation::GetAdaptersForPredicate", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
  
     outAdapters.Clear();
 
@@ -520,8 +515,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForPredicate(
  */
 SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
         AdapterList& outAdapters, const IPAddress& address) {
-    VLSTACKTRACE("NetworkInformation::GetAdaptersForUnicastAddress", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return NetworkInformation::GetAdaptersForPredicate(
         outAdapters, 
         NetworkInformation::selectAdapterByUnicastIPv4, 
@@ -534,8 +528,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
  */
 SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
         AdapterList& outAdapters, const IPAddress6& address) {
-    VLSTACKTRACE("NetworkInformation::GetAdaptersForUnicastAddress", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return NetworkInformation::GetAdaptersForPredicate(
         outAdapters, 
         NetworkInformation::selectAdapterByUnicastIPv6, 
@@ -548,8 +541,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
  */
 SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
         AdapterList& outAdapters, const IPAgnosticAddress& address) {
-    VLSTACKTRACE("NetworkInformation::GetAdaptersForUnicastAddress", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return NetworkInformation::GetAdaptersForPredicate(
         outAdapters, 
         NetworkInformation::selectAdapterByUnicastIP, 
@@ -562,7 +554,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
  */
 SIZE_T vislib::net::NetworkInformation::GetAdaptersForType(
         AdapterList& outAdapters, const Adapter::Type type) {
-    VLSTACKTRACE("NetworkInformation::GetAdaptersForType", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     return NetworkInformation::GetAdaptersForPredicate(outAdapters,
         NetworkInformation::selectAdapterByType,
@@ -575,7 +567,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForType(
  */
 //const vislib::net::NetworkInformation::AdapterList& 
 //vislib::net::NetworkInformation::GetAdaptersUnsafe(const bool forceUpdate) {
-//    VLSTACKTRACE("NetworkInformation::GetAdaptersUnsafe", __FILE__, __LINE__);
+//    THE_STACK_TRACE;
 //    
 //    NetworkInformation::lockAdapters.Lock();
 //    try {
@@ -596,8 +588,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForType(
 SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastPrefix(
         AdapterList& outAdapters, const IPAgnosticAddress& address, 
         const ULONG prefixLength) {
-    VLSTACKTRACE("NetworkInformation::GetAdaptersForSubnet", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
     UnicastAddressInformation ai(IPEndPoint(address, 0), prefixLength, VALID,
         UnicastAddressInformation::PREFIX_ORIGIN_OTHER, INVALID,
         UnicastAddressInformation::SUFFIX_ORIGIN_OTHER, INVALID);
@@ -613,7 +604,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastPrefix(
  */
 const vislib::net::NetworkInformation::Adapter& 
 vislib::net::NetworkInformation::GetAdapterUnsafe(const SIZE_T idx) {
-    VLSTACKTRACE("NetworkInformation::GetAdapterUnsafe", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SIZE_T cntAdapters = 0;
 
     NetworkInformation::lockAdapters.Lock();
@@ -643,7 +634,7 @@ vislib::net::NetworkInformation::GetAdapterUnsafe(const SIZE_T idx) {
  */
 float vislib::net::NetworkInformation::GuessAdapter(Adapter& outAdapter, 
         const char *str, const bool invertWildness) {
-    VLSTACKTRACE("NetworkInformation::GuessAdapter", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return NetworkInformation::GuessAdapter(outAdapter, A2W(str), 
         invertWildness);
 }
@@ -655,7 +646,7 @@ float vislib::net::NetworkInformation::GuessAdapter(Adapter& outAdapter,
  */
 float vislib::net::NetworkInformation::GuessAdapter(Adapter& outAdapter, 
         const wchar_t *str, const bool invertWildness) {
-    VLSTACKTRACE("NetworkInformation::GuessAdapter", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     float retval = 1.0f;            // The wildness of the guess.
     UINT32 validMask = 0;           // Valid fields from the input.
     IPAgnosticAddress address;      // The adapter address from the input.
@@ -702,7 +693,7 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
         IPEndPoint& outEndPoint, const char *str, 
         const IPAgnosticAddress::AddressFamily preferredFamily, 
         const bool invertWildness) {
-    VLSTACKTRACE("NetworkInformation::GuessLocalEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return NetworkInformation::guessLocalEndPoint(outEndPoint, A2W(str),
         &preferredFamily, invertWildness);
 }
@@ -715,7 +706,7 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
         IPEndPoint& outEndPoint, const wchar_t *str, 
         const IPAgnosticAddress::AddressFamily preferredFamily, 
         const bool invertWildness) {
-    VLSTACKTRACE("NetworkInformation::GuessLocalEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return NetworkInformation::guessLocalEndPoint(outEndPoint, str,
         &preferredFamily, invertWildness);
 }
@@ -726,7 +717,7 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
  */
 float vislib::net::NetworkInformation::GuessLocalEndPoint(
         IPEndPoint& outEndPoint, const char *str, const bool invertWildness) {
-    VLSTACKTRACE("NetworkInformation::GuessLocalEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return NetworkInformation::guessLocalEndPoint(outEndPoint, A2W(str),
         NULL, invertWildness);
 }
@@ -738,7 +729,7 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
 float vislib::net::NetworkInformation::GuessLocalEndPoint(
         IPEndPoint& outEndPoint, const wchar_t *str, 
         const bool invertWildness) {
-    VLSTACKTRACE("NetworkInformation::GuessLocalEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return NetworkInformation::guessLocalEndPoint(outEndPoint, str,
         NULL, invertWildness);
 }
@@ -752,7 +743,7 @@ float vislib::net::NetworkInformation::GuessRemoteEndPoint(
         const char *str, 
         const IPAgnosticAddress::AddressFamily preferredFamily,
         const bool invertWildness) {
-    VLSTACKTRACE("NetworkInformation::GuessRemoteEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return NetworkInformation::guessRemoteEndPoint(outEndPoint, 
         A2W(str), &preferredFamily, invertWildness);
 }
@@ -763,7 +754,7 @@ float vislib::net::NetworkInformation::GuessRemoteEndPoint(
  */
 float vislib::net::NetworkInformation::GuessRemoteEndPoint(
         IPEndPoint& outEndPoint, const char *str, const bool invertWildness) {
-    VLSTACKTRACE("NetworkInformation::GuessRemoteEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return NetworkInformation::guessRemoteEndPoint(outEndPoint, 
         A2W(str), NULL, invertWildness);
 }
@@ -778,7 +769,7 @@ float vislib::net::NetworkInformation::GuessRemoteEndPoint(
         const wchar_t *str, 
         const IPAgnosticAddress::AddressFamily preferredFamily,
         const bool invertWildness) {
-    VLSTACKTRACE("NetworkInformation::GuessRemoteEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return NetworkInformation::guessRemoteEndPoint(outEndPoint, 
         str, &preferredFamily, invertWildness);
 }
@@ -789,7 +780,7 @@ float vislib::net::NetworkInformation::GuessRemoteEndPoint(
  */
 float vislib::net::NetworkInformation::GuessRemoteEndPoint(
         IPEndPoint& outEndPoint, const wchar_t *str, const bool invertWildness) {
-    VLSTACKTRACE("NetworkInformation::GuessRemoteEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return NetworkInformation::guessRemoteEndPoint(outEndPoint, 
         str, NULL, invertWildness);
 }
@@ -800,7 +791,7 @@ float vislib::net::NetworkInformation::GuessRemoteEndPoint(
  */
 ULONG vislib::net::NetworkInformation::NetmaskToPrefix(
         const IPAgnosticAddress& netmask) {
-    VLSTACKTRACE("NetworkInformation::NetmaskToPrefix", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     switch (netmask.GetAddressFamily()) {
         case IPAgnosticAddress::FAMILY_INET:
@@ -825,8 +816,7 @@ ULONG vislib::net::NetworkInformation::NetmaskToPrefix(
  */
 const char *vislib::net::NetworkInformation::Stringise(
         const Adapter::ScopeLevel sl) {
-    VLSTACKTRACE("NetworkInformation::Stringise", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
 
     switch (sl) {
         IMPLEMENT_STRINGISE_CASE(Adapter, SCOPE_INTERFACE);
@@ -848,8 +838,7 @@ const char *vislib::net::NetworkInformation::Stringise(
  */
 const char *vislib::net::NetworkInformation::Stringise(
         const Adapter::OperStatus as) {
-    VLSTACKTRACE("NetworkInformation::Stringise", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
 
     switch (as) {
         IMPLEMENT_STRINGISE_CASE(Adapter, OPERSTATUS_UNKNOWN);
@@ -871,8 +860,7 @@ const char *vislib::net::NetworkInformation::Stringise(
  */
 const char *vislib::net::NetworkInformation::Stringise(
         const Adapter::Type at) {
-    VLSTACKTRACE("NetworkInformation::Stringise", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
 
     switch (at) {
         IMPLEMENT_STRINGISE_CASE(Adapter, TYPE_OTHER);
@@ -896,8 +884,7 @@ const char *vislib::net::NetworkInformation::Stringise(
  */
 const char *vislib::net::NetworkInformation::Stringise(
         const Adapter::TunnelType tt) {
-    VLSTACKTRACE("NetworkInformation::Stringise", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
 
     switch (tt) {
         IMPLEMENT_STRINGISE_CASE(Adapter, TUNNELTYPE_NONE);
@@ -918,8 +905,7 @@ const char *vislib::net::NetworkInformation::Stringise(
  */
 const char *vislib::net::NetworkInformation::Stringise(
         const UnicastAddressInformation::PrefixOrigin po) {
-    VLSTACKTRACE("NetworkInformation::Stringise", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
 
     switch (po) {
         IMPLEMENT_STRINGISE_CASE(UnicastAddressInformation, 
@@ -944,8 +930,7 @@ const char *vislib::net::NetworkInformation::Stringise(
  */
 const char *vislib::net::NetworkInformation::Stringise(
         const UnicastAddressInformation::SuffixOrigin so) {
-    VLSTACKTRACE("NetworkInformation::Stringise", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
 
     switch (so) {
         IMPLEMENT_STRINGISE_CASE(UnicastAddressInformation,
@@ -975,8 +960,7 @@ const char *vislib::net::NetworkInformation::Stringise(
 float vislib::net::NetworkInformation::assessAddressAsEndPoint(
         const UnicastAddressInformation& addrInfo, 
         const GuessLocalEndPointCtx& ctx) {
-    VLSTACKTRACE("NetworkInformation::assessAddressAsEndPoint", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
     float retval = 1.0f;        // Initialise wildness result.
 
     if (ctx.Address != NULL) {
@@ -1051,7 +1035,7 @@ float vislib::net::NetworkInformation::assessAddressAsEndPoint(
  */
 float vislib::net::NetworkInformation::consolidateWildness(
         Array<float>& inOutWildness, SIZE_T& outIdxFirstBest) {
-    VLSTACKTRACE("NetworkInformation::consolidateWildness", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SIZE_T cntEqualWildness = 1;    // # of equal wildness values.
     float retval = 1.0f;            // The minimal wildness found.
 
@@ -1113,8 +1097,7 @@ float vislib::net::NetworkInformation::consolidateWildness(
  */
 vislib::net::IPAddress vislib::net::NetworkInformation::guessBroadcastAddress(
         const IPAddress& address, const IPAddress& netmask) {
-    VLSTACKTRACE("NetworkInformation::guessBroadcastAddress", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
 
     UINT32 addr = static_cast<UINT32>(
         static_cast<const struct in_addr *>(address)->s_addr);
@@ -1142,7 +1125,7 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
         IPEndPoint& outEndPoint, const wchar_t *str, 
         const IPAgnosticAddress::AddressFamily *prefFam, 
         const bool invertWildness) {
-    VLSTACKTRACE("NetworkInformation::guessLocalEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     Adapter candidate;              // The adapter candidate.
     GuessLocalEndPointCtx ctx;      // The enumeration context.
@@ -1323,7 +1306,7 @@ float vislib::net::NetworkInformation::guessRemoteEndPoint(
         IPEndPoint& outEndPoint, const wchar_t *str, 
         const IPAgnosticAddress::AddressFamily *prefFam, 
         const bool invertWildness) {
-    VLSTACKTRACE("NetworkInformation::guessRemoteEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     Array<float> wildness(0);       // The wildness of multiple candidates.
     float retval = 1.0f;            // The wildness of the guess.
@@ -1430,7 +1413,7 @@ float vislib::net::NetworkInformation::guessRemoteEndPoint(
  * vislib::net::NetworkInformation::initAdapters
  */
 void vislib::net::NetworkInformation::initAdapters(void) {
-    VLSTACKTRACE("NetworkInformation::initAdapters", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     /* Check whether there is work to do or not. */
     if (!NetworkInformation::adapters.IsEmpty()) {
@@ -1840,7 +1823,7 @@ vislib::net::NetworkInformation::Adapter::Type
 vislib::net::NetworkInformation::mapAdapterType(
 #ifdef _WIN32
         const IFTYPE type) {
-    VLSTACKTRACE("NetworkInformation::mapAdapterType", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     switch (type) {
         case IF_TYPE_ETHERNET_CSMACD:
@@ -1877,7 +1860,7 @@ vislib::net::NetworkInformation::mapAdapterType(
 
 #else /* _WIN32 */
         const int type) {
-    VLSTACKTRACE("NetworkInformation::mapAdapterType", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     switch (type) {
         case ARPHRD_ETHER:
@@ -1967,7 +1950,7 @@ vislib::net::NetworkInformation::mapAdapterType(
 vislib::net::NetworkInformation::Adapter::OperStatus
 vislib::net::NetworkInformation::mapOperationStatus(
         const IF_OPER_STATUS status) {
-    VLSTACKTRACE("NetworkInformation::mapOperationStatus", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     switch (status) {
         case IfOperStatusUp:
@@ -2005,7 +1988,7 @@ vislib::net::NetworkInformation::mapOperationStatus(
 vislib::net::NetworkInformation::UnicastAddressInformation::PrefixOrigin 
 vislib::net::NetworkInformation::mapPrefixOrigin(
         const IP_PREFIX_ORIGIN prefixOrigin) {
-    VLSTACKTRACE("NetworkInformation::mapPrefixOrigin", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     switch (prefixOrigin) {
         case IpPrefixOriginOther:
@@ -2036,7 +2019,7 @@ vislib::net::NetworkInformation::mapPrefixOrigin(
 vislib::net::NetworkInformation::UnicastAddressInformation::SuffixOrigin 
 vislib::net::NetworkInformation::mapSuffixOrigin(
         const IP_SUFFIX_ORIGIN suffixOrigin) {
-    VLSTACKTRACE("NetworkInformation::suffixOrigin", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     switch (suffixOrigin) {
         case IpSuffixOriginOther:
@@ -2069,7 +2052,7 @@ vislib::net::NetworkInformation::mapSuffixOrigin(
  */
 ULONG vislib::net::NetworkInformation::netmaskToPrefix(const BYTE *netmask,
                                                        const SIZE_T len) {
-    VLSTACKTRACE("NetworkInformation::netmaskToPrefix", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     const BYTE *mask = netmask;
     const BYTE *end = mask + len;
     LONG retval = 0;
@@ -2104,7 +2087,7 @@ ULONG vislib::net::NetworkInformation::netmaskToPrefix(const BYTE *netmask,
  */
 void vislib::net::NetworkInformation::prefixToNetmask(BYTE *outNetmask, 
         const SIZE_T len, const ULONG prefix) {
-    VLSTACKTRACE("NetworkInformation::prefixToNetmask", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     BYTE *mask = outNetmask;
     LONG remBits = prefix;
     LONG maxPrefix = 8L * static_cast<LONG>(len);
@@ -2133,8 +2116,7 @@ void vislib::net::NetworkInformation::prefixToNetmask(BYTE *outNetmask,
  */
 bool vislib::net::NetworkInformation::processAdapterForLocalEndpointGuess(
         const Adapter& adapter, void *context) {
-    VLSTACKTRACE("NetworkInformation::processAdapterForLocalEndpointGuess", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
     GuessLocalEndPointCtx *ctx = static_cast<GuessLocalEndPointCtx *>(context);
     NetworkInformation::Confidence dummy; // TODO: should be accounted in wildness!
     UnicastAddressList al = adapter.GetUnicastAddresses(&dummy);
@@ -2156,7 +2138,7 @@ bool vislib::net::NetworkInformation::processAdapterForLocalEndpointGuess(
  */
 bool vislib::net::NetworkInformation::selectAdapterByType(
         const Adapter& adapter, void *type) {
-    VLSTACKTRACE("NetworkInformation::selectAdapterByType", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     Adapter::Type t = *static_cast<Adapter::Type *>(type);   
     return (adapter.GetType() == t);
 }
@@ -2167,8 +2149,7 @@ bool vislib::net::NetworkInformation::selectAdapterByType(
  */
 bool vislib::net::NetworkInformation::selectAdapterByUnicastIP(
         const Adapter& adapter, void *addr) {
-    VLSTACKTRACE("NetworkInformation::selectAdapterByUnicastIP", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
     return (NetworkInformation::findAddress(
         adapter.GetUnicastAddresses(), 
         *static_cast<IPAgnosticAddress *>(addr)) >= 0);
@@ -2180,8 +2161,7 @@ bool vislib::net::NetworkInformation::selectAdapterByUnicastIP(
  */
 bool vislib::net::NetworkInformation::selectAdapterByUnicastIPv4(
         const Adapter& adapter, void *addr) {
-    VLSTACKTRACE("NetworkInformation::selectAdapterByUnicastIPv4", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
     return (NetworkInformation::findAddress(
         adapter.GetUnicastAddresses(), 
         *static_cast<IPAddress *>(addr)) >= 0);
@@ -2194,8 +2174,7 @@ bool vislib::net::NetworkInformation::selectAdapterByUnicastIPv4(
  */
 bool vislib::net::NetworkInformation::selectAdapterByUnicastIPv6(
         const Adapter& adapter, void *addr) {
-    VLSTACKTRACE("NetworkInformation::selectAdapterByUnicastIPv6", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
     return (NetworkInformation::findAddress(
         adapter.GetUnicastAddresses(), 
         *static_cast<IPAddress6 *>(addr)) >= 0);
@@ -2207,8 +2186,7 @@ bool vislib::net::NetworkInformation::selectAdapterByUnicastIPv6(
  */
 bool vislib::net::NetworkInformation::selectAdapterByUnicastPrefix(
         const Adapter& adapter, void *addrInfo) {
-    VLSTACKTRACE("NetworkInformation::selectAdapterByUnicastPrefix", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
     UnicastAddressInformation *ai = static_cast<UnicastAddressInformation *>(
         addrInfo);
     return (NetworkInformation::findSamePrefix(
@@ -2224,7 +2202,7 @@ bool vislib::net::NetworkInformation::selectAdapterByUnicastPrefix(
 float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter, 
             const IPAgnosticAddress& address, const StringW& device, 
             const ULONG prefixLen, const UINT32 validMask) {
-    VLSTACKTRACE("NetworkInformation::wildGuessAdapter", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     //static const float LEVENSHTEIN_WILDNESS_WEIGHT = 0.05f;
     Array<float> wildness(0);       // The pre-adapter wildness.
     float retval = 1.0f;            // The final wildness of the guess.
@@ -2396,7 +2374,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
         IPAgnosticAddress& outAddress, StringW& outDevice, 
         ULONG& outPrefixLen, USHORT& outPort, const wchar_t *str,
         const IPAgnosticAddress::AddressFamily *prefFam) {
-    VLSTACKTRACE("NetworkInformation::wildGuessSplitInput", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     UINT32 retval = 0;          // Bitmask of valid output.
     StringW::Size pos = 0;      // Split positions.
     StringW input(str);     
@@ -2635,7 +2613,7 @@ vislib::sys::CriticalSection vislib::net::NetworkInformation::lockAdapters;
  * vislib::net::NetworkInformation::NetworkInformation
  */
 vislib::net::NetworkInformation::NetworkInformation(void) {
-    VLSTACKTRACE("NetworkInformation::NetworkInformation", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     throw UnsupportedOperationException(
         "NetworkInformation::NetworkInformation", __FILE__, __LINE__);
 }
@@ -2646,7 +2624,7 @@ vislib::net::NetworkInformation::NetworkInformation(void) {
  */
 vislib::net::NetworkInformation::NetworkInformation(
         const NetworkInformation& rhs) {
-    VLSTACKTRACE("NetworkInformation::NetworkInformation", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     throw UnsupportedOperationException(
         "NetworkInformation::NetworkInformation", __FILE__, __LINE__);
 }
@@ -2656,5 +2634,5 @@ vislib::net::NetworkInformation::NetworkInformation(
  * vislib::net::NetworkInformation::~NetworkInformation
  */
 vislib::net::NetworkInformation::~NetworkInformation(void) {
-    VLSTACKTRACE("NetworkInformation::~NetworkInformation", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }

@@ -22,7 +22,7 @@
 #include "vislib/SimpleMessage.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartRef.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 #include "vislib/TcpCommChannel.h"
 #include "vislib/UdpCommChannel.h"
 

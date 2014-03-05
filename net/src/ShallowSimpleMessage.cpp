@@ -14,8 +14,7 @@
 vislib::net::ShallowSimpleMessage::ShallowSimpleMessage(
         void *storage, const SIZE_T cntStorage) 
         : Super(), cntStorage(cntStorage), storage(storage) {
-    VLSTACKTRACE("ShallowSimpleMessage::ShallowSimpleMessage", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
     ASSERT(storage != NULL);
     ASSERT((cntStorage == 0) 
         || (cntStorage >= sizeof(SimpleMessageHeaderData)));
@@ -32,8 +31,7 @@ vislib::net::ShallowSimpleMessage::ShallowSimpleMessage(
  * vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage
  */
 vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage(void) {
-    VLSTACKTRACE("ShallowSimpleMessage::~ShallowSimpleMessage",
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -42,7 +40,7 @@ vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage(void) {
  */
 void vislib::net::ShallowSimpleMessage::SetStorage(void *storage, 
         const SIZE_T cntStorage) {
-    VLSTACKTRACE("ShallowSimpleMessage::SetStorage", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     ASSERT(storage != NULL);
     ASSERT((cntStorage == 0) 
         || (cntStorage >= sizeof(SimpleMessageHeaderData)));

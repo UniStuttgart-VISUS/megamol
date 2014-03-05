@@ -12,7 +12,7 @@
 #include <cstdarg>
 
 #include "vislib/memutils.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 #include "vislib/StringConverter.h"
 
 
@@ -145,8 +145,8 @@ vislib::Exception& vislib::Exception::operator =(const Exception& rhs) {
  * vislib::Exception::fetchStack
  */
 void vislib::Exception::fetchStack(void) {
-    unsigned int size;
-    vislib::StackTrace::GetStackString((char*)NULL, size);
+    size_t size;
+    the::stack_trace::get_stack_string((char*)nullptr, size);
     if (size <= 1) {
         //ARY_SAFE_DELETE(this->stack);
         this->stack = NULL;
@@ -154,7 +154,7 @@ void vislib::Exception::fetchStack(void) {
     }
 
     this->stack = new char[size];
-    vislib::StackTrace::GetStackString(this->stack, size);
+    the::stack_trace::get_stack_string(this->stack, size);
 }
 
 

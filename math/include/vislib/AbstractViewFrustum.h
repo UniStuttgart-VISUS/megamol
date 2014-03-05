@@ -332,8 +332,7 @@ namespace math {
      */
     template<class T, class S> 
     AbstractViewFrustum<T, S>::~AbstractViewFrustum(void) {
-        VLSTACKTRACE("AbstractViewFrustum::~AbstractViewFrustum", __FILE__, 
-            __LINE__);
+        THE_STACK_TRACE;
         // Must not do anything about 'offsets' due to the Crowbar pattern(TM).
     }
 
@@ -344,8 +343,7 @@ namespace math {
     template<class T, class S> 
     void AbstractViewFrustum<T, S>::GetBottomBasePoints(
             vislib::Array<Point<T, 3> >& outPoints) const {
-        VLSTACKTRACE("AbstractViewFrustum::GetBottomBasePoints", __FILE__, 
-            __LINE__);
+        THE_STACK_TRACE;
         outPoints.Clear();
         outPoints.SetCount(4);
         outPoints[Super::IDX_LEFT_BOTTOM_POINT].Set(
@@ -373,8 +371,7 @@ namespace math {
     template<class T, class S> 
     void AbstractViewFrustum<T, S>::GetTopBasePoints(
             vislib::Array<Point<T, 3> >& outPoints) const {
-        VLSTACKTRACE("AbstractViewFrustum::GetTopBasePoints", __FILE__, 
-            __LINE__);
+        THE_STACK_TRACE;
         outPoints.Clear();
         outPoints.SetCount(4);
         outPoints[Super::IDX_LEFT_BOTTOM_POINT].Set(
@@ -402,7 +399,7 @@ namespace math {
     template<class T, class S> 
     void AbstractViewFrustum<T, S>::Set(const T fovy, 
             const double aspectRatio, const T zNear, const T zFar) {
-        VLSTACKTRACE("AbstractViewFrustum::Set", __FILE__, __LINE__);
+        THE_STACK_TRACE;
         T height = static_cast<T>(tan(static_cast<double>(fovy) * 0.5));
         T width = static_cast<T>(static_cast<double>(height) * aspectRatio);
         this->Set(-width, width, -height, height, zNear, zFar);
@@ -415,7 +412,7 @@ namespace math {
     template<class T, class S>
     AbstractViewFrustum<T, S>& AbstractViewFrustum<T, S>::operator =(
             const AbstractViewFrustum& rhs) {
-        VLSTACKTRACE("AbstractViewFrustum::operator =", __FILE__, __LINE__);
+        THE_STACK_TRACE;
         if (this != &rhs) {
             ::memcpy(this->offsets, rhs.offsets, CNT_ELEMENTS * sizeof(T));
         }
@@ -431,7 +428,7 @@ namespace math {
     template<class Tp, class Sp>
     AbstractViewFrustum<T, S>& AbstractViewFrustum<T, S>::operator =(
             const AbstractViewFrustum<Tp, Sp>& rhs) {
-        VLSTACKTRACE("AbstractViewFrustum::operator =", __FILE__, __LINE__);
+        THE_STACK_TRACE;
         if (static_cast<void *>(this) != static_cast<const void *>(&rhs)) {
             this->offsets[IDX_BOTTOM] 
                 = static_cast<T>(rhs.GetBottomDistance());
@@ -452,7 +449,7 @@ namespace math {
     template<class T, class S>
     bool AbstractViewFrustum<T, S>::operator ==(
             const AbstractViewFrustum& rhs) const {
-        VLSTACKTRACE("AbstractViewFrustum::operator ==", __FILE__, __LINE__);
+        THE_STACK_TRACE;
         return (IsEqual(this->offsets[IDX_BOTTOM], rhs.offsets[IDX_BOTTOM])
             && IsEqual(this->offsets[IDX_TOP], rhs.offsets[IDX_TOP])
             && IsEqual(this->offsets[IDX_LEFT], rhs.offsets[IDX_LEFT])
@@ -469,7 +466,7 @@ namespace math {
     template<class Tp, class Sp> 
     bool AbstractViewFrustum<T, S>::operator ==(
             const AbstractViewFrustum<Tp, Sp>& rhs) const {
-        VLSTACKTRACE("AbstractViewFrustum::operator ==", __FILE__, __LINE__);
+        THE_STACK_TRACE;
         return (IsEqual<T>(this->offsets[IDX_BOTTOM], rhs.offsets[IDX_BOTTOM])
             && IsEqual<T>(this->offsets[IDX_TOP], rhs.offsets[IDX_TOP])
             && IsEqual<T>(this->offsets[IDX_LEFT], rhs.offsets[IDX_LEFT])

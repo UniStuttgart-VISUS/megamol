@@ -105,8 +105,7 @@ namespace net {
          */
         inline ShallowSimpleMessage& operator =(
                 const AbstractSimpleMessage& rhs) {
-            VLSTACKTRACE("ShallowSimpleMessage::operator =",
-                __FILE__, __LINE__);
+            THE_STACK_TRACE;
             Super::operator =(rhs);
             return *this;
         }
@@ -120,8 +119,7 @@ namespace net {
          */
         inline ShallowSimpleMessage& operator =(
                 const ShallowSimpleMessage& rhs) {
-            VLSTACKTRACE("ShallowSimpleMessage::operator =", 
-                __FILE__, __LINE__);
+            THE_STACK_TRACE;
             Super::operator =(rhs);
             return *this;
         }

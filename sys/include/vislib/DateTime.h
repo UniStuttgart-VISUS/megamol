@@ -18,7 +18,7 @@
 #include <ctime>
 
 #include "vislib/DateTimeSpan.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 #include "vislib/types.h"
 
 
@@ -96,7 +96,7 @@ namespace sys {
         inline static INT64 TimeToTicks(const INT hours, const INT minutes, 
                 const INT seconds, const INT milliseconds = 0,
                 const INT ticks = 0) {
-            VLSTACKTRACE("DateTime::TimeToTicks", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return DateTimeSpan::TimeToTicks(hours, minutes, seconds,
                 milliseconds, ticks);
         }
@@ -155,7 +155,7 @@ namespace sys {
          * @param tm The time that should be used for initialisation.
          */
         inline DateTime(const struct tm& tm) {
-            VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             this->Set(tm);
         }
 
@@ -172,7 +172,7 @@ namespace sys {
          * @param time The time that should be used for initialisation.
          */
         explicit inline DateTime(const time_t time) {
-            VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             this->Set(time);
         }
 
@@ -186,12 +186,12 @@ namespace sys {
          * @param fileTime The time that should be used for initialisation.
          */
         inline DateTime(const FILETIME& fileTime) {
-            VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             this->Set(fileTime);
         }
 
         inline DateTime(const SYSTEMTIME& systemTime, const bool isUTC = true) {
-            VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             this->Set(systemTime, isUTC);
         }
 #endif /* _WIN32 */
@@ -202,7 +202,7 @@ namespace sys {
          * @param rhs The object to be cloned.
          */
         inline DateTime(const DateTime& rhs) : ticks(rhs.ticks) {
-            VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
+            THE_STACK_TRACE;
         }
 
         /** Dtor. */
@@ -274,7 +274,7 @@ namespace sys {
         inline void Get(INT& outYear, INT& outMonth, INT& outDay,
                 INT& outHours, INT& outMinutes, INT& outSeconds, 
                 INT& outMilliseconds) const {
-            VLSTACKTRACE("DateTime::Get", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             this->GetDate(outYear, outMonth, outDay);
             this->GetTime(outHours, outMinutes, outSeconds, outMilliseconds);
         }
@@ -293,7 +293,7 @@ namespace sys {
          */
         inline void Get(INT& outYear, INT& outMonth, INT& outDay,
                 INT& outHours, INT& outMinutes, INT& outSeconds) const {
-            VLSTACKTRACE("DateTime::Get", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             this->GetDate(outYear, outMonth, outDay);
             this->GetTime(outHours, outMinutes, outSeconds);
         }
@@ -328,7 +328,7 @@ namespace sys {
          */
         inline void GetTime(INT& outHours, INT& outMinutes, 
                 INT& outSeconds) const {
-            VLSTACKTRACE("DateTime::GetTime", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             INT tmp;
             this->GetTime(outHours, outMinutes, outSeconds, tmp);
         }
@@ -339,7 +339,7 @@ namespace sys {
          * @return The total ticks that represent the time.
          */
         inline INT64 GetTotalTicks(void) const {
-            VLSTACKTRACE("DateTime::GetTotalTicks", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return this->ticks;
         }
 
@@ -516,7 +516,7 @@ namespace sys {
          * @return true, if 'rhs' and this object are equal, false otherwise.
          */
         inline bool operator ==(const DateTime& rhs) const {
-            VLSTACKTRACE("DateTime::operator ==", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return (this->ticks == rhs.ticks);
         }
 
@@ -529,7 +529,7 @@ namespace sys {
          *         false otherwise.
          */
         inline bool operator !=(const DateTime& rhs) const {
-            VLSTACKTRACE("DateTime::operator !=", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return (this->ticks != rhs.ticks);
         }
 
@@ -541,7 +541,7 @@ namespace sys {
          * @return true, if this DateTime lies before 'rhs', false otherwise.
          */
         inline bool operator <(const DateTime& rhs) const {
-            VLSTACKTRACE("DateTime::operator <", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return (this->ticks < rhs.ticks);
         }
 
@@ -554,7 +554,7 @@ namespace sys {
          *         false otherwise.
          */
         inline bool operator <=(const DateTime& rhs) const {
-            VLSTACKTRACE("DateTime::operator <=", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return (this->ticks <= rhs.ticks);
         }
 
@@ -566,7 +566,7 @@ namespace sys {
          * @return true, if this DateTime lies after 'rhs', false otherwise.
          */
         inline bool operator >(const DateTime& rhs) const {
-            VLSTACKTRACE("DateTime::operator >", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return (this->ticks > rhs.ticks);
         }
 
@@ -579,7 +579,7 @@ namespace sys {
          *         false otherwise.
          */
         inline bool operator >=(const DateTime& rhs) const {
-            VLSTACKTRACE("DateTime::operator >=", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return (this->ticks >= rhs.ticks);
         }
 
@@ -595,7 +595,7 @@ namespace sys {
          *                               result would overflow.
          */
         inline DateTime operator +(const DateTimeSpan& rhs) const {
-            VLSTACKTRACE("DateTime::operator +", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             DateTime retval(*this);
             retval += rhs;
             return retval;
@@ -612,7 +612,7 @@ namespace sys {
          *                               result would overflow.
          */
         inline DateTime operator -(const DateTimeSpan& rhs) const {
-            VLSTACKTRACE("DateTime::operator -", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             DateTime retval(*this);
             retval -= rhs;
             return retval;
@@ -739,7 +739,7 @@ namespace sys {
          * @param dowel Ignore this. Any data is acceptable
          */
         inline DateTime(const INT64 value, const INT dowel) : ticks(ticks) {
-            VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
+            THE_STACK_TRACE;
         }
 
         /**

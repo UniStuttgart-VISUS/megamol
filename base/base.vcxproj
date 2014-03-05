@@ -602,7 +602,6 @@
     <ClCompile Include="src\SmartPtr.cpp" />
     <ClCompile Include="src\SmartRef.cpp" />
     <ClCompile Include="src\Stack.cpp" />
-    <ClCompile Include="src\StackTrace.cpp" />
     <ClCompile Include="src\String.cpp" />
     <ClCompile Include="src\StringConverter.cpp" />
     <ClCompile Include="src\StringSerialiser.cpp">
@@ -690,7 +689,6 @@
     <ClInclude Include="include\vislib\SmartPtr.h" />
     <ClInclude Include="include\vislib\SmartRef.h" />
     <ClInclude Include="include\vislib\Stack.h" />
-    <ClInclude Include="include\vislib\StackTrace.h" />
     <ClInclude Include="include\vislib\String.h" />
     <ClInclude Include="include\vislib\StringConverter.h" />
     <ClInclude Include="include\vislib\StringSerialiser.h" />

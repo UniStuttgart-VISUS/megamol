@@ -14,7 +14,7 @@
 
 #include "vislib/IllegalParamException.h"
 #include "vislib/SocketException.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 #include "vislib/StringConverter.h"
 #include "vislib/UnsupportedOperationException.h"
 
@@ -34,7 +34,7 @@
  */
 void vislib::net::DNS::GetHostAddress(IPAddress& outAddress,
                                       const char *hostNameOrAddress) {
-    VLSTACKTRACE("DNS::GetHostAddress", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     struct addrinfo *entries = NULL;
 
     try {
@@ -61,7 +61,7 @@ void vislib::net::DNS::GetHostAddress(IPAddress& outAddress,
  */
 void vislib::net::DNS::GetHostAddress(IPAddress& outAddress,
                                       const wchar_t *hostNameOrAddress) {
-    VLSTACKTRACE("DNS::GetHostAddress", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     ADDRINFOW *entries = NULL;
 
     try {
@@ -88,7 +88,7 @@ void vislib::net::DNS::GetHostAddress(IPAddress& outAddress,
  */
 void vislib::net::DNS::GetHostAddress(IPAddress6& outAddress,
                                       const char *hostNameOrAddress) {
-    VLSTACKTRACE("DNS::GetHostAddress", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     struct addrinfo *entries = DNS::getAddrInfo(hostNameOrAddress, AF_INET6);
     ASSERT(entries != NULL);
@@ -102,7 +102,7 @@ void vislib::net::DNS::GetHostAddress(IPAddress6& outAddress,
  */
 void vislib::net::DNS::GetHostAddress(IPAddress6& outAddress,
                                       const wchar_t *hostNameOrAddress) {
-    VLSTACKTRACE("DNS::GetHostAddress", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     ADDRINFOW *entries = DNS::getAddrInfo(hostNameOrAddress, AF_INET6);
     ASSERT(entries != NULL);
@@ -117,7 +117,7 @@ void vislib::net::DNS::GetHostAddress(IPAddress6& outAddress,
 void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
         const char *hostNameOrAddress, 
         const IPAgnosticAddress::AddressFamily inCaseOfDoubt) {
-    VLSTACKTRACE("DNS::GetHostAddress", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     int addrFam = static_cast<int>(inCaseOfDoubt);
     struct addrinfo *entries = NULL;
@@ -168,7 +168,7 @@ void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
 void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
         const wchar_t *hostNameOrAddress,
         const IPAgnosticAddress::AddressFamily inCaseOfDoubt) {
-    VLSTACKTRACE("DNS::GetHostAddress", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     int addrFam = static_cast<int>(inCaseOfDoubt);
     ADDRINFOW *entries = NULL;
@@ -256,7 +256,7 @@ void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
  */
 void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry, 
         const char *hostNameOrAddress) {
-    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     struct addrinfo *entries = DNS::getAddrInfo(hostNameOrAddress, AF_UNSPEC);
 
@@ -276,7 +276,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry,
  */
 void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry, 
         const wchar_t *hostNameOrAddress) {
-    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     ADDRINFOW *entries = DNS::getAddrInfo(hostNameOrAddress, AF_UNSPEC);
 
@@ -296,7 +296,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,
  */
 void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry, 
         const IPAgnosticAddress& address) {
-    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DNS::GetHostEntry(outEntry, address.ToStringA().PeekBuffer());
 }
 
@@ -306,7 +306,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry,
  */
 void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,  
         const IPAgnosticAddress& address) {
-    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DNS::GetHostEntry(outEntry, address.ToStringW().PeekBuffer());
 }
 
@@ -316,7 +316,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,
  */
 void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry, 
         const IPAddress& address) {
-    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DNS::GetHostEntry(outEntry, address.ToStringA().PeekBuffer());
 }
 
@@ -326,7 +326,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry,
  */
 void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,  
         const IPAddress& address) {
-    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DNS::GetHostEntry(outEntry, address.ToStringW().PeekBuffer());
 }
 
@@ -336,7 +336,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,
  */
 void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry, 
         const IPAddress6& address) {
-    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DNS::GetHostEntry(outEntry, address.ToStringA().PeekBuffer());
 }
 
@@ -346,7 +346,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry,
  */
 void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,  
         const IPAddress6& address) {
-    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DNS::GetHostEntry(outEntry, address.ToStringW().PeekBuffer());
 }
 
@@ -356,7 +356,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,
  */
 struct addrinfo *vislib::net::DNS::getAddrInfo(const char *hostNameOrAddress,
         const int addressFamily) {
-    VLSTACKTRACE("DNS::getAddrInfo", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     struct addrinfo *retval = NULL;     // Receives the address infos.
     struct addrinfo hints;              // The hints about the info we want.
@@ -389,7 +389,7 @@ struct addrinfo *vislib::net::DNS::getAddrInfo(const char *hostNameOrAddress,
  */
 ADDRINFOW *vislib::net::DNS::getAddrInfo(const wchar_t *hostNameOrAddress,
         const int addressFamily) {
-    VLSTACKTRACE("DNS::getAddrInfo", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     ADDRINFOW *retval = NULL;           // Receives the address infos.
     ADDRINFOW hints;                    // The hints about the info we want.
@@ -425,7 +425,7 @@ ADDRINFOW *vislib::net::DNS::getAddrInfo(const wchar_t *hostNameOrAddress,
  * vislib::net::DNS::~DNS
  */
 vislib::net::DNS::~DNS(void) {
-    VLSTACKTRACE("DNS::~DNS", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     // Nothing to do.
 }
 
@@ -434,7 +434,7 @@ vislib::net::DNS::~DNS(void) {
  * vislib::net::DNS::DNS
  */
 vislib::net::DNS::DNS(void) {
-    VLSTACKTRACE("DNS::DNS", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     // Nothing to do.
 }
 
@@ -443,7 +443,7 @@ vislib::net::DNS::DNS(void) {
  * vislib::net::DNS::DNS
  */
 vislib::net::DNS::DNS(const DNS& rhs) {
-    VLSTACKTRACE("DNS::DNS", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     throw UnsupportedOperationException("DNS::DNS", __FILE__, __LINE__);
 }
 
@@ -452,7 +452,7 @@ vislib::net::DNS::DNS(const DNS& rhs) {
  * vislib::net::DNS::DNS
  */
 vislib::net::DNS& vislib::net::DNS::operator =(const DNS& rhs) {
-    VLSTACKTRACE("DNS::operator =", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     if (this != &rhs) {
         throw IllegalParamException("rhs", __FILE__, __LINE__);

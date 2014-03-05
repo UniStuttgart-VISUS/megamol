@@ -19,7 +19,7 @@
 #include "vislib/AbstractCommChannel.h"
 #include "vislib/SimpleMessage.h"
 #include "vislib/SmartRef.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 #include "vislib/TcpCommChannel.h"
 #include "vislib/UnexpectedMessageException.h"
 
@@ -57,8 +57,7 @@ namespace net {
          * @param rhs The object to be cloned.
          */
         inline AbstractSyncMsgUser(const AbstractSyncMsgUser& rhs) {
-            VLSTACKTRACE("AbstractSyncMsgUser::AbstractSyncMsgUser", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             *this = rhs;
         }
 
@@ -92,8 +91,7 @@ namespace net {
                 const void *requestBody, 
                 const unsigned int requestBodySize,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
-            VLSTACKTRACE("AbstractSyncMsgUser::requestViaMsgBuffer", __FILE__,
-                __LINE__);
+            THE_STACK_TRACE;
             this->sendViaMsgBuffer(channel, requestMsgID, requestBody, 
                 requestBodySize, timeout);
             return this->receiveViaMsgBuffer(channel, timeout);
@@ -129,8 +127,7 @@ namespace net {
                 const void *requestBody, 
                 const unsigned int requestBodySize,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
-            VLSTACKTRACE("AbstractSyncMsgUser::requestViaMsgBuffer", __FILE__,
-                __LINE__);
+            THE_STACK_TRACE;
             return this->requestViaMsgBuffer(
                 channel.DynamicCast<vislib::net::AbstractCommClientChannel>(), 
                 requestMsgID, requestBody, requestBodySize, timeout);
@@ -166,8 +163,7 @@ namespace net {
                 const SimpleMessageID requestMsgID, 
                 const T& requestBody,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
-            VLSTACKTRACE("AbstractSyncMsgUser::requestViaMsgBuffer", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             return this->requestViaMsgBuffer(channel, requestMsgID, 
                 &requestBody, sizeof(T), timeout);
         }
@@ -202,8 +198,7 @@ namespace net {
                 const SimpleMessageID requestMsgID, 
                 const T& requestBody,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
-            VLSTACKTRACE("AbstractSyncMsgUser::requestViaMsgBuffer", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             return this->requestViaMsgBuffer(channel, requestMsgID, 
                 &requestBody, sizeof(T), timeout);
         }
@@ -288,8 +283,7 @@ namespace net {
                 const I& requestBody,
                 SIZE_T *outAdditionalBytes = NULL,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
-            VLSTACKTRACE("AbstractSyncMsgUser::requestViaMsgBuffer", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             return this->requestViaMsgBuffer<I, Iid, O, Oid>(
                 channel.DynamicCast<AbstractCommClientChannel>(), 
                 requestBody, outAdditionalBytes, timeout);
@@ -313,8 +307,7 @@ namespace net {
         VLDEPRECATED inline const SimpleMessage& receiveViaMsgBuffer(
                 SmartRef<AbstractCommChannel> channel,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
-            VLSTACKTRACE("AbstractSyncMsgUser::receiveViaMsgBuffer", __FILE__,
-                __LINE__);
+            THE_STACK_TRACE;
             return this->receiveViaMsgBuffer(
                 channel.DynamicCast<AbstractCommClientChannel>(), timeout);
         }
@@ -354,8 +347,7 @@ namespace net {
         inline const SimpleMessage& receiveViaMsgBuffer(
                 SmartRef<TcpCommChannel> channel,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
-            VLSTACKTRACE("AbstractSyncMsgUser::receiveViaMsgBuffer", __FILE__,
-                __LINE__);
+            THE_STACK_TRACE;
             return this->receiveViaMsgBuffer(
                 channel.DynamicCast<AbstractCommClientChannel>(), timeout);
         }
@@ -381,8 +373,7 @@ namespace net {
                 const void *body, 
                 const unsigned int bodySize,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
-            VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             this->sendViaMsgBuffer(
                 channel.DynamicCast<AbstractCommClientChannel>(),
                 msgID, body, bodySize, timeout);
@@ -429,8 +420,7 @@ namespace net {
                 const void *body, 
                 const unsigned int bodySize,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
-            VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             this->sendViaMsgBuffer(
                 channel.DynamicCast<AbstractCommClientChannel>(),
                 msgID, 
@@ -462,8 +452,7 @@ namespace net {
                 SmartRef<AbstractCommClientChannel> channel,
                 const SimpleMessageID msgID, 
                 const T& body) {
-            VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             this->sendViaMsgBuffer(channel, msgID, &body, sizeof(T));
         }
 
@@ -489,8 +478,7 @@ namespace net {
         inline void sendViaMsgBuffer(SmartRef<TcpCommChannel> channel,
                 const SimpleMessageID msgID, 
                 const T& body) {
-            VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             this->sendViaMsgBuffer(channel, msgID, &body, sizeof(T));
         }
 
@@ -505,7 +493,7 @@ namespace net {
          * @return (*this).
          */
         inline AbstractSyncMsgUser& operator =(const AbstractSyncMsgUser& rhs) {
-            VLSTACKTRACE("AbstractSyncMsgUser::operator =", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return (*this);
         }
 
@@ -531,8 +519,7 @@ namespace net {
             const I& requestBody,
             SIZE_T *outAdditionalBytes,
             const UINT timeout) {
-        VLSTACKTRACE("AbstractSyncMsgUser::requestViaMsgBuffer", __FILE__, 
-            __LINE__);
+        THE_STACK_TRACE;
 
         /* Send request and receive response. */
         const SimpleMessage& response = this->requestViaMsgBuffer(channel, 

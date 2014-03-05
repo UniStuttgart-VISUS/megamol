@@ -49,7 +49,6 @@
 #include "testrefcount.h"
 #include "testpoolallocator.h"
 #include "testpoint.h"
-#include "teststacktrace.h"
 #include "testasyncsocket.h"
 #include "testnetinfo.h"
 #include "testfrustum.h"
@@ -93,7 +92,6 @@ VislibTest tests[] = {
     {_T("Map"), ::TestMap, "Tests vislib::Map"},
     {_T("Serialiser"), ::TestSerialiser, "Tests VISlib serialisers."},
     {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
-    {_T("StackTrace"), ::TestStackTrace, "Tests vislib::StackTrace"},
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
     {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
@@ -141,7 +139,6 @@ VislibTest tests[] = {
     {_T("IPC"), ::TestIpc, "Tests inter-process communication"},
     {_T("IPC2"), ::TestIpc2, "For internal use only. Do not call."},
     {_T("Log"), ::TestTheLogWithPhun, "Tests vislib::sys::Log"},
-    {_T("MTStackTrace"), ::TestMTStackTrace, "Tests vislib::sys::ThreadSafeStackTrace"},
     {_T("NamedPipe"), ::TestNamedPipe, "Tests vislib::sys::NamedPipe (also requires 'vislib::sys::Thread' and 'vislib::sys::Mutex' to work correctly)"},
     {_T("Path"), ::TestPath, "Tests vislib::sys::Path"},
     {_T("PoolAllocator"), ::TestPoolAllocator, "Tests vislib::sys::PoolAllocator"},

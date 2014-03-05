@@ -21,7 +21,7 @@
  * vislib::net::AsyncSocket::~AsyncSocket
  */
 vislib::net::AsyncSocket::~AsyncSocket(void) {
-    VLSTACKTRACE("AsyncSocket::~AsyncSocket", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
 #if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
     try {
@@ -39,7 +39,7 @@ vislib::net::AsyncSocket::~AsyncSocket(void) {
 void vislib::net::AsyncSocket::BeginReceive(void *outData, 
         const SIZE_T cntBytes, AsyncSocketContext *context, const INT timeout, 
         const INT flags) {
-    VLSTACKTRACE("AsyncSocket::BeginReceive", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     /* Sanity checks. */
     if (context == NULL) {
@@ -77,7 +77,7 @@ void vislib::net::AsyncSocket::BeginReceive(void *outData,
 void vislib::net::AsyncSocket::BeginReceive(IPEndPoint *outFromAddr, 
         void *outData, const SIZE_T cntBytes, AsyncSocketContext *context, 
         const INT timeout, const INT flags) {
-    VLSTACKTRACE("AsyncSocket::BeginReceive", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     /* Sanity checks. */
     if (outFromAddr == NULL) {
@@ -120,7 +120,7 @@ void vislib::net::AsyncSocket::BeginReceive(IPEndPoint *outFromAddr,
 void vislib::net::AsyncSocket::BeginSend(const void *data, 
         const SIZE_T cntBytes, AsyncSocketContext *context, const INT timeout,
         const INT flags) {
-    VLSTACKTRACE("AsyncSocket::BeginSend", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     /* Sanity checks. */
     if (context == NULL) {
@@ -156,7 +156,7 @@ void vislib::net::AsyncSocket::BeginSend(const void *data,
 void vislib::net::AsyncSocket::BeginSend(const IPEndPoint& toAddr, 
         const void *data, const SIZE_T cntBytes, AsyncSocketContext *context,
         const INT timeout, const INT flags) {
-    VLSTACKTRACE("AsyncSocket::BeginSend", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     /* Sanity checks. */
     if (context == NULL) {
@@ -195,7 +195,7 @@ void vislib::net::AsyncSocket::BeginSend(const IPEndPoint& toAddr,
  */
 SIZE_T vislib::net::AsyncSocket::Receive(void *outData, const SIZE_T cntBytes,
         const INT timeout, const INT flags, const bool forceReceive) {
-    VLSTACKTRACE("AsyncSocket::Receive", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SIZE_T retval = 0;
 
     this->lockRecv.Lock();
@@ -217,7 +217,7 @@ SIZE_T vislib::net::AsyncSocket::Receive(void *outData, const SIZE_T cntBytes,
 SIZE_T vislib::net::AsyncSocket::Receive(IPEndPoint& outFromAddr, void *outData,
         const SIZE_T cntBytes, const INT timeout, const INT flags, 
         const bool forceReceive) {
-    VLSTACKTRACE("AsyncSocket::Receive", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SIZE_T retval = 0;
 
     this->lockRecv.Lock();
@@ -240,7 +240,7 @@ SIZE_T vislib::net::AsyncSocket::Receive(IPEndPoint& outFromAddr, void *outData,
 SIZE_T vislib::net::AsyncSocket::Receive(SocketAddress& outFromAddr, 
         void *outData, const SIZE_T cntBytes, const INT timeout, 
         const INT flags, const bool forceReceive) {
-    VLSTACKTRACE("AsyncSocket::Receive", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SIZE_T retval = 0;
 
     this->lockRecv.Lock();
@@ -262,7 +262,7 @@ SIZE_T vislib::net::AsyncSocket::Receive(SocketAddress& outFromAddr,
  */
 SIZE_T vislib::net::AsyncSocket::Send(const void *data, const SIZE_T cntBytes, 
         const INT timeout, const INT flags, const bool forceSend) {
-    VLSTACKTRACE("AsyncSocket::Send", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SIZE_T retval = 0;
 
     this->lockSend.Lock();
@@ -284,7 +284,7 @@ SIZE_T vislib::net::AsyncSocket::Send(const void *data, const SIZE_T cntBytes,
 SIZE_T vislib::net::AsyncSocket::Send(const IPEndPoint& toAddr, const void *data, 
         const SIZE_T cntBytes, const INT timeout, const INT flags, 
         const bool forceSend) {
-    VLSTACKTRACE("AsyncSocket::Send", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SIZE_T retval = 0;
 
     this->lockSend.Lock();
@@ -307,7 +307,7 @@ SIZE_T vislib::net::AsyncSocket::Send(const IPEndPoint& toAddr, const void *data
  */
 void CALLBACK vislib::net::AsyncSocket::completedFunc(DWORD dwError, 
         DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags) {
-    VLSTACKTRACE("AsyncSocket::completedFunc", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     AsyncSocketContext *ctx = reinterpret_cast<AsyncSocketContext *>(
         lpOverlapped->hEvent);
     ctx->notifyCompleted(cbTransferred, dwError);
@@ -320,7 +320,7 @@ void CALLBACK vislib::net::AsyncSocket::completedFunc(DWORD dwError,
  * vislib::net::AsyncSocket::receiveFunc
  */
 DWORD vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
-    VLSTACKTRACE("AsyncSocket::receiveFunc", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     AsyncSocketContext *ctx = static_cast<AsyncSocketContext *>(
         asyncSocketContext);
     DWORD retval = 0;   // The return value (error code of socket call).
@@ -372,7 +372,7 @@ DWORD vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
  * vislib::net::AsyncSocket::sendFunc
  */
 DWORD vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
-    VLSTACKTRACE("AsyncSocket::sendFunc", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     AsyncSocketContext *ctx = static_cast<AsyncSocketContext *>(
         asyncSocketContext);
     DWORD retval = 0;   // The return value (error code of socket call).
@@ -425,7 +425,7 @@ DWORD vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
  * vislib::net::AsyncSocket::endAsync
  */
 SIZE_T vislib::net::AsyncSocket::endAsync(AsyncSocketContext *context) {
-    VLSTACKTRACE("AsyncSocket::endAsync", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DWORD retval = 0;
     DWORD flags = 0;
 

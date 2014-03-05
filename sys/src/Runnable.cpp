@@ -6,14 +6,14 @@
 
 #include "vislib/Runnable.h"
 
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 
 
 /*
  * vislib::sys::Runnable::~Runnable
  */
 vislib::sys::Runnable::~Runnable(void) {
-    VLSTACKTRACE("Runnable::~Runnable", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -21,7 +21,7 @@ vislib::sys::Runnable::~Runnable(void) {
  * vislib::sys::Runnable::OnThreadStarted
  */
 void vislib::sys::Runnable::OnThreadStarted(void *userData) {
-    VLSTACKTRACE("Runnable::OnThreadStarted", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -29,7 +29,7 @@ void vislib::sys::Runnable::OnThreadStarted(void *userData) {
  * vislib::sys::Runnable::OnThreadStarting
  */
 void vislib::sys::Runnable::OnThreadStarting(void *userData) {
-    VLSTACKTRACE("Runnable::OnThreadStarting", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -37,6 +37,6 @@ void vislib::sys::Runnable::OnThreadStarting(void *userData) {
  * vislib::sys::Runnable::Terminate
  */
 bool vislib::sys::Runnable::Terminate(void) {
-    VLSTACKTRACE("Runnable::Terminate", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return false;
 }

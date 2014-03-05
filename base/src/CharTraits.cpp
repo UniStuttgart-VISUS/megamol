@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <wchar.h>
 
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 
 
 /*
@@ -111,7 +111,7 @@ int vislib::CharTraits<char>::ParseInt(const Char *str) {
  * vislib::CharTraits<char>::ParseInt64
  */
 INT64 vislib::CharTraits<char>::ParseInt64(const Char *str) {
-    VLAUTOSTACKTRACE;
+    THE_STACK_TRACE;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
@@ -137,7 +137,7 @@ INT64 vislib::CharTraits<char>::ParseInt64(const Char *str) {
  * vislib::CharTraits<char>::ParseUInt64
  */
 UINT64 vislib::CharTraits<char>::ParseUInt64(const Char *str) {
-    VLAUTOSTACKTRACE;
+    THE_STACK_TRACE;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
@@ -379,7 +379,7 @@ int vislib::CharTraits<WCHAR>::ParseInt(const Char *str) {
  * vislib::CharTraits<char>::ParseInt64
  */
 INT64 vislib::CharTraits<WCHAR>::ParseInt64(const Char *str) {
-    VLAUTOSTACKTRACE;
+    THE_STACK_TRACE;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
@@ -405,7 +405,7 @@ INT64 vislib::CharTraits<WCHAR>::ParseInt64(const Char *str) {
  * vislib::CharTraits<char>::ParseUInt64
  */
 UINT64 vislib::CharTraits<WCHAR>::ParseUInt64(const Char *str) {
-    VLAUTOSTACKTRACE;
+    THE_STACK_TRACE;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }

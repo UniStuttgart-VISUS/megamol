@@ -18,7 +18,7 @@
 
 #include "vislib/IPEndPoint.h"                  // Must be first.
 #include "vislib/AbstractCommEndPoint.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 #include "vislib/StringConverter.h"
 
 
@@ -157,7 +157,7 @@ namespace net {
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPAgnosticAddress::AddressFamily addressFamily, 
                 const unsigned short port) {
-            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return IPCommEndPoint::Create(
                 IPCommEndPoint::convertAddressFamily(addressFamily), 
                 port);
@@ -185,7 +185,7 @@ namespace net {
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
                 const unsigned short port) {
-            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return IPCommEndPoint::Create(
                 static_cast<IPAgnosticAddress::AddressFamily>(addressFamily), 
                 port);
@@ -242,7 +242,7 @@ namespace net {
                 const ProtocolVersion protocolVersion,
                 const wchar_t *hostNameOrAddress,
                 const unsigned short port) {
-            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return IPCommEndPoint::Create(protocolVersion, 
                 W2A(hostNameOrAddress), port);
         }
@@ -273,7 +273,7 @@ namespace net {
                 const IPAgnosticAddress::AddressFamily addressFamily, 
                 const char *hostNameOrAddress,
                 const unsigned short port) {
-            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return IPCommEndPoint::Create(
                 IPCommEndPoint::convertAddressFamily(addressFamily), 
                 hostNameOrAddress, port);
@@ -305,7 +305,7 @@ namespace net {
                 const IPAgnosticAddress::AddressFamily addressFamily, 
                 const wchar_t *hostNameOrAddress,
                 const unsigned short port) {
-            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return IPCommEndPoint::Create(addressFamily, 
                 W2A(hostNameOrAddress), port);
         }
@@ -336,7 +336,7 @@ namespace net {
                 const IPEndPoint::AddressFamily addressFamily, 
                 const char *hostNameOrAddress,
                 const unsigned short port) {
-            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return IPCommEndPoint::Create(
                 static_cast<IPAgnosticAddress::AddressFamily>(addressFamily), 
                 hostNameOrAddress, port);
@@ -368,7 +368,7 @@ namespace net {
                 const IPEndPoint::AddressFamily addressFamily, 
                 const wchar_t *hostNameOrAddress,
                 const unsigned short port) {
-            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return IPCommEndPoint::Create(addressFamily, 
                 W2A(hostNameOrAddress), port);
         }
@@ -399,7 +399,7 @@ namespace net {
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const ProtocolVersion protocolVersion,
                 const char *str) {
-            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return IPCommEndPoint::Create(
                 static_cast<IPAgnosticAddress::AddressFamily>(protocolVersion),
                  str);
@@ -431,7 +431,7 @@ namespace net {
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const ProtocolVersion protocolVersion,
                 const wchar_t *str) {
-            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return IPCommEndPoint::Create(protocolVersion, W2A(str));
         }
 
@@ -490,7 +490,7 @@ namespace net {
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPAgnosticAddress::AddressFamily addressFamily,
                 const wchar_t *str) {
-            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return IPCommEndPoint::Create(addressFamily, W2A(str));
         }
 
@@ -521,7 +521,7 @@ namespace net {
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
                 const char *str) {
-            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return IPCommEndPoint::Create(
                 static_cast<IPAgnosticAddress::AddressFamily>(addressFamily), 
                 str);
@@ -554,7 +554,7 @@ namespace net {
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
                 const wchar_t *str) {
-            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return IPCommEndPoint::Create(addressFamily, W2A(str));
         }
 
@@ -635,8 +635,7 @@ namespace net {
          * @return The IP address part of the end point address.
          */
         inline IPAgnosticAddress GetIPAddress(void) const {
-            VLSTACKTRACE("IPCommEndPoint::GetIPAddress", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             return this->endPoint.GetIPAddress();
         }
 
@@ -646,7 +645,7 @@ namespace net {
          * @return The port of the end point address.
          */
         inline unsigned short GetPort(void) const {
-            VLSTACKTRACE("IPCommEndPoint::GetPort", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return this->endPoint.GetPort();
         }
 
@@ -656,8 +655,7 @@ namespace net {
          * @return The protocol version of the end point address.
          */
         inline ProtocolVersion GetProtocolVersion(void) const {
-            VLSTACKTRACE("IPCommEndPoint::GetProtocolVersion", __FILE__,
-                __LINE__);
+            THE_STACK_TRACE;
             return static_cast<ProtocolVersion>(
                 this->endPoint.GetAddressFamily());
         }
@@ -740,8 +738,7 @@ namespace net {
          * @param endPoint The new end point address.
          */
         inline void SetEndPoint(const IPEndPoint& endPoint) {
-            VLSTACKTRACE("IPCommEndPoint::SetEndPoint", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             this->endPoint = endPoint;
         }
 
@@ -751,8 +748,7 @@ namespace net {
          * @param ipAddress The new IP address.
          */
         inline void SetIPAddress(const IPAgnosticAddress& ipAddress) {
-            VLSTACKTRACE("IPCommEndPoint::SetIPAddress", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             this->endPoint.SetIPAddress(ipAddress);
         }
 
@@ -762,8 +758,7 @@ namespace net {
          * @param ipAddress The new IP address.
          */
         inline void SetIPAddress(const IPAddress& ipAddress) {
-            VLSTACKTRACE("IPCommEndPoint::SetIPAddress", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             this->endPoint.SetIPAddress(ipAddress);
         }
 
@@ -773,8 +768,7 @@ namespace net {
          * @param ipAddress The new IP address.
          */
         inline void SetIPAddress(const IPAddress6& ipAddress) {
-            VLSTACKTRACE("IPCommEndPoint::SetIPAddress", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             this->endPoint.SetIPAddress(ipAddress);
         }
 
@@ -784,7 +778,7 @@ namespace net {
          * @param ipAddress The new port.
          */
         inline void SetPort(const unsigned short port) {
-            VLSTACKTRACE("IPCommEndPoint::SetPort", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             this->endPoint.SetPort(port);
         }
 

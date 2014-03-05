@@ -19,7 +19,7 @@
  * vislib::graphics::AbstractWindow::~AbstractWindow
  */
 vislib::graphics::AbstractWindow::~AbstractWindow(void) {
-    VLSTACKTRACE("AbstractWindow::~AbstractWindow", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     try {
         this->Close();
     } catch (...) { /* Ignore this.*/ }
@@ -30,7 +30,7 @@ vislib::graphics::AbstractWindow::~AbstractWindow(void) {
  * vislib::graphics::AbstractWindow::Close
  */
 void vislib::graphics::AbstractWindow::Close(void) {
-    VLSTACKTRACE("AbstractWindow::Close", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
 #ifdef _WIN32
     if (::DestroyWindow(this->hWnd) == FALSE) {
@@ -48,7 +48,7 @@ void vislib::graphics::AbstractWindow::Close(void) {
  */
 void vislib::graphics::AbstractWindow::Create(const vislib::StringA& title, 
         int left, int top, int width, int height) {
-    VLSTACKTRACE("AbstractWindow::Create", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
 #ifdef _WIN32
     this->Create(A2W(title), left, top, width, height);
@@ -65,7 +65,7 @@ void vislib::graphics::AbstractWindow::Create(const vislib::StringA& title,
  */
 void vislib::graphics::AbstractWindow::Create(const vislib::StringW& title, 
         int left, int top, int width, int height) {
-    VLSTACKTRACE("AbstractWindow::Create", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
 #ifdef _WIN32
     HINSTANCE hInstance = NULL;
@@ -135,7 +135,7 @@ void vislib::graphics::AbstractWindow::Create(const vislib::StringW& title,
  */
 inline vislib::graphics::AbstractWindow::Point 
 vislib::graphics::AbstractWindow::GetPosition(void) const {
-    VLSTACKTRACE("AbstractWindow::GetPosition", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 #ifdef _WIN32
     RECT rect;
     if (::GetWindowRect(this->hWnd, &rect) == FALSE) {
@@ -155,7 +155,7 @@ vislib::graphics::AbstractWindow::GetPosition(void) const {
  */
 inline vislib::graphics::AbstractWindow::Dimension 
 vislib::graphics::AbstractWindow::GetSize(void) const {
-    VLSTACKTRACE("AbstractWindow::GetSize", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 #ifdef _WIN32
     RECT rect;
     if (::GetWindowRect(this->hWnd, &rect) == FALSE) {
@@ -174,7 +174,7 @@ vislib::graphics::AbstractWindow::GetSize(void) const {
  * vislib::graphics::AbstractWindow::Move
  */
 void vislib::graphics::AbstractWindow::Move(const int x, const int y) {
-    VLSTACKTRACE("AbstractWindow::Move", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 #ifdef _WIN32
     Dimension size = this->GetSize();
     if (::MoveWindow(this->hWnd, x, y, size.Width(), size.Height(), TRUE) 
@@ -193,7 +193,7 @@ void vislib::graphics::AbstractWindow::Move(const int x, const int y) {
  */
 void vislib::graphics::AbstractWindow::Resize(const int width, 
         const int height) {
-    VLSTACKTRACE("AbstractWindow::Resize", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 #ifdef _WIN32
     Point position = this->GetPosition();
     if (::MoveWindow(this->hWnd, position.X(), position.Y(), width, height,
@@ -211,7 +211,7 @@ void vislib::graphics::AbstractWindow::Resize(const int width,
  * vislib::graphics::AbstractWindow::AbstractWindow
  */
 vislib::graphics::AbstractWindow::AbstractWindow(void) {
-    VLSTACKTRACE("AbstractWindow::AbstractWindow", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 #ifdef _WIN32
     this->hWnd = NULL;
 #endif /* _WIN32 */
@@ -223,7 +223,7 @@ vislib::graphics::AbstractWindow::AbstractWindow(void) {
  * vislib::graphics::AbstractWindow::onCreated
  */
 void vislib::graphics::AbstractWindow::onCreated(HWND hWnd) {
-    VLSTACKTRACE("AbstractWindow::onCreated", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     // Nothing to do.
 }
 #endif /* _WIN32 */
@@ -235,7 +235,7 @@ void vislib::graphics::AbstractWindow::onCreated(HWND hWnd) {
  */
 void vislib::graphics::AbstractWindow::onCreating(DWORD& inOutStyle, 
         DWORD& inOutExStyle) throw() {
-    VLSTACKTRACE("AbstractWindow::onCreating", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     // Nothing to do.
 }
 #endif /* _WIN32 */
@@ -247,7 +247,7 @@ void vislib::graphics::AbstractWindow::onCreating(DWORD& inOutStyle,
  */
 LRESULT vislib::graphics::AbstractWindow::onMessage(bool& outHandled, 
         UINT msg, WPARAM wParam, LPARAM lParam) throw() {
-    VLSTACKTRACE("AbstractWindow::onMessage", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     outHandled = false;
     return static_cast<LRESULT>(0);
 }
@@ -259,7 +259,7 @@ LRESULT vislib::graphics::AbstractWindow::onMessage(bool& outHandled,
  */
 void vislib::graphics::AbstractWindow::onResized(const int width, 
         const int height) {
-    VLSTACKTRACE("AbstractWindow::onResized", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     // Nothing to do.
 }
 
@@ -270,8 +270,7 @@ void vislib::graphics::AbstractWindow::onResized(const int width,
  */
 void vislib::graphics::AbstractWindow::onWindowClassRegistering(
         WNDCLASSEX& inOutWndClass) throw() {
-    VLSTACKTRACE("AbstractWindow::onWindowClassRegistering", __FILE__,
-        __LINE__);
+    THE_STACK_TRACE;
     // Nothing to do.
 }
 #endif /* _WIN32 */
@@ -283,7 +282,7 @@ void vislib::graphics::AbstractWindow::onWindowClassRegistering(
  */
 void vislib::graphics::AbstractWindow::onWindowClassRegistered(
         const vislib::StringW className) throw() {
-    VLSTACKTRACE("AbstractWindow::onWindowClassRegistered", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     // Nothing to do.
 }
 #endif /* _WIN32 */
@@ -295,7 +294,7 @@ void vislib::graphics::AbstractWindow::onWindowClassRegistered(
  */
 LRESULT CALLBACK vislib::graphics::AbstractWindow::wndProc(HWND hWnd, UINT msg,
         WPARAM wParam, LPARAM lParam) {
-    VLSTACKTRACE("AbstractWindow::wndProc", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
 #pragma warning(disable: 4312)
     AbstractWindow *wnd = reinterpret_cast<AbstractWindow*>(
@@ -341,7 +340,7 @@ LRESULT CALLBACK vislib::graphics::AbstractWindow::wndProc(HWND hWnd, UINT msg,
  * vislib::graphics::AbstractWindow::AbstractWindow
  */
 vislib::graphics::AbstractWindow::AbstractWindow(const AbstractWindow& rhs) {
-    VLSTACKTRACE("AbstractWindow::AbstractWindow", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     throw UnsupportedOperationException("AbstractWindow::AbstractWindow",
         __FILE__, __LINE__);
 }
@@ -353,7 +352,7 @@ vislib::graphics::AbstractWindow::AbstractWindow(const AbstractWindow& rhs) {
  */
 vislib::StringW vislib::graphics::AbstractWindow::registerWindowClassW(
         HINSTANCE hInstance) {
-    VLSTACKTRACE("AbstractWindow::registerWindowClassW", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     WNDCLASSEXW wcex = { sizeof(WNDCLASSEXW) };
     ::ZeroMemory(&wcex, sizeof(WNDCLASSEXW));
@@ -390,7 +389,7 @@ vislib::StringW vislib::graphics::AbstractWindow::registerWindowClassW(
  */
 vislib::graphics::AbstractWindow& vislib::graphics::AbstractWindow::operator =(
         const AbstractWindow& rhs) {
-    VLSTACKTRACE("AbstractWindow::operator =", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     if (this != &rhs) {
         throw IllegalParamException("rhs", __FILE__, __LINE__);
     }

@@ -532,7 +532,6 @@
     <ClCompile Include="src\Thread.cpp" />
     <ClCompile Include="src\ThreadPool.cpp" />
     <ClCompile Include="src\ThreadPoolListener.cpp" />
-    <ClCompile Include="src\ThreadSafeStackTrace.cpp" />
     <ClCompile Include="src\TrayIcon.cpp" />
     <ClCompile Include="src\VolatileIPCStringTable.cpp" />
     <ClCompile Include="src\WindowsService.cpp" />
@@ -599,7 +598,6 @@
     <ClInclude Include="include\vislib\Thread.h" />
     <ClInclude Include="include\vislib\ThreadPool.h" />
     <ClInclude Include="include\vislib\ThreadPoolListener.h" />
-    <ClInclude Include="include\vislib\ThreadSafeStackTrace.h" />
     <ClInclude Include="include\vislib\TrayIcon.h" />
     <ClInclude Include="include\vislib\VolatileIPCStringTable.h" />
     <ClInclude Include="include\vislib\WindowsService.h" />

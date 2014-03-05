@@ -20,7 +20,7 @@
 #include "vislib/CriticalSection.h"
 #include "vislib/Exception.h"
 #include "vislib/IPHostEntry.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 #include "vislib/String.h"
 
 #ifdef _WIN32
@@ -1937,7 +1937,7 @@ namespace net {
     template<class T>
     NetworkInformation::AssessedMember<T>::AssessedMember(void) 
             : confidence(INVALID) {
-        VLSTACKTRACE("AssessedMember::AssessedMember", __FILE__, __LINE__);
+        THE_STACK_TRACE;
     }
 
 
@@ -1946,7 +1946,7 @@ namespace net {
      */
     template<class T>
     NetworkInformation::AssessedMember<T>::~AssessedMember(void) {
-        VLSTACKTRACE("AssessedMember::~AssessedMember", __FILE__, __LINE__);
+        THE_STACK_TRACE;
     }
 
 
@@ -1957,7 +1957,7 @@ namespace net {
     NetworkInformation::AssessedMember<T>::AssessedMember(
             const T& value, const Confidence confidence) 
             : confidence(confidence), value(value) {
-        VLSTACKTRACE("AssessedMember::AssessedMember", __FILE__, __LINE__);
+        THE_STACK_TRACE;
     }
 
 
@@ -1967,7 +1967,7 @@ namespace net {
     template<class T>
     void NetworkInformation::AssessedMember<T>::GetConfidence(
             Confidence *outConfidence, const char *name) const {
-        VLSTACKTRACE("AssessedMember::GetConfidence", __FILE__, __LINE__);
+        THE_STACK_TRACE;
         if (outConfidence != NULL) {
             *outConfidence = this->confidence;
         } else if (this->confidence == INVALID) {
@@ -1983,7 +1983,7 @@ namespace net {
     NetworkInformation::AssessedMember<T>& 
     NetworkInformation::AssessedMember<T>::operator =(
             const AssessedMember& rhs) {
-        VLSTACKTRACE("AssessedMember::operator =", __FILE__, __LINE__);
+        THE_STACK_TRACE;
 
         if (this != &rhs) {
             this->confidence = rhs.confidence;
@@ -2002,8 +2002,7 @@ namespace net {
      */
     template<class A> int NetworkInformation::findAddress(
             const UnicastAddressList& list, const A& addr, const int startIdx) {
-        VLSTACKTRACE("NetworkInformation::findAddress", __FILE__, 
-            __LINE__);
+        THE_STACK_TRACE;
         ASSERT(startIdx >= 0);
 
         for (SIZE_T i = static_cast<SIZE_T>(startIdx); i < list.Count(); i++) {
@@ -2024,8 +2023,7 @@ namespace net {
             const UnicastAddressList& list, 
             const A& addr, const ULONG prefixLen, 
             const int startIdx) {
-        VLSTACKTRACE("NetworkInformation::findAddress", __FILE__, 
-            __LINE__);
+        THE_STACK_TRACE;
         ASSERT(startIdx >= 0);
 
         try {

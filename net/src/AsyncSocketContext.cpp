@@ -18,7 +18,7 @@
  */
 vislib::net::AsyncSocketContext::AsyncSocketContext(AsyncCallback callback,
         void *userContext) : Super(callback, userContext), evt(true) {
-    VLSTACKTRACE("AsyncSocketContext::AsyncSocketContext", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 #if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
     this->cntData = 0;
     this->errorCode = 0;
@@ -30,7 +30,7 @@ vislib::net::AsyncSocketContext::AsyncSocketContext(AsyncCallback callback,
  * vislib::net::AsyncSocketContext::~AsyncSocketContext
  */
 vislib::net::AsyncSocketContext::~AsyncSocketContext(void) {
-    VLSTACKTRACE("AsyncSocketContext::~AsyncSocketContext", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -38,7 +38,7 @@ vislib::net::AsyncSocketContext::~AsyncSocketContext(void) {
  * vislib::net::AsyncSocketContext::Reset
  */
 void vislib::net::AsyncSocketContext::Reset(void) {
-    VLSTACKTRACE("AsyncSocketContext::Reset", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     Super::Reset();
     this->evt.Reset();
 }
@@ -48,7 +48,7 @@ void vislib::net::AsyncSocketContext::Reset(void) {
  * vislib::net::AsyncSocketContext::Wait
  */
 void vislib::net::AsyncSocketContext::Wait(void) {
-    VLSTACKTRACE("AsyncSocketContext::Wait", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     this->evt.Wait();
 }
 
@@ -58,7 +58,7 @@ void vislib::net::AsyncSocketContext::Wait(void) {
  */
 void vislib::net::AsyncSocketContext::notifyCompleted(const DWORD cntData,
         const DWORD errorCode) {
-    VLSTACKTRACE("AsyncSocketContext::notifyCompleted", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Signaling completion of "
         "asynchronous socket operation with return value %u for "
@@ -85,7 +85,7 @@ void vislib::net::AsyncSocketContext::notifyCompleted(const DWORD cntData,
  */
 vislib::net::AsyncSocketContext& vislib::net::AsyncSocketContext::operator =(
         const AsyncSocketContext& rhs) {
-    VLSTACKTRACE("AsyncSocketContext::operator =", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     if (this != &rhs) {
         throw IllegalParamException("rhs", __FILE__, __LINE__);

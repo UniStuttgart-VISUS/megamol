@@ -33,8 +33,7 @@ namespace math {
 
         /** Ctor. */
         inline RectangularPyramidalFrustum(void) : Super() {
-            VLSTACKTRACE("RectangularPyramidalFrustum"
-                "::RectangularPyramidalFrustum", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             this->values[Super::IDX_BOTTOM] = static_cast<T>(0);
             this->values[Super::IDX_TOP] = static_cast<T>(0);
             this->values[Super::IDX_LEFT] = static_cast<T>(0);
@@ -82,8 +81,7 @@ namespace math {
             const AbstractPoint<T, 3, Sp2>& apex,
             const AbstractVector<T, 3, Sp3>& baseNormal,
             const AbstractVector<T, 3, Sp4>& baseUp) : Super() {
-        VLSTACKTRACE("RectangularPyramidalFrustum::RectangularPyramidalFrustum",
-            __FILE__, __LINE__);
+        THE_STACK_TRACE;
         this->Set(frustum, apex, baseNormal, baseUp);
     }
 
@@ -93,8 +91,7 @@ namespace math {
      */
     template<class T> 
     RectangularPyramidalFrustum<T>::~RectangularPyramidalFrustum(void) {
-        VLSTACKTRACE("RectangularPyramidalFrustum"
-            "::~RectangularPyramidalFrustum", __FILE__, __LINE__);
+        THE_STACK_TRACE;
     }
     
 } /* end namespace math */

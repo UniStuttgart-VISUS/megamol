@@ -50,8 +50,7 @@ namespace d3d {
         virtual ~D3D9AdapterInformation(void);
 
         inline UINT GetAdapterOrdinal(const SIZE_T outputIdx) {
-            VLSTACKTRACE("D3D9AdapterInformation::GetAdapterOrdinal", 
-                __FILE__,__LINE__);
+            THE_STACK_TRACE;
             return this->GetDirect3DCapabilites(outputIdx).AdapterOrdinal;
         }
 

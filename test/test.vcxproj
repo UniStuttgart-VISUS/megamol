@@ -102,7 +102,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include;$(TheLibPath)include\</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRTDBG_MAP_ALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -133,7 +133,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include;$(TheLibPath)include\</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRTDBG_MAP_ALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -161,7 +161,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include;$(TheLibPath)include\</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -194,7 +194,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include;$(TheLibPath)include\</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -260,7 +260,6 @@
     <ClCompile Include="testrefcount.cpp" />
     <ClCompile Include="testserialiser.cpp" />
     <ClCompile Include="testsockets.cpp" />
-    <ClCompile Include="teststacktrace.cpp" />
     <ClCompile Include="teststring.cpp" />
     <ClCompile Include="testsysinfo.cpp" />
     <ClCompile Include="testtcpserver.cpp" />
@@ -313,7 +312,6 @@
     <ClInclude Include="testrefcount.h" />
     <ClInclude Include="testserialiser.h" />
     <ClInclude Include="testsockets.h" />
-    <ClInclude Include="teststacktrace.h" />
     <ClInclude Include="teststring.h" />
     <ClInclude Include="testsysinfo.h" />
     <ClInclude Include="testtcpserver.h" />

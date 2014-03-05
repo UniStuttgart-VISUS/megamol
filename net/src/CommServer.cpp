@@ -21,7 +21,7 @@
  * vislib::net::CommServer::CommServer
  */
 vislib::net::CommServer::CommServer(void) {
-    VLSTACKTRACE("CommServer::CommServer", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -29,7 +29,7 @@ vislib::net::CommServer::CommServer(void) {
  * vislib::net::CommServer::~CommServer
  */
 vislib::net::CommServer::~CommServer(void) {
-    VLSTACKTRACE("CommServer::~CommServer", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -37,7 +37,7 @@ vislib::net::CommServer::~CommServer(void) {
  * vislib::net::CommServer::AddListener
  */
 void vislib::net::CommServer::AddListener(CommServerListener *listener) {
-    VLSTACKTRACE("CommServer::AddListener", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     ASSERT(listener != NULL);
 
     this->listeners.Lock();
@@ -52,7 +52,7 @@ void vislib::net::CommServer::AddListener(CommServerListener *listener) {
  * vislib::net::CommServer::OnThreadStarting
  */
 void vislib::net::CommServer::OnThreadStarting(void *config) {
-    VLSTACKTRACE("CommServer::OnThreadStarting", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     ASSERT(config != NULL);
     Configuration *c = static_cast<Configuration *>(config);
 
@@ -70,7 +70,7 @@ void vislib::net::CommServer::OnThreadStarting(void *config) {
  * vislib::net::CommServer::RemoveListener
  */
 void vislib::net::CommServer::RemoveListener(CommServerListener *listener) {
-    VLSTACKTRACE("CommServer::AddListener", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     ASSERT(listener != NULL);
     this->listeners.RemoveAll(listener);
 }
@@ -80,7 +80,7 @@ void vislib::net::CommServer::RemoveListener(CommServerListener *listener) {
  * vislib::net::CommServer::Run
  */
 DWORD vislib::net::CommServer::Run(void *config) {
-    VLSTACKTRACE("CommServer::Run", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DWORD retval = 0;
 
     /* Prepare the socket subsystem. */
@@ -198,7 +198,7 @@ DWORD vislib::net::CommServer::Run(void *config) {
  * vislib::net::CommServer::Terminate
  */
 bool vislib::net::CommServer::Terminate(void) {
-    VLSTACKTRACE("CommServer::Terminate", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     try {
         vislib::sys::Interlocked::Exchange(&this->doServe, 
             static_cast<INT32>(0));
@@ -218,7 +218,7 @@ bool vislib::net::CommServer::Terminate(void) {
  */
 bool vislib::net::CommServer::fireNewConnection(
         SmartRef<AbstractCommClientChannel>& channel) {
-    VLSTACKTRACE("CommServer::fireNewConnection", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     bool retval = false;
 
     this->listeners.Lock();
@@ -243,7 +243,7 @@ bool vislib::net::CommServer::fireNewConnection(
  */
 bool vislib::net::CommServer::fireServerError(
         const vislib::Exception& exception) {
-    VLSTACKTRACE("CommServer::fireServerError", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     bool retval = true;
 
     this->listeners.Lock();
@@ -264,7 +264,7 @@ bool vislib::net::CommServer::fireServerError(
  * vislib::net::CommServer::fireServerExited
  */
 void vislib::net::CommServer::fireServerExited(void) {
-    VLSTACKTRACE("CommServer::fireServerExited", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     this->listeners.Lock();
     ListenerList::Iterator it = this->listeners.GetIterator();
     while (it.HasNext()) {
@@ -278,7 +278,7 @@ void vislib::net::CommServer::fireServerExited(void) {
  * vislib::net::CommServer::fireServerStarted
  */
 void vislib::net::CommServer::fireServerStarted(void) {
-    VLSTACKTRACE("CommServer::fireServerStarted", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     this->listeners.Lock();
     ListenerList::Iterator it = this->listeners.GetIterator();
     while (it.HasNext()) {

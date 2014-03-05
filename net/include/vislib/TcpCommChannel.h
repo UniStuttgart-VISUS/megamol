@@ -18,7 +18,7 @@
 
 #include "vislib/Socket.h"                      // Must be first!
 #include "vislib/AbstractCommChannel.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 
 
 namespace vislib {
@@ -39,7 +39,7 @@ namespace net {
          * @param flags The flags for the channel.
          */
         static inline SmartRef<TcpCommChannel> Create(const UINT64 flags = 0) {
-            VLSTACKTRACE("TcpCommChannel::Create", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return SmartRef<TcpCommChannel>(new TcpCommChannel(flags), false);
         }
 
@@ -111,7 +111,7 @@ namespace net {
          * @return The underlying socket.
          */
         inline Socket& GetSocket(void) {
-            VLSTACKTRACE("TcpCommChannel::GetSocket", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return this->socket;
         }
 
@@ -149,7 +149,7 @@ namespace net {
          * @return true if the Nagle algorithm is disabled, false otherwise.
          */
         inline bool IsSetNoDelay(void) const {
-            VLSTACKTRACE("TcpCommChannel::IsSetNoDelay", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return ((this->flags & FLAG_NODELAY) != 0);
         }
 
@@ -159,7 +159,7 @@ namespace net {
          * @return true if the send buffer is zero, false otherwise.
          */
         inline bool IsSetNoSendBuffer(void) const {
-            VLAUTOSTACKTRACE;
+            THE_STACK_TRACE;
             return ((this->flags & FLAG_NOSENDBUFFER) != 0);
         }
 
@@ -170,8 +170,7 @@ namespace net {
          * @return true if address reuse is enabled, false otherwise.
          */
         inline bool IsSetReuseAddress(void) const {
-            VLSTACKTRACE("TcpCommChannel::IsSetReuseAddress", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             return ((this->flags & FLAG_REUSE_ADDRESS) != 0);
         }
 

@@ -583,7 +583,7 @@ void vislib::net::cluster::DiscoveryService::Start(const char *name,
  */
 vislib::StringA vislib::net::cluster::DiscoveryService::ToStringA(
         const PeerHandle& hPeer) const {
-    VLSTACKTRACE("DiscoveryService::ToStringA", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     try {
         return this->GetResponseAddress(hPeer).ToStringA();
     } catch (...) {
@@ -597,7 +597,7 @@ vislib::StringA vislib::net::cluster::DiscoveryService::ToStringA(
  */
 vislib::StringW vislib::net::cluster::DiscoveryService::ToStringW(
         const PeerHandle& hPeer) const {
-    VLSTACKTRACE("DiscoveryService::ToStringW", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     try {
         return this->GetResponseAddress(hPeer).ToStringW();
     } catch (...) {

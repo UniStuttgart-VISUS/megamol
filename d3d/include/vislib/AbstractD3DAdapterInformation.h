@@ -17,7 +17,7 @@
 
 
 #include "vislib/Rectangle.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 
@@ -66,8 +66,7 @@ namespace d3d {
          */
         inline INT_PTR FindOutputIdxForDeviceName(
                 const StringA& deviceName) const {
-            VLSTACKTRACE("AbstractD3DAdapterInformation::"
-                "FindOutputIdxForDeviceName", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return this->FindOutputIdxForDeviceName(
                 A2W(deviceName.PeekBuffer()));
         }

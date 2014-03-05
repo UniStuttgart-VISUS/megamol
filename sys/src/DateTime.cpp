@@ -22,7 +22,7 @@
  * vislib::sys::DateTime::IsLeapYear
  */
 bool vislib::sys::DateTime::IsLeapYear(const INT year) {
-    VLSTACKTRACE("DateTime::IsLeapYear", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return ((year % 4) == 0) && (((year % 100) != 0) || ((year % 400) == 0));
 }
 
@@ -31,7 +31,7 @@ bool vislib::sys::DateTime::IsLeapYear(const INT year) {
  * vislib::sys::DateTime::Now
  */
 vislib::sys::DateTime vislib::sys::DateTime::Now(void) {
-    VLSTACKTRACE("DateTime::Now", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DateTime retval;
     return retval;
 }
@@ -41,7 +41,7 @@ vislib::sys::DateTime vislib::sys::DateTime::Now(void) {
  * vislib::sys::DateTime::Today
  */
 vislib::sys::DateTime vislib::sys::DateTime::Today(void) {
-    VLSTACKTRACE("DateTime::Today", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DateTime retval;
     retval.SetTime(0, 0, 0, 0);
     return retval;
@@ -58,7 +58,7 @@ vislib::sys::DateTime vislib::sys::DateTime::EMPTY(0, 0);
  * vislib::sys::DateTime::DateTime
  */
 vislib::sys::DateTime::DateTime(void) : ticks(0L) {
-    VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 #ifdef _WIN32
     SYSTEMTIME systemTime;
     ::GetLocalTime(&systemTime);
@@ -77,7 +77,7 @@ vislib::sys::DateTime::DateTime(void) : ticks(0L) {
 vislib::sys::DateTime::DateTime(const INT year, const INT month, const INT day,
         const INT hours, const INT minutes, const INT seconds, 
         const INT milliseconds) {
-    VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     try {
         this->Set(year, month, day, hours, minutes, seconds, milliseconds);
     } catch (...) {
@@ -91,7 +91,7 @@ vislib::sys::DateTime::DateTime(const INT year, const INT month, const INT day,
  * vislib::sys::DateTime::~DateTime
  */
 vislib::sys::DateTime::~DateTime(void) {
-    VLSTACKTRACE("DateTime::~DateTime", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -343,7 +343,7 @@ void vislib::sys::DateTime::Set(const INT year, const INT month, const INT day,
  * vislib::sys::DateTime::Set
  */
 void vislib::sys::DateTime::Set(const struct tm& tm) {
-    VLSTACKTRACE("DateTime::Set", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     this->Set(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
         tm.tm_hour, tm.tm_min, tm.tm_sec, 0);
 }
@@ -353,7 +353,7 @@ void vislib::sys::DateTime::Set(const struct tm& tm) {
  * vislib::sys::DateTime::Set
  */
 void vislib::sys::DateTime::Set(const time_t time) {
-    VLSTACKTRACE("DateTime::Set", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400))
     struct tm tm;
     if (::localtime_s(&tm, &time) == 0) {
@@ -386,7 +386,7 @@ void vislib::sys::DateTime::Set(const time_t time) {
  * vislib::sys::DateTime::Set
  */
 void vislib::sys::DateTime::Set(const FILETIME& fileTime) {
-    VLSTACKTRACE("DateTime::Set", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SYSTEMTIME systemTime;
     if (!::FileTimeToSystemTime(&fileTime, &systemTime)) {
         throw SystemException(__FILE__, __LINE__);
@@ -400,7 +400,7 @@ void vislib::sys::DateTime::Set(const FILETIME& fileTime) {
  */
 void vislib::sys::DateTime::Set(const SYSTEMTIME& systemTime, 
         const bool isUTC) {
-    VLSTACKTRACE("DateTime::Set", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SYSTEMTIME lSystemTime;
 
     if (isUTC) {
@@ -427,7 +427,7 @@ void vislib::sys::DateTime::Set(const SYSTEMTIME& systemTime,
 void vislib::sys::DateTime::SetDate(const INT year, 
                                     const INT month, 
                                     const INT day) {
-    VLSTACKTRACE("DateTime::SetDate", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     INT64 time = this->ticks % DateTimeSpan::TICKS_PER_DAY;
     this->Set(year, month, day, 0, 0, 0);
     this->ticks += time;
@@ -442,7 +442,7 @@ void vislib::sys::DateTime::SetTime(const INT hours,
                                     const INT seconds,
                                     const INT milliseconds,
                                     const INT ticks) {
-    VLSTACKTRACE("DateTime::SetTime", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     this->ticks -= this->ticks % DateTimeSpan::TICKS_PER_DAY;
     this->ticks += DateTimeSpan::TimeToTicks(hours, minutes, seconds,
         milliseconds, ticks);
@@ -453,7 +453,7 @@ void vislib::sys::DateTime::SetTime(const INT hours,
  * vislib::sys::DateTime::operator =
  */
 vislib::sys::DateTime& vislib::sys::DateTime::operator =(const DateTime& rhs) {
-    VLSTACKTRACE("DateTime::operator =", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     if (this != &rhs) {
         this->ticks = rhs.ticks;
     }
@@ -466,7 +466,7 @@ vislib::sys::DateTime& vislib::sys::DateTime::operator =(const DateTime& rhs) {
  */
 vislib::sys::DateTime& vislib::sys::DateTime::operator +=(
         const DateTimeSpan& rhs) {
-    VLSTACKTRACE("DateTime::operator +=", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DateTimeSpan tmp(this->ticks);
     tmp += rhs;
     this->ticks = static_cast<INT64>(tmp);
@@ -479,7 +479,7 @@ vislib::sys::DateTime& vislib::sys::DateTime::operator +=(
  */
 vislib::sys::DateTime& vislib::sys::DateTime::operator -=(
         const DateTimeSpan& rhs) {
-    VLSTACKTRACE("DateTime::operator -=", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DateTimeSpan tmp(this->ticks);
     tmp -= rhs;
     this->ticks = static_cast<INT64>(tmp);
@@ -492,7 +492,7 @@ vislib::sys::DateTime& vislib::sys::DateTime::operator -=(
  */
 vislib::sys::DateTimeSpan vislib::sys::DateTime::operator -(
         const DateTime& rhs) const {
-    VLSTACKTRACE("DateTime::operator -", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     DateTimeSpan retval(this->ticks);
     DateTimeSpan r(rhs.ticks);
     retval -= r;
@@ -620,7 +620,7 @@ const INT64 vislib::sys::DateTime::DAYS_PER_400YEARS
  * vislib::sys::DateTime::get
  */
 INT64 vislib::sys::DateTime::get(const DatePart datePart) const {
-    VLSTACKTRACE("DateTime::get", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     // This implementation is shamelessly inspired by the DateTime of
     // Singularity: https://singularity.svn.codeplex.com/svn/base/Applications/Runtime/Full/System/DateTime.cs
 

@@ -16,7 +16,7 @@
 
 
 #include "vislib/IllegalParamException.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -42,7 +42,7 @@ namespace sys {
          * @throws SystemException If the lock could not be acquired.
          */
         inline ScopedLock(T& lock) : lock(lock) {
-            VLSTACKTRACE("ScopedLock::ScopedLock", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             this->lock.Lock();
         }
 
@@ -50,7 +50,7 @@ namespace sys {
          * The dtor releases 'lock'.
          */
         inline ~ScopedLock(void) {
-            VLSTACKTRACE("ScopedLock::~ScopedLock", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             this->lock.Unlock();
         }
 

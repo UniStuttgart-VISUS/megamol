@@ -25,7 +25,7 @@
 #include "vislib/Socket.h"  // Must be first.
 #include "vislib/CriticalSection.h"
 #include "vislib/Runnable.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 #include "vislib/ThreadPool.h"
 
 
@@ -70,7 +70,7 @@ namespace net {
          * a new socket.
          */
         inline AsyncSocket(void) : Super() {
-            VLSTACKTRACE("AsyncSocket::AsyncSocket", __FILE__, __LINE__);
+            THE_STACK_TRACE;
         }
 
         /**
@@ -79,7 +79,7 @@ namespace net {
          * @param handle The socket handle.
          */
         explicit inline AsyncSocket(SOCKET handle) : Super(handle) {
-            VLSTACKTRACE("AsyncSocket::AsyncSocket", __FILE__, __LINE__);
+            THE_STACK_TRACE;
         }
 
         /**
@@ -88,7 +88,7 @@ namespace net {
          * @param socket The socket to be cloned
          */
         explicit inline AsyncSocket(Socket socket) : Super(socket) {
-            VLSTACKTRACE("AsyncSocket::AsyncSocket", __FILE__, __LINE__);
+            THE_STACK_TRACE;
         }
 
         /**
@@ -97,7 +97,7 @@ namespace net {
          * @param rhs The object to be cloned.
          */
         inline AsyncSocket(const AsyncSocket& rhs) : Super(rhs) {
-            VLSTACKTRACE("AsyncSocket::AsyncSocket", __FILE__, __LINE__);
+            THE_STACK_TRACE;
         }
 
         /** Dtor. */
@@ -239,7 +239,7 @@ namespace net {
          * @throws IllegalParamException If 'context' is a NULL pointer.
          */
         inline SIZE_T EndReceive(AsyncSocketContext *context) {
-            VLSTACKTRACE("AsyncSocket::EndReceive", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return this->endAsync(context);
         }
 
@@ -258,7 +258,7 @@ namespace net {
          * @throws IllegalParamException If 'context' is a NULL pointer.
          */
         inline SIZE_T EndSend(AsyncSocketContext *context) {
-            VLSTACKTRACE("AsyncSocket::EndSend", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return this->endAsync(context);
         }
 
@@ -428,7 +428,7 @@ namespace net {
          * @return *this.
          */
         AsyncSocket& operator =(const AsyncSocket& rhs) {
-            VLSTACKTRACE("AsyncSocket::operator =", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             Super::operator =(rhs);
             return *this;
         }
@@ -441,7 +441,7 @@ namespace net {
          * @return true, if *this and 'rhs' are equal, false otherwise.
          */
         inline bool operator ==(const AsyncSocket& rhs) const {
-            VISLIB_STACKTRACE("AsyncSocket::operator ==", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return Super::operator ==(rhs);
         }
 
@@ -453,7 +453,7 @@ namespace net {
          * @return true, if *this and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const AsyncSocket& rhs) const {
-            VLSTACKTRACE("AsyncSocket::operator !=", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             return !(*this == rhs);
         }
 

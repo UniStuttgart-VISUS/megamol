@@ -40,7 +40,7 @@ const UINT64 vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS = 0x00000002;
  */
 vislib::SmartRef<vislib::net::AbstractCommClientChannel> 
 vislib::net::TcpCommChannel::Accept(void) {
-    VLSTACKTRACE("TcpCommChannel::Accept", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     Socket socket = this->socket.Accept();
     // Ctor of TcpCommChannel will assign flags to actual socket.
 
@@ -54,7 +54,7 @@ vislib::net::TcpCommChannel::Accept(void) {
  */
 void vislib::net::TcpCommChannel::Bind(
         SmartRef<AbstractCommEndPoint> endPoint) {
-    VLSTACKTRACE("TcpCommChannel::Bind", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SmartRef<IPCommEndPoint> ep = endPoint.DynamicCast<IPCommEndPoint>();
 
     if (ep.IsNull()) {
@@ -92,7 +92,7 @@ void vislib::net::TcpCommChannel::Close(void) {
  */
 void vislib::net::TcpCommChannel::Connect(
         SmartRef<AbstractCommEndPoint> endPoint) {
-    VLSTACKTRACE("TcpCommChannel::Connect", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SmartRef<IPCommEndPoint> ep = endPoint.DynamicCast<IPCommEndPoint>();
 
     if (ep.IsNull()) {
@@ -109,7 +109,7 @@ void vislib::net::TcpCommChannel::Connect(
  */
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::TcpCommChannel::GetLocalEndPoint(void) const {
-    VLSTACKTRACE("TcpCommChannel::GetLocalEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return IPCommEndPoint::Create(this->socket.GetLocalEndPoint());
 }
 
@@ -119,7 +119,7 @@ vislib::net::TcpCommChannel::GetLocalEndPoint(void) const {
  */
 vislib::SmartRef<vislib::net::AbstractCommEndPoint>
 vislib::net::TcpCommChannel::GetRemoteEndPoint(void) const {
-    VLSTACKTRACE("TcpCommChannel::GetRemoteEndPoint", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return IPCommEndPoint::Create(this->socket.GetPeerEndPoint());
 }
 
@@ -128,7 +128,7 @@ vislib::net::TcpCommChannel::GetRemoteEndPoint(void) const {
  * vislib::net::TcpCommChannel::Listen
  */
 void vislib::net::TcpCommChannel::Listen(const int backlog) {
-    VLSTACKTRACE("TcpCommChannel::Listen", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     this->socket.Listen(backlog);
 }
 
@@ -138,7 +138,7 @@ void vislib::net::TcpCommChannel::Listen(const int backlog) {
  */
 SIZE_T vislib::net::TcpCommChannel::Receive(void *outData, 
         const SIZE_T cntBytes, const UINT timeout, const bool forceReceive) {
-    VLSTACKTRACE("TcpCommChannel::Receive", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     SIZE_T retval = 0;
     
     if (cntBytes > 0) {
@@ -162,7 +162,7 @@ SIZE_T vislib::net::TcpCommChannel::Receive(void *outData,
  */
 SIZE_T vislib::net::TcpCommChannel::Send(const void *data, 
         const SIZE_T cntBytes, const UINT timeout, const bool forceSend) {
-    VLSTACKTRACE("TcpCommChannel::Send", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     return this->socket.Send(data, cntBytes, timeout, 0, forceSend);
 }
 
@@ -172,7 +172,7 @@ SIZE_T vislib::net::TcpCommChannel::Send(const void *data,
  */
 vislib::net::TcpCommChannel::TcpCommChannel(const UINT64 flags) 
         : Super(), flags(flags) {
-     VLSTACKTRACE("TcpCommChannel::TcpCommChannel", __FILE__, __LINE__);
+     THE_STACK_TRACE;
 }
 
 
@@ -181,7 +181,7 @@ vislib::net::TcpCommChannel::TcpCommChannel(const UINT64 flags)
  */
 vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket, const UINT64 flags) 
         : Super(), socket(socket), flags(flags) {
-    VLSTACKTRACE("TcpCommChannel::TcpCommChannel", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     socket.SetNoDelay(this->IsSetNoDelay());
     socket.SetReuseAddr(this->IsSetReuseAddress());
     if (this->IsSetNoSendBuffer()) {
@@ -203,7 +203,7 @@ vislib::net::TcpCommChannel::TcpCommChannel(const TcpCommChannel& rhs) {
  * vislib::net::TcpCommChannel::~TcpCommChannel
  */
 vislib::net::TcpCommChannel::~TcpCommChannel(void) {
-    VLSTACKTRACE("TcpCommChannel::~TcpCommChannel", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     /* Ensure that the socket is closed. */
     try {
@@ -220,7 +220,7 @@ vislib::net::TcpCommChannel::~TcpCommChannel(void) {
  * vislib::net::TcpCommChannel::createSocket
  */
 void vislib::net::TcpCommChannel::createSocket(const IPEndPoint& endPoint) {
-    VLSTACKTRACE("TcpCommChannel::createSocket", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     /* Destroy old instance. */
     if (this->socket.IsValid()) {

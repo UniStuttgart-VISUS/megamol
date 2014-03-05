@@ -19,7 +19,7 @@
 #include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/Point.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 #include "vislib/types.h"
 
 #include "vislib/MissingImplementationException.h"
@@ -148,8 +148,7 @@ namespace math {
      */
     template<class T> 
     AbstractPyramidalFrustum<T>::~AbstractPyramidalFrustum(void) {
-        VLSTACKTRACE("AbstractPyramidalFrustum::AbstractPyramidalFrustum", 
-            __FILE__, __LINE__);
+        THE_STACK_TRACE;
     }
 
 
@@ -160,8 +159,7 @@ namespace math {
     bool AbstractPyramidalFrustum<T>::checkSanity(
             const vislib::Array<Point<T, 3> >& bottomBasePoints,
             const vislib::Array<Point<T, 3> >& topBasePoints) const {
-        VLSTACKTRACE("AbstractPyramidalFrustum::checkSanity", __FILE__, 
-            __LINE__);
+        THE_STACK_TRACE;
 
         /* 
          * Bottom and top base must be at least triangles and have the same 

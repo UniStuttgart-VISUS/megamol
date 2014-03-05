@@ -18,8 +18,7 @@
  * vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher
  */
 vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher(void) {
-    VLSTACKTRACE("SimpleMessageDispatcher::SimpleMessageDispatcher", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -27,8 +26,7 @@ vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher(void) {
  * vislib::net::SimpleMessageDispatcher::~SimpleMessageDispatcher
  */
 vislib::net::SimpleMessageDispatcher::~SimpleMessageDispatcher(void) {
-    VLSTACKTRACE("SimpleMessageDispatcher::~SimpleMessageDispatcher", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -37,7 +35,7 @@ vislib::net::SimpleMessageDispatcher::~SimpleMessageDispatcher(void) {
  */
 void vislib::net::SimpleMessageDispatcher::AddListener(
         SimpleMessageDispatchListener *listener) {
-    VLSTACKTRACE("SimpleMessageDispatcher::AddListener", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     ASSERT(listener != NULL);
 
     this->listeners.Lock();
@@ -52,8 +50,7 @@ void vislib::net::SimpleMessageDispatcher::AddListener(
  * vislib::net::SimpleMessageDispatcher::OnThreadStarting
  */
 void vislib::net::SimpleMessageDispatcher::OnThreadStarting(void *config) {
-    VLSTACKTRACE("SimpleMessageDispatcher::OnThreadStarting", __FILE__, 
-        __LINE__);
+    THE_STACK_TRACE;
     ASSERT(config != NULL);
     Configuration *c = static_cast<Configuration *>(config);
 
@@ -67,7 +64,7 @@ void vislib::net::SimpleMessageDispatcher::OnThreadStarting(void *config) {
  */
 void vislib::net::SimpleMessageDispatcher::RemoveListener(
         SimpleMessageDispatchListener *listener) {
-    VLSTACKTRACE("SimpleMessageDispatcher::RemoveListener", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     ASSERT(listener != NULL);
     this->listeners.RemoveAll(listener);
 }
@@ -77,7 +74,7 @@ void vislib::net::SimpleMessageDispatcher::RemoveListener(
  * vislib::net::SimpleMessageDispatcher::Run
  */
 DWORD vislib::net::SimpleMessageDispatcher::Run(void *config) {
-    VLSTACKTRACE("SimpleMessageDispatcher::Run", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     ASSERT(!this->configuration.Channel.IsNull());
 
     bool doReceive = true;
@@ -160,7 +157,7 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *config) {
  * vislib::net::SimpleMessageDispatcher::Terminate
  */
 bool vislib::net::SimpleMessageDispatcher::Terminate(void) {
-    VLSTACKTRACE("SimpleMessageDispatcher::Terminate", __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     if (!this->configuration.Channel.IsNull()) {
         try {
@@ -180,8 +177,7 @@ bool vislib::net::SimpleMessageDispatcher::Terminate(void) {
  */
 bool vislib::net::SimpleMessageDispatcher::fireCommunicationError(
         const vislib::Exception& exception) {
-    VLSTACKTRACE("SimpleMessageDispatcher::fireCommunicationError", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
     bool retval = true;
 
     this->listeners.Lock();
@@ -202,8 +198,7 @@ bool vislib::net::SimpleMessageDispatcher::fireCommunicationError(
  * vislib::net::SimpleMessageDispatcher::fireDispatcherExited
  */
 void vislib::net::SimpleMessageDispatcher::fireDispatcherExited(void) {
-    VLSTACKTRACE("SimpleMessageDispatcher::fireDispatcherExited", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     this->listeners.Lock();
     ListenerList::Iterator it = this->listeners.GetIterator();
@@ -218,8 +213,7 @@ void vislib::net::SimpleMessageDispatcher::fireDispatcherExited(void) {
  * vislib::net::SimpleMessageDispatcher::fireDispatcherStarted
  */
 void vislib::net::SimpleMessageDispatcher::fireDispatcherStarted(void) {
-    VLSTACKTRACE("SimpleMessageDispatcher::fireDispatcherStarted", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
 
     this->listeners.Lock();
     ListenerList::Iterator it = this->listeners.GetIterator();
@@ -235,8 +229,7 @@ void vislib::net::SimpleMessageDispatcher::fireDispatcherStarted(void) {
  */
 bool vislib::net::SimpleMessageDispatcher::fireMessageReceived(
         const AbstractSimpleMessage& msg) {
-    VLSTACKTRACE("SimpleMessageDispatcher::fireMessageReceived", 
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
     bool retval = true;
 
     this->listeners.Lock();

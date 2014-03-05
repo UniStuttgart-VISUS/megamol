@@ -8,15 +8,14 @@
 
 #include "vislib/AbstractCommEndPoint.h"
 
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 
 
 /*
  * vislib::net::AbstractCommEndPoint::AbstractCommEndPoint
  */
 vislib::net::AbstractCommEndPoint::AbstractCommEndPoint(void) : Super() {
-    VLSTACKTRACE("AbstractCommEndPoint::AbstractCommEndPoint",
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -25,8 +24,7 @@ vislib::net::AbstractCommEndPoint::AbstractCommEndPoint(void) : Super() {
  */
 vislib::net::AbstractCommEndPoint::AbstractCommEndPoint(
         const AbstractCommEndPoint& rhs) : Super(rhs) {
-    VLSTACKTRACE("AbstractCommEndPoint::AbstractCommEndPoint",
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }
 
 
@@ -34,6 +32,5 @@ vislib::net::AbstractCommEndPoint::AbstractCommEndPoint(
  * vislib::net::AbstractCommEndPoint::~AbstractCommEndPoint
  */
 vislib::net::AbstractCommEndPoint::~AbstractCommEndPoint(void) {
-    VLSTACKTRACE("AbstractCommEndPoint::~AbstractCommEndPoint",
-        __FILE__, __LINE__);
+    THE_STACK_TRACE;
 }

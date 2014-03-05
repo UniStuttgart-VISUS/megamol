@@ -25,7 +25,7 @@
 #include "vislib/Event.h"
 #include "vislib/IPEndPoint.h"
 #include "vislib/Socket.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -135,8 +135,7 @@ namespace net {
          * @return A pointer to the WSAOVERLAPPED structure.
          */
         operator WSAOVERLAPPED *(void) {
-            VLSTACKTRACE("AsyncSocketContext::operator WSAOVERLAPPED *", 
-                __FILE__, __LINE__);
+            THE_STACK_TRACE;
             ASSERT(sizeof(WSAOVERLAPPED) == sizeof(OVERLAPPED));
             return (Super::operator OVERLAPPED *());
         }
@@ -172,8 +171,7 @@ namespace net {
         inline void setDgramParams(AsyncSocket *socket, 
                 const IPEndPoint *dgramAddr, const void *data, 
                 const SIZE_T cntData, const INT flags, const INT timeout) {
-            VLSTACKTRACE("AsyncSocketContext::setDgramParams", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             ASSERT(dgramAddr != NULL);
             this->socket = socket;
             this->dgramAddrOrg = const_cast<IPEndPoint *>(dgramAddr);
@@ -194,8 +192,7 @@ namespace net {
          * @param timeout   Timeout for the operation.         */
         inline void setStreamParams(AsyncSocket *socket, const void *data, 
                 const SIZE_T cntData, const INT flags, const INT timeout) {
-            VLSTACKTRACE("AsyncSocketContext::setStreamParams", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             this->socket = socket;
             this->dgramAddrOrg = NULL;
             this->data = const_cast<void *>(data);
@@ -212,8 +209,7 @@ namespace net {
          * @param cntData   Size of the data buffer.
          */
         inline void setWsaParams(const void *data, const SIZE_T cntData) {
-            VLSTACKTRACE("AsyncSocketContext::setWsaParams", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             wsaBuf.buf = static_cast<char *>(const_cast<void *>(data));
             wsaBuf.len = static_cast<u_long>(cntData);
         }
@@ -230,8 +226,7 @@ namespace net {
          */
         inline AsyncSocketContext(const AsyncSocketContext& rhs)
                 : Super(NULL, NULL) {
-            VLSTACKTRACE("AsyncSocketContext::AsyncSocketContext", __FILE__, 
-                __LINE__);
+            THE_STACK_TRACE;
             throw UnsupportedOperationException("AsyncSocketContext", __FILE__, 
                 __LINE__);
         }

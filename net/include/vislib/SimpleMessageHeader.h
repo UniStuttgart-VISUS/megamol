@@ -87,7 +87,7 @@ namespace net {
          * @return *this
          */
         inline SimpleMessageHeader& operator =(const SimpleMessageHeader& rhs) {
-            VLSTACKTRACE("SimpleMessageHeader::operator =", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             Super::operator =(rhs);
             return *this;
         }
@@ -101,7 +101,7 @@ namespace net {
          */
         inline SimpleMessageHeader& operator =(
                 const AbstractSimpleMessageHeader& rhs) {
-            VLSTACKTRACE("SimpleMessageHeader::operator =", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             Super::operator =(rhs);
             return *this;
         }
@@ -115,7 +115,7 @@ namespace net {
          */
         inline SimpleMessageHeader& operator =(
                 const SimpleMessageHeaderData& rhs) {
-            VLSTACKTRACE("SimpleMessageHeader::operator =", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             Super::operator =(rhs);
             return *this;
         }
@@ -129,7 +129,7 @@ namespace net {
          */
         inline SimpleMessageHeader& operator =(
                 const SimpleMessageHeaderData *rhs) {
-            VLSTACKTRACE("SimpleMessageHeader::operator =", __FILE__, __LINE__);
+            THE_STACK_TRACE;
             Super::operator =(rhs);
             return *this;
         }

@@ -10,7 +10,8 @@
 
 #include "vislib/D3DException.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/StackTrace.h"
+#include "the/stack_trace.h"
+#include "vislib/assert.h"
 
 
 /**
@@ -54,7 +55,7 @@ static bool IsDisplayModeLargerThan(const D3DDISPLAYMODE& displayMode,
  */
 void vislib::graphics::d3d::GetBackbufferSize(UINT& outWidth, UINT& outHeight,
         IDirect3DDevice9 *device) {
-    VLSTACKTRACE("GetBackbufferSize", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;
@@ -92,7 +93,7 @@ void vislib::graphics::d3d::GetMaximumFullscreenResolution(
         const UINT adapterID, 
         const D3DFORMAT& format,
         const FullscreenSizeCriterion criterion) {
-    VLSTACKTRACE("GetMaximumFullscreenResolution", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;
@@ -133,7 +134,7 @@ bool vislib::graphics::d3d::GetMaximumSharedFullscreenResolution(
         IDirect3D9 *d3d, 
         const D3DFORMAT& format,
         const FullscreenSizeCriterion criterion) {
-    VLSTACKTRACE("GetMaximumSharedFullscreenResolution", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;                // API return values.
@@ -213,7 +214,7 @@ bool vislib::graphics::d3d::IsFullscreenResolutionSupported(
         const UINT width,
         const UINT height,
         UINT *outRefreshRate) {
-    VLSTACKTRACE("GetMaximumFullscreenResolution", __FILE__, __LINE__);
+    THE_STACK_TRACE;
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;
