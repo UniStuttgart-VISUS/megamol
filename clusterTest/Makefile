@@ -31,13 +31,13 @@ DebugDir := Debug
 
 
 # Additional include directories
-IncludeDirs := .
+IncludeDirs := . $(thelibpath)include
 
 # Additional system include directories
 SystemIncludeDirs := /usr/include/g++ /usr/include/g++/bits /usr/include/g++/ext
 
 # Additional compiler flags
-CompilerFlags := -fPIC -DVISLIB_CLUSTER_WITH_OPENGL -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY
+CompilerFlags := -fPIC -DVISLIB_CLUSTER_WITH_OPENGL -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY $(CompilerFlags)
 CompilerFlagsDebug := -ggdb
 CompilerFlagsRelease := -O3 -g0
 

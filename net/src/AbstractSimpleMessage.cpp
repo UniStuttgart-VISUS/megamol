@@ -8,6 +8,7 @@
 #include "vislib/AbstractSimpleMessage.h"
 
 #include <climits>
+#include <cstring>
 
 
 /*

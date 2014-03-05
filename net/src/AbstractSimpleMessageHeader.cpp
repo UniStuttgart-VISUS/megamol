@@ -9,6 +9,7 @@
 
 #include "vislib/IllegalParamException.h"
 #include "vislib/assert.h"
+#include <cstring>
 
 /*
  * vislib::net::AbstractSimpleMessageHeader::~AbstractSimpleMessageHeader
