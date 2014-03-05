@@ -67,7 +67,7 @@ namespace math {
      * @return The smallest power of two with ('n' <= result).
      */
     template<class T> T NextPowerOfTwo(const T n) {
-        ASSERT(std::numeric_limits<T>::is_integer);
+        THE_ASSERT(std::numeric_limits<T>::is_integer);
         
         T retval = static_cast<T>(1);
 
@@ -181,7 +181,7 @@ namespace math {
     template<class T> inline bool IsWithin(const T n, const T minVal, 
             const T maxVal, const bool includeMin = false, 
             const bool includeMax = false) {
-        ASSERT(minVal <= maxVal);
+        THE_ASSERT(minVal <= maxVal);
         return (((minVal < n) || (includeMin && (minVal == n)))
             && ((n < maxVal) || (includeMax && (maxVal == n))));
     }
@@ -295,9 +295,9 @@ namespace math {
      * @return The unsigned modulo value.
      */
     template<class T> inline T UMod(const T left, const T right) {
-        ASSERT(std::numeric_limits<T>::is_integer);
-        ASSERT(std::numeric_limits<T>::is_signed);
-        ASSERT(right >= 0);
+        THE_ASSERT(std::numeric_limits<T>::is_integer);
+        THE_ASSERT(std::numeric_limits<T>::is_signed);
+        THE_ASSERT(right >= 0);
         // return (left >= 0) ? (left % right) : ((left % right) + right);
         return (left >= 0) ? (left % right) : ((1 - ((left + 1) / right)) * right + left);
     }

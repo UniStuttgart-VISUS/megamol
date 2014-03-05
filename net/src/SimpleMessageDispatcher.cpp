@@ -36,7 +36,7 @@ vislib::net::SimpleMessageDispatcher::~SimpleMessageDispatcher(void) {
 void vislib::net::SimpleMessageDispatcher::AddListener(
         SimpleMessageDispatchListener *listener) {
     THE_STACK_TRACE;
-    ASSERT(listener != NULL);
+    THE_ASSERT(listener != NULL);
 
     this->listeners.Lock();
     if ((listener != NULL) && !this->listeners.Contains(listener)) {
@@ -51,10 +51,10 @@ void vislib::net::SimpleMessageDispatcher::AddListener(
  */
 void vislib::net::SimpleMessageDispatcher::OnThreadStarting(void *config) {
     THE_STACK_TRACE;
-    ASSERT(config != NULL);
+    THE_ASSERT(config != NULL);
     Configuration *c = static_cast<Configuration *>(config);
 
-    ASSERT(!c->Channel.IsNull());
+    THE_ASSERT(!c->Channel.IsNull());
     this->configuration.Channel = c->Channel;
 }
 
@@ -65,7 +65,7 @@ void vislib::net::SimpleMessageDispatcher::OnThreadStarting(void *config) {
 void vislib::net::SimpleMessageDispatcher::RemoveListener(
         SimpleMessageDispatchListener *listener) {
     THE_STACK_TRACE;
-    ASSERT(listener != NULL);
+    THE_ASSERT(listener != NULL);
     this->listeners.RemoveAll(listener);
 }
 
@@ -75,7 +75,7 @@ void vislib::net::SimpleMessageDispatcher::RemoveListener(
  */
 DWORD vislib::net::SimpleMessageDispatcher::Run(void *config) {
     THE_STACK_TRACE;
-    ASSERT(!this->configuration.Channel.IsNull());
+    THE_ASSERT(!this->configuration.Channel.IsNull());
 
     bool doReceive = true;
     

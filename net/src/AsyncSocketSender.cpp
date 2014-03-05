@@ -60,7 +60,7 @@ DWORD vislib::net::AsyncSocketSender::Run(void *socket) {
  * vislib::net::AsyncSocketSender::Run
  */
 DWORD vislib::net::AsyncSocketSender::Run(Socket *socket) {
-    ASSERT(socket != NULL);
+    THE_ASSERT(socket != NULL);
     const void *data = NULL;
     SIZE_T cntSent = 0;
     DWORD result = 0;
@@ -92,7 +92,7 @@ DWORD vislib::net::AsyncSocketSender::Run(Socket *socket) {
         }
 
         /* Set send task and send it using our socket. */
-        ASSERT(!this->queue.IsEmpty());
+        THE_ASSERT(!this->queue.IsEmpty());
         SendTask task = this->queue.First();
         this->queue.RemoveFirst();
         this->lockQueue.Unlock();

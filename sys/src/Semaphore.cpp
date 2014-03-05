@@ -30,7 +30,7 @@ vislib::sys::Semaphore::Semaphore(long initialCount, long maxCount) {
 
 #ifdef _WIN32
     this->handle = ::CreateSemaphore(NULL, initialCount, maxCount, NULL);
-    ASSERT(this->handle != NULL);
+    THE_ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
     this->handle = new sem_t;
@@ -60,7 +60,7 @@ vislib::sys::Semaphore::Semaphore(const char *name, long initialCount,
             *outIsNew = true;
         }
     }
-    ASSERT(this->handle != NULL);
+    THE_ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
     if (name != NULL) {
@@ -75,7 +75,7 @@ vislib::sys::Semaphore::Semaphore(const char *name, long initialCount,
                 *outIsNew = true;
             }
         }
-        ASSERT(this->handle !=  SEM_FAILED);
+        THE_ASSERT(this->handle !=  SEM_FAILED);
     } else {
         this->handle = new sem_t;
         ::sem_init(this->handle, 0, initialCount); 
@@ -108,7 +108,7 @@ vislib::sys::Semaphore::Semaphore(const wchar_t *name, long initialCount,
             *outIsNew = true;
         }
     }
-    ASSERT(this->handle != NULL);
+    THE_ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
     if (name != NULL) {
@@ -123,7 +123,7 @@ vislib::sys::Semaphore::Semaphore(const wchar_t *name, long initialCount,
                 *outIsNew = true;
             }
         }
-        ASSERT(this->handle !=  SEM_FAILED);
+        THE_ASSERT(this->handle !=  SEM_FAILED);
     } else {
         this->handle = new sem_t;
         ::sem_init(this->handle, 0, initialCount);
@@ -174,7 +174,7 @@ void vislib::sys::Semaphore::Lock(void) {
 
         case WAIT_TIMEOUT:
             /* Waiting infinitely should not timeout. */
-            ASSERT(false);
+            THE_ASSERT(false);
             break;
 
         default:
@@ -292,9 +292,9 @@ void vislib::sys::Semaphore::enforceParamAssertions(long& inOutInitialCount,
         inOutInitialCount = inOutMaxCount;
     }
 
-    ASSERT(inOutMaxCount > 0);
-    ASSERT(inOutInitialCount >= 0);
-    ASSERT(inOutInitialCount <= inOutMaxCount);
+    THE_ASSERT(inOutMaxCount > 0);
+    THE_ASSERT(inOutInitialCount >= 0);
+    THE_ASSERT(inOutInitialCount <= inOutMaxCount);
 
 }
 

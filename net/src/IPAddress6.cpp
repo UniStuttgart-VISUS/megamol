@@ -218,10 +218,10 @@ void vislib::net::IPAddress6::MapV4Address(const struct in_addr& address) {
     }
 
     /* Embed IPv4 in the last 32 bits. */
-    ASSERT(sizeof(in_addr) == 4);
+    THE_ASSERT(sizeof(in_addr) == 4);
     ::memcpy(this->address.s6_addr + 12, &address, sizeof(in_addr));
 
-    ASSERT(this->IsV4Mapped());
+    THE_ASSERT(this->IsV4Mapped());
 }
 
 

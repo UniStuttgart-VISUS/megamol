@@ -331,7 +331,7 @@ void vislib::net::IPEndPoint::SetPort(const unsigned int port) {
             break;
 
         default:
-            ASSERT(false);          // This should be unreachable.
+            THE_ASSERT(false);          // This should be unreachable.
     }
 }
 
@@ -356,7 +356,7 @@ vislib::StringA vislib::net::IPEndPoint::ToStringA(void) const {
             break;
 
         default:
-            ASSERT(false);          // This should be unreachable.
+            THE_ASSERT(false);          // This should be unreachable.
     }
 
     return retval;

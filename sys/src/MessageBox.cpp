@@ -1024,7 +1024,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
             btn3 = "Ignore"; break;
         case BTNS_CANCELRETRYCONTINUE: btn1 = "Cancel"; btn2 = "Retry";
             btn3 = "Continue"; break;
-        default: ASSERT(false); break;
+        default: THE_ASSERT(false); break;
     }
 
     // try connect to the x server and to create a window
@@ -1533,7 +1533,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
                 }
                 break;
             case BTNS_OK: this->retval = RET_OK; break;
-            default: ASSERT(false); break;
+            default: THE_ASSERT(false); break;
         }
 
     }

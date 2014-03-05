@@ -63,7 +63,7 @@
 // */
 //vislib::net::ib::IbvShared::IbvShared(const IbvShared& rhs) {
 //    VLSTACKTRACE("IbvShared::IbvShared", __FILE__, __LINE__);
-//    ASSERT(IbvShared::wvProvider != NULL);
+//    THE_ASSERT(IbvShared::wvProvider != NULL);
 //    
 //    sys::AutoLock lock(IbvShared::lock);
 //    IbvShared::wvProvider->AddRef();

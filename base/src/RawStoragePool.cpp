@@ -74,7 +74,7 @@ vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const SIZE_T size) {
     }
 
     if (bestFit != NULL) {
-        ASSERT(bestFit->storage->GetSize() >= size);
+        THE_ASSERT(bestFit->storage->GetSize() >= size);
         bestFit->isInUse = true;
         return bestFit->storage;
 
@@ -89,7 +89,7 @@ vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const SIZE_T size) {
         n.storage = new RawStorage(size);
         this->storageList.Append(n);
 
-        ASSERT(this->storageList.Last().storage->GetSize() == size);
+        THE_ASSERT(this->storageList.Last().storage->GetSize() == size);
         return this->storageList.Last().storage;
     }
 

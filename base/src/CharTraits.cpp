@@ -202,7 +202,7 @@ vislib::CharTraits<char>::Size vislib::CharTraits<char>::ToLower(
         Char *dst, const Size cnt, const Char *str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
-    ASSERT(str != NULL);
+    THE_ASSERT(str != NULL);
     Size retval = static_cast<Size>(::strlen(str));
 
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400))
@@ -243,7 +243,7 @@ vislib::CharTraitsA::Size vislib::CharTraits<char>::ToUpper(
         Char *dst, const Size cnt, const Char *str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
-    ASSERT(str != NULL);
+    THE_ASSERT(str != NULL);
     Size retval = static_cast<Size>(::strlen(str));
 
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400))
@@ -493,7 +493,7 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToLower(
         Char *dst, const Size cnt, const Char *str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
-    ASSERT(str != NULL);
+    THE_ASSERT(str != NULL);
     Size retval = static_cast<Size>(::wcslen(str));
 
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400))
@@ -534,7 +534,7 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToUpper(
         Char *dst, const Size cnt, const Char *str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
-    ASSERT(str != NULL);
+    THE_ASSERT(str != NULL);
     Size retval = static_cast<Size>(::wcslen(str));
 
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400))

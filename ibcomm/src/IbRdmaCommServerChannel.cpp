@@ -79,7 +79,7 @@ vislib::net::ib::IbRdmaCommServerChannel::Accept(BYTE *bufRecv,
     // saved initialisation attributes for any end point that does not have
     // a send or receive CQ.
     if ((retval->id->send_cq == NULL) || (retval->id->recv_cq == NULL)) {
-        ASSERT(retval->id != NULL);
+        THE_ASSERT(retval->id != NULL);
         ::rdma_destroy_qp(retval->id);
 
         struct ibv_qp_init_attr attr;

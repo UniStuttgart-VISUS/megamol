@@ -143,7 +143,7 @@ namespace cluster {
             }
 
             inline const DiscoveryConfigEx& getDiscoverySource(void) const {
-                ASSERT(this->discoverySource != NULL);
+                THE_ASSERT(this->discoverySource != NULL);
                 return *this->discoverySource;
             }
 
@@ -1043,7 +1043,7 @@ namespace cluster {
             virtual ~DiscoveryConfigEx(void);
 
             inline DiscoveryService& GetDiscoveryService(void) {
-                ASSERT(this->cds != NULL);
+                THE_ASSERT(this->cds != NULL);
                 return *(this->cds);
             }
 

@@ -516,7 +516,7 @@ namespace vislib {
                         const Char *sepBuf = this->separator.PeekBuffer();
                         while (*sepBuf != 0) {
                             buffer[pos++] = *(sepBuf++);
-                            ASSERT(pos <= this->maxWidth + 1);
+                            THE_ASSERT(pos <= this->maxWidth + 1);
                         }
                     }
 
@@ -539,7 +539,7 @@ namespace vislib {
                     const Char *sepBuf = this->separator.PeekBuffer();
                     while (*sepBuf != 0) {
                         buffer[pos++] = *(sepBuf++);
-                        ASSERT(pos <= this->maxWidth + 1);
+                        THE_ASSERT(pos <= this->maxWidth + 1);
                     }
                 }
 
@@ -547,7 +547,7 @@ namespace vislib {
                     // remaining column content fits into column
                     while (*col->rmTextBuf != 0) {
                         buffer[pos++] = *(col->rmTextBuf++);
-                        ASSERT(pos <= this->maxWidth + 1);
+                        THE_ASSERT(pos <= this->maxWidth + 1);
                     }
                     pos = col->colEnd;
                     continue;
@@ -577,7 +577,7 @@ namespace vislib {
                 for (unsigned int i = 0; i < textlen; i++) {
                     buffer[pos++] = *col->rmTextBuf;
                     col->rmTextBuf++;
-                    ASSERT(pos <= this->maxWidth + 1);
+                    THE_ASSERT(pos <= this->maxWidth + 1);
                 }
                 pos += len - textlen;
 
@@ -665,7 +665,7 @@ namespace vislib {
                                 while ((*buf != 0) && (T::IsSpace(*buf))) {
                                     buf++;
                                 }
-                                ASSERT(buf != 0); // because all strings had been trimmed right
+                                THE_ASSERT(buf != 0); // because all strings had been trimmed right
                                 lastWordStart = NULL;
                             }
 
@@ -687,7 +687,7 @@ namespace vislib {
                         // column content is too large to place the following 
                         // columns right aside, but is short enough that the
                         // content fits into a single line.
-                        ASSERT(lines == 1);
+                        THE_ASSERT(lines == 1);
                         col->colWidth = 0; 
                     }
                 }

@@ -90,7 +90,7 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
         throw SystemException(__FILE__, __LINE__);
     }
     buf = new char[bufLen];
-    ASSERT(buf != NULL);
+    THE_ASSERT(buf != NULL);
     /* From now on, 'buf' must be deallocated before leaving. */
 
     /* Get the UID and GID first (string fields will not be used!). */
@@ -115,7 +115,7 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
         VLTRACE(Trace::LEVEL_VL_ERROR, "::getspnam_r failed.\n");
         throw SystemException(errorCode, __FILE__, __LINE__);
     }
-    ASSERT(pspw != NULL);
+    THE_ASSERT(pspw != NULL);
     if (pspw == NULL) {
         /* User was not found. */
         ARY_SAFE_DELETE(buf);

@@ -290,7 +290,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -346,7 +346,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -406,7 +406,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -467,7 +467,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -779,7 +779,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, P8, P9)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -835,7 +835,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, P8, P9, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -895,7 +895,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, P8, P9)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -956,7 +956,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, P8, P9, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -1268,7 +1268,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, P8)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -1324,7 +1324,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, P8, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -1384,7 +1384,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, P8)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -1445,7 +1445,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, P8, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -1757,7 +1757,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -1813,7 +1813,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -1873,7 +1873,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -1934,7 +1934,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -2246,7 +2246,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4, P5, P6)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -2302,7 +2302,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -2362,7 +2362,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -2423,7 +2423,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -2735,7 +2735,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4, P5)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -2791,7 +2791,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, P5, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -2851,7 +2851,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -2912,7 +2912,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -3224,7 +3224,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -3280,7 +3280,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -3340,7 +3340,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -3401,7 +3401,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -3713,7 +3713,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -3769,7 +3769,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -3829,7 +3829,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -3890,7 +3890,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -4202,7 +4202,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -4258,7 +4258,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -4318,7 +4318,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -4379,7 +4379,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -4691,7 +4691,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -4747,7 +4747,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -4807,7 +4807,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -4868,7 +4868,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -5180,7 +5180,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(void)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -5236,7 +5236,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -5296,7 +5296,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(void)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -5357,7 +5357,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -5670,7 +5670,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(void (*func)(void)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -5726,7 +5726,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(void (*func)(CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -5786,7 +5786,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, void (C::*meth)(void)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -5847,7 +5847,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, void (C::*meth)(CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */

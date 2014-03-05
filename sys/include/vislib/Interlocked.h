@@ -75,7 +75,7 @@ namespace sys {
         VISLIB_FORCEINLINE static INT32 CompareExchange(volatile INT32 *address,
                 const INT32 exchange, const INT32 comparand) {
 #ifdef _WIN32
-            ASSERT(sizeof(INT32) == sizeof(LONG));
+            THE_ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedCompareExchange(
                 reinterpret_cast<volatile LONG *>(address), 
                 static_cast<LONG>(exchange),
@@ -110,7 +110,7 @@ namespace sys {
         VISLIB_FORCEINLINE static INT64 CompareExchange(volatile INT64 *address,
                 const INT64 exchange, const INT64 comparand) {
 #ifdef _WIN32
-            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+            THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedCompareExchange64(
                 reinterpret_cast<volatile LONGLONG *>(address),
@@ -136,7 +136,7 @@ namespace sys {
          */
         VISLIB_FORCEINLINE static INT32 Decrement(volatile INT32 *address) {
 #ifdef _WIN32
-            ASSERT(sizeof(INT32) == sizeof(LONG));
+            THE_ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedDecrement(
                 reinterpret_cast<volatile LONG *>(address));
 #else /* _WIN32 */
@@ -157,7 +157,7 @@ namespace sys {
          *                                       operations.
          */
         VISLIB_FORCEINLINE static INT64 Decrement(volatile INT64 *address) {
-            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+            THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #ifdef _WIN32
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedDecrement64(
@@ -183,7 +183,7 @@ namespace sys {
         VISLIB_FORCEINLINE static INT32 Exchange(volatile INT32 *address,
                 const INT32 value) {
 #ifdef _WIN32
-            ASSERT(sizeof(INT32) == sizeof(LONG));
+            THE_ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedExchange(
                 reinterpret_cast<volatile LONG *>(address),
                 static_cast<INT32>(value));
@@ -211,7 +211,7 @@ namespace sys {
         VISLIB_FORCEINLINE static INT64 Exchange(volatile INT64 *address,
                 const INT64 value) {
 #ifdef _WIN32
-            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+            THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedExchange64(
                 reinterpret_cast<volatile LONGLONG *>(address),
@@ -273,7 +273,7 @@ namespace sys {
         VISLIB_FORCEINLINE static INT32 ExchangeAdd(volatile INT32 *address, 
                 const INT32 value) {
 #ifdef _WIN32
-            ASSERT(sizeof(INT32) == sizeof(LONG));
+            THE_ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedExchangeAdd(
                 reinterpret_cast<volatile LONG *>(address),
                 static_cast<LONG>(value));
@@ -304,7 +304,7 @@ namespace sys {
         VISLIB_FORCEINLINE static INT64 ExchangeAdd(volatile INT64 *address,
                 const INT64 value) {
 #ifdef _WIN32
-            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+            THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedExchangeAdd64(
                 reinterpret_cast<volatile LONGLONG *>(address),
@@ -332,7 +332,7 @@ namespace sys {
         VISLIB_FORCEINLINE static INT32 ExchangeSub(volatile INT32 *address, 
                 const INT32 value) {
 #ifdef _WIN32
-            ASSERT(sizeof(INT32) == sizeof(LONG));
+            THE_ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedExchangeAdd(
                 reinterpret_cast<volatile LONG *>(address), 
                 static_cast<LONG>(-value));
@@ -374,7 +374,7 @@ namespace sys {
          */
         VISLIB_FORCEINLINE static INT32 Increment(volatile INT32 *address) {
 #ifdef _WIN32
-            ASSERT(sizeof(INT32) == sizeof(LONG));
+            THE_ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedIncrement(
                 reinterpret_cast<volatile LONG *>(address));
 #else /* _WIN32 */
@@ -395,7 +395,7 @@ namespace sys {
          *                                       operations.
          */
         VISLIB_FORCEINLINE static INT64 Increment(volatile INT64 *address) {
-            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+            THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #ifdef _WIN32
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedIncrement64(

@@ -729,7 +729,7 @@ namespace sys {
             ci++;
         }
 
-        ASSERT(this->storeCount == this->argCount);
+        THE_ASSERT(this->storeCount == this->argCount);
 
         for (this->argCount = 0; this->argCount < this->storeCount; this->argCount++) {
             this->arguments[this->argCount] = this->memoryAnchor[0][this->argCount];

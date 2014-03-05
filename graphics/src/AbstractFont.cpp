@@ -15,7 +15,7 @@
  */
 vislib::graphics::AbstractFont::~AbstractFont(void) {
     // Deinitialise must be called from the dtor of the implementing class.
-    ASSERT(this->initialised == false);
+    THE_ASSERT(this->initialised == false);
 }
 
 

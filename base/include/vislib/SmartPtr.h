@@ -102,7 +102,7 @@ namespace vislib {
          * @return true, if the pointer is a NULL pointer, false otherwise.
          */
         inline bool IsNull(void) const {
-            ASSERT ((this->ptr == NULL) || (this->ptr->obj != NULL));
+            THE_ASSERT ((this->ptr == NULL) || (this->ptr->obj != NULL));
             return (this->ptr == NULL);
         }
 
@@ -220,7 +220,7 @@ namespace vislib {
              * @param obj The pointer that is wrapped by the smart pointer.
              */
             inline CounterProxy_t(T *obj) : cnt(1), obj(obj) {
-                ASSERT(obj != NULL);
+                THE_ASSERT(obj != NULL);
             }
         } CounterProxy;
 

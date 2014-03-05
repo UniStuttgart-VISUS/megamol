@@ -67,7 +67,7 @@ namespace math {
     template<class T, unsigned int D, MatrixLayout L, class S1, class S2>
     void CalcCovarianceMatrix(AbstractMatrix<T, D, L, S1>& outMatrix,
             const AbstractVector<T, D, S2> *relCoords, SIZE_T relCoordsCnt) {
-        ASSERT(relCoords != NULL);
+        THE_ASSERT(relCoords != NULL);
 
         for (unsigned int x = 0; x < D; x++) {
             for (unsigned int y = 0; y < D; y++) {

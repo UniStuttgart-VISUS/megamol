@@ -103,7 +103,7 @@ void vislib::graphics::CameraParamsProjectionOverride::preBaseSet(
  */
 void vislib::graphics::CameraParamsProjectionOverride::resetOverride(void) {
     THE_STACK_TRACE;
-    ASSERT(!this->paramsBase().IsNull());
+    THE_ASSERT(!this->paramsBase().IsNull());
     this->projection = this->paramsBase()->Projection();
     this->indicateValueChange();
 }

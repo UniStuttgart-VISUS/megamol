@@ -72,7 +72,7 @@ bool vislib::graphics::gl::GLSLComputeShader::Compile(
         bool insertLineDirective) {
 
     USES_GL_VERIFY;
-    ASSERT(computeShaderSrc != NULL);
+    THE_ASSERT(computeShaderSrc != NULL);
 
     this->Release();
 

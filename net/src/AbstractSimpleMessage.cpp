@@ -33,7 +33,7 @@ vislib::net::AbstractSimpleMessage::AbstractSimpleMessage(void) {
 const void *vislib::net::AbstractSimpleMessage::GetBody(void) const {
     THE_STACK_TRACE;
     // If that asserts, the child class probably does not initialise correctly.
-    ASSERT(this->header.PeekData() != NULL);
+    THE_ASSERT(this->header.PeekData() != NULL);
     return (this->header.PeekData() + 1);
 }
 
@@ -44,7 +44,7 @@ const void *vislib::net::AbstractSimpleMessage::GetBody(void) const {
 void *vislib::net::AbstractSimpleMessage::GetBody(void) {
     THE_STACK_TRACE;
     // If that asserts, the child class probably does not initialise correctly.
-    ASSERT(this->header.PeekData() != NULL);
+    THE_ASSERT(this->header.PeekData() != NULL);
     return const_cast<SimpleMessageHeaderData *>(this->header.PeekData() + 1);
 }
 
@@ -57,7 +57,7 @@ void vislib::net::AbstractSimpleMessage::SetBody(const void *body,
         const SIZE_T bodySize) {
     THE_STACK_TRACE;
     // If that asserts, the child class probably does not initialise correctly.
-    ASSERT(this->header.PeekData() != NULL);
+    THE_ASSERT(this->header.PeekData() != NULL);
 
     void *b = NULL;
     SIZE_T bs = bodySize;
@@ -72,7 +72,7 @@ void vislib::net::AbstractSimpleMessage::SetBody(const void *body,
             static_cast<vislib::net::SimpleMessageSize>(bs));
         this->AssertBodySize();
         b = this->GetBody();
-        ASSERT(b != NULL);
+        THE_ASSERT(b != NULL);
 
         ::memcpy(b, body, bs);
 
@@ -90,7 +90,7 @@ void vislib::net::AbstractSimpleMessage::SetHeader(
         const AbstractSimpleMessageHeader& header, const bool reallocateBody) {
     THE_STACK_TRACE;
     // If that asserts, the child class probably does not initialise correctly.
-    ASSERT(this->header.PeekData() != NULL);
+    THE_ASSERT(this->header.PeekData() != NULL);
     this->header = header;
     if (reallocateBody) {
         this->assertStorage(this->GetHeader().GetBodySize());
@@ -158,7 +158,7 @@ vislib::net::AbstractSimpleMessage::operator void *(void) {
 void *vislib::net::AbstractSimpleMessage::assertStorage(
         const SIZE_T bodySize) {
     THE_STACK_TRACE;
-    ASSERT(bodySize <= UINT_MAX);
+    THE_ASSERT(bodySize <= UINT_MAX);
     
     SimpleMessageHeader oldHeader;
     void *retval = NULL;
@@ -173,6 +173,6 @@ void *vislib::net::AbstractSimpleMessage::assertStorage(
         this->header = oldHeader;
     }
 
-    ASSERT(retval != NULL);
+    THE_ASSERT(retval != NULL);
     return retval;
 }

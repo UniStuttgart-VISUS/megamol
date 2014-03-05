@@ -14,7 +14,7 @@
 vislib::net::ShallowSimpleMessageHeader::ShallowSimpleMessageHeader(
 		SimpleMessageHeaderData *data) : Super() {
 	THE_STACK_TRACE;
-	ASSERT(data != NULL);
+	THE_ASSERT(data != NULL);
 	this->data = data;
 }
 

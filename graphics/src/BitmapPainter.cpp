@@ -101,9 +101,9 @@ void vislib::graphics::BitmapPainter::preDraw(void) {
         const unsigned int unsetMask = 0x00000000;
         const unsigned int setMask = 0xFFFFFFFF;
         unsigned int cc = this->img->GetChannelCount();
-        ASSERT((this->img->BytesPerPixel() % cc) == 0);
+        THE_ASSERT((this->img->BytesPerPixel() % cc) == 0);
         unsigned int bpc = this->img->BytesPerPixel() / cc;
-        ASSERT(bpc <= 4);
+        THE_ASSERT(bpc <= 4);
         this->colSize = this->img->BytesPerPixel();
         this->colBits = new unsigned char[this->colSize];
         this->colMask = new unsigned char[this->colSize];
@@ -133,7 +133,7 @@ void vislib::graphics::BitmapPainter::preDraw(void) {
         }
 #if defined(DEBUG) || defined(_DEBUG)
         for (unsigned int i = 0; i < this->colSize; i++) {
-            ASSERT((this->colBits[i] & ~this->colMask[i]) == 0);
+            THE_ASSERT((this->colBits[i] & ~this->colMask[i]) == 0);
         }
 #endif /* DEBUG || _DEBUG */
     }

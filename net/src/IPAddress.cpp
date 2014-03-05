@@ -89,7 +89,7 @@ vislib::net::IPAddress vislib::net::IPAddress::Create(const char *address) {
  * vislib::net::IPAddress::IPAddress
  */
 vislib::net::IPAddress::IPAddress(const char *address) {
-    VERIFY(this->Lookup(address));
+    THE_VERIFY(this->Lookup(address));
 }
 
 

@@ -58,7 +58,7 @@ vislib::graphics::ObservableCameraParams::~ObservableCameraParams(
  */
 void vislib::graphics::ObservableCameraParams::AddCameraParameterObserver(
         CameraParameterObserver *observer) {
-    ASSERT(observer != NULL);
+    THE_ASSERT(observer != NULL);
 
     if ((observer != NULL) && !this->camParamObservers.Contains(observer)) {
         this->camParamObservers.Append(observer);
@@ -82,7 +82,7 @@ void vislib::graphics::ObservableCameraParams::ApplyLimits(void) {
  */
 vislib::graphics::SceneSpaceType
 vislib::graphics::ObservableCameraParams::AutoFocusOffset(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->AutoFocusOffset();
 }
 
@@ -100,7 +100,7 @@ void vislib::graphics::ObservableCameraParams::BeginBatchInteraction(void) {
  */
 vislib::math::CoordSystemType
 vislib::graphics::ObservableCameraParams::CoordSystemType(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->CoordSystemType();
 }
 
@@ -120,7 +120,7 @@ void vislib::graphics::ObservableCameraParams::EndBatchInteraction(void) {
  */
 vislib::graphics::CameraParameters::StereoEye 
 vislib::graphics::ObservableCameraParams::Eye(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->Eye();
 }
 
@@ -130,7 +130,7 @@ vislib::graphics::ObservableCameraParams::Eye(void) const {
  */
 vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> 
 vislib::graphics::ObservableCameraParams::EyeDirection(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->EyeDirection();
 }
 
@@ -140,7 +140,7 @@ vislib::graphics::ObservableCameraParams::EyeDirection(void) const {
  */
 vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> 
 vislib::graphics::ObservableCameraParams::EyeUpVector(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->EyeUpVector();
 }
 
@@ -150,7 +150,7 @@ vislib::graphics::ObservableCameraParams::EyeUpVector(void) const {
  */
 vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> 
 vislib::graphics::ObservableCameraParams::EyeRightVector(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->EyeRightVector();
 }
 
@@ -160,7 +160,7 @@ vislib::graphics::ObservableCameraParams::EyeRightVector(void) const {
  */
 vislib::math::Point<vislib::graphics::SceneSpaceType, 3> 
 vislib::graphics::ObservableCameraParams::EyePosition(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->EyePosition();
 }
 
@@ -170,7 +170,7 @@ vislib::graphics::ObservableCameraParams::EyePosition(void) const {
  */
 vislib::graphics::SceneSpaceType 
 vislib::graphics::ObservableCameraParams::FarClip(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->FarClip();
 }
 
@@ -180,7 +180,7 @@ vislib::graphics::ObservableCameraParams::FarClip(void) const {
  */
 vislib::graphics::SceneSpaceType 
 vislib::graphics::ObservableCameraParams::FocalDistance(bool autofocus) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->FocalDistance(autofocus);
 }
 
@@ -190,7 +190,7 @@ vislib::graphics::ObservableCameraParams::FocalDistance(bool autofocus) const {
  */
 const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3>& 
 vislib::graphics::ObservableCameraParams::Front(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->Front();
 }
 
@@ -200,7 +200,7 @@ vislib::graphics::ObservableCameraParams::Front(void) const {
  */
 vislib::math::AngleRad 
 vislib::graphics::ObservableCameraParams::HalfApertureAngle(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->HalfApertureAngle();
 }
 
@@ -210,7 +210,7 @@ vislib::graphics::ObservableCameraParams::HalfApertureAngle(void) const {
  */
 vislib::graphics::SceneSpaceType 
 vislib::graphics::ObservableCameraParams::HalfStereoDisparity(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->HalfStereoDisparity();
 }
 
@@ -220,7 +220,7 @@ vislib::graphics::ObservableCameraParams::HalfStereoDisparity(void) const {
  */
 vislib::SmartPtr<vislib::graphics::CameraParameterLimits> 
 vislib::graphics::ObservableCameraParams::Limits(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->Limits();
 }
 
@@ -230,7 +230,7 @@ vislib::graphics::ObservableCameraParams::Limits(void) const {
  */
 bool vislib::graphics::ObservableCameraParams::IsSimilar(
         const SmartPtr<CameraParameters> rhs) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
 // TODO: MUST IMPLEMENT THIS!
 //    return this->observed->IsSimilar(rhs);
     return true;
@@ -242,7 +242,7 @@ bool vislib::graphics::ObservableCameraParams::IsSimilar(
  */
 const vislib::math::Point<vislib::graphics::SceneSpaceType, 3>& 
 vislib::graphics::ObservableCameraParams::LookAt(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->LookAt();
 }
 
@@ -252,7 +252,7 @@ vislib::graphics::ObservableCameraParams::LookAt(void) const {
  */
 vislib::graphics::SceneSpaceType 
 vislib::graphics::ObservableCameraParams::NearClip(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->NearClip();
 }
 
@@ -262,7 +262,7 @@ vislib::graphics::ObservableCameraParams::NearClip(void) const {
  */
 const vislib::math::Point<vislib::graphics::SceneSpaceType, 3>& 
 vislib::graphics::ObservableCameraParams::Position(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->Position();
 }
 
@@ -272,7 +272,7 @@ vislib::graphics::ObservableCameraParams::Position(void) const {
  */
 vislib::graphics::CameraParameters::ProjectionType 
 vislib::graphics::ObservableCameraParams::Projection(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->Projection();
 }
 
@@ -282,7 +282,7 @@ vislib::graphics::ObservableCameraParams::Projection(void) const {
  */
 void vislib::graphics::ObservableCameraParams::RemoveCameraParameterObserver(
         CameraParameterObserver *observer) {
-    ASSERT(observer != NULL);
+    THE_ASSERT(observer != NULL);
     this->camParamObservers.RemoveAll(observer);
 }
 
@@ -314,7 +314,7 @@ void vislib::graphics::ObservableCameraParams::ResetTileRect(void) {
  */
 const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3>& 
 vislib::graphics::ObservableCameraParams::Right(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->Right();
 }
 
@@ -539,7 +539,7 @@ void vislib::graphics::ObservableCameraParams::SetVirtualViewSize(
  * vislib::graphics::ObservableCameraParams::SyncNumber
  */
 unsigned int vislib::graphics::ObservableCameraParams::SyncNumber(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->SyncNumber();
 }
 
@@ -549,7 +549,7 @@ unsigned int vislib::graphics::ObservableCameraParams::SyncNumber(void) const {
  */
 const vislib::math::Rectangle<vislib::graphics::ImageSpaceType>& 
 vislib::graphics::ObservableCameraParams::TileRect(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->TileRect();
 }
 
@@ -559,7 +559,7 @@ vislib::graphics::ObservableCameraParams::TileRect(void) const {
  */
 const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3>& 
 vislib::graphics::ObservableCameraParams::Up(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->Up();
 }
 
@@ -569,7 +569,7 @@ vislib::graphics::ObservableCameraParams::Up(void) const {
  */
 const vislib::math::Dimension<vislib::graphics::ImageSpaceType, 2>& 
 vislib::graphics::ObservableCameraParams::VirtualViewSize(void) const {
-    ASSERT(!this->observed.IsNull());
+    THE_ASSERT(!this->observed.IsNull());
     return this->observed->VirtualViewSize();
 }
 

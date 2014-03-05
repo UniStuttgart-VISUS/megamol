@@ -312,7 +312,7 @@ LRESULT CALLBACK vislib::graphics::AbstractWindow::wndProc(HWND hWnd, UINT msg,
     // handlers from being fired, only the default procedure.
     switch (msg) {
         case WM_CLOSE:
-            ASSERT(wnd != NULL);
+            THE_ASSERT(wnd != NULL);
             wnd->hWnd = NULL;
             retval = 0;
             break;
@@ -366,9 +366,9 @@ vislib::StringW vislib::graphics::AbstractWindow::registerWindowClassW(
     wcex.lpszClassName = L"VISLIB_ABSTRACT_WINDOW_CLASS";
 
     this->onWindowClassRegistering(wcex);
-    ASSERT(wcex.cbWndExtra == sizeof(LONG_PTR));
-    ASSERT(wcex.hInstance != NULL);
-    ASSERT(wcex.lpfnWndProc == AbstractWindow::wndProc);
+    THE_ASSERT(wcex.cbWndExtra == sizeof(LONG_PTR));
+    THE_ASSERT(wcex.hInstance != NULL);
+    THE_ASSERT(wcex.lpfnWndProc == AbstractWindow::wndProc);
 
     if (!::GetClassInfoExW(wcex.hInstance, wcex.lpszClassName, &wcex)) {
         if (!::RegisterClassExW(&wcex)) {

@@ -307,7 +307,7 @@ namespace sys {
                 /** private ctor */
                 ValueDesc(ValueType type) 
                     : name(), description(), type(type), next(NULL) {
-                    ASSERT(this->type != NO_VALUE);
+                    THE_ASSERT(this->type != NO_VALUE);
                 }
 
                 /**
@@ -1745,7 +1745,7 @@ namespace sys {
         if (this->GetValueType() != Option::STRING_VALUE) {
             throw vislib::UnsupportedOperationException("Option value of incompatible type", __FILE__, __LINE__);
         }
-        ASSERT(this->type != TYPE_UNKNOWN);
+        THE_ASSERT(this->type != TYPE_UNKNOWN);
 
         return this->valueArg;
     }
@@ -1759,7 +1759,7 @@ namespace sys {
         if (this->GetValueType() != Option::INT_VALUE) {
             throw vislib::UnsupportedOperationException("Option value of incompatible type", __FILE__, __LINE__);
         }
-        ASSERT(this->type != TYPE_UNKNOWN);
+        THE_ASSERT(this->type != TYPE_UNKNOWN);
 
         return T::ParseInt(this->valueArg); // throws FormatException on failure
     }
@@ -1773,7 +1773,7 @@ namespace sys {
         if (this->GetValueType() != Option::DOUBLE_VALUE) {
             throw vislib::UnsupportedOperationException("Option value of incompatible type", __FILE__, __LINE__);
         }
-        ASSERT(this->type != TYPE_UNKNOWN);
+        THE_ASSERT(this->type != TYPE_UNKNOWN);
 
         return T::ParseDouble(this->valueArg); // throws FormatException on failure
     }
@@ -1787,7 +1787,7 @@ namespace sys {
         if (this->GetValueType() != Option::BOOL_VALUE) {
             throw vislib::UnsupportedOperationException("Option value of incompatible type", __FILE__, __LINE__);
         }
-        ASSERT(this->type != TYPE_UNKNOWN);
+        THE_ASSERT(this->type != TYPE_UNKNOWN);
 
         return T::ParseBool(this->valueArg); // throws FormatException on failure
     }
@@ -2137,7 +2137,7 @@ namespace sys {
                     opti = this->options.GetIterator();
                     while (opti.HasNext()) {
                         Option *opt = opti.Next();
-                        ASSERT(opt != NULL);
+                        THE_ASSERT(opt != NULL);
                         if (opt->longName.Equals(&argv[i][2], false)) {
                             o = opt; 
                             break;
@@ -2205,7 +2205,7 @@ namespace sys {
                         opti = this->options.GetIterator();
                         while (opti.HasNext()) {
                             Option *opt = opti.Next();
-                            ASSERT(opt != NULL);
+                            THE_ASSERT(opt != NULL);
                             if (opt->shortName == *sn) {
 
                                 if (opt->exclusive) {
@@ -2258,7 +2258,7 @@ namespace sys {
                             opti = this->options.GetIterator();
                             while (opti.HasNext()) {
                                 Option *opt = opti.Next();
-                                ASSERT(opt != NULL);
+                                THE_ASSERT(opt != NULL);
                                 if (opt->shortName == argv[i][j]) {
                                     
                                     if (opt->GetValueCount() > 0) {
@@ -2330,7 +2330,7 @@ namespace sys {
                     opti = this->options.GetIterator();
                     while (opti.HasNext()) {
                         Option *opt = opti.Next();
-                        ASSERT(opt != NULL);
+                        THE_ASSERT(opt != NULL);
                         if (opt->longName.Equals(&argv[i][2], false)) {
                             this->arglist[this->arglistSize].option = opt;
                             this->arglist[this->arglistSize].type = Argument::TYPE_OPTION_LONGNAME;
@@ -2353,7 +2353,7 @@ namespace sys {
                         opti = this->options.GetIterator();
                         while (opti.HasNext()) {
                             Option *opt = opti.Next();
-                            ASSERT(opt != NULL);
+                            THE_ASSERT(opt != NULL);
                             if (opt->shortName == *sn) {
                                 this->arglist[this->arglistSize].pos = static_cast<unsigned int>(sn - argv[i]);
                                 this->arglist[this->arglistSize].option = opt;
@@ -2511,7 +2511,7 @@ namespace sys {
      */
     template<class T>
     void CmdLineParser<T>::ExtractSelectedArguments(CmdLineProvider<T> &outCmdLine) {
-        ASSERT((this->arglist == NULL) || (outCmdLine.ArgC() == 0) || (this->arglist[0].arg != outCmdLine.ArgV()[0]));
+        THE_ASSERT((this->arglist == NULL) || (outCmdLine.ArgC() == 0) || (this->arglist[0].arg != outCmdLine.ArgV()[0]));
 
         // outCmdLine must not be the same as used for Parse!
         outCmdLine.clearArgumentList();
@@ -2543,7 +2543,7 @@ namespace sys {
                 }
             }
 
-            ASSERT(outCmdLine.argCount == outCmdLine.storeCount);
+            THE_ASSERT(outCmdLine.argCount == outCmdLine.storeCount);
         }
     }
 

@@ -136,7 +136,7 @@ namespace net {
          */
         operator WSAOVERLAPPED *(void) {
             THE_STACK_TRACE;
-            ASSERT(sizeof(WSAOVERLAPPED) == sizeof(OVERLAPPED));
+            THE_ASSERT(sizeof(WSAOVERLAPPED) == sizeof(OVERLAPPED));
             return (Super::operator OVERLAPPED *());
         }
 #endif /* _WIN32 */
@@ -172,7 +172,7 @@ namespace net {
                 const IPEndPoint *dgramAddr, const void *data, 
                 const SIZE_T cntData, const INT flags, const INT timeout) {
             THE_STACK_TRACE;
-            ASSERT(dgramAddr != NULL);
+            THE_ASSERT(dgramAddr != NULL);
             this->socket = socket;
             this->dgramAddrOrg = const_cast<IPEndPoint *>(dgramAddr);
             this->dgramAddrCpy = *this->dgramAddrOrg;

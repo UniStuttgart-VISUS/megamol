@@ -28,7 +28,7 @@ vislib::graphics::Camera::Camera(void) : syncNumber(),
 vislib::graphics::Camera::Camera(
         const vislib::SmartPtr<vislib::graphics::CameraParameters>& params) 
         : syncNumber(params->SyncNumber() - 1), parameters(params) {
-    ASSERT(!this->parameters.IsNull());
+    THE_ASSERT(!this->parameters.IsNull());
 }
 
 

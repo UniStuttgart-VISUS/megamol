@@ -130,7 +130,7 @@ void vislib::net::cluster::AbstractClientNode::connect(
         rmc->Socket = &this->socket;
     }
     try {
-        VERIFY(this->receiver.Start(static_cast<void *>(rmc)));
+        THE_VERIFY(this->receiver.Start(static_cast<void *>(rmc)));
     } catch (Exception e) {
         FreeRecvMsgCtx(rmc);
         throw e;

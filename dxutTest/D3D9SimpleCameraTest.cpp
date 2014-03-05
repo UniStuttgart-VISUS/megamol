@@ -43,7 +43,7 @@ HRESULT D3D9SimpleCameraTest::OnD3D9CreateDevice(
         const D3DSURFACE_DESC *pBackBufferSurfaceDesc) {
     using namespace vislib::graphics::d3d;
     USES_D3D_VERIFY;
-    ASSERT(this->logo == NULL);
+    THE_ASSERT(this->logo == NULL);
 
     AbstractTest::OnD3D9CreateDevice(pd3dDevice, pBackBufferSurfaceDesc);
 
@@ -78,7 +78,7 @@ void D3D9SimpleCameraTest::OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice,
         double fTime, float fElapsedTime) {
     using vislib::graphics::d3d::D3DMatrix;
     USES_D3D_VERIFY;
-    ASSERT(this->logo != NULL);
+    THE_ASSERT(this->logo != NULL);
 
     D3DXMATRIXA16 modelMatrix;              // Model matrix.
     D3DMatrix projMatrix;                   // Projection matrix.

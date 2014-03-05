@@ -41,7 +41,7 @@ vislib::net::cluster::DiscoveryService::PeerNode::PeerNode(
         discoveryAddress(discoveryAddress),
         discoverySource(discoverySource),
         responseAddress(responseAddress) {
-    ASSERT(this->discoverySource != NULL);
+    THE_ASSERT(this->discoverySource != NULL);
 
     // Fix the port of the discovery address, as we get the client socket 
     // address as input, which is normally not bound to the port of the 
@@ -354,7 +354,7 @@ vislib::net::cluster::DiscoveryService::~DiscoveryService(void) {
  */
 void vislib::net::cluster::DiscoveryService::AddListener(
         DiscoveryListener *listener) {
-    ASSERT(listener != NULL);
+    THE_ASSERT(listener != NULL);
 
     this->listeners.Lock();
     if ((listener != NULL) && !this->listeners.Contains(listener)) {
@@ -471,7 +471,7 @@ bool vislib::net::cluster::DiscoveryService::IsSelf(
  */
 void vislib::net::cluster::DiscoveryService::RemoveListener(
         DiscoveryListener *listener) {
-    ASSERT(listener != NULL);
+    THE_ASSERT(listener != NULL);
     this->listeners.RemoveAll(listener);
 }
 
@@ -571,7 +571,7 @@ void vislib::net::cluster::DiscoveryService::Start(const char *name,
 
     /* Start the threads. */
     this->senderThread.Start(this);
-    ASSERT(cntConfigs == this->configs.Count());
+    THE_ASSERT(cntConfigs == this->configs.Count());
     for (SIZE_T i = 0; i < cntConfigs; i++) {
         this->configs[i].GetRecvThread().Start(&(this->configs[i]));
     }
@@ -687,12 +687,12 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
     Message msg;                    // Receives the request messages.
     DiscoveryConfigEx *config = static_cast<DiscoveryConfigEx *>(dcfg);
 
-    ASSERT(config != NULL);
-    ASSERT(!this->socket.IsValid());
+    THE_ASSERT(config != NULL);
+    THE_ASSERT(!this->socket.IsValid());
 
     // Assert expected message memory layout.
-    ASSERT(sizeof(msg) == MAX_USER_DATA + 2 * sizeof(UINT32));
-    ASSERT(reinterpret_cast<BYTE *>(&(msg.SenderBody)) 
+    THE_ASSERT(sizeof(msg) == MAX_USER_DATA + 2 * sizeof(UINT32));
+    THE_ASSERT(reinterpret_cast<BYTE *>(&(msg.SenderBody)) 
        == reinterpret_cast<BYTE *>(&msg) + 2 * sizeof(UINT32));
 
     // Reset termiation flag.
@@ -803,7 +803,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
                     if (!config->GetDiscoveryService().IsObserver()) {
                         /* Observers must not send alive messages. */
                         peerAddr.SetPort(config->GetBindAddress().GetPort());
-                        ASSERT(msg.MagicNumber == MAGIC_NUMBER);
+                        THE_ASSERT(msg.MagicNumber == MAGIC_NUMBER);
                         msg.MsgType = MSG_TYPE_IAMALIVE;
                         msg.SenderBody.ResponseAddress 
                             = config->GetResponseAddress();
@@ -901,7 +901,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::DiscoveryConfigEx(
 vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::DiscoveryConfigEx(
         const DiscoveryConfig& config, DiscoveryService *cds) 
         : Super(config), cds(cds) {
-    ASSERT(cds != NULL);
+    THE_ASSERT(cds != NULL);
 }
 
 
@@ -1088,7 +1088,7 @@ vislib::net::cluster::DiscoveryService::Sender::~Sender(void) {
  * vislib::net::cluster::DiscoveryService::Sender::Run
  */
 DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
-    ASSERT(cds != NULL);
+    THE_ASSERT(cds != NULL);
 
     Message request;        // The UDP datagram we send.
     DiscoveryService *ds    // The discovery service we work for.
@@ -1097,8 +1097,8 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
     SIZE_T cntPeers = 0;    // Cache for # of known peers.
 
     // Assert expected memory layout of messages.
-    ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(UINT32));
-    ASSERT(reinterpret_cast<BYTE *>(&(request.SenderBody)) 
+    THE_ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(UINT32));
+    THE_ASSERT(reinterpret_cast<BYTE *>(&(request.SenderBody)) 
        == reinterpret_cast<BYTE *>(&request) + 2 * sizeof(UINT32));
 
     // Reset termiation flag.
@@ -1265,7 +1265,7 @@ void vislib::net::cluster::DiscoveryService::addPeerNode(
     INT_PTR idx = 0;            // Index of possible duplicate.
     PeerHandle hPeer = NULL;    // Old or new peer node handle.
 
-    ASSERT(discoverySource != NULL);
+    THE_ASSERT(discoverySource != NULL);
 
     this->peerNodesCritSect.Lock();
     
@@ -1382,7 +1382,7 @@ void vislib::net::cluster::DiscoveryService::prepareRequest(void) {
 
     for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
         if (!this->peerNodes[i]->decrementResponseChances()) {
-            ASSERT(this->peerNodes[i]->isValid());
+            THE_ASSERT(this->peerNodes[i]->isValid());
             VLTRACE(Trace::LEVEL_VL_VERBOSE, "Node %s lost, firing event ...\n",
                 this->peerNodes[i]->responseAddress.ToStringA().PeekBuffer());
             
@@ -1429,12 +1429,12 @@ void vislib::net::cluster::DiscoveryService::prepareUserMessage(
     }
 
     // Assert some stuff.
-    ASSERT(sizeof(outMsg) == MAX_USER_DATA + 2 * sizeof(UINT32));
-    ASSERT(reinterpret_cast<BYTE *>(&(outMsg.UserData)) 
+    THE_ASSERT(sizeof(outMsg) == MAX_USER_DATA + 2 * sizeof(UINT32));
+    THE_ASSERT(reinterpret_cast<BYTE *>(&(outMsg.UserData)) 
        == reinterpret_cast<BYTE *>(&outMsg) + 2 * sizeof(UINT32));
-    ASSERT(msgType >= MSG_TYPE_USER);
-    ASSERT((msgBody != NULL) || (msgSize == 0));
-    ASSERT(msgSize <= MAX_USER_DATA);
+    THE_ASSERT(msgType >= MSG_TYPE_USER);
+    THE_ASSERT((msgBody != NULL) || (msgSize == 0));
+    THE_ASSERT(msgSize <= MAX_USER_DATA);
 
     /* Prepare the message. */
     outMsg.MagicNumber = MAGIC_NUMBER;

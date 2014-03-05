@@ -250,7 +250,7 @@ bool vislib::sys::Thread::Start(void *userData) {
  */
 bool vislib::sys::Thread::Terminate(const bool forceTerminate, 
                                     const int exitCode) {
-    ASSERT(exitCode != STILL_ACTIVE);   // User should never set this.
+    THE_ASSERT(exitCode != STILL_ACTIVE);   // User should never set this.
 
     if (forceTerminate) {
         /* Force immediate termination of the thread. */
@@ -291,7 +291,7 @@ bool vislib::sys::Thread::TryTerminate(const bool doWait) {
         throw IllegalStateException("TryTerminate can only be used, if the "
             "thread is using a Runnable.", __FILE__, __LINE__);
     }
-    ASSERT(this->runnable != NULL); 
+    THE_ASSERT(this->runnable != NULL); 
 
     if (this->runnable->Terminate()) {
         /*
@@ -316,7 +316,7 @@ bool vislib::sys::Thread::TryTerminate(const bool doWait) {
  * vislib::sys::Thread::CleanupFunc
  */
 void vislib::sys::Thread::CleanupFunc(void *param) {
-    ASSERT(param != NULL);
+    THE_ASSERT(param != NULL);
 
     Thread *t = static_cast<Thread *>(param);
 
@@ -341,12 +341,12 @@ DWORD WINAPI vislib::sys::Thread::ThreadFunc(void *param) {
 #else /* _WIN32 */
 void *vislib::sys::Thread::ThreadFunc(void *param) {
 #endif /* _WIN32 */
-    ASSERT(param != NULL);
+    THE_ASSERT(param != NULL);
 
     int retval = 0;
     ThreadFuncParam *tfp = static_cast<ThreadFuncParam *>(param);
     Thread *t = tfp->thread;
-    ASSERT(t != NULL);
+    THE_ASSERT(t != NULL);
 
 #ifndef _WIN32
     pthread_cleanup_push(Thread::CleanupFunc, t);
@@ -356,10 +356,10 @@ void *vislib::sys::Thread::ThreadFunc(void *param) {
         t->runnable->OnThreadStarted(tfp->userData);
         retval = t->runnable->Run(tfp->userData);
     } else {
-        ASSERT(t->runnableFunc != NULL);
+        THE_ASSERT(t->runnableFunc != NULL);
         retval = t->runnableFunc(tfp->userData);
     }
-    ASSERT(retval != STILL_ACTIVE); // Thread should never use STILL_ACTIVE!
+    THE_ASSERT(retval != STILL_ACTIVE); // Thread should never use STILL_ACTIVE!
 
 #ifndef _WIN32    
     t->exitCode = retval;

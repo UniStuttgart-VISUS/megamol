@@ -233,10 +233,10 @@ namespace vislib {
                     nextIdx++;
                 }
             }
-            ASSERT(idx >= 0);
-            ASSERT(idx < this->elements.Count());
-            ASSERT(nextIdx >= 0);
-            ASSERT(nextIdx < this->elements.Count());
+            THE_ASSERT(idx >= 0);
+            THE_ASSERT(idx < this->elements.Count());
+            THE_ASSERT(nextIdx >= 0);
+            THE_ASSERT(nextIdx < this->elements.Count());
 
             if (this->elements[idx].Key() < this->elements[nextIdx].Key()) {
                 /* Heap property fulfilled. */
@@ -259,10 +259,10 @@ namespace vislib {
 
         while (idx > 0) {
             nextIdx = (idx - 1) / 2;
-            ASSERT(idx >= 0);
-            ASSERT(idx < this->elements.Count());
-            ASSERT(nextIdx >= 0);
-            ASSERT(nextIdx < this->elements.Count());
+            THE_ASSERT(idx >= 0);
+            THE_ASSERT(idx < this->elements.Count());
+            THE_ASSERT(nextIdx >= 0);
+            THE_ASSERT(nextIdx < this->elements.Count());
 
             if (this->elements[nextIdx].Key() < this->elements[idx].Key()) {
                 /* Heap property fulfilled. */

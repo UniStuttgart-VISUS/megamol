@@ -787,7 +787,7 @@ namespace vislib {
                     delete i;
                     i = j->next;
                 } else {
-                    ASSERT(this->first == i);
+                    THE_ASSERT(this->first == i);
                     this->first = i->next;
                     if (this->last == i) {
                         this->last = i->next;
@@ -822,7 +822,7 @@ namespace vislib {
                     delete i;
                     i = j->next;
                 } else {
-                    ASSERT(this->first == i);
+                    THE_ASSERT(this->first == i);
                     this->first = i->next;
                     if (this->last == i) {
                         this->last = i->next;
@@ -904,7 +904,7 @@ namespace vislib {
                 newlast = this->first;
                 while (newlast->next != this->last) {
                     newlast = newlast->next;
-                    ASSERT(newlast);
+                    THE_ASSERT(newlast);
                 }
                 newlast->next = NULL;
             } else {
@@ -1125,7 +1125,7 @@ namespace vislib {
 
         // sequential implementation with A LOT of temporary memory
         SIZE_T cnt = this->Count();
-        ASSERT(cnt > 1);
+        THE_ASSERT(cnt > 1);
         if (cnt % 2) cnt++;
         cnt /= 2;
         Item **Array = new Item*[cnt];

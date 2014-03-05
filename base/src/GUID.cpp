@@ -30,8 +30,8 @@ vislib::GUID::GUID(void) {
  * vislib::GUID::GUID
  */
 vislib::GUID::GUID(const BYTE b[16]) {
-    ASSERT(b != NULL);
-    ASSERT(sizeof(this->guid) == 16 * sizeof(BYTE));
+    THE_ASSERT(b != NULL);
+    THE_ASSERT(sizeof(this->guid) == 16 * sizeof(BYTE));
 #ifdef _WIN32
     ::memcpy(&this->guid, b, sizeof(this->guid));
 #else /* _WIN32 */
@@ -114,7 +114,7 @@ vislib::GUID::GUID(const UINT32 i, const UINT16 s1, const UINT16 s2,
  */
 vislib::GUID::GUID(const UINT32 i, const UINT16 s1, const UINT16 s2,
         const BYTE b[8]) {
-    ASSERT(b != NULL);
+    THE_ASSERT(b != NULL);
 #ifdef _WIN32
     BYTE *g = reinterpret_cast<BYTE *>(&this->guid);
 #else /* _WIN32 */

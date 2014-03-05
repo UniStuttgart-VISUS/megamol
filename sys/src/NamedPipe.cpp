@@ -271,7 +271,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
             } break;
         }
     }
-    ASSERT(this->handle != INVALID_HANDLE_VALUE);
+    THE_ASSERT(this->handle != INVALID_HANDLE_VALUE);
     this->mode = mode;
     return true; // pipe opened
 
@@ -432,7 +432,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringW name,
     }
     
 #ifdef _WIN32
-    ASSERT(this->handle != INVALID_HANDLE_VALUE);
+    THE_ASSERT(this->handle != INVALID_HANDLE_VALUE);
 #endif /* _WIN32 */
 
     this->mode = mode;

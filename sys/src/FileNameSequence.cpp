@@ -125,9 +125,9 @@ unsigned int vislib::sys::FileNameSequence::FileNameCountElement::Count(void)
 unsigned int
 vislib::sys::FileNameSequence::FileNameCountElement::CounterIndex(void)
         const {
-    ASSERT(this->value >= this->minVal);
+    THE_ASSERT(this->value >= this->minVal);
     unsigned int p = this->value - this->minVal;
-    ASSERT((p % this->step) == 0);
+    THE_ASSERT((p % this->step) == 0);
     return p / this->step;
 }
 
@@ -156,7 +156,7 @@ void vislib::sys::FileNameSequence::FileNameCountElement::SetCounterIndex(
         throw OutOfRangeException(idx, 0, this->Count(), __FILE__, __LINE__);
     }
     this->value = this->minVal + this->step * idx;
-    ASSERT(this->value <= this->maxVal);
+    THE_ASSERT(this->value <= this->maxVal);
 }
 
 
@@ -290,7 +290,7 @@ unsigned int vislib::sys::FileNameSequence::Count(void) {
  * vislib::sys::FileNameSequence::FileNameA
  */
 vislib::StringA vislib::sys::FileNameSequence::FileNameA(unsigned int idx) {
-    ASSERT(this->IsValid() == true);
+    THE_ASSERT(this->IsValid() == true);
     this->setIndex(idx);
     vislib::StringA rv;
     for (unsigned int i = 0; i < this->elements.Count(); i++) {
@@ -304,7 +304,7 @@ vislib::StringA vislib::sys::FileNameSequence::FileNameA(unsigned int idx) {
  * vislib::sys::FileNameSequence::FileNameW
  */
 vislib::StringW vislib::sys::FileNameSequence::FileNameW(unsigned int idx) {
-    ASSERT(this->IsValid() == true);
+    THE_ASSERT(this->IsValid() == true);
     this->setIndex(idx);
     vislib::StringW rv;
     for (unsigned int i = 0; i < this->elements.Count(); i++) {

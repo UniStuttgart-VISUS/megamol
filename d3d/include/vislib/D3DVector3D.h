@@ -69,7 +69,7 @@ namespace d3d {
          * @param components The initial vector components.
          */
         explicit inline D3DVector3D(const T *components) : Super() {
-            ASSERT(components != NULL);
+            THE_ASSERT(components != NULL);
             ::memcpy(this->components, components, D * sizeof(T));
         }
 

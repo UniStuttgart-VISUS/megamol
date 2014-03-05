@@ -50,14 +50,14 @@ vislib::graphics::MouseInteractionAdapter::~MouseInteractionAdapter(void) {
 void vislib::graphics::MouseInteractionAdapter::ConfigureRotation(
         const RotationType type, const Button button, 
         const InputModifiers::Modifier altModifier) {
-    ASSERT(!this->cursor.CameraParams().IsNull());
+    THE_ASSERT(!this->cursor.CameraParams().IsNull());
 
     /* Clean up old stuff. */
     if (this->rotator != NULL) {
         this->cursor.UnregisterCursorEvent(this->rotator);
         SAFE_DELETE(this->rotator);
     }
-    ASSERT(this->rotator == NULL);
+    THE_ASSERT(this->rotator == NULL);
 
     /* Create and configure new rotation. */
     switch (type) {
@@ -78,7 +78,7 @@ void vislib::graphics::MouseInteractionAdapter::ConfigureRotation(
             throw IllegalParamException("type", __FILE__, __LINE__);
             break;
     }
-    ASSERT(this->rotator != NULL);
+    THE_ASSERT(this->rotator != NULL);
 
     this->rotator->SetTestButton(static_cast<const unsigned int>(button));
     this->rotator->SetModifierTestCount(0); // TODO: Do not know what this does.
@@ -94,14 +94,14 @@ void vislib::graphics::MouseInteractionAdapter::ConfigureRotation(
 void vislib::graphics::MouseInteractionAdapter::ConfigureZoom(
         const ZoomType type, const Button button, const SceneSpaceType speed,
         const CameraZoom2DMove::ZoomBehaviourType behaviour) {
-    ASSERT(!this->cursor.CameraParams().IsNull());
+    THE_ASSERT(!this->cursor.CameraParams().IsNull());
 
     /* Clean up old stuff. */
     if (this->zoomer != NULL) {
         this->cursor.UnregisterCursorEvent(this->zoomer);
         SAFE_DELETE(this->zoomer);
     }
-    ASSERT(this->zoomer == NULL);
+    THE_ASSERT(this->zoomer == NULL);
 
     /* Create and configure new zoom. */
     switch (type) {

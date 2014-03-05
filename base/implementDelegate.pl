@@ -346,7 +346,7 @@ sub WriteClass {
              * \@param func The function pointer (must not be NULL)
              */
             FunctionCallee($returnType (*func)($paramTypeList)) : AbstractCallee(), func(func) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -402,7 +402,7 @@ sub WriteClass {
              * \@param ctxt The user data context
              */
             FunctionContextCallee($returnType (*func)($paramCtxtTypeList), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                ASSERT(this->func != NULL);
+                THE_ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -462,7 +462,7 @@ sub WriteClass {
              * \@param ctxt The user data context
              */
             MethodCallee(C& obj, $returnType (C::*meth)($paramTypeList)) : AbstractCallee(), obj(obj), meth(meth) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -523,7 +523,7 @@ sub WriteClass {
              * \@param ctxt The user data context
              */
             MethodContextCallee(C& obj, $returnType (C::*meth)($paramCtxtTypeList), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                ASSERT(this->meth != NULL);
+                THE_ASSERT(this->meth != NULL);
             }
 
             /** Dtor */

@@ -19,7 +19,7 @@ vislib::net::SimpleMessage::SimpleMessage(const SIZE_T bodySize) : Super() {
     THE_STACK_TRACE;
     // This will force the superclass to (i) allocate memory for the message
     // header and the body itself and (ii) to update the message header pointer.
-    ASSERT(bodySize < UINT_MAX);
+    THE_ASSERT(bodySize < UINT_MAX);
     Super::assertStorage(bodySize);
     this->GetHeader().SetBodySize(static_cast<UINT32>(bodySize));
 }

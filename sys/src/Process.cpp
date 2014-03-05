@@ -510,7 +510,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         const char *user, const char *domain, const char *password,
         const Environment::Snapshot& environment, 
         const char *currentDirectory) {
-    ASSERT(command != NULL);
+    THE_ASSERT(command != NULL);
 
 #ifdef _WIN32
     const char **arg = arguments;
@@ -586,7 +586,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
     } else {
         cmd = Path::Resolve(command);
     }
-    ASSERT(Path::IsAbsolute(cmd));
+    THE_ASSERT(Path::IsAbsolute(cmd));
     VLTRACE(Trace::LEVEL_VL_INFO, "CreateProcess: command is \"%s\"\n",
         cmd.PeekBuffer());
 
@@ -612,7 +612,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         /** Impersonate as new user. */
         if ((user != NULL) && (password != NULL)) {
             //ic.Impersonate(user, NULL, password);
-            ASSERT(false);
+            THE_ASSERT(false);
         }
 
         /* Change to working directory, if specified. */
@@ -662,7 +662,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
 
     } else {
         /* Process was spawned, we are in parent. */
-        ASSERT(this->pid > 0);
+        THE_ASSERT(this->pid > 0);
         ::close(pipe[1]);       // We do not need the write end any more.
 
         /* Try to read error from child process if e. g. exec failed. */

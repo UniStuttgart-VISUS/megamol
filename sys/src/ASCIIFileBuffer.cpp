@@ -150,8 +150,8 @@ VLTRACE(VISLIB_TRCELVL_WARN, "ASCIIFileBuffer(PARSING_DEFAULT) illegal\n");
  */
 vislib::sys::ASCIIFileBuffer::~ASCIIFileBuffer(void) {
     this->Clear();
-    ASSERT(this->lines.Count() == 0);
-    ASSERT(this->buffer == NULL);
+    THE_ASSERT(this->lines.Count() == 0);
+    THE_ASSERT(this->buffer == NULL);
 }
 
 

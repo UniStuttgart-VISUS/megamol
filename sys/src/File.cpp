@@ -586,7 +586,7 @@ vislib::sys::File::FileSize vislib::sys::File::Read(void *outBuf,
         return readBytes;
 
 #else /* _WIN32 */
-    ASSERT(bufSize < INT_MAX);
+    THE_ASSERT(bufSize < INT_MAX);
 
     int readBytes = ::read(this->handle, outBuf, bufSize);
     if (readBytes != -1) {
@@ -662,7 +662,7 @@ vislib::sys::File::FileSize vislib::sys::File::Write(const void *buf,
         return writtenBytes;
 
 #else /* _WIN32 */
-    ASSERT(bufSize < INT_MAX);
+    THE_ASSERT(bufSize < INT_MAX);
 
     int writtenBytes = ::write(this->handle, buf, bufSize);
     if (writtenBytes != -1) {

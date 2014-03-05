@@ -85,8 +85,8 @@ vislib::graphics::ZoomToRectangle&
  * vislib::graphics::ZoomToRectangle::zoomOrthographicCamera
  */
 void vislib::graphics::ZoomToRectangle::zoomOrthographicCamera(void) {
-    ASSERT(this->IsCameraParamsValid());
-    ASSERT(this->CameraParams()->Projection() 
+    THE_ASSERT(this->IsCameraParamsValid());
+    THE_ASSERT(this->CameraParams()->Projection() 
         == CameraParameters::MONO_ORTHOGRAPHIC);
     THE_ASSERT(this->CameraParams()->VirtualViewSize().Width() > 0.0f);
     THE_ASSERT(this->CameraParams()->VirtualViewSize().Height() > 0.0f);
@@ -148,8 +148,8 @@ void vislib::graphics::ZoomToRectangle::zoomOrthographicCamera(void) {
  * vislib::graphics::ZoomToRectangle::zoomProjectiveCamera
  */
 void vislib::graphics::ZoomToRectangle::zoomProjectiveCamera(void) {
-    ASSERT(this->IsCameraParamsValid());
-    ASSERT(this->CameraParams()->Projection() 
+    THE_ASSERT(this->IsCameraParamsValid());
+    THE_ASSERT(this->CameraParams()->Projection() 
         != CameraParameters::MONO_ORTHOGRAPHIC);
     THE_ASSERT(this->CameraParams()->VirtualViewSize().Width() > 0.0f);
     THE_ASSERT(this->CameraParams()->VirtualViewSize().Height() > 0.0f);

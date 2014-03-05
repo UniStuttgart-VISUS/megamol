@@ -2003,7 +2003,7 @@ namespace net {
     template<class A> int NetworkInformation::findAddress(
             const UnicastAddressList& list, const A& addr, const int startIdx) {
         THE_STACK_TRACE;
-        ASSERT(startIdx >= 0);
+        THE_ASSERT(startIdx >= 0);
 
         for (SIZE_T i = static_cast<SIZE_T>(startIdx); i < list.Count(); i++) {
             if (list[i] == addr) {
@@ -2024,7 +2024,7 @@ namespace net {
             const A& addr, const ULONG prefixLen, 
             const int startIdx) {
         THE_STACK_TRACE;
-        ASSERT(startIdx >= 0);
+        THE_ASSERT(startIdx >= 0);
 
         try {
             A prefix = addr.GetPrefix(prefixLen);

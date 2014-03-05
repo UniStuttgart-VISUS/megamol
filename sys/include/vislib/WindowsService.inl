@@ -126,7 +126,7 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
 
 
 #define IMPLEMENT_WINDOWS_SERVICE_HANDLER_EX                                   \
-    ASSERT(context != NULL);                                                   \
+    THE_ASSERT(context != NULL);                                                   \
     DWORD retval = NO_ERROR;                                                   \
     WindowsService *svc = static_cast<WindowsService *>(context);              \
                                                                                \
@@ -230,7 +230,7 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
 
 
 #define IMPLEMENT_WINDOWS_SERVICE_SERVICE_MAIN(strType)                        \
-    ASSERT(WindowsService::instance != NULL);                                  \
+    THE_ASSERT(WindowsService::instance != NULL);                                  \
                                                                                \
     SERVICE_STATUS_HANDLE& hStatus = WindowsService::instance->hStatus;        \
     SERVICE_STATUS& status = WindowsService::instance->status;                 \

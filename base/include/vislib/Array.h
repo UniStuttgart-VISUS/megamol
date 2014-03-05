@@ -607,7 +607,7 @@ namespace vislib {
             const SIZE_T capacityIncrement)	: OrderedCollection<T, L>(),
             capacity(0), capacityIncrement(capacityIncrement), count(0),
             elements(NULL) {
-        ASSERT(capacityIncrement > 0);
+        THE_ASSERT(capacityIncrement > 0);
         this->AssertCapacity(capacity);
     }
 
@@ -620,7 +620,7 @@ namespace vislib {
             const SIZE_T capacityIncrement) : OrderedCollection<T, L>(),
             capacity(0), capacityIncrement(capacityIncrement), count(count),
             elements(NULL) {
-        ASSERT(capacityIncrement > 0);
+        THE_ASSERT(capacityIncrement > 0);
         this->Lock();
         this->AssertCapacity(count);
         for (SIZE_T i = 0; i < this->count; i++) {
@@ -645,7 +645,7 @@ namespace vislib {
      */
     template<class T, class L, class C> Array<T, L, C>::~Array(void) {
         this->Resize(0);
-        ASSERT(this->elements == NULL);
+        THE_ASSERT(this->elements == NULL);
     }
 
 
@@ -777,7 +777,7 @@ namespace vislib {
             if (beginIdx + range >= this->count) {
                 cntRemoved = range = cntMove = this->count - beginIdx;
             }
-            ASSERT(beginIdx + range <= this->count);
+            THE_ASSERT(beginIdx + range <= this->count);
 
             /* Dtor element range to erase. */
             for (SIZE_T i = beginIdx; i < beginIdx + range; i++) {

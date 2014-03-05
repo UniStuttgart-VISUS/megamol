@@ -226,7 +226,7 @@ vislib::sys::RegistrySerialiser::RegistrySerialiser(
         const RegistrySerialiser& rhs) 
         : vislib::Serialiser(rhs), hBaseKey(NULL) {
     *this = rhs;
-    ASSERT(this->keyStack.Top() == this->hBaseKey);
+    THE_ASSERT(this->keyStack.Top() == this->hBaseKey);
 }
 
 
@@ -263,7 +263,7 @@ void vislib::sys::RegistrySerialiser::ClearKey(const bool includeValues) {
  */
 void vislib::sys::RegistrySerialiser::Deserialise(bool& outValue, 
         const char *name) {
-    ASSERT(sizeof(bool) <= sizeof(DWORD));
+    THE_ASSERT(sizeof(bool) <= sizeof(DWORD));
     DWORD tmp;
     IntegralDeserialise<DWORD, REG_DWORD, char, ::RegQueryValueExA>(
         tmp, this->keyStack.Top(), name);
@@ -276,7 +276,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(bool& outValue,
  */
 void vislib::sys::RegistrySerialiser::Deserialise(bool& outValue, 
         const wchar_t *name) {
-    ASSERT(sizeof(bool) <= sizeof(DWORD));
+    THE_ASSERT(sizeof(bool) <= sizeof(DWORD));
     DWORD tmp;
     IntegralDeserialise<DWORD, REG_DWORD, wchar_t, ::RegQueryValueExW>(
         tmp, this->keyStack.Top(), name);
@@ -545,7 +545,7 @@ void vislib::sys::RegistrySerialiser::PopKey(const bool isSilent) {
 
     } else {
         /* The last key must not be removed by the user. */
-        ASSERT(hKey == this->hBaseKey);
+        THE_ASSERT(hKey == this->hBaseKey);
         this->keyStack.Push(hKey);
 
         /* Throw if not disabled. */
@@ -803,7 +803,7 @@ this->serialiseAsDword0<float, UINT32, wchar_t>(value, name);
  */
 void vislib::sys::RegistrySerialiser::Serialise(const double value, 
         const char *name) {
-    ASSERT(sizeof(double) == sizeof(UINT64));
+    THE_ASSERT(sizeof(double) == sizeof(UINT64));
     IntegralSerialise<UINT64, REG_QWORD, char, ::RegSetValueExA>(
         *reinterpret_cast<const UINT64 *>(&value), this->keyStack.Top(), name);
 }
@@ -814,7 +814,7 @@ void vislib::sys::RegistrySerialiser::Serialise(const double value,
  */
 void vislib::sys::RegistrySerialiser::Serialise(const double value, 
         const wchar_t *name) {
-    ASSERT(sizeof(double) == sizeof(UINT64));
+    THE_ASSERT(sizeof(double) == sizeof(UINT64));
     IntegralSerialise<UINT64, REG_QWORD, wchar_t, ::RegSetValueExW>(
         *reinterpret_cast<const UINT64 *>(&value), this->keyStack.Top(), name);
 }
@@ -869,8 +869,8 @@ vislib::sys::RegistrySerialiser& vislib::sys::RegistrySerialiser::operator =(
 
     if (this != &rhs) {
         this->closeAllRegistry();
-        ASSERT(this->keyStack.IsEmpty());
-        ASSERT(this->hBaseKey == NULL);
+        THE_ASSERT(this->keyStack.IsEmpty());
+        THE_ASSERT(this->hBaseKey == NULL);
 
         // MSDN: DuplicateHandle can duplicate handles to the following types 
         // of objects: The handle is returned by the RegCreateKey, 
@@ -889,7 +889,7 @@ vislib::sys::RegistrySerialiser& vislib::sys::RegistrySerialiser::operator =(
         }
 
         this->keyStack.Push(this->hBaseKey);
-        ASSERT(this->keyStack.Top() == this->hBaseKey);
+        THE_ASSERT(this->keyStack.Top() == this->hBaseKey);
     }
 
     return *this;
@@ -902,10 +902,10 @@ vislib::sys::RegistrySerialiser& vislib::sys::RegistrySerialiser::operator =(
 void vislib::sys::RegistrySerialiser::closeAllRegistry(void) {
     while (this->keyStack.IsEmpty()) {
         HKEY hKey = this->keyStack.Pop();
-        ASSERT(hKey != NULL);
+        THE_ASSERT(hKey != NULL);
         ::RegCloseKey(hKey);
 
-        ASSERT((this->keyStack.Count() != 1) 
+        THE_ASSERT((this->keyStack.Count() != 1) 
             || (this->keyStack.Top() == this->hBaseKey));
     }
 
@@ -919,8 +919,8 @@ void vislib::sys::RegistrySerialiser::closeAllRegistry(void) {
 void vislib::sys::RegistrySerialiser::initialise(const char *subKey, 
         HKEY hKey) {
     // Assert initialisations that ctor must make in initialisation list:
-    ASSERT((this->GetProperties() & SERIALISER_REQUIRES_NAMES) != 0);
-    ASSERT(this->hBaseKey == NULL);
+    THE_ASSERT((this->GetProperties() & SERIALISER_REQUIRES_NAMES) != 0);
+    THE_ASSERT(this->hBaseKey == NULL);
 
     DWORD createDisp = 0;
     LONG result = ::RegCreateKeyExA(hKey, subKey, 0, NULL, 
@@ -934,7 +934,7 @@ void vislib::sys::RegistrySerialiser::initialise(const char *subKey,
     }
 
     this->keyStack.Push(this->hBaseKey);
-    ASSERT(this->keyStack.Top() == this->hBaseKey);
+    THE_ASSERT(this->keyStack.Top() == this->hBaseKey);
 }
 
 
@@ -944,8 +944,8 @@ void vislib::sys::RegistrySerialiser::initialise(const char *subKey,
 void vislib::sys::RegistrySerialiser::initialise(const wchar_t *subKey, 
         HKEY hKey) {
     // Assert initialisations that ctor must make in initialisation list:
-    ASSERT((this->GetProperties() & SERIALISER_REQUIRES_NAMES) != 0);
-    ASSERT(this->hBaseKey == NULL);
+    THE_ASSERT((this->GetProperties() & SERIALISER_REQUIRES_NAMES) != 0);
+    THE_ASSERT(this->hBaseKey == NULL);
 
     DWORD createDisp = 0;
     LONG result = ::RegCreateKeyExW(hKey, subKey, 0, NULL, 
@@ -959,7 +959,7 @@ void vislib::sys::RegistrySerialiser::initialise(const wchar_t *subKey,
     }
 
     this->keyStack.Push(this->hBaseKey);
-    ASSERT(this->keyStack.Top() == this->hBaseKey);
+    THE_ASSERT(this->keyStack.Top() == this->hBaseKey);
 }
 
 #endif /* _WIN32 */

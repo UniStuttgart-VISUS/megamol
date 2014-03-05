@@ -910,7 +910,7 @@ void vislib::sys::Path::PurgeDirectory(const StringA& path, bool recursive) {
             }
 
         } else {
-            ASSERT(false); // DirectoryEntry is something unknown to this 
+            THE_ASSERT(false); // DirectoryEntry is something unknown to this 
                            // implementation. Check DirectoryIterator for 
                            // changes.
         }
@@ -938,7 +938,7 @@ void vislib::sys::Path::PurgeDirectory(const StringW& path, bool recursive) {
             }
 
         } else {
-            ASSERT(false); // DirectoryEntry is something unknown to this 
+            THE_ASSERT(false); // DirectoryEntry is something unknown to this 
                            // implementation. Check DirectoryIterator for 
                            // changes.
         }

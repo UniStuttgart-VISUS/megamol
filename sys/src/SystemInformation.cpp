@@ -674,7 +674,7 @@ vislib::sys::SystemInformation::getRootWndRect(Display *dpy, int screen) {
  */
 BOOL CALLBACK vislib::sys::SystemInformation::monitorEnumProc(HMONITOR hMonitor,
         HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
-    ASSERT(hdcMonitor == NULL);
+    THE_ASSERT(hdcMonitor == NULL);
     MonitorRectArray *da = reinterpret_cast<MonitorRectArray *>(dwData);
     
     da->Append(MonitorRect(lprcMonitor->left, lprcMonitor->bottom,

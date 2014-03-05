@@ -90,7 +90,7 @@ namespace cluster {
          */
         inline void setParameters(
                 const SmartPtr<graphics::CameraParameters>& params) {
-            ASSERT(!params.IsNull());
+            THE_ASSERT(!params.IsNull());
             this->parameters = params;
         }
 

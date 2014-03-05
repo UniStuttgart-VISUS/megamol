@@ -356,7 +356,7 @@ bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
     memcpy(outmem, header.PeekBuffer(), headLen);
 
     if (bin) {
-        ASSERT(bd != NULL);
+        THE_ASSERT(bd != NULL);
         outmem.AssertSize(headLen + imgSize * 3, true);
         for (unsigned int i = 0; i < imgSize; i++) {
             outmem.AsAt<BYTE>(headLen)[i * 3]

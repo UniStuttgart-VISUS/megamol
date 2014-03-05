@@ -66,7 +66,7 @@ SIZE_T vislib::sys::ThreadPool::AbortPendingUserWorkItems(void) {
  * vislib::sys::ThreadPool::AddListener
  */
 void vislib::sys::ThreadPool::AddListener(ThreadPoolListener *listener) {
-    ASSERT(listener != NULL);
+    THE_ASSERT(listener != NULL);
 
     this->lockListeners.Lock();
     if ((listener != NULL) && !this->listeners.Contains(listener)) {
@@ -144,7 +144,7 @@ void vislib::sys::ThreadPool::QueueUserWorkItem(Runnable::Function runnable,
  * vislib::sys::ThreadPool::RemoveListener
  */
 void vislib::sys::ThreadPool::RemoveListener(ThreadPoolListener *listener) {
-    ASSERT(listener != NULL);
+    THE_ASSERT(listener != NULL);
 
     this->lockListeners.Lock();
     this->listeners.RemoveAll(listener);
@@ -190,8 +190,8 @@ void vislib::sys::ThreadPool::Terminate(const bool abortPending) {
 
         this->lockQueue.Lock();
         this->lockThreadCounters.Lock();
-        ASSERT(this->queue.IsEmpty());
-        ASSERT(!this->semBlockWorker.TryLock());
+        THE_ASSERT(this->queue.IsEmpty());
+        THE_ASSERT(!this->semBlockWorker.TryLock());
 
         this->evtAllCompleted.Reset();
         for (SIZE_T i = 0; i < this->cntTotalThreads; i++) {
@@ -230,7 +230,7 @@ vislib::sys::ThreadPool::Worker::~Worker(void) {
  * DWORD vislib::sys::ThreadPool::Worker::Run
  */
 DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
-    ASSERT(pool != NULL);
+    THE_ASSERT(pool != NULL);
     this->pool = static_cast<ThreadPool *>(pool);
 
     VLTRACE(Trace::LEVEL_VL_INFO, "Worker thread [%u] started.\n", 
@@ -264,7 +264,7 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
         }
 
         /* Get the work item and mark thread as active. */
-        ASSERT(!this->pool->queue.IsEmpty());
+        THE_ASSERT(!this->pool->queue.IsEmpty());
         WorkItem workItem = this->pool->queue.First();
         this->pool->queue.RemoveFirst();
         this->pool->cntActiveThreads++;
@@ -276,7 +276,7 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
         /* Do the work. */
         VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is working ...\n",
             Thread::CurrentID());
-        ASSERT((workItem.runnable != NULL) 
+        THE_ASSERT((workItem.runnable != NULL) 
             || (workItem.runnableFunction != NULL));
         DWORD exitCode = (workItem.runnable != NULL)
             ? workItem.runnable->Run(workItem.userData)
@@ -322,7 +322,7 @@ void vislib::sys::ThreadPool::fireUserWorkItemAborted(WorkItem& workItem) {
                 workItem.userData);
         }
     } else {
-        ASSERT(workItem.runnableFunction != NULL);
+        THE_ASSERT(workItem.runnableFunction != NULL);
         while (it.HasNext()) {
             it.Next()->OnUserWorkItemAborted(*this, workItem.runnableFunction,
                 workItem.userData);
@@ -346,7 +346,7 @@ void vislib::sys::ThreadPool::fireUserWorkItemCompleted(WorkItem& workItem,
                 workItem.userData, exitCode);
         }
     } else {
-        ASSERT(workItem.runnableFunction != NULL);
+        THE_ASSERT(workItem.runnableFunction != NULL);
         while (it.HasNext()) {
             it.Next()->OnUserWorkItemCompleted(*this, workItem.runnableFunction,
                 workItem.userData, exitCode);

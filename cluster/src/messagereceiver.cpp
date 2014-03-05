@@ -52,9 +52,9 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
     AbstractClusterNode::PeerIdentifier peerId; // Peer address of socket.
 
     /* Sanity checks. */
-    ASSERT(ctx != NULL);
-    ASSERT(ctx->Receiver != NULL);
-    ASSERT(ctx->Socket != NULL);
+    THE_ASSERT(ctx != NULL);
+    THE_ASSERT(ctx->Receiver != NULL);
+    THE_ASSERT(ctx->Socket != NULL);
     if ((ctx == NULL) || (ctx->Receiver == NULL) || (ctx->Socket == NULL)) {
         throw IllegalParamException("receiveMessagesCtx", __FILE__, __LINE__);
     }
@@ -84,8 +84,8 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             }
 
             /* Sanity check. */
-            ASSERT(recvBuf.GetSize() >= sizeof(MessageHeader));
-            //ASSERT(msgHdr->MagicNumber == MAGIC_NUMBER);
+            THE_ASSERT(recvBuf.GetSize() >= sizeof(MessageHeader));
+            //THE_ASSERT(msgHdr->MagicNumber == MAGIC_NUMBER);
             if (msgHdr->MagicNumber != MAGIC_NUMBER) {
                 VLTRACE(Trace::LEVEL_WARN, "Discarding data packet without "
                     "valid magic number. Expected %u, but received %u.\n",

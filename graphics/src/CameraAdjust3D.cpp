@@ -46,10 +46,10 @@ void vislib::graphics::CameraAdjust3D::Trigger(
         unsigned int param) {
 
     RelativeCursor3D *cursor = dynamic_cast<RelativeCursor3D *>(caller);
-    ASSERT(cursor != NULL);
+    THE_ASSERT(cursor != NULL);
 
     // otherwise this would be very strange
-    ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
+    THE_ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
 
     if (reason == REASON_MOVE) {
 

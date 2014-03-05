@@ -226,7 +226,7 @@ void vislib::sys::Environment::Snapshot::Clear(void) {
     }
 
     ARY_SAFE_DELETE(this->data);
-    ASSERT(this->data == NULL);
+    THE_ASSERT(this->data == NULL);
 #endif /* !_WIN32 */
 }
 
@@ -265,7 +265,7 @@ void vislib::sys::Environment::Snapshot::GetAt(const SIZE_T idx,
 #ifdef _WIN32
     StringW tmp = this->data[idx];
     StringW::Size splitPos = tmp.Find(L'=');
-    ASSERT(splitPos != StringW::INVALID_POS);
+    THE_ASSERT(splitPos != StringW::INVALID_POS);
     outName = tmp.Substring(0, splitPos);
     outValue = tmp.Substring(splitPos + 1);
 #else /* _WIN32 */
@@ -436,7 +436,7 @@ void vislib::sys::Environment::Snapshot::assign(const char **const data) {
     SIZE_T dataSize = 0;
 
     this->Clear();
-    ASSERT(this->data == NULL);
+    THE_ASSERT(this->data == NULL);
     
     if (data != NULL) {
         /* Count parameters. */

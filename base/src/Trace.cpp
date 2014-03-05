@@ -30,7 +30,7 @@ vislib::Trace& vislib::Trace::GetInstance(void) {
  * vislib::Trace::OverrideInstance
  */
 void vislib::Trace::OverrideInstance(vislib::Trace *inst) {
-    ASSERT(inst != NULL);
+    THE_ASSERT(inst != NULL);
     vislib::Trace::instance = inst; // no need to delete the old object
 }
 
@@ -136,7 +136,7 @@ bool vislib::Trace::EnableFileOutput(const char *filename) {
             ARY_SAFE_DELETE(this->filename);
             SIZE_T len = ::strlen(filename) + 1;
             this->filename = new char[len];
-            ASSERT(this->filename != NULL); // std::bad_alloc should have been thrown.
+            THE_ASSERT(this->filename != NULL); // std::bad_alloc should have been thrown.
             ::memcpy(this->filename, filename, len * sizeof(char));
 
             if (this->fp != NULL) {
@@ -183,12 +183,12 @@ bool vislib::Trace::EnableFileOutput(const char *filename) {
  */
 void vislib::Trace::SetPrefix(const char *prefix) {
     ARY_SAFE_DELETE(this->prefix);
-    ASSERT(this->prefix == NULL);		// Ensure potential disabling.
+    THE_ASSERT(this->prefix == NULL);		// Ensure potential disabling.
 
     if (prefix != NULL) {
         SIZE_T len = ::strlen(prefix) + 1;
         this->prefix = new char[len];
-        ASSERT(this->prefix != NULL);	// std::bad_alloc or OK.
+        THE_ASSERT(this->prefix != NULL);	// std::bad_alloc or OK.
         ::memcpy(this->prefix, prefix, len * sizeof(char));	
     }
 }

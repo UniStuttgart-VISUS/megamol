@@ -20,7 +20,7 @@
 vislib::sys::Mutex::Mutex(void) {
 #ifdef _WIN32
     this->handle = ::CreateMutex(NULL, FALSE, NULL);
-    ASSERT(this->handle != NULL);
+    THE_ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
     ::pthread_mutexattr_init(&attr);
@@ -66,7 +66,7 @@ void vislib::sys::Mutex::Lock(void) {
 
         case WAIT_TIMEOUT:
             /* Waiting infinitely should not timeout. */
-            ASSERT(false);
+            THE_ASSERT(false);
             break;
 
         default:

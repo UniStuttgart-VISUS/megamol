@@ -1145,7 +1145,7 @@ namespace math {
     Vector<T, D> AbstractMatrixImpl<T, D, L, S, C>::operator *(
             const AbstractVector<T, D, Sp>& rhs) const {
         Vector<T, D> retval;
-        ASSERT(retval.IsNull());
+        THE_ASSERT(retval.IsNull());
 
         for (unsigned int r = 0; r < D; r++) {
             for (unsigned int c = 0; c < D; c++) {
@@ -1166,7 +1166,7 @@ namespace math {
     Vector<T, D - 1> AbstractMatrixImpl<T, D, L, S, C>::operator *(
             const AbstractVector<T, D - 1, Sp>& rhs) const {
         Vector<T, D - 1> retval;
-        ASSERT(retval.IsNull());
+        THE_ASSERT(retval.IsNull());
 
         /* Compute w-component of result. */
         T w = this->components[indexOf(D - 1, D - 1)];

@@ -133,9 +133,9 @@
 //    IPEndPoint& ep = static_cast<IPEndPoint&>(*cep);
 //
 //    this->createQueuePair();
-//    ASSERT(this->queuePair != NULL);
-//    ASSERT(this->recvComplQueue != NULL);
-//    ASSERT(this->sendComplQueue != NULL);
+//    THE_ASSERT(this->queuePair != NULL);
+//    THE_ASSERT(this->recvComplQueue != NULL);
+//    THE_ASSERT(this->sendComplQueue != NULL);
 //
 //    WV_QP_ATTRIBUTES qpAttribs;
 //    this->queuePair->Query(&qpAttribs);
@@ -145,7 +145,7 @@
 //    sge.Lkey = this->recvKeys.Lkey;
 //    sge.pAddress = this->recvRegion;
 //
-//    ASSERT(this->queuePair != NULL);
+//    THE_ASSERT(this->queuePair != NULL);
 //    hr = this->queuePair->PostReceive(NULL, &sge, 1);
 //
 //    WV_CONNECT_PARAM conParam;
@@ -186,7 +186,7 @@
 //IWVProvider *vislib::net::ib::IbvCommChannel::GetProvider(void) {
 //    VLSTACKTRACE("IbvCommChannel::GetProvider", __FILE__, __LINE__);
 //    this->initialise();
-//    ASSERT(this->wvProvider != NULL);
+//    THE_ASSERT(this->wvProvider != NULL);
 //    return this->wvProvider;
 //}
 //
@@ -291,7 +291,7 @@
 //        /* Get attributes of end point to get the device used for it. */
 //        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying attributes of "
 //            "connect end point...\n");
-//        ASSERT(this->connectEndPoint != NULL);
+//        THE_ASSERT(this->connectEndPoint != NULL);
 //        if (FAILED(hr = this->connectEndPoint->Query(&connAttribs))) {
 //            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying attributes of "
 //                "connect end point failed with error code %d.\n", hr);
@@ -306,8 +306,8 @@
 //        }
 //
 //        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Opening IB device...\n");
-//        ASSERT(this->wvProvider != NULL);
-//        ASSERT(this->device == NULL);
+//        THE_ASSERT(this->wvProvider != NULL);
+//        THE_ASSERT(this->device == NULL);
 //        if (FAILED(hr = this->wvProvider->OpenDevice(
 //                connAttribs.Device.DeviceGuid, &this->device))) {
 //            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Opening IB device failed "
@@ -317,7 +317,7 @@
 //
 //        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying IB device "
 //            "attributes...\n");
-//        ASSERT(this->device != NULL);
+//        THE_ASSERT(this->device != NULL);
 //        if (FAILED(hr = this->device->Query(&devAttribs))) {
 //            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying IB device "
 //                "attributes failed with error code %d.\n", hr);
@@ -327,8 +327,8 @@
 //        /* Allocate a protection domain for the device. */
 //        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Allocating protection "
 //            "domain...\n");
-//        ASSERT(this->protectionDomain == NULL);
-//        ASSERT(this->device != NULL);
+//        THE_ASSERT(this->protectionDomain == NULL);
+//        THE_ASSERT(this->device != NULL);
 //        if (FAILED(hr = this->device->AllocateProtectionDomain(
 //                &this->protectionDomain))) {
 //            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Allocating protection "
@@ -339,8 +339,8 @@
 //        /* Allocate and register memory buffers for sending and receiving. */
 //        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Registering memory for "
 //            "receiving data...\n");
-//        ASSERT(this->recvRegion == NULL);
-//        ASSERT(this->protectionDomain != NULL);
+//        THE_ASSERT(this->recvRegion == NULL);
+//        THE_ASSERT(this->protectionDomain != NULL);
 //        this->recvRegion = new BYTE[this->recvRegionSize];
 //        if (FAILED(hr = this->protectionDomain->RegisterMemory(
 //                this->recvRegion, this->recvRegionSize, 
@@ -353,8 +353,8 @@
 //
 //        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Registering memory for "
 //            "sending data...\n");
-//        ASSERT(this->sendRegion == NULL);
-//        ASSERT(this->protectionDomain != NULL);
+//        THE_ASSERT(this->sendRegion == NULL);
+//        THE_ASSERT(this->protectionDomain != NULL);
 //        this->sendRegion = new BYTE[this->sendRegionSize];
 //        if (FAILED(hr = this->protectionDomain->RegisterMemory(
 //                this->sendRegion, this->sendRegionSize, 
@@ -368,8 +368,8 @@
 //        /* Create completion queues. */
 //        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Creating receive completion "
 //            "queue...\n");
-//        ASSERT(this->recvComplQueue == NULL);
-//        ASSERT(this->device != NULL);
+//        THE_ASSERT(this->recvComplQueue == NULL);
+//        THE_ASSERT(this->device != NULL);
 //        qpCreate.ReceiveDepth = 15;  // TODO
 //        if (FAILED(hr = this->device->CreateCompletionQueue(
 //                &qpCreate.ReceiveDepth, &this->recvComplQueue))) {
@@ -380,8 +380,8 @@
 //
 //        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Creating send completion "
 //            "queue...\n");
-//        ASSERT(this->sendComplQueue == NULL);
-//        ASSERT(this->device != NULL);
+//        THE_ASSERT(this->sendComplQueue == NULL);
+//        THE_ASSERT(this->device != NULL);
 //        qpCreate.SendDepth = 15; // TODO
 //        if (FAILED(hr = this->device->CreateCompletionQueue(
 //                &qpCreate.SendDepth, &this->sendComplQueue))) {
@@ -431,7 +431,7 @@
 //        //create.QpFlags = qp_init_attr->sq_sig_all ? WV_QP_SIGNAL_SENDS : 0;
 //
 //        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Creating queue pair...\n");
-//        ASSERT(this->queuePair == NULL);
+//        THE_ASSERT(this->queuePair == NULL);
 //        if (FAILED(hr = this->protectionDomain->CreateConnectQueuePair(
 //            &qpCreate, &this->queuePair))) {
 //            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Creating queue pair failed "
@@ -473,8 +473,8 @@
 //        }
 //    } 
 //
-//    ASSERT(this->wvProvider != NULL);
-//    ASSERT(this->connectEndPoint != NULL);
+//    THE_ASSERT(this->wvProvider != NULL);
+//    THE_ASSERT(this->connectEndPoint != NULL);
 //}
 //
 //
@@ -487,11 +487,11 @@
 //    sys::SafeRelease(this->queuePair);
 //
 //    if (this->recvKeys.Lkey != 0) {
-//        ASSERT(this->protectionDomain != NULL);
+//        THE_ASSERT(this->protectionDomain != NULL);
 //        this->protectionDomain->DeregisterMemory(this->recvKeys.Lkey, NULL);
 //    }
 //    if (this->sendKeys.Lkey != 0) {
-//        ASSERT(this->protectionDomain != NULL);
+//        THE_ASSERT(this->protectionDomain != NULL);
 //        this->protectionDomain->DeregisterMemory(this->sendKeys.Lkey, NULL);
 //    }
 //
@@ -501,9 +501,9 @@
 //    sys::SafeRelease(this->recvComplQueue);
 //    sys::SafeRelease(this->sendComplQueue);
 //
-//    ASSERT(this->queuePair == NULL);
-//    ASSERT(this->recvRegion == NULL);
-//    ASSERT(this->recvComplQueue == NULL);
-//    ASSERT(this->sendRegion == NULL);
-//    ASSERT(this->sendComplQueue == NULL);
+//    THE_ASSERT(this->queuePair == NULL);
+//    THE_ASSERT(this->recvRegion == NULL);
+//    THE_ASSERT(this->recvComplQueue == NULL);
+//    THE_ASSERT(this->sendRegion == NULL);
+//    THE_ASSERT(this->sendComplQueue == NULL);
 //}

@@ -77,9 +77,9 @@ bool vislib::graphics::gl::GLSLGeometryShader::Compile(
         bool insertLineDirective) {
 
     USES_GL_VERIFY;
-    ASSERT(vertexShaderSrc != NULL);
-    ASSERT(geometryShaderSrc != NULL);
-    ASSERT(fragmentShaderSrc != NULL);
+    THE_ASSERT(vertexShaderSrc != NULL);
+    THE_ASSERT(geometryShaderSrc != NULL);
+    THE_ASSERT(fragmentShaderSrc != NULL);
 
     this->Release();
 
@@ -226,7 +226,7 @@ bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
  */
 void vislib::graphics::gl::GLSLGeometryShader::SetProgramParameter(GLenum name,
         GLint value) {
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     glProgramParameteriEXT(this->hProgObj, name, value);
 }

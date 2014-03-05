@@ -525,7 +525,7 @@ namespace vislib {
      * StringTokeniser<C>::Reset
      */
     template<class C> void StringTokeniser<C>::Reset(void) {
-        ASSERT(separator.Length() > 0);
+        THE_ASSERT(separator.Length() > 0);
         this->inputPos = 0;
         this->prepareNextToken();
         this->inputPos = 0;

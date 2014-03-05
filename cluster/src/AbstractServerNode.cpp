@@ -83,7 +83,7 @@ bool vislib::net::cluster::AbstractServerNode::OnNewConnection(Socket& socket,
 
         ReceiveMessagesCtx *rmc = AllocateRecvMsgCtx(this, &peerNode->Socket);
         try {
-            VERIFY(peerNode->Receiver->Start(static_cast<void *>(rmc)));
+            THE_VERIFY(peerNode->Receiver->Start(static_cast<void *>(rmc)));
         } catch (Exception e) {
             FreeRecvMsgCtx(rmc);
             throw e;

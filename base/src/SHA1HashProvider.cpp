@@ -94,8 +94,8 @@ bool vislib::SHA1HashProvider::TransformFinalBlock(BYTE *outHash,
  */
 void vislib::SHA1HashProvider::input(SHA1Context *context, const BYTE *input, 
         const UINT cntInput) {
-    ASSERT(context != NULL);
-    ASSERT(input != NULL);
+    THE_ASSERT(context != NULL);
+    THE_ASSERT(input != NULL);
 
     UINT length = cntInput;
 
@@ -270,8 +270,8 @@ void vislib::SHA1HashProvider::processMessageBlock(SHA1Context *context) {
  */
 void vislib::SHA1HashProvider::result(UINT8 *messageDigest, 
                                       SHA1Context *context) {
-    ASSERT(messageDigest != NULL);
-    ASSERT(context != NULL);
+    THE_ASSERT(messageDigest != NULL);
+    THE_ASSERT(context != NULL);
 
     // vislib enforces this.
     //if (!context || !messageDigest) {

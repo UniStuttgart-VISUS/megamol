@@ -167,9 +167,9 @@ bool vislib::MD5HashProvider::TransformFinalBlock(BYTE *outHash,
  */
 void vislib::MD5HashProvider::decode(UINT32 *output, const BYTE *input, 
         const UINT len) {
-    ASSERT(output != NULL);
-    ASSERT(input != NULL);
-    ASSERT((len % 4) == 0);
+    THE_ASSERT(output != NULL);
+    THE_ASSERT(input != NULL);
+    THE_ASSERT((len % 4) == 0);
 
     for (UINT i = 0, j = 0; j < len; i++, j += 4) {
         output[i] = static_cast<UINT32>(input[j]) 
@@ -185,9 +185,9 @@ void vislib::MD5HashProvider::decode(UINT32 *output, const BYTE *input,
  */
 void vislib::MD5HashProvider::encode(BYTE *output, const UINT32 *input, 
         const UINT len) {
-    ASSERT(output != NULL);
-    ASSERT(input != NULL);
-    ASSERT((len % 4) == 0);
+    THE_ASSERT(output != NULL);
+    THE_ASSERT(input != NULL);
+    THE_ASSERT((len % 4) == 0);
 
     for (UINT i = 0, j = 0; j < len; i++, j += 4) {
         output[j] = static_cast<BYTE>(input[i] & 0xff);
@@ -202,8 +202,8 @@ void vislib::MD5HashProvider::encode(BYTE *output, const UINT32 *input,
  * vislib::MD5HashProvider::finalise
  */
 void vislib::MD5HashProvider::finalise(BYTE *output, MD5_CTX *context) {
-    ASSERT(output != NULL);
-    ASSERT(context != NULL);
+    THE_ASSERT(output != NULL);
+    THE_ASSERT(context != NULL);
 
     BYTE bits[8];
     UINT index, padLen;

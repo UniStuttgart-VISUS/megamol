@@ -1528,7 +1528,7 @@ namespace vislib {
 
             return (T::ToLower(*lhs) == T::ToLower(*rhs));
         }
-        ASSERT(false);
+        THE_ASSERT(false);
     }
 
 
@@ -1540,14 +1540,14 @@ namespace vislib {
         Size ncLen = T::SafeStringLength(normChars);
 
         // checking preconditions
-        ASSERT(T::SafeStringLength(escpdChars) == ncLen);
+        THE_ASSERT(T::SafeStringLength(escpdChars) == ncLen);
 #if (defined(DEBUG) || defined(_DEBUG))
         for (Size i = 0; i < ncLen; i++) {
-            ASSERT(normChars[i] != ec);
-            ASSERT(escpdChars[i] != ec);
+            THE_ASSERT(normChars[i] != ec);
+            THE_ASSERT(escpdChars[i] != ec);
             for (Size j = i + 1; j < ncLen; j++) {
-                ASSERT(normChars[i] != normChars[j]);
-                ASSERT(escpdChars[i] != escpdChars[j]);
+                THE_ASSERT(normChars[i] != normChars[j]);
+                THE_ASSERT(escpdChars[i] != escpdChars[j]);
             }
         }
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
@@ -1717,7 +1717,7 @@ namespace vislib {
         va_end(argptr);
 
         /* Allocate memory. */
-        ASSERT(size >= 0);
+        THE_ASSERT(size >= 0);
         this->AllocateBuffer(size);
         
         /* Write the actual output. */
@@ -1773,7 +1773,7 @@ namespace vislib {
 #undef ___local_arg_list_copyied
 
         /* Allocate memory. */
-        ASSERT(size >= 0);
+        THE_ASSERT(size >= 0);
         this->AllocateBuffer(size);
         
         /* Write the actual output. */
@@ -1859,7 +1859,7 @@ namespace vislib {
     ? (((c) < (a)) ? (c) : (a))\
     : (((c) < (b)) ? (c) : (b)))
 
-        ASSERT(rhs != NULL);
+        THE_ASSERT(rhs != NULL);
 
         Size len1 = this->Length();
         Size len2 = T::SafeStringLength(rhs);
@@ -1904,14 +1904,14 @@ namespace vislib {
         INT bufLen = 128;
         INT charsRead = 0;
         Char *buffer = new Char[bufLen];
-        ASSERT(buffer != NULL);
+        THE_ASSERT(buffer != NULL);
 
         while ((charsRead = T::StringFromResource(hInst, id, buffer, bufLen)) 
                 == bufLen - 1) {
             delete[] buffer;
             bufLen *= 2;
             buffer = new Char[bufLen];
-            ASSERT(buffer != NULL);
+            THE_ASSERT(buffer != NULL);
         }
 
         if (charsRead > 0) {
@@ -2298,14 +2298,14 @@ namespace vislib {
         Size ncLen = T::SafeStringLength(normChars);
 
         // checking preconditions
-        ASSERT(T::SafeStringLength(escpdChars) == ncLen);
+        THE_ASSERT(T::SafeStringLength(escpdChars) == ncLen);
 #if (defined(DEBUG) || defined(_DEBUG))
         for (Size i = 0; i < ncLen; i++) {
-            ASSERT(normChars[i] != ec);
-            ASSERT(escpdChars[i] != ec);
+            THE_ASSERT(normChars[i] != ec);
+            THE_ASSERT(escpdChars[i] != ec);
             for (Size j = i + 1; j < ncLen; j++) {
-                ASSERT(normChars[i] != normChars[j]);
-                ASSERT(escpdChars[i] != escpdChars[j]);
+                THE_ASSERT(normChars[i] != normChars[j]);
+                THE_ASSERT(escpdChars[i] != escpdChars[j]);
             }
         }
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */

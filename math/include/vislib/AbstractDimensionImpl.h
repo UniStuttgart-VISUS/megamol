@@ -285,8 +285,8 @@ namespace math {
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C> 
     T& AbstractDimensionImpl<T, D, S, C>::operator [](const int i) {
-        ASSERT(0 <= i);
-        ASSERT(i < static_cast<int>(D));
+        THE_ASSERT(0 <= i);
+        THE_ASSERT(i < static_cast<int>(D));
 
         if ((0 <= i) && (i < static_cast<int>(D))) {
             return this->dimension[i];
@@ -302,8 +302,8 @@ namespace math {
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C> 
     const T& AbstractDimensionImpl<T, D, S, C>::operator [](const int i) const {
-        ASSERT(0 <= i);
-        ASSERT(i < static_cast<int>(D));
+        THE_ASSERT(0 <= i);
+        THE_ASSERT(i < static_cast<int>(D));
 
         if ((0 <= i) && (i < static_cast<int>(D))) {
             return this->dimension[i];

@@ -112,7 +112,7 @@ void vislib::graphics::d3d::GetMaximumFullscreenResolution(
                 &displayMode))) {
             throw D3DException(hr, __FILE__, __LINE__);
         }
-        ASSERT(displayMode.Format == format);
+        THE_ASSERT(displayMode.Format == format);
 
         if (::IsDisplayModeLargerThan(displayMode, outWidth, outHeight, 
                 criterion)) {
@@ -159,7 +159,7 @@ bool vislib::graphics::d3d::GetMaximumSharedFullscreenResolution(
         if (FAILED(hr = d3d->EnumAdapterModes(0, format, i, &displayModeRef))) {
             throw D3DException(hr, __FILE__, __LINE__);
         }
-        ASSERT(displayModeRef.Format == format);
+        THE_ASSERT(displayModeRef.Format == format);
 
         if (::IsDisplayModeLargerThan(displayModeRef, outWidth, outHeight,
                 criterion)) {
@@ -173,7 +173,7 @@ bool vislib::graphics::d3d::GetMaximumSharedFullscreenResolution(
                             &displayModeOther))) {
                         throw D3DException(hr, __FILE__, __LINE__);
                     }
-                    ASSERT(displayModeOther.Format == format);                
+                    THE_ASSERT(displayModeOther.Format == format);                
                 
                     if ((displayModeRef.Width != displayModeOther.Width)
                             || (displayModeRef.Height 
@@ -232,7 +232,7 @@ bool vislib::graphics::d3d::IsFullscreenResolutionSupported(
                 &displayMode))) {
             throw D3DException(hr, __FILE__, __LINE__);
         }
-        ASSERT(displayMode.Format == format);
+        THE_ASSERT(displayMode.Format == format);
 
         if ((displayMode.Width == width) && (displayMode.Height == height)) {
             if (outRefreshRate != NULL) {

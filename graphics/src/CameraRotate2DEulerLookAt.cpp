@@ -79,9 +79,9 @@ void vislib::graphics::CameraRotate2DEulerLookAt::Trigger(
         vislib::graphics::AbstractCursorEvent::TriggerReason reason,
         unsigned int param) {
     Cursor2D *cursor = dynamic_cast<Cursor2D *>(caller);
-    ASSERT(cursor != NULL);
+    THE_ASSERT(cursor != NULL);
     // otherwise this would be very strange:
-    ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
+    THE_ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
 
     ImageSpaceType curX, curY;
     ImageSpaceType preX, preY;

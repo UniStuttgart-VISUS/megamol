@@ -17,7 +17,7 @@
  */
 vislib::graphics::d3d::D3DVISLogo::D3DVISLogo(IDirect3DDevice9 *device)
         : apiVersion(D3DVERSION_9), device9(device), vb9(NULL) {
-    ASSERT(this->device9 != NULL);
+    THE_ASSERT(this->device9 != NULL);
     this->device9->AddRef();
 }
 
@@ -27,7 +27,7 @@ vislib::graphics::d3d::D3DVISLogo::D3DVISLogo(IDirect3DDevice9 *device)
  */
 vislib::graphics::d3d::D3DVISLogo::D3DVISLogo(ID3D10Device *device)
         : apiVersion(D3DVERSION_10), device10(device), vb10(NULL) {
-    ASSERT(this->device10 != NULL);
+    THE_ASSERT(this->device10 != NULL);
     this->device10->AddRef();
 }
 
@@ -48,7 +48,7 @@ vislib::graphics::d3d::D3DVISLogo::~D3DVISLogo(void) {
             break;
 
         default:
-            ASSERT(false);  // Should be unreachable.
+            THE_ASSERT(false);  // Should be unreachable.
             break;
     }
 }
@@ -145,7 +145,7 @@ void vislib::graphics::d3d::D3DVISLogo::Release(void) {
             break;
 
         default:
-            ASSERT(false);  // Should be unreachable.
+            THE_ASSERT(false);  // Should be unreachable.
             break;
     }
 }

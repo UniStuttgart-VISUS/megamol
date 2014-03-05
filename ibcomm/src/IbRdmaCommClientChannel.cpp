@@ -188,14 +188,14 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
         // the in-flight receive and post the next one. 'forceReceive' is not
         // allowed in this operation mode.
 
-        ASSERT(false);  // TODO: This currently does not work.
+        THE_ASSERT(false);  // TODO: This currently does not work.
 
         //VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for RDMA receive "
         //    "operation to complete...\n");
         //while (!::ibv_poll_cq(this->id->recv_cq, 1, &wc));
 
         //// TODO: Currently, we can only receive to the begin of the buffer.
-        //ASSERT((outData == NULL) || (outData == this->bufRecv));
+        //THE_ASSERT((outData == NULL) || (outData == this->bufRecv));
         ////outPtr = this->bufRecv;
 
         //if (cntBytes > this->cntBufRecv) {
@@ -219,7 +219,7 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
                 }
 
                 // Copy receive data to user buffer.
-                ASSERT(lastReceived <= this->cntRemRecv);
+                THE_ASSERT(lastReceived <= this->cntRemRecv);
                 ::memcpy(outPtr, this->remRecv, lastReceived);
 
                 // Update internal cursor variables.
@@ -255,7 +255,7 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
                 // Re-initialise internal buffer cursors.
                 this->remRecv = this->bufRecv;
                 this->cntRemRecv = wc.byte_len;
-                ASSERT(this->cntRemRecv <= this->cntBufRecv);
+                THE_ASSERT(this->cntRemRecv <= this->cntBufRecv);
 
                 // Determine how much we can copy from the receive buffer to the 
                 // user-supplied destination buffer.
@@ -266,8 +266,8 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
                 }
 
                 // Copy receive data to user buffer.
-                ASSERT(lastReceived <= this->cntRemRecv);
-                ASSERT(this->remRecv == this->bufRecv);
+                THE_ASSERT(lastReceived <= this->cntRemRecv);
+                THE_ASSERT(this->remRecv == this->bufRecv);
                 ::memcpy(outPtr, this->remRecv, lastReceived);
 
                 // Update internal cursor variables.
@@ -278,8 +278,8 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
                 totalReceived += lastReceived;
                 outPtr += lastReceived;
             }
-            ASSERT(this->cntRemRecv >= 0);
-            ASSERT(this->cntRemRecv < this->cntBufRecv);
+            THE_ASSERT(this->cntRemRecv >= 0);
+            THE_ASSERT(this->cntRemRecv < this->cntBufRecv);
 
             VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "User did not receive "
                 "%u bytes already in RDMA buffer.\n", this->cntRemRecv);
@@ -317,7 +317,7 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
     SIZE_T lastSent = 0;                // # of bytes received in last op.
 
     if (this->IsZeroCopySend()) {
-        ASSERT(this->bufSendEnd != NULL);
+        THE_ASSERT(this->bufSendEnd != NULL);
 
         /* 
          * If no specific location to send from is specified, assume the begin
@@ -357,7 +357,7 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
 
     } else {
         do {
-            ASSERT(cntBytes >= totalSent);
+            THE_ASSERT(cntBytes >= totalSent);
             if ((cntBytes - totalSent) < this->cntBufSend) {
                 lastSent = cntBytes - totalSent;
             } else {
@@ -454,11 +454,11 @@ void vislib::net::ib::IbRdmaCommClientChannel::postReceive(void) {
  */
 void vislib::net::ib::IbRdmaCommClientChannel::registerBuffers(void) {
     THE_STACK_TRACE;
-    ASSERT(this->id != NULL);
-    ASSERT(this->mrRecv == NULL);
-    ASSERT(this->bufRecv != NULL);
-    ASSERT(this->mrSend == NULL);
-    ASSERT(this->bufSend != NULL);
+    THE_ASSERT(this->id != NULL);
+    THE_ASSERT(this->mrRecv == NULL);
+    THE_ASSERT(this->bufRecv != NULL);
+    THE_ASSERT(this->mrSend == NULL);
+    THE_ASSERT(this->bufSend != NULL);
 
     this->mrRecv = ::rdma_reg_msgs(this->id, this->bufRecv, 
         this->cntBufRecv);
@@ -494,10 +494,10 @@ void vislib::net::ib::IbRdmaCommClientChannel::setBuffers(BYTE *bufRecv,
         this->bufRecvEnd = NULL;
     }
 
-    ASSERT(this->bufRecv == NULL);
-    ASSERT(this->bufRecvEnd == NULL);
-    ASSERT(this->bufSend == NULL);
-    ASSERT(this->bufSendEnd == NULL);
+    THE_ASSERT(this->bufRecv == NULL);
+    THE_ASSERT(this->bufRecvEnd == NULL);
+    THE_ASSERT(this->bufSend == NULL);
+    THE_ASSERT(this->bufSendEnd == NULL);
 
     /* Remember the buffer size. */
     this->cntBufRecv = cntBufRecv;

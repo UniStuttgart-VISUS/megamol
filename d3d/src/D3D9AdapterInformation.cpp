@@ -22,7 +22,7 @@ void vislib::graphics::d3d::D3D9AdapterInformation::GetAdapterInformation(
     USES_D3D_VERIFY;
     D3DCAPS9 d3dCaps;           // Capabilities of the hardware.
 
-    ASSERT(d3d != NULL);
+    THE_ASSERT(d3d != NULL);
 
     /* Clear output. */
     outAdapterInformation.Clear();
@@ -52,7 +52,7 @@ vislib::graphics::d3d::D3D9AdapterInformation::D3D9AdapterInformation(
     HMONITOR hMon = NULL;           // Monitor pseudo handle.
     UINT masterAdapterOrdinal = 0;  // ID of the master adapter.
 
-    ASSERT(d3d != NULL);
+    THE_ASSERT(d3d != NULL);
 
     /* 
      * Get the ID of the master adapter. In order to get all outputs/swap 

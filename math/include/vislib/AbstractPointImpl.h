@@ -336,7 +336,7 @@ namespace math {
             return HALFSPACE_NEGATIVE;//HALFSPACE_POSITIVE;
     
         } else {
-            ASSERT(false);      // Should never happen.
+            THE_ASSERT(false);      // Should never happen.
             return HALFSPACE_IN_PLANE;
         }        
     }

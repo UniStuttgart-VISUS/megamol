@@ -183,19 +183,19 @@ void vislib::sys::IPCSemaphore::init(const char *name, const long initialCount,
     long m = (maxCount > 0) ? maxCount : 1;
     long i = (initialCount < 0) ? 0 : ((initialCount > m) ? m : initialCount);
 
-    ASSERT(m > 0);
-    ASSERT(i >= 0);
-    ASSERT(i <= m);
+    THE_ASSERT(m > 0);
+    THE_ASSERT(i >= 0);
+    THE_ASSERT(i <= m);
 
 #ifdef _WIN32
-    ASSERT(this->handle == NULL);
+    THE_ASSERT(this->handle == NULL);
 
     /* Try to open existing semaphore. */
     if ((this->handle = ::OpenSemaphoreA(SYNCHRONIZE | SEMAPHORE_MODIFY_STATE, 
             FALSE, name)) == NULL) {
         this->handle = ::CreateSemaphoreA(NULL, i, m, name);
     }
-    ASSERT(this->handle != NULL);
+    THE_ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
 
@@ -218,7 +218,7 @@ void vislib::sys::IPCSemaphore::init(const char *name, const long initialCount,
         this->isOwner = false;
         VLTRACE(Trace::LEVEL_VL_INFO, "Semaphore %u opened.\n", this->id);
     }
-    ASSERT(this->id != -1); // TODO: Throw exception here?
+    THE_ASSERT(this->id != -1); // TODO: Throw exception here?
 
 #endif /* _WIN32 */
 }

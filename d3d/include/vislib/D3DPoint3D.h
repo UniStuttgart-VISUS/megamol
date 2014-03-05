@@ -67,7 +67,7 @@ namespace d3d {
          * @param coordinates The initial point coordinates.
          */
         explicit inline D3DPoint3D(const T *coordinates) : Super() {
-            ASSERT(coordinates != NULL);
+            THE_ASSERT(coordinates != NULL);
             ::memcpy(this->coordinates, coordinates, D * sizeof(T));
         }
 

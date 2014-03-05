@@ -25,7 +25,7 @@ UINT32 vislib::ReferenceCounted::AddRef(void) {
  * vislib::ReferenceCounted::Release
  */
 UINT32 vislib::ReferenceCounted::Release(void) {
-    ASSERT(this->cntRefs > 0);
+    THE_ASSERT(this->cntRefs > 0);
     UINT32 retval = --this->cntRefs;
     VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Released object 0x%p, "
         "reference count is now %u.\n", this, this->cntRefs);
@@ -57,7 +57,7 @@ vislib::ReferenceCounted::ReferenceCounted(const ReferenceCounted& rhs)
  * vislib::ReferenceCounted::~ReferenceCounted
  */
 vislib::ReferenceCounted::~ReferenceCounted(void) {
-    ASSERT(this->cntRefs == 0);
+    THE_ASSERT(this->cntRefs == 0);
 }
 
 

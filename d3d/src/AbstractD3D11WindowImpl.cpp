@@ -37,8 +37,8 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::ClearViews(const float r,
         const float g, const float b, const float a, const float depth, 
         const BYTE stencil) {
     THE_STACK_TRACE;
-    ASSERT(this->deviceContext != NULL);
-    ASSERT(this->renderTargetView != NULL);
+    THE_ASSERT(this->deviceContext != NULL);
+    THE_ASSERT(this->renderTargetView != NULL);
     float colour[] = { r, g, b, a };
 
     this->deviceContext->ClearRenderTargetView(this->renderTargetView, colour);
@@ -79,7 +79,7 @@ vislib::graphics::d3d::AbstractD3D11WindowImpl::GetDeviceContext(void) {
  */
 void vislib::graphics::d3d::AbstractD3D11WindowImpl::Present(void) {
     THE_STACK_TRACE;
-    ASSERT(this->swapChain != NULL);
+    THE_ASSERT(this->swapChain != NULL);
     this->swapChain->Present(0, 0);
 }
 
@@ -119,7 +119,7 @@ IDXGIAdapter *vislib::graphics::d3d::AbstractD3D11WindowImpl::findAdapter(
         VLTRACE(Trace::LEVEL_VL_INFO, "Searching monitor that window is "
             "displayed on...\n");
         hMonitor = ::MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
-        ASSERT(hMonitor != NULL);
+        THE_ASSERT(hMonitor != NULL);
     }
 
     /* Create DXGI factory if necessary. */
@@ -161,8 +161,8 @@ IDXGIAdapter *vislib::graphics::d3d::AbstractD3D11WindowImpl::findAdapter(
         }
     }
 
-    ASSERT(adapter == NULL);
-    ASSERT(output == NULL);
+    THE_ASSERT(adapter == NULL);
+    THE_ASSERT(output == NULL);
 
     if (FAILED(hr)) {
         throw D3DException(hr, __FILE__, __LINE__);
@@ -241,8 +241,8 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::initialise(HWND hWnd) {
                 &this->deviceContext);
         }
     } /* end if (device != NULL) */
-    ASSERT(FAILED(hr) || (this->dxgiFactory != NULL));
-    ASSERT(FAILED(hr) || (this->device != NULL));
+    THE_ASSERT(FAILED(hr) || (this->dxgiFactory != NULL));
+    THE_ASSERT(FAILED(hr) || (this->device != NULL));
 
     /* Get windows bounds. */
     if (SUCCEEDED(hr)) {
@@ -268,7 +268,7 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::initialise(HWND hWnd) {
 
         this->onCreatingSwapChain(swapChainDesc);
 
-        ASSERT(this->dxgiFactory != NULL);
+        THE_ASSERT(this->dxgiFactory != NULL);
         hr = this->dxgiFactory->CreateSwapChain(this->device, 
             &swapChainDesc, &this->swapChain);
     }
@@ -325,7 +325,7 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::resizeSwapChain(
         const int width, const int height) {
     THE_STACK_TRACE;
     USES_D3D_VERIFY;
-    ASSERT(this->swapChain != NULL);
+    THE_ASSERT(this->swapChain != NULL);
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
 
@@ -341,8 +341,8 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::resizeSwapChain(
  */
 HRESULT vislib::graphics::d3d::AbstractD3D11WindowImpl::updateViews(void) {
     THE_STACK_TRACE;
-    ASSERT(this->device != NULL);
-    ASSERT(this->swapChain != NULL);
+    THE_ASSERT(this->device != NULL);
+    THE_ASSERT(this->swapChain != NULL);
 
     ID3D11Texture2D *backBuffer = NULL;
     D3D11_TEXTURE2D_DESC backBufferDesc;

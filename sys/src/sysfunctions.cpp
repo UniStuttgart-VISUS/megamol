@@ -46,7 +46,7 @@
  */
 static vislib::RawStorage& loadResource(vislib::RawStorage& out, 
         HMODULE hModule, HRSRC hRes) {
-    ASSERT(hRes != NULL);
+    THE_ASSERT(hRes != NULL);
     HGLOBAL hGlobal = NULL;
     void *data = NULL;
     DWORD size = 0;
@@ -64,7 +64,7 @@ static vislib::RawStorage& loadResource(vislib::RawStorage& out,
     }
 
     data = ::LockResource(hGlobal);
-    ASSERT(data != NULL);
+    THE_ASSERT(data != NULL);
     out.EnforceSize(0);
     out.Append(data, size);
     UnlockResource(hGlobal);
@@ -322,7 +322,7 @@ bool vislib::sys::ReadTextFile(vislib::StringA& outStr,
         checkFileFormat(file, format,
             (format == TEXTFF_UNSPECIFIC) ? TEXTFF_ASCII : format);
     }
-    ASSERT(format != TEXTFF_UNSPECIFIC);
+    THE_ASSERT(format != TEXTFF_UNSPECIFIC);
     File::FileSize len = file.GetSize() - file.Tell();
 
     switch (format) {
@@ -406,7 +406,7 @@ bool vislib::sys::ReadTextFile(vislib::StringW& outStr,
         checkFileFormat(file, format,
             (format == TEXTFF_UNSPECIFIC) ? TEXTFF_UNICODE : format);
     }
-    ASSERT(format != TEXTFF_UNSPECIFIC);
+    THE_ASSERT(format != TEXTFF_UNSPECIFIC);
     File::FileSize len = file.GetSize() - file.Tell();
 
     switch (format) {
@@ -616,7 +616,7 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
     
     /* Remove Windows kernel namespaces from the name. */
     StringA n = RemoveKernelNamespace(name);
-    ASSERT(n.Length() > 0);
+    THE_ASSERT(n.Length() > 0);
 
     // TODO: Ist das Verzeichnis sinnvoll? Eher nicht ...
     retval = ::ftok(Path::GetUserHomeDirectoryA().PeekBuffer(), n.HashCode());

@@ -64,7 +64,7 @@ void vislib::graphics::CameraLookAtDist::Trigger(
         vislib::graphics::Cursor2D *cursor 
             = dynamic_cast<vislib::graphics::Cursor2D*>(caller);
         // otherwise this would be very strange:
-        ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
+        THE_ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
         if (!this->IsCameraParamsValid()) {
             VLTRACE(vislib::Trace::LEVEL_WARN, 
                 "CameraZoom2DMove::Trigger camera missing.");

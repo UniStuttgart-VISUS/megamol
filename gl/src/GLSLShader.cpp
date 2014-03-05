@@ -75,7 +75,7 @@ vislib::graphics::gl::GLSLShader::~GLSLShader(void) {
 GLenum vislib::graphics::gl::GLSLShader::BindAttribute(GLint index, 
         const char *name) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     GL_VERIFY_RETURN(::glBindAttribLocationARB(this->hProgObj, index, name));
     return GL_NO_ERROR;
@@ -101,8 +101,8 @@ bool vislib::graphics::gl::GLSLShader::Compile(const char **vertexShaderSrc,
         const SIZE_T cntVertexShaderSrc, const char **fragmentShaderSrc,
         const SIZE_T cntFragmentShaderSrc, bool insertLineDirective) {
     USES_GL_VERIFY;
-    ASSERT(vertexShaderSrc != NULL);
-    ASSERT(fragmentShaderSrc != NULL);
+    THE_ASSERT(vertexShaderSrc != NULL);
+    THE_ASSERT(fragmentShaderSrc != NULL);
 
     this->Release();
 
@@ -277,7 +277,7 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFile(
  */
 GLenum vislib::graphics::gl::GLSLShader::Disable(void) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     GL_VERIFY_RETURN(::glUseProgramObjectARB(0));
     GL_VERIFY_RETURN(::glDisable(GL_VERTEX_PROGRAM_ARB));
@@ -291,7 +291,7 @@ GLenum vislib::graphics::gl::GLSLShader::Disable(void) {
  */
 GLenum vislib::graphics::gl::GLSLShader::Enable(void) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     GL_VERIFY_RETURN(::glEnable(GL_VERTEX_PROGRAM_ARB));
     GL_VERIFY_RETURN(::glEnable(GL_FRAGMENT_PROGRAM_ARB));
@@ -305,7 +305,7 @@ GLenum vislib::graphics::gl::GLSLShader::Enable(void) {
  */
 bool vislib::graphics::gl::GLSLShader::Link() {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
     
     GL_VERIFY_THROW(::glLinkProgramARB(this->hProgObj));
     if (!this->isLinked(this->hProgObj)) {
@@ -321,8 +321,8 @@ bool vislib::graphics::gl::GLSLShader::Link() {
  * vislib::graphics::gl::GLSLShader::ParameterLocation
  */
 GLint vislib::graphics::gl::GLSLShader::ParameterLocation(const char *name) const {
-    ASSERT(name != NULL);
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(name != NULL);
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
     return ::glGetUniformLocationARB(this->hProgObj, name);
 }
 
@@ -362,7 +362,7 @@ GLenum vislib::graphics::gl::GLSLShader::Release(void) {
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
         const float v1) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -379,7 +379,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const float v1, const float v2) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -395,7 +395,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const float v1, const float v2, const float v3) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -411,7 +411,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const float v1, const float v2, const float v3, const float v4) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -427,7 +427,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const int v1) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -443,7 +443,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const int v1, const int v2) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -459,7 +459,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const int v1, const int v2, const int v3) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -475,7 +475,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const int v1, const int v2, const int v3, const int v4) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -491,7 +491,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray1(const GLint name,
         const GLsizei count, const float *value) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -507,7 +507,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray1(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray2(const GLint name,
         const GLsizei count, const float *value) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -523,7 +523,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray2(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray3(const GLint name,
         const GLsizei count, const float *value) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -539,7 +539,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray3(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray4(const GLint name,
         const GLsizei count, const float *value) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -555,7 +555,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray4(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray1(const GLint name,
         const GLsizei count, const int *value) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -571,7 +571,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray1(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray2(const GLint name,
         const GLsizei count, const int *value) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -587,7 +587,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray2(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray3(const GLint name,
         const GLsizei count, const int *value) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -603,7 +603,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray3(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray4(const GLint name,
         const GLsizei count, const int *value) {
     USES_GL_VERIFY;
-    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;

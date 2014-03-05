@@ -37,7 +37,7 @@ HRESULT D3D9VisLogoTest::OnD3D9CreateDevice(
         PDIRECT3DDEVICE9 pd3dDevice,
         const D3DSURFACE_DESC *pBackBufferSurfaceDesc) {
     using namespace vislib::graphics::d3d;
-    ASSERT(this->logo == NULL);
+    THE_ASSERT(this->logo == NULL);
 
     AbstractTest::OnD3D9CreateDevice(pd3dDevice, pBackBufferSurfaceDesc);
 
@@ -80,7 +80,7 @@ void D3D9VisLogoTest::OnFrameMove(double fTime, float fElapsedTime) {
 void D3D9VisLogoTest::OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice, 
         double fTime, float fElapsedTime) {
     USES_D3D_VERIFY;
-    ASSERT(this->logo != NULL);
+    THE_ASSERT(this->logo != NULL);
 
     D3DXMATRIXA16 modelMatrix;                  // Model matrix.
     D3DXMATRIXA16 projMatrix;                   // Projection matrix.

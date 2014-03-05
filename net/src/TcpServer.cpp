@@ -94,7 +94,7 @@ void vislib::net::TcpServer::RemoveListener(Listener *listener) {
  * vislib::net::TcpServer::Run
  */
 DWORD vislib::net::TcpServer::Run(void *userData) {
-    ASSERT(userData != NULL);
+    THE_ASSERT(userData != NULL);
     if (userData != NULL) {
         IPEndPoint serverAddr = *static_cast<IPEndPoint *>(userData);
         return this->Run(serverAddr);

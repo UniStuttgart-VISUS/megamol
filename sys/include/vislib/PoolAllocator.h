@@ -295,7 +295,7 @@ namespace sys {
                 SIZE_T offset = (reinterpret_cast<char*>(e)
                     - reinterpret_cast<char*>(p)) - sizeof(Page);
                 if (offset <= p->cnt * sizeof(Element)) {
-                    ASSERT((offset % sizeof(Element)) == 0);
+                    THE_ASSERT((offset % sizeof(Element)) == 0);
                     e->link = static_cast<void*>(p);
                     break;
                 }
@@ -321,8 +321,8 @@ namespace sys {
 
         this->Unlock();
 
-        ASSERT(e != NULL);
-        ASSERT(e->link != NULL);
+        THE_ASSERT(e != NULL);
+        THE_ASSERT(e->link != NULL);
         new (&e->obj) T; // ctor object
         return &e->obj;
     }
@@ -353,7 +353,7 @@ namespace sys {
         // remove pages
         while (pages) {
             nextPage = pages->next;
-            ASSERT(pages->owner == this);
+            THE_ASSERT(pages->owner == this);
             if (isPageClean(pages)) {
                 // page not in use. => deallocate
                 ::free(static_cast<void*>(pages));
@@ -390,7 +390,7 @@ namespace sys {
      */
     template<class T, class L, class LS>
     void PoolAllocator<T, L, LS>::SetAllocationSize(unsigned int s) {
-        ASSERT(s > 0);
+        THE_ASSERT(s > 0);
         // no need to synchronise this
         this->allocSize = s;
     }
@@ -407,9 +407,9 @@ namespace sys {
 
         Element *e = CONTAINING_STRUCT(inOutPtr, Element, obj);
         Page *p = static_cast<Page *>(e->link);
-        ASSERT(((reinterpret_cast<char*>(e) - reinterpret_cast<char*>(p))
+        THE_ASSERT(((reinterpret_cast<char*>(e) - reinterpret_cast<char*>(p))
             - sizeof(Page)) % sizeof(Element) == 0);
-        ASSERT((((reinterpret_cast<char*>(e) - reinterpret_cast<char*>(p))
+        THE_ASSERT((((reinterpret_cast<char*>(e) - reinterpret_cast<char*>(p))
             - sizeof(Page)) / sizeof(Element)) <= p->cnt);
 
         if (p->owner != NULL) {

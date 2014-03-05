@@ -39,7 +39,7 @@ vislib::sys::TextFileReader::~TextFileReader(void) {
  * vislib::sys::TextFileReader::FilePositionToReaderPosition
  */
 void vislib::sys::TextFileReader::FilePositionToReaderPosition(void) {
-    ASSERT(this->file != NULL);
+    THE_ASSERT(this->file != NULL);
     this->bufStart = this->file->Tell();
     this->bufPos = 0;
     this->validBufSize = 0;
@@ -50,7 +50,7 @@ void vislib::sys::TextFileReader::FilePositionToReaderPosition(void) {
  * vislib::sys::TextFileReader::ReaderPositionToFilePosition
  */
 void vislib::sys::TextFileReader::ReaderPositionToFilePosition(void) {
-    ASSERT(this->file != NULL);
+    THE_ASSERT(this->file != NULL);
     this->file->Seek(this->bufStart + this->bufPos);
 }
 
@@ -60,7 +60,7 @@ void vislib::sys::TextFileReader::ReaderPositionToFilePosition(void) {
  */
 bool vislib::sys::TextFileReader::ReadLine(vislib::StringA& outLine,
         unsigned int maxSize) {
-    ASSERT(this->file != NULL);
+    THE_ASSERT(this->file != NULL);
 
     vislib::StringA prepend;
     unsigned int start = this->bufPos;
@@ -77,7 +77,7 @@ bool vislib::sys::TextFileReader::ReadLine(vislib::StringA& outLine,
 
             // buffer depleted. Need new data.
             this->bufStart += this->validBufSize;
-            ASSERT(this->file->Tell() == this->bufStart); // inconsitency
+            THE_ASSERT(this->file->Tell() == this->bufStart); // inconsitency
             // ... detected, maybe we should always seek here (or at least
             // throw and exception instead of an assertion. Think about!
             this->bufPos = 0;
@@ -107,7 +107,7 @@ bool vislib::sys::TextFileReader::ReadLine(vislib::StringA& outLine,
             } else {
                 // arglegarglgarg EndOfBuffer Buhuhu
                 this->bufStart += this->validBufSize;
-                ASSERT(this->file->Tell() == this->bufStart); // inconsitency
+                THE_ASSERT(this->file->Tell() == this->bufStart); // inconsitency
                 // ... detected, maybe we should always seek here (or at least
                 // throw and exception instead of an assertion. Think about!
                 this->bufPos = 0;
@@ -147,7 +147,7 @@ bool vislib::sys::TextFileReader::ReadLine(vislib::StringA& outLine,
  */
 bool vislib::sys::TextFileReader::ReadLine(vislib::StringW& outLine,
         unsigned int maxSize) {
-    ASSERT(this->file != NULL);
+    THE_ASSERT(this->file != NULL);
 
     // Think about it! Reading unicode files seams kinda odd.
     // Would need encoding or something similar.

@@ -282,8 +282,8 @@ namespace math {
         inline void invalidateCaches(void) {
             ARY_SAFE_DELETE(this->cachePoints);
             ARY_SAFE_DELETE(this->cachePlanes);
-            ASSERT(this->cachePoints == NULL);
-            ASSERT(this->cachePlanes == NULL);
+            THE_ASSERT(this->cachePoints == NULL);
+            THE_ASSERT(this->cachePlanes == NULL);
         }
 
         //Point<T, 3> *fillPointCache(const bool forcheUpdate = false) const;
@@ -337,7 +337,7 @@ namespace math {
             const AbstractPoint<Tp, 3, Sp>& point, const bool onIsIn) {
         THE_STACK_TRACE;
         Plane<T> *planes = this->fillPlaneCache();
-        ASSERT(planes != NULL);
+        THE_ASSERT(planes != NULL);
 
         for (SIZE_T i = 0; i < 6; i++) {
             T d = planes[i].Distance(point);
@@ -409,7 +409,7 @@ namespace math {
         Vector<T, 3> left = right;                      // Compute left.
         left.ScaleToLength(this->values[IDX_LEFT]);
 
-        ASSERT(normal.IsNormalised());
+        THE_ASSERT(normal.IsNormalised());
         Point<T, 3> center = apex + normal * this->values[IDX_NEAR];
 
         outPoints.SetCount(4);
@@ -665,9 +665,9 @@ namespace math {
         Vector<T, 3> planeNormal;                       // Normal of plane.
 
         /* Assert some preconditions. */
-        ASSERT(normal.IsNormalised());
-        ASSERT(up.IsNormalised());
-        ASSERT(right.IsNormalised());
+        THE_ASSERT(normal.IsNormalised());
+        THE_ASSERT(up.IsNormalised());
+        THE_ASSERT(right.IsNormalised());
 
         /* Compute intersection of base normal with bases. */
         Point<T, 3> nearIntersect = apex + this->values[IDX_NEAR] * normal;
@@ -714,7 +714,7 @@ namespace math {
         THE_STACK_TRACE;
 
         const ShallowVector<T, 3> normal(this->values + IDX_NORMAL_X);
-        ASSERT(normal.IsNormalised());
+        THE_ASSERT(normal.IsNormalised());
         if (inOutUp.IsParallel(normal)) {
             // Cannot fix non-perpendicular up vector if vectors are parallel.
             throw vislib::IllegalParamException("inOutUp", __FILE__, __LINE__);

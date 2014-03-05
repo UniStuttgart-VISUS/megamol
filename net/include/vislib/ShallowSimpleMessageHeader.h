@@ -72,7 +72,7 @@ namespace net {
          */
         inline void SetData(SimpleMessageHeaderData *data) {
             THE_STACK_TRACE;
-            ASSERT(data != NULL);
+            THE_ASSERT(data != NULL);
             this->data = data;
         }
 

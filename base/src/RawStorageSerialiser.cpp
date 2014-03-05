@@ -30,7 +30,7 @@ vislib::RawStorageSerialiser::RawStorageSerialiser(const BYTE *storage,
         : Serialiser(SERIALISER_REQUIRES_ORDER), nakedStorage(storage),
         nakedStorageSize(storageSize), storage(NULL), offset(offset) {
     // Intentionally empty
-    ASSERT(storage != NULL);
+    THE_ASSERT(storage != NULL);
 }
 
 

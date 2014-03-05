@@ -121,7 +121,7 @@ vislib::RawStorage& vislib::RawStorage::operator =(const RawStorage& rhs) {
         this->EnforceSize(rhs.size);
         ::memcpy(this->data, rhs.data, rhs.size);
         
-        ASSERT(this->size == rhs.size);
+        THE_ASSERT(this->size == rhs.size);
     }
 
     return *this;

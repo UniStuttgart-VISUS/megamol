@@ -108,7 +108,7 @@ void vislib::graphics::FpsCounter::Reset(void) {
  * vislib::graphics::FpsCounter::SetBufferLength
  */
 void vislib::graphics::FpsCounter::SetBufferLength(unsigned int bufLength) {
-    ASSERT(bufLength > 0);
+    THE_ASSERT(bufLength > 0);
     ARY_SAFE_DELETE(this->timeValues);
     this->timeValuesCount = bufLength;
     this->timeValues = new TimeValues[this->timeValuesCount];

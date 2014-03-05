@@ -39,7 +39,7 @@ namespace math {
          *                    pointer.
          */
         explicit inline ShallowPoint(T *coordinates) {
-            ASSERT(coordinates != NULL);
+            THE_ASSERT(coordinates != NULL);
             this->coordinates = coordinates;
         }
 
@@ -63,7 +63,7 @@ namespace math {
          *                    pointer.
          */
         inline void SetPointer(T *coordinates) {
-            ASSERT(coordinates != NULL);
+            THE_ASSERT(coordinates != NULL);
             this->coordinates = coordinates;
         }
 

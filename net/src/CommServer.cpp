@@ -38,7 +38,7 @@ vislib::net::CommServer::~CommServer(void) {
  */
 void vislib::net::CommServer::AddListener(CommServerListener *listener) {
     THE_STACK_TRACE;
-    ASSERT(listener != NULL);
+    THE_ASSERT(listener != NULL);
 
     this->listeners.Lock();
     if ((listener != NULL) && !this->listeners.Contains(listener)) {
@@ -53,13 +53,13 @@ void vislib::net::CommServer::AddListener(CommServerListener *listener) {
  */
 void vislib::net::CommServer::OnThreadStarting(void *config) {
     THE_STACK_TRACE;
-    ASSERT(config != NULL);
+    THE_ASSERT(config != NULL);
     Configuration *c = static_cast<Configuration *>(config);
 
-    ASSERT(!c->Channel.IsNull());
+    THE_ASSERT(!c->Channel.IsNull());
     this->configuration.Channel = c->Channel;
 
-    ASSERT(!c->EndPoint.IsNull());
+    THE_ASSERT(!c->EndPoint.IsNull());
     this->configuration.EndPoint = c->EndPoint;
 
     this->doServe = 1;
@@ -71,7 +71,7 @@ void vislib::net::CommServer::OnThreadStarting(void *config) {
  */
 void vislib::net::CommServer::RemoveListener(CommServerListener *listener) {
     THE_STACK_TRACE;
-    ASSERT(listener != NULL);
+    THE_ASSERT(listener != NULL);
     this->listeners.RemoveAll(listener);
 }
 

@@ -591,7 +591,7 @@ namespace math {
             outAngle = 0.0f;
         } 
 
-        ASSERT(outAxis.IsNormalised());
+        THE_ASSERT(outAxis.IsNormalised());
     }
 
 

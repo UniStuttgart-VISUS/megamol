@@ -70,7 +70,7 @@ void vislib::graphics::CameraZoom2DMove::Trigger(
                 = dynamic_cast<vislib::graphics::Cursor2D*>(caller);
 
             // otherwise this would be very strange:
-            ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
+            THE_ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
 
             if (!this->IsCameraParamsValid()) {
                 VLTRACE(vislib::Trace::LEVEL_WARN, 

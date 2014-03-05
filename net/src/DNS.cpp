@@ -39,7 +39,7 @@ void vislib::net::DNS::GetHostAddress(IPAddress& outAddress,
 
     try {
         entries = DNS::getAddrInfo(hostNameOrAddress, AF_INET);
-        ASSERT(entries != NULL);
+        THE_ASSERT(entries != NULL);
         outAddress = reinterpret_cast<sockaddr_in *>(
             entries->ai_addr)->sin_addr;
         ::freeaddrinfo(entries);
@@ -48,7 +48,7 @@ void vislib::net::DNS::GetHostAddress(IPAddress& outAddress,
          * Try to use the old implementation (gethostbyname) as fallback and 
          * fail, if this does not work either.
          */
-        ASSERT(entries == NULL);
+        THE_ASSERT(entries == NULL);
         if (!outAddress.Lookup(hostNameOrAddress)) {
             throw;
         }
@@ -66,7 +66,7 @@ void vislib::net::DNS::GetHostAddress(IPAddress& outAddress,
 
     try {
         entries = DNS::getAddrInfo(hostNameOrAddress, AF_INET);
-        ASSERT(entries != NULL);
+        THE_ASSERT(entries != NULL);
         outAddress = reinterpret_cast<sockaddr_in *>(
             entries->ai_addr)->sin_addr;
         ::FreeAddrInfoW(entries);
@@ -75,7 +75,7 @@ void vislib::net::DNS::GetHostAddress(IPAddress& outAddress,
          * Try to use the old implementation (gethostbyname) as fallback and 
          * fail, if this does not work either.
          */
-        ASSERT(entries == NULL);
+        THE_ASSERT(entries == NULL);
         if (!outAddress.Lookup(W2A(hostNameOrAddress))) {
             throw;
         }
@@ -91,7 +91,7 @@ void vislib::net::DNS::GetHostAddress(IPAddress6& outAddress,
     THE_STACK_TRACE;
 
     struct addrinfo *entries = DNS::getAddrInfo(hostNameOrAddress, AF_INET6);
-    ASSERT(entries != NULL);
+    THE_ASSERT(entries != NULL);
     outAddress = reinterpret_cast<sockaddr_in6 *>(entries->ai_addr)->sin6_addr;
     ::freeaddrinfo(entries);
 }
@@ -105,7 +105,7 @@ void vislib::net::DNS::GetHostAddress(IPAddress6& outAddress,
     THE_STACK_TRACE;
 
     ADDRINFOW *entries = DNS::getAddrInfo(hostNameOrAddress, AF_INET6);
-    ASSERT(entries != NULL);
+    THE_ASSERT(entries != NULL);
     outAddress = reinterpret_cast<sockaddr_in6 *>(entries->ai_addr)->sin6_addr;
     ::FreeAddrInfoW(entries);
 }
@@ -140,7 +140,7 @@ void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
         }
     }
 
-    ASSERT(entries != NULL);    // Must have succeeded or exception.
+    THE_ASSERT(entries != NULL);    // Must have succeeded or exception.
     switch (entries->ai_family) {
         case AF_INET:
             outAddress = reinterpret_cast<const sockaddr_in *>(
@@ -153,7 +153,7 @@ void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
             break;
 
         default:
-            ASSERT(false);
+            THE_ASSERT(false);
             outAddress = IPAgnosticAddress();
             break;
     }
@@ -191,7 +191,7 @@ void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
         }
     }
 
-    ASSERT(entries != NULL);    // Must have succeeded or exception.
+    THE_ASSERT(entries != NULL);    // Must have succeeded or exception.
     switch (entries->ai_family) {
         case AF_INET:
             outAddress = reinterpret_cast<const sockaddr_in *>(
@@ -204,7 +204,7 @@ void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
             break;
 
         default:
-            ASSERT(false);
+            THE_ASSERT(false);
             outAddress = IPAgnosticAddress();
             break;
     }
@@ -261,7 +261,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry,
     struct addrinfo *entries = DNS::getAddrInfo(hostNameOrAddress, AF_UNSPEC);
 
     try {
-        ASSERT(entries != NULL);
+        THE_ASSERT(entries != NULL);
         outEntry.set(entries);
     } catch (...) {
         ::freeaddrinfo(entries);
@@ -281,7 +281,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,
     ADDRINFOW *entries = DNS::getAddrInfo(hostNameOrAddress, AF_UNSPEC);
 
     try {
-        ASSERT(entries != NULL);
+        THE_ASSERT(entries != NULL);
         outEntry.set(entries);
     } catch (...) {
         ::FreeAddrInfoW(entries);
@@ -372,7 +372,7 @@ struct addrinfo *vislib::net::DNS::getAddrInfo(const char *hostNameOrAddress,
     hints.ai_family = addressFamily;
 
     if ((err = ::getaddrinfo(hostNameOrAddress, NULL, &hints, &retval)) != 0) {
-        ASSERT(retval == NULL);
+        THE_ASSERT(retval == NULL);
 #ifdef _WIN32
         throw SocketException(__FILE__, __LINE__);
 #else /* _WIN32 */
@@ -409,7 +409,7 @@ ADDRINFOW *vislib::net::DNS::getAddrInfo(const wchar_t *hostNameOrAddress,
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
     if (::getaddrinfo(W2A(hostNameOrAddress), NULL, &hints, &retval) != 0) {
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
-        ASSERT(retval == NULL);
+        THE_ASSERT(retval == NULL);
 #ifdef _WIN32
         throw SocketException(__FILE__, __LINE__);
 #else /* _WIN32 */

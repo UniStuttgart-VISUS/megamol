@@ -272,7 +272,7 @@ void vislib::graphics::gl::CameraOpenGL::updateMembers(void) const {
             break;
         default:
             // projection parameter calculation still not implemeneted
-            ASSERT(false);
+            THE_ASSERT(false);
     }
     const_cast<CameraOpenGL*>(this)->markAsUpdated();
 }

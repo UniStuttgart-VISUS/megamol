@@ -92,7 +92,7 @@ vislib::StringA vislib::HashAlgorithm::ToStringA(void) const {
         this->GetHashValue(hash, hashSize);
 
         out = retval.AllocateBuffer(2 * static_cast<StringA::Size>(hashSize));
-        ASSERT(out[2 * hashSize] == 0);
+        THE_ASSERT(out[2 * hashSize] == 0);
 
         for (SIZE_T i = 0; i < hashSize; i++) {
             tmp.Format("%02x", hash[i]);
@@ -123,7 +123,7 @@ vislib::StringW vislib::HashAlgorithm::ToStringW(void) const {
         this->GetHashValue(hash, hashSize);
 
         out = retval.AllocateBuffer(2 * static_cast<StringW::Size>(hashSize));
-        ASSERT(out[2 * hashSize] == 0);
+        THE_ASSERT(out[2 * hashSize] == 0);
 
         for (SIZE_T i = 0; i < hashSize; i++) {
             tmp.Format(L"%02x", hash[i]);

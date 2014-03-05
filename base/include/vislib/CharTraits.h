@@ -123,8 +123,8 @@ namespace vislib {
          * @return 'dst'.
          */
         inline static Char *StringCopy(Char *dst, const Char *src) {
-            ASSERT(dst != NULL);
-            ASSERT(src != NULL);
+            THE_ASSERT(dst != NULL);
+            THE_ASSERT(src != NULL);
 
             Char *tmp = dst;
             while ((*tmp++ = *src++));
@@ -175,7 +175,7 @@ namespace vislib {
          *         terminating zero.
          */
         inline static Size StringLength(const Char *str) {
-            ASSERT(str != NULL);
+            THE_ASSERT(str != NULL);
 
             const Char *end = str;
             while (*end++ != 0);
@@ -512,8 +512,8 @@ namespace vislib {
          */
         inline static bool Convert(char *dst, const Size cnt, 
                 const Char *src) {
-            ASSERT(dst != NULL);
-            ASSERT(src != NULL);
+            THE_ASSERT(dst != NULL);
+            THE_ASSERT(src != NULL);
             StringCopy(dst, src);
             return true;
         }
@@ -533,8 +533,8 @@ namespace vislib {
          */
         inline static bool Convert(wchar_t *dst, const Size cnt,
                 const Char *src) {
-            ASSERT(dst != NULL);
-            ASSERT(src != NULL);
+            THE_ASSERT(dst != NULL);
+            THE_ASSERT(src != NULL);
 
 #ifdef _WIN32
             return (::MultiByteToWideChar(CP_ACP, 0, src, cnt, dst, cnt) > 0);
@@ -898,8 +898,8 @@ namespace vislib {
          */
         inline static bool Convert(char *dst, const Size cnt,
                 const Char *src) {
-            ASSERT(dst != NULL);
-            ASSERT(src != NULL);
+            THE_ASSERT(dst != NULL);
+            THE_ASSERT(src != NULL);
 
 #ifdef _WIN32
             return (::WideCharToMultiByte(CP_ACP, 0, src, cnt, dst, cnt, NULL, 
@@ -945,8 +945,8 @@ namespace vislib {
          */
         inline static bool Convert(wchar_t *dst, const Size cnt, 
                 const Char *src) {
-            ASSERT(dst != NULL);
-            ASSERT(src != NULL);
+            THE_ASSERT(dst != NULL);
+            THE_ASSERT(src != NULL);
             StringCopy(dst, src);
             return true;
         }

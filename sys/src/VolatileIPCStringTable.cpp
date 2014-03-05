@@ -84,7 +84,7 @@ vislib::sys::VolatileIPCStringTable::EntryImplementation::~EntryImplementation(
  */
 void vislib::sys::VolatileIPCStringTable::EntryImplementation::Create(void) {
 #ifdef _WIN32
-    ASSERT(this->key == NULL);
+    THE_ASSERT(this->key == NULL);
     StringW keyname(VIPCST_BASE_KEY_NAME);
     keyname.Append(this->name);
     DWORD disposition;
@@ -195,7 +195,7 @@ vislib::sys::VolatileIPCStringTable::Entry::~Entry() {
  */
 void vislib::sys::VolatileIPCStringTable::Entry::SetValue(
         const char *value) {
-    ASSERT(this->impl.IsNull() == false);
+    THE_ASSERT(this->impl.IsNull() == false);
     this->impl->SetValue(value);
 }
 
@@ -205,7 +205,7 @@ void vislib::sys::VolatileIPCStringTable::Entry::SetValue(
  */
 void vislib::sys::VolatileIPCStringTable::Entry::SetValue(
         const wchar_t *value) {
-    ASSERT(this->impl.IsNull() == false);
+    THE_ASSERT(this->impl.IsNull() == false);
     this->impl->SetValue(value);
 }
 
@@ -214,7 +214,7 @@ void vislib::sys::VolatileIPCStringTable::Entry::SetValue(
  * vislib::sys::VolatileIPCStringTable::Entry::NameA
  */
 vislib::StringA vislib::sys::VolatileIPCStringTable::Entry::NameA() const {
-    ASSERT(this->impl.IsNull() == false);
+    THE_ASSERT(this->impl.IsNull() == false);
     vislib::StringA retval;
     this->impl->GetName(retval);
     return retval;
@@ -225,7 +225,7 @@ vislib::StringA vislib::sys::VolatileIPCStringTable::Entry::NameA() const {
  * vislib::sys::VolatileIPCStringTable::Entry::NameW
  */
 vislib::StringW vislib::sys::VolatileIPCStringTable::Entry::NameW() const {
-    ASSERT(this->impl.IsNull() == false);
+    THE_ASSERT(this->impl.IsNull() == false);
     vislib::StringW retval;
     this->impl->GetName(retval);
     return retval;

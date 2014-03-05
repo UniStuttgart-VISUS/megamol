@@ -329,7 +329,7 @@ DWORD vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
     // Assert this as we require the overridden methods for locking!
     // The call to the overloaded ctx->socket->Receive will ensure locking, 
     // we do not have to do this ourselves in the thread function.
-    ASSERT(dynamic_cast<AsyncSocket *>(ctx->socket) != NULL);
+    THE_ASSERT(dynamic_cast<AsyncSocket *>(ctx->socket) != NULL);
 
     try {
         Socket::Startup();
@@ -354,7 +354,7 @@ DWORD vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
         ctx->notifyCompleted(cnt, retval);
     } catch (...) {
         ctx->notifyCompleted(0, ::GetLastError());
-        ASSERT(false);
+        THE_ASSERT(false);
     }
 
     try {
@@ -381,7 +381,7 @@ DWORD vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
     // Assert this as we require the overridden methods for locking!
     // The call to the overloaded ctx->socket->Send will ensure locking,
     // we do not have to do this ourselves in the thread function.
-    ASSERT(dynamic_cast<AsyncSocket *>(ctx->socket) != NULL);
+    THE_ASSERT(dynamic_cast<AsyncSocket *>(ctx->socket) != NULL);
 
     try {
         Socket::Startup();
@@ -406,7 +406,7 @@ DWORD vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
         ctx->notifyCompleted(cnt, retval);
     } catch (...) {
         ctx->notifyCompleted(0, ::GetLastError());
-        ASSERT(false);
+        THE_ASSERT(false);
     }
 
     try {

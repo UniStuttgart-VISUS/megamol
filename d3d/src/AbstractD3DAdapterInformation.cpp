@@ -57,7 +57,7 @@ AbstractD3DAdapterInformation::GetDesktopCoordinates(
     THE_STACK_TRACE;
 
     const MONITORINFOEXW& mi = this->getMonitorInfo(outputIdx);
-    ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
+    THE_ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
 
     outDesktopCoordinates.Set(mi.rcMonitor.left, mi.rcMonitor.bottom,
         mi.rcMonitor.right, mi.rcMonitor.top);
@@ -73,7 +73,7 @@ vislib::StringW AbstractD3DAdapterInformation::GetDeviceName(
     THE_STACK_TRACE;
 
     const MONITORINFOEXW& mi = this->getMonitorInfo(outputIdx);
-    ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
+    THE_ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
     return StringW(mi.szDevice);
 }
 
@@ -86,7 +86,7 @@ bool AbstractD3DAdapterInformation::IsPrimaryDisplay(
     THE_STACK_TRACE;
 
     const MONITORINFOEXW& mi = this->getMonitorInfo(outputIdx);
-    ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
+    THE_ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
     return ((mi.dwFlags & MONITORINFOF_PRIMARY) != 0);
 }
 

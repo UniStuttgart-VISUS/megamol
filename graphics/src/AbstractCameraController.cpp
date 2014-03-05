@@ -32,7 +32,7 @@ vislib::graphics::AbstractCameraController::~AbstractCameraController(void) {
  */
 vislib::SmartPtr<vislib::graphics::CameraParameters>& 
 vislib::graphics::AbstractCameraController::CameraParams(void) {
-    ASSERT(this->IsCameraParamsValid());
+    THE_ASSERT(this->IsCameraParamsValid());
     return this->cameraParams;
 }
 
@@ -42,7 +42,7 @@ vislib::graphics::AbstractCameraController::CameraParams(void) {
  */
 const vislib::SmartPtr<vislib::graphics::CameraParameters>& 
 vislib::graphics::AbstractCameraController::CameraParams(void) const {
-    ASSERT(this->IsCameraParamsValid());
+    THE_ASSERT(this->IsCameraParamsValid());
     return this->cameraParams;
 }
 

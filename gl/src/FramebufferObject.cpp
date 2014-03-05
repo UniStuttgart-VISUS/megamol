@@ -235,7 +235,7 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
     //}
     //this->attachmentOther[ATTACH_IDX_STENCIL].state = sap.state;
     // TODO: Find format that makes stencil attachment work.
-    ASSERT(sap.state == ATTACHMENT_DISABLED);
+    THE_ASSERT(sap.state == ATTACHMENT_DISABLED);
     this->attachmentOther[ATTACH_IDX_STENCIL].state = ATTACHMENT_DISABLED;
 
     /* Check for completeness and unbind FBO before returning. */
@@ -346,7 +346,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
 
     } else {
         /* Illegal colour attachment id. */
-        ASSERT(colourAttachment >= this->cntColourAttachments);
+        THE_ASSERT(colourAttachment >= this->cntColourAttachments);
         throw OutOfRangeException(colourAttachment, 0, 
             this->cntColourAttachments, __FILE__, __LINE__);
     }
@@ -438,7 +438,7 @@ GLuint vislib::graphics::gl::FramebufferObject::GetColourTextureID(
 
     } else {
         /* Illegal colour attachment id. */
-        ASSERT(colourAttachment >= this->cntColourAttachments);
+        THE_ASSERT(colourAttachment >= this->cntColourAttachments);
         throw OutOfRangeException(colourAttachment, 0, 
             this->cntColourAttachments, __FILE__, __LINE__);
     }
@@ -562,7 +562,7 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
 
             default:
                 /* Should not allocate disabled or RB attachments. */
-                ASSERT(false);
+                THE_ASSERT(false);
                 break;
         }
     }

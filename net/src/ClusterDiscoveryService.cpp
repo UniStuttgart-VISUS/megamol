@@ -105,7 +105,7 @@ vislib::net::ClusterDiscoveryService::~ClusterDiscoveryService(void) {
  */
 void vislib::net::ClusterDiscoveryService::AddListener(
         ClusterDiscoveryListener *listener) {
-    ASSERT(listener != NULL);
+    THE_ASSERT(listener != NULL);
 
     this->critSect.Lock();
     if ((listener != NULL) && !this->listeners.Contains(listener)) {
@@ -180,7 +180,7 @@ bool vislib::net::ClusterDiscoveryService::IsStopped(void) const {
  */
 void vislib::net::ClusterDiscoveryService::RemoveListener(
         ClusterDiscoveryListener *listener) {
-    ASSERT(listener != NULL);
+    THE_ASSERT(listener != NULL);
 
     this->critSect.Lock();
     this->listeners.RemoveAll(listener);
@@ -197,7 +197,7 @@ UINT vislib::net::ClusterDiscoveryService::SendUserMessage(
     UINT retval = 0;            // Number of failed communication trials.
 
     this->prepareUserMessage(msg, msgType, msgBody, msgSize);
-    ASSERT(this->userMsgSocket.IsValid());
+    THE_ASSERT(this->userMsgSocket.IsValid());
 
     /* Send the message to all registered clients. */
     this->critSect.Lock();
@@ -226,7 +226,7 @@ UINT vislib::net::ClusterDiscoveryService::SendUserMessage(
     UINT retval = 0;            // Retval, 0 in case of success.
 
     this->prepareUserMessage(msg, msgType, msgBody, msgSize);
-    ASSERT(this->userMsgSocket.IsValid());
+    THE_ASSERT(this->userMsgSocket.IsValid());
     
     this->critSect.Lock();
 
@@ -324,11 +324,11 @@ DWORD vislib::net::ClusterDiscoveryService::Sender::Run(void *discSvc) {
                 /** The socket used for the broadcast. */
     Socket socket;                  // Socket used for broadcast.
     
-    ASSERT(cds != NULL);
+    THE_ASSERT(cds != NULL);
 
     // Assert expected memory layout of messages.
-    ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(UINT32));
-    ASSERT(reinterpret_cast<BYTE *>(&(request.senderBody)) 
+    THE_ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(UINT32));
+    THE_ASSERT(reinterpret_cast<BYTE *>(&(request.senderBody)) 
        == reinterpret_cast<BYTE *>(&request) + 2 * sizeof(UINT32));
 
     /* Prepare the socket. */
@@ -473,11 +473,11 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(void *discSvc) {
     ClusterDiscoveryService *cds    // The discovery service we work for.
         = static_cast<ClusterDiscoveryService *>(discSvc);
 
-    ASSERT(cds != NULL);
+    THE_ASSERT(cds != NULL);
 
     // Assert expected message memory layout.
-    ASSERT(sizeof(msg) == MAX_USER_DATA + 2 * sizeof(UINT32));
-    ASSERT(reinterpret_cast<BYTE *>(&(msg.senderBody)) 
+    THE_ASSERT(sizeof(msg) == MAX_USER_DATA + 2 * sizeof(UINT32));
+    THE_ASSERT(reinterpret_cast<BYTE *>(&(msg.senderBody)) 
        == reinterpret_cast<BYTE *>(&msg) + 2 * sizeof(UINT32));
 
     /* 
@@ -550,7 +550,7 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(void *discSvc) {
                     if (!cds->isObserver) {
                         /* Observers must not send alive messages. */
                         peerAddr.SetPort(cds->bindAddr.GetPort());
-                        ASSERT(msg.magicNumber == MAGIC_NUMBER);
+                        THE_ASSERT(msg.magicNumber == MAGIC_NUMBER);
                         msg.msgType = MSG_TYPE_IAMALIVE;
                         msg.senderBody.sockAddr = cds->responseAddr;
                         this->socket.Send(peerAddr, &msg, sizeof(Message));
@@ -790,12 +790,12 @@ void vislib::net::ClusterDiscoveryService::prepareUserMessage(
     }
 
     // Assert some stuff.
-    ASSERT(sizeof(outMsg) == MAX_USER_DATA + 2 * sizeof(UINT32));
-    ASSERT(reinterpret_cast<BYTE *>(&(outMsg.userData)) 
+    THE_ASSERT(sizeof(outMsg) == MAX_USER_DATA + 2 * sizeof(UINT32));
+    THE_ASSERT(reinterpret_cast<BYTE *>(&(outMsg.userData)) 
        == reinterpret_cast<BYTE *>(&outMsg) + 2 * sizeof(UINT32));
-    ASSERT(msgType >= MSG_TYPE_USER);
-    ASSERT(msgBody != NULL);
-    ASSERT(msgSize <= MAX_USER_DATA);
+    THE_ASSERT(msgType >= MSG_TYPE_USER);
+    THE_ASSERT(msgBody != NULL);
+    THE_ASSERT(msgSize <= MAX_USER_DATA);
 
     /* Prepare the message. */
     outMsg.magicNumber = MAGIC_NUMBER;

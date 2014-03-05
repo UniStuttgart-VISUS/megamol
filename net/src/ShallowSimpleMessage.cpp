@@ -15,8 +15,8 @@ vislib::net::ShallowSimpleMessage::ShallowSimpleMessage(
         void *storage, const SIZE_T cntStorage) 
         : Super(), cntStorage(cntStorage), storage(storage) {
     THE_STACK_TRACE;
-    ASSERT(storage != NULL);
-    ASSERT((cntStorage == 0) 
+    THE_ASSERT(storage != NULL);
+    THE_ASSERT((cntStorage == 0) 
         || (cntStorage >= sizeof(SimpleMessageHeaderData)));
 
     this->GetHeader().SetData(static_cast<SimpleMessageHeaderData*>(storage));
@@ -41,8 +41,8 @@ vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage(void) {
 void vislib::net::ShallowSimpleMessage::SetStorage(void *storage, 
         const SIZE_T cntStorage) {
     THE_STACK_TRACE;
-    ASSERT(storage != NULL);
-    ASSERT((cntStorage == 0) 
+    THE_ASSERT(storage != NULL);
+    THE_ASSERT((cntStorage == 0) 
         || (cntStorage >= sizeof(SimpleMessageHeaderData)));
     
     // Note: Order of assignments is important!

@@ -44,7 +44,7 @@ vislib::graphics::CameraParamsTileRectOverride::~CameraParamsTileRectOverride(vo
  *  vislib::graphics::CameraParamsTileRectOverride::ResetTileRect
  */
 void vislib::graphics::CameraParamsTileRectOverride::ResetTileRect(void) {
-    ASSERT(!this->paramsBase().IsNull());
+    THE_ASSERT(!this->paramsBase().IsNull());
     this->fullSize = true;
     this->tileRect.SetNull();
     this->tileRect.SetSize(this->paramsBase()->VirtualViewSize());
@@ -57,7 +57,7 @@ void vislib::graphics::CameraParamsTileRectOverride::ResetTileRect(void) {
  */
 void vislib::graphics::CameraParamsTileRectOverride::SetTileRect(
         const vislib::math::Rectangle<vislib::graphics::ImageSpaceType>& tileRect) {
-    ASSERT(!this->paramsBase().IsNull());
+    THE_ASSERT(!this->paramsBase().IsNull());
     this->tileRect = tileRect;
     this->fullSize = (math::IsEqual(this->tileRect.GetLeft(), 0.0f)
         && math::IsEqual(this->tileRect.GetBottom(), 0.0f)
@@ -72,7 +72,7 @@ void vislib::graphics::CameraParamsTileRectOverride::SetTileRect(
  */
 const vislib::math::Rectangle<vislib::graphics::ImageSpaceType>& 
 vislib::graphics::CameraParamsTileRectOverride::TileRect(void) const {
-    ASSERT(!this->paramsBase().IsNull());
+    THE_ASSERT(!this->paramsBase().IsNull());
     if (this->fullSize) {
         this->tileRect.SetNull();
         this->tileRect.SetSize(this->paramsBase()->VirtualViewSize());
@@ -140,7 +140,7 @@ void vislib::graphics::CameraParamsTileRectOverride::preBaseSet(
  *  vislib::graphics::CameraParamsTileRectOverride::resetOverride
  */
 void vislib::graphics::CameraParamsTileRectOverride::resetOverride(void) {
-    ASSERT(!this->paramsBase().IsNull());
+    THE_ASSERT(!this->paramsBase().IsNull());
     this->tileRect = this->paramsBase()->TileRect();
     this->fullSize = (math::IsEqual(this->tileRect.GetLeft(), 0.0f)
         && math::IsEqual(this->tileRect.GetBottom(), 0.0f)

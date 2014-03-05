@@ -41,7 +41,7 @@ vislib::graphics::CameraParamsVirtualViewOverride
  */
 void vislib::graphics::CameraParamsVirtualViewOverride::SetVirtualViewSize(
         const ImageSpaceDimension& viewSize) {
-    ASSERT(!this->paramsBase().IsNull());
+    THE_ASSERT(!this->paramsBase().IsNull());
 
     if (math::IsEqual(this->TileRect().GetLeft(), 0.0f)
             && math::IsEqual(this->TileRect().GetBottom(), 0.0f)
@@ -64,7 +64,7 @@ void vislib::graphics::CameraParamsVirtualViewOverride::SetVirtualViewSize(
  */
 const vislib::graphics::ImageSpaceDimension&
 vislib::graphics::CameraParamsVirtualViewOverride::VirtualViewSize(void) const {
-    ASSERT(!this->paramsBase().IsNull());
+    THE_ASSERT(!this->paramsBase().IsNull());
     return this->overrideValue;
 }
 
@@ -104,6 +104,6 @@ void vislib::graphics::CameraParamsVirtualViewOverride::preBaseSet(
  *  vislib::graphics::CameraParamsVirtualViewOverride::resetOverride
  */
 void vislib::graphics::CameraParamsVirtualViewOverride::resetOverride(void) {
-    ASSERT(!this->paramsBase().IsNull());
+    THE_ASSERT(!this->paramsBase().IsNull());
     this->SetVirtualViewSize(this->paramsBase()->VirtualViewSize());
 }

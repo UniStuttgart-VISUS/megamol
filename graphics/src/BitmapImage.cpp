@@ -269,7 +269,7 @@ float vislib::graphics::BitmapImage::Conversion<ST>::grayFromRGB(
 template<class ST>
 float vislib::graphics::BitmapImage::Conversion<ST>::rgbFromCMY(
         vislib::graphics::BitmapImage::Conversion<ST> *conv, int param) {
-    ASSERT((param >= 0) && (param <= 2));
+    THE_ASSERT((param >= 0) && (param <= 2));
     float Cmy = conv->func[SC_CMY_CYAN](conv, conv->param[SC_CMY_CYAN]);
     float cMy = conv->func[SC_CMY_MAGENTA](conv, conv->param[SC_CMY_MAGENTA]);
     float cmY = conv->func[SC_CMY_YELLOW](conv, conv->param[SC_CMY_YELLOW]);
@@ -295,7 +295,7 @@ float vislib::graphics::BitmapImage::Conversion<ST>::rgbFromCMY(
 template<class ST>
 float vislib::graphics::BitmapImage::Conversion<ST>::cmyFromRGB(
         vislib::graphics::BitmapImage::Conversion<ST> *conv, int param) {
-    ASSERT((param >= 0) && (param <= 2));
+    THE_ASSERT((param >= 0) && (param <= 2));
     float Rgb = conv->func[SC_RED](conv, conv->param[SC_RED]);
     float rGb = conv->func[SC_GREEN](conv, conv->param[SC_GREEN]);
     float rgB = conv->func[SC_BLUE](conv, conv->param[SC_BLUE]);
@@ -321,7 +321,7 @@ float vislib::graphics::BitmapImage::Conversion<ST>::cmyFromRGB(
 template<class ST>
 float vislib::graphics::BitmapImage::Conversion<ST>::cmyFromCMYK(
         vislib::graphics::BitmapImage::Conversion<ST> *conv, int param) {
-    ASSERT((param >= 0) && (param <= 2));
+    THE_ASSERT((param >= 0) && (param <= 2));
     float Cmyk = conv->func[SC_CMYK_CYAN](conv, conv->param[SC_CMYK_CYAN]);
     float cMyk = conv->func[SC_CMYK_MAGENTA](conv, conv->param[SC_CMYK_MAGENTA]);
     float cmYk = conv->func[SC_CMYK_YELLOW](conv, conv->param[SC_CMYK_YELLOW]);
@@ -348,7 +348,7 @@ float vislib::graphics::BitmapImage::Conversion<ST>::cmyFromCMYK(
 template<class ST>
 float vislib::graphics::BitmapImage::Conversion<ST>::cmykFromCMY(
         vislib::graphics::BitmapImage::Conversion<ST> *conv, int param) {
-    ASSERT((param >= 0) && (param <= 3));
+    THE_ASSERT((param >= 0) && (param <= 3));
     float Cmy = conv->func[SC_CMY_CYAN](conv, conv->param[SC_CMY_CYAN]);
     float cMy = conv->func[SC_CMY_MAGENTA](conv, conv->param[SC_CMY_MAGENTA]);
     float cmY = conv->func[SC_CMY_YELLOW](conv, conv->param[SC_CMY_YELLOW]);
@@ -937,7 +937,7 @@ void vislib::graphics::BitmapImage::CreateImage(unsigned int width,
 void vislib::graphics::BitmapImage::CreateImage(unsigned int width,
         unsigned int height, const vislib::graphics::BitmapImage& tmpl,
         const void *data) {
-    ASSERT(&tmpl != this);
+    THE_ASSERT(&tmpl != this);
 
     ChannelLabel *tmplLabels = new ChannelLabel[tmpl.numChans];
     ::memcpy(tmplLabels, tmpl.labels, tmpl.numChans * sizeof(ChannelLabel));
@@ -1071,14 +1071,14 @@ void vislib::graphics::BitmapImage::cropCopy(char *to, char *from,
         unsigned int fromWidth, unsigned int fromHeight, unsigned int cropX,
         unsigned int cropY, unsigned int cropWidth, unsigned int cropHeight,
         unsigned int bpp) {
-    ASSERT(cropX < fromWidth);
-    ASSERT(cropY < fromHeight);
-    ASSERT(cropX + cropWidth <= fromWidth);
-    ASSERT(cropY + cropHeight <= fromHeight);
-    ASSERT((cropWidth < fromWidth) || (cropHeight < fromHeight));
-    ASSERT(bpp > 0);
-    ASSERT(to != NULL);
-    ASSERT(from != NULL);
+    THE_ASSERT(cropX < fromWidth);
+    THE_ASSERT(cropY < fromHeight);
+    THE_ASSERT(cropX + cropWidth <= fromWidth);
+    THE_ASSERT(cropY + cropHeight <= fromHeight);
+    THE_ASSERT((cropWidth < fromWidth) || (cropHeight < fromHeight));
+    THE_ASSERT(bpp > 0);
+    THE_ASSERT(to != NULL);
+    THE_ASSERT(from != NULL);
 
     from += (cropY * fromWidth * bpp); // skip 'cropY' lines
     for (unsigned int y = 0; y < cropHeight; y++) {

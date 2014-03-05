@@ -175,7 +175,7 @@ namespace vislib {
          */
         inline void Clear(void) {
             ARY_SAFE_DELETE(this->data);
-            ASSERT(this->data == NULL);
+            THE_ASSERT(this->data == NULL);
         }
 
         /**
@@ -481,7 +481,7 @@ namespace vislib {
             SIZE_T oldLen = MultiSz::Length(this->data);
             SIZE_T strLen = T::SafeStringLength(str) + 1;
             Char *newData = NULL;
-            ASSERT(strLen > 0);
+            THE_ASSERT(strLen > 0);
 
             if (oldLen > 0) {
                 newData = new Char[oldLen + strLen];
@@ -529,16 +529,16 @@ namespace vislib {
                 SIZE_T strLen = T::SafeStringLength(str) + 1;
                 SIZE_T offset = this->PeekAt(idx) - this->data;
                 Char *newData = NULL;
-                ASSERT(oldLen > 0);
-                ASSERT(strLen > 0);
+                THE_ASSERT(oldLen > 0);
+                THE_ASSERT(strLen > 0);
                 
                 newData = new Char[oldLen + strLen];
                 ::memcpy(newData, this->data, offset * sizeof(Char));
                 ::memcpy(newData + offset, str, strLen * sizeof(Char));
                 ::memcpy(newData + offset + strLen, this->data + offset, 
                     (oldLen - offset) * sizeof(Char));
-                ASSERT(newData[oldLen + strLen - 1] == 0);
-                ASSERT(newData[oldLen + strLen - 2] == 0);
+                THE_ASSERT(newData[oldLen + strLen - 1] == 0);
+                THE_ASSERT(newData[oldLen + strLen - 2] == 0);
 
                 ARY_SAFE_DELETE(this->data);
                 this->data = newData;
@@ -608,15 +608,15 @@ namespace vislib {
                 }
 
                 newData[newLen - 1] = 0;    // Enfore double-zero.
-                ASSERT(newData[newLen - 1] == 0);
-                ASSERT(newData[newLen - 2] == 0);
+                THE_ASSERT(newData[newLen - 1] == 0);
+                THE_ASSERT(newData[newLen - 2] == 0);
 
                 ARY_SAFE_DELETE(this->data);
                 this->data = newData;
             } else {
                 /* Remove everything. */
                 ARY_SAFE_DELETE(this->data);
-                ASSERT(this->data == NULL);
+                THE_ASSERT(this->data == NULL);
             } /* end if ((newLen = oldLen - cnt * strLen) > 2) */
         } /* end if ((str != NULL) && (*str != 0) && (this->data != NULL)) */
     }
@@ -647,7 +647,7 @@ namespace vislib {
 
         if (rhs != NULL) {
             SIZE_T cnt = MultiSz::Length(rhs);
-            ASSERT(cnt > 0);
+            THE_ASSERT(cnt > 0);
             this->data = new Char[cnt];
             ::memcpy(this->data, rhs, cnt * sizeof(Char));
         }

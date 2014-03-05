@@ -334,11 +334,11 @@ vislib::net::IPAgnosticAddress& vislib::net::IPAgnosticAddress::operator =(
         SAFE_DELETE(this->v6);
 
         if (rhs.IsV4()) {
-            ASSERT(rhs.v6 == NULL);
+            THE_ASSERT(rhs.v6 == NULL);
             this->v4 = new IPAddress(*(rhs.v4));
 
         } else if (rhs.IsV6()) {
-            ASSERT(rhs.v4 == NULL);
+            THE_ASSERT(rhs.v4 == NULL);
             this->v6 = new IPAddress6(*(rhs.v6));
         }
     }
@@ -435,10 +435,10 @@ bool vislib::net::IPAgnosticAddress::operator ==(
         return this->v6->operator ==(IPAddress6(*(rhs.v4)));
 
     } else {
-        ASSERT(this->v4 == NULL);
-        ASSERT(rhs.v4 == NULL);
-        ASSERT(this->v6 == NULL);
-        ASSERT(rhs.v6 == NULL);
+        THE_ASSERT(this->v4 == NULL);
+        THE_ASSERT(rhs.v4 == NULL);
+        THE_ASSERT(this->v6 == NULL);
+        THE_ASSERT(rhs.v6 == NULL);
         return true;
     }
 }

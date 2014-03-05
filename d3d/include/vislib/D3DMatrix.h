@@ -61,7 +61,7 @@ namespace d3d {
          *                   NULL and according to the matrix layout L.
          */
         inline D3DMatrix(const T *components) : Super() {
-            ASSERT(components != NULL);
+            THE_ASSERT(components != NULL);
             ::memcpy(this->components.m, components, Super::CNT_COMPONENTS
                 * sizeof(T));
         }

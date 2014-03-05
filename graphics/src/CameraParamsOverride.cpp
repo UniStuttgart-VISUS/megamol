@@ -40,7 +40,7 @@ vislib::graphics::CameraParamsOverride::~CameraParamsOverride(void) {
  * vislib::graphics::CameraParamsOverride::ApplyLimits
  */
 void vislib::graphics::CameraParamsOverride::ApplyLimits(void) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->ApplyLimits();
 }
 
@@ -50,7 +50,7 @@ void vislib::graphics::CameraParamsOverride::ApplyLimits(void) {
  */
 vislib::graphics::SceneSpaceType
 vislib::graphics::CameraParamsOverride::AutoFocusOffset(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->AutoFocusOffset();
 }
 
@@ -60,7 +60,7 @@ vislib::graphics::CameraParamsOverride::AutoFocusOffset(void) const {
  */
 vislib::math::CoordSystemType
 vislib::graphics::CameraParamsOverride::CoordSystemType(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->CoordSystemType();
 }
 
@@ -70,7 +70,7 @@ vislib::graphics::CameraParamsOverride::CoordSystemType(void) const {
  */
 vislib::graphics::CameraParameters::StereoEye 
 vislib::graphics::CameraParamsOverride::Eye(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->Eye();
 }
 
@@ -97,7 +97,7 @@ vislib::graphics::CameraParamsOverride::EyeDirection(void) const {
  */
 vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> 
 vislib::graphics::CameraParamsOverride::EyeUpVector(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->EyeUpVector(); // until we get upper and lower eyes
 }
 
@@ -122,7 +122,7 @@ vislib::graphics::CameraParamsOverride::EyeRightVector(void) const {
  */
 vislib::math::Point<vislib::graphics::SceneSpaceType, 3> 
 vislib::graphics::CameraParamsOverride::EyePosition(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     if ((this->Projection() == MONO_PERSPECTIVE) 
             || (this->Projection() == MONO_ORTHOGRAPHIC)) {
         return this->Position();
@@ -141,7 +141,7 @@ vislib::graphics::CameraParamsOverride::EyePosition(void) const {
  */
 vislib::graphics::SceneSpaceType 
 vislib::graphics::CameraParamsOverride::FarClip(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->FarClip();
 }
 
@@ -151,7 +151,7 @@ vislib::graphics::CameraParamsOverride::FarClip(void) const {
  */
 vislib::graphics::SceneSpaceType 
 vislib::graphics::CameraParamsOverride::FocalDistance(bool autofocus) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->FocalDistance(autofocus);
 }
 
@@ -161,7 +161,7 @@ vislib::graphics::CameraParamsOverride::FocalDistance(bool autofocus) const {
  */
 const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3>& 
 vislib::graphics::CameraParamsOverride::Front(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->Front();
 }
 
@@ -171,7 +171,7 @@ vislib::graphics::CameraParamsOverride::Front(void) const {
  */
 vislib::math::AngleRad 
 vislib::graphics::CameraParamsOverride::HalfApertureAngle(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->HalfApertureAngle();
 }
 
@@ -181,7 +181,7 @@ vislib::graphics::CameraParamsOverride::HalfApertureAngle(void) const {
  */
 vislib::graphics::SceneSpaceType 
 vislib::graphics::CameraParamsOverride::HalfStereoDisparity(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->HalfStereoDisparity();
 }
 
@@ -215,7 +215,7 @@ bool vislib::graphics::CameraParamsOverride::IsValid(void) const {
  */
 vislib::SmartPtr<vislib::graphics::CameraParameterLimits> 
 vislib::graphics::CameraParamsOverride::Limits(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->Limits();
 }
 
@@ -225,7 +225,7 @@ vislib::graphics::CameraParamsOverride::Limits(void) const {
  */
 const vislib::math::Point<vislib::graphics::SceneSpaceType, 3>& 
 vislib::graphics::CameraParamsOverride::LookAt(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->LookAt();
 }
 
@@ -235,7 +235,7 @@ vislib::graphics::CameraParamsOverride::LookAt(void) const {
  */
 vislib::graphics::SceneSpaceType 
 vislib::graphics::CameraParamsOverride::NearClip(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->NearClip();
 }
 
@@ -270,7 +270,7 @@ vislib::graphics::CameraParamsOverride::ParametersTopBase(void) const {
  */
 const vislib::math::Point<vislib::graphics::SceneSpaceType, 3>& 
 vislib::graphics::CameraParamsOverride::Position(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->Position();
 }
 
@@ -280,7 +280,7 @@ vislib::graphics::CameraParamsOverride::Position(void) const {
  */
 vislib::graphics::CameraParameters::ProjectionType 
 vislib::graphics::CameraParamsOverride::Projection(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->Projection();
 }
 
@@ -289,7 +289,7 @@ vislib::graphics::CameraParamsOverride::Projection(void) const {
  * vislib::graphics::CameraParamsOverride::Reset
  */
 void vislib::graphics::CameraParamsOverride::Reset(void) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->Reset();
     this->resetOverride();
 }
@@ -299,7 +299,7 @@ void vislib::graphics::CameraParamsOverride::Reset(void) {
  * vislib::graphics::CameraParamsOverride::ResetTileRect
  */
 void vislib::graphics::CameraParamsOverride::ResetTileRect(void) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->ResetTileRect();
 }
 
@@ -309,7 +309,7 @@ void vislib::graphics::CameraParamsOverride::ResetTileRect(void) {
  */
 const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3>& 
 vislib::graphics::CameraParamsOverride::Right(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->Right();
 }
 
@@ -319,7 +319,7 @@ vislib::graphics::CameraParamsOverride::Right(void) const {
  */
 void vislib::graphics::CameraParamsOverride::SetApertureAngle(
         vislib::math::AngleDeg apertureAngle) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetApertureAngle(apertureAngle);
 }
 
@@ -329,7 +329,7 @@ void vislib::graphics::CameraParamsOverride::SetApertureAngle(
  */
 void vislib::graphics::CameraParamsOverride::SetAutoFocusOffset(
         vislib::graphics::SceneSpaceType offset) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetAutoFocusOffset(offset);
 }
 
@@ -340,7 +340,7 @@ void vislib::graphics::CameraParamsOverride::SetAutoFocusOffset(
 void vislib::graphics::CameraParamsOverride::SetClip(
         vislib::graphics::SceneSpaceType nearClip, 
         vislib::graphics::SceneSpaceType farClip) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetClip(nearClip, farClip);
 }
 
@@ -350,7 +350,7 @@ void vislib::graphics::CameraParamsOverride::SetClip(
  */
 void vislib::graphics::CameraParamsOverride::SetCoordSystemType(
         vislib::math::CoordSystemType coordSysType) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetCoordSystemType(coordSysType);
 }
 
@@ -360,7 +360,7 @@ void vislib::graphics::CameraParamsOverride::SetCoordSystemType(
  */
 void vislib::graphics::CameraParamsOverride::SetEye(
         vislib::graphics::CameraParameters::StereoEye eye) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetEye(eye);
 }
 
@@ -370,7 +370,7 @@ void vislib::graphics::CameraParamsOverride::SetEye(
  */
 void vislib::graphics::CameraParamsOverride::SetFarClip(
         vislib::graphics::SceneSpaceType farClip) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetFarClip(farClip);
 }
 
@@ -380,7 +380,7 @@ void vislib::graphics::CameraParamsOverride::SetFarClip(
  */
 void vislib::graphics::CameraParamsOverride::SetFocalDistance(
         vislib::graphics::SceneSpaceType focalDistance) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetFocalDistance(focalDistance);
 }
 
@@ -391,7 +391,7 @@ void vislib::graphics::CameraParamsOverride::SetFocalDistance(
 void vislib::graphics::CameraParamsOverride::SetLimits(
         const vislib::SmartPtr<vislib::graphics::CameraParameterLimits>& 
         limits) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetLimits(limits);
 }
 
@@ -402,7 +402,7 @@ void vislib::graphics::CameraParamsOverride::SetLimits(
 void vislib::graphics::CameraParamsOverride::SetLookAt(
         const vislib::math::Point<vislib::graphics::SceneSpaceType, 3>& 
         lookAt) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetLookAt(lookAt);
 }
 
@@ -412,7 +412,7 @@ void vislib::graphics::CameraParamsOverride::SetLookAt(
  */
 void vislib::graphics::CameraParamsOverride::SetNearClip(
         vislib::graphics::SceneSpaceType nearClip) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetNearClip(nearClip);
 }
 
@@ -434,7 +434,7 @@ bool vislib::graphics::CameraParamsOverride::SetParametersBase(
 void vislib::graphics::CameraParamsOverride::SetPosition(
         const vislib::math::Point<vislib::graphics::SceneSpaceType, 3>& 
         position) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetPosition(position);
 }
 
@@ -444,7 +444,7 @@ void vislib::graphics::CameraParamsOverride::SetPosition(
  */
 void vislib::graphics::CameraParamsOverride::SetProjection(
         vislib::graphics::CameraParameters::ProjectionType projectionType) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetProjection(projectionType);
 }
 
@@ -454,7 +454,7 @@ void vislib::graphics::CameraParamsOverride::SetProjection(
  */
 void vislib::graphics::CameraParamsOverride::SetStereoDisparity(
         vislib::graphics::SceneSpaceType stereoDisparity) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetStereoDisparity(stereoDisparity);
 }
 
@@ -466,7 +466,7 @@ void vislib::graphics::CameraParamsOverride::SetStereoParameters(
         vislib::graphics::SceneSpaceType stereoDisparity, 
         vislib::graphics::CameraParameters::StereoEye eye, 
         vislib::graphics::SceneSpaceType focalDistance) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetStereoParameters(stereoDisparity, eye, focalDistance);
 }
 
@@ -477,7 +477,7 @@ void vislib::graphics::CameraParamsOverride::SetStereoParameters(
 void vislib::graphics::CameraParamsOverride::SetTileRect(
         const vislib::math::Rectangle<vislib::graphics::ImageSpaceType>& 
         tileRect) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetTileRect(tileRect);
 }
 
@@ -487,7 +487,7 @@ void vislib::graphics::CameraParamsOverride::SetTileRect(
  */
 void vislib::graphics::CameraParamsOverride::SetUp(
         const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3>& up) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetUp(up);
 }
 
@@ -499,7 +499,7 @@ void vislib::graphics::CameraParamsOverride::SetView(const
         vislib::math::Point<vislib::graphics::SceneSpaceType, 3>& position, 
         const vislib::math::Point<vislib::graphics::SceneSpaceType, 3>& lookAt,
         const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3>& up) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetView(position, lookAt, up);
 }
 
@@ -510,7 +510,7 @@ void vislib::graphics::CameraParamsOverride::SetView(const
 void vislib::graphics::CameraParamsOverride::SetVirtualViewSize(
         const vislib::math::Dimension<vislib::graphics::ImageSpaceType, 2>& 
         viewSize) {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     this->base->SetVirtualViewSize(viewSize);
 }
 
@@ -520,7 +520,7 @@ void vislib::graphics::CameraParamsOverride::SetVirtualViewSize(
  */
 unsigned int vislib::graphics::CameraParamsOverride::SyncNumber(void) 
         const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->SyncNumber() + this->syncNumberOff;
 }
 
@@ -530,7 +530,7 @@ unsigned int vislib::graphics::CameraParamsOverride::SyncNumber(void)
  */
 const vislib::math::Rectangle<vislib::graphics::ImageSpaceType>& 
 vislib::graphics::CameraParamsOverride::TileRect(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->TileRect();
 }
 
@@ -540,7 +540,7 @@ vislib::graphics::CameraParamsOverride::TileRect(void) const {
  */
 const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3>& 
 vislib::graphics::CameraParamsOverride::Up(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->Up();
 }
 
@@ -550,7 +550,7 @@ vislib::graphics::CameraParamsOverride::Up(void) const {
  */
 const vislib::math::Dimension<vislib::graphics::ImageSpaceType, 2>& 
 vislib::graphics::CameraParamsOverride::VirtualViewSize(void) const {
-    ASSERT(!this->base.IsNull());
+    THE_ASSERT(!this->base.IsNull());
     return this->base->VirtualViewSize();
 }
 

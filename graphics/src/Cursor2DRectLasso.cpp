@@ -45,7 +45,7 @@ void vislib::graphics::Cursor2DRectLasso::Trigger(
         unsigned int param) {
     vislib::graphics::Cursor2D *cursor 
         = dynamic_cast<vislib::graphics::Cursor2D*>(caller);
-    ASSERT(cursor != NULL);
+    THE_ASSERT(cursor != NULL);
 
     if (reason == REASON_BUTTON_DOWN) {
         this->drag = true;

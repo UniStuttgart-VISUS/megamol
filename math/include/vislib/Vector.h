@@ -46,7 +46,7 @@ namespace math {
          * @param components The initial vector components.
          */
         explicit inline Vector(const T *components) : Super() {
-            ASSERT(components != NULL);
+            THE_ASSERT(components != NULL);
             ::memcpy(this->components, components, D * sizeof(T));
         }
 
@@ -160,7 +160,7 @@ namespace math {
 
         /** Behaves like primary class template. */
         explicit inline Vector(const T *components) : Super() {
-            ASSERT(components != NULL);
+            THE_ASSERT(components != NULL);
             ::memcpy(this->components, components, D * sizeof(T));
         }
 
@@ -262,7 +262,7 @@ namespace math {
 
         /** Behaves like primary class template. */
         explicit inline Vector(const T *components) : Super() {
-            ASSERT(components != NULL);
+            THE_ASSERT(components != NULL);
             ::memcpy(this->components, components, D * sizeof(T));
         }
 
@@ -366,7 +366,7 @@ namespace math {
 
         /** Behaves like primary class template. */
         explicit inline Vector(const T *components) : Super() {
-            ASSERT(components != NULL);
+            THE_ASSERT(components != NULL);
             ::memcpy(this->components, components, D * sizeof(T));
         }
 

@@ -45,7 +45,7 @@ namespace math {
          *                   pointer.
          */
         explicit inline ShallowMatrix(T *components) {
-            ASSERT(components != NULL);
+            THE_ASSERT(components != NULL);
             this->components = components;
         }
 

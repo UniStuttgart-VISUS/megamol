@@ -63,7 +63,7 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage,
     if (this->iconState != ICON_NOT_INSTALLED) {
         this->Destroy();
     }
-    ASSERT(this->iconState == ICON_NOT_INSTALLED);
+    THE_ASSERT(this->iconState == ICON_NOT_INSTALLED);
 
     /*
      * Create the invisible window for controlling the tray icon, if the user
@@ -103,7 +103,7 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage,
         /* Use user-defined window. */
         this->hWnd = NULL;
     }
-    ASSERT((this->hWnd != NULL) || (targetWnd != NULL));
+    THE_ASSERT((this->hWnd != NULL) || (targetWnd != NULL));
 
     /* Initialise the tray icon structure. */
     this->nid.cbSize = sizeof(this->nid);
@@ -244,8 +244,8 @@ void vislib::sys::TrayIcon::Destroy(void) {
 void vislib::sys::TrayIcon::Hide(void) {
     if (this->iconState == ICON_VISIBLE) {
         if (this->configureHidden(true)) {
-            ASSERT(this->capabilities >= CAPABILITIES_V2);
-            ASSERT(_WIN32_IE >= 0x0500);
+            THE_ASSERT(this->capabilities >= CAPABILITIES_V2);
+            THE_ASSERT(_WIN32_IE >= 0x0500);
 #if (_WIN32_IE >= 0x0500)
             this->notify(NIM_MODIFY);
             this->iconState = ICON_HIDDEN;
@@ -254,7 +254,7 @@ void vislib::sys::TrayIcon::Hide(void) {
             this->Destroy();
         }
     } /* end if (this->iconState == ICON_VISIBLE) */
-    ASSERT(this->iconState != ICON_VISIBLE);
+    THE_ASSERT(this->iconState != ICON_VISIBLE);
 }
 
 
@@ -277,8 +277,8 @@ void vislib::sys::TrayIcon::SetIcon(HINSTANCE hResourceModule,
 void vislib::sys::TrayIcon::Show(void) {
     if (this->iconState != ICON_VISIBLE) {
         if ((this->iconState == ICON_HIDDEN) && this->configureHidden(false)) {
-            ASSERT(this->capabilities >= CAPABILITIES_V2);
-            ASSERT(_WIN32_IE >= 0x0500);
+            THE_ASSERT(this->capabilities >= CAPABILITIES_V2);
+            THE_ASSERT(_WIN32_IE >= 0x0500);
 #if (_WIN32_IE >= 0x0500)
             this->notify(NIM_MODIFY);
 #endif /* (_WIN32_IE >= 0x0500) */
@@ -288,7 +288,7 @@ void vislib::sys::TrayIcon::Show(void) {
 
         this->iconState = ICON_VISIBLE;
     } /* end if (this->iconState != ICON_VISIBLE) */
-    ASSERT(this->iconState == ICON_VISIBLE);
+    THE_ASSERT(this->iconState == ICON_VISIBLE);
 }
 
 
@@ -404,13 +404,13 @@ const wchar_t *vislib::sys::TrayIcon::WNDCLASSNAME = L"VISLIBTRAYICONWNDCLASS";
 bool vislib::sys::TrayIcon::configureBalloonHelp(const wchar_t *balloonText,
         const wchar_t *balloonTitle, const DWORD balloonIcon, 
         const UINT balloonTimeout) {
-    ASSERT((balloonText == NULL)
+    THE_ASSERT((balloonText == NULL)
         || (::wcslen(balloonText) < MAX_BALLOON_LEN));
-    ASSERT((balloonTitle == NULL) 
+    THE_ASSERT((balloonTitle == NULL) 
         || (::wcslen(balloonTitle) < MAX_BALLOON_TITLE_LEN));
-    ASSERT((balloonTimeout >= 10) && (balloonTimeout <= 30));
+    THE_ASSERT((balloonTimeout >= 10) && (balloonTimeout <= 30));
 #if (_WIN32_IE >= 0x0500)
-    ASSERT((balloonIcon == NIIF_NONE) || (balloonIcon == NIIF_INFO)
+    THE_ASSERT((balloonIcon == NIIF_NONE) || (balloonIcon == NIIF_INFO)
         || (balloonIcon == NIIF_WARNING) || (balloonIcon == NIIF_ERROR));
 #endif /* (_WIN32_IE >= 0x0500) */
 
@@ -464,7 +464,7 @@ bool vislib::sys::TrayIcon::configureBalloonHelp(const wchar_t *balloonText,
  */
 bool vislib::sys::TrayIcon::configureCallbackMessage(
         const UINT callbackMessage) {
-    ASSERT(callbackMessage >= WM_APP);
+    THE_ASSERT(callbackMessage >= WM_APP);
 
     this->nid.uCallbackMessage = callbackMessage;
     this->nid.uFlags |= NIF_MESSAGE;
@@ -477,7 +477,7 @@ bool vislib::sys::TrayIcon::configureCallbackMessage(
  * vislib::sys::TrayIcon::configureIcon
  */
 bool vislib::sys::TrayIcon::configureIcon(const HICON icon) {
-    ASSERT(icon != NULL);
+    THE_ASSERT(icon != NULL);
 
     this->nid.hIcon = icon;
     this->nid.uFlags |= NIF_ICON;
@@ -515,7 +515,7 @@ bool vislib::sys::TrayIcon::configureHidden(const bool isHidden) {
  * vislib::sys::TrayIcon::configureToolTip
  */
 bool vislib::sys::TrayIcon::configureToolTip(const wchar_t *toolTip) {
-    ASSERT(::wcslen(toolTip) < MAX_TOOLTIP_LEN);
+    THE_ASSERT(::wcslen(toolTip) < MAX_TOOLTIP_LEN);
 
 #if (_MSC_VER >= 1400)
     ::wcsncpy_s(this->nid.szTip, MAX_TOOLTIP_LEN, toolTip, MAX_TOOLTIP_LEN);

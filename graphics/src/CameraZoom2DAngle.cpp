@@ -48,7 +48,7 @@ void vislib::graphics::CameraZoom2DAngle::Trigger(
             float maxAngle = 180.0f - FLT_MIN;
 
             // otherwise this would be very strange:
-            ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
+            THE_ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
 
             if (!this->IsCameraParamsValid()) {
                 VLTRACE(vislib::Trace::LEVEL_WARN, 

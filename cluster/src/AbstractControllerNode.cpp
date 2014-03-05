@@ -207,7 +207,7 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
 
     /* Serialise the camera parameter limits first. */
     msg.EnforceSize(0);
-    ASSERT(msg.GetSize() == 0);     // Storage must be empty!
+    THE_ASSERT(msg.GetSize() == 0);     // Storage must be empty!
     serialiser.SetOffset(sizeof(MessageHeader) + sizeof(BlockHeader));
     this->parameters->Limits()->Serialise(serialiser);
 
@@ -223,7 +223,7 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
      * Serialise the parameters as a second block (deserialisation of parameters
      * will trigger evaluation against limits on client side).
      */
-    ASSERT(msg.GetSize() >= serialiser.Offset());
+    THE_ASSERT(msg.GetSize() >= serialiser.Offset());
     serialiser.SetOffset(static_cast<UINT32>(msg.GetSize()
         + sizeof(BlockHeader)));
     this->parameters->Serialise(serialiser);
@@ -240,15 +240,15 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
         "(Message %u).\n", blkHdr2->BlockLength, blkHdr2->BlockId);
 
     /* Fill in the message header for a compound message. */
-    ASSERT(blkHdr1->BlockId == MSGID_CAM_LIMITS);
-    ASSERT(blkHdr2->BlockId == MSGID_CAM_SERIALISEDCAMPARAMS);
+    THE_ASSERT(blkHdr1->BlockId == MSGID_CAM_LIMITS);
+    THE_ASSERT(blkHdr2->BlockId == MSGID_CAM_SERIALISEDCAMPARAMS);
 
     MessageHeader *msgHdr = msg.As<MessageHeader>();
     InitialiseMessageHeader(*msgHdr);
     msgHdr->Header.BlockId = MSGID_MULTIPLE;
     msgHdr->Header.BlockLength = static_cast<UINT32>(msg.GetSize() 
         - sizeof(MessageHeader));
-    ASSERT(msgHdr->Header.BlockLength 
+    THE_ASSERT(msgHdr->Header.BlockLength 
         == sizeof(BlockHeader) + blkHdr1->BlockLength
         + sizeof(BlockHeader) + blkHdr2->BlockLength);
 

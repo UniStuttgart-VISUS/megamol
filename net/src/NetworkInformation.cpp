@@ -680,8 +680,8 @@ float vislib::net::NetworkInformation::GuessAdapter(Adapter& outAdapter,
     }
     NetworkInformation::lockAdapters.Unlock();
 
-    ASSERT(retval >= 0.0f);
-    ASSERT(retval <= 1.0f);
+    THE_ASSERT(retval >= 0.0f);
+    THE_ASSERT(retval <= 1.0f);
     return (invertWildness ? (1.0f - retval) : retval);
 }
 
@@ -803,7 +803,7 @@ ULONG vislib::net::NetworkInformation::NetmaskToPrefix(
                 *static_cast<const IPAddress6 *>(netmask));
 
         default:
-            ASSERT(false);
+            THE_ASSERT(false);
             return static_cast<ULONG>(ULONG_MAX);
     }
 }
@@ -1042,7 +1042,7 @@ float vislib::net::NetworkInformation::consolidateWildness(
     outIdxFirstBest = 0;
 
     /* Consolidate to [0, 1] and find the minimum. */
-    ASSERT(!inOutWildness.IsEmpty());
+    THE_ASSERT(!inOutWildness.IsEmpty());
     for (SIZE_T i = 0; i < inOutWildness.Count(); i++) {
         if (inOutWildness[i] < 0.0f) {
             inOutWildness[i] = 0.0f;
@@ -1086,8 +1086,8 @@ float vislib::net::NetworkInformation::consolidateWildness(
         retval = 1.0f;
     }
 
-    ASSERT(retval >= 0.0f);
-    ASSERT(retval <= 1.0f);
+    THE_ASSERT(retval >= 0.0f);
+    THE_ASSERT(retval <= 1.0f);
     return retval;
 }
 
@@ -1293,8 +1293,8 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
     }
     NetworkInformation::lockAdapters.Unlock();
 
-    ASSERT(retval >= 0.0f);
-    ASSERT(retval <= 1.0f);
+    THE_ASSERT(retval >= 0.0f);
+    THE_ASSERT(retval <= 1.0f);
     return (invertWildness ? (1.0f - retval) : retval);
 }
 
@@ -1403,8 +1403,8 @@ float vislib::net::NetworkInformation::guessRemoteEndPoint(
 
     }
 
-    ASSERT(retval >= 0.0f);
-    ASSERT(retval <= 1.0f);
+    THE_ASSERT(retval >= 0.0f);
+    THE_ASSERT(retval <= 1.0f);
     return (invertWildness ? (1.0f - retval) : retval);
 }
 
@@ -1642,7 +1642,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
 
     /* Process all adapter addresses. */
     for (struct ifaddrs *cur = addrs; cur != NULL; cur = cur->ifa_next) {
-        ASSERT(cur->ifa_name != NULL);
+        THE_ASSERT(cur->ifa_name != NULL);
         
         /* 
          * Search whether we already have the adapter or add a new one.
@@ -1742,7 +1742,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
                     UnicastAddressInformation::SUFFIX_ORIGIN_OTHER, INVALID));
                 adapter->unicastAddresses.SetConfidence(VALID);
 
-                ASSERT(cur->ifa_broadaddr == NULL);
+                THE_ASSERT(cur->ifa_broadaddr == NULL);
                 } break;
 
             case AF_PACKET: {
@@ -2121,8 +2121,8 @@ bool vislib::net::NetworkInformation::processAdapterForLocalEndpointGuess(
     NetworkInformation::Confidence dummy; // TODO: should be accounted in wildness!
     UnicastAddressList al = adapter.GetUnicastAddresses(&dummy);
 
-    ASSERT(ctx != NULL);
-    ASSERT(ctx->Wildness != NULL);
+    THE_ASSERT(ctx != NULL);
+    THE_ASSERT(ctx->Wildness != NULL);
 
     for (SIZE_T i = 0; i < al.Count(); i++) {
         ctx->Wildness->Add(NetworkInformation::assessAddressAsEndPoint(al[i], 
@@ -2361,8 +2361,8 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
     retval = NetworkInformation::consolidateWildness(wildness, candidateIdx);
     outAdapter = NetworkInformation::adapters[candidateIdx];
 
-    ASSERT(retval >= 0.0f);
-    ASSERT(retval <= 1.0f);
+    THE_ASSERT(retval >= 0.0f);
+    THE_ASSERT(retval <= 1.0f);
     return retval;
 }
 
@@ -2429,7 +2429,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
             } catch (Exception e) {
                 VLTRACE(Trace::LEVEL_VL_VERBOSE, "Parsing port failed: %s\n",
                     e.GetMsgA());
-                ASSERT((retval & WILD_GUESS_HAS_PORT) == 0);
+                THE_ASSERT((retval & WILD_GUESS_HAS_PORT) == 0);
             }
         }
     } /* end if ((pos = input.FindLast(L':')) != StringW::INVALID_POS) */
@@ -2469,7 +2469,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
             } catch (Exception e) {
                 VLTRACE(Trace::LEVEL_VL_VERBOSE, "Parsing netmask failed: %s\n",
                     e.GetMsgA());
-                ASSERT((retval & WILD_GUESS_HAS_NETMASK) == 0);
+                THE_ASSERT((retval & WILD_GUESS_HAS_NETMASK) == 0);
             }
 
             /* Parse as prefix length if not a netmask. */
@@ -2485,7 +2485,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
                 } catch (Exception e) {
                     VLTRACE(Trace::LEVEL_VL_VERBOSE, "Parsing prefix length "
                         "failed: %s.\n", e.GetMsgA());
-                    ASSERT((retval & WILD_GUESS_HAS_PREFIX_LEN) == 0);
+                    THE_ASSERT((retval & WILD_GUESS_HAS_PREFIX_LEN) == 0);
                 }
             } 
         } /* end if (!prefix.IsEmpty()) */
@@ -2518,7 +2518,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
     } catch (Exception e) {
         VLTRACE(Trace::LEVEL_VL_VERBOSE, "Parsing address \"%s\" failed: %s\n",
             W2A(input), e.GetMsgA());
-        ASSERT((retval & WILD_GUESS_HAS_ADDRESS) == 0);
+        THE_ASSERT((retval & WILD_GUESS_HAS_ADDRESS) == 0);
 
         outDevice = input;
         retval |= WILD_GUESS_HAS_DEVICE;

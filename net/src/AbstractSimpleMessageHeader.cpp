@@ -75,7 +75,7 @@ vislib::net::AbstractSimpleMessageHeader&
 vislib::net::AbstractSimpleMessageHeader::operator =(
 		const SimpleMessageHeaderData *rhs) {
 	THE_STACK_TRACE;
-	ASSERT(rhs != NULL);
+	THE_ASSERT(rhs != NULL);
 
 	if (this->PeekData() != rhs) {
 		::memcpy(this->PeekData(), rhs, this->GetHeaderSize());

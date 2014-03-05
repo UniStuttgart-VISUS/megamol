@@ -79,7 +79,7 @@ void vislib::graphics::gl::AbstractOpenGLTexture::Release(void) {
     if (this->IsValid()) {
         GL_VERIFY_THROW(::glDeleteTextures(1, &this->id));
     }
-    ASSERT(!this->IsValid());
+    THE_ASSERT(!this->IsValid());
 }
 
 

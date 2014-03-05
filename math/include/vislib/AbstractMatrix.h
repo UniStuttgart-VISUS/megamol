@@ -265,8 +265,8 @@ namespace math {
         } while (s < D);
 
         /* Compute determinant as product of the diagonal. */
-        ASSERT(D > 0);
-        ASSERT(::fabs(retval) == 1.0);
+        THE_ASSERT(D > 0);
+        THE_ASSERT(::fabs(retval) == 1.0);
         for (unsigned int i = 0; i < D; i++) {
             retval *= A(i, i);
         }

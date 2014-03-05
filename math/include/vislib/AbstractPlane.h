@@ -404,9 +404,9 @@ namespace math {
         Vector<T, 3> n2(a2, b2, c2);
         Vector<T, 3> n3(a3, b3, c3);
 
-        ASSERT(n1.IsNormalised());
-        ASSERT(n2.IsNormalised());
-        ASSERT(n3.IsNormalised());
+        THE_ASSERT(n1.IsNormalised());
+        THE_ASSERT(n2.IsNormalised());
+        THE_ASSERT(n3.IsNormalised());
 
         T denom = n1.Dot(n2.Cross(n3));
 
@@ -430,9 +430,9 @@ namespace math {
         d1 = Abs(this->Distance(outPoint));
         d2 = Abs(plane2.Distance(outPoint));
         d3 = Abs(plane3.Distance(outPoint));
-        ASSERT(d1 < static_cast<T>(0.002f)); // epsilon is adjusted for MegaMol :-/
-        ASSERT(d2 < static_cast<T>(0.002f));
-        ASSERT(d3 < static_cast<T>(0.002f));
+        THE_ASSERT(d1 < static_cast<T>(0.002f)); // epsilon is adjusted for MegaMol :-/
+        THE_ASSERT(d2 < static_cast<T>(0.002f));
+        THE_ASSERT(d3 < static_cast<T>(0.002f));
 #endif
 
         return true;
@@ -473,7 +473,7 @@ namespace math {
             return POSITIVE_HALFSPACE;
     
         } else {
-            ASSERT(false);      // Should never happen.
+            THE_ASSERT(false);      // Should never happen.
             return IN_PLANE;
         }        
     }
@@ -545,9 +545,9 @@ namespace math {
             outP1.Z());
         outP3 += (outP2 - outP1).Cross(this->Normal());   
 
-        ASSERT(this->Contains(outP1));
-        ASSERT(this->Contains(outP2));
-        ASSERT(this->Contains(outP3));
+        THE_ASSERT(this->Contains(outP1));
+        THE_ASSERT(this->Contains(outP2));
+        THE_ASSERT(this->Contains(outP3));
     }
 
 

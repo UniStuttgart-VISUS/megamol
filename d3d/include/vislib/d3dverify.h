@@ -63,7 +63,7 @@
 //#ifdef V
 //#define D3D_VERIFY(call) V(call)
 //#else /* V */
-#define D3D_VERIFY(call) VERIFY(D3D_SUCCEEDED(__d3dv_hr = (call)))
+#define D3D_VERIFY(call) THE_VERIFY(D3D_SUCCEEDED(__d3dv_hr = (call)))
 //#endif /* V */
 
 

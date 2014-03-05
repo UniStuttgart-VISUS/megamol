@@ -47,7 +47,7 @@ vislib::graphics::gl::ARBShader::~ARBShader(void) {
  */
 bool vislib::graphics::gl::ARBShader::Create(const char *src) {
     USES_GL_VERIFY;
-    ASSERT(src != NULL);
+    THE_ASSERT(src != NULL);
 
     int errorPos = -1;
 
@@ -164,7 +164,7 @@ GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name,
 GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name, 
                                                      const double *v) {
     USES_GL_VERIFY;
-    ASSERT(v != NULL);
+    THE_ASSERT(v != NULL);
 
     GL_VERIFY_RETURN(::glProgramLocalParameter4dvARB(this->type, name, v));
     return GL_NO_ERROR;
@@ -190,7 +190,7 @@ GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name,
 GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name, 
                                                      const float *v) {
     USES_GL_VERIFY;
-    ASSERT(v != NULL);
+    THE_ASSERT(v != NULL);
 
     GL_VERIFY_RETURN(::glProgramLocalParameter4fvARB(this->type, name, v));
     return GL_NO_ERROR;
@@ -202,7 +202,7 @@ GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name,
  */
 GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name, 
                                                      const int *v) {
-    ASSERT(v != NULL);
+    THE_ASSERT(v != NULL);
     double vd[4];
 
     for (int i = 0; i < 4; i++) {

@@ -43,7 +43,7 @@ vislib::sys::Event::Event(const bool isManualReset,
     this->handle = ::CreateEventA(NULL, isManualReset ? TRUE : FALSE,
         isInitiallySignaled ? TRUE : FALSE, 
         NULL);
-    ASSERT(this->handle != NULL);
+    THE_ASSERT(this->handle != NULL);
 #endif /* _WIN32 */
 }
 
@@ -73,7 +73,7 @@ vislib::sys::Event::Event(const char *name, const bool isManualReset,
             *outIsNew = true;
         }
     }
-    ASSERT(this->handle != NULL);
+    THE_ASSERT(this->handle != NULL);
 #endif /* _WIN32 */
 }
 
@@ -103,7 +103,7 @@ vislib::sys::Event::Event(const wchar_t *name, const bool isManualReset,
             *outIsNew = true;
         }
     }
-    ASSERT(this->handle != NULL);
+    THE_ASSERT(this->handle != NULL);
 #endif /* _WIN32 */
 }
 
@@ -135,7 +135,7 @@ void vislib::sys::Event::Reset(void) {
     VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Reset\n");
     
     this->semaphore.TryLock();
-    ASSERT(!this->semaphore.TryLock());
+    THE_ASSERT(!this->semaphore.TryLock());
 
 #endif /* _WIN32 */
 }

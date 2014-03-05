@@ -90,7 +90,7 @@ void vislib::graphics::CameraParamsEyeOverride::preBaseSet(
  *  vislib::graphics::CameraParamsEyeOverride::resetOverride
  */
 void vislib::graphics::CameraParamsEyeOverride::resetOverride(void) {
-    ASSERT(!this->paramsBase().IsNull());
+    THE_ASSERT(!this->paramsBase().IsNull());
     this->eye = this->paramsBase()->Eye();
     this->indicateValueChange();
 }

@@ -17,7 +17,7 @@
  */
 vislib::sys::Interlocked::~Interlocked(void) {
     // Should never be called.
-    ASSERT(false);
+    THE_ASSERT(false);
 }
 
 

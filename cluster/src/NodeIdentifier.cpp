@@ -15,7 +15,7 @@
  */
 vislib::net::cluster::NodeIdentifier::NodeIdentifier(void) {
     THE_STACK_TRACE;
-    ASSERT(this->IsNull());
+    THE_ASSERT(this->IsNull());
 }
 
 

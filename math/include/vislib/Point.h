@@ -46,7 +46,7 @@ namespace math {
          * @param coordinates The initial coordinates of the point.
          */
         explicit inline Point(const T *coordinates) : Super() {
-            ASSERT(coordinates != NULL);
+            THE_ASSERT(coordinates != NULL);
             ::memcpy(this->coordinates, coordinates, D * sizeof(T));
         }
 
@@ -163,7 +163,7 @@ namespace math {
 
         /** Behaves like primary class template. */
         explicit inline Point(const T *coordinates) : Super() {
-            ASSERT(coordinates != NULL);
+            THE_ASSERT(coordinates != NULL);
             ::memcpy(this->coordinates, coordinates, D * sizeof(T));
         }
 
@@ -267,7 +267,7 @@ namespace math {
 
         /** Behaves like primary class template. */
         explicit inline Point(const T *coordinates) : Super() {
-            ASSERT(coordinates != NULL);
+            THE_ASSERT(coordinates != NULL);
             ::memcpy(this->coordinates, coordinates, D * sizeof(T));
         }
 
@@ -373,7 +373,7 @@ namespace math {
 
         /** Behaves like primary class template. */
         explicit inline Point(const T *coordinates) : Super() {
-            ASSERT(coordinates != NULL);
+            THE_ASSERT(coordinates != NULL);
             ::memcpy(this->coordinates, coordinates, D * sizeof(T));
         }
 

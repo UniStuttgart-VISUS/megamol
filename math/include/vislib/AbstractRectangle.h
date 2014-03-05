@@ -829,10 +829,10 @@ namespace math {
 
         this->EnforcePositiveSize();
 
-        ASSERT(this->bounds[IDX_LEFT] <= this->bounds[IDX_RIGHT]);
-        ASSERT(this->bounds[IDX_BOTTOM] <= this->bounds[IDX_TOP]);
-        ASSERT(rectLeft <= rectRight);
-        ASSERT(rectBottom <= rectTop);
+        THE_ASSERT(this->bounds[IDX_LEFT] <= this->bounds[IDX_RIGHT]);
+        THE_ASSERT(this->bounds[IDX_BOTTOM] <= this->bounds[IDX_TOP]);
+        THE_ASSERT(rectLeft <= rectRight);
+        THE_ASSERT(rectBottom <= rectTop);
 
         if (rectLeft < this->bounds[IDX_LEFT]) {
             this->bounds[IDX_LEFT] = rectLeft;

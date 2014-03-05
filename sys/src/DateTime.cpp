@@ -125,7 +125,7 @@ void vislib::sys::DateTime::GetDate(INT& outYear,
     outYear = static_cast<INT>(this->get(DATE_PART_YEAR));
     outMonth = static_cast<INT>(this->get(DATE_PART_MONTH));
     outDay = static_cast<INT>(this->get(DATE_PART_DAY));
-//    //ASSERT(this->value >= 0); // TODO: Implementation does not yet work for BC
+//    //THE_ASSERT(this->value >= 0); // TODO: Implementation does not yet work for BC
 //    INT64 days = this->GetDays();           // Full days.
 //    INT64 cnt400Years = 0;                  // # of full 400 year blocks.
 //    INT64 cnt100Years = 0;                  // # of full 100 year blocks.
@@ -163,8 +163,8 @@ void vislib::sys::DateTime::GetDate(INT& outYear,
 //    divisor = (100 * ONE_YEAR) + (100 / 4) - 1;
 //    cnt100Years = days / divisor;
 //    days %= divisor;
-//    //ASSERT(cnt100Years > -4);
-//    //ASSERT(cnt100Years < 4);
+//    //THE_ASSERT(cnt100Years > -4);
+//    //THE_ASSERT(cnt100Years < 4);
 //
 //    //days -= cnt100Years;
 //
@@ -176,8 +176,8 @@ void vislib::sys::DateTime::GetDate(INT& outYear,
 //    divisor = (4 * ONE_YEAR) + (4 / 4);
 //    cnt4Years = days / divisor;
 //    days %= divisor;
-//    ASSERT(cnt4Years > -(100 / 4));
-//    ASSERT(cnt4Years < (100 / 4));
+//    THE_ASSERT(cnt4Years > -(100 / 4));
+//    THE_ASSERT(cnt4Years < (100 / 4));
 //
 //    /*
 //     * Divide a last time to determine the active year in the 4 year block.
@@ -188,8 +188,8 @@ void vislib::sys::DateTime::GetDate(INT& outYear,
 //    //}
 //    cntYears = days / divisor;
 //    days %= divisor;
-//    ASSERT(cntYears > -4);
-//    ASSERT(cntYears < 4);
+//    THE_ASSERT(cntYears > -4);
+//    THE_ASSERT(cntYears < 4);
 //
 //    /* At this point, we can compute the year. */
 //    outYear = static_cast<INT>(400 * cnt400Years + 100 * cnt100Years
@@ -197,7 +197,7 @@ void vislib::sys::DateTime::GetDate(INT& outYear,
 ////    if (this->value < 0) {
 ////        //outYear = -outYear;
 ////        //days = 365 - days - 1;
-//////        ASSERT(days >= 0);
+//////        THE_ASSERT(days >= 0);
 ////    }
 //    //if (days < 0) {
 //    //    days = 365 + IsLeapYear(outYear - 1) + days + 1;
@@ -306,19 +306,19 @@ void vislib::sys::DateTime::Set(const INT year, const INT month, const INT day,
             y = 1;
         }
     }
-    ASSERT(m >= 1);
-    ASSERT(m <= 12);
+    THE_ASSERT(m >= 1);
+    THE_ASSERT(m <= 12);
 
     /* 
      * Determine how many days are in each month of the input year. The year
      * must not yet be zero-based for this operation!
      */
-    ASSERT(y != 0);
+    THE_ASSERT(y != 0);
     const INT64 *daysAfterMonth = DateTime::IsLeapYear(static_cast<INT>(y)) 
         ? DAYS_AFTER_MONTH_LY : DAYS_AFTER_MONTH;
 
     /* Positive years are zero-based from now on (year 0 does not exist!). */
-    ASSERT(y != 0);
+    THE_ASSERT(y != 0);
     if (y > 0) {
         y--;
     }
@@ -660,7 +660,7 @@ INT64 vislib::sys::DateTime::get(const DatePart datePart) const {
         y1 = 3;
     }
     else if (y1 == -4) {
-        ASSERT(0);
+        THE_ASSERT(0);
         y1 = -3;
     }
 
@@ -701,7 +701,7 @@ INT64 vislib::sys::DateTime::get(const DatePart datePart) const {
         return m;
     }
 
-    ASSERT(datePart == DATE_PART_DAY);
+    THE_ASSERT(datePart == DATE_PART_DAY);
     // Return 1-based day-of-month
     return n - daysAfterMonth[m - 1] + 1;
 }

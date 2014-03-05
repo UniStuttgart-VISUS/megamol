@@ -146,7 +146,7 @@ vislib::net::ib::IbvInformation::Port::Port(IWVDevice *device,
     ::ZeroMemory(&this->attributes, sizeof(this->attributes));
 
     VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying port attributes...\n");
-    ASSERT(device != NULL);
+    THE_ASSERT(device != NULL);
     if (FAILED(hr = device->QueryPort(port, &this->attributes))) {
         VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying port attributes "
             "failed with error code %d.\n", hr);
@@ -155,15 +155,15 @@ vislib::net::ib::IbvInformation::Port::Port(IWVDevice *device,
     }
 
     VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying port GUID...\n");
-    ASSERT(this->attributes.GidTableLength > 0);
-    ASSERT(device != NULL);
+    THE_ASSERT(this->attributes.GidTableLength > 0);
+    THE_ASSERT(device != NULL);
     if (FAILED(device->QueryGid(port, 0, &this->gid))) {
         VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying port GUID failed "
             "with error code %d.\n", hr);
         this->~Port();
         throw sys::COMException(hr, __FILE__, __LINE__);
     }
-    ASSERT(!IbvInformation::IsNullGid(this->gid));
+    THE_ASSERT(!IbvInformation::IsNullGid(this->gid));
 }
  
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -313,7 +313,7 @@ vislib::net::ib::IbvInformation::Device::Device(IWVProvider *wvProvider,
     ::ZeroMemory(&this->attributes, sizeof(this->attributes));
 
     VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Opening IB device...\n");
-    ASSERT(wvProvider != NULL);
+    THE_ASSERT(wvProvider != NULL);
     if (FAILED(hr = wvProvider->OpenDevice(guid, &this->device))) {
         VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Opening device "
             "failed with error code %d.\n", hr);
@@ -457,7 +457,7 @@ bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
         /* Determine number of devices and get their GUIDs. */
         VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying number of IB "
             "devices...\n");
-        ASSERT(this->wvProvider != NULL);
+        THE_ASSERT(this->wvProvider != NULL);
         if (FAILED(hr = this->wvProvider->QueryDeviceList(NULL, &size))) {
             VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying number of "
                 "devices failed with error code %d.\n", hr);

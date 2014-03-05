@@ -108,7 +108,7 @@ vislib::StringA vislib::math::Ternary::ToStringA(void) const {
         case 1: return "true";
         case 0: return "unknown";
         case -1: return "false";
-        default: ASSERT(false);
+        default: THE_ASSERT(false);
     }
     return "";
 }
@@ -122,7 +122,7 @@ vislib::StringW vislib::math::Ternary::ToStringW(void) const {
         case 1: return L"true";
         case 0: return L"unknown";
         case -1: return L"false";
-        default: ASSERT(false);
+        default: THE_ASSERT(false);
     }
     return L"";
 }

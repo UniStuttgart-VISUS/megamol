@@ -25,7 +25,7 @@
  * @param call The OpenGL call to make.
  */
 #define GL_VERIFY(call) ::glGetError(); call;\
-    ASSERT(::glGetError() == GL_NO_ERROR)
+    THE_ASSERT(::glGetError() == GL_NO_ERROR)
 
 
 /**
@@ -35,7 +35,7 @@
  * @param expr The expression to execute and evaluate.
  */
 #if defined(DEBUG) || defined(_DEBUG)
-#define GL_VERIFY_EXPR(expr) ASSERT(expr == GL_NO_ERROR) 
+#define GL_VERIFY_EXPR(expr) THE_ASSERT(expr == GL_NO_ERROR) 
 #else /* defined(DEBUG) || defined(_DEBUG) */
 #define GL_VERIFY_EXPR(expr) (expr)
 #endif /* defined(DEBUG) || defined(_DEBUG) */

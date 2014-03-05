@@ -259,7 +259,7 @@ unsigned char vislib::graphics::ColourParser::hexToNum(const char& c) {
  */
 bool vislib::graphics::ColourParser::parseArray(const vislib::StringA& inStr,
         float &outR, float &outG, float &outB, float &outA) {
-    ASSERT(!inStr.IsEmpty());
+    THE_ASSERT(!inStr.IsEmpty());
 
     // remove any parentheses
     if (inStr[0] == '(') {
@@ -485,7 +485,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
         const vislib::StringA& inStr) {
     vislib::graphics::ColourRGBAu8 col;
     unsigned char c, b;
-    ASSERT(!inStr.IsEmpty() && (inStr[0] == '#'));
+    THE_ASSERT(!inStr.IsEmpty() && (inStr[0] == '#'));
 
     if (inStr.Length() == 4) { // short RGB
         c = hexToNum(inStr[1]);

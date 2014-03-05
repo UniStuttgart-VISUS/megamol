@@ -305,7 +305,7 @@ void vislib::net::Socket::GetMulticastInterface(IPAddress& outAddr) const {
     struct in_addr retval;
     SIZE_T size = sizeof(retval);
     this->GetOption(IPPROTO_IP, IP_MULTICAST_IF, &retval, size);
-    ASSERT(size == sizeof(retval));
+    THE_ASSERT(size == sizeof(retval));
     outAddr = retval;
 }
 
@@ -348,7 +348,7 @@ BYTE vislib::net::Socket::GetMulticastTimeToLive(
             break;
     }
 
-    ASSERT(size == sizeof(retval));
+    THE_ASSERT(size == sizeof(retval));
     return retval;
 }
 
@@ -518,7 +518,7 @@ SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
     }
 
     /* Initialise socket set and timeout structure. */
-    //ASSERT(forceReceive == false);
+    //THE_ASSERT(forceReceive == false);
     FD_ZERO(&readSet);
     FD_SET(this->handle, &readSet);
 
@@ -571,7 +571,7 @@ SIZE_T vislib::net::Socket::Receive(IPEndPoint& outFromAddr, void *outData,
     }
 
     /* Initialise socket set and timeout structure. */
-    //ASSERT(forceReceive == false);
+    //THE_ASSERT(forceReceive == false);
     FD_ZERO(&readSet);
     FD_SET(this->handle, &readSet);
 
@@ -637,7 +637,7 @@ SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes,
     }
 
     /* Initialise socket set and timeout structure. */
-    //ASSERT(forceSend == false);
+    //THE_ASSERT(forceSend == false);
     FD_ZERO(&writeSet);
     FD_SET(this->handle, &writeSet);
 
@@ -689,7 +689,7 @@ SIZE_T vislib::net::Socket::Send(const IPEndPoint& toAddr, const void *data,
     }
 
     /* Initialise socket set and timeout structure. */
-    //ASSERT(forceSend == false);
+    //THE_ASSERT(forceSend == false);
     FD_ZERO(&writeSet);
     FD_SET(this->handle, &writeSet);
 

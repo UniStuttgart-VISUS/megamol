@@ -449,7 +449,7 @@ bool vislib::graphics::BmpBitmapCodec::loadWithBitmapInfoHeader(
     const BITMAPINFOHEADER *bih = reinterpret_cast<const BITMAPINFOHEADER*>(
         dat + sizeof(BITMAPFILEHEADER));
 
-    ASSERT(bih->biSize == sizeof(BITMAPINFOHEADER));
+    THE_ASSERT(bih->biSize == sizeof(BITMAPINFOHEADER));
     // bih->biWidth
     // bih->biHeight
     if (bih->biPlanes != 1) {

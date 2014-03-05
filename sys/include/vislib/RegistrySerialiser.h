@@ -349,9 +349,9 @@ namespace sys {
          */
         template<class T, class R, class C>
         inline void deserialiseAsDword(T& outValue, const C *name) {
-            ASSERT(sizeof(T) <= sizeof(DWORD));
-            ASSERT(sizeof(DWORD) == sizeof(UINT32));
-            ASSERT(sizeof(DWORD) == sizeof(R));
+            THE_ASSERT(sizeof(T) <= sizeof(DWORD));
+            THE_ASSERT(sizeof(DWORD) == sizeof(UINT32));
+            THE_ASSERT(sizeof(DWORD) == sizeof(R));
             UINT32 value;
             this->Deserialise(value, name);
             outValue = static_cast<T>(*reinterpret_cast<R *>(&value));
@@ -457,9 +457,9 @@ namespace sys {
          */
         template<class T, class R, class C>
         inline void serialiseAsDword0(const T& value, const C *name) {
-            ASSERT(sizeof(T) <= sizeof(DWORD));
-            ASSERT(sizeof(DWORD) == sizeof(UINT32));
-            ASSERT(sizeof(T) == sizeof(R));
+            THE_ASSERT(sizeof(T) <= sizeof(DWORD));
+            THE_ASSERT(sizeof(DWORD) == sizeof(UINT32));
+            THE_ASSERT(sizeof(T) == sizeof(R));
             UINT32 v = static_cast<UINT32>(*reinterpret_cast<const R *>(
                 &value));
             this->Serialise(v, name);
