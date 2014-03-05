@@ -126,6 +126,7 @@ public:
         if((this->pt_D == NULL)||(sizeNew > this->size)) {
             this->Release();
             CudaSafeCall(cudaMalloc((void**)&this->pt_D, sizeof(T)*sizeNew));
+//            printf("Allocated at %p\n", &this->pt_D);
             this->size = sizeNew;
         }
         this->count = sizeNew;
