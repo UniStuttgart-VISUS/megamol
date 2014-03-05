@@ -16,7 +16,7 @@
 
 #include "vislib/String.h"
 #include "vislib/types.h"
-#include "vislib/Log.h"
+#include "the/log.h"
 
 
 namespace vislib {
@@ -50,42 +50,6 @@ namespace sys {
             WHITE = 0x0F,
             UNKNOWN_COLOR = 0x10
         };
-
-        /**
-         * Log echo output target implementation using special functions of the
-         * console, like coloured text.
-         */
-        class ConsoleLogTarget : public vislib::sys::Log::Target {
-        public:
-
-            /** ctor */
-            ConsoleLogTarget(unsigned int level = vislib::sys::Log::LEVEL_ERROR)
-                    : vislib::sys::Log::Target(level) {
-                // intentionally empty
-            }
-
-            /** dtor */
-            virtual ~ConsoleLogTarget() {
-                // intentionally empty
-            }
-
-            /**
-             * Writes a message to the log target
-             *
-             * @param level The level of the message
-             * @param time The time stamp of the message
-             * @param sid The object id of the source of the message
-             * @param msg The message text itself
-             */
-            virtual void Msg(unsigned int level,
-                vislib::sys::Log::TimeStamp time,
-                vislib::sys::Log::SourceID sid,
-                const char *msg);
-
-        };
-
-        /** The log echo output target of the console. */
-        static const ConsoleLogTarget LogEchoTarget;
 
         /**
          * Runs a console command in a common system command interpreter. On

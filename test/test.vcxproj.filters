@@ -132,9 +132,6 @@
     <ClCompile Include="testtcpserver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="testthelog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="testthread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -282,9 +279,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="testtcpserver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="testthelog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="testthread.h">

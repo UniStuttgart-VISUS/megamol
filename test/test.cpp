@@ -31,7 +31,6 @@
 #include "testcollection.h"
 #include "testpointers.h"
 #include "testdiscovery.h"
-#include "testthelog.h"
 #include "testdirectoryiterator.h"
 #include "testhash.h"
 #include "testtrayicon.h"
@@ -137,7 +136,6 @@ VislibTest tests[] = {
     {_T("Interlocked"), ::TestInterlocked, "Tests interlocked operations."},
     {_T("IPC"), ::TestIpc, "Tests inter-process communication"},
     {_T("IPC2"), ::TestIpc2, "For internal use only. Do not call."},
-    {_T("Log"), ::TestTheLogWithPhun, "Tests vislib::sys::Log"},
     {_T("NamedPipe"), ::TestNamedPipe, "Tests vislib::sys::NamedPipe (also requires 'vislib::sys::Thread' and 'vislib::sys::Mutex' to work correctly)"},
     {_T("Path"), ::TestPath, "Tests vislib::sys::Path"},
     {_T("PoolAllocator"), ::TestPoolAllocator, "Tests vislib::sys::PoolAllocator"},

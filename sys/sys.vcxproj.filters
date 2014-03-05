@@ -96,9 +96,6 @@
     <ClCompile Include="src\Lockable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Log.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\MemmappedFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -291,9 +288,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\Lockable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vislib\Log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\MemmappedFile.h">

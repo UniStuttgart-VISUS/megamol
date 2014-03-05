@@ -37,40 +37,6 @@
 
 
 /*
- * vislib::sys::Console::ConsoleLogTarget::Msg
- */
-void vislib::sys::Console::ConsoleLogTarget::Msg(unsigned int level,
-        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
-                const char *msg) {
-    if (vislib::sys::Console::ColorsEnabled()) {
-        vislib::sys::Console::ColorType color;
-
-        if (level <= vislib::sys::Log::LEVEL_ERROR) color = vislib::sys::Console::RED; // error
-        else if (level <= vislib::sys::Log::LEVEL_WARN) color = vislib::sys::Console::YELLOW; // warning
-        else if (level <= vislib::sys::Log::LEVEL_INFO) color = vislib::sys::Console::WHITE; // info
-        else color = vislib::sys::Console::UNKNOWN_COLOR;
-
-        if (color != vislib::sys::Console::UNKNOWN_COLOR) {
-            vislib::sys::Console::SetForegroundColor(color);
-            vislib::sys::Console::Write("%.4d", level);
-            vislib::sys::Console::RestoreDefaultColors();
-            vislib::sys::Console::Write("|%s", msg);
-        } else {
-            vislib::sys::Console::Write("%.4d|%s", level, msg);
-        }
-    } else {
-        vislib::sys::Console::Write("%.4d|%s", level, msg);
-    }
-}
-
-
-/*
- * vislib::sys::Console::LogEchoTarget
- */
-const vislib::sys::Console::ConsoleLogTarget vislib::sys::Console::LogEchoTarget;
-
-
-/*
  * __vl_console_useColors
  */
 bool __vl_console_useColors = vislib::sys::Console::ColorsAvailable();

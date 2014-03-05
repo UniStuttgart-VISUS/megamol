@@ -263,7 +263,6 @@
     <ClCompile Include="teststring.cpp" />
     <ClCompile Include="testsysinfo.cpp" />
     <ClCompile Include="testtcpserver.cpp" />
-    <ClCompile Include="testthelog.cpp" />
     <ClCompile Include="testthread.cpp" />
     <ClCompile Include="testthreadpool.cpp" />
     <ClCompile Include="testtrayicon.cpp" />
@@ -315,7 +314,6 @@
     <ClInclude Include="teststring.h" />
     <ClInclude Include="testsysinfo.h" />
     <ClInclude Include="testtcpserver.h" />
-    <ClInclude Include="testthelog.h" />
     <ClInclude Include="testthread.h" />
     <ClInclude Include="testthreadpool.h" />
     <ClInclude Include="testtrayicon.h" />
