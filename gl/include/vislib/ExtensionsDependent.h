@@ -18,9 +18,7 @@
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(disable: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#ifndef VISLIB_SYMBOL_EXPORT
 #define GLH_EXT_IMPORT  // TODO: This is extremely hughly because of LNK4049, but works.
-#endif /* !VISLIB_SYMBOL_EXPORT */
 #include "glh/glh_extensions.h"
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(default: 4996)

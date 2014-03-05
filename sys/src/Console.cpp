@@ -73,11 +73,7 @@ const vislib::sys::Console::ConsoleLogTarget vislib::sys::Console::LogEchoTarget
 /*
  * __vl_console_useColors
  */
-VISLIB_STATICSYMBOL bool __vl_console_useColors
-#ifndef VISLIB_SYMBOL_IMPORT
-    = vislib::sys::Console::ColorsAvailable()
-#endif /* !VISLIB_SYMBOL_IMPORT */
-    ;
+bool __vl_console_useColors = vislib::sys::Console::ColorsAvailable();
 
 
 /*

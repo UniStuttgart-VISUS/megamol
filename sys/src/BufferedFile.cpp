@@ -25,13 +25,7 @@
 /*
  * vislib::sys::BufferedFile::defBufferSize
  */
-VISLIB_STATICSYMBOL vislib::sys::File::FileSize
-__vl_bufferedfile_defaultBufferSize 
-#ifndef VISLIB_SYMBOL_IMPORT
-//    = vislib::sys::SystemInformation::PageSize();
-    = 64 * 1024
-#endif /* !VISLIB_SYMBOL_IMPORT */
-    ;
+vislib::sys::File::FileSize __vl_bufferedfile_defaultBufferSize = 64 * 1024;
 
 
 /*

@@ -16,12 +16,9 @@
 /*
  * __vl_CameraParameterLimits_defaultlimits
  */
-VISLIB_STATICSYMBOL vislib::SmartPtr<vislib::graphics::CameraParameterLimits>
-    __vl_CameraParameterLimits_defaultlimits
-#ifndef VISLIB_SYMBOL_IMPORT
-        (new vislib::graphics::CameraParameterLimits())
-#endif /* !VISLIB_SYMBOL_IMPORT */
-        ;
+vislib::SmartPtr<vislib::graphics::CameraParameterLimits>
+    __vl_CameraParameterLimits_defaultlimits(
+        new vislib::graphics::CameraParameterLimits());
 
 
 /* Default values */

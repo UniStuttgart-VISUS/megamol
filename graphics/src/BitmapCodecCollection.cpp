@@ -20,17 +20,6 @@
 
 
 /*
- * __vl_bitmapcodeccollection_defcol
- */
-VISLIB_STATICSYMBOL vislib::graphics::BitmapCodecCollection
-__vl_bitmapcodeccollection_defcol
-#ifndef VISLIB_SYMBOL_IMPORT
-    = vislib::graphics::BitmapCodecCollection::BuildDefaultCollection()
-#endif /* !VISLIB_SYMBOL_IMPORT */
-    ;
-
-
-/*
  * vislib::graphics::BitmapCodecCollection::BuildDefaultCollection
  */
 vislib::graphics::BitmapCodecCollection
@@ -45,15 +34,6 @@ vislib::graphics::BitmapCodecCollection::BuildDefaultCollection(void) {
 
     defCol.codecs.Trim();
     return defCol;
-}
-
-
-/*
- * vislib::graphics::BitmapCodecCollection::DefaultCollection
- */
-vislib::graphics::BitmapCodecCollection&
-vislib::graphics::BitmapCodecCollection::DefaultCollection(void) {
-    return __vl_bitmapcodeccollection_defcol;
 }
 
 

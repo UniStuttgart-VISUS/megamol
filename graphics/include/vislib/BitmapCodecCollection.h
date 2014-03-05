@@ -45,13 +45,6 @@ namespace graphics {
          */
         static BitmapCodecCollection BuildDefaultCollection();
 
-        /**
-         * Answer the built-in default collection
-         *
-         * @return The built-in default codec collection
-         */
-        static BitmapCodecCollection& DefaultCollection();
-
         /** Ctor. */
         BitmapCodecCollection(void);
 
