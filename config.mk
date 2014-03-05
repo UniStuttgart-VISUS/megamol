@@ -61,8 +61,9 @@ endif
 
 
 # Add clib version to the bits field for binary compatibility
-CLIBVER := $(shell /lib/libc.so.6 | sed -n 's/^.*C.*Library.*version[[:space:]]\+\([[:digit:]\.]\+\)[[:space:]].*$ /\1/I p' | sed -n 's/\./_/g p')
-BITSEX := $(BITS)_clib$(CLIBVER)
+#CLIBVER := $(shell /lib/libc.so.6 | sed -n 's/^.*C.*Library.*version[[:space:]]\+\([[:digit:]\.]\+\)[[:space:]].*$ /\1/I p' | sed -n 's/\./_/g p')
+#BITSEX := $(BITS)_clib$(CLIBVER)
+BITSEX := $(BITS)
 
 
 # The default input directory
