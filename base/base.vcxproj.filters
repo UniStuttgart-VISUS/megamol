@@ -200,9 +200,6 @@
     <ClInclude Include="include\vislib\ArrayElementPtrCtor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vislib\assert.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\vislib\AssociativeCollection.h">
       <Filter>Header Files</Filter>
     </ClInclude>

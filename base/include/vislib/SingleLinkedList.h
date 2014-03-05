@@ -20,7 +20,7 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/NoSuchElementException.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/OrderedCollection.h"
 #include "vislib/NullLockable.h"
 

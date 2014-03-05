@@ -7,7 +7,7 @@
 //
 //#include "vislib/IbvCommChannel.h"
 //
-//#include "vislib/assert.h"
+//#include "the/assert.h"
 //#include "vislib/Exception.h"
 //#include "vislib/IbvInformation.h"
 //#include "vislib/IPCommEndPoint.h"

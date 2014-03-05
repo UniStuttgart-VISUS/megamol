@@ -11,7 +11,7 @@
 #include "glh/glh_genext.h"
 #include <GL/glu.h>
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/ShallowMatrix.h"
 
 

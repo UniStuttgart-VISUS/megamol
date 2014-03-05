@@ -6,7 +6,7 @@
  */
 
 #include "vislib/AbstractFont.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalParamException.h"
 
 

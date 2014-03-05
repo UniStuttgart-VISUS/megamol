@@ -7,7 +7,7 @@
 
 #include "vislib/ObservableCameraParams.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/CameraParamsStore.h"
 #include "vislib/Trace.h"
 

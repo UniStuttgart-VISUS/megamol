@@ -8,7 +8,7 @@
 
 #include "vislib/AbstractAsyncContext.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/memutils.h"
 
 

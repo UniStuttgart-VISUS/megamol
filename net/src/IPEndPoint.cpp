@@ -8,7 +8,7 @@
 
 #include "vislib/IPEndPoint.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/DNS.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"

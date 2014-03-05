@@ -508,7 +508,7 @@ namespace sys {
         this->memoryAnchor[1] = new Char *[this->argCount];
         this->arguments = this->memoryAnchor[1];
 
-        BECAUSE_I_KNOW(this->argCount == this->storeCount);
+        THE_ASSERT(this->argCount == this->storeCount);
         for (int i = 0; i < this->argCount; i++) {
             typename T::Size len = T::SafeStringLength(argv[i]) + 1;
             this->arguments[i] = this->memoryAnchor[0][i] = new Char[len];

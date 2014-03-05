@@ -6,7 +6,7 @@
  */
 
 #include "vislib/CameraLookAtDist.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include <cfloat>
 #include "vislib/CameraParameters.h"
 #include "vislib/Cursor2D.h"

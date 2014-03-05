@@ -7,7 +7,7 @@
 
 #include "vislib/DiscoveryService.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/DiscoveryListener.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/mathfunctions.h"

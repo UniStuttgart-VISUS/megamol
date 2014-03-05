@@ -8,7 +8,7 @@
  */
 
 #include "vislib/Camera.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/CameraParamsStore.h"
 #include "vislib/IllegalStateException.h"
 

@@ -8,7 +8,7 @@
 
 #include "vislib/Log.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/memutils.h"

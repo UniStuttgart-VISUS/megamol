@@ -26,7 +26,7 @@
 #include <unistd.h>
 #endif /* _WIN32 */
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/DNS.h"
 #include "vislib/memutils.h"
 #include "vislib/IllegalParamException.h"

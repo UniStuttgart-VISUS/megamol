@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/memutils.h"
 #include "vislib/SingleAllocator.h"
 #include "vislib/types.h"

@@ -21,7 +21,7 @@
 #endif /* _WIN32 */
 
 #include "vislib/AbstractAsyncContext.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/Event.h"
 #include "vislib/IPEndPoint.h"
 #include "vislib/Socket.h"

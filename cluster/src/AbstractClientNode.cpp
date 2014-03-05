@@ -7,7 +7,7 @@
 
 #include "vislib/AbstractClientNode.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/memutils.h"
 #include "vislib/SocketException.h"

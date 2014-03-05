@@ -8,7 +8,7 @@
 
 #include <cfloat>
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 
 
 /** Absolute of bias of half exponent (-15). */

@@ -7,7 +7,7 @@
 
 #include "vislib/NodeIdentifier.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 
 
 /*

@@ -7,7 +7,7 @@
 
 #include "vislib/VolatileIPCStringTable.h"
 #include "vislib/AlreadyExistsException.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"

@@ -6,7 +6,7 @@
  */
 
 #include "vislib/Cursor2DRectLasso.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/Cursor2D.h"
 
 

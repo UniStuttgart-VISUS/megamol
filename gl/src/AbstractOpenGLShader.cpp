@@ -14,7 +14,7 @@
 #include "glh/glh_genext.h"
 
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/File.h"
 #include "vislib/memutils.h"
 #include "vislib/Trace.h"

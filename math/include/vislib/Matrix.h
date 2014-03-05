@@ -15,7 +15,7 @@
 
 
 #include "vislib/AbstractMatrix.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 
 
 namespace vislib {

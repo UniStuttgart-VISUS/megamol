@@ -19,7 +19,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/Point.h"
 #include "vislib/ShallowPoint.h"

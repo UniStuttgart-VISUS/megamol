@@ -6,7 +6,7 @@
  */
 
 #include "vislib/ColourParser.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/NamedColours.h"
 #include "vislib/UnsupportedOperationException.h"

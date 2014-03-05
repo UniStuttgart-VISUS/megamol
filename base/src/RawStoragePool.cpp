@@ -9,7 +9,7 @@
 
 #include <climits>
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/memutils.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/UnsupportedOperationException.h"

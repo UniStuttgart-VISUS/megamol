@@ -601,7 +601,7 @@ print $out qq§/*
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/memutils.h"
 

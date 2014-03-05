@@ -8,7 +8,7 @@
 #include "vislib/AbstractSimpleMessageHeader.h"
 
 #include "vislib/IllegalParamException.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include <cstring>
 
 /*

@@ -15,7 +15,7 @@
 #include "vislib/String.h"
 #endif /* !_WIN32 */
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/sysfunctions.h"

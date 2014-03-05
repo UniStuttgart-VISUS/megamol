@@ -17,7 +17,7 @@
 
 #include "vislib/Socket.h"  // Must be first
 #include "vislib/AbstractClusterNode.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/Camera.h"
 
 

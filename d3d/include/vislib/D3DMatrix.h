@@ -20,7 +20,7 @@
 #include <d3dx9math.h>
 
 #include "vislib/AbstractMatrix.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 
 
 namespace vislib {

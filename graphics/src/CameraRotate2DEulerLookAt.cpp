@@ -7,7 +7,7 @@
 
 #include "vislib/CameraRotate2DEulerLookAt.h"
 #define _USE_MATH_DEFINES
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/Cursor2D.h"
 #include "vislib/graphicstypes.h"
 #include "vislib/Quaternion.h"

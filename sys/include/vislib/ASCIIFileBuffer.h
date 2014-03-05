@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/Array.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/File.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/MemmappedFile.h"

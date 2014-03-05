@@ -10,7 +10,7 @@
 
 #include <cstdlib>
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/DNS.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/OutOfRangeException.h"

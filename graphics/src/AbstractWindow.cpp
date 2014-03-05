@@ -8,7 +8,7 @@
 
 #include "vislib/AbstractWindow.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/StringConverter.h"

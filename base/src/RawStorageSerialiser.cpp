@@ -7,7 +7,7 @@
 
 #include "vislib/RawStorageSerialiser.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalStateException.h"
 
 

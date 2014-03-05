@@ -11,7 +11,7 @@
 #include "vislib/D3DException.h"
 #include "vislib/IllegalParamException.h"
 #include "the/stack_trace.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 
 
 /**

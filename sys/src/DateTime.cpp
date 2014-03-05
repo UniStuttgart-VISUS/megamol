@@ -11,7 +11,7 @@
 
 #include <climits>
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/error.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/SystemException.h"

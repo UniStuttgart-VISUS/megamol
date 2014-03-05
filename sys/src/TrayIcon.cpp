@@ -7,7 +7,7 @@
 
 #include "vislib/TrayIcon.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/StringConverter.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/SystemException.h"

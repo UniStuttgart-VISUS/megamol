@@ -7,7 +7,7 @@
  */
 
 #include "vislib/CameraParamsEyeOverride.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 
 
 /*

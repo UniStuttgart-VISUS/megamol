@@ -19,7 +19,7 @@
 #include <sys/types.h>
 #endif /* !_WIN32 */
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/AutoHandle.h"
 #include "vislib/Console.h"
 #include "vislib/error.h"

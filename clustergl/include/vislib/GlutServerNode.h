@@ -377,7 +377,7 @@ namespace cluster {
 
         /* Clean up possible old controllers. */
         if (inOutRotateController != NULL) {
-            BECAUSE_I_KNOW(dynamic_cast<graphics::AbstractCursorEvent *>(
+            THE_ASSERT(dynamic_cast<graphics::AbstractCursorEvent *>(
                 inOutRotateController) != NULL);
             this->cursor.UnregisterCursorEvent(dynamic_cast<
                 graphics::AbstractCursorEvent *>(inOutRotateController));
@@ -385,7 +385,7 @@ namespace cluster {
         SAFE_DELETE(inOutRotateController);
 
         if (inOutZoomController != NULL) {
-            BECAUSE_I_KNOW(dynamic_cast<graphics::AbstractCursorEvent *>(
+            THE_ASSERT(dynamic_cast<graphics::AbstractCursorEvent *>(
                 inOutZoomController) != NULL);
             this->cursor.UnregisterCursorEvent(dynamic_cast<
                 graphics::AbstractCursorEvent *>(inOutZoomController));
@@ -478,8 +478,8 @@ namespace cluster {
      */
     template<class T> void GlutServerNode<T>::onMouseButton(const int button,
             const int state, const int x, const int y) {
-        BECAUSE_I_KNOW(GLUT_LEFT_BUTTON < 3);
-        BECAUSE_I_KNOW(GLUT_MIDDLE_BUTTON < 3);
+        THE_ASSERT(GLUT_LEFT_BUTTON < 3);
+        THE_ASSERT(GLUT_MIDDLE_BUTTON < 3);
         this->cursor.SetButtonState(button, (state == GLUT_DOWN));
 
         this->updateInputModifiers();

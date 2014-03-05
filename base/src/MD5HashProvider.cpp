@@ -29,7 +29,7 @@
 
 #include "vislib/MD5HashProvider.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/memutils.h"
 

@@ -7,7 +7,7 @@
 
 #include "vislib/SHA1HashProvider.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/memutils.h"

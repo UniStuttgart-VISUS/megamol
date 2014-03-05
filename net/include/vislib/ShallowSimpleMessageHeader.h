@@ -16,7 +16,7 @@
 
 
 #include "vislib/AbstractSimpleMessageHeader.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 
 
 namespace vislib {

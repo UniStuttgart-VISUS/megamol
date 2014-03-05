@@ -7,7 +7,7 @@
  */
 
 #include "vislib/CameraMove2D.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/Cursor2D.h"
 #include "vislib/graphicstypes.h"
 #include "vislib/Trace.h"

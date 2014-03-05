@@ -20,7 +20,7 @@
 //#include <asm/atomic.h>
 #endif /* _WIN32 */
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/forceinline.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/types.h"

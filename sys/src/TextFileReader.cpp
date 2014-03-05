@@ -6,7 +6,7 @@
  */
 
 #include "vislib/TextFileReader.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/UnsupportedOperationException.h"
 
 #include "vislib/sysfunctions.h"

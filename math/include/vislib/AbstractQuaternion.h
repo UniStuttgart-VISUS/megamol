@@ -15,7 +15,7 @@
 
 #include <cmath>
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/types.h"
@@ -543,7 +543,7 @@ namespace math {
          */
         inline AbstractQuaternion(const T& x, const T& y, const T& z, 
                 const T& w) {
-            BECAUSE_I_KNOW(sizeof(this->components) == 4 * sizeof(T));
+            THE_ASSERT(sizeof(this->components) == 4 * sizeof(T));
             this->components[IDX_X] = x;
             this->components[IDX_Y] = y;
             this->components[IDX_Z] = z;

@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/Array.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/AbstractVector.h"
 #include "vislib/AbstractMatrix.h"
 #include "vislib/mathfunctions.h"

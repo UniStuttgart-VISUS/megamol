@@ -8,7 +8,7 @@
 
 #include "vislib/BmpBitmapCodec.h"
 #include <climits>
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/BitmapImage.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/Trace.h"

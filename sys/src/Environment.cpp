@@ -15,7 +15,7 @@
 #include <cstdlib>
 #endif /* _WIn32 */
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/memutils.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"

@@ -6,7 +6,7 @@
  */
 
 #include "vislib/FileNameSequence.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/File.h"
 #include "vislib/IllegalParamException.h"

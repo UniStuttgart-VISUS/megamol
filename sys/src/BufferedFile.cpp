@@ -6,7 +6,7 @@
 
 #include "vislib/BufferedFile.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IOException.h"

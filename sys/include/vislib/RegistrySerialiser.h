@@ -18,7 +18,7 @@
 
 #include <windows.h>
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/RegistryKey.h"
 #include "vislib/Serialiser.h"
 #include "vislib/Stack.h"

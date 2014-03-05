@@ -14,7 +14,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 
 #ifdef __cplusplus
 extern "C" {

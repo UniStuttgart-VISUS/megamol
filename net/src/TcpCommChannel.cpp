@@ -8,7 +8,7 @@
 
 #include "vislib/TcpCommChannel.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/PeerDisconnectedException.h"

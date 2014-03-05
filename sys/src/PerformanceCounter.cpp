@@ -13,7 +13,7 @@
 #include <sys/time.h>
 #endif /* _WIN32 */
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/error.h"
 #include "vislib/memutils.h"
 #include "vislib/SystemException.h"

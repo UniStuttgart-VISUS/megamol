@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/memutils.h"

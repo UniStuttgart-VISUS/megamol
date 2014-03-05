@@ -645,7 +645,6 @@
     <ClInclude Include="include\vislib\ArrayAllocator.h" />
     <ClInclude Include="include\vislib\ArrayElementDftCtor.h" />
     <ClInclude Include="include\vislib\ArrayElementPtrCtor.h" />
-    <ClInclude Include="include\vislib\assert.h" />
     <ClInclude Include="include\vislib\AssociativeCollection.h" />
     <ClInclude Include="include\vislib\CharTraits.h" />
     <ClInclude Include="include\vislib\Collection.h" />

@@ -7,7 +7,7 @@
 
 #include "vislib/CriticalSection.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/UnsupportedOperationException.h"
 

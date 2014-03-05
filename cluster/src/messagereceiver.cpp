@@ -7,7 +7,7 @@
 
 #include "messagereceiver.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/clustermessages.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/memutils.h"

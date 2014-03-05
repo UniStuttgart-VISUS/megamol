@@ -8,7 +8,7 @@
 
 #include "vislib/AbstractServerNode.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/NoSuchElementException.h"

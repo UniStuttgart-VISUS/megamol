@@ -16,7 +16,7 @@
 
 
 #include "vislib/Array.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/utils.h"
 
 
@@ -75,7 +75,7 @@ namespace vislib {
          */
         inline void Add(const T& element) {
             this->elements.Append(element);
-            BECAUSE_I_KNOW(!this->elements.IsEmpty());
+            THE_ASSERT(!this->elements.IsEmpty());
             this->siftUp(this->elements.Count() - 1);
         }
 

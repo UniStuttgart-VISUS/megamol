@@ -16,7 +16,7 @@
 
 
 #include "vislib/Array.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/String.h"
 #include "vislib/Iterator.h"
 #include "vislib/NoSuchElementException.h"

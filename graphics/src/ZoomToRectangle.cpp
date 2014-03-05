@@ -88,8 +88,8 @@ void vislib::graphics::ZoomToRectangle::zoomOrthographicCamera(void) {
     ASSERT(this->IsCameraParamsValid());
     ASSERT(this->CameraParams()->Projection() 
         == CameraParameters::MONO_ORTHOGRAPHIC);
-    BECAUSE_I_KNOW(this->CameraParams()->VirtualViewSize().Width() > 0.0f);
-    BECAUSE_I_KNOW(this->CameraParams()->VirtualViewSize().Height() > 0.0f);
+    THE_ASSERT(this->CameraParams()->VirtualViewSize().Width() > 0.0f);
+    THE_ASSERT(this->CameraParams()->VirtualViewSize().Height() > 0.0f);
 
     // move the camera to center the target area
     math::Point<ImageSpaceType, 2> center = this->targetRect.CalcCenter();
@@ -151,8 +151,8 @@ void vislib::graphics::ZoomToRectangle::zoomProjectiveCamera(void) {
     ASSERT(this->IsCameraParamsValid());
     ASSERT(this->CameraParams()->Projection() 
         != CameraParameters::MONO_ORTHOGRAPHIC);
-    BECAUSE_I_KNOW(this->CameraParams()->VirtualViewSize().Width() > 0.0f);
-    BECAUSE_I_KNOW(this->CameraParams()->VirtualViewSize().Height() > 0.0f);
+    THE_ASSERT(this->CameraParams()->VirtualViewSize().Width() > 0.0f);
+    THE_ASSERT(this->CameraParams()->VirtualViewSize().Height() > 0.0f);
 
     // calculate distance of the image plane
     SceneSpaceType imgDist = (this->CameraParams()->VirtualViewSize().Height()

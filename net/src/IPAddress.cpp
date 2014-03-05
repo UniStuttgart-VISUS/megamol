@@ -13,7 +13,7 @@
 
 #include "vislib/IPAddress.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/OutOfRangeException.h"

@@ -7,7 +7,7 @@
 
 #include "vislib/ClusterDiscoveryService.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/ClusterDiscoveryListener.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/SocketException.h"

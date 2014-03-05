@@ -15,7 +15,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/D3DException.h"
 
 

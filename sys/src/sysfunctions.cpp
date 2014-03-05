@@ -16,7 +16,7 @@
 #include <climits>
 #endif /* _WIN32 */
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/File.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IOException.h"

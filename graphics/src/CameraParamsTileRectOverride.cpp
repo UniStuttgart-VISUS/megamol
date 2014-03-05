@@ -7,7 +7,7 @@
  */
 
 #include "vislib/CameraParamsTileRectOverride.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/mathfunctions.h"
 
 

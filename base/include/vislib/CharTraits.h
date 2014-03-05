@@ -27,7 +27,7 @@
 #include <iconv.h>
 #endif /* !_WIN32 */
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/memutils.h"
 #include "vislib/types.h"
 #include "vislib/UnsupportedOperationException.h"

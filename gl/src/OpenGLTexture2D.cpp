@@ -8,7 +8,7 @@
 
 #include "vislib/OpenGLTexture2D.h"
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/glverify.h"
 #include "vislib/mathfunctions.h"

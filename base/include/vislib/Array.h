@@ -27,7 +27,7 @@
 #endif /* (!defined(WIN32)) || !defined(INCLUDED_FROM_ARRAY_CPP) */
 
 #include "vislib/ArrayElementDftCtor.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/Iterator.h"
 #include "vislib/OrderedCollection.h"
 #include "vislib/OutOfRangeException.h"

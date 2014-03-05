@@ -29,7 +29,7 @@
 
 #endif /* _WIN32 */
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/Thread.h"

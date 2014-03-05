@@ -7,7 +7,7 @@
 
 #include <cstddef> // for NULL
 #include "vislib/AbstractCameraController.h"
-#include "vislib/assert.h"
+#include "the/assert.h"
 
 
 /*

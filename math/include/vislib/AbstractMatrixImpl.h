@@ -18,7 +18,7 @@
 #include <ios>
 #include <iostream>
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/Exception.h"
 #include "vislib/forceinline.h"
 #include "vislib/mathfunctions.h"

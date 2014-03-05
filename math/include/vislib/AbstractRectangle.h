@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/assert.h"
+#include "the/assert.h"
 #include "vislib/Dimension.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/memutils.h"
