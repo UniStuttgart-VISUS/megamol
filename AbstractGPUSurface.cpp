@@ -129,6 +129,7 @@ bool AbstractGPUSurface::InitTriangleIdxVBO(size_t triangleCnt) {
     if (this->triangleIdxReady) {
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, this->vboTriangleIdx);
         glDeleteBuffersARB(1, &this->vboTriangleIdx);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
         this->vboTriangleIdx = 0;
     }
 
@@ -138,6 +139,8 @@ bool AbstractGPUSurface::InitTriangleIdxVBO(size_t triangleCnt) {
     glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER,
             sizeof(unsigned int)*triangleCnt*3, 0, GL_DYNAMIC_DRAW);
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+//    printf("InitTriangleIdxVBO: %u bytes\n", sizeof(unsigned int)*triangleCnt*3);
 
     this->triangleCnt = triangleCnt;
     this->triangleIdxReady = true;
@@ -156,6 +159,7 @@ bool AbstractGPUSurface::InitVertexDataVBO(size_t vertexCnt) {
     if (this->vertexDataReady) {
         glBindBufferARB(GL_ARRAY_BUFFER, this->vboVtxData);
         glDeleteBuffersARB(1, &this->vboVtxData);
+        glBindBufferARB(GL_ARRAY_BUFFER, 0);
         this->vboVtxData = 0;
     }
 
@@ -165,6 +169,8 @@ bool AbstractGPUSurface::InitVertexDataVBO(size_t vertexCnt) {
     glBufferDataARB(GL_ARRAY_BUFFER,
             vertexCnt*this->vertexDataStride*sizeof(float), 0, GL_DYNAMIC_DRAW);
     glBindBufferARB(GL_ARRAY_BUFFER, 0);
+
+//    printf("InitVertexDataVBO: %u bytes\n", vertexCnt*this->vertexDataStride*sizeof(float));
 
     this->vertexCnt = vertexCnt;
     this->vertexDataReady = true;
@@ -265,12 +271,14 @@ void AbstractGPUSurface::Release() {
         glDeleteBuffersARB(1, &this->vboVtxData);
         this->vboVtxData = 0;
         CheckForGLError();
+        glBindBufferARB(GL_ARRAY_BUFFER, 0);
     }
     if (this->vboTriangleIdx) {
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, this->vboTriangleIdx);
         glDeleteBuffersARB(1, &this->vboTriangleIdx);
         this->vboTriangleIdx = 0;
         CheckForGLError();
+        glBindBufferARB(GL_ARRAY_BUFFER, 0);
     }
 
     this->vertexDataReady = false;

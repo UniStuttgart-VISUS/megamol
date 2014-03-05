@@ -3276,7 +3276,8 @@ void GPUSurfaceMT::Release() {
     CudaSafeCall(this->edges_D.Release());
     CudaSafeCall(this->edgesPerTetrahedron_D.Release());
     CudaSafeCall(this->tetraEdgeIdxOffsets_D.Release());
-
+    CudaSafeCall(this->triangleNeighbors_D.Release());
+    this->edges.Release();
     this->neighboursReady = false;
     this->activeCellCnt = 0;
 }
