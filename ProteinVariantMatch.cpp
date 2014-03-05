@@ -756,6 +756,12 @@ void ProteinVariantMatch::computeDensityBBox(
         maxC.x = std::max(maxC.x, atomPos1[4*i+0]);
         maxC.y = std::max(maxC.y, atomPos1[4*i+1]);
         maxC.z = std::max(maxC.z, atomPos1[4*i+2]);
+//        if (i < 10) {
+//            printf("ATOM POS #0, %i: %f %f %f\n", i,
+//                atomPos1[4*i+0],
+//                atomPos1[4*i+1],
+//                atomPos1[4*i+2]);
+//        }
     }
     for (size_t i = 0; i < atomCnt2; ++i) {
         minC.x = std::min(minC.x, atomPos2[4*i+0]);
@@ -764,19 +770,25 @@ void ProteinVariantMatch::computeDensityBBox(
         maxC.x = std::max(maxC.x, atomPos2[4*i+0]);
         maxC.y = std::max(maxC.y, atomPos2[4*i+1]);
         maxC.z = std::max(maxC.z, atomPos2[4*i+2]);
+//        if (i < 10) {
+//            printf("ATOM POS #0, %i: %f %f %f\n", i,
+//                atomPos2[4*i+0],
+//                atomPos2[4*i+1],
+//                atomPos2[4*i+2]);
+//        }
     }
 
     this->bboxParticles.Set(
             minC.x, minC.y, minC.z,
             maxC.x, maxC.y, maxC.z);
-//
-//    // DEBUG Print new bounding box
-//    printf("bbboxParticles: %f %f %f %f %f %f\n",
-//            minC.x, minC.y, minC.z,
-//            maxC.x, maxC.y, maxC.z);
-//    printf("atomCnt0: %u\n",atomCnt1);
-//    printf("atomCnt1: %u\n",atomCnt2);
-//    // END DEBUG
+
+    // DEBUG Print new bounding box
+    printf("bbboxParticles: %f %f %f %f %f %f\n",
+            minC.x, minC.y, minC.z,
+            maxC.x, maxC.y, maxC.z);
+    printf("atomCnt0: %u\n",atomCnt1);
+    printf("atomCnt1: %u\n",atomCnt2);
+    // END DEBUG
 
 }
 
@@ -966,7 +978,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 //                    maxCOld.x, maxCOld.y, maxCOld.z);
 
 
-#define COMPUTE_RUNTIME
+//#define COMPUTE_RUNTIME
 #ifdef COMPUTE_RUNTIME
             float dt_ms;
             cudaEvent_t event1, event2;
@@ -993,6 +1005,8 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             // Compute RMS value and transformation
             int posCnt = std::min(posCnt0, posCnt1);
 
+//            printf("poscount 1 %u, posCnt 2 %u\n", posCnt0, posCnt1);
+
             // Fit atom positions of source structure
             Vec3f centroid(0.0f, 0.0f, 0.0f);
             for (int cnt = 0; cnt < static_cast<int>(posCnt); ++cnt) {
@@ -1000,20 +1014,13 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                         this->rmsPosVec1.Peek()[cnt*3+0],
                         this->rmsPosVec1.Peek()[cnt*3+1],
                         this->rmsPosVec1.Peek()[cnt*3+2]);
-                if (cnt < 20) {
-                    printf("%f %f %f\n",
-                            this->rmsPosVec1.Peek()[3*cnt+0],
-                            this->rmsPosVec1.Peek()[3*cnt+1],
-                            this->rmsPosVec1.Peek()[3*cnt+2]);
-                }
-
             }
             centroid /= static_cast<float>(posCnt);
 
-            printf("centroid %f %f %f\n",
-                    centroid.GetX(),
-                    centroid.GetY(),
-                    centroid.GetZ());
+//            printf("centroid %f %f %f\n",
+//                    centroid.GetX(),
+//                    centroid.GetY(),
+//                    centroid.GetZ());
 
 //            if (posCnt0 != posCnt1) {
 //                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1072,6 +1079,10 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                     particleCnt0,
                     particleCnt1);
 
+//            printf("DENSITY MAP DIM %u %u %u\n", this->volDim.x, this->volDim.y, this->volDim.z);
+//            printf("DENSITY MAP ORG %f %f %f\n", this->volOrg.x, this->volOrg.y, this->volOrg.z);
+//            printf("DENSITY MAP DELTA %f %f %f\n", this->volDelta.x, this->volDelta.y, this->volDelta.z);
+
             // Compute density map of variant #0
             if (!this->computeDensityMap(
                     this->atomPos0.Peek(),
@@ -1098,22 +1109,23 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             cudaEventRecord(event1, 0);
 #endif // COMPUTE_RUNTIME
 
-            DeformableGPUSurfaceMT surfStart, surfEnd;
+            DeformableGPUSurfaceMT surfStart, surfEnd, surfTarget;
 
-//            // Get vertex positions based on the level set
-//            if (!surfTarget.ComputeVertexPositions(
-//                    ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
-//                    this->volDim,
-//                    this->volOrg,
-//                    this->volDelta,
-//                    this->qsIsoVal)) {
-//
-//                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                        "%s: could not compute vertex positions #1",
-//                        this->ClassName());
-//
-//                return false;
-//            }
+            // Get vertex positions based on the level set
+            // (Needed because we need the cube States of the target shape
+            if (!surfTarget.ComputeVertexPositions(
+                    ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
+                    this->qsIsoVal)) {
+
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "%s: could not compute vertex positions #1",
+                        this->ClassName());
+
+                return false;
+            }
 
             // Get vertex positions based on the level set
             if (!surfStart.ComputeVertexPositions(
@@ -1129,6 +1141,22 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 
                 return false;
             }
+////            surfStart.PrintCubeStates((volDim.x-1)*(volDim.y-1)*(volDim.z-1));
+//            // DEBUG Print voltarget_D
+//            HostArr<float> volTarget;
+//            size_t gridSize = volDim.x*volDim.y*volDim.z;
+//            volTarget.Validate(gridSize);
+//            CudaSafeCall(cudaMemcpy(volTarget.Peek(),
+//                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+//                    sizeof(float)*gridSize,
+//                    cudaMemcpyDeviceToHost));
+//            for (int i = 0; i < gridSize; ++i) {
+//                printf("VOL %.16f\n", volTarget.Peek()[i]);
+//            }
+//            volTarget.Release();
+//            // END DEBUG
+
+
             ::CheckForCudaErrorSync();
 
             // Build triangle mesh from vertices
@@ -1208,6 +1236,10 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                 return false;
             }
 
+//            // DEBUG print positions of regularized surface
+//            surfStart.PrintVertexBuffer(15);
+//            // END DEBUG
+
 #ifdef COMPUTE_RUNTIME
             cudaEventRecord(event2, 0);
             cudaEventSynchronize(event1);
@@ -1231,29 +1263,57 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             // Make deep copy of start surface
             surfEnd = surfStart;
 
+//            // DEBUG Print voltarget_D
+//            HostArr<float> volTarget;
+//            size_t gridSize = volDim.x*volDim.y*volDim.z;
+//            volTarget.Validate(gridSize);
+//            CudaSafeCall(cudaMemcpy(volTarget.Peek(),
+//                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+//                    sizeof(float)*gridSize,
+//                    cudaMemcpyDeviceToHost));
+//
+//            for (int i = 0; i < gridSize; ++i) {
+//                printf("VOL %.16f\n", volTarget.Peek()[i]);
+//            }
+//            volTarget.Release();
+//            // END DEBUG
+
+//            // DEBUG print external forces
+//            surfEnd.PrintExternalForces(volDim.x*volDim.y*volDim.z);
+//            // END DEBUG
+
+//            surfTarget.PrintCubeStates((volDim.x-1)*(volDim.y-1)*(volDim.z-1));
+
             // Morph end surface to its final position using two-way gradient
             // vector flow
             if (!surfEnd.MorphToVolumeTwoWayGVF(
                     ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                     ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
                     surfEnd.PeekCubeStates(),
-                    surfStart.PeekCubeStates(),
+                    surfTarget.PeekCubeStates(),
                     this->volDim,
                     this->volOrg,
                     this->volDelta,
                     this->qsIsoVal,
                     this->surfMapInterpolMode,
                     this->surfMapMaxIt,
-                    qsGridDelta/100.0f*this->surfMapForcesScl,
+                    this->qsGridDelta/100.0f*this->surfMapForcesScl,
                     this->surfMapSpringStiffness,
                     this->surfMapForcesScl,
                     this->surfMapExternalForcesWeight,
-                    0.1f,
-                    100,
+                    1.0f,
+                    50,
                     true,
-                    true)) { // TODO Change back
+                    true)) {
                 return false;
             }
+
+//            printf("volOrg %f %f %f\n", volOrg.x, volOrg.y, volOrg.z);
+//            printf("volDelta %f %f %f\n", volDelta.x, volDelta.y, volDelta.z);
+//            printf("volDim %u %u %u\n", volDim.x, volDim.x, volDim.z);
+            // DEBUG print positions of regularized surface
+//            surfEnd.PrintVertexBuffer(15);
+            // END DEBUG
 
             // Refine mesh
             // Perform subdivision with subsequent deformation to create a fine
@@ -1263,7 +1323,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             const uint deformIt = 25;
             int newTris;
             for (uint i = 0; i < maxSubdivLevel; ++i) {
-                printf("SUBDIV #%i\n", i);
+//                printf("SUBDIV #%i\n", i);
 
                 for (uint j = 0; j < subdivSubLevel; ++j) {
 
@@ -1362,8 +1422,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 
             float meanVertexPath = surfEnd.IntVtxPathOverSurfArea();
 
-            //this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/surfArea;
-            this->matchMeanVertexPath[i*this->nVariants+j] = surfArea;
+            this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/surfArea;
 
             //            if (i != j) {
             this->minMatchMeanVertexPathVal =
@@ -1371,9 +1430,9 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             this->maxMatchMeanVertexPathVal =
                     std::max(this->maxMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
             //            }
-            printf("Mean vertex path: min %f, max %f\n",
-                    this->minMatchMeanVertexPathVal,
-                    this->maxMatchMeanVertexPathVal);
+//            printf("Mean vertex path: min %f, max %f\n",
+//                    this->minMatchMeanVertexPathVal,
+//                    this->maxMatchMeanVertexPathVal);
 
             // 1. Compute potential difference per vertex
 
@@ -1513,11 +1572,11 @@ float ProteinVariantMatch::getRMS(
             translation                  // Saves the translation vector
     );
 
-    printf("translation %.10f %.10f %.10f\n", translation[0],translation[1],translation[2]);
-    printf("rotation %.10f %.10f %.10f \n %.10f %.10f %.10f \n %.10f %.10f %.10f\n",
-            rotation[0][0], rotation[0][1], rotation[0][2],
-            rotation[1][0], rotation[1][1], rotation[1][2],
-            rotation[2][0], rotation[2][1], rotation[2][2]);
+//    printf("translation %.10f %.10f %.10f\n", translation[0],translation[1],translation[2]);
+//    printf("rotation %.10f %.10f %.10f \n %.10f %.10f %.10f \n %.10f %.10f %.10f\n",
+//            rotation[0][0], rotation[0][1], rotation[0][2],
+//            rotation[1][0], rotation[1][1], rotation[1][2],
+//            rotation[2][0], rotation[2][1], rotation[2][2]);
 
     if (rotation != NULL) {
 
@@ -1547,6 +1606,8 @@ bool ProteinVariantMatch::getRMSPosArray(
     using namespace vislib::sys;
 
     cnt = 0;
+
+    printf("mol frame %u \n", mol->FrameID());
 
     // Use all particles for RMS fitting
     if (this->fittingMode == RMS_ALL) {
@@ -1618,21 +1679,39 @@ atoms (residue mislabeled as 'amino acid')", this->ClassName());
             }
         }
     } else if (this->fittingMode == RMS_C_ALPHA) { // Use C alpha atoms for RMS fitting
-        // Extracting C alpha atoms from mol 0
-        for (uint sec = 0; sec < mol->SecondaryStructureCount(); ++sec) {
-            MolecularDataCall::SecStructure secStructure = mol->SecondaryStructures()[sec];
-            for (uint acid = 0; acid < secStructure.AminoAcidCount(); ++acid) {
-                uint cAlphaIdx =
-                        ((const MolecularDataCall::AminoAcid*)
-                                (mol->Residues()[secStructure.
-                                                  FirstAminoAcidIndex()+acid]))->CAlphaIndex();
+//        // Extracting C alpha atoms from mol
+//        for (uint sec = 0; sec < mol->SecondaryStructureCount(); ++sec) {
+//            printf("sec %u of %u\n", sec, mol->SecondaryStructureCount());
+//            MolecularDataCall::SecStructure secStructure = mol->SecondaryStructures()[sec];
+//            for (uint acid = 0; acid < secStructure.AminoAcidCount(); ++acid) {
+//                printf("acid %u of %u\n", acid, secStructure.AminoAcidCount());
+//                uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*)(mol->Residues()[secStructure.FirstAminoAcidIndex()+acid]))->CAlphaIndex();
+//                posArr.Peek()[3*cnt+0] = mol->AtomPositions()[3*cAlphaIdx+0];
+//                posArr.Peek()[3*cnt+1] = mol->AtomPositions()[3*cAlphaIdx+1];
+//                posArr.Peek()[3*cnt+2] = mol->AtomPositions()[3*cAlphaIdx+2];
+//                if (cnt <= 20) {
+//                    printf("ADDING ATOM POS 1 %f %f %f\n", cnt,
+//                        posArr.Peek()[3*cnt+0],
+//                        posArr.Peek()[3*cnt+1],
+//                        posArr.Peek()[3*cnt+2]);
+//                    printf("amino acid idx %u, c alpha idx %u\n", secStructure.FirstAminoAcidIndex()+acid, cAlphaIdx);
+//                }
+//                cnt++;
+//            }
+//        }
+
+        // Loop through all residues of the molecule
+        for (size_t res = 0; res < mol->ResidueCount(); ++res) {
+            const MolecularDataCall::Residue *residue = mol->Residues()[res];
+            if (residue->Identifier() == MolecularDataCall::Residue::AMINOACID) {
+                uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*)(residue))->CAlphaIndex();
                 posArr.Peek()[3*cnt+0] = mol->AtomPositions()[3*cAlphaIdx+0];
                 posArr.Peek()[3*cnt+1] = mol->AtomPositions()[3*cAlphaIdx+1];
                 posArr.Peek()[3*cnt+2] = mol->AtomPositions()[3*cAlphaIdx+2];
-                if (cnt < 10) printf("ADDING ATOM POS %f %f %f\n",
-                        posArr.Peek()[3*cnt+0],
-                        posArr.Peek()[3*cnt+1],
-                        posArr.Peek()[3*cnt+2]);
+//                printf("ADDING ATOM POS %f %f %f\n",
+//                        posArr.Peek()[3*cnt+0],
+//                        posArr.Peek()[3*cnt+1],
+//                        posArr.Peek()[3*cnt+2]);
                 cnt++;
             }
         }

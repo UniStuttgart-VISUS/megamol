@@ -5756,7 +5756,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
 
 
     /* 1. Compute edge list */
-#define USE_TIMER
+//#define USE_TIMER
 #ifdef USE_TIMER
     float dt_ms;
     cudaEvent_t event1, event2, eventStart, eventEnd;
@@ -6766,7 +6766,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             }
             avgDisplLen /= static_cast<float>(this->vertexCnt);
 //            if (i%5 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+//            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
@@ -6775,8 +6775,38 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
             ::CheckForCudaErrorSync();
         }
     } else {
-        // TODO Timer
+
         for (uint i = 0; i < maxIt; ++i) {
+//            this->PrintVertexBuffer(1);
+
+//            // DEBUG print parameters
+//            printf("PARAMS:\n");
+//            printf("vertex count %u\n", this->vertexCnt);
+//            printf("forcesScl %f\n", forceScl);
+//            printf("isovalue %f\n", isovalue);
+//            printf("surfMappedMinDisplScl %f\n", surfMappedMinDisplScl);
+//            if (useCubicInterpolation) printf("useCubicInterpolation TRUE\n");
+//            else printf("useCubicInterpolation FALSE\n");
+//            if (trackPath) printf("trackPath TRUE\n");
+//                        else printf("trackPath FALSE\n");
+//            // END DEBUG
+
+//            // DEBUG Print voltarget_D
+//            if (i == 0) {
+//                HostArr<float> volTarget;
+//                size_t gridSize = volDim.x*volDim.y*volDim.z;
+//                volTarget.Validate(gridSize);
+//                CudaSafeCall(cudaMemcpy(volTarget.Peek(), volTarget_D,
+//                        sizeof(float)*gridSize,
+//                        cudaMemcpyDeviceToHost));
+//
+//                for (int i = 0; i < gridSize; ++i) {
+//                    printf("VOL %.16f\n", volTarget.Peek()[i]);
+//                }
+//
+//                volTarget.Release();
+//            }
+//            // END DEBUG
 
             cudaEventRecord(eventStart, 0);
 
@@ -6829,7 +6859,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
 //                    dt_ms/1000.0f);
             avgDisplLen /= static_cast<float>(this->vertexCnt);
 //            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+//            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
@@ -7014,7 +7044,7 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
             }
             avgDisplLen /= static_cast<float>(this->vertexCnt);
 //            if (i%5 == 0) printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+//            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
@@ -7055,9 +7085,9 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
                 return false;
             }
             avgDisplLen /= static_cast<float>(this->nFlaggedVertices);
-            printf("New vertex count %u\n", this->nFlaggedVertices);
+//            printf("New vertex count %u\n", this->nFlaggedVertices);
 //            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
+//            printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
@@ -8300,10 +8330,10 @@ bool DeformableGPUSurfaceMT::TrackPathSubdivVertices(
         if (!CudaSafeCall(cudaGetLastError())) {
             return false;
         }
-        printf("Number of flagged vertices %u, %f\n", this->nFlaggedVertices, avgDisplLen);
+//        printf("Number of flagged vertices %u, %f\n", this->nFlaggedVertices, avgDisplLen);
         avgDisplLen /= static_cast<float>(this->nFlaggedVertices);
 //        if (i%10 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, minDispl);
-        printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, minDispl);
+//        printf("It: %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, minDispl);
         if (avgDisplLen < minDispl) {
             iterationsNeeded = i+1;
             break;
@@ -9080,6 +9110,83 @@ bool DeformableGPUSurfaceMT::ComputeNormalsSubdiv() {
         return false;
     }
     return ::CheckForCudaError();
+}
+
+
+/*
+ * DeformableGPUSurfaceMT::PrintVertexBuffer
+ */
+void DeformableGPUSurfaceMT::PrintVertexBuffer(size_t cnt) {
+    // Get pointer to vertex attribute array
+    cudaGraphicsResource* cudaTokens[1];
+    CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0],
+            this->vboVtxData,
+            cudaGraphicsMapFlagsNone));
+    CudaSafeCall(cudaGraphicsMapResources(1, cudaTokens, 0));
+
+    // Get mapped pointers to the vertex data buffers
+    float *vertexBuffer_D;
+    size_t vboVertexBufferSize;
+    CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vertexBuffer_D), // The mapped pointer
+            &vboVertexBufferSize,              // The size of the accessible data
+            cudaTokens[0]));
+
+    HostArr<float> vertexBuffer;
+    vertexBuffer.Validate(cnt*this->vertexDataStride);
+    CudaSafeCall(cudaMemcpy(vertexBuffer.Peek(), vertexBuffer_D,
+            sizeof(float)*cnt*this->vertexDataStride,
+            cudaMemcpyDeviceToHost));
+
+    for (int i = 0; i < cnt; ++i) {
+        printf("VERTEX BUFFER %f %f %f, %f %f %f, %f %f %f\n",
+                vertexBuffer.Peek()[i*this->vertexDataStride+0],
+                vertexBuffer.Peek()[i*this->vertexDataStride+1],
+                vertexBuffer.Peek()[i*this->vertexDataStride+2],
+                vertexBuffer.Peek()[i*this->vertexDataStride+3],
+                vertexBuffer.Peek()[i*this->vertexDataStride+4],
+                vertexBuffer.Peek()[i*this->vertexDataStride+5],
+                vertexBuffer.Peek()[i*this->vertexDataStride+6],
+                vertexBuffer.Peek()[i*this->vertexDataStride+7],
+                vertexBuffer.Peek()[i*this->vertexDataStride+8]);
+    }
+
+    vertexBuffer.Release();
+
+    CudaSafeCall(cudaGraphicsUnmapResources(1, cudaTokens, 0));
+    CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]));
+}
+
+void DeformableGPUSurfaceMT::PrintExternalForces(size_t cnt) {
+
+    HostArr<float> externalForces;
+    externalForces.Validate(cnt*4);
+    CudaSafeCall(cudaMemcpy(externalForces.Peek(), this->externalForces_D.Peek(),
+            sizeof(float)*cnt*4,
+            cudaMemcpyDeviceToHost));
+
+    for (int i = 0; i < cnt; ++i) {
+        printf("EXT FORCES %f %f %f\n",
+                externalForces.Peek()[4*i+0],
+                externalForces.Peek()[4*i+1],
+                externalForces.Peek()[4*i+2]);
+    }
+    externalForces.Release();
+}
+
+
+void DeformableGPUSurfaceMT::PrintCubeStates(size_t cnt) {
+    HostArr<unsigned int> cubeStates;
+    cubeStates.Validate(cnt);
+    CudaSafeCall(cudaMemcpy(cubeStates.Peek(), this->cubeStates_D.Peek(),
+            sizeof(unsigned int)*cnt,
+            cudaMemcpyDeviceToHost));
+
+    for (int i = 0; i < cnt; ++i) {
+        printf("CUBESTATES %u\n", cubeStates.Peek()[i]);
+    }
+    cubeStates.Release();
 }
 
 #endif // WITH_CUDA

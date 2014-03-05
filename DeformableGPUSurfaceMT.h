@@ -460,6 +460,10 @@ public:
             float3 texOrg1,
             float3 texDelta1);
 
+    void PrintVertexBuffer(size_t cnt);
+    void PrintExternalForces(size_t cnt);
+    void PrintCubeStates(size_t cnt);
+
 protected:
 
     /**

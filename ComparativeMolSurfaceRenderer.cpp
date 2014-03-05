@@ -82,6 +82,12 @@ void ComparativeMolSurfaceRenderer::computeDensityBBox(
         maxC.x = std::max(maxC.x, atomPos1[3*i+0]);
         maxC.y = std::max(maxC.y, atomPos1[3*i+1]);
         maxC.z = std::max(maxC.z, atomPos1[3*i+2]);
+//        if (i < 10) {
+//            printf("ATOM POS #0, %i: %f %f %f\n", i,
+//                atomPos1[3*i+0],
+//                atomPos1[3*i+1],
+//                atomPos1[3*i+2]);
+//        }
     }
     for (size_t i = 0; i < atomCnt2; ++i) {
         minC.x = std::min(minC.x, atomPos2[3*i+0]);
@@ -90,17 +96,23 @@ void ComparativeMolSurfaceRenderer::computeDensityBBox(
         maxC.x = std::max(maxC.x, atomPos2[3*i+0]);
         maxC.y = std::max(maxC.y, atomPos2[3*i+1]);
         maxC.z = std::max(maxC.z, atomPos2[3*i+2]);
+//        if (i < 10) {
+//            printf("ATOM POS #0, %i: %f %f %f\n", i,
+//                atomPos1[3*i+0],
+//                atomPos1[3*i+1],
+//                atomPos1[3*i+2]);
+//        }
     }
 
     this->bboxParticles.Set(minC.x, minC.y, minC.z,
             maxC.x, maxC.y, maxC.z);
 
-//    // DEBUG Print new bounding box
-//    printf("bbboxParticles: %f %f %f %f %f %f\n", minC.x, minC.y, minC.z,
-//            maxC.x, maxC.y, maxC.z);
-//    printf("atomCnt0: %u\n",atomCnt1);
-//    printf("atomCnt1: %u\n",atomCnt2);
-//    // END DEBUG
+    // DEBUG Print new bounding box
+    printf("bbboxParticles: %f %f %f %f %f %f\n", minC.x, minC.y, minC.z,
+            maxC.x, maxC.y, maxC.z);
+    printf("atomCnt0: %u\n",atomCnt1);
+    printf("atomCnt1: %u\n",atomCnt2);
+    // END DEBUG
 
 }
 
@@ -1048,40 +1060,95 @@ atoms instead.",
 
             uint posCnt1=0, posCnt2=0;
 
+            printf("mol frame %u \n", mol1->FrameID());
+
             // Extracting C alpha atoms from mol 1
-            for (uint sec = 0; sec < mol1->SecondaryStructureCount(); ++sec) {
-                MolecularDataCall::SecStructure secStructure = mol1->SecondaryStructures()[sec];
-                for (uint acid = 0; acid < secStructure.AminoAcidCount(); ++acid) {
-                    uint cAlphaIdx =
-                            ((const MolecularDataCall::AminoAcid*)
-                                (mol1->Residues()[secStructure.
-                                     FirstAminoAcidIndex()+acid]))->CAlphaIndex();
-//                    printf("amino acid idx %u, c alpha idx %u\n", secStructure.
-//                            FirstAminoAcidIndex()+acid, cAlphaIdx);
+//            for (uint sec = 0; sec < mol1->SecondaryStructureCount(); ++sec) {
+//                printf("sec %u of %u\n", sec, mol1->SecondaryStructureCount());
+//                MolecularDataCall::SecStructure secStructure = mol1->SecondaryStructures()[sec];
+//                for (uint acid = 0; acid < secStructure.AminoAcidCount(); ++acid) {
+//                    printf("acid %u of %u\n", acid, secStructure.AminoAcidCount());
+//                    const MolecularDataCall::Residue *residue = mol1->Residues()[secStructure.FirstAminoAcidIndex()+acid];
+//                    if (residue->Identifier() != MolecularDataCall::Residue::AMINOACID) {
+//                        printf("No amino acid!!\n");
+//                    }
+//                    uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*)(mol1->Residues()[secStructure.FirstAminoAcidIndex()+acid]))->CAlphaIndex();
+////                    printf("amino acid idx %u, c alpha idx %u\n", secStructure.
+////                            FirstAminoAcidIndex()+acid, cAlphaIdx);
+//                    this->rmsPosVec1.Peek()[3*posCnt1+0] = mol1->AtomPositions()[3*cAlphaIdx+0];
+//                    this->rmsPosVec1.Peek()[3*posCnt1+1] = mol1->AtomPositions()[3*cAlphaIdx+1];
+//                    this->rmsPosVec1.Peek()[3*posCnt1+2] = mol1->AtomPositions()[3*cAlphaIdx+2];
+//                    if (posCnt1 <= 20) {
+//                        printf("ADDING ATOM POS 1 %f %f %f\n",
+//                            this->rmsPosVec1.Peek()[3*posCnt1+0],
+//                            this->rmsPosVec1.Peek()[3*posCnt1+1],
+//                            this->rmsPosVec1.Peek()[3*posCnt1+2]);
+//                        printf("amino acid idx %u, c alpha idx %u\n", secStructure.FirstAminoAcidIndex()+acid, cAlphaIdx);
+//                    }
+//                    posCnt1++;
+//
+//                }
+//            }
+
+            // Loop through all residues of the molecule
+            for (size_t res = 0; res < mol1->ResidueCount(); ++res) {
+                const MolecularDataCall::Residue *residue = mol1->Residues()[res];
+                if (residue->Identifier() == MolecularDataCall::Residue::AMINOACID) {
+                    uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*)(residue))->CAlphaIndex();
                     this->rmsPosVec1.Peek()[3*posCnt1+0] = mol1->AtomPositions()[3*cAlphaIdx+0];
                     this->rmsPosVec1.Peek()[3*posCnt1+1] = mol1->AtomPositions()[3*cAlphaIdx+1];
                     this->rmsPosVec1.Peek()[3*posCnt1+2] = mol1->AtomPositions()[3*cAlphaIdx+2];
+//                    printf("ADDING ATOM POS 1 %f %f %f\n",
+//                            this->rmsPosVec1.Peek()[3*posCnt1+0],
+//                            this->rmsPosVec1.Peek()[3*posCnt1+1],
+//                            this->rmsPosVec1.Peek()[3*posCnt1+2]);
                     posCnt1++;
                 }
             }
 
-            // Extracting C alpha atoms from mol 2
-            for (uint sec = 0; sec < mol2->SecondaryStructureCount(); ++sec) {
-                MolecularDataCall::SecStructure secStructure = mol2->SecondaryStructures()[sec];
-                for (uint acid = 0; acid < secStructure.AminoAcidCount(); ++acid) {
-                    uint cAlphaIdx =
-                            ((const MolecularDataCall::AminoAcid*)
-                                (mol2->Residues()[secStructure.
-                                     FirstAminoAcidIndex()+acid]))->CAlphaIndex();
+//            // Extracting C alpha atoms from mol 2
+//            for (uint sec = 0; sec < mol2->SecondaryStructureCount(); ++sec) {
+//                MolecularDataCall::SecStructure secStructure = mol2->SecondaryStructures()[sec];
+//                for (uint acid = 0; acid < secStructure.AminoAcidCount(); ++acid) {
+//                    uint cAlphaIdx =
+//                            ((const MolecularDataCall::AminoAcid*)
+//                                (mol2->Residues()[secStructure.
+//                                     FirstAminoAcidIndex()+acid]))->CAlphaIndex();
+//                    this->rmsPosVec2.Peek()[3*posCnt2+0] = mol2->AtomPositions()[3*cAlphaIdx+0];
+//                    this->rmsPosVec2.Peek()[3*posCnt2+1] = mol2->AtomPositions()[3*cAlphaIdx+1];
+//                    this->rmsPosVec2.Peek()[3*posCnt2+2] = mol2->AtomPositions()[3*cAlphaIdx+2];
+////                    if (posCnt2 < 10) {
+////                        printf("ADDING ATOM POS 2 %f %f %f\n",
+////                            this->rmsPosVec2.Peek()[3*posCnt2+0],
+////                            this->rmsPosVec2.Peek()[3*posCnt2+1],
+////                            this->rmsPosVec2.Peek()[3*posCnt2+2]);
+////                    }
+//                    posCnt2++;
+//
+//                }
+//            }
+
+            // Loop through all residues of the molecule
+            for (size_t res = 0; res < mol2->ResidueCount(); ++res) {
+                const MolecularDataCall::Residue *residue = mol2->Residues()[res];
+                if (residue->Identifier() == MolecularDataCall::Residue::AMINOACID) {
+                    uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*)(residue))->CAlphaIndex();
                     this->rmsPosVec2.Peek()[3*posCnt2+0] = mol2->AtomPositions()[3*cAlphaIdx+0];
                     this->rmsPosVec2.Peek()[3*posCnt2+1] = mol2->AtomPositions()[3*cAlphaIdx+1];
                     this->rmsPosVec2.Peek()[3*posCnt2+2] = mol2->AtomPositions()[3*cAlphaIdx+2];
+//                    printf("ADDING ATOM POS 2 %f %f %f\n",
+//                            this->rmsPosVec2.Peek()[3*posCnt2+0],
+//                            this->rmsPosVec2.Peek()[3*posCnt2+1],
+//                            this->rmsPosVec2.Peek()[3*posCnt2+2]);
                     posCnt2++;
                 }
             }
 
             posCnt = std::min(posCnt1, posCnt2);
+//            printf("poscount 1 %u, posCnt 2 %u\n", posCnt1, posCnt2);
         }
+
+
 
 //        for (int i = 0; i < posCnt; ++i) {
 //            printf("pos1 %f %f %f, pos2 %f %f %f\n",
@@ -1116,13 +1183,6 @@ atoms instead.",
                     this->rmsPosVec2.Peek()[cnt*3+0],
                     this->rmsPosVec2.Peek()[cnt*3+1],
                     this->rmsPosVec2.Peek()[cnt*3+2]);
-
-            if (cnt < 20) {
-                printf("%f %f %f\n",
-                        this->rmsPosVec2.Peek()[3*cnt+0],
-                        this->rmsPosVec2.Peek()[3*cnt+1],
-                        this->rmsPosVec2.Peek()[3*cnt+2]);
-            }
         }
         this->rmsCentroid /= static_cast<float>(posCnt);
 //        printf("posCnt %u\n", posCnt);
@@ -1135,10 +1195,10 @@ atoms instead.",
 //        }
 //        this->rmsCentroid /= static_cast<float>(mol2->AtomCount());
 
-        printf("centroid2   %.10f %.10f %.10f\n",
-                this->rmsCentroid.PeekComponents()[0],
-                this->rmsCentroid.PeekComponents()[1],
-                this->rmsCentroid.PeekComponents()[2]);
+//        printf("centroid2   %.10f %.10f %.10f\n",
+//                this->rmsCentroid.PeekComponents()[0],
+//                this->rmsCentroid.PeekComponents()[1],
+//                this->rmsCentroid.PeekComponents()[2]);
 
         // Do actual RMSD calculations
         this->rmsMask.Validate(posCnt);
@@ -1174,11 +1234,11 @@ atoms instead.",
         this->rmsRotation.SetAt(2, 1, rotation[2][1]);
         this->rmsRotation.SetAt(2, 2, rotation[2][2]);
 
-        printf("translation %.10f %.10f %.10f\n", translation[0],translation[1],translation[2]);
-        printf("rotation %.10f %.10f %.10f \n %.10f %.10f %.10f \n %.10f %.10f %.10f\n",
-                rotation[0][0], rotation[0][1], rotation[0][2],
-                rotation[1][0], rotation[1][1], rotation[1][2],
-                rotation[2][0], rotation[2][1], rotation[2][2]);
+//        printf("translation %.10f %.10f %.10f\n", translation[0],translation[1],translation[2]);
+//        printf("rotation %.10f %.10f %.10f \n %.10f %.10f %.10f \n %.10f %.10f %.10f\n",
+//                rotation[0][0], rotation[0][1], rotation[0][2],
+//                rotation[1][0], rotation[1][1], rotation[1][2],
+//                rotation[2][0], rotation[2][1], rotation[2][2]);
 
 
         this->rmsRotationMatrix.SetAt(0, 0, rotation[0][0]);
@@ -1861,6 +1921,10 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         this->triggerComputeVolume = false;
         this->triggerComputeSurfacePoints1 = true;
         this->triggerComputeSurfacePoints2 = true;
+//
+//        printf("DENSITY MAP DIM %u %u %u\n", this->volDim.x, this->volDim.y, this->volDim.z);
+//        printf("DENSITY MAP ORG %f %f %f\n", this->volOrg.x, this->volOrg.y, this->volOrg.z);
+//        printf("DENSITY MAP DELTA %f %f %f\n", this->volDelta.x, this->volDelta.y, this->volDelta.z);
     }
 
     // (Re-)compute potential texture if necessary
@@ -1940,6 +2004,21 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
             return false;
         }
+
+////        this->deformSurf1.PrintCubeStates((this->volDim.x-1)*(this->volDim.y-1)*(this->volDim.z-1));
+//        // DEBUG Print voltarget_D
+//        HostArr<float> volTarget;
+//        size_t gridSize = volDim.x*volDim.y*volDim.z;
+//        volTarget.Validate(gridSize);
+//        CudaSafeCall(cudaMemcpy(volTarget.Peek(),
+//                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+//                sizeof(float)*gridSize,
+//                cudaMemcpyDeviceToHost));
+//        for (int i = 0; i < gridSize; ++i) {
+//            printf("VOL %.16f\n", volTarget.Peek()[i]);
+//        }
+//        volTarget.Release();
+//        // END DEBUG
 
         ::CheckForCudaErrorSync();
 
@@ -2226,6 +2305,10 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             return false;
         }
 
+//        // DEBUG print positions of regularized surface
+//        this->deformSurf2.PrintVertexBuffer(15);
+//        // END DEBUG
+
 #ifdef VERBOSE
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "%s: compute normals #2",
@@ -2404,6 +2487,27 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
             // Morph surface #2 to shape #1 using Two-Way-GVF
 
+//            // DEBUG Print voltarget_D
+//            HostArr<float> volTarget;
+//            size_t gridSize = volDim.x*volDim.y*volDim.z;
+//            volTarget.Validate(gridSize);
+//            CudaSafeCall(cudaMemcpy(volTarget.Peek(),
+//                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+//                    sizeof(float)*gridSize,
+//                    cudaMemcpyDeviceToHost));
+//
+//            for (int i = 0; i < gridSize; ++i) {
+//                printf("VOL %.16f\n", volTarget.Peek()[i]);
+//            }
+//            volTarget.Release();
+//            // END DEBUG
+
+//            // DEBUG print external forces
+//            this->deformSurfMapped.PrintExternalForces(volDim.x*volDim.y*volDim.z);
+//            // END DEBUG
+
+//            this->deformSurf1.PrintCubeStates((volDim.x-1)*(volDim.y-1)*(volDim.z-1));
+
             if (!this->deformSurfMapped.MorphToVolumeTwoWayGVF(
 #ifndef  USE_PROCEDURAL_DATA
                 ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
@@ -2438,6 +2542,15 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
                 return false;
             }
+
+
+//            // DEBUG print positions of regularized surface
+//            this->deformSurfMapped.PrintVertexBuffer(15);
+//            // END DEBUG
+
+//            printf("volOrg %f %f %f\n", volOrg.x, volOrg.y, volOrg.z);
+//             printf("volDelta %f %f %f\n", volDelta.x, volDelta.y, volDelta.z);
+//             printf("volDim %u %u %u\n", volDim.x, volDim.x, volDim.z);
 
         } else {
             return false;
