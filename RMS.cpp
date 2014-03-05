@@ -316,6 +316,7 @@ float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *
             cofmX1 += weights[k] * Vec[3*k];
             cofmY1 += weights[k] * Vec[3*k+1];
             cofmZ1 += weights[k] * Vec[3*k+2];
+//            printf("RMS %f %f %f\n", Vec[3*k], Vec[3*k+1], Vec[3*k+2]);
         }
 
         cofmX /= total_mass;
