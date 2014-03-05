@@ -31,7 +31,7 @@
 #include "vislib/Path.h"
 #include "vislib/RawStorage.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 #include "vislib/MissingImplementationException.h"
@@ -587,7 +587,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         cmd = Path::Resolve(command);
     }
     THE_ASSERT(Path::IsAbsolute(cmd));
-    VLTRACE(Trace::LEVEL_VL_INFO, "CreateProcess: command is \"%s\"\n",
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "CreateProcess: command is \"%s\"\n",
         cmd.PeekBuffer());
 
     /* Open a pipe to get the exec error codes. */

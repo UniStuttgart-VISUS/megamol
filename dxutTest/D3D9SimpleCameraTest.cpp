@@ -12,7 +12,7 @@
 #include "the/assert.h"
 #include "vislib/d3dverify.h"
 #include "vislib/memutils.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 /*
@@ -149,7 +149,7 @@ void D3D9SimpleCameraTest::OnMouse(bool bLeftButtonDown, bool bRightButtonDown,
         bool bMiddleButtonDown, bool bSideButton1Down, bool bSideButton2Down,
         INT nMouseWheelDelta, INT xPos, INT yPos) {
     using vislib::graphics::MouseInteractionAdapter;
-    VLTRACE(VISLIB_TRCELVL_INFO, "left = %d, right = %d, middle = %d\n", 
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "left = %d, right = %d, middle = %d\n", 
         bLeftButtonDown, bRightButtonDown, bMiddleButtonDown);
 
     this->mia->SetMouseButtonState(MouseInteractionAdapter::BUTTON_LEFT, 

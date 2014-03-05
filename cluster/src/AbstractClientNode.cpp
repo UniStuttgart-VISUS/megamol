@@ -12,7 +12,7 @@
 #include "vislib/memutils.h"
 #include "vislib/SocketException.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/unreferenced.h"
 
 #include "messagereceiver.h"
@@ -26,7 +26,7 @@ vislib::net::cluster::AbstractClientNode::~AbstractClientNode(void) {
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Exception while releasing "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Exception while releasing "
             "AbstractClientNode: %s\n", e.GetMsgA());
     }
 }
@@ -77,7 +77,7 @@ vislib::net::cluster::AbstractClientNode::AbstractClientNode(void)
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Socket::Startup failed in "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket::Startup failed in "
             "AbstractClientNode::ctor. The instance will probably not work. "
             "Details: %s\n", e.GetMsgA());
     }
@@ -94,7 +94,7 @@ vislib::net::cluster::AbstractClientNode::AbstractClientNode(
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Socket::Startup failed in "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket::Startup failed in "
             "AbstractClientNode::ctor. The instance will probably not work. "
             "Details: %s\n", e.GetMsgA());
     }
@@ -115,7 +115,7 @@ void vislib::net::cluster::AbstractClientNode::connect(
     }
 
     /* Connect to the server. */
-    VLTRACE(Trace::LEVEL_VL_INFO, "Connecting to server node %s ...\n", 
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Connecting to server node %s ...\n", 
         this->serverAddress.ToStringA().PeekBuffer());
     this->socket.Create(Socket::FAMILY_INET, Socket::TYPE_STREAM,
         Socket::PROTOCOL_TCP);
@@ -187,10 +187,10 @@ SIZE_T vislib::net::cluster::AbstractClientNode::forEachPeer(
         retval = 1;
     } catch (Exception& e) {
         VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
-        VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed "
             "with an exception: %s\n", e.GetMsgA());
     } catch (...) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed "
             "with a non-VISlib exception.\n");
     }
 
@@ -210,10 +210,10 @@ bool vislib::net::cluster::AbstractClientNode::forPeer(
             retval = true;
         } catch (Exception& e) {
             VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
-            VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed "
                 "with an exception: %s\n", e.GetMsgA());
         } catch (...) {
-            VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed "
                 "with a non-VISlib exception.\n");
         }
     }
@@ -233,20 +233,20 @@ void vislib::net::cluster::AbstractClientNode::onMessageReceiverExiting(
     // abgebrochen werden muss, aufgerufen wird.
 
     //while (this->reconnectAttempts > 0) {
-    //    VLTRACE(Trace::LEVEL_VL_INFO, "Message receiver exited, trying to "
+    //    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Message receiver exited, trying to "
     //        "reconnect ...\n");
     //    try {
     //        this->connect(rmc);
     //    } catch (Exception& e) {
-    //        VLTRACE(Trace::LEVEL_VL_WARN, "Reconnection attempt failed: %s\n",
+    //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Reconnection attempt failed: %s\n",
     //            e.GetMsgA());
     //    } catch (...) {
-    //        VLTRACE(Trace::LEVEL_VL_WARN, "Reconnection attempt failed.\n");
+    //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Reconnection attempt failed.\n");
     //    }
     //}
     /* Specified number of reconnect attempts failed, so clean up. */
 
-    VLTRACE(Trace::LEVEL_VL_INFO, "Should not try to reconnect any more, "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Should not try to reconnect any more, "
         "releasing resources ...\n");
     Super::onMessageReceiverExiting(socket, rmc);
     //this->disconnect(true, true);

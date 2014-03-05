@@ -7,12 +7,12 @@
 #include "testnamedpipe.h"
 #include "testhelper.h"
 
-#include <vislib/Mutex.h>
-#include <vislib/NamedPipe.h>
-#include <vislib/String.h>
-#include <vislib/Thread.h>
-#include <vislib/Trace.h>
-#include <vislib/SystemException.h>
+#include "vislib/Mutex.h"
+#include "vislib/NamedPipe.h"
+#include "vislib/String.h"
+#include "vislib/Thread.h"
+#include "the/trace.h"
+#include "vislib/SystemException.h"
 
 #define PIPE_NAME "DieHorstPipe"
 #define COM_STR_01 "Hello World through a named pipe"
@@ -56,7 +56,7 @@ DWORD TestNamedPipeSecondThread(void *param) {
     // initialze Barrier
     m2.Lock();
 
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     try {
         pipe.Open(PIPE_NAME, vislib::sys::NamedPipe::PIPE_MODE_READ, 1000);
@@ -67,7 +67,7 @@ DWORD TestNamedPipeSecondThread(void *param) {
         AssertTrue("Open Pipe 2 for reading", false);
     }
 
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     SyncHere();
 
@@ -83,31 +83,31 @@ DWORD TestNamedPipeSecondThread(void *param) {
         }
     } // */
 
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     pipe.Read(buf, 256);
     AssertEqual("Communication #1 correct", strcmp(buf, COM_STR_01), 0);
 
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     pipe.Read(buf, 256);
     AssertEqual("Communication #2 correct", strcmp(buf, COM_STR_02), 0);
 
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     pipe.Read(buf, 16);
     pipe.Read(&buf[16], 240);
     AssertEqual("Communication #3 correct", strcmp(buf, COM_STR_03), 0);
 
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     pipe.Close();
 
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     SyncHere();
 
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     SyncHere();
 
@@ -162,7 +162,7 @@ DWORD TestNamedPipeSecondThread(void *param) {
 
 #define SyncHere BarrierT1
 void TestNamedPipe(void) {
-    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
+    the::trace::get_instance().set_default_level(the::trace::LEVEL_ALL);
 
     vislib::sys::Thread secondThread(TestNamedPipeSecondThread);
     vislib::sys::NamedPipe pipe;
@@ -190,31 +190,31 @@ void TestNamedPipe(void) {
         AssertTrue("Open Pipe 1 for writing", false);
     }
     // SyncHere();
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
     SyncHere();
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
     SyncHere();
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     strncpy(buf, COM_STR_01, 255);
     pipe.Write(buf, 256);
 
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     strncpy(buf, COM_STR_02, 255);
     pipe.Write(buf, 16);
     pipe.Write(&buf[16], 240);
 
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     strncpy(buf, COM_STR_03, 255);
     pipe.Write(buf, 256);
 
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     SyncHere();
 
-    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
     AssertException("Write to closed pipe", pipe.Write(buf, 256), vislib::sys::SystemException);
 

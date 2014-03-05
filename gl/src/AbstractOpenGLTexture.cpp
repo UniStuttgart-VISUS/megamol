@@ -13,7 +13,7 @@
 #include "the/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/glverify.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 

@@ -11,7 +11,7 @@
 #include "the/assert.h"
 #include "vislib/BitmapImage.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 #ifndef _WIN32
@@ -189,29 +189,29 @@ const wchar_t * vislib::graphics::BmpBitmapCodec::NameW(void) const {
  * vislib::graphics::BmpBitmapCodec::loadFromMemory
  */
 bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
-    VLTRACE(Trace::LEVEL_VL_INFO, "Loading BMP ...\n");
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Loading BMP ...\n");
     const BYTE *memBytes = static_cast<const BYTE *>(mem);
 
     const BITMAPFILEHEADER *bfh
         = reinterpret_cast<const BITMAPFILEHEADER *>(memBytes);
     if (size < sizeof(BITMAPFILEHEADER)) {
-        VLTRACE(Trace::LEVEL_VL_INFO, "Failed: insufficient data\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Failed: insufficient data\n");
         return false; // insufficient data
     }
     if (bfh->bfType != 0x4D42) {
-        VLTRACE(Trace::LEVEL_VL_INFO, "Failed: wrong magic number\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Failed: wrong magic number\n");
         return false; // wrong magic number
     }
     if (size < bfh->bfSize) {
-        VLTRACE(Trace::LEVEL_VL_INFO, "Failed: truncated data\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Failed: truncated data\n");
         return false; // truncated data
     }
     if (bfh->bfReserved1 != 0) {
-        VLTRACE(Trace::LEVEL_VL_INFO, "Failed: unexpected extension\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Failed: unexpected extension\n");
         return false; // unexpected extension
     }
     if (bfh->bfReserved2 != 0) {
-        VLTRACE(Trace::LEVEL_VL_INFO, "Failed: unexpected extension\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Failed: unexpected extension\n");
         return false; // unexpected extension
     }
 
@@ -219,7 +219,7 @@ bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void *mem, SIZE_T si
     HDC screenDC = ::CreateDC(_T("DISPLAY"), NULL, NULL, NULL);
 
     if (screenDC == NULL) {
-        VLTRACE(Trace::LEVEL_VL_ERROR,
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR,
             "Failed: unable to get screen device context\n");
         return false;
     }
@@ -233,7 +233,7 @@ bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void *mem, SIZE_T si
         DIB_RGB_COLORS);
 
     if (bmp == NULL) {
-        VLTRACE(Trace::LEVEL_VL_ERROR,
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR,
             "Failed: unable to create bitmap\n");
         ::DeleteDC(screenDC);
 
@@ -244,7 +244,7 @@ bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void *mem, SIZE_T si
 
         if (::GetDIBits(screenDC, bmp, 0, 0, NULL, &info, DIB_RGB_COLORS)
                 == 0) {
-            VLTRACE(Trace::LEVEL_VL_ERROR,
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR,
                 "Failed: unable to query bitmap attributes\n");
             ::DeleteObject(bmp);
             ::DeleteDC(screenDC);
@@ -287,26 +287,26 @@ bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void *mem, SIZE_T si
             memBytes + sizeof(BITMAPFILEHEADER))) {
 
         case sizeof(BITMAPINFOHEADER) :
-            VLTRACE(Trace::LEVEL_VL_INFO, "Loading BITMAPINFOHEADER ...\n");
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Loading BITMAPINFOHEADER ...\n");
             return this->loadWithBitmapInfoHeader(bfh, memBytes);
 
         case sizeof(BITMAPCOREHEADER) :
-            VLTRACE(Trace::LEVEL_VL_INFO,
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO,
                 "Failed: BITMAPCOREHEADER not supported\n");
             break; // unsupported ATM
 
         case sizeof(BITMAPV4HEADER) :
-            VLTRACE(Trace::LEVEL_VL_INFO,
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO,
                 "Failed: BITMAPV4HEADER not supported\n");
             break; // unsupported ATM
 
         case sizeof(BITMAPV5HEADER) :
-            VLTRACE(Trace::LEVEL_VL_INFO,
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO,
                 "Failed: BITMAPV5HEADER not supported\n");
             break; // unsupported ATM
 
         default:
-            VLTRACE(Trace::LEVEL_VL_INFO,
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO,
                 "Failed: unable to find BITMAPINFOHEADER\n");
             break;
     }
@@ -331,7 +331,7 @@ bool vislib::graphics::BmpBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
     const BitmapImage *img = &this->image();
 
     if (img->GetChannelCount() == 0) {
-        VLTRACE(Trace::LEVEL_VL_ERROR,
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR,
             "Fail to save bmp: image has no channels\n");
         return false;
     }
@@ -340,7 +340,7 @@ bool vislib::graphics::BmpBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
         BitmapImage tmpl(1, 1, 3, BitmapImage::CHANNELTYPE_BYTE);
         tmpl.LabelChannelsRGB();
         bmiStore.ConvertFrom(this->image(), tmpl);
-        VLTRACE(Trace::LEVEL_VL_INFO, "Image converted to RGB8");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Image converted to RGB8");
         img = & bmiStore;
     }
 
@@ -350,7 +350,7 @@ bool vislib::graphics::BmpBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
     unsigned int bidx = UINT_MAX;
 
     if (bpp == 0) {
-        VLTRACE(Trace::LEVEL_VL_ERROR,
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR,
             "Fail to save bmp: image has no channels\n");
         return false;
     }
@@ -453,19 +453,19 @@ bool vislib::graphics::BmpBitmapCodec::loadWithBitmapInfoHeader(
     // bih->biWidth
     // bih->biHeight
     if (bih->biPlanes != 1) {
-        VLTRACE(Trace::LEVEL_VL_INFO, "Failed: biPlanes != 1\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Failed: biPlanes != 1\n");
         return false;
     }
     if ((bih->biBitCount != 1) && (bih->biBitCount != 2)
             && (bih->biBitCount != 4) && (bih->biBitCount != 8)
             && (bih->biBitCount != 16) && (bih->biBitCount != 24)
             && (bih->biBitCount != 32)) {
-        VLTRACE(Trace::LEVEL_VL_INFO,
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO,
             "Failed: biBitCount == %d unsupported\n", bih->biBitCount);
         return false;
     }
     if (bih->biCompression != BI_RGB) {
-        VLTRACE(Trace::LEVEL_VL_INFO,
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO,
             "Failed: biCompression != BI_RGB is unsupported\n");
         return false;
     }
@@ -473,7 +473,7 @@ bool vislib::graphics::BmpBitmapCodec::loadWithBitmapInfoHeader(
     // bih->biXPelsPerMeter
     // bih->biYPelsPerMeter
     if (bih->biClrUsed > (1U << bih->biBitCount)) {
-        VLTRACE(Trace::LEVEL_VL_INFO,
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO,
             "Failed: biClrUsed requeste more colours than allowed\n");
         return false;
     }
@@ -553,7 +553,7 @@ bool vislib::graphics::BmpBitmapCodec::loadWithBitmapInfoHeader(
             return this->loadBitmap32(bih->biWidth, bih->biHeight,
                 dat + bfh->bfOffBits);
         default:
-            VLTRACE(Trace::LEVEL_VL_INFO,
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO,
                 "Failed: biBitCount == %d not supported\n",
                 bih->biBitCount);
     }
@@ -596,7 +596,7 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap1(int width, int height,
             unsigned int idx = (imgLine[0] >> (7 - (x % 8))) % 2;
             if ((x % 8) == 7) imgLine++;
             if (idx >= colPalSize) {
-                VLTRACE(Trace::LEVEL_VL_ERROR,
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR,
                     "Colour index %u out of palette size %u\n", idx,
                     colPalSize);
                 idx = 0;
@@ -650,7 +650,7 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap4(int width, int height,
                 idx = imgLine[0] >> 4;
             }
             if (idx >= colPalSize) {
-                VLTRACE(Trace::LEVEL_VL_ERROR,
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR,
                     "Colour index %u out of palette size %u\n", idx,
                     colPalSize);
                 idx = 0;
@@ -698,7 +698,7 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap8(int width, int height,
         for (int x = 0; x < width; x++, bmpLine += 3, imgLine++) {
             unsigned int idx = imgLine[0];
             if (idx >= colPalSize) {
-                VLTRACE(Trace::LEVEL_VL_ERROR,
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR,
                     "Colour index %u out of palette size %u\n", idx,
                     colPalSize);
                 idx = 0;

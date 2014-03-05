@@ -8,7 +8,7 @@
 #include "vislib/D3D11Window.h"
 
 #include "vislib/D3DException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 /*

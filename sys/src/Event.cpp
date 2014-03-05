@@ -15,7 +15,7 @@
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -132,7 +132,7 @@ void vislib::sys::Event::Reset(void) {
     }
 
 #else /* _WIN32 */
-    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Reset\n");
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Event::Reset\n");
     
     this->semaphore.TryLock();
     THE_ASSERT(!this->semaphore.TryLock());
@@ -151,7 +151,7 @@ void vislib::sys::Event::Set(void) {
     }
 
 #else /* _WIN32 */
-    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Set\n");
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Event::Set\n");
 
     this->semaphore.TryLock();
     this->semaphore.Unlock();
@@ -183,7 +183,7 @@ bool vislib::sys::Event::Wait(const DWORD timeout) {
     }
 
 #else /* _WIN32 */
-    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Wait\n");
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Event::Wait\n");
     bool retval = false;
 
     if (timeout == TIMEOUT_INFINITE) {
@@ -195,7 +195,7 @@ bool vislib::sys::Event::Wait(const DWORD timeout) {
     }
 
     if (retval && this->isManualReset) {
-        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Wait signal again\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Event::Wait signal again\n");
         this->semaphore.Unlock();
     }
 

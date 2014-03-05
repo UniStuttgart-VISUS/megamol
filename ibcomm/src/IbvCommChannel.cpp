@@ -14,7 +14,7 @@
 //#include "vislib/memutils.h"
 //#include "vislib/MissingImplementationException.h"
 //#include "vislib/sysfunctions.h"
-//#include "vislib/Trace.h"
+//#include "the/trace.h"
 //
 //
 ///*
@@ -26,11 +26,11 @@
 //
 //    HRESULT hr = S_OK;
 //
-//    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "GetRequest.\n");
+//    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "GetRequest.\n");
 //    IWVConnectEndpoint *ep = NULL;
 //    this->wvProvider->CreateConnectEndpoint(&ep);
 //    if (FAILED(hr = this->connectEndPoint->GetRequest(ep, NULL))) {
-//        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "GetRequest failed "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "GetRequest failed "
 //            "with error code %d.\n", hr);
 //        throw sys::COMException(hr, __FILE__, __LINE__);
 //    }
@@ -38,7 +38,7 @@
 //    WV_CONNECT_PARAM conParam;
 //    ::ZeroMemory(&conParam, sizeof(conParam));
 //
-//    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "After GetRequest\n");
+//    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "After GetRequest\n");
 //
 //    this->createQueuePair();
 //
@@ -50,7 +50,7 @@
 //
 //    if (FAILED(hr = this->connectEndPoint->Accept(this->queuePair, 
 //            &conParam, NULL))) {
-//        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Accepting client failed "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Accepting client failed "
 //            "with error code %d.\n", hr);
 //        throw sys::COMException(hr, __FILE__, __LINE__);
 //    }
@@ -85,7 +85,7 @@
 //    ////    throw Exception("TODO: Binding server address failed", __FILE__, __LINE__);
 //    ////}
 //
-//    //VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Creating IB end point...\n");
+//    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Creating IB end point...\n");
 //    //if (FAILED(this->wvProvider->CreateConnectEndpoint(&this->connectEndPoint))) {
 //    //    throw Exception("TODO: CreateConnectEndpoint failed", __FILE__, __LINE__);
 //    //}
@@ -96,11 +96,11 @@
 //    IPCommEndPoint *cep = endPoint.DynamicPeek<IPCommEndPoint>();
 //    IPEndPoint& ep = static_cast<IPEndPoint&>(*cep);
 //
-//    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Binding IB end point to %s...\n",
+//    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Binding IB end point to %s...\n",
 //        ep.ToStringA().PeekBuffer());
 //    if (FAILED(hr = this->connectEndPoint->BindAddress(
 //            static_cast<struct sockaddr *>(ep)))) {
-//        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Binding IB end point failed "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Binding IB end point failed "
 //            "with error code %d.\n", hr);
 //        throw sys::COMException(hr, __FILE__, __LINE__);
 //    }
@@ -156,11 +156,11 @@
 //    conParam.RnrRetryCount = 7;
 //
 //
-//    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Connecting to IB end point "
+//    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Connecting to IB end point "
 //        "%s...\n", ep.ToStringA().PeekBuffer());
 //    if (FAILED(hr = this->connectEndPoint->Connect(this->queuePair, 
 //            static_cast<const sockaddr *>(ep), &conParam, NULL))) {
-//        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Connection to IB end point "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Connection to IB end point "
 //            "failed with error code %d.\n", hr);
 //        throw sys::COMException(hr, __FILE__, __LINE__);        
 //    }
@@ -208,7 +208,7 @@
 //    VLSTACKTRACE("IbvCommChannel::Listen", __FILE__, __LINE__);
 //    HRESULT hr = S_OK;
 //
-//    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Setting IB end point into "
+//    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Setting IB end point into "
 //        "listening state...\n");
 //    if (FAILED(hr = this->connectEndPoint->Listen(backlog))) {
 //        throw sys::COMException(hr, __FILE__, __LINE__);
@@ -289,11 +289,11 @@
 //        ::ZeroMemory(&qpCreate, sizeof(qpCreate));
 //
 //        /* Get attributes of end point to get the device used for it. */
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying attributes of "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying attributes of "
 //            "connect end point...\n");
 //        THE_ASSERT(this->connectEndPoint != NULL);
 //        if (FAILED(hr = this->connectEndPoint->Query(&connAttribs))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying attributes of "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying attributes of "
 //                "connect end point failed with error code %d.\n", hr);
 //            throw sys::COMException(hr, __FILE__, __LINE__);
 //        }
@@ -305,39 +305,39 @@
 //            connAttribs.Device.DeviceGuid = devices[0].GetNodeGuid();
 //        }
 //
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Opening IB device...\n");
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Opening IB device...\n");
 //        THE_ASSERT(this->wvProvider != NULL);
 //        THE_ASSERT(this->device == NULL);
 //        if (FAILED(hr = this->wvProvider->OpenDevice(
 //                connAttribs.Device.DeviceGuid, &this->device))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Opening IB device failed "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Opening IB device failed "
 //                "with error code %d.\n", hr);
 //            throw sys::COMException(hr, __FILE__, __LINE__);
 //        }
 //
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying IB device "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying IB device "
 //            "attributes...\n");
 //        THE_ASSERT(this->device != NULL);
 //        if (FAILED(hr = this->device->Query(&devAttribs))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying IB device "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying IB device "
 //                "attributes failed with error code %d.\n", hr);
 //            throw sys::COMException(hr, __FILE__, __LINE__);
 //        }
 //
 //        /* Allocate a protection domain for the device. */
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Allocating protection "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Allocating protection "
 //            "domain...\n");
 //        THE_ASSERT(this->protectionDomain == NULL);
 //        THE_ASSERT(this->device != NULL);
 //        if (FAILED(hr = this->device->AllocateProtectionDomain(
 //                &this->protectionDomain))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Allocating protection "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Allocating protection "
 //                "domain failed with error code %d.\n", hr);
 //            throw sys::COMException(hr, __FILE__, __LINE__);
 //        }
 //
 //        /* Allocate and register memory buffers for sending and receiving. */
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Registering memory for "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Registering memory for "
 //            "receiving data...\n");
 //        THE_ASSERT(this->recvRegion == NULL);
 //        THE_ASSERT(this->protectionDomain != NULL);
@@ -346,12 +346,12 @@
 //                this->recvRegion, this->recvRegionSize, 
 //                IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_LOCAL_WRITE,
 //                NULL, &this->recvKeys))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Registering memory for "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Registering memory for "
 //                "receiving data failed with error code %d.\n", hr);
 //            throw sys::COMException(hr, __FILE__, __LINE__);
 //        }
 //
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Registering memory for "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Registering memory for "
 //            "sending data...\n");
 //        THE_ASSERT(this->sendRegion == NULL);
 //        THE_ASSERT(this->protectionDomain != NULL);
@@ -360,32 +360,32 @@
 //                this->sendRegion, this->sendRegionSize, 
 //                IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_LOCAL_WRITE,
 //                NULL, &this->sendKeys))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Registering memory for "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Registering memory for "
 //                "sending data failed with error code %d.\n", hr);
 //            throw sys::COMException(hr, __FILE__, __LINE__);
 //        }
 //
 //        /* Create completion queues. */
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Creating receive completion "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Creating receive completion "
 //            "queue...\n");
 //        THE_ASSERT(this->recvComplQueue == NULL);
 //        THE_ASSERT(this->device != NULL);
 //        qpCreate.ReceiveDepth = 15;  // TODO
 //        if (FAILED(hr = this->device->CreateCompletionQueue(
 //                &qpCreate.ReceiveDepth, &this->recvComplQueue))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Creating receive "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Creating receive "
 //                "completion queue failed with error code %d.\n", hr);
 //            throw sys::COMException(hr, __FILE__, __LINE__);        
 //        }
 //
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Creating send completion "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Creating send completion "
 //            "queue...\n");
 //        THE_ASSERT(this->sendComplQueue == NULL);
 //        THE_ASSERT(this->device != NULL);
 //        qpCreate.SendDepth = 15; // TODO
 //        if (FAILED(hr = this->device->CreateCompletionQueue(
 //                &qpCreate.SendDepth, &this->sendComplQueue))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Creating send "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Creating send "
 //                "completion queue failed with error code %d.\n", hr);
 //            throw sys::COMException(hr, __FILE__, __LINE__);        
 //        }
@@ -430,11 +430,11 @@
 //        //create.QpType = (WV_QP_TYPE) qp_init_attr->qp_type;
 //        //create.QpFlags = qp_init_attr->sq_sig_all ? WV_QP_SIGNAL_SENDS : 0;
 //
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Creating queue pair...\n");
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Creating queue pair...\n");
 //        THE_ASSERT(this->queuePair == NULL);
 //        if (FAILED(hr = this->protectionDomain->CreateConnectQueuePair(
 //            &qpCreate, &this->queuePair))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Creating queue pair failed "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Creating queue pair failed "
 //                "with error code %d.\n", hr);
 //            throw sys::COMException(hr, __FILE__, __LINE__);
 //        }
@@ -451,11 +451,11 @@
 //    HRESULT hr = S_OK;      // Result of API calls.
 //
 //    if (this->wvProvider == NULL) {
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Acquiring WinVerbs "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Acquiring WinVerbs "
 //            "provider...\n");
 //        if (FAILED(hr = ::WvGetObject(IID_IWVProvider, 
 //                reinterpret_cast<void **>(&this->wvProvider)))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Acquiring WinVerbs "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Acquiring WinVerbs "
 //                "provider failed with error code %d.\n", hr);
 //            throw sys::COMException(hr, __FILE__, __LINE__);    
 //        }
@@ -463,11 +463,11 @@
 //
 //    if (this->connectEndPoint == NULL) {
 //        /* Create a connect end point. */
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Creating IB connect end "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Creating IB connect end "
 //            "point...\n");
 //        if (FAILED(hr = this->wvProvider->CreateConnectEndpoint(
 //                &this->connectEndPoint))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Creating IB connect end "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Creating IB connect end "
 //                "point failed with error code %d.\n", hr);
 //            throw sys::COMException(hr, __FILE__, __LINE__);
 //        }

@@ -12,7 +12,7 @@
 #include "vislib/IbRdmaCommClientChannel.h"
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/memutils.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 /*
@@ -163,7 +163,7 @@ void vislib::net::ib::IbRdmaCommServerChannel::Close(void) {
 
     result = ::rdma_disconnect(this->id);
     if (result != 0) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "rdma_disconnect failed with error "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "rdma_disconnect failed with error "
             "code %d when closing the channel.\n", errno);
     }
 
@@ -229,7 +229,7 @@ vislib::net::ib::IbRdmaCommServerChannel::~IbRdmaCommServerChannel(void) {
     //try {
     //    this->Close();
     //} catch (...) {
-    //    VLTRACE(Trace::LEVEL_VL_WARN, "An exception was caught when closing "
+    //    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "An exception was caught when closing "
     //        "a IbRdmaCommServerChannel in its destructor.\n");
     //}
 }

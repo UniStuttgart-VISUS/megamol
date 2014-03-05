@@ -17,7 +17,7 @@
 #include "vislib/IbvInformation.h"
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/RunnableThread.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 typedef vislib::SmartRef<vislib::net::AbstractCommEndPoint> IbEndPoint;
@@ -131,7 +131,7 @@ int _tmain(int argc, _TCHAR **argv) {
     using namespace vislib::net::ib;
     using namespace vislib::sys;
 
-    vislib::Trace::GetInstance().SetLevel(Trace::LEVEL_ALL);
+    the::trace::get_instance().set_level(THE_TRCCHL_DEFAULT, the::trace::LEVEL_ALL);
 
     IbvInformation::DeviceList devices;
 

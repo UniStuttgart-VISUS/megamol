@@ -13,7 +13,7 @@
 #include "vislib/Exception.h"
 #include "vislib/SocketException.h"
 #include "vislib/Thread.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/unreferenced.h"
 
 
@@ -37,7 +37,7 @@ vislib::net::AsyncSocketSender::~AsyncSocketSender(void) {
         SAFE_DELETE(this->storagePool);
     } catch (Exception& e) {
         VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
-        VLTRACE(Trace::LEVEL_VL_WARN, "Exception while destroying "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Exception while destroying "
             "AsyncSocketSender: %s\n", e.GetMsgA());
     }
 
@@ -68,7 +68,7 @@ DWORD vislib::net::AsyncSocketSender::Run(Socket *socket) {
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Socket::Startup failed in "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket::Startup failed in "
             "AsyncSocketSender::Run().\n");
         return e.GetErrorCode();
     }
@@ -85,7 +85,7 @@ DWORD vislib::net::AsyncSocketSender::Run(Socket *socket) {
          */
         if (!this->isQueueOpen && this->queue.IsEmpty()) {
             this->lockQueue.Unlock();
-            VLTRACE(Trace::LEVEL_VL_INFO, "AsyncSocketSender [%u] is "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "AsyncSocketSender [%u] is "
                 "exiting because of empty queue ...\n",
                 sys::Thread::CurrentID());
             break;
@@ -103,7 +103,7 @@ DWORD vislib::net::AsyncSocketSender::Run(Socket *socket) {
                                     : static_cast<const void *>(*task.data1);
         result = 0;
         try {
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Sending %u bytes "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Sending %u bytes "
                 "starting at 0x%x ...\n", task.cntBytes, data);
             cntSent = socket->Send(data, task.cntBytes, task.timeout,
                 task.flags, task.forceSend);
@@ -117,7 +117,7 @@ DWORD vislib::net::AsyncSocketSender::Run(Socket *socket) {
     /* Do cleanup. */
     try {
         if ((this->flags & FLAG_IS_CLOSE_SOCKET) != 0) {
-            VLTRACE(Trace::LEVEL_VL_INFO, "AsyncSocketSender [%u] is closing the "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "AsyncSocketSender [%u] is closing the "
                 "socket ...\n", sys::Thread::CurrentID());
             socket->Close();
         }
@@ -211,7 +211,7 @@ bool vislib::net::AsyncSocketSender::Terminate(void) {
         this->isQueueOpen = false;
 
         if ((this->flags & FLAG_IS_LINGER) == 0) {
-            VLTRACE(Trace::LEVEL_VL_INFO, "Discarding all pending asynchronous "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discarding all pending asynchronous "
                 "socket sends ...\n");
 
             /* Notify the user about his/her task being aborted. */
@@ -231,7 +231,7 @@ bool vislib::net::AsyncSocketSender::Terminate(void) {
 
     } catch (vislib::Exception& e) {
         VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Terminating AsyncSocketSender "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Terminating AsyncSocketSender "
             "failed. %s\n", e.GetMsgA());
         retval = false;
     }

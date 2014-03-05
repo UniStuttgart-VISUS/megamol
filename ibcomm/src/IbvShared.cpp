@@ -11,7 +11,7 @@
 //#include "vislib/COMException.h"
 //#include "vislib/StackTrace.h"
 //#include "vislib/sysfunctions.h"
-//#include "vislib/Trace.h"
+//#include "the/trace.h"
 //
 //
 ///*
@@ -23,29 +23,29 @@
 //    sys::AutoLock lock(IbvShared::lock);
 //
 //    if (IbvShared::wvProvider == NULL) {
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Acquiring WinVerbs "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Acquiring WinVerbs "
 //            "provider...\n");
 //        if (FAILED(hr = ::WvGetObject(IID_IWVProvider, 
 //                reinterpret_cast<void **>(&IbvShared::wvProvider)))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Acquiring WinVerbs "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Acquiring WinVerbs "
 //                "provider failed with error code %d.\n", hr);
 //            throw sys::COMException(hr, __FILE__, __LINE__);    
 //        }
 //
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Opening completion "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Opening completion "
 //            "manager...\n");
 //        if (FAILED(hr = ::CompManagerOpen(&IbvShared::compMgr))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Opening completion "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Opening completion "
 //                "manager failed with error code %d.\n", hr);
 //            sys::SafeRelease(IbvShared::wvProvider);
 //            throw sys::COMException(hr, __FILE__, __LINE__);
 //        }
 //
-//        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Configuring completion "
+//        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Configuring completion "
 //            "monitoring...\n");
 //        if (FAILED(hr = ::CompManagerMonitor(&IbvShared::compMgr, 
 //                IbvShared::wvProvider->GetFileHandle(), 0))) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Configuring completion "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Configuring completion "
 //                "monitoring failed with error code %d.\n", hr);
 //            ::CompManagerClose(&IbvShared::compMgr);
 //            sys::SafeRelease(IbvShared::wvProvider);
@@ -79,7 +79,7 @@
 //
 //    if (IbvShared::wvProvider != NULL) {
 //        if (IbvShared::wvProvider->Release() == 0) {
-//            VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Releasing shared IB "
+//            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Releasing shared IB "
 //                "resources...\n");
 //            ::CompManagerClose(&IbvShared::compMgr);
 //            IbvShared::wvProvider = NULL;

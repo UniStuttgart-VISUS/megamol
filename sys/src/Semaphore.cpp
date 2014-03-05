@@ -18,7 +18,7 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -65,7 +65,7 @@ vislib::sys::Semaphore::Semaphore(const char *name, long initialCount,
 #else /* _WIN32 */
     if (name != NULL) {
         this->name = TranslateWinIpc2PosixName(name);
-        VLTRACE(Trace::LEVEL_VL_INFO, "Open named POSIX semaphore \"%s\"\n", 
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Open named POSIX semaphore \"%s\"\n", 
             this->name.PeekBuffer());
         if ((this->handle = ::sem_open(this->name.PeekBuffer(), 0, 0, 0)) 
                 == SEM_FAILED) {
@@ -113,7 +113,7 @@ vislib::sys::Semaphore::Semaphore(const wchar_t *name, long initialCount,
 #else /* _WIN32 */
     if (name != NULL) {
         this->name = TranslateWinIpc2PosixName(name);
-        VLTRACE(Trace::LEVEL_VL_INFO, "Open named POSIX semaphore \"%ls\"\n", 
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Open named POSIX semaphore \"%ls\"\n", 
             this->name.PeekBuffer());
         if ((this->handle = ::sem_open(this->name.PeekBuffer(), 0, 0, 0)) 
                 == SEM_FAILED) {

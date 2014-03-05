@@ -7,7 +7,7 @@
 
 #include "vislib/CameraAdjust3D.h"
 #include "vislib/RelativeCursor3D.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/Quaternion.h"
 #include "vislib/Matrix4.h"
 #include <climits>

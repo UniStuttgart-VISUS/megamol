@@ -26,7 +26,7 @@
 #include "vislib/Array.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/String.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 namespace vislib {
@@ -174,7 +174,7 @@ namespace net {
                 ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
             if ((err = ::getnameinfo(static_cast<const sockaddr *>(ep), size,
                 buffer, sizeof(buffer), NULL, 0, NI_NAMEREQD)) != 0) {
-                    VLTRACE(Trace::LEVEL_VL_ERROR, "::getnameinfo failed in "
+                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::getnameinfo failed in "
                         "IPHostEntry::fixHostName(): %s\n",
 #ifdef _WIN32
                     ::gai_strerrorA(err)

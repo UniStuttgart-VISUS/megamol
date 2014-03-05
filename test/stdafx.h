@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 #include "vislib/tchar.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 // TODO: reference additional headers your program requires here

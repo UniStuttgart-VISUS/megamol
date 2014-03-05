@@ -19,7 +19,7 @@
 #include "vislib/memutils.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 #ifndef _WIN32
 /** Gain access to the global environment data provided by the system. */

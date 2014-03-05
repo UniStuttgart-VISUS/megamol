@@ -9,7 +9,7 @@
 #include "vislib/ClusterDiscoveryService.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/SystemInformation.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 #include <iostream>
 
@@ -88,8 +88,8 @@ static void runCDS(const bool observer) {
     using namespace vislib::net;
     using namespace vislib::sys;
 
-    UINT oldLevel = Trace::GetInstance().GetLevel();
-    //Trace::GetInstance().SetLevel(Trace::LEVEL_ERROR);
+    UINT oldLevel = the::trace::get_instance().get_default_level();
+    //Trace::GetInstance().SetLevel(THE_TRCLVL_ERROR);
 
     MyListener myListener;
 
@@ -104,7 +104,7 @@ static void runCDS(const bool observer) {
     Thread::Sleep(60 * 1000);
     cds.Stop();
 
-    Trace::GetInstance().SetLevel(oldLevel);
+    the::trace::get_instance().set_default_level(oldLevel);
     Socket::Cleanup();
 }
 

@@ -12,7 +12,7 @@
 #include <iostream>
 #include "vislib/Console.h"
 #include "vislib/MessageBox.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 /* include test implementations */
 #include "testhelper.h"
@@ -93,7 +93,6 @@ VislibTest tests[] = {
     {_T("Serialiser"), ::TestSerialiser, "Tests VISlib serialisers."},
     {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
-    {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
     {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
     {_T("RLEUINT"), ::TestRLEUInt, "Tests UINT RLE Encoding"},
     {_T("multisz"), ::TestMultiSz, "Tests MultiSz container"},

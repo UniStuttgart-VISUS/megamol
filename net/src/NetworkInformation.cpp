@@ -35,7 +35,7 @@
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -499,7 +499,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForPredicate(
                 outAdapters.Add(NetworkInformation::adapters[i]);
             }
         } catch (...) {
-            VLTRACE(Trace::LEVEL_VL_WARN, "Exception in SelectAdapterCallback "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Exception in SelectAdapterCallback "
                 "while assessing adapter %u.\n", i);
             // Ignore that and go on with the next adapter.
         }
@@ -656,13 +656,13 @@ float vislib::net::NetworkInformation::GuessAdapter(Adapter& outAdapter,
 
 #if (defined(DEBUG) || defined(_DEBUG))
     if (invertWildness) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "You have chosen to invert the wildness "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "You have chosen to invert the wildness "
             "of GuessAdapter(). Please be advised that this is not "
             "recommended and severely degrades the Chefmäßigkeit of your "
             "application. It is recommended not to invert the wildness.\n");
     }
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "GuessAdapter() trying to guess what "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "GuessAdapter() trying to guess what "
         " adapter \"%s\" might be ...\n", W2A(str));
 
     /* Parse the input. */
@@ -965,20 +965,20 @@ float vislib::net::NetworkInformation::assessAddressAsEndPoint(
 
     if (ctx.Address != NULL) {
         IPAgnosticAddress a = addrInfo.GetAddress();
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Checking input \"%s\" against \"%s\" "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Checking input \"%s\" against \"%s\" "
             "...\n", ctx.Address->ToStringA().PeekBuffer(),  
             a.ToStringA().PeekBuffer());
 
         if (a == *ctx.Address) {
             /* Identified by exact address. */
-            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found exact address match "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Found exact address match "
                 "\"%s\".\n", a.ToStringA().PeekBuffer());
             retval = 0.0f;
 
             if (ctx.PrefixLen != NULL) {
                 /* Check for expected prefix length. */
                 if (addrInfo.GetPrefixLength() != *ctx.PrefixLen) {
-                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Prefix length %u was "
+                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Prefix length %u was "
                         "found, but %u was expected.\n", 
                         addrInfo.GetPrefixLength(), *ctx.PrefixLen);
                     retval += NetworkInformation::PENALTY_WRONG_PREFIX;
@@ -987,13 +987,13 @@ float vislib::net::NetworkInformation::assessAddressAsEndPoint(
 
             if ((a.GetAddressFamily() != IPAgnosticAddress::FAMILY_INET)
                     && ctx.IsIPv4Preferred) {
-                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Address \"%s\" is not "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Address \"%s\" is not "
                     "IPv4 as preferred.\n", a.ToStringA().PeekBuffer());
                 retval += NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY;
             }
 
         } else if (ctx.PrefixLen != NULL) {
-            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Have no exact address match for "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Have no exact address match for "
                 "\"%s\", can check for same prefix length of %u.\n", 
                 a.ToStringA().PeekBuffer(), *ctx.PrefixLen);
 
@@ -1002,7 +1002,7 @@ float vislib::net::NetworkInformation::assessAddressAsEndPoint(
                 
                 if (a == ctx.Address->GetPrefix(*ctx.PrefixLen)) {
                     /* Identified by subnet. */
-                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found exact prefix "
+                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Found exact prefix "
                         "match \"%s\".\n", a.ToStringA().PeekBuffer());
                     retval = 0.0f;
                 }
@@ -1014,7 +1014,7 @@ float vislib::net::NetworkInformation::assessAddressAsEndPoint(
     } else if (ctx.PrefixLen != NULL) {
         /* Choose only based on prefix length. This is really wild ... */
         if (addrInfo.GetPrefixLength() == *ctx.PrefixLen) {
-            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found prefix length match "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Found prefix length match "
                 "\"%s/%u\".\n", 
                 addrInfo.GetAddress().ToStringA().PeekBuffer(),
                 *ctx.PrefixLen);
@@ -1022,7 +1022,7 @@ float vislib::net::NetworkInformation::assessAddressAsEndPoint(
         }
     } /* end if (ctx.Address != NULL) */
 
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Input \"%s\" was assessed as endpoint "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Input \"%s\" was assessed as endpoint "
         "with wildness %f.\n", addrInfo.GetAddress().ToStringA().PeekBuffer(),  
         retval);
 
@@ -1060,7 +1060,7 @@ float vislib::net::NetworkInformation::consolidateWildness(
         }
     }
     /* We have the candidate now. */
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Have %u candidates with equal "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Have %u candidates with equal "
         "wildness %f. The first is at index %u.\n", cntEqualWildness, retval,
         outIdxFirstBest);
 
@@ -1140,13 +1140,13 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
 
 #if (defined(DEBUG) || defined(_DEBUG))
     if (invertWildness) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "You have chosen to invert the wildness "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "You have chosen to invert the wildness "
             "of GuessLocalEndPoint(). Please be advised that this is not "
             "recommended and severely degrades the Chefmäßigkeit of your "
             "application. It is recommended not to invert the wildness.\n");
     }
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "GuessLocalEndPoint() trying to guess "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "GuessLocalEndPoint() trying to guess "
         " what endpoint \"%s\" might be ...\n", W2A(str));
 
     /* Parse the input. */
@@ -1165,7 +1165,7 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
 
         /* Return any endpoint (with wildness 1) if no adapter is available. */
         if (NetworkInformation::adapters.IsEmpty()) {
-            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Suggest any endpoint as we do "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Suggest any endpoint as we do "
                 "not have a network adapter ...\n", W2A(str));
             if ((validMask & WILD_GUESS_HAS_NETMASK) != 0) {
                 outEndPoint.SetIPAddress(IPAgnosticAddress::ANY4);
@@ -1207,7 +1207,7 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
 
             if (ctx.Address != NULL) {
                 if (ctx.Address->IsAny()) {
-                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "User explicity specified "
+                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "User explicity specified "
                         "ANY address.\n");
                     outEndPoint.SetIPAddress(*ctx.Address);
                     retval = 0.0f;
@@ -1225,7 +1225,7 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
                     Confidence dummy; // TODO: consider to use in wildness 'calculation'
                     const UnicastAddressList& al = NetworkInformation::adapters[
                         i].GetUnicastAddresses(&dummy);
-                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Confidence for unicast "
+                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Confidence for unicast "
                         "address is %d", dummy);
                     if ((j <= bestAddressIdx) 
                             && (bestAddressIdx < j + al.Count())) {
@@ -1320,13 +1320,13 @@ float vislib::net::NetworkInformation::guessRemoteEndPoint(
 
 #if (defined(DEBUG) || defined(_DEBUG))
     if (invertWildness) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "You have chosen to invert the wildness "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "You have chosen to invert the wildness "
             "of GuessRemoteEndPoint(). Please be advised that this is not "
             "recommended and severely degrades the Chefmäßigkeit of your "
             "application. It is recommended not to invert the wildness.\n");
     }
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "GuessRemoteEndPoint() trying to guess "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "GuessRemoteEndPoint() trying to guess "
         " what endpoint \"%s\" might be ...\n", W2A(str));
 
     /* Parse the input. */
@@ -1430,7 +1430,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
     try {                                                                      \
         Socket::Cleanup();                                                     \
     } catch (SocketException e) {                                              \
-        VLTRACE(Trace::LEVEL_VL_WARN, "Unexpected error while cleaning "       \
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Unexpected error while cleaning "       \
             " up socket subsystem after an error: %s", e.GetMsgA());           \
     }
 
@@ -1612,7 +1612,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
     try {                                                                      \
         Socket::Cleanup();                                                     \
     } catch (SocketException e) {                                              \
-        VLTRACE(Trace::LEVEL_VL_WARN, "Unexpected error while cleaning "       \
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Unexpected error while cleaning "       \
             " up socket subsystem after an error: %s", e.GetMsgA());           \
     }
 
@@ -2229,7 +2229,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
         const Adapter& a = NetworkInformation::adapters[i];
         matchedIndex = -1;
 
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "WILD_GUESS_HAS_DEVICE = %d\n",
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "WILD_GUESS_HAS_DEVICE = %d\n",
             (validMask & WILD_GUESS_HAS_DEVICE));
 
         /* Check whether we have an adapter with the specified device name. */
@@ -2239,7 +2239,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
             try {
                 StringW id(a.GetID());
                 dist = static_cast<float>(device.LevenshteinDistance(id));
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Levenshtein "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Levenshtein "
                     "distance of adapter %u's ID \"%s\" and the input \"%s\" "
                     "is %f.\n", i, W2A(id), W2A(device), dist);
                 len1 = static_cast<float>(id.Length());
@@ -2250,7 +2250,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
                     wildness[i] = dist;
                 }
             } catch (...) {
-                VLTRACE(Trace::LEVEL_VL_WARN, "Adapter %u has an invalid ID. "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Adapter %u has an invalid ID. "
                     "This should never happen.\n", i);
             }
 
@@ -2258,7 +2258,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
             try {
                 dist = static_cast<float>(device.LevenshteinDistance(
                     a.GetName()));
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Levenshtein "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Levenshtein "
                     "distance of adapter %u's name \"%s\" and the input \"%s\" "
                     "is %f.\n", i, W2A(a.GetName()), W2A(device), dist);
                 len1 = static_cast<float>(a.GetName().Length());
@@ -2269,16 +2269,16 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
                     wildness[i] = dist;
                 }
             } catch (...) {
-                VLTRACE(Trace::LEVEL_VL_WARN, "Adapter %u has an invalid name. "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Adapter %u has an invalid name. "
                     "This should never happen.\n", i);
             }
         } /* end if ((validMask & WILD_GUESS_HAS_DEVICE) != 0) */
 
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "WILD_GUESS_HAS_ADDRESS = %d\n",
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "WILD_GUESS_HAS_ADDRESS = %d\n",
             (validMask & WILD_GUESS_HAS_ADDRESS));
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "WILD_GUESS_HAS_PREFIX_LEN = %d\n",
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "WILD_GUESS_HAS_PREFIX_LEN = %d\n",
             (validMask & WILD_GUESS_HAS_PREFIX_LEN));
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "WILD_GUESS_HAS_NETMASK = %d\n",
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "WILD_GUESS_HAS_NETMASK = %d\n",
             (validMask & WILD_GUESS_HAS_NETMASK));
 
         if ((validMask & WILD_GUESS_HAS_ADDRESS) != 0) {
@@ -2287,7 +2287,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
              * Check whether we have an adapter bound to the specified 
              * unicast address. 
              */
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Checking adapter "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Checking adapter "
                 "%u against unicast address \"%s\" ...\n", i,
                 address.ToStringA().PeekBuffer());
             if ((matchedIndex = NetworkInformation::findAddress(
@@ -2301,7 +2301,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
                  * Search an adapter with the given prefix or check whether the
                  * address we already found has the correct prefix.
                  */
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Checking "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Checking "
                         "adapter %u against prefix \"%s/%u\" ...\n", i, 
                         address.ToStringA().PeekBuffer(), prefixLen);
                 if (matchedIndex >= 0) {
@@ -2327,7 +2327,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
              * been matched via the name. If so, check the prefix and add
              * optional penalty if it does not match.
              */
-            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Special check for correct prefix "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Special check for correct prefix "
                 "length %u ...\n", prefixLen);
 
             const UnicastAddressList& al = a.GetUnicastAddresses();
@@ -2339,7 +2339,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
             for (SIZE_T a = 0; a < al.Count(); a++) {
                 if (al[a].GetPrefixLength() == prefixLen) {
                     wildness[i] -= NetworkInformation::PENALTY_WRONG_PREFIX;
-                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Prefix length %u is "
+                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Prefix length %u is "
                         "OK.\n", prefixLen);
                     break;
                 }
@@ -2382,7 +2382,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
     IPAgnosticAddress::AddressFamily preferredFamily = (prefFam != NULL)
         ? *prefFam : IPAgnosticAddress::FAMILY_INET6;
 
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Splitting wild guess input \"%s\" ...\n",
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Splitting wild guess input \"%s\" ...\n",
         W2A(str));
 
     /* Check whether we have a port in the input. */
@@ -2393,7 +2393,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
         /* Get the potential port. */
         if (pos < input.Length() + 3) {
             port = input.Substring(pos + 1);
-            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found potential port: \"%s\"\n", 
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Found potential port: \"%s\"\n", 
                 W2A(port));
         }
 
@@ -2403,7 +2403,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
          * a part of the address as the port.
          */
         if (tmp.Contains(L':') && !port.IsEmpty()) {
-            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Check whether IPv6 address can "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Check whether IPv6 address can "
                 "be valid with port: \"%s\"\n", W2A(tmp));
             if (!tmp.Contains(L']')             // Have brackets
                     && !tmp.Contains(L'/')      // Have subnet
@@ -2417,17 +2417,17 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
         port.TrimSpaces();
         if (!port.IsEmpty()) {
             input = tmp;
-            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Remaining input without port: "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Remaining input without port: "
                 "\"%s\"\n", W2A(input));
 
             try {
                 outPort = static_cast<USHORT>(CharTraitsW::ParseInt(
                     port.PeekBuffer()));
                 retval |= WILD_GUESS_HAS_PORT;
-                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found port: %d\n", outPort);
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Found port: %d\n", outPort);
 
             } catch (Exception e) {
-                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Parsing port failed: %s\n",
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Parsing port failed: %s\n",
                     e.GetMsgA());
                 THE_ASSERT((retval & WILD_GUESS_HAS_PORT) == 0);
             }
@@ -2442,7 +2442,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
         /* Get the potential subnet mask or prefix length. */
         if (pos < input.Length() + 3) {
             prefix = input.Substring(pos + 1);
-            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found potential prefix: \"%s\"\n",
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Found potential prefix: \"%s\"\n",
                 W2A(prefix));
         }
 
@@ -2450,24 +2450,24 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
         prefix.TrimSpaces();
         if (!prefix.IsEmpty()) {
             input = tmp;
-            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Remaining input without prefix: "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Remaining input without prefix: "
                 "\"%s\"\n", W2A(input));
 
             /* Parse as netmask first. */
             try {
                 IPAgnosticAddress mask = IPAgnosticAddress::Create(
                     prefix.PeekBuffer());
-                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Parsed netmask: %s\n",
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Parsed netmask: %s\n",
                     mask.ToStringA().PeekBuffer());
 
                 outPrefixLen = NetworkInformation::NetmaskToPrefix(mask);
                 preferredFamily = IPAgnosticAddress::FAMILY_INET;
                 retval |= WILD_GUESS_HAS_NETMASK;
-                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Converted netmask to prefix "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Converted netmask to prefix "
                     "length: %u\n", outPrefixLen);
 
             } catch (Exception e) {
-                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Parsing netmask failed: %s\n",
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Parsing netmask failed: %s\n",
                     e.GetMsgA());
                 THE_ASSERT((retval & WILD_GUESS_HAS_NETMASK) == 0);
             }
@@ -2479,11 +2479,11 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
                         prefix.PeekBuffer()));
                     preferredFamily = IPAgnosticAddress::FAMILY_INET6;
                     retval |= WILD_GUESS_HAS_PREFIX_LEN;
-                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found prefix length: "
+                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Found prefix length: "
                         "%d.\n", outPrefixLen);
 
                 } catch (Exception e) {
-                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Parsing prefix length "
+                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Parsing prefix length "
                         "failed: %s.\n", e.GetMsgA());
                     THE_ASSERT((retval & WILD_GUESS_HAS_PREFIX_LEN) == 0);
                 }
@@ -2494,7 +2494,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
     /* Remove potential zone ID. */
     if ((pos = input.FindLast(L'%')) != StringW::INVALID_POS) {
         input.Truncate(pos);
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Remaining input without zone ID: "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Remaining input without zone ID: "
             "\"%s\"\n", W2A(input));
     }
   
@@ -2512,11 +2512,11 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
         if (input.IsEmpty()) {
             retval |= WILD_GUESS_FROM_EMPTY_ADDRESS;
         }
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Parsed address: %s\n",
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Parsed address: %s\n",
             outAddress.ToStringA().PeekBuffer());
 
     } catch (Exception e) {
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Parsing address \"%s\" failed: %s\n",
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Parsing address \"%s\" failed: %s\n",
             W2A(input), e.GetMsgA());
         THE_ASSERT((retval & WILD_GUESS_HAS_ADDRESS) == 0);
 

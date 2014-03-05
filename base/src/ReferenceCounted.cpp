@@ -9,14 +9,14 @@
 
 
 #include "the/assert.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 /*
  * vislib::ReferenceCounted::AddRef
  */
 UINT32 vislib::ReferenceCounted::AddRef(void) {
-    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Add reference to 0x%p, "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Add reference to 0x%p, "
         "reference count is now %u.\n", this, this->cntRefs + 1);
     return ++this->cntRefs;
 }
@@ -27,7 +27,7 @@ UINT32 vislib::ReferenceCounted::AddRef(void) {
 UINT32 vislib::ReferenceCounted::Release(void) {
     THE_ASSERT(this->cntRefs > 0);
     UINT32 retval = --this->cntRefs;
-    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Released object 0x%p, "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Released object 0x%p, "
         "reference count is now %u.\n", this, this->cntRefs);
     if (this->cntRefs == 0) {
         delete this;
@@ -40,7 +40,7 @@ UINT32 vislib::ReferenceCounted::Release(void) {
  * vislib::ReferenceCounted::ReferenceCounted
  */
 vislib::ReferenceCounted::ReferenceCounted(void) : cntRefs(1) {
-    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Object 0x%p initialised, "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Object 0x%p initialised, "
         "reference count is now %u.\n", this, this->cntRefs);
 }
 

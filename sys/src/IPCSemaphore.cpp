@@ -20,7 +20,7 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -205,18 +205,18 @@ void vislib::sys::IPCSemaphore::init(const char *name, const long initialCount,
     /* Try to create new semaphore. */
     if ((this->id = ::semget(key, 1, IPC_CREAT | IPC_EXCL | DFT_PERMS)) != -1) {
         /* Set initial count if new semaphore was created. */
-        VLTRACE(Trace::LEVEL_VL_INFO, "Semaphore %u created.\n", this->id);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Semaphore %u created.\n", this->id);
 
         this->isOwner = true;
         ::semctl(this->id, MEMBER_IDX, SETVAL, i);
-        VLTRACE(Trace::LEVEL_VL_INFO, "Inital semaphore value: %d\n", 
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Inital semaphore value: %d\n", 
             this->getCount());
 
     } else if (errno == EEXIST) {
         /* Semaphore already exists, try to open it. */
         this->id = ::semget(key, 1, DFT_PERMS);
         this->isOwner = false;
-        VLTRACE(Trace::LEVEL_VL_INFO, "Semaphore %u opened.\n", this->id);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Semaphore %u opened.\n", this->id);
     }
     THE_ASSERT(this->id != -1); // TODO: Throw exception here?
 

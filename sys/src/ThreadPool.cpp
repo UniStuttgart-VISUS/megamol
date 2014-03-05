@@ -17,7 +17,7 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/SystemInformation.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -233,13 +233,13 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
     THE_ASSERT(pool != NULL);
     this->pool = static_cast<ThreadPool *>(pool);
 
-    VLTRACE(Trace::LEVEL_VL_INFO, "Worker thread [%u] started.\n", 
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Worker thread [%u] started.\n", 
         Thread::CurrentID());
 
     while (true) {
 
         /* Wait for work. */
-        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is waiting for "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "ThreadPool thread [%u] is waiting for "
             "work ...\n", Thread::CurrentID());
         this->pool->semBlockWorker.Lock();
 
@@ -252,7 +252,7 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
          * thread and it does not find any work to do, it should exit.
          */
         if (this->pool->queue.IsEmpty()) {
-            VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "ThreadPool thread [%u] is "
                 "exiting ...\n", Thread::CurrentID());
             if (--this->pool->cntTotalThreads == 0) {
                 this->pool->evtAllCompleted.Set();
@@ -274,14 +274,14 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
         this->pool->lockQueue.Unlock();
 
         /* Do the work. */
-        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is working ...\n",
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "ThreadPool thread [%u] is working ...\n",
             Thread::CurrentID());
         THE_ASSERT((workItem.runnable != NULL) 
             || (workItem.runnableFunction != NULL));
         DWORD exitCode = (workItem.runnable != NULL)
             ? workItem.runnable->Run(workItem.userData)
             : workItem.runnableFunction(workItem.userData);
-        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] completed work "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "ThreadPool thread [%u] completed work "
             "item with exit code %u\n", Thread::CurrentID(), exitCode);
 
         this->pool->fireUserWorkItemCompleted(workItem, exitCode);

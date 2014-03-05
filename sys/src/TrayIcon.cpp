@@ -11,7 +11,7 @@
 #include "vislib/StringConverter.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 #ifdef _WIN32
@@ -39,7 +39,7 @@ vislib::sys::TrayIcon::~TrayIcon(void) {
     try {
         this->Destroy();
     } catch (SystemException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Unexpected exception in dtor "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Unexpected exception in dtor "
             "of tray icon. The exception message is: %s\n", e.GetMsgA());
     }
 
@@ -552,7 +552,7 @@ bool vislib::sys::TrayIcon::init(HINSTANCE hInstance) {
             return false;
         }
     } catch (SystemException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Retrieving shell version failed: "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Retrieving shell version failed: "
             "%s (%u).\n", e.GetMsgA(), e.GetErrorCode());
         return false;
     }

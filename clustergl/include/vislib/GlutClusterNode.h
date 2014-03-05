@@ -18,7 +18,7 @@
 
 #include "vislib/AbstractClusterNode.h"
 #include "vislib/UnsupportedOperationException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 namespace vislib {

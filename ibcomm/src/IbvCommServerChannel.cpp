@@ -8,7 +8,7 @@
 //#include "vislib/IbvCommServerChannel.h"
 //
 //#include "vislib/IPCommEndPoint.h"
-//#include "vislib/Trace.h"
+//#include "the/trace.h"
 //#include "vislib/UnsupportedOperationException.h"
 //
 //
@@ -16,7 +16,7 @@
 //vislib::net::ib::IbvCommServerChannel::Accept(void) {
 //    VLSTACKTRACE("IbvCommServerChannel::Bind", __FILE__, __LINE__);
 //
-//    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Waiting for IB connection "
+//    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Waiting for IB connection "
 //        "request...\n");
 //    //this->evtAccept.Wait();
 //
@@ -42,7 +42,7 @@
 //    IPCommEndPoint *cep = endPoint.DynamicPeek<IPCommEndPoint>();
 //    IPEndPoint& ep = static_cast<IPEndPoint&>(*cep);
 //
-//    //VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Binding IB end point to %s...\n",
+//    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Binding IB end point to %s...\n",
 //    //    ep.ToStringA().PeekBuffer());
 //    //int x = ::rdma_bind_addr(this->id, static_cast<sockaddr *>(ep));
 //    //int y = ::GetLastError();
@@ -124,7 +124,7 @@
 //        userData);
 //    int retval = 0;
 //
-//    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Entering RDMA CM message "
+//    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Entering RDMA CM message "
 //        "loop...\n");
 //    while ((retval = ::rdma_get_cm_event(channel->channel, 
 //            &channel->evt)) == 0) {
@@ -134,7 +134,7 @@
 //
 //        switch (e.event) {
 //            case RDMA_CM_EVENT_CONNECT_REQUEST:
-//                VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Received "
+//                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Received "
 //                    "RDMA_CM_EVENT_CONNECT_REQUEST.\n");
 //                retval = channel->onConnectRequest(e);
 //                break;

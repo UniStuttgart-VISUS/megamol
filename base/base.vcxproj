@@ -632,7 +632,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\Trace.cpp" />
     <ClCompile Include="src\UnsupportedOperationException.cpp" />
     <ClCompile Include="src\UTF8Encoder.cpp" />
     <ClCompile Include="src\utils.cpp" />
@@ -693,7 +692,6 @@
     <ClInclude Include="include\vislib\StringSerialiser.h" />
     <ClInclude Include="include\vislib\StringTokeniser.h" />
     <ClInclude Include="include\vislib\tchar.h" />
-    <ClInclude Include="include\vislib\Trace.h" />
     <ClInclude Include="include\vislib\types.h" />
     <ClInclude Include="include\vislib\unreferenced.h" />
     <ClInclude Include="include\vislib\UnsupportedOperationException.h" />

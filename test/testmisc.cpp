@@ -20,7 +20,7 @@
 #include "vislib/SystemMessage.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/Path.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/FileNameSequence.h"
 #include "vislib/RawStorage.h"
 #include "vislib/NamedColours.h"
@@ -435,13 +435,6 @@ void TestColumnFormatter(void) {
 
 }
 
-
-void TestTrace(void) {
-    vislib::Trace::GetInstance().EnableFileOutput("trace.txt");
-    vislib::Trace::GetInstance().EnableDebuggerOutput(true);
-    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
-    VLTRACE(1, "HORST!\n");
-}
 
 void TestExceptions(void) {
     vislib::sys::SystemException e1(2, __FILE__, __LINE__);

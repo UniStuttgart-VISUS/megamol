@@ -9,7 +9,7 @@
 
 #include "the/assert.h"
 #include "vislib/CameraParamsStore.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 /*
@@ -732,7 +732,7 @@ void vislib::graphics::ObservableCameraParams::fireChanged(
 #define IMPLEMENT_FIRE_EX(name, flag, value)                                   \
             if (((which & (flag)) != 0)                                        \
                     || (andAllDirty && ((this->dirtyFields & (flag)) != 0))) { \
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Firing On" #name  \
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Firing On" #name  \
                     "Changed ...\n");                                          \
                 observer->On##name##Changed(value);                            \
             } 

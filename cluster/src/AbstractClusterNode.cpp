@@ -10,7 +10,7 @@
 #include "vislib/clustermessages.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/RawStorage.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/types.h"
 
 #include "messagereceiver.h"
@@ -63,7 +63,7 @@ vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(
 void vislib::net::cluster::AbstractClusterNode::onCommunicationError(
         const PeerIdentifier& peerId, const ComErrorSource src,
         const SocketException& err) throw() {
-    VLTRACE(Trace::LEVEL_VL_ERROR, "A communication error occurred while talking "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A communication error occurred while talking "
         "to %s: %s\n", peerId.ToStringA().PeekBuffer(), err.GetMsgA());
 }
 
@@ -73,7 +73,7 @@ void vislib::net::cluster::AbstractClusterNode::onCommunicationError(
  */
 void vislib::net::cluster::AbstractClusterNode::onMessageReceiverExiting(
         vislib::net::Socket& socket, PReceiveMessagesCtx rmc) {
-    VLTRACE(Trace::LEVEL_VL_INFO, "AbstractClusterNode::onMessageReceiverExiting "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "AbstractClusterNode::onMessageReceiverExiting "
         "releasing receive context ...\n");
     FreeRecvMsgCtx(rmc);
 }

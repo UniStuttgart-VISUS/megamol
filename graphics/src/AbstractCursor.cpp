@@ -7,7 +7,7 @@
 
 #include "vislib/AbstractCursor.h"
 #include "vislib/memutils.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 #include <memory.h>
 
@@ -80,7 +80,7 @@ void vislib::graphics::AbstractCursor::SetButtonState(unsigned int btn,
     //    throw IllegalParamException("btn", __FILE__, __LINE__);
     //}
     if (btn >= this->btnCnt) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "%d is an illegal value for \"btn\".\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "%d is an illegal value for \"btn\".\n");
         return;
     }
 

@@ -12,7 +12,7 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/glverify.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 

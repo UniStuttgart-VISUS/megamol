@@ -9,7 +9,7 @@
 #include "the/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/memutils.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 /*
@@ -139,7 +139,7 @@ vislib::sys::ASCIIFileBuffer::LineBuffer::operator=(vislib::Array<char *>& words
 vislib::sys::ASCIIFileBuffer::ASCIIFileBuffer(ParsingElement elements)
         : buffer(NULL), lines(), defElements(elements) {
     if (this->defElements == PARSING_DEFAULT) {
-VLTRACE(VISLIB_TRCELVL_WARN, "ASCIIFileBuffer(PARSING_DEFAULT) illegal\n");
+THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ASCIIFileBuffer(PARSING_DEFAULT) illegal\n");
         this->defElements = PARSING_LINES;
     }
 }

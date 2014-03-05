@@ -162,9 +162,6 @@
     <ClCompile Include="src\StringTokeniser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Trace.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\UnsupportedOperationException.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -339,9 +336,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\tchar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vislib\Trace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\types.h">

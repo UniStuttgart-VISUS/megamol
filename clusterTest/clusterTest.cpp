@@ -15,7 +15,7 @@
 
 #include "vislib/CmdLineParser.h"
 #include "vislib/String.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 #include "GlutClient.h"
 #include "GlutServer.h"
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     typedef Parser::Option Option;
     typedef Option::ValueDesc ValueDesc;
 
-    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL_VERBOSE);
+    the::trace::get_instance().set_default_level(THE_TRCLVL_INFO);
 
     Parser parser;
     Option optTest(_T("test"),

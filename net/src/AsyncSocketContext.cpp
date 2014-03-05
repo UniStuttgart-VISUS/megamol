@@ -10,7 +10,7 @@
 
 #include "vislib/AsyncSocket.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 /*
@@ -60,7 +60,7 @@ void vislib::net::AsyncSocketContext::notifyCompleted(const DWORD cntData,
         const DWORD errorCode) {
     THE_STACK_TRACE;
 
-    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Signaling completion of "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Signaling completion of "
         "asynchronous socket operation with return value %u for "
         "%u Bytes ...\n", errorCode, cntData);
 

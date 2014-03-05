@@ -18,7 +18,7 @@
 #include "vislib/StringConverter.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -42,7 +42,7 @@ vislib::sys::SharedMemory::~SharedMemory(void) {
     try {
         this->Close();
     } catch (...) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Exception in SharedMemory dtor.\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Exception in SharedMemory dtor.\n");
     }
 }
 
@@ -176,7 +176,7 @@ void vislib::sys::SharedMemory::Open(const char *name, const AccessMode accessMo
     }
 
     this->name = TranslateWinIpc2PosixName(name);
-    VLTRACE(Trace::LEVEL_VL_INFO, "Open POSIX shared memory \"%s\"\n", 
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Open POSIX shared memory \"%s\"\n", 
         this->name.PeekBuffer());
     this->hSharedMem = ::shm_open(this->name.PeekBuffer(), oflags, DFT_MODE);
     if (this->hSharedMem == -1) {

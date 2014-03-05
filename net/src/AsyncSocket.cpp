@@ -13,7 +13,7 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/SocketException.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/unreferenced.h"
 
 
@@ -27,7 +27,7 @@ vislib::net::AsyncSocket::~AsyncSocket(void) {
     try {
         this->threadPool.Terminate(true);
     } catch (...) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Exception in AsyncSocket dtor.");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Exception in AsyncSocket dtor.");
     }
 #endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 }
@@ -360,7 +360,7 @@ DWORD vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Socket::Cleanup failed in AsyncSocket "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Socket::Cleanup failed in AsyncSocket "
             "AsyncSocket::receiveFunc.");
     }
 
@@ -412,7 +412,7 @@ DWORD vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Socket::Cleanup failed in AsyncSocket "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Socket::Cleanup failed in AsyncSocket "
             "AsyncSocket::sendFunc.");
     }
 

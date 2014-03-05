@@ -10,7 +10,7 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/Interlocked.h"
 #include "vislib/SocketException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 
@@ -116,7 +116,7 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Socket::Startup in TcpServer failed: "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket::Startup in TcpServer failed: "
             "%s\n", e.GetMsgA());
         return e.GetErrorCode();
     }
@@ -127,7 +127,7 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
             this->socket.Close();
         }
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Error while cleaning existing socket of "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Error while cleaning existing socket of "
             "TcpServer: %s\n", e.GetMsgA());
     }
 
@@ -144,7 +144,7 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
         }
         this->socket.Bind(serverAddr);
     } catch (SocketException e) {
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Creating or binding server socket of "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Creating or binding server socket of "
             "TcpServer server: %s\n", e.GetMsgA());
         retval = e.GetErrorCode();
     }
@@ -152,29 +152,29 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
     /* Enter server loop if no error so far. */
     if (retval == 0) {
         try {
-            VLTRACE(Trace::LEVEL_VL_INFO, "The TcpServer is listening on "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "The TcpServer is listening on "
                 "%s ...\n", serverAddr.ToStringA().PeekBuffer());
 
             while (true) {
                 this->socket.Listen();
                 peerSocket = this->socket.Accept(&peerAddr);
-                VLTRACE(Trace::LEVEL_VL_INFO, "TcpServer accepted new connection "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "TcpServer accepted new connection "
                     "from %s.\n", peerAddr.ToStringA().PeekBuffer());
 
                 if (!this->fireNewConnection(peerSocket, peerAddr)) {
-                    VLTRACE(Trace::LEVEL_VL_INFO, "TcpServer is closing "
+                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "TcpServer is closing "
                         "connection to %s because no one is interested in this "
                         "client.\n", peerAddr.ToStringA().PeekBuffer());
                     try {
                         peerSocket.Close();
                     } catch (SocketException e) {
-                        VLTRACE(Trace::LEVEL_VL_WARN, "Closing unused peer "
+                        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Closing unused peer "
                             "connection: %s\n", e.GetMsgA());
                     }
                 }
             }
         } catch (SocketException e) {
-            VLTRACE(VISLIB_TRCELVL_WARN, "Communication error in TcpServer: "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Communication error in TcpServer: "
                 "%s\n", e.GetMsgA());
         }
     }
@@ -187,7 +187,7 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        VLTRACE(VISLIB_TRCELVL_WARN, "Error during TcpServer shutdown: %s\n",
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Error during TcpServer shutdown: %s\n",
             e.GetMsgA());
         retval = e.GetErrorCode();
     }
@@ -212,13 +212,13 @@ bool vislib::net::TcpServer::Terminate(void) {
     try {
         this->socket.Shutdown();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "SocketException when shutting "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "SocketException when shutting "
             "TcpServer down: %s\n", e.GetMsgA());
     }
     try {
         this->socket.Close();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "SocketException when terminating "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "SocketException when terminating "
             "TcpServer: %s\n", e.GetMsgA());
     }
     return true;

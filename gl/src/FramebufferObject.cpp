@@ -15,7 +15,7 @@
 #include "vislib/memutils.h"
 #include "vislib/OutOfRangeException.h"
 #include "the/stack_trace.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -66,7 +66,7 @@ vislib::graphics::gl::FramebufferObject::~FramebufferObject(void) {
         this->Disable();
         this->Release();
     } catch (OpenGLException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "\"%s\" at line %d in \"%s\" when "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "\"%s\" at line %d in \"%s\" when "
             "destroying FramebufferObject", e.GetMsgA(), e.GetLine(), 
             e.GetFile());
     }
@@ -145,7 +145,7 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
     try {
         this->Release();    // TODO: Could also return false instead of recreate.
     } catch (OpenGLException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Release() of old FBO failed in Create(). "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Release() of old FBO failed in Create(). "
             "This error is not critical.\n");
     }
 
@@ -265,14 +265,14 @@ GLenum vislib::graphics::gl::FramebufferObject::Disable(void) throw() {
          * Extensions might not have been initialised, but dtor will call
          * Disable anyway.
          */
-        VLTRACE(Trace::LEVEL_VL_WARN, "glBindFramebuffer is not available.\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "glBindFramebuffer is not available.\n");
         return GL_INVALID_OPERATION;
     }
 
 #if (defined(DEBUG) || defined(_DEBUG)) 
     try {
         if (!this->IsEnabled()) {
-            VLTRACE(Trace::LEVEL_VL_WARN, "Trying to disable an FBO which is "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Trying to disable an FBO which is "
                 "not enabled. This might indicate a bug in the application.\n");
         }
     } catch (OpenGLException e) { /* Ignore this. */ }
@@ -306,7 +306,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
 
     /* Ensure that we enable only valid FBOs. */
     if (!this->IsValid()) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Cannot enable invalid FBO.\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Cannot enable invalid FBO.\n");
         return GL_INVALID_OPERATION;
     }
 
@@ -315,7 +315,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
      * state.
      */
     if (this->IsEnabled()) {
-        VLTRACE(Trace::LEVEL_VL_INFO, "FBO is already enabled.\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "FBO is already enabled.\n");
         return GL_NO_ERROR;
     }
 
@@ -323,7 +323,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
     try {
         this->saveState();
     } catch (OpenGLException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not save OpenGL state before "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not save OpenGL state before "
             "enabling FBO (\"%s\").\n", e.GetMsgA());
         return e.GetErrorCode();
     }
@@ -374,7 +374,7 @@ GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(
 
     /* Ensure that we enable only valid FBOs. */
     if (!this->IsValid()) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Cannot enable invalid FBO.\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Cannot enable invalid FBO.\n");
         return GL_INVALID_OPERATION;
     }
 
@@ -382,7 +382,7 @@ GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(
     try {
         this->saveState();
     } catch (OpenGLException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not save OpenGL state before "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not save OpenGL state before "
             "enabling FBO (\"%s\").\n", e.GetMsgA());
         return e.GetErrorCode();
     }
@@ -505,7 +505,7 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
     USES_GL_DEFERRED_VERIFY;
 
     //if (GL_FAILED(this->Disable())) {
-    //    VLTRACE(Trace::LEVEL_VL_WARN, "Disabling FBO before release failed. "
+    //    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Disabling FBO before release failed. "
     //        "This is not a critical error.\n");
     //}
 
@@ -515,7 +515,7 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
          * Extensions might not have been initialised, but dtor will call 
          * Release anyway. 
          */
-        VLTRACE(Trace::LEVEL_VL_WARN, "glDeleteRenderbuffers or "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "glDeleteRenderbuffers or "
             "glDeleteFramebuffers is not available.\n");
         return;
     }
@@ -723,12 +723,12 @@ bool vislib::graphics::gl::FramebufferObject::isComplete(void) const {
             /* Unreachable. */
 
         case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-            VLTRACE(Trace::LEVEL_ERROR, "The selected framebuffer format is "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The selected framebuffer format is "
                 "unsupported.\n");
             /* falls through. */
 
         default:
-            VLTRACE(Trace::LEVEL_ERROR, "The framebuffer object is not complete "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The framebuffer object is not complete "
                 "(%u).\n", status);
             return false;
             /* Unreachable. */
@@ -785,7 +785,7 @@ void vislib::graphics::gl::FramebufferObject::saveState(void) {
 
     GL_VERIFY_THROW(::glGetIntegerv(GL_VIEWPORT, this->oldVp));
 
-    VLTRACE(Trace::LEVEL_VL_INFO, "FBO saved state:\n"
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "FBO saved state:\n"
         "\tGL_FRAMEBUFFER_BINDING = %d\n"
         "\tGL_DRAW_BUFFER = %d\n"
         "\tGL_READ_BUFFER = %d\n"

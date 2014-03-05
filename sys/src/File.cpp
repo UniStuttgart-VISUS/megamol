@@ -32,7 +32,7 @@
 #include "vislib/StringConverter.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 

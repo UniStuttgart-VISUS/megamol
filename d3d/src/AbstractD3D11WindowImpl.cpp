@@ -11,7 +11,7 @@
 #include "vislib/d3dutils.h"
 #include "vislib/d3dverify.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 
@@ -116,7 +116,7 @@ IDXGIAdapter *vislib::graphics::d3d::AbstractD3D11WindowImpl::findAdapter(
 
     /* Determine which is the adapter that the window is visible on. */
     if (SUCCEEDED(hr)) {
-        VLTRACE(Trace::LEVEL_VL_INFO, "Searching monitor that window is "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Searching monitor that window is "
             "displayed on...\n");
         hMonitor = ::MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
         THE_ASSERT(hMonitor != NULL);
@@ -124,18 +124,18 @@ IDXGIAdapter *vislib::graphics::d3d::AbstractD3D11WindowImpl::findAdapter(
 
     /* Create DXGI factory if necessary. */
     if (SUCCEEDED(hr) && (this->dxgiFactory == NULL)) {
-        VLTRACE(Trace::LEVEL_VL_INFO, "Creating DXGI factory...\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Creating DXGI factory...\n");
         hr = ::CreateDXGIFactory(IID_IDXGIFactory,
             reinterpret_cast<void **>(&this->dxgiFactory));
     }
 
     /* Search the output that the monitor uses. */
     if (SUCCEEDED(hr)) {
-         VLTRACE(Trace::LEVEL_VL_INFO, "Enumerating DXGI adapters...\n");
+         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Enumerating DXGI adapters...\n");
         for (UINT a = 0; SUCCEEDED(hr); ++a) {
             hr = this->dxgiFactory->EnumAdapters(a, &adapter);
 
-            VLTRACE(Trace::LEVEL_VL_INFO, "Enumerating outputs...\n");
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Enumerating outputs...\n");
             for (UINT o = 0; SUCCEEDED(hr); ++o) {
                 hr = adapter->EnumOutputs(o, &output);
                 if (SUCCEEDED(hr)) {

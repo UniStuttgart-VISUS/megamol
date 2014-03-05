@@ -13,7 +13,7 @@
 #include "vislib/mathfunctions.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/SocketException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 #include "vislib/MissingImplementationException.h"
 
@@ -49,7 +49,7 @@ vislib::net::cluster::DiscoveryService::PeerNode::PeerNode(
     this->discoveryAddress.SetPort(
         this->discoverySource->GetBcastAddress().GetPort());
 
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "New peer node %s, discovered via %s.\n",
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "New peer node %s, discovered via %s.\n",
         this->responseAddress.ToStringA().PeekBuffer(),
         this->discoveryAddress.ToStringA().PeekBuffer());
 }
@@ -79,13 +79,13 @@ bool vislib::net::cluster::DiscoveryService::PeerNode::decrementResponseChances(
         void) {
     if (this->cntResponseChances > 0) {
         this->cntResponseChances--;
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Response chances for %s decremented "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Response chances for %s decremented "
             "to %d.\n", this->responseAddress.ToStringA().PeekBuffer(),
             this->cntResponseChances);
         return true;
 
     } else {
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "No response chance for %s left.\n",
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "No response chance for %s left.\n",
             this->responseAddress.ToStringA().PeekBuffer());
         return false;
     }
@@ -340,10 +340,10 @@ vislib::net::cluster::DiscoveryService::DiscoveryService(void)
 vislib::net::cluster::DiscoveryService::~DiscoveryService(void) {
     try {
         this->Stop();
-        VLTRACE(Trace::LEVEL_VL_WARN, "DiscoveryService was stopped in dtor. "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "DiscoveryService was stopped in dtor. "
             "Any shutdown exceptions traced before can be safely ignored.\n");
     } catch (...) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Stopping the discovery threads crashed "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Stopping the discovery threads crashed "
             "in the dtor. This should never happen.\n");
     }
 }
@@ -493,7 +493,7 @@ UINT vislib::net::cluster::DiscoveryService::SendUserMessage(
             this->peerNodes[i]->discoverySource->SendMessageTo(msg,
                 this->peerNodes[i]->discoveryAddress);
         } catch (SocketException e) {
-            VLTRACE(Trace::LEVEL_VL_WARN, "DiscoveryService could not send "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "DiscoveryService could not send "
                 "user message (\"%s\").\n", e.GetMsgA());
             retval++;
         }
@@ -529,7 +529,7 @@ UINT vislib::net::cluster::DiscoveryService::SendUserMessage(
     try {
         hPeer->discoverySource->SendMessageTo(msg, hPeer->discoveryAddress);
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "DiscoveryService could not send "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "DiscoveryService could not send "
             "user message (\"%s\").\n", e.GetMsgA());
         retval++;
     }
@@ -619,7 +619,7 @@ bool vislib::net::cluster::DiscoveryService::Stop(const bool noWait) {
         try {
             this->configs[i].GetRecvThread().Terminate(false);
         } catch (sys::SystemException e) {
-            VLTRACE(Trace::LEVEL_VL_ERROR, "Stopping a discovery receiver "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Stopping a discovery receiver "
                 "thread failed. The error code is %d (\"%s\").\n", 
                 e.GetErrorCode(), e.GetMsgA());
             retval = false;
@@ -629,7 +629,7 @@ bool vislib::net::cluster::DiscoveryService::Stop(const bool noWait) {
     try {
         this->senderThread.Terminate(false);
     } catch (sys::SystemException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Stopping the discovery sender thread "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Stopping the discovery sender thread "
             "failed. The error code is %d (\"%s\").\n", 
             e.GetErrorCode(), e.GetMsgA());
         retval = false;
@@ -702,7 +702,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
      * Prepare a datagram socket listening for requests on the specified 
      * adapter and port. 
      */
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "The discovery receiver thread is "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "The discovery receiver thread is "
         "preparing its socket on %s ...\n", 
         config->GetBindAddress().ToStringA().PeekBuffer());
     try {
@@ -716,7 +716,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
         this->socket.Bind(config->GetBindAddress());
         //socket.SetLinger(false, 0);     // Force hard close.
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Discovery receiver thread could not "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Discovery receiver thread could not "
             "create its socket and bind it to the requested address. The "
             "error code is %d (\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
         return e.GetErrorCode();
@@ -726,13 +726,13 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
     if (!config->GetDiscoveryService().IsObserver()) {
         IPEndPoint discoveryAddr(config->GetResponseAddress());
         discoveryAddr.SetPort(config->GetBindAddress().GetPort());  // TODO: hugly
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Add myself (%s) as known node.\n",
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Add myself (%s) as known node.\n",
             config->GetResponseAddress().ToStringA().PeekBuffer());
         config->GetDiscoveryService().addPeerNode(discoveryAddr,
             config, config->GetResponseAddress());
     }
 
-    VLTRACE(Trace::LEVEL_VL_INFO, "The discovery receiver thread is "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "The discovery receiver thread is "
         "starting ...\n");
 
     while (this->isRunning != 0) {
@@ -745,7 +745,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
             }
 
             if (msg.MagicNumber != MAGIC_NUMBER) {
-                VLTRACE(Trace::LEVEL_VL_ERROR, "Discovery service received "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Discovery service received "
                     "invalid magic number %d from %s.\n", msg.MagicNumber,
                     peerAddr.ToStringA().PeekBuffer());
                 continue;
@@ -764,7 +764,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
 
             if (!config->GetDiscoveryService().GetName().Equals(
                     msg.SenderBody.Name)) {
-                VLTRACE(Trace::LEVEL_VL_ERROR, "Discovery service received "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Discovery service received "
                     "message for different cluster \"%s\" from %s.\n", 
                     msg.SenderBody.Name,
                     peerAddr.ToStringA().PeekBuffer());
@@ -775,7 +775,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
             switch (msg.MsgType) {
 
                 case MSG_TYPE_IAMALIVE:
-                    VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service received "
+                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service received "
                         "MSG_TYPE_IAMALIVE from %s.\n", 
                         peerAddr.ToStringA().PeekBuffer());
                     
@@ -796,7 +796,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
                      * observer mode also send MSG_TYPE_IAMHERE to request an
                      * immediate response of all running nodes.
                      */
-                    VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service received "
+                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service received "
                         "MSG_TYPE_IAMHERE from %s.\n", 
                         peerAddr.ToStringA().PeekBuffer());
 
@@ -808,7 +808,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
                         msg.SenderBody.ResponseAddress 
                             = config->GetResponseAddress();
                         this->socket.Send(peerAddr, &msg, sizeof(Message));
-                        VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
+                        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service sent "
                             "immediate MSG_TYPE_IAMALIVE answer to %s.\n",
                             peerAddr.ToStringA().PeekBuffer());
                     }
@@ -816,7 +816,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
 
                 case MSG_TYPE_SAYONARA:
                     /* Got an explicit disconnect. */
-                    VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service received "
+                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service received "
                         "MSG_TYPE_SAYONARA from %s.\n",
                         peerAddr.ToStringA().PeekBuffer());
 
@@ -826,11 +826,11 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
             }
 
         } catch (SocketException e) {
-            VLTRACE(Trace::LEVEL_VL_WARN, "A socket error occurred in the "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "A socket error occurred in the "
                 "discovery receiver thread. The error code is %d (\"%s\").\n",
                 e.GetErrorCode(), e.GetMsgA());
         } catch (...) {
-            VLTRACE(Trace::LEVEL_VL_ERROR, "The discovery receiver caught an "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The discovery receiver caught an "
                 "unexpected exception and will exit.\n");
             return -1;
         }
@@ -844,7 +844,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Socket cleanup failed in the discovery "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket cleanup failed in the discovery "
             "receiver thread. The error code is %d (\"%s\").\n", 
             e.GetErrorCode(), e.GetMsgA());
         return e.GetErrorCode();
@@ -863,7 +863,7 @@ bool vislib::net::cluster::DiscoveryService::Receiver::Terminate(void) {
     try {
         this->socket.Shutdown();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Error while shutting down cluster "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Error while shutting down cluster "
             "discovery receiver socket: %s. This is normally no problem and "
             "indicates that you already stopped the receiver before.\n",
             e.GetMsgA());
@@ -871,7 +871,7 @@ bool vislib::net::cluster::DiscoveryService::Receiver::Terminate(void) {
     try {
         this->socket.Close();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Error while closing cluster "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Error while closing cluster "
             "discovery receiver socket: %s. This is normally no problem and "
             "indicates that you already stopped the receiver before.\n",
             e.GetMsgA());
@@ -940,7 +940,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::~DiscoveryConfigEx(
             this->recvThread.Terminate(true);
         }
     } catch (...) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Error while forcefully terminating "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Error while forcefully terminating "
             "receiver thread.\n");
     }
 }
@@ -990,7 +990,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::SendMessageTo(
             //IPEndPoint bindAddr(this->bindAddress, 0);
 
             try {
-                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Lazy creation of discovery "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Lazy creation of discovery "
                     "service send socket.\n");
                 this->socketSend.Create(this->GetProtocolFamily(), 
                     Socket::TYPE_DGRAM, Socket::PROTOCOL_UDP);
@@ -998,33 +998,33 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::SendMessageTo(
                 //this->socketSend.SetLinger(false, 0);     // Force hard close.
                 //this->socketSend.Bind(bindAddr);
             } catch (SocketException e) {
-                VLTRACE(Trace::LEVEL_VL_ERROR, "The socket for the discovery "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The socket for the discovery "
                     "sender could not be created. The error code is %d "
                     "(\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
                 throw;
             }
         }
 
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Using broadcast socket for sending a "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Using broadcast socket for sending a "
             "message to %s ...\n", to.ToStringA().PeekBuffer());
         socket = &this->socketSend;
 
     } else {
         if (!this->socketUserMsg.IsValid()) {
             try {
-                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Lazy creation of discovery "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Lazy creation of discovery "
                     "service user message socket.\n");
                 this->socketUserMsg.Create(this->GetProtocolFamily(), 
                     Socket::TYPE_DGRAM, Socket::PROTOCOL_UDP);
             } catch (SocketException e) {
-                VLTRACE(Trace::LEVEL_VL_ERROR, "The socket for sending user "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The socket for sending user "
                     "messages could not be created. The error code is %d "
                     "(\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
                 throw;
             } 
         }
 
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Using user message socket for "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Using user message socket for "
             "sending a message to %s ...\n", to.ToStringA().PeekBuffer());
         socket = &this->socketUserMsg;
     }
@@ -1104,14 +1104,14 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
     // Reset termiation flag.
     this->isRunning = true;
 
-    VLTRACE(Trace::LEVEL_VL_INFO, "The discovery sender thread is "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "The discovery sender thread is "
         "starting ...\n");
 
     /* Prepare the sockets. */
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Discovery sender thread could not "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Discovery sender thread could not "
             "create initialise socket sub-system. The error code is %d "
             "(\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
         return e.GetErrorCode();
@@ -1138,12 +1138,12 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
         
         try {
             config.SendCustomisedMessage(request);
-            VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service sent "
                 "MSG_TYPE_IAMHERE (%s) to %s.\n", 
                 config.GetResponseAddress().ToStringA().PeekBuffer(),
                 config.GetBcastAddress().ToStringA().PeekBuffer());
         } catch (SocketException e) {
-            VLTRACE(Trace::LEVEL_VL_ERROR, "A socket error occurred in the "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A socket error occurred in the "
                 "discovery sender thread. The error code is %d (\"%s\").\n",
                 e.GetErrorCode(), e.GetMsgA());
         }
@@ -1158,7 +1158,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
      * time before really starting.
      */
     if (ds->IsObserver()) {
-        VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service is leaving the sender "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service is leaving the sender "
             "thread as it is in observer mode.\n");
         return 0;
     } else {
@@ -1172,7 +1172,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
         try {
             ds->prepareRequest();
         } catch (...) {
-            VLTRACE(Trace::LEVEL_VL_ERROR, "The discovery sender thread caught "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The discovery sender thread caught "
                 "an unexpected exception while preparing the request.\n");
             return -1;
         }
@@ -1187,12 +1187,12 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
 
             try {
                 config.SendCustomisedMessage(request);
-                VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service sent "
                     "MSG_TYPE_IAMALIVE (%s) to %s.\n", 
                     config.GetResponseAddress().ToStringA().PeekBuffer(),
                     config.GetBcastAddress().ToStringA().PeekBuffer());
             } catch (SocketException e) {
-                VLTRACE(Trace::LEVEL_VL_ERROR, "A socket error occurred in the "
+                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A socket error occurred in the "
                     "discovery sender thread. The error code is %d (\"%s\").\n",
                     e.GetErrorCode(), e.GetMsgA());
             }
@@ -1204,7 +1204,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
                     ? ds->requestIntervalIntensive : ds->requestInterval);
             }
         } catch (sys::SystemException e) {
-            VLTRACE(Trace::LEVEL_VL_WARN, "An error occurred in the "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "An error occurred in the "
                 "discovery sender thread while waiting. The error code is %d "
                 "(\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
         }
@@ -1217,11 +1217,11 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
 
         try {
             config.SendCustomisedMessage(request);
-            VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service sent "
                 "MSG_TYPE_SAYONARA to %s.\n", 
                 config.GetBcastAddress().ToStringA().PeekBuffer());
         } catch (SocketException e) {
-            VLTRACE(Trace::LEVEL_VL_ERROR, "A socket error occurred in the "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A socket error occurred in the "
                 "discovery sender thread. The error code is %d (\"%s\").\n",
                 e.GetErrorCode(), e.GetMsgA());
         }
@@ -1231,7 +1231,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Socket cleanup failed in the discovery "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket cleanup failed in the discovery "
             "request thread. The error code is %d (\"%s\").\n", 
             e.GetErrorCode(), e.GetMsgA());
         return e.GetErrorCode();
@@ -1271,14 +1271,14 @@ void vislib::net::cluster::DiscoveryService::addPeerNode(
     
     if ((idx = this->peerFromResponseAddress(responseAddr)) >= 0) {
         /* Already known, reset disconnect chance. */
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Peer node %s is already known.\n", 
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Peer node %s is already known.\n", 
             responseAddr.ToStringA().PeekBuffer());
         hPeer = this->peerNodes[static_cast<SIZE_T>(idx)];
         hPeer->cntResponseChances = this->cntResponseChances;
 
     } else {
         /* Not known, so add it and fire event. */
-        VLTRACE(Trace::LEVEL_VL_INFO, "I learned about node %s.\n",
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "I learned about node %s.\n",
             responseAddr.ToStringA().PeekBuffer());
         hPeer = new PeerNode(discoveryAddr, responseAddr, 
             this->cntResponseChances, discoverySource);
@@ -1383,7 +1383,7 @@ void vislib::net::cluster::DiscoveryService::prepareRequest(void) {
     for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
         if (!this->peerNodes[i]->decrementResponseChances()) {
             THE_ASSERT(this->peerNodes[i]->isValid());
-            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Node %s lost, firing event ...\n",
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Node %s lost, firing event ...\n",
                 this->peerNodes[i]->responseAddress.ToStringA().PeekBuffer());
             
             /* Fire event. */

@@ -14,7 +14,7 @@
 #include "vislib/AsyncSocket.h"
 #include "vislib/AsyncSocketContext.h"
 #include "vislib/RunnableThread.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 using namespace vislib::net;
 using namespace vislib::sys;

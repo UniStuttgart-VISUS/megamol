@@ -20,7 +20,7 @@
 
 #include "vislib/String.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

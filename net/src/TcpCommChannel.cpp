@@ -13,7 +13,7 @@
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/PeerDisconnectedException.h"
 #include "vislib/SocketException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -74,13 +74,13 @@ void vislib::net::TcpCommChannel::Close(void) {
     //try {
     //    this->socket.Shutdown();
     //} catch (SocketException e) {
-    //    VLTRACE(Trace::LEVEL_VL_WARN, "SocketException when shutting down "
+    //    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "SocketException when shutting down "
     //        "socket in TcpCommChannel::Close: %s\n", e.GetMsgA());
     //}
     try {
         this->socket.Close();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "SocketException when closing socket "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "SocketException when closing socket "
             "in TcpCommChannel::Close: %s\n", e.GetMsgA());
         throw e;
     }

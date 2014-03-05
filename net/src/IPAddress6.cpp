@@ -15,7 +15,7 @@
 #include "vislib/IllegalStateException.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/SocketException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 /*
@@ -240,7 +240,7 @@ vislib::StringA vislib::net::IPAddress6::ToStringA(void) const {
     if ((err = ::getnameinfo(reinterpret_cast<struct sockaddr *>(&addr),
             sizeof(struct sockaddr_in6), buffer, sizeof(buffer), NULL, 0,
             NI_NUMERICHOST)) != 0) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "::getnameinfo failed in "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::getnameinfo failed in "
             "IPAddress6::ToStringA(): %s\n",
 #ifdef _WIN32
             ::gai_strerrorA(err)

@@ -11,7 +11,7 @@
 
 #include "the/assert.h"
 #include "vislib/memutils.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 /*
@@ -83,12 +83,12 @@ void vislib::RawStorage::EnforceSize(const SIZE_T size,
     if ((this->size = size) > 0) {
                                          
         if (keepContent) {
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO,
                 "RawStorage::AssertSize reallocates %u bytes.\n", this->size);
             this->data = ::realloc(this->data, this->size);
 
         } else {
-            //VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, 
+            //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, 
             //    "RawStorage::AssertSize allocates %u bytes.\n", this->size);
             SAFE_FREE(this->data);
             this->data = ::malloc(this->size);

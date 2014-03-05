@@ -9,7 +9,7 @@
 #include "vislib/CameraRotate2DLookAt.h"
 #include <climits>
 #include "vislib/Cursor2D.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/Quaternion.h"
 
 
@@ -48,7 +48,7 @@ void vislib::graphics::CameraRotate2DLookAt::Trigger(
     ImageSpaceType preX, preY;
 
     if (!this->IsCameraParamsValid()) {
-        VLTRACE(vislib::Trace::LEVEL_WARN, 
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, 
             "CameraRotate2DLookAt::Trigger camera missing.");
         return;
     }

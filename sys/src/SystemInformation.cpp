@@ -10,7 +10,7 @@
 #include "DynamicFunctionPointer.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 #include "vislib/MissingImplementationException.h"
@@ -462,7 +462,7 @@ void vislib::sys::SystemInformation::SystemVersion(DWORD& outMajor,
     }
 
     if (::sscanf(buffer, "%d.%d", &majorVersion, &minorVersion) != 2) {
-        VLTRACE(Trace::LEVEL_ERROR, "sscanf on version string failed.");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "sscanf on version string failed.");
         throw SystemException(ENOTSUP, __FILE__, __LINE__);
     }
 

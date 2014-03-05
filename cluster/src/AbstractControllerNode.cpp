@@ -9,7 +9,7 @@
 
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/unreferenced.h"
 
 
@@ -172,10 +172,10 @@ void vislib::net::cluster::AbstractControllerNode::onPeerConnected(
         this->sendAllParameters(&peerId);
     } catch (Exception& e) {
         VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Sending camera parameters to newly "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Sending camera parameters to newly "
             "connected node failed: %s\n", e.GetMsgA());
     } catch (...) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Sending camera parameters to newly "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Sending camera parameters to newly "
             "connected node failed for a unknown reason\n");
     }
 }
@@ -216,7 +216,7 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
     blkHdr1->BlockLength = static_cast<UINT32>(msg.GetSize()
         - sizeof(MessageHeader)
         - sizeof(BlockHeader));
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Packaged %u B serialised camera parameter "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Packaged %u B serialised camera parameter "
         "limits (Message %u).\n", blkHdr1->BlockLength, blkHdr1->BlockId);
 
     /* 
@@ -236,7 +236,7 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
         - sizeof(MessageHeader)
         - 2 * sizeof(BlockHeader)
         - blkHdr1->BlockLength);
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Packaged %u B serialised camera parameters "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Packaged %u B serialised camera parameters "
         "(Message %u).\n", blkHdr2->BlockLength, blkHdr2->BlockId);
 
     /* Fill in the message header for a compound message. */

@@ -10,7 +10,7 @@
 #include "the/assert.h"
 #include "vislib/Cursor2D.h"
 #include "vislib/graphicstypes.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 /*
@@ -51,7 +51,7 @@ void vislib::graphics::CameraMove2D::Trigger(
         THE_ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
 
         if (!this->IsCameraParamsValid()) {
-            VLTRACE(vislib::Trace::LEVEL_WARN, 
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, 
                 "CameraMove2D::Trigger camera missing.");
             return;
         }

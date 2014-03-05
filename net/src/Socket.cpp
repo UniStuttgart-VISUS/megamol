@@ -25,7 +25,7 @@
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/SocketException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -844,7 +844,7 @@ SIZE_T vislib::net::Socket::receive(void *outData, const SIZE_T cntBytes,
                 ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(errorCode, __FILE__, __LINE__);
             }
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Overlapped socket I/O "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Overlapped socket I/O "
                 "pending.\n");
             if (!::WSAGetOverlappedResult(this->handle, &overlapped, 
                     reinterpret_cast<DWORD *>(&lastReceived), TRUE, 
@@ -920,7 +920,7 @@ SIZE_T vislib::net::Socket::receiveFrom(IPEndPoint& outFromAddr,
                 ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(errorCode, __FILE__, __LINE__);
             }
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Overlapped socket I/O "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Overlapped socket I/O "
                 "pending.\n");
             if (!::WSAGetOverlappedResult(this->handle, &overlapped, 
                     reinterpret_cast<DWORD *>(&lastReceived), TRUE, 
@@ -992,7 +992,7 @@ SIZE_T vislib::net::Socket::send(const void *data, const SIZE_T cntBytes,
                 ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(errorCode, __FILE__, __LINE__);
             }
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Overlapped socket I/O "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Overlapped socket I/O "
                 "pending.\n");
             if (!::WSAGetOverlappedResult(this->handle, &overlapped, 
                     reinterpret_cast<DWORD *>(&lastSent), TRUE, &inOutFlags)) {
@@ -1061,7 +1061,7 @@ SIZE_T vislib::net::Socket::sendTo(const IPEndPoint& toAddr,
                 ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(errorCode, __FILE__, __LINE__);
             }
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Overlapped socket I/O "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Overlapped socket I/O "
                 "pending.\n");
             if (!::WSAGetOverlappedResult(this->handle, &overlapped, 
                     reinterpret_cast<DWORD *>(&lastSent), TRUE, &inOutFlags)) {

@@ -15,7 +15,7 @@
 #include "vislib/memutils.h"
 #include "vislib/SocketException.h"
 #include "vislib/SystemMessage.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 #ifdef _WIN32
@@ -40,7 +40,7 @@ vislib::net::IPEndPoint vislib::net::IPEndPoint::CreateIPv4(
     try {
         DNS::GetHostAddress(addr, hostNameOrAddress);
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not lookup \"%s\": %s\n", 
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not lookup \"%s\": %s\n", 
             hostNameOrAddress, e.GetMsgA());
         throw IllegalParamException("hostNameOrAddress", __FILE__, __LINE__);
     }
@@ -58,7 +58,7 @@ vislib::net::IPEndPoint vislib::net::IPEndPoint::CreateIPv6(
     try {
         DNS::GetHostAddress(addr, hostNameOrAddress);
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not lookup \"%s\": %s\n", 
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not lookup \"%s\": %s\n", 
             hostNameOrAddress, e.GetMsgA());
         throw IllegalParamException("hostNameOrAddress", __FILE__, __LINE__);
     }

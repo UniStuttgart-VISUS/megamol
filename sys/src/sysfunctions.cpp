@@ -25,7 +25,7 @@
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/UTF8Encoder.h"
 
@@ -357,38 +357,38 @@ CASE_TEXTFF_UNICODE:
 #ifdef _WIN32
         goto CASE_TEXTFF_UNICODE;
 #else /* _WIN32 */
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
 #endif /* _WIN32 */
         break;
     case TEXTFF_UTF16_BE:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32_BE:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF7:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF1:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF_EBCDIC:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_SCSU:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_BOCU1:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_GB18030:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     default:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unknown text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unknown text file format %d\n", format);
         break;
     }
 
@@ -441,38 +441,38 @@ CASE_TEXTFF_UNICODE:
 #ifdef _WIN32
         goto CASE_TEXTFF_UNICODE;
 #else /* _WIN32 */
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
 #endif /* _WIN32 */
         break;
     case TEXTFF_UTF16_BE:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32_BE:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF7:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF1:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF_EBCDIC:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_SCSU:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_BOCU1:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_GB18030:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     default:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unknown text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unknown text file format %d\n", format);
         break;
     }
 
@@ -624,7 +624,7 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
         throw SystemException(__FILE__, __LINE__);
     }
 
-    VLTRACE(Trace::LEVEL_VL_INFO, "TranslateIpcName(\"%s\") = %u\n", name, 
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "TranslateIpcName(\"%s\") = %u\n", name, 
         retval);
     return retval;
 }
@@ -669,38 +669,38 @@ CASE_TEXTFF_UNICODE:
 #ifdef _WIN32
         goto CASE_TEXTFF_UNICODE;
 #else /* _WIN32 */
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
 #endif /* _WIN32 */
         break;
     case TEXTFF_UTF16_BE:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32_BE:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF7:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF1:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF_EBCDIC:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_SCSU:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_BOCU1:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_GB18030:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     default:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unknown text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unknown text file format %d\n", format);
         break;
     }
     //SIZE_T len = text.Length();
@@ -754,38 +754,38 @@ CASE_TEXTFF_UTF8: {
 #ifdef _WIN32
         goto CASE_TEXTFF_UNICODE;
 #else /* _WIN32 */
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
 #endif /* _WIN32 */
         break;
     case TEXTFF_UTF16_BE:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32_BE:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF7:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF1:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF_EBCDIC:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_SCSU:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_BOCU1:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_GB18030:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     default:
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Unknown text file format %d\n", format);
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unknown text file format %d\n", format);
         break;
     }
     //vislib::StringA tmp(text);

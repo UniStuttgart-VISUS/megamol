@@ -7,7 +7,7 @@
 
 #include "vislib/AbstractSyncMsgUser.h"
 
-#include "vislib/Trace.h"
+#include "the/trace.h"
 
 
 /*
@@ -64,12 +64,12 @@ void vislib::net::AbstractSyncMsgUser::sendViaMsgBuffer(
     this->msgBuffer.GetHeader().SetMessageID(msgID);
     this->msgBuffer.SetBody(body, bodySize);
     
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Sending message %u via buffer ...\n",
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Sending message %u via buffer ...\n",
         this->msgBuffer.GetHeader().GetMessageID());
     channel->Send(static_cast<const void *>(this->msgBuffer),
         this->msgBuffer.GetMessageSize(), 
         timeout,
         true);
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Message %u sent via buffer.\n", 
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Message %u sent via buffer.\n", 
         this->msgBuffer.GetHeader().GetMessageID());
 }

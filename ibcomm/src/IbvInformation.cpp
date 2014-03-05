@@ -14,7 +14,7 @@
 #include "vislib/OutOfRangeException.h"
 #include "vislib/RawStorage.h"
 #include "vislib/sysfunctions.h"
-#include "vislib/Trace.h"
+#include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/utils.h"
 
@@ -145,20 +145,20 @@ vislib::net::ib::IbvInformation::Port::Port(IWVDevice *device,
 
     ::ZeroMemory(&this->attributes, sizeof(this->attributes));
 
-    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying port attributes...\n");
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying port attributes...\n");
     THE_ASSERT(device != NULL);
     if (FAILED(hr = device->QueryPort(port, &this->attributes))) {
-        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying port attributes "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying port attributes "
             "failed with error code %d.\n", hr);
         this->~Port();
         throw sys::COMException(hr, __FILE__, __LINE__);
     }
 
-    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying port GUID...\n");
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying port GUID...\n");
     THE_ASSERT(this->attributes.GidTableLength > 0);
     THE_ASSERT(device != NULL);
     if (FAILED(device->QueryGid(port, 0, &this->gid))) {
-        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying port GUID failed "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying port GUID failed "
             "with error code %d.\n", hr);
         this->~Port();
         throw sys::COMException(hr, __FILE__, __LINE__);
@@ -189,7 +189,7 @@ vislib::net::ib::IbvInformation::Device::Device(const Device& rhs) {
  */
 vislib::net::ib::IbvInformation::Device::~Device(void) {
     THE_STACK_TRACE;
-    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Releasing IB device object...\n");
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Releasing IB device object...\n");
     sys::SafeRelease(this->device);
 }
 
@@ -312,18 +312,18 @@ vislib::net::ib::IbvInformation::Device::Device(IWVProvider *wvProvider,
 
     ::ZeroMemory(&this->attributes, sizeof(this->attributes));
 
-    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Opening IB device...\n");
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Opening IB device...\n");
     THE_ASSERT(wvProvider != NULL);
     if (FAILED(hr = wvProvider->OpenDevice(guid, &this->device))) {
-        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Opening device "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Opening device "
             "failed with error code %d.\n", hr);
         this->~Device();
         throw sys::COMException(hr, __FILE__, __LINE__);
     }
 
-    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying device attributes...\n");
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying device attributes...\n");
     if (FAILED(hr = this->device->Query(&this->attributes))) {
-        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying device attributes "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying device attributes "
             "failed with error code %d.\n", hr);
         this->~Device();
         throw sys::COMException(hr, __FILE__, __LINE__);
@@ -408,11 +408,11 @@ vislib::net::ib::IbvInformation::IbvInformation(void) : wvProvider(NULL) {
     THE_STACK_TRACE;
     HRESULT hr = S_OK;
 
-    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Acquiring WinVerbs "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Acquiring WinVerbs "
         "provider...\n");
     if (FAILED(hr = ::WvGetObject(IID_IWVProvider, 
             reinterpret_cast<void **>(&this->wvProvider)))) {
-        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Acquiring WinVerbs provider "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Acquiring WinVerbs provider "
             "failed with error code %d.\n", hr);
         this->~IbvInformation();
         throw sys::COMException(hr, __FILE__, __LINE__);    
@@ -436,7 +436,7 @@ vislib::net::ib::IbvInformation::IbvInformation(const IbvInformation& rhs)
  */
 vislib::net::ib::IbvInformation::~IbvInformation(void) {
     THE_STACK_TRACE;
-    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Releasing WinVerbs "
+    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Releasing WinVerbs "
         "provider...\n");
     sys::SafeRelease(this->wvProvider);
 }
@@ -455,20 +455,20 @@ bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
     if (this->devices.IsEmpty()) {
 
         /* Determine number of devices and get their GUIDs. */
-        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying number of IB "
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying number of IB "
             "devices...\n");
         THE_ASSERT(this->wvProvider != NULL);
         if (FAILED(hr = this->wvProvider->QueryDeviceList(NULL, &size))) {
-            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying number of "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying number of "
                 "devices failed with error code %d.\n", hr);
             throw sys::COMException(hr, __FILE__, __LINE__);
         }
 
-        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying device GUIDs...\n");
+        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying device GUIDs...\n");
         guids.AssertSize(size);
         if (FAILED(hr = this->wvProvider->QueryDeviceList(guids.As<NET64>(), 
                 &size))) {
-            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying device GUIDs "
+            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying device GUIDs "
                 "failed with error code %d.\n", hr);
             throw sys::COMException(hr, __FILE__, __LINE__);
         }
