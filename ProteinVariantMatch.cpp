@@ -1346,32 +1346,32 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                 // Perform morphing
                 // Morph surface #2 to shape #1 using Two-Way-GVF
 
-//                if (!surfEnd.MorphToVolumeTwoWayGVF( // TODO Do not compute GVF every time
-//                        ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-//                        ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
-//                        surfStart.PeekCubeStates(),
-//                        surfEnd.PeekCubeStates(),
-//                        this->volDim,
-//                        this->volOrg,
-//                        this->volDelta,
-//                        this->qsIsoVal,
-//                        this->surfMapInterpolMode,
-//                        deformIt,
-//                        this->qsGridDelta/100.0f*this->surfMapForcesScl,
-//                        this->surfMapSpringStiffness,
-//                        this->surfMapForcesScl,
-//                        this->surfMapExternalForcesWeight,
-//                        0.1f,
-//                        50,  // TODO Change back to 30 or so?
-//                        false,
-//                        false)) {
-//
-//                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                            "%s: could not compute Two-Way-GVF deformation",
-//                            this->ClassName());
-//
-//                    return false;
-//                }
+                if (!surfEnd.MorphToVolumeTwoWayGVF( // TODO Do not compute GVF every time
+                        ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                        ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
+                        surfStart.PeekCubeStates(),
+                        surfEnd.PeekCubeStates(),
+                        this->volDim,
+                        this->volOrg,
+                        this->volDelta,
+                        this->qsIsoVal,
+                        this->surfMapInterpolMode,
+                        deformIt,
+                        this->qsGridDelta/100.0f*this->surfMapForcesScl,
+                        this->surfMapSpringStiffness,
+                        this->surfMapForcesScl,
+                        this->surfMapExternalForcesWeight,
+                        0.1f,
+                        50,  // TODO Change back to 30 or so?
+                        false,
+                        false)) {
+
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                            "%s: could not compute Two-Way-GVF deformation",
+                            this->ClassName());
+
+                    return false;
+                }
             }
 
 
@@ -1385,134 +1385,134 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             cudaEventRecord(event1, 0);
 #endif // COMPUTE_RUNTIME
 
-//            // Compute surface area
-//            float surfArea = surfEnd.GetTotalSurfArea();
-//            printf("Surface area %f, vertexCnt %u\n", surfArea, surfEnd.GetVertexCnt());
-//
-//            /* Compute different metrics on a per-vertex basis */
-//
-//            // Compute texture coordinates
-//            Mat3f rmsRotInv(this->rmsRotation);
-//            if (!rmsRotInv.Invert()) {
-//                printf("Could not invert rotation matrix\n");
-//                return false;
-//            }
-//
-//            // 3. Compute mean vertex path
-//
-//            // Compute uncertainty for new vertices
-//            // Update uncertainty VBO for new vertices
-//            if (!surfEnd.TrackPathSubdivVertices(
-//                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
-//                    this->volDim,
-//                    this->volOrg,
-//                    this->volDelta,
-//                    this->surfMapForcesScl,
-//                    this->qsGridDelta/100.0f*this->surfMapForcesScl,
-//                    this->qsIsoVal,
-//                    this->surfMapMaxIt)) {
-//                return false;
-//            }
-//
-//            float meanVertexPath = surfEnd.IntVtxPathOverSurfArea();
-//
-//            this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/surfArea;
-//
-//            //            if (i != j) {
-//            this->minMatchMeanVertexPathVal =
-//                    std::min(this->minMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
-//            this->maxMatchMeanVertexPathVal =
-//                    std::max(this->maxMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
-//            //            }
-////            printf("Mean vertex path: min %f, max %f\n",
-////                    this->minMatchMeanVertexPathVal,
-////                    this->maxMatchMeanVertexPathVal);
-//
-//            // 1. Compute potential difference per vertex
-//
-//            //            if (!CudaSafeCall(this->vertexPotentialDiff_D.Validate(this->surfEnd.GetVertexCnt()))) {
-//            //                return false;
-//            //            }
-//
-//            // Compute texture difference per vertex
-//            if (!surfEnd.ComputeSurfAttribDiff(
-//                    surfStart,
-//                    centroid.PeekComponents(), // In case the start surface has been fitted using RMSD
-//                    rmsRotInv.PeekComponents(),
-//                    this->rmsTranslation.PeekComponents(),
-//                    this->potentialTex0_D.Peek(),
-//                    texDim0,
-//                    texOrg0,
-//                    texDelta0,
-//                    this->potentialTex1_D.Peek(),
-//                    texDim1,
-//                    texOrg1,
-//                    texDelta1)) {
-//                return false;
-//            }
-//
-//            // Integrate over surface area and write to matrix
-//            float meanPotentialDiff = surfEnd.IntVtxAttribOverSurfArea();
-//
-//            //            printf("Surface area %f\, potentialDiff %f, meanPotentialDiff %f\n", surfArea, meanPotentialDiff, meanPotentialDiff/surfArea);
-//            this->matchSurfacePotential[i*this->nVariants+j] = meanPotentialDiff/surfArea;
-//
-//
-//            //            if (i !=j) {
-//            this->minMatchSurfacePotentialVal =
-//                    std::min(this->minMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
-//            this->maxMatchSurfacePotentialVal =
-//                    std::max(this->maxMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
-//            //            }
-//
-//
-//            // 2. Compute potential sign difference per vertex
-//
-//            // Compute texture difference per vertex
-//            if (!surfEnd.ComputeSurfAttribSignDiff(
-//                    surfStart,
-//                    centroid.PeekComponents(), // In case the start surface has been fitted using RMSD
-//                    rmsRotInv.PeekComponents(),
-//                    this->rmsTranslation.PeekComponents(),
-//                    this->potentialTex0_D.Peek(),
-//                    texDim0,
-//                    texOrg0,
-//                    texDelta0,
-//                    this->potentialTex1_D.Peek(),
-//                    texDim1,
-//                    texOrg1,
-//                    texDelta1)) {
-//                return false;
-//            }
-//
-//            float meanPotentialSignDiff = surfEnd.IntVtxAttribOverSurfArea();
-//            this->matchSurfacePotentialSign[i*this->nVariants+j] = meanPotentialSignDiff/surfArea;
-//
-//            this->minMatchSurfacePotentialSignVal =
-//                    std::min(this->minMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
-//            this->maxMatchSurfacePotentialSignVal =
-//                    std::max(this->maxMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
-//
-//#ifdef COMPUTE_RUNTIME
-//            cudaEventRecord(event2, 0);
-//            cudaEventSynchronize(event1);
-//            cudaEventSynchronize(event2);
-//            cudaEventElapsedTime(&dt_ms, event1, event2);
-//            printf("metrics : %.10f\n", dt_ms/1000.0f);
-//#endif // COMPUTE_RUNTIME
-//
-//            molCall->Unlock(); // Unlock the frame
-//            volCall->Unlock(); // Unlock the frame
-//
-//#if defined(OUTPUT_PROGRESS)
-//            // Ouput progress
-//            currStep += 1.0f;
-//            // if (static_cast<unsigned int>(currStep)%10 == 0) {
-//            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-//                    "%s: matching surfaces %3u%%", this->ClassName(),
-//                    static_cast<unsigned int>(currStep/steps*100));
-//            // }
-//#endif // defined(OUTPUT_PROGRESS)
+            // Compute surface area
+            float surfArea = surfEnd.GetTotalSurfArea();
+            printf("Surface area %f, vertexCnt %u\n", surfArea, surfEnd.GetVertexCnt());
+
+            /* Compute different metrics on a per-vertex basis */
+
+            // Compute texture coordinates
+            Mat3f rmsRotInv(this->rmsRotation);
+            if (!rmsRotInv.Invert()) {
+                printf("Could not invert rotation matrix\n");
+                return false;
+            }
+
+            // 3. Compute mean vertex path
+
+            // Compute uncertainty for new vertices
+            // Update uncertainty VBO for new vertices
+            if (!surfEnd.TrackPathSubdivVertices(
+                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
+                    this->surfMapForcesScl,
+                    this->qsGridDelta/100.0f*this->surfMapForcesScl,
+                    this->qsIsoVal,
+                    this->surfMapMaxIt)) {
+                return false;
+            }
+
+            float meanVertexPath = surfEnd.IntVtxPathOverSurfArea();
+
+            this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/surfArea;
+
+            //            if (i != j) {
+            this->minMatchMeanVertexPathVal =
+                    std::min(this->minMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
+            this->maxMatchMeanVertexPathVal =
+                    std::max(this->maxMatchMeanVertexPathVal, this->matchMeanVertexPath[this->nVariants*i+j]);
+            //            }
+//            printf("Mean vertex path: min %f, max %f\n",
+//                    this->minMatchMeanVertexPathVal,
+//                    this->maxMatchMeanVertexPathVal);
+
+            // 1. Compute potential difference per vertex
+
+            //            if (!CudaSafeCall(this->vertexPotentialDiff_D.Validate(this->surfEnd.GetVertexCnt()))) {
+            //                return false;
+            //            }
+
+            // Compute texture difference per vertex
+            if (!surfEnd.ComputeSurfAttribDiff(
+                    surfStart,
+                    centroid.PeekComponents(), // In case the start surface has been fitted using RMSD
+                    rmsRotInv.PeekComponents(),
+                    this->rmsTranslation.PeekComponents(),
+                    this->potentialTex0_D.Peek(),
+                    texDim0,
+                    texOrg0,
+                    texDelta0,
+                    this->potentialTex1_D.Peek(),
+                    texDim1,
+                    texOrg1,
+                    texDelta1)) {
+                return false;
+            }
+
+            // Integrate over surface area and write to matrix
+            float meanPotentialDiff = surfEnd.IntVtxAttribOverSurfArea();
+
+            //            printf("Surface area %f\, potentialDiff %f, meanPotentialDiff %f\n", surfArea, meanPotentialDiff, meanPotentialDiff/surfArea);
+            this->matchSurfacePotential[i*this->nVariants+j] = meanPotentialDiff/surfArea;
+
+
+            //            if (i !=j) {
+            this->minMatchSurfacePotentialVal =
+                    std::min(this->minMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
+            this->maxMatchSurfacePotentialVal =
+                    std::max(this->maxMatchSurfacePotentialVal, this->matchSurfacePotential[this->nVariants*i+j]);
+            //            }
+
+
+            // 2. Compute potential sign difference per vertex
+
+            // Compute texture difference per vertex
+            if (!surfEnd.ComputeSurfAttribSignDiff(
+                    surfStart,
+                    centroid.PeekComponents(), // In case the start surface has been fitted using RMSD
+                    rmsRotInv.PeekComponents(),
+                    this->rmsTranslation.PeekComponents(),
+                    this->potentialTex0_D.Peek(),
+                    texDim0,
+                    texOrg0,
+                    texDelta0,
+                    this->potentialTex1_D.Peek(),
+                    texDim1,
+                    texOrg1,
+                    texDelta1)) {
+                return false;
+            }
+
+            float meanPotentialSignDiff = surfEnd.IntVtxAttribOverSurfArea();
+            this->matchSurfacePotentialSign[i*this->nVariants+j] = meanPotentialSignDiff/surfArea;
+
+            this->minMatchSurfacePotentialSignVal =
+                    std::min(this->minMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
+            this->maxMatchSurfacePotentialSignVal =
+                    std::max(this->maxMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
+
+#ifdef COMPUTE_RUNTIME
+            cudaEventRecord(event2, 0);
+            cudaEventSynchronize(event1);
+            cudaEventSynchronize(event2);
+            cudaEventElapsedTime(&dt_ms, event1, event2);
+            printf("metrics : %.10f\n", dt_ms/1000.0f);
+#endif // COMPUTE_RUNTIME
+
+            molCall->Unlock(); // Unlock the frame
+            volCall->Unlock(); // Unlock the frame
+
+#if defined(OUTPUT_PROGRESS)
+            // Ouput progress
+            currStep += 1.0f;
+            // if (static_cast<unsigned int>(currStep)%10 == 0) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+                    "%s: matching surfaces %3u%%", this->ClassName(),
+                    static_cast<unsigned int>(currStep/steps*100));
+            // }
+#endif // defined(OUTPUT_PROGRESS)
 
             surfStart.Release();
             surfEnd.Release();

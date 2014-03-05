@@ -5750,6 +5750,8 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
 
+    printf("Vertex VBO size %u\n", vboSize);
+
     // Get mapped pointers to the vertex data buffers
     unsigned int *vboTriIdxPt;
     size_t vboTriSize;
@@ -5762,6 +5764,8 @@ int DeformableGPUSurfaceMT::RefineMesh(
                 this->ClassName());
         return -1;
     }
+
+    printf("Tri VBO size %u\n", vboTriSize);
 
     /* 1. Compute edge list */
 //#define USE_TIMER
@@ -5778,6 +5782,9 @@ int DeformableGPUSurfaceMT::RefineMesh(
 
     const uint edgeCnt = (this->triangleCnt*3)/2;
 //    printf("EDGE COUNT %u\n", edgeCnt);
+
+    printf("Bla1\n");
+
 
     // Get the number of edges associated with each triangle
     if (!CudaSafeCall(this->triangleEdgeOffs_D.Validate(this->triangleCnt))) {
@@ -5851,6 +5858,9 @@ int DeformableGPUSurfaceMT::RefineMesh(
 #endif
 
 
+    printf("Bla2\n");
+
+
     /* 2. Flag long edges and determine number of newly created vertices */
 
     // Build up edge list based on the offsets
@@ -5870,6 +5880,8 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
 
+    printf("Bla2\n");
+
     // Compute prefix sum
     if (!CudaSafeCall(this->subDivEdgeIdxOffs_D.Validate(edgeCnt))) {
         return -1;
@@ -5881,7 +5893,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
             thrust::device_ptr<uint>(this->subDivEdgeFlag_D.Peek()),
             thrust::device_ptr<uint>(this->subDivEdgeFlag_D.Peek() + edgeCnt),
             thrust::device_ptr<uint>(this->subDivEdgeIdxOffs_D.Peek()));
-
+    printf("Bla2\n");
     uint accTmp;
     if (!CudaSafeCall(cudaMemcpy(&accTmp, this->subDivEdgeFlag_D.Peek()+(edgeCnt-1), sizeof(uint),
             cudaMemcpyDeviceToHost))) {
@@ -5892,9 +5904,17 @@ int DeformableGPUSurfaceMT::RefineMesh(
             cudaMemcpyDeviceToHost))) {
         return -1;
     }
+    printf("Bla2\n");
     this->newVertexCnt += accTmp;
     this->nFlaggedVertices += this->newVertexCnt;
-    if (this->newVertexCnt == 0) return 0;
+    if (this->newVertexCnt == 0) {
+        // !! Unmap/registers vbos because they will be reinitialized
+        CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0));
+        CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]));
+        CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]));
+        printf("NULL\n");
+        return 0;
+    }
 //    printf("Need %i new vertices (old triangle count %u)\n", newVertexCnt, this->triangleCnt);
 
 //    // DEBUG print edge flag
@@ -5916,6 +5936,8 @@ int DeformableGPUSurfaceMT::RefineMesh(
             dt_ms/1000.0f);
     cudaEventRecord(event1, 0);
 #endif
+
+    printf("Bla3\n");
 
 
     /* 3. Interpolate new vertex positions associated with the flagged edges */
@@ -6039,6 +6061,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
     cudaEventRecord(event1, 0);
 #endif
 
+    printf("Bla5\n");
 
     /* 5. Determine number of newly created triangles */
 
@@ -6106,6 +6129,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
             dt_ms/1000.0f);
     cudaEventRecord(event1, 0);
 #endif
+
 
 
     /* 6. Create new triangles with respective vertex indices */
@@ -6188,6 +6212,8 @@ int DeformableGPUSurfaceMT::RefineMesh(
             dt_ms/1000.0f);
     cudaEventRecord(event1, 0);
 #endif
+
+
 
     /* 7. (Re-)compute triangle neighbors */
 
@@ -6356,6 +6382,8 @@ int DeformableGPUSurfaceMT::RefineMesh(
         return -1;
     }
 
+    printf("Vertex VBO size %u\n", vboSize);
+
     // Get mapped pointers to the vertex data buffers
     if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
             reinterpret_cast<void**>(&vboTriIdxPt), // The mapped pointer
@@ -6363,6 +6391,9 @@ int DeformableGPUSurfaceMT::RefineMesh(
             cudaTokens[1]))) {                 // The mapped resource
         return -1;
     }
+
+    printf("Tri VBO size %u\n", vboTriSize);
+    printf("----------------------------\n");
 
     // Copy old vertex data to new buffer
     if (!CudaSafeCall(cudaMemcpy(vboPt, this->trackedSubdivVertexData_D.Peek(),
