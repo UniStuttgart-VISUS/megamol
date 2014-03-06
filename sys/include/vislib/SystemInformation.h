@@ -67,7 +67,7 @@ namespace sys {
 #ifdef _WIN32
         static DWORD AllocationGranularity(void);
 #else /* _WIN32 */
-        static inline DWORD AllocationGranularity(void) {
+        static inline unsigned int AllocationGranularity(void) {
             return PageSize();
         }
 #endif /* _WIN32 */
@@ -143,7 +143,7 @@ namespace sys {
          * @throws Exception       On Linux, if the X11 display could not be
          *                         opened.
          */
-        static DWORD MonitorRects(MonitorRectArray& outMonitorRects);
+        static unsigned int MonitorRects(MonitorRectArray& outMonitorRects);
 
         /**
          * Answer the page size
@@ -153,7 +153,7 @@ namespace sys {
          * @throws SystemException If the page size could not be retrieved 
          *                         (Linux only).
          */
-        static DWORD PageSize(void);
+        static unsigned int PageSize(void);
 
         /**
          * Return the size of physical memory in bytes.
@@ -252,7 +252,7 @@ namespace sys {
          *
          * @throws SystemException If the version could not be retrieved.
          */
-        static void SystemVersion(DWORD& outMajor, DWORD& outMinor);
+        static void SystemVersion(unsigned int& outMajor, unsigned int& outMinor);
 
         /**
          * Returns the size of a word in bit of current operating system. This

@@ -36,7 +36,7 @@ namespace sys {
          * @param file      The file the exception was thrown in.
          * @param line      The line the exception was thrown in.
          */
-        IOException(const DWORD errorCode, const char *file,
+        IOException(const the::system::system_error::native_error_type errorCode, const char *file,
             const int line);
 
         /**
@@ -47,7 +47,7 @@ namespace sys {
          * @param file      The file the exception was thrown in.
          * @param line      The line the exception was thrown in.
          */
-        IOException(const DWORD errorCode, const char *msg, const char *file,
+        IOException(const the::system::system_error::native_error_type errorCode, const char *msg, const char *file,
             const int line);
 
         /**
@@ -58,7 +58,7 @@ namespace sys {
          * @param file      The file the exception was thrown in.
          * @param line      The line the exception was thrown in.
          */
-        IOException(const DWORD errorCode, const wchar_t *msg, const char *file,
+        IOException(const the::system::system_error::native_error_type errorCode, const wchar_t *msg, const char *file,
             const int line);
 
         /**

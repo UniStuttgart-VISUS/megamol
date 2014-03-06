@@ -184,7 +184,7 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringW &outName) {
 /*
  * vislib::sys::SystemInformation::MonitorRects
  */
-DWORD vislib::sys::SystemInformation::MonitorRects(
+unsigned int vislib::sys::SystemInformation::MonitorRects(
         MonitorRectArray& outMonitorRects) {
     outMonitorRects.Clear();
 
@@ -221,7 +221,7 @@ DWORD vislib::sys::SystemInformation::MonitorRects(
 /*
  * vislib::sys::SystemInformation::PageSize
  */
-DWORD vislib::sys::SystemInformation::PageSize(void) {
+unsigned int vislib::sys::SystemInformation::PageSize(void) {
 #ifdef _WIN32
     SYSTEM_INFO si;
     ::GetSystemInfo(&si);
@@ -428,8 +428,8 @@ vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SystemTyp
 /*
  * vislib::sys::SystemInformation::SystemVersion
  */
-void vislib::sys::SystemInformation::SystemVersion(DWORD& outMajor, 
-                                                   DWORD& outMinor) {
+void vislib::sys::SystemInformation::SystemVersion(unsigned int& outMajor, 
+                                                   unsigned int& outMinor) {
 #ifdef _WIN32
     OSVERSIONINFO ver;
     ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
