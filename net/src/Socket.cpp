@@ -425,15 +425,17 @@ void vislib::net::Socket::GracefulDisconnect(const bool isClose) {
 /*
  * vislib::net::Socket::IOControl
  */
-void vislib::net::Socket::IOControl(const DWORD ioControlCode, void *inBuffer,
-        const DWORD cntInBuffer, void *outBuffer, const DWORD cntOutBuffer,
-        DWORD& outBytesReturned) {
+void vislib::net::Socket::IOControl(const unsigned int ioControlCode, void *inBuffer,
+        const unsigned int cntInBuffer, void *outBuffer, const unsigned int cntOutBuffer,
+        unsigned int& outBytesReturned) {
 #ifdef _WIN32
+    DWORD arg(outBytesReturned);
     if (::WSAIoctl(this->handle, ioControlCode, inBuffer, cntInBuffer, 
-            outBuffer, cntOutBuffer, &outBytesReturned, NULL, NULL) 
+            outBuffer, cntOutBuffer, &arg, NULL, NULL) 
             == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
+    outBytesReturned = arg;
 #else /* _WIN32 */
     // TODO
 #endif /* _WIN32 */
@@ -776,8 +778,8 @@ void vislib::net::Socket::SetOption(const int level, const int optName,
  */
 void vislib::net::Socket::SetRcvAll(const bool enable) {
 #ifdef _WIN32
-    DWORD inBuffer = enable ? 1 : 0;
-    DWORD bytesReturned;
+    unsigned int inBuffer = enable ? 1 : 0;
+    unsigned int bytesReturned;
     // SIO_RCVALL
     this->IOControl(_WSAIOW(IOC_VENDOR, 1), &inBuffer, sizeof(inBuffer), NULL, 
         0, bytesReturned);

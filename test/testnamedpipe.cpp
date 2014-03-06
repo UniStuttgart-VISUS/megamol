@@ -48,7 +48,7 @@ void BarrierT2(void) {
 #endif
 
 #define SyncHere BarrierT2
-DWORD TestNamedPipeSecondThread(void *param) {
+unsigned int TestNamedPipeSecondThread(void *param) {
     vislib::sys::NamedPipe pipe;
     char buf[256];
     buf[255] = 0;

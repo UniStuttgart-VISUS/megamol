@@ -41,14 +41,14 @@ void vislib::net::cluster::FreeRecvMsgCtx(ReceiveMessagesCtx *& ctx) {
 /*
  * vislib::net::cluster::ReceiveMessages
  */
-DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
+unsigned int vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
     ReceiveMessagesCtx *ctx = static_cast<ReceiveMessagesCtx *>(
         receiveMessagesCtx);            // Receive context.
     const MessageHeader *msgHdr = NULL; // Pointer to header area of 'recvBuf'.
     const BlockHeader *blkHdr = NULL;   // Pointer to a block header.
     size_t msgSize = 0;                 // Total message size (header + body).
     RawStorage recvBuf;                 // Receives data from network.
-    DWORD retval = 0;                   // Function return value.
+    unsigned int retval = 0;                   // Function return value.
     AbstractClusterNode::PeerIdentifier peerId; // Peer address of socket.
 
     /* Sanity checks. */

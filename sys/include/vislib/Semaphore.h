@@ -146,7 +146,7 @@ namespace sys {
          * @throws SystemException If an error occurred when trying to acquire
          *                         the lock.
          */
-        virtual bool TryLock(const DWORD timeout);
+        virtual bool TryLock(const unsigned int timeout);
 
         /**
          * Release the semaphore.

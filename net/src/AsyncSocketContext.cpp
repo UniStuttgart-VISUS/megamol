@@ -56,8 +56,8 @@ void vislib::net::AsyncSocketContext::Wait(void) {
 /*
  * islib::net::AsyncSocketContext::notifyCompleted
  */
-void vislib::net::AsyncSocketContext::notifyCompleted(const DWORD cntData,
-        const DWORD errorCode) {
+void vislib::net::AsyncSocketContext::notifyCompleted(const unsigned int cntData,
+        const unsigned int errorCode) {
     THE_STACK_TRACE;
 
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Signaling completion of "

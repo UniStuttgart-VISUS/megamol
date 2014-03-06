@@ -353,13 +353,13 @@ void TestSingleLinkedListSort(void) {
     }
 
 #ifdef _WIN32
-    DWORD startTick = GetTickCount();
+    unsigned int startTick = GetTickCount();
 #endif /* _WIN32 */
     AssertEqual("List filled with random Elements", list.Count(), cnt);
     list.Sort(intSortCompare);
     AssertEqual("List still contains random Elements", list.Count(), cnt);
 #ifdef _WIN32
-    DWORD duration = GetTickCount() - startTick;
+    unsigned int duration = GetTickCount() - startTick;
     printf("Sorted in %u milliseconds\n", duration);
 #endif /* _WIN32 */
 

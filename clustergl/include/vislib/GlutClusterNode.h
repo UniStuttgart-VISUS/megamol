@@ -86,7 +86,7 @@ namespace cluster {
          */
         virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
 
-        virtual DWORD Run(void);
+        virtual unsigned int Run(void);
 
     protected:
 
@@ -308,7 +308,7 @@ namespace cluster {
     /*
      * vislib::net::cluster::GlutClusterNode<T>::Run
      */
-    template<class T> DWORD GlutClusterNode<T>::Run(void) {
+    template<class T> unsigned int GlutClusterNode<T>::Run(void) {
         // TODO: Additional initialisation callback (format, title, ...) req.
         this->onPreCreateWindow();
         ::glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);

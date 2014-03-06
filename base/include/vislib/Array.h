@@ -460,7 +460,8 @@ namespace vislib {
          * @throws OutOfRangeException If 'idx' is not within 
          *                             [0, this->Count()[.
          */
-        inline T& operator [](const int idx) {
+        template<typename Tp>
+        inline T& operator [](const Tp idx) {
             return (*this)[static_cast<size_t>(idx)];
         }
 
@@ -475,46 +476,47 @@ namespace vislib {
          * @throws OutOfRangeException If 'idx' is not within 
          *                             [0, this->Count()[.
          */
-        const T& operator [](const int idx) const {
+        template<typename Tp>
+        const T& operator [](const Tp idx) const {
             return (*this)[static_cast<size_t>(idx)];
         }
 
-#if (defined _WIN32) || (defined _LIN64)
-        // this define is correct!
-        //  used on all windows platforms 
-        //  and on 64 bit linux!
-
-        /**
-         * Access the 'idx'th element in the array.
-         *
-         * @param idx The index of the element to access. This must be a value
-         *            within [0, this->Count()[.
-         *
-         * @return A reference to the 'idx'th element.
-         *
-         * @throws OutOfRangeException If 'idx' is not within 
-         *                             [0, this->Count()[.
-         */
-        inline T& operator [](const unsigned int idx) {
-            return (*this)[static_cast<size_t>(idx)];
-        }
-
-        /**
-         * Access the 'idx'th element in the array.
-         *
-         * @param idx The index of the element to access. This must be a value
-         *            within [0, this->Count()[.
-         *
-         * @return A reference to the 'idx'th element.
-         *
-         * @throws OutOfRangeException If 'idx' is not within 
-         *                             [0, this->Count()[.
-         */
-        const T& operator [](const unsigned int idx) const {
-            return (*this)[static_cast<size_t>(idx)];
-        }
-
-#endif /* (defined _WIN32) || (defined _LIN64) */
+//#if (defined _WIN32) || (defined _LIN64)
+//        // this define is correct!
+//        //  used on all windows platforms 
+//        //  and on 64 bit linux!
+//
+//        /**
+//         * Access the 'idx'th element in the array.
+//         *
+//         * @param idx The index of the element to access. This must be a value
+//         *            within [0, this->Count()[.
+//         *
+//         * @return A reference to the 'idx'th element.
+//         *
+//         * @throws OutOfRangeException If 'idx' is not within 
+//         *                             [0, this->Count()[.
+//         */
+//        inline T& operator [](const unsigned long idx) {
+//            return (*this)[static_cast<size_t>(idx)];
+//        }
+//
+//        /**
+//         * Access the 'idx'th element in the array.
+//         *
+//         * @param idx The index of the element to access. This must be a value
+//         *            within [0, this->Count()[.
+//         *
+//         * @return A reference to the 'idx'th element.
+//         *
+//         * @throws OutOfRangeException If 'idx' is not within 
+//         *                             [0, this->Count()[.
+//         */
+//        const T& operator [](const unsigned long idx) const {
+//            return (*this)[static_cast<size_t>(idx)];
+//        }
+//
+//#endif /* (defined _WIN32) || (defined _LIN64) */
 
         /**
          * Assignment.

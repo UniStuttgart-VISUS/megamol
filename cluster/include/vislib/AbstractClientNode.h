@@ -104,7 +104,7 @@ namespace cluster {
          *                         started.
          * @throws std::bad_alloc In case there is insufficient heap memory.
          */
-        virtual DWORD Run(void);
+        virtual unsigned int Run(void);
 
         inline void SetReconnectAttempts(const unsigned int reconnectAttempts) {
             this->reconnectAttempts = reconnectAttempts;

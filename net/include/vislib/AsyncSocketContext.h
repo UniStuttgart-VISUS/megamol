@@ -154,8 +154,8 @@ namespace net {
          * @param errorCode 0 in case the operation completed successfully, an 
          *                  appropriate system error code otherwise.
          */
-        virtual void notifyCompleted(const DWORD cntData, 
-            const DWORD errorCode);
+        virtual void notifyCompleted(const unsigned int cntData, 
+            const unsigned int errorCode);
 
 #if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
         /**

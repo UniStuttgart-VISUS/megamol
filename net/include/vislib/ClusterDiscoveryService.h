@@ -543,7 +543,7 @@ namespace net {
              * @return 0, if the work was successfully finished, an error code
              *         otherwise.
              */
-            virtual DWORD Run(void *discSvc);
+            virtual unsigned int Run(void *discSvc);
 
             /**
              * Ask the thread to terminate.
@@ -588,7 +588,7 @@ namespace net {
              * @return 0, if the work was successfully finished, an error code
              *         otherwise.
              */
-            virtual DWORD Run(void *discSvc);
+            virtual unsigned int Run(void *discSvc);
 
             /**
              * Ask the thread to terminate.

@@ -34,12 +34,12 @@ class Sender : public vislib::sys::Runnable {
 public:
     inline Sender(void) {}
     virtual ~Sender(void);
-    virtual DWORD Run(void *userData);
+    virtual unsigned int Run(void *userData);
 };
 
 Sender::~Sender(void) {}
 
-DWORD Sender::Run(void *userData) {
+unsigned int Sender::Run(void *userData) {
     uintptr_t cnt = reinterpret_cast<uintptr_t>(userData);
     AsyncSocketContext ctx;
 
@@ -77,7 +77,7 @@ DWORD Sender::Run(void *userData) {
 
         AssertNoException("Socket::Cleanup", Socket::Cleanup());
 
-        return static_cast<DWORD>(cnt);
+        return static_cast<unsigned int>(cnt);
     } catch (...) {
         return 0;
     }
@@ -91,12 +91,12 @@ class Receiver : public vislib::sys::Runnable {
 public:
     inline Receiver(void) {}
     virtual ~Receiver(void);
-    virtual DWORD Run(void *userData);
+    virtual unsigned int Run(void *userData);
 };
 
 Receiver::~Receiver(void) {}
 
-DWORD Receiver::Run(void *userData) {
+unsigned int Receiver::Run(void *userData) {
     uintptr_t cnt = reinterpret_cast<uintptr_t>(userData);
     uintptr_t data;
     AsyncSocketContext ctx;
@@ -145,7 +145,7 @@ DWORD Receiver::Run(void *userData) {
 
         AssertNoException("Socket::Cleanup", Socket::Cleanup());
 
-        return static_cast<DWORD>(cnt);
+        return static_cast<unsigned int>(cnt);
     } catch (...) {
         return 0;
     }

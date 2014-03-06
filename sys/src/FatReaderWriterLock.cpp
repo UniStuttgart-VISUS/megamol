@@ -133,7 +133,7 @@ void vislib::sys::FatReaderWriterLock::UnlockShared(void) {
 
     intptr_t pos = this->shThreads.IndexOf(Thread::CurrentID());
 
-    if (pos == Array<DWORD>::INVALID_POS) {
+    if (pos == Array<unsigned int>::INVALID_POS) {
         this->sharedLock.Unlock();
         this->exclusiveLock.Unlock();
         throw IllegalStateException("UnlockShared illegal", __FILE__, __LINE__);

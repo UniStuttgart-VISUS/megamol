@@ -261,7 +261,7 @@ namespace sys {
          * paging mode, writing needs this parameter for each new mapping...
          */
 #ifdef _WIN32
-        DWORD protect;
+        unsigned int protect;
 #else /* _WIN32 */
         int protect;
 #endif

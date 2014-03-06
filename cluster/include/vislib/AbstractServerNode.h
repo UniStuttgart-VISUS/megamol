@@ -121,7 +121,7 @@ namespace cluster {
          *
          * @throws SystemException If the server thread could not be started.
          */
-        virtual DWORD Run(void);
+        virtual unsigned int Run(void);
 
         /**
          * Set a new socket address the server should bind to. 

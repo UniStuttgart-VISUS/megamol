@@ -53,7 +53,7 @@ static void sync2(void) {
  *
  * @return 0
  */
-DWORD testThread(void * userData) {
+unsigned int testThread(void * userData) {
     FatReaderWriterLock& lock = *static_cast<FatReaderWriterLock*>(userData);
     sync2();
 

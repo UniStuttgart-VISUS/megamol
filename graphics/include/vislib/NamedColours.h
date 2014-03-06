@@ -577,7 +577,7 @@ namespace graphics {
          *
          * @return The colour
          */
-        static ColourRGBAu8 colFromHex(DWORD hex);
+        static ColourRGBAu8 colFromHex(unsigned int hex);
 
         /** Forbidden ctor. */
         NamedColours(void);

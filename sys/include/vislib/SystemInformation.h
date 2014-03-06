@@ -65,7 +65,7 @@ namespace sys {
          *                         (Linux only).
          */
 #ifdef _WIN32
-        static DWORD AllocationGranularity(void);
+        static unsigned int AllocationGranularity(void);
 #else /* _WIN32 */
         static inline unsigned int AllocationGranularity(void) {
             return PageSize();

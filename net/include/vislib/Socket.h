@@ -617,9 +617,9 @@ namespace net {
          * @throws SocketException If the operation fails.
          */
         // TODO: Linux IOCTLs?
-        void IOControl(const DWORD ioControlCode, void *inBuffer, 
-            const DWORD cntInBuffer, void *outBuffer, const DWORD cntOutBuffer,
-            DWORD& outBytesReturned);
+        void IOControl(const unsigned int ioControlCode, void *inBuffer, 
+            const unsigned int cntInBuffer, void *outBuffer, const unsigned int cntOutBuffer,
+            unsigned int& outBytesReturned);
 
         /**
          * Answer whether the socket is valid. Only use sockets that return true

@@ -25,7 +25,7 @@ public:
 
     virtual void Initialise(vislib::sys::CmdLineProviderW& inOutCmdLine);
 
-    virtual DWORD Run(void);
+    virtual unsigned int Run(void);
 
 protected:
 

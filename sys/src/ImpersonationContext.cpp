@@ -63,7 +63,7 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
     }
     
     if (::ImpersonateLoggedOnUser(this->hToken) == FALSE) {
-        DWORD errorCode = ::GetLastError();
+        unsigned int errorCode = ::GetLastError();
         ::CloseHandle(this->hToken);
         this->hToken = NULL;
         throw SystemException(errorCode, __FILE__, __LINE__);
@@ -172,7 +172,7 @@ void vislib::sys::ImpersonationContext::Impersonate(const wchar_t *username,
     }
 
     if (::ImpersonateLoggedOnUser(this->hToken) == FALSE) {
-        DWORD errorCode = ::GetLastError();
+        unsigned int errorCode = ::GetLastError();
         ::CloseHandle(this->hToken);
         this->hToken = NULL;
         throw SystemException(errorCode, __FILE__, __LINE__);

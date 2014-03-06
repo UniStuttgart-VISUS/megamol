@@ -32,10 +32,10 @@ public:
         void *userData) throw();
 
     void OnUserWorkItemCompleted(ThreadPool& src, Runnable *runnable, 
-        void *userData, const DWORD exitCode) throw();
+        void *userData, const unsigned int exitCode) throw();
 
     void OnUserWorkItemCompleted(ThreadPool& src, Runnable::Function runnable,
-        void *userData, const DWORD exitCode) throw();
+        void *userData, const unsigned int exitCode) throw();
 
     unsigned int cntAborted;
     unsigned int cntCompleted;
@@ -53,13 +53,13 @@ void Horcher::OnUserWorkItemAborted(ThreadPool& src,
 }
 
 void Horcher::OnUserWorkItemCompleted(ThreadPool& src, Runnable *runnable,
-        void *userData, const DWORD exitCode) throw() {
+        void *userData, const unsigned int exitCode) throw() {
     this->cntCompleted++;
 }
 
 void Horcher::OnUserWorkItemCompleted(ThreadPool& src, 
         Runnable::Function runnable, void *userData, 
-        const DWORD exitCode) throw() {
+        const unsigned int exitCode) throw() {
     this->cntCompleted++;
 }
 
@@ -71,13 +71,13 @@ public:
 
     inline Doweler(void) : Runnable() {};
 
-    virtual DWORD Run(void *userData);
+    virtual unsigned int Run(void *userData);
 
     virtual bool Terminate(void);
 };
 
 
-DWORD Doweler::Run(void *userData) {
+unsigned int Doweler::Run(void *userData) {
     uintptr_t dowel = reinterpret_cast<uintptr_t>(userData);
 
     for (int i = 0; i < 5; i++) {
@@ -100,7 +100,7 @@ public:
 
     inline Crowbarer(void) : Runnable() {};
 
-    virtual DWORD Run(void *userData);
+    virtual unsigned int Run(void *userData);
 
     virtual bool Terminate(void);
 
@@ -108,7 +108,7 @@ public:
 };
 
 
-DWORD Crowbarer::Run(void *userData) {
+unsigned int Crowbarer::Run(void *userData) {
     uintptr_t crowbar = reinterpret_cast<uintptr_t>(userData);
 
     sem.Lock();

@@ -83,7 +83,7 @@ inline char* vislib::sys::MemmappedFile::SafeMapView() {
 	char *ret;
 
 #ifdef _WIN32
-	DWORD da;
+	unsigned int da;
 	ULARGE_INTEGER fp;
 	fp.QuadPart = this->AlignPosition(this->filePos);
 	if (this->mapping == NULL || this->mapping == INVALID_HANDLE_VALUE) {
@@ -175,7 +175,7 @@ inline void vislib::sys::MemmappedFile::SafeCloseMapping() {
  * vislib::sys::MemmappedFile::AlignPosition
  */
 inline vislib::sys::File::FileSize vislib::sys::MemmappedFile::AlignPosition(vislib::sys::File::FileSize position) {
-	static DWORD granularity = SystemInformation::AllocationGranularity();
+	static unsigned int granularity = SystemInformation::AllocationGranularity();
 	if (position % granularity != 0) {
 		position -= position % granularity;
 	}

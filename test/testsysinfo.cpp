@@ -29,15 +29,15 @@ void TestSysInfo(void) {
         std::cout << "Self System Type: " << vislib::sys::SystemInformation::SelfSystemType() << std::endl;
         std::cout << "Self Word Size: " << vislib::sys::SystemInformation::SelfWordSize() << std::endl;
 
-        DWORD verMajor;
-        DWORD verMinor;
+        unsigned int verMajor;
+        unsigned int verMinor;
         vislib::sys::SystemInformation::SystemVersion(verMajor, verMinor);
         std::cout << "System version " << verMajor << "." << verMinor << std::endl;
 
         SystemInformation::MonitorRectArray monitorSizes;
-        DWORD cntMonitors = SystemInformation::MonitorRects(monitorSizes);
+        unsigned int cntMonitors = SystemInformation::MonitorRects(monitorSizes);
         std::cout << "Found " << cntMonitors << " monitors" << std::endl;
-        for (DWORD i = 0; i < cntMonitors; i++) {
+        for (unsigned int i = 0; i < cntMonitors; i++) {
             std::cout << "Monitor " << i << " has origin ("
                 << monitorSizes[int(i)].Left() << ", " 
                 << monitorSizes[int(i)].Top() << ") (top) and size [" 

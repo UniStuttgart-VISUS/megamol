@@ -93,7 +93,7 @@ void vislib::net::TcpServer::RemoveListener(Listener *listener) {
 /*
  * vislib::net::TcpServer::Run
  */
-DWORD vislib::net::TcpServer::Run(void *userData) {
+unsigned int vislib::net::TcpServer::Run(void *userData) {
     THE_ASSERT(userData != NULL);
     if (userData != NULL) {
         IPEndPoint serverAddr = *static_cast<IPEndPoint *>(userData);
@@ -107,10 +107,10 @@ DWORD vislib::net::TcpServer::Run(void *userData) {
 /*
  * vislib::net::TcpServer::Run
  */
-DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
+unsigned int vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
     IPEndPoint peerAddr;
     Socket peerSocket;
-    DWORD retval = 0;
+    unsigned int retval = 0;
 
     /* Prepare the socket subsystem */
     try {

@@ -51,7 +51,7 @@ vislib::net::AsyncSocketSender::~AsyncSocketSender(void) {
 /*
  * vislib::net::AsyncSocketSender::Run
  */
-DWORD vislib::net::AsyncSocketSender::Run(void *socket) {
+unsigned int vislib::net::AsyncSocketSender::Run(void *socket) {
     return this->Run(static_cast<Socket *>(socket));
 }
 
@@ -59,11 +59,11 @@ DWORD vislib::net::AsyncSocketSender::Run(void *socket) {
 /*
  * vislib::net::AsyncSocketSender::Run
  */
-DWORD vislib::net::AsyncSocketSender::Run(Socket *socket) {
+unsigned int vislib::net::AsyncSocketSender::Run(Socket *socket) {
     THE_ASSERT(socket != NULL);
     const void *data = NULL;
     size_t cntSent = 0;
-    DWORD result = 0;
+    unsigned int result = 0;
 
     try {
         Socket::Startup();
@@ -248,7 +248,7 @@ bool vislib::net::AsyncSocketSender::Terminate(void) {
 /*
  * vislib::net::AsyncSocketSender::onSendCompletedEvt
  */
-void vislib::net::AsyncSocketSender::onSendCompletedEvt(const DWORD result,
+void vislib::net::AsyncSocketSender::onSendCompletedEvt(const unsigned int result,
         const void *data, const size_t cntBytesSent, void *userContext) {
     if (userContext != NULL) {
         static_cast<sys::Event *>(userContext)->Set();
@@ -259,7 +259,7 @@ void vislib::net::AsyncSocketSender::onSendCompletedEvt(const DWORD result,
 /*
  * vislib::net::AsyncSocketSender::onSendCompletedSem
  */
-void vislib::net::AsyncSocketSender::onSendCompletedSem(const DWORD result,
+void vislib::net::AsyncSocketSender::onSendCompletedSem(const unsigned int result,
         const void *data, const size_t cntBytesSent, void *userContext) {
     if (userContext != NULL) {
         static_cast<sys::Semaphore *>(userContext)->Unlock();
@@ -283,7 +283,7 @@ const uint32_t vislib::net::AsyncSocketSender::FLAG_IS_LINGER= 0x00000002;
  * vislib::net::AsyncSocketSender::finaliseSendTask
  */
 void vislib::net::AsyncSocketSender::finaliseSendTask(SendTask& task, 
-        const DWORD result, const size_t cntBytesSent) {
+        const unsigned int result, const size_t cntBytesSent) {
     /* Call completion function. */
     if (task.onCompleted != NULL) {
         task.onCompleted(result, task.data0, cntBytesSent, task.userContext);

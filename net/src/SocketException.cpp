@@ -11,7 +11,7 @@
 /*
  * vislib::net::SocketException::SocketException
  */
-vislib::net::SocketException::SocketException(const DWORD errorCode, 
+vislib::net::SocketException::SocketException(const unsigned int errorCode, 
         const char *file, const int line)
         : SystemException(errorCode, file, line) {
 }
@@ -20,7 +20,7 @@ vislib::net::SocketException::SocketException(const DWORD errorCode,
 /*
  * vislib::net::SocketException::SocketException
  */
-vislib::net::SocketException::SocketException(const DWORD errorCode,
+vislib::net::SocketException::SocketException(const unsigned int errorCode,
         const char *msg, const char *file, const int line)
         : SystemException(errorCode, file, line) {
     if (msg != NULL) {

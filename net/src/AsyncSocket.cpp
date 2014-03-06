@@ -319,12 +319,12 @@ void CALLBACK vislib::net::AsyncSocket::completedFunc(DWORD dwError,
 /*
  * vislib::net::AsyncSocket::receiveFunc
  */
-DWORD vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
+unsigned int vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
     THE_STACK_TRACE;
     AsyncSocketContext *ctx = static_cast<AsyncSocketContext *>(
         asyncSocketContext);
-    DWORD retval = 0;   // The return value (error code of socket call).
-    DWORD cnt = 0;      // The number of bytes received.
+    unsigned int retval = 0;   // The return value (error code of socket call).
+    unsigned int cnt = 0;      // The number of bytes received.
 
     // Assert this as we require the overridden methods for locking!
     // The call to the overloaded ctx->socket->Receive will ensure locking, 
@@ -371,12 +371,12 @@ DWORD vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
 /*
  * vislib::net::AsyncSocket::sendFunc
  */
-DWORD vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
+unsigned int vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
     THE_STACK_TRACE;
     AsyncSocketContext *ctx = static_cast<AsyncSocketContext *>(
         asyncSocketContext);
-    DWORD retval = 0;   // The return value (error code of socket call).
-    DWORD cnt = 0;      // The number of bytes sent.
+    unsigned int retval = 0;   // The return value (error code of socket call).
+    unsigned int cnt = 0;      // The number of bytes sent.
 
     // Assert this as we require the overridden methods for locking!
     // The call to the overloaded ctx->socket->Send will ensure locking,
@@ -426,10 +426,13 @@ DWORD vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
  */
 size_t vislib::net::AsyncSocket::endAsync(AsyncSocketContext *context) {
     THE_STACK_TRACE;
+
+#ifdef _WIN32
     DWORD retval = 0;
     DWORD flags = 0;
-
-#ifndef _WIN32
+#else /* _WIN32 */
+    unsigned int retval = 0;
+    unsigned int flags = 0;
     VL_UNREFERENCED_LOCAL_VARIABLE(flags);
 #endif /* _WIN32 */
 
@@ -448,7 +451,7 @@ size_t vislib::net::AsyncSocket::endAsync(AsyncSocketContext *context) {
     if (context->errorCode != 0) {
         throw SocketException(context->errorCode, __FILE__, __LINE__);
     }
-    retval = static_cast<DWORD>(context->cntData);
+    retval = static_cast<unsigned int>(context->cntData);
 #endif /* (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 
     return static_cast<size_t>(retval);

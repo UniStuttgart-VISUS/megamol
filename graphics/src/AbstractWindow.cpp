@@ -69,8 +69,8 @@ void vislib::graphics::AbstractWindow::Create(const vislib::StringW& title,
 
 #ifdef _WIN32
     HINSTANCE hInstance = NULL;
-    DWORD dwStyle = 0;
-    DWORD dwExStyle = 0;
+    unsigned int dwStyle = 0;
+    unsigned int dwExStyle = 0;
     RECT wndRect;
 
     /* Sanity checks. */
@@ -233,8 +233,8 @@ void vislib::graphics::AbstractWindow::onCreated(HWND hWnd) {
 /*
  * vislib::graphics::AbstractWindow::onCreating(
  */
-void vislib::graphics::AbstractWindow::onCreating(DWORD& inOutStyle, 
-        DWORD& inOutExStyle) throw() {
+void vislib::graphics::AbstractWindow::onCreating(unsigned int& inOutStyle, 
+        unsigned int& inOutExStyle) throw() {
     THE_STACK_TRACE;
     // Nothing to do.
 }

@@ -73,7 +73,7 @@
 //
 //    private:
 //
-//        static DWORD messagePump(void *userData); 
+//        static unsigned int messagePump(void *userData); 
 //
 //        /** Ctor. */
 //        IbvCommServerChannel(void);

@@ -214,7 +214,7 @@ bool vislib::sys::Semaphore::TryLock(void) {
 /*
  * vislib::sys::Semaphore::TryLock
  */
-bool vislib::sys::Semaphore::TryLock(const DWORD timeout) {
+bool vislib::sys::Semaphore::TryLock(const unsigned int timeout) {
 #ifdef _WIN32
     switch (::WaitForSingleObject(this->handle, timeout)) {
 

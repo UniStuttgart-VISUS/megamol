@@ -179,7 +179,7 @@ namespace net {
          *
          * @throws IllegalParamException if 'userData' is NULL.
          */
-        virtual DWORD Run(void *userData);
+        virtual unsigned int Run(void *userData);
 
         /**
          * Start the server.
@@ -190,7 +190,7 @@ namespace net {
          *
          * @return 0 in case of success, an error code otherwise.
          */
-        virtual DWORD Run(const IPEndPoint& serverAddr);
+        virtual unsigned int Run(const IPEndPoint& serverAddr);
 
         /**
          * Sets the behaviour flags. This method has no effect after the

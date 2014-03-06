@@ -79,9 +79,9 @@ void vislib::net::CommServer::RemoveListener(CommServerListener *listener) {
 /*
  * vislib::net::CommServer::Run
  */
-DWORD vislib::net::CommServer::Run(void *config) {
+unsigned int vislib::net::CommServer::Run(void *config) {
     THE_STACK_TRACE;
-    DWORD retval = 0;
+    unsigned int retval = 0;
 
     /* Prepare the socket subsystem. */
     try {

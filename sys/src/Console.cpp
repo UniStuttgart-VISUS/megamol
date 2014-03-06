@@ -98,11 +98,15 @@ public:
      *
      * @return 0 on success, nonzero on failure.
      */
-    static DWORD ReadFromPipe(void *userData) {
+    static unsigned int ReadFromPipe(void *userData) {
         PipeReaderInfo *info = static_cast<PipeReaderInfo* >(userData);
-        const DWORD bufferSize = 1024;
+        const unsigned int bufferSize = 1024;
         char buffer[bufferSize + 1];
+#ifdef _WIN32
         DWORD bytesRead;
+#else /* _WIN32 */
+        unsigned int bytesRead;
+#endif /* _WIN32 */
 
         while (true) {
 #ifdef _WIN32

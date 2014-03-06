@@ -23,9 +23,9 @@
  * vislib::sys::Event::TIMEOUT_INFINITE
  */
 #ifdef _WIN32
-const DWORD vislib::sys::Event::TIMEOUT_INFINITE = INFINITE;
+const unsigned int vislib::sys::Event::TIMEOUT_INFINITE = INFINITE;
 #else /* _WIN32 */
-const DWORD vislib::sys::Event::TIMEOUT_INFINITE = UINT_MAX;
+const unsigned int vislib::sys::Event::TIMEOUT_INFINITE = UINT_MAX;
 #endif /* _WIN32 */
 
 
@@ -163,7 +163,7 @@ void vislib::sys::Event::Set(void) {
 /*
  * vislib::sys::Event::Wait
  */
-bool vislib::sys::Event::Wait(const DWORD timeout) {
+bool vislib::sys::Event::Wait(const unsigned int timeout) {
 #ifdef _WIN32
     switch (::WaitForSingleObject(this->handle, timeout)) {
 

@@ -144,7 +144,7 @@ namespace sys {
         vislib::sys::CriticalSection exclusiveLock;
 
         /** ID of the thread currently locked exclusively */
-        DWORD exThread;
+        unsigned int exThread;
 
         /** Number of exclusive locks issued */
         unsigned int exThreadCnt;
@@ -159,7 +159,7 @@ namespace sys {
         vislib::sys::CriticalSection sharedLock;
 
         /** List of IDs of the threads that have aquired shared locks */
-        Array<DWORD> shThreads;
+        Array<unsigned int> shThreads;
 
     };
     

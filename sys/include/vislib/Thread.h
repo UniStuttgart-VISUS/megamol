@@ -47,11 +47,11 @@ namespace sys {
          *
          * @eturn The ID of the calling thread.
          */
-        static inline DWORD CurrentID(void) {
+        static inline unsigned int CurrentID(void) {
 #ifdef _WIN32
             return ::GetCurrentThreadId();
 #else /* _WIN32 */
-            return static_cast<DWORD>(::pthread_self());
+            return static_cast<unsigned int>(::pthread_self());
 #endif /* _WIN32 */
         }
 
@@ -74,7 +74,7 @@ namespace sys {
          *
          * @param millis The milliseconds to block the calling thread.
          */
-        static void Sleep(const DWORD millis);
+        static void Sleep(const unsigned int millis);
 
         /**
          * Causes the calling thread to yield execution to another thread that 
@@ -114,7 +114,7 @@ namespace sys {
          * 
          * @throws SystemException If the exit code could not be determined.
          */
-        DWORD GetExitCode(void) const;
+        unsigned int GetExitCode(void) const;
 
         /**
          * Answer a pointer to the Runnable executed by this thread. If the
@@ -296,7 +296,7 @@ namespace sys {
         pthread_attr_t attribs;
 
         /** The exit code of the thread. */
-        DWORD exitCode;
+        unsigned int exitCode;
 
         /** The thread ID. */
         pthread_t id;

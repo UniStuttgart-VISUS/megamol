@@ -110,8 +110,8 @@ vislib::sys::File* vislib::sys::File::CreateTempFile(void) {
  */
 vislib::StringA& vislib::sys::File::CreateTempFileName(vislib::StringA& outFn) {
 #ifdef _WIN32
-    const DWORD BUFFER_SIZE = 4096;
-    DWORD bufSize=BUFFER_SIZE;
+    const unsigned int BUFFER_SIZE = 4096;
+    unsigned int bufSize=BUFFER_SIZE;
     char tempName[MAX_PATH];
     char tempPath[BUFFER_SIZE];
 
@@ -136,8 +136,8 @@ vislib::StringA& vislib::sys::File::CreateTempFileName(vislib::StringA& outFn) {
  */
 vislib::StringW& vislib::sys::File::CreateTempFileName(vislib::StringW& outFn) {
 #ifdef _WIN32
-    const DWORD BUFFER_SIZE = 4096;
-    DWORD bufSize=BUFFER_SIZE;
+    const unsigned int BUFFER_SIZE = 4096;
+    unsigned int bufSize=BUFFER_SIZE;
     wchar_t tempName[MAX_PATH];
     wchar_t tempPath[BUFFER_SIZE];
 
@@ -461,9 +461,9 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
     this->Close();
 
 #ifdef _WIN32
-    DWORD access;
-    DWORD share;
-    DWORD create;
+    unsigned int access;
+    unsigned int share;
+    unsigned int create;
 
     switch (accessMode) {
         case READ_WRITE: access = GENERIC_READ | GENERIC_WRITE; break;
@@ -536,9 +536,9 @@ bool vislib::sys::File::Open(const wchar_t *filename, const AccessMode accessMod
     this->Close();
 
 #ifdef _WIN32
-    DWORD access;
-    DWORD share;
-    DWORD create;
+    unsigned int access;
+    unsigned int share;
+    unsigned int create;
 
     switch (accessMode) {
         case READ_WRITE: access = GENERIC_READ | GENERIC_WRITE; break;
@@ -581,7 +581,7 @@ vislib::sys::File::FileSize vislib::sys::File::Read(void *outBuf,
                                                     const FileSize bufSize) {
 #ifdef _WIN32
     DWORD readBytes;
-    if (::ReadFile(this->handle, outBuf, static_cast<DWORD>(bufSize), 
+    if (::ReadFile(this->handle, outBuf, static_cast<unsigned int>(bufSize), 
             &readBytes, NULL)) {
         return readBytes;
 
@@ -609,7 +609,7 @@ vislib::sys::File::FileSize vislib::sys::File::Seek(const FileOffset offset,
     LARGE_INTEGER n;
     o.QuadPart = offset; 
 
-    if (::SetFilePointerEx(this->handle, o, &n, static_cast<DWORD>(from))) {
+    if (::SetFilePointerEx(this->handle, o, &n, static_cast<unsigned int>(from))) {
         return n.QuadPart;		
 
 #else /* _WIN32 */
@@ -657,7 +657,7 @@ vislib::sys::File::FileSize vislib::sys::File::Write(const void *buf,
                                                      const FileSize bufSize) {
 #ifdef _WIN32
     DWORD writtenBytes;
-    if (::WriteFile(this->handle, buf, static_cast<DWORD>(bufSize), 
+    if (::WriteFile(this->handle, buf, static_cast<unsigned int>(bufSize), 
             &writtenBytes, NULL)) {
         return writtenBytes;
 

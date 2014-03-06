@@ -74,7 +74,7 @@ namespace sys {
          * @throws SystemException If an error occurred when trying to acquire
          *                         the lock.
          */
-        bool TryLock(const DWORD timeout = 0);
+        bool TryLock(const unsigned int timeout = 0);
 
         /**
          * Release the mutex.

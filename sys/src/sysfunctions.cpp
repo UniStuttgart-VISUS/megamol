@@ -49,7 +49,7 @@ static vislib::RawStorage& loadResource(vislib::RawStorage& out,
     THE_ASSERT(hRes != NULL);
     HGLOBAL hGlobal = NULL;
     void *data = NULL;
-    DWORD size = 0;
+    unsigned int size = 0;
 
     if ((hGlobal = ::LoadResource(hModule, hRes)) == NULL) {
         // From MSDN: The return type of LoadResource is HGLOBAL for backward 

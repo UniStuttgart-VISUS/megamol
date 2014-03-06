@@ -51,8 +51,8 @@ void PlainServer::Initialise(vislib::sys::CmdLineProviderW& inOutCmdLine) {
 /*
  * PlainServer::Run
  */
-DWORD PlainServer::Run(void) {
-    DWORD retval = vislib::net::cluster::AbstractServerNode::Run();
+unsigned int PlainServer::Run(void) {
+    unsigned int retval = vislib::net::cluster::AbstractServerNode::Run();
     char dowel;
     
     std::cin >> dowel;

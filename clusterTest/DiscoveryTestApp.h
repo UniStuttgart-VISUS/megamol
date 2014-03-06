@@ -43,7 +43,7 @@ public:
         const bool isClusterMember,
         const uint32_t msgType, const uint8_t *msgBody) throw();
 
-    virtual DWORD Run(void);
+    virtual unsigned int Run(void);
 
 protected:
 

@@ -53,7 +53,7 @@ void vislib::net::cluster::AbstractClientNode::Initialise(
 /*
  * vislib::net::cluster::AbstractClientNode::Run
  */
-DWORD vislib::net::cluster::AbstractClientNode::Run(void) {
+unsigned int vislib::net::cluster::AbstractClientNode::Run(void) {
     if (this->socket.IsValid() || (this->receiver.IsRunning())) {
         throw IllegalStateException("AbstractClientNode::Run can only be "
             "called once for connecting to the server node.", __FILE__, 

@@ -35,10 +35,10 @@ static const int CNT_CLIENTS = 2;
 class Server : public vislib::sys::Runnable {
 public:
     inline Server(void) { }
-    virtual DWORD Run(void *userData);
+    virtual unsigned int Run(void *userData);
 };
 
-DWORD Server::Run(void *userData) {
+unsigned int Server::Run(void *userData) {
     using namespace vislib;
     using namespace vislib::net;
     using namespace vislib::net::ib;
@@ -77,7 +77,7 @@ DWORD Server::Run(void *userData) {
 
     } catch (IbRdmaException e) {
         std::cerr << "IB server failed: " << e.GetMsgA() << std::endl;
-        return static_cast<DWORD>(e.GetErrorCode());
+        return static_cast<unsigned int>(e.GetErrorCode());
     }
 }
 
@@ -85,10 +85,10 @@ DWORD Server::Run(void *userData) {
 class Client : public vislib::sys::Runnable {
 public:
     inline Client(void) { }
-    virtual DWORD Run(void *userData);
+    virtual unsigned int Run(void *userData);
 };
 
-DWORD Client::Run(void *userData) {
+unsigned int Client::Run(void *userData) {
     using namespace vislib;
     using namespace vislib::net;
     using namespace vislib::net::ib;
@@ -119,7 +119,7 @@ DWORD Client::Run(void *userData) {
         return 0;
     } catch (IbRdmaException e) {
         std::cerr << "IB client failed: " << e.GetMsgA() << ", " << e.GetErrorCode() << std::endl;
-        return static_cast<DWORD>(e.GetErrorCode());
+        return static_cast<unsigned int>(e.GetErrorCode());
     }
 }
 

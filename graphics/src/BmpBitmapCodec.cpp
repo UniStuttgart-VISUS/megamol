@@ -21,26 +21,26 @@
  */
 typedef struct tagBITMAPFILEHEADER {
   WORD  bfType;
-  DWORD bfSize;
+  unsigned int bfSize;
   WORD  bfReserved1;
   WORD  bfReserved2;
-  DWORD bfOffBits;
+  unsigned int bfOffBits;
 } BITMAPFILEHEADER;
 typedef struct tagBITMAPINFOHEADER {
-  DWORD biSize;
+  unsigned int biSize;
   LONG  biWidth;
   LONG  biHeight;
   WORD  biPlanes;
   WORD  biBitCount;
-  DWORD biCompression;
-  DWORD biSizeImage;
+  unsigned int biCompression;
+  unsigned int biSizeImage;
   LONG  biXPelsPerMeter;
   LONG  biYPelsPerMeter;
-  DWORD biClrUsed;
-  DWORD biClrImportant;
+  unsigned int biClrUsed;
+  unsigned int biClrImportant;
 } BITMAPINFOHEADER;
 typedef struct tagBITMAPCOREHEADER {
-  DWORD bcSize;
+  unsigned int bcSize;
   WORD  bcWidth;
   WORD  bcHeight;
   WORD  bcPlanes;
@@ -58,52 +58,52 @@ typedef struct tagCIEXYZTRIPLE {
   CIEXYZ ciexyzBlue;
 } CIEXYZTRIPLE;
 typedef struct {
-  DWORD        bV4Size;
+  unsigned int        bV4Size;
   LONG         bV4Width;
   LONG         bV4Height;
   WORD         bV4Planes;
   WORD         bV4BitCount;
-  DWORD        bV4V4Compression;
-  DWORD        bV4SizeImage;
+  unsigned int        bV4V4Compression;
+  unsigned int        bV4SizeImage;
   LONG         bV4XPelsPerMeter;
   LONG         bV4YPelsPerMeter;
-  DWORD        bV4ClrUsed;
-  DWORD        bV4ClrImportant;
-  DWORD        bV4RedMask;
-  DWORD        bV4GreenMask;
-  DWORD        bV4BlueMask;
-  DWORD        bV4AlphaMask;
-  DWORD        bV4CSType;
+  unsigned int        bV4ClrUsed;
+  unsigned int        bV4ClrImportant;
+  unsigned int        bV4RedMask;
+  unsigned int        bV4GreenMask;
+  unsigned int        bV4BlueMask;
+  unsigned int        bV4AlphaMask;
+  unsigned int        bV4CSType;
   CIEXYZTRIPLE bV4Endpoints;
-  DWORD        bV4GammaRed;
-  DWORD        bV4GammaGreen;
-  DWORD        bV4GammaBlue;
+  unsigned int        bV4GammaRed;
+  unsigned int        bV4GammaGreen;
+  unsigned int        bV4GammaBlue;
 } BITMAPV4HEADER;
 typedef struct {
-  DWORD        bV5Size;
+  unsigned int        bV5Size;
   LONG         bV5Width;
   LONG         bV5Height;
   WORD         bV5Planes;
   WORD         bV5BitCount;
-  DWORD        bV5Compression;
-  DWORD        bV5SizeImage;
+  unsigned int        bV5Compression;
+  unsigned int        bV5SizeImage;
   LONG         bV5XPelsPerMeter;
   LONG         bV5YPelsPerMeter;
-  DWORD        bV5ClrUsed;
-  DWORD        bV5ClrImportant;
-  DWORD        bV5RedMask;
-  DWORD        bV5GreenMask;
-  DWORD        bV5BlueMask;
-  DWORD        bV5AlphaMask;
-  DWORD        bV5CSType;
+  unsigned int        bV5ClrUsed;
+  unsigned int        bV5ClrImportant;
+  unsigned int        bV5RedMask;
+  unsigned int        bV5GreenMask;
+  unsigned int        bV5BlueMask;
+  unsigned int        bV5AlphaMask;
+  unsigned int        bV5CSType;
   CIEXYZTRIPLE bV5Endpoints;
-  DWORD        bV5GammaRed;
-  DWORD        bV5GammaGreen;
-  DWORD        bV5GammaBlue;
-  DWORD        bV5Intent;
-  DWORD        bV5ProfileData;
-  DWORD        bV5ProfileSize;
-  DWORD        bV5Reserved;
+  unsigned int        bV5GammaRed;
+  unsigned int        bV5GammaGreen;
+  unsigned int        bV5GammaBlue;
+  unsigned int        bV5Intent;
+  unsigned int        bV5ProfileData;
+  unsigned int        bV5ProfileSize;
+  unsigned int        bV5Reserved;
 } BITMAPV5HEADER;
 #define BI_RGB        0L
 typedef struct tagRGBQUAD {
@@ -283,7 +283,7 @@ bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void *mem, size_t si
 
 #else /* !defined(VISLIB_BMP_LOAD_BY_HAND) && defined(_WIN32) */
 
-    switch (*reinterpret_cast<const DWORD*>(
+    switch (*reinterpret_cast<const unsigned int*>(
             memBytes + sizeof(BITMAPFILEHEADER))) {
 
         case sizeof(BITMAPINFOHEADER) :
@@ -396,11 +396,11 @@ bool vislib::graphics::BmpBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
         = outmem.AsAt<BITMAPINFOHEADER>(sizeof(BITMAPFILEHEADER));
 
     bfh->bfType = 0x4D42; //BM
-    bfh->bfSize = static_cast<DWORD>(headersSize
+    bfh->bfSize = static_cast<unsigned int>(headersSize
         + (slsize + slcut) * img->Height());
     bfh->bfReserved1 = 0;
     bfh->bfReserved2 = 0;
-    bfh->bfOffBits = static_cast<DWORD>(headersSize);
+    bfh->bfOffBits = static_cast<unsigned int>(headersSize);
 
     bih->biSize = sizeof(BITMAPINFOHEADER);
     bih->biWidth = img->Width();

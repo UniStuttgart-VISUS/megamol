@@ -35,7 +35,7 @@ namespace sys {
 
         this->findHandle = FindFirstFileA(p, &fd);
         if (this->findHandle == INVALID_HANDLE_VALUE) {
-            DWORD le = ::GetLastError();
+            unsigned int le = ::GetLastError();
             if ((le == ERROR_FILE_NOT_FOUND) || (le == ERROR_PATH_NOT_FOUND)) {
                 this->nextItem.Path.Clear();
             } else {
@@ -96,7 +96,7 @@ namespace sys {
 
         this->findHandle = FindFirstFileW(p, &fd);
         if (this->findHandle == INVALID_HANDLE_VALUE) {
-            DWORD le = ::GetLastError();
+            unsigned int le = ::GetLastError();
             if ((le == ERROR_FILE_NOT_FOUND) || (le == ERROR_PATH_NOT_FOUND)) {
                 this->nextItem.Path.Clear();
             } else {
@@ -143,7 +143,7 @@ namespace sys {
     template<> void DirectoryIterator<CharTraitsA>::fetchNextItem(void) {
 #ifdef _WIN32
         WIN32_FIND_DATAA fd;
-        DWORD le;
+        unsigned int le;
         bool found = false;
         do {
             if (this->findHandle == INVALID_HANDLE_VALUE) {
@@ -208,7 +208,7 @@ namespace sys {
     template<> void DirectoryIterator<CharTraitsW>::fetchNextItem(void) {
 #ifdef _WIN32
         WIN32_FIND_DATAW fd;
-        DWORD le;
+        unsigned int le;
         bool found = false;
         do {
             if (this->findHandle == INVALID_HANDLE_VALUE) {

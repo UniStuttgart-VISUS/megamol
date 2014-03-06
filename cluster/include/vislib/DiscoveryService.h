@@ -1003,7 +1003,7 @@ namespace cluster {
              * @return 0, if the work was successfully finished, an error code
              *         otherwise.
              */
-            virtual DWORD Run(void *dcfg);
+            virtual unsigned int Run(void *dcfg);
 
             /**
              * Ask the thread to terminate.
@@ -1155,7 +1155,7 @@ namespace cluster {
              * @return 0, if the work was successfully finished, an error code
              *         otherwise.
              */
-            virtual DWORD Run(void *cds);
+            virtual unsigned int Run(void *cds);
 
             /**
              * Ask the thread to terminate.

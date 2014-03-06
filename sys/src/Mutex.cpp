@@ -86,7 +86,7 @@ void vislib::sys::Mutex::Lock(void) {
 /*
  * vislib::sys::Mutex::TryLock
  */
-bool vislib::sys::Mutex::TryLock(const DWORD timeout) {
+bool vislib::sys::Mutex::TryLock(const unsigned int timeout) {
 #ifdef _WIN32
     switch (::WaitForSingleObject(this->handle, timeout)) {
 

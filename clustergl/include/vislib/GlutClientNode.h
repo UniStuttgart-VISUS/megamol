@@ -45,7 +45,7 @@ namespace cluster {
 
         virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
 
-        virtual DWORD Run(void);
+        virtual unsigned int Run(void);
 
     protected:
 
@@ -169,7 +169,7 @@ namespace cluster {
     /*
      *  vislib::net::cluster::GlutClientNode<T>::Run
      */
-    template<class T> DWORD GlutClientNode<T>::Run(void) {
+    template<class T> unsigned int GlutClientNode<T>::Run(void) {
         AbstractClientNode::Run();          // Let the client node connect.
         return GlutClusterNode<T>::Run();   // Enter GLUT message loop.
     }

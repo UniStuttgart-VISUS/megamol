@@ -69,7 +69,7 @@ namespace sys {
          *
          * @return The return code of the daemon.
          */
-        virtual DWORD OnRun(const DWORD argc, const Char **argv) = 0;
+        virtual unsigned int OnRun(const unsigned int argc, const Char **argv) = 0;
 
     protected:
 

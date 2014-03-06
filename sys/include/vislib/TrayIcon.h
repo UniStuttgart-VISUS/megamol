@@ -142,7 +142,7 @@ namespace sys {
             const bool initiallyHidden = false, 
             const wchar_t *balloonText = NULL, 
             const wchar_t *balloonTitle = NULL, 
-            const DWORD balloonIcon = NIIF_NONE, 
+            const unsigned int balloonIcon = NIIF_NONE, 
             const unsigned int balloonTimeout = 10);
 
         /**
@@ -210,7 +210,7 @@ namespace sys {
             const bool initiallyHidden = false, 
             const char *balloonText = NULL, 
             const char *balloonTitle = NULL, 
-            const DWORD balloonIcon = NIIF_NONE, 
+            const unsigned int balloonIcon = NIIF_NONE, 
             const unsigned int balloonTimeout = 10);
 
         /**
@@ -280,7 +280,7 @@ namespace sys {
             const unsigned int iconID, const bool initiallyHidden = false, 
             const wchar_t *balloonText = NULL, 
             const wchar_t *balloonTitle = NULL, 
-            const DWORD balloonIcon = NIIF_NONE, 
+            const unsigned int balloonIcon = NIIF_NONE, 
             const unsigned int balloonTimeout = 10);
 
         /**
@@ -350,7 +350,7 @@ namespace sys {
             const unsigned int iconID, const bool initiallyHidden = false, 
             const char *balloonText = NULL, 
             const char *balloonTitle = NULL, 
-            const DWORD balloonIcon = NIIF_NONE, 
+            const unsigned int balloonIcon = NIIF_NONE, 
             const unsigned int balloonTimeout = 10);
 
         /**
@@ -420,7 +420,7 @@ namespace sys {
             const unsigned int iconID, const bool initiallyHidden = false, 
             const unsigned int balloonTextID = 0, 
             const unsigned int balloonTitleID = 0, 
-            const DWORD balloonIcon = NIIF_NONE, 
+            const unsigned int balloonIcon = NIIF_NONE, 
             const unsigned int balloonTimeout = 10);
 
         /**
@@ -501,7 +501,7 @@ namespace sys {
          */
         bool ShowBalloonHelp(const wchar_t *balloonText, 
             const wchar_t *balloonTitle = NULL, 
-            const DWORD balloonIcon = NIIF_NONE, 
+            const unsigned int balloonIcon = NIIF_NONE, 
             const unsigned int balloonTimeout = 10);
 
         /**
@@ -521,7 +521,7 @@ namespace sys {
          */
         bool ShowBalloonHelp(const char *balloonText, 
             const char *balloonTitle = NULL, 
-            const DWORD balloonIcon = NIIF_NONE, 
+            const unsigned int balloonIcon = NIIF_NONE, 
             const unsigned int balloonTimeout = 10);
 
         /**
@@ -543,7 +543,7 @@ namespace sys {
          */
         bool ShowBalloonHelp(HINSTANCE hResourceModule, 
             const unsigned int balloonTextID, const unsigned int balloonTitleID = 0, 
-            const DWORD balloonIcon = NIIF_NONE, 
+            const unsigned int balloonIcon = NIIF_NONE, 
             const unsigned int balloonTimeout = 10);
 
     protected:
@@ -603,7 +603,7 @@ namespace sys {
          *         false otherwise.
          */
         bool configureBalloonHelp(const wchar_t *balloonText, 
-            const wchar_t *balloonTitle, const DWORD balloonIcon, 
+            const wchar_t *balloonTitle, const unsigned int balloonIcon, 
             const unsigned int balloonTimeout);
 
         /**
@@ -655,7 +655,7 @@ namespace sys {
          *
          * @throws SystemException If ::Shell_NotifyIcon fails.
          */
-        void notify(const DWORD message);
+        void notify(const unsigned int message);
 
         /**
          * Register the window class for the hidden window that is used for

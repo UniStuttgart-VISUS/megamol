@@ -108,7 +108,7 @@ void DiscoveryTestApp::OnUserMessage(DiscoveryService& src,
 /*
  * DiscoveryTestApp::Run
  */
-DWORD DiscoveryTestApp::Run(void) {
+unsigned int DiscoveryTestApp::Run(void) {
     char dowel;
     size_t cntCfgs = 0;
     IPAddress adapter;

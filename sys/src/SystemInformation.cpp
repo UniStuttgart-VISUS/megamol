@@ -35,7 +35,7 @@
  * vislib::sys::SystemInformation::AllocationGranularity
  */
 #ifdef _WIN32
-DWORD vislib::sys::SystemInformation::AllocationGranularity(void) {
+unsigned int vislib::sys::SystemInformation::AllocationGranularity(void) {
     SYSTEM_INFO si;
     ::GetSystemInfo(&si);
     return si.dwAllocationGranularity;
@@ -162,11 +162,11 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringW &outName) {
 ///* 
 // * vislib::sys::SystemInformation::DisplayDeviceCount
 // */
-//DWORD vislib::sys::SystemInformation::DisplayDeviceCount(void) {
+//unsigned int vislib::sys::SystemInformation::DisplayDeviceCount(void) {
 //#ifdef _WIN32
 //    DISPLAY_DEVICE dpyDev;
 //    dpyDev.cb = sizeof(DISPLAY_DEVICE);
-//    DWORD retval = 0;
+//    unsigned int retval = 0;
 //
 //    while (::EnumDisplayDevices(NULL, retval, &dpyDev, 0)) {
 //        retval++;
@@ -214,7 +214,7 @@ unsigned int vislib::sys::SystemInformation::MonitorRects(
 
 #endif /* _WIN32 */
 
-    return static_cast<DWORD>(outMonitorRects.Count());
+    return static_cast<unsigned int>(outMonitorRects.Count());
 }
 
 
@@ -234,7 +234,7 @@ unsigned int vislib::sys::SystemInformation::PageSize(void) {
         throw SystemException(__FILE__, __LINE__);
     }
 
-    return static_cast<DWORD>(retval);
+    return static_cast<unsigned int>(retval);
 
 #endif /* _WIN32 */
 }

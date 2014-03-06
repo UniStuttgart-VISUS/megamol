@@ -184,7 +184,7 @@ namespace graphics {
          *
          * The default implementation does nothing.
          */
-        virtual void onCreating(DWORD& inOutStyle, DWORD& inOutExStyle) throw();
+        virtual void onCreating(unsigned int& inOutStyle, unsigned int& inOutExStyle) throw();
 #endif /* _WIN32 */
 
 #ifdef _WIN32

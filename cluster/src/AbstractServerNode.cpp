@@ -121,7 +121,7 @@ void vislib::net::cluster::AbstractServerNode::OnServerStopped(void) throw() {
 /*
  * vislib::net::cluster::AbstractServerNode::Run
  */
-DWORD vislib::net::cluster::AbstractServerNode::Run(void) {
+unsigned int vislib::net::cluster::AbstractServerNode::Run(void) {
     bool isStarted = this->server.Start(&this->bindAddress);
 #ifndef _WIN32
     isStarted = isStarted;

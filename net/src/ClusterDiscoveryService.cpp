@@ -317,7 +317,7 @@ vislib::net::ClusterDiscoveryService::Sender::~Sender(void) {
 /*
  * vislib::net::ClusterDiscoveryService::Sender::Run
  */
-DWORD vislib::net::ClusterDiscoveryService::Sender::Run(void *discSvc) {
+unsigned int vislib::net::ClusterDiscoveryService::Sender::Run(void *discSvc) {
     Message request;                // The UDP datagram we send.
     ClusterDiscoveryService *cds    // The discovery service we work for.
         = static_cast<ClusterDiscoveryService *>(discSvc);
@@ -466,7 +466,7 @@ vislib::net::ClusterDiscoveryService::Receiver::~Receiver(void) {
 /*
  * vislib::net::ClusterDiscoveryService::Receiver::Run
  */
-DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(void *discSvc) {
+unsigned int vislib::net::ClusterDiscoveryService::Receiver::Run(void *discSvc) {
     IPEndPoint peerAddr;            // Receives address of communication peer.
     PeerNode peerNode;              // The peer node to register in our list.
     Message msg;                    // Receives the request messages.

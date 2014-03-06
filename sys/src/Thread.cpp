@@ -35,7 +35,7 @@
 /*
  * vislib::sys::Thread::Sleep
  */
-void vislib::sys::Thread::Sleep(const DWORD millis) {
+void vislib::sys::Thread::Sleep(const unsigned int millis) {
 #ifdef _WIN32
     ::Sleep(millis);
 #else /* _WIN32 */
@@ -139,7 +139,7 @@ vislib::sys::Thread::~Thread(void) {
 /*
  * vislib::sys::Thread::GetExitCode
  */
-DWORD vislib::sys::Thread::GetExitCode(void) const {
+unsigned int vislib::sys::Thread::GetExitCode(void) const {
 #ifdef _WIN32
     DWORD retval = 0;
     if (::GetExitCodeThread(this->handle, &retval) == FALSE) {

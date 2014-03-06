@@ -73,7 +73,7 @@ void vislib::net::SimpleMessageDispatcher::RemoveListener(
 /*
  * vislib::net::SimpleMessageDispatcher::Run
  */
-DWORD vislib::net::SimpleMessageDispatcher::Run(void *config) {
+unsigned int vislib::net::SimpleMessageDispatcher::Run(void *config) {
     THE_STACK_TRACE;
     THE_ASSERT(!this->configuration.Channel.IsNull());
 

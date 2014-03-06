@@ -681,7 +681,7 @@ vislib::net::cluster::DiscoveryService::Receiver::~Receiver(void) {
 /*
  * vislib::net::cluster::DiscoveryService::Receiver::Run
  */
-DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
+unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
     IPEndPoint peerAddr;            // Receives address of communication peer.
     PeerNode peerNode;              // The peer node to register in our list.
     Message msg;                    // Receives the request messages.
@@ -1087,7 +1087,7 @@ vislib::net::cluster::DiscoveryService::Sender::~Sender(void) {
 /*
  * vislib::net::cluster::DiscoveryService::Sender::Run
  */
-DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
+unsigned int vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
     THE_ASSERT(cds != NULL);
 
     Message request;        // The UDP datagram we send.

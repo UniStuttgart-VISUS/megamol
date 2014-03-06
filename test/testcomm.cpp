@@ -23,12 +23,12 @@ static vislib::sys::Event evtServerBound(true);
 
 class Worker : public vislib::sys::Runnable {
 public:
-    virtual DWORD Run(void *userData);
+    virtual unsigned int Run(void *userData);
 
     vislib::SmartRef<vislib::net::AbstractCommEndPoint> EndPoint;
 };
 
-DWORD Worker::Run(void *userData) {
+unsigned int Worker::Run(void *userData) {
     using namespace vislib::net;
 
     Socket::Startup();

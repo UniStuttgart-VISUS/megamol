@@ -45,7 +45,7 @@ namespace sys {
          * Use this value to wait infinitely for an event to become 
          * signaled. 
          */
-        static const DWORD TIMEOUT_INFINITE;
+        static const unsigned int TIMEOUT_INFINITE;
 
         /** 
          * Create a new event.
@@ -153,7 +153,7 @@ namespace sys {
          * 
          * @throws SystemException If the operation failed.
          */
-        bool Wait(const DWORD timeout = TIMEOUT_INFINITE);
+        bool Wait(const unsigned int timeout = TIMEOUT_INFINITE);
 
     protected:
 

@@ -106,7 +106,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual DWORD Run(void) = 0;
+        virtual unsigned int Run(void) = 0;
 
     protected:
 
@@ -372,7 +372,7 @@ namespace cluster {
             const PeerIdentifier& peerId, Socket& peerSocket, void *context);
 
         /* Grant access to message handler methods. */
-        friend DWORD ReceiveMessages(void *receiveMessagesCtx);
+        friend unsigned int ReceiveMessages(void *receiveMessagesCtx);
 
     };
     

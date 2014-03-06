@@ -107,8 +107,8 @@ bool vislib::sys::SharedMemory::IsOpen(void) const {
 void vislib::sys::SharedMemory::Open(const char *name, const AccessMode accessMode, 
         const CreationMode creationMode, const FileSize size) {
 #ifdef _WIN32
-    DWORD protect = 0;
-    DWORD access = 0;
+    unsigned int protect = 0;
+    unsigned int access = 0;
     switch (accessMode) {
         case READ_ONLY: 
             protect = PAGE_READONLY; 
@@ -128,13 +128,13 @@ void vislib::sys::SharedMemory::Open(const char *name, const AccessMode accessMo
 
     } else {
         this->hSharedMem = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, 
-            protect, static_cast<DWORD>(size >> 32), 
-            static_cast<DWORD>(size & 0xFFFFFFFF), name);
+            protect, static_cast<unsigned int>(size >> 32), 
+            static_cast<unsigned int>(size & 0xFFFFFFFF), name);
         if (this->hSharedMem == NULL) {
             throw SystemException(__FILE__, __LINE__);
         } else if (creationMode == CREATE_ONLY) {
             /* Handle exclusive open by closing any exisiting mapping. */
-            DWORD error = ::GetLastError();
+            unsigned int error = ::GetLastError();
             if (error == ERROR_ALREADY_EXISTS) {
                 ::CloseHandle(this->hSharedMem);
                 this->hSharedMem = NULL;
@@ -205,8 +205,8 @@ void vislib::sys::SharedMemory::Open(const char *name, const AccessMode accessMo
 void vislib::sys::SharedMemory::Open(const wchar_t *name, const AccessMode accessMode, 
         const CreationMode creationMode, const FileSize size) {
 #ifdef _WIN32
-    DWORD protect = 0;
-    DWORD access = 0;
+    unsigned int protect = 0;
+    unsigned int access = 0;
     switch (accessMode) {
         case READ_ONLY: 
             protect = PAGE_READONLY; 
@@ -226,13 +226,13 @@ void vislib::sys::SharedMemory::Open(const wchar_t *name, const AccessMode acces
 
     } else {
         this->hSharedMem = CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, 
-            protect, static_cast<DWORD>(size >> 32), 
-            static_cast<DWORD>(size & 0xFFFFFFFF), name);
+            protect, static_cast<unsigned int>(size >> 32), 
+            static_cast<unsigned int>(size & 0xFFFFFFFF), name);
         if (this->hSharedMem == NULL) {
             throw SystemException(__FILE__, __LINE__);
         } else if (creationMode == CREATE_ONLY) {
             /* Handle exclusive open by closing any exisiting mapping. */
-            DWORD error = ::GetLastError();
+            unsigned int error = ::GetLastError();
             if (error == ERROR_ALREADY_EXISTS) {
                 ::CloseHandle(this->hSharedMem);
                 this->hSharedMem = NULL;

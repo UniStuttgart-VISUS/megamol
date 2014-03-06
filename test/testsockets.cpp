@@ -25,7 +25,7 @@ class SocketReader : public vislib::sys::Runnable {
 public:
     inline SocketReader(vislib::net::Socket socket) : socket(socket) {}
     virtual ~SocketReader(void);
-    virtual DWORD Run(void *cntRepeat);
+    virtual unsigned int Run(void *cntRepeat);
 
 protected:
     vislib::net::Socket socket;
@@ -42,17 +42,17 @@ SocketReader::~SocketReader(void) {
 /*
  * SocketReader::Run
  */
-DWORD SocketReader::Run(void *cntRepeat) {
+unsigned int SocketReader::Run(void *cntRepeat) {
     using namespace vislib::net;
-    DWORD cnt = *static_cast<DWORD *>(cntRepeat);
-    DWORD recvBuf = 0;
-    DWORD retval = 0;
+    unsigned int cnt = *static_cast<unsigned int *>(cntRepeat);
+    unsigned int recvBuf = 0;
+    unsigned int retval = 0;
 
     try {
         Socket::Startup();
 
         for (retval = 0; retval < cnt; retval++) {
-            this->socket.Receive(&recvBuf, sizeof(DWORD));
+            this->socket.Receive(&recvBuf, sizeof(unsigned int));
             AssertEqual("Received expected data", retval, recvBuf);
             vislib::sys::Thread::Reschedule();
         }
@@ -72,7 +72,7 @@ class SocketWriter : public vislib::sys::Runnable {
 public:
     inline SocketWriter(vislib::net::Socket socket) : socket(socket) {}
     virtual ~SocketWriter(void);
-    virtual DWORD Run(void *cntRepeat);
+    virtual unsigned int Run(void *cntRepeat);
 
 protected:
     vislib::net::Socket socket;
@@ -89,16 +89,16 @@ SocketWriter::~SocketWriter(void) {
 /*
  * SocketWriter::run
  */
-DWORD SocketWriter::Run(void *cntRepeat) {
+unsigned int SocketWriter::Run(void *cntRepeat) {
     using namespace vislib::net;
-    DWORD cnt = *static_cast<DWORD *>(cntRepeat);
-    DWORD retval = 0;
+    unsigned int cnt = *static_cast<unsigned int *>(cntRepeat);
+    unsigned int retval = 0;
 
     try {
         Socket::Startup();
 
         for (retval = 0; retval < cnt; retval++) {
-            this->socket.Send(&retval, sizeof(DWORD));
+            this->socket.Send(&retval, sizeof(unsigned int));
         }
 
         Socket::Cleanup();
@@ -115,7 +115,7 @@ class SocketServer : public vislib::sys::Runnable {
 public:
     inline SocketServer(void) {}
     virtual ~SocketServer(void);
-    virtual DWORD Run(void *cntRepeat);
+    virtual unsigned int Run(void *cntRepeat);
 };
 
 
@@ -129,10 +129,10 @@ SocketServer::~SocketServer(void) {
 /*
  * SocketServer::run
  */
-DWORD SocketServer::Run(void *cntRepeat) {
+unsigned int SocketServer::Run(void *cntRepeat) {
     using namespace vislib::net;
     using namespace vislib::sys;
-    DWORD retval = 0;
+    unsigned int retval = 0;
     Socket serverSocket;
     Socket clientSocket;
     
@@ -174,7 +174,7 @@ class SocketClient : public vislib::sys::Runnable {
 public:
     inline SocketClient(void) {}
     virtual ~SocketClient(void);
-    virtual DWORD Run(void *cntRepeat);
+    virtual unsigned int Run(void *cntRepeat);
 };
 
 
@@ -188,10 +188,10 @@ SocketClient::~SocketClient(void) {
 /*
  * SocketClient::run
  */
-DWORD SocketClient::Run(void *cntRepeat) {
+unsigned int SocketClient::Run(void *cntRepeat) {
     using namespace vislib::net;
     using namespace vislib::sys;
-    DWORD retval = 0;
+    unsigned int retval = 0;
     Socket clientSocket;
     
     try {
@@ -228,7 +228,7 @@ void TestAsyncSocketSender(void) {
     using namespace vislib::net;
     using namespace vislib::sys;
 
-    DWORD cntRepeat = 10;
+    unsigned int cntRepeat = 10;
     Socket socket;
     AsyncSocketSender sender;
     Thread senderThread(&sender);
@@ -246,8 +246,8 @@ void TestAsyncSocketSender(void) {
     socket.Connect(SocketAddress::CreateInet("127.0.0.1", TEST_PORT));
     senderThread.Start(&socket);
 
-    for (DWORD i = 0; i < cntRepeat; i++) {
-        sender.Send(&i, sizeof(DWORD));
+    for (unsigned int i = 0; i < cntRepeat; i++) {
+        sender.Send(&i, sizeof(unsigned int));
     }
 
     serverThread.Join();
@@ -260,7 +260,7 @@ void TestAsyncSocketSender(void) {
 
 void TestSockets(void) {
     using namespace vislib::sys;
-    DWORD cntRepeat = 10;
+    unsigned int cntRepeat = 10;
     SocketServer server;
     Thread serverThread(&server);
     SocketClient client;

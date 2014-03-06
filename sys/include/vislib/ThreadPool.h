@@ -190,7 +190,7 @@ namespace sys {
          * @return true If the operation completed successfully, 
          *         false if a timeout occurred.
          */
-        inline bool Wait(const DWORD timeout = Event::TIMEOUT_INFINITE) {
+        inline bool Wait(const unsigned int timeout = Event::TIMEOUT_INFINITE) {
             return this->evtAllCompleted.Wait(timeout);
         }
 
@@ -222,7 +222,7 @@ namespace sys {
              *
              * @return 0, always.
              */
-            virtual DWORD Run(void *pool);
+            virtual unsigned int Run(void *pool);
 
         private:
 
@@ -271,7 +271,7 @@ namespace sys {
          * @param exitCode The exit code of the work item.
          */
         void fireUserWorkItemCompleted(WorkItem& workItem, 
-            const DWORD exitCode);
+            const unsigned int exitCode);
 
         /**
          * Queue a new work item for execution in a pool thread.

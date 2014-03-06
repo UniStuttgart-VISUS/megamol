@@ -491,8 +491,8 @@ vislib::StringA vislib::sys::Environment::GetVariable(const char *name,
                                                       const bool isLenient) {
 #ifdef _WIN32
     vislib::StringA retval;
-    DWORD error = NO_ERROR;
-    DWORD size = ::GetEnvironmentVariableA(name, NULL, 0);
+    unsigned int error = NO_ERROR;
+    unsigned int size = ::GetEnvironmentVariableA(name, NULL, 0);
     
     if (size == 0) {
         if (!isLenient || ((error = ::GetLastError()) 
@@ -527,8 +527,8 @@ vislib::StringW vislib::sys::Environment::GetVariable(const wchar_t *name,
                                                       const bool isLenient) {
 #ifdef _WIN32
     vislib::StringW retval;
-    DWORD error = NO_ERROR;
-    DWORD size = ::GetEnvironmentVariableW(name, NULL, 0);
+    unsigned int error = NO_ERROR;
+    unsigned int size = ::GetEnvironmentVariableW(name, NULL, 0);
     
     if (size == 0) {
         if (!isLenient || ((error = ::GetLastError()) 

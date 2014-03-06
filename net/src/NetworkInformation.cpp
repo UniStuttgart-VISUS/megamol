@@ -1436,7 +1436,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
 
     PIP_ADAPTER_ADDRESSES adapterAddresses = NULL;  // Receives the data.
     MIB_IPADDRTABLE  *ipAddrTable = NULL;           // Receives address table.
-    DWORD result = 0;                               // API call result.
+    unsigned int result = 0;                               // API call result.
     ULONG flags = GAA_FLAG_INCLUDE_PREFIX;          // Get the prefix, too.
     ULONG family = AF_UNSPEC;                       // Get IPv4 and IPv6.
     ULONG bufLenAdapters = 0;                       // Size of adapter data.
@@ -1509,7 +1509,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
             /* Retrieve the broadcast address for IPv4. */
             if (tmpEndPoint.GetAddressFamily() == IPEndPoint::FAMILY_INET) {
                 // TODO: dwBCastAddr seems to be nonsense.
-                //for (DWORD i = 0; i < ipAddrTable->dwNumEntries; i++) {
+                //for (unsigned int i = 0; i < ipAddrTable->dwNumEntries; i++) {
                 //    // Note: MSDN states that addresses are in host byte order,
                 //    // which seems to be wrong.
                 //    IPAddress tmpAddr(ipAddrTable->table[i].dwAddr, false);

@@ -491,7 +491,7 @@ namespace net {
          *
          * @return 0 in case of success, an OS error code otherwise.
          */
-        static DWORD receiveFunc(void *asyncSocketContext);
+        static unsigned int receiveFunc(void *asyncSocketContext);
 
         /**
          * This function runs the send operation specified in 
@@ -502,7 +502,7 @@ namespace net {
          *
          * @return 0 in case of success, an OS error code otherwise.
          */
-        static DWORD sendFunc(void *asyncSocketContext);
+        static unsigned int sendFunc(void *asyncSocketContext);
 #endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 
         /**

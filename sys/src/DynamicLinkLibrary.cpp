@@ -91,7 +91,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
     }
 
 #ifdef _WIN32
-    DWORD flags = 0;
+    unsigned int flags = 0;
     unsigned int oldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
     if (dontResolveReferences) flags |= DONT_RESOLVE_DLL_REFERENCES;
     if (alternateSearchPath && vislib::sys::Path::IsAbsolute(moduleName)) {
@@ -126,7 +126,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
     }
 
 #ifdef _WIN32
-    DWORD flags = 0;
+    unsigned int flags = 0;
     unsigned int oldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
     if (dontResolveReferences) flags |= DONT_RESOLVE_DLL_REFERENCES;
     if (alternateSearchPath && vislib::sys::Path::IsAbsolute(moduleName)) {

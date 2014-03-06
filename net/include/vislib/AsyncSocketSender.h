@@ -62,7 +62,7 @@ namespace net {
          * @param cntBytesSent The number of bytes actually sent.
          * @param userContext  A user-defined pointer that was passed to Send().
          */
-        typedef void (* CompletedFunction)(const DWORD result, const void *data,
+        typedef void (* CompletedFunction)(const unsigned int result, const void *data,
             const size_t cntBytesSent, void *userContext);
 
         /** Ctor. */
@@ -100,7 +100,7 @@ namespace net {
          *
          * @return 0, or a socket error code if the thread could not start.
          */
-        virtual DWORD Run(void *socket);
+        virtual unsigned int Run(void *socket);
 
         /**
          * Start sending data on the specified socket.
@@ -111,7 +111,7 @@ namespace net {
          *
          * @return 0, or a socket error code if the thread could not start.
          */
-        DWORD Run(Socket *socket);
+        unsigned int Run(Socket *socket);
 
         /**
          * TODO
@@ -227,8 +227,8 @@ namespace net {
          * @param lpOverlapped
          * @param dwFlags
          */
-        void CALLBACK completionRoutine(DWORD dwError, DWORD cbTransferred,
-            LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
+        void CALLBACK completionRoutine(unsigned int dwError, unsigned int cbTransferred,
+            LPWSAOVERLAPPED lpOverlapped, unsigned int dwFlags);
 #endif /* _WIN32 */
 
         /**
@@ -240,7 +240,7 @@ namespace net {
          * @param cntBytesSent
          * @param userContext
          */
-        static void onSendCompletedEvt(const DWORD result, const void *data,
+        static void onSendCompletedEvt(const unsigned int result, const void *data,
             const size_t cntBytesSent, void *userContext);
 
         /**
@@ -252,7 +252,7 @@ namespace net {
          * @param cntBytesSent
          * @param userContext
          */
-        static void onSendCompletedSem(const DWORD result, const void *data,
+        static void onSendCompletedSem(const unsigned int result, const void *data,
             const size_t cntBytesSent, void *userContext);
 
         /**
@@ -263,7 +263,7 @@ namespace net {
          * @param cntBytesSent The number of bytes sent passed to the completion
          *                     callback.
          */
-        void finaliseSendTask(SendTask& task, const DWORD result, 
+        void finaliseSendTask(SendTask& task, const unsigned int result, 
             const size_t cntBytesSent);
 
         /**

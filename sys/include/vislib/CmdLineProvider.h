@@ -429,8 +429,8 @@ namespace sys {
      */
     template<class T> String<T> CmdLineProvider<T>::GetModuleName(void) {
         String<T> str;
-        DWORD len = 16;
-        DWORD rlen;
+        unsigned int len = 16;
+        unsigned int rlen;
         Char *buf = NULL;
 
         while(true) {

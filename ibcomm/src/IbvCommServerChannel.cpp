@@ -118,7 +118,7 @@
 ///*
 // * vislib::net::ib::IbvCommServerChannel::messagePump
 // */
-//DWORD vislib::net::ib::IbvCommServerChannel::messagePump(void *userData) {
+//unsigned int vislib::net::ib::IbvCommServerChannel::messagePump(void *userData) {
 //    VLSTACKTRACE("IbvCommServerChannel::messagePump", __FILE__, __LINE__);
 //    IbvCommServerChannel *channel = static_cast<IbvCommServerChannel *>(
 //        userData);

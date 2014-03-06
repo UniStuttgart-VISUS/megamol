@@ -227,9 +227,9 @@ vislib::sys::ThreadPool::Worker::~Worker(void) {
 
 
 /*
- * DWORD vislib::sys::ThreadPool::Worker::Run
+ * unsigned int vislib::sys::ThreadPool::Worker::Run
  */
-DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
+unsigned int vislib::sys::ThreadPool::Worker::Run(void *pool) {
     THE_ASSERT(pool != NULL);
     this->pool = static_cast<ThreadPool *>(pool);
 
@@ -278,7 +278,7 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
             Thread::CurrentID());
         THE_ASSERT((workItem.runnable != NULL) 
             || (workItem.runnableFunction != NULL));
-        DWORD exitCode = (workItem.runnable != NULL)
+        unsigned int exitCode = (workItem.runnable != NULL)
             ? workItem.runnable->Run(workItem.userData)
             : workItem.runnableFunction(workItem.userData);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "ThreadPool thread [%u] completed work "
@@ -335,7 +335,7 @@ void vislib::sys::ThreadPool::fireUserWorkItemAborted(WorkItem& workItem) {
  * vislib::sys::ThreadPool::fireUserWorkItemCompleted
  */
 void vislib::sys::ThreadPool::fireUserWorkItemCompleted(WorkItem& workItem,
-                                                        const DWORD exitCode) {
+                                                        const unsigned int exitCode) {
     AutoLock lock(this->lockListeners);
 
     SingleLinkedList<ThreadPoolListener *>::Iterator it 

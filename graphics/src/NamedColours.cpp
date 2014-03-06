@@ -1295,7 +1295,7 @@ vislib::graphics::NamedColours::index[] = {
  * vislib::graphics::NamedColours::colFromHex
  */
 vislib::graphics::ColourRGBAu8
-vislib::graphics::NamedColours::colFromHex(DWORD hex) {
+vislib::graphics::NamedColours::colFromHex(unsigned int hex) {
     return ColourRGBAu8(
         static_cast<unsigned char>((hex & 0x00FF0000) >> 16),
         static_cast<unsigned char>((hex & 0x0000FF00) >> 8),
