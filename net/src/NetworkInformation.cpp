@@ -28,7 +28,7 @@
 
 #include "the/assert.h"
 #include "vislib/DNS.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/SocketException.h"
@@ -1425,8 +1425,8 @@ void vislib::net::NetworkInformation::initAdapters(void) {
 
 #ifdef _WIN32
 #define SAFE_CLEAN_RES()                                                       \
-    SAFE_FREE(adapterAddresses);                                               \
-    SAFE_FREE(ipAddrTable);                                                    \
+    the::safe_free(adapterAddresses);                                               \
+    the::safe_free(ipAddrTable);                                                    \
     try {                                                                      \
         Socket::Cleanup();                                                     \
     } catch (SocketException e) {                                              \

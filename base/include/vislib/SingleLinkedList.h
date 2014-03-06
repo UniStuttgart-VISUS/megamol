@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/ConstIterator.h"
 #include "vislib/Iterator.h"
 #include "vislib/IllegalParamException.h"

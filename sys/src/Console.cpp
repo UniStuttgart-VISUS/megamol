@@ -399,7 +399,7 @@ private:
         
         if (this->oldConsoleTitle != NULL) {
             this->SetConsoleTitle(this->oldConsoleTitle);
-            ARY_SAFE_DELETE(this->oldConsoleTitle);
+            the::safe_array_delete(this->oldConsoleTitle);
         }
     }
 

@@ -14,9 +14,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/NoSuchElementException.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {
@@ -188,7 +188,7 @@ namespace vislib {
         while (cursor != NULL) {
             tmp = cursor;
             cursor = cursor->next;
-            SAFE_DELETE(tmp);
+            the::safe_delete(tmp);
         }
 
         this->top = NULL;
@@ -262,7 +262,7 @@ namespace vislib {
 
         if (tmp != NULL) {
             this->top = tmp->next;
-            SAFE_DELETE(tmp);
+            the::safe_delete(tmp);
         }
     }
 

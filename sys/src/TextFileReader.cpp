@@ -29,7 +29,7 @@ vislib::sys::TextFileReader::TextFileReader(vislib::sys::File *file,
  * vislib::sys::TextFileReader::~TextFileReader
  */
 vislib::sys::TextFileReader::~TextFileReader(void) {
-    ARY_SAFE_DELETE(this->buf);
+    the::safe_array_delete(this->buf);
     this->validBufSize = 0;
     this->file = NULL; // DO NOT DELETE!
 }

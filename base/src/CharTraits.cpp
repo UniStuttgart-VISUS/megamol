@@ -464,13 +464,13 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::Format(
 
         while ((retval = ::vswprintf(buffer, bufferSize, fmt, argptr)) 
                 == -1) {
-            ARY_SAFE_DELETE(buffer);
+            the::safe_array_delete(buffer);
             bufferSize += bufferGrow;
             buffer = new Char[bufferSize];
         }
 
         retval = ::wcslen(buffer);
-        ARY_SAFE_DELETE(buffer);
+        the::safe_array_delete(buffer);
             
     } else {
         /* Format the string. */

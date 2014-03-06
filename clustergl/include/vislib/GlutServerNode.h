@@ -288,8 +288,8 @@ namespace cluster {
      * vislib::net::cluster::GlutServerNode<T>::~GlutServerNode
      */
     template<class T> GlutServerNode<T>::~GlutServerNode(void) {
-        SAFE_DELETE(this->rotateController);
-        SAFE_DELETE(this->zoomController);
+        the::safe_delete(this->rotateController);
+        the::safe_delete(this->zoomController);
     }
 
 
@@ -382,7 +382,7 @@ namespace cluster {
             this->cursor.UnregisterCursorEvent(dynamic_cast<
                 graphics::AbstractCursorEvent *>(inOutRotateController));
         }
-        SAFE_DELETE(inOutRotateController);
+        the::safe_delete(inOutRotateController);
 
         if (inOutZoomController != NULL) {
             THE_ASSERT(dynamic_cast<graphics::AbstractCursorEvent *>(

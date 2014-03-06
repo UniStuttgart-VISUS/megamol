@@ -9,7 +9,7 @@
 #include "vislibGlutInclude.h"
 #include <cstdio>
 
-#include "vislib/types.h"
+#include "the/types.h"
 #include "vislib/graphicstypes.h"
 #include "vislib/Rectangle.h"
 #include "vislib/sysfunctions.h"

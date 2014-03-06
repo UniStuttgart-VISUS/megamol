@@ -12,7 +12,7 @@
 #include "vislib/DNS.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/SocketException.h"
 #include "vislib/SystemMessage.h"
 #include "the/trace.h"

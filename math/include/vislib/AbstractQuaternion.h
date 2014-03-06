@@ -18,7 +18,7 @@
 #include "the/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/types.h"
+#include "the/types.h"
 #include "vislib/Vector.h"
 
 #ifndef M_PI

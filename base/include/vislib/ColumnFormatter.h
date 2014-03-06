@@ -431,7 +431,7 @@ namespace vislib {
      */
     template<class T>
     ColumnFormatter<T>::~ColumnFormatter(void) {
-        ARY_SAFE_DELETE(this->cols);
+        the::safe_array_delete(this->cols);
     }
 
     
@@ -451,7 +451,7 @@ namespace vislib {
             }
 
             this->colCount = colCount;
-            ARY_SAFE_DELETE(oc);
+            the::safe_array_delete(oc);
         }
     }
 

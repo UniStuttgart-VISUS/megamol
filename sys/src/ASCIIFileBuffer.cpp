@@ -8,7 +8,7 @@
 #include "vislib/ASCIIFileBuffer.h"
 #include "the/assert.h"
 #include "vislib/CharTraits.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "the/trace.h"
 
 
@@ -160,7 +160,7 @@ vislib::sys::ASCIIFileBuffer::~ASCIIFileBuffer(void) {
  */
 void vislib::sys::ASCIIFileBuffer::Clear(void) {
     this->lines.Clear(); // DO NOT DELETE individual pointers
-    ARY_SAFE_DELETE(this->buffer);
+    the::safe_array_delete(this->buffer);
 }
 
 

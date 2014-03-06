@@ -6,7 +6,7 @@
 
 
 #include "vislib/AbstractCursorEvent.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 
 
 /*

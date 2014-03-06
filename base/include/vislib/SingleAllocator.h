@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/memutils.h"
+#include "the/memory.h"
 
 
 namespace vislib {

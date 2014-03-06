@@ -9,7 +9,7 @@
 
 #include "the/assert.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/SocketException.h"
 #include "vislib/SystemException.h"
 #include "the/trace.h"

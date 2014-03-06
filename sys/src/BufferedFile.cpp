@@ -10,7 +10,7 @@
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IOException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/UnsupportedOperationException.h"
 
@@ -50,7 +50,7 @@ vislib::sys::BufferedFile::BufferedFile(void)
  * vislib::sys::BufferedFile::~BufferedFile
  */
 vislib::sys::BufferedFile::~BufferedFile(void) {
-    ARY_SAFE_DELETE(this->buffer);
+    the::safe_array_delete(this->buffer);
 }
 
 

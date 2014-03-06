@@ -34,6 +34,4 @@ void TestAsciiFile(void);
 
 void TestNamedColours(void);
 
-void TestRLEUInt(void);
-
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */

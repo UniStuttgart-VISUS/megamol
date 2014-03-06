@@ -20,7 +20,7 @@
 #include "vislib/mathfunctions.h"
 #include "vislib/Point.h"
 #include "the/stack_trace.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 #include "vislib/MissingImplementationException.h"
 

@@ -25,7 +25,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/NamedColours.h"
 #include "vislib/ColourParser.h"
-#include "vislib/utils.h"
+#include "the/utils.h"
 
 // #define USE_UNICODE_COLUMNFORMATTER
 
@@ -732,58 +732,5 @@ void TestNamedColours(void) {
          && vislib::math::IsEqual(b, 0.49803901f) );
     ColourParser::FromString(txt, col);
     AssertEqual("SpringGreen parsed back correctly from floats", col, NamedColours::SpringGreen);
-
-}
-
-
-void TestRLEUInt(void) {
-    UINT64 v = 0;
-    UINT64 d;
-    unsigned char buf[10];
-    unsigned int len;
-
-    // test working paths
-    for (int i = 0; i < 10; i++) {
-        len = 10;
-        AssertTrue("Can encode", vislib::UIntRLEEncode(buf, len, v));
-        printf("Memory consumption: %u\n", len);
-        //AssertEqual("Memory consumption correct", len, 1u);
-        AssertEqual("Memory estimation correct", len, vislib::UIntRLELength(v));
-        AssertTrue("Can decode", vislib::UIntRLEDecode(d, buf, len));
-        AssertEqual("Decode successful", v, d);
-        v *= 100;
-        v += 21;
-    }
-
-    v = -1;
-    len = 10;
-    AssertTrue("Can encode", vislib::UIntRLEEncode(buf, len, v));
-    printf("Memory consumption: %u\n", len);
-    AssertEqual("Memory consumption correct", len, 10u);
-    AssertEqual("Memory estimation correct", len, vislib::UIntRLELength(v));
-    AssertTrue("Can decode", vislib::UIntRLEDecode(d, buf, len));
-    AssertEqual("Decode successful", v, d);
-
-    // test some failure passes
-    v = 0;
-    len = 0;
-    AssertFalse("Fail encode", vislib::UIntRLEEncode(buf, len, v));
-
-    v = 128;
-    len = 1;
-    AssertFalse("Fail encode", vislib::UIntRLEEncode(buf, len, v));
-
-    v = -1;
-    len = 10;
-    AssertTrue("Can encode", vislib::UIntRLEEncode(buf, len, v));
-    buf[9] = 0xFF;
-    AssertFalse("Fail decode", vislib::UIntRLEDecode(d, buf, len));
-    v = 300;
-    len = 10;
-    AssertTrue("Can encode", vislib::UIntRLEEncode(buf, len, v));
-    len = 1;
-    AssertFalse("Fail decode", vislib::UIntRLEDecode(d, buf, len));
-
-    // okey. Basic path coverage reached (not regarding the while loops)
 
 }

@@ -23,7 +23,7 @@
 #include "vislib/mathfunctions.h"
 #include "vislib/Point.h"
 #include "vislib/ShallowPoint.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {

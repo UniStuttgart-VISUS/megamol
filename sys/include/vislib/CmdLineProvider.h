@@ -744,10 +744,10 @@ namespace sys {
     template<class T> void CmdLineProvider<T>::clearArgumentList(void) {
         if (this->memoryAnchor[0] != NULL) {
             for (int i = 0; i < this->storeCount; i++) {
-                ARY_SAFE_DELETE(this->memoryAnchor[0][i]);
+                the::safe_array_delete(this->memoryAnchor[0][i]);
             }
-            ARY_SAFE_DELETE(this->memoryAnchor[0]);
-            ARY_SAFE_DELETE(this->memoryAnchor[1]);
+            the::safe_array_delete(this->memoryAnchor[0]);
+            the::safe_array_delete(this->memoryAnchor[1]);
             this->arguments = NULL;
         }
 

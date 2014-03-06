@@ -11,7 +11,7 @@
 #include "vislib/MissingImplementationException.h"
 #include "vislib/RawStorage.h"
 #include "the/trace.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 #include "messagereceiver.h"
 

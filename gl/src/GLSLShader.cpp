@@ -13,7 +13,7 @@
 #include "vislib/Array.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/RawStorage.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -185,27 +185,27 @@ bool vislib::graphics::gl::GLSLShader::CompileFromFile(
             fragmentShaderSrcPtrs, cntFragmentShaderFiles, 
             insertLineDirective);
 
-        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
-        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
+        the::safe_array_delete(vertexShaderSrcPtrs);
+        the::safe_array_delete(fragmentShaderSrcPtrs);
 
         return retval;
 
         // free pointer arrays on exception
     } catch(OpenGLException e) { // catch OpenGLException to avoid truncating
-        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
-        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
+        the::safe_array_delete(vertexShaderSrcPtrs);
+        the::safe_array_delete(fragmentShaderSrcPtrs);
         throw e;
     } catch(CompileException e) {
-        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
-        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
+        the::safe_array_delete(vertexShaderSrcPtrs);
+        the::safe_array_delete(fragmentShaderSrcPtrs);
         throw e;
     } catch(Exception e) {
-        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
-        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
+        the::safe_array_delete(vertexShaderSrcPtrs);
+        the::safe_array_delete(fragmentShaderSrcPtrs);
         throw e;
     } catch(...) {
-        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
-        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
+        the::safe_array_delete(vertexShaderSrcPtrs);
+        the::safe_array_delete(fragmentShaderSrcPtrs);
         throw Exception("Unknown Exception", __FILE__, __LINE__);
     }
 

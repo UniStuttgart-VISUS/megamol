@@ -21,9 +21,9 @@
 #endif /* _WIN32 */
 
 #include "the/assert.h"
-#include "vislib/forceinline.h"
+#include "the/force_inline.h"
 #include "vislib/UnsupportedOperationException.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {
@@ -72,7 +72,7 @@ namespace sys {
          *
          * @return The initial value of the variable designated by 'address'.
          */
-        VISLIB_FORCEINLINE static INT32 CompareExchange(volatile INT32 *address,
+        THE_FORCE_INLINE static INT32 CompareExchange(volatile INT32 *address,
                 const INT32 exchange, const INT32 comparand) {
 #ifdef _WIN32
             THE_ASSERT(sizeof(INT32) == sizeof(LONG));
@@ -107,7 +107,7 @@ namespace sys {
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        VISLIB_FORCEINLINE static INT64 CompareExchange(volatile INT64 *address,
+        THE_FORCE_INLINE static INT64 CompareExchange(volatile INT64 *address,
                 const INT64 exchange, const INT64 comparand) {
 #ifdef _WIN32
             THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
@@ -134,7 +134,7 @@ namespace sys {
          *
          * @return The new value of the variable.
          */
-        VISLIB_FORCEINLINE static INT32 Decrement(volatile INT32 *address) {
+        THE_FORCE_INLINE static INT32 Decrement(volatile INT32 *address) {
 #ifdef _WIN32
             THE_ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedDecrement(
@@ -156,7 +156,7 @@ namespace sys {
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        VISLIB_FORCEINLINE static INT64 Decrement(volatile INT64 *address) {
+        THE_FORCE_INLINE static INT64 Decrement(volatile INT64 *address) {
             THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #ifdef _WIN32
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
@@ -180,7 +180,7 @@ namespace sys {
          *
          * @return The old value of the variable designated by 'address'.
          */
-        VISLIB_FORCEINLINE static INT32 Exchange(volatile INT32 *address,
+        THE_FORCE_INLINE static INT32 Exchange(volatile INT32 *address,
                 const INT32 value) {
 #ifdef _WIN32
             THE_ASSERT(sizeof(INT32) == sizeof(LONG));
@@ -208,7 +208,7 @@ namespace sys {
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        VISLIB_FORCEINLINE static INT64 Exchange(volatile INT64 *address,
+        THE_FORCE_INLINE static INT64 Exchange(volatile INT64 *address,
                 const INT64 value) {
 #ifdef _WIN32
             THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
@@ -237,7 +237,7 @@ namespace sys {
          *
          * @return The old value of the variable designated by 'address'.
          */
-        VISLIB_FORCEINLINE static void *Exchange(void **address,
+        THE_FORCE_INLINE static void *Exchange(void **address,
                 const void *value) {
 #ifdef _WIN32
 #pragma warning(disable: 4311)
@@ -270,7 +270,7 @@ namespace sys {
          * @return Value of variable designated by 'address' prior to the 
          *         operation.
          */
-        VISLIB_FORCEINLINE static INT32 ExchangeAdd(volatile INT32 *address, 
+        THE_FORCE_INLINE static INT32 ExchangeAdd(volatile INT32 *address, 
                 const INT32 value) {
 #ifdef _WIN32
             THE_ASSERT(sizeof(INT32) == sizeof(LONG));
@@ -301,7 +301,7 @@ namespace sys {
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        VISLIB_FORCEINLINE static INT64 ExchangeAdd(volatile INT64 *address,
+        THE_FORCE_INLINE static INT64 ExchangeAdd(volatile INT64 *address,
                 const INT64 value) {
 #ifdef _WIN32
             THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
@@ -329,7 +329,7 @@ namespace sys {
          * @return Value of variable designated by 'address' prior to the 
          *         operation.
          */
-        VISLIB_FORCEINLINE static INT32 ExchangeSub(volatile INT32 *address, 
+        THE_FORCE_INLINE static INT32 ExchangeSub(volatile INT32 *address, 
                 const INT32 value) {
 #ifdef _WIN32
             THE_ASSERT(sizeof(INT32) == sizeof(LONG));
@@ -355,7 +355,7 @@ namespace sys {
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        VISLIB_FORCEINLINE static INT64 ExchangeSub(volatile INT64 *address,
+        THE_FORCE_INLINE static INT64 ExchangeSub(volatile INT64 *address,
                 const INT64 value) {
 #ifdef _WIN32
             return Interlocked::ExchangeAdd(address, -value);
@@ -372,7 +372,7 @@ namespace sys {
          *
          * @return The new value of the variable.
          */
-        VISLIB_FORCEINLINE static INT32 Increment(volatile INT32 *address) {
+        THE_FORCE_INLINE static INT32 Increment(volatile INT32 *address) {
 #ifdef _WIN32
             THE_ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedIncrement(
@@ -394,7 +394,7 @@ namespace sys {
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        VISLIB_FORCEINLINE static INT64 Increment(volatile INT64 *address) {
+        THE_FORCE_INLINE static INT64 Increment(volatile INT64 *address) {
             THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #ifdef _WIN32
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))

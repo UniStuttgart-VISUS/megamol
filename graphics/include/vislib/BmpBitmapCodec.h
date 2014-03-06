@@ -16,7 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/AbstractBitmapCodec.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 //
 // Use this define to load Bitmaps manually on windows if the windows api

@@ -12,7 +12,7 @@
 #include "vislib/glverify.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/OutOfRangeException.h"
 #include "the/stack_trace.h"
 #include "the/trace.h"
@@ -72,7 +72,7 @@ vislib::graphics::gl::FramebufferObject::~FramebufferObject(void) {
     }
 
     // Dtor must ensure deallocation in any case!
-    ARY_SAFE_DELETE(this->attachmentColour);
+    the::safe_array_delete(this->attachmentColour);
 }
 
 
@@ -567,7 +567,7 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
         }
     }
     this->cntColourAttachments = 0;
-    ARY_SAFE_DELETE(this->attachmentColour);
+    the::safe_array_delete(this->attachmentColour);
 
     /* Release framebuffer itself. */
     if (::glIsFramebufferEXT(this->idFb)) {

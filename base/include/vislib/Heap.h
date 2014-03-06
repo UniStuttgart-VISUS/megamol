@@ -17,7 +17,7 @@
 
 #include "vislib/Array.h"
 #include "the/assert.h"
-#include "vislib/utils.h"
+#include "the/utils.h"
 
 
 namespace vislib {
@@ -244,7 +244,7 @@ namespace vislib {
 
             } else {
                 /* Bubble down. */
-                Swap(this->elements[idx], this->elements[nextIdx]);
+                std::swap(this->elements[idx], this->elements[nextIdx]);
                 idx = nextIdx;
             }
         }
@@ -270,7 +270,7 @@ namespace vislib {
 
             } else {
                 /* Bubble up. */
-                Swap(this->elements[idx], this->elements[nextIdx]);
+                std::swap(this->elements[idx], this->elements[nextIdx]);
                 idx = nextIdx;
             } 
         }

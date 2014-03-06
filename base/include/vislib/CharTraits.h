@@ -28,8 +28,8 @@
 #endif /* !_WIN32 */
 
 #include "the/assert.h"
-#include "vislib/memutils.h"
-#include "vislib/types.h"
+#include "the/memory.h"
+#include "the/types.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/FormatException.h"
 #include "vislib/IllegalParamException.h"

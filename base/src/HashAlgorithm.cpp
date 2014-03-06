@@ -102,7 +102,7 @@ vislib::StringA vislib::HashAlgorithm::ToStringA(void) const {
     } catch (...) {
     }
 
-    ARY_SAFE_DELETE(hash);
+    the::safe_array_delete(hash);
     return retval;
 }
 
@@ -133,7 +133,7 @@ vislib::StringW vislib::HashAlgorithm::ToStringW(void) const {
     } catch (...) {
     }
 
-    ARY_SAFE_DELETE(hash);
+    the::safe_array_delete(hash);
     return retval;
 }
 

@@ -10,7 +10,7 @@
 #include <climits>
 
 #include "the/assert.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/UnsupportedOperationException.h"
 
@@ -39,7 +39,7 @@ vislib::RawStoragePool::~RawStoragePool(void) {
 void vislib::RawStoragePool::Clear(void) {
     THE_STACK_TRACE;
     while (!this->storageList.IsEmpty()) {
-        SAFE_DELETE(this->storageList.First().storage);
+        the::safe_delete(this->storageList.First().storage);
         this->storageList.RemoveFirst();
     }
 }

@@ -31,7 +31,7 @@
 
 #include "the/assert.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 
 
 /* Constants as in RSA reference implementation. */

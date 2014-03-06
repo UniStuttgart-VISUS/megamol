@@ -10,7 +10,7 @@
 #include <cfloat>
 #include "the/assert.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/PerformanceCounter.h"
@@ -32,7 +32,7 @@ vislib::graphics::FpsCounter::FpsCounter(unsigned int bufLength)
  * vislib::graphics::FpsCounter::~FpsCounter
  */
 vislib::graphics::FpsCounter::~FpsCounter(void) {
-    ARY_SAFE_DELETE(this->timeValues);
+    the::safe_array_delete(this->timeValues);
     this->timeValuesCount = 0; // paranoia
 }
 
@@ -109,7 +109,7 @@ void vislib::graphics::FpsCounter::Reset(void) {
  */
 void vislib::graphics::FpsCounter::SetBufferLength(unsigned int bufLength) {
     THE_ASSERT(bufLength > 0);
-    ARY_SAFE_DELETE(this->timeValues);
+    the::safe_array_delete(this->timeValues);
     this->timeValuesCount = bufLength;
     this->timeValues = new TimeValues[this->timeValuesCount];
     this->Reset();

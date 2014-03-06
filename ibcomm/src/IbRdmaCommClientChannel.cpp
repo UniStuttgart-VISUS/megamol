@@ -11,7 +11,7 @@
 
 #include "vislib/IbRdmaException.h"
 #include "vislib/IPCommEndPoint.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "the/trace.h"
 
 
@@ -483,13 +483,13 @@ void vislib::net::ib::IbRdmaCommClientChannel::setBuffers(BYTE *bufRecv,
     
     /* If there is a current buffer and if it is owned by us, delete it. */
     if (!this->IsZeroCopyReceive()) {
-        ARY_SAFE_DELETE(this->bufRecv);
+        the::safe_array_delete(this->bufRecv);
     } else {
         this->bufRecvEnd = NULL;
     }
 
     if (!this->IsZeroCopySend()) {
-        ARY_SAFE_DELETE(this->bufSend);
+        the::safe_array_delete(this->bufSend);
     } else {
         this->bufRecvEnd = NULL;
     }

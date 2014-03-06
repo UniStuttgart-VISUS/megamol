@@ -15,9 +15,9 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/forceinline.h"
+#include "the/force_inline.h"
 #include "vislib/PtrArray.h"
-#include "vislib/types.h"
+#include "the/types.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -664,7 +664,7 @@ namespace graphics {
              * @param src The source
              */
             template<class T>
-            static VISLIB_FORCEINLINE void CopyBit(T& dst, const T& src) {
+            static THE_FORCE_INLINE void CopyBit(T& dst, const T& src) {
                 dst = src;
             }
 
@@ -674,7 +674,7 @@ namespace graphics {
              * @param dst The destination
              * @param src The source
              */
-            static VISLIB_FORCEINLINE void CopyBit(unsigned char& dst,
+            static THE_FORCE_INLINE void CopyBit(unsigned char& dst,
                     const unsigned short& src) {
                 dst = static_cast<unsigned char>(src / 256);
             }
@@ -685,7 +685,7 @@ namespace graphics {
              * @param dst The destination
              * @param src The source
              */
-            static VISLIB_FORCEINLINE void CopyBit(unsigned char& dst,
+            static THE_FORCE_INLINE void CopyBit(unsigned char& dst,
                     const float& src) {
                 dst = static_cast<unsigned char>(((src < 0.0f) ? 0
                     : ((src > 1.0f) ? 1.0f : src)) * 255.0f);
@@ -697,7 +697,7 @@ namespace graphics {
              * @param dst The destination
              * @param src The source
              */
-            static VISLIB_FORCEINLINE void CopyBit(unsigned short& dst,
+            static THE_FORCE_INLINE void CopyBit(unsigned short& dst,
                     const unsigned char& src) {
                 dst = (static_cast<unsigned short>(src) << 8)
                     + static_cast<unsigned short>(src);
@@ -709,7 +709,7 @@ namespace graphics {
              * @param dst The destination
              * @param src The source
              */
-            static VISLIB_FORCEINLINE void CopyBit(unsigned short& dst,
+            static THE_FORCE_INLINE void CopyBit(unsigned short& dst,
                     const float& src) {
                 dst = static_cast<unsigned char>(((src < 0.0f) ? 0
                     : ((src > 1.0f) ? 1.0f : src)) * 65535.0f);
@@ -721,7 +721,7 @@ namespace graphics {
              * @param dst The destination
              * @param src The source
              */
-            static VISLIB_FORCEINLINE void CopyBit(float& dst,
+            static THE_FORCE_INLINE void CopyBit(float& dst,
                     const unsigned char& src) {
                 dst = static_cast<float>(src) / 255.0f;
             }
@@ -732,7 +732,7 @@ namespace graphics {
              * @param dst The destination
              * @param src The source
              */
-            static VISLIB_FORCEINLINE void CopyBit(float& dst,
+            static THE_FORCE_INLINE void CopyBit(float& dst,
                     const unsigned short& src) {
                 dst = static_cast<float>(src) / 65535.0f;
             }
@@ -807,7 +807,7 @@ namespace graphics {
              *
              * @return The requested value
              */
-            VISLIB_FORCEINLINE float GetValue(SourceChannel chan) {
+            THE_FORCE_INLINE float GetValue(SourceChannel chan) {
                 return this->func[chan](this, this->param[chan]);
             }
 

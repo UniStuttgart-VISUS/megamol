@@ -170,7 +170,7 @@ sub WriteClass {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            SAFE_DELETE(this->callee);
+            the::safe_delete(this->callee);
         }
 
         /**
@@ -188,7 +188,7 @@ sub WriteClass {
          * \@param funcPtr Function pointer to be set
          */
         void Set($returnType (*funcPtr)($paramTypeList)) {
-            SAFE_DELETE(this->callee);
+            the::safe_delete(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -202,7 +202,7 @@ sub WriteClass {
          */
         template<class CT1, class CT2>
         void Set($returnType (*funcPtr)($paramCtxtTypeList), CT2 ctxt) {
-            SAFE_DELETE(this->callee);
+            the::safe_delete(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -216,7 +216,7 @@ sub WriteClass {
          */
         template<class C>
         void Set(C& obj, $returnType (C::*methPtr)($paramTypeList)) {
-            SAFE_DELETE(this->callee);
+            the::safe_delete(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -229,7 +229,7 @@ sub WriteClass {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, $returnType (C::*methPtr)($paramCtxtTypeList), CT2 ctxt) {
-            SAFE_DELETE(this->callee);
+            the::safe_delete(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -239,7 +239,7 @@ sub WriteClass {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            SAFE_DELETE(this->callee);
+            the::safe_delete(this->callee);
         }
 
         /**
@@ -276,7 +276,7 @@ sub WriteClass {
          * \@return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            SAFE_DELETE(this->callee);
+            the::safe_delete(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -603,7 +603,7 @@ print $out qq§/*
 
 #include "the/assert.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 
 
 /*

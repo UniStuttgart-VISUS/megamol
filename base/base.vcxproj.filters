@@ -48,13 +48,7 @@
     <ClCompile Include="src\Exception.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\forceinline.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\FormatException.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\functioncast.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\GUID.cpp">
@@ -168,9 +162,6 @@
     <ClCompile Include="src\UTF8Encoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\VersionNumber.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -212,19 +203,10 @@
     <ClInclude Include="include\vislib\ConstIterator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vislib\deprecated.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\vislib\Exception.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vislib\forceinline.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\vislib\FormatException.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vislib\functioncast.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\GUID.h">
@@ -252,9 +234,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\MD5HashProvider.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vislib\memutils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\MissingImplementationException.h">
@@ -338,9 +317,6 @@
     <ClInclude Include="include\vislib\tchar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vislib\types.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\vislib\unreferenced.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -348,9 +324,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\UTF8Encoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vislib\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\VersionNumber.h">

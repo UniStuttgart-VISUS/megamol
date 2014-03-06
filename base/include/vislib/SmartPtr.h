@@ -16,9 +16,9 @@
 
 
 #include "the/assert.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/SingleAllocator.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {
@@ -255,7 +255,7 @@ namespace vislib {
         /* Handle reference decrement on current object. */
         if ((this->ptr != NULL) && (--this->ptr->cnt == 0)) {
             A::Deallocate(this->ptr->obj);
-            SAFE_DELETE(this->ptr);
+            the::safe_delete(this->ptr);
         }
 
         if (rhs != NULL) {
@@ -278,7 +278,7 @@ namespace vislib {
             /* Handle reference decrement on current object. */
             if ((this->ptr != NULL) && (--this->ptr->cnt == 0)) {
                 A::Deallocate(this->ptr->obj);
-                SAFE_DELETE(this->ptr);
+                the::safe_delete(this->ptr);
             }
 
             /* Handle reference increment on new object. */

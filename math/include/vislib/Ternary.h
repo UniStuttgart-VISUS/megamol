@@ -14,7 +14,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/forceinline.h"
+#include "the/force_inline.h"
 #include "vislib/String.h"
 
 
@@ -355,7 +355,7 @@ namespace math {
          *
          * @return The value for the internal representation
          */
-        VISLIB_FORCEINLINE int getValue(int v) const;
+        THE_FORCE_INLINE int getValue(int v) const;
 
         /**
          * Calculates the value for the input 'v'
@@ -364,7 +364,7 @@ namespace math {
          *
          * @return The value for the internal representation
          */
-        VISLIB_FORCEINLINE int getValue(bool v) const;
+        THE_FORCE_INLINE int getValue(bool v) const;
 
         /** The three-state value */
         int value;

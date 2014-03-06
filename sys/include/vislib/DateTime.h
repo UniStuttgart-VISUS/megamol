@@ -19,7 +19,7 @@
 
 #include "vislib/DateTimeSpan.h"
 #include "the/stack_trace.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {

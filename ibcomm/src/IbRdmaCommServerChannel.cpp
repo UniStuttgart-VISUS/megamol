@@ -11,7 +11,7 @@
 
 #include "vislib/IbRdmaCommClientChannel.h"
 #include "vislib/IPCommEndPoint.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "the/trace.h"
 
 

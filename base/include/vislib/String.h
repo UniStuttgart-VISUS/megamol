@@ -16,8 +16,8 @@
 
 
 #include "vislib/CharTraits.h"
-#include "vislib/deprecated.h"
-#include "vislib/memutils.h"
+#include "the/deprecated.h"
+#include "the/memory.h"
 #include "vislib/OutOfRangeException.h"
 
 
@@ -202,7 +202,7 @@ namespace vislib {
          *
          * @return true if both strings are equal, false otherwise.
          */
-        VLDEPRECATED inline bool Compare(const Char *rhs) const {
+        THE_DEPRECATED inline bool Compare(const Char *rhs) const {
         // TODO: The semantics of this method is unintuitive and should be 
         // changed to be similar to strcmp.
         // TODO: Merge Compare and CompareInsensitive to one method and
@@ -217,7 +217,7 @@ namespace vislib {
          *
          * @return true if both strings are equal, false otherwise.
          */
-        VLDEPRECATED inline bool Compare(const String& rhs) const {
+        THE_DEPRECATED inline bool Compare(const String& rhs) const {
         // TODO: The semantics of this method is unintuitive and should be 
         // changed to be similar to strcmp.
         // TODO: Merge Compare and CompareInsensitive to one method and
@@ -233,7 +233,7 @@ namespace vislib {
          *
          * @return true if both strings are equal, false otherwise.
          */
-        VLDEPRECATED inline bool CompareInsensitive(const Char *rhs) const {
+        THE_DEPRECATED inline bool CompareInsensitive(const Char *rhs) const {
             return this->Equals(rhs, false);
         }
 
@@ -245,7 +245,7 @@ namespace vislib {
          *
          * @return true if both strings are equal, false otherwise.
          */
-        VLDEPRECATED inline bool CompareInsensitive(const String& rhs) const {
+        THE_DEPRECATED inline bool CompareInsensitive(const String& rhs) const {
             return this->Equals(rhs, false);
         }
 
@@ -1370,7 +1370,7 @@ namespace vislib {
      * vislib::String<T>::~String
      */
     template<class T> String<T>::~String(void) {
-        ARY_SAFE_DELETE(this->data);
+        the::safe_array_delete(this->data);
     }
 
 
@@ -1379,7 +1379,7 @@ namespace vislib {
      */
     template<class T>
     typename String<T>::Char *String<T>::AllocateBuffer(const Size newLen) {
-        ARY_SAFE_DELETE(this->data);
+        the::safe_array_delete(this->data);
         this->data = new Char[newLen + 1];
         this->data[newLen] = 0;
         return this->data;
@@ -1887,7 +1887,7 @@ namespace vislib {
         }
 
         retval = dist[VL_LVS_ARY_IDX(len1, len2)];
-        ARY_SAFE_DELETE(dist);
+        the::safe_array_delete(dist);
         return retval;
 
 #undef VL_LVS_MIN3
@@ -1918,7 +1918,7 @@ namespace vislib {
             *this = buffer;
         }
 
-        ARY_SAFE_DELETE(buffer);
+        the::safe_array_delete(buffer);
         return (charsRead > 0);
 
     }

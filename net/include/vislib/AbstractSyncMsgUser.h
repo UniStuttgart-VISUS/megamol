@@ -304,7 +304,7 @@ namespace net {
          * @throws Exception Or derived in case of a communication error.
          */
         // TODO: WHO NEEDS THIS? PLEASE REPORT TO MUELLER...
-        VLDEPRECATED inline const SimpleMessage& receiveViaMsgBuffer(
+        THE_DEPRECATED inline const SimpleMessage& receiveViaMsgBuffer(
                 SmartRef<AbstractCommChannel> channel,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             THE_STACK_TRACE;
@@ -368,7 +368,7 @@ namespace net {
          * @throws Exception Or derived in case of a communication error.
          */
         // TODO: WHO NEEDS THIS? PLEASE REPORT TO MUELLER...
-        VLDEPRECATED inline void sendViaMsgBuffer(SmartRef<AbstractCommChannel> channel,
+        THE_DEPRECATED inline void sendViaMsgBuffer(SmartRef<AbstractCommChannel> channel,
                 const SimpleMessageID msgID, 
                 const void *body, 
                 const unsigned int bodySize,

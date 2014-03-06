@@ -13,7 +13,7 @@
 #include "vislib/IOException.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/SystemInformation.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/UnsupportedOperationException.h"
 
 #ifndef _WIN32

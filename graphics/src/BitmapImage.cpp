@@ -11,7 +11,7 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include <climits>
 
 /****************************************************************************/
@@ -592,10 +592,10 @@ vislib::graphics::BitmapImage::BitmapImage(
  * vislib::graphics::BitmapImage::~BitmapImage
  */
 vislib::graphics::BitmapImage::~BitmapImage(void) {
-    ARY_SAFE_DELETE(this->data);
+    the::safe_array_delete(this->data);
     this->height = 0;   // set for paranoia reasons
     this->exts.Clear();
-    ARY_SAFE_DELETE(this->labels);
+    the::safe_array_delete(this->labels);
     this->numChans = 0;
     this->width = 0;
 }
@@ -607,7 +607,7 @@ vislib::graphics::BitmapImage::~BitmapImage(void) {
 void vislib::graphics::BitmapImage::CopyFrom(
         const vislib::graphics::BitmapImage& src, bool copyExt) {
     unsigned int len = src.width * src.height * src.BytesPerPixel();
-    ARY_SAFE_DELETE(this->data);
+    the::safe_array_delete(this->data);
     this->data = new char[len];
     memcpy(this->data, src.data, len);
     this->exts.Clear();
@@ -619,7 +619,7 @@ void vislib::graphics::BitmapImage::CopyFrom(
     }
     this->chanType = src.chanType;
     this->height = src.height;
-    ARY_SAFE_DELETE(this->labels);
+    the::safe_array_delete(this->labels);
     this->labels = new ChannelLabel[src.numChans];
     memcpy(this->labels, src.labels, sizeof(ChannelLabel) * src.numChans);
     this->numChans = src.numChans;
@@ -909,8 +909,8 @@ void vislib::graphics::BitmapImage::Crop(unsigned int left, unsigned int top,
 void vislib::graphics::BitmapImage::CreateImage(unsigned int width,
         unsigned int height, unsigned int channels,
         vislib::graphics::BitmapImage::ChannelType type, const void *data) {
-    ARY_SAFE_DELETE(this->data);
-    ARY_SAFE_DELETE(this->labels);
+    the::safe_array_delete(this->data);
+    the::safe_array_delete(this->labels);
     this->chanType = type;
     this->height = height;
     this->numChans = channels;

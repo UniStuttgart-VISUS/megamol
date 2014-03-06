@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/AbstractFont.h"
-#include "vislib/forceinline.h"
+#include "the/force_inline.h"
 
 
 namespace vislib {
@@ -372,7 +372,7 @@ namespace gl {
          *
          * @return The resulting glyph run
          */
-        VISLIB_FORCEINLINE int *buildGlyphRun(const char *txt,
+        THE_FORCE_INLINE int *buildGlyphRun(const char *txt,
             float maxWidth) const;
 
         /**
@@ -383,7 +383,7 @@ namespace gl {
          *
          * @return The resulting glyph run
          */
-        VISLIB_FORCEINLINE int *buildGlyphRun(const wchar_t *txt,
+        THE_FORCE_INLINE int *buildGlyphRun(const wchar_t *txt,
             float maxWidth) const;
 
         /**
@@ -430,7 +430,7 @@ namespace gl {
          *
          * @return the number of lines.
          */
-        VISLIB_FORCEINLINE int lineCount(int *run, bool deleterun) const;
+        THE_FORCE_INLINE int lineCount(int *run, bool deleterun) const;
 
         /**
          * Answer the width of the line 'run' starts.
@@ -442,7 +442,7 @@ namespace gl {
          *
          * @return The width of the line
          */
-        VISLIB_FORCEINLINE float lineWidth(int *&run, bool iterate) const;
+        THE_FORCE_INLINE float lineWidth(int *&run, bool iterate) const;
 
         /** The font outline info data */
         const OutlineFontInfo& data;

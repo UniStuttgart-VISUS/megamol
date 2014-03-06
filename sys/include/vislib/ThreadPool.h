@@ -20,7 +20,7 @@
 #include "vislib/RunnableThread.h"
 #include "vislib/Semaphore.h"
 #include "vislib/SingleLinkedList.h"
-#include "vislib/types.h"
+#include "the/types.h"
 #include "vislib/ThreadPoolListener.h"
 
 

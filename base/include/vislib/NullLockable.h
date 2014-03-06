@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/forceinline.h"
+#include "the/force_inline.h"
 
 
 namespace vislib {
@@ -42,7 +42,7 @@ namespace vislib {
          * This implementation does nothing and therefore object using this
          * lockable are not threadsafe.
          */
-        VISLIB_FORCEINLINE void Lock(void) {
+        THE_FORCE_INLINE void Lock(void) {
             // intentionally empty
         }
 
@@ -53,7 +53,7 @@ namespace vislib {
          * This implementation does nothing and therefore object using this
          * lockable are not threadsafe.
          */
-        VISLIB_FORCEINLINE void Unlock(void) {
+        THE_FORCE_INLINE void Unlock(void) {
             // intentionally empty
         }
 

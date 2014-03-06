@@ -9,14 +9,16 @@
 
 #include "vislib/AutoLock.h"
 #include "vislib/COMException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/RawStorage.h"
 #include "vislib/sysfunctions.h"
 #include "the/trace.h"
 #include "vislib/UnsupportedOperationException.h"
-#include "vislib/utils.h"
+#include "the/utils.h"
+#include "the/string.h"
+#include "the/text/string_utility.h"
 
 
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -47,8 +49,9 @@ vislib::StringA vislib::net::ib::IbvInformation::Port::GetPortGuidA(
         void) const {
     THE_STACK_TRACE;
     NET64 guid = this->GetPortGuid();
-    return BytesToHexStringA(reinterpret_cast<const BYTE *>(&guid), 
-        sizeof(guid));
+    return the::text::string_utility::to_hex_astring(
+        reinterpret_cast<const BYTE *>(&guid), 
+        sizeof(guid)).c_str();
 }
 
 
@@ -59,8 +62,8 @@ vislib::StringW vislib::net::ib::IbvInformation::Port::GetPortGuidW(
         void) const {
     THE_STACK_TRACE;
     NET64 guid = this->GetPortGuid();
-    return BytesToHexStringW(reinterpret_cast<const BYTE *>(&guid), 
-        sizeof(guid));
+    return the::text::string_utility::to_hex_wstring(reinterpret_cast<const BYTE *>(&guid), 
+        sizeof(guid)).c_str();
 }
 
 
@@ -200,8 +203,8 @@ vislib::net::ib::IbvInformation::Device::~Device(void) {
 vislib::StringA vislib::net::ib::IbvInformation::Device::GetNodeGuidA(
         void) const {
     THE_STACK_TRACE;
-    return BytesToHexStringA(reinterpret_cast<const BYTE *>(
-        &this->attributes.NodeGuid), sizeof(this->attributes.NodeGuid));
+    return the::text::string_utility::to_hex_astring(reinterpret_cast<const BYTE *>(
+        &this->attributes.NodeGuid), sizeof(this->attributes.NodeGuid)).c_str();
 }
 
 
@@ -211,8 +214,8 @@ vislib::StringA vislib::net::ib::IbvInformation::Device::GetNodeGuidA(
 vislib::StringW vislib::net::ib::IbvInformation::Device::GetNodeGuidW(
         void) const {
     THE_STACK_TRACE;
-    return BytesToHexStringW(reinterpret_cast<const BYTE *>(
-        &this->attributes.NodeGuid), sizeof(this->attributes.NodeGuid));
+    return the::text::string_utility::to_hex_wstring(reinterpret_cast<const BYTE *>(
+        &this->attributes.NodeGuid), sizeof(this->attributes.NodeGuid)).c_str();
 }
 
 
@@ -237,9 +240,9 @@ vislib::net::ib::IbvInformation::Device::GetPort(const SIZE_T idx) const {
 vislib::StringA 
 vislib::net::ib::IbvInformation::Device::GetSystemImageGuidA(void) const {
     THE_STACK_TRACE;
-    return BytesToHexStringA(reinterpret_cast<const BYTE *>(
+    return the::text::string_utility::to_hex_astring(reinterpret_cast<const BYTE *>(
         &this->attributes.SystemImageGuid), 
-        sizeof(this->attributes.SystemImageGuid));
+        sizeof(this->attributes.SystemImageGuid)).c_str();
 }
 
 
@@ -250,9 +253,9 @@ vislib::net::ib::IbvInformation::Device::GetSystemImageGuidW
 vislib::StringW 
 vislib::net::ib::IbvInformation::Device::GetSystemImageGuidW(void) const {
     THE_STACK_TRACE;
-    return BytesToHexStringW(reinterpret_cast<const BYTE *>(
+    return the::text::string_utility::to_hex_wstring(reinterpret_cast<const BYTE *>(
         &this->attributes.SystemImageGuid), 
-        sizeof(this->attributes.SystemImageGuid));
+        sizeof(this->attributes.SystemImageGuid)).c_str();
 }
 
 

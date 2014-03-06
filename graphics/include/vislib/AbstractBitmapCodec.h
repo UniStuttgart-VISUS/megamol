@@ -19,7 +19,7 @@
 #include "vislib/File.h"
 #include "vislib/MultiSz.h"
 #include "vislib/RawStorage.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {

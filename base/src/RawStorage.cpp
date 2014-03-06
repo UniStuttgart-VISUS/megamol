@@ -10,7 +10,7 @@
 #include <stdexcept>
 
 #include "the/assert.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "the/trace.h"
 
 
@@ -38,7 +38,7 @@ vislib::RawStorage::RawStorage(const RawStorage& rhs)
  * vislib::RawStorage::~RawStorage
  */
 vislib::RawStorage::~RawStorage(void) {
-    SAFE_FREE(this->data);
+    the::safe_free(this->data);
 }
 
 
@@ -90,7 +90,7 @@ void vislib::RawStorage::EnforceSize(const SIZE_T size,
         } else {
             //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, 
             //    "RawStorage::AssertSize allocates %u bytes.\n", this->size);
-            SAFE_FREE(this->data);
+            the::safe_free(this->data);
             this->data = ::malloc(this->size);
         }
 

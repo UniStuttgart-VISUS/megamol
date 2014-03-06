@@ -20,7 +20,7 @@
 #include "vislib/clustermessages.h"
 #include "vislib/ObservableCameraParams.h"
 #include "vislib/SmartPtr.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {

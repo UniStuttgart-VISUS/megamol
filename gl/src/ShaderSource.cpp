@@ -8,7 +8,7 @@
 #include "vislib/ShaderSource.h"
 #include <cstdarg>
 #include "vislib/AlreadyExistsException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/NoSuchElementException.h"
 #include "vislib/CharTraits.h"
 #include "vislib/IllegalParamException.h"
@@ -156,7 +156,7 @@ vislib::graphics::gl::ShaderSource::ShaderSource(
  * vislib::graphics::gl::ShaderSource::~ShaderSource
  */
 vislib::graphics::gl::ShaderSource::~ShaderSource(void) {
-    ARY_SAFE_DELETE(this->code);
+    the::safe_array_delete(this->code);
 }
 
 
@@ -171,7 +171,7 @@ vislib::graphics::gl::ShaderSource::Append(
         throw IllegalParamException("code", __FILE__, __LINE__);
     }
     this->snippets.Append(code);
-    ARY_SAFE_DELETE(this->code);
+    the::safe_array_delete(this->code);
     return this->snippets.Last();
 }
 
@@ -192,7 +192,7 @@ vislib::graphics::gl::ShaderSource::Append(
     }
     this->names[name] = this->snippets.Count();
     this->snippets.Append(code);
-    ARY_SAFE_DELETE(this->code);
+    the::safe_array_delete(this->code);
     return this->snippets.Last();
 }
 
@@ -203,7 +203,7 @@ vislib::graphics::gl::ShaderSource::Append(
 void vislib::graphics::gl::ShaderSource::Clear(void) {
     this->snippets.Clear();
     this->names.Clear();
-    ARY_SAFE_DELETE(this->code);
+    the::safe_array_delete(this->code);
 }
 
 
@@ -247,7 +247,7 @@ vislib::graphics::gl::ShaderSource::Insert(const SIZE_T idx,
         if (ep.Value() >= idx) ep.Value()++;
     }
     this->snippets.Insert(idx, code);
-    ARY_SAFE_DELETE(this->code);  
+    the::safe_array_delete(this->code);  
     return this->snippets[idx];
 }
 
@@ -273,7 +273,7 @@ vislib::graphics::gl::ShaderSource::Insert(const SIZE_T idx,
     }
     this->names[name] = idx;
     this->snippets.Insert(idx, code);
-    ARY_SAFE_DELETE(this->code);  
+    the::safe_array_delete(this->code);  
     return this->snippets[idx];
 }
 
@@ -304,7 +304,7 @@ vislib::graphics::gl::ShaderSource::Prepend(
         i.Next().Value()++;
     }
     this->snippets.Prepend(code);
-    ARY_SAFE_DELETE(this->code);
+    the::safe_array_delete(this->code);
     return this->snippets.First();
 }
 
@@ -328,7 +328,7 @@ vislib::graphics::gl::ShaderSource::Prepend( const vislib::StringA& name,
     }
     this->names[name] = 0;
     this->snippets.Prepend(code);
-    ARY_SAFE_DELETE(this->code);
+    the::safe_array_delete(this->code);
     return this->snippets.First();
 }
 
@@ -348,7 +348,7 @@ void vislib::graphics::gl::ShaderSource::Remove(SIZE_T idx) {
         this->names.Remove(i2.Next());
     }
     this->snippets.Erase(idx);
-    ARY_SAFE_DELETE(this->code);
+    the::safe_array_delete(this->code);
 }
 
 
@@ -369,7 +369,7 @@ vislib::graphics::gl::ShaderSource::Replace(SIZE_T idx,
         code) {
     vislib::SmartPtr<Snippet> retval = this->snippets[idx];
     this->snippets[idx] = code;
-    ARY_SAFE_DELETE(this->code);
+    the::safe_array_delete(this->code);
     return retval;
 }
 
@@ -385,7 +385,7 @@ vislib::graphics::gl::ShaderSource::Set(
         throw IllegalParamException("code", __FILE__, __LINE__);
     }
     this->snippets = Array<SmartPtr<Snippet> >(1, code);
-    ARY_SAFE_DELETE(this->code);
+    the::safe_array_delete(this->code);
     return this->snippets.First();
 }
 
@@ -449,7 +449,7 @@ vislib::graphics::gl::ShaderSource::operator=(
             this->names[ep.Key()] = ep.Value();
         }
 
-        ARY_SAFE_DELETE(this->code);
+        the::safe_array_delete(this->code);
     }
     return *this;
 }

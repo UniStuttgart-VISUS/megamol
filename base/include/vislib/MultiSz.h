@@ -174,7 +174,7 @@ namespace vislib {
          * Clear all elements in the MultiSz.
          */
         inline void Clear(void) {
-            ARY_SAFE_DELETE(this->data);
+            the::safe_array_delete(this->data);
             THE_ASSERT(this->data == NULL);
         }
 
@@ -494,7 +494,7 @@ namespace vislib {
                 newData[strLen] = 0;
             } 
             
-            ARY_SAFE_DELETE(this->data);
+            the::safe_array_delete(this->data);
             this->data = newData;
         }
     }
@@ -505,7 +505,7 @@ namespace vislib {
      */
     template<class T> 
     typename MultiSz<T>::Char *MultiSz<T>::AllocateBuffer(const SIZE_T cnt) {
-        ARY_SAFE_DELETE(this->data);
+        the::safe_array_delete(this->data);
         if (cnt > 0) {
             this->data = new Char[cnt];
         }
@@ -540,7 +540,7 @@ namespace vislib {
                 THE_ASSERT(newData[oldLen + strLen - 1] == 0);
                 THE_ASSERT(newData[oldLen + strLen - 2] == 0);
 
-                ARY_SAFE_DELETE(this->data);
+                the::safe_array_delete(this->data);
                 this->data = newData;
             }
         } else {
@@ -611,11 +611,11 @@ namespace vislib {
                 THE_ASSERT(newData[newLen - 1] == 0);
                 THE_ASSERT(newData[newLen - 2] == 0);
 
-                ARY_SAFE_DELETE(this->data);
+                the::safe_array_delete(this->data);
                 this->data = newData;
             } else {
                 /* Remove everything. */
-                ARY_SAFE_DELETE(this->data);
+                the::safe_array_delete(this->data);
                 THE_ASSERT(this->data == NULL);
             } /* end if ((newLen = oldLen - cnt * strLen) > 2) */
         } /* end if ((str != NULL) && (*str != 0) && (this->data != NULL)) */

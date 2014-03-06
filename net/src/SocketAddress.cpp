@@ -8,7 +8,7 @@
 #include "vislib/SocketAddress.h"
 
 #include "the/assert.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 
 
 /*

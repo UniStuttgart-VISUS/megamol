@@ -21,7 +21,7 @@
 #endif /* _WIN32 */
 
 #include "vislib/String.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 #ifdef _MSC_VER
 #pragma comment(lib, "rpcrt4")

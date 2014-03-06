@@ -15,11 +15,11 @@
 
 
 #ifndef _WIN32
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #endif /* _WIN32 */
 #include "vislib/String.h"
 #include "vislib/SystemException.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {

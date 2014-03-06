@@ -15,7 +15,7 @@
 
 
 #include "vislib/Matrix.h"
-#include "vislib/deprecated.h"
+#include "the/deprecated.h"
 
 
 namespace vislib {
@@ -33,7 +33,7 @@ namespace math {
         /** 
          * Create the identity matrix.
          */
-        VLDEPRECATED
+        THE_DEPRECATED
         inline Matrix4(void) : Super() {}
 
         /**
@@ -42,7 +42,7 @@ namespace math {
          * @param components (D * D) components of the matrix. This must not be
          *                   NULL and according to the matrix layout L.
          */
-        VLDEPRECATED
+        THE_DEPRECATED
         inline Matrix4(const T *components) : Super(components) {}
 
         /**
@@ -50,7 +50,7 @@ namespace math {
          *
          * @param value The initial value of all components.
          */
-        VLDEPRECATED
+        THE_DEPRECATED
         explicit inline Matrix4(const T& value) : Super(value) {}
 
         /**
@@ -74,7 +74,7 @@ namespace math {
          * @param m43 Element in row 4, column 3.
          * @param m44 Element in row 4, column 4.
          */
-        VLDEPRECATED
+        THE_DEPRECATED
         Matrix4(const T& m11, const T& m12, const T& m13, const T& m14, 
             const T& m21, const T& m22, const T& m23, const T& m24, 
             const T& m31, const T& m32, const T& m33, const T& m34, 
@@ -85,7 +85,7 @@ namespace math {
          *
          * @param rhs The object to be cloned.
          */
-        VLDEPRECATED
+        THE_DEPRECATED
         inline Matrix4(const Matrix4& rhs) : Super(rhs) {}
 
         /**
@@ -94,7 +94,7 @@ namespace math {
          * @param rhs The object to be cloned.
          */
         template<class Tp, unsigned int Dp, MatrixLayout Lp, class Sp>
-        VLDEPRECATED
+        THE_DEPRECATED
         inline Matrix4(const AbstractMatrix<Tp, Dp, Lp, Sp>& rhs) 
             : Super(rhs) {}
 
@@ -105,7 +105,7 @@ namespace math {
          * @param rhs The quaterion to be converted.
          */
         template<class Tp, class Sp>
-        VLDEPRECATED
+        THE_DEPRECATED
         explicit inline Matrix4(const AbstractQuaternion<Tp, Sp>& rhs) {
             // Implementation note: No superclass ctor called
             // Implementation note: quaternion assign does not check for

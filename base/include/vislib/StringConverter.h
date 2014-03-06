@@ -17,8 +17,8 @@
 #include "the/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/memutils.h"
-#include "vislib/types.h"
+#include "the/memory.h"
+#include "the/types.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -171,7 +171,7 @@ namespace vislib {
     template<class S, class T, INT32 B>
     StringConverter<S, T, B>::~StringConverter(void) {
         if (this->buffer != this->staticBuffer) {
-            ARY_SAFE_DELETE(this->buffer);
+            the::safe_array_delete(this->buffer);
         }
     }
 

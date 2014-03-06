@@ -20,7 +20,7 @@
 #include "vislib/CameraRotate2DLookAt.h"
 #include "vislib/Cursor2D.h"
 #include "vislib/InputModifiers.h"
-#include "vislib/types.h"
+#include "the/types.h"
 #include "CamParamObserver.h"
 #include "vislib/OpenGLVISLogo.h"
 

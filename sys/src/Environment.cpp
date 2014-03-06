@@ -16,7 +16,7 @@
 #endif /* _WIn32 */
 
 #include "the/assert.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
 #include "the/trace.h"
@@ -220,12 +220,12 @@ void vislib::sys::Environment::Snapshot::Clear(void) {
         char **cursor = this->data;
 
         while (*cursor != NULL) {
-            ARY_SAFE_DELETE(*cursor);
+            the::safe_array_delete(*cursor);
             cursor++;
         }
     }
 
-    ARY_SAFE_DELETE(this->data);
+    the::safe_array_delete(this->data);
     THE_ASSERT(this->data == NULL);
 #endif /* !_WIN32 */
 }

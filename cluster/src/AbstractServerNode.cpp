@@ -196,7 +196,7 @@ void vislib::net::cluster::AbstractServerNode::disconnectPeer(
     try {
         PeerNode& peerNode = *this->peers[idx];
         peerNode.Socket.Close();
-        SAFE_DELETE(peerNode.Receiver);
+        the::safe_delete(peerNode.Receiver);
         this->peers.Erase(idx);
 
     } catch (SocketException se) {

@@ -20,9 +20,9 @@
 
 #include "the/assert.h"
 #include "vislib/Exception.h"
-#include "vislib/forceinline.h"
+#include "the/force_inline.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Point.h"
 #include "vislib/Polynom.h"
@@ -571,7 +571,7 @@ namespace math {
          *
          * @return The determinant of the matrix
          */
-        static VISLIB_FORCEINLINE T determinant2x2(const T& a00, const T& a10,
+        static THE_FORCE_INLINE T determinant2x2(const T& a00, const T& a10,
             const T& a01, const T& a11);
 
         /**
@@ -592,7 +592,7 @@ namespace math {
          *
          * @return The determinant of the matrix
          */
-        static VISLIB_FORCEINLINE T determinant3x3(const T& a00, const T& a10,
+        static THE_FORCE_INLINE T determinant3x3(const T& a00, const T& a10,
             const T& a20, const T& a01, const T& a11, const T& a21,
             const T& a02, const T& a12, const T& a22);
 
@@ -622,7 +622,7 @@ namespace math {
          *
          * @return The determinant of the matrix
          */
-        static VISLIB_FORCEINLINE T determinant4x4(const T& a00, const T& a10,
+        static THE_FORCE_INLINE T determinant4x4(const T& a00, const T& a10,
             const T& a20, const T& a30, const T& a01, const T& a11,
             const T& a21, const T& a31, const T& a02, const T& a12,
             const T& a22, const T& a32, const T& a03, const T& a13,

@@ -11,7 +11,7 @@
 
 #include "the/assert.h"
 #include "vislib/d3dverify.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 
 
 /*
@@ -26,7 +26,7 @@ D3D9VisLogoTest::D3D9VisLogoTest(void) : AbstractTest(L"VIS-Logo-Test"),
  * D3D9VisLogoTest::~D3D9VisLogoTest
  */
 D3D9VisLogoTest::~D3D9VisLogoTest(void) {
-    SAFE_DELETE(this->logo);
+    the::safe_delete(this->logo);
 }
 
 
@@ -59,7 +59,7 @@ HRESULT D3D9VisLogoTest::OnD3D9CreateDevice(
  * D3D9VisLogoTest::OnD3D9DestroyDevice
  */
 void D3D9VisLogoTest::OnD3D9DestroyDevice(void) {
-    SAFE_DELETE(this->logo);
+    the::safe_delete(this->logo);
 }
 
 

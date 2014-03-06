@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/forceinline.h"
+#include "the/force_inline.h"
 #include "vislib/SingleAllocator.h"
 
 
@@ -36,7 +36,7 @@ namespace vislib {
          *
          * @param inOutAddress The address of the object to be constructed.
          */
-        VISLIB_FORCEINLINE static void Ctor(T **inOutAddress) {
+        THE_FORCE_INLINE static void Ctor(T **inOutAddress) {
             *inOutAddress = NULL;
         }
 
@@ -46,7 +46,7 @@ namespace vislib {
          *
          * @param inOutAddress The address of the object to be destructed.
          */
-        VISLIB_FORCEINLINE static void Dtor(T **inOutAddress) {
+        THE_FORCE_INLINE static void Dtor(T **inOutAddress) {
             A::Deallocate(*inOutAddress);
             *inOutAddress = NULL;
         }

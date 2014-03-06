@@ -14,7 +14,7 @@
 #endif /* _WIN32 */
 
 #include "vislib/IllegalParamException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/StringConverter.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/SystemException.h"

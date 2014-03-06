@@ -10,7 +10,7 @@
 #include "the/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 
 
 /* Define the SHA1 circular left shift macro. */

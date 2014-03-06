@@ -10,7 +10,7 @@
 #include "the/assert.h"
 #include "vislib/clustermessages.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/RawStorage.h"
 #include "vislib/SocketException.h"
 #include "the/trace.h"
@@ -34,7 +34,7 @@ vislib::net::cluster::AllocateRecvMsgCtx(AbstractClusterNode *receiver,
  * vislib::net::cluster::FreeRecvMsgCtx
  */
 void vislib::net::cluster::FreeRecvMsgCtx(ReceiveMessagesCtx *& ctx) {
-    SAFE_DELETE(ctx);
+    the::safe_delete(ctx);
 }
 
 

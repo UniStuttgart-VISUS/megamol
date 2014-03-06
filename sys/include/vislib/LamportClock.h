@@ -17,7 +17,7 @@
 
 #include "vislib/AutoLock.h"
 #include "vislib/CriticalSection.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {

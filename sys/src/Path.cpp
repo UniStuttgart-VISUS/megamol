@@ -22,7 +22,7 @@
 #include "the/assert.h"
 #include "vislib/error.h"
 #include "vislib/Environment.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/SystemException.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/Stack.h"
@@ -541,12 +541,12 @@ vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
     char *buffer = new char[bufferSize];
 
     if (::GetCurrentDirectoryA(bufferSize, buffer) == 0) {
-        ARY_SAFE_DELETE(buffer);
+        the::safe_array_delete(buffer);
         throw SystemException(__FILE__, __LINE__);
     }
 
     StringA retval(buffer);
-    ARY_SAFE_DELETE(buffer);
+    the::safe_array_delete(buffer);
 
 #else /* _WIN32 */
     const SIZE_T BUFFER_GROW = 32;
@@ -554,7 +554,7 @@ vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
     char *buffer = new char[bufferSize];
 
     while (::getcwd(buffer, bufferSize) == NULL) {
-        ARY_SAFE_DELETE(buffer);
+        the::safe_array_delete(buffer);
 
         if (errno == ERANGE) {
             bufferSize += BUFFER_GROW;
@@ -565,7 +565,7 @@ vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
     }
 
     StringA retval(buffer);
-    ARY_SAFE_DELETE(buffer);
+    the::safe_array_delete(buffer);
 
 #endif /* _WIN32 */
 
@@ -586,12 +586,12 @@ vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
     wchar_t *buffer = new wchar_t[bufferSize];
 
     if (::GetCurrentDirectoryW(bufferSize, buffer) == 0) {
-        ARY_SAFE_DELETE(buffer);
+        the::safe_array_delete(buffer);
         throw SystemException(__FILE__, __LINE__);
     }
 
     StringW retval(buffer);
-    ARY_SAFE_DELETE(buffer);
+    the::safe_array_delete(buffer);
 
     if (!retval.EndsWith(SEPARATOR_W)) {
         retval += SEPARATOR_W;

@@ -9,7 +9,7 @@
 #include "vislib/MouseInteractionAdapter.h"
 
 #include "vislib/IllegalParamException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -39,8 +39,8 @@ vislib::graphics::MouseInteractionAdapter::MouseInteractionAdapter(
  * vislib::graphics::MouseInteractionAdapter::~MouseInteractionAdapter
  */
 vislib::graphics::MouseInteractionAdapter::~MouseInteractionAdapter(void) {
-    SAFE_DELETE(this->rotator);
-    SAFE_DELETE(this->zoomer);
+    the::safe_delete(this->rotator);
+    the::safe_delete(this->zoomer);
 }
 
 
@@ -55,7 +55,7 @@ void vislib::graphics::MouseInteractionAdapter::ConfigureRotation(
     /* Clean up old stuff. */
     if (this->rotator != NULL) {
         this->cursor.UnregisterCursorEvent(this->rotator);
-        SAFE_DELETE(this->rotator);
+        the::safe_delete(this->rotator);
     }
     THE_ASSERT(this->rotator == NULL);
 
@@ -99,7 +99,7 @@ void vislib::graphics::MouseInteractionAdapter::ConfigureZoom(
     /* Clean up old stuff. */
     if (this->zoomer != NULL) {
         this->cursor.UnregisterCursorEvent(this->zoomer);
-        SAFE_DELETE(this->zoomer);
+        the::safe_delete(this->zoomer);
     }
     THE_ASSERT(this->zoomer == NULL);
 

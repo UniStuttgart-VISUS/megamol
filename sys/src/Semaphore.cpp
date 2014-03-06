@@ -146,7 +146,7 @@ vislib::sys::Semaphore::~Semaphore(void) {
 #else /* _WIN32 */
     if (this->name.IsEmpty()) {
         ::sem_destroy(this->handle);
-        SAFE_DELETE(this->handle);
+        the::safe_delete(this->handle);
     } else {
         ::sem_unlink(this->name.PeekBuffer());
         ::sem_close(this->handle);

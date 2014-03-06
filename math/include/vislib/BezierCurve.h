@@ -15,7 +15,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/forceinline.h"
+#include "the/force_inline.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Point.h"
@@ -104,7 +104,7 @@ namespace math {
          *
          * @return The position on the bézier curve
          */
-        VISLIB_FORCEINLINE T Evaluate(float t) const {
+        THE_FORCE_INLINE T Evaluate(float t) const {
             T rv;
             return this->CalcPoint(rv, t);
         }
@@ -115,7 +115,7 @@ namespace math {
          * @param idx The index of the control point to be set (0..E)
          * @param p The new value for the control point
          */
-        VISLIB_FORCEINLINE void SetControlPoint(unsigned int idx, T& p) {
+        THE_FORCE_INLINE void SetControlPoint(unsigned int idx, T& p) {
             this->ControlPoint(idx) = p;
         }
 
@@ -128,7 +128,7 @@ namespace math {
          *
          * @return The position on the bézier curve
          */
-        VISLIB_FORCEINLINE T operator()(float t) const {
+        THE_FORCE_INLINE T operator()(float t) const {
             T rv;
             return this->CalcPoint(rv, t);
         }
@@ -140,7 +140,7 @@ namespace math {
          *
          * @return A reference to the idx-th control point
          */
-        VISLIB_FORCEINLINE T& operator[](unsigned int idx) {
+        THE_FORCE_INLINE T& operator[](unsigned int idx) {
             return this->ControlPoint(idx);
         }
 
@@ -151,7 +151,7 @@ namespace math {
          *
          * @return A const reference to the idx-th control point
          */
-        VISLIB_FORCEINLINE const T& operator[](unsigned int idx) const {
+        THE_FORCE_INLINE const T& operator[](unsigned int idx) const {
             return this->ControlPoint(idx);
         }
 

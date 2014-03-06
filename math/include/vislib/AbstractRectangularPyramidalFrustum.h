@@ -18,7 +18,7 @@
 #include "vislib/AbstractPyramidalFrustum.h"
 #include "vislib/AbstractViewFrustum.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/Plane.h"
 #include "vislib/Point.h"
 #include "vislib/ShallowVector.h"
@@ -280,8 +280,8 @@ namespace math {
          * Clear all cached data.
          */
         inline void invalidateCaches(void) {
-            ARY_SAFE_DELETE(this->cachePoints);
-            ARY_SAFE_DELETE(this->cachePlanes);
+            the::safe_array_delete(this->cachePoints);
+            the::safe_array_delete(this->cachePlanes);
             THE_ASSERT(this->cachePoints == NULL);
             THE_ASSERT(this->cachePlanes == NULL);
         }
@@ -323,8 +323,8 @@ namespace math {
             ::~AbstractRectangularPyramidalFrustum(void) {
         THE_STACK_TRACE;
         // Must not do anything about 'values' due to the Crowbar pattern(TM).
-        ARY_SAFE_DELETE(this->cachePoints);
-        ARY_SAFE_DELETE(this->cachePlanes);
+        the::safe_array_delete(this->cachePoints);
+        the::safe_array_delete(this->cachePlanes);
     }
 
 

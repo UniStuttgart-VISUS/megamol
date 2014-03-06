@@ -11,7 +11,7 @@
 
 #include "the/assert.h"
 #include "vislib/d3dverify.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "the/trace.h"
 
 
@@ -31,7 +31,7 @@ D3D9SimpleCameraTest::D3D9SimpleCameraTest(void)
  * D3D9SimpleCameraTest::~D3D9SimpleCameraTest
  */
 D3D9SimpleCameraTest::~D3D9SimpleCameraTest(void) {
-    SAFE_DELETE(this->mia);
+    the::safe_delete(this->mia);
 }
 
 
@@ -67,7 +67,7 @@ HRESULT D3D9SimpleCameraTest::OnD3D9CreateDevice(
  */
 void D3D9SimpleCameraTest::OnD3D9DestroyDevice(void) {
     this->boxes.Release();
-    SAFE_DELETE(this->logo);
+    the::safe_delete(this->logo);
 }
 
 

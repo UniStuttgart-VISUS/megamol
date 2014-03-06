@@ -11,7 +11,7 @@
 //#include "vislib/Exception.h"
 //#include "vislib/IbvInformation.h"
 //#include "vislib/IPCommEndPoint.h"
-//#include "vislib/memutils.h"
+//#include "the/memory.h"
 //#include "vislib/MissingImplementationException.h"
 //#include "vislib/sysfunctions.h"
 //#include "the/trace.h"
@@ -495,8 +495,8 @@
 //        this->protectionDomain->DeregisterMemory(this->sendKeys.Lkey, NULL);
 //    }
 //
-//    ARY_SAFE_DELETE(this->recvRegion);
-//    ARY_SAFE_DELETE(this->sendRegion);
+//    the::safe_array_delete(this->recvRegion);
+//    the::safe_array_delete(this->sendRegion);
 //
 //    sys::SafeRelease(this->recvComplQueue);
 //    sys::SafeRelease(this->sendComplQueue);

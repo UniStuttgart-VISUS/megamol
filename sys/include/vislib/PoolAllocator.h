@@ -19,7 +19,7 @@
 #include "vislib/CriticalSection.h"
 #include "vislib/NullLockable.h"
 #include "vislib/sysfunctions.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {

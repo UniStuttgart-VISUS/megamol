@@ -6,7 +6,7 @@
 
 
 #include "vislib/AbstractCursor.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "the/trace.h"
 
 #include <memory.h>

@@ -103,30 +103,30 @@ namespace math {
 
         if (cnt < 5) {
             if (eval[0] > eval[1]) {
-                vislib::math::Swap(eval[0], eval[1]);
-                vislib::math::Swap(evec[0], evec[1]);
+                std::swap(eval[0], eval[1]);
+                std::swap(evec[0], evec[1]);
             }
             if (cnt > 2) {
                 if (eval[0] > eval[2]) {
-                    vislib::math::Swap(eval[0], eval[2]);
-                    vislib::math::Swap(evec[0], evec[2]);
+                    std::swap(eval[0], eval[2]);
+                    std::swap(evec[0], evec[2]);
                 }
                 if (eval[1] > eval[2]) {
-                    vislib::math::Swap(eval[1], eval[2]);
-                    vislib::math::Swap(evec[1], evec[2]);
+                    std::swap(eval[1], eval[2]);
+                    std::swap(evec[1], evec[2]);
                 }
                 if (cnt == 4) {
                     if (eval[0] > eval[3]) {
-                        vislib::math::Swap(eval[0], eval[3]);
-                        vislib::math::Swap(evec[0], evec[3]);
+                        std::swap(eval[0], eval[3]);
+                        std::swap(evec[0], evec[3]);
                     }
                     if (eval[1] > eval[3]) {
-                        vislib::math::Swap(eval[1], eval[3]);
-                        vislib::math::Swap(evec[1], evec[3]);
+                        std::swap(eval[1], eval[3]);
+                        std::swap(evec[1], evec[3]);
                     }
                     if (eval[2] > eval[3]) {
-                        vislib::math::Swap(eval[2], eval[3]);
-                        vislib::math::Swap(evec[2], evec[3]);
+                        std::swap(eval[2], eval[3]);
+                        std::swap(evec[2], evec[3]);
                     }
                 }
             }

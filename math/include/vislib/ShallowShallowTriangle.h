@@ -16,7 +16,7 @@
 
 #include "vislib/AbstractTriangle.h"
 #include "vislib/ShallowPoint.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 
 namespace vislib {
 namespace math {

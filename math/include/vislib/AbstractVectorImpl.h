@@ -18,7 +18,7 @@
 
 #include "the/assert.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/OutOfRangeException.h"
 
 

@@ -11,7 +11,7 @@
 #endif /* _WIN32 */
 
 #include "vislib/error.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 
 
 /*
@@ -39,7 +39,7 @@ vislib::sys::SystemMessage::~SystemMessage(void) {
         ::LocalFree(this->msg);
     }
 #else /* _WIN32 */
-    SAFE_OPERATOR_DELETE(this->msg);
+    the::safe_operator_delete(this->msg);
 #endif /* _WIN32 */
 }
 
@@ -56,7 +56,7 @@ vislib::sys::SystemMessage& vislib::sys::SystemMessage::operator =(
             this->msg = NULL;
         }
 #else /* _WIN32 */
-        SAFE_OPERATOR_DELETE(this->msg);
+        the::safe_operator_delete(this->msg);
 #endif /* _WIN32 */
 		this->errorCode = rhs.errorCode;
 	}
@@ -74,7 +74,7 @@ vislib::sys::SystemMessage::operator const char *(void) const {
         ::LocalFree(this->msg);
         this->msg = NULL;
 #else /* _WIN32 */
-        SAFE_OPERATOR_DELETE(this->msg);
+        the::safe_operator_delete(this->msg);
 #endif /* _WIN32 */
     }
 
@@ -119,7 +119,7 @@ vislib::sys::SystemMessage::operator const char *(void) const {
             // allocated ourselves, but only our own buffer.
             // Manpages do not contain sufficient information for doing
             // something more intelligent.
-            ARY_SAFE_DELETE(buf);
+            the::safe_array_delete(buf);
         }
 #endif /* _WIN32 */
 
@@ -140,7 +140,7 @@ vislib::sys::SystemMessage::operator const wchar_t *(void) const {
         ::LocalFree(this->msg);
         this->msg = NULL;
 #else /* _WIN32 */
-        SAFE_OPERATOR_DELETE(this->msg);
+        the::safe_operator_delete(this->msg);
 #endif /* _WIN32 */
     }
 
@@ -185,7 +185,7 @@ vislib::sys::SystemMessage::operator const wchar_t *(void) const {
             // allocated ourselves, but only our own buffer.
             // Manpages do not contain sufficient information for doing
             // something more intelligent.
-            ARY_SAFE_DELETE(buf);
+            the::safe_array_delete(buf);
         }
 #endif /* _WIN32 */
 

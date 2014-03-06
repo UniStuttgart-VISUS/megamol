@@ -15,9 +15,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/NullLockable.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 
@@ -129,7 +129,7 @@ namespace vislib {
          * lock. We do not use a mutable member to avoid additional memory
          * used in non-synchronised collections.
          */
-        VISLIB_FORCEINLINE void Lock(void) const {
+        THE_FORCE_INLINE void Lock(void) const {
             const_cast<L *>(static_cast<const L *>(this))->Lock();
         }
 
@@ -147,7 +147,7 @@ namespace vislib {
          * lock. We do not use a mutable member to avoid additional memory
          * used in non-synchronised collections.
          */
-        VISLIB_FORCEINLINE void Unlock(void) const {
+        THE_FORCE_INLINE void Unlock(void) const {
             const_cast<L *>(static_cast<const L *>(this))->Unlock();
         }
 

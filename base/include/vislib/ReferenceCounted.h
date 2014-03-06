@@ -16,7 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {

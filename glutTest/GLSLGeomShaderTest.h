@@ -12,7 +12,7 @@
 
 
 #include "AbstractGlutApp.h"
-#include "vislib/types.h"
+#include "the/types.h"
 #include "vislib/CameraOpenGL.h"
 #include "vislib/CameraRotate2DLookAt.h"
 #include "vislib/Cursor2D.h"

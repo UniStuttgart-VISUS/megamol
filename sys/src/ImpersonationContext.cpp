@@ -17,7 +17,7 @@
 
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
@@ -96,13 +96,13 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
     /* Get the UID and GID first (string fields will not be used!). */
     if (::getpwnam_r(username, &pw, buf, bufLen, &ppw) != 0) {
         errorCode = ::GetLastError();
-        ARY_SAFE_DELETE(buf);
+        the::safe_array_delete(buf);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::getpwnam_r failed.\n");
         throw SystemException(errorCode, __FILE__, __LINE__);
     }
     if (ppw == NULL) {
         /* User was not found. */
-        ARY_SAFE_DELETE(buf);
+        the::safe_array_delete(buf);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Cannot impersonate, because the "
             "user \"%s\" does not exist.\n", username);
         throw SystemException(ENOENT, __FILE__, __LINE__);
@@ -111,14 +111,14 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
     /* Get shadow password of target user (pw.passwd is not valid!). */
     if (::getspnam_r(username, &spw, buf, bufLen, &pspw) != 0) {
         errorCode = ::GetLastError();
-        ARY_SAFE_DELETE(buf);
+        the::safe_array_delete(buf);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::getspnam_r failed.\n");
         throw SystemException(errorCode, __FILE__, __LINE__);
     }
     THE_ASSERT(pspw != NULL);
     if (pspw == NULL) {
         /* User was not found. */
-        ARY_SAFE_DELETE(buf);
+        the::safe_array_delete(buf);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Cannot impersonate, because the "
             "user \"%s\" does not exist.\n", username);
         throw SystemException(ENOENT, __FILE__, __LINE__);
@@ -128,7 +128,7 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
     if (spw.sp_pwdp != NULL) {
         if ((password == NULL) || (::strcmp(spw.sp_pwdp, ::crypt(password,
                 spw.sp_pwdp)) != 0)) {
-            ARY_SAFE_DELETE(buf);
+            the::safe_array_delete(buf);
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Cannot impersonate, because the "
                 "password is invalid: Expected \"%s\", but got \"%s\".\n",
                 spw.sp_pwdp, ::crypt(password, spw.sp_pwdp));
@@ -140,19 +140,19 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
     /* Switch effective user and group ID. */
     if (::seteuid(pw.pw_uid) != 0) {
         errorCode = ::GetLastError();
-        ARY_SAFE_DELETE(buf);
+        the::safe_array_delete(buf);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::seteuid failed.\n");
         throw SystemException(errorCode, __FILE__, __LINE__);
     }
     if (::setegid(pw.pw_gid) != 0) {
         errorCode = ::GetLastError();
         ::seteuid(this->revertToUid);
-        ARY_SAFE_DELETE(buf);
+        the::safe_array_delete(buf);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::setegid failed.\n");
         throw SystemException(errorCode, __FILE__, __LINE__);
     }
 
-    ARY_SAFE_DELETE(buf);
+    the::safe_array_delete(buf);
 #endif /* _WIN32 */
 }
 

@@ -14,7 +14,7 @@
 #endif /* _WIN32 */
 
 #include "the/assert.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/StringConverter.h"
 
 

@@ -20,7 +20,7 @@
 #include "the/assert.h"
 #include "vislib/mathtypes.h"
 #include "vislib/Pair.h"
-#include "vislib/utils.h"
+#include "the/utils.h"
 
 
 namespace vislib {
@@ -272,14 +272,6 @@ namespace math {
     inline int Sqrt(const int n) {
         return static_cast<int>(::sqrt(static_cast<double>(n)));
     }
-
-
-    /*
-     * There was a second implementation of 'Swap' here.
-     * Instead use '::vislib::Swap' from 'vislib/utils' from base!
-     * This 'using' is to preserve the name for backward compatibility.
-     */
-    using ::vislib::Swap;
 
 
     /**

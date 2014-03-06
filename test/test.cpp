@@ -93,7 +93,6 @@ VislibTest tests[] = {
     {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
-    {_T("RLEUINT"), ::TestRLEUInt, "Tests UINT RLE Encoding"},
     {_T("multisz"), ::TestMultiSz, "Tests MultiSz container"},
     // graphics
     {_T("BitmapCodecSimple"), ::TestBitmapCodecSimple, "Performs very simple tests of vislib::graphics::*BitmapCodec"},

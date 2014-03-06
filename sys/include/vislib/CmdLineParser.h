@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/types.h"
+#include "the/types.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/IllegalParamException.h"
@@ -1637,7 +1637,7 @@ namespace sys {
      */
     template<class T>
     CmdLineParser<T>::Option::~Option(void) {
-        SAFE_DELETE(this->values); // paranoia
+        the::safe_delete(this->values); // paranoia
     }
 
 
@@ -1807,7 +1807,7 @@ namespace sys {
      */
     template<class T> 
     CmdLineParser<T>::OptionDescIterator::~OptionDescIterator(void) {
-        ARY_SAFE_DELETE(this->output);
+        the::safe_array_delete(this->output);
     }
 
 
@@ -1821,7 +1821,7 @@ namespace sys {
             this->option = rhs.option;
             this->formatter = rhs.formatter;
 
-            ARY_SAFE_DELETE(this->output);
+            the::safe_array_delete(this->output);
             unsigned int len = T::SafeStringLength(rhs.output);
             this->output = new Char[len + 1];
             this->output[len] = 0;
@@ -1849,7 +1849,7 @@ namespace sys {
     template<class T> 
     typename CmdLineParser<T>::Char*& CmdLineParser<T>::OptionDescIterator::Next(void) {
         Option *opt = this->option.Next();
-        ARY_SAFE_DELETE(this->output);
+        the::safe_array_delete(this->output);
 
         vislib::String<T> str;
         if (!opt->GetLongName().IsEmpty()) {
@@ -1987,7 +1987,7 @@ namespace sys {
      */
     template<class T>
     CmdLineParser<T>::~CmdLineParser() {
-        ARY_SAFE_DELETE(this->arglist);
+        the::safe_array_delete(this->arglist);
         this->CleanOptionList();
     }
  
@@ -2109,7 +2109,7 @@ namespace sys {
      */
     template<class T>
     int CmdLineParser<T>::Parse(int argc, Char **argv, bool includeFirstArgument) {
-        ARY_SAFE_DELETE(this->arglist);
+        the::safe_array_delete(this->arglist);
         this->arglistSize = 0;
         this->errors.Clear();
         this->warnings.Clear();

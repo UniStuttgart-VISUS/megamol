@@ -16,12 +16,12 @@
 
 #include "vislib/Array.h"
 #include "vislib/BitmapImage.h"
-#include "vislib/forceinline.h"
+#include "the/force_inline.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/Point.h"
 #include "vislib/ShallowPoint.h"
-#include "vislib/types.h"
+#include "the/types.h"
 #include <climits>
 
 
@@ -339,7 +339,7 @@ namespace graphics {
          * @param label The colour channel label
          * @param v The colour value
          */
-        VISLIB_FORCEINLINE void setColourEntry(SIZE_T i, unsigned int idx,
+        THE_FORCE_INLINE void setColourEntry(SIZE_T i, unsigned int idx,
                 BitmapImage::ChannelLabel label, unsigned char v) {
             this->col[i].idx = idx;
             this->col[i].label = label;
@@ -355,7 +355,7 @@ namespace graphics {
          * @param label The colour channel label
          * @param v The colour value
          */
-        VISLIB_FORCEINLINE void setColourEntry(SIZE_T i, unsigned int idx,
+        THE_FORCE_INLINE void setColourEntry(SIZE_T i, unsigned int idx,
                 BitmapImage::ChannelLabel label, unsigned short v) {
             this->col[i].idx = idx;
             this->col[i].label = label;
@@ -371,7 +371,7 @@ namespace graphics {
          * @param label The colour channel label
          * @param v The colour value
          */
-        VISLIB_FORCEINLINE void setColourEntry(SIZE_T i, unsigned int idx,
+        THE_FORCE_INLINE void setColourEntry(SIZE_T i, unsigned int idx,
                 BitmapImage::ChannelLabel label, float v) {
             this->col[i].idx = idx;
             this->col[i].label = label;
@@ -382,10 +382,10 @@ namespace graphics {
         /**
          * Clears all cached colour information
          */
-        VISLIB_FORCEINLINE void clearColourCache(void) {
+        THE_FORCE_INLINE void clearColourCache(void) {
             this->colSize = 0;
-            ARY_SAFE_DELETE(this->colBits);
-            ARY_SAFE_DELETE(this->colMask);
+            the::safe_array_delete(this->colBits);
+            the::safe_array_delete(this->colMask);
         }
 
         /**
@@ -522,7 +522,7 @@ namespace graphics {
          * @param dst Pointer to the pixel
          */
 #ifdef _WIN32
-        VISLIB_FORCEINLINE
+        THE_FORCE_INLINE
 #endif /*_WIN32 */
         void setPixel(unsigned char *dst);
 

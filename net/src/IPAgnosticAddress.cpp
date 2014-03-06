@@ -13,7 +13,7 @@
 #include "vislib/DNS.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/OutOfRangeException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 
 
 /*
@@ -224,8 +224,8 @@ vislib::net::IPAgnosticAddress::IPAgnosticAddress(const IPAgnosticAddress& rhs)
  */
 vislib::net::IPAgnosticAddress::~IPAgnosticAddress(void) {
     THE_STACK_TRACE;
-    SAFE_DELETE(this->v4);
-    SAFE_DELETE(this->v6);
+    the::safe_delete(this->v4);
+    the::safe_delete(this->v6);
 }
 
 
@@ -330,8 +330,8 @@ vislib::net::IPAgnosticAddress& vislib::net::IPAgnosticAddress::operator =(
     THE_STACK_TRACE;
 
     if (this != &rhs) {
-        SAFE_DELETE(this->v4);
-        SAFE_DELETE(this->v6);
+        the::safe_delete(this->v4);
+        the::safe_delete(this->v6);
 
         if (rhs.IsV4()) {
             THE_ASSERT(rhs.v6 == NULL);
@@ -355,8 +355,8 @@ vislib::net::IPAgnosticAddress& vislib::net::IPAgnosticAddress::operator =(
     THE_STACK_TRACE;
 
     if (this->v4 != &rhs) {
-        SAFE_DELETE(this->v4);
-        SAFE_DELETE(this->v6);
+        the::safe_delete(this->v4);
+        the::safe_delete(this->v6);
         this->v4 = new IPAddress(rhs);
     }
 
@@ -372,8 +372,8 @@ vislib::net::IPAgnosticAddress& vislib::net::IPAgnosticAddress::operator =(
     THE_STACK_TRACE;
 
     if (this->v6 != &rhs) {
-        SAFE_DELETE(this->v4);
-        SAFE_DELETE(this->v6);
+        the::safe_delete(this->v4);
+        the::safe_delete(this->v6);
         this->v6 = new IPAddress6(rhs);
     }
 
@@ -389,8 +389,8 @@ vislib::net::IPAgnosticAddress& vislib::net::IPAgnosticAddress::operator =(
     THE_STACK_TRACE;
 
     // TODO: This might be unsafe if s.o. copies internal data of v4
-    SAFE_DELETE(this->v4);
-    SAFE_DELETE(this->v6);
+    the::safe_delete(this->v4);
+    the::safe_delete(this->v6);
     this->v4 = new IPAddress(rhs);
 
     return *this;
@@ -405,8 +405,8 @@ vislib::net::IPAgnosticAddress& vislib::net::IPAgnosticAddress::operator =(
     THE_STACK_TRACE;
 
     // TODO: This might be unsafe if s.o. copies internal data of v6
-    SAFE_DELETE(this->v4);
-    SAFE_DELETE(this->v6);
+    the::safe_delete(this->v4);
+    the::safe_delete(this->v6);
     this->v6 = new IPAddress6(rhs);
 
     return *this;

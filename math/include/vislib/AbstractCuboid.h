@@ -17,7 +17,7 @@
 #include "the/assert.h"
 #include "vislib/Dimension.h"
 #include "vislib/Point.h"
-#include "vislib/types.h"
+#include "the/types.h"
 #include "vislib/mathfunctions.h"
 
 

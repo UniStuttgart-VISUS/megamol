@@ -17,7 +17,7 @@
 #include "vislib/AbstractOpenGLShader.h"
 #include "vislib/ExtensionsDependent.h"
 #include "vislib/glverify.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {

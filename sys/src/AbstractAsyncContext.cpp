@@ -9,7 +9,7 @@
 #include "vislib/AbstractAsyncContext.h"
 
 #include "the/assert.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 
 
 /*

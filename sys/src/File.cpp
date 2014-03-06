@@ -86,14 +86,14 @@ vislib::sys::File* vislib::sys::File::CreateTempFile(void) {
             GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
             FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, NULL))
             == INVALID_HANDLE_VALUE) {
-        SAFE_DELETE(retval);
+        the::safe_delete(retval);
         throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     TmpFile *retval = new TmpFile();
     if ((retval->hFile = ::tmpfile()) == NULL) {
-        SAFE_DELETE(retval);
+        the::safe_delete(retval);
         throw SystemException(__FILE__, __LINE__);
     } else {
         retval->handle = ::fileno(retval->hFile);

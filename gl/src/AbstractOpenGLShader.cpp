@@ -16,7 +16,7 @@
 
 #include "the/assert.h"
 #include "vislib/File.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "the/trace.h"
 
 

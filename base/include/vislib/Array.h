@@ -31,9 +31,9 @@
 #include "vislib/Iterator.h"
 #include "vislib/OrderedCollection.h"
 #include "vislib/OutOfRangeException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/NullLockable.h"
-#include "vislib/types.h"
+#include "the/types.h"
 
 
 namespace vislib {
@@ -1034,7 +1034,7 @@ namespace vislib {
         this->capacity = capacity;
         if (this->capacity == 0) {
             /* Array is empty now, make 'this->elements' a NULL pointer. */
-            SAFE_FREE(this->elements);
+            the::safe_free(this->elements);
 
         } else if (oldCapacity != this->capacity) {
             /* Reallocate elements. */
@@ -1049,7 +1049,7 @@ namespace vislib {
                 for (SIZE_T i = 0; i < oldCapacity; i++) {
                     C::Dtor(this->elements + i);
                 }
-                SAFE_FREE(this->elements);
+                the::safe_free(this->elements);
                 this->Unlock();
                 throw std::bad_alloc();
             }

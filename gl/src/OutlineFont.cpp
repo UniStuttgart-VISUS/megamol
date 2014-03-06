@@ -9,7 +9,7 @@
 #include <cfloat>
 #include "glh/glh_genext.h"
 #include "vislib/CharTraits.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/UTF8Encoder.h"
 
 using namespace vislib::graphics::gl;

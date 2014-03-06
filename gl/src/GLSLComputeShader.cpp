@@ -13,7 +13,7 @@
 
 #include "vislib/Array.h"
 #include "vislib/glverify.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/String.h"
 #include "vislib/sysfunctions.h"
 
@@ -132,22 +132,22 @@ bool vislib::graphics::gl::GLSLComputeShader::CompileFromFile(
         bool retval = this->Compile(computeShaderSrcPtrs, cntComputeShaderFiles,
             insertLineDirective);
 
-        ARY_SAFE_DELETE(computeShaderSrcPtrs);
+        the::safe_array_delete(computeShaderSrcPtrs);
 
         return retval;
 
         // free pointer arrays on exception
     } catch(OpenGLException e) { // catch OpenGLException to avoid truncating
-        ARY_SAFE_DELETE(computeShaderSrcPtrs);
+        the::safe_array_delete(computeShaderSrcPtrs);
         throw e;
     } catch(CompileException e) {
-        ARY_SAFE_DELETE(computeShaderSrcPtrs);
+        the::safe_array_delete(computeShaderSrcPtrs);
         throw e;
     } catch(Exception e) {
-        ARY_SAFE_DELETE(computeShaderSrcPtrs);
+        the::safe_array_delete(computeShaderSrcPtrs);
         throw e;
     } catch(...) {
-        ARY_SAFE_DELETE(computeShaderSrcPtrs);
+        the::safe_array_delete(computeShaderSrcPtrs);
         throw Exception("Unknown Exception", __FILE__, __LINE__);
     }
 

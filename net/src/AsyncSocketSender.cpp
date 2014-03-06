@@ -34,7 +34,7 @@ vislib::net::AsyncSocketSender::~AsyncSocketSender(void) {
     try {
         this->Terminate();
         this->lockStoragePool.Lock();
-        SAFE_DELETE(this->storagePool);
+        the::safe_delete(this->storagePool);
     } catch (Exception& e) {
         VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Exception while destroying "

@@ -18,10 +18,10 @@
 #include "the/assert.h"
 #include "vislib/Dimension.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/Point.h"
-#include "vislib/types.h"
-#include "vislib/utils.h"
+#include "the/types.h"
+#include "the/utils.h"
 
 
 namespace vislib {

@@ -23,8 +23,8 @@
 #endif /* _WIN32 */
 
 #include "vislib/Environment.h"
-#include "vislib/memutils.h"
-#include "vislib/types.h"
+#include "the/memory.h"
+#include "the/types.h"
 
 #ifdef _WIN32
 #pragma comment(lib, "advapi32")

@@ -20,7 +20,7 @@
 #include "vislib/File.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IOException.h"
-#include "vislib/memutils.h"
+#include "the/memory.h"
 #include "vislib/Path.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
@@ -150,13 +150,13 @@ vislib::StringA vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
         buf[pos] = '\0';
 
     } catch(IOException e) {
-        ARY_SAFE_DELETE(buf);
+        the::safe_array_delete(buf);
         throw IOException(e);
     } catch(Exception e) {
-        ARY_SAFE_DELETE(buf);
+        the::safe_array_delete(buf);
         throw Exception(e);
     } catch(...) {
-        ARY_SAFE_DELETE(buf);
+        the::safe_array_delete(buf);
         throw Exception("Unexcepted exception", __FILE__, __LINE__);
     }
     StringA str(buf);
@@ -197,13 +197,13 @@ vislib::StringW vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
         buf[pos] = L'\0';
 
     } catch(IOException e) {
-        ARY_SAFE_DELETE(buf);
+        the::safe_array_delete(buf);
         throw IOException(e);
     } catch(Exception e) {
-        ARY_SAFE_DELETE(buf);
+        the::safe_array_delete(buf);
         throw Exception(e);
     } catch(...) {
-        ARY_SAFE_DELETE(buf);
+        the::safe_array_delete(buf);
         throw Exception("Unexcepted exception", __FILE__, __LINE__);
     }
     StringW str(buf);

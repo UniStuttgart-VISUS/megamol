@@ -174,7 +174,7 @@ inline bool vislib::graphics::BitmapPainter::setColourCacheValue(Tp* dst,
  * vislib::graphics::BitmapPainter::setPixel
  */
 #ifdef _WIN32
-VISLIB_FORCEINLINE
+THE_FORCE_INLINE
 #endif /* _WIN32 */
 void vislib::graphics::BitmapPainter::setPixel(
         unsigned char *dst) {
