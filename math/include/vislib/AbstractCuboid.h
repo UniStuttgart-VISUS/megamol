@@ -683,22 +683,22 @@ namespace math {
     protected:
 
         /** The index of the back coordinate in 'bounds'. */
-        static const UINT_PTR IDX_BACK;
+        static const uintptr_t IDX_BACK;
 
         /** The index of the bottom coordinate in 'bounds'. */
-        static const UINT_PTR IDX_BOTTOM;
+        static const uintptr_t IDX_BOTTOM;
 
         /** The index of the front coordinate in 'bounds'. */
-        static const UINT_PTR IDX_FRONT;
+        static const uintptr_t IDX_FRONT;
 
         /** The index of the right coordinate in 'bounds'. */
-        static const UINT_PTR IDX_RIGHT;
+        static const uintptr_t IDX_RIGHT;
 
         /** The index of the left coordinate in 'bounds'. */
-        static const UINT_PTR IDX_LEFT;
+        static const uintptr_t IDX_LEFT;
 
         /** The index of the top coordinate in 'bounds'. */
-        static const UINT_PTR IDX_TOP;
+        static const uintptr_t IDX_TOP;
 
         /**
          * Forbidden default ctor. This does nothing.
@@ -1018,42 +1018,42 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::IDX_BACK
      */
     template<class T, class S> 
-    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_BACK = 2;
+    const uintptr_t vislib::math::AbstractCuboid<T, S>::IDX_BACK = 2;
 
 
     /*
      * vislib::math::AbstractCuboid<T, S>::IDX_BOTTOM
      */
     template<class T, class S> 
-    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_BOTTOM = 1;
+    const uintptr_t vislib::math::AbstractCuboid<T, S>::IDX_BOTTOM = 1;
     
 
     /*
      * vislib::math::AbstractCuboid<T, S>::IDX_FRONT
      */
     template<class T, class S> 
-    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_FRONT = 5;
+    const uintptr_t vislib::math::AbstractCuboid<T, S>::IDX_FRONT = 5;
     
 
     /*
      * vislib::math::AbstractCuboid<T, S>::IDX_RIGHT
      */
     template<class T, class S> 
-    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_RIGHT = 3;
+    const uintptr_t vislib::math::AbstractCuboid<T, S>::IDX_RIGHT = 3;
 
 
     /*
      * vislib::math::AbstractCuboid<T, S>::IDX_LEFT
      */
     template<class T, class S> 
-    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_LEFT = 0;
+    const uintptr_t vislib::math::AbstractCuboid<T, S>::IDX_LEFT = 0;
 
 
     /*
      * vislib::math::AbstractCuboid<T, S>::IDX_TOP
      */
     template<class T, class S> 
-    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_TOP = 4;
+    const uintptr_t vislib::math::AbstractCuboid<T, S>::IDX_TOP = 4;
 
 
     ///*

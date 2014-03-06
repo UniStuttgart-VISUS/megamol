@@ -237,16 +237,16 @@ namespace math {
     protected:
 
         /** Index of the center point x-coordinate in 'xyzr'. */
-        static const UINT_PTR IDX_X;
+        static const uintptr_t IDX_X;
 
         /** Index of the center point y-coordinate in 'xyzr'. */
-        static const UINT_PTR IDX_Y;
+        static const uintptr_t IDX_Y;
 
         /** Index of the center point z-coordinate in 'xyzr'. */
-        static const UINT_PTR IDX_Z;
+        static const uintptr_t IDX_Z;
 
         /** Index of the radius in 'xyzr'. */
-        static const UINT_PTR IDX_RADIUS;
+        static const uintptr_t IDX_RADIUS;
 
         /**
          * Forbidden default ctor. This does nothing.
@@ -356,26 +356,26 @@ namespace math {
     /*
      * vislib::math::AbstractSphere<T, S>::IDX_X
      */
-    template<class T, class S> const UINT_PTR AbstractSphere<T, S>::IDX_X = 0;
+    template<class T, class S> const uintptr_t AbstractSphere<T, S>::IDX_X = 0;
 
 
     /*
      * vislib::math::AbstractSphere<T, S>::IDX_Y
      */
-    template<class T, class S> const UINT_PTR AbstractSphere<T, S>::IDX_Y = 1;
+    template<class T, class S> const uintptr_t AbstractSphere<T, S>::IDX_Y = 1;
 
 
     /*
      * vislib::math::AbstractSphere<T, S>::IDX_Z
      */
-    template<class T, class S> const UINT_PTR AbstractSphere<T, S>::IDX_Z = 2;
+    template<class T, class S> const uintptr_t AbstractSphere<T, S>::IDX_Z = 2;
 
 
     /*
      * vislib::math::AbstractSphere<T, S>::IDX_RADIUS
      */
     template<class T, class S> 
-    const UINT_PTR AbstractSphere<T, S>::IDX_RADIUS = 3;
+    const uintptr_t AbstractSphere<T, S>::IDX_RADIUS = 3;
 
     
 } /* end namespace math */

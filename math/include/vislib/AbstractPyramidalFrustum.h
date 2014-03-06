@@ -40,26 +40,26 @@ namespace math {
          * Index of the left bottom point (as seen from the apex of the pyramid)
          * in the array returned by GetBottomBasePoints() or GetTopBasePoints().
          */
-        static const UINT_PTR IDX_LEFT_BOTTOM_POINT;
+        static const uintptr_t IDX_LEFT_BOTTOM_POINT;
 
         /**
          * Index of the left top point (as seen from the apex of the pyramid)
          * in the array returned by GetBottomBasePoints() or GetTopBasePoints().
          */
-        static const UINT_PTR IDX_LEFT_TOP_POINT;
+        static const uintptr_t IDX_LEFT_TOP_POINT;
 
         /**
          * Index of the right bottom point (as seen from the apex of the 
          * pyramid) in the array returned by GetBottomBasePoints() or 
          * GetTopBasePoints().
          */
-        static const UINT_PTR IDX_RIGHT_BOTTOM_POINT;
+        static const uintptr_t IDX_RIGHT_BOTTOM_POINT;
 
         /**
          * Index of the right top point (as seen from the apex of the pyramid)
          * in the array returned by GetBottomBasePoints() or GetTopBasePoints().
          */
-        static const UINT_PTR IDX_RIGHT_TOP_POINT;
+        static const uintptr_t IDX_RIGHT_TOP_POINT;
 
         /** Dtor. */
         virtual ~AbstractPyramidalFrustum(void);
@@ -119,28 +119,28 @@ namespace math {
      * vislib::math::AbstractPyramidalFrustum<T>::IDX_LEFT_BOTTOM_POINT
      */
     template<class T> 
-    const UINT_PTR AbstractPyramidalFrustum<T>::IDX_LEFT_BOTTOM_POINT = 0;
+    const uintptr_t AbstractPyramidalFrustum<T>::IDX_LEFT_BOTTOM_POINT = 0;
 
 
     /*
      * vislib::math::AbstractPyramidalFrustum<T>::IDX_LEFT_TOP_POINT
      */
     template<class T> 
-    const UINT_PTR AbstractPyramidalFrustum<T>::IDX_LEFT_TOP_POINT = 3;
+    const uintptr_t AbstractPyramidalFrustum<T>::IDX_LEFT_TOP_POINT = 3;
 
 
     /*
      * vislib::math::AbstractPyramidalFrustum<T>::IDX_RIGHT_BOTTOM_POINT
      */
     template<class T> 
-    const UINT_PTR AbstractPyramidalFrustum<T>::IDX_RIGHT_BOTTOM_POINT = 1;
+    const uintptr_t AbstractPyramidalFrustum<T>::IDX_RIGHT_BOTTOM_POINT = 1;
 
 
     /*
      * vislib::math::AbstractPyramidalFrustum<T>::IDX_RIGHT_TOP_POINT
      */
     template<class T> 
-    const UINT_PTR AbstractPyramidalFrustum<T>::IDX_RIGHT_TOP_POINT = 2;
+    const uintptr_t AbstractPyramidalFrustum<T>::IDX_RIGHT_TOP_POINT = 2;
 
 
     /*

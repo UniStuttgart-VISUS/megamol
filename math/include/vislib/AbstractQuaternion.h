@@ -515,16 +515,16 @@ namespace math {
     protected:
 
         /** The index of the w component. */
-        static const UINT_PTR IDX_W;
+        static const uintptr_t IDX_W;
 
         /** The index of the x component. */
-        static const UINT_PTR IDX_X;
+        static const uintptr_t IDX_X;
 
         /** The index of the y component. */
-        static const UINT_PTR IDX_Y;
+        static const uintptr_t IDX_Y;
 
         /** The index of the z component. */
-        static const UINT_PTR IDX_Z;
+        static const uintptr_t IDX_Z;
 
         /**
          * Disallow instances of this class.
@@ -938,28 +938,28 @@ namespace math {
      * vislib::math::AbstractQuaternion<T, S>::IDX_W
      */
     template<class T, class S> 
-    const UINT_PTR AbstractQuaternion<T, S>::IDX_W = 3;
+    const uintptr_t AbstractQuaternion<T, S>::IDX_W = 3;
 
 
     /*
      * vislib::math::AbstractQuaternion<T, S>::IDX_X
      */
     template<class T, class S> 
-    const UINT_PTR AbstractQuaternion<T, S>::IDX_X = 0;
+    const uintptr_t AbstractQuaternion<T, S>::IDX_X = 0;
 
 
     /*
      * vislib::math::AbstractQuaternion<T, S>::IDX_Y
      */
     template<class T, class S> 
-    const UINT_PTR AbstractQuaternion<T, S>::IDX_Y = 1;
+    const uintptr_t AbstractQuaternion<T, S>::IDX_Y = 1;
 
 
     /*
      * vislib::math::AbstractQuaternion<T, S>::IDX_Z
      */
     template<class T, class S> 
-    const UINT_PTR AbstractQuaternion<T, S>::IDX_Z = 2;
+    const uintptr_t AbstractQuaternion<T, S>::IDX_Z = 2;
 
 } /* end namespace math */
 } /* end namespace vislib */

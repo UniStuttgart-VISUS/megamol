@@ -224,52 +224,52 @@ namespace math {
         typedef AbstractPyramidalFrustum<T> Super;
 
         /** The number of elements in 'offset'. */
-        static const UINT_PTR CNT_ELEMENTS;
+        static const uintptr_t CNT_ELEMENTS;
 
         /** Index of the x-coordinate of the apex of the pyramid. */
-        static const UINT_PTR IDX_APEX_X;
+        static const uintptr_t IDX_APEX_X;
 
         /** Index of the y-coordinate of the apex of the pyramid. */
-        static const UINT_PTR IDX_APEX_Y;
+        static const uintptr_t IDX_APEX_Y;
 
         /** Index of the y-coordinate of the apex of the pyramid. */
-        static const UINT_PTR IDX_APEX_Z;
+        static const uintptr_t IDX_APEX_Z;
 
         /** The index of the bottom plane offset. */
-        static const UINT_PTR IDX_BOTTOM;
+        static const uintptr_t IDX_BOTTOM;
 
         /** The index of the far plane offset. */
-        static const UINT_PTR IDX_FAR;
+        static const uintptr_t IDX_FAR;
 
         /** The index of the left plane offset. */
-        static const UINT_PTR IDX_LEFT;
+        static const uintptr_t IDX_LEFT;
 
         /** The index of the near plane offset. */
-        static const UINT_PTR IDX_NEAR;
+        static const uintptr_t IDX_NEAR;
 
         /** The index of the x-coordinate of the bottom/top normal vector. */
-        static const UINT_PTR IDX_NORMAL_X;
+        static const uintptr_t IDX_NORMAL_X;
 
         /** The index of the x-coordinate of the bottom/top normal vector. */
-        static const UINT_PTR IDX_NORMAL_Y;
+        static const uintptr_t IDX_NORMAL_Y;
 
         /** The index of the x-coordinate of the bottom/top normal vector. */
-        static const UINT_PTR IDX_NORMAL_Z;
+        static const uintptr_t IDX_NORMAL_Z;
 
         /** The index of the right plane offset. */
-        static const UINT_PTR IDX_RIGHT;
+        static const uintptr_t IDX_RIGHT;
 
         /** The index of the top plane offset. */
-        static const UINT_PTR IDX_TOP;
+        static const uintptr_t IDX_TOP;
 
         /** The index of the x-coordinate of the up vector. */
-        static const UINT_PTR IDX_UP_X;
+        static const uintptr_t IDX_UP_X;
 
         /** The index of the x-coordinate of the up vector. */
-        static const UINT_PTR IDX_UP_Y;
+        static const uintptr_t IDX_UP_Y;
 
         /** The index of the x-coordinate of the up vector. */
-        static const UINT_PTR IDX_UP_Z;
+        static const uintptr_t IDX_UP_Z;
 
         /** 
          * Disallow instances.
@@ -457,112 +457,112 @@ namespace math {
      * ...AbstractRectangularPyramidalFrustum<T, S>::CNT_ELEMENTS
      */
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::CNT_ELEMENTS = 15;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::CNT_ELEMENTS = 15;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_X
      */
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_X = 6;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_X = 6;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_Y
      */
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_Y = 7;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_Y = 7;
 
     
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_Z
      */
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_Z = 8;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_Z = 8;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_BOTTOM
      */
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_BOTTOM = 0;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_BOTTOM = 0;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_FAR
      */
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_FAR = 4;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_FAR = 4;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_LEFT
      */
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_LEFT = 2;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_LEFT = 2;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_NEAR
      */
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_NEAR = 5;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_NEAR = 5;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_X
      */    
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_X = 9;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_X = 9;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_Y
      */    
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_Y = 10;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_Y = 10;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_Z
      */    
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_Z = 11;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_Z = 11;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_RIGHT
      */    
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_RIGHT = 3;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_RIGHT = 3;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_TOP
      */
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_TOP = 1;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_TOP = 1;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_X
      */    
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_X = 12;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_X = 12;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Y
      */    
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Y = 13;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Y = 13;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Z
      */    
     template<class T, class S>
-    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Z = 14;
+    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Z = 14;
 
 
     /*

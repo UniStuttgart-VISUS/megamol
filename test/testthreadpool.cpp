@@ -78,7 +78,7 @@ public:
 
 
 DWORD Doweler::Run(void *userData) {
-    UINT_PTR dowel = reinterpret_cast<UINT_PTR>(userData);
+    uintptr_t dowel = reinterpret_cast<uintptr_t>(userData);
 
     for (int i = 0; i < 5; i++) {
         LOCK_COUT;
@@ -109,7 +109,7 @@ public:
 
 
 DWORD Crowbarer::Run(void *userData) {
-    UINT_PTR crowbar = reinterpret_cast<UINT_PTR>(userData);
+    uintptr_t crowbar = reinterpret_cast<uintptr_t>(userData);
 
     sem.Lock();
     LOCK_COUT;

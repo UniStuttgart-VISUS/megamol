@@ -293,25 +293,25 @@ namespace math {
         typedef AbstractPyramidalFrustum<T> Super;
 
         /** The number of elements in 'offset'. */
-        static const UINT_PTR CNT_ELEMENTS;
+        static const uintptr_t CNT_ELEMENTS;
 
         /** The index of the bottom plane offset. */
-        static const UINT_PTR IDX_BOTTOM;
+        static const uintptr_t IDX_BOTTOM;
 
         /** The index of the far plane offset. */
-        static const UINT_PTR IDX_FAR;
+        static const uintptr_t IDX_FAR;
 
         /** The index of the left plane offset. */
-        static const UINT_PTR IDX_LEFT;
+        static const uintptr_t IDX_LEFT;
 
         /** The index of the near plane offset. */
-        static const UINT_PTR IDX_NEAR;
+        static const uintptr_t IDX_NEAR;
 
         /** The index of the right plane offset. */
-        static const UINT_PTR IDX_RIGHT;
+        static const uintptr_t IDX_RIGHT;
 
         /** The index of the top plane offset. */
-        static const UINT_PTR IDX_TOP;
+        static const uintptr_t IDX_TOP;
 
         /** 
          * Disallow instances of this class.
@@ -480,49 +480,49 @@ namespace math {
      * vislib::math::AbstractViewFrustum<T, S>::CNT_ELEMENTS
      */
     template<class T, class S>
-    const UINT_PTR AbstractViewFrustum<T, S>::CNT_ELEMENTS = 6;
+    const uintptr_t AbstractViewFrustum<T, S>::CNT_ELEMENTS = 6;
 
 
     /*
      * vislib::math::AbstractViewFrustum<T, S>::IDX_BOTTOM
      */
     template<class T, class S>
-    const UINT_PTR AbstractViewFrustum<T, S>::IDX_BOTTOM = 0;
+    const uintptr_t AbstractViewFrustum<T, S>::IDX_BOTTOM = 0;
 
 
     /*
      * vislib::math::AbstractViewFrustum<T, S>::IDX_FAR
      */
     template<class T, class S>
-    const UINT_PTR AbstractViewFrustum<T, S>::IDX_FAR = 4;
+    const uintptr_t AbstractViewFrustum<T, S>::IDX_FAR = 4;
 
 
     /*
      * vislib::math::AbstractViewFrustum<T, S>::IDX_LEFT
      */
     template<class T, class S>
-    const UINT_PTR AbstractViewFrustum<T, S>::IDX_LEFT = 2;
+    const uintptr_t AbstractViewFrustum<T, S>::IDX_LEFT = 2;
 
 
     /*
      * vislib::math::AbstractViewFrustum<T, S>::IDX_NEAR
      */
     template<class T, class S>
-    const UINT_PTR AbstractViewFrustum<T, S>::IDX_NEAR = 5;
+    const uintptr_t AbstractViewFrustum<T, S>::IDX_NEAR = 5;
 
 
     /*
      * vislib::math::AbstractViewFrustum<T, S>::IDX_RIGHT
      */    
     template<class T, class S>
-    const UINT_PTR AbstractViewFrustum<T, S>::IDX_RIGHT = 3;
+    const uintptr_t AbstractViewFrustum<T, S>::IDX_RIGHT = 3;
 
 
     /*
      * vislib::math::AbstractViewFrustum<T, S>::IDX_TOP
      */
     template<class T, class S>
-    const UINT_PTR AbstractViewFrustum<T, S>::IDX_TOP = 1;
+    const uintptr_t AbstractViewFrustum<T, S>::IDX_TOP = 1;
     
 } /* end namespace math */
 } /* end namespace vislib */

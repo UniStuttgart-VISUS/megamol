@@ -344,16 +344,16 @@ namespace math {
     protected:
 
         /** The index of the parameter a. */
-        static const UINT_PTR IDX_A;
+        static const uintptr_t IDX_A;
 
         /** The index of the parameter b. */
-        static const UINT_PTR IDX_B;
+        static const uintptr_t IDX_B;
 
         /** The index of the parameter c. */
-        static const UINT_PTR IDX_C;
+        static const uintptr_t IDX_C;
 
         /** The index of the parameter d. */
-        static const UINT_PTR IDX_D;
+        static const uintptr_t IDX_D;
 
         /** 
          * Disallow instances of this class.
@@ -629,28 +629,28 @@ namespace math {
      * vislib::math::AbstractPlane<T, S>::IDX_A
      */
     template<class T, class S> 
-    const UINT_PTR AbstractPlane<T, S>::IDX_A = 0;
+    const uintptr_t AbstractPlane<T, S>::IDX_A = 0;
 
 
     /*
      * vislib::math::AbstractPlane<T, S>::IDX_B
      */
     template<class T, class S> 
-    const UINT_PTR AbstractPlane<T, S>::IDX_B = 1;
+    const uintptr_t AbstractPlane<T, S>::IDX_B = 1;
 
 
     /*
      * vislib::math::AbstractPlane<T, S>::IDX_C
      */
     template<class T, class S> 
-    const UINT_PTR AbstractPlane<T, S>::IDX_C = 2;
+    const uintptr_t AbstractPlane<T, S>::IDX_C = 2;
 
 
     /*
      * vislib::math::AbstractPlane<T, S>::IDX_D
      */
     template<class T, class S> 
-    const UINT_PTR AbstractPlane<T, S>::IDX_D = 3;
+    const uintptr_t AbstractPlane<T, S>::IDX_D = 3;
 
 
     /*

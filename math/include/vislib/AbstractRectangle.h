@@ -603,16 +603,16 @@ namespace math {
     protected:
 
         /** The index of the bottom coordinate in 'bounds'. */
-        static const UINT_PTR IDX_BOTTOM;
+        static const uintptr_t IDX_BOTTOM;
 
         /** The index of the right coordinate in 'bounds'. */
-        static const UINT_PTR IDX_RIGHT;
+        static const uintptr_t IDX_RIGHT;
 
         /** The index of the left coordinate in 'bounds'. */
-        static const UINT_PTR IDX_LEFT;
+        static const uintptr_t IDX_LEFT;
 
         /** The index of the top coordinate in 'bounds'. */
-        static const UINT_PTR IDX_TOP;
+        static const uintptr_t IDX_TOP;
 
         /**
          * Forbidden default ctor. This does nothing.
@@ -903,28 +903,28 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::IDX_BOTTOM
      */
     template<class T, class S> 
-    const UINT_PTR AbstractRectangle<T, S>::IDX_BOTTOM = 1;
+    const uintptr_t AbstractRectangle<T, S>::IDX_BOTTOM = 1;
 
 
     /*
      * vislib::math::AbstractRectangle<T, S>::IDX_RIGHT
      */
     template<class T, class S> 
-    const UINT_PTR AbstractRectangle<T, S>::IDX_RIGHT = 2;
+    const uintptr_t AbstractRectangle<T, S>::IDX_RIGHT = 2;
 
 
     /*
      * vislib::math::AbstractRectangle<T, S>::IDX_LEFT
      */
     template<class T, class S> 
-    const UINT_PTR AbstractRectangle<T, S>::IDX_LEFT = 0;
+    const uintptr_t AbstractRectangle<T, S>::IDX_LEFT = 0;
 
 
     /*
      * vislib::math::AbstractRectangle<T, S>::IDX_TOP
      */
     template<class T, class S> 
-    const UINT_PTR AbstractRectangle<T, S>::IDX_TOP = 3;
+    const uintptr_t AbstractRectangle<T, S>::IDX_TOP = 3;
 
 } /* end namespace math */
 } /* end namespace vislib */

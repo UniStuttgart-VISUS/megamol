@@ -40,7 +40,7 @@ public:
 Sender::~Sender(void) {}
 
 DWORD Sender::Run(void *userData) {
-    UINT_PTR cnt = reinterpret_cast<UINT_PTR>(userData);
+    uintptr_t cnt = reinterpret_cast<uintptr_t>(userData);
     AsyncSocketContext ctx;
 
     try {
@@ -53,7 +53,7 @@ DWORD Sender::Run(void *userData) {
         IPEndPoint endPoint(IPAddress::LOCALHOST, TEST_PORT);
         AssertNoException("Connect to server", socket.Connect(endPoint));
 
-        for (UINT_PTR i = 0; i < cnt; i++) {
+        for (uintptr_t i = 0; i < cnt; i++) {
             LOCK_COUT;
             std::cout << "BeginSend #" << i << std::endl;
             UNLOCK_COUT;
@@ -69,7 +69,7 @@ DWORD Sender::Run(void *userData) {
             std::cout << "EndSend #" << i << std::endl;
             UNLOCK_COUT;
             AssertEqual("Sent sufficient data", socket.EndSend(&ctx),
-                static_cast<size_t>(sizeof(UINT_PTR)));
+                static_cast<size_t>(sizeof(uintptr_t)));
         }
 
         AssertNoException("socket.Shutdown", socket.Shutdown());
@@ -97,8 +97,8 @@ public:
 Receiver::~Receiver(void) {}
 
 DWORD Receiver::Run(void *userData) {
-    UINT_PTR cnt = reinterpret_cast<UINT_PTR>(userData);
-    UINT_PTR data;
+    uintptr_t cnt = reinterpret_cast<uintptr_t>(userData);
+    uintptr_t data;
     AsyncSocketContext ctx;
 
     try {
@@ -120,7 +120,7 @@ DWORD Receiver::Run(void *userData) {
             << " connected." << std::endl;
         UNLOCK_COUT;
 
-        for (UINT_PTR i = 0; i < cnt; i++) {
+        for (uintptr_t i = 0; i < cnt; i++) {
             LOCK_COUT;
             std::cout << "BeginReceive #" << i << std::endl;
             UNLOCK_COUT;
@@ -137,7 +137,7 @@ DWORD Receiver::Run(void *userData) {
             std::cout << "EndReceive #" << i << std::endl;
             UNLOCK_COUT;
             AssertEqual("Received sufficient data", socket.EndReceive(&ctx),
-                static_cast<size_t>(sizeof(UINT_PTR)));
+                static_cast<size_t>(sizeof(uintptr_t)));
         }
 
         AssertNoException("socket.Shutdown", socket.Shutdown());
@@ -159,7 +159,7 @@ void TestAsyncSocket(void) {
     vislib::sys::RunnableThread<Sender> sender;
     vislib::sys::RunnableThread<Receiver> receiver;
 
-    UINT_PTR cnt = 10;
+    uintptr_t cnt = 10;
     receiver.Start(reinterpret_cast<void *>(cnt));
     sender.Start(reinterpret_cast<void *>(cnt));
 
