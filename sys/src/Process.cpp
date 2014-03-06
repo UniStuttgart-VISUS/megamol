@@ -70,7 +70,7 @@ bool vislib::sys::Process::Exists(const PID processID) {
 /*
  * vislib::sys::Process::Exit
  */
-void vislib::sys::Process::Exit(const DWORD exitCode) {
+void vislib::sys::Process::Exit(const unsigned int exitCode) {
 #ifdef _WIN32
     ::ExitProcess(exitCode);
 #else /* _WIN32 */
@@ -570,7 +570,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
    // TODO: PAM disabled
     StringA query;  // Query to which to expand shell commands.
     StringA cmd;    // The command actually run.
-    DWORD error;    // Exception error code.
+    unsigned int error;    // Exception error code.
     int pipe[2];    // A pipe to get the error code of exec.
 
     /* A process must not be started twice. */
@@ -685,7 +685,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
 /*
  * vislib::sys::Process::Terminate
  */
-void vislib::sys::Process::Terminate(const DWORD exitCode) {
+void vislib::sys::Process::Terminate(const unsigned int exitCode) {
 #ifdef _WIN32
     if (!::TerminateProcess(this->hProcess, exitCode)) {
         throw SystemException(__FILE__, __LINE__);

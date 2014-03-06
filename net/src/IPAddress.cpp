@@ -133,7 +133,7 @@ vislib::net::IPAddress::~IPAddress(void) {
  * vislib::net::IPAddress::GetPrefix
  */
 vislib::net::IPAddress vislib::net::IPAddress::GetPrefix(
-        const ULONG prefixLength) const {
+        const unsigned long prefixLength) const {
     IPAddress netmask = NetworkInformation::PrefixToNetmask4(prefixLength);
     return (netmask & *this);
 }

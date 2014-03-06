@@ -272,7 +272,7 @@ namespace sys {
              * @return The application dependent return code of the thread. This 
              *         must not be STILL_ACTIVE (259).
              */
-            virtual DWORD Run(void *userData);
+            virtual unsigned int Run(void *userData);
 
             /** Marks the pipe as connected. */
             inline void MarkConnected(void) {

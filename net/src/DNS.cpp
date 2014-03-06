@@ -367,7 +367,7 @@ struct addrinfo *vislib::net::DNS::getAddrInfo(const char *hostNameOrAddress,
      * - The input string is either a host name or a human readable IP address.
      * - Return the addresses for any protocol family.
      */
-    ::ZeroMemory(&hints, sizeof(hints));
+    the::zero_memory(&hints, sizeof(hints));
     hints.ai_flags = 0; //AI_CANONNAME | AI_NUMERICHOST;
     hints.ai_family = addressFamily;
 
@@ -400,7 +400,7 @@ ADDRINFOW *vislib::net::DNS::getAddrInfo(const wchar_t *hostNameOrAddress,
      * - The input string is either a host name or a human readable IP address.
      * - Return the addresses for any protocol family.
      */
-    ::ZeroMemory(&hints, sizeof(hints));
+    the::zero_memory(&hints, sizeof(hints));
     hints.ai_flags = 0; //AI_CANONNAME | AI_NUMERICHOST;
     hints.ai_family = addressFamily;
 

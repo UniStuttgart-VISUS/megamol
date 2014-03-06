@@ -811,7 +811,7 @@ void vislib::sys::Path::MakeDirectory(const StringA& path) {
             }
 
         } else {
-            DWORD errorCode = GetLastError();
+            auto errorCode = GetLastError();
 
             try {
                 // failure, so try to remove already created paths and throw exception.

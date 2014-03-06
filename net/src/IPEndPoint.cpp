@@ -72,7 +72,7 @@ vislib::net::IPEndPoint vislib::net::IPEndPoint::CreateIPv6(
  */
 vislib::net::IPEndPoint::IPEndPoint(const IPAddress& ipAddress,
                                     const unsigned short port) {
-    ::ZeroMemory(&this->address, sizeof(this->address));
+    ::the::zero_memory(&this->address, sizeof(this->address));
     this->SetIPAddress(ipAddress);
     this->SetPort(port);            // IP address must have been set before!
 }
@@ -83,7 +83,7 @@ vislib::net::IPEndPoint::IPEndPoint(const IPAddress& ipAddress,
  */
 vislib::net::IPEndPoint::IPEndPoint(const IPAddress6& ipAddress,
                                     const unsigned short port) {
-    ::ZeroMemory(&this->address, sizeof(this->address));
+    ::the::zero_memory(&this->address, sizeof(this->address));
     this->SetIPAddress(ipAddress);
     this->SetPort(port);            // IP address must have been set before!
     // TODO flow stuff etc!
@@ -95,7 +95,7 @@ vislib::net::IPEndPoint::IPEndPoint(const IPAddress6& ipAddress,
  */
 vislib::net::IPEndPoint::IPEndPoint(const IPAgnosticAddress& ipAddress, 
                                     const unsigned short port) {
-    ::ZeroMemory(&this->address, sizeof(this->address));
+    ::the::zero_memory(&this->address, sizeof(this->address));
     this->SetIPAddress(ipAddress);
     this->SetPort(port);            // IP address must have been set before!
 }
@@ -106,7 +106,7 @@ vislib::net::IPEndPoint::IPEndPoint(const IPAgnosticAddress& ipAddress,
  */
 vislib::net::IPEndPoint::IPEndPoint(const AddressFamily addressFamily,
                                     const unsigned short port) {
-    ::ZeroMemory(&this->address, sizeof(this->address));
+    ::the::zero_memory(&this->address, sizeof(this->address));
 
     switch (addressFamily) {
 
@@ -132,7 +132,7 @@ vislib::net::IPEndPoint::IPEndPoint(const AddressFamily addressFamily,
  * vislib::net::IPEndPoint::IPEndPoint
  */
 vislib::net::IPEndPoint::IPEndPoint(const SocketAddress& address) {
-    ::ZeroMemory(&this->address, sizeof(this->address));
+    ::the::zero_memory(&this->address, sizeof(this->address));
     *this = address;
 }
 
@@ -141,7 +141,7 @@ vislib::net::IPEndPoint::IPEndPoint(const SocketAddress& address) {
  * vislib::net::IPEndPoint::IPEndPoint
  */
 vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_storage& address) {
-    //::ZeroMemory(&this->address, sizeof(this->address));
+    //::the::zero_memory(&this->address, sizeof(this->address));
     ::memcpy(&this->address, &address, sizeof(struct sockaddr_storage));
 }
 
@@ -150,7 +150,7 @@ vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_storage& address) {
  * vislib::net::IPEndPoint::IPEndPoint
  */
 vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_in& address) {
-    ::ZeroMemory(&this->address, sizeof(this->address));
+    ::the::zero_memory(&this->address, sizeof(this->address));
     *this = address;
 }
 
@@ -159,7 +159,7 @@ vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_in& address) {
  * vislib::net::IPEndPoint::IPEndPoint
  */
 vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_in6& address) {
-    ::ZeroMemory(&this->address, sizeof(this->address));
+    ::the::zero_memory(&this->address, sizeof(this->address));
     *this = address;
 }
 
@@ -168,7 +168,7 @@ vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_in6& address) {
  * vislib::net::IPEndPoint::IPEndPoint
  */
 vislib::net::IPEndPoint::IPEndPoint(const IPEndPoint& rhs) {
-    ::ZeroMemory(&this->address, sizeof(this->address));
+    ::the::zero_memory(&this->address, sizeof(this->address));
     *this = rhs;
 }
 
@@ -178,7 +178,7 @@ vislib::net::IPEndPoint::IPEndPoint(const IPEndPoint& rhs) {
  */
 vislib::net::IPEndPoint::IPEndPoint(const IPEndPoint& address, 
                                     const unsigned short newPort) {
-    ::ZeroMemory(&this->address, sizeof(this->address));
+    ::the::zero_memory(&this->address, sizeof(this->address));
     *this = address;
     this->SetPort(newPort);
 }
@@ -393,7 +393,7 @@ vislib::net::IPEndPoint& vislib::net::IPEndPoint::operator =(
 vislib::net::IPEndPoint& vislib::net::IPEndPoint::operator =(
         const struct sockaddr_in& rhs) {
     if (reinterpret_cast<struct sockaddr_in *>(&this->address) != &rhs) {
-        ::ZeroMemory(&this->address, sizeof(struct sockaddr_storage));
+        ::the::zero_memory(&this->address, sizeof(struct sockaddr_storage));
         ::memcpy(&this->address, &rhs, sizeof(struct sockaddr_in));
     }
     return *this;
@@ -406,7 +406,7 @@ vislib::net::IPEndPoint& vislib::net::IPEndPoint::operator =(
 vislib::net::IPEndPoint& vislib::net::IPEndPoint::operator =(
         const struct sockaddr_in6& rhs) {
     if (reinterpret_cast<struct sockaddr_in6 *>(&this->address) != &rhs) {
-        ::ZeroMemory(&this->address, sizeof(struct sockaddr_storage));
+        ::the::zero_memory(&this->address, sizeof(struct sockaddr_storage));
         ::memcpy(&this->address, &rhs, sizeof(struct sockaddr_in6));
     }
     return *this;

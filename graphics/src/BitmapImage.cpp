@@ -926,7 +926,7 @@ void vislib::graphics::BitmapImage::CreateImage(unsigned int width,
     if (data != NULL) {
         memcpy(this->data, data, len);
     } else {
-        ZeroMemory(this->data, len);
+        the::zero_memory(this->data, len);
     }
 }
 

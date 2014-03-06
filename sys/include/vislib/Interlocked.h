@@ -157,8 +157,8 @@ namespace sys {
          *                                       operations.
          */
         THE_FORCE_INLINE static int64_t Decrement(volatile int64_t *address) {
-            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
 #ifdef _WIN32
+            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedDecrement64(
                 reinterpret_cast<volatile LONGLONG *>(address));
@@ -395,8 +395,8 @@ namespace sys {
          *                                       operations.
          */
         THE_FORCE_INLINE static int64_t Increment(volatile int64_t *address) {
-            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
 #ifdef _WIN32
+            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedIncrement64(
                 reinterpret_cast<volatile LONGLONG *>(address));

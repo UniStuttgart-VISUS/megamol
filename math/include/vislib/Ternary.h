@@ -355,7 +355,7 @@ namespace math {
          *
          * @return The value for the internal representation
          */
-        THE_FORCE_INLINE int getValue(int v) const;
+        THE_TRY_FORCE_INLINE int getValue(int v) const;
 
         /**
          * Calculates the value for the input 'v'
@@ -364,7 +364,7 @@ namespace math {
          *
          * @return The value for the internal representation
          */
-        THE_FORCE_INLINE int getValue(bool v) const;
+        THE_TRY_FORCE_INLINE int getValue(bool v) const;
 
         /** The three-state value */
         int value;

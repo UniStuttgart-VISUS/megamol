@@ -55,7 +55,7 @@ namespace sys {
          *
          * @eturn The ID of the calling process.
          */
-        static inline DWORD CurrentID(void) {
+        static inline PID CurrentID(void) {
 #ifdef _WIN32
             return ::GetCurrentProcessId();
 #else /* _WIN32 */
@@ -81,7 +81,7 @@ namespace sys {
          *
          * @param exitCode The exit code to return.
          */
-        static void Exit(const DWORD exitCode);
+        static void Exit(const unsigned int exitCode);
 
         /**
          * Answer the exectuable file of the process with the specified ID.
@@ -407,7 +407,7 @@ namespace sys {
          *
          * @throws SystemException If the process could not be terminated.
          */
-        void Terminate(const DWORD exitCode = 0);
+        void Terminate(const unsigned int exitCode = 0);
 
     private:
 

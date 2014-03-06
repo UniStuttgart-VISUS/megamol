@@ -75,7 +75,7 @@ vislib::sys::NamedPipe::Exterminatus::~Exterminatus(void) {
 /*
  * vislib::sys::NamedPipe::Exterminatus::Run
  */
-DWORD vislib::sys::NamedPipe::Exterminatus::Run(void *userData) {
+unsigned int vislib::sys::NamedPipe::Exterminatus::Run(void *userData) {
     PerformanceCounter counter;
 
     while (!this->connected && (static_cast<unsigned int>(counter.Difference()) < this->timeout)) {
@@ -289,7 +289,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
 
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "mknod failed\n");
 
-        DWORD lastError = ::GetLastError();
+        auto lastError = ::GetLastError();
         if (lastError != EEXIST) {
             ::umask(oldMask);
             throw vislib::sys::SystemException(lastError, __FILE__, __LINE__);

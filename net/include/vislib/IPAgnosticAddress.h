@@ -260,7 +260,7 @@ namespace net {
          *                     the method will succeed and return the complete
          *                     address.
          */
-        IPAgnosticAddress GetPrefix(const ULONG prefixLength) const;
+        IPAgnosticAddress GetPrefix(const unsigned long prefixLength) const;
 
         /**
          * Answer whether the address is the ANY4 or ANY6 address.

@@ -17,7 +17,7 @@
 /*
  * vislib::net::ClusterDiscoveryService::DEFAULT_PORT 
  */
-const USHORT vislib::net::ClusterDiscoveryService::DEFAULT_PORT = 28181;
+const uint16_t vislib::net::ClusterDiscoveryService::DEFAULT_PORT = 28181;
 
 
 /*
@@ -44,7 +44,7 @@ const uint32_t vislib::net::ClusterDiscoveryService::MSG_TYPE_USER = 16;
  */
 vislib::net::ClusterDiscoveryService::ClusterDiscoveryService(
         const StringA& name, const IPEndPoint& responseAddr, 
-        const IPAddress& bcastAddr, const USHORT bindPort, 
+        const IPAddress& bcastAddr, const uint16_t bindPort, 
         const bool isObserver, const unsigned int requestInterval, 
         const unsigned int cntResponseChances)
         : bcastAddr(bcastAddr, bindPort), 
@@ -65,7 +65,7 @@ vislib::net::ClusterDiscoveryService::ClusterDiscoveryService(
  */
 vislib::net::ClusterDiscoveryService::ClusterDiscoveryService(
         const StringA& name, const IPEndPoint& responseAddr, 
-        const IPAddress6& bcastAddr, const USHORT bindPort, 
+        const IPAddress6& bcastAddr, const uint16_t bindPort, 
         const bool isObserver, const unsigned int requestInterval, 
         const unsigned int cntResponseChances)
         : bcastAddr(bcastAddr, bindPort), 
@@ -800,7 +800,7 @@ void vislib::net::ClusterDiscoveryService::prepareUserMessage(
     /* Prepare the message. */
     outMsg.magicNumber = MAGIC_NUMBER;
     outMsg.msgType = msgType;
-    ::ZeroMemory(outMsg.userData, MAX_USER_DATA);
+    the::zero_memory(outMsg.userData, MAX_USER_DATA);
     ::memcpy(outMsg.userData, msgBody, msgSize);
 
     /* Lazy creation of our socket. */

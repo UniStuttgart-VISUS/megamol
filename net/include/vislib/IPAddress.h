@@ -141,7 +141,7 @@ namespace net {
          *                     the method will succeed and return the complete
          *                     address.
          */
-        IPAddress GetPrefix(const ULONG prefixLength) const;
+        IPAddress GetPrefix(const unsigned long prefixLength) const;
 
         /**
          * Lookup and set the IP address of the specified host. If the host is

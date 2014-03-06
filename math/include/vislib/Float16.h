@@ -163,7 +163,7 @@ namespace math {
          *
          * @param value The initial value of the half float.
          */
-        inline Float16(const SHORT value) 
+        inline Float16(const uint16_t value) 
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /**
@@ -280,8 +280,8 @@ namespace math {
          *
          * @return The value of this half.
          */
-        inline operator SHORT(void) const {
-            return static_cast<SHORT>(Float16::ToFloat32(this->value));
+        inline operator uint16_t(void) const {
+            return static_cast<uint16_t>(Float16::ToFloat32(this->value));
         }
 
         /**

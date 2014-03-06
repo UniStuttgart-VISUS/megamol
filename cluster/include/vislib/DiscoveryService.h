@@ -232,7 +232,7 @@ namespace cluster {
              */
             DiscoveryConfig(const IPEndPoint& responseAddress, 
                 const IPAddress& bcastAddress,
-                const USHORT bindPort = DEFAULT_PORT);
+                const uint16_t bindPort = DEFAULT_PORT);
 
             /**
              * Create a new configuration with all parameters manually 
@@ -265,7 +265,7 @@ namespace cluster {
              */
             DiscoveryConfig(const IPEndPoint& responseAddress, 
                 const IPAddress6& bcastAddress,
-                const USHORT bindPort = DEFAULT_PORT);
+                const uint16_t bindPort = DEFAULT_PORT);
 
             /**
              * Create a new configuration with all parameters manually 
@@ -299,7 +299,7 @@ namespace cluster {
              */
             DiscoveryConfig(const IPEndPoint& responseAddress, 
                 const IPAgnosticAddress& bcastAddress,
-                const USHORT bindPort = DEFAULT_PORT);
+                const uint16_t bindPort = DEFAULT_PORT);
 
             /**
              * Create a new configuration with all parameters manually 
@@ -337,7 +337,7 @@ namespace cluster {
              *                               determined from 'responseAddress'.
              */
             DiscoveryConfig(const IPEndPoint& responseAddress,
-                const USHORT bindPort = DEFAULT_PORT);
+                const uint16_t bindPort = DEFAULT_PORT);
 
             /**
              * Clone 'rhs'.
@@ -465,7 +465,7 @@ namespace cluster {
         typedef vislib::SmartPtr<PeerNode> PeerHandle;
 
         /** The default port number used by the discovery service. */
-        static const USHORT DEFAULT_PORT;
+        static const uint16_t DEFAULT_PORT;
 
         /** The default request interval in milliseconds. */
         static const unsigned int DEFAULT_REQUEST_INTERVAL;

@@ -372,7 +372,7 @@ namespace gl {
          *
          * @return The resulting glyph run
          */
-        THE_FORCE_INLINE int *buildGlyphRun(const char *txt,
+        THE_TRY_FORCE_INLINE int *buildGlyphRun(const char *txt,
             float maxWidth) const;
 
         /**
@@ -383,7 +383,7 @@ namespace gl {
          *
          * @return The resulting glyph run
          */
-        THE_FORCE_INLINE int *buildGlyphRun(const wchar_t *txt,
+        THE_TRY_FORCE_INLINE int *buildGlyphRun(const wchar_t *txt,
             float maxWidth) const;
 
         /**
@@ -430,7 +430,7 @@ namespace gl {
          *
          * @return the number of lines.
          */
-        THE_FORCE_INLINE int lineCount(int *run, bool deleterun) const;
+        THE_TRY_FORCE_INLINE int lineCount(int *run, bool deleterun) const;
 
         /**
          * Answer the width of the line 'run' starts.
@@ -442,7 +442,7 @@ namespace gl {
          *
          * @return The width of the line
          */
-        THE_FORCE_INLINE float lineWidth(int *&run, bool iterate) const;
+        THE_TRY_FORCE_INLINE float lineWidth(int *&run, bool iterate) const;
 
         /** The font outline info data */
         const OutlineFontInfo& data;

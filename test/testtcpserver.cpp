@@ -16,7 +16,7 @@
 #include <iostream>
 
 /** Port used for test server. */
-static const SHORT TEST_PORT = 8665;
+static const uint16_t TEST_PORT = 8665;
 
 
 class ConnectionListener : public vislib::net::TcpServer::Listener {

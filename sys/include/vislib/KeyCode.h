@@ -42,6 +42,8 @@ namespace sys {
      */
     class KeyCode {
     public:
+    
+        typedef unsigned short WORD;
 
         /** Bit mask for modifier keys */
         static const WORD KEY_MOD       = 0xf000;

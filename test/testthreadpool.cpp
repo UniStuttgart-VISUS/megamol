@@ -152,8 +152,8 @@ void TestThreadPool(void) {
     ::AssertTrue("Idle threads exist after wait.", pool.GetAvailableThreads() > 0);
     ::AssertEqual("No active threads after wait.", pool.GetActiveThreads(), size_t(0));
 
-    ::AssertEqual("Nothing aborted.", a6.cntAborted, unsigned int(0));
-    ::AssertEqual("Everything completed.", a6.cntCompleted, unsigned int(CNT_DOWELERS));
+    ::AssertEqual("Nothing aborted.", a6.cntAborted, static_cast<unsigned int>(0));
+    ::AssertEqual("Everything completed.", a6.cntCompleted, static_cast<unsigned int>(CNT_DOWELERS));
 
     a6.cntAborted = 0;
     a6.cntCompleted = 0;

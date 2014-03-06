@@ -252,7 +252,7 @@ vislib::net::IPAgnosticAddress::GetAddressFamily(void) const {
  * vislib::net::IPAgnosticAddress::GetPrefix
  */
 vislib::net::IPAgnosticAddress vislib::net::IPAgnosticAddress::GetPrefix(
-        const ULONG prefixLength) const {
+        const unsigned long prefixLength) const {
     THE_STACK_TRACE;
 
     if (this->IsV4()) {

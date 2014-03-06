@@ -143,7 +143,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(void) {
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const vislib::net::IPEndPoint &responseAddress, 
         const vislib::net::IPAddress &bcastAddress, 
-        const USHORT bindPort) 
+        const uint16_t bindPort) 
         : bcastAddress(bcastAddress, bindPort),
         bindAddress(IPAddress::ANY, bindPort),
         responseAddress(responseAddress) {
@@ -156,7 +156,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const vislib::net::IPEndPoint &responseAddress, 
         const vislib::net::IPAddress6 &bcastAddress, 
-        const USHORT bindPort) 
+        const uint16_t bindPort) 
         : bcastAddress(bcastAddress, bindPort),
         bindAddress(IPAddress6::ANY, bindPort),
         responseAddress(responseAddress) {
@@ -168,7 +168,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const IPEndPoint& responseAddress, 
         const IPAgnosticAddress& bcastAddress,
-        const USHORT bindPort)
+        const uint16_t bindPort)
         : bcastAddress(bcastAddress, bindPort),
         bindAddress(static_cast<IPEndPoint::AddressFamily>(
         bcastAddress.GetAddressFamily()), bindPort),
@@ -181,7 +181,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
  */
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const IPEndPoint& responseAddress, 
-        const USHORT bindPort)
+        const uint16_t bindPort)
         : bcastAddress(responseAddress.GetAddressFamily(), bindPort),
         bindAddress(responseAddress.GetAddressFamily(), bindPort),
         responseAddress(responseAddress) {
@@ -290,7 +290,7 @@ bool vislib::net::cluster::DiscoveryService::DiscoveryConfig::operator ==(
 /*
  * vislib::net::cluster::DiscoveryService::DEFAULT_PORT 
  */
-const USHORT vislib::net::cluster::DiscoveryService::DEFAULT_PORT = 28181;
+const uint16_t vislib::net::cluster::DiscoveryService::DEFAULT_PORT = 28181;
 
 
 /*
@@ -1439,7 +1439,7 @@ void vislib::net::cluster::DiscoveryService::prepareUserMessage(
     /* Prepare the message. */
     outMsg.MagicNumber = MAGIC_NUMBER;
     outMsg.MsgType = msgType;
-    ::ZeroMemory(outMsg.UserData, MAX_USER_DATA);
+    ::the::zero_memory(outMsg.UserData, MAX_USER_DATA);
     ::memcpy(outMsg.UserData, msgBody, msgSize);
 }
 

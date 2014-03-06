@@ -231,12 +231,12 @@ bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, size_t si
                 img.SetChannelLabel(0, BitmapImage::CHANNEL_RED);
                 img.SetChannelLabel(1, BitmapImage::CHANNEL_GREEN);
                 img.SetChannelLabel(2, BitmapImage::CHANNEL_BLUE);
-                WORD *wd = img.PeekDataAs<WORD>();
+                uint16_t *wd = img.PeekDataAs<uint16_t>();
 
                 fac = 65535.0f / static_cast<float>(v);
                 for (unsigned int i = 0; i < 3 * w * h; i++) {
                     _LOCAL_PPM_SIFT(f, float, ParseDouble)
-                    wd[i] = static_cast<WORD>(f * fac);
+                    wd[i] = static_cast<uint16_t>(f * fac);
                 }
 
                 return true;
@@ -286,7 +286,7 @@ bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
     unsigned int cr = UINT_MAX, cg = UINT_MAX, cb = UINT_MAX;
     unsigned int maxVal = 255;
     const uint8_t *bd = img.PeekDataAs<uint8_t>();
-    const WORD *wd = NULL;
+    const uint16_t *wd = NULL;
     size_t headLen;
     unsigned int imgSize = img.Width() * img.Height();
 
@@ -315,7 +315,7 @@ bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
         maxVal = 65535;
         bin = false;
         bd = NULL;
-        wd = img.PeekDataAs<WORD>();
+        wd = img.PeekDataAs<uint16_t>();
 
     } else if (img.GetChannelType() == BitmapImage::CHANNELTYPE_FLOAT) {
         // write a PFM

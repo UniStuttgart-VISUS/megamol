@@ -77,7 +77,7 @@ namespace sys {
 #ifdef _WIN32
         FARPROC GetProcAddress(const CHAR *procName) const;
 #else /* _WIN32 */
-        void *GetProcAddress(const CHAR *procName) const;
+        void *GetProcAddress(const char *procName) const;
 #endif /* _WIN32 */
 
         /**

@@ -19,7 +19,7 @@
 /*
  * vislib::net::cluster::AbstractClusterNode::DEFAULT_PORT
  */
-const SHORT vislib::net::cluster::AbstractClusterNode::DEFAULT_PORT = 28182;
+const uint16_t vislib::net::cluster::AbstractClusterNode::DEFAULT_PORT = 28182;
 
 
 /*

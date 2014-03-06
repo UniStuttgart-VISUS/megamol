@@ -59,7 +59,7 @@ namespace cluster {
          * no other value is provided either via the command line or via the 
          * API.
          */
-        static const SHORT DEFAULT_PORT;
+        static const uint16_t DEFAULT_PORT;
 
         /** Dtor. */
         virtual ~AbstractClusterNode(void);

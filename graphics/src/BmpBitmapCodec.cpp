@@ -20,31 +20,31 @@
  * Declaration of structs from MSDN
  */
 typedef struct tagBITMAPFILEHEADER {
-  WORD  bfType;
+  uint16_t  bfType;
   unsigned int bfSize;
-  WORD  bfReserved1;
-  WORD  bfReserved2;
+  uint16_t  bfReserved1;
+  uint16_t  bfReserved2;
   unsigned int bfOffBits;
 } BITMAPFILEHEADER;
 typedef struct tagBITMAPINFOHEADER {
   unsigned int biSize;
-  LONG  biWidth;
-  LONG  biHeight;
-  WORD  biPlanes;
-  WORD  biBitCount;
+  long  biWidth;
+  long  biHeight;
+  uint16_t  biPlanes;
+  uint16_t  biBitCount;
   unsigned int biCompression;
   unsigned int biSizeImage;
-  LONG  biXPelsPerMeter;
-  LONG  biYPelsPerMeter;
+  long  biXPelsPerMeter;
+  long  biYPelsPerMeter;
   unsigned int biClrUsed;
   unsigned int biClrImportant;
 } BITMAPINFOHEADER;
 typedef struct tagBITMAPCOREHEADER {
   unsigned int bcSize;
-  WORD  bcWidth;
-  WORD  bcHeight;
-  WORD  bcPlanes;
-  WORD  bcBitCount;
+  uint16_t  bcWidth;
+  uint16_t  bcHeight;
+  uint16_t  bcPlanes;
+  uint16_t  bcBitCount;
 } BITMAPCOREHEADER;
 typedef long FXPT2DOT30;
 typedef struct tagCIEXYZ {
@@ -59,14 +59,14 @@ typedef struct tagCIEXYZTRIPLE {
 } CIEXYZTRIPLE;
 typedef struct {
   unsigned int        bV4Size;
-  LONG         bV4Width;
-  LONG         bV4Height;
-  WORD         bV4Planes;
-  WORD         bV4BitCount;
+  long         bV4Width;
+  long         bV4Height;
+  uint16_t         bV4Planes;
+  uint16_t         bV4BitCount;
   unsigned int        bV4V4Compression;
   unsigned int        bV4SizeImage;
-  LONG         bV4XPelsPerMeter;
-  LONG         bV4YPelsPerMeter;
+  long         bV4XPelsPerMeter;
+  long         bV4YPelsPerMeter;
   unsigned int        bV4ClrUsed;
   unsigned int        bV4ClrImportant;
   unsigned int        bV4RedMask;
@@ -81,14 +81,14 @@ typedef struct {
 } BITMAPV4HEADER;
 typedef struct {
   unsigned int        bV5Size;
-  LONG         bV5Width;
-  LONG         bV5Height;
-  WORD         bV5Planes;
-  WORD         bV5BitCount;
+  long         bV5Width;
+  long         bV5Height;
+  uint16_t         bV5Planes;
+  uint16_t         bV5BitCount;
   unsigned int        bV5Compression;
   unsigned int        bV5SizeImage;
-  LONG         bV5XPelsPerMeter;
-  LONG         bV5YPelsPerMeter;
+  long         bV5XPelsPerMeter;
+  long         bV5YPelsPerMeter;
   unsigned int        bV5ClrUsed;
   unsigned int        bV5ClrImportant;
   unsigned int        bV5RedMask;
@@ -404,7 +404,7 @@ bool vislib::graphics::BmpBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
 
     bih->biSize = sizeof(BITMAPINFOHEADER);
     bih->biWidth = img->Width();
-    bih->biHeight = -static_cast<LONG>(img->Height());
+    bih->biHeight = -static_cast<long>(img->Height());
     bih->biPlanes = 1;
     bih->biBitCount = 24;
     bih->biCompression = BI_RGB;

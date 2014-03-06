@@ -1021,7 +1021,7 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline void SetLinger(const bool enable, const SHORT lingerTime) {
+        inline void SetLinger(const bool enable, const short lingerTime) {
             struct linger l = { enable, lingerTime };
             this->SetOption(SOL_SOCKET, SO_LINGER, &l, sizeof(struct linger));
         }

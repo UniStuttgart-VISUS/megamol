@@ -73,7 +73,7 @@ namespace net {
         typedef vislib::SmartPtr<PeerNode> PeerHandle;
 
         /** The default port number used by the discovery service. */
-        static const USHORT DEFAULT_PORT;
+        static const uint16_t DEFAULT_PORT;
 
         /** The default request interval in milliseconds. */
         static const unsigned int DEFAULT_REQUEST_INTERVAL;
@@ -137,7 +137,7 @@ namespace net {
         ClusterDiscoveryService(const StringA& name, 
             const IPEndPoint& responseAddr, 
             const IPAddress& bcastAddr,
-            const USHORT bindPort = DEFAULT_PORT,
+            const uint16_t bindPort = DEFAULT_PORT,
             const bool discoveryOnly = false,
             const unsigned int requestInterval = DEFAULT_REQUEST_INTERVAL,
             const unsigned int cntResponseChances = DEFAULT_RESPONSE_CHANCES);
@@ -182,7 +182,7 @@ namespace net {
         ClusterDiscoveryService(const StringA& name, 
             const IPEndPoint& responseAddr, 
             const IPAddress6& bcastAddr,
-            const USHORT bindPort = DEFAULT_PORT,
+            const uint16_t bindPort = DEFAULT_PORT,
             const bool discoveryOnly = false,
             const unsigned int requestInterval = DEFAULT_REQUEST_INTERVAL,
             const unsigned int cntResponseChances = DEFAULT_RESPONSE_CHANCES);

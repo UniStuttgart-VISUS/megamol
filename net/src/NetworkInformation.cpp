@@ -163,7 +163,7 @@ bool vislib::net::NetworkInformation::UnicastAddressInformation::operator ==(
  */
 vislib::net::NetworkInformation::UnicastAddressInformation::\
 UnicastAddressInformation(const IPEndPoint endPoint, 
-        const ULONG prefixLength, 
+        const unsigned long prefixLength, 
         const Confidence prefixLengthConfidence,
         const PrefixOrigin prefixOrigin,
         const Confidence prefixOriginConfidence,
@@ -587,7 +587,7 @@ size_t vislib::net::NetworkInformation::GetAdaptersForType(
  */
 size_t vislib::net::NetworkInformation::GetAdaptersForUnicastPrefix(
         AdapterList& outAdapters, const IPAgnosticAddress& address, 
-        const ULONG prefixLength) {
+        const unsigned long prefixLength) {
     THE_STACK_TRACE;
     UnicastAddressInformation ai(IPEndPoint(address, 0), prefixLength, VALID,
         UnicastAddressInformation::PREFIX_ORIGIN_OTHER, INVALID,
@@ -651,8 +651,8 @@ float vislib::net::NetworkInformation::GuessAdapter(Adapter& outAdapter,
     uint32_t validMask = 0;           // Valid fields from the input.
     IPAgnosticAddress address;      // The adapter address from the input.
     StringW device;                 // The device name from the input.
-    ULONG prefixLen;                // The prefix length from the input.
-    USHORT port;                    // The port from the input.
+    unsigned long prefixLen;                // The prefix length from the input.
+    uint16_t port;                    // The port from the input.
 
 #if (defined(DEBUG) || defined(_DEBUG))
     if (invertWildness) {
@@ -789,7 +789,7 @@ float vislib::net::NetworkInformation::GuessRemoteEndPoint(
 /*
  * vislib::net::NetworkInformation::NetmaskToPrefix
  */
-ULONG vislib::net::NetworkInformation::NetmaskToPrefix(
+unsigned long vislib::net::NetworkInformation::NetmaskToPrefix(
         const IPAgnosticAddress& netmask) {
     THE_STACK_TRACE;
 
@@ -804,7 +804,7 @@ ULONG vislib::net::NetworkInformation::NetmaskToPrefix(
 
         default:
             THE_ASSERT(false);
-            return static_cast<ULONG>(ULONG_MAX);
+            return static_cast<unsigned long>(-1);
     }
 }
 
@@ -1135,8 +1135,8 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
     uint32_t validMask = 0;           // Valid fields from the input.
     IPAgnosticAddress address;      // The adapter address from the input.
     StringW device;                 // The device name from the input.
-    ULONG prefixLen;                // The prefix length from the input.
-    USHORT port;                    // The port from the input.
+    unsigned long prefixLen;                // The prefix length from the input.
+    uint16_t port;                    // The port from the input.
 
 #if (defined(DEBUG) || defined(_DEBUG))
     if (invertWildness) {
@@ -1315,8 +1315,8 @@ float vislib::net::NetworkInformation::guessRemoteEndPoint(
     uint32_t validMask = 0;           // Valid fields from the input.
     IPAgnosticAddress address;      // The adapter address from the input.
     StringW device;                 // The device name from the input.
-    ULONG prefixLen;                // The prefix length from the input.
-    USHORT port;                    // The port from the input.
+    unsigned long prefixLen;                // The prefix length from the input.
+    uint16_t port;                    // The port from the input.
 
 #if (defined(DEBUG) || defined(_DEBUG))
     if (invertWildness) {
@@ -1683,7 +1683,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
                 IPEndPoint addr(*reinterpret_cast<struct sockaddr_in *>(
                     cur->ifa_addr));
                 IPEndPoint mask;
-                ULONG prefixLen = static_cast<ULONG>(ULONG_MAX);
+                unsigned long prefixLen = static_cast<unsigned long>(-1);
                 Confidence prefixConf = INVALID;
 
                 if (cur->ifa_netmask != NULL) {
@@ -1725,7 +1725,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
                 /* This is an IPv6 address. */
                 IPEndPoint addr(*reinterpret_cast<struct sockaddr_in6 *>(
                     cur->ifa_addr));
-                ULONG prefixLen = static_cast<ULONG>(ULONG_MAX);
+                unsigned long prefixLen = static_cast<unsigned long>(-1);
                 Confidence prefixConf = INVALID;
 
                 if (cur->ifa_netmask != NULL) {
@@ -1772,7 +1772,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
         //}
 
         /* Get MTU. */
-        ::ZeroMemory(&ifr, sizeof(ifr));
+        ::the::zero_memory(&ifr, sizeof(ifr));
         ::strcpy(ifr.ifr_name, adapter.GetID().PeekBuffer());
         if (::ioctl(handle, SIOCGIFMTU, &ifr) >= 0) {
             adapter.mtu.Set(ifr.ifr_mtu , VALID);
@@ -1783,7 +1783,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
          * adapter type.
          */
         // TODO: Somehow, I cannot retrieve the IPoIB MAC any more ...
-        ::ZeroMemory(&ifr, sizeof(ifr));
+        ::the::zero_memory(&ifr, sizeof(ifr));
         ::strcpy(ifr.ifr_name, adapter.GetID().PeekBuffer());
         if (::ioctl(handle, SIOCGIFHWADDR, &ifr) >= 0) {
             sockaddr_ll *sll = reinterpret_cast<sockaddr_ll *>(&ifr.ifr_hwaddr);
@@ -2050,12 +2050,12 @@ vislib::net::NetworkInformation::mapSuffixOrigin(
 /*
  * vislib::net::NetworkInformation::netmaskToPrefix
  */
-ULONG vislib::net::NetworkInformation::netmaskToPrefix(const uint8_t *netmask,
+unsigned long vislib::net::NetworkInformation::netmaskToPrefix(const uint8_t *netmask,
                                                        const size_t len) {
     THE_STACK_TRACE;
     const uint8_t *mask = netmask;
     const uint8_t *end = mask + len;
-    LONG retval = 0;
+    long retval = 0;
 
     while ((mask < end) && (*mask == 0xFF)) {
         retval += 8;
@@ -2086,18 +2086,18 @@ ULONG vislib::net::NetworkInformation::netmaskToPrefix(const uint8_t *netmask,
  * vislib::net::NetworkInformation::prefixToNetmask
  */
 void vislib::net::NetworkInformation::prefixToNetmask(uint8_t *outNetmask, 
-        const size_t len, const ULONG prefix) {
+        const size_t len, const unsigned long prefix) {
     THE_STACK_TRACE;
     uint8_t *mask = outNetmask;
-    LONG remBits = prefix;
-    LONG maxPrefix = 8L * static_cast<LONG>(len);
+    long remBits = prefix;
+    long maxPrefix = 8L * static_cast<long>(len);
     
     if ((remBits < 0) || (remBits > maxPrefix)) {
         throw vislib::OutOfRangeException(remBits, 0, maxPrefix, __FILE__, 
             __LINE__);
     }
 
-    ::ZeroMemory(mask, len);
+    ::the::zero_memory(mask, len);
     while (remBits > 0) {
         if (remBits >= 8) {
             *mask++ = 0xFF;
@@ -2201,7 +2201,7 @@ bool vislib::net::NetworkInformation::selectAdapterByUnicastPrefix(
  */
 float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter, 
             const IPAgnosticAddress& address, const StringW& device, 
-            const ULONG prefixLen, const uint32_t validMask) {
+            const unsigned long prefixLen, const uint32_t validMask) {
     THE_STACK_TRACE;
     //static const float LEVENSHTEIN_WILDNESS_WEIGHT = 0.05f;
     Array<float> wildness(0);       // The pre-adapter wildness.
@@ -2372,7 +2372,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
  */
 uint32_t vislib::net::NetworkInformation::wildGuessSplitInput(
         IPAgnosticAddress& outAddress, StringW& outDevice, 
-        ULONG& outPrefixLen, USHORT& outPort, const wchar_t *str,
+        unsigned long& outPrefixLen, uint16_t& outPort, const wchar_t *str,
         const IPAgnosticAddress::AddressFamily *prefFam) {
     THE_STACK_TRACE;
     uint32_t retval = 0;          // Bitmask of valid output.
@@ -2421,7 +2421,7 @@ uint32_t vislib::net::NetworkInformation::wildGuessSplitInput(
                 "\"%s\"\n", W2A(input));
 
             try {
-                outPort = static_cast<USHORT>(CharTraitsW::ParseInt(
+                outPort = static_cast<uint16_t>(CharTraitsW::ParseInt(
                     port.PeekBuffer()));
                 retval |= WILD_GUESS_HAS_PORT;
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Found port: %d\n", outPort);
@@ -2475,7 +2475,7 @@ uint32_t vislib::net::NetworkInformation::wildGuessSplitInput(
             /* Parse as prefix length if not a netmask. */
             if ((retval & WILD_GUESS_HAS_NETMASK) != WILD_GUESS_HAS_NETMASK) {
                 try {
-                    outPrefixLen = static_cast<ULONG>(CharTraitsW::ParseInt(
+                    outPrefixLen = static_cast<unsigned long>(CharTraitsW::ParseInt(
                         prefix.PeekBuffer()));
                     preferredFamily = IPAgnosticAddress::FAMILY_INET6;
                     retval |= WILD_GUESS_HAS_PREFIX_LEN;

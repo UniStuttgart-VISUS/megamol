@@ -288,7 +288,7 @@ void TestThread(void) {
 
     ::AssertEqual("Exit code is number of loops", t3.GetExitCode(), cntLoops);
     ::AssertEqual("Exit code is number of loops", t4.GetExitCode(), cntLoops);
-    ::AssertEqual("Counter twice number of loops", unsigned int(SynchronisedRunnable::Cnt), 2 * cntLoops);
+    ::AssertEqual("Counter twice number of loops", static_cast<unsigned int>(SynchronisedRunnable::Cnt), 2 * cntLoops);
 
 
     SynchronisedRunnable::Cnt = 0;
@@ -304,7 +304,7 @@ void TestThread(void) {
 
     ::AssertEqual("Exit code is number of loops", t5.GetExitCode(), cntLoops);
     ::AssertEqual("Exit code is number of loops", t6.GetExitCode(), cntLoops);
-    ::AssertEqual("Counter twice number of loops", unsigned int(SynchronisedRunnable::Cnt), 2 * cntLoops);
+    ::AssertEqual("Counter twice number of loops", static_cast<unsigned int>(SynchronisedRunnable::Cnt), 2 * cntLoops);
 
 
     // Event tests.
@@ -325,7 +325,7 @@ void TestThread(void) {
     t8.Join();
     t9.Join();
 
-    ::AssertEqual("Signal Dude Thread has never waited", t7.GetExitCode(), unsigned int(0));
+    ::AssertEqual("Signal Dude Thread has never waited", t7.GetExitCode(), static_cast<unsigned int>(0));
     ::AssertEqual("Exit code is number of event being signaled", t8.GetExitCode(), cntLoops);
     ::AssertEqual("Exit code is number of event being signaled", t9.GetExitCode(), cntLoops);
 
@@ -349,7 +349,7 @@ void TestThread(void) {
     t11.Join();
     t12.Join();
 
-    ::AssertEqual("Signal Dude Thread has never waited", t10.GetExitCode(), unsigned int(0));
+    ::AssertEqual("Signal Dude Thread has never waited", t10.GetExitCode(), static_cast<unsigned int>(0));
     ::AssertEqual("Exit code is number of event being signaled", t11.GetExitCode(), cntLoops);
     ::AssertEqual("Exit code is number of event being signaled", t12.GetExitCode(), cntLoops);
 

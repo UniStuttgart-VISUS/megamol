@@ -191,7 +191,7 @@ namespace net {
          *                     the method will succeed and return the complete
          *                     address.
          */
-        IPAddress6 GetPrefix(const ULONG prefixLength) const;
+        IPAddress6 GetPrefix(const unsigned long prefixLength) const;
 
         /**
          * Determines whether the address is a link local address.

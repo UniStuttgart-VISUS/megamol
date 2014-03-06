@@ -180,15 +180,15 @@ vislib::net::IPAddress6::~IPAddress6(void) {
  * vislib::net::IPAddress6::GetPrefix
  */ 
 vislib::net::IPAddress6 
-vislib::net::IPAddress6::GetPrefix(const ULONG prefixLength) const {
+vislib::net::IPAddress6::GetPrefix(const unsigned long prefixLength) const {
     IPAddress6 retval;
     int cntBytes = sizeof(retval.address.s6_addr); 
-    int cntPrefix = prefixLength > static_cast<ULONG>(8 * cntBytes)
+    int cntPrefix = prefixLength > static_cast<unsigned long>(8 * cntBytes)
         ? cntBytes : static_cast<int>(prefixLength);
     div_t cntCopy = ::div(cntPrefix, 8);
 
     /* Zero out everything. */
-    ::ZeroMemory(retval.address.s6_addr, cntBytes);
+    the::zero_memory(retval.address.s6_addr, cntBytes);
 
     /* Copy complete bytes. */
     ::memcpy(retval.address.s6_addr, this->address.s6_addr, cntCopy.quot);
@@ -233,7 +233,7 @@ vislib::StringA vislib::net::IPAddress6::ToStringA(void) const {
     char buffer[NI_MAXHOST];    // Receives the stringised address.
     int err = 0;                // OS operation return value.
 
-    ::ZeroMemory(&addr, sizeof(addr));
+    the::zero_memory(&addr, sizeof(addr));
     addr.sin6_family = AF_INET6;
     ::memcpy(&addr.sin6_addr, &this->address, sizeof(struct in6_addr));
 

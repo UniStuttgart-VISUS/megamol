@@ -353,7 +353,7 @@ namespace net {
              * @throws NoConfidenceException If the prefix length is invalid
              *                               and 'outConfidence' is NULL.
              */
-            inline ULONG GetPrefixLength(
+            inline unsigned long GetPrefixLength(
                     Confidence *outConfidence = NULL) const {
                 this->prefixLength.GetConfidence(outConfidence, 
                     "Prefix Length");
@@ -485,7 +485,7 @@ namespace net {
              * @param suffixOriginConfidence Confidence of 'suffixOrigin'. 
              */
             UnicastAddressInformation(const IPEndPoint endPoint, 
-                const ULONG prefixLength, 
+                const unsigned long prefixLength, 
                 const Confidence prefixLengthConfidence,
                 const PrefixOrigin prefixOrigin,
                 const Confidence prefixOriginConfidence,
@@ -496,7 +496,7 @@ namespace net {
             IPAgnosticAddress address;
 
             /** Length of the prefix (equivalent of netmask). */
-            AssessedMember<ULONG> prefixLength;
+            AssessedMember<unsigned long> prefixLength;
 
             /** Origin of the prefix. */
             AssessedMember<PrefixOrigin> prefixOrigin;
@@ -1166,7 +1166,7 @@ namespace net {
          *                             retrieving the data.
          */
         static size_t GetAdaptersForUnicastPrefix(AdapterList& outAdapters,
-            const IPAgnosticAddress& address, const ULONG prefixLength);
+            const IPAgnosticAddress& address, const unsigned long prefixLength);
 
         /**
          *
@@ -1342,7 +1342,7 @@ namespace net {
          *
          * @throws IllegalParamException If 'netmask' is not a valid netmask.
          */
-        inline static ULONG NetmaskToPrefix(const IPAddress& netmask) {
+        inline static unsigned long NetmaskToPrefix(const IPAddress& netmask) {
             const uint8_t *mask = reinterpret_cast<const uint8_t *>(
                 static_cast<const struct in_addr *>(netmask));
             return NetworkInformation::netmaskToPrefix(mask, 
@@ -1358,7 +1358,7 @@ namespace net {
          *
          * @throws IllegalParamException If 'netmask' is not a valid netmask.
          */
-        inline static ULONG NetmaskToPrefix(const IPAddress6& netmask) {
+        inline static unsigned long NetmaskToPrefix(const IPAddress6& netmask) {
             const uint8_t *mask = reinterpret_cast<const uint8_t *>(
                 static_cast<const struct in6_addr *>(netmask));
             return NetworkInformation::netmaskToPrefix(mask, 
@@ -1374,7 +1374,7 @@ namespace net {
          *
          * @throws IllegalParamException If 'netmask' is not a valid netmask.
          */
-        static ULONG NetmaskToPrefix(const IPAgnosticAddress& netmask);
+        static unsigned long NetmaskToPrefix(const IPAgnosticAddress& netmask);
 
         /**
          * Convert a prefix length to an IPv4 netmask.
@@ -1386,7 +1386,7 @@ namespace net {
          * @throws OutOfRangeException If the prefix length is not within the 
          *                             valid range of an IPv4 address.
          */
-        inline static IPAddress PrefixToNetmask4(const ULONG prefix) {
+        inline static IPAddress PrefixToNetmask4(const unsigned long prefix) {
             IPAddress retval;
             uint8_t *mask = reinterpret_cast<uint8_t *>(
                 static_cast<struct in_addr *>(retval));
@@ -1500,7 +1500,7 @@ namespace net {
          */
         typedef struct GuessLocalEndPointCtx_t {
             IPAgnosticAddress *Address; //< Pointer to input address.
-            ULONG *PrefixLen;           //< Pointer to input prefix length.
+            unsigned long *PrefixLen;           //< Pointer to input prefix length.
             Array<float> *Wildness;     //< Output array of address wildness.
             bool IsIPv4Preferred;       //< Prefer IPv4 in case of doubt.
         } GuessLocalEndPointCtx;
@@ -1566,7 +1566,7 @@ namespace net {
          */
         template<class A> 
         static int findSamePrefix(const UnicastAddressList& list, 
-            const A& addr, const ULONG prefixLen, const int startIdx = 0);
+            const A& addr, const unsigned long prefixLen, const int startIdx = 0);
 
         /**
          * Guess a broadcast address for the given adapter address 'address' 
@@ -1703,7 +1703,7 @@ namespace net {
          *
          * @throws IllegalParamException If 'netmask' is not a valid netmask.
          */
-        static ULONG netmaskToPrefix(const uint8_t *netmask, const size_t len);
+        static unsigned long netmaskToPrefix(const uint8_t *netmask, const size_t len);
 
         /**
          * Convert a prefix length to a netmask.
@@ -1718,7 +1718,7 @@ namespace net {
          *                             valid range.
          */
         static void prefixToNetmask(uint8_t *outNetmask, const size_t len,
-            const ULONG prefix);
+            const unsigned long prefix);
 
         /**
          * Process an enumerated adapter for guessing a local endpoint.
@@ -1812,7 +1812,7 @@ namespace net {
          */
         static float wildGuessAdapter(Adapter& outAdapter, 
             const IPAgnosticAddress& address, const StringW& device, 
-            const ULONG prefixLen, const uint32_t validMask);
+            const unsigned long prefixLen, const uint32_t validMask);
 
         /**
          * Split the input on behalf of the wild guess method into the parts
@@ -1834,7 +1834,7 @@ namespace net {
          * @return A bitmask specifying which of the out parameters are valid.
          */
         static uint32_t wildGuessSplitInput(IPAgnosticAddress& outAddress,
-            StringW& outDevice, ULONG& outPrefixLen, USHORT& outPort,
+            StringW& outDevice, unsigned long& outPrefixLen, uint16_t& outPort,
             const wchar_t *str, 
             const IPAgnosticAddress::AddressFamily *prefFam = NULL);
 
@@ -2021,7 +2021,7 @@ namespace net {
      */
     template<class A> int NetworkInformation::findSamePrefix(
             const UnicastAddressList& list, 
-            const A& addr, const ULONG prefixLen, 
+            const A& addr, const unsigned long prefixLen, 
             const int startIdx) {
         THE_STACK_TRACE;
         THE_ASSERT(startIdx >= 0);

@@ -16,7 +16,7 @@
 
 
 /** Port used for test server. */
-static const SHORT TEST_PORT = 7134;
+static const uint16_t TEST_PORT = 7134;
 
 
 /** Reads data from 'socket' member. */

@@ -80,7 +80,7 @@ namespace sys {
         ((type *)((PCHAR)(address) - (ULONG_PTR)(&((type *)0)->field)))
 #else /* _WIN32 */
     #define CONTAINING_RECORD(address, type, field) \
-        ((type *)((PCHAR)(address) - ((ULONG_PTR)(&((type *)4)->field) - 4)))
+        ((type *)((char*)(address) - ((uintptr_t)(&((type *)4)->field) - 4)))
 #endif /* _WIN32 */
     #endif /* CONTAINING_RECORD */
     #define CONTAINING_STRUCT(address, type, field) \

@@ -69,7 +69,7 @@ FARPROC vislib::sys::DynamicLinkLibrary::GetProcAddress(
 }
 #else /* _WIN32 */
 void *vislib::sys::DynamicLinkLibrary::GetProcAddress(
-        const CHAR *procName) const {
+        const char *procName) const {
     // TODO: Error handling using dlerror
     // Using an exception is probably not useful because of the error-code
     // incompatibility.

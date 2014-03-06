@@ -108,7 +108,7 @@ void vislib::graphics::gl::CameraOpenGL::ProjectionMatrix(float *mat) const {
         this->updateMembers();
     }
 
-    ZeroMemory(mat, sizeof(float) * 16);
+    the::zero_memory(mat, sizeof(float) * 16);
     vislib::math::ShallowMatrix<float, 4, vislib::math::COLUMN_MAJOR> matrix(mat);
 
     if (this->Parameters()->Projection() != CameraParameters::MONO_ORTHOGRAPHIC) {
@@ -151,7 +151,7 @@ void vislib::graphics::gl::CameraOpenGL::ViewMatrix(float *mat) const {
     SceneSpaceVector3D yAxis = zAxis.Cross(xAxis);
     yAxis.Normalise();
 
-    ::ZeroMemory(mat, sizeof(float) * 16);
+    the::zero_memory(mat, sizeof(float) * 16);
     math::ShallowMatrix<float, 4, math::COLUMN_MAJOR> matrix(mat);
 
     matrix.SetAt(0, 0, xAxis.GetX());
