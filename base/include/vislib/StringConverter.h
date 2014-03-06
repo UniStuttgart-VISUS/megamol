@@ -30,11 +30,11 @@
 
 // Note: Explicits casts are required for Linux.
 #ifndef A2W
-#define A2W(str) static_cast<const WCHAR *>(vislib::StringConverter<\
+#define A2W(str) static_cast<const wchar_t *>(vislib::StringConverter<\
     vislib::CharTraitsA, vislib::CharTraitsW>(str))
 #endif /* !A2W */
 #ifndef W2A
-#define W2A(str) static_cast<const CHAR *>(vislib::StringConverter<\
+#define W2A(str) static_cast<const char *>(vislib::StringConverter<\
     vislib::CharTraitsW, vislib::CharTraitsA>(str))
 #endif /* !W2A */
 

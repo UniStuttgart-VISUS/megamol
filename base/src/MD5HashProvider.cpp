@@ -109,7 +109,7 @@ vislib::MD5HashProvider::MD5HashProvider(void) : HashAlgorithm() {
  * vislib::MD5HashProvider::~MD5HashProvider
  */
 vislib::MD5HashProvider::~MD5HashProvider(void) {
-    ::SecureZeroMemory(&this->context, sizeof(MD5_CTX));
+    the::secure_zero_memory(&this->context, sizeof(MD5_CTX));
 }
 
 
@@ -224,7 +224,7 @@ void vislib::MD5HashProvider::finalise(uint8_t *output, MD5_CTX *context) {
         static_cast<unsigned int>(MD5HashProvider::HASH_SIZE));
 
     /* Zeroize sensitive information. */
-    ::SecureZeroMemory(context, sizeof(MD5_CTX));
+    the::secure_zero_memory(context, sizeof(MD5_CTX));
 }
 
 
@@ -318,7 +318,7 @@ void vislib::MD5HashProvider::transform(uint32_t state[4], const uint8_t block[6
     state[3] += d;
 
     /* Zeroize sensitive information. */
-    ::ZeroMemory(x, sizeof (x));
+    the::zero_memory(x, sizeof (x));
 }
 
 

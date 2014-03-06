@@ -108,7 +108,7 @@ void vislib::RawStorage::EnforceSize(const size_t size,
  */
 void vislib::RawStorage::ZeroAll(void) {
     if (this->data != NULL) {
-        ::ZeroMemory(this->data, this->size);
+        the::zero_memory(this->data, this->size);
     }
 }
 

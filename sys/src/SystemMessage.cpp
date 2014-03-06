@@ -17,7 +17,7 @@
 /*
  * vislib::sys::SystemMessage::SystemMessage
  */
-vislib::sys::SystemMessage::SystemMessage(const DWORD errorCode)
+vislib::sys::SystemMessage::SystemMessage(const the::system::system_error::native_error_type errorCode)
         : errorCode(errorCode), isMsgUnicode(false), msg(NULL) {
 }
 

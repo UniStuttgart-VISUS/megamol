@@ -20,7 +20,7 @@
 
 #else  /* _WIN32 */
 #include <errno.h>
-
+#include "the/system/system_error.h"
 #include "the/types.h"
 
 /**
@@ -29,8 +29,8 @@
  *
  * @return The last error.
  */
-static inline DWORD GetLastError(void) {
-    return static_cast<DWORD>(errno);
+static inline the::system::system_error::native_error_type GetLastError(void) {
+    return static_cast<the::system::system_error::native_error_type>(errno);
 }
 
 #endif /* !_WIN32 */

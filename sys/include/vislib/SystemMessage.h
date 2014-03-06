@@ -16,6 +16,7 @@
 
 #include "vislib/Exception.h"
 #include "the/types.h"
+#include "the/system/system_error.h"
 
 
 namespace vislib {
@@ -35,7 +36,7 @@ namespace sys {
          *
          * @param errorCode A system dependent error code.
          */
-        SystemMessage(const DWORD errorCode);
+        SystemMessage(const the::system::system_error::native_error_type errorCode);
 
         /**
          * Create a clone of 'rhs'.
@@ -90,14 +91,14 @@ namespace sys {
          *
          * @return The system error code.
          */
-        inline DWORD GetErrorCode(void) const {
+        inline the::system::system_error::native_error_type GetErrorCode(void) const {
             return this->errorCode;
         }
 
     private:
 
         /** A system dependent error code. */
-        DWORD errorCode;
+        the::system::system_error::native_error_type errorCode;
 
         /** Remember whether 'msg' points to a Unicode or ANSI string. */
         mutable bool isMsgUnicode;

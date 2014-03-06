@@ -664,7 +664,7 @@ namespace vislib {
      *
      * @author Christoph Mueller
      */
-    template<> class CharTraits<WCHAR> : public CharTraitsBase<WCHAR> {
+    template<> class CharTraits<wchar_t> : public CharTraitsBase<wchar_t> {
 
     public:
 
@@ -879,7 +879,7 @@ namespace vislib {
 
         /** Forbidden Ctor. */
         inline CharTraits(void) {
-            throw UnsupportedOperationException("CharTraits<WCHAR>", __FILE__, 
+            throw UnsupportedOperationException("CharTraits<wchar_t>", __FILE__, 
                 __LINE__);
         }
 
@@ -1038,12 +1038,12 @@ namespace vislib {
         template<class S, class T, int32_t B> friend class StringConverter;
         friend class vislib::sys::Log;
 
-    }; /* end class CharTraits<WCHAR> */
+    }; /* end class CharTraits<wchar_t> */
 
 
     /* Typedef for template specialisations. */
     typedef CharTraits<char> CharTraitsA;
-    typedef CharTraits<WCHAR> CharTraitsW;
+    typedef CharTraits<wchar_t> CharTraitsW;
 
 
     /* Typedef for TCHAR CharTraits. */

@@ -14,7 +14,7 @@
 /*
  * vislib::sys::SystemException::SystemException
  */
-vislib::sys::SystemException::SystemException(const DWORD errorCode, 
+vislib::sys::SystemException::SystemException(const the::system::system_error::native_error_type errorCode, 
         const char *file, const int line) 
 		: Exception(static_cast<const char *>(NULL), file, line), sysMsg(errorCode) {
 }

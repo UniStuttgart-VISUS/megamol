@@ -249,7 +249,7 @@ void vislib::GUID::SetZero(void) {
 #ifdef _WIN32
     ::ZeroMemory(&this->guid, sizeof(this->guid));
 #else /* _WIN32 */
-    ::ZeroMemory(this->guid, sizeof(this->guid));
+    the::zero_memory(this->guid, sizeof(this->guid));
 #endif /* _WIN32 */
 }
 

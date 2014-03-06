@@ -281,9 +281,9 @@ vislib::CharTraitsA::Size vislib::CharTraits<char>::ToUpper(
 
 
 /*
- * vislib::CharTraits<WCHAR>::ParseBool
+ * vislib::CharTraits<wchar_t>::ParseBool
  */
-bool vislib::CharTraits<WCHAR>::ParseBool(const Char *str) {
+bool vislib::CharTraits<wchar_t>::ParseBool(const Char *str) {
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
@@ -328,9 +328,9 @@ bool vislib::CharTraits<WCHAR>::ParseBool(const Char *str) {
 
 
 /*
- * vislib::CharTraits<WCHAR>::ParseDouble
+ * vislib::CharTraits<wchar_t>::ParseDouble
  */
-double vislib::CharTraits<WCHAR>::ParseDouble(const Char *str) {
+double vislib::CharTraits<wchar_t>::ParseDouble(const Char *str) {
     double retval;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
@@ -352,9 +352,9 @@ double vislib::CharTraits<WCHAR>::ParseDouble(const Char *str) {
 
 
 /*
- * vislib::CharTraits<WCHAR>::ParseInt
+ * vislib::CharTraits<wchar_t>::ParseInt
  */
-int vislib::CharTraits<WCHAR>::ParseInt(const Char *str) {
+int vislib::CharTraits<wchar_t>::ParseInt(const Char *str) {
     int retval;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
@@ -378,7 +378,7 @@ int vislib::CharTraits<WCHAR>::ParseInt(const Char *str) {
 /*
  * vislib::CharTraits<char>::ParseInt64
  */
-int64_t vislib::CharTraits<WCHAR>::ParseInt64(const Char *str) {
+int64_t vislib::CharTraits<wchar_t>::ParseInt64(const Char *str) {
     THE_STACK_TRACE;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
@@ -404,7 +404,7 @@ int64_t vislib::CharTraits<WCHAR>::ParseInt64(const Char *str) {
 /*
  * vislib::CharTraits<char>::ParseUInt64
  */
-uint64_t vislib::CharTraits<WCHAR>::ParseUInt64(const Char *str) {
+uint64_t vislib::CharTraits<wchar_t>::ParseUInt64(const Char *str) {
     THE_STACK_TRACE;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
@@ -428,9 +428,9 @@ uint64_t vislib::CharTraits<WCHAR>::ParseUInt64(const Char *str) {
 
 
 /*
- * vislib::CharTraits<WCHAR>::Format
+ * vislib::CharTraits<wchar_t>::Format
  */
-vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::Format(
+vislib::CharTraits<wchar_t>::Size vislib::CharTraits<wchar_t>::Format(
         Char *dst, const Size cnt, const Char *fmt, va_list argptr) {
     int retval = -1;
 
@@ -487,9 +487,9 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::Format(
 
 
 /*
-* vislib::CharTraits<WCHAR>::ToLower
+* vislib::CharTraits<wchar_t>::ToLower
  */
-vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToLower(
+vislib::CharTraits<wchar_t>::Size vislib::CharTraits<wchar_t>::ToLower(
         Char *dst, const Size cnt, const Char *str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
@@ -528,9 +528,9 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToLower(
 
 
 /*
- * vislib::CharTraits<WCHAR>::ToUpper
+ * vislib::CharTraits<wchar_t>::ToUpper
  */
-vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToUpper(
+vislib::CharTraits<wchar_t>::Size vislib::CharTraits<wchar_t>::ToUpper(
         Char *dst, const Size cnt, const Char *str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.

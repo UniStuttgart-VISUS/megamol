@@ -39,7 +39,7 @@ namespace sys {
          * @param file      The file the exception was thrown in.
          * @param line      The line the exception was thrown in.
          */
-        SystemException(const DWORD errorCode, const char *file,
+        SystemException(const the::system::system_error::native_error_type errorCode, const char *file,
             const int line);
 
         /**
@@ -67,7 +67,7 @@ namespace sys {
          *
          * @return The system error code.
          */
-        inline DWORD GetErrorCode(void) const {
+        inline the::system::system_error::native_error_type GetErrorCode(void) const {
             return this->sysMsg.GetErrorCode();
         }
 

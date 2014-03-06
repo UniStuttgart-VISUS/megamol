@@ -31,7 +31,7 @@ vislib::SHA1HashProvider::SHA1HashProvider(void) {
  * vislib::SHA1HashProvider::~SHA1HashProvider
  */
 vislib::SHA1HashProvider::~SHA1HashProvider(void) {
-    ::SecureZeroMemory(&this->context, sizeof(SHA1Context));
+    the::secure_zero_memory(&this->context, sizeof(SHA1Context));
 }
 
 
