@@ -34,7 +34,7 @@ vislib::net::AbstractSyncMsgUser::AbstractSyncMsgUser(void) {
 const vislib::net::SimpleMessage& 
 vislib::net::AbstractSyncMsgUser::receiveViaMsgBuffer(
         SmartRef<AbstractCommClientChannel> channel,
-        const UINT timeout) {
+        const unsigned int timeout) {
     THE_STACK_TRACE;
     
     SimpleMessageSize headerSize = this->msgBuffer.GetHeader().GetHeaderSize();
@@ -58,7 +58,7 @@ void vislib::net::AbstractSyncMsgUser::sendViaMsgBuffer(
         const SimpleMessageID msgID, 
         const void *body, 
         const unsigned int bodySize,
-        const UINT timeout) {
+        const unsigned int timeout) {
     THE_STACK_TRACE;
 
     this->msgBuffer.GetHeader().SetMessageID(msgID);

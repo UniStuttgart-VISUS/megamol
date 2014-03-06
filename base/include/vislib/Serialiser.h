@@ -289,7 +289,7 @@ namespace vislib {
             const wchar_t *name) = 0;
 
         /**
-         * Deserialise the INT64 element with name 'name' into 'outValue'.
+         * Deserialise the int64_t element with name 'name' into 'outValue'.
          *
          * @param outValue Receives the deserialised value.
          * @param name     The name of the value to be deserialises. 
@@ -299,11 +299,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Deserialise(INT64& outValue, 
+        virtual void Deserialise(int64_t& outValue, 
             const char *name = NULL) = 0;
 
         /**
-         * Deserialise the INT64 element with name 'name' into 'outValue'.
+         * Deserialise the int64_t element with name 'name' into 'outValue'.
          *
          * @param outValue Receives the deserialised value.
          * @param name     The name of the value to be deserialises. 
@@ -313,11 +313,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Deserialise(INT64& outValue, 
+        virtual void Deserialise(int64_t& outValue, 
             const wchar_t *name) = 0;
 
         /**
-         * Deserialise the UINT64 element with name 'name' into 'outValue'.
+         * Deserialise the uint64_t element with name 'name' into 'outValue'.
          *
          * @param outValue Receives the deserialised value.
          * @param name     The name of the value to be deserialises. 
@@ -327,11 +327,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Deserialise(UINT64& outValue, 
+        virtual void Deserialise(uint64_t& outValue, 
             const char *name = NULL) = 0;
 
         /**
-         * Deserialise the UINT64 element with name 'name' into 'outValue'.
+         * Deserialise the uint64_t element with name 'name' into 'outValue'.
          *
          * @param outValue Receives the deserialised value.
          * @param name     The name of the value to be deserialises. 
@@ -341,7 +341,7 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Deserialise(UINT64& outValue, 
+        virtual void Deserialise(uint64_t& outValue, 
             const wchar_t *name) = 0;
 
         /**
@@ -690,7 +690,7 @@ namespace vislib {
             const wchar_t *name) = 0;
 
         /**
-         * Serialise the INT64 variable using the name 'name'.
+         * Serialise the int64_t variable using the name 'name'.
          *
          * @param value The value to be serialised.
          * @param name  The name for this value.
@@ -700,11 +700,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Serialise(const INT64 value,
+        virtual void Serialise(const int64_t value,
             const char *name = NULL) = 0;
 
         /**
-         * Serialise the INT64 variable using the name 'name'.
+         * Serialise the int64_t variable using the name 'name'.
          *
          * @param value The value to be serialised.
          * @param name  The name for this value.
@@ -714,11 +714,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Serialise(const INT64 value,
+        virtual void Serialise(const int64_t value,
             const wchar_t *name) = 0;
 
         /**
-         * Serialise the UINT64 variable using the name 'name'.
+         * Serialise the uint64_t variable using the name 'name'.
          *
          * @param value The value to be serialised.
          * @param name  The name for this value.
@@ -728,11 +728,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Serialise(const UINT64 value,
+        virtual void Serialise(const uint64_t value,
             const char *name = NULL) = 0;
 
         /**
-         * Serialise the UINT64 variable using the name 'name'.
+         * Serialise the uint64_t variable using the name 'name'.
          *
          * @param value The value to be serialised.
          * @param name  The name for this value.
@@ -742,7 +742,7 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Serialise(const UINT64 value,
+        virtual void Serialise(const uint64_t value,
             const wchar_t *name) = 0;
 
         /**

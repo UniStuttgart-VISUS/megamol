@@ -106,7 +106,7 @@ namespace cluster {
          */
         virtual DWORD Run(void);
 
-        inline void SetReconnectAttempts(const UINT reconnectAttempts) {
+        inline void SetReconnectAttempts(const unsigned int reconnectAttempts) {
             this->reconnectAttempts = reconnectAttempts;
         }
 
@@ -171,7 +171,7 @@ namespace cluster {
          *
          * @return The number of known peer nodes.
          */
-        virtual SIZE_T countPeers(void) const;
+        virtual size_t countPeers(void) const;
 
         /**
          * Call 'func' for each known peer node (socket).
@@ -187,7 +187,7 @@ namespace cluster {
          * @return The number of sucessful calls to 'func' that have been made.
          *         This is at most 1 for a client node.
          */
-        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
+        virtual size_t forEachPeer(ForeachPeerFunc func, void *context);
 
         /**
          * Call 'func' for the peer node that has the specified ID 'peerId'. If
@@ -250,7 +250,7 @@ namespace cluster {
             sys::CmdLineProvider<T>& inOutCmdLine);
 
         /** The number of reconnect attempts to make if disconnected. */
-        UINT reconnectAttempts;
+        unsigned int reconnectAttempts;
 
         /** The receiver thread that generates the message events. */
         sys::Thread receiver;

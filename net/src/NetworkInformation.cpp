@@ -221,7 +221,7 @@ vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressA(void) const {
     try {
         const vislib::Array<BYTE>& addr = this->GetPhysicalAddress();
 
-        for (SIZE_T i = 0; i < addr.Count(); i++) {
+        for (size_t i = 0; i < addr.Count(); i++) {
             tmp.Format((i > 0) ? "-%.2X" : "%.2X", addr[i]);
             retval += tmp;
         }
@@ -245,7 +245,7 @@ vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressW(void) const {
     try {
         const vislib::Array<BYTE>& addr = this->GetPhysicalAddress();
 
-        for (SIZE_T i = 0; i < addr.Count(); i++) {
+        for (size_t i = 0; i < addr.Count(); i++) {
             tmp.Format((i > 0) ? L"-%.2X" : L"%.2X", addr[i]);
             retval += tmp;
         }
@@ -283,7 +283,7 @@ vislib::net::NetworkInformation::Adapter::GetUnicastAddress(
     THE_STACK_TRACE;
     UnicastAddressList addrs = this->GetUnicastAddresses();
 
-    for (SIZE_T i = 0; i < addrs.Count(); i++) {
+    for (size_t i = 0; i < addrs.Count(); i++) {
         if (addrs[i].GetAddressFamily() == preferredFamily) {
             return addrs[i].GetAddress();
         }
@@ -349,7 +349,7 @@ bool vislib::net::NetworkInformation::Adapter::operator ==(
 /*
  * vislib::net::NetworkInformation::CountAdapters
  */
-SIZE_T vislib::net::NetworkInformation::CountAdapters() {
+size_t vislib::net::NetworkInformation::CountAdapters() {
     THE_STACK_TRACE;
 
     NetworkInformation::lockAdapters.Lock();
@@ -360,7 +360,7 @@ SIZE_T vislib::net::NetworkInformation::CountAdapters() {
         throw;
     }
 
-    SIZE_T retval = NetworkInformation::adapters.Count();
+    size_t retval = NetworkInformation::adapters.Count();
     NetworkInformation::lockAdapters.Unlock();
     return retval;
 }
@@ -409,7 +409,7 @@ void vislib::net::NetworkInformation::EnumerateAdapters(
     }
 
     /* Invoke the callback. */
-    for (SIZE_T i = 0; i < NetworkInformation::adapters.Count(); i++) {
+    for (size_t i = 0; i < NetworkInformation::adapters.Count(); i++) {
         try {
             if (!cb(NetworkInformation::adapters[i], userContext)) {
                 break;
@@ -428,7 +428,7 @@ void vislib::net::NetworkInformation::EnumerateAdapters(
  * vislib::net::NetworkInformation::GetAdapter
  */
 vislib::net::NetworkInformation::Adapter 
-vislib::net::NetworkInformation::GetAdapter(const SIZE_T idx) {
+vislib::net::NetworkInformation::GetAdapter(const size_t idx) {
     THE_STACK_TRACE;
 
     NetworkInformation::lockAdapters.Lock();
@@ -458,7 +458,7 @@ bool vislib::net::NetworkInformation::GetAdapterForID(
         throw;
     }
 
-    for (SIZE_T i = 0; i < NetworkInformation::adapters.Count(); i++) {
+    for (size_t i = 0; i < NetworkInformation::adapters.Count(); i++) {
         try {
             if (NetworkInformation::adapters[i].GetID().Equals(id)) {
                 outAdapter = NetworkInformation::adapters[i];
@@ -479,7 +479,7 @@ bool vislib::net::NetworkInformation::GetAdapterForID(
 /*
  * vislib::net::NetworkInformation::GetAdaptersForPredicate
  */
-SIZE_T vislib::net::NetworkInformation::GetAdaptersForPredicate(
+size_t vislib::net::NetworkInformation::GetAdaptersForPredicate(
         AdapterList& outAdapters, SelectAdapterCallback cb, void *userContext) {
     THE_STACK_TRACE;
  
@@ -493,7 +493,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForPredicate(
         throw;
     }
 
-    for (SIZE_T i = 0; i < NetworkInformation::adapters.Count(); i++) {
+    for (size_t i = 0; i < NetworkInformation::adapters.Count(); i++) {
         try {
             if (cb(NetworkInformation::adapters[i], userContext)) {
                 outAdapters.Add(NetworkInformation::adapters[i]);
@@ -513,7 +513,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForPredicate(
 /*
  * vislib::net::NetworkInformation::GetAdaptersForUnicastAddress
  */
-SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
+size_t vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
         AdapterList& outAdapters, const IPAddress& address) {
     THE_STACK_TRACE;
     return NetworkInformation::GetAdaptersForPredicate(
@@ -526,7 +526,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
 /*
  * vislib::net::NetworkInformation::GetAdaptersForUnicastAddress
  */
-SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
+size_t vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
         AdapterList& outAdapters, const IPAddress6& address) {
     THE_STACK_TRACE;
     return NetworkInformation::GetAdaptersForPredicate(
@@ -539,7 +539,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
 /*
  * vislib::net::NetworkInformation::GetAdaptersForUnicastAddress
  */
-SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
+size_t vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
         AdapterList& outAdapters, const IPAgnosticAddress& address) {
     THE_STACK_TRACE;
     return NetworkInformation::GetAdaptersForPredicate(
@@ -552,7 +552,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastAddress(
 /*
  * vislib::net::NetworkInformation::GetAdaptersForType
  */
-SIZE_T vislib::net::NetworkInformation::GetAdaptersForType(
+size_t vislib::net::NetworkInformation::GetAdaptersForType(
         AdapterList& outAdapters, const Adapter::Type type) {
     THE_STACK_TRACE;
 
@@ -585,7 +585,7 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForType(
 /*
  * vislib::net::NetworkInformation::GetAdaptersForUnicastPrefix
  */
-SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastPrefix(
+size_t vislib::net::NetworkInformation::GetAdaptersForUnicastPrefix(
         AdapterList& outAdapters, const IPAgnosticAddress& address, 
         const ULONG prefixLength) {
     THE_STACK_TRACE;
@@ -603,9 +603,9 @@ SIZE_T vislib::net::NetworkInformation::GetAdaptersForUnicastPrefix(
  * vislib::net::NetworkInformation::GetAdapterUnsafe
  */
 const vislib::net::NetworkInformation::Adapter& 
-vislib::net::NetworkInformation::GetAdapterUnsafe(const SIZE_T idx) {
+vislib::net::NetworkInformation::GetAdapterUnsafe(const size_t idx) {
     THE_STACK_TRACE;
-    SIZE_T cntAdapters = 0;
+    size_t cntAdapters = 0;
 
     NetworkInformation::lockAdapters.Lock();
     try {
@@ -1034,16 +1034,16 @@ float vislib::net::NetworkInformation::assessAddressAsEndPoint(
  * vislib::net::NetworkInformation::consolidateWildness
  */
 float vislib::net::NetworkInformation::consolidateWildness(
-        Array<float>& inOutWildness, SIZE_T& outIdxFirstBest) {
+        Array<float>& inOutWildness, size_t& outIdxFirstBest) {
     THE_STACK_TRACE;
-    SIZE_T cntEqualWildness = 1;    // # of equal wildness values.
+    size_t cntEqualWildness = 1;    // # of equal wildness values.
     float retval = 1.0f;            // The minimal wildness found.
 
     outIdxFirstBest = 0;
 
     /* Consolidate to [0, 1] and find the minimum. */
     THE_ASSERT(!inOutWildness.IsEmpty());
-    for (SIZE_T i = 0; i < inOutWildness.Count(); i++) {
+    for (size_t i = 0; i < inOutWildness.Count(); i++) {
         if (inOutWildness[i] < 0.0f) {
             inOutWildness[i] = 0.0f;
         } else if (inOutWildness[i] > 1.0f) {
@@ -1131,7 +1131,7 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
     GuessLocalEndPointCtx ctx;      // The enumeration context.
     Array<float> wildness(0);       // The wildness of multiple candidates.
     float retval = 1.0f;            // The wildness of the guess.
-    SIZE_T bestAddressIdx = 0;      // Index of best address after consolidate.
+    size_t bestAddressIdx = 0;      // Index of best address after consolidate.
     UINT32 validMask = 0;           // Valid fields from the input.
     IPAgnosticAddress address;      // The adapter address from the input.
     StringW device;                 // The device name from the input.
@@ -1220,7 +1220,7 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
                     &ctx);
                 retval = NetworkInformation::consolidateWildness(wildness, 
                     bestAddressIdx);
-                for (SIZE_T i = 0, j = 0; 
+                for (size_t i = 0, j = 0; 
                         i < NetworkInformation::adapters.Count(); i++) {
                     Confidence dummy; // TODO: consider to use in wildness 'calculation'
                     const UnicastAddressList& al = NetworkInformation::adapters[
@@ -1234,7 +1234,7 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
                         break;
                     }
                     j += al.Count();
-                } /* end for for (SIZE_T i = 0, j = 0; ... */
+                } /* end for for (size_t i = 0, j = 0; ... */
             }
                 
             if ((retval == 1.0f) 
@@ -1254,7 +1254,7 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
                 const UnicastAddressList& al = candidate.GetUnicastAddresses();
                 
                 wildness.Clear();
-                for (SIZE_T i = 0; i < al.Count(); i++) {
+                for (size_t i = 0; i < al.Count(); i++) {
                     wildness.Add(NetworkInformation::assessAddressAsEndPoint(
                         al[i], ctx) * retval);
                 }
@@ -1311,7 +1311,7 @@ float vislib::net::NetworkInformation::guessRemoteEndPoint(
     Array<float> wildness(0);       // The wildness of multiple candidates.
     float retval = 1.0f;            // The wildness of the guess.
     IPHostEntryW hostEntry;         // DNS host entry.
-    SIZE_T bestAddressIdx = 0;      // Index of best address after consolidate.
+    size_t bestAddressIdx = 0;      // Index of best address after consolidate.
     UINT32 validMask = 0;           // Valid fields from the input.
     IPAgnosticAddress address;      // The adapter address from the input.
     StringW device;                 // The device name from the input.
@@ -1344,7 +1344,7 @@ float vislib::net::NetworkInformation::guessRemoteEndPoint(
         const Array<IPAgnosticAddress>& al = hostEntry.GetAddresses();
 
         if ((validMask & WILD_GUESS_HAS_ADDRESS) != 0) {
-            for (SIZE_T i = 0; i < al.Count(); i++) {
+            for (size_t i = 0; i < al.Count(); i++) {
                 retval = 1.0f;
 
                 if (al[i] == address) {
@@ -1648,7 +1648,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
          * Search whether we already have the adapter or add a new one.
          */
         Adapter *adapter = NULL;
-        for (SIZE_T i = 0; i < NetworkInformation::adapters.Count(); i++) {
+        for (size_t i = 0; i < NetworkInformation::adapters.Count(); i++) {
             if (NetworkInformation::adapters[i].id.GetValue().Equals(
                     cur->ifa_name)) {
                 adapter = &(adapters[i]);
@@ -1763,7 +1763,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
     } /* end for (struct ifaddrs *cur = addrs; cur != NULL; ... */
 
     /* Now that we have all addresses, do some post-processing. */
-    for (SIZE_T i = 0; i < NetworkInformation::adapters.Count(); i++) {
+    for (size_t i = 0; i < NetworkInformation::adapters.Count(); i++) {
         Adapter& adapter = NetworkInformation::adapters[i];
 
         ///* Set unknown adapter type if we could not retrieve it. */
@@ -1806,7 +1806,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
             }
         }
 
-    } /* end for (SIZE_T i = 0; i < NetworkInformation::adapters.Count(); ... */
+    } /* end for (size_t i = 0; i < NetworkInformation::adapters.Count(); ... */
 
 #undef SAFE_CLEAN_RES_THROWSYS
 #endif /* _WIN32 */
@@ -2051,7 +2051,7 @@ vislib::net::NetworkInformation::mapSuffixOrigin(
  * vislib::net::NetworkInformation::netmaskToPrefix
  */
 ULONG vislib::net::NetworkInformation::netmaskToPrefix(const BYTE *netmask,
-                                                       const SIZE_T len) {
+                                                       const size_t len) {
     THE_STACK_TRACE;
     const BYTE *mask = netmask;
     const BYTE *end = mask + len;
@@ -2086,7 +2086,7 @@ ULONG vislib::net::NetworkInformation::netmaskToPrefix(const BYTE *netmask,
  * vislib::net::NetworkInformation::prefixToNetmask
  */
 void vislib::net::NetworkInformation::prefixToNetmask(BYTE *outNetmask, 
-        const SIZE_T len, const ULONG prefix) {
+        const size_t len, const ULONG prefix) {
     THE_STACK_TRACE;
     BYTE *mask = outNetmask;
     LONG remBits = prefix;
@@ -2124,7 +2124,7 @@ bool vislib::net::NetworkInformation::processAdapterForLocalEndpointGuess(
     THE_ASSERT(ctx != NULL);
     THE_ASSERT(ctx->Wildness != NULL);
 
-    for (SIZE_T i = 0; i < al.Count(); i++) {
+    for (size_t i = 0; i < al.Count(); i++) {
         ctx->Wildness->Add(NetworkInformation::assessAddressAsEndPoint(al[i], 
             *ctx));
     }
@@ -2210,7 +2210,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
     float len1 = 0.0f;              // Temporary length variable.
     float len2 = 0.0f;              // Temporary length variable.
     int matchedIndex = -1;          // Index of the last successful match.
-    SIZE_T candidateIdx = 0;        // Index of the guess candidate.
+    size_t candidateIdx = 0;        // Index of the guess candidate.
 
     /* Ensure that we know the adapters and that we have at least one. */
     NetworkInformation::initAdapters();
@@ -2221,11 +2221,11 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
     
     /* Initially, all adapters are candidates with wildness 1. */
     wildness.AssertCapacity(NetworkInformation::adapters.Count());
-    for (SIZE_T i = 0; i < NetworkInformation::adapters.Count(); i++) {
+    for (size_t i = 0; i < NetworkInformation::adapters.Count(); i++) {
         wildness.Add(1.0f);
     }
 
-    for (SIZE_T i = 0; i < NetworkInformation::adapters.Count(); i++) {
+    for (size_t i = 0; i < NetworkInformation::adapters.Count(); i++) {
         const Adapter& a = NetworkInformation::adapters[i];
         matchedIndex = -1;
 
@@ -2336,7 +2336,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
             // Adapter, der mehrere Addressen im richtigen Subnetz hat besser
             // bewertet wird.
             wildness[i] += NetworkInformation::PENALTY_WRONG_PREFIX;
-            for (SIZE_T a = 0; a < al.Count(); a++) {
+            for (size_t a = 0; a < al.Count(); a++) {
                 if (al[a].GetPrefixLength() == prefixLen) {
                     wildness[i] -= NetworkInformation::PENALTY_WRONG_PREFIX;
                     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Prefix length %u is "
@@ -2356,7 +2356,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
         } catch (NoConfidenceException) {
             wildness[i] += NetworkInformation::PENALTY_ADAPTER_DOWN / 2.0f;
         }
-    } /* end for (SIZE_T i = 0; i < NetworkInformation::adapters.Count() ... */
+    } /* end for (size_t i = 0; i < NetworkInformation::adapters.Count() ... */
 
     retval = NetworkInformation::consolidateWildness(wildness, candidateIdx);
     outAdapter = NetworkInformation::adapters[candidateIdx];

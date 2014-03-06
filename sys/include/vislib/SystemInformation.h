@@ -80,7 +80,7 @@ namespace sys {
          *
          * @throws SystemException on failure.
          */
-        static UINT64 AvailableMemorySize(void);
+        static uint64_t AvailableMemorySize(void);
 
         /**
          * Returns an ansi string with the local computers name.
@@ -162,7 +162,7 @@ namespace sys {
          *
          * @throws SystemException on failure.
          */
-        static UINT64 PhysicalMemorySize(void);
+        static uint64_t PhysicalMemorySize(void);
 
         /**
          * Answer the size and origin of the primary monitor. 

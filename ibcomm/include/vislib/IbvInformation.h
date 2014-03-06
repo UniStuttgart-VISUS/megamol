@@ -316,7 +316,7 @@ namespace ib {
              *                             port index within 
              *                             [0, this->GetPortCount[.
              */
-            const Port& GetPort(const SIZE_T idx) const;
+            const Port& GetPort(const size_t idx) const;
 
             /**
              * Get the list of port descriptors.
@@ -465,7 +465,7 @@ namespace ib {
          */
         void DiscardCache(const bool reread = false);
 
-        SIZE_T GetDevices(DeviceList& outDevices) const;
+        size_t GetDevices(DeviceList& outDevices) const;
 
     private:
 

@@ -52,7 +52,7 @@ namespace vislib {
          *
          * @return The number of strings in the set.
          */
-        static SIZE_T Count(const Char *multiSz);
+        static size_t Count(const Char *multiSz);
 
         /**
          * Answer the length of the set of zero-terminated strings 'multiSz' 
@@ -67,7 +67,7 @@ namespace vislib {
          * @return The number of characters that are required to store the
          *         'multiSz'.
          */
-        static SIZE_T Length(const Char *multiSz);
+        static size_t Length(const Char *multiSz);
 
         /**
          * Answer the 'idx' string in the set of zero-terminated string 
@@ -82,7 +82,7 @@ namespace vislib {
          * @return A pointer to the begin of the 'idx'th string or NULL, if
          *         'idx' is out of range.
          */
-        static const Char *PeekAt(const SIZE_T idx, const Char *multiSz);
+        static const Char *PeekAt(const size_t idx, const Char *multiSz);
 
         /**
          * Create a new object using the the set of zero-terminated strings
@@ -110,7 +110,7 @@ namespace vislib {
          * @throws std::bad_alloc If the memory required for the MultiSz could
          *                        not be allocated.
          */
-        MultiSz(const Char **strings, const SIZE_T cntStrings);
+        MultiSz(const Char **strings, const size_t cntStrings);
 
         /**
          * Clone 'rhs'.
@@ -168,7 +168,7 @@ namespace vislib {
          * @throws std::bad_alloc If the memory requested amount of memory could
          *                        not be allocated.
          */
-        Char *AllocateBuffer(const SIZE_T cnt);
+        Char *AllocateBuffer(const size_t cnt);
 
         /**
          * Clear all elements in the MultiSz.
@@ -183,7 +183,7 @@ namespace vislib {
          *
          * @return The number of strings in the MultiSz.
          */
-        inline SIZE_T Count(void) const {
+        inline size_t Count(void) const {
             return MultiSz::Count(this->data);
         }
 
@@ -196,7 +196,7 @@ namespace vislib {
          *
          * @throws OutOfRangeException If 'idx' is not within [0, Count()[.
          */
-        String<T> GetAt(const SIZE_T idx) const {
+        String<T> GetAt(const size_t idx) const {
             return (*this)[idx];
         }
 
@@ -217,7 +217,7 @@ namespace vislib {
          * @throws std::bad_alloc If the memory required for the MultiSz could
          *                        not be allocated.
          */
-        void Insert(const SIZE_T idx, const Char *str);
+        void Insert(const size_t idx, const Char *str);
 
         /**
          * Insert 'str' at the 'idx'th position. All elements behind
@@ -234,7 +234,7 @@ namespace vislib {
          * @throws std::bad_alloc If the memory required for the MultiSz could
          *                        not be allocated.
          */
-        inline void Insert(const SIZE_T idx, const String<T>& str) {
+        inline void Insert(const size_t idx, const String<T>& str) {
             this->Insert(idx, str.PeekBuffer());
         }
 
@@ -253,7 +253,7 @@ namespace vislib {
          * @return The number of characters that are required to store the
          *         MultiSz.
          */
-        inline SIZE_T Length(void) const {
+        inline size_t Length(void) const {
             return MultiSz::Length(this->data);
         }
 
@@ -266,7 +266,7 @@ namespace vislib {
          * @return A pointer to the begin of the 'idx'th string or NULL, if the
          *         index is out of range.
          */
-        inline const Char *PeekAt(const SIZE_T idx) const {
+        inline const Char *PeekAt(const size_t idx) const {
             return MultiSz::PeekAt(idx, this->data);
         }
 
@@ -353,7 +353,7 @@ namespace vislib {
          *
          * @throws OutOfRangeException If 'idx' is not within [0, Count()[.
          */
-        String<T> operator [](const SIZE_T idx) const;
+        String<T> operator [](const size_t idx) const;
 
     private:
 
@@ -366,8 +366,8 @@ namespace vislib {
     /*
      * MultiSz<T>::Count
      */
-    template<class T> SIZE_T MultiSz<T>::Count(const Char *multiSz) {
-        SIZE_T retval = 0;
+    template<class T> size_t MultiSz<T>::Count(const Char *multiSz) {
+        size_t retval = 0;
         const Char *cursor = multiSz;
 
         if (cursor != NULL) {
@@ -384,7 +384,7 @@ namespace vislib {
     /*
      * MultiSz<T>::Length
      */
-    template<class T> SIZE_T MultiSz<T>::Length(const Char *multiSz) {
+    template<class T> size_t MultiSz<T>::Length(const Char *multiSz) {
         const Char *cursor = multiSz;
 
         if (cursor != NULL) {
@@ -400,12 +400,12 @@ namespace vislib {
      * MultiSz<T>::PeekAt
      */
     template<class T> 
-    const typename MultiSz<T>::Char *MultiSz<T>::PeekAt(const SIZE_T idx, 
+    const typename MultiSz<T>::Char *MultiSz<T>::PeekAt(const size_t idx, 
             const Char *multiSz) {
         const Char *cursor = multiSz;
 
         if (cursor != NULL) {
-            for (SIZE_T i = 0; (i < idx) && (*cursor != 0); i++) {
+            for (size_t i = 0; (i < idx) && (*cursor != 0); i++) {
                 while (*cursor++ != 0);
             }
 
@@ -431,20 +431,20 @@ namespace vislib {
      * MultiSz<T>::MultiSz
      */
     template<class T> 
-    MultiSz<T>::MultiSz(const Char **strings, const SIZE_T cntStrings) 
+    MultiSz<T>::MultiSz(const Char **strings, const size_t cntStrings) 
             : data(NULL) {
         if ((strings != NULL) && (cntStrings > 0)) {
-            SIZE_T cnt = 0;
+            size_t cnt = 0;
             Char *dstPos = NULL;
             const Char *srcPos = NULL;
 
-            for (SIZE_T i = 0; i < cntStrings; i++) {
+            for (size_t i = 0; i < cntStrings; i++) {
                 cnt += T::SafeStringLength(strings[i]) + 1;
             }
 
             this->data = dstPos = new Char[cnt + 1];
             
-            for (SIZE_T i = 0; i < cntStrings; i++) {
+            for (size_t i = 0; i < cntStrings; i++) {
                 if ((strings[i] != NULL) && (*(strings[i]) != 0)) {
                     srcPos = strings[i];
                     while ((*dstPos++ = *srcPos++) != 0);
@@ -478,8 +478,8 @@ namespace vislib {
      */
     template<class T> void MultiSz<T>::Append(const Char *str) {
         if ((str != NULL) && (*str != 0)) {
-            SIZE_T oldLen = MultiSz::Length(this->data);
-            SIZE_T strLen = T::SafeStringLength(str) + 1;
+            size_t oldLen = MultiSz::Length(this->data);
+            size_t strLen = T::SafeStringLength(str) + 1;
             Char *newData = NULL;
             THE_ASSERT(strLen > 0);
 
@@ -504,7 +504,7 @@ namespace vislib {
      * vislib::MultiSz<T>::AllocateBuffer
      */
     template<class T> 
-    typename MultiSz<T>::Char *MultiSz<T>::AllocateBuffer(const SIZE_T cnt) {
+    typename MultiSz<T>::Char *MultiSz<T>::AllocateBuffer(const size_t cnt) {
         the::safe_array_delete(this->data);
         if (cnt > 0) {
             this->data = new Char[cnt];
@@ -517,17 +517,17 @@ namespace vislib {
      * vislib::MultiSz<T>::Insert
      */
     template<class T> 
-    void MultiSz<T>::Insert(const SIZE_T idx, const Char *str) {
-        SIZE_T oldCnt = MultiSz::Count(this->data);
+    void MultiSz<T>::Insert(const size_t idx, const Char *str) {
+        size_t oldCnt = MultiSz::Count(this->data);
 
         if (idx == oldCnt) {
             this->Append(str);
 
         } else if (idx < oldCnt) {
             if ((str != NULL) && (*str != 0)) {
-                SIZE_T oldLen = MultiSz::Length(this->data);
-                SIZE_T strLen = T::SafeStringLength(str) + 1;
-                SIZE_T offset = this->PeekAt(idx) - this->data;
+                size_t oldLen = MultiSz::Length(this->data);
+                size_t strLen = T::SafeStringLength(str) + 1;
+                size_t offset = this->PeekAt(idx) - this->data;
                 Char *newData = NULL;
                 THE_ASSERT(oldLen > 0);
                 THE_ASSERT(strLen > 0);
@@ -555,10 +555,10 @@ namespace vislib {
      */
     template<class T> void MultiSz<T>::Remove(const Char *str) {
         if ((str != NULL) && (*str != 0) && (this->data != NULL)) {
-            SIZE_T cnt = 0;
-            SIZE_T newLen = 0;
-            SIZE_T oldLen = MultiSz::Length(this->data);
-            SIZE_T strLen = T::SafeStringLength(str) + 1;
+            size_t cnt = 0;
+            size_t newLen = 0;
+            size_t oldLen = MultiSz::Length(this->data);
+            size_t strLen = T::SafeStringLength(str) + 1;
             const Char *cursor = this->data;
             const Char *s = NULL;
             const Char *strStart = NULL;
@@ -628,7 +628,7 @@ namespace vislib {
     template<class T> MultiSz<T>& MultiSz<T>::operator =(const MultiSz& rhs) {
         if (this != &rhs) {
             this->Clear();
-            SIZE_T cnt = rhs.Length();
+            size_t cnt = rhs.Length();
             if (cnt > 0) {
                 this->data = new Char[cnt];
                 ::memcpy(this->data, rhs.data, cnt * sizeof(Char));
@@ -646,7 +646,7 @@ namespace vislib {
         this->Clear();
 
         if (rhs != NULL) {
-            SIZE_T cnt = MultiSz::Length(rhs);
+            size_t cnt = MultiSz::Length(rhs);
             THE_ASSERT(cnt > 0);
             this->data = new Char[cnt];
             ::memcpy(this->data, rhs, cnt * sizeof(Char));
@@ -685,7 +685,7 @@ namespace vislib {
      * vislib::MultiSz<T>::operator []
      */
     template<class T> 
-    String<T> MultiSz<T>::operator [](const SIZE_T idx) const {
+    String<T> MultiSz<T>::operator [](const size_t idx) const {
         const Char *tmp = MultiSz::PeekAt(idx, this->data);
         if (tmp != NULL) {
             return String<T>(tmp);

@@ -37,16 +37,16 @@ namespace ib {
 
     public:
 
-        static SmartRef<IbRdmaCommServerChannel> Create(const SIZE_T cntBufRecv,
-            const SIZE_T cntBufSend);
+        static SmartRef<IbRdmaCommServerChannel> Create(const size_t cntBufRecv,
+            const size_t cntBufSend);
 
-        static SmartRef<IbRdmaCommServerChannel> Create(const SIZE_T cntBuf);
+        static SmartRef<IbRdmaCommServerChannel> Create(const size_t cntBuf);
 
         virtual SmartRef<AbstractCommClientChannel> Accept(void);
 
         SmartRef<IbRdmaCommClientChannel> Accept(
-                BYTE *bufRecv, const SIZE_T cntBufRecv, 
-                BYTE *bufSend, const SIZE_T cntBufSend);
+                BYTE *bufRecv, const size_t cntBufRecv, 
+                BYTE *bufSend, const size_t cntBufSend);
 
         virtual void Bind(SmartRef<AbstractCommEndPoint> endPoint);
 
@@ -62,17 +62,17 @@ namespace ib {
         typedef AbstractCommServerChannel Super;
 
         /** Ctor. */
-        IbRdmaCommServerChannel(const SIZE_T cntBufRecv, 
-            const SIZE_T cntBufSend);
+        IbRdmaCommServerChannel(const size_t cntBufRecv, 
+            const size_t cntBufSend);
 
         /** Dtor. */
         ~IbRdmaCommServerChannel(void);
 
         /** Size of receive buffers created for client channels in bytes. */
-        SIZE_T cntBufRecv;
+        size_t cntBufRecv;
 
         /** Size of send buffers created for client channels in bytes. */
-        SIZE_T cntBufSend;
+        size_t cntBufSend;
 
         /** The root handle of the RMDA objects used by this channel. */
         struct rdma_cm_id *id;

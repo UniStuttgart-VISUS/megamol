@@ -54,7 +54,7 @@ void TestString(void) {
 void TestStringA(void) {
     using namespace vislib;
 
-    INT64 int64;
+    int64_t int64;
     StringA s1;
     StringA s2("Horst");
     StringA s3(s2);
@@ -304,14 +304,14 @@ void TestStringA(void) {
 
 
     int64 = CharTraitsA::ParseInt64("12345");
-    AssertEqual("Parsing INT64", int64, INT64(12345));
-    AssertException("Exception for invalid INT64", CharTraitsA::ParseInt64("hugo"), FormatException);
+    AssertEqual("Parsing int64_t", int64, int64_t(12345));
+    AssertException("Exception for invalid int64_t", CharTraitsA::ParseInt64("hugo"), FormatException);
 }
 
 void TestStringW(void) {
     using namespace vislib;
 
-    INT64 int64;
+    int64_t int64;
     StringW s1;
     StringW s2(L"Horst");
     StringW s3(s2);
@@ -565,8 +565,8 @@ void TestStringW(void) {
     AssertEqual("Levenshtein distance.", s1.LevenshteinDistance(s2), StringW::Size(3));
 
     int64 = CharTraitsW::ParseInt64(L"12345");
-    AssertEqual("Parsing INT64", int64, INT64(12345));
-    AssertException("Exception for invalid INT64", CharTraitsW::ParseInt64(L"hugo"), FormatException);
+    AssertEqual("Parsing int64_t", int64, int64_t(12345));
+    AssertException("Exception for invalid int64_t", CharTraitsW::ParseInt64(L"hugo"), FormatException);
 }
 
 void TestUTF8String(void) {

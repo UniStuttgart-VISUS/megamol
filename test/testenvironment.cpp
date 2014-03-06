@@ -31,26 +31,26 @@ void TestEnvironment(void) {
 
     Environment::Snapshot snapshot;
     AssertTrue("Dft ctor creates empty snapshot.", snapshot.IsEmpty());
-    AssertEqual("Empty snapshot has zero entries.", snapshot.Count(), SIZE_T(0));
+    AssertEqual("Empty snapshot has zero entries.", snapshot.Count(), size_t(0));
     snapshot.Clear();
-    AssertEqual("Clearing empty snapshot has no effect.", snapshot.Count(), SIZE_T(0));
+    AssertEqual("Clearing empty snapshot has no effect.", snapshot.Count(), size_t(0));
 
     snapshot = Environment::Snapshot(static_cast<wchar_t *>(NULL));
     AssertTrue("Ctor with NULL parameter empty snapshot.", snapshot.IsEmpty());
 
     snapshot = Environment::Snapshot("CROWBAR=27", NULL);
     AssertFalse("Ctor with one parameter creates non-empty snapshot.", snapshot.IsEmpty());
-    AssertEqual("Snapshot contains one element.", snapshot.Count(), SIZE_T(1));
+    AssertEqual("Snapshot contains one element.", snapshot.Count(), size_t(1));
     AssertTrue("Variable CORWBAR is set.", snapshot.IsSet("CROWBAR"));
 
     snapshot = Environment::Snapshot(L"CROWBAR=27", NULL);
     AssertFalse("Ctor with one parameter creates non-empty snapshot.", snapshot.IsEmpty());
-    AssertEqual("Snapshot contains one element.", snapshot.Count(), SIZE_T(1));
+    AssertEqual("Snapshot contains one element.", snapshot.Count(), size_t(1));
     AssertTrue("Variable CORWBAR is set.", snapshot.IsSet("CROWBAR"));
 
     snapshot = Environment::Snapshot(L"CROWBAR=27", L"HORSTIFY=TRUE", NULL);
     AssertFalse("Ctor with two parameter creates non-empty snapshot.", snapshot.IsEmpty());
-    AssertEqual("Snapshot contains two elements.", snapshot.Count(), SIZE_T(2));
+    AssertEqual("Snapshot contains two elements.", snapshot.Count(), size_t(2));
     AssertTrue("Variable CORWBAR is set.", snapshot.IsSet("CROWBAR"));
     AssertTrue("Variable HORSTIFY is set.", snapshot.IsSet("HORSTIFY"));
     AssertEqual("CROWBAR is 27 (Unicode).", snapshot.GetVariable(L"CROWBAR").PeekBuffer(), L"27");
@@ -63,8 +63,8 @@ void TestEnvironment(void) {
 
     snapshot = Environment::CreateSnapshot();
     cout << "Dump of complete environment snapshot:" << endl;
-    SIZE_T cntVariables = snapshot.Count();
-    for (SIZE_T i = 0; i < cntVariables; i++) {
+    size_t cntVariables = snapshot.Count();
+    for (size_t i = 0; i < cntVariables; i++) {
         vislib::StringA name, value;
         snapshot.GetAt(i, name, value);
         cout << name << " = \"" << value << "\"" << endl;

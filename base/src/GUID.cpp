@@ -184,7 +184,7 @@ bool vislib::GUID::IsZero(void) const {
     const BYTE *g = this->guid;
 #endif /* _WIN32 */
 
-    for (SIZE_T i = 0; i < sizeof(this->guid); i++) {
+    for (size_t i = 0; i < sizeof(this->guid); i++) {
         if (g[i] != 0) {
             return false;
         }

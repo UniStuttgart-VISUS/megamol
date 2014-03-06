@@ -71,7 +71,7 @@ PlainServer::PlainServer(void) : vislib::net::cluster::AbstractServerNode() {
  * PlainServer::onMessageReceived
  */
 bool PlainServer::onMessageReceived(const vislib::net::Socket& src, 
-        const UINT msgId, const BYTE *body, const SIZE_T cntBody) {
+        const unsigned int msgId, const BYTE *body, const size_t cntBody) {
     std::cout << "PlainServer received message " << msgId << " with " 
         << cntBody << " Bytes of body data" << std::endl;
 

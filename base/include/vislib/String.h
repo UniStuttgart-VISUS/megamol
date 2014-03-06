@@ -299,7 +299,7 @@ namespace vislib {
          * @return The number of occurrences of 'c' in the substring starting
          *         at 'beginningAt'.
          */
-        SIZE_T Count(const Char c, const Size beginningAt = 0) const;
+        size_t Count(const Char c, const Size beginningAt = 0) const;
 
         /**
          * Answer whether this string ends with the character 'c'.
@@ -649,7 +649,7 @@ namespace vislib {
          * @return true in case of success, false, if the resource could not be
          *         found.
          */
-        bool Load(const HINSTANCE hInst, const UINT id);
+        bool Load(const HINSTANCE hInst, const unsigned int id);
 
         /**
          * Load a string resource using the instance handle of the current
@@ -660,7 +660,7 @@ namespace vislib {
          * @return true in case of success, false, if the resource could not be
          *         found.
          */
-        inline bool Load(const UINT id) {
+        inline bool Load(const unsigned int id) {
             return this->Load(::GetModuleHandle(NULL), id);
         }
 #endif /* _WIN32 */
@@ -1453,8 +1453,8 @@ namespace vislib {
      * vislib::String<T>::Count
      */
     template<class T> 
-    SIZE_T String<T>::Count(const Char c, const Size beginningAt) const {
-        SIZE_T retval = 0;
+    size_t String<T>::Count(const Char c, const Size beginningAt) const {
+        size_t retval = 0;
         Size offset = beginningAt;
 
         while ((offset = this->Find(c, offset)) != INVALID_POS) {
@@ -1900,9 +1900,9 @@ namespace vislib {
      * vislib::String<T>::Load
      */
     template<class T>
-    bool String<T>::Load(const HINSTANCE hInst, const UINT id) {
-        INT bufLen = 128;
-        INT charsRead = 0;
+    bool String<T>::Load(const HINSTANCE hInst, const unsigned int id) {
+        int bufLen = 128;
+        int charsRead = 0;
         Char *buffer = new Char[bufLen];
         THE_ASSERT(buffer != NULL);
 

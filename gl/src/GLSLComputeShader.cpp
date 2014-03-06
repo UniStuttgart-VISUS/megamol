@@ -68,7 +68,7 @@ bool vislib::graphics::gl::GLSLComputeShader::Compile(
  * vislib::graphics::gl::GLSLComputeShader::Compile
  */
 bool vislib::graphics::gl::GLSLComputeShader::Compile(
-        const char **computeShaderSrc, const SIZE_T cntComputeShaderSrc, 
+        const char **computeShaderSrc, const size_t cntComputeShaderSrc, 
         bool insertLineDirective) {
 
     USES_GL_VERIFY;
@@ -108,13 +108,13 @@ bool vislib::graphics::gl::GLSLComputeShader::CompileFromFile(
  * vislib::graphics::gl::GLSLComputeShader::CompileFromFile
  */
 bool vislib::graphics::gl::GLSLComputeShader::CompileFromFile(
-        const char **computeShaderFiles, const SIZE_T cntComputeShaderFiles,
+        const char **computeShaderFiles, const size_t cntComputeShaderFiles,
         bool insertLineDirective) {
 
     // using arrays for automatic cleanup when a 'read' throws an exception
     Array<StringA> copmuteShaderSrcs(cntComputeShaderFiles);
 
-    for(SIZE_T i = 0; i < cntComputeShaderFiles; i++) {
+    for(size_t i = 0; i < cntComputeShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(copmuteShaderSrcs[i], 
                 computeShaderFiles[i])) {
             return false;
@@ -125,7 +125,7 @@ bool vislib::graphics::gl::GLSLComputeShader::CompileFromFile(
     const char **computeShaderSrcPtrs = new const char*[cntComputeShaderFiles];
 
     try {
-        for(SIZE_T i = 0; i < cntComputeShaderFiles; i++) {
+        for(size_t i = 0; i < cntComputeShaderFiles; i++) {
             computeShaderSrcPtrs[i] = copmuteShaderSrcs[i].PeekBuffer();
         }
 

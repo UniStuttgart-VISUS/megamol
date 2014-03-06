@@ -201,7 +201,7 @@ namespace vislib {
          *
          * @return The reference count.
          */
-        inline UINT _GetCnt(void) const {
+        inline unsigned int _GetCnt(void) const {
             return (this->ptr != NULL) ? this->ptr->cnt : 0;
         }
 #endif /* defined(DEBUG) || defined(_DEBUG) */
@@ -210,7 +210,7 @@ namespace vislib {
 
         /** This is a helper structure for doing the reference counting. */
         typedef struct CounterProxy_t {
-            UINT cnt;           // The reference counter.
+            unsigned int cnt;           // The reference counter.
             T *obj;             // The actual object.
 
             /**

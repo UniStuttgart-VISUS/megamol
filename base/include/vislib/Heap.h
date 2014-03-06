@@ -63,7 +63,7 @@ namespace vislib {
          *                 however, needs more memory, it will dynamically 
          *                 reallocate the array.
          */
-        Heap(const SIZE_T capacity = Array<T>::DEFAULT_CAPACITY);
+        Heap(const size_t capacity = Array<T>::DEFAULT_CAPACITY);
 
         /** Dtor. */
         ~Heap(void);
@@ -90,7 +90,7 @@ namespace vislib {
          * @throws std::bad_alloc If there was insufficient memory for 
          *                        allocating the array.
          */
-        inline void AssertCapacity(const SIZE_T capacity) {
+        inline void AssertCapacity(const size_t capacity) {
             this->elements.AssertCapacity(capacity);
         }
 
@@ -99,7 +99,7 @@ namespace vislib {
          *
          * @return The current capacity of the heap.
          */
-        inline SIZE_T Capacity(void) const {
+        inline size_t Capacity(void) const {
             return this->elements.Capacity();
         }
 
@@ -117,7 +117,7 @@ namespace vislib {
          *
          * @return The number of elements in the heap.
          */
-        inline SIZE_T Count(void) const {
+        inline size_t Count(void) const {
             return this->elements.Count();
         }
 
@@ -171,7 +171,7 @@ namespace vislib {
          * @param idx The index of the element removed. This should be the first
          *            element.
          */
-        void siftDown(SIZE_T idx);
+        void siftDown(size_t idx);
 
         /**
          * Enforces the heap property after inserting an element at 'idx'.
@@ -179,7 +179,7 @@ namespace vislib {
          * @param idx The index of the inserted element. This should be the last
          *            element.
          */
-        void siftUp(SIZE_T idx);
+        void siftUp(size_t idx);
 
         /** The array of heap elements. */
         Array<T> elements;
@@ -191,7 +191,7 @@ namespace vislib {
      * vislib::Heap<T>::Heap
      */
     template<class T> 
-    Heap<T>::Heap(const SIZE_T capacity) : elements(capacity) {
+    Heap<T>::Heap(const size_t capacity) : elements(capacity) {
     }
 
 
@@ -219,8 +219,8 @@ namespace vislib {
     /*
      * vislib::Heap<T>::siftDown
      */
-    template<class T> void Heap<T>::siftDown(SIZE_T idx) {
-        SIZE_T nextIdx = 0;
+    template<class T> void Heap<T>::siftDown(size_t idx) {
+        size_t nextIdx = 0;
 
         while (idx < this->elements.Count() / 2) {
             nextIdx = 2 * idx + 1;
@@ -254,8 +254,8 @@ namespace vislib {
     /*
      * vislib::Heap<T>::siftUp
      */
-    template<class T> void Heap<T>::siftUp(SIZE_T idx) {
-        SIZE_T nextIdx = 0;
+    template<class T> void Heap<T>::siftUp(size_t idx) {
+        size_t nextIdx = 0;
 
         while (idx > 0) {
             nextIdx = (idx - 1) / 2;

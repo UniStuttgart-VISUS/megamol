@@ -63,7 +63,7 @@ void DiscoveryTestApp::OnNodeFound(DiscoveryService& src,
         << "\" discovered new peer node " << src[hPeer].ToStringA().PeekBuffer()
         << std::endl
         << "Now, the following nodes are known to the service:" << std::endl;
-    for (SIZE_T i = 0; i < src.CountPeers(); i++) {
+    for (size_t i = 0; i < src.CountPeers(); i++) {
         std::cout << "\t" << src[i].ToStringA().PeekBuffer() << std::endl;
     }
 
@@ -85,7 +85,7 @@ void DiscoveryTestApp::OnNodeLost(DiscoveryService& src,
         << " for reason " << reason 
         << std::endl
         << "from the following list of known nodes:" << std::endl;
-    for (SIZE_T i = 0; i < src.CountPeers(); i++) {
+    for (size_t i = 0; i < src.CountPeers(); i++) {
         std::cout << "\t" << src[hPeer].ToStringA().PeekBuffer() << std::endl;
     }
 }
@@ -110,7 +110,7 @@ void DiscoveryTestApp::OnUserMessage(DiscoveryService& src,
  */
 DWORD DiscoveryTestApp::Run(void) {
     char dowel;
-    SIZE_T cntCfgs = 0;
+    size_t cntCfgs = 0;
     IPAddress adapter;
     IPAddress bcastAddress;
     DiscoveryService::DiscoveryConfig cfg;
@@ -119,7 +119,7 @@ DWORD DiscoveryTestApp::Run(void) {
         Socket::Startup();
 
         DNS::GetHostAddress(adapter, SystemInformation::ComputerNameW());
-        //for (UINT i = 0; i < NetworkInformation::AdapterCount(); i++) {
+        //for (unsigned int i = 0; i < NetworkInformation::AdapterCount(); i++) {
         //    NetworkInformation::Adapter ai = NetworkInformation::AdapterInformation(i);
         //    if ((adapter & ai.SubnetMask()) == (ai.BroadcastAddress() & ai.SubnetMask())) {
         //        bcastAddress = ai.BroadcastAddress();

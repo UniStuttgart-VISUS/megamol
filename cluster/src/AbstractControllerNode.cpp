@@ -157,8 +157,8 @@ vislib::net::cluster::AbstractControllerNode::AbstractControllerNode(
  * vislib::net::cluster::AbstractControllerNode::onMessageReceived
  */
 bool vislib::net::cluster::AbstractControllerNode::onMessageReceived(
-        const Socket& src, const UINT msgId, const BYTE *body, 
-        const SIZE_T cntBody) {
+        const Socket& src, const unsigned int msgId, const BYTE *body, 
+        const size_t cntBody) {
     return false;
 }
 

@@ -58,11 +58,11 @@ void vislib::SHA1HashProvider::Initialise(void) {
  * vislib::SHA1HashProvider::TransformBlock
  */
 void vislib::SHA1HashProvider::TransformBlock(const BYTE *input, 
-                                              const SIZE_T cntInput) {
+                                              const size_t cntInput) {
     // Must be initialised, as ctor does this.
     if ((input != NULL) && (cntInput > 0)) {
         SHA1HashProvider::input(&this->context, input, 
-            static_cast<UINT>(cntInput));
+            static_cast<unsigned int>(cntInput));
     }
 }
 
@@ -71,7 +71,7 @@ void vislib::SHA1HashProvider::TransformBlock(const BYTE *input,
  * vislib::SHA1HashProvider::TransformFinalBlock
  */
 bool vislib::SHA1HashProvider::TransformFinalBlock(BYTE *outHash, 
-        SIZE_T& inOutSize, const BYTE *input, const SIZE_T cntInput) {
+        size_t& inOutSize, const BYTE *input, const size_t cntInput) {
     SHA1Context ctx = this->context;    // Local context to be finalised.
     bool retval = false;                // Remember whether output was copied.
 
@@ -93,11 +93,11 @@ bool vislib::SHA1HashProvider::TransformFinalBlock(BYTE *outHash,
  * vislib::SHA1HashProvider::input
  */
 void vislib::SHA1HashProvider::input(SHA1Context *context, const BYTE *input, 
-        const UINT cntInput) {
+        const unsigned int cntInput) {
     THE_ASSERT(context != NULL);
     THE_ASSERT(input != NULL);
 
-    UINT length = cntInput;
+    unsigned int length = cntInput;
 
     if (!length) {
         /* Nothing to do. */
@@ -294,7 +294,7 @@ void vislib::SHA1HashProvider::result(UINT8 *messageDigest,
         context->Computed = 1;
     }
 
-    for (UINT i = 0; i < SHA1HashProvider::HASH_SIZE; i++) {
+    for (unsigned int i = 0; i < SHA1HashProvider::HASH_SIZE; i++) {
         messageDigest[i] = context->Intermediate_Hash[i >> 2] >> 8 
             * (3 - (i & 0x03));
     }

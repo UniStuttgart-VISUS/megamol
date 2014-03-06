@@ -72,7 +72,7 @@ namespace sys {
          *
          * @return true on success, false on failure
          */
-        virtual bool Open(void *buffer, SIZE_T bufferLength,
+        virtual bool Open(void *buffer, size_t bufferLength,
             AccessMode accessMode);
 
         /**

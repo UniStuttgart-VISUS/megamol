@@ -133,7 +133,7 @@ void StereoCamTestApp::OnResize(unsigned int w, unsigned int h) {
 }
 
 void StereoCamTestApp::Render(void) {
-    UINT64 time = vislib::sys::PerformanceCounter::Query();
+    uint64_t time = vislib::sys::PerformanceCounter::Query();
     this->lastTime = time;
     this->angle = static_cast<float>(static_cast<int>(static_cast<float>(time) * 0.5f) % 3600) * 0.1f;
 

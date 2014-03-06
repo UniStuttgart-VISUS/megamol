@@ -158,7 +158,7 @@ namespace cluster {
          *
          * @return The number of known peer nodes.
          */
-        virtual SIZE_T countPeers(void) const;
+        virtual size_t countPeers(void) const;
 
         /**
          * Remove the 'idx'th peer node. 
@@ -172,7 +172,7 @@ namespace cluster {
          *
          * @param idx The index of the peer node to be removed.
          */
-        void disconnectPeer(const SIZE_T idx);
+        void disconnectPeer(const size_t idx);
 
         /**
          * Call 'func' for each known peer node (socket).
@@ -187,7 +187,7 @@ namespace cluster {
          *
          * @return The number of sucessful calls to 'func' that have been made.
          */
-        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
+        virtual size_t forEachPeer(ForeachPeerFunc func, void *context);
 
         /**
          * Call 'func' for the peer node that has the specified ID 'peerId'. If
@@ -251,7 +251,7 @@ namespace cluster {
          * @throws NoSuchElementException If no peer with the specified ID is
          *                                known.
          */
-        SIZE_T findPeerNode(const PeerIdentifier& peerId);
+        size_t findPeerNode(const PeerIdentifier& peerId);
 
         /**
          * Character type agnostic initialiser that does the actual work.

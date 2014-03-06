@@ -18,7 +18,7 @@
 /*
  * vislib::sys::DateTimeSpan::DaysToTicks
  */
-INT64 vislib::sys::DateTimeSpan::DaysToTicks(const INT64 days) {
+int64_t vislib::sys::DateTimeSpan::DaysToTicks(const int64_t days) {
     THE_STACK_TRACE;
     // TODO range check!
     return days * TICKS_PER_DAY;
@@ -28,9 +28,9 @@ INT64 vislib::sys::DateTimeSpan::DaysToTicks(const INT64 days) {
 /*
  * vislib::sys::DateTimeSpan::TimeToTicks
  */
-INT64 vislib::sys::DateTimeSpan::TimeToTicks(const INT hours, 
-        const INT minutes, const INT seconds, const INT milliseconds, 
-        const INT ticks) {
+int64_t vislib::sys::DateTimeSpan::TimeToTicks(const int hours, 
+        const int minutes, const int seconds, const int milliseconds, 
+        const int ticks) {
     THE_STACK_TRACE;
     // TODO range check
     return hours * TICKS_PER_HOUR
@@ -50,28 +50,28 @@ const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::EMPTY(0L);
 /*
  * vislib::sys::DateTimeSpan::MILLISECONDS_PER_DAY
  */
-const INT64 vislib::sys::DateTimeSpan::MILLISECONDS_PER_DAY 
+const int64_t vislib::sys::DateTimeSpan::MILLISECONDS_PER_DAY 
     = 24L * 60L * 60L * 1000L;
 
 
 /*
  * vislib::sys::DateTimeSpan::MILLISECONDS_PER_HOUR
  */
-const INT64 vislib::sys::DateTimeSpan::MILLISECONDS_PER_HOUR 
+const int64_t vislib::sys::DateTimeSpan::MILLISECONDS_PER_HOUR 
     = 60L * 60L * 1000L;
 
 
 /*
  * vislib::sys::DateTimeSpan::MILLISECONDS_PER_MINUTE
  */
-const INT64 vislib::sys::DateTimeSpan::MILLISECONDS_PER_MINUTE 
+const int64_t vislib::sys::DateTimeSpan::MILLISECONDS_PER_MINUTE 
     = 60L * 1000L;
   
 
 /*
  * vislib::sys::DateTimeSpan::MILLISECONDS_PER_SECOND
  */
-const INT64 vislib::sys::DateTimeSpan::MILLISECONDS_PER_SECOND 
+const int64_t vislib::sys::DateTimeSpan::MILLISECONDS_PER_SECOND 
     = 1000L;
 
 
@@ -83,7 +83,7 @@ const INT64 vislib::sys::DateTimeSpan::MILLISECONDS_PER_SECOND
  * vislib::sys::DateTimeSpan::MAXIMUM
  */
 const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::MAXIMUM(
-    std::numeric_limits<INT64>::max());
+    std::numeric_limits<int64_t>::max());
 #ifdef _MSC_VER
 #pragma pop_macro("max")
 #endif /* _MSC_VER */
@@ -97,7 +97,7 @@ const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::MAXIMUM(
  * vislib::sys::DateTimeSpan::MINIMUM
  */
 const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::MINIMUM(
-    std::numeric_limits<INT64>::min());
+    std::numeric_limits<int64_t>::min());
 #ifdef _MSC_VER
 #pragma pop_macro("min")
 #endif /* _MSC_VER */
@@ -106,43 +106,43 @@ const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::MINIMUM(
 /*
  * vislib::sys::DateTimeSpan::TICKS_PER_DAY
  */
-const INT64 vislib::sys::DateTimeSpan::TICKS_PER_DAY 
-    = static_cast<INT64>(24) * 60 * 60 * 1000 * 10000;
+const int64_t vislib::sys::DateTimeSpan::TICKS_PER_DAY 
+    = static_cast<int64_t>(24) * 60 * 60 * 1000 * 10000;
 
 
 /*
  * vislib::sys::DateTimeSpan::TICKS_PER_HOUR
  */
-const INT64 vislib::sys::DateTimeSpan::TICKS_PER_HOUR 
-    = static_cast<INT64>(60) * 60 * 1000 * 10000;
+const int64_t vislib::sys::DateTimeSpan::TICKS_PER_HOUR 
+    = static_cast<int64_t>(60) * 60 * 1000 * 10000;
 
 
 /*
  * vislib::sys::DateTimeSpan::TICKS_PER_MILLISECOND
  */
-const INT64 vislib::sys::DateTimeSpan::TICKS_PER_MILLISECOND 
-    = static_cast<INT64>(10000);
+const int64_t vislib::sys::DateTimeSpan::TICKS_PER_MILLISECOND 
+    = static_cast<int64_t>(10000);
 
 /*
  * vislib::sys::DateTimeSpan::MILLISECONDS_PER_MINUTE
  */
-const INT64 vislib::sys::DateTimeSpan::TICKS_PER_MINUTE 
-    = static_cast<INT64>(60) * 1000 * 10000;
+const int64_t vislib::sys::DateTimeSpan::TICKS_PER_MINUTE 
+    = static_cast<int64_t>(60) * 1000 * 10000;
   
 
 /*
  * vislib::sys::DateTimeSpan::MILLISECONDS_PER_SECOND
  */
-const INT64 vislib::sys::DateTimeSpan::TICKS_PER_SECOND 
-    = static_cast<INT64>(1000) * 10000;
+const int64_t vislib::sys::DateTimeSpan::TICKS_PER_SECOND 
+    = static_cast<int64_t>(1000) * 10000;
 
 
 /*
  * vislib::sys::DateTimeSpan::DateTimeSpan
  */
-vislib::sys::DateTimeSpan::DateTimeSpan(const INT days, const INT hours, 
-        const INT minutes, const INT seconds, const INT milliseconds,
-        const INT ticks) : ticks(0) {
+vislib::sys::DateTimeSpan::DateTimeSpan(const int days, const int hours, 
+        const int minutes, const int seconds, const int milliseconds,
+        const int ticks) : ticks(0) {
     THE_STACK_TRACE;
     try {
         this->Set(days, hours, minutes, seconds, milliseconds, ticks);
@@ -165,9 +165,9 @@ vislib::sys::DateTimeSpan::~DateTimeSpan(void) {
 /*
  * vislib::sys::DateTimeSpan::Set
  */
-void vislib::sys::DateTimeSpan::Set(const INT days, const INT hours, 
-        const INT minutes, const INT seconds, const INT milliseconds,
-        const INT ticks) {
+void vislib::sys::DateTimeSpan::Set(const int days, const int hours, 
+        const int minutes, const int seconds, const int milliseconds,
+        const int ticks) {
     THE_STACK_TRACE;
     this->ticks = 0;
     this->add(DateTimeSpan::DaysToTicks(days));
@@ -252,10 +252,10 @@ vislib::sys::DateTimeSpan& vislib::sys::DateTimeSpan::operator =(
 /*
  * vislib::sys::DateTimeSpan::add
  */
-void vislib::sys::DateTimeSpan::add(const INT64 millis) {
+void vislib::sys::DateTimeSpan::add(const int64_t millis) {
     THE_STACK_TRACE;
-    INT64 max = static_cast<INT64>(DateTimeSpan::MAXIMUM);
-    INT64 min = static_cast<INT64>(DateTimeSpan::MINIMUM);
+    int64_t max = static_cast<int64_t>(DateTimeSpan::MAXIMUM);
+    int64_t min = static_cast<int64_t>(DateTimeSpan::MINIMUM);
     
     /* Sanity checks. */
     if (math::Signum(this->ticks) == math::Signum(millis)) {

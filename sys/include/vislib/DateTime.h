@@ -70,7 +70,7 @@ namespace sys {
          *
          * @return true, if 'year' is a leap year, false otherwise.
          */
-        static bool IsLeapYear(const INT year);
+        static bool IsLeapYear(const int year);
 
         /**
          * Get the current local time.
@@ -93,9 +93,9 @@ namespace sys {
          * @throws IllegalParamException If the conversion fails due to numeric
          *                               overflows.
          */
-        inline static INT64 TimeToTicks(const INT hours, const INT minutes, 
-                const INT seconds, const INT milliseconds = 0,
-                const INT ticks = 0) {
+        inline static int64_t TimeToTicks(const int hours, const int minutes, 
+                const int seconds, const int milliseconds = 0,
+                const int ticks = 0) {
             THE_STACK_TRACE;
             return DateTimeSpan::TimeToTicks(hours, minutes, seconds,
                 milliseconds, ticks);
@@ -141,9 +141,9 @@ namespace sys {
          *
          * @throws TODO should implement overflow check.
          */
-        DateTime(const INT year, const INT month, const INT day, 
-            const INT hours = 0, const INT minutes = 0, const INT seconds = 0,
-            const INT milliseconds = 0);
+        DateTime(const int year, const int month, const int day, 
+            const int hours = 0, const int minutes = 0, const int seconds = 0,
+            const int milliseconds = 0);
 
         /**
          * Create a new instance from struct tm. This ctor allows for implicit
@@ -213,7 +213,7 @@ namespace sys {
         // *
         // * @param days The number of days to add.
         // */
-        //inline void AddDays(const INT days) {
+        //inline void AddDays(const int days) {
         //    this->value += days * ONE_DAY;
         //}
 
@@ -222,7 +222,7 @@ namespace sys {
         // *
         // * @param hours The number of hours to add.
         // */
-        //inline void AddHours(const INT hours) {
+        //inline void AddHours(const int hours) {
         //    this->value += hours * ONE_HOUR;
         //}
 
@@ -231,7 +231,7 @@ namespace sys {
         // *
         // * @param minutes The number of minutes to add.
         // */
-        //inline void AddMinutes(const INT minutes) {
+        //inline void AddMinutes(const int minutes) {
         //    this->value += minutes * ONE_MINUTE;
         //}
 
@@ -240,14 +240,14 @@ namespace sys {
         //// *
         //// * @param months The number of months to add.
         //// */
-        ////void AddMonths(const INT months);
+        ////void AddMonths(const int months);
 
         ///**
         // * Add the specified number of seconds to the current date.
         // *
         // * @param seconds The number of seconds to add.
         // */
-        //inline void AddSeconds(const INT seconds) {
+        //inline void AddSeconds(const int seconds) {
         //    this->value += seconds * ONE_SECOND;
         //}
 
@@ -256,7 +256,7 @@ namespace sys {
         //// *
         //// * @param years The number of years to add.
         //// */
-        ////void AddYears(const INT years);
+        ////void AddYears(const int years);
 
         /**
          * Get the date and time.
@@ -271,9 +271,9 @@ namespace sys {
          * @param outSeconds      Receives the seconds.
          * @param outMilliseconds Receives the milliseconds.
          */
-        inline void Get(INT& outYear, INT& outMonth, INT& outDay,
-                INT& outHours, INT& outMinutes, INT& outSeconds, 
-                INT& outMilliseconds) const {
+        inline void Get(int& outYear, int& outMonth, int& outDay,
+                int& outHours, int& outMinutes, int& outSeconds, 
+                int& outMilliseconds) const {
             THE_STACK_TRACE;
             this->GetDate(outYear, outMonth, outDay);
             this->GetTime(outHours, outMinutes, outSeconds, outMilliseconds);
@@ -291,8 +291,8 @@ namespace sys {
          * @param outMinutes Receives the minutes.
          * @param outSeconds Receives the seconds.
          */
-        inline void Get(INT& outYear, INT& outMonth, INT& outDay,
-                INT& outHours, INT& outMinutes, INT& outSeconds) const {
+        inline void Get(int& outYear, int& outMonth, int& outDay,
+                int& outHours, int& outMinutes, int& outSeconds) const {
             THE_STACK_TRACE;
             this->GetDate(outYear, outMonth, outDay);
             this->GetTime(outHours, outMinutes, outSeconds);
@@ -306,7 +306,7 @@ namespace sys {
          * @param outMonth  Receives the month. The value is within [1, 12].
          * @param outDay    Recevies the day in the month.
          */
-        void GetDate(INT& outYear, INT& outMonth, INT& outDay) const;
+        void GetDate(int& outYear, int& outMonth, int& outDay) const;
 
         /**
          * Get the time.
@@ -316,8 +316,8 @@ namespace sys {
          * @param outSeconds      Receives the seconds.
          * @param outMilliseconds Receives the milliseconds.
          */
-        void GetTime(INT& outHours, INT& outMinutes, INT& outSeconds, 
-            INT& outMilliseconds) const;
+        void GetTime(int& outHours, int& outMinutes, int& outSeconds, 
+            int& outMilliseconds) const;
 
         /**
          * Get the time.
@@ -326,10 +326,10 @@ namespace sys {
          * @param outMinutes Receives the minutes.
          * @param outSeconds Receives the seconds.
          */
-        inline void GetTime(INT& outHours, INT& outMinutes, 
-                INT& outSeconds) const {
+        inline void GetTime(int& outHours, int& outMinutes, 
+                int& outSeconds) const {
             THE_STACK_TRACE;
-            INT tmp;
+            int tmp;
             this->GetTime(outHours, outMinutes, outSeconds, tmp);
         }
 
@@ -338,7 +338,7 @@ namespace sys {
          *
          * @return The total ticks that represent the time.
          */
-        inline INT64 GetTotalTicks(void) const {
+        inline int64_t GetTotalTicks(void) const {
             THE_STACK_TRACE;
             return this->ticks;
         }
@@ -369,9 +369,9 @@ namespace sys {
          *
          * @throws TODO should implement overflow check.
          */
-        void Set(const INT year, const INT month, const INT day, 
-            const INT hours, const INT minutes, const INT seconds, 
-            const INT milliseconds = 0, const INT ticks = 0);
+        void Set(const int year, const int month, const int day, 
+            const int hours, const int minutes, const int seconds, 
+            const int milliseconds = 0, const int ticks = 0);
 
         /**
          * Set the date and time from the specified struct tm. 'tm' is assumed 
@@ -440,7 +440,7 @@ namespace sys {
          * @param day   The day. Invalid dates are corrected by changing the
          *              month and/or year.
          */
-        void SetDate(const INT year, const INT month, const INT day); 
+        void SetDate(const int year, const int month, const int day); 
 
         /**
          * Se the time part without modifying the date.
@@ -460,15 +460,15 @@ namespace sys {
          *                     TICKS_PER_MILLISECOND[. This parameter defaults 
          *                     to 0.
          */
-        void SetTime(const INT hour, const INT minute, const INT second,
-            const INT milliseconds = 0, const INT ticks = 0);
+        void SetTime(const int hour, const int minute, const int second,
+            const int milliseconds = 0, const int ticks = 0);
 
         ///**
         // * Subtract the specified number of days from the current date.
         // *
         // * @param days The number of days to subtract.
         // */
-        //inline void SubtractDays(const INT days) {
+        //inline void SubtractDays(const int days) {
         //    this->value -= days * ONE_DAY;
         //}
 
@@ -477,7 +477,7 @@ namespace sys {
         // *
         // * @param hours The number of hours to subtract.
         // */
-        //inline void SubtractHours(const INT hours) {
+        //inline void SubtractHours(const int hours) {
         //    this->value -= hours * ONE_HOUR;
         //}
 
@@ -486,7 +486,7 @@ namespace sys {
         // *
         // * @param minutes The number of minutes to subtract.
         // */
-        //inline void SubtractMinutes(const INT minutes) {
+        //inline void SubtractMinutes(const int minutes) {
         //    this->value -= minutes * ONE_MINUTE;
         //}
 
@@ -495,7 +495,7 @@ namespace sys {
         // *
         // * @param seconds The number of seconds to subtract.
         // */
-        //inline void SubtractSeconds(const INT seconds) {
+        //inline void SubtractSeconds(const int seconds) {
         //    this->value -= seconds * ONE_SECOND;
         //}
 
@@ -711,24 +711,24 @@ namespace sys {
          * being at index 1. Element 0 holds a zero, element 13 holds the 
          * total number of days of a non-leap year.
          */
-        static const INT64 DAYS_AFTER_MONTH[13];
+        static const int64_t DAYS_AFTER_MONTH[13];
 
         /**
          * The same as DAYS_AFTER_MONTH, but for leap years. 
          */
-        static const INT64 DAYS_AFTER_MONTH_LY[13];
+        static const int64_t DAYS_AFTER_MONTH_LY[13];
 
         /** The days in a normal, i. e. non-leap, year. */
-        static const INT64 DAYS_PER_YEAR;
+        static const int64_t DAYS_PER_YEAR;
 
         /** The days in a four year period, including leap years. */
-        static const INT64 DAYS_PER_4YEARS;
+        static const int64_t DAYS_PER_4YEARS;
 
         /** The days in a 100 year period, including leap years. */
-        static const INT64 DAYS_PER_100YEARS;
+        static const int64_t DAYS_PER_100YEARS;
 
         /** The days in a 400 year period, including leap years. */
-        static const INT64 DAYS_PER_400YEARS;
+        static const int64_t DAYS_PER_400YEARS;
 
         /**
          * Create a new instance with the given initial value.
@@ -738,7 +738,7 @@ namespace sys {
          * @param ticks The ticks since 01.01.0001.
          * @param dowel Ignore this. Any data is acceptable
          */
-        inline DateTime(const INT64 value, const INT dowel) : ticks(ticks) {
+        inline DateTime(const int64_t value, const int dowel) : ticks(ticks) {
             THE_STACK_TRACE;
         }
 
@@ -749,10 +749,10 @@ namespace sys {
          *
          * @return The value of the specified part.
          */
-        INT64 get(const DatePart datePart) const;
+        int64_t get(const DatePart datePart) const;
 
         /** The date value in 100 ns ticks since 01.01.0001. */
-        INT64 ticks;
+        int64_t ticks;
     };
     
 } /* end namespace sys */

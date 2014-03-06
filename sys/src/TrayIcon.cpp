@@ -53,11 +53,11 @@ vislib::sys::TrayIcon::~TrayIcon(void) {
 /* 
  * vislib::sys::TrayIcon::Create
  */
-void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage,
-        const UINT id, const wchar_t *toolTip, const HICON icon,
+void vislib::sys::TrayIcon::Create(HWND targetWnd, const unsigned int callbackMessage,
+        const unsigned int id, const wchar_t *toolTip, const HICON icon,
         const bool initiallyHidden, const wchar_t *balloonText, 
         const wchar_t *balloonTitle, const DWORD balloonIcon, 
-        const UINT balloonTimeout) {
+        const unsigned int balloonTimeout) {
 
     /* Destroy old icon, if any. */
     if (this->iconState != ICON_NOT_INSTALLED) {
@@ -132,11 +132,11 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage,
 /*
  * vislib::sys::TrayIcon::Create
  */
-void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage, 
-        const UINT id, const char *toolTip, const HICON icon,
+void vislib::sys::TrayIcon::Create(HWND targetWnd, const unsigned int callbackMessage, 
+        const unsigned int id, const char *toolTip, const HICON icon,
         const bool initiallyHidden, const char *balloonText, 
         const char *balloonTitle, const DWORD balloonIcon, 
-        const UINT balloonTimeout) {
+        const unsigned int balloonTimeout) {
     this->Create(targetWnd, 
         callbackMessage, 
         id, 
@@ -152,11 +152,11 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage,
 /*
  * vislib::sys::TrayIcon::Create
  */
-void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage, 
-        const UINT id, HINSTANCE hResourceModule, const wchar_t *toolTip, 
-        const UINT iconID, const bool initiallyHidden, 
+void vislib::sys::TrayIcon::Create(HWND targetWnd, const unsigned int callbackMessage, 
+        const unsigned int id, HINSTANCE hResourceModule, const wchar_t *toolTip, 
+        const unsigned int iconID, const bool initiallyHidden, 
         const wchar_t *balloonText, const wchar_t *balloonTitle, 
-        const DWORD balloonIcon, const UINT balloonTimeout) {
+        const DWORD balloonIcon, const unsigned int balloonTimeout) {
     HINSTANCE hInst = (hResourceModule != NULL) 
         ? hResourceModule : ::GetModuleHandleW(NULL);
     HICON icon = ::LoadIconW(hResourceModule, MAKEINTRESOURCEW(iconID));
@@ -181,11 +181,11 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage,
 /*
  * vislib::sys::TrayIcon::Create
  */
-void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage, 
-        const UINT id, HINSTANCE hResourceModule, const char *toolTip, 
-        const UINT iconID, const bool initiallyHidden, 
+void vislib::sys::TrayIcon::Create(HWND targetWnd, const unsigned int callbackMessage, 
+        const unsigned int id, HINSTANCE hResourceModule, const char *toolTip, 
+        const unsigned int iconID, const bool initiallyHidden, 
         const char *balloonText, const char *balloonTitle, 
-        const DWORD balloonIcon, const UINT balloonTimeout) {
+        const DWORD balloonIcon, const unsigned int balloonTimeout) {
     this->Create(targetWnd, 
         callbackMessage, 
         id, 
@@ -203,11 +203,11 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage,
 /*
  * vislib::sys::TrayIcon::Create
  */
-void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage,
-        const UINT id, HINSTANCE hResourceModule, const UINT toolTipID, 
-        const UINT iconID, const bool initiallyHidden, const UINT balloonTextID, 
-        const UINT balloonTitleID, const DWORD balloonIcon, 
-        const UINT balloonTimeout) {
+void vislib::sys::TrayIcon::Create(HWND targetWnd, const unsigned int callbackMessage,
+        const unsigned int id, HINSTANCE hResourceModule, const unsigned int toolTipID, 
+        const unsigned int iconID, const bool initiallyHidden, const unsigned int balloonTextID, 
+        const unsigned int balloonTitleID, const DWORD balloonIcon, 
+        const unsigned int balloonTimeout) {
     StringW toolTip, balloonText, balloonTitle;
     HINSTANCE hInst = (hResourceModule != NULL) 
         ? hResourceModule : ::GetModuleHandleW(NULL);
@@ -262,7 +262,7 @@ void vislib::sys::TrayIcon::Hide(void) {
  * vislib::sys::TrayIcon::SetIcon
  */
 void vislib::sys::TrayIcon::SetIcon(HINSTANCE hResourceModule,
-									const UINT iconID) {
+									const unsigned int iconID) {
     HINSTANCE hInst = (hResourceModule != NULL) 
         ? hResourceModule : ::GetModuleHandleW(NULL);
     HICON icon = ::LoadIconW(hResourceModule, MAKEINTRESOURCEW(iconID));
@@ -297,7 +297,7 @@ void vislib::sys::TrayIcon::Show(void) {
  */
 bool vislib::sys::TrayIcon::ShowBalloonHelp(const wchar_t *balloonText, 
         const wchar_t *balloonTitle, const DWORD balloonIcon, 
-        const UINT balloonTimeout) {
+        const unsigned int balloonTimeout) {
     DWORD flags = 0;
     bool retval = false;
     
@@ -324,7 +324,7 @@ bool vislib::sys::TrayIcon::ShowBalloonHelp(const wchar_t *balloonText,
  */
 bool vislib::sys::TrayIcon::ShowBalloonHelp(const char *balloonText, 
         const char *balloonTitle, const DWORD balloonIcon, 
-        const UINT balloonTimeout) {
+        const unsigned int balloonTimeout) {
     return this->ShowBalloonHelp(
         (balloonText != NULL) ? A2W(balloonText) : NULL,
         (balloonTitle != NULL) ? A2W(balloonTitle) : NULL, 
@@ -336,8 +336,8 @@ bool vislib::sys::TrayIcon::ShowBalloonHelp(const char *balloonText,
  * vislib::sys::TrayIcon::ShowBalloonHelp
  */
 bool vislib::sys::TrayIcon::ShowBalloonHelp(HINSTANCE hResourceModule,
-        const UINT balloonTextID, const UINT balloonTitleID, 
-        const DWORD balloonIcon, const UINT balloonTimeout) {
+        const unsigned int balloonTextID, const unsigned int balloonTitleID, 
+        const DWORD balloonIcon, const unsigned int balloonTimeout) {
     StringW balloonText, balloonTitle;
     HINSTANCE hInst = (hResourceModule != NULL) 
         ? hResourceModule : ::GetModuleHandleW(NULL);
@@ -360,7 +360,7 @@ LRESULT vislib::sys::TrayIcon::onNotify(WPARAM wParam, LPARAM lParam) {
 /*
  * vislib::sys::TrayIcon::wndProc
  */
-LRESULT WINAPI vislib::sys::TrayIcon::wndProc(HWND hWnd, UINT msg, 
+LRESULT WINAPI vislib::sys::TrayIcon::wndProc(HWND hWnd, unsigned int msg, 
         WPARAM wParam, LPARAM lParam) {
 #pragma warning(disable: 4312)
     TrayIcon *thisPtr = reinterpret_cast<TrayIcon *>(
@@ -378,18 +378,18 @@ LRESULT WINAPI vislib::sys::TrayIcon::wndProc(HWND hWnd, UINT msg,
 /* 
  * vislib::sys::TrayIcon::MAX_BALLOON_LEN
  */
-const UINT vislib::sys::TrayIcon::MAX_BALLOON_LEN = 256;
+const unsigned int vislib::sys::TrayIcon::MAX_BALLOON_LEN = 256;
 
 /* 
  * vislib::sys::TrayIcon::MAX_BALLOON_TITLE_LEN
  */
-const UINT vislib::sys::TrayIcon::MAX_BALLOON_TITLE_LEN = 64;
+const unsigned int vislib::sys::TrayIcon::MAX_BALLOON_TITLE_LEN = 64;
  
 
 /*
  * vislib::sys::TrayIcon::MAX_TOOLTIP_LEN
  */
-const UINT vislib::sys::TrayIcon::MAX_TOOLTIP_LEN = 64;
+const unsigned int vislib::sys::TrayIcon::MAX_TOOLTIP_LEN = 64;
 
 
 /*
@@ -403,7 +403,7 @@ const wchar_t *vislib::sys::TrayIcon::WNDCLASSNAME = L"VISLIBTRAYICONWNDCLASS";
  */ 
 bool vislib::sys::TrayIcon::configureBalloonHelp(const wchar_t *balloonText,
         const wchar_t *balloonTitle, const DWORD balloonIcon, 
-        const UINT balloonTimeout) {
+        const unsigned int balloonTimeout) {
     THE_ASSERT((balloonText == NULL)
         || (::wcslen(balloonText) < MAX_BALLOON_LEN));
     THE_ASSERT((balloonTitle == NULL) 
@@ -463,7 +463,7 @@ bool vislib::sys::TrayIcon::configureBalloonHelp(const wchar_t *balloonText,
  * vislib::sys::TrayIcon::configureCallbackMessage
  */
 bool vislib::sys::TrayIcon::configureCallbackMessage(
-        const UINT callbackMessage) {
+        const unsigned int callbackMessage) {
     THE_ASSERT(callbackMessage >= WM_APP);
 
     this->nid.uCallbackMessage = callbackMessage;

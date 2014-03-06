@@ -147,8 +147,8 @@ namespace sys {
          * @param outElCount    Receives the number of allocated elements.
          * @param outActElCount Receives the number of active elements.
          */
-        inline void _GetCounts(UINT &outPageCount, UINT &outElCount,
-                UINT &outActElCount) const {
+        inline void _GetCounts(unsigned int &outPageCount, unsigned int &outElCount,
+                unsigned int &outActElCount) const {
 
             outPageCount = 0;
             outElCount = 0;
@@ -292,7 +292,7 @@ namespace sys {
             e->link = NULL; // find the page ... :-(
             Page *p = this->firstPage;
             while (p) {
-                SIZE_T offset = (reinterpret_cast<char*>(e)
+                size_t offset = (reinterpret_cast<char*>(e)
                     - reinterpret_cast<char*>(p)) - sizeof(Page);
                 if (offset <= p->cnt * sizeof(Element)) {
                     THE_ASSERT((offset % sizeof(Element)) == 0);

@@ -66,7 +66,7 @@ namespace math {
      */
     template<class T, unsigned int D, MatrixLayout L, class S1, class S2>
     void CalcCovarianceMatrix(AbstractMatrix<T, D, L, S1>& outMatrix,
-            const AbstractVector<T, D, S2> *relCoords, SIZE_T relCoordsCnt) {
+            const AbstractVector<T, D, S2> *relCoords, size_t relCoordsCnt) {
         THE_ASSERT(relCoords != NULL);
 
         for (unsigned int x = 0; x < D; x++) {
@@ -76,7 +76,7 @@ namespace math {
         }
 
         if (relCoordsCnt > 0) {
-            for (SIZE_T i = 0; i < relCoordsCnt; i++) {
+            for (size_t i = 0; i < relCoordsCnt; i++) {
                 for (unsigned int x = 0; x < D; x++) {
                     for (unsigned int y = 0; y < D; y++) {
                         outMatrix(x, y) += (relCoords[i][x] * relCoords[i][y]);
@@ -98,7 +98,7 @@ namespace math {
      * @param cnt The number of eigenvectors/eigenvalues
      */
     template<class T, unsigned int D, class S>
-    void SortEigenvectors(AbstractVector<T, D, S> *evec, T *eval, SIZE_T cnt) {
+    void SortEigenvectors(AbstractVector<T, D, S> *evec, T *eval, size_t cnt) {
         if (cnt < 2) return; // lol
 
         if (cnt < 5) {
@@ -136,12 +136,12 @@ namespace math {
         // more than four dimensions. I so don't care
         vislib::Array<vislib::Pair<T, Vector<T, D> > > tb;
         tb.SetCount(cnt);
-        for (SIZE_T i = 0; i < cnt; i++) {
+        for (size_t i = 0; i < cnt; i++) {
             tb[i].SetFirst(eval[i]);
             tb[i].SetSecond(evec[i]);
         }
         tb.Sort(&ComparePairsFirst<T, Vector<T, D> >);
-        for (SIZE_T i = 0; i < cnt; i++) {
+        for (size_t i = 0; i < cnt; i++) {
             eval[i] = tb[i].First();
             evec[i] = tb[i].Second();
         }

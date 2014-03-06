@@ -98,8 +98,8 @@ bool vislib::graphics::gl::GLSLShader::Compile(const char *vertexShaderSrc,
  * vislib::graphics::gl::GLSLShader::Compile
  */
 bool vislib::graphics::gl::GLSLShader::Compile(const char **vertexShaderSrc, 
-        const SIZE_T cntVertexShaderSrc, const char **fragmentShaderSrc,
-        const SIZE_T cntFragmentShaderSrc, bool insertLineDirective) {
+        const size_t cntVertexShaderSrc, const char **fragmentShaderSrc,
+        const size_t cntFragmentShaderSrc, bool insertLineDirective) {
     USES_GL_VERIFY;
     THE_ASSERT(vertexShaderSrc != NULL);
     THE_ASSERT(fragmentShaderSrc != NULL);
@@ -146,22 +146,22 @@ bool vislib::graphics::gl::GLSLShader::CompileFromFile(
  * vislib::graphics::gl::GLSLShader::CompileFromFile
  */
 bool vislib::graphics::gl::GLSLShader::CompileFromFile(
-        const char **vertexShaderFiles, const SIZE_T cntVertexShaderFiles, 
+        const char **vertexShaderFiles, const size_t cntVertexShaderFiles, 
         const char **fragmentShaderFiles, 
-        const SIZE_T cntFragmentShaderFiles, bool insertLineDirective) {
+        const size_t cntFragmentShaderFiles, bool insertLineDirective) {
 
     // using arrays for automatic cleanup when a 'read' throws an exception
     Array<StringA> vertexShaderSrcs(cntVertexShaderFiles);
     Array<StringA> fragmentShaderSrcs(cntFragmentShaderFiles);
 
-    for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
+    for(size_t i = 0; i < cntVertexShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(vertexShaderSrcs[i], 
                 vertexShaderFiles[i])) {
             return false;
         }
     }
 
-    for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
+    for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(fragmentShaderSrcs[i], 
                 fragmentShaderFiles[i])) {
             return false;
@@ -174,10 +174,10 @@ bool vislib::graphics::gl::GLSLShader::CompileFromFile(
         = new const char*[cntFragmentShaderFiles];
 
     try {
-        for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
+        for(size_t i = 0; i < cntVertexShaderFiles; i++) {
             vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].PeekBuffer();
         }
-        for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
+        for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
             fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].PeekBuffer();
         }
 
@@ -230,8 +230,8 @@ bool vislib::graphics::gl::GLSLShader::Create(const char *vertexShaderSrc,
  * vislib::graphics::gl::GLSLShader::Create
  */
 bool vislib::graphics::gl::GLSLShader::Create(const char **vertexShaderSrc, 
-        const SIZE_T cntVertexShaderSrc, const char **fragmentShaderSrc,
-        const SIZE_T cntFragmentShaderSrc, bool insertLineDirective) {
+        const size_t cntVertexShaderSrc, const char **fragmentShaderSrc,
+        const size_t cntFragmentShaderSrc, bool insertLineDirective) {
     if (this->Compile(vertexShaderSrc, cntVertexShaderSrc, fragmentShaderSrc, 
             cntFragmentShaderSrc, insertLineDirective)) {
         return this->Link();
@@ -258,9 +258,9 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFile(
  * vislib::graphics::gl::GLSLShader::CreateFromFile
  */
 bool vislib::graphics::gl::GLSLShader::CreateFromFile(
-        const char **vertexShaderFiles, const SIZE_T cntVertexShaderFiles, 
+        const char **vertexShaderFiles, const size_t cntVertexShaderFiles, 
         const char **fragmentShaderFiles, 
-        const SIZE_T cntFragmentShaderFiles, bool insertLineDirective) {
+        const size_t cntFragmentShaderFiles, bool insertLineDirective) {
 
     if (this->CompileFromFile(vertexShaderFiles, cntVertexShaderFiles, 
             fragmentShaderFiles, cntFragmentShaderFiles, 

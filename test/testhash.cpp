@@ -21,7 +21,7 @@ void TestMD5(void) {
     MD5HashProvider hash;
     const char *TEXT = "Horst";
     BYTE hashValue[16];
-    SIZE_T hashSize = 16;
+    size_t hashSize = 16;
 
     AssertNoException("Initialisation in ctor",  hash.TransformFinalBlock(hashValue, hashSize, reinterpret_cast<const BYTE *>(TEXT), ::strlen(TEXT)));
 
@@ -91,7 +91,7 @@ void TestMD5(void) {
 //    hash2.ComputeHash(hashVal, hashSize, reinterpret_cast<const BYTE*>(TEXT), ::strlen(TEXT));
 //    hash2.GetHashValue(hashVal, hashSize); //<= with this line the code works! Why?
     vislib::StringA hashStr, tmp;
-    for (SIZE_T i =0; i < hashSize; i++) {
+    for (size_t i =0; i < hashSize; i++) {
         tmp.Format("%.2x", hashVal[i]);
         hashStr += tmp;
     }
@@ -109,7 +109,7 @@ void TestSHA1(void) {
     
     SHA1HashProvider hash;
     BYTE hashValue[20];
-    SIZE_T hashSize = 20;
+    size_t hashSize = 20;
 
     // SHA-1 tests from RFC 3174
     const char *TEST1 = "abc";
@@ -147,7 +147,7 @@ void TestSHA1(void) {
 //    hash2.ComputeHash(hashVal, hashSize, reinterpret_cast<const BYTE*>(TEXT), ::strlen(TEXT));
 //    hash2.GetHashValue(hashVal, hashSize); //<= with this line the code works! Why?
     vislib::StringA hashStr, tmp;
-    for (SIZE_T i = 0; i < hashSize; i++) {
+    for (size_t i = 0; i < hashSize; i++) {
         tmp.Format("%.2x", hashVal[i]);
         hashStr += tmp;
     }

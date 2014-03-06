@@ -97,7 +97,7 @@ namespace sys {
              *
              * @return The number of environment variables set.
              */
-            inline SIZE_T Count(void) const {
+            inline size_t Count(void) const {
 #ifdef _WIN32
                 return this->data.Count();
 #else /* _WIN32 */
@@ -115,7 +115,7 @@ namespace sys {
              *
              * @throws OutOfRangeException If 'idx' is not valid.
              */
-            void GetAt(const SIZE_T idx, StringA& outName, StringA& outValue);
+            void GetAt(const size_t idx, StringA& outName, StringA& outValue);
 
             /**
              * Get the 'idx'th variable and its value.
@@ -127,7 +127,7 @@ namespace sys {
              *
              * @throws OutOfRangeException If 'idx' is not valid.
              */
-            void GetAt(const SIZE_T idx, StringW& outName, StringW& outValue);
+            void GetAt(const size_t idx, StringW& outName, StringW& outValue);
 
             /**
              * Answer the variable with the name 'name'. If such a variable does
@@ -279,7 +279,7 @@ namespace sys {
              *             The caller remains owner of the memory designated 
              *             by this pointer.
              */
-            static SIZE_T count(const char **const data);
+            static size_t count(const char **const data);
 #endif /* !_WIN32 */
 
             /**

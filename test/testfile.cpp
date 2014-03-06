@@ -313,7 +313,7 @@ static void runTests(File& f1) {
 
 
 void TestFile(void) {
-    AssertEqual("TestFileSize % 8 == 0", static_cast<INT64>(BIGFILE_SIZE) % static_cast<INT64>(8), static_cast<INT64>(0));
+    AssertEqual("TestFileSize % 8 == 0", static_cast<int64_t>(BIGFILE_SIZE) % static_cast<int64_t>(8), static_cast<int64_t>(0));
 
     try {
         ::TestBaseFile();

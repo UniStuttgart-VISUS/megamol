@@ -147,7 +147,7 @@ template<class Tp>
 inline bool vislib::graphics::BitmapPainter::setColourCacheValue(Tp* dst,
         unsigned int idx, BitmapImage::ChannelLabel label) {
     bool rv = false;
-    for (SIZE_T i = 0; i < this->col.Count(); i++) {
+    for (size_t i = 0; i < this->col.Count(); i++) {
         ChannelColour &cc = this->col[i];
         if ((cc.idx == idx) || (cc.label == label)
                 || ((cc.idx == UINT_MAX)

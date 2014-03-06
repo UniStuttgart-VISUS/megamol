@@ -137,7 +137,7 @@ vislib::graphics::BmpBitmapCodec::~BmpBitmapCodec(void) {
  * vislib::graphics::BmpBitmapCodec::AutoDetect
  */
 int vislib::graphics::BmpBitmapCodec::AutoDetect(const void *mem,
-        SIZE_T size) const {
+        size_t size) const {
     if (size < 2) return -1; // insufficient preview data
     const char *data = static_cast<const char*>(mem);
     if ((data[0] != 'B') || (data[1] != 'M')) return 0; // wrong magic number
@@ -188,7 +188,7 @@ const wchar_t * vislib::graphics::BmpBitmapCodec::NameW(void) const {
 /*
  * vislib::graphics::BmpBitmapCodec::loadFromMemory
  */
-bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
+bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void *mem, size_t size) {
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Loading BMP ...\n");
     const BYTE *memBytes = static_cast<const BYTE *>(mem);
 
@@ -260,13 +260,13 @@ bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void *mem, SIZE_T si
         info.bmiHeader.biBitCount = 24;
         info.bmiHeader.biCompression = BI_RGB;
 
-        SIZE_T lineDataSize = this->image().Width() * 3;
+        size_t lineDataSize = this->image().Width() * 3;
         for (unsigned int y = 0; y < this->image().Height(); y ++) {
             BYTE* bmpLine = this->image().PeekDataAs<BYTE>()
                 + (lineDataSize * (this->image().Height() - (y + 1)));
             ::GetDIBits(screenDC, bmp, y, 1, buf, &info, DIB_RGB_COLORS);
             ::memcpy(bmpLine, buf, lineDataSize);
-            for (SIZE_T x = 0; x < lineDataSize; x += 3) { // BGR to RGB
+            for (size_t x = 0; x < lineDataSize; x += 3) { // BGR to RGB
                 BYTE b = bmpLine[x];
                 bmpLine[x] = bmpLine[x + 2];
                 bmpLine[x + 2] = b;
@@ -383,12 +383,12 @@ bool vislib::graphics::BmpBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
         bidx = ((bpp == 3) ? 2 : 0);
     }
 
-    SIZE_T slsize = img->Width() * 3;
-    SIZE_T slcut = 0;
+    size_t slsize = img->Width() * 3;
+    size_t slcut = 0;
     if (slsize % 4) {
         slcut = 4 - (slsize % 4);
     }
-    SIZE_T headersSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    size_t headersSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
     outmem.EnforceSize(headersSize + (slsize + slcut) * img->Height());
 
     BITMAPFILEHEADER *bfh = outmem.As<BITMAPFILEHEADER>();
@@ -768,12 +768,12 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap24(int width, int height,
         yStep = -1;
     }
 
-    SIZE_T lineDataSize = this->image().Width() * 3;
+    size_t lineDataSize = this->image().Width() * 3;
     for (; y != yEnd; y += yStep, dat += stride) {
         BYTE* bmpLine = this->image().PeekDataAs<BYTE>()
             + (lineDataSize * (this->image().Height() - (y + 1)));
         memcpy(bmpLine, dat, lineDataSize);
-        for (SIZE_T x = 0; x < lineDataSize; x += 3) { // BGR to RGB
+        for (size_t x = 0; x < lineDataSize; x += 3) { // BGR to RGB
             BYTE b = bmpLine[x];
             bmpLine[x] = bmpLine[x + 2];
             bmpLine[x + 2] = b;

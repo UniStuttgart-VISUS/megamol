@@ -55,7 +55,7 @@ namespace graphics {
          *         1 if the file can be loaded by this codec (loading might
          *           still fail however, e.g. if file data is corrupt).
          */
-        virtual int AutoDetect(const void *mem, SIZE_T size) const;
+        virtual int AutoDetect(const void *mem, size_t size) const;
 
         /**
          * Answers whether this codec can autodetect if an image is supported
@@ -114,7 +114,7 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully loaded.
          */
-        virtual bool loadFromMemory(const void *mem, SIZE_T size);
+        virtual bool loadFromMemory(const void *mem, size_t size);
 
         /**
          * Answer whether or not 'loadFromMemory' has been implement.

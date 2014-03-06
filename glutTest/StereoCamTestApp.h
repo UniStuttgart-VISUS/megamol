@@ -38,7 +38,7 @@ private:
     void RenderTestBox(void);
 
     float angle;
-    UINT64 lastTime;
+    uint64_t lastTime;
 
     vislib::SmartPtr<vislib::graphics::CameraParameters> parameters;
     vislib::graphics::gl::CameraOpenGL cameraLeft;

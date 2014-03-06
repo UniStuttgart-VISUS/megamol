@@ -86,7 +86,7 @@ namespace graphics {
          */
         template<class Sp>
         void FillPolygon(const math::AbstractPoint<int, 2, Sp> *points,
-            SIZE_T count);
+            size_t count);
 
         /**
          * Fills a pixels inside the specified polygon
@@ -95,7 +95,7 @@ namespace graphics {
          * @param count The number of point objects forming the polygon
          */
         inline void FillPolygon(const math::Point<int, 2> *points,
-            SIZE_T count) {
+            size_t count) {
             this->FillPolygon(
                 reinterpret_cast<const math::AbstractPoint<int, 2, int[2]>*>(
                     points), count);
@@ -108,7 +108,7 @@ namespace graphics {
          * @param count The number of point objects forming the polygon
          */
         inline void FillPolygon(const math::ShallowPoint<int, 2> *points,
-            SIZE_T count) {
+            size_t count) {
             this->FillPolygon(
                 reinterpret_cast<const math::AbstractPoint<int, 2, int*>*>(
                     points), count);
@@ -121,9 +121,9 @@ namespace graphics {
          * @param count The number of point objects forming the polygon
          */
         template<class Tp>
-        inline void FillPolygon(const Tp *points, SIZE_T count) {
+        inline void FillPolygon(const Tp *points, size_t count) {
             math::Point<int, 2> *pts = new math::Point<int, 2>[count];
-            for (SIZE_T i = 0; i < count; i++) {
+            for (size_t i = 0; i < count; i++) {
                 pts[i] = points[i];
             }
             this->FillPolygon(pts, count);
@@ -339,7 +339,7 @@ namespace graphics {
          * @param label The colour channel label
          * @param v The colour value
          */
-        THE_FORCE_INLINE void setColourEntry(SIZE_T i, unsigned int idx,
+        THE_FORCE_INLINE void setColourEntry(size_t i, unsigned int idx,
                 BitmapImage::ChannelLabel label, unsigned char v) {
             this->col[i].idx = idx;
             this->col[i].label = label;
@@ -355,7 +355,7 @@ namespace graphics {
          * @param label The colour channel label
          * @param v The colour value
          */
-        THE_FORCE_INLINE void setColourEntry(SIZE_T i, unsigned int idx,
+        THE_FORCE_INLINE void setColourEntry(size_t i, unsigned int idx,
                 BitmapImage::ChannelLabel label, unsigned short v) {
             this->col[i].idx = idx;
             this->col[i].label = label;
@@ -371,7 +371,7 @@ namespace graphics {
          * @param label The colour channel label
          * @param v The colour value
          */
-        THE_FORCE_INLINE void setColourEntry(SIZE_T i, unsigned int idx,
+        THE_FORCE_INLINE void setColourEntry(size_t i, unsigned int idx,
                 BitmapImage::ChannelLabel label, float v) {
             this->col[i].idx = idx;
             this->col[i].label = label;
@@ -549,15 +549,15 @@ namespace graphics {
      */
     template<class Sp>
     void BitmapPainter::FillPolygon(
-            const math::AbstractPoint<int, 2, Sp> *points, SIZE_T count) {
+            const math::AbstractPoint<int, 2, Sp> *points, size_t count) {
         math::Point<int, 2> p1;
         math::Point<int, 2> p2;
         math::Point<int, 2> p;
         int bottom = INT_MAX, top = -INT_MAX, y, x;
-        //UINT64 pixelCount = 0;
+        //uint64_t pixelCount = 0;
 
         // find polygon y bounds
-        for (SIZE_T i = 0; i < count; i++) {
+        for (size_t i = 0; i < count; i++) {
             if (points[i].Y() < bottom) {
                 bottom = points[i].Y();
             }
@@ -571,7 +571,7 @@ namespace graphics {
         for (y = bottom; y <= top; y++) {
             Array<tableEdge> edgeLine;
             edgeLine.SetCapacityIncrement(4);
-            for (SIZE_T i = 0; i < count; i++) {
+            for (size_t i = 0; i < count; i++) {
                 p = points[i];
                 p2 = points[(i + 1) % count];
                 if (p2.Y() < p.Y()) {

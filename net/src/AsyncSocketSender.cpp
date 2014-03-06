@@ -62,7 +62,7 @@ DWORD vislib::net::AsyncSocketSender::Run(void *socket) {
 DWORD vislib::net::AsyncSocketSender::Run(Socket *socket) {
     THE_ASSERT(socket != NULL);
     const void *data = NULL;
-    SIZE_T cntSent = 0;
+    size_t cntSent = 0;
     DWORD result = 0;
 
     try {
@@ -137,9 +137,9 @@ DWORD vislib::net::AsyncSocketSender::Run(Socket *socket) {
  * vislib::net::AsyncSocketSender::Send
  */
 void vislib::net::AsyncSocketSender::Send(const void *data,
-        const SIZE_T cntBytes, const CompletedFunction onCompleted,
-        void *userContext, const bool doNotCopy, const INT timeout,
-        const INT flags, const bool forceSend) {
+        const size_t cntBytes, const CompletedFunction onCompleted,
+        void *userContext, const bool doNotCopy, const int timeout,
+        const int flags, const bool forceSend) {
     SendTask task;
 
     /* Sanity checks. */
@@ -249,7 +249,7 @@ bool vislib::net::AsyncSocketSender::Terminate(void) {
  * vislib::net::AsyncSocketSender::onSendCompletedEvt
  */
 void vislib::net::AsyncSocketSender::onSendCompletedEvt(const DWORD result,
-        const void *data, const SIZE_T cntBytesSent, void *userContext) {
+        const void *data, const size_t cntBytesSent, void *userContext) {
     if (userContext != NULL) {
         static_cast<sys::Event *>(userContext)->Set();
     }
@@ -260,7 +260,7 @@ void vislib::net::AsyncSocketSender::onSendCompletedEvt(const DWORD result,
  * vislib::net::AsyncSocketSender::onSendCompletedSem
  */
 void vislib::net::AsyncSocketSender::onSendCompletedSem(const DWORD result,
-        const void *data, const SIZE_T cntBytesSent, void *userContext) {
+        const void *data, const size_t cntBytesSent, void *userContext) {
     if (userContext != NULL) {
         static_cast<sys::Semaphore *>(userContext)->Unlock();
     }
@@ -283,7 +283,7 @@ const UINT32 vislib::net::AsyncSocketSender::FLAG_IS_LINGER= 0x00000002;
  * vislib::net::AsyncSocketSender::finaliseSendTask
  */
 void vislib::net::AsyncSocketSender::finaliseSendTask(SendTask& task, 
-        const DWORD result, const SIZE_T cntBytesSent) {
+        const DWORD result, const size_t cntBytesSent) {
     /* Call completion function. */
     if (task.onCompleted != NULL) {
         task.onCompleted(result, task.data0, cntBytesSent, task.userContext);

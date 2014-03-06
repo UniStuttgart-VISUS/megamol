@@ -115,10 +115,10 @@ namespace sys {
      */
     template <class T>
     bool FilenameGlobMatch(const T* filename, const T* pattern) {
-        SIZE_T fnl = vislib::CharTraits<T>::SafeStringLength(filename);
-        SIZE_T fnp = 0;
-        SIZE_T pl = vislib::CharTraits<T>::SafeStringLength(pattern);
-        SIZE_T pp = 0;
+        size_t fnl = vislib::CharTraits<T>::SafeStringLength(filename);
+        size_t fnp = 0;
+        size_t pl = vislib::CharTraits<T>::SafeStringLength(pattern);
+        size_t pp = 0;
 
         while ((fnp < fnl) && (pp < pl)) {
             switch (pattern[pp]) {
@@ -133,7 +133,7 @@ namespace sys {
                         return true;
                     }
                     // this is super slow and lazy, but works
-                    for (SIZE_T skipSize = 0; skipSize < (fnl - fnp);
+                    for (size_t skipSize = 0; skipSize < (fnl - fnp);
                             skipSize++) {
                         if (FilenameGlobMatch(filename + fnp + skipSize,
                                 pattern + pp)) {
@@ -142,7 +142,7 @@ namespace sys {
                     }
                     return false;
                 case '[': {
-                    SIZE_T pps = pp;
+                    size_t pps = pp;
                     while ((pp < pl) && (pattern[pp] != ']')) pp++;
                     if (pp == pl) return false;
                     vislib::String<vislib::CharTraits<T> > matchGroup(
@@ -492,7 +492,7 @@ namespace sys {
         va_start(argptr, format);
         tmp.FormatVa(format, argptr);
         va_end(argptr);
-        SIZE_T len = tmp.Length() * sizeof(T);
+        size_t len = tmp.Length() * sizeof(T);
         return out.Write(tmp.PeekBuffer(), len) == len;
     }
 
@@ -510,7 +510,7 @@ namespace sys {
      */
     template<class T>
     bool WriteLineToFile(File &out, const T *text) {
-        SIZE_T len = vislib::CharTraits<T>::SafeStringLength(text)
+        size_t len = vislib::CharTraits<T>::SafeStringLength(text)
             * sizeof(T);
         return out.Write(text, len) == len;
     }

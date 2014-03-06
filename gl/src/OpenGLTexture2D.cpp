@@ -74,8 +74,8 @@ GLenum vislib::graphics::gl::OpenGLTexture2D::Bind(void) {
 /*
  * vislib::graphics::gl::OpenGLTexture2D::Create
  */
-GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const UINT width, 
-        const UINT height, const void *pixels, const GLenum format, 
+GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const unsigned int width, 
+        const unsigned int height, const void *pixels, const GLenum format, 
         const GLenum type, const GLint internalFormat, const GLint border) {
     THE_STACK_TRACE;
     USES_GL_VERIFY;
@@ -100,15 +100,15 @@ GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const UINT width,
 /*
  * vislib::graphics::gl::OpenGLTexture2D::Create
  */
-GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const UINT width, 
-        const UINT height, const bool forcePowerOfTwo, const void *pixels,
+GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const unsigned int width, 
+        const unsigned int height, const bool forcePowerOfTwo, const void *pixels,
         const GLenum format, const GLenum type, const GLint internalFormat, 
         const GLint border) {
     THE_STACK_TRACE;
     USES_GL_VERIFY;
 
-    UINT w = math::NextPowerOfTwo(width);
-    UINT h = math::NextPowerOfTwo(height);
+    unsigned int w = math::NextPowerOfTwo(width);
+    unsigned int h = math::NextPowerOfTwo(height);
 
     if (!forcePowerOfTwo || ((w == width) && (h == height))) {
         return this->Create(width, height, pixels, format, type, 
@@ -128,8 +128,8 @@ GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const UINT width,
  * vislib::graphics::gl::OpenGLTexture2D::Update
  */
 GLenum vislib::graphics::gl::OpenGLTexture2D::Update(const void *pixels, 
-        const UINT width, const UINT height, const GLenum format, 
-        const GLenum type, const UINT offsetX, const UINT offsetY, 
+        const unsigned int width, const unsigned int height, const GLenum format, 
+        const GLenum type, const unsigned int offsetX, const unsigned int offsetY, 
         const GLint level, const bool resetBind) {
     THE_STACK_TRACE;
     USES_GL_VERIFY;

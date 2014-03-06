@@ -27,7 +27,7 @@ bool PrintAdapter(const vislib::net::NetworkInformation::Adapter& a, void *ctx) 
 
     std::cout << "\tUnicast Addresses:" << std::endl;
     const NetworkInformation::UnicastAddressList& unicastAddresses = a.GetUnicastAddresses();
-    for (SIZE_T i = 0; i < unicastAddresses.Count(); i++) {
+    for (size_t i = 0; i < unicastAddresses.Count(); i++) {
         const NetworkInformation::UnicastAddressInformation& ai = unicastAddresses[i];
         std::cout << "\t\t" << ai.GetAddress().ToStringA().PeekBuffer() 
             << "/" << ai.GetPrefixLength() << std::endl;
@@ -54,7 +54,7 @@ bool PrintAdapter(const vislib::net::NetworkInformation::Adapter& a, void *ctx) 
     std::cout << "\tMulticast Addresses:" << std::endl;
     try {
         const NetworkInformation::AddressList& multicastAddresses = a.GetMulticastAddresses();
-        for (SIZE_T i = 0; i < multicastAddresses.Count(); i++) {
+        for (size_t i = 0; i < multicastAddresses.Count(); i++) {
             std::cout << "\t\t" << (multicastAddresses[i]).ToStringA().PeekBuffer() << std::endl;
         }
     } catch (...) {
@@ -65,7 +65,7 @@ bool PrintAdapter(const vislib::net::NetworkInformation::Adapter& a, void *ctx) 
     std::cout << "\tAnycast Addresses:" << std::endl;
     try {
         const NetworkInformation::AddressList& anycastAddresses = a.GetAnycastAddresses();
-        for (SIZE_T i = 0; i < anycastAddresses.Count(); i++) {
+        for (size_t i = 0; i < anycastAddresses.Count(); i++) {
             std::cout << "\t\t" << (anycastAddresses[i]).ToStringA().PeekBuffer() << std::endl;
         }
     } catch (...) {
@@ -118,7 +118,7 @@ bool PrintAdapter(const vislib::net::NetworkInformation::Adapter& a, void *ctx) 
 
 
 void PrintAdapterList(const vislib::net::NetworkInformation::AdapterList& a) {
-    for (SIZE_T i = 0; i < a.Count(); i++) {
+    for (size_t i = 0; i < a.Count(); i++) {
         std::cout << "\t\"" << a[i].GetID() << "\" \"" << W2A(a[i].GetName()) << "\"" << std::endl;
     }
 }
@@ -135,7 +135,7 @@ void TestNetworkInformation(void) {
 
     Socket::Startup();
 
-    SIZE_T cntAdapters = NetworkInformation::CountAdapters();
+    size_t cntAdapters = NetworkInformation::CountAdapters();
     std::cout << "Number of network adapters: " << cntAdapters << std::endl;
     NetworkInformation::EnumerateAdapters(::PrintAdapter);
     std::cout << std::endl;

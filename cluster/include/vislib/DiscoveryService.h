@@ -86,7 +86,7 @@ namespace cluster {
              */
             PeerNode(const IPEndPoint& discoveryAddress, 
                 const IPEndPoint& responseAddress,
-                const UINT cntResponseChances, 
+                const unsigned int cntResponseChances, 
                 DiscoveryConfigEx *discoverySource);
 
             /**
@@ -169,7 +169,7 @@ namespace cluster {
             bool isValid(void) const;
 
             /** Implicit disconnect detection counter. */
-            UINT cntResponseChances;
+            unsigned int cntResponseChances;
 
             /** Discovery service address of the peer node (remote address). */
             IPEndPoint discoveryAddress;
@@ -468,10 +468,10 @@ namespace cluster {
         static const USHORT DEFAULT_PORT;
 
         /** The default request interval in milliseconds. */
-        static const UINT DEFAULT_REQUEST_INTERVAL;
+        static const unsigned int DEFAULT_REQUEST_INTERVAL;
 
         /** The default number of chances to respond before disconnect. */
-        static const UINT DEFAULT_RESPONSE_CHANCES;
+        static const unsigned int DEFAULT_RESPONSE_CHANCES;
 
         /** 
          * If this behaviour flag is set, the discovery service will only 
@@ -492,13 +492,13 @@ namespace cluster {
          * The maximum size of user data that can be sent via the cluster
          * discovery service in bytes.
          */
-        static const SIZE_T MAX_USER_DATA = 256;
+        static const size_t MAX_USER_DATA = 256;
 
         /** 
          * The maximum length of a cluster name in characters, including the
          * trailing zero. 
          */
-        static const SIZE_T MAX_NAME_LEN = MAX_USER_DATA 
+        static const size_t MAX_NAME_LEN = MAX_USER_DATA 
             - sizeof(struct sockaddr_storage);
 
         /** The first message ID that can be used for a user message. */
@@ -549,9 +549,9 @@ namespace cluster {
          *
          * @return The number of known peer nodes.
          */
-        inline SIZE_T CountPeers(void) const {
+        inline size_t CountPeers(void) const {
             this->peerNodesCritSect.Lock();
-            SIZE_T retval = this->peerNodes.Count();
+            size_t retval = this->peerNodes.Count();
             this->peerNodesCritSect.Unlock();
             return retval;
         }
@@ -572,7 +572,7 @@ namespace cluster {
          *
          * @return The number of chances for a node to answer.
          */
-        inline UINT GetCntResponseChances(void) const {
+        inline unsigned int GetCntResponseChances(void) const {
             return this->cntResponseChances;
         }
 
@@ -627,7 +627,7 @@ namespace cluster {
          *
          * @return The interval between two discovery  requests in milliseconds.
          */
-        inline UINT GetRequestInterval(void) const {
+        inline unsigned int GetRequestInterval(void) const {
             return this->requestInterval;
         }
 
@@ -689,7 +689,7 @@ namespace cluster {
          *
          * @throws OutOfRangeException If 'idx' is not a valid node index.
          */
-        bool IsSelf(const INT idx) const;
+        bool IsSelf(const int idx) const;
 
         /**
          * Answer whether the sockets of the receiver threads may be shared or 
@@ -747,8 +747,8 @@ namespace cluster {
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        UINT SendUserMessage(const UINT32 msgType, const void *msgBody, 
-            const SIZE_T msgSize);
+        unsigned int SendUserMessage(const UINT32 msgType, const void *msgBody, 
+            const size_t msgSize);
 
         /**
          * Send a user-defined message to the node that is identified with the
@@ -775,8 +775,8 @@ namespace cluster {
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        UINT SendUserMessage(const PeerHandle& hPeer, const UINT32 msgType,
-            const void *msgBody, const SIZE_T msgSize);
+        unsigned int SendUserMessage(const PeerHandle& hPeer, const UINT32 msgType,
+            const void *msgBody, const size_t msgSize);
 
         /**
          * Change the interval between two discovery requests.
@@ -787,7 +787,7 @@ namespace cluster {
          * @param requestInterval The interval between two discovery  requests 
          *                        in milliseconds.
          */
-        //inline void SetRequestInterval(const UINT requestInterval) {
+        //inline void SetRequestInterval(const unsigned int requestInterval) {
         //    sys::Interlocked::Exchange(
         //        reinterpret_cast<INT32 *>(&this->requestInterval),
         //        static_cast<INT32>(requestInterval));
@@ -832,12 +832,12 @@ namespace cluster {
          *                         available.
          */
         virtual void Start(const char *name, 
-            const DiscoveryConfig *configs, const SIZE_T cntConfigs,
-            const UINT cntExpectedNodes = 0,
+            const DiscoveryConfig *configs, const size_t cntConfigs,
+            const unsigned int cntExpectedNodes = 0,
             const UINT32 flags = 0,
-            const UINT requestInterval = DEFAULT_REQUEST_INTERVAL,
-            const UINT requestIntervalIntensive = DEFAULT_REQUEST_INTERVAL / 2,
-            const UINT cntResponseChances = DEFAULT_RESPONSE_CHANCES);
+            const unsigned int requestInterval = DEFAULT_REQUEST_INTERVAL,
+            const unsigned int requestIntervalIntensive = DEFAULT_REQUEST_INTERVAL / 2,
+            const unsigned int cntResponseChances = DEFAULT_RESPONSE_CHANCES);
 
         /**
          * Answer a string representation of the discovery service, which is 
@@ -907,7 +907,7 @@ namespace cluster {
          *
          * @throws OutOfRangeException If 'idx' is not a valid node index.
          */
-        inline IPEndPoint operator [](const INT idx) const {
+        inline IPEndPoint operator [](const int idx) const {
             this->peerNodesCritSect.Lock();
             IPEndPoint retval = this->peerNodes[idx]->responseAddress;
             this->peerNodesCritSect.Unlock();
@@ -925,7 +925,7 @@ namespace cluster {
          *
          * @throws OutOfRangeException If 'idx' is not a valid node index.
          */
-        inline IPEndPoint operator [](const SIZE_T idx) const {
+        inline IPEndPoint operator [](const size_t idx) const {
             this->peerNodesCritSect.Lock();
             IPEndPoint retval = this->peerNodes[idx]->responseAddress;
             this->peerNodesCritSect.Unlock();
@@ -1312,7 +1312,7 @@ namespace cluster {
          *                               or 'msgSize' > MAX_USER_DATA.
          */
         void prepareUserMessage(Message& outMsg, const UINT32 msgType,
-            const void *msgBody, const SIZE_T msgSize);
+            const void *msgBody, const size_t msgSize);
 
         /**
          * Remove the peer node having the user communication address 'address'.
@@ -1342,22 +1342,22 @@ namespace cluster {
          * The number of expected nodes. Until this number is reached, the
          * discovery service performs an intensive search for peer nodes.
          */
-        UINT cntExpectedNodes;
+        unsigned int cntExpectedNodes;
 
         /** 
          * The number of chances a node gets to respond before it is implicitly 
          * disconnected from the cluster.
          */
-        UINT cntResponseChances;
+        unsigned int cntResponseChances;
 
         /** Boolean flags that specialise the behaviour of the object. */
-        UINT flags;
+        unsigned int flags;
 
         /** The time in milliseconds between two discovery requests. */
-        UINT requestInterval;
+        unsigned int requestInterval;
 
         /** The interval for intensive search in milliseconds. */
-        UINT requestIntervalIntensive;
+        unsigned int requestIntervalIntensive;
 
         /** The per-adapter configurations. */
         ConfigList configs;

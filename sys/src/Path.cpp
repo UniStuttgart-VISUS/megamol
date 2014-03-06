@@ -495,7 +495,7 @@ vislib::StringA vislib::sys::Path::GetApplicationPathA(void) {
     vislib::StringA pid;
     pid.Format("/proc/%d/exe", getpid());
     vislib::StringA path;
-    const SIZE_T bufSize = 0xFFFF;
+    const size_t bufSize = 0xFFFF;
     char *buf = path.AllocateBuffer(bufSize);
     ssize_t size = readlink(pid.PeekBuffer(), buf, bufSize - 1);
     if (size >= 0) {
@@ -549,8 +549,8 @@ vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
     the::safe_array_delete(buffer);
 
 #else /* _WIN32 */
-    const SIZE_T BUFFER_GROW = 32;
-    SIZE_T bufferSize = 256;
+    const size_t BUFFER_GROW = 32;
+    size_t bufferSize = 256;
     char *buffer = new char[bufferSize];
 
     while (::getcwd(buffer, bufferSize) == NULL) {

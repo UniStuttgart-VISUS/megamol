@@ -94,7 +94,7 @@ namespace graphics {
          *
          * @return The idx-th codec
          */
-        inline SmartPtr<AbstractBitmapCodec> Codec(SIZE_T idx) {
+        inline SmartPtr<AbstractBitmapCodec> Codec(size_t idx) {
             return this->codecs[idx];
         }
 
@@ -105,7 +105,7 @@ namespace graphics {
          *
          * @return The idx-th codec
          */
-        inline const SmartPtr<AbstractBitmapCodec> Codec(SIZE_T idx) const {
+        inline const SmartPtr<AbstractBitmapCodec> Codec(size_t idx) const {
             return this->codecs[idx];
         }
 
@@ -114,7 +114,7 @@ namespace graphics {
          *
          * @return The number of codecs in the collection
          */
-        inline SIZE_T Count(void) const {
+        inline size_t Count(void) const {
             return this->codecs.Count();
         }
 
@@ -198,7 +198,7 @@ namespace graphics {
          * @throw vislib::Exception or derived class on error
          */
         bool LoadBitmapImage(BitmapImage& outImg,
-            const void *mem, SIZE_T size);
+            const void *mem, size_t size);
 
         /**
          * Loads a bitmap image by automatically choosing the proper codec
@@ -229,7 +229,7 @@ namespace graphics {
          *
          * @param idx The zero-based index of the codec to be removed
          */
-        inline void RemoveCodec(SIZE_T idx) {
+        inline void RemoveCodec(size_t idx) {
             this->codecs.RemoveAt(idx);
         }
 
@@ -263,7 +263,7 @@ namespace graphics {
          *
          * @return The idx-th codec
          */
-        inline SmartPtr<AbstractBitmapCodec>& operator[](SIZE_T idx) {
+        inline SmartPtr<AbstractBitmapCodec>& operator[](size_t idx) {
             return this->codecs[idx];
         }
 
@@ -274,7 +274,7 @@ namespace graphics {
          *
          * @return The idx-th codec
          */
-        inline const SmartPtr<AbstractBitmapCodec>& operator[](SIZE_T idx) const {
+        inline const SmartPtr<AbstractBitmapCodec>& operator[](size_t idx) const {
             return this->codecs[idx];
         }
 
@@ -309,7 +309,7 @@ namespace graphics {
          * @param outUnsureCodecs The codecs out of 'codecs' which may be able
          *                        to load the image (return value -1)
          */
-        void autodetecCodec(const void *mem, SIZE_T size,
+        void autodetecCodec(const void *mem, size_t size,
             const CodecArray& codecs, CodecArray& outMatchingCodecs,
             CodecArray& outUnsureCodecs) const;
 

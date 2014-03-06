@@ -80,7 +80,7 @@ PlainClient::PlainClient(void) : vislib::net::cluster::AbstractClientNode() {
  * PlainClient::onMessageReceived
  */
 bool PlainClient::onMessageReceived(const vislib::net::Socket& src, 
-        const UINT msgId, const BYTE *body, const SIZE_T cntBody) {
+        const unsigned int msgId, const BYTE *body, const size_t cntBody) {
     std::cout << "PlainClient received message " << msgId << " with " 
         << cntBody << " Bytes of body data" << std::endl;
     return false;   

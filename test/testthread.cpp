@@ -29,15 +29,15 @@ class MyRunnable : public Runnable {
 
 public:
 
-    inline MyRunnable(const UINT id = 0) : cnt(1), id(id) {};
+    inline MyRunnable(const unsigned int id = 0) : cnt(1), id(id) {};
 
     virtual DWORD Run(void *userData);
 
 private:
 
-    UINT cnt;
+    unsigned int cnt;
 
-    UINT id;
+    unsigned int id;
 };
 
 
@@ -46,7 +46,7 @@ DWORD MyRunnable::Run(void *userData) {
         this->cnt = *static_cast<const DWORD *>(userData);
     }
 
-    for (UINT i = 0; i < cnt; i++) {
+    for (unsigned int i = 0; i < cnt; i++) {
         //std::cout << "Thread " << this->id << " [" << Thread::CurrentID() 
         //    << "] " << i << std::endl;
         Thread::Sleep(20);
@@ -78,7 +78,7 @@ private:
 };
 
 DWORD SynchronisedRunnable::Run(void *userData) {
-    UINT cnt = (userData != NULL) 
+    unsigned int cnt = (userData != NULL) 
         ? *static_cast<const DWORD *>(userData)
         : 100;
 
@@ -92,7 +92,7 @@ DWORD SynchronisedRunnable::Run(void *userData) {
         UNLOCK_COUT;
     }
 
-    for (UINT i = 0; i < cnt; i++) {
+    for (unsigned int i = 0; i < cnt; i++) {
         if (UseSemaphore) {
             semaphore.Lock();
             SynchronisedRunnable::Cnt++;
@@ -121,7 +121,7 @@ class EventRunnable : public Runnable {
 
 public:
     typedef struct UserData_t {
-        UINT cnt;
+        unsigned int cnt;
         vislib::sys::Event *evt;
         bool isSignalDude;
         vislib::sys::Semaphore *resetSem;
@@ -150,7 +150,7 @@ DWORD EventRunnable::Run(void *userData) {
             << "manually." << std::endl;
         UNLOCK_COUT;
 
-        for (UINT i = 0; i < ((ud->resetSem != NULL) ? 1 : 2 * ud->cnt); i++) {
+        for (unsigned int i = 0; i < ((ud->resetSem != NULL) ? 1 : 2 * ud->cnt); i++) {
             LOCK_COUT;
             std::cout << "Event is being signaled " << i << "." << std::endl;
             UNLOCK_COUT;
@@ -160,7 +160,7 @@ DWORD EventRunnable::Run(void *userData) {
                 LOCK_COUT;
                 std::cout << "Waiting to reset manually." << std::endl;
                 UNLOCK_COUT;
-                for (UINT j = 0; j < 2 * ud->cnt; j++) {
+                for (unsigned int j = 0; j < 2 * ud->cnt; j++) {
                     ud->resetSem->Lock();
                 }
 
@@ -183,7 +183,7 @@ DWORD EventRunnable::Run(void *userData) {
             << "a manual reset event." << std::endl;
         UNLOCK_COUT;
 
-        for (UINT i = 0; i < ud->cnt; i++) {
+        for (unsigned int i = 0; i < ud->cnt; i++) {
             ud->evt->Wait();
             if (ud->resetSem != NULL) {
                 ud->resetSem->Unlock();

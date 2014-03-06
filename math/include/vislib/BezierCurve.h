@@ -317,7 +317,7 @@ namespace math {
      */
     template<class T, unsigned int E>
     bool BezierCurve<T, E>::operator==(const BezierCurve<T, E>& rhs) const {
-        for (SIZE_T i = 0; i <= E; i++) {
+        for (size_t i = 0; i <= E; i++) {
             if (this->cp[i] != rhs.cp[i]) {
                 return false;
             }

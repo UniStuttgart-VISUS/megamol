@@ -281,8 +281,8 @@ bool vislib::graphics::ColourParser::parseArray(const vislib::StringA& inStr,
     }
 
     // detect separators
-    SIZE_T scsc = inStr.Count(';');
-    SIZE_T csc = inStr.Count(',');
+    size_t scsc = inStr.Count(';');
+    size_t csc = inStr.Count(',');
 
     vislib::StringA rStr, gStr, bStr, aStr;
     if ((scsc == 3) || (scsc == 2)) {

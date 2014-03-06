@@ -949,7 +949,7 @@ vislib::sys::MessageBox::~MessageBox(void) {
 vislib::sys::MessageBox::ReturnValue
 vislib::sys::MessageBox::ShowDialog(void) {
 #ifdef _WIN32
-    UINT type = 0;
+    unsigned int type = 0;
     int rv;
 
     switch (this->btns) {

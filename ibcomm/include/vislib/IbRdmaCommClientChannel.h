@@ -52,7 +52,7 @@ namespace ib {
          * @return
          */
         static SmartRef<IbRdmaCommClientChannel> Create(
-                const SIZE_T cntBufRecv, const SIZE_T cntBufSend);
+                const size_t cntBufRecv, const size_t cntBufSend);
         
         /**
          * Create a new instance with receive and send buffers of the specified
@@ -62,7 +62,7 @@ namespace ib {
          *
          * @return
          */
-        static SmartRef<IbRdmaCommClientChannel> Create(const SIZE_T cntBuf);
+        static SmartRef<IbRdmaCommClientChannel> Create(const size_t cntBuf);
 
         /**
          * Create a new instance using the specified buffers for DMA.
@@ -89,7 +89,7 @@ namespace ib {
          * @return
          */
         static SmartRef<IbRdmaCommClientChannel> Create(BYTE *bufRecv, 
-            const SIZE_T cntBufRecv, BYTE *bufSend, const SIZE_T cntBufSend);
+            const size_t cntBufRecv, BYTE *bufSend, const size_t cntBufSend);
 
         virtual void Close(void);
 
@@ -121,12 +121,12 @@ namespace ib {
             return (this->bufSendEnd != NULL);
         }
 
-        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
-            const UINT timeout = TIMEOUT_INFINITE, 
+        virtual size_t Receive(void *outData, const size_t cntBytes,
+            const unsigned int timeout = TIMEOUT_INFINITE, 
             const bool forceReceive = true);
 
-        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes,
-            const UINT timeout = TIMEOUT_INFINITE, 
+        virtual size_t Send(const void *data, const size_t cntBytes,
+            const unsigned int timeout = TIMEOUT_INFINITE, 
             const bool forceSend = true);
 
     private:
@@ -177,8 +177,8 @@ namespace ib {
          *                   number of bytes to be allocaated if 'bufSend' is
          *                   NULL.
          */
-        void setBuffers(BYTE *bufRecv, const SIZE_T cntBufRecv, 
-            BYTE *bufSend, const SIZE_T cntBufSend);
+        void setBuffers(BYTE *bufRecv, const size_t cntBufRecv, 
+            BYTE *bufSend, const size_t cntBufSend);
 
         /**
          * Buffer for receiving data from the network. This can either be a 
@@ -207,13 +207,13 @@ namespace ib {
         BYTE *bufSendEnd;
 
         /** Size of 'bufRecv' in bytes. */
-        SIZE_T cntBufRecv;
+        size_t cntBufRecv;
 
         /** Size of 'bufSend' in bytes. */
-        SIZE_T cntBufSend;
+        size_t cntBufSend;
 
         /** Valid bytes starting at 'remRecv'. */
-        SIZE_T cntRemRecv;
+        size_t cntRemRecv;
 
         struct rdma_cm_id *id;
 

@@ -12,7 +12,7 @@
  * vislib::net::ShallowSimpleMessage::ShallowSimpleMessage
  */
 vislib::net::ShallowSimpleMessage::ShallowSimpleMessage(
-        void *storage, const SIZE_T cntStorage) 
+        void *storage, const size_t cntStorage) 
         : Super(), cntStorage(cntStorage), storage(storage) {
     THE_STACK_TRACE;
     THE_ASSERT(storage != NULL);
@@ -39,7 +39,7 @@ vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage(void) {
  * vislib::net::ShallowSimpleMessage::SetStorage
  */
 void vislib::net::ShallowSimpleMessage::SetStorage(void *storage, 
-        const SIZE_T cntStorage) {
+        const size_t cntStorage) {
     THE_STACK_TRACE;
     THE_ASSERT(storage != NULL);
     THE_ASSERT((cntStorage == 0) 
@@ -55,7 +55,7 @@ void vislib::net::ShallowSimpleMessage::SetStorage(void *storage,
 /*
  * vislib::net::ShallowSimpleMessage::assertStorage
  */
-bool vislib::net::ShallowSimpleMessage::assertStorage(void *& outStorage, const SIZE_T size) {
+bool vislib::net::ShallowSimpleMessage::assertStorage(void *& outStorage, const size_t size) {
     // intentionally empty atm
     return false;
 }

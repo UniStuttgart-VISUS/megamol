@@ -66,7 +66,7 @@ namespace vislib {
          *
          * @return The number of elements in the stack.
          */
-        SIZE_T Count(void) const;
+        size_t Count(void) const;
 
         /**
          * Answer whether the stack is empty.
@@ -199,9 +199,9 @@ namespace vislib {
      * vislib::Stack<T>::Count
      */
     template<class T>
-    SIZE_T Stack<T>::Count(void) const {
+    size_t Stack<T>::Count(void) const {
         Element *cursor = this->top;
-        SIZE_T retval = 0;
+        size_t retval = 0;
 
         while (cursor != NULL) {
             retval++;

@@ -67,7 +67,7 @@ bool MemoryFile::IsOpen(void) const {
 /*
  * MemoryFile::Open
  */
-bool MemoryFile::Open(void *buffer, SIZE_T bufferLength,
+bool MemoryFile::Open(void *buffer, size_t bufferLength,
         File::AccessMode accessMode) {
     if (buffer == NULL) return false;
     this->Close();
@@ -137,8 +137,8 @@ File::FileSize MemoryFile::Read(void *outBuf, const File::FileSize bufSize) {
     }
     if (s > 0) {
         ::memcpy(outBuf, (this->storage != NULL)
-            ? this->storage->At(static_cast<SIZE_T>(this->pos))
-            : (this->buffer + this->pos), static_cast<SIZE_T>(s));
+            ? this->storage->At(static_cast<size_t>(this->pos))
+            : (this->buffer + this->pos), static_cast<size_t>(s));
         this->pos += s;
     }
     return s;
@@ -212,22 +212,22 @@ File::FileSize MemoryFile::Write(const void *buf,
             }
             s = this->bufferLen - this->pos;
         }
-        ::memcpy(this->buffer + this->pos, buf, static_cast<SIZE_T>(s));
+        ::memcpy(this->buffer + this->pos, buf, static_cast<size_t>(s));
         this->pos += s;
 
     } else if (this->storage != NULL) {
         s = bufSize;
         if (this->storage->GetSize() < this->pos + s) {
             // growing by size could be nice here, but ATM I don't care
-            this->storage->AssertSize(static_cast<SIZE_T>(this->pos + s),
+            this->storage->AssertSize(static_cast<size_t>(this->pos + s),
                 true);
             if (this->pos > this->storage->GetSize()) {
                 this->pos = this->storage->GetSize();
             }
             s = this->storage->GetSize() - this->pos;
         }
-        ::memcpy(this->storage->At(static_cast<SIZE_T>(this->pos)), buf,
-            static_cast<SIZE_T>(s));
+        ::memcpy(this->storage->At(static_cast<size_t>(this->pos)), buf,
+            static_cast<size_t>(s));
         this->pos += s;
 
     } else {

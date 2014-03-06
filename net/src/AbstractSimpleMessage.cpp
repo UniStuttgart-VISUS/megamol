@@ -54,13 +54,13 @@ void *vislib::net::AbstractSimpleMessage::GetBody(void) {
  * vislib::net::AbstractSimpleMessage::SetBody
  */
 void vislib::net::AbstractSimpleMessage::SetBody(const void *body, 
-        const SIZE_T bodySize) {
+        const size_t bodySize) {
     THE_STACK_TRACE;
     // If that asserts, the child class probably does not initialise correctly.
     THE_ASSERT(this->header.PeekData() != NULL);
 
     void *b = NULL;
-    SIZE_T bs = bodySize;
+    size_t bs = bodySize;
     
     if (body != NULL) {
         if (bs == 0) {
@@ -156,7 +156,7 @@ vislib::net::AbstractSimpleMessage::operator void *(void) {
  * vislib::net::AbstractSimpleMessage::assertStorage
  */
 void *vislib::net::AbstractSimpleMessage::assertStorage(
-        const SIZE_T bodySize) {
+        const size_t bodySize) {
     THE_STACK_TRACE;
     THE_ASSERT(bodySize <= UINT_MAX);
     

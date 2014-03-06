@@ -107,10 +107,10 @@ namespace sys {
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        THE_FORCE_INLINE static INT64 CompareExchange(volatile INT64 *address,
-                const INT64 exchange, const INT64 comparand) {
+        THE_FORCE_INLINE static int64_t CompareExchange(volatile int64_t *address,
+                const int64_t exchange, const int64_t comparand) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedCompareExchange64(
                 reinterpret_cast<volatile LONGLONG *>(address),
@@ -156,8 +156,8 @@ namespace sys {
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        THE_FORCE_INLINE static INT64 Decrement(volatile INT64 *address) {
-            THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+        THE_FORCE_INLINE static int64_t Decrement(volatile int64_t *address) {
+            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
 #ifdef _WIN32
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedDecrement64(
@@ -208,10 +208,10 @@ namespace sys {
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        THE_FORCE_INLINE static INT64 Exchange(volatile INT64 *address,
-                const INT64 value) {
+        THE_FORCE_INLINE static int64_t Exchange(volatile int64_t *address,
+                const int64_t value) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedExchange64(
                 reinterpret_cast<volatile LONGLONG *>(address),
@@ -221,7 +221,7 @@ namespace sys {
                 __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
 #else /* _WIN32 */
-            INT64 old;
+            int64_t old;
             do {
                 old = *address;
             } while (Interlocked::CompareExchange(address, value, old) != old);
@@ -250,8 +250,8 @@ namespace sys {
 #if ((defined(__LP64__) || defined(_LP64) || defined(__x86_64__)) \
 && ((__LP64__ != 0) || (_LP64 != 0) || (__x86_64__ != 0)))
             return reinterpret_cast<void *>(Interlocked::Exchange(
-                reinterpret_cast<volatile INT64 *>(address), 
-                reinterpret_cast<INT64>(value)));
+                reinterpret_cast<volatile int64_t *>(address), 
+                reinterpret_cast<int64_t>(value)));
 #else /* #if ((defined(__LP64__) || defined(_LP64) || ... */
             return reinterpret_cast<void *>(Interlocked::Exchange(
                 reinterpret_cast<volatile INT32 *>(address), 
@@ -301,10 +301,10 @@ namespace sys {
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        THE_FORCE_INLINE static INT64 ExchangeAdd(volatile INT64 *address,
-                const INT64 value) {
+        THE_FORCE_INLINE static int64_t ExchangeAdd(volatile int64_t *address,
+                const int64_t value) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedExchangeAdd64(
                 reinterpret_cast<volatile LONGLONG *>(address),
@@ -355,8 +355,8 @@ namespace sys {
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        THE_FORCE_INLINE static INT64 ExchangeSub(volatile INT64 *address,
-                const INT64 value) {
+        THE_FORCE_INLINE static int64_t ExchangeSub(volatile int64_t *address,
+                const int64_t value) {
 #ifdef _WIN32
             return Interlocked::ExchangeAdd(address, -value);
 #else /* _WIN32 */
@@ -394,8 +394,8 @@ namespace sys {
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        THE_FORCE_INLINE static INT64 Increment(volatile INT64 *address) {
-            THE_ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+        THE_FORCE_INLINE static int64_t Increment(volatile int64_t *address) {
+            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
 #ifdef _WIN32
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedIncrement64(

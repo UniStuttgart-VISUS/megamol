@@ -75,12 +75,12 @@ bool vislib::graphics::gl::GLSLTesselationShader::Compile(const char *vertexShad
  * vislib::graphics::gl::GLSLTesselationShader::Compile
  */
 bool vislib::graphics::gl::GLSLTesselationShader::Compile(
-            const char **vertexShaderSrc, const SIZE_T cntVertexShaderSrc,
+            const char **vertexShaderSrc, const size_t cntVertexShaderSrc,
             const char **tessControlShaderSrc,
-            const SIZE_T cntTessControlShaderSrc,
-            const char **tessEvalShaderSrc, const SIZE_T cntTessEvalShaderSrc,
-            const char **geometryShaderSrc, const SIZE_T cntGeometryShaderSrc,
-            const char **fragmentShaderSrc, const SIZE_T cntFragmentShaderSrc,
+            const size_t cntTessControlShaderSrc,
+            const char **tessEvalShaderSrc, const size_t cntTessEvalShaderSrc,
+            const char **geometryShaderSrc, const size_t cntGeometryShaderSrc,
+            const char **fragmentShaderSrc, const size_t cntFragmentShaderSrc,
             bool insertLineDirective) {
 
     USES_GL_VERIFY;
@@ -182,15 +182,15 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
  */
 bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
         const char **vertexShaderFiles,
-        const SIZE_T cntVertexShaderFiles,
+        const size_t cntVertexShaderFiles,
         const char **tessControlShaderFiles,
-        const SIZE_T cntTessControlShaderFiles,
+        const size_t cntTessControlShaderFiles,
         const char **tessEvalShaderFiles,
-        const SIZE_T cntTessEvalShaderFiles,
+        const size_t cntTessEvalShaderFiles,
         const char **geometryShaderFiles,
-        const SIZE_T cntGeometryShaderFiles,
+        const size_t cntGeometryShaderFiles,
         const char **fragmentShaderFiles,
-        const SIZE_T cntFragmentShaderFiles,
+        const size_t cntFragmentShaderFiles,
         bool insertLineDirective) {
 
     // using arrays for automatic cleanup when a 'read' throws an exception
@@ -200,35 +200,35 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
     Array<StringA> geometryShaderSrcs(cntGeometryShaderFiles);
     Array<StringA> fragmentShaderSrcs(cntFragmentShaderFiles);
 
-    for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
+    for(size_t i = 0; i < cntVertexShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(vertexShaderSrcs[i], 
                 vertexShaderFiles[i])) {
             return false;
         }
     }
 
-    for(SIZE_T i = 0; i < cntTessControlShaderFiles; i++) {
+    for(size_t i = 0; i < cntTessControlShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(tessControlShaderSrcs[i], 
                 tessControlShaderFiles[i])) {
             return false;
         }
     }
 
-    for(SIZE_T i = 0; i < cntTessEvalShaderFiles; i++) {
+    for(size_t i = 0; i < cntTessEvalShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(tessEvalShaderSrcs[i], 
                 tessEvalShaderFiles[i])) {
             return false;
         }
     }
 
-    for(SIZE_T i = 0; i < cntGeometryShaderFiles; i++) {
+    for(size_t i = 0; i < cntGeometryShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(geometryShaderSrcs[i], 
                 geometryShaderFiles[i])) {
             return false;
         }
     }
 
-    for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
+    for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(fragmentShaderSrcs[i], 
                 fragmentShaderFiles[i])) {
             return false;
@@ -247,19 +247,19 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
         = new const char*[cntFragmentShaderFiles];
 
     try {
-        for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
+        for(size_t i = 0; i < cntVertexShaderFiles; i++) {
             vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].PeekBuffer();
         }
-        for(SIZE_T i = 0; i < cntTessControlShaderFiles; i++) {
+        for(size_t i = 0; i < cntTessControlShaderFiles; i++) {
             tessControlShaderSrcPtrs[i] = tessControlShaderSrcs[i].PeekBuffer();
         }
-        for(SIZE_T i = 0; i < cntTessEvalShaderFiles; i++) {
+        for(size_t i = 0; i < cntTessEvalShaderFiles; i++) {
             tessEvalShaderSrcPtrs[i] = tessEvalShaderSrcs[i].PeekBuffer();
         }
-        for(SIZE_T i = 0; i < cntGeometryShaderFiles; i++) {
+        for(size_t i = 0; i < cntGeometryShaderFiles; i++) {
             geometryShaderSrcPtrs[i] = geometryShaderSrcs[i].PeekBuffer();
         }
-        for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
+        for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
             fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].PeekBuffer();
         }
 

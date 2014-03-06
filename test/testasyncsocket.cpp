@@ -69,7 +69,7 @@ DWORD Sender::Run(void *userData) {
             std::cout << "EndSend #" << i << std::endl;
             UNLOCK_COUT;
             AssertEqual("Sent sufficient data", socket.EndSend(&ctx),
-                static_cast<SIZE_T>(sizeof(UINT_PTR)));
+                static_cast<size_t>(sizeof(UINT_PTR)));
         }
 
         AssertNoException("socket.Shutdown", socket.Shutdown());
@@ -137,7 +137,7 @@ DWORD Receiver::Run(void *userData) {
             std::cout << "EndReceive #" << i << std::endl;
             UNLOCK_COUT;
             AssertEqual("Received sufficient data", socket.EndReceive(&ctx),
-                static_cast<SIZE_T>(sizeof(UINT_PTR)));
+                static_cast<size_t>(sizeof(UINT_PTR)));
         }
 
         AssertNoException("socket.Shutdown", socket.Shutdown());

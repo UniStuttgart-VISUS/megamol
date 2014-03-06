@@ -48,11 +48,11 @@ void vislib::RawStoragePool::Clear(void) {
 /*
  * vislib::RawStoragePool::RaiseAtLeast
  */
-vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const SIZE_T size) {
+vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const size_t size) {
     THE_STACK_TRACE;
     PooledRawStorage *bestFit = NULL;
     PooledRawStorage *firstUnused = NULL;
-    SIZE_T bestDist = SIZE_MAX;
+    size_t bestDist = SIZE_MAX;
     RawStorageList::Iterator it = this->storageList.GetIterator();
 
     while (it.HasNext()) {

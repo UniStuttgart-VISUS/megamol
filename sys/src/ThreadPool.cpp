@@ -43,8 +43,8 @@ vislib::sys::ThreadPool::~ThreadPool(void) {
 /*
  * vislib::sys::ThreadPool::AbortPendingUserWorkItems
  */
-SIZE_T vislib::sys::ThreadPool::AbortPendingUserWorkItems(void) {
-    SIZE_T retval = 0;
+size_t vislib::sys::ThreadPool::AbortPendingUserWorkItems(void) {
+    size_t retval = 0;
     AutoLock lock(this->lockQueue);
 
     SingleLinkedList<WorkItem>::Iterator it = this->queue.GetIterator();
@@ -54,7 +54,7 @@ SIZE_T vislib::sys::ThreadPool::AbortPendingUserWorkItems(void) {
         this->fireUserWorkItemAborted(workItem);
     }
 
-    for (SIZE_T i = 0; i < retval; i++) {
+    for (size_t i = 0; i < retval; i++) {
         this->queue.RemoveFirst();
     }
 
@@ -79,7 +79,7 @@ void vislib::sys::ThreadPool::AddListener(ThreadPoolListener *listener) {
 /*
  * vislib::sys::ThreadPool::GetActiveThreads
  */
-SIZE_T vislib::sys::ThreadPool::GetActiveThreads(void) const {
+size_t vislib::sys::ThreadPool::GetActiveThreads(void) const {
     AutoLock lock(this->lockThreadCounters);
     return this->cntActiveThreads;
 }
@@ -88,7 +88,7 @@ SIZE_T vislib::sys::ThreadPool::GetActiveThreads(void) const {
 /*
  * vislib::sys::ThreadPool::GetAvailableThreads
  */
-SIZE_T vislib::sys::ThreadPool::GetAvailableThreads(void) const {
+size_t vislib::sys::ThreadPool::GetAvailableThreads(void) const {
     AutoLock lock(this->lockThreadCounters);
     return (this->cntTotalThreads - this->cntActiveThreads);
 }
@@ -97,7 +97,7 @@ SIZE_T vislib::sys::ThreadPool::GetAvailableThreads(void) const {
 /*
  * vislib::sys::ThreadPool::GetTotalThreads
  */
-SIZE_T vislib::sys::ThreadPool::GetTotalThreads(void) const {
+size_t vislib::sys::ThreadPool::GetTotalThreads(void) const {
     AutoLock lock(this->lockThreadCounters);
     return (this->cntTotalThreads);
 }
@@ -106,7 +106,7 @@ SIZE_T vislib::sys::ThreadPool::GetTotalThreads(void) const {
 /*
  * vislib::sys::ThreadPool::CountUserWorkItems
  */
-SIZE_T vislib::sys::ThreadPool::CountUserWorkItems(void) const {
+size_t vislib::sys::ThreadPool::CountUserWorkItems(void) const {
     AutoLock lock(this->lockQueue);
     return this->queue.Count();
 }
@@ -156,7 +156,7 @@ void vislib::sys::ThreadPool::RemoveListener(ThreadPoolListener *listener) {
 /*
  * vislib::sys::ThreadPool::SetThreadCount
  */
-void vislib::sys::ThreadPool::SetThreadCount(const SIZE_T threadCount) {
+void vislib::sys::ThreadPool::SetThreadCount(const size_t threadCount) {
     AutoLock lock(this->lockThreadCounters);
 
     if (threadCount < this->cntTotalThreads) {
@@ -194,7 +194,7 @@ void vislib::sys::ThreadPool::Terminate(const bool abortPending) {
         THE_ASSERT(!this->semBlockWorker.TryLock());
 
         this->evtAllCompleted.Reset();
-        for (SIZE_T i = 0; i < this->cntTotalThreads; i++) {
+        for (size_t i = 0; i < this->cntTotalThreads; i++) {
             this->semBlockWorker.Unlock();
         }
 

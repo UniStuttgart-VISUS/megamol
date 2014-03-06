@@ -170,7 +170,7 @@ namespace net {
          */
         inline void setDgramParams(AsyncSocket *socket, 
                 const IPEndPoint *dgramAddr, const void *data, 
-                const SIZE_T cntData, const INT flags, const INT timeout) {
+                const size_t cntData, const int flags, const int timeout) {
             THE_STACK_TRACE;
             THE_ASSERT(dgramAddr != NULL);
             this->socket = socket;
@@ -191,7 +191,7 @@ namespace net {
          * @param flags     Socket flags.
          * @param timeout   Timeout for the operation.         */
         inline void setStreamParams(AsyncSocket *socket, const void *data, 
-                const SIZE_T cntData, const INT flags, const INT timeout) {
+                const size_t cntData, const int flags, const int timeout) {
             THE_STACK_TRACE;
             this->socket = socket;
             this->dgramAddrOrg = NULL;
@@ -208,7 +208,7 @@ namespace net {
          * @param data      Pointer to the data buffer.
          * @param cntData   Size of the data buffer.
          */
-        inline void setWsaParams(const void *data, const SIZE_T cntData) {
+        inline void setWsaParams(const void *data, const size_t cntData) {
             THE_STACK_TRACE;
             wsaBuf.buf = static_cast<char *>(const_cast<void *>(data));
             wsaBuf.len = static_cast<u_long>(cntData);
@@ -285,13 +285,13 @@ namespace net {
          * Passes the socket flags from AsyncSocket::BeginSend() or 
          * AsyncSocket::BeginReceive() to the worker thread.
          */
-        INT flags;
+        int flags;
 
         /** 
          * Passes the timeout from AsyncSocket::BeginSend() or 
          * AsyncSocket::BeginReceive() to the worker thread.
          */
-        INT timeout;
+        int timeout;
 
 #else /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
         /** 

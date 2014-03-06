@@ -42,7 +42,7 @@ void MyListener::OnNodeFound(const vislib::net::ClusterDiscoveryService& src,
         << src.GetName().PeekBuffer() << "\"" << std::endl;
 
     std::cout << "Now I know ";
-    for (SIZE_T i = 0; i < src.CountPeers(); i++) {
+    for (size_t i = 0; i < src.CountPeers(); i++) {
         std::cout << std::endl << " " << src[i].ToStringA().PeekBuffer();
     }
     std::cout << std::endl;
@@ -88,7 +88,7 @@ static void runCDS(const bool observer) {
     using namespace vislib::net;
     using namespace vislib::sys;
 
-    UINT oldLevel = the::trace::get_instance().get_default_level();
+    unsigned int oldLevel = the::trace::get_instance().get_default_level();
     //Trace::GetInstance().SetLevel(THE_TRCLVL_ERROR);
 
     MyListener myListener;

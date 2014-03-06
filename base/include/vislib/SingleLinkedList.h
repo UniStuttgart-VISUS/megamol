@@ -172,7 +172,7 @@ namespace vislib {
          *
          * @return Number of items in the collection.
          */
-        virtual SIZE_T Count(void) const;
+        virtual size_t Count(void) const;
 
         /**
          * Answer a pointer to the first copy of 'element' in the collection. 
@@ -612,7 +612,7 @@ namespace vislib {
      * SingleLinkedList<T, L>::Count 
      */
     template<class T, class L>
-    SIZE_T SingleLinkedList<T, L>::Count(void) const {
+    size_t SingleLinkedList<T, L>::Count(void) const {
         unsigned int c = 0;
         this->Lock();
         Item *i = this->first;
@@ -1124,7 +1124,7 @@ namespace vislib {
         /*/
 
         // sequential implementation with A LOT of temporary memory
-        SIZE_T cnt = this->Count();
+        size_t cnt = this->Count();
         THE_ASSERT(cnt > 1);
         if (cnt % 2) cnt++;
         cnt /= 2;

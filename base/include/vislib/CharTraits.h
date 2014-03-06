@@ -143,8 +143,8 @@ namespace vislib {
          * @return The number of characters, not including the terminating zero,
          *         in case of success, 0 otherwise.
          */
-        inline static INT StringFromResource(HINSTANCE hInst, const UINT id, 
-                char *outStr, const INT cntStr) {
+        inline static int StringFromResource(HINSTANCE hInst, const unsigned int id, 
+                char *outStr, const int cntStr) {
             return ::LoadStringA(hInst, id, outStr, cntStr);
         }
 
@@ -159,8 +159,8 @@ namespace vislib {
          * @return The number of characters, not including the terminating zero,
          *         in case of success, 0 otherwise.
          */
-        inline static INT StringFromResource(HINSTANCE hInst, const UINT id, 
-                wchar_t *outStr, const INT cntStr) {
+        inline static int StringFromResource(HINSTANCE hInst, const unsigned int id, 
+                wchar_t *outStr, const int cntStr) {
             return ::LoadStringW(hInst, id, outStr, cntStr);
         }
 #endif /* _WIN32 */
@@ -426,7 +426,7 @@ namespace vislib {
          * @throw FormatException if the string could not be parsed to an
          *        integer value.
          */
-        static INT64 ParseInt64(const Char *str);
+        static int64_t ParseInt64(const Char *str);
 
         /**
          * Converts the string str to the returned 64 bit unsigned integer 
@@ -440,7 +440,7 @@ namespace vislib {
          * @throw FormatException if the string could not be parsed to an
          *        integer value.
          */
-        static UINT64 ParseUInt64(const Char *str);
+        static uint64_t ParseUInt64(const Char *str);
 
         /**
          * Convert 'src' to an ANSI character.
@@ -814,7 +814,7 @@ namespace vislib {
          * @throw FormatException if the string could not be parsed to an
          *        integer value.
          */
-        static INT64 ParseInt64(const Char *str);
+        static int64_t ParseInt64(const Char *str);
 
         /**
          * Converts the string str to the returned 64 bit unsigned integer 
@@ -828,7 +828,7 @@ namespace vislib {
          * @throw FormatException if the string could not be parsed to an
          *        integer value.
          */
-        static UINT64 ParseUInt64(const Char *str);
+        static uint64_t ParseUInt64(const Char *str);
 
         /**
          * Convert 'src' to an ANSI character.

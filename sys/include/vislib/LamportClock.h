@@ -55,7 +55,7 @@ namespace sys {
          *
          * @return The current value of the counter.
          */
-        inline UINT64 GetValue(void) const {
+        inline uint64_t GetValue(void) const {
             AutoLock l(this->lock);
             return this->value;
         }
@@ -66,7 +66,7 @@ namespace sys {
          *
          * @return The new value of the counter.
          */
-        UINT64 StepLocal(void);
+        uint64_t StepLocal(void);
 
         /**
          * Tells the clock that a message with timestamp 'timestamp' was 
@@ -76,7 +76,7 @@ namespace sys {
          *
          * @return The new value of the counter.
          */
-        UINT64 StepReceive(UINT64 timestamp);
+        uint64_t StepReceive(uint64_t timestamp);
 
         /**
          * Tells the clock to make a local step, i. e. increment the counter
@@ -84,7 +84,7 @@ namespace sys {
          *
          * @return The old value of the counter.
          */
-        UINT64 operator ++(int);
+        uint64_t operator ++(int);
 
         /**
          * Tells the clock to make a local step, i. e. increment the counter 
@@ -92,7 +92,7 @@ namespace sys {
          *
          * @return The new value of the counter.
          */
-        inline UINT64 operator ++(void) {
+        inline uint64_t operator ++(void) {
             return this->StepLocal();
         }
 
@@ -101,7 +101,7 @@ namespace sys {
          *
          * @return The current value of the counter.
          */
-        UINT64 operator *(void) const {
+        uint64_t operator *(void) const {
             return this->GetValue();
         }
 
@@ -129,7 +129,7 @@ namespace sys {
         mutable CriticalSection lock;
 
         /** The value of counter. */
-        UINT64 value;
+        uint64_t value;
 
     };
     

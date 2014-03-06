@@ -36,7 +36,7 @@ vislib::graphics::PpmBitmapCodec::~PpmBitmapCodec(void) {
  * vislib::graphics::PpmBitmapCodec::AutoDetect
  */
 int vislib::graphics::PpmBitmapCodec::AutoDetect(const void *mem,
-        SIZE_T size) const {
+        size_t size) const {
     if (size < 3) return -1; // insufficient preview data
     const char *data = static_cast<const char*>(mem);
     if ((data[0] != 'p') && (data[0] != 'P')) return 0; // wrong magic number
@@ -90,10 +90,10 @@ const wchar_t * vislib::graphics::PpmBitmapCodec::NameW(void) const {
 /*
  * vislib::graphics::PpmBitmapCodec::loadFromMemory
  */
-bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
+bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, size_t size) {
     BitmapImage& img = this->image();
     const char *cd = static_cast<const char*>(mem);
-    SIZE_T p1, p2;
+    size_t p1, p2;
     unsigned int w, h, v;
     vislib::StringA tmp;
     float f, fac;
@@ -287,7 +287,7 @@ bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
     unsigned int maxVal = 255;
     const BYTE *bd = img.PeekDataAs<BYTE>();
     const WORD *wd = NULL;
-    SIZE_T headLen;
+    size_t headLen;
     unsigned int imgSize = img.Width() * img.Height();
 
     for (unsigned int i = 0; i < cc; i++) {
@@ -340,8 +340,8 @@ bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
         data.Format("P%c\n%u %u\n%f\n", img.GetChannelCount() == 1 ? 'f' : 'F', img.Width(), img.Height(), 
             machineEnd == sys::SystemInformation::ENDIANNESS_BIG_ENDIAN ? 1.0f : -1.0f);
 
-        SIZE_T imgLen = img.GetChannelCount() * img.Width() * img.Height() * sizeof(float);
-        SIZE_T bodyLen = data.Length() + imgLen;
+        size_t imgLen = img.GetChannelCount() * img.Width() * img.Height() * sizeof(float);
+        size_t bodyLen = data.Length() + imgLen;
         outmem.EnforceSize(bodyLen);
         memcpy(outmem, data.PeekBuffer(), data.Length());
         memcpy(outmem.At(data.Length()), img.PeekDataAs<UINT8>(), imgLen);
@@ -396,7 +396,7 @@ bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
             }
         } else return false; // internal format error
 
-        SIZE_T bodyLen = data.Length();
+        size_t bodyLen = data.Length();
         outmem.AssertSize(headLen + bodyLen, true);
         memcpy(outmem.At(headLen), data.PeekBuffer(), bodyLen);
     }

@@ -46,14 +46,14 @@ DWORD vislib::sys::SystemInformation::AllocationGranularity(void) {
 /*
  * vislib::sys::SystemInformation::AvailableMemorySize
  */
-UINT64 vislib::sys::SystemInformation::AvailableMemorySize(void) {
+uint64_t vislib::sys::SystemInformation::AvailableMemorySize(void) {
 #ifdef _WIN32
     /*
      * It's necessary to call the ex version to get information on machines 
      * with more then 4 GB ram. However, staticly linking would restrict the
      * vislib to windowsXP pro and newer, which is a to hard restrict.
      */
-    UINT64 retval = 0;
+    uint64_t retval = 0;
     DynamicFunctionPointer<BOOL (WINAPI*)(MEMORYSTATUSEX *)> gmsEx("kernel32", "GlobalMemoryStatusEx");
 
     if (gmsEx.IsValid()) {
@@ -84,10 +84,10 @@ UINT64 vislib::sys::SystemInformation::AvailableMemorySize(void) {
 
     if (sizeof(info._f) != (sizeof(char) * (20 - 2 * sizeof(long) - sizeof(int)))) {
         /* a fucking old kernel is used */
-        return static_cast<UINT64>(info.freeram);
+        return static_cast<uint64_t>(info.freeram);
     }
-    return static_cast<UINT64>(info.freeram) 
-        * static_cast<UINT64>(info.mem_unit);
+    return static_cast<uint64_t>(info.freeram) 
+        * static_cast<uint64_t>(info.mem_unit);
 
 #endif /* _WIN32 */
 }
@@ -243,14 +243,14 @@ DWORD vislib::sys::SystemInformation::PageSize(void) {
 /*
  * vislib::sys::SystemInformation::PhysicalMemorySize
  */
-UINT64 vislib::sys::SystemInformation::PhysicalMemorySize(void) {
+uint64_t vislib::sys::SystemInformation::PhysicalMemorySize(void) {
 #ifdef _WIN32
     /*
      * It's necessary to call the ex version to get information on machines 
      * with more then 4 GB ram. However, staticly linking would restrict the
      * vislib to windowsXP pro and newer, which is a to hard restrict.
      */
-    UINT64 retval = 0;
+    uint64_t retval = 0;
     DynamicFunctionPointer<BOOL (WINAPI*)(MEMORYSTATUSEX *)> gmsEx("kernel32", "GlobalMemoryStatusEx");
 
     if (gmsEx.IsValid()) {
@@ -281,10 +281,10 @@ UINT64 vislib::sys::SystemInformation::PhysicalMemorySize(void) {
 
     if (sizeof(info._f) != (sizeof(char) * (20 - 2 * sizeof(long) - sizeof(int)))) {
         /* a fucking old kernel is used */
-        return static_cast<UINT64>(info.totalram);
+        return static_cast<uint64_t>(info.totalram);
     }
-    return static_cast<UINT64>(info.totalram) 
-        * static_cast<UINT64>(info.mem_unit);
+    return static_cast<uint64_t>(info.totalram) 
+        * static_cast<uint64_t>(info.mem_unit);
 
 #endif /* _WIN32 */
 }
@@ -603,7 +603,7 @@ vislib::sys::SystemInformation::VirtualScreen(void) {
     MonitorRectArray monitors;
     SystemInformation::MonitorRects(monitors);
 
-    for (SIZE_T i = 0; i < monitors.Count(); i++) {
+    for (size_t i = 0; i < monitors.Count(); i++) {
         const MonitorRect& monitor = monitors[i];
         if (monitor.Left() < retval.Left()) {
             retval.SetLeft(monitor.Left());

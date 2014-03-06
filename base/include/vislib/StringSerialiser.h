@@ -153,22 +153,22 @@ namespace vislib {
             outValue = static_cast<UINT32>(T::ParseUInt64(this->value(name)));
         }
 
-        virtual void Deserialise(INT64& outValue, 
+        virtual void Deserialise(int64_t& outValue, 
                 const char *name = NULL) {
             outValue = T::ParseInt64(this->value(name));
         }
 
-        virtual void Deserialise(INT64& outValue, 
+        virtual void Deserialise(int64_t& outValue, 
                 const wchar_t *name) {
             outValue = T::ParseInt64(this->value(name));
         }
 
-        virtual void Deserialise(UINT64& outValue, 
+        virtual void Deserialise(uint64_t& outValue, 
                 const char *name = NULL) {
             outValue = T::ParseUInt64(this->value(name));
         }
 
-        virtual void Deserialise(UINT64& outValue, 
+        virtual void Deserialise(uint64_t& outValue, 
                 const wchar_t *name) {
             outValue = T::ParseUInt64(this->value(name));
         }
@@ -301,28 +301,28 @@ namespace vislib {
             this->Serialise(s, name);
         }
 
-        virtual void Serialise(const INT64 value,
+        virtual void Serialise(const int64_t value,
                 const char *name = NULL) {
             vislib::StringA s;
             s.Format("%" _I64_PRINTF "d", value);
             this->Serialise(s, name);
         }
 
-        virtual void Serialise(const INT64 value,
+        virtual void Serialise(const int64_t value,
                 const wchar_t *name) {
             vislib::StringA s;
             s.Format("%" _I64_PRINTF "d", value);
             this->Serialise(s, name);
         }
 
-        virtual void Serialise(const UINT64 value,
+        virtual void Serialise(const uint64_t value,
                 const char *name = NULL) {
             vislib::StringA s;
             s.Format("%" _I64_PRINTF "u", value);
             this->Serialise(s, name);
         }
 
-        virtual void Serialise(const UINT64 value,
+        virtual void Serialise(const uint64_t value,
                 const wchar_t *name) {
             vislib::StringA s;
             s.Format("%" _I64_PRINTF "u", value);

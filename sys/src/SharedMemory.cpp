@@ -144,7 +144,7 @@ void vislib::sys::SharedMemory::Open(const char *name, const AccessMode accessMo
     }
 
     this->mapping = ::MapViewOfFile(this->hSharedMem, access, 0, 0, 
-        static_cast<SIZE_T>(size));
+        static_cast<size_t>(size));
     if (this->mapping == NULL) {
         throw SystemException(__FILE__, __LINE__);
     }
@@ -242,7 +242,7 @@ void vislib::sys::SharedMemory::Open(const wchar_t *name, const AccessMode acces
     }
 
     this->mapping = ::MapViewOfFile(this->hSharedMem, access, 0, 0, 
-        static_cast<SIZE_T>(size));
+        static_cast<size_t>(size));
     if (this->mapping == NULL) {
         throw SystemException(__FILE__, __LINE__);
     }

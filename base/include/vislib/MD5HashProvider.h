@@ -61,7 +61,7 @@ namespace vislib {
          *
          * @throws IllegalStateException If the hash has not been initialised.
          */
-        virtual void TransformBlock(const BYTE *input, const SIZE_T cntInput);
+        virtual void TransformBlock(const BYTE *input, const size_t cntInput);
 
         /**
          * Update the hash with a new block of 'cntInput' bytes and compute the
@@ -81,8 +81,8 @@ namespace vislib {
          *
          * @throws IllegalStateException If the hash has not been initialised.
          */
-        virtual bool TransformFinalBlock(BYTE *outHash, SIZE_T& inOutSize,
-            const BYTE *input, const SIZE_T cntInput);
+        virtual bool TransformFinalBlock(BYTE *outHash, size_t& inOutSize,
+            const BYTE *input, const size_t cntInput);
 
     private:
 
@@ -100,7 +100,7 @@ namespace vislib {
          * @param input  The stream to decode.
          * @param len    The number of elements in 'input'.
          */
-        static void decode(UINT32 *output, const BYTE *input, const UINT len);
+        static void decode(UINT32 *output, const BYTE *input, const unsigned int len);
 
         /**
          * Encodes 'input' into 'output'. Assumes 'len' is a multiple of 4.
@@ -109,7 +109,7 @@ namespace vislib {
          * @param input  The stream to decode.
          * @param len    The number of elements in 'input'.
          */
-        static void encode(BYTE *output, const UINT32 *input, const UINT len);
+        static void encode(BYTE *output, const UINT32 *input, const unsigned int len);
 
         /**
          * MD5 finalization. Ends an MD5 message-digest operation, writing the
@@ -139,10 +139,10 @@ namespace vislib {
          * @param cntInput The size of the input in bytes.
          */
         static void update(MD5_CTX *context, const BYTE *input, 
-            const SIZE_T cntInput);
+            const size_t cntInput);
 
         /** The size of the MD5 hash in bytes. */
-        static const SIZE_T HASH_SIZE;
+        static const size_t HASH_SIZE;
 
         /**
          * Forbidden assignemt operator.

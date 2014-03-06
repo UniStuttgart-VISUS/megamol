@@ -97,7 +97,7 @@ namespace gl {
          * @return GL_NO_ERROR in case of success, an OpenGL error code 
          *         otherwise.
          */
-        GLenum Create(const UINT width, const UINT height, 
+        GLenum Create(const unsigned int width, const unsigned int height, 
             const void *pixels = NULL, 
             const GLenum format = GL_RGBA, const GLenum type = GL_UNSIGNED_BYTE,
             const GLint internalFormat = GL_RGBA, const GLint border = 0);
@@ -135,7 +135,7 @@ namespace gl {
          * @return GL_NO_ERROR in case of success, an OpenGL error code 
          *         otherwise.
          */
-        GLenum Create(const UINT width, const UINT height, 
+        GLenum Create(const unsigned int width, const unsigned int height, 
             const bool forcePowerOfTwo, const void *pixels = NULL,
             const GLenum format = GL_RGBA, const GLenum type = GL_UNSIGNED_BYTE,
             const GLint internalFormat = GL_RGBA, const GLint border = 0);
@@ -168,9 +168,9 @@ namespace gl {
          * @return GL_NO_ERROR in case of success, an OpenGL error code 
          *         otherwise.
          */
-        GLenum Update(const void *pixels, const UINT width, const UINT height,
+        GLenum Update(const void *pixels, const unsigned int width, const unsigned int height,
             const GLenum format = GL_RGBA, const GLenum type = GL_UNSIGNED_BYTE,
-            const UINT offsetX = 0, const UINT offsetY = 0, 
+            const unsigned int offsetX = 0, const unsigned int offsetY = 0, 
             const GLint level = 0, const bool resetBind = false);
 
     protected:

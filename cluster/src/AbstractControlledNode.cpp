@@ -38,8 +38,8 @@ vislib::net::cluster::AbstractControlledNode::AbstractControlledNode(void)
  * vislib::net::cluster::AbstractControlledNode::onMessageReceived
  */
 bool vislib::net::cluster::AbstractControlledNode::onMessageReceived(
-        const Socket& src, const UINT msgId, const BYTE *body, 
-        const SIZE_T cntBody) {
+        const Socket& src, const unsigned int msgId, const BYTE *body, 
+        const size_t cntBody) {
 #define SET_AS_INTEGRAL_PARAM(type, name)                                      \
     this->parameters->Set##name(*reinterpret_cast<const type *>(body))
 #define SET_AS_SHALLOW_PARAM(type, space, name) {                              \

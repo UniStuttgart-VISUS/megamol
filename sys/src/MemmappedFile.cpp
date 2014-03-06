@@ -89,7 +89,7 @@ inline char* vislib::sys::MemmappedFile::SafeMapView() {
 	if (this->mapping == NULL || this->mapping == INVALID_HANDLE_VALUE) {
 		throw IllegalStateException("SafeMapView while mapping invalid", __FILE__, __LINE__);
 	}
-	SIZE_T vs = static_cast <SIZE_T>(this->AdjustedViewSize(this->filePos));
+	size_t vs = static_cast <size_t>(this->AdjustedViewSize(this->filePos));
 	switch(this->access) {
 		case READ_ONLY:
 			da = FILE_MAP_READ;

@@ -211,7 +211,7 @@ namespace vislib {
             Map<K, V>* owner;
 
             /** The next index */
-            SIZE_T idx;
+            size_t idx;
 
             /** The returned value */
             ElementPair retval;
@@ -253,7 +253,7 @@ namespace vislib {
          *
          * @return The number of entries in the map.
          */
-        virtual SIZE_T Count(void) const;
+        virtual size_t Count(void) const;
 
         /**
          * Finds all keys which are associated to a given value. The order of
@@ -356,7 +356,7 @@ namespace vislib {
             this->keys.Append(key);
             this->values.Append(value);
         } else {
-            this->values[static_cast<SIZE_T>(idx)] = value;
+            this->values[static_cast<size_t>(idx)] = value;
         }
     }
 
@@ -381,7 +381,7 @@ namespace vislib {
     /*
      * vislib::Map::Count
      */
-    template<class K, class V> SIZE_T Map<K, V>::Count(void) const {
+    template<class K, class V> size_t Map<K, V>::Count(void) const {
         return this->keys.Count();
     }
 
@@ -392,8 +392,8 @@ namespace vislib {
     template<class K, class V> 
     SingleLinkedList<K> Map<K, V>::FindKeys(const V &value) const {
         SingleLinkedList<K> retval;
-        SIZE_T len = static_cast<SIZE_T>(this->values.Count());
-        for (SIZE_T i = 0; i < len; i++) {
+        size_t len = static_cast<size_t>(this->values.Count());
+        for (size_t i = 0; i < len; i++) {
             if (this->values[i] == value) {
                 retval.Append(this->keys[i]);
             }
@@ -411,7 +411,7 @@ namespace vislib {
         if (idx == Array<K>::INVALID_POS) {
             return NULL;
         } else {
-            return &this->values[static_cast<SIZE_T>(idx)];
+            return &this->values[static_cast<size_t>(idx)];
         }
     }
 
@@ -424,7 +424,7 @@ namespace vislib {
         if (idx == Array<K>::INVALID_POS) {
             return NULL;
         } else {
-            return &this->values[static_cast<SIZE_T>(idx)];
+            return &this->values[static_cast<size_t>(idx)];
         }
     }
 

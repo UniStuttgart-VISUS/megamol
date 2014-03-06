@@ -54,7 +54,7 @@ namespace net {
     public:
 
         /** Constant for specifying an infinite timeout. */
-        static const UINT TIMEOUT_INFINITE;
+        static const unsigned int TIMEOUT_INFINITE;
 
         /**
          * Terminate the open connection if any and reset the communication
@@ -123,8 +123,8 @@ namespace net {
          * @throws Exception Or any derived exception depending on the 
          *                   underlying layer in case of an error.
          */
-        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
-            const UINT timeout = TIMEOUT_INFINITE, 
+        virtual size_t Receive(void *outData, const size_t cntBytes,
+            const unsigned int timeout = TIMEOUT_INFINITE, 
             const bool forceReceive = true) = 0;
 
         /**
@@ -148,8 +148,8 @@ namespace net {
          * @throws Exception Or any derived exception depending on the 
          *                   underlying layer in case of an error.
          */
-        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes,
-            const UINT timeout = TIMEOUT_INFINITE, 
+        virtual size_t Send(const void *data, const size_t cntBytes,
+            const unsigned int timeout = TIMEOUT_INFINITE, 
             const bool forceSend = true) = 0;
 
     protected:

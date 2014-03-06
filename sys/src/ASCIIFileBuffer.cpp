@@ -172,7 +172,7 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
     if (elements == PARSING_DEFAULT) {
         elements = this->defElements;
     }
-    SIZE_T l = static_cast<SIZE_T>(file.GetSize());
+    size_t l = static_cast<size_t>(file.GetSize());
     file.SeekToBegin();
 
     this->Clear();
@@ -184,7 +184,7 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
         throw vislib::Exception("Cannot allocate memory to store file",
             __FILE__, __LINE__);
     }
-    SIZE_T rl = static_cast<SIZE_T>(file.Read(this->buffer, l));
+    size_t rl = static_cast<size_t>(file.Read(this->buffer, l));
     if (rl != l) {
         if (rl == 0) {
             return false; // cannot read from file; "file.read" should have

@@ -37,8 +37,8 @@ vislib::net::AsyncSocket::~AsyncSocket(void) {
  * vislib::net::AsyncSocket::BeginReceive
  */
 void vislib::net::AsyncSocket::BeginReceive(void *outData, 
-        const SIZE_T cntBytes, AsyncSocketContext *context, const INT timeout, 
-        const INT flags) {
+        const size_t cntBytes, AsyncSocketContext *context, const int timeout, 
+        const int flags) {
     THE_STACK_TRACE;
 
     /* Sanity checks. */
@@ -75,8 +75,8 @@ void vislib::net::AsyncSocket::BeginReceive(void *outData,
  * vislib::net::AsyncSocket::BeginReceive
  */
 void vislib::net::AsyncSocket::BeginReceive(IPEndPoint *outFromAddr, 
-        void *outData, const SIZE_T cntBytes, AsyncSocketContext *context, 
-        const INT timeout, const INT flags) {
+        void *outData, const size_t cntBytes, AsyncSocketContext *context, 
+        const int timeout, const int flags) {
     THE_STACK_TRACE;
 
     /* Sanity checks. */
@@ -91,7 +91,7 @@ void vislib::net::AsyncSocket::BeginReceive(IPEndPoint *outFromAddr,
     DWORD errorCode = 0;        // WSA error during last operation.
     DWORD cntReceived = 0;      // Receives # of received bytes.
     DWORD inOutFlags = flags;   // Flags for WSA.
-    INT fromLen = sizeof(struct sockaddr_storage);
+    int fromLen = sizeof(struct sockaddr_storage);
 
     context->setWsaParams(outData, cntBytes);
 
@@ -118,8 +118,8 @@ void vislib::net::AsyncSocket::BeginReceive(IPEndPoint *outFromAddr,
  * vislib::net::AsyncSocket::BeginSend
  */
 void vislib::net::AsyncSocket::BeginSend(const void *data, 
-        const SIZE_T cntBytes, AsyncSocketContext *context, const INT timeout,
-        const INT flags) {
+        const size_t cntBytes, AsyncSocketContext *context, const int timeout,
+        const int flags) {
     THE_STACK_TRACE;
 
     /* Sanity checks. */
@@ -154,8 +154,8 @@ void vislib::net::AsyncSocket::BeginSend(const void *data,
  * vislib::net::AsyncSocket::BeginSend
  */
 void vislib::net::AsyncSocket::BeginSend(const IPEndPoint& toAddr, 
-        const void *data, const SIZE_T cntBytes, AsyncSocketContext *context,
-        const INT timeout, const INT flags) {
+        const void *data, const size_t cntBytes, AsyncSocketContext *context,
+        const int timeout, const int flags) {
     THE_STACK_TRACE;
 
     /* Sanity checks. */
@@ -166,7 +166,7 @@ void vislib::net::AsyncSocket::BeginSend(const IPEndPoint& toAddr,
 #if (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
     DWORD errorCode = 0;        // WSA error during last operation.
     DWORD cntSent = 0;          // Receives # of sent bytes.
-    INT toLen = sizeof(struct sockaddr_storage);
+    int toLen = sizeof(struct sockaddr_storage);
 
     context->setWsaParams(data, cntBytes);
 
@@ -193,10 +193,10 @@ void vislib::net::AsyncSocket::BeginSend(const IPEndPoint& toAddr,
 /*
  * vislib::net::AsyncSocket::Receive
  */
-SIZE_T vislib::net::AsyncSocket::Receive(void *outData, const SIZE_T cntBytes,
-        const INT timeout, const INT flags, const bool forceReceive) {
+size_t vislib::net::AsyncSocket::Receive(void *outData, const size_t cntBytes,
+        const int timeout, const int flags, const bool forceReceive) {
     THE_STACK_TRACE;
-    SIZE_T retval = 0;
+    size_t retval = 0;
 
     this->lockRecv.Lock();
     try {
@@ -214,11 +214,11 @@ SIZE_T vislib::net::AsyncSocket::Receive(void *outData, const SIZE_T cntBytes,
 /*
  * vislib::net::AsyncSocket::Receive
  */
-SIZE_T vislib::net::AsyncSocket::Receive(IPEndPoint& outFromAddr, void *outData,
-        const SIZE_T cntBytes, const INT timeout, const INT flags, 
+size_t vislib::net::AsyncSocket::Receive(IPEndPoint& outFromAddr, void *outData,
+        const size_t cntBytes, const int timeout, const int flags, 
         const bool forceReceive) {
     THE_STACK_TRACE;
-    SIZE_T retval = 0;
+    size_t retval = 0;
 
     this->lockRecv.Lock();
     try {
@@ -237,11 +237,11 @@ SIZE_T vislib::net::AsyncSocket::Receive(IPEndPoint& outFromAddr, void *outData,
 /*
  * vislib::net::AsyncSocket::Receive
  */
-SIZE_T vislib::net::AsyncSocket::Receive(SocketAddress& outFromAddr, 
-        void *outData, const SIZE_T cntBytes, const INT timeout, 
-        const INT flags, const bool forceReceive) {
+size_t vislib::net::AsyncSocket::Receive(SocketAddress& outFromAddr, 
+        void *outData, const size_t cntBytes, const int timeout, 
+        const int flags, const bool forceReceive) {
     THE_STACK_TRACE;
-    SIZE_T retval = 0;
+    size_t retval = 0;
 
     this->lockRecv.Lock();
     try {
@@ -260,10 +260,10 @@ SIZE_T vislib::net::AsyncSocket::Receive(SocketAddress& outFromAddr,
 /*
  * vislib::net::AsyncSocket::Send
  */
-SIZE_T vislib::net::AsyncSocket::Send(const void *data, const SIZE_T cntBytes, 
-        const INT timeout, const INT flags, const bool forceSend) {
+size_t vislib::net::AsyncSocket::Send(const void *data, const size_t cntBytes, 
+        const int timeout, const int flags, const bool forceSend) {
     THE_STACK_TRACE;
-    SIZE_T retval = 0;
+    size_t retval = 0;
 
     this->lockSend.Lock();
     try {
@@ -281,11 +281,11 @@ SIZE_T vislib::net::AsyncSocket::Send(const void *data, const SIZE_T cntBytes,
 /*
  * vislib::net::AsyncSocket::Send
  */
-SIZE_T vislib::net::AsyncSocket::Send(const IPEndPoint& toAddr, const void *data, 
-        const SIZE_T cntBytes, const INT timeout, const INT flags, 
+size_t vislib::net::AsyncSocket::Send(const IPEndPoint& toAddr, const void *data, 
+        const size_t cntBytes, const int timeout, const int flags, 
         const bool forceSend) {
     THE_STACK_TRACE;
-    SIZE_T retval = 0;
+    size_t retval = 0;
 
     this->lockSend.Lock();
     try {
@@ -424,7 +424,7 @@ DWORD vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
 /*
  * vislib::net::AsyncSocket::endAsync
  */
-SIZE_T vislib::net::AsyncSocket::endAsync(AsyncSocketContext *context) {
+size_t vislib::net::AsyncSocket::endAsync(AsyncSocketContext *context) {
     THE_STACK_TRACE;
     DWORD retval = 0;
     DWORD flags = 0;
@@ -451,5 +451,5 @@ SIZE_T vislib::net::AsyncSocket::endAsync(AsyncSocketContext *context) {
     retval = static_cast<DWORD>(context->cntData);
 #endif /* (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 
-    return static_cast<SIZE_T>(retval);
+    return static_cast<size_t>(retval);
 }

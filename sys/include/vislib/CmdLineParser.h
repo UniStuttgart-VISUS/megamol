@@ -1922,7 +1922,7 @@ namespace sys {
             : formatter(withValues ? 3 : 2), output(NULL), withValues(withValues) {
         this->options = &opts;
         this->formatter.SetSeparator(vislib::String<T>(static_cast<Char>(' '), withValues ? 1 : 2));
-        UINT consoleWidth = vislib::sys::Console::GetWidth();
+        unsigned int consoleWidth = vislib::sys::Console::GetWidth();
         if (consoleWidth > 0) {
             this->formatter.SetMaxWidth(consoleWidth - 1);
         } else {

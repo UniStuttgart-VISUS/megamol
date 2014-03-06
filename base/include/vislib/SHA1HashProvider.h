@@ -59,7 +59,7 @@ namespace vislib {
          *
          * @throws IllegalStateException If the hash has not been initialised.
          */
-        virtual void TransformBlock(const BYTE *input, const SIZE_T cntInput);
+        virtual void TransformBlock(const BYTE *input, const size_t cntInput);
 
         /**
          * Update the hash with a new block of 'cntInput' bytes and compute the
@@ -79,13 +79,13 @@ namespace vislib {
          *
          * @throws IllegalStateException If the hash has not been initialised.
          */
-        virtual bool TransformFinalBlock(BYTE *outHash, SIZE_T& inOutSize,
-            const BYTE *input, const SIZE_T cntInput);
+        virtual bool TransformFinalBlock(BYTE *outHash, size_t& inOutSize,
+            const BYTE *input, const size_t cntInput);
 
     private:
 
         /** The size of the SHA-1 in bytes. */
-        static const SIZE_T HASH_SIZE = 20;
+        static const size_t HASH_SIZE = 20;
 
         /**
          * This structure will hold context information for the SHA-1
@@ -126,7 +126,7 @@ namespace vislib {
          *                               If the context was corrupted.
          */
         void input(SHA1Context *context, const BYTE *input, 
-            const UINT cntInput);
+            const unsigned int cntInput);
 
         /**
          * According to the standard, the message must be padded to an even

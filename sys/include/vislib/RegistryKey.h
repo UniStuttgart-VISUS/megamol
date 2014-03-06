@@ -244,7 +244,7 @@ namespace sys {
          * @return The error code
          */
         DWORD GetValue(const vislib::StringA& name, void* outData,
-            SIZE_T dataSize) const;
+            size_t dataSize) const;
 
         /**
          * Gets a value of type REGVAL_BINARY (or any other type)
@@ -256,7 +256,7 @@ namespace sys {
          * @return The error code
          */
         DWORD GetValue(const vislib::StringW& name, void* outData,
-            SIZE_T dataSize) const;
+            size_t dataSize) const;
 
         /**
          * Gets a value of type REGVAL_STRING or REGVAL_EXPAND_SZ
@@ -426,7 +426,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const vislib::StringA& name, UINT64& outVal) const;
+        DWORD GetValue(const vislib::StringA& name, uint64_t& outVal) const;
 
         /**
          * Gets a value of type REGVAL_DWORD or REGVAL_QWORD
@@ -436,7 +436,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const vislib::StringW& name, UINT64& outVal) const;
+        DWORD GetValue(const vislib::StringW& name, uint64_t& outVal) const;
 
         /**
          * Gets the size of the data of a value in bytes
@@ -445,7 +445,7 @@ namespace sys {
          *
          * @return The size of the data in bytes
          */
-        SIZE_T GetValueSize(const vislib::StringA& name) const;
+        size_t GetValueSize(const vislib::StringA& name) const;
 
         /**
          * Gets the size of the data of a value in bytes
@@ -454,7 +454,7 @@ namespace sys {
          *
          * @return The size of the data in bytes
          */
-        SIZE_T GetValueSize(const vislib::StringW& name) const;
+        size_t GetValueSize(const vislib::StringW& name) const;
 
         /**
          * Answer whether or not this object represents a valid key handle
@@ -534,7 +534,7 @@ namespace sys {
          * @return The error code
          */
         DWORD SetValue(const vislib::StringA& name, const void* data,
-            SIZE_T size);
+            size_t size);
 
         /**
          * Sets a value of this key of type 'REGVAL_BINARY'
@@ -546,7 +546,7 @@ namespace sys {
          * @return The error code
          */
         DWORD SetValue(const vislib::StringW& name, const void* data,
-            SIZE_T size);
+            size_t size);
 
         /**
          * Sets a value of this key of type 'REGVAL_STRING' or
@@ -744,7 +744,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const vislib::StringA& name, INT64 val);
+        DWORD SetValue(const vislib::StringA& name, int64_t val);
 
         /**
          * Sets a value of this key of type 'REGVAL_QWORD'
@@ -754,7 +754,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const vislib::StringW& name, INT64 val);
+        DWORD SetValue(const vislib::StringW& name, int64_t val);
 
         /**
          * Sets a value of this key of type 'REGVAL_QWORD'
@@ -764,7 +764,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const vislib::StringA& name, UINT64 val);
+        DWORD SetValue(const vislib::StringA& name, uint64_t val);
 
         /**
          * Sets a value of this key of type 'REGVAL_QWORD'
@@ -774,7 +774,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const vislib::StringW& name, UINT64 val);
+        DWORD SetValue(const vislib::StringW& name, uint64_t val);
 
         /**
          * Assignment operator. This will duplicate the key 'rhs' represents

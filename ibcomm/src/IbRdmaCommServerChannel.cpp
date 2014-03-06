@@ -19,8 +19,8 @@
  * vislib::net::ib::IbRdmaCommServerChannel::Create
  */
 vislib::SmartRef<vislib::net::ib::IbRdmaCommServerChannel> 
-vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBufRecv,
-        const SIZE_T cntBufSend) {
+vislib::net::ib::IbRdmaCommServerChannel::Create(const size_t cntBufRecv,
+        const size_t cntBufSend) {
     THE_STACK_TRACE;
     return SmartRef<IbRdmaCommServerChannel>(new IbRdmaCommServerChannel(
         cntBufRecv, cntBufSend), false);
@@ -31,7 +31,7 @@ vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBufRecv,
  * vislib::net::ib::IbRdmaCommServerChannel::Create
  */
 vislib::SmartRef<vislib::net::ib::IbRdmaCommServerChannel> 
-vislib::net::ib::IbRdmaCommServerChannel::Create(const SIZE_T cntBuf) {
+vislib::net::ib::IbRdmaCommServerChannel::Create(const size_t cntBuf) {
     THE_STACK_TRACE;
     return SmartRef<IbRdmaCommServerChannel>(new IbRdmaCommServerChannel(
         cntBuf, cntBuf), false);
@@ -56,7 +56,7 @@ vislib::net::ib::IbRdmaCommServerChannel::Accept(void) {
  */
 vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
 vislib::net::ib::IbRdmaCommServerChannel::Accept(BYTE *bufRecv, 
-        const SIZE_T cntBufRecv, BYTE *bufSend, const SIZE_T cntBufSend) {
+        const size_t cntBufRecv, BYTE *bufSend, const size_t cntBufSend) {
     THE_STACK_TRACE;
 
     int result = 0;                             // RDMA API results.
@@ -206,7 +206,7 @@ void vislib::net::ib::IbRdmaCommServerChannel::Listen(const int backlog) {
  * vislib::net::ib::IbRdmaCommServerChannel::IbRdmaCommServerChannel
  */
 vislib::net::ib::IbRdmaCommServerChannel::IbRdmaCommServerChannel(
-        const SIZE_T cntBufRecv, const SIZE_T cntBufSend) 
+        const size_t cntBufRecv, const size_t cntBufSend) 
         : Super(), cntBufRecv(cntBufRecv), cntBufSend(cntBufSend), id(NULL) {
     THE_STACK_TRACE;
 

@@ -58,7 +58,7 @@ private:
     unsigned int lensCount;
     Lens *lenses;
     float angle;
-    UINT64 lastTime;
+    uint64_t lastTime;
     float walkSpeed, rotSpeed;
     bool ortho;
     bool nativeFull;

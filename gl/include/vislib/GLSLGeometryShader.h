@@ -137,9 +137,9 @@ namespace gl {
          *                         fails.
          */
         virtual bool Compile(const char **vertexShaderSrc, 
-            const SIZE_T cntVertexShaderSrc, const char **geometryShaderSrc,
-            const SIZE_T cntGeometryShaderSrc, const char **fragmentShaderSrc,
-            const SIZE_T cntFragmentShaderSrc, 
+            const size_t cntVertexShaderSrc, const char **geometryShaderSrc,
+            const size_t cntGeometryShaderSrc, const char **fragmentShaderSrc,
+            const size_t cntFragmentShaderSrc, 
             bool insertLineDirective = true);
 
         /**
@@ -198,11 +198,11 @@ namespace gl {
          *                         file failed.
          */
         virtual bool CompileFromFile(const char **vertexShaderFiles,
-            const SIZE_T cntVertexShaderFiles,
+            const size_t cntVertexShaderFiles,
             const char **geometryShaderFiles,
-            const SIZE_T cntGeometryShaderFiles,
+            const size_t cntGeometryShaderFiles,
             const char **fragmentShaderFiles,
-            const SIZE_T cntFragmentShaderFiles,
+            const size_t cntFragmentShaderFiles,
             bool insertLineDirective = true);
 
         /**

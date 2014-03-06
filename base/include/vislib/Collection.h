@@ -89,7 +89,7 @@ namespace vislib {
          *
          * @return Number of items in the collection.
          */
-        virtual SIZE_T Count(void) const = 0;
+        virtual size_t Count(void) const = 0;
 
         /**
          * Answer a pointer to the first copy of 'element' in the collection. 

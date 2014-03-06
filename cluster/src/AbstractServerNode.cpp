@@ -175,8 +175,8 @@ vislib::net::cluster::AbstractServerNode::AbstractServerNode(
 /*
  * vislib::net::cluster::AbstractServerNode::countPeers
  */
-SIZE_T vislib::net::cluster::AbstractServerNode::countPeers(void) const {
-    SIZE_T retval = 0;
+size_t vislib::net::cluster::AbstractServerNode::countPeers(void) const {
+    size_t retval = 0;
     this->peersLock.Lock();
     retval = this->peers.Count();
     this->peersLock.Unlock();
@@ -188,7 +188,7 @@ SIZE_T vislib::net::cluster::AbstractServerNode::countPeers(void) const {
  * vislib::net::cluster::AbstractServerNode::disconnectPeer
  */
 void vislib::net::cluster::AbstractServerNode::disconnectPeer(
-        const SIZE_T idx) {
+        const size_t idx) {
     this->peersLock.Lock();
 
     // We assure the user that erasing non-existent peers will silently fail, 
@@ -217,13 +217,13 @@ void vislib::net::cluster::AbstractServerNode::disconnectPeer(
 /*
  * vislib::net::cluster::AbstractServerNode::forEachPeer
  */
-SIZE_T vislib::net::cluster::AbstractServerNode::forEachPeer(
+size_t vislib::net::cluster::AbstractServerNode::forEachPeer(
         ForeachPeerFunc func, void *context) {
     PeerIdentifier peerId;
-    SIZE_T retval = 0;
+    size_t retval = 0;
 
     this->peersLock.Lock();
-    for (SIZE_T i = 0; i < this->peers.Count(); i++) {
+    for (size_t i = 0; i < this->peers.Count(); i++) {
         try {
             peerId = this->peers[i]->Socket.GetPeerEndPoint();
             bool isContinue = func(this, peerId, this->peers[i]->Socket, 
@@ -261,7 +261,7 @@ SIZE_T vislib::net::cluster::AbstractServerNode::forEachPeer(
  */
 bool vislib::net::cluster::AbstractServerNode::forPeer(
         const PeerIdentifier& peerId, ForeachPeerFunc func, void *context) {
-    SIZE_T i = 0;
+    size_t i = 0;
     bool retval = false;
 
     this->peersLock.Lock();
@@ -322,12 +322,12 @@ vislib::net::cluster::AbstractServerNode::operator =(
 /*
  * vislib::net::cluster::AbstractServerNode::findPeerNode
  */
-SIZE_T vislib::net::cluster::AbstractServerNode::findPeerNode(
+size_t vislib::net::cluster::AbstractServerNode::findPeerNode(
         const PeerIdentifier& peerId) {
     PeerIdentifier addr;
 
     this->peersLock.Lock();
-    for (SIZE_T i = 0; i < this->peers.Count(); i++) {
+    for (size_t i = 0; i < this->peers.Count(); i++) {
         try {
             if (this->peers[i]->Socket.GetPeerEndPoint() == peerId) {
                 this->peersLock.Unlock();

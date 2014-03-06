@@ -38,7 +38,7 @@ namespace net {
          *
          * @param flags The flags for the channel.
          */
-        static inline SmartRef<TcpCommChannel> Create(const UINT64 flags = 0) {
+        static inline SmartRef<TcpCommChannel> Create(const uint64_t flags = 0) {
             THE_STACK_TRACE;
             return SmartRef<TcpCommChannel>(new TcpCommChannel(flags), false);
         }
@@ -49,7 +49,7 @@ namespace net {
           * channel itself as well as on the child channels created in server
           * mode.
           */
-        static const UINT64 FLAG_NODELAY;
+        static const uint64_t FLAG_NODELAY;
 
         /**
          * This behaviour flag sets the send buffer of the underlying socket to
@@ -57,14 +57,14 @@ namespace net {
           * channel itself as well as on the child channels created in server
           * mode.
          */
-        static const UINT64 FLAG_NOSENDBUFFER;
+        static const uint64_t FLAG_NOSENDBUFFER;
 
         /**
          * This flag enables or disables the reuse of addresses already bound.
          * Setting the flag has an effect on the communication channel itself 
          * as well as on the child channels created in server mode.
          */
-        static const UINT64 FLAG_REUSE_ADDRESS;
+        static const uint64_t FLAG_REUSE_ADDRESS;
 
         /**
          * Permit incoming connection attempt on the communication channel.
@@ -206,8 +206,8 @@ namespace net {
          *                                   disconnect gracefully.
          * @throws SocketException In case the operation fails.
          */
-        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
-            const UINT timeout = TIMEOUT_INFINITE, 
+        virtual size_t Receive(void *outData, const size_t cntBytes,
+            const unsigned int timeout = TIMEOUT_INFINITE, 
             const bool forceReceive = true);
 
         /**
@@ -230,8 +230,8 @@ namespace net {
          *
          * @throws SocketException In case the operation fails.
          */
-        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes,
-            const UINT timeout = TIMEOUT_INFINITE, 
+        virtual size_t Send(const void *data, const size_t cntBytes,
+            const unsigned int timeout = TIMEOUT_INFINITE, 
             const bool forceSend = true);
 
     private:
@@ -244,14 +244,14 @@ namespace net {
          *
          * @param flags The flags for the channel.
          */
-        explicit TcpCommChannel(const UINT64 flags);
+        explicit TcpCommChannel(const uint64_t flags);
 
         /**
          * Create a communication channel from an existing socket.
          *
          * @param socket The socket to be used.
          */
-        TcpCommChannel(Socket& socket, const UINT64 flags);
+        TcpCommChannel(Socket& socket, const uint64_t flags);
 
         /**
          * Disallow copies as we want to handle that via reference counting.
@@ -280,7 +280,7 @@ namespace net {
         void createSocket(const IPEndPoint& endPoint);
 
         /** Behaviour flags for the channel. */
-        UINT64 flags;
+        uint64_t flags;
 
         /** The socket that performs the actual work. */
         Socket socket;

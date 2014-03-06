@@ -35,7 +35,7 @@ vislib::net::cluster::DiscoveryService::PeerNode::PeerNode(void)
 vislib::net::cluster::DiscoveryService::PeerNode::PeerNode(
         const IPEndPoint& discoveryAddress,  
         const IPEndPoint& responseAddress,
-        const UINT cntResponseChances, 
+        const unsigned int cntResponseChances, 
         DiscoveryConfigEx *discoverySource)
         : cntResponseChances(cntResponseChances), 
         discoveryAddress(discoveryAddress),
@@ -191,7 +191,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
     NetworkInformation::GetAdaptersForUnicastAddress(candidates, 
         responseAddress.GetIPAddress());
 
-    for (SIZE_T i = 0; i < candidates.Count(); i++) {
+    for (size_t i = 0; i < candidates.Count(); i++) {
         this->bcastAddress.SetIPAddress(candidates[i].GetBroadcastAddress(
             &confidence));
         // We allow valid and guessed broadcast addresses.
@@ -223,7 +223,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
 //
 //    NetworkInformation::GetAdaptersForUnicastAddress(candidates, bindAddress);
 //
-//    for (SIZE_T i = 0; i < candidates.Count(); i++) {
+//    for (size_t i = 0; i < candidates.Count(); i++) {
 //        this->bcastAddress.SetIPAddress(candidates[i].GetBroadcastAddress(
 //            &confidence));
 //        if (confidence != NetworkInformation::INVALID) {
@@ -296,14 +296,14 @@ const USHORT vislib::net::cluster::DiscoveryService::DEFAULT_PORT = 28181;
 /*
  * vislib::net::cluster::DiscoveryService::DEFAULT_REQUEST_INTERVAL
  */
-const UINT vislib::net::cluster::DiscoveryService::DEFAULT_REQUEST_INTERVAL
+const unsigned int vislib::net::cluster::DiscoveryService::DEFAULT_REQUEST_INTERVAL
     = 10 * 1000;
 
 
 /*
  * vislib::net::cluster::DiscoveryService::DEFAULT_RESPONSE_CHANCES
  */
-const UINT vislib::net::cluster::DiscoveryService::DEFAULT_RESPONSE_CHANCES = 1;
+const unsigned int vislib::net::cluster::DiscoveryService::DEFAULT_RESPONSE_CHANCES = 1;
 
 
 /*
@@ -414,7 +414,7 @@ vislib::net::cluster::DiscoveryService::GetDiscoveryAddress6(
 vislib::net::cluster::DiscoveryService::State 
 vislib::net::cluster::DiscoveryService::GetState(void) const {
     State retval = STATE_STOPPED;
-    SIZE_T cntConfigs = this->configs.Count();
+    size_t cntConfigs = this->configs.Count();
     
     if (this->senderThread.IsRunning()) {
         reinterpret_cast<int&>(retval) |= STATE_SENDER_RUNNING;
@@ -423,7 +423,7 @@ vislib::net::cluster::DiscoveryService::GetState(void) const {
     if (cntConfigs > 0) {
         reinterpret_cast<int&>(retval) |= STATE_RECEIVER_RUNNING;
     }
-    for (SIZE_T i = 0; i < cntConfigs; i++) {
+    for (size_t i = 0; i < cntConfigs; i++) {
         if (!this->configs[i].GetRecvThread().IsRunning()) {
             reinterpret_cast<int&>(retval) &= ~STATE_RECEIVER_RUNNING;
             break;
@@ -449,13 +449,13 @@ bool vislib::net::cluster::DiscoveryService::IsRunning(void) const {
  * vislib::net::cluster::DiscoveryService::IsSelf
  */
 bool vislib::net::cluster::DiscoveryService::IsSelf(
-        const INT idx) const {
+        const int idx) const {
     IPEndPoint ep((*this)[idx]);
-    SIZE_T cntConfigs = this->configs.Count();
+    size_t cntConfigs = this->configs.Count();
     bool retval = false;
 
     this->peerNodesCritSect.Lock();
-    for (SIZE_T i = 0; i < cntConfigs; i++) {
+    for (size_t i = 0; i < cntConfigs; i++) {
         if ((retval = (ep == this->configs[i].GetResponseAddress()))) {
             break;
         }
@@ -479,16 +479,16 @@ void vislib::net::cluster::DiscoveryService::RemoveListener(
 /*
  * vislib::net::cluster::DiscoveryService::SendUserMessage
  */
-UINT vislib::net::cluster::DiscoveryService::SendUserMessage(
-        const UINT32 msgType, const void *msgBody, const SIZE_T msgSize) {
+unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
+        const UINT32 msgType, const void *msgBody, const size_t msgSize) {
     Message msg;                // The datagram we are going to send.
-    UINT retval = 0;            // Number of failed communication trials.
+    unsigned int retval = 0;            // Number of failed communication trials.
 
     this->prepareUserMessage(msg, msgType, msgBody, msgSize);
 
     /* Send the message to all registered clients. */
     this->peerNodesCritSect.Lock();
-    for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
+    for (size_t i = 0; i < this->peerNodes.Count(); i++) {
         try {
             this->peerNodes[i]->discoverySource->SendMessageTo(msg,
                 this->peerNodes[i]->discoveryAddress);
@@ -507,11 +507,11 @@ UINT vislib::net::cluster::DiscoveryService::SendUserMessage(
 /*
  * vislib::net::cluster::DiscoveryService::SendUserMessage
  */
-UINT vislib::net::cluster::DiscoveryService::SendUserMessage(
+unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
         const PeerHandle& hPeer, const UINT32 msgType, const void *msgBody, 
-        const SIZE_T msgSize) {
+        const size_t msgSize) {
     Message msg;                // The datagram we are going to send.
-    UINT retval = 0;            // Retval, 0 in case of success.
+    unsigned int retval = 0;            // Retval, 0 in case of success.
 
     this->prepareUserMessage(msg, msgType, msgBody, msgSize);
     
@@ -543,12 +543,12 @@ UINT vislib::net::cluster::DiscoveryService::SendUserMessage(
  * vislib::net::cluster::DiscoveryService::Start
  */
 void vislib::net::cluster::DiscoveryService::Start(const char *name, 
-        const DiscoveryConfig *configs, const SIZE_T cntConfigs,
-        const UINT cntExpectedNodes,
+        const DiscoveryConfig *configs, const size_t cntConfigs,
+        const unsigned int cntExpectedNodes,
         const UINT32 flags,
-        const UINT requestInterval,
-        const UINT requestIntervalIntensive,
-        const UINT cntResponseChances) {
+        const unsigned int requestInterval,
+        const unsigned int requestIntervalIntensive,
+        const unsigned int cntResponseChances) {
     // TODO: Check for restart
 
     this->name = name;
@@ -556,7 +556,7 @@ void vislib::net::cluster::DiscoveryService::Start(const char *name,
 
     this->configs.SetCount(0);
     this->configs.AssertCapacity(cntConfigs);
-    for (SIZE_T i = 0; i < cntConfigs; i++) {
+    for (size_t i = 0; i < cntConfigs; i++) {
         this->configs.Add(DiscoveryConfigEx(configs[i], this));
     }
 
@@ -566,13 +566,13 @@ void vislib::net::cluster::DiscoveryService::Start(const char *name,
     this->requestIntervalIntensive 
         = (requestInterval > requestIntervalIntensive)
         ? requestIntervalIntensive
-        : math::Max(requestInterval / 2, static_cast<UINT>(1));
+        : math::Max(requestInterval / 2, static_cast<unsigned int>(1));
     this->cntResponseChances = cntResponseChances;
 
     /* Start the threads. */
     this->senderThread.Start(this);
     THE_ASSERT(cntConfigs == this->configs.Count());
-    for (SIZE_T i = 0; i < cntConfigs; i++) {
+    for (size_t i = 0; i < cntConfigs; i++) {
         this->configs[i].GetRecvThread().Start(&(this->configs[i]));
     }
 }
@@ -610,12 +610,12 @@ vislib::StringW vislib::net::cluster::DiscoveryService::ToStringW(
  * vislib::net::cluster::DiscoveryService::Stop
  */
 bool vislib::net::cluster::DiscoveryService::Stop(const bool noWait) {
-    SIZE_T cntConfigs = this->configs.Count();
+    size_t cntConfigs = this->configs.Count();
     bool retval = true;
     
     // Note: Receiver must be stopped first, in order to prevent shutdown
     // deadlock when waiting for the last message.    
-    for (SIZE_T i = 0; i < cntConfigs; i++) {
+    for (size_t i = 0; i < cntConfigs; i++) {
         try {
             this->configs[i].GetRecvThread().Terminate(false);
         } catch (sys::SystemException e) {
@@ -1093,8 +1093,8 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
     Message request;        // The UDP datagram we send.
     DiscoveryService *ds    // The discovery service we work for.
         = static_cast<DiscoveryService *>(cds);
-    SIZE_T cntConfigs = ds->configs.Count();    // # of configs. to serve.
-    SIZE_T cntPeers = 0;    // Cache for # of known peers.
+    size_t cntConfigs = ds->configs.Count();    // # of configs. to serve.
+    size_t cntPeers = 0;    // Cache for # of known peers.
 
     // Assert expected memory layout of messages.
     THE_ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(UINT32));
@@ -1129,7 +1129,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
 
     /* Send the initial "immediate alive request" message(s). */
     request.MsgType = MSG_TYPE_IAMHERE;
-    for (SIZE_T i = 0; i < cntConfigs; i++) {
+    for (size_t i = 0; i < cntConfigs; i++) {
         DiscoveryConfigEx& config = ds->configs[i];
 
         if (this->isRunning == 0) {
@@ -1147,7 +1147,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
                 "discovery sender thread. The error code is %d (\"%s\").\n",
                 e.GetErrorCode(), e.GetMsgA());
         }
-    } /* end for (SIZE_T i = 0; i < cntConfigs; i++) */
+    } /* end for (size_t i = 0; i < cntConfigs; i++) */
 
 
     /*
@@ -1178,7 +1178,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
         }
 
         cntPeers = ds->CountPeers();    // Remember that for all configs.
-        for (SIZE_T i = 0; i < cntConfigs; i++) {
+        for (size_t i = 0; i < cntConfigs; i++) {
             DiscoveryConfigEx& config = ds->configs[i];
 
             if (this->isRunning == 0) {
@@ -1196,7 +1196,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
                     "discovery sender thread. The error code is %d (\"%s\").\n",
                     e.GetErrorCode(), e.GetMsgA());
             }
-        } /* end for (SIZE_T i = 0; i < cntConfigs; i++) */ 
+        } /* end for (size_t i = 0; i < cntConfigs; i++) */ 
 
         try {
             if (this->isRunning != 0) {
@@ -1212,7 +1212,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
 
     /* Now inform all other nodes, that we are out. */
     request.MsgType = MSG_TYPE_SAYONARA;
-    for (SIZE_T i = 0; i < cntConfigs; i++) {
+    for (size_t i = 0; i < cntConfigs; i++) {
         DiscoveryConfigEx& config = ds->configs[i];
 
         try {
@@ -1225,7 +1225,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
                 "discovery sender thread. The error code is %d (\"%s\").\n",
                 e.GetErrorCode(), e.GetMsgA());
         }
-    } /* end for (SIZE_T i = 0; i < cntConfigs; i++) */
+    } /* end for (size_t i = 0; i < cntConfigs; i++) */
 
     /* Clean up. */
     try {
@@ -1273,7 +1273,7 @@ void vislib::net::cluster::DiscoveryService::addPeerNode(
         /* Already known, reset disconnect chance. */
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Peer node %s is already known.\n", 
             responseAddr.ToStringA().PeekBuffer());
-        hPeer = this->peerNodes[static_cast<SIZE_T>(idx)];
+        hPeer = this->peerNodes[static_cast<size_t>(idx)];
         hPeer->cntResponseChances = this->cntResponseChances;
 
     } else {
@@ -1309,7 +1309,7 @@ void vislib::net::cluster::DiscoveryService::fireUserMessage(
     this->peerNodesCritSect.Lock();
     
     if ((idx = this->peerFromDiscoveryAddr(sender)) >= 0) {
-        hPeer = this->peerNodes[static_cast<SIZE_T>(idx)];
+        hPeer = this->peerNodes[static_cast<size_t>(idx)];
     } else {
         hPeer = new PeerNode(sender,  
             IPEndPoint(IPAddress6::UNSPECIFIED, 0),
@@ -1342,7 +1342,7 @@ INT_PTR vislib::net::cluster::DiscoveryService::peerFromResponseAddress(
     // TODO: Think of faster solution.  
     INT_PTR retval = -1;
 
-    for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
+    for (size_t i = 0; i < this->peerNodes.Count(); i++) {
         if (this->peerNodes[i]->responseAddress == addr) {
             retval = i;
             break;
@@ -1361,7 +1361,7 @@ INT_PTR vislib::net::cluster::DiscoveryService::peerFromDiscoveryAddr(
     // TODO: Think of faster solution.  
     INT_PTR retval = -1;
 
-    for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
+    for (size_t i = 0; i < this->peerNodes.Count(); i++) {
         // TODO: Endpoint test for multiple discovery instances on one node
         if (this->peerNodes[i]->discoveryAddress.GetIPAddress()
                 == addr.GetIPAddress()) {
@@ -1380,7 +1380,7 @@ INT_PTR vislib::net::cluster::DiscoveryService::peerFromDiscoveryAddr(
 void vislib::net::cluster::DiscoveryService::prepareRequest(void) {
     this->peerNodesCritSect.Lock();
 
-    for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
+    for (size_t i = 0; i < this->peerNodes.Count(); i++) {
         if (!this->peerNodes[i]->decrementResponseChances()) {
             THE_ASSERT(this->peerNodes[i]->isValid());
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Node %s lost, firing event ...\n",
@@ -1415,7 +1415,7 @@ void vislib::net::cluster::DiscoveryService::prepareRequest(void) {
  */
 void vislib::net::cluster::DiscoveryService::prepareUserMessage(
         Message& outMsg, const UINT32 msgType, const void *msgBody, 
-        const SIZE_T msgSize) {
+        const size_t msgSize) {
 
     /* Check user parameters. */
     if (msgType < MSG_TYPE_USER) {
@@ -1454,7 +1454,7 @@ void vislib::net::cluster::DiscoveryService::removePeerNode(
     this->listeners.Lock();
 
     if ((idx = this->peerFromResponseAddress(address)) >= 0) {
-        PeerHandle hPeer = this->peerNodes[static_cast<SIZE_T>(idx)];
+        PeerHandle hPeer = this->peerNodes[static_cast<size_t>(idx)];
 
         /* Fire event. */
         ConstIterator<ListenerList::Iterator> it 

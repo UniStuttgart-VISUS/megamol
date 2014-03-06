@@ -28,7 +28,7 @@ vislib::sys::LamportClock::~LamportClock(void) {
 /*
  * vislib::sys::LamportClock::StepLocal
  */
-UINT64 vislib::sys::LamportClock::StepLocal(void) {
+uint64_t vislib::sys::LamportClock::StepLocal(void) {
     AutoLock l(this->lock);
     return ++this->value;
 }
@@ -37,7 +37,7 @@ UINT64 vislib::sys::LamportClock::StepLocal(void) {
 /*
  * vislib::sys::LamportClock::StepReceive
  */
-UINT64 vislib::sys::LamportClock::StepReceive(UINT64 timestamp) {
+uint64_t vislib::sys::LamportClock::StepReceive(uint64_t timestamp) {
     AutoLock l(this->lock);
     this->value = (this->value > timestamp) ? this->value : timestamp;
     return ++this->value;
@@ -47,7 +47,7 @@ UINT64 vislib::sys::LamportClock::StepReceive(UINT64 timestamp) {
 /*
  * vislib::sys::LamportClock::operator ++
  */
-UINT64 vislib::sys::LamportClock::operator ++(int) {
+uint64_t vislib::sys::LamportClock::operator ++(int) {
     AutoLock l(this->lock);
     return this->value++;
 }

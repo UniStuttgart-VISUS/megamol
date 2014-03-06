@@ -260,17 +260,17 @@ bool SimpleFontTest::OnKeyPress(unsigned char key, int x, int y) {
             return true;
         }
         case '0':
-            for (SIZE_T i = 0; i < this->tests.Count(); i++) {
+            for (size_t i = 0; i < this->tests.Count(); i++) {
                 this->tests[i]->active = true;
             }
             return true;
         case '1':
-            for (SIZE_T i = 0; i < this->tests.Count(); i++) {
+            for (size_t i = 0; i < this->tests.Count(); i++) {
                 this->tests[i]->active = (i == 0);
             }
             return true;
         case '+':
-            for (SIZE_T i = 0; i < this->tests.Count(); i++) {
+            for (size_t i = 0; i < this->tests.Count(); i++) {
                 if (this->tests[i]->active) {
                     this->tests[i]->active = false;
                     this->tests[(i + 1) % this->tests.Count()]->active = true;
@@ -279,7 +279,7 @@ bool SimpleFontTest::OnKeyPress(unsigned char key, int x, int y) {
             }
             return true;
         case '-':
-            for (SIZE_T i = 0; i < this->tests.Count(); i++) {
+            for (size_t i = 0; i < this->tests.Count(); i++) {
                 if (this->tests[i]->active) {
                     this->tests[i]->active = false;
                     this->tests[(i == 0) ? (this->tests.Count() - 1) : (i - 1)]->active = true;
@@ -417,13 +417,13 @@ void SimpleFontTest::Render(void) {
     float camZ = static_cast<float>(z);
 
     glScalef(1.0f, -1.0f, 1.0f);
-    SIZE_T l = this->tests.Count();
-    for (SIZE_T i = 0; i < l; i++) {
+    size_t l = this->tests.Count();
+    for (size_t i = 0; i < l; i++) {
         if (this->tests[i]->Z() >= camZ) {
             this->tests[i]->Draw();
         }
     }
-    for (SIZE_T i = l; i > 0;) {
+    for (size_t i = l; i > 0;) {
         i--;
         if (this->tests[i]->Z() < camZ) {
             this->tests[i]->Draw();

@@ -12,7 +12,7 @@
  * vislib::RawStorageWriter::RawStorageWriter
  */
 vislib::RawStorageWriter::RawStorageWriter(vislib::RawStorage &store,
-        SIZE_T pos, SIZE_T end, SIZE_T inc) : data(store), end(end), inc(inc),
+        size_t pos, size_t end, size_t inc) : data(store), end(end), inc(inc),
         pos(pos) {
     if (this->end == SIZE_MAX) {
         this->end = this->data.GetSize();
@@ -38,7 +38,7 @@ vislib::RawStorageWriter::~RawStorageWriter(void) {
 /*
  * vislib::RawStorageWriter::SetEnd
  */
-void vislib::RawStorageWriter::SetEnd(SIZE_T end) {
+void vislib::RawStorageWriter::SetEnd(size_t end) {
     this->end = end;
     if (this->end < this->pos) {
         this->pos = this->end;
@@ -49,7 +49,7 @@ void vislib::RawStorageWriter::SetEnd(SIZE_T end) {
 /*
  * vislib::RawStorageWriter::SetIncrement
  */
-void vislib::RawStorageWriter::SetIncrement(SIZE_T inc) {
+void vislib::RawStorageWriter::SetIncrement(size_t inc) {
     this->inc = inc;
     if (this->inc == 0) {
         this->inc = RawStorageWriter::DEFAULT_INCREMENT;
@@ -60,7 +60,7 @@ void vislib::RawStorageWriter::SetIncrement(SIZE_T inc) {
 /*
  * vislib::RawStorageWriter::SetPosition
  */
-void vislib::RawStorageWriter::SetPosition(SIZE_T pos) {
+void vislib::RawStorageWriter::SetPosition(size_t pos) {
     this->pos = pos;
     if (this->end < this->pos) {
         this->end = this->pos;
@@ -72,7 +72,7 @@ void vislib::RawStorageWriter::SetPosition(SIZE_T pos) {
 /*
  * vislib::RawStorageWriter::Write
  */
-void vislib::RawStorageWriter::Write(const void *buf, SIZE_T size) {
+void vislib::RawStorageWriter::Write(const void *buf, size_t size) {
     this->assertSize(this->pos + size);
     ::memcpy(this->data.At(this->pos), buf, size);
     this->pos += size;
@@ -85,11 +85,11 @@ void vislib::RawStorageWriter::Write(const void *buf, SIZE_T size) {
 /*
  * vislib::RawStorageWriter::assertSize
  */
-void vislib::RawStorageWriter::assertSize(SIZE_T e) {
+void vislib::RawStorageWriter::assertSize(size_t e) {
     if (e > this->data.GetSize()) {
-        SIZE_T s = this->data.GetSize();
-        SIZE_T d = e - s;
-        SIZE_T f = d / this->inc;
+        size_t s = this->data.GetSize();
+        size_t d = e - s;
+        size_t f = d / this->inc;
         if (d % this->inc) f++;
         d = f * this->inc;
         s = e + d;

@@ -19,13 +19,13 @@
 /*
  * vislib::net::UdpCommChannel::FLAG_BROADCAST
  */
-const UINT64 vislib::net::UdpCommChannel::FLAG_BROADCAST = 0x00000004;
+const uint64_t vislib::net::UdpCommChannel::FLAG_BROADCAST = 0x00000004;
 
 
 /*
  * vislib::net::UdpCommChannel::FLAG_REUSE_ADDRESS
  */
-const UINT64 vislib::net::UdpCommChannel::FLAG_REUSE_ADDRESS = 0x00000002;
+const uint64_t vislib::net::UdpCommChannel::FLAG_REUSE_ADDRESS = 0x00000002;
 // Implementation note: Trying to assign flags of different channels with the 
 // same name the same value (see TcpCommChannel::FLAG_REUSE_ADDRESS).
 
@@ -131,10 +131,10 @@ void vislib::net::UdpCommChannel::Listen(const int backlog) {
 /*
  * vislib::net::UdpCommChannel::Receive
  */
-SIZE_T vislib::net::UdpCommChannel::Receive(void *outData, 
-        const SIZE_T cntBytes, const UINT timeout, const bool forceReceive) {
+size_t vislib::net::UdpCommChannel::Receive(void *outData, 
+        const size_t cntBytes, const unsigned int timeout, const bool forceReceive) {
     THE_STACK_TRACE;
-    SIZE_T retval = this->socket.Receive(outData, cntBytes, timeout, 0, 
+    size_t retval = this->socket.Receive(outData, cntBytes, timeout, 0, 
         forceReceive);
 
     if (retval == 0) {
@@ -151,8 +151,8 @@ SIZE_T vislib::net::UdpCommChannel::Receive(void *outData,
 /*
  * vislib::net::UdpCommChannel::Send
  */
-SIZE_T vislib::net::UdpCommChannel::Send(const void *data, 
-        const SIZE_T cntBytes, const UINT timeout, const bool forceSend) {
+size_t vislib::net::UdpCommChannel::Send(const void *data, 
+        const size_t cntBytes, const unsigned int timeout, const bool forceSend) {
     THE_STACK_TRACE;
     return this->socket.Send(data, cntBytes, timeout, 0, forceSend);
 }
@@ -161,7 +161,7 @@ SIZE_T vislib::net::UdpCommChannel::Send(const void *data,
 /*
  * vislib::net::UdpCommChannel::UdpCommChannel
  */
-vislib::net::UdpCommChannel::UdpCommChannel(const UINT64 flags) : flags(flags) {
+vislib::net::UdpCommChannel::UdpCommChannel(const uint64_t flags) : flags(flags) {
     THE_STACK_TRACE;
 }
 
@@ -169,7 +169,7 @@ vislib::net::UdpCommChannel::UdpCommChannel(const UINT64 flags) : flags(flags) {
 /*
  * vislib::net::UdpCommChannel::UdpCommChannel
  */
-vislib::net::UdpCommChannel::UdpCommChannel(Socket& socket, const UINT64 flags) 
+vislib::net::UdpCommChannel::UdpCommChannel(Socket& socket, const uint64_t flags) 
         : Super(), socket(socket), flags(flags) {
     THE_STACK_TRACE;
     socket.SetReuseAddr(this->IsSetReuseAddress());

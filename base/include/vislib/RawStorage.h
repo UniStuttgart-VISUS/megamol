@@ -35,7 +35,7 @@ namespace vislib {
          *
          * @throws std::bad_alloc If the requested memory could not be allocated.
          */
-        RawStorage(const SIZE_T size = 0);
+        RawStorage(const size_t size = 0);
 
         /**
          * Clone 'rhs'. This will deep copy the whole dynamic memory.
@@ -71,7 +71,7 @@ namespace vislib {
          *
          * @throws std::bad_alloc If the requested memory could not be allocated.
          */
-        void *Append(const void *data, const SIZE_T cntData);
+        void *Append(const void *data, const size_t cntData);
 
         /**
          * Answer the raw memory block as pointer to T. The object remains
@@ -102,7 +102,7 @@ namespace vislib {
          *
          * @return A pointer to the begin of the memory block + 'offset' bytes.
          */
-        template<class T> inline T *AsAt(const SIZE_T offset) {
+        template<class T> inline T *AsAt(const size_t offset) {
             return reinterpret_cast<T *>(static_cast<BYTE *>(this->data) 
                 + offset);
         }
@@ -116,7 +116,7 @@ namespace vislib {
          *
          * @return A pointer to the begin of the memory block + 'offset' bytes.
          */
-        template<class T> inline const T *AsAt(const SIZE_T offset) const {
+        template<class T> inline const T *AsAt(const size_t offset) const {
             return reinterpret_cast<T *>(static_cast<BYTE *>(this->data) 
                 + offset);
         }
@@ -137,7 +137,7 @@ namespace vislib {
          *
          * @throws std::bad_alloc If the requested memory could not be allocated.
          */
-        bool AssertSize(const SIZE_T size, const bool keepContent = false);
+        bool AssertSize(const size_t size, const bool keepContent = false);
 
         /**
          * Answer a pointer to the data at 'offset' byte distance from the 
@@ -147,7 +147,7 @@ namespace vislib {
          *
          * @return A pointer to the begin of the memory block + 'offset' bytes.
          */
-        inline void *At(const SIZE_T offset) {
+        inline void *At(const size_t offset) {
             return (static_cast<BYTE *>(this->data) + offset);
         }
 
@@ -159,7 +159,7 @@ namespace vislib {
          *
          * @return A pointer to the begin of the memory block + 'offset' bytes.
          */
-        inline const void *At(const SIZE_T offset) const {
+        inline const void *At(const size_t offset) const {
             return (static_cast<BYTE *>(this->data) + offset);
         }
 
@@ -175,14 +175,14 @@ namespace vislib {
          *
          * @throws std::bad_alloc If the requested memory could not be allocated.
          */
-        void EnforceSize(const SIZE_T size, const bool keepContent = false);
+        void EnforceSize(const size_t size, const bool keepContent = false);
 
         /**
          * Answer the size of the memory block.
          *
          * @return The size of the memory block in bytes.
          */
-        inline SIZE_T GetSize(void) const {
+        inline size_t GetSize(void) const {
             return this->size;
         }
 
@@ -204,7 +204,7 @@ namespace vislib {
          * @return true, if the memory the memory block is 'size' bytes or larger,
 		 *         false otherwise.
          */
-		inline bool TestSize(const SIZE_T size) {
+		inline bool TestSize(const size_t size) {
 			return (this->size >= size);
 		}
 
@@ -272,7 +272,7 @@ namespace vislib {
         void *data;
 
         /** The size of the memory block 'data' in bytes. */
-        SIZE_T size;
+        size_t size;
 
     };
     

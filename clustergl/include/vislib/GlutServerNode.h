@@ -77,7 +77,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual SIZE_T countPeers(void) const;
+        virtual size_t countPeers(void) const;
 
         /**
          * Call 'func' for each known peer node (socket).
@@ -95,7 +95,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
+        virtual size_t forEachPeer(ForeachPeerFunc func, void *context);
 
         /**
          * Call 'func' for the peer node that has the specified ID 'peerId'. If
@@ -166,8 +166,8 @@ namespace cluster {
          * @return true in order to signal that the message has been processed, 
          *         false if the implementation did ignore it.
          */
-        virtual bool onMessageReceived(const Socket& src, const UINT msgId,
-            const BYTE *body, const SIZE_T cntBody);
+        virtual bool onMessageReceived(const Socket& src, const unsigned int msgId,
+            const BYTE *body, const size_t cntBody);
 
         /**
          * The message receiver thread calls this method once it exists.
@@ -338,7 +338,7 @@ namespace cluster {
     /*
      * vislib::net::cluster::GlutServerNode<T>::countPeers
      */
-    template<class T> SIZE_T GlutServerNode<T>::countPeers(void) const {
+    template<class T> size_t GlutServerNode<T>::countPeers(void) const {
         // GCC cannot resolve this conflict via dominance, even if it is obvious
         // that we do not want to inherit the pure virtual implementation.
         return AbstractServerNode::countPeers();
@@ -349,7 +349,7 @@ namespace cluster {
      * vislib::net::cluster::GlutServerNode<T>::forEachPeer
      */
     template<class T> 
-    SIZE_T GlutServerNode<T>::forEachPeer(ForeachPeerFunc func, void *context) {
+    size_t GlutServerNode<T>::forEachPeer(ForeachPeerFunc func, void *context) {
         // GCC cannot resolve this conflict via dominance, even if it is obvious
         // that we do not want to inherit the pure virtual implementation.
         return AbstractServerNode::forEachPeer(func, context);
@@ -454,8 +454,8 @@ namespace cluster {
      *  vislib::net::cluster::GlutServerNode<T>::onMessageReceived
      */
     template<class T> bool GlutServerNode<T>::onMessageReceived(
-            const Socket& src, const UINT msgId, const BYTE *body, 
-            const SIZE_T cntBody) {
+            const Socket& src, const unsigned int msgId, const BYTE *body, 
+            const size_t cntBody) {
         bool retval = AbstractControllerNode::onMessageReceived(src, msgId, 
             body, cntBody);
         // Add GlutClusterNode if it overrides method some time, too.

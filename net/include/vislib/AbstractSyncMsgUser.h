@@ -90,7 +90,7 @@ namespace net {
                 const SimpleMessageID requestMsgID, 
                 const void *requestBody, 
                 const unsigned int requestBodySize,
-                const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
+                const unsigned int timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             THE_STACK_TRACE;
             this->sendViaMsgBuffer(channel, requestMsgID, requestBody, 
                 requestBodySize, timeout);
@@ -126,7 +126,7 @@ namespace net {
                 const SimpleMessageID requestMsgID, 
                 const void *requestBody, 
                 const unsigned int requestBodySize,
-                const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
+                const unsigned int timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             THE_STACK_TRACE;
             return this->requestViaMsgBuffer(
                 channel.DynamicCast<vislib::net::AbstractCommClientChannel>(), 
@@ -162,7 +162,7 @@ namespace net {
                 SmartRef<AbstractCommClientChannel> channel,
                 const SimpleMessageID requestMsgID, 
                 const T& requestBody,
-                const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
+                const unsigned int timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             THE_STACK_TRACE;
             return this->requestViaMsgBuffer(channel, requestMsgID, 
                 &requestBody, sizeof(T), timeout);
@@ -197,7 +197,7 @@ namespace net {
                 SmartRef<TcpCommChannel> channel,
                 const SimpleMessageID requestMsgID, 
                 const T& requestBody,
-                const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
+                const unsigned int timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             THE_STACK_TRACE;
             return this->requestViaMsgBuffer(channel, requestMsgID, 
                 &requestBody, sizeof(T), timeout);
@@ -240,8 +240,8 @@ namespace net {
         template<class I, SimpleMessageID Iid, class O, SimpleMessageID Oid>
         const O *requestViaMsgBuffer(SmartRef<AbstractCommClientChannel> channel,
             const I& requestBody,
-            SIZE_T *outAdditionalBytes = NULL,
-            const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE);
+            size_t *outAdditionalBytes = NULL,
+            const unsigned int timeout = AbstractCommChannel::TIMEOUT_INFINITE);
 
         /**
          * Perform a message round-trip using the message buffer. This includes
@@ -281,8 +281,8 @@ namespace net {
         inline const O *requestViaMsgBuffer(
                 SmartRef<TcpCommChannel> channel,
                 const I& requestBody,
-                SIZE_T *outAdditionalBytes = NULL,
-                const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
+                size_t *outAdditionalBytes = NULL,
+                const unsigned int timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             THE_STACK_TRACE;
             return this->requestViaMsgBuffer<I, Iid, O, Oid>(
                 channel.DynamicCast<AbstractCommClientChannel>(), 
@@ -306,7 +306,7 @@ namespace net {
         // TODO: WHO NEEDS THIS? PLEASE REPORT TO MUELLER...
         THE_DEPRECATED inline const SimpleMessage& receiveViaMsgBuffer(
                 SmartRef<AbstractCommChannel> channel,
-                const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
+                const unsigned int timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             THE_STACK_TRACE;
             return this->receiveViaMsgBuffer(
                 channel.DynamicCast<AbstractCommClientChannel>(), timeout);
@@ -328,7 +328,7 @@ namespace net {
          */
         const SimpleMessage& receiveViaMsgBuffer(
             SmartRef<AbstractCommClientChannel> channel,
-            const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE);
+            const unsigned int timeout = AbstractCommChannel::TIMEOUT_INFINITE);
 
         /**
          * Receive a SimpleMessage into the local message buffer from the given 
@@ -346,7 +346,7 @@ namespace net {
          */
         inline const SimpleMessage& receiveViaMsgBuffer(
                 SmartRef<TcpCommChannel> channel,
-                const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
+                const unsigned int timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             THE_STACK_TRACE;
             return this->receiveViaMsgBuffer(
                 channel.DynamicCast<AbstractCommClientChannel>(), timeout);
@@ -372,7 +372,7 @@ namespace net {
                 const SimpleMessageID msgID, 
                 const void *body, 
                 const unsigned int bodySize,
-                const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
+                const unsigned int timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             THE_STACK_TRACE;
             this->sendViaMsgBuffer(
                 channel.DynamicCast<AbstractCommClientChannel>(),
@@ -398,7 +398,7 @@ namespace net {
             const SimpleMessageID msgID, 
             const void *body, 
             const unsigned int bodySize,
-            const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE);
+            const unsigned int timeout = AbstractCommChannel::TIMEOUT_INFINITE);
 
         /**
          * Pack a message with the given ID and body data into the local message
@@ -419,7 +419,7 @@ namespace net {
                 const SimpleMessageID msgID, 
                 const void *body, 
                 const unsigned int bodySize,
-                const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
+                const unsigned int timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             THE_STACK_TRACE;
             this->sendViaMsgBuffer(
                 channel.DynamicCast<AbstractCommClientChannel>(),
@@ -517,8 +517,8 @@ namespace net {
     const O *AbstractSyncMsgUser::requestViaMsgBuffer(
             SmartRef<AbstractCommClientChannel> channel,
             const I& requestBody,
-            SIZE_T *outAdditionalBytes,
-            const UINT timeout) {
+            size_t *outAdditionalBytes,
+            const unsigned int timeout) {
         THE_STACK_TRACE;
 
         /* Send request and receive response. */

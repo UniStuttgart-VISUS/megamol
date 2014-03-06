@@ -14,7 +14,7 @@
 /*
  * vislib::net::AbstractCommClientChannel::TIMEOUT_INFINITE
  */
-const UINT vislib::net::AbstractCommClientChannel::TIMEOUT_INFINITE 
+const unsigned int vislib::net::AbstractCommClientChannel::TIMEOUT_INFINITE 
     = vislib::net::Socket::TIMEOUT_INFINITE;
 
 

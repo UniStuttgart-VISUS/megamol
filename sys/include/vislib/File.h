@@ -42,10 +42,10 @@ namespace sys {
     public:
 
         /** This type is used for offsets when seeking in files. */
-        typedef INT64 FileOffset;
+        typedef int64_t FileOffset;
 
         /** This type is used for size information of files. */
-        typedef UINT64 FileSize;
+        typedef uint64_t FileSize;
 
         /** Possible values for the access mode. */
         enum AccessMode { READ_WRITE = 1, READ_ONLY, WRITE_ONLY };

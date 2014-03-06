@@ -31,14 +31,14 @@ const char *vislib::graphics::gl::FramebufferObject::RequiredExtensions(void) {
 /*
  * vislib::graphics::gl::FramebufferObject::GetMaxColourAttachments
  */
-UINT vislib::graphics::gl::FramebufferObject::GetMaxColourAttachments(void) {
+unsigned int vislib::graphics::gl::FramebufferObject::GetMaxColourAttachments(void) {
     THE_STACK_TRACE;
     USES_GL_VERIFY;
     GLint retval = 0;
 
     GL_VERIFY_THROW(::glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS_EXT, &retval));
 
-    return static_cast<UINT>(retval);
+    return static_cast<unsigned int>(retval);
 }
 
 
@@ -80,7 +80,7 @@ vislib::graphics::gl::FramebufferObject::~FramebufferObject(void) {
  * vislib::graphics::gl::FramebufferObject::BindColourTexture
  */
 GLenum vislib::graphics::gl::FramebufferObject::BindColourTexture(
-        const UINT which) {
+        const unsigned int which) {
     THE_STACK_TRACE;
     USES_GL_VERIFY;
     
@@ -128,8 +128,8 @@ GLenum vislib::graphics::gl::FramebufferObject::BindDepthTexture(void) {
 /*
  * vislib::graphics::gl::FramebufferObject::Create
  */
-bool vislib::graphics::gl::FramebufferObject::Create(const UINT width, 
-        const UINT height, const UINT cntColourAttachments, 
+bool vislib::graphics::gl::FramebufferObject::Create(const unsigned int width, 
+        const unsigned int height, const unsigned int cntColourAttachments, 
         const ColourAttachParams *cap, const DepthAttachParams& dap, 
         const StencilAttachParams& sap) {
     THE_STACK_TRACE;
@@ -164,7 +164,7 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
 
     /* Create colour buffers and attach it to FBO. */
     this->attachmentColour = new AttachmentProps[this->cntColourAttachments];
-    for (UINT i = 0; i < cntColourAttachments; i++) {
+    for (unsigned int i = 0; i < cntColourAttachments; i++) {
         this->attachmentColour[i].state = ATTACHMENT_TEXTURE;
         this->createTexture(this->attachmentColour[i].id, cap[i].internalFormat,
             cap[i].format, cap[i].type);
@@ -300,7 +300,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Disable(void) throw() {
  * vislib::graphics::gl::FramebufferObject::Enable
  */
 GLenum vislib::graphics::gl::FramebufferObject::Enable(
-        const UINT colourAttachment) {
+        const unsigned int colourAttachment) {
     THE_STACK_TRACE;
     USES_GL_VERIFY;
 
@@ -362,7 +362,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
  * vislib::graphics::gl::FramebufferObject::EnableMultipleV
  */
 GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(
-        UINT cntColourAttachments, const UINT* colourAttachments) {
+        unsigned int cntColourAttachments, const unsigned int* colourAttachments) {
     THE_STACK_TRACE;
     if (cntColourAttachments == 0) {
         return this->Enable();
@@ -405,13 +405,13 @@ GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(
  * vislib::graphics::gl::FramebufferObject::EnableMultiple
  */
 GLenum vislib::graphics::gl::FramebufferObject::EnableMultiple(
-        UINT cntColourAttachments, ...) {
+        unsigned int cntColourAttachments, ...) {
     THE_STACK_TRACE;
     va_list argptr;
     va_start(argptr, cntColourAttachments);
-    UINT *atts = new UINT[cntColourAttachments];
-    for (UINT i = 0; i < cntColourAttachments; i++) {
-        atts[i] = va_arg(argptr, UINT);
+    unsigned int *atts = new unsigned int[cntColourAttachments];
+    for (unsigned int i = 0; i < cntColourAttachments; i++) {
+        atts[i] = va_arg(argptr, unsigned int);
     }
     va_end(argptr);
     GLenum rv = this->EnableMultipleV(cntColourAttachments, atts);
@@ -424,7 +424,7 @@ GLenum vislib::graphics::gl::FramebufferObject::EnableMultiple(
  * vislib::graphics::gl::FramebufferObject::GetColourTextureID
  */
 GLuint vislib::graphics::gl::FramebufferObject::GetColourTextureID(
-        const UINT colourAttachment) const {
+        const unsigned int colourAttachment) const {
     THE_STACK_TRACE;
 
     if (this->cntColourAttachments < 1) {
@@ -521,7 +521,7 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
     }
 
     /* Release depth and stencil buffers, if any. */
-    for (UINT i = 0; i < 2; i++) {
+    for (unsigned int i = 0; i < 2; i++) {
         switch (this->attachmentOther[i].state) {
 
             case ATTACHMENT_TEXTURE:
@@ -550,7 +550,7 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
     }
 
     /* Release colour attachments, if any. */
-    for (UINT i = 0; i < this->cntColourAttachments; i++) {
+    for (unsigned int i = 0; i < this->cntColourAttachments; i++) {
         switch (this->attachmentColour[i].state) {
     
             case ATTACHMENT_TEXTURE:
@@ -586,13 +586,13 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
 /*
  * vislib::graphics::gl::FramebufferObject::ATTACH_IDX_DEPTH
  */
-const UINT vislib::graphics::gl::FramebufferObject::ATTACH_IDX_DEPTH = 0;
+const unsigned int vislib::graphics::gl::FramebufferObject::ATTACH_IDX_DEPTH = 0;
 
 
 /*
  * vislib::graphics::gl::FramebufferObject::ATTACH_IDX_STENCIL
  */
-const UINT vislib::graphics::gl::FramebufferObject::ATTACH_IDX_STENCIL = 1;
+const unsigned int vislib::graphics::gl::FramebufferObject::ATTACH_IDX_STENCIL = 1;
 
 
 /*

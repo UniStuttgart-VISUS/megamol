@@ -389,8 +389,8 @@ namespace graphics {
          */
         template<class Tp>
         inline Tp* FindExtension(void) {
-            SIZE_T extCnt = this->exts.Count();
-            for (SIZE_T i = 0; i < extCnt; i++) {
+            size_t extCnt = this->exts.Count();
+            for (size_t i = 0; i < extCnt; i++) {
                 Tp *ptr = dynamic_cast<Tp *>(this->exts[i]);
                 if (ptr != NULL) return ptr;
             }
@@ -405,8 +405,8 @@ namespace graphics {
          */
         template<class Tp>
         inline const Tp* FindExtension(void) const {
-            SIZE_T extCnt = this->exts.Count();
-            for (SIZE_T i = 0; i < extCnt; i++) {
+            size_t extCnt = this->exts.Count();
+            for (size_t i = 0; i < extCnt; i++) {
                 const Tp *ptr = dynamic_cast<Tp *>(this->exts[i]);
                 if (ptr != NULL) return ptr;
             }

@@ -703,7 +703,7 @@ CASE_TEXTFF_UNICODE:
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unknown text file format %d\n", format);
         break;
     }
-    //SIZE_T len = text.Length();
+    //size_t len = text.Length();
     //return (file.Write(text.PeekBuffer(), len) == len);
 
     return false;
@@ -789,7 +789,7 @@ CASE_TEXTFF_UTF8: {
         break;
     }
     //vislib::StringA tmp(text);
-    //SIZE_T len = tmp.Length();
+    //size_t len = tmp.Length();
     //return (file.Write(tmp.PeekBuffer(), len) == len);
     return false;
 }

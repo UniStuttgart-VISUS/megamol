@@ -217,8 +217,8 @@ namespace cluster {
          * @return true in order to signal that the message has been processed, 
          *         false if the implementation did ignore it.
          */
-        virtual bool onMessageReceived(const Socket& src, const UINT msgId,
-            const BYTE *body, const SIZE_T cntBody);
+        virtual bool onMessageReceived(const Socket& src, const unsigned int msgId,
+            const BYTE *body, const size_t cntBody);
 
         /**
          * If a peer node connects, send initial camera configuration to it.
@@ -290,7 +290,7 @@ namespace cluster {
          * @param msgId The message ID.
          * @param value Pointer to the value.
          */
-        template<class T, UINT D>
+        template<class T, unsigned int D>
         inline void sendVectorialCamParam(const UINT32 msgId, const T *value) {
             BYTE msg[sizeof(MessageHeader) + D * sizeof(T)];
             MessageHeader *header = reinterpret_cast<MessageHeader *>(msg);

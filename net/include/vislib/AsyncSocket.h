@@ -127,9 +127,9 @@ namespace net {
          * @throws SocketException       If the operation fails.
          * @throws IllegalParamException If 'context' is a NULL pointer.
          */
-        void BeginReceive(void *outData, const SIZE_T cntBytes,
-            AsyncSocketContext *context, const INT timeout = TIMEOUT_INFINITE, 
-            const INT flags = 0);
+        void BeginReceive(void *outData, const size_t cntBytes,
+            AsyncSocketContext *context, const int timeout = TIMEOUT_INFINITE, 
+            const int flags = 0);
 
         /**
          * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
@@ -160,8 +160,8 @@ namespace net {
          *                               NULL pointer.
          */
         void BeginReceive(IPEndPoint *outFromAddr, void *outData, 
-            const SIZE_T cntBytes, AsyncSocketContext *context, 
-            const INT timeout = TIMEOUT_INFINITE, const INT flags = 0);
+            const size_t cntBytes, AsyncSocketContext *context, 
+            const int timeout = TIMEOUT_INFINITE, const int flags = 0);
 
         /**
          * Send 'cntBytes' from the location designated by 'data' using this 
@@ -188,9 +188,9 @@ namespace net {
          * @throws IllegalParamException If 'outFromAddr' or 'context' is a 
          *                               NULL pointer.
          */
-        void BeginSend(const void *data, const SIZE_T cntBytes,
-            AsyncSocketContext *context, const INT timeout = TIMEOUT_INFINITE, 
-            const INT flags = 0);
+        void BeginSend(const void *data, const size_t cntBytes,
+            AsyncSocketContext *context, const int timeout = TIMEOUT_INFINITE, 
+            const int flags = 0);
 
         /**
          * Send a datagram of 'cntBytes' bytes from the location designated by 
@@ -221,8 +221,8 @@ namespace net {
          *                               NULL pointer.
          */
         void BeginSend(const IPEndPoint& toAddr, const void *data, 
-            const SIZE_T cntBytes, AsyncSocketContext *context, 
-            const INT timeout = TIMEOUT_INFINITE, const INT flags = 0);
+            const size_t cntBytes, AsyncSocketContext *context, 
+            const int timeout = TIMEOUT_INFINITE, const int flags = 0);
 
         /**
          * Completes an asynchronous receive operation. This method must be 
@@ -238,7 +238,7 @@ namespace net {
          *                               failed.
          * @throws IllegalParamException If 'context' is a NULL pointer.
          */
-        inline SIZE_T EndReceive(AsyncSocketContext *context) {
+        inline size_t EndReceive(AsyncSocketContext *context) {
             THE_STACK_TRACE;
             return this->endAsync(context);
         }
@@ -257,7 +257,7 @@ namespace net {
          *                               failed.
          * @throws IllegalParamException If 'context' is a NULL pointer.
          */
-        inline SIZE_T EndSend(AsyncSocketContext *context) {
+        inline size_t EndSend(AsyncSocketContext *context) {
             THE_STACK_TRACE;
             return this->endAsync(context);
         }
@@ -288,8 +288,8 @@ namespace net {
          * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceReceive' is true.
          */
-        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes, 
-            const INT timeout = TIMEOUT_INFINITE, const INT flags = 0, 
+        virtual size_t Receive(void *outData, const size_t cntBytes, 
+            const int timeout = TIMEOUT_INFINITE, const int flags = 0, 
             const bool forceReceive = false);
 
         /**
@@ -321,9 +321,9 @@ namespace net {
          * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceReceive' is true.
          */
-        virtual SIZE_T Receive(IPEndPoint& outFromAddr, void *outData, 
-            const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
-            const INT flags = 0, const bool forceReceive = false);
+        virtual size_t Receive(IPEndPoint& outFromAddr, void *outData, 
+            const size_t cntBytes, const int timeout = TIMEOUT_INFINITE, 
+            const int flags = 0, const bool forceReceive = false);
 
         /**
          * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
@@ -358,9 +358,9 @@ namespace net {
          * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceReceive' is true.
          */
-        virtual SIZE_T Receive(SocketAddress& outFromAddr, void *outData, 
-            const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
-            const INT flags = 0, const bool forceReceive = false);
+        virtual size_t Receive(SocketAddress& outFromAddr, void *outData, 
+            const size_t cntBytes, const int timeout = TIMEOUT_INFINITE, 
+            const int flags = 0, const bool forceReceive = false);
 
         /**
          * Send 'cntBytes' from the location designated by 'data' using this 
@@ -385,8 +385,8 @@ namespace net {
          * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
-        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes, 
-            const INT timeout = TIMEOUT_INFINITE, const INT flags = 0, 
+        virtual size_t Send(const void *data, const size_t cntBytes, 
+            const int timeout = TIMEOUT_INFINITE, const int flags = 0, 
             const bool forceSend = false);
 
         /**
@@ -415,9 +415,9 @@ namespace net {
          * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
-        virtual SIZE_T Send(const IPEndPoint& toAddr, const void *data, 
-            const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
-            const INT flags = 0, const bool forceSend = false);
+        virtual size_t Send(const IPEndPoint& toAddr, const void *data, 
+            const size_t cntBytes, const int timeout = TIMEOUT_INFINITE, 
+            const int flags = 0, const bool forceSend = false);
 #endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 
         /**
@@ -518,7 +518,7 @@ namespace net {
          *                               failed.
          * @throws IllegalParamException If 'context' is a NULL pointer.
          */
-        SIZE_T endAsync(AsyncSocketContext *context);
+        size_t endAsync(AsyncSocketContext *context);
 
 #if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
         /** This lock ensures exclusive receive access on Linux. */

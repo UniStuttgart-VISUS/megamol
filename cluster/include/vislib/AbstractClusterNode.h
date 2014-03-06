@@ -162,7 +162,7 @@ namespace cluster {
          *
          * @return The number of known peer nodes.
          */
-        virtual SIZE_T countPeers(void) const = 0;
+        virtual size_t countPeers(void) const = 0;
 
         /**
          * Call 'func' for each known peer node (socket).
@@ -177,7 +177,7 @@ namespace cluster {
          *
          * @return The number of sucessful calls to 'func' that have been made.
          */
-        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context) = 0;
+        virtual size_t forEachPeer(ForeachPeerFunc func, void *context) = 0;
 
         /**
          * Call 'func' for the peer node that has the specified ID 'peerId'. If
@@ -223,8 +223,8 @@ namespace cluster {
          * @return true in order to signal that the message has been processed,
          *         false if the implementation did ignore it.
          */
-        virtual bool onMessageReceived(const Socket& src, const UINT msgId,
-            const BYTE *body, const SIZE_T cntBody) = 0;
+        virtual bool onMessageReceived(const Socket& src, const unsigned int msgId,
+            const BYTE *body, const size_t cntBody) = 0;
 
         /**
          * The message receiver thread calls this method once it exists.
@@ -272,7 +272,7 @@ namespace cluster {
          *
          * @return The number of messages successfully delivered.
          */
-        virtual SIZE_T sendMessage(const UINT32 msgId, const BYTE *data, 
+        virtual size_t sendMessage(const UINT32 msgId, const BYTE *data, 
             const UINT32 cntData);
 
         /**
@@ -305,7 +305,7 @@ namespace cluster {
          *
          * @return The number of messages successfully delivered.
          */
-        virtual SIZE_T sendToEachPeer(const BYTE *data, const SIZE_T cntData);
+        virtual size_t sendToEachPeer(const BYTE *data, const size_t cntData);
 
         /**
          * Send 'cntData' bytes of data beginning at 'data' to the peer node
@@ -323,7 +323,7 @@ namespace cluster {
          *         not found or a communication error occurred.
          */
         virtual bool sendToPeer(const PeerIdentifier& peerId,
-            const BYTE *data, const SIZE_T cntData);
+            const BYTE *data, const size_t cntData);
 
         /**
          * Assignment.
@@ -341,7 +341,7 @@ namespace cluster {
          */
         typedef struct SendToPeerCtx_t {
             const BYTE *Data;
-            SIZE_T CntData;
+            size_t CntData;
         } SendToPeerCtx;
 
         /**

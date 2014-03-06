@@ -110,18 +110,18 @@ int vislib::CharTraits<char>::ParseInt(const Char *str) {
 /*
  * vislib::CharTraits<char>::ParseInt64
  */
-INT64 vislib::CharTraits<char>::ParseInt64(const Char *str) {
+int64_t vislib::CharTraits<char>::ParseInt64(const Char *str) {
     THE_STACK_TRACE;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
     Char *end = NULL;
-    INT64 retval = 0;
+    int64_t retval = 0;
 
 #ifdef _WIN32
     retval = ::_strtoi64(str, &end, 10);
 #else /* _WIN32 */
-    retval = static_cast<INT64>(::strtoll(str, &end, 10));
+    retval = static_cast<int64_t>(::strtoll(str, &end, 10));
 #endif /* _WIN32 */
 
     if (str < end) {
@@ -136,18 +136,18 @@ INT64 vislib::CharTraits<char>::ParseInt64(const Char *str) {
 /*
  * vislib::CharTraits<char>::ParseUInt64
  */
-UINT64 vislib::CharTraits<char>::ParseUInt64(const Char *str) {
+uint64_t vislib::CharTraits<char>::ParseUInt64(const Char *str) {
     THE_STACK_TRACE;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
     Char *end = NULL;
-    UINT64 retval = 0;
+    uint64_t retval = 0;
 
 #ifdef _WIN32
     retval = ::_strtoui64(str, &end, 10);
 #else /* _WIN32 */
-    retval = static_cast<UINT64>(::strtoull(str, &end, 10));
+    retval = static_cast<uint64_t>(::strtoull(str, &end, 10));
 #endif /* _WIN32 */
 
     if (str < end) {
@@ -378,18 +378,18 @@ int vislib::CharTraits<WCHAR>::ParseInt(const Char *str) {
 /*
  * vislib::CharTraits<char>::ParseInt64
  */
-INT64 vislib::CharTraits<WCHAR>::ParseInt64(const Char *str) {
+int64_t vislib::CharTraits<WCHAR>::ParseInt64(const Char *str) {
     THE_STACK_TRACE;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
     Char *end = NULL;
-    INT64 retval = 0;
+    int64_t retval = 0;
 
 #ifdef _WIN32
     retval = ::_wcstoi64(str, &end, 10);
 #else /* _WIN32 */
-    retval = static_cast<INT64>(::wcstoll(str, &end, 10));
+    retval = static_cast<int64_t>(::wcstoll(str, &end, 10));
 #endif /* _WIN32 */
 
     if (str < end) {
@@ -404,18 +404,18 @@ INT64 vislib::CharTraits<WCHAR>::ParseInt64(const Char *str) {
 /*
  * vislib::CharTraits<char>::ParseUInt64
  */
-UINT64 vislib::CharTraits<WCHAR>::ParseUInt64(const Char *str) {
+uint64_t vislib::CharTraits<WCHAR>::ParseUInt64(const Char *str) {
     THE_STACK_TRACE;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
     Char *end = NULL;
-    UINT64 retval = 0;
+    uint64_t retval = 0;
 
 #ifdef _WIN32
     retval = ::_wcstoui64(str, &end, 10);
 #else /* _WIN32 */
-    retval = static_cast<UINT64>(::wcstoull(str, &end, 10));
+    retval = static_cast<uint64_t>(::wcstoull(str, &end, 10));
 #endif /* _WIN32 */
 
     if (str < end) {
@@ -451,14 +451,14 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::Format(
     // Yes, you can trust your eyes: The char and wide char implementations
     // under Linux have a completely different semantics. vswprintf cannot 
     // be used for determining the required size as vsprintf can.
-    SIZE_T bufferSize, bufferGrow;
+    size_t bufferSize, bufferGrow;
     Char *buffer = NULL;
 
     if ((dst == NULL) || (cnt <= 0)) {
         /* Just count. */
-        bufferSize = static_cast<SIZE_T>(1.1 * static_cast<float>(
+        bufferSize = static_cast<size_t>(1.1 * static_cast<float>(
             ::wcslen(fmt)) + 1);
-        bufferGrow = static_cast<SIZE_T>(0.5 * static_cast<float>(
+        bufferGrow = static_cast<size_t>(0.5 * static_cast<float>(
             bufferSize));
         buffer = new Char[bufferSize];
 

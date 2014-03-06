@@ -159,12 +159,12 @@ namespace gl {
          *                         fails.
          */
         virtual bool Compile(
-            const char **vertexShaderSrc, const SIZE_T cntVertexShaderSrc,
+            const char **vertexShaderSrc, const size_t cntVertexShaderSrc,
             const char **tessControlShaderSrc,
-            const SIZE_T cntTessControlShaderSrc,
-            const char **tessEvalShaderSrc, const SIZE_T cntTessEvalShaderSrc,
-            const char **geometryShaderSrc, const SIZE_T cntGeometryShaderSrc,
-            const char **fragmentShaderSrc, const SIZE_T cntFragmentShaderSrc,
+            const size_t cntTessControlShaderSrc,
+            const char **tessEvalShaderSrc, const size_t cntTessEvalShaderSrc,
+            const char **geometryShaderSrc, const size_t cntGeometryShaderSrc,
+            const char **fragmentShaderSrc, const size_t cntFragmentShaderSrc,
             bool insertLineDirective = true);
 
         /**
@@ -252,15 +252,15 @@ namespace gl {
          */
         virtual bool CompileFromFile(
             const char **vertexShaderFiles,
-            const SIZE_T cntVertexShaderFiles,
+            const size_t cntVertexShaderFiles,
             const char **tessControlShaderFiles,
-            const SIZE_T cntTessControlShaderFiles,
+            const size_t cntTessControlShaderFiles,
             const char **tessEvalShaderFiles,
-            const SIZE_T cntTessEvalShaderFiles,
+            const size_t cntTessEvalShaderFiles,
             const char **geometryShaderFiles,
-            const SIZE_T cntGeometryShaderFiles,
+            const size_t cntGeometryShaderFiles,
             const char **fragmentShaderFiles,
-            const SIZE_T cntFragmentShaderFiles,
+            const size_t cntFragmentShaderFiles,
             bool insertLineDirective = true);
 
         /**

@@ -487,7 +487,7 @@ namespace graphics {
          *
          * @return The number of named colours
          */
-        static SIZE_T CountNamedColours(void);
+        static size_t CountNamedColours(void);
 
         /**
          * Answer the idx-th named colour
@@ -498,7 +498,7 @@ namespace graphics {
          *
          * @throw OutOfRangeException if idx < 0 or idx >= CountNamedColours
          */
-        static const ColourRGBAu8& GetColourByIndex(SIZE_T idx);
+        static const ColourRGBAu8& GetColourByIndex(size_t idx);
 
         /**
          * Answer the colour of the specified name
@@ -520,7 +520,7 @@ namespace graphics {
          *
          * @throw OutOfRangeException if idx < 0 or idx >= CountNamedColours
          */
-        static const char *GetNameByIndex(SIZE_T idx);
+        static const char *GetNameByIndex(size_t idx);
 
         /**
          * Answer the name of the colour
@@ -565,7 +565,7 @@ namespace graphics {
         } NamedColourIndex;
 
         /** The size of the index of named colours */
-        static SIZE_T count;
+        static size_t count;
 
         /** The index of named colours */
         static NamedColourIndex index[];

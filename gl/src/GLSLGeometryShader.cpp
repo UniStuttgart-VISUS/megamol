@@ -71,9 +71,9 @@ bool vislib::graphics::gl::GLSLGeometryShader::Compile(
  * vislib::graphics::gl::GLSLGeometryShader::Compile
  */
 bool vislib::graphics::gl::GLSLGeometryShader::Compile(
-        const char **vertexShaderSrc, const SIZE_T cntVertexShaderSrc, 
-        const char **geometryShaderSrc, const SIZE_T cntGeometryShaderSrc, 
-        const char **fragmentShaderSrc, const SIZE_T cntFragmentShaderSrc, 
+        const char **vertexShaderSrc, const size_t cntVertexShaderSrc, 
+        const char **geometryShaderSrc, const size_t cntGeometryShaderSrc, 
+        const char **fragmentShaderSrc, const size_t cntFragmentShaderSrc, 
         bool insertLineDirective) {
 
     USES_GL_VERIFY;
@@ -134,9 +134,9 @@ bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
  * vislib::graphics::gl::GLSLGeometryShader::CompileFromFile
  */
 bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
-        const char **vertexShaderFiles, const SIZE_T cntVertexShaderFiles,
-        const char **geometryShaderFiles, const SIZE_T cntGeometryShaderFiles,
-        const char **fragmentShaderFiles, const SIZE_T cntFragmentShaderFiles,
+        const char **vertexShaderFiles, const size_t cntVertexShaderFiles,
+        const char **geometryShaderFiles, const size_t cntGeometryShaderFiles,
+        const char **fragmentShaderFiles, const size_t cntFragmentShaderFiles,
         bool insertLineDirective) {
 
     // using arrays for automatic cleanup when a 'read' throws an exception
@@ -144,21 +144,21 @@ bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
     Array<StringA> geometryShaderSrcs(cntGeometryShaderFiles);
     Array<StringA> fragmentShaderSrcs(cntFragmentShaderFiles);
 
-    for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
+    for(size_t i = 0; i < cntVertexShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(vertexShaderSrcs[i], 
                 vertexShaderFiles[i])) {
             return false;
         }
     }
 
-    for(SIZE_T i = 0; i < cntGeometryShaderFiles; i++) {
+    for(size_t i = 0; i < cntGeometryShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(geometryShaderSrcs[i], 
                 geometryShaderFiles[i])) {
             return false;
         }
     }
 
-    for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
+    for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(fragmentShaderSrcs[i], 
                 fragmentShaderFiles[i])) {
             return false;
@@ -173,13 +173,13 @@ bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
         = new const char*[cntFragmentShaderFiles];
 
     try {
-        for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
+        for(size_t i = 0; i < cntVertexShaderFiles; i++) {
             vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].PeekBuffer();
         }
-        for(SIZE_T i = 0; i < cntGeometryShaderFiles; i++) {
+        for(size_t i = 0; i < cntGeometryShaderFiles; i++) {
             geometryShaderSrcPtrs[i] = geometryShaderSrcs[i].PeekBuffer();
         }
-        for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
+        for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
             fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].PeekBuffer();
         }
 

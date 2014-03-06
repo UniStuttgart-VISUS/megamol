@@ -46,14 +46,14 @@ static const UINT32 FLT32_SIGN_MASK = 0x80000000;
 /*
  * vislib::math::Float16::FromFloat32
  */
-void vislib::math::Float16::FromFloat32(UINT16 *outHalf, SIZE_T cnt,
+void vislib::math::Float16::FromFloat32(UINT16 *outHalf, size_t cnt,
         const float *flt) {
     INT32 exponent = 0;         // Value of exponent of 'flt'.
     UINT32 input = 0;           // Bitwise reinterpretation of 'flt'.
     UINT32 mantissa = 0;        // Value of mantissa, biased for half.
     UINT32 sign = 0;            // The sign bit.
 
-    for (SIZE_T i = 0; i < cnt; i++) {
+    for (size_t i = 0; i < cnt; i++) {
 
         /* Bitwise reinterpretation of input */
         input = *(reinterpret_cast<const UINT32 *>(flt + i));
@@ -115,21 +115,21 @@ void vislib::math::Float16::FromFloat32(UINT16 *outHalf, SIZE_T cnt,
             outHalf[i] = sign | (exponent << Float16::MANT_DIG)
                 | (mantissa >> FLT1632_MANTISSA_OFFSET);
         } /* end if (exponent <= 0) */
-    } /* end for (SIZE_T i = 0; i < cnt; i++) */
+    } /* end for (size_t i = 0; i < cnt; i++) */
 }
 
 
 /*
  * vislib::math::Float16::ToFloat32
  */
-void vislib::math::Float16::ToFloat32(float *outFloat, const SIZE_T cnt,
+void vislib::math::Float16::ToFloat32(float *outFloat, const size_t cnt,
         const UINT16 *half) {
     INT32 exponent = 0;         // Value of exponent of 'half'.
     UINT32 mantissa = 0;        // Value of mantissa.
     UINT32 result = 0;          // The result
     UINT32 sign = 0;            // The sign bit.
 
-    for (SIZE_T i = 0; i < cnt; i++) {
+    for (size_t i = 0; i < cnt; i++) {
 
         /* Just move the sign bit directly to its final position. */
         sign = static_cast<UINT32>(half[i] & FLT16_SIGN_MASK) 
@@ -196,32 +196,32 @@ void vislib::math::Float16::ToFloat32(float *outFloat, const SIZE_T cnt,
         /* Bitwise reinterpret the result as float. */
         outFloat[i] = *reinterpret_cast<float *>(&result);
 
-    } /* end for (SIZE_T i = 0; i < cnt; i++) */
+    } /* end for (size_t i = 0; i < cnt; i++) */
 }
 
 
 /*
  * vislib::math::Float16::MANT_DIG
  */
-const INT vislib::math::Float16::MANT_DIG = 10;
+const int vislib::math::Float16::MANT_DIG = 10;
 
 
 /*
  * vislib::math::Float16::MAX_EXP
  */
-const INT vislib::math::Float16::MAX_EXP = (16 - 1);
+const int vislib::math::Float16::MAX_EXP = (16 - 1);
 
 
 /*
  * vislib::math::Float16::MIN_EXP
  */
-const INT vislib::math::Float16::MIN_EXP = -12;
+const int vislib::math::Float16::MIN_EXP = -12;
 
 
 /*
  * vislib::math::Float16::RADIX
  */
-const INT vislib::math::Float16::RADIX = 2;
+const int vislib::math::Float16::RADIX = 2;
 
 
 /*

@@ -170,7 +170,7 @@ void vislib::net::cluster::AbstractClientNode::disconnect(const bool isSilent,
 /*
  * vislib::net::cluster::AbstractClientNode::countPeers
  */
-SIZE_T vislib::net::cluster::AbstractClientNode::countPeers(void) const {
+size_t vislib::net::cluster::AbstractClientNode::countPeers(void) const {
     return (this->socket.IsValid() ? 1 : 0);
 }
 
@@ -178,9 +178,9 @@ SIZE_T vislib::net::cluster::AbstractClientNode::countPeers(void) const {
 /*
  * vislib::net::cluster::AbstractClientNode::forEachPeer
  */
-SIZE_T vislib::net::cluster::AbstractClientNode::forEachPeer(
+size_t vislib::net::cluster::AbstractClientNode::forEachPeer(
         ForeachPeerFunc func, void *context) {
-    SIZE_T retval = 0;
+    size_t retval = 0;
 
     try {
         func(this, this->serverAddress, this->socket, context);

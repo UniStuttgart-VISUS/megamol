@@ -87,7 +87,7 @@ namespace math {
          *
          * @param index The index of the new element in the inputData array.
          */
-        void ComputeSingle(SIZE_T index) {
+        void ComputeSingle(size_t index) {
             OutElement out;
             unsigned int currDim;
             float xi;
@@ -117,7 +117,7 @@ namespace math {
          * @param x   Index of one object.
          * @param y   Index of the other object.
          */
-        float calcDistanceSquared(unsigned int dim, SIZE_T x, SIZE_T y);
+        float calcDistanceSquared(unsigned int dim, size_t x, size_t y);
 
         /**
          * Heuristically choose two maximally distant pivot points using the
@@ -143,7 +143,7 @@ namespace math {
         ResultType &outData;
 
         /** The pivot indices per (output) dimension */
-        SIZE_T a[D], b[D];
+        size_t a[D], b[D];
 
         /** The pivot distance per (output) dimension */
         float dab[D];
@@ -158,7 +158,7 @@ namespace math {
      */
     template<class TI, class TO, unsigned int D>
     float FastMap<TI, TO, D>::calcDistanceSquared(
-        unsigned int dim, SIZE_T x, SIZE_T y) {
+        unsigned int dim, size_t x, size_t y) {
         float d;
         if (dim == 0) {
             d = inData[x].Distance(inData[y]);
@@ -174,24 +174,24 @@ namespace math {
      */
     template<class TI, class TO, unsigned int D>
     void FastMap<TI, TO, D>::chooseDistant(unsigned int dim) {
-        SIZE_T a = 0;
-        SIZE_T b;
+        size_t a = 0;
+        size_t b;
         float dist, tmpDist;
 
         // This should be done outside to give more control to the application
         // srand(static_cast<unsigned>(time(NULL)));
 
-        b = SIZE_T ((rand() / static_cast<double>(RAND_MAX)) * inData.Count());
+        b = size_t ((rand() / static_cast<double>(RAND_MAX)) * inData.Count());
         for (unsigned int j = 0; j <= MAX_PIVOT_ITERATIONS; j++) {
             dist = 0.0f;
-            for (SIZE_T i = 0; i < inData.Count(); i++) {
+            for (size_t i = 0; i < inData.Count(); i++) {
                 tmpDist = calcDistanceSquared(dim, i, b);
                 if (tmpDist > dist) {
                     dist = tmpDist;
                     a = i;
                 }
             }
-            SIZE_T i = b;
+            size_t i = b;
             b = a;
             a = i;
         }
@@ -214,11 +214,11 @@ namespace math {
 
             //if (calcDistanceSquared(currDim, a[currDim], b[currDim]) == 0) {
             if (vislib::math::IsEqual(calcDistanceSquared(currDim, a[currDim], b[currDim]), 0.0f)) {
-                for (SIZE_T i = 0; i < inData.Count(); i++) {
+                for (size_t i = 0; i < inData.Count(); i++) {
                     outData[i][currDim] = 0;
                 }
             } else {
-                for (SIZE_T i = 0; i < inData.Count(); i++) {
+                for (size_t i = 0; i < inData.Count(); i++) {
                     xi = calcDistanceSquared(currDim, a[currDim], i);
                     xi += dabSq[currDim];
                     xi -= calcDistanceSquared(currDim, b[currDim], i);

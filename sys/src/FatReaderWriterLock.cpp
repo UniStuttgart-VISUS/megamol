@@ -61,7 +61,7 @@ void vislib::sys::FatReaderWriterLock::LockExclusive(void) {
 
     this->exclusiveLock.Lock();
 
-    for (SIZE_T i = 0; i < this->shThreads.Count(); i++) {
+    for (size_t i = 0; i < this->shThreads.Count(); i++) {
         if (this->shThreads[i] == Thread::CurrentID()) {
             this->exclusiveLock.Unlock();
             throw IllegalStateException("LockExclusive Upgrade not allowed",

@@ -61,7 +61,7 @@ namespace vislib {
          *
          * @return The number of entries in the map.
          */
-        virtual SIZE_T Count(void) const = 0;
+        virtual size_t Count(void) const = 0;
 
         /**
          * Finds all keys which are associated to a given value. The order of

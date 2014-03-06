@@ -23,7 +23,7 @@
 /*
  * vislib::sys::PerformanceCounter::Query
  */
-UINT64 vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
+uint64_t vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
 #ifdef _WIN32
     LARGE_INTEGER timerCount;
 
@@ -46,9 +46,9 @@ UINT64 vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
     }
 
     if (useFullPrecision) {
-        return static_cast<UINT64>(t.tv_sec * 1e6 + t.tv_usec);
+        return static_cast<uint64_t>(t.tv_sec * 1e6 + t.tv_usec);
     } else {
-        return static_cast<UINT64>((t.tv_sec * 1e6 + t.tv_usec) / 1000.0);
+        return static_cast<uint64_t>((t.tv_sec * 1e6 + t.tv_usec) / 1000.0);
     }
 
 #endif /* _WIN32 */
@@ -58,7 +58,7 @@ UINT64 vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
 /*
  * vislib::sys::PerformanceCounter::QueryFrequency
  */
-UINT64 vislib::sys::PerformanceCounter::QueryFrequency(void) {
+uint64_t vislib::sys::PerformanceCounter::QueryFrequency(void) {
 #ifdef _WIN32
     LARGE_INTEGER timerFreq;
 

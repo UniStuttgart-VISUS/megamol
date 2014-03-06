@@ -43,7 +43,7 @@ namespace sys {
          *
          * @throws TODO: range check!
          */
-        static INT64 DaysToTicks(const INT64 days);
+        static int64_t DaysToTicks(const int64_t days);
 
         /** 
          * Create a positive or negative DateTimeSpan of one day.
@@ -122,24 +122,24 @@ namespace sys {
          *
          * @throws TODO: range check!
          */
-        static INT64 TimeToTicks(const INT hours, const INT minutes, 
-            const INT seconds, const INT milliseconds = 0,
-            const INT ticks = 0);
+        static int64_t TimeToTicks(const int hours, const int minutes, 
+            const int seconds, const int milliseconds = 0,
+            const int ticks = 0);
 
         /** A constant empty time span. */
         static const DateTimeSpan EMPTY;
 
         /** One day in milliseconds. */
-        static const INT64 MILLISECONDS_PER_DAY;
+        static const int64_t MILLISECONDS_PER_DAY;
 
         /** One hour in milliseconds. */
-        static const INT64 MILLISECONDS_PER_HOUR;
+        static const int64_t MILLISECONDS_PER_HOUR;
 
         /** One minute in milliseconds. */
-        static const INT64 MILLISECONDS_PER_MINUTE;
+        static const int64_t MILLISECONDS_PER_MINUTE;
         
         /** One second in milliseconds. */
-        static const INT64 MILLISECONDS_PER_SECOND;
+        static const int64_t MILLISECONDS_PER_SECOND;
 
         /** The largest possible positive time span. */
         static const DateTimeSpan MAXIMUM;
@@ -148,19 +148,19 @@ namespace sys {
         static const DateTimeSpan MINIMUM;
 
         /** One day in milliseconds. */
-        static const INT64 TICKS_PER_DAY;
+        static const int64_t TICKS_PER_DAY;
 
         /** One hour in milliseconds. */
-        static const INT64 TICKS_PER_HOUR;
+        static const int64_t TICKS_PER_HOUR;
 
         /** Ticks per millisecond. */
-        static const INT64 TICKS_PER_MILLISECOND;
+        static const int64_t TICKS_PER_MILLISECOND;
 
         /** One minute in milliseconds. */
-        static const INT64 TICKS_PER_MINUTE;
+        static const int64_t TICKS_PER_MINUTE;
         
         /** One second in milliseconds. */
-        static const INT64 TICKS_PER_SECOND;
+        static const int64_t TICKS_PER_SECOND;
 
         /**
          * Create a time span of the given amount of ticks.
@@ -168,7 +168,7 @@ namespace sys {
          * @param ticks The total number of ticks of the timespan. This 
          *              parameter defaults to zero.
          */
-        explicit inline DateTimeSpan(const INT64 ticks = 0L) throw()
+        explicit inline DateTimeSpan(const int64_t ticks = 0L) throw()
             : ticks(ticks) {}
 
         /**
@@ -186,8 +186,8 @@ namespace sys {
          * @throws IllegalParamException If the parameters would cause a numeric
          *                               overflow.
          */
-        DateTimeSpan(const INT days, const INT hours, const INT minutes,
-            const INT seconds, const INT milliseconds = 0, const INT ticks = 0);
+        DateTimeSpan(const int days, const int hours, const int minutes,
+            const int seconds, const int milliseconds = 0, const int ticks = 0);
 
         /**
          * Copy ctor.
@@ -207,9 +207,9 @@ namespace sys {
          *
          * @return The days part of the time span.
          */
-        inline INT GetDays(void) const {
+        inline int GetDays(void) const {
             THE_STACK_TRACE;
-            return static_cast<INT>(this->ticks / TICKS_PER_DAY);
+            return static_cast<int>(this->ticks / TICKS_PER_DAY);
         }
 
         /**
@@ -218,9 +218,9 @@ namespace sys {
          *
          * @return The hours part of the time span.
          */
-        inline INT GetHours(void) const {
+        inline int GetHours(void) const {
             THE_STACK_TRACE;
-            return static_cast<INT>((this->ticks / TICKS_PER_HOUR) % 24);
+            return static_cast<int>((this->ticks / TICKS_PER_HOUR) % 24);
         }
 
         /**
@@ -229,9 +229,9 @@ namespace sys {
          *
          * @return The milliseconds part of the time span.
          */
-        inline INT GetMilliseconds(void) const {
+        inline int GetMilliseconds(void) const {
             THE_STACK_TRACE;
-            return static_cast<INT>((this->ticks / TICKS_PER_MILLISECOND) 
+            return static_cast<int>((this->ticks / TICKS_PER_MILLISECOND) 
                 % 1000);
         }
 
@@ -241,9 +241,9 @@ namespace sys {
          *
          * @return The minutes part of the time span.
          */
-        inline INT GetMinutes(void) const {
+        inline int GetMinutes(void) const {
             THE_STACK_TRACE;
-            return static_cast<INT>((this->ticks / TICKS_PER_MINUTE) % 60);
+            return static_cast<int>((this->ticks / TICKS_PER_MINUTE) % 60);
         }
 
         /**
@@ -252,9 +252,9 @@ namespace sys {
          *
          * @return The seconds part of the time span.
          */
-        inline INT GetSeconds(void) const {
+        inline int GetSeconds(void) const {
             THE_STACK_TRACE;
-            return static_cast<INT>((this->ticks / TICKS_PER_SECOND) % 60);
+            return static_cast<int>((this->ticks / TICKS_PER_SECOND) % 60);
         }
 
         /**
@@ -263,9 +263,9 @@ namespace sys {
          *
          * @return The ticks part of the time span.
          */
-        inline INT GetTicks(void) const {
+        inline int GetTicks(void) const {
             THE_STACK_TRACE;
-            return static_cast<INT>(this->ticks % TICKS_PER_MILLISECOND);
+            return static_cast<int>(this->ticks % TICKS_PER_MILLISECOND);
         }
 
         /**
@@ -273,7 +273,7 @@ namespace sys {
          *
          * @return The total number of ticks.
          */
-        inline INT64 GetTotalTicks(void) const {
+        inline int64_t GetTotalTicks(void) const {
             THE_STACK_TRACE;
             return this->ticks;
         }
@@ -293,8 +293,8 @@ namespace sys {
          * @throws IllegalParamException If the parameters would cause a numeric
          *                               overflow.
          */
-        void Set(const INT days, const INT hours, const INT minutes,
-            const INT seconds, const INT milliseconds = 0, const INT ticks = 0);
+        void Set(const int days, const int hours, const int minutes,
+            const int seconds, const int milliseconds = 0, const int ticks = 0);
 
         /**
          * Answer a string representation of the time span.
@@ -475,7 +475,7 @@ namespace sys {
          *
          * @return The total number of ticks.
          */
-        inline operator INT64(void) const throw() {
+        inline operator int64_t(void) const throw() {
             THE_STACK_TRACE;
             return this->ticks;
         }
@@ -494,10 +494,10 @@ namespace sys {
          * @throws IllegalParamException If 'ticks' has a value that would 
          *                               cause an overflow of the result.
          */
-        void add(const INT64 ticks);
+        void add(const int64_t ticks);
 
         /** The value in 100 ns ticks. */
-        INT64 ticks;
+        int64_t ticks;
 
     };
     

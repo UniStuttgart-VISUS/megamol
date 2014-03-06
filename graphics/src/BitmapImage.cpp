@@ -612,8 +612,8 @@ void vislib::graphics::BitmapImage::CopyFrom(
     memcpy(this->data, src.data, len);
     this->exts.Clear();
     if (copyExt && (!src.exts.IsEmpty())) {
-        SIZE_T eCnt = src.exts.Count();
-        for (SIZE_T i = 0; i < eCnt; i++) {
+        size_t eCnt = src.exts.Count();
+        for (size_t i = 0; i < eCnt; i++) {
             this->exts.Append(src.exts[i]->Clone(*this));
         }
     }

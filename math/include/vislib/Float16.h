@@ -59,7 +59,7 @@ namespace math {
          * @param flt     An array of at least 'cnt' floats. The caller remains
          *                owner of the memory.
          */
-        static void FromFloat32(UINT16 *outHalf, SIZE_T cnt,
+        static void FromFloat32(UINT16 *outHalf, size_t cnt,
             const float *flt);
 
         /**
@@ -86,7 +86,7 @@ namespace math {
          * @param half     An array of at least 'cnt' 16 bit floats. The caller 
          *                 remains owner of the memory.
          */
-        static void ToFloat32(float *outFloat, const SIZE_T cnt,
+        static void ToFloat32(float *outFloat, const size_t cnt,
             const UINT16 *half);
 
         /**
@@ -103,16 +103,16 @@ namespace math {
         }
 
         /** Number of bits in mantissa. */
-        static const INT MANT_DIG;
+        static const int MANT_DIG;
 
         /** Maximum binary exponent. */
-        static const INT MAX_EXP;
+        static const int MAX_EXP;
 
         /** Minimum binary exponent. */
-        static const INT MIN_EXP;
+        static const int MIN_EXP;
 
         /** Exponent radix. */
-        static const INT RADIX;
+        static const int RADIX;
 
         /** Smallest such that 1.0 + epsilon != 1.0 */
         static const float EPSILON;
@@ -175,11 +175,11 @@ namespace math {
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /**
-         * Cast ctor. from INT64.
+         * Cast ctor. from int64_t.
          *
          * @param value The initial value of the half float.
          */
-        inline Float16(const INT64 value)
+        inline Float16(const int64_t value)
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /** Dtor. */
@@ -294,12 +294,12 @@ namespace math {
         }
 
         /**
-         * Cast to INT64.
+         * Cast to int64_t.
          *
          * @return The value of this half.
          */
-        inline operator INT64(void) const {
-            return static_cast<INT64>(Float16::ToFloat32(this->value));
+        inline operator int64_t(void) const {
+            return static_cast<int64_t>(Float16::ToFloat32(this->value));
         }
 
     private:

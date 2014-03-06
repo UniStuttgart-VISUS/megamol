@@ -53,7 +53,7 @@ namespace sys {
          * @throws SystemException If the performance counter could not be 
          *                         queried.
          */
-        static UINT64 Query(const bool useFullPrecision = false);
+        static uint64_t Query(const bool useFullPrecision = false);
 
         /**
          * Query the performance counter for its current value in milliseconds.
@@ -62,8 +62,8 @@ namespace sys {
          *
          * Using this method is equivalent to the following code:
          *
-         * UINT64 value = PerformanceCounter::Query(true);
-         * UINT64 frequency = PerformanceCounter::QueryFrequency();
+         * uint64_t value = PerformanceCounter::Query(true);
+         * uint64_t frequency = PerformanceCounter::QueryFrequency();
          * double result = static_cast<double>(value) * 1000.0 
          *     / static_cast<double>(frequency);
          *
@@ -83,7 +83,7 @@ namespace sys {
          *
          * @throws SystemException If the frequency could not be queried.
          */
-        static UINT64 QueryFrequency(void);
+        static uint64_t QueryFrequency(void);
 
         /**
          * Convert a full resolution performance counter value to milliseconds.
@@ -95,7 +95,7 @@ namespace sys {
          *
          * @throws SystemException If the frequency could not be queried.
          */
-        inline static double ToMillis(const UINT64 value) {
+        inline static double ToMillis(const uint64_t value) {
             return (static_cast<double>(value) * 1000.0)
                 / static_cast<double>(QueryFrequency());
         }
@@ -139,10 +139,10 @@ namespace sys {
          *
          * @return The difference between now and the mark.
          */
-        inline INT64 Difference(void) const {
-            return (static_cast<INT64>(PerformanceCounter::Query(
+        inline int64_t Difference(void) const {
+            return (static_cast<int64_t>(PerformanceCounter::Query(
                 this->isUsingFullPrecisionMark)) 
-                - static_cast<INT64>(this->mark));
+                - static_cast<int64_t>(this->mark));
         }
 
         /**
@@ -156,7 +156,7 @@ namespace sys {
          *
          * @return The last mark.
          */
-        inline UINT64 GetMark(void) const {
+        inline uint64_t GetMark(void) const {
             return this->mark;
         }
 
@@ -176,7 +176,7 @@ namespace sys {
          * @return The new value of the mark, i. e. the current performance 
          *         counter value.
          */
-        inline UINT64 SetMark(void) {
+        inline uint64_t SetMark(void) {
             return (this->mark = PerformanceCounter::Query(
                 this->isUsingFullPrecisionMark));
         }
@@ -222,7 +222,7 @@ namespace sys {
          * The mark, i. e. the performance counter value when the last
          * mark was set.
          */
-        UINT64 mark;
+        uint64_t mark;
         
     };
 

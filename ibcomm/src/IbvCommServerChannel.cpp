@@ -101,15 +101,15 @@
 //}
 //
 //
-//SIZE_T vislib::net::ib::IbvCommServerChannel::Receive(void *outData, 
-//        const SIZE_T cntBytes, const UINT timeout, const bool forceReceive) {
+//size_t vislib::net::ib::IbvCommServerChannel::Receive(void *outData, 
+//        const size_t cntBytes, const unsigned int timeout, const bool forceReceive) {
 //    throw UnsupportedOperationException("IbvCommServerChannel::Receive", 
 //        __FILE__, __LINE__);
 //}
 //
 //
-//SIZE_T vislib::net::ib::IbvCommServerChannel::Send(const void *data, 
-//        const SIZE_T cntBytes, const UINT timeout, const bool forceSend) {
+//size_t vislib::net::ib::IbvCommServerChannel::Send(const void *data, 
+//        const size_t cntBytes, const unsigned int timeout, const bool forceSend) {
 //    throw UnsupportedOperationException("IbvCommServerChannel::Send", __FILE__, 
 //        __LINE__);
 //}

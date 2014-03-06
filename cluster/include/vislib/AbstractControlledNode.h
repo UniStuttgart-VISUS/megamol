@@ -80,8 +80,8 @@ namespace cluster {
          * @return true in order to signal that the message has been processed, 
          *         false if the implementation did ignore it.
          */
-        virtual bool onMessageReceived(const Socket& src, const UINT msgId,
-            const BYTE *body, const SIZE_T cntBody);
+        virtual bool onMessageReceived(const Socket& src, const unsigned int msgId,
+            const BYTE *body, const size_t cntBody);
 
         /**
          * Set new camera parameters to update.

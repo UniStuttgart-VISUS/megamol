@@ -87,7 +87,7 @@ vislib::sys::SystemMessage::operator const char *(void) const {
             reinterpret_cast<char *>(&this->msg), 0, NULL);
 
 #else /* _WIN32 */
-        SIZE_T bufLen = 128;
+        size_t bufLen = 128;
         char *buf = new char[bufLen];
         char *msg = NULL;
 
@@ -153,7 +153,7 @@ vislib::sys::SystemMessage::operator const wchar_t *(void) const {
             reinterpret_cast<wchar_t *>(&this->msg), 0, NULL);
 
 #else /* _WIN32 */
-        SIZE_T bufLen = 128;
+        size_t bufLen = 128;
         char *buf = new char[bufLen];
         char *msg = NULL;
 

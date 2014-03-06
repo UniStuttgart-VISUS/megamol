@@ -49,7 +49,7 @@ namespace vislib {
          *
          * @throws std::bad_alloc If the memory could not be allocated.
          */
-        static inline TargetPtrType Allocate(const SIZE_T cnt) {
+        static inline TargetPtrType Allocate(const size_t cnt) {
             return new T[cnt];
         }
 
@@ -76,8 +76,8 @@ namespace vislib {
         // *
         // * @throws std::bad_alloc If the new memory could not be allocated.
         // */
-        //static inline T *Reallocate(T *ptr, const SIZE_T cntOld, 
-        //		const SIZE_T cntNew) {
+        //static inline T *Reallocate(T *ptr, const size_t cntOld, 
+        //		const size_t cntNew) {
         //	T *retval = new T[cnt];
         //	::memcpy(retval, ptr, (cntOld < cntNew) ? cntOld : cntNew);
         //	delete[] ptr;

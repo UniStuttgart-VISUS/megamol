@@ -1061,7 +1061,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::MegaMolBlue(
 /*
  * vislib::graphics::NamedColours::CountNamedColours
  */
-SIZE_T vislib::graphics::NamedColours::CountNamedColours(void) {
+size_t vislib::graphics::NamedColours::CountNamedColours(void) {
     if (count == 0) {
         while (!index[count].name.IsEmpty()) count++;
     }
@@ -1073,7 +1073,7 @@ SIZE_T vislib::graphics::NamedColours::CountNamedColours(void) {
  * vislib::graphics::NamedColours::GetColourByIndex
  */
 const vislib::graphics::ColourRGBAu8&
-vislib::graphics::NamedColours::GetColourByIndex(SIZE_T idx) {
+vislib::graphics::NamedColours::GetColourByIndex(size_t idx) {
     if ((idx < 0) || (idx >= CountNamedColours())) {
         throw vislib::OutOfRangeException(idx, 0, count - 1,
             __FILE__, __LINE__);
@@ -1088,7 +1088,7 @@ vislib::graphics::NamedColours::GetColourByIndex(SIZE_T idx) {
 const vislib::graphics::ColourRGBAu8&
 vislib::graphics::NamedColours::GetColourByName(const char *name) {
     CountNamedColours();
-    for (SIZE_T i = 0; i < count; i++) {
+    for (size_t i = 0; i < count; i++) {
         if (index[i].name.Equals(name, false)) return index[i].colour;
     }
     throw vislib::NoSuchElementException(name, __FILE__, __LINE__);
@@ -1098,7 +1098,7 @@ vislib::graphics::NamedColours::GetColourByName(const char *name) {
 /*
  * vislib::graphics::NamedColours::GetNameByIndex
  */
-const char *vislib::graphics::NamedColours::GetNameByIndex(SIZE_T idx) {
+const char *vislib::graphics::NamedColours::GetNameByIndex(size_t idx) {
     if ((idx < 0) || (idx >= CountNamedColours())) {
         throw vislib::OutOfRangeException(idx, 0, count - 1,
             __FILE__, __LINE__);
@@ -1113,7 +1113,7 @@ const char *vislib::graphics::NamedColours::GetNameByIndex(SIZE_T idx) {
 const char *vislib::graphics::NamedColours::GetNameByColour(
         const vislib::graphics::ColourRGBAu8& col, bool throwException) {
     CountNamedColours();
-    for (SIZE_T i = 0; i < count; i++) {
+    for (size_t i = 0; i < count; i++) {
         if (index[i].colour == col) return index[i].name.PeekBuffer();
     }
     if (throwException) {
@@ -1127,7 +1127,7 @@ const char *vislib::graphics::NamedColours::GetNameByColour(
 /*
  * vislib::graphics::NamedColours::count
  */
-SIZE_T vislib::graphics::NamedColours::count = 0;
+size_t vislib::graphics::NamedColours::count = 0;
 
 
 /*

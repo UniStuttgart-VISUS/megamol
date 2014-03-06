@@ -255,7 +255,7 @@ void CamTestApp::OnSpecialKey(int key, int x, int y) {
  * CamTestApp::Render
  */
 void CamTestApp::Render(void) {
-    UINT64 time = vislib::sys::PerformanceCounter::Query();
+    uint64_t time = vislib::sys::PerformanceCounter::Query();
     float sec = this->walkSpeed * float(time - this->lastTime) / 1000.0f;
 
     this->lastTime = time;

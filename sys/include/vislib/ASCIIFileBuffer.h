@@ -69,7 +69,7 @@ namespace sys {
              *
              * @return The number of words in this line
              */
-            inline SIZE_T Count(void) const {
+            inline size_t Count(void) const {
                 return this->cnt;
             }
 
@@ -99,7 +99,7 @@ namespace sys {
              *
              * @throw OutOfRangeException if a non-existing line is requested
              */
-            inline const char * Word(SIZE_T idx) const {
+            inline const char * Word(size_t idx) const {
                 if (idx >= this->cnt) {
                     throw vislib::OutOfRangeException(static_cast<int>(idx),
                         0, static_cast<int>(this->cnt - 1),
@@ -181,7 +181,7 @@ namespace sys {
             LineBuffer& operator=(vislib::Array<char *>& words);
 
             /** The number of tokens, or Zero if only storing the line */
-            SIZE_T cnt;
+            size_t cnt;
 
             /** The pointers */
             union _pointers_t {
@@ -222,7 +222,7 @@ namespace sys {
          *
          * @return The number of lines stored in the buffer
          */
-        inline SIZE_T Count(void) const {
+        inline size_t Count(void) const {
             return this->lines.Count();
         }
 
@@ -245,7 +245,7 @@ namespace sys {
          *
          * @throw OutOfRangeException if a non-existing line is requested
          */
-        inline const LineBuffer&  Line(SIZE_T idx) const {
+        inline const LineBuffer&  Line(size_t idx) const {
             return this->lines[idx];
         }
 
@@ -357,7 +357,7 @@ namespace sys {
          *
          * @throw OutOfRangeException if a non-existing line is requested
          */
-        inline const LineBuffer& operator[](SIZE_T idx) const {
+        inline const LineBuffer& operator[](size_t idx) const {
             return this->lines[idx];
         }
 

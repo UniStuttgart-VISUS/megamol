@@ -36,7 +36,7 @@ vislib::graphics::AbstractBitmapCodec::~AbstractBitmapCodec(void) {
  * vislib::graphics::AbstractBitmapCodec::AutoDetect
  */
 int vislib::graphics::AbstractBitmapCodec::AutoDetect(const void *mem,
-        SIZE_T size) const {
+        size_t size) const {
     // does never detect compatibility
     return 0;
 }
@@ -93,10 +93,10 @@ bool vislib::graphics::AbstractBitmapCodec::Load(const char* filename) {
                 vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
             vislib::sys::File::FileSize size = file.GetSize();
             vislib::SmartPtr<char, vislib::ArrayAllocator<char> > mem
-                = new char[static_cast<SIZE_T>(size)];
+                = new char[static_cast<size_t>(size)];
             size = file.Read(mem.operator->(), size);
             return this->loadFromMemory(mem.operator->(),
-                static_cast<SIZE_T>(size));
+                static_cast<size_t>(size));
         }
         return false;
 
@@ -133,10 +133,10 @@ bool vislib::graphics::AbstractBitmapCodec::Load(const wchar_t* filename) {
                 vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
             vislib::sys::File::FileSize size = file.GetSize();
             vislib::SmartPtr<char, vislib::ArrayAllocator<char> > mem
-                = new char[static_cast<SIZE_T>(size)];
+                = new char[static_cast<size_t>(size)];
             size = file.Read(mem.operator->(), size);
             return this->loadFromMemory(mem.operator->(),
-                static_cast<SIZE_T>(size));
+                static_cast<size_t>(size));
         }
         return false;
 
@@ -160,10 +160,10 @@ bool vislib::graphics::AbstractBitmapCodec::Load(vislib::sys::File& file) {
         file.SeekToBegin();
         vislib::sys::File::FileSize size = file.GetSize() - file.Tell();
         vislib::SmartPtr<char, vislib::ArrayAllocator<char> > mem = new char[
-            static_cast<SIZE_T>(size)];
+            static_cast<size_t>(size)];
         size = file.Read(mem.operator->(), size);
         return this->loadFromMemory(mem.operator->(),
-            static_cast<SIZE_T>(size));
+            static_cast<size_t>(size));
 
     } else if (this->loadFromFileAImplemented()) {
         vislib::StringA filename;
@@ -174,10 +174,10 @@ bool vislib::graphics::AbstractBitmapCodec::Load(vislib::sys::File& file) {
                 vislib::sys::File::CREATE_ONLY)) {
 
             try {
-                SIZE_T size = static_cast<SIZE_T>(
+                size_t size = static_cast<size_t>(
                     file.GetSize() - file.Tell());
                 char *buf = new char[size];
-                size = static_cast<SIZE_T>(file.Read(buf, size));
+                size = static_cast<size_t>(file.Read(buf, size));
                 tmpfile.Write(buf, size);
                 delete[] buf;
                 tmpfile.Flush();
@@ -204,10 +204,10 @@ bool vislib::graphics::AbstractBitmapCodec::Load(vislib::sys::File& file) {
                 vislib::sys::File::CREATE_ONLY)) {
 
             try {
-                SIZE_T size = static_cast<SIZE_T>(
+                size_t size = static_cast<size_t>(
                     file.GetSize() - file.Tell());
                 char *buf = new char[size];
-                size = static_cast<SIZE_T>(file.Read(buf, size));
+                size = static_cast<size_t>(file.Read(buf, size));
                 tmpfile.Write(buf, size);
                 delete[] buf;
                 tmpfile.Flush();
@@ -235,7 +235,7 @@ bool vislib::graphics::AbstractBitmapCodec::Load(vislib::sys::File& file) {
 /*
  * vislib::graphics::AbstractBitmapCodec::Load
  */
-bool vislib::graphics::AbstractBitmapCodec::Load(const void *mem, SIZE_T size) {
+bool vislib::graphics::AbstractBitmapCodec::Load(const void *mem, size_t size) {
     this->image();
 
     if (this->loadFromMemoryImplemented()) {
@@ -431,9 +431,9 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
                 if (this->saveToFileA(filename)) {
                     tmpfile.Flush();
                     tmpfile.SeekToBegin();
-                    SIZE_T size = static_cast<SIZE_T>(tmpfile.GetSize());
+                    size_t size = static_cast<size_t>(tmpfile.GetSize());
                     char *buf = new char[size];
-                    size = static_cast<SIZE_T>(tmpfile.Read(buf,
+                    size = static_cast<size_t>(tmpfile.Read(buf,
                         static_cast<vislib::sys::File::FileSize>(size)));
                     file.Write(buf,
                         static_cast<vislib::sys::File::FileSize>(size));
@@ -465,9 +465,9 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
                 if (this->saveToFileW(filename)) {
                     tmpfile.Flush();
                     tmpfile.SeekToBegin();
-                    SIZE_T size = static_cast<SIZE_T>(tmpfile.GetSize());
+                    size_t size = static_cast<size_t>(tmpfile.GetSize());
                     char *buf = new char[size];
-                    size = static_cast<SIZE_T>(tmpfile.Read(buf,
+                    size = static_cast<size_t>(tmpfile.Read(buf,
                         static_cast<vislib::sys::File::FileSize>(size)));
                     file.Write(buf,
                         static_cast<vislib::sys::File::FileSize>(size));
@@ -524,9 +524,9 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
                 if (this->saveToFileA(filename)) {
                     tmpfile.Flush();
                     tmpfile.SeekToBegin();
-                    SIZE_T size = static_cast<SIZE_T>(tmpfile.GetSize());
+                    size_t size = static_cast<size_t>(tmpfile.GetSize());
                     outmem.AssertSize(size);
-                    size = static_cast<SIZE_T>(tmpfile.Read(outmem,
+                    size = static_cast<size_t>(tmpfile.Read(outmem,
                         static_cast<vislib::sys::File::FileSize>(size)));
                     outmem.EnforceSize(size, true);
                     return true;
@@ -556,9 +556,9 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
                 if (this->saveToFileW(filename)) {
                     tmpfile.Flush();
                     tmpfile.SeekToBegin();
-                    SIZE_T size = static_cast<SIZE_T>(tmpfile.GetSize());
+                    size_t size = static_cast<size_t>(tmpfile.GetSize());
                     outmem.AssertSize(size);
-                    size = static_cast<SIZE_T>(tmpfile.Read(outmem,
+                    size = static_cast<size_t>(tmpfile.Read(outmem,
                         static_cast<vislib::sys::File::FileSize>(size)));
                     outmem.EnforceSize(size, true);
                     return true;
@@ -653,7 +653,7 @@ vislib::graphics::AbstractBitmapCodec::loadFromFileWImplemented(void) const {
  * vislib::graphics::AbstractBitmapCodec::loadFromMemory
  */
 bool vislib::graphics::AbstractBitmapCodec::loadFromMemory(const void *mem,
-        SIZE_T size) {
+        size_t size) {
     throw vislib::UnsupportedOperationException("loadFromMemory",
         __FILE__, __LINE__);
     return false;

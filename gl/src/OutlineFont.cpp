@@ -488,14 +488,14 @@ int *OutlineFont::buildGlyphRun(const wchar_t *txt, float maxWidth) const {
  * OutlineFont::buildUpGlyphRun
  */
 int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
-    SIZE_T txtlen = static_cast<SIZE_T>(
+    size_t txtlen = static_cast<size_t>(
         CharTraitsA::SafeStringLength(txtutf8));
-    SIZE_T pos = 0;
+    size_t pos = 0;
     int *glyphrun = new int[txtlen + 1];
     bool knowLastWhite = false;
     bool blackspace = true;
-    SIZE_T lastWhiteGlyph = 0;
-    SIZE_T lastWhiteSpace = 0;
+    size_t lastWhiteGlyph = 0;
+    size_t lastWhiteSpace = 0;
     float lineLength = 0.0f;
     bool nextAsNewLine = false;
     signed short idx;
@@ -506,7 +506,7 @@ int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 
     // build glyph run
     idx = 0;
-    for (SIZE_T i = 0; i < txtlen; i++) {
+    for (size_t i = 0; i < txtlen; i++) {
         if (txtutf8[i] == '\n') { // special handle new lines
             nextAsNewLine = true;
             continue;

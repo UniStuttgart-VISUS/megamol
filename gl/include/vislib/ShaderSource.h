@@ -254,7 +254,7 @@ namespace gl {
          *
          * @return The number of code snippets.
          */
-        SIZE_T Count(void) const;
+        size_t Count(void) const;
 
         /**
          * Inserts one code snipped into the shader source at the given index.
@@ -268,7 +268,7 @@ namespace gl {
          * @throw OutOfRangeException If 'idx' is not within 
          *                            [0, this->Count()[.
          */
-        const vislib::SmartPtr<Snippet>& Insert(const SIZE_T idx, 
+        const vislib::SmartPtr<Snippet>& Insert(const size_t idx, 
             const vislib::SmartPtr<Snippet>& code);
 
         /**
@@ -286,7 +286,7 @@ namespace gl {
          * @throw OutOfRangeException If 'idx' is not within 
          *                            [0, this->Count()[.
          */
-        const vislib::SmartPtr<Snippet>& Insert(const SIZE_T idx, 
+        const vislib::SmartPtr<Snippet>& Insert(const size_t idx, 
             const vislib::StringA& name,
             const vislib::SmartPtr<Snippet>& code);
 
@@ -297,7 +297,7 @@ namespace gl {
          *
          * @throw NoSuchElementException if there is no index with this name.
          */
-        SIZE_T NameIndex(const vislib::StringA& name);
+        size_t NameIndex(const vislib::StringA& name);
 
         /**
          * Adds one code snippet to the beginning of the shader source.
@@ -335,7 +335,7 @@ namespace gl {
          * @throw OutOfRangeException If 'idx' is not within 
          *                            [0, this->Count()[.
          */
-        void Remove(SIZE_T idx);
+        void Remove(size_t idx);
 
         /**
          * Removes the name 'name', if it exists.
@@ -352,7 +352,7 @@ namespace gl {
          *
          * @return The snippet replaced by the new one.
          */
-        vislib::SmartPtr<Snippet> Replace(SIZE_T idx, 
+        vislib::SmartPtr<Snippet> Replace(size_t idx, 
             const vislib::SmartPtr<Snippet>& code);
 
         /**
@@ -378,7 +378,7 @@ namespace gl {
          * @throw OutOfRangeException If 'idx' is not within 
          *                            [0, this->Count()[.
          */
-        void SetName(const vislib::StringA& name, SIZE_T idx);
+        void SetName(const vislib::StringA& name, size_t idx);
 
         /**
          * Creates a single string containing the whole shader source code.
@@ -397,7 +397,7 @@ namespace gl {
          * @throw OutOfRangeException If 'idx' is not within 
          *                            [0, this->Count()[.
          */
-        const vislib::SmartPtr<Snippet>& operator[](const SIZE_T idx) const;
+        const vislib::SmartPtr<Snippet>& operator[](const size_t idx) const;
 
         /**
          * Assignment operator.
@@ -416,7 +416,7 @@ namespace gl {
         vislib::Array<vislib::SmartPtr<Snippet> > snippets;
 
         /** the names of some of the shader snippets */
-        vislib::Map<vislib::StringA, SIZE_T> names;
+        vislib::Map<vislib::StringA, size_t> names;
 
         /** the code output array */
         mutable const char **code;

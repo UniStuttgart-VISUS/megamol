@@ -339,7 +339,7 @@ namespace math {
         Plane<T> *planes = this->fillPlaneCache();
         THE_ASSERT(planes != NULL);
 
-        for (SIZE_T i = 0; i < 6; i++) {
+        for (size_t i = 0; i < 6; i++) {
             T d = planes[i].Distance(point);
 
             if (onIsIn && (d > static_cast<T>(0))) {

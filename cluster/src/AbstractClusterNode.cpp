@@ -50,8 +50,8 @@ vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(
  * vislib::net::cluster::AbstractClusterNode::onMessageReceived
  */
 //void vislib::net::cluster::AbstractClusterNode::onMessageReceived(
-//        const Socket& src, const UINT msgId, const BYTE *body, 
-//        const SIZE_T cntBody) {
+//        const Socket& src, const unsigned int msgId, const BYTE *body, 
+//        const size_t cntBody) {
 //    // Do nothing. Implementing subclasses override this method if they are
 //    // interested in messages.
 //}
@@ -91,7 +91,7 @@ void vislib::net::cluster::AbstractClusterNode::onPeerConnected(
 /*
  * vislib::net::cluster::AbstractClusterNode::sendMessage
  */
-SIZE_T vislib::net::cluster::AbstractClusterNode::sendMessage(
+size_t vislib::net::cluster::AbstractClusterNode::sendMessage(
         const UINT32 msgId, const BYTE *data, const UINT32 cntData) {
     RawStorage msg(sizeof(MessageHeader) + cntData);
 
@@ -120,8 +120,8 @@ bool vislib::net::cluster::AbstractClusterNode::sendMessage(
 /*
  * vislib::net::cluster::AbstractClusterNode::sendToEachPeer
  */
-SIZE_T vislib::net::cluster::AbstractClusterNode::sendToEachPeer(
-        const BYTE *data, const SIZE_T cntData) {
+size_t vislib::net::cluster::AbstractClusterNode::sendToEachPeer(
+        const BYTE *data, const size_t cntData) {
     SendToPeerCtx context;
     context.Data = data;
     context.CntData = cntData;
@@ -134,7 +134,7 @@ SIZE_T vislib::net::cluster::AbstractClusterNode::sendToEachPeer(
  * vislib::net::cluster::AbstractClusterNode::sendToPeer
  */
 bool vislib::net::cluster::AbstractClusterNode::sendToPeer(
-        const PeerIdentifier& peerId, const BYTE *data, const SIZE_T cntData) {
+        const PeerIdentifier& peerId, const BYTE *data, const size_t cntData) {
     SendToPeerCtx context;
     context.Data = data;
     context.CntData = cntData;

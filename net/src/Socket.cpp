@@ -59,7 +59,7 @@ void vislib::net::Socket::Startup(void) {
 /*
  * vislib::net::Socket::TIMEOUT_INFINITE 
  */
-const UINT vislib::net::Socket::TIMEOUT_INFINITE = 0;
+const unsigned int vislib::net::Socket::TIMEOUT_INFINITE = 0;
 
 
 /*
@@ -77,7 +77,7 @@ vislib::net::Socket vislib::net::Socket::Accept(IPEndPoint *outConnAddr) {
     SOCKET newSocket;
 
 #ifdef _WIN32
-    INT addrLen = static_cast<int>(sizeof(connAddr));
+    int addrLen = static_cast<int>(sizeof(connAddr));
 
     if ((newSocket = ::WSAAccept(this->handle, 
             reinterpret_cast<sockaddr *>(&connAddr), &addrLen, NULL,
@@ -204,7 +204,7 @@ void vislib::net::Socket::Connect(const IPEndPoint& address) {
     if (::connect(this->handle, sa, sal) == SOCKET_ERROR) {
         struct pollfd linuxReallySucks;
         int someMoreJunk = 0;
-        SIZE_T yetMoreUselessJunk = sizeof(someMoreJunk);
+        size_t yetMoreUselessJunk = sizeof(someMoreJunk);
 
         if (errno != EINTR /* && errno != EINPROGRESS */) {
             throw SocketException(__FILE__, __LINE__);
@@ -303,7 +303,7 @@ vislib::net::IPEndPoint vislib::net::Socket::GetLocalEndPoint(void) const {
  */
 void vislib::net::Socket::GetMulticastInterface(IPAddress& outAddr) const {
     struct in_addr retval;
-    SIZE_T size = sizeof(retval);
+    size_t size = sizeof(retval);
     this->GetOption(IPPROTO_IP, IP_MULTICAST_IF, &retval, size);
     THE_ASSERT(size == sizeof(retval));
     outAddr = retval;
@@ -336,7 +336,7 @@ bool vislib::net::Socket::GetMulticastLoop(const ProtocolFamily pf) const {
 BYTE vislib::net::Socket::GetMulticastTimeToLive(
         const ProtocolFamily pf) const {
     BYTE retval = 0;
-    SIZE_T size = sizeof(retval);
+    size_t size = sizeof(retval);
 
     switch (pf) {
         case FAMILY_INET:
@@ -356,8 +356,8 @@ BYTE vislib::net::Socket::GetMulticastTimeToLive(
 /*
  * vislib::net::Socket::GetOption
  */
-void vislib::net::Socket::GetOption(const INT level, const INT optName, 
-        void *outValue, SIZE_T& inOutValueLength) const {
+void vislib::net::Socket::GetOption(const int level, const int optName, 
+        void *outValue, size_t& inOutValueLength) const {
 #ifdef _WIN32
     int len = static_cast<int>(inOutValueLength);
 #else /* _WIN32 */
@@ -369,7 +369,7 @@ void vislib::net::Socket::GetOption(const INT level, const INT optName,
         throw SocketException(__FILE__, __LINE__);
     }
 
-    inOutValueLength = static_cast<SIZE_T>(len);
+    inOutValueLength = static_cast<size_t>(len);
 }
 
 
@@ -467,7 +467,7 @@ void vislib::net::Socket::LeaveMulticastGroup(const IPAddress6& group,
 /*
  * vislib::net::Socket::Listen
  */
-void vislib::net::Socket::Listen(const INT backlog) {
+void vislib::net::Socket::Listen(const int backlog) {
     if (TEMP_FAILURE_RETRY(::listen(this->handle, backlog)) == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
@@ -501,8 +501,8 @@ void vislib::net::Socket::JoinMulticastGroup(const IPAddress6& group,
 /*
  * vislib::net::Socket::Receive
  */
-SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes, 
-        const INT timeout, const INT flags, const bool forceReceive) {
+size_t vislib::net::Socket::Receive(void *outData, const size_t cntBytes, 
+        const int timeout, const int flags, const bool forceReceive) {
     int n = 0;                  // Highest descriptor in 'readSet' + 1.
     fd_set readSet;             // Set of socket to check for readability.
     struct timeval timeOut;     // Timeout for readability check.
@@ -552,8 +552,8 @@ SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
 /*
  * vislib::net::Socket::Receive
  */
-SIZE_T vislib::net::Socket::Receive(IPEndPoint& outFromAddr, void *outData,
-        const SIZE_T cntBytes, const INT timeout, const INT flags,
+size_t vislib::net::Socket::Receive(IPEndPoint& outFromAddr, void *outData,
+        const size_t cntBytes, const int timeout, const int flags,
         const bool forceReceive) {
     int n = 0;                  // Highest descriptor in 'readSet' + 1.
     fd_set readSet;             // Set of socket to check for readability.
@@ -606,11 +606,11 @@ SIZE_T vislib::net::Socket::Receive(IPEndPoint& outFromAddr, void *outData,
 /*
  * vislib::net::Socket::Receive
  */
-SIZE_T vislib::net::Socket::Receive(SocketAddress& outFromAddr, void *outData,
-        const SIZE_T cntBytes, const INT timeout, const INT flags,
+size_t vislib::net::Socket::Receive(SocketAddress& outFromAddr, void *outData,
+        const size_t cntBytes, const int timeout, const int flags,
         const bool forceReceive) {
     IPEndPoint endPoint;
-    SIZE_T retval = this->Receive(endPoint, outData, cntBytes, timeout, flags,
+    size_t retval = this->Receive(endPoint, outData, cntBytes, timeout, flags,
         forceReceive);
     outFromAddr = static_cast<SocketAddress>(endPoint);
     return retval;
@@ -620,8 +620,8 @@ SIZE_T vislib::net::Socket::Receive(SocketAddress& outFromAddr, void *outData,
 /*
  * vislib::net::Socket::Send
  */
-SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes, 
-        const INT timeout, const INT flags, const bool forceSend) {
+size_t vislib::net::Socket::Send(const void *data, const size_t cntBytes, 
+        const int timeout, const int flags, const bool forceSend) {
     int n = 0;                  // Highest descriptor in 'writeSet' + 1.
     fd_set writeSet;            // Set of socket to check for writability.
     struct timeval timeOut;     // Timeout for writability check.
@@ -671,8 +671,8 @@ SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes,
 /*
  * vislib::net::Socket::Send
  */
-SIZE_T vislib::net::Socket::Send(const IPEndPoint& toAddr, const void *data,
-        const SIZE_T cntBytes, const INT timeout, const INT flags,
+size_t vislib::net::Socket::Send(const IPEndPoint& toAddr, const void *data,
+        const size_t cntBytes, const int timeout, const int flags,
         const bool forceSend) {
     int n = 0;                  // Highest descriptor in 'writeSet' + 1.
     fd_set writeSet;            // Set of socket to check for writability.
@@ -761,8 +761,8 @@ void vislib::net::Socket::SetMulticastTimeToLive(const ProtocolFamily pf,
 /*
  * vislib::net::Socket::SetOption
  */
-void vislib::net::Socket::SetOption(const INT level, const INT optName, 
-            const void *value, const SIZE_T valueLength) {
+void vislib::net::Socket::SetOption(const int level, const int optName, 
+            const void *value, const size_t valueLength) {
     if (::setsockopt(this->handle, level, optName, 
             static_cast<const char *>(value), static_cast<int>(valueLength)) 
             != 0) {
@@ -818,10 +818,10 @@ bool vislib::net::Socket::operator ==(const Socket& rhs) const {
 /*
  * vislib::net::Socket::receive
  */
-SIZE_T vislib::net::Socket::receive(void *outData, const SIZE_T cntBytes, 
-        const INT flags, const bool forceReceive) {
-    SIZE_T totalReceived = 0;   // # of bytes totally received.
-    INT lastReceived = 0;       // # of bytes received during last recv() call.
+size_t vislib::net::Socket::receive(void *outData, const size_t cntBytes, 
+        const int flags, const bool forceReceive) {
+    size_t totalReceived = 0;   // # of bytes totally received.
+    int lastReceived = 0;       // # of bytes received during last recv() call.
 #ifdef _WIN32
     WSAOVERLAPPED overlapped;   // Overlap structure for asynchronous recv().
     WSABUF wsaBuf;              // Buffer for WSA output.
@@ -864,7 +864,7 @@ SIZE_T vislib::net::Socket::receive(void *outData, const SIZE_T cntBytes,
 
         if ((lastReceived >= 0) && (lastReceived != SOCKET_ERROR)) {
             /* Successfully received new package. */
-            totalReceived += static_cast<SIZE_T>(lastReceived);
+            totalReceived += static_cast<size_t>(lastReceived);
 
         } else {
             /* Communication failed. */
@@ -888,17 +888,17 @@ SIZE_T vislib::net::Socket::receive(void *outData, const SIZE_T cntBytes,
 /*
  * vislib::net::Socket::receiveFrom
  */
-SIZE_T vislib::net::Socket::receiveFrom(IPEndPoint& outFromAddr, 
-        void *outData, const SIZE_T cntBytes, const INT flags, 
+size_t vislib::net::Socket::receiveFrom(IPEndPoint& outFromAddr, 
+        void *outData, const size_t cntBytes, const int flags, 
         const bool forceReceive) {
-    SIZE_T totalReceived = 0;   // # of bytes totally received.
-    INT lastReceived = 0;       // # of bytes received during last recv() call.
+    size_t totalReceived = 0;   // # of bytes totally received.
+    int lastReceived = 0;       // # of bytes received during last recv() call.
 #ifdef _WIN32
     WSAOVERLAPPED overlapped;   // Overlap structure for asynchronous recv().
     WSABUF wsaBuf;              // Buffer for WSA output.
     DWORD errorCode = 0;        // WSA error during last operation.
     DWORD inOutFlags = flags;   // Flags for WSA.
-    INT fromLen = sizeof(struct sockaddr_storage);
+    int fromLen = sizeof(struct sockaddr_storage);
 
     if ((overlapped.hEvent = ::WSACreateEvent()) == WSA_INVALID_EVENT) {
         throw SocketException(__FILE__, __LINE__);
@@ -941,7 +941,7 @@ SIZE_T vislib::net::Socket::receiveFrom(IPEndPoint& outFromAddr,
 
         if ((lastReceived >= 0) && (lastReceived != SOCKET_ERROR)) {
             /* Successfully received new package. */
-            totalReceived += static_cast<SIZE_T>(lastReceived);
+            totalReceived += static_cast<size_t>(lastReceived);
 
         } else {
             /* Communication failed. */
@@ -966,10 +966,10 @@ SIZE_T vislib::net::Socket::receiveFrom(IPEndPoint& outFromAddr,
 /*
  * vislib::net::Socket::send
  */
-SIZE_T vislib::net::Socket::send(const void *data, const SIZE_T cntBytes, 
-        const INT flags, const bool forceSend) {
-    SIZE_T totalSent = 0;       // # of bytes totally sent.      
-    INT lastSent = 0;           // # of bytes sent during last send() call.
+size_t vislib::net::Socket::send(const void *data, const size_t cntBytes, 
+        const int flags, const bool forceSend) {
+    size_t totalSent = 0;       // # of bytes totally sent.      
+    int lastSent = 0;           // # of bytes sent during last send() call.
 #ifdef _WIN32
     WSAOVERLAPPED overlapped;   // Overlap structure for asynchronous recv().
     WSABUF wsaBuf;              // Buffer for WSA output.
@@ -1010,7 +1010,7 @@ SIZE_T vislib::net::Socket::send(const void *data, const SIZE_T cntBytes,
             static_cast<int>(cntBytes - totalSent), flags));
 
         if ((lastSent >= 0) && (lastSent != SOCKET_ERROR)) {
-            totalSent += static_cast<SIZE_T>(lastSent);
+            totalSent += static_cast<size_t>(lastSent);
 
         } else {
             throw SocketException(__FILE__, __LINE__);
@@ -1032,13 +1032,13 @@ SIZE_T vislib::net::Socket::send(const void *data, const SIZE_T cntBytes,
 /*
  * vislib::net::Socket::sendTo
  */
-SIZE_T vislib::net::Socket::sendTo(const IPEndPoint& toAddr, 
-        const void *data, const SIZE_T cntBytes, const INT flags, 
+size_t vislib::net::Socket::sendTo(const IPEndPoint& toAddr, 
+        const void *data, const size_t cntBytes, const int flags, 
         const bool forceSend) {
-    SIZE_T totalSent = 0;       // # of bytes totally sent.      
-    INT lastSent = 0;           // # of bytes sent during last send() call.
+    size_t totalSent = 0;       // # of bytes totally sent.      
+    int lastSent = 0;           // # of bytes sent during last send() call.
     const sockaddr *to = static_cast<const sockaddr *>(toAddr);
-    INT toLen = sizeof(sockaddr_storage);
+    int toLen = sizeof(sockaddr_storage);
 #ifdef _WIN32
     WSAOVERLAPPED overlapped;   // Overlap structure for asynchronous recv().
     WSABUF wsaBuf;              // Buffer for WSA output.
@@ -1079,7 +1079,7 @@ SIZE_T vislib::net::Socket::sendTo(const IPEndPoint& toAddr,
             static_cast<int>(cntBytes - totalSent), flags, to, toLen));
 
         if ((lastSent >= 0) && (lastSent != SOCKET_ERROR)) {
-            totalSent += static_cast<SIZE_T>(lastSent);
+            totalSent += static_cast<size_t>(lastSent);
 
         } else {
             throw SocketException(__FILE__, __LINE__);

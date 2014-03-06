@@ -246,7 +246,7 @@ void vislib::graphics::AbstractWindow::onCreating(DWORD& inOutStyle,
  * vislib::graphics::AbstractWindow::onMessage
  */
 LRESULT vislib::graphics::AbstractWindow::onMessage(bool& outHandled, 
-        UINT msg, WPARAM wParam, LPARAM lParam) throw() {
+        unsigned int msg, WPARAM wParam, LPARAM lParam) throw() {
     THE_STACK_TRACE;
     outHandled = false;
     return static_cast<LRESULT>(0);
@@ -292,7 +292,7 @@ void vislib::graphics::AbstractWindow::onWindowClassRegistered(
 /*
  * vislib::graphics::AbstractWindow::wndProc
  */
-LRESULT CALLBACK vislib::graphics::AbstractWindow::wndProc(HWND hWnd, UINT msg,
+LRESULT CALLBACK vislib::graphics::AbstractWindow::wndProc(HWND hWnd, unsigned int msg,
         WPARAM wParam, LPARAM lParam) {
     THE_STACK_TRACE;
 

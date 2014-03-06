@@ -135,16 +135,16 @@ namespace sys {
         virtual void Deserialise(UINT32& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(INT64& outValue, 
+        virtual void Deserialise(int64_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(INT64& outValue, 
+        virtual void Deserialise(int64_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(UINT64& outValue, 
+        virtual void Deserialise(uint64_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(UINT64& outValue, 
+        virtual void Deserialise(uint64_t& outValue, 
             const wchar_t *name);
 
         virtual void Deserialise(float& outValue, 
@@ -262,16 +262,16 @@ namespace sys {
         virtual void Serialise(const UINT32 value,
             const wchar_t *name);
 
-        virtual void Serialise(const INT64 value,
+        virtual void Serialise(const int64_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const INT64 value,
+        virtual void Serialise(const int64_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const UINT64 value,
+        virtual void Serialise(const uint64_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const UINT64 value,
+        virtual void Serialise(const uint64_t value,
             const wchar_t *name);
 
         virtual void Serialise(const float value,

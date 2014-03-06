@@ -37,8 +37,8 @@ public:
     void OnUserWorkItemCompleted(ThreadPool& src, Runnable::Function runnable,
         void *userData, const DWORD exitCode) throw();
 
-    UINT cntAborted;
-    UINT cntCompleted;
+    unsigned int cntAborted;
+    unsigned int cntCompleted;
 
 };
 
@@ -139,9 +139,9 @@ void TestThreadPool(void) {
 
     pool.AddListener(&a6);
 
-    ::AssertEqual("No threads initially.", pool.GetTotalThreads(), SIZE_T(0));
-    ::AssertEqual("No active threads initially.", pool.GetActiveThreads(), SIZE_T(0));
-    ::AssertEqual("No idle threads initially.", pool.GetAvailableThreads(), SIZE_T(0));
+    ::AssertEqual("No threads initially.", pool.GetTotalThreads(), size_t(0));
+    ::AssertEqual("No active threads initially.", pool.GetActiveThreads(), size_t(0));
+    ::AssertEqual("No idle threads initially.", pool.GetAvailableThreads(), size_t(0));
 
     for (INT_PTR i = 0; i < CNT_DOWELERS; i++) {
         pool.QueueUserWorkItem(&dowelers[i], reinterpret_cast<void *>(i), false);
@@ -150,10 +150,10 @@ void TestThreadPool(void) {
 
     pool.Wait();
     ::AssertTrue("Idle threads exist after wait.", pool.GetAvailableThreads() > 0);
-    ::AssertEqual("No active threads after wait.", pool.GetActiveThreads(), SIZE_T(0));
+    ::AssertEqual("No active threads after wait.", pool.GetActiveThreads(), size_t(0));
 
-    ::AssertEqual("Nothing aborted.", a6.cntAborted, UINT(0));
-    ::AssertEqual("Everything completed.", a6.cntCompleted, UINT(CNT_DOWELERS));
+    ::AssertEqual("Nothing aborted.", a6.cntAborted, unsigned int(0));
+    ::AssertEqual("Everything completed.", a6.cntCompleted, unsigned int(CNT_DOWELERS));
 
     a6.cntAborted = 0;
     a6.cntCompleted = 0;
@@ -171,9 +171,9 @@ void TestThreadPool(void) {
     }
 
     pool.Terminate();
-    ::AssertEqual("No threads after terminate.", pool.GetTotalThreads(), SIZE_T(0));
-    ::AssertEqual("No active threads after terminate.", pool.GetActiveThreads(), SIZE_T(0));
-    ::AssertEqual("No idle threads after terminate.", pool.GetAvailableThreads(), SIZE_T(0));
+    ::AssertEqual("No threads after terminate.", pool.GetTotalThreads(), size_t(0));
+    ::AssertEqual("No active threads after terminate.", pool.GetActiveThreads(), size_t(0));
+    ::AssertEqual("No idle threads after terminate.", pool.GetAvailableThreads(), size_t(0));
 
     ::AssertTrue("Work items have been completed.", a6.cntCompleted > 0);
     ::AssertTrue("Work items have been aborted.", a6.cntAborted > 0);

@@ -40,7 +40,7 @@ vislib::sys::Environment::Snapshot::Snapshot(void) : data(NULL) {
 vislib::sys::Environment::Snapshot::Snapshot(const char *variable, ...) 
         : data(NULL) {
     va_list argptr;
-    SIZE_T dataSize = 0;
+    size_t dataSize = 0;
     const char *arg;
     
     if (variable != NULL) {
@@ -117,7 +117,7 @@ vislib::sys::Environment::Snapshot::Snapshot(const char *variable, ...)
 vislib::sys::Environment::Snapshot::Snapshot(const wchar_t *variable, ...) 
         : data(NULL) {
     va_list argptr;
-    SIZE_T dataSize = 0;
+    size_t dataSize = 0;
     const wchar_t *arg;
     
     if (variable != NULL) {
@@ -234,7 +234,7 @@ void vislib::sys::Environment::Snapshot::Clear(void) {
 /*
  * vislib::sys::Environment::Snapshot::GetAt
  */
-void vislib::sys::Environment::Snapshot::GetAt(const SIZE_T idx,
+void vislib::sys::Environment::Snapshot::GetAt(const size_t idx,
         StringA& outName, StringA& outValue) {
 #ifdef _WIN32
     StringW name, value;
@@ -242,7 +242,7 @@ void vislib::sys::Environment::Snapshot::GetAt(const SIZE_T idx,
     outName = name;
     outValue = value;
 #else /* _WIN32 */
-    SIZE_T cntVariables = Snapshot::count(const_cast<const char **>(data));
+    size_t cntVariables = Snapshot::count(const_cast<const char **>(data));
 
     if (idx < cntVariables) {
         const char *tmp = this->data[idx];
@@ -260,7 +260,7 @@ void vislib::sys::Environment::Snapshot::GetAt(const SIZE_T idx,
 /*
  * vislib::sys::Environment::Snapshot::GetAt
  */
-void vislib::sys::Environment::Snapshot::GetAt(const SIZE_T idx, 
+void vislib::sys::Environment::Snapshot::GetAt(const size_t idx, 
         StringW& outName, StringW& outValue)  {
 #ifdef _WIN32
     StringW tmp = this->data[idx];
@@ -366,7 +366,7 @@ vislib::sys::Environment::Snapshot::operator =(const Snapshot& rhs) {
 /*
  * vislib::sys::Environment::Snapshot::count
  */
-SIZE_T vislib::sys::Environment::Snapshot::count(const char **const data) {
+size_t vislib::sys::Environment::Snapshot::count(const char **const data) {
     const char **cursor = data;
 
     if (cursor != NULL) {
@@ -387,7 +387,7 @@ SIZE_T vislib::sys::Environment::Snapshot::count(const char **const data) {
 const wchar_t *vislib::sys::Environment::Snapshot::find(const wchar_t *name,
         const wchar_t *data) {
     const wchar_t *cursor = data;
-    SIZE_T cntName = ::wcslen(name);
+    size_t cntName = ::wcslen(name);
     
     if (cursor != NULL) {
         while (*cursor != 0) {
@@ -410,10 +410,10 @@ const wchar_t *vislib::sys::Environment::Snapshot::find(const wchar_t *name,
 #else /* _WIN32 */
 const char *vislib::sys::Environment::Snapshot::find(const char *name, 
         const char **const data) {
-    SIZE_T cntVariables = Snapshot::count(data);
-    SIZE_T cntName = ::strlen(name);
+    size_t cntVariables = Snapshot::count(data);
+    size_t cntName = ::strlen(name);
     
-    for (SIZE_T i = 0; i < cntVariables; i++) {
+    for (size_t i = 0; i < cntVariables; i++) {
         // Linux environment variables are case sensitive.
         if ((::strncmp(name, data[i], cntName) == 0) 
                 && (data[i][cntName] == '=')) {
@@ -433,7 +433,7 @@ const char *vislib::sys::Environment::Snapshot::find(const char *name,
  * vislib::sys::Environment::Snapshot::assign
  */
 void vislib::sys::Environment::Snapshot::assign(const char **const data) {
-    SIZE_T dataSize = 0;
+    size_t dataSize = 0;
 
     this->Clear();
     THE_ASSERT(this->data == NULL);
@@ -446,7 +446,7 @@ void vislib::sys::Environment::Snapshot::assign(const char **const data) {
         this->data = new char *[dataSize + 1];
 
         /* Allocate variable memory and copy data. */
-        for (SIZE_T i = 0; i < dataSize; i++) {
+        for (size_t i = 0; i < dataSize; i++) {
             this->data[i] = new char[::strlen(data[i]) + 1];
             ::strcpy(this->data[i], data[i]);
         }

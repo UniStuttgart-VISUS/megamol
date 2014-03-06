@@ -17,7 +17,7 @@
 /*
  * vislib::RawStorage::RawStorage
  */
-vislib::RawStorage::RawStorage(const SIZE_T size) : data(NULL), size(size) {
+vislib::RawStorage::RawStorage(const size_t size) : data(NULL), size(size) {
     this->EnforceSize(this->size);
 }
 
@@ -45,8 +45,8 @@ vislib::RawStorage::~RawStorage(void) {
 /*
  * vislib::RawStorage::Append
  */
-void *vislib::RawStorage::Append(const void *data, const SIZE_T cntData) {
-    SIZE_T offset = this->size;
+void *vislib::RawStorage::Append(const void *data, const size_t cntData) {
+    size_t offset = this->size;
     void *retval = NULL;
 
     this->EnforceSize(this->size + cntData, true);
@@ -63,7 +63,7 @@ void *vislib::RawStorage::Append(const void *data, const SIZE_T cntData) {
 /*
  * vislib::RawStorage::AssertSize
  */
-bool vislib::RawStorage::AssertSize(const SIZE_T size, const bool keepContent) {
+bool vislib::RawStorage::AssertSize(const size_t size, const bool keepContent) {
 	if (!this->TestSize(size)) {
         this->EnforceSize(size, keepContent);
         return true;
@@ -77,7 +77,7 @@ bool vislib::RawStorage::AssertSize(const SIZE_T size, const bool keepContent) {
 /*
  * vislib::RawStorage::EnforceSize
  */
-void vislib::RawStorage::EnforceSize(const SIZE_T size, 
+void vislib::RawStorage::EnforceSize(const size_t size, 
                                      const bool keepContent) {
     
     if ((this->size = size) > 0) {

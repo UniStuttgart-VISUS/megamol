@@ -709,7 +709,7 @@ namespace net {
              * @throws NoConfidenceException If the return value is invalid 
              *                               and 'outConfidence' is NULL.
              */
-            inline UINT GetMTU(Confidence *outConfidence = NULL) const {
+            inline unsigned int GetMTU(Confidence *outConfidence = NULL) const {
                 this->mtu.GetConfidence(outConfidence, "MTU");
                 return this->mtu;
             }
@@ -895,7 +895,7 @@ namespace net {
             AssessedMember<StringA> id;
 
             /** The maximum transmission unit (MTU) size, in bytes. */
-            AssessedMember<UINT> mtu;
+            AssessedMember<unsigned int> mtu;
 
             /** The multicast addressess of the adapter. */
             AssessedMember<AddressList> multicastAddresses;
@@ -961,7 +961,7 @@ namespace net {
          * @throws std::bad_alloc  If the memory required to retrieve the 
          *                         adapters could not be allocated.
          */
-        static SIZE_T CountAdapters(void);
+        static size_t CountAdapters(void);
 
         /**
          * Discard all cached adapter information.
@@ -1020,7 +1020,7 @@ namespace net {
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static Adapter GetAdapter(const SIZE_T idx);
+        static Adapter GetAdapter(const size_t idx);
 
         /**
          * Answer the adapter with the given ID into 'outAdapter.
@@ -1064,7 +1064,7 @@ namespace net {
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static SIZE_T GetAdaptersForPredicate(AdapterList& outAdapters,
+        static size_t GetAdaptersForPredicate(AdapterList& outAdapters,
             SelectAdapterCallback cb, void *userContext = NULL);
 
         /**
@@ -1084,7 +1084,7 @@ namespace net {
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static SIZE_T GetAdaptersForType(AdapterList& outAdapters,
+        static size_t GetAdaptersForType(AdapterList& outAdapters,
             const Adapter::Type type);
 
         /**
@@ -1104,7 +1104,7 @@ namespace net {
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static SIZE_T GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
+        static size_t GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
             const IPAddress& address);
 
         /**
@@ -1124,7 +1124,7 @@ namespace net {
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static SIZE_T GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
+        static size_t GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
             const IPAddress6& address);
 
         /**
@@ -1144,7 +1144,7 @@ namespace net {
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static SIZE_T GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
+        static size_t GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
             const IPAgnosticAddress& address);
 
         /**
@@ -1165,7 +1165,7 @@ namespace net {
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static SIZE_T GetAdaptersForUnicastPrefix(AdapterList& outAdapters,
+        static size_t GetAdaptersForUnicastPrefix(AdapterList& outAdapters,
             const IPAgnosticAddress& address, const ULONG prefixLength);
 
         /**
@@ -1197,7 +1197,7 @@ namespace net {
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static const Adapter& GetAdapterUnsafe(const SIZE_T idx);
+        static const Adapter& GetAdapterUnsafe(const size_t idx);
 
         /**
          * Performs a wild guess on which adapter could be designated by the 
@@ -1533,7 +1533,7 @@ namespace net {
          *         change is not reflected in 'inOutWildness'.
          */
         static float consolidateWildness(Array<float>& inOutWildness, 
-            SIZE_T& outIdxFirstBest);
+            size_t& outIdxFirstBest);
 
         /**
          * Answer whether the UnicastAddressList 'list' contains the IPAddress,
@@ -1703,7 +1703,7 @@ namespace net {
          *
          * @throws IllegalParamException If 'netmask' is not a valid netmask.
          */
-        static ULONG netmaskToPrefix(const BYTE *netmask, const SIZE_T len);
+        static ULONG netmaskToPrefix(const BYTE *netmask, const size_t len);
 
         /**
          * Convert a prefix length to a netmask.
@@ -1717,7 +1717,7 @@ namespace net {
          * @throws OutOfRangeException If the prefix length is not within the 
          *                             valid range.
          */
-        static void prefixToNetmask(BYTE *outNetmask, const SIZE_T len,
+        static void prefixToNetmask(BYTE *outNetmask, const size_t len,
             const ULONG prefix);
 
         /**
@@ -2005,7 +2005,7 @@ namespace net {
         THE_STACK_TRACE;
         THE_ASSERT(startIdx >= 0);
 
-        for (SIZE_T i = static_cast<SIZE_T>(startIdx); i < list.Count(); i++) {
+        for (size_t i = static_cast<size_t>(startIdx); i < list.Count(); i++) {
             if (list[i] == addr) {
                 return static_cast<int>(i);
             }
@@ -2029,7 +2029,7 @@ namespace net {
         try {
             A prefix = addr.GetPrefix(prefixLen);
 
-            for (SIZE_T i = static_cast<SIZE_T>(startIdx); i < list.Count();
+            for (size_t i = static_cast<size_t>(startIdx); i < list.Count();
                     i++) {
                 try {
                     if (list[i].GetAddress().GetPrefix(prefixLen) == prefix) {

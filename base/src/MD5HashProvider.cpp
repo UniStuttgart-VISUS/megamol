@@ -131,7 +131,7 @@ void vislib::MD5HashProvider::Initialise(void) {
  * vislib::MD5HashProvider::TransformBlock
  */
 void vislib::MD5HashProvider::TransformBlock(const BYTE *input, 
-                                             const SIZE_T cntInput) {
+                                             const size_t cntInput) {
     // Must be initialised as the ctor does this.
 
     if ((input != NULL) && (cntInput > 0)) {
@@ -144,7 +144,7 @@ void vislib::MD5HashProvider::TransformBlock(const BYTE *input,
  * vislib::MD5HashProvider::TransformFinalBlock
  */
 bool vislib::MD5HashProvider::TransformFinalBlock(BYTE *outHash, 
-        SIZE_T& inOutSize, const BYTE *input, const SIZE_T cntInput) {
+        size_t& inOutSize, const BYTE *input, const size_t cntInput) {
     MD5_CTX ctx = this->context;    // Local context to be finalised.
     bool retval = false;            // Remember whether output was copied.
 
@@ -166,12 +166,12 @@ bool vislib::MD5HashProvider::TransformFinalBlock(BYTE *outHash,
  * vislib::MD5HashProvider::decode
  */
 void vislib::MD5HashProvider::decode(UINT32 *output, const BYTE *input, 
-        const UINT len) {
+        const unsigned int len) {
     THE_ASSERT(output != NULL);
     THE_ASSERT(input != NULL);
     THE_ASSERT((len % 4) == 0);
 
-    for (UINT i = 0, j = 0; j < len; i++, j += 4) {
+    for (unsigned int i = 0, j = 0; j < len; i++, j += 4) {
         output[i] = static_cast<UINT32>(input[j]) 
             | (static_cast<UINT32>(input[j + 1]) << 8) 
             | (static_cast<UINT32>(input[j + 2]) << 16) 
@@ -184,12 +184,12 @@ void vislib::MD5HashProvider::decode(UINT32 *output, const BYTE *input,
  * vislib::MD5HashProvider::encode
  */
 void vislib::MD5HashProvider::encode(BYTE *output, const UINT32 *input, 
-        const UINT len) {
+        const unsigned int len) {
     THE_ASSERT(output != NULL);
     THE_ASSERT(input != NULL);
     THE_ASSERT((len % 4) == 0);
 
-    for (UINT i = 0, j = 0; j < len; i++, j += 4) {
+    for (unsigned int i = 0, j = 0; j < len; i++, j += 4) {
         output[j] = static_cast<BYTE>(input[i] & 0xff);
         output[j + 1] = static_cast<BYTE>((input[i] >> 8) & 0xff);
         output[j + 2] = static_cast<BYTE>((input[i] >> 16) & 0xff);
@@ -206,7 +206,7 @@ void vislib::MD5HashProvider::finalise(BYTE *output, MD5_CTX *context) {
     THE_ASSERT(context != NULL);
 
     BYTE bits[8];
-    UINT index, padLen;
+    unsigned int index, padLen;
 
     /* Save number of bits. */
     MD5HashProvider::encode(bits, context->count, 8);
@@ -221,7 +221,7 @@ void vislib::MD5HashProvider::finalise(BYTE *output, MD5_CTX *context) {
 
     /* Store state in 'outHash'. */
     MD5HashProvider::encode(output, context->state, 
-        static_cast<UINT>(MD5HashProvider::HASH_SIZE));
+        static_cast<unsigned int>(MD5HashProvider::HASH_SIZE));
 
     /* Zeroize sensitive information. */
     ::SecureZeroMemory(context, sizeof(MD5_CTX));
@@ -326,11 +326,11 @@ void vislib::MD5HashProvider::transform(UINT32 state[4], const BYTE block[64]) {
  * vislib::MD5HashProvider::update
  */
 void vislib::MD5HashProvider::update(MD5_CTX *context, const BYTE *input, 
-        const SIZE_T cntInput) {
-    UINT i = 0, index = 0, partLen = 0;
+        const size_t cntInput) {
+    unsigned int i = 0, index = 0, partLen = 0;
 
     /* Compute number of bytes mod 64. */
-    index = static_cast<UINT>((context->count[0] >> 3) & 0x3F);
+    index = static_cast<unsigned int>((context->count[0] >> 3) & 0x3F);
 
     /* Update number of bits. */
     if ((context->count[0] += (static_cast<UINT32>(cntInput) << 3)) 
@@ -363,7 +363,7 @@ void vislib::MD5HashProvider::update(MD5_CTX *context, const BYTE *input,
 /*
  * vislib::MD5HashProvider::HASH_SIZE 
  */
-const SIZE_T vislib::MD5HashProvider::HASH_SIZE = 16;
+const size_t vislib::MD5HashProvider::HASH_SIZE = 16;
 
 
 /*

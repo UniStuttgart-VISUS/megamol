@@ -64,7 +64,7 @@ vislib::Exception::Exception(const Exception& rhs)
     }
 
     if (rhs.stack != NULL) {
-        SIZE_T len = ::strlen(rhs.stack) + 1;
+        size_t len = ::strlen(rhs.stack) + 1;
         this->stack = new char[len];
         ::memcpy(this->stack, rhs.stack, len);
     }
@@ -131,7 +131,7 @@ vislib::Exception& vislib::Exception::operator =(const Exception& rhs) {
 
         the::safe_array_delete(this->stack);
         if (rhs.stack != NULL) {
-            SIZE_T len = ::strlen(rhs.stack) + 1;
+            size_t len = ::strlen(rhs.stack) + 1;
             this->stack = new char[len];
             ::memcpy(this->stack, rhs.stack, len);
         }

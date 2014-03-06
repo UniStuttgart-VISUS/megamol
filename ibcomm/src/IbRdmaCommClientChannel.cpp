@@ -19,8 +19,8 @@
  * vislib::net::ib::IbRdmaCommClientChannel::Create
  */
 vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
-vislib::net::ib::IbRdmaCommClientChannel::Create(const SIZE_T cntBufRecv, 
-        const SIZE_T cntBufSend) {
+vislib::net::ib::IbRdmaCommClientChannel::Create(const size_t cntBufRecv, 
+        const size_t cntBufSend) {
     THE_STACK_TRACE;
     return IbRdmaCommClientChannel::Create(NULL, cntBufRecv, NULL, 
         cntBufSend);
@@ -31,7 +31,7 @@ vislib::net::ib::IbRdmaCommClientChannel::Create(const SIZE_T cntBufRecv,
  * vislib::net::ib::IbRdmaCommClientChannel::Create
  */
 vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
-vislib::net::ib::IbRdmaCommClientChannel::Create(const SIZE_T cntBuf) {
+vislib::net::ib::IbRdmaCommClientChannel::Create(const size_t cntBuf) {
     THE_STACK_TRACE;
     return IbRdmaCommClientChannel::Create(NULL, cntBuf, NULL, cntBuf);
 }
@@ -42,7 +42,7 @@ vislib::net::ib::IbRdmaCommClientChannel::Create(const SIZE_T cntBuf) {
  */
 vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
 vislib::net::ib::IbRdmaCommClientChannel::Create(BYTE *bufRecv, 
-        const SIZE_T cntBufRecv, BYTE *bufSend, const SIZE_T cntBufSend) {
+        const size_t cntBufRecv, BYTE *bufSend, const size_t cntBufSend) {
     THE_STACK_TRACE;
     SmartRef<IbRdmaCommClientChannel> retval(new IbRdmaCommClientChannel(), 
         false);
@@ -172,15 +172,15 @@ vislib::net::ib::IbRdmaCommClientChannel::GetRemoteEndPoint(void) const {
 /*
  * vislib::net::ib::IbRdmaCommClientChannel::Receive
  */
-SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData, 
-        const SIZE_T cntBytes, const UINT timeout, const bool forceReceive) {
+size_t vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData, 
+        const size_t cntBytes, const unsigned int timeout, const bool forceReceive) {
     THE_STACK_TRACE;
 
     int result = 0;                     // RDMA API results.
     struct ibv_wc wc;                   // Receives the completion parameters.
     BYTE *outPtr = static_cast<BYTE *>(outData);    // Cursor through 'outData'.
-    SIZE_T lastReceived = 0;            // # of bytes received in last op.
-    SIZE_T totalReceived = 0;           // # of bytes totally received.
+    size_t lastReceived = 0;            // # of bytes received in last op.
+    size_t totalReceived = 0;           // # of bytes totally received.
     
 
     if (this->IsZeroCopyReceive()) {
@@ -306,15 +306,15 @@ SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
 /*
  * vislib::net::ib::IbRdmaCommClientChannel::Send
  */
-SIZE_T vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data, 
-        const SIZE_T cntBytes, const UINT timeout,  const bool forceSend) {
+size_t vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data, 
+        const size_t cntBytes, const unsigned int timeout,  const bool forceSend) {
     THE_STACK_TRACE;
 
     int result = 0;                     // RDMA API results.
     struct ibv_wc wc;                   // Receives the completion parameters.
     const BYTE *inPtr = static_cast<const BYTE *>(data);    // Cursor in 'data'.
-    SIZE_T totalSent = 0;               // # of bytes totally received.
-    SIZE_T lastSent = 0;                // # of bytes received in last op.
+    size_t totalSent = 0;               // # of bytes totally received.
+    size_t lastSent = 0;                // # of bytes received in last op.
 
     if (this->IsZeroCopySend()) {
         THE_ASSERT(this->bufSendEnd != NULL);
@@ -478,7 +478,7 @@ void vislib::net::ib::IbRdmaCommClientChannel::registerBuffers(void) {
  * vislib::net::ib::IbRdmaCommClientChannel::setBuffers
  */
 void vislib::net::ib::IbRdmaCommClientChannel::setBuffers(BYTE *bufRecv, 
-        const SIZE_T cntBufRecv, BYTE *bufSend, const SIZE_T cntBufSend) {
+        const size_t cntBufRecv, BYTE *bufSend, const size_t cntBufSend) {
     THE_STACK_TRACE;
     
     /* If there is a current buffer and if it is owned by us, delete it. */

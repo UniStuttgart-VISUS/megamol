@@ -54,7 +54,7 @@ namespace net {
     public:
 
         /** Constant for specifying an infinite timeout. */
-        static const UINT TIMEOUT_INFINITE;
+        static const unsigned int TIMEOUT_INFINITE;
 
     protected:
 

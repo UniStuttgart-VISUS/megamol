@@ -59,7 +59,7 @@ namespace sys {
          *
          * @return The number of items actually removed.
          */
-        SIZE_T AbortPendingUserWorkItems(void);
+        size_t AbortPendingUserWorkItems(void);
 
         /**
          * Add a new ThreadPoolListener to be informed about user work items 
@@ -76,28 +76,28 @@ namespace sys {
          *
          * @return The number of threads currently working.
          */
-        SIZE_T GetActiveThreads(void) const;
+        size_t GetActiveThreads(void) const;
 
         /**
          * Answer the number of threads currently idling.
          *
          * @return The number of threads currently idling.
          */
-        SIZE_T GetAvailableThreads(void) const;
+        size_t GetAvailableThreads(void) const;
 
         /**
          * Answer the total number of threads available in the pool.
          *
          * @return The total number of threads in the pool.
          */
-        SIZE_T GetTotalThreads(void) const;
+        size_t GetTotalThreads(void) const;
 
         /**
          * Answer the number of work items which are currently in the queue.
          *
          * @return The number of work items currently in the queue.
          */
-        SIZE_T CountUserWorkItems(void) const;
+        size_t CountUserWorkItems(void) const;
 
         /**
          * Queue a new work item for execution in a pool thread.
@@ -169,7 +169,7 @@ namespace sys {
          *
          * @throws IllegalParamException If 'threadCount' is too small.
          */
-        void SetThreadCount(const SIZE_T threadCount);
+        void SetThreadCount(const size_t threadCount);
 
         /**
          * Wait for all queued or running work items to be completed and exit 
@@ -305,10 +305,10 @@ namespace sys {
         ThreadPool& operator =(const ThreadPool& rhs);
 
         /** The number of threads currently working on some work item. */
-        SIZE_T cntActiveThreads;
+        size_t cntActiveThreads;
 
         /** The total number of threads (active and idling). */
-        SIZE_T cntTotalThreads;
+        size_t cntTotalThreads;
 
         /** 
          * This event is in signaled state while no work item is pending or

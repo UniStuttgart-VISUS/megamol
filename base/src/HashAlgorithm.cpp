@@ -27,8 +27,8 @@ vislib::HashAlgorithm::~HashAlgorithm(void) {
 /*
  * vislib::HashAlgorithm::ComputeHash
  */
-bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
-        const BYTE *input, const SIZE_T cntInput) {
+bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, size_t& inOutSize, 
+        const BYTE *input, const size_t cntInput) {
     this->Initialise();
     this->TransformFinalBlock(outHash, inOutSize, input, cntInput);
     // Fix for ticket #64. It is, however, unclear why this is required.
@@ -39,7 +39,7 @@ bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, SIZE_T& inOutSize,
 /*
  * vislib::HashAlgorithm::ComputeHash
  */
-bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
+bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, size_t& inOutSize, 
         const char *input) {
     return this->ComputeHash(outHash, inOutSize, 
         reinterpret_cast<const BYTE *>(input), ::strlen(input));
@@ -49,7 +49,7 @@ bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, SIZE_T& inOutSize,
 /*
  * vislib::HashAlgorithm::ComputeHash
  */
-bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
+bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, size_t& inOutSize, 
         const wchar_t *input) {
     return this->ComputeHash(outHash, inOutSize, 
         reinterpret_cast<const BYTE *>(input), 
@@ -60,8 +60,8 @@ bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, SIZE_T& inOutSize,
 /*
  * vislib::HashAlgorithm::GetHashSize
  */ 
-SIZE_T vislib::HashAlgorithm::GetHashSize(void) const {
-    SIZE_T retval;
+size_t vislib::HashAlgorithm::GetHashSize(void) const {
+    size_t retval;
     const_cast<HashAlgorithm *>(this)->TransformFinalBlock(NULL, retval, NULL, 0);
     return retval;
 }
@@ -71,7 +71,7 @@ SIZE_T vislib::HashAlgorithm::GetHashSize(void) const {
  * vislib::HashAlgorithm::GetHashValue
  */
 bool vislib::HashAlgorithm::GetHashValue(BYTE *outHash, 
-                                         SIZE_T& inOutSize) const {
+                                         size_t& inOutSize) const {
     return const_cast<HashAlgorithm *>(this)->TransformFinalBlock(outHash, inOutSize, NULL, 0);
 }
 
@@ -82,7 +82,7 @@ bool vislib::HashAlgorithm::GetHashValue(BYTE *outHash,
 vislib::StringA vislib::HashAlgorithm::ToStringA(void) const {
     BYTE *hash = NULL;
     StringA::Char *out = NULL;
-    SIZE_T hashSize = 0;
+    size_t hashSize = 0;
     StringA retval;
     StringA tmp(' ', 2);
 
@@ -94,7 +94,7 @@ vislib::StringA vislib::HashAlgorithm::ToStringA(void) const {
         out = retval.AllocateBuffer(2 * static_cast<StringA::Size>(hashSize));
         THE_ASSERT(out[2 * hashSize] == 0);
 
-        for (SIZE_T i = 0; i < hashSize; i++) {
+        for (size_t i = 0; i < hashSize; i++) {
             tmp.Format("%02x", hash[i]);
             *out++ = tmp[0];
             *out++ = tmp[1];
@@ -113,7 +113,7 @@ vislib::StringA vislib::HashAlgorithm::ToStringA(void) const {
 vislib::StringW vislib::HashAlgorithm::ToStringW(void) const {
     BYTE *hash = NULL;
     StringW::Char *out = NULL;
-    SIZE_T hashSize = 0;
+    size_t hashSize = 0;
     StringW retval;
     StringW tmp(L' ', 2);
 
@@ -125,7 +125,7 @@ vislib::StringW vislib::HashAlgorithm::ToStringW(void) const {
         out = retval.AllocateBuffer(2 * static_cast<StringW::Size>(hashSize));
         THE_ASSERT(out[2 * hashSize] == 0);
 
-        for (SIZE_T i = 0; i < hashSize; i++) {
+        for (size_t i = 0; i < hashSize; i++) {
             tmp.Format(L"%02x", hash[i]);
             *out++ = tmp[0];
             *out++ = tmp[1];

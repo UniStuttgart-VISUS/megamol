@@ -46,7 +46,7 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
         receiveMessagesCtx);            // Receive context.
     const MessageHeader *msgHdr = NULL; // Pointer to header area of 'recvBuf'.
     const BlockHeader *blkHdr = NULL;   // Pointer to a block header.
-    SIZE_T msgSize = 0;                 // Total message size (header + body).
+    size_t msgSize = 0;                 // Total message size (header + body).
     RawStorage recvBuf;                 // Receives data from network.
     DWORD retval = 0;                   // Function return value.
     AbstractClusterNode::PeerIdentifier peerId; // Peer address of socket.
@@ -108,7 +108,7 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             if (msgHdr->Header.BlockId == MSGID_MULTIPLE) {
                 /* Received a compound message, so split it. */
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Splitting compond message ...\n");
-                INT remBody = static_cast<INT>(msgHdr->Header.BlockLength);
+                int remBody = static_cast<int>(msgHdr->Header.BlockLength);
                 const BYTE *d = recvBuf.As<BYTE>() + sizeof(MessageHeader);
 
                 while (remBody > 0) {

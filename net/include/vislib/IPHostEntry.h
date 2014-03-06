@@ -167,7 +167,7 @@ namespace net {
         char buffer[NI_MAXHOST];    // Receives the host name
         int err = 0;                // OS operation return value.
 
-        for (SIZE_T i = 0; i < this->addresses.Count()
+        for (size_t i = 0; i < this->addresses.Count()
                 && this->canonicalName.IsEmpty(); ++i) {
             IPEndPoint ep(this->addresses[i], 0);
             socklen_t size = (ep.GetAddressFamily() == IPEndPoint::FAMILY_INET)

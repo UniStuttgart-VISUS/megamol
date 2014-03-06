@@ -132,11 +132,11 @@ namespace math {
     template<class TI, class TO, unsigned int D>
     void ForceDirected<TI, TO, D>::Init(void) {
 
-        SIZE_T count = inData.Count();
+        size_t count = inData.Count();
         currVelocity->SetCount(count);
         srand((unsigned)time(NULL));
 
-        for (SIZE_T i = 0; i < count; i++) {
+        for (size_t i = 0; i < count; i++) {
             for (unsigned int j = 0; j < D; j++) {
                 outData[i][j] = (float)(((float)rand() / (float)RAND_MAX) * (float)count * 2.0);
             }
@@ -150,17 +150,17 @@ namespace math {
     template<class TI, class TO, unsigned int D>
     float ForceDirected<TI, TO, D>::SingleStep(void) {
 
-        SIZE_T count = inData.Count();
+        size_t count = inData.Count();
         OutElement currForce;
         OutElement diff, normdiff;
         float energy = 0;
         float w, twi, twj, dl;
         //float k = 1; // in theory 1/(4Pi epsilon_0)
 
-        for (SIZE_T i = 0; i < count; i++) {
+        for (size_t i = 0; i < count; i++) {
             currForce.SetNull();
             twi = inData[i].TotalWeight();
-            for (SIZE_T j = 0; j < count; j++) {
+            for (size_t j = 0; j < count; j++) {
                 if (i != j) {
                     //diff = outData[j] - outData[i];
                     diff = outData[i] - outData[j];

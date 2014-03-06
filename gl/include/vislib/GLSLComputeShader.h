@@ -122,7 +122,7 @@ namespace gl {
          *                         fails.
          */
         virtual bool Compile(const char **computeShaderSrc, 
-            const SIZE_T cntComputeShaderSrc, 
+            const size_t cntComputeShaderSrc, 
             bool insertLineDirective = true);
 
         /**
@@ -170,7 +170,7 @@ namespace gl {
          *                         file failed.
          */
         virtual bool CompileFromFile(const char **computeShaderFiles,
-            const SIZE_T cntComputeShaderFiles,
+            const size_t cntComputeShaderFiles,
             bool insertLineDirective = true);
 
 

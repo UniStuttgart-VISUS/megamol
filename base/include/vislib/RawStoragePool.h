@@ -71,7 +71,7 @@ namespace vislib {
          * @throws std::bad_alloc If the request cannot be fulfilled because
          *                        of too low memory.
          */
-        RawStorage *RaiseAtLeast(const SIZE_T size);
+        RawStorage *RaiseAtLeast(const size_t size);
 
         /**
          * Return 'storage' for reuse.

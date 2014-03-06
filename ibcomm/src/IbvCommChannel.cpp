@@ -219,8 +219,8 @@
 ///* 
 // * vislib::net::ib::IbvCommChannel::Receive
 // */
-//SIZE_T vislib::net::ib::IbvCommChannel::Receive(void *outData, 
-//        const SIZE_T cntBytes, const UINT timeout,  const bool forceReceive) {
+//size_t vislib::net::ib::IbvCommChannel::Receive(void *outData, 
+//        const size_t cntBytes, const unsigned int timeout,  const bool forceReceive) {
 //    // TODO
 //    return 0;
 //}
@@ -229,8 +229,8 @@
 ///* 
 // * vislib::net::ib::IbvCommChannel::Receive
 // */
-//SIZE_T vislib::net::ib::IbvCommChannel::Send(const void *data, 
-//        const SIZE_T cntBytes, const UINT timeout, const bool forceSend) {
+//size_t vislib::net::ib::IbvCommChannel::Send(const void *data, 
+//        const size_t cntBytes, const unsigned int timeout, const bool forceSend) {
 //    // TODO
 //    return 0;
 //}

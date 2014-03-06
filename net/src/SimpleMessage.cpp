@@ -15,7 +15,7 @@
 /*
  * vislib::net::SimpleMessage::SimpleMessage
  */
-vislib::net::SimpleMessage::SimpleMessage(const SIZE_T bodySize) : Super() {
+vislib::net::SimpleMessage::SimpleMessage(const size_t bodySize) : Super() {
     THE_STACK_TRACE;
     // This will force the superclass to (i) allocate memory for the message
     // header and the body itself and (ii) to update the message header pointer.
@@ -81,7 +81,7 @@ void vislib::net::SimpleMessage::Trim(void) {
  * vislib::net::SimpleMessage::assertStorage
  */
 bool vislib::net::SimpleMessage::assertStorage(void *& outStorage, 
-        const SIZE_T size) {
+        const size_t size) {
     THE_STACK_TRACE;
     bool retval = this->storage.AssertSize(size, false);
     outStorage = static_cast<void *>(this->storage);

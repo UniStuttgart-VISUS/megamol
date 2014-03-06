@@ -138,7 +138,7 @@ int _tmain(int argc, _TCHAR **argv) {
     try {
         IbvInformation::GetInstance().GetDevices(devices);
 
-        for (SIZE_T i = 0; i < devices.Count(); i++) {
+        for (size_t i = 0; i < devices.Count(); i++) {
             std::cout << "Device #" << i << ":" << std::endl;
 
             std::cout << "\tGUID: " 
@@ -151,7 +151,7 @@ int _tmain(int argc, _TCHAR **argv) {
             std::cout << "\tNumber of ports: " << devices[i].GetPortCount() 
                 << std::endl;
 
-            for (SIZE_T j = 0; j < devices[i].GetPortCount(); j++) {
+            for (size_t j = 0; j < devices[i].GetPortCount(); j++) {
                 const IbvInformation::Port& port = devices[i].GetPort(j);
                 std::cout << "\tPort #" << j << ": " << std::endl;
 

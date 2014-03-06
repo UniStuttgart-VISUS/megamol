@@ -220,7 +220,7 @@ void TestDirectoryGlobbing(const char *path) {
     AssertTrue("kevin.txt found", children.Contains("kevin.txt"));
     AssertTrue("heinz.dir found", children.Contains("heinz.dir"));
     AssertTrue("adolf.dir found", children.Contains("adolf.dir"));
-    AssertEqual<SIZE_T>("5 children found", children.Count(), 5);
+    AssertEqual<size_t>("5 children found", children.Count(), 5);
 
     {
         children.Clear();
@@ -235,7 +235,7 @@ void TestDirectoryGlobbing(const char *path) {
     AssertTrue("kevin.txt found", children.Contains("kevin.txt"));
     AssertFalse("heinz.txt not found", children.Contains("heinz.dir"));
     AssertFalse("adolf.txt not found", children.Contains("adolf.dir"));
-    AssertEqual<SIZE_T>("3 children found", children.Count(), 3);
+    AssertEqual<size_t>("3 children found", children.Count(), 3);
 
     {
         children.Clear();
@@ -250,7 +250,7 @@ void TestDirectoryGlobbing(const char *path) {
     AssertFalse("kevin.txt not found", children.Contains("kevin.txt"));
     AssertTrue("heinz.dir found", children.Contains("heinz.dir"));
     AssertFalse("adolf.dir not found", children.Contains("adolf.dir"));
-    AssertEqual<SIZE_T>("3 children found", children.Count(), 3);
+    AssertEqual<size_t>("3 children found", children.Count(), 3);
 
     {
         children.Clear();
@@ -265,7 +265,7 @@ void TestDirectoryGlobbing(const char *path) {
     AssertFalse("kevin.txt not found", children.Contains("kevin.txt"));
     AssertFalse("heinz.txt not found", children.Contains("heinz.dir"));
     AssertFalse("adolf.txt not found", children.Contains("adolf.dir"));
-    AssertEqual<SIZE_T>("2 children found", children.Count(), 2);
+    AssertEqual<size_t>("2 children found", children.Count(), 2);
 
     vislib::sys::Path::DeleteDirectory(path, true);
     if (vislib::sys::File::Exists(path)) {

@@ -207,7 +207,7 @@ namespace graphics {
          * 
          * @return
          */
-        virtual LRESULT onMessage(bool& outHandled, UINT msg, WPARAM wParam, 
+        virtual LRESULT onMessage(bool& outHandled, unsigned int msg, WPARAM wParam, 
             LPARAM lParam) throw();
 #endif /* _WIN32 */
 
@@ -270,7 +270,7 @@ namespace graphics {
          *
          * @return
          */
-        static LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wParam,
+        static LRESULT CALLBACK wndProc(HWND hWnd, unsigned int msg, WPARAM wParam,
             LPARAM lParam);
 #endif /* _WIN32 */
 

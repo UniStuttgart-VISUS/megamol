@@ -223,7 +223,7 @@ vislib::StringW vislib::net::ib::IbvInformation::Device::GetNodeGuidW(
  * vislib::net::ib::IbvInformation::Device::GetPort
  */
 const vislib::net::ib::IbvInformation::Port& 
-vislib::net::ib::IbvInformation::Device::GetPort(const SIZE_T idx) const {
+vislib::net::ib::IbvInformation::Device::GetPort(const size_t idx) const {
     THE_STACK_TRACE;
     if ((idx < 0) || (idx > this->ports.Count() - 1)) {
         throw OutOfRangeException(idx, 0, this->ports.Count() - 1, __FILE__, 
@@ -393,7 +393,7 @@ void vislib::net::ib::IbvInformation::DiscardCache(const bool reread) {
 /*
  * vislib::net::ib::IbvInformation::GetDevices
  */
-SIZE_T vislib::net::ib::IbvInformation::GetDevices(
+size_t vislib::net::ib::IbvInformation::GetDevices(
         DeviceList& outDevices) const {
     THE_STACK_TRACE;
 
@@ -452,7 +452,7 @@ bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
     THE_STACK_TRACE;
 
     RawStorage guids;       // Receives GUIDs of devices.
-    SIZE_T size = 0;        // Receives size of GUIDs in bytes.
+    size_t size = 0;        // Receives size of GUIDs in bytes.
     HRESULT hr = S_OK;      // Receives WV API results.
 
     if (this->devices.IsEmpty()) {
@@ -479,7 +479,7 @@ bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
         /* Get the attributes of the devices. */
         size /= sizeof(NET64);
         this->devices.AssertCapacity(size);
-        for (SIZE_T i = 0; i < size; i++) {
+        for (size_t i = 0; i < size; i++) {
             NET64 guid = *guids.AsAt<NET64>(i * sizeof(NET64));
             this->devices.Add(Device(wvProvider, guid));
         }

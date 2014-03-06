@@ -20,19 +20,19 @@
 /*
  * vislib::net::TcpCommChannel::FLAG_NODELAY
  */
-const UINT64 vislib::net::TcpCommChannel::FLAG_NODELAY = 0x00000001;
+const uint64_t vislib::net::TcpCommChannel::FLAG_NODELAY = 0x00000001;
 
 
 /*
  * vislib::net::TcpCommChannel::FLAG_NOSENDBUFFER
  */
-const UINT64 vislib::net::TcpCommChannel::FLAG_NOSENDBUFFER = 0x00000004;
+const uint64_t vislib::net::TcpCommChannel::FLAG_NOSENDBUFFER = 0x00000004;
 
 
 /*
  * vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS
  */
-const UINT64 vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS = 0x00000002;
+const uint64_t vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS = 0x00000002;
 
 
 /*
@@ -136,10 +136,10 @@ void vislib::net::TcpCommChannel::Listen(const int backlog) {
 /*
  * vislib::net::TcpCommChannel::Receive
  */
-SIZE_T vislib::net::TcpCommChannel::Receive(void *outData, 
-        const SIZE_T cntBytes, const UINT timeout, const bool forceReceive) {
+size_t vislib::net::TcpCommChannel::Receive(void *outData, 
+        const size_t cntBytes, const unsigned int timeout, const bool forceReceive) {
     THE_STACK_TRACE;
-    SIZE_T retval = 0;
+    size_t retval = 0;
     
     if (cntBytes > 0) {
         retval = this->socket.Receive(outData, cntBytes, timeout, 0, 
@@ -160,8 +160,8 @@ SIZE_T vislib::net::TcpCommChannel::Receive(void *outData,
 /*
  * vislib::net::TcpCommChannel::Send
  */
-SIZE_T vislib::net::TcpCommChannel::Send(const void *data, 
-        const SIZE_T cntBytes, const UINT timeout, const bool forceSend) {
+size_t vislib::net::TcpCommChannel::Send(const void *data, 
+        const size_t cntBytes, const unsigned int timeout, const bool forceSend) {
     THE_STACK_TRACE;
     return this->socket.Send(data, cntBytes, timeout, 0, forceSend);
 }
@@ -170,7 +170,7 @@ SIZE_T vislib::net::TcpCommChannel::Send(const void *data,
 /*
  * vislib::net::TcpCommChannel::TcpCommChannel
  */
-vislib::net::TcpCommChannel::TcpCommChannel(const UINT64 flags) 
+vislib::net::TcpCommChannel::TcpCommChannel(const uint64_t flags) 
         : Super(), flags(flags) {
      THE_STACK_TRACE;
 }
@@ -179,7 +179,7 @@ vislib::net::TcpCommChannel::TcpCommChannel(const UINT64 flags)
 /*
  * vislib::net::TcpCommChannel::TcpCommChannel
  */
-vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket, const UINT64 flags) 
+vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket, const uint64_t flags) 
         : Super(), socket(socket), flags(flags) {
     THE_STACK_TRACE;
     socket.SetNoDelay(this->IsSetNoDelay());

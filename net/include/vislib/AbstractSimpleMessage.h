@@ -99,7 +99,7 @@ namespace vislib {
             * @return A pointer to the begin of the message body + 'offset' bytes.
             */
             template<class T> 
-            inline const T *GetBodyAsAt(const SIZE_T offset) const {
+            inline const T *GetBodyAsAt(const size_t offset) const {
                 THE_STACK_TRACE;
                 return reinterpret_cast<const T *>(this->GetBodyAs<BYTE>() 
                     + offset);
@@ -115,7 +115,7 @@ namespace vislib {
             * @return A pointer to the begin of the message body + 'offset' bytes.
             */
             template<class T> 
-            inline T *GetBodyAsAt(const SIZE_T offset) {
+            inline T *GetBodyAsAt(const size_t offset) {
                 THE_STACK_TRACE;
                 return reinterpret_cast<T *>(this->GetBodyAs<BYTE>() + offset);
             }
@@ -145,7 +145,7 @@ namespace vislib {
             *
             * @return The combined size of the header and message body.
             */
-            inline SIZE_T GetMessageSize(void) const {
+            inline size_t GetMessageSize(void) const {
                 THE_STACK_TRACE;
                 return (this->GetHeader().GetHeaderSize() 
                     + this->GetHeader().GetBodySize());
@@ -173,7 +173,7 @@ namespace vislib {
             *
             * @throws Exception or derived in case of an error.
             */
-            void SetBody(const void *body, const SIZE_T bodySize = 0);
+            void SetBody(const void *body, const size_t bodySize = 0);
 
             /**
             * Update the message header. 
@@ -278,7 +278,7 @@ namespace vislib {
             *
             * @throws Exception or derived in case of an error.
             */
-            virtual bool assertStorage(void *& outStorage, const SIZE_T size) = 0;
+            virtual bool assertStorage(void *& outStorage, const size_t size) = 0;
 
             /**
             * Ensure that there is enough storage for the message header and a body
@@ -287,7 +287,7 @@ namespace vislib {
             * the header is returned.
             *
             * Implementation note: This method uses 
-            * assertStorage(void *& outStorage, const SIZE_T size) to allocate the
+            * assertStorage(void *& outStorage, const size_t size) to allocate the
             * storage. Additional logic is wrapped around this call.
             *
             * @param bodySize The size of the message body in bytes.
@@ -296,7 +296,7 @@ namespace vislib {
             *
             * @throws Exception or derived in case of an error.
             */
-            void *assertStorage(const SIZE_T bodySize);
+            void *assertStorage(const size_t bodySize);
 
         private:
 

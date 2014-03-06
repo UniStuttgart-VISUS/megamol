@@ -245,13 +245,13 @@ void vislib::sys::RegistrySerialiser::ClearKey(const bool includeValues) {
     RegistryKey key(this->keyStack.Top());
     
     Array<StringW> keys = key.GetSubKeysW();
-    for (SIZE_T i = 0; i < keys.Count(); i++) {
+    for (size_t i = 0; i < keys.Count(); i++) {
         key.DeleteSubKey(keys[i]);
     }
 
     if (includeValues) {
         Array<StringW> values = key.GetValueNamesW();
-        for (SIZE_T i = 0; i < values.Count(); i++) {
+        for (size_t i = 0; i < values.Count(); i++) {
             key.DeleteValue(values[i]);
         }
     }
@@ -415,31 +415,31 @@ void vislib::sys::RegistrySerialiser::Deserialise(UINT32& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(INT64& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(int64_t& outValue, 
         const char *name) {
-    UINT64 value;
+    uint64_t value;
     this->Deserialise(value, name);
-    outValue = *reinterpret_cast<INT64 *>(&value);
+    outValue = *reinterpret_cast<int64_t *>(&value);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(INT64& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(int64_t& outValue, 
         const wchar_t *name) {
-    UINT64 value;
+    uint64_t value;
     this->Deserialise(value, name);
-    outValue = *reinterpret_cast<INT64 *>(&value);
+    outValue = *reinterpret_cast<int64_t *>(&value);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(UINT64& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(uint64_t& outValue, 
         const char *name) {
-    IntegralDeserialise<UINT64, REG_QWORD, char, ::RegQueryValueExA>(
+    IntegralDeserialise<uint64_t, REG_QWORD, char, ::RegQueryValueExA>(
         outValue, this->keyStack.Top(), name);
 }
 
@@ -447,9 +447,9 @@ void vislib::sys::RegistrySerialiser::Deserialise(UINT64& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(UINT64& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(uint64_t& outValue, 
         const wchar_t *name) {
-    IntegralDeserialise<UINT64, REG_QWORD, wchar_t, ::RegQueryValueExW>(
+    IntegralDeserialise<uint64_t, REG_QWORD, wchar_t, ::RegQueryValueExW>(
         outValue, this->keyStack.Top(), name);
 }
 
@@ -477,7 +477,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(float& outValue,
  */
 void vislib::sys::RegistrySerialiser::Deserialise(double& outValue, 
         const char *name) {
-    UINT64 value;
+    uint64_t value;
     this->Deserialise(value, name);
     outValue = *reinterpret_cast<double *>(&value);
 }
@@ -488,7 +488,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(double& outValue,
  */
 void vislib::sys::RegistrySerialiser::Deserialise(double& outValue, 
         const wchar_t *name) {
-    UINT64 value;
+    uint64_t value;
     this->Deserialise(value, name);
     outValue = *reinterpret_cast<double *>(&value);
 }
@@ -743,29 +743,29 @@ void vislib::sys::RegistrySerialiser::Serialise(const UINT32 value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const INT64 value,
+void vislib::sys::RegistrySerialiser::Serialise(const int64_t value,
         const char *name) {
-    IntegralSerialise<UINT64, REG_QWORD, char, ::RegSetValueExA>(
-        *reinterpret_cast<const UINT64 *>(&value), this->keyStack.Top(), name);
+    IntegralSerialise<uint64_t, REG_QWORD, char, ::RegSetValueExA>(
+        *reinterpret_cast<const uint64_t *>(&value), this->keyStack.Top(), name);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const INT64 value,
+void vislib::sys::RegistrySerialiser::Serialise(const int64_t value,
         const wchar_t *name) {
-    IntegralSerialise<UINT64, REG_QWORD, wchar_t, ::RegSetValueExW>(
-        *reinterpret_cast<const UINT64 *>(&value), this->keyStack.Top(), name);
+    IntegralSerialise<uint64_t, REG_QWORD, wchar_t, ::RegSetValueExW>(
+        *reinterpret_cast<const uint64_t *>(&value), this->keyStack.Top(), name);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const UINT64 value,
+void vislib::sys::RegistrySerialiser::Serialise(const uint64_t value,
         const char *name) {
-    IntegralSerialise<UINT64, REG_QWORD, char, ::RegSetValueExA>(
+    IntegralSerialise<uint64_t, REG_QWORD, char, ::RegSetValueExA>(
         value, this->keyStack.Top(), name);
 }
 
@@ -773,9 +773,9 @@ void vislib::sys::RegistrySerialiser::Serialise(const UINT64 value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const UINT64 value,
+void vislib::sys::RegistrySerialiser::Serialise(const uint64_t value,
         const wchar_t *name) {
-    IntegralSerialise<UINT64, REG_QWORD, wchar_t, ::RegSetValueExW>(
+    IntegralSerialise<uint64_t, REG_QWORD, wchar_t, ::RegSetValueExW>(
         value, this->keyStack.Top(), name);
 }
 
@@ -803,9 +803,9 @@ this->serialiseAsDword0<float, UINT32, wchar_t>(value, name);
  */
 void vislib::sys::RegistrySerialiser::Serialise(const double value, 
         const char *name) {
-    THE_ASSERT(sizeof(double) == sizeof(UINT64));
-    IntegralSerialise<UINT64, REG_QWORD, char, ::RegSetValueExA>(
-        *reinterpret_cast<const UINT64 *>(&value), this->keyStack.Top(), name);
+    THE_ASSERT(sizeof(double) == sizeof(uint64_t));
+    IntegralSerialise<uint64_t, REG_QWORD, char, ::RegSetValueExA>(
+        *reinterpret_cast<const uint64_t *>(&value), this->keyStack.Top(), name);
 }
 
 
@@ -814,9 +814,9 @@ void vislib::sys::RegistrySerialiser::Serialise(const double value,
  */
 void vislib::sys::RegistrySerialiser::Serialise(const double value, 
         const wchar_t *name) {
-    THE_ASSERT(sizeof(double) == sizeof(UINT64));
-    IntegralSerialise<UINT64, REG_QWORD, wchar_t, ::RegSetValueExW>(
-        *reinterpret_cast<const UINT64 *>(&value), this->keyStack.Top(), name);
+    THE_ASSERT(sizeof(double) == sizeof(uint64_t));
+    IntegralSerialise<uint64_t, REG_QWORD, wchar_t, ::RegSetValueExW>(
+        *reinterpret_cast<const uint64_t *>(&value), this->keyStack.Top(), name);
 }
 
 
