@@ -25,7 +25,7 @@ vislib::RawStorageSerialiser::RawStorageSerialiser(RawStorage *storage,
 /*
  * vislib::RawStorageSerialiser::RawStorageSerialiser
  */
-vislib::RawStorageSerialiser::RawStorageSerialiser(const BYTE *storage, 
+vislib::RawStorageSerialiser::RawStorageSerialiser(const uint8_t *storage, 
         const size_t storageSize, const unsigned int offset) 
         : Serialiser(SERIALISER_REQUIRES_ORDER), nakedStorage(storage),
         nakedStorageSize(storageSize), storage(NULL), offset(offset) {
@@ -99,108 +99,108 @@ void vislib::RawStorageSerialiser::Deserialise(wchar_t& outValue,
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(INT8& outValue, 
+void vislib::RawStorageSerialiser::Deserialise(int8_t& outValue, 
         const char *name) {
-    this->restore(&outValue, sizeof(INT8));
+    this->restore(&outValue, sizeof(int8_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(INT8& outValue, 
+void vislib::RawStorageSerialiser::Deserialise(int8_t& outValue, 
         const wchar_t *name) {
-    this->restore(&outValue, sizeof(INT8));
+    this->restore(&outValue, sizeof(int8_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(UINT8& outValue, 
+void vislib::RawStorageSerialiser::Deserialise(uint8_t& outValue, 
         const char *name) {
-    this->restore(&outValue, sizeof(UINT8));
+    this->restore(&outValue, sizeof(uint8_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(UINT8& outValue, 
+void vislib::RawStorageSerialiser::Deserialise(uint8_t& outValue, 
         const wchar_t *name) {
-    this->restore(&outValue, sizeof(UINT8));
+    this->restore(&outValue, sizeof(uint8_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(INT16& outValue, 
+void vislib::RawStorageSerialiser::Deserialise(int16_t& outValue, 
         const char *name) {
-    this->restore(&outValue, sizeof(INT16));
+    this->restore(&outValue, sizeof(int16_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(INT16& outValue, 
+void vislib::RawStorageSerialiser::Deserialise(int16_t& outValue, 
         const wchar_t *name) {
-    this->restore(&outValue, sizeof(INT16));
+    this->restore(&outValue, sizeof(int16_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(UINT16& outValue, 
+void vislib::RawStorageSerialiser::Deserialise(uint16_t& outValue, 
         const char *name) {
-    this->restore(&outValue, sizeof(UINT16));
+    this->restore(&outValue, sizeof(uint16_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(UINT16& outValue, 
+void vislib::RawStorageSerialiser::Deserialise(uint16_t& outValue, 
         const wchar_t *name) {
-    this->restore(&outValue, sizeof(UINT16));
+    this->restore(&outValue, sizeof(uint16_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(INT32& outValue, 
+void vislib::RawStorageSerialiser::Deserialise(int32_t& outValue, 
         const char *name) {
-    this->restore(&outValue, sizeof(INT32));
+    this->restore(&outValue, sizeof(int32_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(INT32& outValue, 
+void vislib::RawStorageSerialiser::Deserialise(int32_t& outValue, 
         const wchar_t *name) {
-    this->restore(&outValue, sizeof(INT32));
+    this->restore(&outValue, sizeof(int32_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(UINT32& outValue, 
+void vislib::RawStorageSerialiser::Deserialise(uint32_t& outValue, 
         const char *name) {
-    this->restore(&outValue, sizeof(UINT32));
+    this->restore(&outValue, sizeof(uint32_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(UINT32& outValue, 
+void vislib::RawStorageSerialiser::Deserialise(uint32_t& outValue, 
         const wchar_t *name) {
-    this->restore(&outValue, sizeof(UINT32));
+    this->restore(&outValue, sizeof(uint32_t));
 }
 
 
@@ -361,108 +361,108 @@ void vislib::RawStorageSerialiser::Serialise(const wchar_t value,
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const INT8 value, 
+void vislib::RawStorageSerialiser::Serialise(const int8_t value, 
         const char *name) {
-    this->store(&value, sizeof(INT8));
+    this->store(&value, sizeof(int8_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const INT8 value, 
+void vislib::RawStorageSerialiser::Serialise(const int8_t value, 
         const wchar_t *name) {
-    this->store(&value, sizeof(INT8));
+    this->store(&value, sizeof(int8_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const UINT8 value, 
+void vislib::RawStorageSerialiser::Serialise(const uint8_t value, 
         const char *name) {
-    this->store(&value, sizeof(UINT8));
+    this->store(&value, sizeof(uint8_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const UINT8 value, 
+void vislib::RawStorageSerialiser::Serialise(const uint8_t value, 
         const wchar_t *name) {
-    this->store(&value, sizeof(UINT8));
+    this->store(&value, sizeof(uint8_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const INT16 value, 
+void vislib::RawStorageSerialiser::Serialise(const int16_t value, 
         const char *name) {
-    this->store(&value, sizeof(INT16));
+    this->store(&value, sizeof(int16_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const INT16 value, 
+void vislib::RawStorageSerialiser::Serialise(const int16_t value, 
         const wchar_t *name) {
-    this->store(&value, sizeof(INT16));
+    this->store(&value, sizeof(int16_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const UINT16 value, 
+void vislib::RawStorageSerialiser::Serialise(const uint16_t value, 
         const char *name) {
-    this->store(&value, sizeof(UINT16));
+    this->store(&value, sizeof(uint16_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const UINT16 value, 
+void vislib::RawStorageSerialiser::Serialise(const uint16_t value, 
         const wchar_t *name) {
-    this->store(&value, sizeof(UINT16));
+    this->store(&value, sizeof(uint16_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const INT32 value, 
+void vislib::RawStorageSerialiser::Serialise(const int32_t value, 
         const char *name) {
-    this->store(&value, sizeof(INT32));
+    this->store(&value, sizeof(int32_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const INT32 value, 
+void vislib::RawStorageSerialiser::Serialise(const int32_t value, 
         const wchar_t *name) {
-    this->store(&value, sizeof(INT32));
+    this->store(&value, sizeof(int32_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const UINT32 value, 
+void vislib::RawStorageSerialiser::Serialise(const uint32_t value, 
         const char *name) {
-    this->store(&value, sizeof(UINT32));
+    this->store(&value, sizeof(uint32_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const UINT32 value, 
+void vislib::RawStorageSerialiser::Serialise(const uint32_t value, 
         const wchar_t *name) {
-    this->store(&value, sizeof(UINT32));
+    this->store(&value, sizeof(uint32_t));
 }
 
 
@@ -631,7 +631,7 @@ void vislib::RawStorageSerialiser::store(const void *data, unsigned int size) {
 void vislib::RawStorageSerialiser::restore(void *data, unsigned int size) {
     /* Consolidate pointers. */
     if (this->storage != NULL) {
-        this->nakedStorage = this->storage->As<BYTE>();
+        this->nakedStorage = this->storage->As<uint8_t>();
         this->nakedStorageSize = this->storage->GetSize();
     }
 

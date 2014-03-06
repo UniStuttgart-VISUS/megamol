@@ -101,7 +101,7 @@ namespace vislib {
             template<class T> 
             inline const T *GetBodyAsAt(const size_t offset) const {
                 THE_STACK_TRACE;
-                return reinterpret_cast<const T *>(this->GetBodyAs<BYTE>() 
+                return reinterpret_cast<const T *>(this->GetBodyAs<uint8_t>() 
                     + offset);
             }
 
@@ -117,7 +117,7 @@ namespace vislib {
             template<class T> 
             inline T *GetBodyAsAt(const size_t offset) {
                 THE_STACK_TRACE;
-                return reinterpret_cast<T *>(this->GetBodyAs<BYTE>() + offset);
+                return reinterpret_cast<T *>(this->GetBodyAs<uint8_t>() + offset);
             }
 
             /**

@@ -234,7 +234,7 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::initialise(HWND hWnd) {
                 NULL,
                 flags,
                 !featureLevels.IsEmpty() ? featureLevels.PeekElements() : NULL,
-                featureLevels.Count(),
+                static_cast<UINT>(featureLevels.Count()),
                 D3D11_SDK_VERSION,
                 &this->device,
                 &featureLevel,

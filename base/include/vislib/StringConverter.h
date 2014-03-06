@@ -88,7 +88,7 @@ namespace vislib {
      *
      * @author Christoph Mueller
      */
-    template<class S, class T, INT32 B = 64> class StringConverter {
+    template<class S, class T, int32_t B = 64> class StringConverter {
 
     public:
 
@@ -156,7 +156,7 @@ namespace vislib {
     /*
      * StringConverter<S, T, B>::StringConverter
      */
-    template<class S, class T, INT32 B>
+    template<class S, class T, int32_t B>
     StringConverter<S, T, B>::StringConverter(const SrcChar *str) 
             : buffer(NULL) {
         typename S::Size bufLen = S::SafeStringLength(str) + 1;
@@ -168,7 +168,7 @@ namespace vislib {
     /*
      * StringConverter<S, T, B>::~StringConverter
      */
-    template<class S, class T, INT32 B>
+    template<class S, class T, int32_t B>
     StringConverter<S, T, B>::~StringConverter(void) {
         if (this->buffer != this->staticBuffer) {
             the::safe_array_delete(this->buffer);
@@ -179,7 +179,7 @@ namespace vislib {
     /*
      * StringConverter<S, T, B>::operator =
      */
-    template<class S, class T, INT32 B>
+    template<class S, class T, int32_t B>
     StringConverter<S, T, B>& StringConverter<S, T, B>::operator =(
             const StringConverter& rhs) {
         if (this != &rhs) {

@@ -14,9 +14,9 @@
 #include "vislib/Float16.h"
 
 
-#define DR_HALF UINT16
-#define DR_INT INT32
-#define DR_UINT UINT32
+#define DR_HALF uint16_t
+#define DR_INT int32_t
+#define DR_UINT uint32_t
 
 float halfToFloat(DR_HALF val)
 {
@@ -153,12 +153,12 @@ void TestFloat16(void) {
     float fltIn = 0.0f;
     float fltOut = 0.0f;
     float fltOutThomas = 0.0f;
-    UINT16 hlf = 0;
-    UINT16 hlfThomas;
+    uint16_t hlf = 0;
+    uint16_t hlfThomas;
 
     fltIn = 0.0f;
     hlf = Float16::FromFloat32(fltIn);
-    ::AssertEqual("Convert 0.0f to half", hlf, UINT16(0));
+    ::AssertEqual("Convert 0.0f to half", hlf, uint16_t(0));
     hlfThomas = ::floatToHalf(fltIn);
     ::AssertEqual("Regression test with Thomas' impl for 0.0f", hlf, hlfThomas);
 
@@ -170,7 +170,7 @@ void TestFloat16(void) {
 
     fltIn = 1.0f;
     hlf = Float16::FromFloat32(fltIn);
-    ::AssertEqual("Convert 1.0f to half", hlf, UINT16(15 << 10));
+    ::AssertEqual("Convert 1.0f to half", hlf, uint16_t(15 << 10));
     hlfThomas = ::floatToHalf(fltIn);
     ::AssertEqual("Regression test with Thomas' impl for 1.0f", hlf, hlfThomas);
 
@@ -182,7 +182,7 @@ void TestFloat16(void) {
 
     fltIn = -1.0f;
     hlf = Float16::FromFloat32(fltIn);
-    ::AssertEqual("Convert -1.0f to half", hlf, UINT16((1 << 15) | (15 << 10)));
+    ::AssertEqual("Convert -1.0f to half", hlf, uint16_t((1 << 15) | (15 << 10)));
     hlfThomas = ::floatToHalf(fltIn);
     ::AssertEqual("Regression test with Thomas' impl for -1.0f", hlf, hlfThomas);
 
@@ -194,7 +194,7 @@ void TestFloat16(void) {
 
     fltIn = 1.0f / 2.0f;
     hlf = Float16::FromFloat32(fltIn);
-    ::AssertEqual("Convert 1/2f to half", hlf, UINT16(7 << 11));
+    ::AssertEqual("Convert 1/2f to half", hlf, uint16_t(7 << 11));
     hlfThomas = ::floatToHalf(fltIn);
     ::AssertEqual("Regression test with Thomas' impl for 1/2f", hlf, hlfThomas);
 
@@ -206,7 +206,7 @@ void TestFloat16(void) {
 
     fltIn = 3.0f;
     hlf = Float16::FromFloat32(fltIn);
-    ::AssertEqual("Convert 3.0f to half", hlf, UINT16(16896));
+    ::AssertEqual("Convert 3.0f to half", hlf, uint16_t(16896));
     hlfThomas = ::floatToHalf(fltIn);
     ::AssertEqual("Regression test with Thomas' impl for 3.0f", hlf, hlfThomas);
 
@@ -218,7 +218,7 @@ void TestFloat16(void) {
 
     fltIn = 65504.0f;
     hlf = Float16::FromFloat32(fltIn);
-    ::AssertEqual("Convert 65504.0f to half", hlf, UINT16(31743));
+    ::AssertEqual("Convert 65504.0f to half", hlf, uint16_t(31743));
     hlfThomas = ::floatToHalf(fltIn);
     ::AssertEqual("Regression test with Thomas' impl for 65504.0f", hlf, hlfThomas);
 

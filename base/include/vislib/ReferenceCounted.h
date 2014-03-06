@@ -40,7 +40,7 @@ namespace vislib {
          *
          * @return The new value of the reference counter.
          */
-        UINT32 AddRef(void);
+        uint32_t AddRef(void);
 
         /**
          * Decrement the reference count. If the reference count reaches zero,
@@ -48,7 +48,7 @@ namespace vislib {
          *
          * @return The new value of the reference counter.
          */
-        UINT32 Release(void);
+        uint32_t Release(void);
 
     protected:
 
@@ -85,7 +85,7 @@ namespace vislib {
     private:
         
         /** The current reference count. */
-        UINT32 cntRefs;
+        uint32_t cntRefs;
     };
     
 } /* end namespace vislib */

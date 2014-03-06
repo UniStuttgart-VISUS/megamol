@@ -81,7 +81,7 @@ namespace cluster {
          *         false if the implementation did ignore it.
          */
         virtual bool onMessageReceived(const Socket& src, const unsigned int msgId,
-            const BYTE *body, const size_t cntBody);
+            const uint8_t *body, const size_t cntBody);
 
         /**
          * Set new camera parameters to update.

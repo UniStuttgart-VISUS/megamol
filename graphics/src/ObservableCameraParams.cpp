@@ -603,112 +603,112 @@ bool vislib::graphics::ObservableCameraParams::operator ==(
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_APERTUREANGLE 
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_ALL 
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_ALL 
     = 0xFFFFFFFF;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_APERTUREANGLE 
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_APERTUREANGLE
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_APERTUREANGLE
     = 0x00000001;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_APERTUREANGLE 
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_AUTOFOCUSOFFSET
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_AUTOFOCUSOFFSET
     = 0x00004000;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_COORDSYSTEMTYPE
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_COORDSYSTEMTYPE
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_COORDSYSTEMTYPE
     = 0x00002000;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_EYE
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_EYE
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_EYE
     = 0x00000002;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_FARCLIP
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_FARCLIP
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_FARCLIP
     = 0x00000004;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_FOCALDISTANCE
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_FOCALDISTANCE
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_FOCALDISTANCE
     = 0x00000008;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_LIMITS
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_LIMITS
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_LIMITS
     = 0x00000010;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_LOOKAT
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_LOOKAT
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_LOOKAT
     = 0x00000020;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_NEARCLIP
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_NEARCLIP
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_NEARCLIP
     = 0x00000040;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_POSITION
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_POSITION
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_POSITION
     = 0x00000080;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_PROJECTION 
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_PROJECTION 
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_PROJECTION 
     = 0x00000100;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_DISPARITY
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_DISPARITY
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_DISPARITY
     = 0x00000200;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_TILERECT
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_TILERECT
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_TILERECT
     = 0x00000400;
 
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_UP
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_UP
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_UP
     = 0x00000800;
         
 
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_VIRTUALVIEW
  */
-const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_VIRTUALVIEW
+const uint32_t vislib::graphics::ObservableCameraParams::DIRTY_VIRTUALVIEW
     = 0x00001000;
 
 
@@ -716,7 +716,7 @@ const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_VIRTUALVIEW
  * vislib::graphics::ObservableCameraParams::fireChanged
  */
 void vislib::graphics::ObservableCameraParams::fireChanged(
-        const UINT32 which, const bool andAllDirty) {
+        const uint32_t which, const bool andAllDirty) {
 
     if (this->isBatchInteraction || this->isSuspendFire) {
         /* Firing events is suspended, just mark fields dirty. */

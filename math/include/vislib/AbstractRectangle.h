@@ -43,19 +43,19 @@ namespace math {
     public:
 
         /** A bitmask representing all rectangle borders. */
-        static const UINT32 BORDER_ALL;
+        static const uint32_t BORDER_ALL;
 
         /** A bitmask representing the bottom border of the rectangle. */
-        static const UINT32 BORDER_BOTTOM;
+        static const uint32_t BORDER_BOTTOM;
 
         /** A bitmask representing the left border of the rectangle. */
-        static const UINT32 BORDER_LEFT;
+        static const uint32_t BORDER_LEFT;
 
         /** A bitmask representing the right border of the rectangle. */
-        static const UINT32 BORDER_RIGHT;
+        static const uint32_t BORDER_RIGHT;
 
         /** A bitmask representing the top border of the rectangle. */
-        static const UINT32 BORDER_TOP;
+        static const uint32_t BORDER_TOP;
 
         /** Dtor. */
         ~AbstractRectangle(void);
@@ -112,7 +112,7 @@ namespace math {
          */
         template<class Sp>
         bool Contains(const AbstractPoint<T, 2, Sp>& point, 
-            const UINT32 includeBorder = 0) const;
+            const uint32_t includeBorder = 0) const;
 
         /**
          * Answer the height of the rectangle.
@@ -631,7 +631,7 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::BORDER_ALL
      */
     template<class T, class S>
-    const UINT32 AbstractRectangle<T, S>::BORDER_ALL
+    const uint32_t AbstractRectangle<T, S>::BORDER_ALL
         = AbstractRectangle<T, S>::BORDER_LEFT
         | AbstractRectangle<T, S>::BORDER_BOTTOM
         | AbstractRectangle<T, S>::BORDER_RIGHT
@@ -642,14 +642,14 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::BORDER_BOTTOM
      */
     template<class T, class S>
-    const UINT32 AbstractRectangle<T, S>::BORDER_BOTTOM 
+    const uint32_t AbstractRectangle<T, S>::BORDER_BOTTOM 
         = 1 << AbstractRectangle<T, S>::IDX_BOTTOM;
 
     /*
      * vislib::math::AbstractRectangle<T, S>::BORDER_LEFT
      */
     template<class T, class S>
-    const UINT32 AbstractRectangle<T, S>::BORDER_LEFT 
+    const uint32_t AbstractRectangle<T, S>::BORDER_LEFT 
         = 1 << AbstractRectangle<T, S>::IDX_LEFT;
 
 
@@ -657,7 +657,7 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::BORDER_RIGHT
      */
     template<class T, class S>
-    const UINT32 AbstractRectangle<T, S>::BORDER_RIGHT 
+    const uint32_t AbstractRectangle<T, S>::BORDER_RIGHT 
         = 1 << AbstractRectangle<T, S>::IDX_RIGHT;
 
 
@@ -665,7 +665,7 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::BORDER_TOP
      */
     template<class T, class S>
-    const UINT32 AbstractRectangle<T, S>::BORDER_TOP
+    const uint32_t AbstractRectangle<T, S>::BORDER_TOP
         = 1 << AbstractRectangle<T, S>::IDX_TOP;
 
 
@@ -694,7 +694,7 @@ namespace math {
     template<class T, class S> 
     template<class Sp>
     bool AbstractRectangle<T, S>::Contains(const AbstractPoint<T, 2, Sp>& point,
-            const UINT32 includeBorder) const {
+            const uint32_t includeBorder) const {
 
         if ((point.X() < this->bounds[IDX_LEFT])
                 || ((((includeBorder & BORDER_LEFT) == 0))

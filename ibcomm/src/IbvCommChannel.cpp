@@ -341,7 +341,7 @@
 //            "receiving data...\n");
 //        THE_ASSERT(this->recvRegion == NULL);
 //        THE_ASSERT(this->protectionDomain != NULL);
-//        this->recvRegion = new BYTE[this->recvRegionSize];
+//        this->recvRegion = new uint8_t[this->recvRegionSize];
 //        if (FAILED(hr = this->protectionDomain->RegisterMemory(
 //                this->recvRegion, this->recvRegionSize, 
 //                IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_LOCAL_WRITE,
@@ -355,7 +355,7 @@
 //            "sending data...\n");
 //        THE_ASSERT(this->sendRegion == NULL);
 //        THE_ASSERT(this->protectionDomain != NULL);
-//        this->sendRegion = new BYTE[this->sendRegionSize];
+//        this->sendRegion = new uint8_t[this->sendRegionSize];
 //        if (FAILED(hr = this->protectionDomain->RegisterMemory(
 //                this->sendRegion, this->sendRegionSize, 
 //                IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_LOCAL_WRITE,

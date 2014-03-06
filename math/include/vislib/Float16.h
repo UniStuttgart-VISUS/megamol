@@ -59,7 +59,7 @@ namespace math {
          * @param flt     An array of at least 'cnt' floats. The caller remains
          *                owner of the memory.
          */
-        static void FromFloat32(UINT16 *outHalf, size_t cnt,
+        static void FromFloat32(uint16_t *outHalf, size_t cnt,
             const float *flt);
 
         /**
@@ -69,8 +69,8 @@ namespace math {
          *
          * @return 'flt' as half.
          */
-        inline static UINT16 FromFloat32(const float flt) {
-            UINT16 retval;
+        inline static uint16_t FromFloat32(const float flt) {
+            uint16_t retval;
             Float16::FromFloat32(&retval, 1, &flt);
             return retval;
         }
@@ -87,7 +87,7 @@ namespace math {
          *                 remains owner of the memory.
          */
         static void ToFloat32(float *outFloat, const size_t cnt,
-            const UINT16 *half);
+            const uint16_t *half);
 
         /**
          * Convert 'half' to float.
@@ -96,7 +96,7 @@ namespace math {
          * 
          * @return 'half' as full float.
          */
-        inline static float ToFloat32(const UINT16 half) {
+        inline static float ToFloat32(const uint16_t half) {
             float retval;
             Float16::ToFloat32(&retval, 1, &half);
             return retval;
@@ -151,11 +151,11 @@ namespace math {
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /**
-         * Cast ctor. from BYTE.
+         * Cast ctor. from uint8_t.
          *
          * @param value The initial value of the half float.
          */
-        inline Float16(const BYTE value)
+        inline Float16(const uint8_t value)
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /**
@@ -167,11 +167,11 @@ namespace math {
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /**
-         * Cast ctor. from INT32.
+         * Cast ctor. from int32_t.
          *
          * @param value The initial value of the half float.
          */
-        inline Float16(const INT32 value)
+        inline Float16(const int32_t value)
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /**
@@ -267,12 +267,12 @@ namespace math {
         }
 
         /**
-         * Cast to BYTE.
+         * Cast to uint8_t.
          *
          * @return The value of this half.
          */
-        inline operator BYTE(void) const {
-            return static_cast<BYTE>(Float16::ToFloat32(this->value));
+        inline operator uint8_t(void) const {
+            return static_cast<uint8_t>(Float16::ToFloat32(this->value));
         }
 
         /**
@@ -285,12 +285,12 @@ namespace math {
         }
 
         /**
-         * Cast to INT32.
+         * Cast to int32_t.
          *
          * @return The value of this half.
          */
-        inline operator INT32(void) const {
-            return static_cast<INT32>(Float16::ToFloat32(this->value));
+        inline operator int32_t(void) const {
+            return static_cast<int32_t>(Float16::ToFloat32(this->value));
         }
 
         /**
@@ -305,7 +305,7 @@ namespace math {
     private:
 
         /** The value represented by this object. */
-        UINT16 value;
+        uint16_t value;
     };
 
 } /* end namespace math */

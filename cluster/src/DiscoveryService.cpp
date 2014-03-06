@@ -309,20 +309,20 @@ const unsigned int vislib::net::cluster::DiscoveryService::DEFAULT_RESPONSE_CHAN
 /*
  * vislib::net::cluster::DiscoveryService::FLAG_OBSERVE_ONLY
  */
-const UINT32 vislib::net::cluster::DiscoveryService::FLAG_OBSERVE_ONLY = 0x1;
+const uint32_t vislib::net::cluster::DiscoveryService::FLAG_OBSERVE_ONLY = 0x1;
 
 
 /*
  * vislib::net::cluster::DiscoveryService::FLAG_SHARE_SOCKETS
  */
-const UINT32 vislib::net::cluster::DiscoveryService::FLAG_SHARE_SOCKETS = 0x2;
+const uint32_t vislib::net::cluster::DiscoveryService::FLAG_SHARE_SOCKETS = 0x2;
 
 
 //#ifndef _WIN32
 ///*
 // * vislib::net::cluster::DiscoveryService::MSG_TYPE_USER
 // */
-//const UINT32 vislib::net::cluster::DiscoveryService::MSG_TYPE_USER;
+//const uint32_t vislib::net::cluster::DiscoveryService::MSG_TYPE_USER;
 //#endif /* _WIN32 */
 
 
@@ -480,7 +480,7 @@ void vislib::net::cluster::DiscoveryService::RemoveListener(
  * vislib::net::cluster::DiscoveryService::SendUserMessage
  */
 unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
-        const UINT32 msgType, const void *msgBody, const size_t msgSize) {
+        const uint32_t msgType, const void *msgBody, const size_t msgSize) {
     Message msg;                // The datagram we are going to send.
     unsigned int retval = 0;            // Number of failed communication trials.
 
@@ -508,7 +508,7 @@ unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
  * vislib::net::cluster::DiscoveryService::SendUserMessage
  */
 unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
-        const PeerHandle& hPeer, const UINT32 msgType, const void *msgBody, 
+        const PeerHandle& hPeer, const uint32_t msgType, const void *msgBody, 
         const size_t msgSize) {
     Message msg;                // The datagram we are going to send.
     unsigned int retval = 0;            // Retval, 0 in case of success.
@@ -545,7 +545,7 @@ unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
 void vislib::net::cluster::DiscoveryService::Start(const char *name, 
         const DiscoveryConfig *configs, const size_t cntConfigs,
         const unsigned int cntExpectedNodes,
-        const UINT32 flags,
+        const uint32_t flags,
         const unsigned int requestInterval,
         const unsigned int requestIntervalIntensive,
         const unsigned int cntResponseChances) {
@@ -691,9 +691,9 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
     THE_ASSERT(!this->socket.IsValid());
 
     // Assert expected message memory layout.
-    THE_ASSERT(sizeof(msg) == MAX_USER_DATA + 2 * sizeof(UINT32));
-    THE_ASSERT(reinterpret_cast<BYTE *>(&(msg.SenderBody)) 
-       == reinterpret_cast<BYTE *>(&msg) + 2 * sizeof(UINT32));
+    THE_ASSERT(sizeof(msg) == MAX_USER_DATA + 2 * sizeof(uint32_t));
+    THE_ASSERT(reinterpret_cast<uint8_t *>(&(msg.SenderBody)) 
+       == reinterpret_cast<uint8_t *>(&msg) + 2 * sizeof(uint32_t));
 
     // Reset termiation flag.
     this->isRunning = true;
@@ -1097,9 +1097,9 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
     size_t cntPeers = 0;    // Cache for # of known peers.
 
     // Assert expected memory layout of messages.
-    THE_ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(UINT32));
-    THE_ASSERT(reinterpret_cast<BYTE *>(&(request.SenderBody)) 
-       == reinterpret_cast<BYTE *>(&request) + 2 * sizeof(UINT32));
+    THE_ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(uint32_t));
+    THE_ASSERT(reinterpret_cast<uint8_t *>(&(request.SenderBody)) 
+       == reinterpret_cast<uint8_t *>(&request) + 2 * sizeof(uint32_t));
 
     // Reset termiation flag.
     this->isRunning = true;
@@ -1262,7 +1262,7 @@ void vislib::net::cluster::DiscoveryService::addPeerNode(
         const IPEndPoint& discoveryAddr, 
         DiscoveryConfigEx *discoverySource,
         const IPEndPoint& responseAddr) {
-    INT_PTR idx = 0;            // Index of possible duplicate.
+    intptr_t idx = 0;            // Index of possible duplicate.
     PeerHandle hPeer = NULL;    // Old or new peer node handle.
 
     THE_ASSERT(discoverySource != NULL);
@@ -1302,8 +1302,8 @@ void vislib::net::cluster::DiscoveryService::addPeerNode(
  */
 void vislib::net::cluster::DiscoveryService::fireUserMessage(
         const IPEndPoint& sender, DiscoveryConfigEx *discoverySource, 
-        const UINT32 msgType, const BYTE *msgBody) {
-    INT_PTR idx = 0;        // Index of sender PeerNode.
+        const uint32_t msgType, const uint8_t *msgBody) {
+    intptr_t idx = 0;        // Index of sender PeerNode.
     PeerHandle hPeer;       // Handle or meta-handle of PeerNode.
 
     this->peerNodesCritSect.Lock();
@@ -1337,10 +1337,10 @@ void vislib::net::cluster::DiscoveryService::fireUserMessage(
 /*
  * vislib::net::cluster::DiscoveryService::peerFromResponseAddress
  */
-INT_PTR vislib::net::cluster::DiscoveryService::peerFromResponseAddress(
+intptr_t vislib::net::cluster::DiscoveryService::peerFromResponseAddress(
         const IPEndPoint& addr) const {
     // TODO: Think of faster solution.  
-    INT_PTR retval = -1;
+    intptr_t retval = -1;
 
     for (size_t i = 0; i < this->peerNodes.Count(); i++) {
         if (this->peerNodes[i]->responseAddress == addr) {
@@ -1356,10 +1356,10 @@ INT_PTR vislib::net::cluster::DiscoveryService::peerFromResponseAddress(
 /*
  * vislib::net::cluster::DiscoveryService::peerFromDiscoveryAddr
  */
-INT_PTR vislib::net::cluster::DiscoveryService::peerFromDiscoveryAddr(
+intptr_t vislib::net::cluster::DiscoveryService::peerFromDiscoveryAddr(
         const IPEndPoint& addr) const {
     // TODO: Think of faster solution.  
-    INT_PTR retval = -1;
+    intptr_t retval = -1;
 
     for (size_t i = 0; i < this->peerNodes.Count(); i++) {
         // TODO: Endpoint test for multiple discovery instances on one node
@@ -1414,7 +1414,7 @@ void vislib::net::cluster::DiscoveryService::prepareRequest(void) {
  * vislib::net::cluster::DiscoveryService::prepareUserMessage
  */
 void vislib::net::cluster::DiscoveryService::prepareUserMessage(
-        Message& outMsg, const UINT32 msgType, const void *msgBody, 
+        Message& outMsg, const uint32_t msgType, const void *msgBody, 
         const size_t msgSize) {
 
     /* Check user parameters. */
@@ -1429,9 +1429,9 @@ void vislib::net::cluster::DiscoveryService::prepareUserMessage(
     }
 
     // Assert some stuff.
-    THE_ASSERT(sizeof(outMsg) == MAX_USER_DATA + 2 * sizeof(UINT32));
-    THE_ASSERT(reinterpret_cast<BYTE *>(&(outMsg.UserData)) 
-       == reinterpret_cast<BYTE *>(&outMsg) + 2 * sizeof(UINT32));
+    THE_ASSERT(sizeof(outMsg) == MAX_USER_DATA + 2 * sizeof(uint32_t));
+    THE_ASSERT(reinterpret_cast<uint8_t *>(&(outMsg.UserData)) 
+       == reinterpret_cast<uint8_t *>(&outMsg) + 2 * sizeof(uint32_t));
     THE_ASSERT(msgType >= MSG_TYPE_USER);
     THE_ASSERT((msgBody != NULL) || (msgSize == 0));
     THE_ASSERT(msgSize <= MAX_USER_DATA);
@@ -1449,7 +1449,7 @@ void vislib::net::cluster::DiscoveryService::prepareUserMessage(
  */
 void vislib::net::cluster::DiscoveryService::removePeerNode(
         const IPEndPoint& address) {
-    INT_PTR idx = 0;
+    intptr_t idx = 0;
     
     this->listeners.Lock();
 
@@ -1478,26 +1478,26 @@ void vislib::net::cluster::DiscoveryService::removePeerNode(
 /*
  * vislib::net::cluster::DiscoveryService::MAGIC_NUMBER
  */
-const UINT32 vislib::net::cluster::DiscoveryService::MAGIC_NUMBER 
-    = (static_cast<UINT32>('v') << 0) | (static_cast<UINT32>('c') << 8)
-    | (static_cast<UINT32>('d') << 16) | (static_cast<UINT32>('s') << 24);
+const uint32_t vislib::net::cluster::DiscoveryService::MAGIC_NUMBER 
+    = (static_cast<uint32_t>('v') << 0) | (static_cast<uint32_t>('c') << 8)
+    | (static_cast<uint32_t>('d') << 16) | (static_cast<uint32_t>('s') << 24);
 
 
 #ifndef _WIN32
 /*
  * vislib::net::cluster::DiscoveryService::MSG_TYPE_IAMALIVE
  */
-const UINT32 vislib::net::cluster::DiscoveryService::MSG_TYPE_IAMALIVE;
+const uint32_t vislib::net::cluster::DiscoveryService::MSG_TYPE_IAMALIVE;
 
 
 /*
  * vislib::net::cluster::DiscoveryService::MSG_TYPE_IAMHERE
  */
-const UINT32 vislib::net::cluster::DiscoveryService::MSG_TYPE_IAMHERE;
+const uint32_t vislib::net::cluster::DiscoveryService::MSG_TYPE_IAMHERE;
 
 
 /*
  * vislib::net::cluster::DiscoveryService::MSG_TYPE_SAYONARA
  */
-const UINT32 vislib::net::cluster::DiscoveryService::MSG_TYPE_SAYONARA;
+const uint32_t vislib::net::cluster::DiscoveryService::MSG_TYPE_SAYONARA;
 #endif  /* !_WIN32 */

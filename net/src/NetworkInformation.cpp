@@ -219,7 +219,7 @@ vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressA(void) const {
     StringA tmp;
 
     try {
-        const vislib::Array<BYTE>& addr = this->GetPhysicalAddress();
+        const vislib::Array<uint8_t>& addr = this->GetPhysicalAddress();
 
         for (size_t i = 0; i < addr.Count(); i++) {
             tmp.Format((i > 0) ? "-%.2X" : "%.2X", addr[i]);
@@ -243,7 +243,7 @@ vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressW(void) const {
     StringW tmp;
 
     try {
-        const vislib::Array<BYTE>& addr = this->GetPhysicalAddress();
+        const vislib::Array<uint8_t>& addr = this->GetPhysicalAddress();
 
         for (size_t i = 0; i < addr.Count(); i++) {
             tmp.Format((i > 0) ? L"-%.2X" : L"%.2X", addr[i]);
@@ -260,7 +260,7 @@ vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressW(void) const {
 /*
  * vislib::net::NetworkInformation::Adapter::GetPhysicalAddress
  */
-const vislib::Array<BYTE>& 
+const vislib::Array<uint8_t>& 
 vislib::net::NetworkInformation::Adapter::GetPhysicalAddress(
         Confidence *outConfidence) const {
     THE_STACK_TRACE;
@@ -648,7 +648,7 @@ float vislib::net::NetworkInformation::GuessAdapter(Adapter& outAdapter,
         const wchar_t *str, const bool invertWildness) {
     THE_STACK_TRACE;
     float retval = 1.0f;            // The wildness of the guess.
-    UINT32 validMask = 0;           // Valid fields from the input.
+    uint32_t validMask = 0;           // Valid fields from the input.
     IPAgnosticAddress address;      // The adapter address from the input.
     StringW device;                 // The device name from the input.
     ULONG prefixLen;                // The prefix length from the input.
@@ -1099,9 +1099,9 @@ vislib::net::IPAddress vislib::net::NetworkInformation::guessBroadcastAddress(
         const IPAddress& address, const IPAddress& netmask) {
     THE_STACK_TRACE;
 
-    UINT32 addr = static_cast<UINT32>(
+    uint32_t addr = static_cast<uint32_t>(
         static_cast<const struct in_addr *>(address)->s_addr);
-    UINT32 mask = static_cast<UINT32>(
+    uint32_t mask = static_cast<uint32_t>(
         static_cast<const struct in_addr *>(netmask)->s_addr);
 
     if (addr == 0) {
@@ -1132,7 +1132,7 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
     Array<float> wildness(0);       // The wildness of multiple candidates.
     float retval = 1.0f;            // The wildness of the guess.
     size_t bestAddressIdx = 0;      // Index of best address after consolidate.
-    UINT32 validMask = 0;           // Valid fields from the input.
+    uint32_t validMask = 0;           // Valid fields from the input.
     IPAgnosticAddress address;      // The adapter address from the input.
     StringW device;                 // The device name from the input.
     ULONG prefixLen;                // The prefix length from the input.
@@ -1312,7 +1312,7 @@ float vislib::net::NetworkInformation::guessRemoteEndPoint(
     float retval = 1.0f;            // The wildness of the guess.
     IPHostEntryW hostEntry;         // DNS host entry.
     size_t bestAddressIdx = 0;      // Index of best address after consolidate.
-    UINT32 validMask = 0;           // Valid fields from the input.
+    uint32_t validMask = 0;           // Valid fields from the input.
     IPAgnosticAddress address;      // The adapter address from the input.
     StringW device;                 // The device name from the input.
     ULONG prefixLen;                // The prefix length from the input.
@@ -1752,7 +1752,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
                 adapter->physicalAddress.Clear();
                 adapter->physicalAddress.AssertCapacity(sll->sll_halen);
                 for (int i = 0; i < sll->sll_halen; i++) {
-                    adapter->physicalAddress.Add(reinterpret_cast<BYTE *>(
+                    adapter->physicalAddress.Add(reinterpret_cast<uint8_t *>(
                         sll->sll_addr)[i]);
                 }
                 } break;
@@ -1793,7 +1793,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
                 adapter.physicalAddress.Clear();
                 adapter.physicalAddress.AssertCapacity(sll->sll_halen);
                 for (int i = 0; i < sll->sll_halen; i++) {
-                    adapter.physicalAddress.Add(reinterpret_cast<BYTE *>(
+                    adapter.physicalAddress.Add(reinterpret_cast<uint8_t *>(
                         sll->sll_addr)[i]);
                 }
             }
@@ -2050,11 +2050,11 @@ vislib::net::NetworkInformation::mapSuffixOrigin(
 /*
  * vislib::net::NetworkInformation::netmaskToPrefix
  */
-ULONG vislib::net::NetworkInformation::netmaskToPrefix(const BYTE *netmask,
+ULONG vislib::net::NetworkInformation::netmaskToPrefix(const uint8_t *netmask,
                                                        const size_t len) {
     THE_STACK_TRACE;
-    const BYTE *mask = netmask;
-    const BYTE *end = mask + len;
+    const uint8_t *mask = netmask;
+    const uint8_t *end = mask + len;
     LONG retval = 0;
 
     while ((mask < end) && (*mask == 0xFF)) {
@@ -2063,7 +2063,7 @@ ULONG vislib::net::NetworkInformation::netmaskToPrefix(const BYTE *netmask,
     }
 
     if (mask < end) {
-        BYTE tmp = *mask;
+        uint8_t tmp = *mask;
         while (tmp != 0) {
             retval++;
             tmp <<= 1;
@@ -2085,10 +2085,10 @@ ULONG vislib::net::NetworkInformation::netmaskToPrefix(const BYTE *netmask,
 /*
  * vislib::net::NetworkInformation::prefixToNetmask
  */
-void vislib::net::NetworkInformation::prefixToNetmask(BYTE *outNetmask, 
+void vislib::net::NetworkInformation::prefixToNetmask(uint8_t *outNetmask, 
         const size_t len, const ULONG prefix) {
     THE_STACK_TRACE;
-    BYTE *mask = outNetmask;
+    uint8_t *mask = outNetmask;
     LONG remBits = prefix;
     LONG maxPrefix = 8L * static_cast<LONG>(len);
     
@@ -2201,7 +2201,7 @@ bool vislib::net::NetworkInformation::selectAdapterByUnicastPrefix(
  */
 float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter, 
             const IPAgnosticAddress& address, const StringW& device, 
-            const ULONG prefixLen, const UINT32 validMask) {
+            const ULONG prefixLen, const uint32_t validMask) {
     THE_STACK_TRACE;
     //static const float LEVENSHTEIN_WILDNESS_WEIGHT = 0.05f;
     Array<float> wildness(0);       // The pre-adapter wildness.
@@ -2370,12 +2370,12 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
 /*
  * vislib::net::NetworkInformation::wildGuessSplitInput
  */
-UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
+uint32_t vislib::net::NetworkInformation::wildGuessSplitInput(
         IPAgnosticAddress& outAddress, StringW& outDevice, 
         ULONG& outPrefixLen, USHORT& outPort, const wchar_t *str,
         const IPAgnosticAddress::AddressFamily *prefFam) {
     THE_STACK_TRACE;
-    UINT32 retval = 0;          // Bitmask of valid output.
+    uint32_t retval = 0;          // Bitmask of valid output.
     StringW::Size pos = 0;      // Split positions.
     StringW input(str);     
     StringW prefix;
@@ -2562,38 +2562,38 @@ const float vislib::net::NetworkInformation::PENALTY_WRONG_PREFIX = 0.15f;
 /*
  * vislib::net::NetworkInformation::WILD_GUESS_FROM_EMPTY_ADDRESS 
  */
-const UINT32 vislib::net::NetworkInformation::WILD_GUESS_FROM_EMPTY_ADDRESS
+const uint32_t vislib::net::NetworkInformation::WILD_GUESS_FROM_EMPTY_ADDRESS
     = 0x20;
 
 
 /* 
  * vislib::net::NetworkInformation::WILD_GUESS_HAS_ADDRESS 
  */
-const UINT32 vislib::net::NetworkInformation::WILD_GUESS_HAS_ADDRESS = 0x02;
+const uint32_t vislib::net::NetworkInformation::WILD_GUESS_HAS_ADDRESS = 0x02;
 
 
 /*
  * vislib::net::NetworkInformation::WILD_GUESS_HAS_DEVICE 
  */
-const UINT32 vislib::net::NetworkInformation::WILD_GUESS_HAS_DEVICE = 0x01;
+const uint32_t vislib::net::NetworkInformation::WILD_GUESS_HAS_DEVICE = 0x01;
 
 
 /*
  * vislib::net::NetworkInformation::WILD_GUESS_HAS_NETMASK
  */
-const UINT32 vislib::net::NetworkInformation::WILD_GUESS_HAS_NETMASK = 0x08;
+const uint32_t vislib::net::NetworkInformation::WILD_GUESS_HAS_NETMASK = 0x08;
 
 
 /*
  * vislib::net::NetworkInformation::WILD_GUESS_HAS_PORT 
  */
-const UINT32 vislib::net::NetworkInformation::WILD_GUESS_HAS_PORT = 0x10;
+const uint32_t vislib::net::NetworkInformation::WILD_GUESS_HAS_PORT = 0x10;
 
 
 /*
  * vislib::net::NetworkInformation::WILD_GUESS_HAS_PREFIX_LEN 
  */
-const UINT32 vislib::net::NetworkInformation::WILD_GUESS_HAS_PREFIX_LEN = 0x04;
+const uint32_t vislib::net::NetworkInformation::WILD_GUESS_HAS_PREFIX_LEN = 0x04;
 
 
 /*

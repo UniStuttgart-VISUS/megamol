@@ -50,7 +50,7 @@ void *vislib::RawStorage::Append(const void *data, const size_t cntData) {
     void *retval = NULL;
 
     this->EnforceSize(this->size + cntData, true);
-    retval = static_cast<BYTE *>(this->data) + offset;
+    retval = static_cast<uint8_t *>(this->data) + offset;
 
     if (data != NULL) {
         ::memcpy(retval, data, cntData);

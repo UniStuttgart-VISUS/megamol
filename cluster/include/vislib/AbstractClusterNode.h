@@ -224,7 +224,7 @@ namespace cluster {
          *         false if the implementation did ignore it.
          */
         virtual bool onMessageReceived(const Socket& src, const unsigned int msgId,
-            const BYTE *body, const size_t cntBody) = 0;
+            const uint8_t *body, const size_t cntBody) = 0;
 
         /**
          * The message receiver thread calls this method once it exists.
@@ -272,8 +272,8 @@ namespace cluster {
          *
          * @return The number of messages successfully delivered.
          */
-        virtual size_t sendMessage(const UINT32 msgId, const BYTE *data, 
-            const UINT32 cntData);
+        virtual size_t sendMessage(const uint32_t msgId, const uint8_t *data, 
+            const uint32_t cntData);
 
         /**
          * Send a message to a specific peer node.
@@ -290,7 +290,7 @@ namespace cluster {
          *         not found or a communication error occurred.
          */
         virtual bool sendMessage(const PeerIdentifier& peerId, 
-            const UINT32 msgId, const BYTE *data, const UINT32 cntData);
+            const uint32_t msgId, const uint8_t *data, const uint32_t cntData);
 
 
         /**
@@ -305,7 +305,7 @@ namespace cluster {
          *
          * @return The number of messages successfully delivered.
          */
-        virtual size_t sendToEachPeer(const BYTE *data, const size_t cntData);
+        virtual size_t sendToEachPeer(const uint8_t *data, const size_t cntData);
 
         /**
          * Send 'cntData' bytes of data beginning at 'data' to the peer node
@@ -323,7 +323,7 @@ namespace cluster {
          *         not found or a communication error occurred.
          */
         virtual bool sendToPeer(const PeerIdentifier& peerId,
-            const BYTE *data, const size_t cntData);
+            const uint8_t *data, const size_t cntData);
 
         /**
          * Assignment.
@@ -340,7 +340,7 @@ namespace cluster {
          * This is the context parameter for SendToPeerFunc().
          */
         typedef struct SendToPeerCtx_t {
-            const BYTE *Data;
+            const uint8_t *Data;
             size_t CntData;
         } SendToPeerCtx;
 

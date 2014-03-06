@@ -107,10 +107,10 @@ typedef struct {
 } BITMAPV5HEADER;
 #define BI_RGB        0L
 typedef struct tagRGBQUAD {
-  BYTE    rgbBlue;
-  BYTE    rgbGreen;
-  BYTE    rgbRed;
-  BYTE    rgbReserved;
+  uint8_t    rgbBlue;
+  uint8_t    rgbGreen;
+  uint8_t    rgbRed;
+  uint8_t    rgbReserved;
 } RGBQUAD;
 
 #endif /* _WIN32 */
@@ -190,7 +190,7 @@ const wchar_t * vislib::graphics::BmpBitmapCodec::NameW(void) const {
  */
 bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void *mem, size_t size) {
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Loading BMP ...\n");
-    const BYTE *memBytes = static_cast<const BYTE *>(mem);
+    const uint8_t *memBytes = static_cast<const uint8_t *>(mem);
 
     const BITMAPFILEHEADER *bfh
         = reinterpret_cast<const BITMAPFILEHEADER *>(memBytes);
@@ -255,19 +255,19 @@ bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void *mem, size_t si
             info.bmiHeader.biHeight, 3,
             vislib::graphics::BitmapImage::CHANNELTYPE_BYTE);
         this->image().LabelChannelsRGB();
-        BYTE *buf = new BYTE[(info.bmiHeader.biWidth + 7) * 3];
+        uint8_t *buf = new uint8_t[(info.bmiHeader.biWidth + 7) * 3];
 
         info.bmiHeader.biBitCount = 24;
         info.bmiHeader.biCompression = BI_RGB;
 
         size_t lineDataSize = this->image().Width() * 3;
         for (unsigned int y = 0; y < this->image().Height(); y ++) {
-            BYTE* bmpLine = this->image().PeekDataAs<BYTE>()
+            uint8_t* bmpLine = this->image().PeekDataAs<uint8_t>()
                 + (lineDataSize * (this->image().Height() - (y + 1)));
             ::GetDIBits(screenDC, bmp, y, 1, buf, &info, DIB_RGB_COLORS);
             ::memcpy(bmpLine, buf, lineDataSize);
             for (size_t x = 0; x < lineDataSize; x += 3) { // BGR to RGB
-                BYTE b = bmpLine[x];
+                uint8_t b = bmpLine[x];
                 bmpLine[x] = bmpLine[x + 2];
                 bmpLine[x + 2] = b;
             }
@@ -414,8 +414,8 @@ bool vislib::graphics::BmpBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
     bih->biClrUsed = 0;
     bih->biClrImportant = 0;
 
-    const BYTE *imgDat = img->PeekDataAs<BYTE>();
-    BYTE *bmpDat = outmem.AsAt<BYTE>(headersSize);
+    const uint8_t *imgDat = img->PeekDataAs<uint8_t>();
+    uint8_t *bmpDat = outmem.AsAt<uint8_t>(headersSize);
     for (unsigned int y = 0; y < img->Height(); y++) {
         for (unsigned int x = 0; x < img->Width(); x++, bmpDat += 3, imgDat += bpp) {
             bmpDat[2] = ((ridx == UINT_MAX) ? 0 : imgDat[ridx]);
@@ -443,7 +443,7 @@ bool vislib::graphics::BmpBitmapCodec::saveToMemoryImplemented(void) const {
  * vislib::graphics::BmpBitmapCodec::loadWithBitmapInfoHeader
  */
 bool vislib::graphics::BmpBitmapCodec::loadWithBitmapInfoHeader(
-        const void *header, const BYTE *dat) {
+        const void *header, const uint8_t *dat) {
     const BITMAPFILEHEADER *bfh
         = static_cast<const BITMAPFILEHEADER*>(header);
     const BITMAPINFOHEADER *bih = reinterpret_cast<const BITMAPINFOHEADER*>(
@@ -567,7 +567,7 @@ bool vislib::graphics::BmpBitmapCodec::loadWithBitmapInfoHeader(
  */
 bool vislib::graphics::BmpBitmapCodec::loadBitmap1(int width, int height,
         int stride, const void *colPalDat, unsigned int colPalSize,
-        const BYTE *dat) {
+        const uint8_t *dat) {
     RGBQUAD black = {0, 0, 0, 0};
     const RGBQUAD *colPal = static_cast<const RGBQUAD *>(colPalDat);
     if (colPalSize == 0) {
@@ -589,8 +589,8 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap1(int width, int height,
     }
 
     for (; y != yEnd; y += yStep, dat += stride) {
-        const BYTE *imgLine = dat;
-        BYTE* bmpLine = this->image().PeekDataAs<BYTE>()
+        const uint8_t *imgLine = dat;
+        uint8_t* bmpLine = this->image().PeekDataAs<uint8_t>()
             + (width * 3 * (this->image().Height() - (y + 1)));
         for (int x = 0; x < width; x++, bmpLine += 3) {
             unsigned int idx = (imgLine[0] >> (7 - (x % 8))) % 2;
@@ -616,7 +616,7 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap1(int width, int height,
  */
 bool vislib::graphics::BmpBitmapCodec::loadBitmap4(int width, int height,
         int stride, const void *colPalDat, unsigned int colPalSize,
-        const BYTE *dat) {
+        const uint8_t *dat) {
     RGBQUAD black = {0, 0, 0, 0};
     const RGBQUAD *colPal = static_cast<const RGBQUAD *>(colPalDat);
     if (colPalSize == 0) {
@@ -638,8 +638,8 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap4(int width, int height,
     }
 
     for (; y != yEnd; y += yStep, dat += stride) {
-        const BYTE *imgLine = dat;
-        BYTE* bmpLine = this->image().PeekDataAs<BYTE>()
+        const uint8_t *imgLine = dat;
+        uint8_t* bmpLine = this->image().PeekDataAs<uint8_t>()
             + (width * 3 * (this->image().Height() - (y + 1)));
         for (int x = 0; x < width; x++, bmpLine += 3) {
             unsigned int idx;
@@ -670,7 +670,7 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap4(int width, int height,
  */
 bool vislib::graphics::BmpBitmapCodec::loadBitmap8(int width, int height,
         int stride, const void *colPalDat, unsigned int colPalSize,
-        const BYTE *dat) {
+        const uint8_t *dat) {
     RGBQUAD black = {0, 0, 0, 0};
     const RGBQUAD *colPal = static_cast<const RGBQUAD *>(colPalDat);
     if (colPalSize == 0) {
@@ -692,8 +692,8 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap8(int width, int height,
     }
 
     for (; y != yEnd; y += yStep, dat += stride) {
-        const BYTE *imgLine = dat;
-        BYTE* bmpLine = this->image().PeekDataAs<BYTE>()
+        const uint8_t *imgLine = dat;
+        uint8_t* bmpLine = this->image().PeekDataAs<uint8_t>()
             + (width * 3 * (this->image().Height() - (y + 1)));
         for (int x = 0; x < width; x++, bmpLine += 3, imgLine++) {
             unsigned int idx = imgLine[0];
@@ -717,7 +717,7 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap8(int width, int height,
  * vislib::graphics::BmpBitmapCodec::loadBitmap16
  */
 bool vislib::graphics::BmpBitmapCodec::loadBitmap16(int width, int height,
-        int stride, const BYTE *dat) {
+        int stride, const uint8_t *dat) {
     this->image().CreateImage(width, vislib::math::Abs(height), 3,
         vislib::graphics::BitmapImage::CHANNELTYPE_BYTE);
     this->image().LabelChannelsRGB();
@@ -732,16 +732,16 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap16(int width, int height,
     }
 
     for (; y != yEnd; y += yStep, dat += stride) {
-        const BYTE *imgLine = dat;
-        BYTE* bmpLine = this->image().PeekDataAs<BYTE>()
+        const uint8_t *imgLine = dat;
+        uint8_t* bmpLine = this->image().PeekDataAs<uint8_t>()
             + (width * 3 * (this->image().Height() - (y + 1)));
         for (int x = 0; x < width; x++, bmpLine += 3, imgLine += 2) {
-            bmpLine[0] = static_cast<BYTE>(static_cast<float>(
+            bmpLine[0] = static_cast<uint8_t>(static_cast<float>(
                 (imgLine[1] >> 2) % 32) * 255.0f / 31.0f);
-            bmpLine[1] = static_cast<BYTE>(static_cast<float>(
+            bmpLine[1] = static_cast<uint8_t>(static_cast<float>(
                 ((imgLine[1] % 4) << 3) + (imgLine[0] >> 5))
                 * 255.0f / 31.0f);
-            bmpLine[2] = static_cast<BYTE>(static_cast<float>(imgLine[0] % 32)
+            bmpLine[2] = static_cast<uint8_t>(static_cast<float>(imgLine[0] % 32)
                 * 255.0f / 31.0f);
         }
     }
@@ -754,7 +754,7 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap16(int width, int height,
  * vislib::graphics::BmpBitmapCodec::loadBitmap24
  */
 bool vislib::graphics::BmpBitmapCodec::loadBitmap24(int width, int height,
-        int stride, const BYTE *dat) {
+        int stride, const uint8_t *dat) {
     this->image().CreateImage(width, vislib::math::Abs(height), 3,
         vislib::graphics::BitmapImage::CHANNELTYPE_BYTE);
     this->image().LabelChannelsRGB();
@@ -770,11 +770,11 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap24(int width, int height,
 
     size_t lineDataSize = this->image().Width() * 3;
     for (; y != yEnd; y += yStep, dat += stride) {
-        BYTE* bmpLine = this->image().PeekDataAs<BYTE>()
+        uint8_t* bmpLine = this->image().PeekDataAs<uint8_t>()
             + (lineDataSize * (this->image().Height() - (y + 1)));
         memcpy(bmpLine, dat, lineDataSize);
         for (size_t x = 0; x < lineDataSize; x += 3) { // BGR to RGB
-            BYTE b = bmpLine[x];
+            uint8_t b = bmpLine[x];
             bmpLine[x] = bmpLine[x + 2];
             bmpLine[x + 2] = b;
         }
@@ -788,7 +788,7 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap24(int width, int height,
  * vislib::graphics::BmpBitmapCodec::loadBitmap32
  */
 bool vislib::graphics::BmpBitmapCodec::loadBitmap32(int width, int height,
-        const BYTE *dat) {
+        const uint8_t *dat) {
     this->image().CreateImage(width, vislib::math::Abs(height), 4,
         vislib::graphics::BitmapImage::CHANNELTYPE_BYTE);
     this->image().LabelChannelsRGBA();
@@ -803,11 +803,11 @@ bool vislib::graphics::BmpBitmapCodec::loadBitmap32(int width, int height,
     }
 
     for (; y != yEnd; y += yStep, dat += width * 4) {
-        BYTE* bmpLine = this->image().PeekDataAs<BYTE>()
+        uint8_t* bmpLine = this->image().PeekDataAs<uint8_t>()
             + (width * 4 * (this->image().Height() - (y + 1)));
         memcpy(bmpLine, dat, width * 4);
         for (int x = 0; x < width * 4; x += 4) { // BGRA to RGBA
-            BYTE b = bmpLine[x];
+            uint8_t b = bmpLine[x];
             bmpLine[x] = bmpLine[x + 2];
             bmpLine[x + 2] = b;
         }

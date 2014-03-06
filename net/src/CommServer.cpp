@@ -159,16 +159,16 @@ DWORD vislib::net::CommServer::Run(void *config) {
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Communication error in "
                     "CommServer: %s\n", e.GetMsgA());
                 retval = e.GetErrorCode();
-                INT32 ds = this->fireServerError(e); 
+                int32_t ds = this->fireServerError(e); 
                 vislib::sys::Interlocked::CompareExchange(&this->doServe, ds, 
-                    static_cast<INT32>(1));
+                    static_cast<int32_t>(1));
             } catch (Exception e) {
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Communication error in "
                     "CommServer: %s\n", e.GetMsgA());
                 retval = -1;
-                INT32 ds = this->fireServerError(e);
+                int32_t ds = this->fireServerError(e);
                 vislib::sys::Interlocked::CompareExchange(&this->doServe, ds, 
-                    static_cast<INT32>(1));
+                    static_cast<int32_t>(1));
             }
         }
     }
@@ -201,7 +201,7 @@ bool vislib::net::CommServer::Terminate(void) {
     THE_STACK_TRACE;
     try {
         vislib::sys::Interlocked::Exchange(&this->doServe, 
-            static_cast<INT32>(0));
+            static_cast<int32_t>(0));
         if (!this->configuration.Channel.IsNull()) {
             this->configuration.Channel->Close();
         }

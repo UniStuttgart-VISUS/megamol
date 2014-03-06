@@ -21,7 +21,7 @@ vislib::net::SimpleMessage::SimpleMessage(const size_t bodySize) : Super() {
     // header and the body itself and (ii) to update the message header pointer.
     THE_ASSERT(bodySize < UINT_MAX);
     Super::assertStorage(bodySize);
-    this->GetHeader().SetBodySize(static_cast<UINT32>(bodySize));
+    this->GetHeader().SetBodySize(static_cast<uint32_t>(bodySize));
 }
 
 

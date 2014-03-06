@@ -166,7 +166,7 @@ bool vislib::UTF8Encoder::Encode(vislib::StringA& outTarget, const char *source)
     unsigned char *cb = reinterpret_cast<unsigned char*>(outTarget.AllocateBuffer(size - 1));
 
     if (size > 1) {
-        UINT32 val;
+        uint32_t val;
 
         while(*source != 0) {
 
@@ -243,7 +243,7 @@ bool vislib::UTF8Encoder::Encode(vislib::StringA& outTarget, const wchar_t *sour
     unsigned char *cb = reinterpret_cast<unsigned char*>(outTarget.AllocateBuffer(size - 1));
 
     if (size > 1) {
-        UINT32 val;
+        uint32_t val;
 
         while(*source != 0) {
 
@@ -320,7 +320,7 @@ bool vislib::UTF8Encoder::Decode(vislib::StringA& outTarget, const char *source)
     char *buf = outTarget.AllocateBuffer(s);
     if (s > 0) {
         const unsigned char *ucb = reinterpret_cast<const unsigned char*>(source);
-        UINT32 val = 0;
+        uint32_t val = 0;
         int ro; // remaining octets
 
         while (*ucb != 0) {
@@ -380,7 +380,7 @@ bool vislib::UTF8Encoder::Decode(vislib::StringW& outTarget, const char *source)
     wchar_t *buf = outTarget.AllocateBuffer(s);
     if (s > 0) {
         const unsigned char *ucb = reinterpret_cast<const unsigned char*>(source);
-        UINT32 val = 0;
+        uint32_t val = 0;
         int ro; // remaining octets
 
         while (*ucb != 0) {

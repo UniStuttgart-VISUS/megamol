@@ -23,10 +23,10 @@ namespace net {
 
 
     /** ID type for simple messages. */
-    typedef UINT32 SimpleMessageID;
+    typedef uint32_t SimpleMessageID;
 
     /** Size type for simple messages. */
-    typedef UINT32 SimpleMessageSize;
+    typedef uint32_t SimpleMessageSize;
 
 
     /**

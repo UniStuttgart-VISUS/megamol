@@ -44,7 +44,7 @@ namespace net {
      * <code>
      * vislib::net::AsyncSocket socket;
      * vislib::net::AsyncSocketContext context;
-     * BYTE data[16];
+     * uint8_t data[16];
      *
      * // Setup the socket and connect.
      *
@@ -76,7 +76,7 @@ namespace net {
      *
      * // Somewhere else:
      * vislib::net::AsyncSocket socket;
-     * BYTE data[16];
+     * uint8_t data[16];
      *
      * // Setup the socket and connect.
      *

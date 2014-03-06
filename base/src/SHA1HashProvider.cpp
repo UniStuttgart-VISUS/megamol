@@ -57,7 +57,7 @@ void vislib::SHA1HashProvider::Initialise(void) {
 /*
  * vislib::SHA1HashProvider::TransformBlock
  */
-void vislib::SHA1HashProvider::TransformBlock(const BYTE *input, 
+void vislib::SHA1HashProvider::TransformBlock(const uint8_t *input, 
                                               const size_t cntInput) {
     // Must be initialised, as ctor does this.
     if ((input != NULL) && (cntInput > 0)) {
@@ -70,8 +70,8 @@ void vislib::SHA1HashProvider::TransformBlock(const BYTE *input,
 /*
  * vislib::SHA1HashProvider::TransformFinalBlock
  */
-bool vislib::SHA1HashProvider::TransformFinalBlock(BYTE *outHash, 
-        size_t& inOutSize, const BYTE *input, const size_t cntInput) {
+bool vislib::SHA1HashProvider::TransformFinalBlock(uint8_t *outHash, 
+        size_t& inOutSize, const uint8_t *input, const size_t cntInput) {
     SHA1Context ctx = this->context;    // Local context to be finalised.
     bool retval = false;                // Remember whether output was copied.
 
@@ -92,7 +92,7 @@ bool vislib::SHA1HashProvider::TransformFinalBlock(BYTE *outHash,
 /*
  * vislib::SHA1HashProvider::input
  */
-void vislib::SHA1HashProvider::input(SHA1Context *context, const BYTE *input, 
+void vislib::SHA1HashProvider::input(SHA1Context *context, const uint8_t *input, 
         const unsigned int cntInput) {
     THE_ASSERT(context != NULL);
     THE_ASSERT(input != NULL);
@@ -192,11 +192,11 @@ void vislib::SHA1HashProvider::padMessage(SHA1Context *context) {
  * vislib::SHA1HashProvider::processMessageBlock
  */
 void vislib::SHA1HashProvider::processMessageBlock(SHA1Context *context) {
-    const UINT32 K[] = {    // Constants defined in SHA-1
+    const uint32_t K[] = {    // Constants defined in SHA-1
         0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6 };
-    UINT32 temp;            // Temporary word value
-    UINT32 W[80];           // Word sequence
-    UINT32 A, B, C, D, E;   // Word buffers 
+    uint32_t temp;            // Temporary word value
+    uint32_t W[80];           // Word sequence
+    uint32_t A, B, C, D, E;   // Word buffers 
 
     /* Initialize the first 16 words in the array W */
     for (int t = 0; t < 16; t++) {
@@ -268,7 +268,7 @@ void vislib::SHA1HashProvider::processMessageBlock(SHA1Context *context) {
 /*
  * vislib::SHA1HashProvider::result
  */
-void vislib::SHA1HashProvider::result(UINT8 *messageDigest, 
+void vislib::SHA1HashProvider::result(uint8_t *messageDigest, 
                                       SHA1Context *context) {
     THE_ASSERT(messageDigest != NULL);
     THE_ASSERT(context != NULL);

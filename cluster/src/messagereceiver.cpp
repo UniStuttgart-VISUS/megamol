@@ -97,7 +97,7 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             msgSize = sizeof(MessageHeader) + msgHdr->Header.BlockLength;
             recvBuf.AssertSize(msgSize, true);
             msgHdr = recvBuf.As<MessageHeader>();
-            if (ctx->Socket->Receive(recvBuf.As<BYTE>() + sizeof(MessageHeader),
+            if (ctx->Socket->Receive(recvBuf.As<uint8_t>() + sizeof(MessageHeader),
                     msgHdr->Header.BlockLength, Socket::TIMEOUT_INFINITE, 0, 
                     true) == 0) {
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "vislib::net::cluster::"
@@ -109,11 +109,11 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
                 /* Received a compound message, so split it. */
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Splitting compond message ...\n");
                 int remBody = static_cast<int>(msgHdr->Header.BlockLength);
-                const BYTE *d = recvBuf.As<BYTE>() + sizeof(MessageHeader);
+                const uint8_t *d = recvBuf.As<uint8_t>() + sizeof(MessageHeader);
 
                 while (remBody > 0) {
                     blkHdr = reinterpret_cast<const BlockHeader *>(d);
-                    const BYTE *body = d + sizeof(BlockHeader);
+                    const uint8_t *body = d + sizeof(BlockHeader);
 
                     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Received message %u.\n", 
                         blkHdr->BlockId);
@@ -129,7 +129,7 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             } else {
                 /* Receive single message. */
                 const BlockHeader *blkHdr = &msgHdr->Header;
-                const BYTE *body = recvBuf.As<BYTE>() + sizeof(MessageHeader);
+                const uint8_t *body = recvBuf.As<uint8_t>() + sizeof(MessageHeader);
 
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Cluster service "
                     "received message %u.\n", blkHdr->BlockId);

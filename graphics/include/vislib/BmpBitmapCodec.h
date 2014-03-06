@@ -156,7 +156,7 @@ namespace graphics {
          *
          * @return 'true' on success, 'false' on failure
          */
-        bool loadWithBitmapInfoHeader(const void *header, const BYTE *dat);
+        bool loadWithBitmapInfoHeader(const void *header, const uint8_t *dat);
 
         /**
          * Loads a 1 bit bitmap without palette
@@ -172,7 +172,7 @@ namespace graphics {
          * @return 'true' on success, 'false' on failure
          */
         bool loadBitmap1(int width, int height, int stride,
-            const void *colPalDat, unsigned int colPalSize, const BYTE *dat);
+            const void *colPalDat, unsigned int colPalSize, const uint8_t *dat);
 
         /**
          * Loads a 4 bit bitmap without palette
@@ -188,7 +188,7 @@ namespace graphics {
          * @return 'true' on success, 'false' on failure
          */
         bool loadBitmap4(int width, int height, int stride,
-            const void *colPalDat, unsigned int colPalSize, const BYTE *dat);
+            const void *colPalDat, unsigned int colPalSize, const uint8_t *dat);
 
         /**
          * Loads a 8 bit bitmap without palette
@@ -204,7 +204,7 @@ namespace graphics {
          * @return 'true' on success, 'false' on failure
          */
         bool loadBitmap8(int width, int height, int stride,
-            const void *colPalDat, unsigned int colPalSize, const BYTE *dat);
+            const void *colPalDat, unsigned int colPalSize, const uint8_t *dat);
 
         /**
          * Loads a 16 bit bitmap without palette
@@ -217,7 +217,7 @@ namespace graphics {
          *
          * @return 'true' on success, 'false' on failure
          */
-        bool loadBitmap16(int width, int height, int stride, const BYTE *dat);
+        bool loadBitmap16(int width, int height, int stride, const uint8_t *dat);
 
         /**
          * Loads a 24 bit bitmap without palette
@@ -230,7 +230,7 @@ namespace graphics {
          *
          * @return 'true' on success, 'false' on failure
          */
-        bool loadBitmap24(int width, int height, int stride, const BYTE *dat);
+        bool loadBitmap24(int width, int height, int stride, const uint8_t *dat);
 
         /**
          * Loads a 32 bit bitmap without palette
@@ -241,7 +241,7 @@ namespace graphics {
          *
          * @return 'true' on success, 'false' on failure
          */
-        bool loadBitmap32(int width, int height, const BYTE *dat);
+        bool loadBitmap32(int width, int height, const uint8_t *dat);
 
 #endif /* defined(VISLIB_BMP_LOAD_BY_HAND) || !defined(_WIN32) */
 

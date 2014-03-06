@@ -95,7 +95,7 @@ namespace net {
             - sizeof(struct sockaddr_storage);
 
         /** The first message ID that can be used for a user message. */
-        static const UINT32 MSG_TYPE_USER;
+        static const uint32_t MSG_TYPE_USER;
 
         /**
          * Create a new instance.
@@ -393,7 +393,7 @@ namespace net {
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        unsigned int SendUserMessage(const UINT32 msgType, const void *msgBody, 
+        unsigned int SendUserMessage(const uint32_t msgType, const void *msgBody, 
             const size_t msgSize);
 
         /**
@@ -421,7 +421,7 @@ namespace net {
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        unsigned int SendUserMessage(const PeerHandle& hPeer, const UINT32 msgType,
+        unsigned int SendUserMessage(const PeerHandle& hPeer, const uint32_t msgType,
             const void *msgBody, const size_t msgSize);
 
         /**
@@ -435,8 +435,8 @@ namespace net {
          */
         inline void SetRequestInterval(const unsigned int requestInterval) {
             sys::Interlocked::Exchange(
-                reinterpret_cast<INT32 *>(&this->requestInterval),
-                static_cast<INT32>(requestInterval));
+                reinterpret_cast<int32_t *>(&this->requestInterval),
+                static_cast<int32_t>(requestInterval));
         }
 
         /**
@@ -622,14 +622,14 @@ namespace net {
          * UDP datagrams in advance.
          */
         typedef struct Message_t {
-            UINT32 magicNumber;						    // Must be MAGIC_NUMBER.
-            UINT32 msgType;							    // The type identifier.
+            uint32_t magicNumber;						    // Must be MAGIC_NUMBER.
+            uint32_t msgType;							    // The type identifier.
             // Note: 'magicNumber' and 'msgType' can be 32 bit now, because 
             // struct sockaddr_storage must be 64 bit aligned any way.
             union {
                 SenderMessageBody senderBody;           // I am here messages.
                 struct sockaddr_storage responseAddr;   // Resonse peer address.
-                BYTE userData[MAX_USER_DATA];		    // User defined data.
+                uint8_t userData[MAX_USER_DATA];		    // User defined data.
             };
         } Message;
 
@@ -678,8 +678,8 @@ namespace net {
          * @param msgType The message type.
          * @param msgBody The body of the message.
          */
-        void fireUserMessage(const IPEndPoint& sender, const UINT32 msgType, 
-            const BYTE *msgBody) const;
+        void fireUserMessage(const IPEndPoint& sender, const uint32_t msgType, 
+            const uint8_t *msgBody) const;
 
         /**
          * Answer whether 'hPeer' is a valid peer node handle.
@@ -701,7 +701,7 @@ namespace net {
          *
          * @return The index of the peer node or -1, if not found.
          */
-        INT_PTR peerFromAddress(const IPEndPoint& addr) const;
+        intptr_t peerFromAddress(const IPEndPoint& addr) const;
 
         /**
          * Answer the index of the peer node that runs its discovery 
@@ -716,7 +716,7 @@ namespace net {
          *
          * @return The index of the peer node or -1, if not found.
          */
-        INT_PTR peerFromDiscoveryAddr(const IPEndPoint& addr) const;
+        intptr_t peerFromDiscoveryAddr(const IPEndPoint& addr) const;
 
         /**
          * Prepares the list of known peer nodes for a new request. 
@@ -764,7 +764,7 @@ namespace net {
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        void prepareUserMessage(Message& outMsg, const UINT32 msgType,
+        void prepareUserMessage(Message& outMsg, const uint32_t msgType,
             const void *msgBody, const size_t msgSize);
 
         /**
@@ -780,16 +780,16 @@ namespace net {
         void removePeerNode(const IPEndPoint& address);
 
         /** The magic number at the begin of each message. */
-        static const UINT32 MAGIC_NUMBER;
+        static const uint32_t MAGIC_NUMBER;
 
         /** Message type ID of a repeated discovery request. */
-        static const UINT32 MSG_TYPE_IAMALIVE;
+        static const uint32_t MSG_TYPE_IAMALIVE;
 
         /** Message type ID of an initial discovery request. */
-        static const UINT32 MSG_TYPE_IAMHERE;
+        static const uint32_t MSG_TYPE_IAMHERE;
 
         /** Message type ID of the explicit disconnect notification. */
-        static const UINT32 MSG_TYPE_SAYONARA;
+        static const uint32_t MSG_TYPE_SAYONARA;
 
         /** This is the broadcast address to send requests to. */
         IPEndPoint bcastAddr;

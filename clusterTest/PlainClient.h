@@ -32,7 +32,7 @@ protected:
     PlainClient(void);
 
     virtual bool onMessageReceived(const vislib::net::Socket& src, 
-        const unsigned int msgId, const BYTE *body, const size_t cntBody);
+        const unsigned int msgId, const uint8_t *body, const size_t cntBody);
 };
 
 #endif /* VISLIBTEST_PLAINCLIENT_H_INCLUDED */

@@ -472,52 +472,52 @@ namespace graphics {
         typedef CameraParameters Super;
 
         /** Set all parameters dirty. */
-        static const UINT32 DIRTY_ALL;
+        static const uint32_t DIRTY_ALL;
 
         /** The dirty flag for the aperture angle. */
-        static const UINT32 DIRTY_APERTUREANGLE;
+        static const uint32_t DIRTY_APERTUREANGLE;
         
         /** The dirty flag for the auto focus offset */
-        static const UINT32 DIRTY_AUTOFOCUSOFFSET;
+        static const uint32_t DIRTY_AUTOFOCUSOFFSET;
 
         /** The dirty flag for the coordinate system type */
-        static const UINT32 DIRTY_COORDSYSTEMTYPE;
+        static const uint32_t DIRTY_COORDSYSTEMTYPE;
 
         /** The dirty flag for the stereo eye. */
-        static const UINT32 DIRTY_EYE;
+        static const uint32_t DIRTY_EYE;
 
         /** The dirty flag for the far clipping plane. */
-        static const UINT32 DIRTY_FARCLIP;
+        static const uint32_t DIRTY_FARCLIP;
 
         /** The dirty flag for the focal distance. */
-        static const UINT32 DIRTY_FOCALDISTANCE;
+        static const uint32_t DIRTY_FOCALDISTANCE;
 
         /** The dirty flag for the parameter limits. */
-        static const UINT32 DIRTY_LIMITS;
+        static const uint32_t DIRTY_LIMITS;
 
         /** The dirty flag for the look-at point. */
-        static const UINT32 DIRTY_LOOKAT;
+        static const uint32_t DIRTY_LOOKAT;
 
         /** The dirty flag for the near clipping plane. */
-        static const UINT32 DIRTY_NEARCLIP;
+        static const uint32_t DIRTY_NEARCLIP;
 
         /** The dirty flag for the camera position. */
-        static const UINT32 DIRTY_POSITION;
+        static const uint32_t DIRTY_POSITION;
         
         /** The dirty flag for the stereo/mono projection type. */
-        static const UINT32 DIRTY_PROJECTION;
+        static const uint32_t DIRTY_PROJECTION;
 
         /** The dirty flag for the stereo disparity. */
-        static const UINT32 DIRTY_DISPARITY;
+        static const uint32_t DIRTY_DISPARITY;
 
         /** The dirty flag for the tile rectangle. */
-        static const UINT32 DIRTY_TILERECT;
+        static const uint32_t DIRTY_TILERECT;
 
         /** The dirty flag for the up vector. */
-        static const UINT32 DIRTY_UP;
+        static const uint32_t DIRTY_UP;
         
         /** The dirty flag for the virtual view size. */
-        static const UINT32 DIRTY_VIRTUALVIEW;
+        static const uint32_t DIRTY_VIRTUALVIEW;
 
         /**
          * Inform all registered observers about a change of the fields marked
@@ -540,7 +540,7 @@ namespace graphics {
          *                    false, only fields set in 'which' are fired. 
          *                    Defaults to true.
          */
-        void fireChanged(const UINT32 which = DIRTY_ALL, 
+        void fireChanged(const uint32_t which = DIRTY_ALL, 
             const bool andAllDirty = true);
 
         /**
@@ -574,7 +574,7 @@ namespace graphics {
          * BeginBatchInteraction/EndBatchInteraction block or while directly 
          * firing events is internally suspended.
          */
-        UINT32 dirtyFields;
+        uint32_t dirtyFields;
 
         /** The list of registered CameraParameterObservers. */
         SingleLinkedList<CameraParameterObserver *> camParamObservers;

@@ -137,8 +137,8 @@ bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, size_t si
             if (v < 255) {
                 float f = 255.0f / static_cast<float>(v);
                 for (unsigned int i = 0; i < 3 * w * h; i++) {
-                    img.PeekDataAs<BYTE>()[i] = static_cast<BYTE>(
-                        static_cast<float>(img.PeekDataAs<BYTE>()[i]) * f);
+                    img.PeekDataAs<uint8_t>()[i] = static_cast<uint8_t>(
+                        static_cast<float>(img.PeekDataAs<uint8_t>()[i]) * f);
                 }
             }
 
@@ -188,11 +188,11 @@ bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, size_t si
                 // endianness agrees with this machine
                 memcpy(fd, buf, sizeof(float) * img.GetChannelCount() * w * h);
             } else {
-                const UINT8 *srcBytes;
-                UINT8 *destBytes;
+                const uint8_t *srcBytes;
+                uint8_t *destBytes;
                 for (unsigned int i = 0; i < img.GetChannelCount() * w * h; i++) {
-                    srcBytes = reinterpret_cast<const UINT8*>(&buf[i]);
-                    destBytes = reinterpret_cast<UINT8*>(&fd[i]);
+                    srcBytes = reinterpret_cast<const uint8_t*>(&buf[i]);
+                    destBytes = reinterpret_cast<uint8_t*>(&fd[i]);
                     destBytes[0] = srcBytes[3];
                     destBytes[1] = srcBytes[2];
                     destBytes[2] = srcBytes[1];
@@ -210,17 +210,17 @@ bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, size_t si
                 img.SetChannelLabel(0, BitmapImage::CHANNEL_RED);
                 img.SetChannelLabel(1, BitmapImage::CHANNEL_GREEN);
                 img.SetChannelLabel(2, BitmapImage::CHANNEL_BLUE);
-                BYTE *bd = img.PeekDataAs<BYTE>();
+                uint8_t *bd = img.PeekDataAs<uint8_t>();
 
                 if (v == 255) {
                     for (unsigned int i = 0; i < 3 * w * h; i++) {
-                        _LOCAL_PPM_SIFT(bd[i], BYTE, ParseInt)
+                        _LOCAL_PPM_SIFT(bd[i], uint8_t, ParseInt)
                     }
                 } else {
                     fac = 255.0f / static_cast<float>(v);
                     for (unsigned int i = 0; i < 3 * w * h; i++) {
                         _LOCAL_PPM_SIFT(f, float, ParseDouble)
-                        bd[i] = static_cast<BYTE>(f * fac);
+                        bd[i] = static_cast<uint8_t>(f * fac);
                     }
                 }
 
@@ -285,7 +285,7 @@ bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
     unsigned int cc = img.GetChannelCount();
     unsigned int cr = UINT_MAX, cg = UINT_MAX, cb = UINT_MAX;
     unsigned int maxVal = 255;
-    const BYTE *bd = img.PeekDataAs<BYTE>();
+    const uint8_t *bd = img.PeekDataAs<uint8_t>();
     const WORD *wd = NULL;
     size_t headLen;
     unsigned int imgSize = img.Width() * img.Height();
@@ -344,7 +344,7 @@ bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
         size_t bodyLen = data.Length() + imgLen;
         outmem.EnforceSize(bodyLen);
         memcpy(outmem, data.PeekBuffer(), data.Length());
-        memcpy(outmem.At(data.Length()), img.PeekDataAs<UINT8>(), imgLen);
+        memcpy(outmem.At(data.Length()), img.PeekDataAs<uint8_t>(), imgLen);
 
         return true;
     }
@@ -359,11 +359,11 @@ bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
         THE_ASSERT(bd != NULL);
         outmem.AssertSize(headLen + imgSize * 3, true);
         for (unsigned int i = 0; i < imgSize; i++) {
-            outmem.AsAt<BYTE>(headLen)[i * 3]
+            outmem.AsAt<uint8_t>(headLen)[i * 3]
                 = (cr != UINT_MAX) ? bd[i * cc + cr] : 0;
-            outmem.AsAt<BYTE>(headLen)[i * 3 + 1]
+            outmem.AsAt<uint8_t>(headLen)[i * 3 + 1]
                 = (cg != UINT_MAX) ? bd[i * cc + cg] : 0;
-            outmem.AsAt<BYTE>(headLen)[i * 3 + 2]
+            outmem.AsAt<uint8_t>(headLen)[i * 3 + 2]
                 = (cb != UINT_MAX) ? bd[i * cc + cb] : 0;
         }
 

@@ -58,7 +58,7 @@ namespace vislib {
          *                    are used by this serialiser or a copy of it.
          * @param storageSize The number of bytes designated by 'storage'.
          */
-        RawStorageSerialiser(const BYTE *storage, const size_t storageSize,
+        RawStorageSerialiser(const uint8_t *storage, const size_t storageSize,
             const unsigned int offset = 0);
 
         /**
@@ -83,40 +83,40 @@ namespace vislib {
         virtual void Deserialise(wchar_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(INT8& outValue, 
+        virtual void Deserialise(int8_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(INT8& outValue, 
+        virtual void Deserialise(int8_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(UINT8& outValue, 
+        virtual void Deserialise(uint8_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(UINT8& outValue, 
+        virtual void Deserialise(uint8_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(INT16& outValue, 
+        virtual void Deserialise(int16_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(INT16& outValue, 
+        virtual void Deserialise(int16_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(UINT16& outValue, 
+        virtual void Deserialise(uint16_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(UINT16& outValue, 
+        virtual void Deserialise(uint16_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(INT32& outValue, 
+        virtual void Deserialise(int32_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(INT32& outValue, 
+        virtual void Deserialise(int32_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(UINT32& outValue, 
+        virtual void Deserialise(uint32_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(UINT32& outValue, 
+        virtual void Deserialise(uint32_t& outValue, 
             const wchar_t *name);
 
         virtual void Deserialise(int64_t& outValue, 
@@ -185,40 +185,40 @@ namespace vislib {
         virtual void Serialise(const wchar_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const INT8 value,
+        virtual void Serialise(const int8_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const INT8 value,
+        virtual void Serialise(const int8_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const UINT8 value,
+        virtual void Serialise(const uint8_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const UINT8 value,
+        virtual void Serialise(const uint8_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const INT16 value,
+        virtual void Serialise(const int16_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const INT16 value,
+        virtual void Serialise(const int16_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const UINT16 value,
+        virtual void Serialise(const uint16_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const UINT16 value,
+        virtual void Serialise(const uint16_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const INT32 value,
+        virtual void Serialise(const int32_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const INT32 value,
+        virtual void Serialise(const int32_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const UINT32 value,
+        virtual void Serialise(const uint32_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const UINT32 value,
+        virtual void Serialise(const uint32_t value,
             const wchar_t *name);
 
         virtual void Serialise(const int64_t value,
@@ -305,7 +305,7 @@ namespace vislib {
         void restore(void *data, unsigned int size);
 
         /** Naked pointer to data to deserialise from. */
-        const BYTE *nakedStorage;
+        const uint8_t *nakedStorage;
 
         /** Number of bytes designated by 'nakedStorage'. */
         size_t nakedStorageSize;

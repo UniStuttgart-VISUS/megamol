@@ -120,10 +120,10 @@ vislib::net::IPAddress6::IPAddress6(const struct in6_addr& address) {
  * vislib::net::IPAddress6::IPAddress6
  */
 vislib::net::IPAddress6::IPAddress6(
-        const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
-        const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8,
-        const BYTE b9, const BYTE b10, const BYTE b11, const BYTE b12,
-        const BYTE b13, const BYTE b14, const BYTE b15, const BYTE b16) {
+        const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4,
+        const uint8_t b5, const uint8_t b6, const uint8_t b7, const uint8_t b8,
+        const uint8_t b9, const uint8_t b10, const uint8_t b11, const uint8_t b12,
+        const uint8_t b13, const uint8_t b14, const uint8_t b15, const uint8_t b16) {
 #define VLIPADDR6_INITBYTE(n) this->address.s6_addr[n - 1] = b##n
     VLIPADDR6_INITBYTE(1);
     VLIPADDR6_INITBYTE(2);
@@ -272,9 +272,9 @@ vislib::net::IPAddress vislib::net::IPAddress6::UnmapV4Address(void) const {
 /*
  * vislib::net::IPAddress6::operator []
  */
-BYTE vislib::net::IPAddress6::operator [](const int i) const {
+uint8_t vislib::net::IPAddress6::operator [](const int i) const {
     if ((i > 0) && (i < static_cast<int>(sizeof(this->address)))) {
-        return reinterpret_cast<const BYTE *>(&this->address)[i];
+        return reinterpret_cast<const uint8_t *>(&this->address)[i];
     } else {
         throw OutOfRangeException(i, 0, sizeof(this->address), __FILE__,
             __LINE__);

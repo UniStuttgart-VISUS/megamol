@@ -406,7 +406,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const vislib::StringA& name, UINT32& outVal) const;
+        DWORD GetValue(const vislib::StringA& name, uint32_t& outVal) const;
 
         /**
          * Gets a value of type REGVAL_DWORD or REGVAL_QWORD
@@ -416,7 +416,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const vislib::StringW& name, UINT32& outVal) const;
+        DWORD GetValue(const vislib::StringW& name, uint32_t& outVal) const;
 
         /**
          * Gets a value of type REGVAL_DWORD or REGVAL_QWORD
@@ -704,7 +704,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const vislib::StringA& name, INT32 val);
+        DWORD SetValue(const vislib::StringA& name, int32_t val);
 
         /**
          * Sets a value of this key of type 'REGVAL_DWORD'
@@ -714,7 +714,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const vislib::StringW& name, INT32 val);
+        DWORD SetValue(const vislib::StringW& name, int32_t val);
 
         /**
          * Sets a value of this key of type 'REGVAL_DWORD'
@@ -724,7 +724,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const vislib::StringA& name, UINT32 val);
+        DWORD SetValue(const vislib::StringA& name, uint32_t val);
 
         /**
          * Sets a value of this key of type 'REGVAL_DWORD'
@@ -734,7 +734,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const vislib::StringW& name, UINT32 val);
+        DWORD SetValue(const vislib::StringW& name, uint32_t val);
 
         /**
          * Sets a value of this key of type 'REGVAL_QWORD'

@@ -88,8 +88,8 @@ namespace ib {
          *
          * @return
          */
-        static SmartRef<IbRdmaCommClientChannel> Create(BYTE *bufRecv, 
-            const size_t cntBufRecv, BYTE *bufSend, const size_t cntBufSend);
+        static SmartRef<IbRdmaCommClientChannel> Create(uint8_t *bufRecv, 
+            const size_t cntBufRecv, uint8_t *bufSend, const size_t cntBufSend);
 
         virtual void Close(void);
 
@@ -177,34 +177,34 @@ namespace ib {
          *                   number of bytes to be allocaated if 'bufSend' is
          *                   NULL.
          */
-        void setBuffers(BYTE *bufRecv, const size_t cntBufRecv, 
-            BYTE *bufSend, const size_t cntBufSend);
+        void setBuffers(uint8_t *bufRecv, const size_t cntBufRecv, 
+            uint8_t *bufSend, const size_t cntBufSend);
 
         /**
          * Buffer for receiving data from the network. This can either be a 
          * buffer owned by the channel or a user-provided memory range (for
          * zero-copy operations). This pointer is registered via 'mrRecv'.
          */
-        BYTE *bufRecv;
+        uint8_t *bufRecv;
 
         /** 
          * Pointer to the end of the receive buffer in case of a zero-copy
          * operation. Otherwise, the pointer is NULL.
          */
-        BYTE *bufRecvEnd;
+        uint8_t *bufRecvEnd;
 
         /**
          * Buffer for sending data from the network. This can either be a 
          * buffer owned by the channel or a user-provided memory range (for
          * zero-copy operations). This pointer is registered via 'mrSend'.
          */
-        BYTE *bufSend;
+        uint8_t *bufSend;
 
         /** 
          * Pointer to the end of the send buffer in case of a zero-copy
          * operation. Otherwise, the pointer is NULL.
          */
-        BYTE *bufSendEnd;
+        uint8_t *bufSendEnd;
 
         /** Size of 'bufRecv' in bytes. */
         size_t cntBufRecv;
@@ -227,7 +227,7 @@ namespace ib {
          * Pointer to the start of the data in 'bufRecv' that have not yet been
          * delivered to the user.
          */
-        BYTE *remRecv;
+        uint8_t *remRecv;
 
         /** 
          * The server channel must be able to initialise a client channel 

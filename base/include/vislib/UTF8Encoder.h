@@ -29,7 +29,7 @@ namespace vislib {
     public:
 
         /** typedef for UTF8-String sizes */
-        typedef INT32 Size;
+        typedef int32_t Size;
 
         /**
          * Calculates the needed size in Bytes to store the given ANSI string

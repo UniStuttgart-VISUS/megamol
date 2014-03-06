@@ -55,8 +55,8 @@ vislib::net::ib::IbRdmaCommServerChannel::Accept(void) {
  * vislib::net::ib::IbRdmaCommServerChannel::Accept
  */
 vislib::SmartRef<vislib::net::ib::IbRdmaCommClientChannel> 
-vislib::net::ib::IbRdmaCommServerChannel::Accept(BYTE *bufRecv, 
-        const size_t cntBufRecv, BYTE *bufSend, const size_t cntBufSend) {
+vislib::net::ib::IbRdmaCommServerChannel::Accept(uint8_t *bufRecv, 
+        const size_t cntBufRecv, uint8_t *bufSend, const size_t cntBufSend) {
     THE_STACK_TRACE;
 
     int result = 0;                             // RDMA API results.

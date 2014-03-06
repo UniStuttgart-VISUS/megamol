@@ -270,13 +270,13 @@ void vislib::net::AsyncSocketSender::onSendCompletedSem(const DWORD result,
 /*
  * vislib::net::AsyncSocketSender::FLAG_IS_CLOSE_SOCKET
  */
-const UINT32 vislib::net::AsyncSocketSender::FLAG_IS_CLOSE_SOCKET = 0x00000001;
+const uint32_t vislib::net::AsyncSocketSender::FLAG_IS_CLOSE_SOCKET = 0x00000001;
 
 
 /*
  * vislib::net::AsyncSocketSender::FLAG_IS_LINGER
  */
-const UINT32 vislib::net::AsyncSocketSender::FLAG_IS_LINGER= 0x00000002;
+const uint32_t vislib::net::AsyncSocketSender::FLAG_IS_LINGER= 0x00000002;
 
 
 /*

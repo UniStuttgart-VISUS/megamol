@@ -75,22 +75,22 @@ static const unsigned char PADDING[64] = {
  * separate from addition to prevent recomputation.
  */
 #define FF(a, b, c, d, x, s, ac) { \
-    (a) += F ((b), (c), (d)) + (x) + (UINT32)(ac); \
+    (a) += F ((b), (c), (d)) + (x) + (uint32_t)(ac); \
     (a) = ROTATE_LEFT ((a), (s)); \
     (a) += (b); \
     }
 #define GG(a, b, c, d, x, s, ac) { \
-    (a) += G ((b), (c), (d)) + (x) + (UINT32)(ac); \
+    (a) += G ((b), (c), (d)) + (x) + (uint32_t)(ac); \
     (a) = ROTATE_LEFT ((a), (s)); \
     (a) += (b); \
     }
 #define HH(a, b, c, d, x, s, ac) { \
-    (a) += H ((b), (c), (d)) + (x) + (UINT32)(ac); \
+    (a) += H ((b), (c), (d)) + (x) + (uint32_t)(ac); \
     (a) = ROTATE_LEFT ((a), (s)); \
     (a) += (b); \
     }
 #define II(a, b, c, d, x, s, ac) { \
-    (a) += I ((b), (c), (d)) + (x) + (UINT32)(ac); \
+    (a) += I ((b), (c), (d)) + (x) + (uint32_t)(ac); \
     (a) = ROTATE_LEFT ((a), (s)); \
     (a) += (b); \
     }
@@ -130,7 +130,7 @@ void vislib::MD5HashProvider::Initialise(void) {
 /*
  * vislib::MD5HashProvider::TransformBlock
  */
-void vislib::MD5HashProvider::TransformBlock(const BYTE *input, 
+void vislib::MD5HashProvider::TransformBlock(const uint8_t *input, 
                                              const size_t cntInput) {
     // Must be initialised as the ctor does this.
 
@@ -143,8 +143,8 @@ void vislib::MD5HashProvider::TransformBlock(const BYTE *input,
 /*
  * vislib::MD5HashProvider::TransformFinalBlock
  */
-bool vislib::MD5HashProvider::TransformFinalBlock(BYTE *outHash, 
-        size_t& inOutSize, const BYTE *input, const size_t cntInput) {
+bool vislib::MD5HashProvider::TransformFinalBlock(uint8_t *outHash, 
+        size_t& inOutSize, const uint8_t *input, const size_t cntInput) {
     MD5_CTX ctx = this->context;    // Local context to be finalised.
     bool retval = false;            // Remember whether output was copied.
 
@@ -165,17 +165,17 @@ bool vislib::MD5HashProvider::TransformFinalBlock(BYTE *outHash,
 /*
  * vislib::MD5HashProvider::decode
  */
-void vislib::MD5HashProvider::decode(UINT32 *output, const BYTE *input, 
+void vislib::MD5HashProvider::decode(uint32_t *output, const uint8_t *input, 
         const unsigned int len) {
     THE_ASSERT(output != NULL);
     THE_ASSERT(input != NULL);
     THE_ASSERT((len % 4) == 0);
 
     for (unsigned int i = 0, j = 0; j < len; i++, j += 4) {
-        output[i] = static_cast<UINT32>(input[j]) 
-            | (static_cast<UINT32>(input[j + 1]) << 8) 
-            | (static_cast<UINT32>(input[j + 2]) << 16) 
-            | (static_cast<UINT32>(input[j + 3]) << 24);
+        output[i] = static_cast<uint32_t>(input[j]) 
+            | (static_cast<uint32_t>(input[j + 1]) << 8) 
+            | (static_cast<uint32_t>(input[j + 2]) << 16) 
+            | (static_cast<uint32_t>(input[j + 3]) << 24);
     }
 }
 
@@ -183,17 +183,17 @@ void vislib::MD5HashProvider::decode(UINT32 *output, const BYTE *input,
 /*
  * vislib::MD5HashProvider::encode
  */
-void vislib::MD5HashProvider::encode(BYTE *output, const UINT32 *input, 
+void vislib::MD5HashProvider::encode(uint8_t *output, const uint32_t *input, 
         const unsigned int len) {
     THE_ASSERT(output != NULL);
     THE_ASSERT(input != NULL);
     THE_ASSERT((len % 4) == 0);
 
     for (unsigned int i = 0, j = 0; j < len; i++, j += 4) {
-        output[j] = static_cast<BYTE>(input[i] & 0xff);
-        output[j + 1] = static_cast<BYTE>((input[i] >> 8) & 0xff);
-        output[j + 2] = static_cast<BYTE>((input[i] >> 16) & 0xff);
-        output[j + 3] = static_cast<BYTE>((input[i] >> 24) & 0xff);
+        output[j] = static_cast<uint8_t>(input[i] & 0xff);
+        output[j + 1] = static_cast<uint8_t>((input[i] >> 8) & 0xff);
+        output[j + 2] = static_cast<uint8_t>((input[i] >> 16) & 0xff);
+        output[j + 3] = static_cast<uint8_t>((input[i] >> 24) & 0xff);
     }
 }
 
@@ -201,11 +201,11 @@ void vislib::MD5HashProvider::encode(BYTE *output, const UINT32 *input,
 /*
  * vislib::MD5HashProvider::finalise
  */
-void vislib::MD5HashProvider::finalise(BYTE *output, MD5_CTX *context) {
+void vislib::MD5HashProvider::finalise(uint8_t *output, MD5_CTX *context) {
     THE_ASSERT(output != NULL);
     THE_ASSERT(context != NULL);
 
-    BYTE bits[8];
+    uint8_t bits[8];
     unsigned int index, padLen;
 
     /* Save number of bits. */
@@ -231,12 +231,12 @@ void vislib::MD5HashProvider::finalise(BYTE *output, MD5_CTX *context) {
 /*
  * vislib::MD5HashProvider::transform
  */
-void vislib::MD5HashProvider::transform(UINT32 state[4], const BYTE block[64]) {
-    UINT32 a = state[0];
-    UINT32 b = state[1];
-    UINT32 c = state[2];
-    UINT32 d = state[3];
-    UINT32 x[16];
+void vislib::MD5HashProvider::transform(uint32_t state[4], const uint8_t block[64]) {
+    uint32_t a = state[0];
+    uint32_t b = state[1];
+    uint32_t c = state[2];
+    uint32_t d = state[3];
+    uint32_t x[16];
 
     MD5HashProvider::decode(x, block, 64);
 
@@ -325,7 +325,7 @@ void vislib::MD5HashProvider::transform(UINT32 state[4], const BYTE block[64]) {
 /*
  * vislib::MD5HashProvider::update
  */
-void vislib::MD5HashProvider::update(MD5_CTX *context, const BYTE *input, 
+void vislib::MD5HashProvider::update(MD5_CTX *context, const uint8_t *input, 
         const size_t cntInput) {
     unsigned int i = 0, index = 0, partLen = 0;
 
@@ -333,11 +333,11 @@ void vislib::MD5HashProvider::update(MD5_CTX *context, const BYTE *input,
     index = static_cast<unsigned int>((context->count[0] >> 3) & 0x3F);
 
     /* Update number of bits. */
-    if ((context->count[0] += (static_cast<UINT32>(cntInput) << 3)) 
-            < (static_cast<UINT32>(cntInput) << 3)) {
+    if ((context->count[0] += (static_cast<uint32_t>(cntInput) << 3)) 
+            < (static_cast<uint32_t>(cntInput) << 3)) {
         context->count[1]++;    
     }
-    context->count[1] += (static_cast<UINT32>(cntInput) >> 29);
+    context->count[1] += (static_cast<uint32_t>(cntInput) >> 29);
 
     partLen = 64 - index;
 

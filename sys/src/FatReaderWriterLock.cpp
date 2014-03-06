@@ -131,7 +131,7 @@ void vislib::sys::FatReaderWriterLock::UnlockShared(void) {
     this->exclusiveLock.Lock(); // reentrant for down-graded locks
     this->sharedLock.Lock();
 
-    INT_PTR pos = this->shThreads.IndexOf(Thread::CurrentID());
+    intptr_t pos = this->shThreads.IndexOf(Thread::CurrentID());
 
     if (pos == Array<DWORD>::INVALID_POS) {
         this->sharedLock.Unlock();

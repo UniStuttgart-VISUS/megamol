@@ -351,7 +351,7 @@ namespace vislib {
      */
     template<class K, class V> 
     void Map<K, V>::Set(const K &key, const V &value) {
-        INT_PTR idx = this->keys.IndexOf(key);
+        intptr_t idx = this->keys.IndexOf(key);
         if (idx == Array<K>::INVALID_POS) {
             this->keys.Append(key);
             this->values.Append(value);
@@ -407,7 +407,7 @@ namespace vislib {
      */
     template<class K, class V>
     const V * Map<K, V>::FindValue(const K &key) const {
-        INT_PTR idx = this->keys.IndexOf(key);
+        intptr_t idx = this->keys.IndexOf(key);
         if (idx == Array<K>::INVALID_POS) {
             return NULL;
         } else {
@@ -420,7 +420,7 @@ namespace vislib {
      * vislib::Map::FindValue
      */
     template<class K, class V> V * Map<K, V>::FindValue(const K &key) {
-        INT_PTR idx = this->keys.IndexOf(key);
+        intptr_t idx = this->keys.IndexOf(key);
         if (idx == Array<K>::INVALID_POS) {
             return NULL;
         } else {
@@ -441,7 +441,7 @@ namespace vislib {
      * vislib::Map::Remove
      */
     template<class K, class V> void Map<K, V>::Remove(const K &key) {
-        INT_PTR idx = this->keys.IndexOf(key);
+        intptr_t idx = this->keys.IndexOf(key);
         if (idx != Array<K>::INVALID_POS) {
             this->values.Erase(idx);
             this->keys.Erase(idx);

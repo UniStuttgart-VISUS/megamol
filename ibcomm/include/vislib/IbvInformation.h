@@ -85,7 +85,7 @@ namespace ib {
              * @return A numeric value identifying the current state of the 
              *         port.
              */
-            inline UINT8 GetPhysicalState(void) const {
+            inline uint8_t GetPhysicalState(void) const {
                 THE_STACK_TRACE;
                 return this->attributes.PhysicalState;
             }
@@ -228,7 +228,7 @@ namespace ib {
              *
              * @throws vislib::sys::COMException In case of an error.
              */
-            Port(IWVDevice *device, const UINT8 port);
+            Port(IWVDevice *device, const uint8_t port);
 
             /** Holds the attributes of the device port. */
             WV_PORT_ATTRIBUTES attributes;

@@ -35,25 +35,25 @@ namespace math {
     public:
 
         /** A bitmask representing all cuboid faces. */
-        static const UINT32 FACE_ALL;
+        static const uint32_t FACE_ALL;
 
         /** A bitmask representing the back face of the cuboid. */
-        static const UINT32 FACE_BACK;
+        static const uint32_t FACE_BACK;
 
         /** A bitmask representing the bottom face of the cuboid. */
-        static const UINT32 FACE_BOTTOM;
+        static const uint32_t FACE_BOTTOM;
 
         /** A bitmask representing the front face of the cuboid. */
-        static const UINT32 FACE_FRONT;
+        static const uint32_t FACE_FRONT;
 
         /** A bitmask representing the left face of the cuboid. */
-        static const UINT32 FACE_LEFT;
+        static const uint32_t FACE_LEFT;
 
         /** A bitmask representing the right face of the cuboid. */
-        static const UINT32 FACE_RIGHT;
+        static const uint32_t FACE_RIGHT;
 
         /** A bitmask representing the top face of the cuboid. */
-        static const UINT32 FACE_TOP;
+        static const uint32_t FACE_TOP;
 
         /** Dtor. */
         ~AbstractCuboid(void);
@@ -102,7 +102,7 @@ namespace math {
          */
         template<class Sp>
         bool Contains(const AbstractPoint<T, 3, Sp>& point, 
-            const UINT32 includeFace = 0) const;
+            const uint32_t includeFace = 0) const;
 
         /**
          * Answer the depth of the cuboid.
@@ -718,7 +718,7 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::FACE_ALL
      */
     template<class T, class S>
-    const UINT32 AbstractCuboid<T, S>::FACE_ALL
+    const uint32_t AbstractCuboid<T, S>::FACE_ALL
         = AbstractCuboid<T, S>::FACE_LEFT
         | AbstractCuboid<T, S>::FACE_BOTTOM
         | AbstractCuboid<T, S>::FACE_BACK
@@ -731,7 +731,7 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::FACE_BACK
      */
     template<class T, class S>
-    const UINT32 AbstractCuboid<T, S>::FACE_BACK 
+    const uint32_t AbstractCuboid<T, S>::FACE_BACK 
         = 1 << AbstractCuboid<T, S>::IDX_BACK;
 
 
@@ -739,7 +739,7 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::FACE_BOTTOM
      */
     template<class T, class S>
-    const UINT32 AbstractCuboid<T, S>::FACE_BOTTOM 
+    const uint32_t AbstractCuboid<T, S>::FACE_BOTTOM 
         = 1 << AbstractCuboid<T, S>::IDX_BOTTOM;
 
 
@@ -747,7 +747,7 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::FACE_FRONT
      */
     template<class T, class S>
-    const UINT32 AbstractCuboid<T, S>::FACE_FRONT 
+    const uint32_t AbstractCuboid<T, S>::FACE_FRONT 
         = 1 << AbstractCuboid<T, S>::IDX_FRONT;
 
 
@@ -755,7 +755,7 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::FACE_LEFT
      */
     template<class T, class S>
-    const UINT32 AbstractCuboid<T, S>::FACE_LEFT 
+    const uint32_t AbstractCuboid<T, S>::FACE_LEFT 
         = 1 << AbstractCuboid<T, S>::IDX_LEFT;
 
 
@@ -763,7 +763,7 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::FACE_RIGHT
      */
     template<class T, class S>
-    const UINT32 AbstractCuboid<T, S>::FACE_RIGHT 
+    const uint32_t AbstractCuboid<T, S>::FACE_RIGHT 
         = 1 << AbstractCuboid<T, S>::IDX_RIGHT;
 
 
@@ -771,7 +771,7 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::FACE_TOP
      */
     template<class T, class S>
-    const UINT32 AbstractCuboid<T, S>::FACE_TOP
+    const uint32_t AbstractCuboid<T, S>::FACE_TOP
         = 1 << AbstractCuboid<T, S>::IDX_TOP;
 
 
@@ -802,7 +802,7 @@ namespace math {
     template<class T, class S> 
     template<class Sp>
     bool AbstractCuboid<T, S>::Contains(const AbstractPoint<T, 3, Sp>& point,
-            const UINT32 includeFace) const {
+            const uint32_t includeFace) const {
 
         if ((point.X() < this->bounds[IDX_LEFT])
                 || ((((includeFace & FACE_LEFT) == 0))

@@ -58,8 +58,8 @@ namespace vislib {
          *         retrieved in principle. 'inOutSize' is set to the required
          *         size of 'outHash' in the latter case.
          */
-        bool ComputeHash(BYTE *outHash, size_t& inOutSize, 
-            const BYTE *input, const size_t cntInput);
+        bool ComputeHash(uint8_t *outHash, size_t& inOutSize, 
+            const uint8_t *input, const size_t cntInput);
 
         /**
          * Computes the hash of the zero-terminated string 'input'. This is 
@@ -81,7 +81,7 @@ namespace vislib {
          *         retrieved in principle. 'inOutSize' is set to the required
          *         size of 'outHash' in the latter case.
          */
-        bool ComputeHash(BYTE *outHash, size_t& inOutSize, 
+        bool ComputeHash(uint8_t *outHash, size_t& inOutSize, 
             const char *input);
 
         /**
@@ -104,7 +104,7 @@ namespace vislib {
          *         retrieved in principle. 'inOutSize' is set to the required
          *         size of 'outHash' in the latter case.
          */
-        bool ComputeHash(BYTE *outHash, size_t& inOutSize, 
+        bool ComputeHash(uint8_t *outHash, size_t& inOutSize, 
             const wchar_t *input);
 
         /**
@@ -128,7 +128,7 @@ namespace vislib {
          *         retrieved in principle. 'inOutSize' is set to the required
          *         size of 'outHash' in the latter case.
          */
-        bool GetHashValue(BYTE *outHash, size_t& inOutSize) const;
+        bool GetHashValue(uint8_t *outHash, size_t& inOutSize) const;
 
         /**
          * Initialise the hash. This method must be called before any other 
@@ -148,7 +148,7 @@ namespace vislib {
          * @param input    The data to be added to the hash.
          * @param cntInput The number of bytes in 'input'.
          */
-        virtual void TransformBlock(const BYTE *input, 
+        virtual void TransformBlock(const uint8_t *input, 
             const size_t cntInput) = 0;
 
         /**
@@ -167,8 +167,8 @@ namespace vislib {
          * @param input     The data to be added to the hash.
          * @param cntInput  The number of bytes in 'input'.
          */
-        virtual bool TransformFinalBlock(BYTE *outHash, size_t& inOutSize, 
-            const BYTE *input, const size_t cntInput) = 0;
+        virtual bool TransformFinalBlock(uint8_t *outHash, size_t& inOutSize, 
+            const uint8_t *input, const size_t cntInput) = 0;
 
         /**
          * Answer a hexadecimal string representation of the hash.

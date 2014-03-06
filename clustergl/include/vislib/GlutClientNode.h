@@ -113,7 +113,7 @@ namespace cluster {
          *         false if the implementation did ignore it.
          */
         virtual bool onMessageReceived(const Socket& src, const unsigned int msgId,
-            const BYTE *body, const size_t cntBody);
+            const uint8_t *body, const size_t cntBody);
 
         /**
          * The message receiver thread calls this method once it exists.
@@ -222,7 +222,7 @@ namespace cluster {
      *  vislib::net::cluster::GlutClientNode<T>::onMessageReceived
      */
     template<class T> bool GlutClientNode<T>::onMessageReceived(
-            const Socket& src, const unsigned int msgId, const BYTE *body, 
+            const Socket& src, const unsigned int msgId, const uint8_t *body, 
             const size_t cntBody) {
         bool retval = AbstractControlledNode::onMessageReceived(src, msgId,
             body, cntBody);

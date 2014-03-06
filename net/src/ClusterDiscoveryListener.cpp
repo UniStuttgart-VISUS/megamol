@@ -28,7 +28,7 @@ vislib::net::ClusterDiscoveryListener::~ClusterDiscoveryListener(void) {
  */
 void vislib::net::ClusterDiscoveryListener::OnUserMessage(
         const ClusterDiscoveryService& src, 
-        const ClusterDiscoveryService::PeerHandle& hPeer, const UINT32 msgType,
-        const BYTE *msgBody) {
+        const ClusterDiscoveryService::PeerHandle& hPeer, const uint32_t msgType,
+        const uint8_t *msgBody) {
     /* Does nothing. */
 }

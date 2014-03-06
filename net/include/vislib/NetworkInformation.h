@@ -764,7 +764,7 @@ namespace net {
              * @throws NoConfidenceException If the MAC address is invalid 
              *                               and 'outConfidence' is NULL.
              */
-            const Array<BYTE>& GetPhysicalAddress(
+            const Array<uint8_t>& GetPhysicalAddress(
                 Confidence *outConfidence = NULL) const;
 
             /** 
@@ -904,7 +904,7 @@ namespace net {
             AssessedMember<StringW> name;
 
             /** The physical MAC address of the adapter. */
-            Array<BYTE> physicalAddress;
+            Array<uint8_t> physicalAddress;
 
             /** The status of the adapter. */
             AssessedMember<OperStatus> status;
@@ -1343,7 +1343,7 @@ namespace net {
          * @throws IllegalParamException If 'netmask' is not a valid netmask.
          */
         inline static ULONG NetmaskToPrefix(const IPAddress& netmask) {
-            const BYTE *mask = reinterpret_cast<const BYTE *>(
+            const uint8_t *mask = reinterpret_cast<const uint8_t *>(
                 static_cast<const struct in_addr *>(netmask));
             return NetworkInformation::netmaskToPrefix(mask, 
                 sizeof(struct in_addr));
@@ -1359,7 +1359,7 @@ namespace net {
          * @throws IllegalParamException If 'netmask' is not a valid netmask.
          */
         inline static ULONG NetmaskToPrefix(const IPAddress6& netmask) {
-            const BYTE *mask = reinterpret_cast<const BYTE *>(
+            const uint8_t *mask = reinterpret_cast<const uint8_t *>(
                 static_cast<const struct in6_addr *>(netmask));
             return NetworkInformation::netmaskToPrefix(mask, 
                 sizeof(struct in6_addr));
@@ -1388,7 +1388,7 @@ namespace net {
          */
         inline static IPAddress PrefixToNetmask4(const ULONG prefix) {
             IPAddress retval;
-            BYTE *mask = reinterpret_cast<BYTE *>(
+            uint8_t *mask = reinterpret_cast<uint8_t *>(
                 static_cast<struct in_addr *>(retval));
             NetworkInformation::prefixToNetmask(mask, sizeof(struct in_addr), 
                 prefix);
@@ -1703,7 +1703,7 @@ namespace net {
          *
          * @throws IllegalParamException If 'netmask' is not a valid netmask.
          */
-        static ULONG netmaskToPrefix(const BYTE *netmask, const size_t len);
+        static ULONG netmaskToPrefix(const uint8_t *netmask, const size_t len);
 
         /**
          * Convert a prefix length to a netmask.
@@ -1717,7 +1717,7 @@ namespace net {
          * @throws OutOfRangeException If the prefix length is not within the 
          *                             valid range.
          */
-        static void prefixToNetmask(BYTE *outNetmask, const size_t len,
+        static void prefixToNetmask(uint8_t *outNetmask, const size_t len,
             const ULONG prefix);
 
         /**
@@ -1812,7 +1812,7 @@ namespace net {
          */
         static float wildGuessAdapter(Adapter& outAdapter, 
             const IPAgnosticAddress& address, const StringW& device, 
-            const ULONG prefixLen, const UINT32 validMask);
+            const ULONG prefixLen, const uint32_t validMask);
 
         /**
          * Split the input on behalf of the wild guess method into the parts
@@ -1833,7 +1833,7 @@ namespace net {
          *
          * @return A bitmask specifying which of the out parameters are valid.
          */
-        static UINT32 wildGuessSplitInput(IPAgnosticAddress& outAddress,
+        static uint32_t wildGuessSplitInput(IPAgnosticAddress& outAddress,
             StringW& outDevice, ULONG& outPrefixLen, USHORT& outPort,
             const wchar_t *str, 
             const IPAgnosticAddress::AddressFamily *prefFam = NULL);
@@ -1867,19 +1867,19 @@ namespace net {
          * Flag indicating that the address returned by wildGuessSplitInput()
          * was parsed from an empty string.
          */
-        static const UINT32 WILD_GUESS_FROM_EMPTY_ADDRESS;
+        static const uint32_t WILD_GUESS_FROM_EMPTY_ADDRESS;
 
         /**
          * Flag that is returned by wildGuessSplitInput() indicating that a 
          * valid value has been set in 'outAddress'.
          */
-        static const UINT32 WILD_GUESS_HAS_ADDRESS;
+        static const uint32_t WILD_GUESS_HAS_ADDRESS;
 
         /**
          * Flag that is returned by wildGuessSplitInput() indicating that a 
          * valid value has been set in 'outDevice'.
          */
-        static const UINT32 WILD_GUESS_HAS_DEVICE;
+        static const uint32_t WILD_GUESS_HAS_DEVICE;
 
         /**
          * Flag that is returned by wildGuessSplitInput() indicating that a 
@@ -1887,19 +1887,19 @@ namespace net {
          * derived from an IPv4 subnet mask rather than from the prefix length
          * itself.
          */
-        static const UINT32 WILD_GUESS_HAS_NETMASK;
+        static const uint32_t WILD_GUESS_HAS_NETMASK;
 
         /**
          * Flag that is returned by wildGuessSplitInput() indicating that a 
          * valid value has been set in 'outPort'.
          */
-        static const UINT32 WILD_GUESS_HAS_PORT;
+        static const uint32_t WILD_GUESS_HAS_PORT;
         
         /**
          * Flag that is returned by wildGuessSplitInput() indicating that a 
          * valid value has been set in 'outPrefix'.
          */
-        static const UINT32 WILD_GUESS_HAS_PREFIX_LEN;
+        static const uint32_t WILD_GUESS_HAS_PREFIX_LEN;
 
         /** The list of adapters. */
         static AdapterList adapters;

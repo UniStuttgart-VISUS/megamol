@@ -27,8 +27,8 @@ vislib::HashAlgorithm::~HashAlgorithm(void) {
 /*
  * vislib::HashAlgorithm::ComputeHash
  */
-bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, size_t& inOutSize, 
-        const BYTE *input, const size_t cntInput) {
+bool vislib::HashAlgorithm::ComputeHash(uint8_t *outHash, size_t& inOutSize, 
+        const uint8_t *input, const size_t cntInput) {
     this->Initialise();
     this->TransformFinalBlock(outHash, inOutSize, input, cntInput);
     // Fix for ticket #64. It is, however, unclear why this is required.
@@ -39,20 +39,20 @@ bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, size_t& inOutSize,
 /*
  * vislib::HashAlgorithm::ComputeHash
  */
-bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, size_t& inOutSize, 
+bool vislib::HashAlgorithm::ComputeHash(uint8_t *outHash, size_t& inOutSize, 
         const char *input) {
     return this->ComputeHash(outHash, inOutSize, 
-        reinterpret_cast<const BYTE *>(input), ::strlen(input));
+        reinterpret_cast<const uint8_t *>(input), ::strlen(input));
 }
 
 
 /*
  * vislib::HashAlgorithm::ComputeHash
  */
-bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, size_t& inOutSize, 
+bool vislib::HashAlgorithm::ComputeHash(uint8_t *outHash, size_t& inOutSize, 
         const wchar_t *input) {
     return this->ComputeHash(outHash, inOutSize, 
-        reinterpret_cast<const BYTE *>(input), 
+        reinterpret_cast<const uint8_t *>(input), 
         ::wcslen(input) * sizeof(wchar_t));
 }
 
@@ -70,7 +70,7 @@ size_t vislib::HashAlgorithm::GetHashSize(void) const {
 /*
  * vislib::HashAlgorithm::GetHashValue
  */
-bool vislib::HashAlgorithm::GetHashValue(BYTE *outHash, 
+bool vislib::HashAlgorithm::GetHashValue(uint8_t *outHash, 
                                          size_t& inOutSize) const {
     return const_cast<HashAlgorithm *>(this)->TransformFinalBlock(outHash, inOutSize, NULL, 0);
 }
@@ -80,7 +80,7 @@ bool vislib::HashAlgorithm::GetHashValue(BYTE *outHash,
  * vislib::HashAlgorithm::ToStringA
  */
 vislib::StringA vislib::HashAlgorithm::ToStringA(void) const {
-    BYTE *hash = NULL;
+    uint8_t *hash = NULL;
     StringA::Char *out = NULL;
     size_t hashSize = 0;
     StringA retval;
@@ -88,7 +88,7 @@ vislib::StringA vislib::HashAlgorithm::ToStringA(void) const {
 
     try {
         this->GetHashValue(hash, hashSize);
-        hash = new BYTE[hashSize];
+        hash = new uint8_t[hashSize];
         this->GetHashValue(hash, hashSize);
 
         out = retval.AllocateBuffer(2 * static_cast<StringA::Size>(hashSize));
@@ -111,7 +111,7 @@ vislib::StringA vislib::HashAlgorithm::ToStringA(void) const {
  * vislib::HashAlgorithm::ToStringW
  */
 vislib::StringW vislib::HashAlgorithm::ToStringW(void) const {
-    BYTE *hash = NULL;
+    uint8_t *hash = NULL;
     StringW::Char *out = NULL;
     size_t hashSize = 0;
     StringW retval;
@@ -119,7 +119,7 @@ vislib::StringW vislib::HashAlgorithm::ToStringW(void) const {
 
     try {
         this->GetHashValue(hash, hashSize);
-        hash = new BYTE[hashSize];
+        hash = new uint8_t[hashSize];
         this->GetHashValue(hash, hashSize);
 
         out = retval.AllocateBuffer(2 * static_cast<StringW::Size>(hashSize));

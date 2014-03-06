@@ -176,9 +176,9 @@ vislib::StringA vislib::net::IPAddress::ToStringA(void) const {
 /*
  * vislib::net::IPAddress::operator []
  */
-BYTE vislib::net::IPAddress::operator [](const int i) const {
+uint8_t vislib::net::IPAddress::operator [](const int i) const {
     if ((i > 0) && (i < static_cast<int>(sizeof(this->address)))) {
-        return reinterpret_cast<const BYTE *>(&this->address)[i];
+        return reinterpret_cast<const uint8_t *>(&this->address)[i];
     } else {
         throw OutOfRangeException(i, 0, sizeof(this->address), __FILE__,
             __LINE__);

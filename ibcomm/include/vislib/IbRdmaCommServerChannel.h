@@ -45,8 +45,8 @@ namespace ib {
         virtual SmartRef<AbstractCommClientChannel> Accept(void);
 
         SmartRef<IbRdmaCommClientChannel> Accept(
-                BYTE *bufRecv, const size_t cntBufRecv, 
-                BYTE *bufSend, const size_t cntBufSend);
+                uint8_t *bufRecv, const size_t cntBufRecv, 
+                uint8_t *bufSend, const size_t cntBufSend);
 
         virtual void Bind(SmartRef<AbstractCommEndPoint> endPoint);
 

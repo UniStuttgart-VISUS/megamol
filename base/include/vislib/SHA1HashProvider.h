@@ -59,7 +59,7 @@ namespace vislib {
          *
          * @throws IllegalStateException If the hash has not been initialised.
          */
-        virtual void TransformBlock(const BYTE *input, const size_t cntInput);
+        virtual void TransformBlock(const uint8_t *input, const size_t cntInput);
 
         /**
          * Update the hash with a new block of 'cntInput' bytes and compute the
@@ -79,8 +79,8 @@ namespace vislib {
          *
          * @throws IllegalStateException If the hash has not been initialised.
          */
-        virtual bool TransformFinalBlock(BYTE *outHash, size_t& inOutSize,
-            const BYTE *input, const size_t cntInput);
+        virtual bool TransformFinalBlock(uint8_t *outHash, size_t& inOutSize,
+            const uint8_t *input, const size_t cntInput);
 
     private:
 
@@ -92,13 +92,13 @@ namespace vislib {
          * hashing operation.
          */
         typedef struct SHA1Context_t {
-            UINT32 Intermediate_Hash[HASH_SIZE / 4];    // Message Digest
+            uint32_t Intermediate_Hash[HASH_SIZE / 4];    // Message Digest
 
-            UINT32 Length_Low;          // Message length in bits
-            UINT32 Length_High;         // Message length in bits
+            uint32_t Length_Low;          // Message length in bits
+            uint32_t Length_High;         // Message length in bits
 
-            UINT16 Message_Block_Index; // Index into message block array
-            BYTE Message_Block[64];     // 512-bit message blocks
+            uint16_t Message_Block_Index; // Index into message block array
+            uint8_t Message_Block[64];     // 512-bit message blocks
 
             int Computed;               // Is the digest computed?
             int Corrupted;              // Is the message digest corrupted?
@@ -125,7 +125,7 @@ namespace vislib {
          *                               already computed,
          *                               If the context was corrupted.
          */
-        void input(SHA1Context *context, const BYTE *input, 
+        void input(SHA1Context *context, const uint8_t *input, 
             const unsigned int cntInput);
 
         /**
@@ -161,7 +161,7 @@ namespace vislib {
          *
          * @throws IllegalStateException If the context was corrupted.
          */
-        static void result(UINT8 *messageDigest, SHA1Context *context);
+        static void result(uint8_t *messageDigest, SHA1Context *context);
 
         /**
          * Forbidden assignemt operator.

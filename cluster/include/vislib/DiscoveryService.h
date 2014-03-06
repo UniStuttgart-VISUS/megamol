@@ -477,7 +477,7 @@ namespace cluster {
          * If this behaviour flag is set, the discovery service will only 
          * collect other nodes and not send alive message itself. 
          */
-        static const UINT32 FLAG_OBSERVE_ONLY;
+        static const uint32_t FLAG_OBSERVE_ONLY;
 
         /**
          * If this behaviour flag is set, the receiver threads will not use
@@ -486,7 +486,7 @@ namespace cluster {
          * if multiple instances of the DiscoveryService are running on the
          * same machine and want to serve the same cluster.
          */
-        static const UINT32 FLAG_SHARE_SOCKETS;
+        static const uint32_t FLAG_SHARE_SOCKETS;
 
         /**
          * The maximum size of user data that can be sent via the cluster
@@ -502,7 +502,7 @@ namespace cluster {
             - sizeof(struct sockaddr_storage);
 
         /** The first message ID that can be used for a user message. */
-        static const UINT32 MSG_TYPE_USER = 16;
+        static const uint32_t MSG_TYPE_USER = 16;
 
         /**
          * Create a new instance.
@@ -609,7 +609,7 @@ namespace cluster {
          *
          * @return The configuration flags of the discovery service.
          */
-        inline UINT32 GetFlags(void) const {
+        inline uint32_t GetFlags(void) const {
             return this->flags;
         }
 
@@ -747,7 +747,7 @@ namespace cluster {
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        unsigned int SendUserMessage(const UINT32 msgType, const void *msgBody, 
+        unsigned int SendUserMessage(const uint32_t msgType, const void *msgBody, 
             const size_t msgSize);
 
         /**
@@ -775,7 +775,7 @@ namespace cluster {
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        unsigned int SendUserMessage(const PeerHandle& hPeer, const UINT32 msgType,
+        unsigned int SendUserMessage(const PeerHandle& hPeer, const uint32_t msgType,
             const void *msgBody, const size_t msgSize);
 
         /**
@@ -789,8 +789,8 @@ namespace cluster {
          */
         //inline void SetRequestInterval(const unsigned int requestInterval) {
         //    sys::Interlocked::Exchange(
-        //        reinterpret_cast<INT32 *>(&this->requestInterval),
-        //        static_cast<INT32>(requestInterval));
+        //        reinterpret_cast<int32_t *>(&this->requestInterval),
+        //        static_cast<int32_t>(requestInterval));
         //}
 
         /**
@@ -834,7 +834,7 @@ namespace cluster {
         virtual void Start(const char *name, 
             const DiscoveryConfig *configs, const size_t cntConfigs,
             const unsigned int cntExpectedNodes = 0,
-            const UINT32 flags = 0,
+            const uint32_t flags = 0,
             const unsigned int requestInterval = DEFAULT_REQUEST_INTERVAL,
             const unsigned int requestIntervalIntensive = DEFAULT_REQUEST_INTERVAL / 2,
             const unsigned int cntResponseChances = DEFAULT_RESPONSE_CHANCES);
@@ -966,14 +966,14 @@ namespace cluster {
          * UDP datagrams in advance.
          */
         typedef struct Message_t {
-            UINT32 MagicNumber;						    //< Always MAGIC_NUMBER.
-            UINT32 MsgType;							    //< The type identifier.
+            uint32_t MagicNumber;						    //< Always MAGIC_NUMBER.
+            uint32_t MsgType;							    //< The type identifier.
             // Note: 'magicNumber' and 'msgType' can be 32 bit now, because 
             // struct sockaddr_storage must be 64 bit aligned any way.
             union {
                 SenderMessageBody SenderBody;           //< I am here messages.
                 struct sockaddr_storage ResponseAddress;//< Response peer addr.
-                BYTE UserData[MAX_USER_DATA];		    //< User defined data.
+                uint8_t UserData[MAX_USER_DATA];		    //< User defined data.
             };
         } Message;
 
@@ -1015,7 +1015,7 @@ namespace cluster {
         private:
 
             /** Flag for terminating the thread safely. */
-            INT32 isRunning;
+            int32_t isRunning;
 
             /** The socket used for receiving messages. */
             Socket socket;
@@ -1170,7 +1170,7 @@ namespace cluster {
         private:
 
             /** Flag for terminating the thread safely. */
-            INT32 isRunning;
+            int32_t isRunning;
 
         }; /* end class Sender */
 
@@ -1232,8 +1232,8 @@ namespace cluster {
           * @param msgBody         The body of the message.
           */
          void fireUserMessage(const IPEndPoint& sender, 
-             DiscoveryConfigEx *discoverySource, const UINT32 msgType, 
-             const BYTE *msgBody); 
+             DiscoveryConfigEx *discoverySource, const uint32_t msgType, 
+             const uint8_t *msgBody); 
 
         /**
          * Answer whether 'hPeer' is a valid peer node handle.
@@ -1255,7 +1255,7 @@ namespace cluster {
          *
          * @return The index of the peer node or -1, if not found.
          */
-        INT_PTR peerFromResponseAddress(const IPEndPoint& addr) const;
+        intptr_t peerFromResponseAddress(const IPEndPoint& addr) const;
 
         /**
          * Answer the index of the peer node that runs its discovery 
@@ -1270,7 +1270,7 @@ namespace cluster {
          *
          * @return The index of the peer node or -1, if not found.
          */
-        INT_PTR peerFromDiscoveryAddr(const IPEndPoint& addr) const;
+        intptr_t peerFromDiscoveryAddr(const IPEndPoint& addr) const;
 
         /**
          * Prepares the list of known peer nodes for a new request. 
@@ -1311,7 +1311,7 @@ namespace cluster {
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        void prepareUserMessage(Message& outMsg, const UINT32 msgType,
+        void prepareUserMessage(Message& outMsg, const uint32_t msgType,
             const void *msgBody, const size_t msgSize);
 
         /**
@@ -1327,16 +1327,16 @@ namespace cluster {
         void removePeerNode(const IPEndPoint& address);
 
         /** The magic number at the begin of each message. */
-        static const UINT32 MAGIC_NUMBER;
+        static const uint32_t MAGIC_NUMBER;
 
         /** Message type ID of a repeated discovery request. */
-        static const UINT32 MSG_TYPE_IAMALIVE = 2;
+        static const uint32_t MSG_TYPE_IAMALIVE = 2;
 
         /** Message type ID of an initial discovery request. */
-        static const UINT32 MSG_TYPE_IAMHERE = 1;
+        static const uint32_t MSG_TYPE_IAMHERE = 1;
 
         /** Message type ID of the explicit disconnect notification. */
-        static const UINT32 MSG_TYPE_SAYONARA = 3;
+        static const uint32_t MSG_TYPE_SAYONARA = 3;
 
         /** 
          * The number of expected nodes. Until this number is reached, the

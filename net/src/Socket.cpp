@@ -333,9 +333,9 @@ bool vislib::net::Socket::GetMulticastLoop(const ProtocolFamily pf) const {
 /*
  * vislib::net::Socket::GetMulticastTimeToLive
  */
-BYTE vislib::net::Socket::GetMulticastTimeToLive(
+uint8_t vislib::net::Socket::GetMulticastTimeToLive(
         const ProtocolFamily pf) const {
-    BYTE retval = 0;
+    uint8_t retval = 0;
     size_t size = sizeof(retval);
 
     switch (pf) {
@@ -398,7 +398,7 @@ vislib::net::IPEndPoint vislib::net::Socket::GetPeerEndPoint(void) const {
  * vislib::net::Socket::GracefulDisconnect
  */
 void vislib::net::Socket::GracefulDisconnect(const bool isClose) {
-    BYTE buffer[4];             // Buffer for receiving remaining data.
+    uint8_t buffer[4];             // Buffer for receiving remaining data.
     
     try {
         /* Signal to server that we will not send anything else. */
@@ -745,7 +745,7 @@ void vislib::net::Socket::SetMulticastLoop(const ProtocolFamily pf,
  * vislib::net::Socket::SetMulticastTimeToLive
  */
 void vislib::net::Socket::SetMulticastTimeToLive(const ProtocolFamily pf, 
-                                                 const BYTE ttl) {
+                                                 const uint8_t ttl) {
     switch (pf) {
         case FAMILY_INET:
             this->SetOption(IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl));

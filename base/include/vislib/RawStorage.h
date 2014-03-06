@@ -103,7 +103,7 @@ namespace vislib {
          * @return A pointer to the begin of the memory block + 'offset' bytes.
          */
         template<class T> inline T *AsAt(const size_t offset) {
-            return reinterpret_cast<T *>(static_cast<BYTE *>(this->data) 
+            return reinterpret_cast<T *>(static_cast<uint8_t *>(this->data) 
                 + offset);
         }
 
@@ -117,7 +117,7 @@ namespace vislib {
          * @return A pointer to the begin of the memory block + 'offset' bytes.
          */
         template<class T> inline const T *AsAt(const size_t offset) const {
-            return reinterpret_cast<T *>(static_cast<BYTE *>(this->data) 
+            return reinterpret_cast<T *>(static_cast<uint8_t *>(this->data) 
                 + offset);
         }
 
@@ -148,7 +148,7 @@ namespace vislib {
          * @return A pointer to the begin of the memory block + 'offset' bytes.
          */
         inline void *At(const size_t offset) {
-            return (static_cast<BYTE *>(this->data) + offset);
+            return (static_cast<uint8_t *>(this->data) + offset);
         }
 
         /**
@@ -160,7 +160,7 @@ namespace vislib {
          * @return A pointer to the begin of the memory block + 'offset' bytes.
          */
         inline const void *At(const size_t offset) const {
-            return (static_cast<BYTE *>(this->data) + offset);
+            return (static_cast<uint8_t *>(this->data) + offset);
         }
 
         /**

@@ -36,7 +36,7 @@ const unsigned int vislib::net::ClusterDiscoveryService::DEFAULT_RESPONSE_CHANCE
 /*
  * vislib::net::ClusterDiscoveryService::MSG_TYPE_USER
  */
-const UINT32 vislib::net::ClusterDiscoveryService::MSG_TYPE_USER = 16;
+const uint32_t vislib::net::ClusterDiscoveryService::MSG_TYPE_USER = 16;
 
 
 /*
@@ -192,7 +192,7 @@ void vislib::net::ClusterDiscoveryService::RemoveListener(
  * vislib::net::ClusterDiscoveryService::SendUserMessage
  */
 unsigned int vislib::net::ClusterDiscoveryService::SendUserMessage(
-        const UINT32 msgType, const void *msgBody, const size_t msgSize) {
+        const uint32_t msgType, const void *msgBody, const size_t msgSize) {
     Message msg;                // The datagram we are going to send.
     unsigned int retval = 0;            // Number of failed communication trials.
 
@@ -220,7 +220,7 @@ unsigned int vislib::net::ClusterDiscoveryService::SendUserMessage(
  * vislib::net::ClusterDiscoveryService::SendUserMessage
  */
 unsigned int vislib::net::ClusterDiscoveryService::SendUserMessage(
-        const PeerHandle& hPeer, const UINT32 msgType, const void *msgBody, 
+        const PeerHandle& hPeer, const uint32_t msgType, const void *msgBody, 
         const size_t msgSize) {
     Message msg;                // The datagram we are going to send.
     unsigned int retval = 0;            // Retval, 0 in case of success.
@@ -327,9 +327,9 @@ DWORD vislib::net::ClusterDiscoveryService::Sender::Run(void *discSvc) {
     THE_ASSERT(cds != NULL);
 
     // Assert expected memory layout of messages.
-    THE_ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(UINT32));
-    THE_ASSERT(reinterpret_cast<BYTE *>(&(request.senderBody)) 
-       == reinterpret_cast<BYTE *>(&request) + 2 * sizeof(UINT32));
+    THE_ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(uint32_t));
+    THE_ASSERT(reinterpret_cast<uint8_t *>(&(request.senderBody)) 
+       == reinterpret_cast<uint8_t *>(&request) + 2 * sizeof(uint32_t));
 
     /* Prepare the socket. */
     try {
@@ -476,9 +476,9 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(void *discSvc) {
     THE_ASSERT(cds != NULL);
 
     // Assert expected message memory layout.
-    THE_ASSERT(sizeof(msg) == MAX_USER_DATA + 2 * sizeof(UINT32));
-    THE_ASSERT(reinterpret_cast<BYTE *>(&(msg.senderBody)) 
-       == reinterpret_cast<BYTE *>(&msg) + 2 * sizeof(UINT32));
+    THE_ASSERT(sizeof(msg) == MAX_USER_DATA + 2 * sizeof(uint32_t));
+    THE_ASSERT(reinterpret_cast<uint8_t *>(&(msg.senderBody)) 
+       == reinterpret_cast<uint8_t *>(&msg) + 2 * sizeof(uint32_t));
 
     /* 
      * Prepare a datagram socket listening for requests on the specified 
@@ -618,7 +618,7 @@ bool vislib::net::ClusterDiscoveryService::Receiver::Terminate(void) {
  */
 void vislib::net::ClusterDiscoveryService::addPeerNode(
         const IPEndPoint& discoveryAddr, const IPEndPoint& address) {
-    INT_PTR idx = 0;            // Index of possible duplicate.
+    intptr_t idx = 0;            // Index of possible duplicate.
     PeerHandle hPeer = NULL;    // Old or new peer node handle.
 
     this->critSect.Lock();
@@ -656,9 +656,9 @@ void vislib::net::ClusterDiscoveryService::addPeerNode(
  * vislib::net::ClusterDiscoveryService::fireUserMessage
  */
 void vislib::net::ClusterDiscoveryService::fireUserMessage(
-        const IPEndPoint& sender, const UINT32 msgType, 
-        const BYTE *msgBody) const {
-    INT_PTR idx = 0;        // Index of sender PeerNode.
+        const IPEndPoint& sender, const uint32_t msgType, 
+        const uint8_t *msgBody) const {
+    intptr_t idx = 0;        // Index of sender PeerNode.
 
     this->critSect.Lock();
     
@@ -695,10 +695,10 @@ bool vislib::net::ClusterDiscoveryService::isValidPeerHandle(
 /*
  * vislib::net::ClusterDiscoveryService::peerFromAddress
  */
-INT_PTR vislib::net::ClusterDiscoveryService::peerFromAddress(
+intptr_t vislib::net::ClusterDiscoveryService::peerFromAddress(
         const IPEndPoint& addr) const {
     // TODO: Think of faster solution.  
-    INT_PTR retval = -1;
+    intptr_t retval = -1;
 
     //this->critSect.Lock();
     for (size_t i = 0; i < this->peerNodes.Count(); i++) {
@@ -716,10 +716,10 @@ INT_PTR vislib::net::ClusterDiscoveryService::peerFromAddress(
 /*
  * vislib::net::ClusterDiscoveryService::peerFromDiscoveryAddr
  */
-INT_PTR vislib::net::ClusterDiscoveryService::peerFromDiscoveryAddr(
+intptr_t vislib::net::ClusterDiscoveryService::peerFromDiscoveryAddr(
         const IPEndPoint& addr) const {
     // TODO: Think of faster solution.  
-    INT_PTR retval = -1;
+    intptr_t retval = -1;
     IPAddress6 peerIP = addr.GetIPAddress6();
 
     //this->critSect.Lock();
@@ -775,7 +775,7 @@ void vislib::net::ClusterDiscoveryService::prepareRequest(void) {
  * vislib::net::ClusterDiscoveryService::prepareUserMessage
  */
 void vislib::net::ClusterDiscoveryService::prepareUserMessage(
-        Message& outMsg, const UINT32 msgType, const void *msgBody, 
+        Message& outMsg, const uint32_t msgType, const void *msgBody, 
         const size_t msgSize) {
 
     /* Check parameters. */
@@ -790,9 +790,9 @@ void vislib::net::ClusterDiscoveryService::prepareUserMessage(
     }
 
     // Assert some stuff.
-    THE_ASSERT(sizeof(outMsg) == MAX_USER_DATA + 2 * sizeof(UINT32));
-    THE_ASSERT(reinterpret_cast<BYTE *>(&(outMsg.userData)) 
-       == reinterpret_cast<BYTE *>(&outMsg) + 2 * sizeof(UINT32));
+    THE_ASSERT(sizeof(outMsg) == MAX_USER_DATA + 2 * sizeof(uint32_t));
+    THE_ASSERT(reinterpret_cast<uint8_t *>(&(outMsg.userData)) 
+       == reinterpret_cast<uint8_t *>(&outMsg) + 2 * sizeof(uint32_t));
     THE_ASSERT(msgType >= MSG_TYPE_USER);
     THE_ASSERT(msgBody != NULL);
     THE_ASSERT(msgSize <= MAX_USER_DATA);
@@ -817,7 +817,7 @@ void vislib::net::ClusterDiscoveryService::prepareUserMessage(
  */
 void vislib::net::ClusterDiscoveryService::removePeerNode(
         const IPEndPoint& address) {
-    INT_PTR idx = 0;
+    intptr_t idx = 0;
     struct sockaddr invalidAddr;
     reinterpret_cast<int&>(invalidAddr) = 0;
     
@@ -849,24 +849,24 @@ void vislib::net::ClusterDiscoveryService::removePeerNode(
 /*
  * vislib::net::ClusterDiscoveryService::MAGIC_NUMBER
  */
-const UINT32 vislib::net::ClusterDiscoveryService::MAGIC_NUMBER 
-    = (static_cast<UINT32>('v') << 0) | (static_cast<UINT32>('c') << 8)
-    | (static_cast<UINT32>('d') << 16) | (static_cast<UINT32>('s') << 24);
+const uint32_t vislib::net::ClusterDiscoveryService::MAGIC_NUMBER 
+    = (static_cast<uint32_t>('v') << 0) | (static_cast<uint32_t>('c') << 8)
+    | (static_cast<uint32_t>('d') << 16) | (static_cast<uint32_t>('s') << 24);
 
 
 /*
  * vislib::net::ClusterDiscoveryService::MSG_TYPE_IAMALIVE
  */
-const UINT32 vislib::net::ClusterDiscoveryService::MSG_TYPE_IAMALIVE = 2;
+const uint32_t vislib::net::ClusterDiscoveryService::MSG_TYPE_IAMALIVE = 2;
 
 
 /*
  * vislib::net::ClusterDiscoveryService::MSG_TYPE_IAMHERE
  */
-const UINT32 vislib::net::ClusterDiscoveryService::MSG_TYPE_IAMHERE = 1;
+const uint32_t vislib::net::ClusterDiscoveryService::MSG_TYPE_IAMHERE = 1;
 
 
 /*
  * vislib::net::ClusterDiscoveryService::MSG_TYPE_SAYONARA
  */
-const UINT32 vislib::net::ClusterDiscoveryService::MSG_TYPE_SAYONARA = 3;
+const uint32_t vislib::net::ClusterDiscoveryService::MSG_TYPE_SAYONARA = 3;

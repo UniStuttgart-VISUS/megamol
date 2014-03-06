@@ -210,8 +210,8 @@ namespace sys {
          * @return The endianness of the machine.
          */
         inline static Endianness SystemEndianness(void) {
-            UINT32 endianTestInt = 0x12345678;
-            UINT8 endianTestBytes[4];
+            uint32_t endianTestInt = 0x12345678;
+            uint8_t endianTestBytes[4];
             ::memcpy(endianTestBytes, &endianTestInt, 4);
             bool machineBigEndian = ((endianTestBytes[0] == 0x12)
                 && (endianTestBytes[1] == 0x34)

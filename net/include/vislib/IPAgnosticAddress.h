@@ -208,7 +208,7 @@ namespace net {
          * @param b4  Byte number 4 of the IP address.
          */
         IPAgnosticAddress(
-            const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4);
+            const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4);
 
         /**
          * Create an IPv6 address from individual bytes. The bytes must be 
@@ -232,10 +232,10 @@ namespace net {
          * @param b16 Byte number 16 of the IP address.
          */
         IPAgnosticAddress(
-            const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
-            const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8,
-            const BYTE b9, const BYTE b10, const BYTE b11, const BYTE b12,
-            const BYTE b13, const BYTE b14, const BYTE b15, const BYTE b16);
+            const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4,
+            const uint8_t b5, const uint8_t b6, const uint8_t b7, const uint8_t b8,
+            const uint8_t b9, const uint8_t b10, const uint8_t b11, const uint8_t b12,
+            const uint8_t b13, const uint8_t b14, const uint8_t b15, const uint8_t b16);
 
         /**
          * Copy ctor.
@@ -317,7 +317,7 @@ namespace net {
          * @throws OutOfRangeException If 'i' is not a legal byte number.
          * @throws IllegalStateException If the address is invalid.
          */
-        BYTE operator [](const int i) const;
+        uint8_t operator [](const int i) const;
 
         /**
          * Assignment.

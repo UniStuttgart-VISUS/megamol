@@ -84,7 +84,7 @@ namespace vislib {
         static const size_t DEFAULT_CAPACITY_INCREMENT;
 
         /** This constant signals an invalid index position. */
-        static const INT_PTR INVALID_POS;
+        static const intptr_t INVALID_POS;
 
         /** 
          * Create an array with the specified initial capacity.
@@ -289,7 +289,7 @@ namespace vislib {
          * @return The index of the first occurrence of 'element' in the array,
          *         or INVALID_POS if the element is not in the array.
          */
-        INT_PTR IndexOf(const T& element, const size_t beginAt = 0) const;
+        intptr_t IndexOf(const T& element, const size_t beginAt = 0) const;
 
         /**
          * Insert 'element' at position 'idx' in the array. All elements behind
@@ -596,7 +596,7 @@ namespace vislib {
      * vislib::Array<T, L, C>::INVALID_POS
      */
     template<class T, class L, class C>
-    const INT_PTR Array<T, L, C>::INVALID_POS = -1;
+    const intptr_t Array<T, L, C>::INVALID_POS = -1;
 
 
     /*
@@ -719,7 +719,7 @@ namespace vislib {
     template<class T, class L, class C>
     bool Array<T, L, C>::Contains(const T& element) const {
         this->Lock();
-        INT_PTR idx = this->IndexOf(element);
+        intptr_t idx = this->IndexOf(element);
         this->Unlock();
         return (idx >= 0);
     }
@@ -810,7 +810,7 @@ namespace vislib {
     template<class T, class L, class C>
     const T * Array<T, L, C>::Find(const T& element) const {
         // TODO: Larger critical section? Would not be safe anyway.
-        INT_PTR idx = this->IndexOf(element);
+        intptr_t idx = this->IndexOf(element);
         return (idx >= 0) ? (this->elements + idx) : NULL;
     }
 
@@ -821,7 +821,7 @@ namespace vislib {
     template<class T, class L, class C>
     T * Array<T, L, C>::Find(const T& element) {
         // TODO: Larger critical section? Would not be safe anyway.
-        INT_PTR idx = this->IndexOf(element);
+        intptr_t idx = this->IndexOf(element);
         return (idx >= 0) ? (this->elements + idx) : NULL;
     }
 
@@ -830,7 +830,7 @@ namespace vislib {
      * vislib::Array<T, L, C>::IndexOf
      */
     template<class T, class L, class C>
-    INT_PTR Array<T, L, C>::IndexOf(const T& element,
+    intptr_t Array<T, L, C>::IndexOf(const T& element,
             const size_t beginAt) const {
         this->Lock();
         for (size_t i = 0; i < this->count; i++) {

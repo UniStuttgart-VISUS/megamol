@@ -539,7 +539,7 @@ namespace vislib {
          *
          * @return A hash code of the string.
          */
-        UINT32 HashCode(void) const;
+        uint32_t HashCode(void) const;
 
         /**
          * Insert 'c' at position 'pos' in the string. 'pos' must be a valid 
@@ -1784,14 +1784,14 @@ namespace vislib {
     /*
      * vislib::String<T>::HashCode
      */
-    template<class T> UINT32 String<T>::HashCode(void) const {
+    template<class T> uint32_t String<T>::HashCode(void) const {
         // DJB2 hash function
-        UINT32 hash = 0;
+        uint32_t hash = 0;
         Char c;
         Char *str = this->data;
 
         while ((c = *str++) != 0) {
-            hash = ((hash << 5) + hash) + static_cast<UINT32>(c);
+            hash = ((hash << 5) + hash) + static_cast<uint32_t>(c);
         }
 
         return hash;

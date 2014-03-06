@@ -50,7 +50,7 @@ vislib::StringA vislib::net::ib::IbvInformation::Port::GetPortGuidA(
     THE_STACK_TRACE;
     NET64 guid = this->GetPortGuid();
     return the::text::string_utility::to_hex_astring(
-        reinterpret_cast<const BYTE *>(&guid), 
+        reinterpret_cast<const uint8_t *>(&guid), 
         sizeof(guid)).c_str();
 }
 
@@ -62,7 +62,7 @@ vislib::StringW vislib::net::ib::IbvInformation::Port::GetPortGuidW(
         void) const {
     THE_STACK_TRACE;
     NET64 guid = this->GetPortGuid();
-    return the::text::string_utility::to_hex_wstring(reinterpret_cast<const BYTE *>(&guid), 
+    return the::text::string_utility::to_hex_wstring(reinterpret_cast<const uint8_t *>(&guid), 
         sizeof(guid)).c_str();
 }
 
@@ -142,7 +142,7 @@ vislib::net::ib::IbvInformation::Port::Port(void) {
  * vislib::net::ib::IbvInformation::Port::Port
  */
 vislib::net::ib::IbvInformation::Port::Port(IWVDevice *device, 
-        const UINT8 port) {
+        const uint8_t port) {
     THE_STACK_TRACE;
     HRESULT hr = S_OK;
 
@@ -203,7 +203,7 @@ vislib::net::ib::IbvInformation::Device::~Device(void) {
 vislib::StringA vislib::net::ib::IbvInformation::Device::GetNodeGuidA(
         void) const {
     THE_STACK_TRACE;
-    return the::text::string_utility::to_hex_astring(reinterpret_cast<const BYTE *>(
+    return the::text::string_utility::to_hex_astring(reinterpret_cast<const uint8_t *>(
         &this->attributes.NodeGuid), sizeof(this->attributes.NodeGuid)).c_str();
 }
 
@@ -214,7 +214,7 @@ vislib::StringA vislib::net::ib::IbvInformation::Device::GetNodeGuidA(
 vislib::StringW vislib::net::ib::IbvInformation::Device::GetNodeGuidW(
         void) const {
     THE_STACK_TRACE;
-    return the::text::string_utility::to_hex_wstring(reinterpret_cast<const BYTE *>(
+    return the::text::string_utility::to_hex_wstring(reinterpret_cast<const uint8_t *>(
         &this->attributes.NodeGuid), sizeof(this->attributes.NodeGuid)).c_str();
 }
 
@@ -240,7 +240,7 @@ vislib::net::ib::IbvInformation::Device::GetPort(const size_t idx) const {
 vislib::StringA 
 vislib::net::ib::IbvInformation::Device::GetSystemImageGuidA(void) const {
     THE_STACK_TRACE;
-    return the::text::string_utility::to_hex_astring(reinterpret_cast<const BYTE *>(
+    return the::text::string_utility::to_hex_astring(reinterpret_cast<const uint8_t *>(
         &this->attributes.SystemImageGuid), 
         sizeof(this->attributes.SystemImageGuid)).c_str();
 }
@@ -253,7 +253,7 @@ vislib::net::ib::IbvInformation::Device::GetSystemImageGuidW
 vislib::StringW 
 vislib::net::ib::IbvInformation::Device::GetSystemImageGuidW(void) const {
     THE_STACK_TRACE;
-    return the::text::string_utility::to_hex_wstring(reinterpret_cast<const BYTE *>(
+    return the::text::string_utility::to_hex_wstring(reinterpret_cast<const uint8_t *>(
         &this->attributes.SystemImageGuid), 
         sizeof(this->attributes.SystemImageGuid)).c_str();
 }
@@ -332,7 +332,7 @@ vislib::net::ib::IbvInformation::Device::Device(IWVProvider *wvProvider,
         throw sys::COMException(hr, __FILE__, __LINE__);
     }
 
-    for (UINT8 i = 0; i < this->attributes.PhysPortCount; i++) {
+    for (uint8_t i = 0; i < this->attributes.PhysPortCount; i++) {
         try {
             this->ports.Add(Port(this->device, i + 1));
         } catch (...) {

@@ -131,12 +131,12 @@ namespace vislib {
          * TODO: Document
          */
         // notice there is no 'int' or 'size_t' since these differ between plattforms
-        inline void Write(UINT8 d) { this->Write(&d, 1); }
-        inline void Write(INT8 d) { this->Write(&d, 1); }
-        inline void Write(UINT16 d) { this->Write(&d, 2); }
-        inline void Write(INT16 d) { this->Write(&d, 2); }
-        inline void Write(UINT32 d) { this->Write(&d, 4); }
-        inline void Write(INT32 d) { this->Write(&d, 4); }
+        inline void Write(uint8_t d) { this->Write(&d, 1); }
+        inline void Write(int8_t d) { this->Write(&d, 1); }
+        inline void Write(uint16_t d) { this->Write(&d, 2); }
+        inline void Write(int16_t d) { this->Write(&d, 2); }
+        inline void Write(uint32_t d) { this->Write(&d, 4); }
+        inline void Write(int32_t d) { this->Write(&d, 4); }
         inline void Write(uint64_t d) { this->Write(&d, 8); }
         inline void Write(int64_t d) { this->Write(&d, 8); }
         inline void Write(float d) { this->Write(&d, 4); }

@@ -72,16 +72,16 @@ namespace sys {
          *
          * @return The initial value of the variable designated by 'address'.
          */
-        THE_FORCE_INLINE static INT32 CompareExchange(volatile INT32 *address,
-                const INT32 exchange, const INT32 comparand) {
+        THE_FORCE_INLINE static int32_t CompareExchange(volatile int32_t *address,
+                const int32_t exchange, const int32_t comparand) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(INT32) == sizeof(LONG));
+            THE_ASSERT(sizeof(int32_t) == sizeof(LONG));
             return ::InterlockedCompareExchange(
                 reinterpret_cast<volatile LONG *>(address), 
                 static_cast<LONG>(exchange),
                 static_cast<LONG>(comparand));
 #else /* _WIN32 */
-            INT32 retval;
+            int32_t retval;
             __asm__ __volatile__ ("lock; cmpxchgl %2, %0"
                 : "=m" (*address), "=a" (retval)
                 : "r" (exchange), "m" (*address), "a" (comparand)
@@ -134,9 +134,9 @@ namespace sys {
          *
          * @return The new value of the variable.
          */
-        THE_FORCE_INLINE static INT32 Decrement(volatile INT32 *address) {
+        THE_FORCE_INLINE static int32_t Decrement(volatile int32_t *address) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(INT32) == sizeof(LONG));
+            THE_ASSERT(sizeof(int32_t) == sizeof(LONG));
             return ::InterlockedDecrement(
                 reinterpret_cast<volatile LONG *>(address));
 #else /* _WIN32 */
@@ -180,15 +180,15 @@ namespace sys {
          *
          * @return The old value of the variable designated by 'address'.
          */
-        THE_FORCE_INLINE static INT32 Exchange(volatile INT32 *address,
-                const INT32 value) {
+        THE_FORCE_INLINE static int32_t Exchange(volatile int32_t *address,
+                const int32_t value) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(INT32) == sizeof(LONG));
+            THE_ASSERT(sizeof(int32_t) == sizeof(LONG));
             return ::InterlockedExchange(
                 reinterpret_cast<volatile LONG *>(address),
-                static_cast<INT32>(value));
+                static_cast<int32_t>(value));
 #else /* _WIN32 */
-            INT32 old;
+            int32_t old;
             do {
                 old = *address;
             } while (Interlocked::CompareExchange(address, value, old) != old);
@@ -254,8 +254,8 @@ namespace sys {
                 reinterpret_cast<int64_t>(value)));
 #else /* #if ((defined(__LP64__) || defined(_LP64) || ... */
             return reinterpret_cast<void *>(Interlocked::Exchange(
-                reinterpret_cast<volatile INT32 *>(address), 
-                reinterpret_cast<INT32>(value)));
+                reinterpret_cast<volatile int32_t *>(address), 
+                reinterpret_cast<int32_t>(value)));
 #endif /* #if ((defined(__LP64__) || defined(_LP64) || ... */
 #endif /* _WIN32 */
         }
@@ -270,15 +270,15 @@ namespace sys {
          * @return Value of variable designated by 'address' prior to the 
          *         operation.
          */
-        THE_FORCE_INLINE static INT32 ExchangeAdd(volatile INT32 *address, 
-                const INT32 value) {
+        THE_FORCE_INLINE static int32_t ExchangeAdd(volatile int32_t *address, 
+                const int32_t value) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(INT32) == sizeof(LONG));
+            THE_ASSERT(sizeof(int32_t) == sizeof(LONG));
             return ::InterlockedExchangeAdd(
                 reinterpret_cast<volatile LONG *>(address),
                 static_cast<LONG>(value));
 #else /* _WIN32 */
-            INT32 retval;
+            int32_t retval;
             __asm__ __volatile__("lock; xaddl %0, %1"
                 : "=r" (retval), "=m" (*address)
                 : "0" (value), "m" (*address)
@@ -329,10 +329,10 @@ namespace sys {
          * @return Value of variable designated by 'address' prior to the 
          *         operation.
          */
-        THE_FORCE_INLINE static INT32 ExchangeSub(volatile INT32 *address, 
-                const INT32 value) {
+        THE_FORCE_INLINE static int32_t ExchangeSub(volatile int32_t *address, 
+                const int32_t value) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(INT32) == sizeof(LONG));
+            THE_ASSERT(sizeof(int32_t) == sizeof(LONG));
             return ::InterlockedExchangeAdd(
                 reinterpret_cast<volatile LONG *>(address), 
                 static_cast<LONG>(-value));
@@ -372,9 +372,9 @@ namespace sys {
          *
          * @return The new value of the variable.
          */
-        THE_FORCE_INLINE static INT32 Increment(volatile INT32 *address) {
+        THE_FORCE_INLINE static int32_t Increment(volatile int32_t *address) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(INT32) == sizeof(LONG));
+            THE_ASSERT(sizeof(int32_t) == sizeof(LONG));
             return ::InterlockedIncrement(
                 reinterpret_cast<volatile LONG *>(address));
 #else /* _WIN32 */

@@ -270,7 +270,7 @@ namespace net {
          * This flag determines whether the thread should close the socket when
          * it exits.
          */
-        static const UINT32 FLAG_IS_CLOSE_SOCKET;
+        static const uint32_t FLAG_IS_CLOSE_SOCKET;
 
         /**
          * This flag determines the termination behaviour of the thread: If set
@@ -278,10 +278,10 @@ namespace net {
          * still tasks in the queue. If false, the queue is emptied immediately
          * on calling terminate.
          */
-        static const UINT32 FLAG_IS_LINGER;
+        static const uint32_t FLAG_IS_LINGER;
 
         /** A bitmask of behaviour flags. */
-        UINT32 flags;
+        uint32_t flags;
 
         /** 
          * This flag determines whether it is possible to add new tasks in

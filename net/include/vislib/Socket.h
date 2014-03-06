@@ -443,7 +443,7 @@ namespace net {
          * @throws IllegalParamException If 'pf' has an unsupported value.
          * @throws SocketException If the operation fails.
          */
-        BYTE GetMulticastTimeToLive(const ProtocolFamily pf) const;
+        uint8_t GetMulticastTimeToLive(const ProtocolFamily pf) const;
 
         /**
          * Answer the deactivation state of the Nagle algorithm for send 
@@ -1191,7 +1191,7 @@ namespace net {
          * @throws IllegalParamException If 'pf' is unsupported.
          * @throws SocketException If the operation fails.
          */
-        void SetMulticastTimeToLive(const ProtocolFamily pf, const BYTE ttl);
+        void SetMulticastTimeToLive(const ProtocolFamily pf, const uint8_t ttl);
 
 //IP_ADD_MEMBERSHIP           yes                      no
 //IP_DROP_MEMBERSHIP          yes                      no

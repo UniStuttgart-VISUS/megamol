@@ -93,64 +93,64 @@ namespace vislib {
             outValue = static_cast<wchar_t>(u);
         }
 
-        virtual void Deserialise(INT8& outValue, 
+        virtual void Deserialise(int8_t& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<INT8>(T::ParseInt(this->value(name)));
+            outValue = static_cast<int8_t>(T::ParseInt(this->value(name)));
         }
 
-        virtual void Deserialise(INT8& outValue, 
+        virtual void Deserialise(int8_t& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<INT8>(T::ParseInt(this->value(name)));
+            outValue = static_cast<int8_t>(T::ParseInt(this->value(name)));
         }
 
-        virtual void Deserialise(UINT8& outValue, 
+        virtual void Deserialise(uint8_t& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<UINT8>(T::ParseInt(this->value(name)));
+            outValue = static_cast<uint8_t>(T::ParseInt(this->value(name)));
         }
 
-        virtual void Deserialise(UINT8& outValue, 
+        virtual void Deserialise(uint8_t& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<UINT8>(T::ParseInt(this->value(name)));
+            outValue = static_cast<uint8_t>(T::ParseInt(this->value(name)));
         }
 
-        virtual void Deserialise(INT16& outValue, 
+        virtual void Deserialise(int16_t& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<INT16>(T::ParseInt(this->value(name)));
+            outValue = static_cast<int16_t>(T::ParseInt(this->value(name)));
         }
 
-        virtual void Deserialise(INT16& outValue, 
+        virtual void Deserialise(int16_t& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<INT16>(T::ParseInt(this->value(name)));
+            outValue = static_cast<int16_t>(T::ParseInt(this->value(name)));
         }
 
-        virtual void Deserialise(UINT16& outValue, 
+        virtual void Deserialise(uint16_t& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<UINT16>(T::ParseInt(this->value(name)));
+            outValue = static_cast<uint16_t>(T::ParseInt(this->value(name)));
         }
 
-        virtual void Deserialise(UINT16& outValue, 
+        virtual void Deserialise(uint16_t& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<UINT16>(T::ParseInt(this->value(name)));
+            outValue = static_cast<uint16_t>(T::ParseInt(this->value(name)));
         }
 
-        virtual void Deserialise(INT32& outValue, 
+        virtual void Deserialise(int32_t& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<INT32>(T::ParseInt(this->value(name)));
+            outValue = static_cast<int32_t>(T::ParseInt(this->value(name)));
         }
 
-        virtual void Deserialise(INT32& outValue, 
+        virtual void Deserialise(int32_t& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<INT32>(T::ParseInt(this->value(name)));
+            outValue = static_cast<int32_t>(T::ParseInt(this->value(name)));
         }
 
-        virtual void Deserialise(UINT32& outValue, 
+        virtual void Deserialise(uint32_t& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<UINT32>(T::ParseUInt64(this->value(name)));
+            outValue = static_cast<uint32_t>(T::ParseUInt64(this->value(name)));
         }
 
-        virtual void Deserialise(UINT32& outValue, 
+        virtual void Deserialise(uint32_t& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<UINT32>(T::ParseUInt64(this->value(name)));
+            outValue = static_cast<uint32_t>(T::ParseUInt64(this->value(name)));
         }
 
         virtual void Deserialise(int64_t& outValue, 
@@ -233,68 +233,68 @@ namespace vislib {
             this->Serialise(static_cast<unsigned int>(value), name);
         }
 
-        virtual void Serialise(const INT8 value,
+        virtual void Serialise(const int8_t value,
                 const char *name = NULL) {
             this->Serialise(static_cast<int>(value), name);
         }
 
-        virtual void Serialise(const INT8 value,
+        virtual void Serialise(const int8_t value,
                 const wchar_t *name) {
             this->Serialise(static_cast<int>(value), name);
         }
 
-        virtual void Serialise(const UINT8 value,
+        virtual void Serialise(const uint8_t value,
                 const char *name = NULL) {
             this->Serialise(static_cast<unsigned int>(value), name);
         }
 
-        virtual void Serialise(const UINT8 value,
+        virtual void Serialise(const uint8_t value,
                 const wchar_t *name) {
             this->Serialise(static_cast<unsigned int>(value), name);
         }
 
-        virtual void Serialise(const INT16 value,
+        virtual void Serialise(const int16_t value,
                 const char *name = NULL) {
             this->Serialise(static_cast<int>(value), name);
         }
 
-        virtual void Serialise(const INT16 value,
+        virtual void Serialise(const int16_t value,
                 const wchar_t *name) {
             this->Serialise(static_cast<int>(value), name);
         }
 
-        virtual void Serialise(const UINT16 value,
+        virtual void Serialise(const uint16_t value,
                 const char *name = NULL) {
             this->Serialise(static_cast<unsigned int>(value), name);
         }
 
-        virtual void Serialise(const UINT16 value,
+        virtual void Serialise(const uint16_t value,
                 const wchar_t *name) {
             this->Serialise(static_cast<unsigned int>(value), name);
         }
 
-        virtual void Serialise(const INT32 value,
+        virtual void Serialise(const int32_t value,
                 const char *name = NULL) {
             vislib::StringA s;
             s.Format("%d", value);
             this->Serialise(s, name);
         }
 
-        virtual void Serialise(const INT32 value,
+        virtual void Serialise(const int32_t value,
                 const wchar_t *name) {
             vislib::StringA s;
             s.Format("%d", value);
             this->Serialise(s, name);
         }
 
-        virtual void Serialise(const UINT32 value,
+        virtual void Serialise(const uint32_t value,
                 const char *name = NULL) {
             vislib::StringA s;
             s.Format("%u", value);
             this->Serialise(s, name);
         }
 
-        virtual void Serialise(const UINT32 value,
+        virtual void Serialise(const uint32_t value,
                 const wchar_t *name) {
             vislib::StringA s;
             s.Format("%u", value);

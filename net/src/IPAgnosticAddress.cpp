@@ -187,7 +187,7 @@ vislib::net::IPAgnosticAddress::IPAgnosticAddress(const struct in6_addr& address
  * vislib::net::IPAgnosticAddress::IPAgnosticAddress
  */
 vislib::net::IPAgnosticAddress::IPAgnosticAddress(
-        const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4)
+        const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4)
         : v4(NULL), v6(NULL) {
     THE_STACK_TRACE;
     this->v4 = new IPAddress(b1, b2, b3, b4);
@@ -198,10 +198,10 @@ vislib::net::IPAgnosticAddress::IPAgnosticAddress(
  * vislib::net::IPAgnosticAddress::IPAgnosticAddress
  */
 vislib::net::IPAgnosticAddress::IPAgnosticAddress(
-        const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
-        const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8,
-        const BYTE b9, const BYTE b10, const BYTE b11, const BYTE b12,
-        const BYTE b13, const BYTE b14, const BYTE b15, const BYTE b16)
+        const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4,
+        const uint8_t b5, const uint8_t b6, const uint8_t b7, const uint8_t b8,
+        const uint8_t b9, const uint8_t b10, const uint8_t b11, const uint8_t b12,
+        const uint8_t b13, const uint8_t b14, const uint8_t b15, const uint8_t b16)
         : v4(NULL), v6(NULL) {
     THE_STACK_TRACE;
     this->v6 = new IPAddress6(b1, b2, b3, b4, b5, b6, b7, b8,
@@ -306,7 +306,7 @@ vislib::StringW vislib::net::IPAgnosticAddress::ToStringW(void) const {
 /*
  * vislib::net::IPAgnosticAddress::operator []
  */
-BYTE vislib::net::IPAgnosticAddress::operator [](const int i) const {
+uint8_t vislib::net::IPAgnosticAddress::operator [](const int i) const {
     THE_STACK_TRACE;
 
     if (this->IsV4()) {

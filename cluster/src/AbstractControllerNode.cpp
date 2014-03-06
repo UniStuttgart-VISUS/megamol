@@ -157,7 +157,7 @@ vislib::net::cluster::AbstractControllerNode::AbstractControllerNode(
  * vislib::net::cluster::AbstractControllerNode::onMessageReceived
  */
 bool vislib::net::cluster::AbstractControllerNode::onMessageReceived(
-        const Socket& src, const unsigned int msgId, const BYTE *body, 
+        const Socket& src, const unsigned int msgId, const uint8_t *body, 
         const size_t cntBody) {
     return false;
 }
@@ -213,7 +213,7 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
 
     BlockHeader *blkHdr1 = msg.AsAt<BlockHeader>(sizeof(MessageHeader));
     blkHdr1->BlockId = MSGID_CAM_LIMITS;
-    blkHdr1->BlockLength = static_cast<UINT32>(msg.GetSize()
+    blkHdr1->BlockLength = static_cast<uint32_t>(msg.GetSize()
         - sizeof(MessageHeader)
         - sizeof(BlockHeader));
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Packaged %u B serialised camera parameter "
@@ -224,7 +224,7 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
      * will trigger evaluation against limits on client side).
      */
     THE_ASSERT(msg.GetSize() >= serialiser.Offset());
-    serialiser.SetOffset(static_cast<UINT32>(msg.GetSize()
+    serialiser.SetOffset(static_cast<uint32_t>(msg.GetSize()
         + sizeof(BlockHeader)));
     this->parameters->Serialise(serialiser);
 
@@ -232,7 +232,7 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
     BlockHeader *blkHdr2 = msg.AsAt<BlockHeader>(sizeof(MessageHeader)
         + sizeof(BlockHeader) + blkHdr1->BlockLength);
     blkHdr2->BlockId = MSGID_CAM_SERIALISEDCAMPARAMS;
-    blkHdr2->BlockLength = static_cast<UINT32>(msg.GetSize()
+    blkHdr2->BlockLength = static_cast<uint32_t>(msg.GetSize()
         - sizeof(MessageHeader)
         - 2 * sizeof(BlockHeader)
         - blkHdr1->BlockLength);
@@ -246,7 +246,7 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
     MessageHeader *msgHdr = msg.As<MessageHeader>();
     InitialiseMessageHeader(*msgHdr);
     msgHdr->Header.BlockId = MSGID_MULTIPLE;
-    msgHdr->Header.BlockLength = static_cast<UINT32>(msg.GetSize() 
+    msgHdr->Header.BlockLength = static_cast<uint32_t>(msg.GetSize() 
         - sizeof(MessageHeader));
     THE_ASSERT(msgHdr->Header.BlockLength 
         == sizeof(BlockHeader) + blkHdr1->BlockLength
@@ -254,9 +254,9 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
 
     /* Post the message. */
     if (peerId != NULL) {
-        this->sendToPeer(*peerId, msg.As<BYTE>(), msg.GetSize());
+        this->sendToPeer(*peerId, msg.As<uint8_t>(), msg.GetSize());
     } else {
-        this->sendToEachPeer(msg.As<BYTE>(), msg.GetSize());
+        this->sendToEachPeer(msg.As<uint8_t>(), msg.GetSize());
     }
 }
 

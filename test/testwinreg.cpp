@@ -60,7 +60,7 @@ void TestWinReg(void) {
 
     // testing integer value set/get/query
     ::AssertEqual<size_t>("testA now has no values", sc1.GetValueNamesW().Count(), 0);
-    UINT32 u32_1, u32_2;
+    uint32_t u32_1, u32_2;
     uint64_t u64_1;
     u32_1 = 0x12345678;
     ::AssertEqual<DWORD>("Value u1 set", sc1.SetValue("u1", u32_1), ERROR_SUCCESS);
@@ -68,11 +68,11 @@ void TestWinReg(void) {
     ::AssertTrue("testA now has one value", sc1.GetValueNamesW()[0].Equals(L"u1"));
     ::AssertEqual<RegistryKey::RegValueType>("u1 is of right type", sc1.GetValueType(L"u1"), RegistryKey::REGVAL_DWORD);
     ::AssertEqual<DWORD>("Getting value u1", sc1.GetValue("u1", u64_1), ERROR_SUCCESS);
-    u32_2 = static_cast<UINT32>(u64_1);
+    u32_2 = static_cast<uint32_t>(u64_1);
     ::AssertEqual("Value u1 correct", u32_1, u32_2);
-    ::AssertEqual<DWORD>("Getting value u1", sc1.GetValue("u1", reinterpret_cast<void*>(&u32_2), sizeof(UINT32)), ERROR_SUCCESS);
+    ::AssertEqual<DWORD>("Getting value u1", sc1.GetValue("u1", reinterpret_cast<void*>(&u32_2), sizeof(uint32_t)), ERROR_SUCCESS);
     ::AssertEqual("Value u1 correct", u32_1, u32_2);
-    ::AssertEqual<size_t>("Size of u1 correct", sc1.GetValueSize("u1"), sizeof(UINT32));
+    ::AssertEqual<size_t>("Size of u1 correct", sc1.GetValueSize("u1"), sizeof(uint32_t));
     ::AssertEqual<DWORD>("Value u1 removed", sc1.DeleteValue("u1"), ERROR_SUCCESS);
     ::AssertEqual<size_t>("testA now has no values", sc1.GetValueNamesW().Count(), 0);
 

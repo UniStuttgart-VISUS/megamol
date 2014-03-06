@@ -99,40 +99,40 @@ namespace sys {
         virtual void Deserialise(wchar_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(INT8& outValue, 
+        virtual void Deserialise(int8_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(INT8& outValue, 
+        virtual void Deserialise(int8_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(UINT8& outValue, 
+        virtual void Deserialise(uint8_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(UINT8& outValue, 
+        virtual void Deserialise(uint8_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(INT16& outValue, 
+        virtual void Deserialise(int16_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(INT16& outValue, 
+        virtual void Deserialise(int16_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(UINT16& outValue, 
+        virtual void Deserialise(uint16_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(UINT16& outValue, 
+        virtual void Deserialise(uint16_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(INT32& outValue, 
+        virtual void Deserialise(int32_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(INT32& outValue, 
+        virtual void Deserialise(int32_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(UINT32& outValue, 
+        virtual void Deserialise(uint32_t& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(UINT32& outValue, 
+        virtual void Deserialise(uint32_t& outValue, 
             const wchar_t *name);
 
         virtual void Deserialise(int64_t& outValue, 
@@ -226,40 +226,40 @@ namespace sys {
         virtual void Serialise(const wchar_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const INT8 value,
+        virtual void Serialise(const int8_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const INT8 value,
+        virtual void Serialise(const int8_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const UINT8 value,
+        virtual void Serialise(const uint8_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const UINT8 value,
+        virtual void Serialise(const uint8_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const INT16 value,
+        virtual void Serialise(const int16_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const INT16 value,
+        virtual void Serialise(const int16_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const UINT16 value,
+        virtual void Serialise(const uint16_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const UINT16 value,
+        virtual void Serialise(const uint16_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const INT32 value,
+        virtual void Serialise(const int32_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const INT32 value,
+        virtual void Serialise(const int32_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const UINT32 value,
+        virtual void Serialise(const uint32_t value,
             const char *name = NULL);
 
-        virtual void Serialise(const UINT32 value,
+        virtual void Serialise(const uint32_t value,
             const wchar_t *name);
 
         virtual void Serialise(const int64_t value,
@@ -323,8 +323,8 @@ namespace sys {
 
         /**
          * Generic convenience method for deserialisation of integral types 
-         * that are at most as large as a DWORD (UINT32). The method just 
-         * delegates the job to the UINT32 deserialisation. The intent of 
+         * that are at most as large as a DWORD (uint32_t). The method just 
+         * delegates the job to the uint32_t deserialisation. The intent of 
          * this template is not to duplicate the implementation of 
          * serialisation methods for small types. It can, however, not be used
          * for all types. E.g. bool deserialisation produces a compiler warning
@@ -350,9 +350,9 @@ namespace sys {
         template<class T, class R, class C>
         inline void deserialiseAsDword(T& outValue, const C *name) {
             THE_ASSERT(sizeof(T) <= sizeof(DWORD));
-            THE_ASSERT(sizeof(DWORD) == sizeof(UINT32));
+            THE_ASSERT(sizeof(DWORD) == sizeof(uint32_t));
             THE_ASSERT(sizeof(DWORD) == sizeof(R));
-            UINT32 value;
+            uint32_t value;
             this->Deserialise(value, name);
             outValue = static_cast<T>(*reinterpret_cast<R *>(&value));
         }
@@ -376,7 +376,7 @@ namespace sys {
          */
         template<class T, class C>
         inline void deserialiseSignedAsDword(T& outValue, const C *name) {
-            this->deserialiseAsDword<T, INT32, C>(outValue, name);
+            this->deserialiseAsDword<T, int32_t, C>(outValue, name);
         }
 
         /**
@@ -398,7 +398,7 @@ namespace sys {
          */
         template<class T, class C>
         inline void deserialiseUnsignedAsDword(T& outValue, const C *name) {
-            this->deserialiseAsDword<T, UINT32, C>(outValue, name);
+            this->deserialiseAsDword<T, uint32_t, C>(outValue, name);
         }
 
         /**
@@ -438,14 +438,14 @@ namespace sys {
 
         /**
          * Generic serialisation of integral types that are at most as large
-         * as a DWORD (UINT32). The method just delegates the job to the UINT32
+         * as a DWORD (uint32_t). The method just delegates the job to the uint32_t
          * serialisation. The intent of this template is not to duplicate the
          * implementation of serialisation methods for small types.
          *
          * The template parameters have the following meaning:
          * T: An integral type of the target variable, which must be at most as
-         *    large as a UINT32.
-         * R: Before casting the value to UINT32, its address is 
+         *    large as a uint32_t.
+         * R: Before casting the value to uint32_t, its address is 
          *    reinterpret_casted to a pointer to R. This allows serialising
          *    signed integral and floating point variables using this method.
          * C: char or wchar_t
@@ -458,9 +458,9 @@ namespace sys {
         template<class T, class R, class C>
         inline void serialiseAsDword0(const T& value, const C *name) {
             THE_ASSERT(sizeof(T) <= sizeof(DWORD));
-            THE_ASSERT(sizeof(DWORD) == sizeof(UINT32));
+            THE_ASSERT(sizeof(DWORD) == sizeof(uint32_t));
             THE_ASSERT(sizeof(T) == sizeof(R));
-            UINT32 v = static_cast<UINT32>(*reinterpret_cast<const R *>(
+            uint32_t v = static_cast<uint32_t>(*reinterpret_cast<const R *>(
                 &value));
             this->Serialise(v, name);
         }

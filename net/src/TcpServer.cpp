@@ -41,19 +41,19 @@ void vislib::net::TcpServer::Listener::OnServerStopped(void) throw() {
 /*
  * vislib::net::TcpServer::FLAGS_REUSE_ADDRESS
  */
-const UINT32 vislib::net::TcpServer::FLAGS_REUSE_ADDRESS = 0x0002;
+const uint32_t vislib::net::TcpServer::FLAGS_REUSE_ADDRESS = 0x0002;
 
 
 /*
  * vislib::net::TcpServer::FLAGS_SHARE_ADDRESS
  */
-const UINT32 vislib::net::TcpServer::FLAGS_SHARE_ADDRESS = 0x0001;
+const uint32_t vislib::net::TcpServer::FLAGS_SHARE_ADDRESS = 0x0001;
 
 
 /*
  * vislib::net::TcpServer::TcpServer
  */
-vislib::net::TcpServer::TcpServer(const UINT32 flags) : flags(flags) {
+vislib::net::TcpServer::TcpServer(const uint32_t flags) : flags(flags) {
     // Nothing to do.
 }
 
@@ -199,9 +199,9 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
 /*
  * vislib::net::TcpServer::SetFlags
  */
-void vislib::net::TcpServer::SetFlags(UINT32 flags) {
-    vislib::sys::Interlocked::Exchange(reinterpret_cast<INT32*>(&this->flags),
-        static_cast<INT32>(flags));
+void vislib::net::TcpServer::SetFlags(uint32_t flags) {
+    vislib::sys::Interlocked::Exchange(reinterpret_cast<int32_t*>(&this->flags),
+        static_cast<int32_t>(flags));
 }
 
 

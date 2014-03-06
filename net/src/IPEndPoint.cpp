@@ -222,7 +222,7 @@ vislib::net::IPAddress vislib::net::IPEndPoint::GetIPAddress4(void) const {
         case AF_INET6: {
             const struct in6_addr *addr = &this->asV6().sin6_addr;
             if (IN6_IS_ADDR_V4MAPPED(addr) || IN6_IS_ADDR_V4COMPAT(addr)) {
-                const BYTE *bytes = reinterpret_cast<const BYTE *>(addr);
+                const uint8_t *bytes = reinterpret_cast<const uint8_t *>(addr);
                 return IPAddress(bytes[12], bytes[13], bytes[14], bytes[15]);
             } else {
                 throw IllegalStateException("The IPEndPoint is an IPv6 end "

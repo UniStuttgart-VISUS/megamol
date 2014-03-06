@@ -464,7 +464,7 @@ DWORD vislib::sys::RegistryKey::GetValue(
     if (errcode != ERROR_SUCCESS) return errcode;
     outData.AssertSize(size);
     errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
-        outData.As<BYTE>(), &size);
+        outData.As<uint8_t>(), &size);
     return errcode;
 }
 
@@ -480,7 +480,7 @@ DWORD vislib::sys::RegistryKey::GetValue(
     if (errcode != ERROR_SUCCESS) return errcode;
     outData.AssertSize(size);
     errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
-        outData.As<BYTE>(), &size);
+        outData.As<uint8_t>(), &size);
     return errcode;
 }
 
@@ -493,7 +493,7 @@ DWORD vislib::sys::RegistryKey::GetValue(
         size_t dataSize) const {
     DWORD size = static_cast<DWORD>(dataSize);
     DWORD errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
-        static_cast<BYTE*>(outData), &size);
+        static_cast<uint8_t*>(outData), &size);
     return errcode;
 }
 
@@ -506,7 +506,7 @@ DWORD vislib::sys::RegistryKey::GetValue(
         size_t dataSize) const {
     DWORD size = static_cast<DWORD>(dataSize);
     DWORD errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
-        static_cast<BYTE*>(outData), &size);
+        static_cast<uint8_t*>(outData), &size);
     return errcode;
 }
 
@@ -525,7 +525,7 @@ DWORD vislib::sys::RegistryKey::GetValue(
         return ERROR_INVALID_DATATYPE;
     }
     errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
-        reinterpret_cast<BYTE*>(outStr.AllocateBuffer(size)), &size);
+        reinterpret_cast<uint8_t*>(outStr.AllocateBuffer(size)), &size);
     return errcode;
 }
 
@@ -544,7 +544,7 @@ DWORD vislib::sys::RegistryKey::GetValue(
         return ERROR_INVALID_DATATYPE;
     }
     errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
-        reinterpret_cast<BYTE*>(outStr.AllocateBuffer(size)), &size);
+        reinterpret_cast<uint8_t*>(outStr.AllocateBuffer(size)), &size);
     return errcode;
 }
 
@@ -596,7 +596,7 @@ DWORD vislib::sys::RegistryKey::GetValue(
 
     } else if (type == REG_MULTI_SZ) {
         errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
-            reinterpret_cast<BYTE*>(outStrs.AllocateBuffer(size)), &size);
+            reinterpret_cast<uint8_t*>(outStrs.AllocateBuffer(size)), &size);
 
     } else {
         errcode = ERROR_INVALID_DATATYPE;
@@ -625,7 +625,7 @@ DWORD vislib::sys::RegistryKey::GetValue(
 
     } else if (type == REG_MULTI_SZ) {
         errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
-            reinterpret_cast<BYTE*>(outStrs.AllocateBuffer(size)), &size);
+            reinterpret_cast<uint8_t*>(outStrs.AllocateBuffer(size)), &size);
 
     } else {
         errcode = ERROR_INVALID_DATATYPE;
@@ -725,24 +725,24 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const vislib::StringA& name, UINT32& outVal) const {
+        const vislib::StringA& name, uint32_t& outVal) const {
     DWORD size;
     DWORD type;
     DWORD errcode = ::RegQueryValueExA(this->key, name, NULL, &type, NULL,
         NULL);
     if (errcode != ERROR_SUCCESS) return errcode;
     if (type == REG_DWORD) {
-        size = sizeof(UINT32);
+        size = sizeof(uint32_t);
         errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
-            reinterpret_cast<BYTE*>(&outVal), &size);
+            reinterpret_cast<uint8_t*>(&outVal), &size);
 
     } else if (type == REG_QWORD) {
         uint64_t val;
         size = sizeof(uint64_t);
         errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
-            reinterpret_cast<BYTE*>(&val), &size);
+            reinterpret_cast<uint8_t*>(&val), &size);
         if (errcode == ERROR_SUCCESS) {
-            outVal = static_cast<UINT32>(val);
+            outVal = static_cast<uint32_t>(val);
         }
 
     } else {
@@ -757,24 +757,24 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const vislib::StringW& name, UINT32& outVal) const {
+        const vislib::StringW& name, uint32_t& outVal) const {
     DWORD size;
     DWORD type;
     DWORD errcode = ::RegQueryValueExW(this->key, name, NULL, &type, NULL,
         NULL);
     if (errcode != ERROR_SUCCESS) return errcode;
     if (type == REG_DWORD) {
-        size = sizeof(UINT32);
+        size = sizeof(uint32_t);
         errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
-            reinterpret_cast<BYTE*>(&outVal), &size);
+            reinterpret_cast<uint8_t*>(&outVal), &size);
 
     } else if (type == REG_QWORD) {
         uint64_t val;
         size = sizeof(uint64_t);
         errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
-            reinterpret_cast<BYTE*>(&val), &size);
+            reinterpret_cast<uint8_t*>(&val), &size);
         if (errcode == ERROR_SUCCESS) {
-            outVal = static_cast<UINT32>(val);
+            outVal = static_cast<uint32_t>(val);
         }
 
     } else {
@@ -796,10 +796,10 @@ DWORD vislib::sys::RegistryKey::GetValue(
         NULL);
     if (errcode != ERROR_SUCCESS) return errcode;
     if (type == REG_DWORD) {
-        UINT32 val;
-        size = sizeof(UINT32);
+        uint32_t val;
+        size = sizeof(uint32_t);
         errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
-            reinterpret_cast<BYTE*>(&val), &size);
+            reinterpret_cast<uint8_t*>(&val), &size);
         if (errcode == ERROR_SUCCESS) {
             outVal = static_cast<uint64_t>(val);
         }
@@ -807,7 +807,7 @@ DWORD vislib::sys::RegistryKey::GetValue(
     } else if (type == REG_QWORD) {
         size = sizeof(uint64_t);
         errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
-            reinterpret_cast<BYTE*>(&outVal), &size);
+            reinterpret_cast<uint8_t*>(&outVal), &size);
 
     } else {
         errcode = ERROR_INVALID_DATATYPE;
@@ -828,10 +828,10 @@ DWORD vislib::sys::RegistryKey::GetValue(
         NULL);
     if (errcode != ERROR_SUCCESS) return errcode;
     if (type == REG_DWORD) {
-        UINT32 val;
-        size = sizeof(UINT32);
+        uint32_t val;
+        size = sizeof(uint32_t);
         errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
-            reinterpret_cast<BYTE*>(&val), &size);
+            reinterpret_cast<uint8_t*>(&val), &size);
         if (errcode == ERROR_SUCCESS) {
             outVal = static_cast<uint64_t>(val);
         }
@@ -839,7 +839,7 @@ DWORD vislib::sys::RegistryKey::GetValue(
     } else if (type == REG_QWORD) {
         size = sizeof(uint64_t);
         errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
-            reinterpret_cast<BYTE*>(&outVal), &size);
+            reinterpret_cast<uint8_t*>(&outVal), &size);
 
     } else {
         errcode = ERROR_INVALID_DATATYPE;
@@ -954,7 +954,7 @@ DWORD vislib::sys::RegistryKey::SetValue(
 DWORD vislib::sys::RegistryKey::SetValue(
         const vislib::StringA& name, const void* data, size_t size) {
     return ::RegSetValueExA(this->key, name, NULL, REG_BINARY,
-        reinterpret_cast<const BYTE*>(data), static_cast<DWORD>(size));
+        reinterpret_cast<const uint8_t*>(data), static_cast<DWORD>(size));
 }
 
 
@@ -964,7 +964,7 @@ DWORD vislib::sys::RegistryKey::SetValue(
 DWORD vislib::sys::RegistryKey::SetValue(
         const vislib::StringW& name, const void* data, size_t size) {
     return ::RegSetValueExW(this->key, name, NULL, REG_BINARY,
-        reinterpret_cast<const BYTE*>(data), static_cast<DWORD>(size));
+        reinterpret_cast<const uint8_t*>(data), static_cast<DWORD>(size));
 }
 
 
@@ -976,7 +976,7 @@ DWORD vislib::sys::RegistryKey::SetValue(
         bool expandable) {
     return ::RegSetValueExA(this->key, name, NULL,
         expandable ? REG_EXPAND_SZ : REG_SZ,
-        reinterpret_cast<const BYTE*>(str.PeekBuffer()), str.Length() + 1);
+        reinterpret_cast<const uint8_t*>(str.PeekBuffer()), str.Length() + 1);
 }
 
 
@@ -988,7 +988,7 @@ DWORD vislib::sys::RegistryKey::SetValue(
         bool expandable) {
     return ::RegSetValueExW(this->key, name, NULL,
         expandable ? REG_EXPAND_SZ : REG_SZ,
-        reinterpret_cast<const BYTE*>(str.PeekBuffer()),
+        reinterpret_cast<const uint8_t*>(str.PeekBuffer()),
         (str.Length() + 1) * sizeof(wchar_t));
 }
 
@@ -1019,7 +1019,7 @@ DWORD vislib::sys::RegistryKey::SetValue(
 DWORD vislib::sys::RegistryKey::SetValue(
         const vislib::StringA& name, const vislib::MultiSzA& strs) {
     return ::RegSetValueExA(this->key, name, NULL, REG_MULTI_SZ,
-        reinterpret_cast<const BYTE*>(strs.PeekBuffer()),
+        reinterpret_cast<const uint8_t*>(strs.PeekBuffer()),
         static_cast<DWORD>(strs.Length()));
 }
 
@@ -1030,7 +1030,7 @@ DWORD vislib::sys::RegistryKey::SetValue(
 DWORD vislib::sys::RegistryKey::SetValue(
         const vislib::StringW& name, const vislib::MultiSzW& strs) {
     return ::RegSetValueExW(this->key, name, NULL, REG_MULTI_SZ,
-        reinterpret_cast<const BYTE*>(strs.PeekBuffer()),
+        reinterpret_cast<const uint8_t*>(strs.PeekBuffer()),
         static_cast<DWORD>(strs.Length() * sizeof(wchar_t)));
 }
 
@@ -1121,8 +1121,8 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const vislib::StringA& name, INT32 val) {
-    return this->SetValue(name, static_cast<UINT32>(val));
+        const vislib::StringA& name, int32_t val) {
+    return this->SetValue(name, static_cast<uint32_t>(val));
 }
 
 
@@ -1130,8 +1130,8 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const vislib::StringW& name, INT32 val) {
-    return this->SetValue(name, static_cast<UINT32>(val));
+        const vislib::StringW& name, int32_t val) {
+    return this->SetValue(name, static_cast<uint32_t>(val));
 }
 
 
@@ -1139,9 +1139,9 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const vislib::StringA& name, UINT32 val) {
+        const vislib::StringA& name, uint32_t val) {
     return ::RegSetValueExA(this->key, name, NULL, REG_DWORD,
-        reinterpret_cast<const BYTE*>(&val), sizeof(UINT32));
+        reinterpret_cast<const uint8_t*>(&val), sizeof(uint32_t));
 }
 
 
@@ -1149,9 +1149,9 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const vislib::StringW& name, UINT32 val) {
+        const vislib::StringW& name, uint32_t val) {
     return ::RegSetValueExW(this->key, name, NULL, REG_DWORD,
-        reinterpret_cast<const BYTE*>(&val), sizeof(UINT32));
+        reinterpret_cast<const uint8_t*>(&val), sizeof(uint32_t));
 }
 
 
@@ -1179,7 +1179,7 @@ DWORD vislib::sys::RegistryKey::SetValue(
 DWORD vislib::sys::RegistryKey::SetValue(
         const vislib::StringA& name, uint64_t val) {
     return ::RegSetValueExA(this->key, name, NULL, REG_QWORD,
-        reinterpret_cast<const BYTE*>(&val), sizeof(uint64_t));
+        reinterpret_cast<const uint8_t*>(&val), sizeof(uint64_t));
 }
 
 
@@ -1189,7 +1189,7 @@ DWORD vislib::sys::RegistryKey::SetValue(
 DWORD vislib::sys::RegistryKey::SetValue(
         const vislib::StringW& name, uint64_t val) {
     return ::RegSetValueExW(this->key, name, NULL, REG_QWORD,
-        reinterpret_cast<const BYTE*>(&val), sizeof(uint64_t));
+        reinterpret_cast<const uint8_t*>(&val), sizeof(uint64_t));
 }
 
 

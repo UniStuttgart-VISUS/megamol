@@ -29,9 +29,9 @@ vislib::GUID::GUID(void) {
 /*
  * vislib::GUID::GUID
  */
-vislib::GUID::GUID(const BYTE b[16]) {
+vislib::GUID::GUID(const uint8_t b[16]) {
     THE_ASSERT(b != NULL);
-    THE_ASSERT(sizeof(this->guid) == 16 * sizeof(BYTE));
+    THE_ASSERT(sizeof(this->guid) == 16 * sizeof(uint8_t));
 #ifdef _WIN32
     ::memcpy(&this->guid, b, sizeof(this->guid));
 #else /* _WIN32 */
@@ -43,12 +43,12 @@ vislib::GUID::GUID(const BYTE b[16]) {
 /*
  * vislib::GUID::GUID
  */
-vislib::GUID::GUID(const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
-        const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8,
-        const BYTE b9, const BYTE b10, const BYTE b11, const BYTE b12,
-        const BYTE b13, const BYTE b14, const BYTE b15, const BYTE b16) {
+vislib::GUID::GUID(const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4,
+        const uint8_t b5, const uint8_t b6, const uint8_t b7, const uint8_t b8,
+        const uint8_t b9, const uint8_t b10, const uint8_t b11, const uint8_t b12,
+        const uint8_t b13, const uint8_t b14, const uint8_t b15, const uint8_t b16) {
 #ifdef _WIN32
-#define ASSIGN_BYTE(i) (reinterpret_cast<BYTE *>(&this->guid))[i - 1] = b##i
+#define ASSIGN_BYTE(i) (reinterpret_cast<uint8_t *>(&this->guid))[i - 1] = b##i
 #else /* _WIN32 */
 #define ASSIGN_BYTE(i) (this->guid)[i - 1] = b##i
 #endif /* _WIN32 */
@@ -75,25 +75,25 @@ vislib::GUID::GUID(const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
 /*
  * vislib::GUID::GUID
  */
-vislib::GUID::GUID(const UINT32 i, const UINT16 s1, const UINT16 s2,
-        const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
-        const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8) {
+vislib::GUID::GUID(const uint32_t i, const uint16_t s1, const uint16_t s2,
+        const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4,
+        const uint8_t b5, const uint8_t b6, const uint8_t b7, const uint8_t b8) {
 #ifdef _WIN32
-    BYTE *g = reinterpret_cast<BYTE *>(&this->guid);
+    uint8_t *g = reinterpret_cast<uint8_t *>(&this->guid);
 #else /* _WIN32 */
-    BYTE *g = this->guid;
+    uint8_t *g = this->guid;
 #endif /* _WIN32 */
-    const BYTE *in = reinterpret_cast<const BYTE *>(&i);
+    const uint8_t *in = reinterpret_cast<const uint8_t *>(&i);
     g[0] = in[0];
     g[1] = in[1];
     g[2] = in[2];
     g[3] = in[3];
 
-    in = reinterpret_cast<const BYTE *>(&s1);
+    in = reinterpret_cast<const uint8_t *>(&s1);
     g[4] = in[0];
     g[5] = in[1];
 
-    in = reinterpret_cast<const BYTE *>(&s2);
+    in = reinterpret_cast<const uint8_t *>(&s2);
     g[6] = in[0];
     g[7] = in[1];
 
@@ -112,29 +112,29 @@ vislib::GUID::GUID(const UINT32 i, const UINT16 s1, const UINT16 s2,
 /*
  * vislib::GUID::GUID
  */
-vislib::GUID::GUID(const UINT32 i, const UINT16 s1, const UINT16 s2,
-        const BYTE b[8]) {
+vislib::GUID::GUID(const uint32_t i, const uint16_t s1, const uint16_t s2,
+        const uint8_t b[8]) {
     THE_ASSERT(b != NULL);
 #ifdef _WIN32
-    BYTE *g = reinterpret_cast<BYTE *>(&this->guid);
+    uint8_t *g = reinterpret_cast<uint8_t *>(&this->guid);
 #else /* _WIN32 */
-    BYTE *g = this->guid;
+    uint8_t *g = this->guid;
 #endif /* _WIN32 */
-    const BYTE *in = reinterpret_cast<const BYTE *>(&i);
+    const uint8_t *in = reinterpret_cast<const uint8_t *>(&i);
     g[0] = in[0];
     g[1] = in[1];
     g[2] = in[2];
     g[3] = in[3];
 
-    in = reinterpret_cast<const BYTE *>(&s1);
+    in = reinterpret_cast<const uint8_t *>(&s1);
     g[4] = in[0];
     g[5] = in[1];
 
-    in = reinterpret_cast<const BYTE *>(&s2);
+    in = reinterpret_cast<const uint8_t *>(&s2);
     g[6] = in[0];
     g[7] = in[1];
 
-    ::memcpy(g + 8, b, 8 * sizeof(BYTE));
+    ::memcpy(g + 8, b, 8 * sizeof(uint8_t));
 }
 
 
@@ -179,9 +179,9 @@ bool vislib::GUID::Create(const bool doNotUseMacAddress) {
  */
 bool vislib::GUID::IsZero(void) const {
 #ifdef _WIN32
-    const BYTE *g = reinterpret_cast<const BYTE *>(&this->guid);
+    const uint8_t *g = reinterpret_cast<const uint8_t *>(&this->guid);
 #else /* _WIN32 */
-    const BYTE *g = this->guid;
+    const uint8_t *g = this->guid;
 #endif /* _WIN32 */
 
     for (size_t i = 0; i < sizeof(this->guid); i++) {
@@ -223,19 +223,19 @@ bool vislib::GUID::Parse(const StringW& str) {
 /*
  * vislib::GUID::HashCode
  */
-UINT32 vislib::GUID::HashCode(void) const {
+uint32_t vislib::GUID::HashCode(void) const {
     // DJB2 hash function
-    UINT32 hash = 0;
-    BYTE c;
+    uint32_t hash = 0;
+    uint8_t c;
 #ifdef _WIN32
-    const BYTE *str = reinterpret_cast<const BYTE *>(&this->guid);
+    const uint8_t *str = reinterpret_cast<const uint8_t *>(&this->guid);
 #else /* _WIN32 */
-    const BYTE *str = this->guid;
+    const uint8_t *str = this->guid;
 #endif /* _WIN32 */
 
     for (size_t i = 0; i < sizeof(this->guid); ++i) {
         c = str[i];
-        hash = ((hash << 5) + hash) + static_cast<UINT32>(c);
+        hash = ((hash << 5) + hash) + static_cast<uint32_t>(c);
     }
 
     return hash;

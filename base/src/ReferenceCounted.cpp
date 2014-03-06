@@ -15,7 +15,7 @@
 /*
  * vislib::ReferenceCounted::AddRef
  */
-UINT32 vislib::ReferenceCounted::AddRef(void) {
+uint32_t vislib::ReferenceCounted::AddRef(void) {
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Add reference to 0x%p, "
         "reference count is now %u.\n", this, this->cntRefs + 1);
     return ++this->cntRefs;
@@ -24,9 +24,9 @@ UINT32 vislib::ReferenceCounted::AddRef(void) {
 /*
  * vislib::ReferenceCounted::Release
  */
-UINT32 vislib::ReferenceCounted::Release(void) {
+uint32_t vislib::ReferenceCounted::Release(void) {
     THE_ASSERT(this->cntRefs > 0);
-    UINT32 retval = --this->cntRefs;
+    uint32_t retval = --this->cntRefs;
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Released object 0x%p, "
         "reference count is now %u.\n", this, this->cntRefs);
     if (this->cntRefs == 0) {

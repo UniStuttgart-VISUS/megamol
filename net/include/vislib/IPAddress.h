@@ -184,7 +184,7 @@ namespace net {
          *
          * @throws OutOfRangeException If 'i' is not a legal byte number.
          */
-        BYTE operator [](const int i) const;
+        uint8_t operator [](const int i) const;
 
         /**
          * Assignment operator.

@@ -41,7 +41,7 @@ public:
     virtual void OnUserMessage(vislib::net::cluster::DiscoveryService& src,
         const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer, 
         const bool isClusterMember,
-        const UINT32 msgType, const BYTE *msgBody) throw();
+        const uint32_t msgType, const uint8_t *msgBody) throw();
 
     virtual DWORD Run(void);
 

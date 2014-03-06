@@ -13,7 +13,7 @@
 
 void TestInterlocked(void) {
     using vislib::sys::Interlocked;
-    INT32 hugo = 0;
+    int32_t hugo = 0;
     void *heinz = NULL;
     void *horst = &hugo;
 

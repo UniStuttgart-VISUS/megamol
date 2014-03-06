@@ -247,7 +247,7 @@ void TestBitmapPainter(void) {
     BitmapImage img(200, 200, BitmapImage::TemplateByteRGB);
     BitmapPainter draw(&img);
 
-    draw.SetColour<BYTE, BYTE, BYTE>(127, 92, 64);
+    draw.SetColour<uint8_t, uint8_t, uint8_t>(127, 92, 64);
     draw.Clear();
 
     vislib::Array<Point> polygon;
@@ -259,17 +259,17 @@ void TestBitmapPainter(void) {
             static_cast<int>(99.5 + s * 40.0),
             static_cast<int>(99.5 - c * 40.0)));
     }
-    draw.SetColour<BYTE, BYTE, BYTE>(200, 0, 0);
+    draw.SetColour<uint8_t, uint8_t, uint8_t>(200, 0, 0);
     draw.FillPolygon(polygon);
 
-    draw.SetColour<BYTE, BYTE, BYTE>(0, 127, 255);
+    draw.SetColour<uint8_t, uint8_t, uint8_t>(0, 127, 255);
     draw.SetPixel(99, 100);
     draw.SetPixel(100, 100);
     draw.SetPixel(101, 100);
     draw.SetPixel(100, 99);
     draw.SetPixel(100, 101);
 
-    draw.SetColour<BYTE, BYTE, BYTE>(0, 200, 0);
+    draw.SetColour<uint8_t, uint8_t, uint8_t>(0, 200, 0);
     a = 0.0;
     for (int stp = 0; stp < 40; stp++, a += 2.0 * M_PI / double(40)) {
         double c = cos(a);

@@ -47,7 +47,7 @@
     }                                                                          \
                                                                                \
     retval = (::RegSetValueEx##strType(hKeySvc, VALNAMEDESC##strType, 0,       \
-        REG_SZ, reinterpret_cast<const BYTE *>(desc.PeekBuffer()),             \
+        REG_SZ, reinterpret_cast<const uint8_t *>(desc.PeekBuffer()),             \
         desc.Length() * CharTraits##strType::CharSize()) == ERROR_SUCCESS);    \
                                                                                \
     ::RegCloseKey(hKeyServices);                                               \
