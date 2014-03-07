@@ -159,6 +159,13 @@ public:
     float GetTotalSurfArea();
 
     /**
+     * Compute the total surface area of all non-corrupt triangles.
+     *
+     * @return The total area of all valid triangles
+     */
+    float GetTotalValidSurfArea();
+
+    /**
      * Flag corrupt triangles in the current mesh.
      * TODO
      *
@@ -210,6 +217,8 @@ public:
      */
     bool InitVtxAttribVBO(size_t vertexCnt);
 
+    bool InitCorruptFlagVBO(size_t vertexCnt);
+
 
     /**
      * Integrate scalar value (given per vertex in value_D) over surface area.
@@ -231,7 +240,21 @@ public:
      *
      * @return The integral value
      */
+    float IntVtxPathOverValidSurfArea();
+
+    /**
+     * Integrate scalar value (given per vertex in value_D) over surface area.
+     *
+     * @return The integral value
+     */
     float IntVtxAttribOverSurfArea();
+
+    /**
+     * Integrate scalar value (given per vertex in value_D) over surface area.
+     *
+     * @return The integral value
+     */
+    float IntVtxAttribOverValidSurfArea();
 
     /**
      * Integrate scalar value over corrupt surface area by using virtual
@@ -338,6 +361,32 @@ public:
             unsigned int gvfIt,
             bool trackPath,
             bool recomputeGVF); // TODO
+
+
+    /**
+     * TODO Only for benchmarking
+     */
+    bool MorphToVolumeTwoWayGVFBM(
+            float *volumeSource_D,
+            float *volumeTarget_D,
+            const unsigned int *cellStatesSource_D,
+            const unsigned int *cellStatesTarget_D,
+            int3 volDim,
+            float3 volOrg,
+            float3 volDelta,
+            float isovalue,
+            InterpolationMode interpMode,
+            size_t maxIt,
+            float surfMappedMinDisplScl,
+            float springStiffness,
+            float forceScl,
+            float externalForcesWeight,
+            float gvfScl,
+            unsigned int gvfIt,
+            bool trackPath,
+            bool recomputeGVF,
+            float &t_gvf,
+            float &t_map); // TODO
 
     /**
      * TODO

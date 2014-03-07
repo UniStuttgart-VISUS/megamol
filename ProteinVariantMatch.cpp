@@ -16,6 +16,9 @@
 // Toggle more detailed output messages
 #define VERBOSE
 
+// Toggle benchmarking of the mapping
+#define BENCHMARK
+
 #include "stdafx.h"
 #include "ProteinVariantMatch.h"
 
@@ -77,6 +80,7 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
         fittingModeSlot("rmsMode", "RMS fitting mode"),
         singleFrameIdxSlot("singleFrame", "Idx of the single frame"),
         maxVariantsSlot("maxVariants", "..." ),
+        omitCorruptTrianglesSlot("omitCorruptTriangles", "Omit corrupt triangles"),
         /* Parameters for surface mapping */
         surfMapMaxItSlot("surfmap::maxIt", "Number of iterations when mapping the mesh"),
         surfMapInterpolModeSlot("surfmap::Interpolation", "Interpolation method used for external forces calculation"),
@@ -89,6 +93,7 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
         surfRegSpringStiffnessSlot("surfreg::stiffness", "Stiffness of the internal springs"),
         surfRegExternalForcesWeightSlot("surfreg::externalForcesWeight", "Weight of the external forces"),
         surfRegForcesSclSlot("surfreg::forcesScl", "Scaling of overall force"),
+
         /* Quicksurf parameters */
         /// Parameter slot for atom radius scaling
         qsRadSclSlot("quicksurf::qsRadScl","..."),
@@ -122,6 +127,11 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
     this->maxVariants = 10;
     this->maxVariantsSlot.SetParameter(new core::param::IntParam(1));
     this->MakeSlotAvailable(&this->maxVariantsSlot);
+
+    // Parameter for label size
+    this->omitCorruptTriangles = true;
+    this->omitCorruptTrianglesSlot.SetParameter(new core::param::BoolParam(true));
+    this->MakeSlotAvailable(&this->omitCorruptTrianglesSlot);
 
 
     /* Global mapping parameters */
@@ -508,8 +518,11 @@ bool ProteinVariantMatch::getMatrixData(core::Call& call) {
 
     if (this->matchRMSD.Count() != this->nVariants*this->nVariants) {
         this->matchSurfacePotential.SetCount(this->nVariants*this->nVariants);
+        this->matchSurfacePotentialCorrupt.SetCount(this->nVariants*this->nVariants);
         this->matchSurfacePotentialSign.SetCount(this->nVariants*this->nVariants);
+        this->matchSurfacePotentialSignCorrupt.SetCount(this->nVariants*this->nVariants);
         this->matchMeanVertexPath.SetCount(this->nVariants*this->nVariants);
+        this->matchMeanVertexPathCorrupt.SetCount(this->nVariants*this->nVariants);
         this->matchHausdorffDistance.SetCount(this->nVariants*this->nVariants);
         this->matchRMSD.SetCount(this->nVariants*this->nVariants);
 #pragma omp for
@@ -549,15 +562,27 @@ bool ProteinVariantMatch::getMatrixData(core::Call& call) {
     dc->SetVariantCnt(this->nVariants);
     switch(this->theheuristic) {
     case SURFACE_POTENTIAL :
-        dc->SetMatch(this->matchSurfacePotential.PeekElements());
+        if (this->omitCorruptTriangles) {
+            dc->SetMatch(this->matchSurfacePotential.PeekElements());
+        } else {
+            dc->SetMatch(this->matchSurfacePotentialCorrupt.PeekElements());
+        }
         dc->SetMatchRange(this->minMatchSurfacePotentialVal, this->maxMatchSurfacePotentialVal);
         break;
     case SURFACE_POTENTIAL_SIGN :
-        dc->SetMatch(this->matchSurfacePotentialSign.PeekElements());
+        if (this->omitCorruptTriangles) {
+            dc->SetMatch(this->matchSurfacePotentialSign.PeekElements());
+        } else {
+            dc->SetMatch(this->matchSurfacePotentialSignCorrupt.PeekElements());
+        }
         dc->SetMatchRange(this->minMatchSurfacePotentialSignVal, this->maxMatchSurfacePotentialSignVal);
         break;
     case MEAN_VERTEX_PATH :
-        dc->SetMatch(this->matchMeanVertexPath.PeekElements());
+        if (this->omitCorruptTriangles) {
+            dc->SetMatch(this->matchMeanVertexPath.PeekElements());
+        } else {
+            dc->SetMatch(this->matchMeanVertexPathCorrupt.PeekElements());
+        }
         dc->SetMatchRange(this->minMatchMeanVertexPathVal, this->maxMatchMeanVertexPathVal);
         break;
     case HAUSDORFF_DIST :
@@ -850,8 +875,25 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
         return false;
     }
 
+#ifdef BENCHMARK
+    // Define benchmark vars
+    uint nComp=0;         // Number of comparisons (needed for computing avg)
+    uint nVox=0;          // Number of voxels
+    //uint nAtoms=0;        // Number of atoms
+    uint nVertices=0;     // Number of vertices
+    float t_vol=0;        // Time for volume
+    float t_mesh=0;       // Time for mesh extraction and regularization
+    float t_gvf=0;        // Time for GVF diffusion process
+    float t_map=0;        // Time for the mapping deformation, includes GVF
+    float t_subdiv=0;     // Time for the subdivision
+    float t_backtrack=0;  // Time for the back tracking of new vertices
+    float t_met=0;        // Time to compute metrics
+    float t_sum=0;        // Time for the whole process
+#endif // ifdef BENCHMARK
+
     // Loop through all variantsPotentialVal
     for (unsigned int i = 0; i < this->nVariants; ++i) {
+//        for (unsigned int i = 0; i < 1; ++i) {
 
         molCall->SetFrameID(i, true); // Set frame id and force flag
         if (!(*molCall)(MolecularDataCall::CallForGetExtent)) {
@@ -919,6 +961,10 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 
         // Loop through all variants
         for (unsigned int j = 0; j < this->nVariants; ++j) {
+
+#ifdef BENCHMARK
+            nComp++;
+#endif // ifdef BENCHMARK
 
 #if defined(VERBOSE)
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
@@ -1017,6 +1063,14 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             }
             centroid /= static_cast<float>(posCnt);
 
+#ifdef BENCHMARK
+            float dtBM_ms;
+            cudaEvent_t eventBM1, eventBM2;
+            cudaEventCreate(&eventBM1);
+            cudaEventCreate(&eventBM2);
+            cudaEventRecord(eventBM1, 0); // Start time measurement
+#endif // ifdef BENCHMARK
+
 //            printf("centroid %f %f %f\n",
 //                    centroid.GetX(),
 //                    centroid.GetY(),
@@ -1109,6 +1163,15 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             cudaEventRecord(event1, 0);
 #endif // COMPUTE_RUNTIME
 
+#ifdef BENCHMARK
+            cudaEventRecord(eventBM2, 0); // Stop time measurement
+            cudaEventSynchronize(eventBM1);
+            cudaEventSynchronize(eventBM2);
+            cudaEventElapsedTime(&dtBM_ms, eventBM1, eventBM2);
+            t_vol += dtBM_ms; // Update volume computation time
+            cudaEventRecord(eventBM1, 0); // Start time measurement
+#endif // ifdef BENCHMARK
+
             DeformableGPUSurfaceMT surfStart, surfEnd, surfTarget;
 
             // Get vertex positions based on the level set
@@ -1141,6 +1204,13 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 
                 return false;
             }
+
+#ifdef BENCHMARK
+    // Update vars
+    nVox += this->volDim.x*this->volDim.y*this->volDim.z;  // Number of voxels
+    nVertices += surfStart.GetVertexCnt();                 // Number of vertices
+#endif // ifdef BENCHMARK
+
 //            surfStart.PrintCubeStates((volDim.x-1)*(volDim.y-1)*(volDim.z-1));
 
 //            // DEBUG Print voltarget_D
@@ -1237,6 +1307,14 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                 return false;
             }
 
+#ifdef BENCHMARK
+            cudaEventRecord(eventBM2, 0); // Stop time measurement
+            cudaEventSynchronize(eventBM1);
+            cudaEventSynchronize(eventBM2);
+            cudaEventElapsedTime(&dtBM_ms, eventBM1, eventBM2);
+            t_mesh += dtBM_ms; // Update volume computation time
+#endif // ifdef BENCHMARK
+
 //            // DEBUG print positions of regularized surface
 //            surfStart.PrintVertexBuffer(15);
 //            // END DEBUG
@@ -1276,6 +1354,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 
 //            surfTarget.PrintCubeStates((volDim.x-1)*(volDim.y-1)*(volDim.z-1));
 
+#ifndef BENCHMARK
             // Morph end surface to its final position using two-way gradient
             // vector flow
             if (!surfEnd.MorphToVolumeTwoWayGVF(
@@ -1299,6 +1378,43 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                     true)) {
                 return false;
             }
+#else // ifndef BENCHMARK
+            // Morph end surface to its final position using two-way gradient
+            // vector flow
+            float t_map_tmp;
+            float t_gvf_tmp;
+            if (!surfEnd.MorphToVolumeTwoWayGVFBM(
+                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                    ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
+                    surfEnd.PeekCubeStates(),
+                    surfTarget.PeekCubeStates(),
+                    this->volDim,
+                    this->volOrg,
+                    this->volDelta,
+                    this->qsIsoVal,
+                    this->surfMapInterpolMode,
+                    this->surfMapMaxIt,
+                    this->qsGridDelta/100.0f*this->surfMapForcesScl,
+                    this->surfMapSpringStiffness,
+                    this->surfMapForcesScl,
+                    this->surfMapExternalForcesWeight,
+                    1.0f,
+                    50,
+                    true,
+                    true,
+                    t_gvf_tmp,
+                    t_map_tmp)) {
+                return false;
+            }
+
+
+#endif // ifndef BENCHMARK
+
+#ifdef BENCHMARK
+            t_map += t_map_tmp; // Update volume computation time
+            t_gvf += t_gvf_tmp; // Update gvf computation time
+            cudaEventRecord(eventBM1, 0); // Stop time measurement
+#endif // ifdef BENCHMARK
 
 //            printf("volOrg %f %f %f\n", volOrg.x, volOrg.y, volOrg.z);
 //            printf("volDelta %f %f %f\n", volDelta.x, volDelta.y, volDelta.z);
@@ -1312,7 +1428,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             // target mesh enough
             const uint maxSubdivLevel = 2;
             const uint subdivSubLevel = 5;
-            const uint deformIt = 25;
+            const uint deformIt = 50;
             int newTris;
             for (uint i = 0; i < maxSubdivLevel; ++i) {
 //                printf("SUBDIV #%i\n", i);
@@ -1346,11 +1462,11 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                 // Perform morphing
                 // Morph surface #2 to shape #1 using Two-Way-GVF
 
-                if (!surfEnd.MorphToVolumeTwoWayGVF( // TODO Do not compute GVF every time
+                if (!surfEnd.MorphToVolumeTwoWayGVFSubdiv(
                         ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
                         ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
                         surfStart.PeekCubeStates(),
-                        surfEnd.PeekCubeStates(),
+                        surfTarget.PeekCubeStates(),
                         this->volDim,
                         this->volOrg,
                         this->volDelta,
@@ -1361,8 +1477,8 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                         this->surfMapSpringStiffness,
                         this->surfMapForcesScl,
                         this->surfMapExternalForcesWeight,
-                        0.1f,
-                        50,  // TODO Change back to 30 or so?
+                        1.0f, // GVF scl, not used atm
+                        50,   // GVF iterations
                         false,
                         false)) {
 
@@ -1373,6 +1489,14 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                     return false;
                 }
             }
+
+#ifdef BENCHMARK
+            cudaEventRecord(eventBM2, 0); // Stop time measurement
+            cudaEventSynchronize(eventBM1);
+            cudaEventSynchronize(eventBM2);
+            cudaEventElapsedTime(&dtBM_ms, eventBM1, eventBM2);
+            t_subdiv += dtBM_ms; // Update volume computation time
+#endif // ifdef BENCHMARK
 
 
 #ifdef COMPUTE_RUNTIME
@@ -1385,20 +1509,23 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             cudaEventRecord(event1, 0);
 #endif // COMPUTE_RUNTIME
 
-            // Compute surface area
-            float surfArea = surfEnd.GetTotalSurfArea();
-            printf("Surface area %f, vertexCnt %u\n", surfArea, surfEnd.GetVertexCnt());
+            if (!surfEnd.FlagCorruptTriangles(
+                    ((CUDAQuickSurf*)this->cudaqsurf0)->getMap(),
+                    surfTarget.PeekCubeStates(),
+                    volDim,
+                    volOrg,
+                    volDelta,
+                    this->qsIsoVal)) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                         "%s: could not flag corrupt triangles",
+                         this->ClassName());
 
-            /* Compute different metrics on a per-vertex basis */
-
-            // Compute texture coordinates
-            Mat3f rmsRotInv(this->rmsRotation);
-            if (!rmsRotInv.Invert()) {
-                printf("Could not invert rotation matrix\n");
                 return false;
             }
 
-            // 3. Compute mean vertex path
+#ifdef BENCHMARK
+            cudaEventRecord(eventBM1, 0); // Stop time measurement
+#endif // ifdef BENCHMARK
 
             // Compute uncertainty for new vertices
             // Update uncertainty VBO for new vertices
@@ -1414,9 +1541,36 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                 return false;
             }
 
+#ifdef BENCHMARK
+            cudaEventRecord(eventBM2, 0); // Stop time measurement
+            cudaEventSynchronize(eventBM1);
+            cudaEventSynchronize(eventBM2);
+            cudaEventElapsedTime(&dtBM_ms, eventBM1, eventBM2);
+            t_backtrack += dtBM_ms; // Update volume computation time
+            cudaEventRecord(eventBM1, 0); // Stop time measurement
+#endif // ifdef BENCHMARK
+
+            // Compute surface area
+            float validSurfArea = surfEnd.GetTotalValidSurfArea();
+            float surfArea = surfEnd.GetTotalSurfArea();
+//            printf("Surface area %f, vertexCnt %u\n", surfArea, surfEnd.GetVertexCnt());
+
+            /* Compute different metrics on a per-vertex basis */
+
+            // Compute texture coordinates
+            Mat3f rmsRotInv(this->rmsRotation);
+            if (!rmsRotInv.Invert()) {
+                printf("Could not invert rotation matrix\n");
+                return false;
+            }
+
+            // 3. Compute mean vertex path
+
+            float validMeanVertexPath = surfEnd.IntVtxPathOverValidSurfArea();
             float meanVertexPath = surfEnd.IntVtxPathOverSurfArea();
 
-            this->matchMeanVertexPath[i*this->nVariants+j] = meanVertexPath/surfArea;
+            this->matchMeanVertexPath[i*this->nVariants+j] = validMeanVertexPath/validSurfArea;
+            this->matchMeanVertexPathCorrupt[i*this->nVariants+j] = meanVertexPath/surfArea;
 
             //            if (i != j) {
             this->minMatchMeanVertexPathVal =
@@ -1452,10 +1606,12 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             }
 
             // Integrate over surface area and write to matrix
+            float validMeanPotentialDiff = surfEnd.IntVtxAttribOverValidSurfArea();
             float meanPotentialDiff = surfEnd.IntVtxAttribOverSurfArea();
 
             //            printf("Surface area %f\, potentialDiff %f, meanPotentialDiff %f\n", surfArea, meanPotentialDiff, meanPotentialDiff/surfArea);
-            this->matchSurfacePotential[i*this->nVariants+j] = meanPotentialDiff/surfArea;
+            this->matchSurfacePotential[i*this->nVariants+j] = validMeanPotentialDiff/validSurfArea;
+            this->matchSurfacePotentialCorrupt[i*this->nVariants+j] = meanPotentialDiff/surfArea;
 
 
             //            if (i !=j) {
@@ -1485,8 +1641,10 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                 return false;
             }
 
+            float validMeanPotentialSignDiff = surfEnd.IntVtxAttribOverValidSurfArea();
             float meanPotentialSignDiff = surfEnd.IntVtxAttribOverSurfArea();
-            this->matchSurfacePotentialSign[i*this->nVariants+j] = meanPotentialSignDiff/surfArea;
+            this->matchSurfacePotentialSign[i*this->nVariants+j] = validMeanPotentialSignDiff/validSurfArea;
+            this->matchSurfacePotentialSignCorrupt[i*this->nVariants+j] = meanPotentialSignDiff/surfArea;
 
             this->minMatchSurfacePotentialSignVal =
                     std::min(this->minMatchSurfacePotentialSignVal, this->matchSurfacePotentialSign[this->nVariants*i+j]);
@@ -1514,9 +1672,33 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             // }
 #endif // defined(OUTPUT_PROGRESS)
 
+#ifdef BENCHMARK
+            cudaEventRecord(eventBM2, 0); // Stop time measurement
+            cudaEventSynchronize(eventBM1);
+            cudaEventSynchronize(eventBM2);
+            cudaEventElapsedTime(&dtBM_ms, eventBM1, eventBM2);
+            t_met += dtBM_ms; // Update volume computation time
+#endif // ifdef BENCHMARK
+
             surfStart.Release();
             surfEnd.Release();
             surfTarget.Release();
+
+#ifdef BENCHMARK
+            // Print current avg values
+            printf("*** benchmark ***\n");
+            printf("  nVox        : %i\n", (int)((float)(nVox)/static_cast<float>(nComp)));
+            printf("  nVtx        : %i\n", (int)((float)(nVertices)/static_cast<float>(nComp)));
+            printf("  t_vol       : %f\n", t_vol/static_cast<float>(nComp));
+            printf("  t_mesh      : %f\n", t_mesh/static_cast<float>(nComp));
+            printf("  t_gvf       : %f\n", t_gvf/static_cast<float>(nComp));
+            printf("  t_map       : %f\n", t_map/static_cast<float>(nComp));
+            printf("  t_subdiv    : %f\n", t_subdiv/static_cast<float>(nComp));
+            printf("  t_backtrack : %f\n", t_backtrack/static_cast<float>(nComp));
+            printf("  t_met       : %f\n", t_met/static_cast<float>(nComp));
+            printf("  t_sum       : %f\n",
+                (t_vol+t_mesh+t_map+t_subdiv+t_backtrack+t_met)/static_cast<float>(nComp));
+#endif // ifdef BENCHMARK
         }
     }
 
@@ -1525,6 +1707,17 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             "%s: time for matching surfaces of %u variants %f sec", this->ClassName(),
             this->nVariants,(double(clock()-t)/double(CLOCKS_PER_SEC)));
 #endif // defined(USE_TIMER)
+
+//        // DEBUG Print matrix values
+//        printf("Variant count %u\n", this->nVariants);
+//        printf("Mean vertex path:\n");
+//        for (size_t i = 0; i < this->nVariants; ++i) {
+//            for (size_t j = 0; j < this->nVariants; ++j) {
+//                printf("%.2f ", this->matchMeanVertexPath[i*this->nVariants+j]);
+//            }
+//            printf("\n");
+//        }
+//        // END DEBUG
 
     return true;
 }
@@ -1745,6 +1938,12 @@ void ProteinVariantMatch::updatParams() {
     if (this->maxVariantsSlot.IsDirty()) {
         this->maxVariants = this->maxVariantsSlot.Param<core::param::IntParam>()->Value();
         this->maxVariantsSlot.ResetDirty();
+    }
+
+    // Omit corrupt triangles
+    if (this->omitCorruptTrianglesSlot.IsDirty()) {
+        this->omitCorruptTriangles = this->omitCorruptTrianglesSlot.Param<core::param::BoolParam>()->Value();
+        this->omitCorruptTrianglesSlot.ResetDirty();
     }
 
 
