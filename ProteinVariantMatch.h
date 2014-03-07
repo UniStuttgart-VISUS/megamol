@@ -340,6 +340,10 @@ private:
     megamol::core::param::ParamSlot qsIsoValSlot;
     float qsIsoVal;
 
+    /// Maximum number of iterations when mapping the mesh
+    core::param::ParamSlot omitCorruptTrianglesSlot;
+    bool omitCorruptTriangles;
+
     /* Variant matching */
 
     /// TODO
@@ -353,6 +357,7 @@ private:
 
     /// TODO
     vislib::Array<float> matchSurfacePotential;
+    vislib::Array<float> matchSurfacePotentialCorrupt;
 
     /// The minimum match value
     float minMatchSurfacePotentialVal;
@@ -362,6 +367,7 @@ private:
 
     /// TODO
     vislib::Array<float> matchSurfacePotentialSign;
+    vislib::Array<float> matchSurfacePotentialSignCorrupt;
 
     /// The minimum match value
     float minMatchSurfacePotentialSignVal;
@@ -371,6 +377,7 @@ private:
 
     /// TODO
     vislib::Array<float> matchMeanVertexPath;
+    vislib::Array<float> matchMeanVertexPathCorrupt;
 
     /// The minimum match value
     float minMatchMeanVertexPathVal;
