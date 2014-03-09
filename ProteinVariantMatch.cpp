@@ -154,6 +154,7 @@ ProteinVariantMatch::ProteinVariantMatch(void) : Module() ,
     // Parameter for the RMS fitting mode
     this->fittingMode = RMS_ALL;
     param::EnumParam *rms = new core::param::EnumParam(int(this->fittingMode));
+    rms->SetTypePair(RMS_NONE, "None");
     rms->SetTypePair(RMS_ALL, "All");
     rms->SetTypePair(RMS_BACKBONE, "Backbone");
     rms->SetTypePair(RMS_C_ALPHA, "C alpha");
@@ -878,17 +879,43 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 #ifdef BENCHMARK
     // Define benchmark vars
     uint nComp=0;         // Number of comparisons (needed for computing avg)
+
     uint nVox=0;          // Number of voxels
-    //uint nAtoms=0;        // Number of atoms
+    uint nVoxMin=0;          // Number of voxels
+    uint nVoxMax=0;          // Number of voxels
+
     uint nVertices=0;     // Number of vertices
+    uint nVerticesMin=0;     // Number of vertices
+    uint nVerticesMax=0;     // Number of vertices
+
     float t_vol=0;        // Time for volume
+    float t_volMin=0;        // Time for volume
+    float t_volMax=0;        // Time for volume
+
     float t_mesh=0;       // Time for mesh extraction and regularization
+    float t_meshMin=0;       // Time for mesh extraction and regularization
+    float t_meshMax=0;       // Time for mesh extraction and regularization
+
     float t_gvf=0;        // Time for GVF diffusion process
+    float t_gvfMin=0;        // Time for GVF diffusion process
+    float t_gvfMax=0;        // Time for GVF diffusion process
+
     float t_map=0;        // Time for the mapping deformation, includes GVF
+    float t_mapMin=0;        // Time for the mapping deformation, includes GVF
+    float t_mapMax=0;        // Time for the mapping deformation, includes GVF
+
     float t_subdiv=0;     // Time for the subdivision
+    float t_subdivMin=0;     // Time for the subdivision
+    float t_subdivMax=0;     // Time for the subdivision
+
     float t_backtrack=0;  // Time for the back tracking of new vertices
+    float t_backtrackMin=0;  // Time for the back tracking of new vertices
+    float t_backtrackMax=0;  // Time for the back tracking of new vertices
+
     float t_met=0;        // Time to compute metrics
-    float t_sum=0;        // Time for the whole process
+    float t_metMin=0;        // Time to compute metrics
+    float t_metMax=0;        // Time to compute metrics
+
 #endif // ifdef BENCHMARK
 
     // Loop through all variantsPotentialVal
@@ -1101,18 +1128,20 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                     std::max(this->maxMatchRMSDVal, this->matchRMSD[this->nVariants*i+j]);
 
             // Rotate/translate positions
+            if (this->fittingMode != RMS_NONE) {
 #pragma omp parallel for
-            for (int a = 0; a < static_cast<int>(particleCnt1); ++a) {
+                for (int a = 0; a < static_cast<int>(particleCnt1); ++a) {
 
-                Vec3f pos(this->atomPosFitted.Peek()[4*a+0],
-                          this->atomPosFitted.Peek()[4*a+1],
-                          this->atomPosFitted.Peek()[4*a+2]);
-                pos -= centroid;
-                pos = this->rmsRotation*pos;
-                pos += this->rmsTranslation;
-                this->atomPosFitted.Peek()[4*a+0] = pos.X();
-                this->atomPosFitted.Peek()[4*a+1] = pos.Y();
-                this->atomPosFitted.Peek()[4*a+2] = pos.Z();
+                    Vec3f pos(this->atomPosFitted.Peek()[4*a+0],
+                            this->atomPosFitted.Peek()[4*a+1],
+                            this->atomPosFitted.Peek()[4*a+2]);
+                    pos -= centroid;
+                    pos = this->rmsRotation*pos;
+                    pos += this->rmsTranslation;
+                    this->atomPosFitted.Peek()[4*a+0] = pos.X();
+                    this->atomPosFitted.Peek()[4*a+1] = pos.Y();
+                    this->atomPosFitted.Peek()[4*a+2] = pos.Z();
+                }
             }
 
 //            printf("CALL 1 frame %u\n", molCall->FrameID());
@@ -1169,6 +1198,15 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             cudaEventSynchronize(eventBM2);
             cudaEventElapsedTime(&dtBM_ms, eventBM1, eventBM2);
             t_vol += dtBM_ms; // Update volume computation time
+
+            if (nComp == 1) { // First comparison
+                t_volMin = dtBM_ms;
+                t_volMax = dtBM_ms;
+            } else {
+                t_volMin = std::min(dtBM_ms, t_volMin);
+                t_volMax = std::max(dtBM_ms, t_volMax);
+            }
+
             cudaEventRecord(eventBM1, 0); // Start time measurement
 #endif // ifdef BENCHMARK
 
@@ -1208,7 +1246,21 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 #ifdef BENCHMARK
     // Update vars
     nVox += this->volDim.x*this->volDim.y*this->volDim.z;  // Number of voxels
+    if (nComp == 1) { // First comparison
+        nVoxMin = this->volDim.x*this->volDim.y*this->volDim.z;
+        nVoxMax = this->volDim.x*this->volDim.y*this->volDim.z;
+    } else {
+        nVoxMin = std::min((uint)(this->volDim.x*this->volDim.y*this->volDim.z), nVoxMin);
+        nVoxMax = std::max((uint)(this->volDim.x*this->volDim.y*this->volDim.z), nVoxMax);
+    }
     nVertices += surfStart.GetVertexCnt();                 // Number of vertices
+    if (nComp == 1) { // First comparison
+        nVerticesMin = surfStart.GetVertexCnt();
+        nVerticesMax = surfStart.GetVertexCnt();
+    } else {
+        nVerticesMin = std::min((uint)(surfStart.GetVertexCnt()), nVerticesMin);
+        nVerticesMax = std::max((uint)(surfStart.GetVertexCnt()), nVerticesMax);
+    }
 #endif // ifdef BENCHMARK
 
 //            surfStart.PrintCubeStates((volDim.x-1)*(volDim.y-1)*(volDim.z-1));
@@ -1313,6 +1365,13 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             cudaEventSynchronize(eventBM2);
             cudaEventElapsedTime(&dtBM_ms, eventBM1, eventBM2);
             t_mesh += dtBM_ms; // Update volume computation time
+            if (nComp == 1) { // First comparison
+                t_meshMin = dtBM_ms;
+                t_meshMax = dtBM_ms;
+            } else {
+                t_meshMin = std::min(dtBM_ms, t_meshMin);
+                t_meshMax = std::max(dtBM_ms, t_meshMax);
+            }
 #endif // ifdef BENCHMARK
 
 //            // DEBUG print positions of regularized surface
@@ -1412,7 +1471,21 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 
 #ifdef BENCHMARK
             t_map += t_map_tmp; // Update volume computation time
+            if (nComp == 1) { // First comparison
+                t_mapMin = t_map_tmp;
+                t_mapMax = t_map_tmp;
+            } else {
+                t_mapMin = std::min(t_map_tmp, t_mapMin);
+                t_mapMax = std::max(t_map_tmp, t_mapMax);
+            }
             t_gvf += t_gvf_tmp; // Update gvf computation time
+            if (nComp == 1) { // First comparison
+                t_gvfMin = t_gvf_tmp;
+                t_gvfMax = t_gvf_tmp;
+            } else {
+                t_gvfMin = std::min(t_gvf_tmp, t_gvfMin);
+                t_gvfMax = std::max(t_gvf_tmp, t_gvfMax);
+            }
             cudaEventRecord(eventBM1, 0); // Stop time measurement
 #endif // ifdef BENCHMARK
 
@@ -1496,6 +1569,13 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             cudaEventSynchronize(eventBM2);
             cudaEventElapsedTime(&dtBM_ms, eventBM1, eventBM2);
             t_subdiv += dtBM_ms; // Update volume computation time
+            if (nComp == 1) { // First comparison
+                t_subdivMin = dtBM_ms;
+                t_subdivMax = dtBM_ms;
+            } else {
+                t_subdivMin = std::min(dtBM_ms, t_subdivMin);
+                t_subdivMax = std::max(dtBM_ms, t_subdivMax);
+            }
 #endif // ifdef BENCHMARK
 
 
@@ -1547,6 +1627,13 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             cudaEventSynchronize(eventBM2);
             cudaEventElapsedTime(&dtBM_ms, eventBM1, eventBM2);
             t_backtrack += dtBM_ms; // Update volume computation time
+            if (nComp == 1) { // First comparison
+                t_backtrackMin = dtBM_ms;
+                t_backtrackMax = dtBM_ms;
+            } else {
+                t_backtrackMin = std::min(dtBM_ms, t_backtrackMin);
+                t_backtrackMax = std::max(dtBM_ms, t_backtrackMax);
+            }
             cudaEventRecord(eventBM1, 0); // Stop time measurement
 #endif // ifdef BENCHMARK
 
@@ -1678,6 +1765,13 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             cudaEventSynchronize(eventBM2);
             cudaEventElapsedTime(&dtBM_ms, eventBM1, eventBM2);
             t_met += dtBM_ms; // Update volume computation time
+            if (nComp == 1) { // First comparison
+                t_metMin = dtBM_ms;
+                t_metMax = dtBM_ms;
+            } else {
+                t_metMin = std::min(dtBM_ms, t_metMin);
+                t_metMax = std::max(dtBM_ms, t_metMax);
+            }
 #endif // ifdef BENCHMARK
 
             surfStart.Release();
@@ -1687,16 +1781,36 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 #ifdef BENCHMARK
             // Print current avg values
             printf("*** benchmark ***\n");
-            printf("  nVox        : %i\n", (int)((float)(nVox)/static_cast<float>(nComp)));
-            printf("  nVtx        : %i\n", (int)((float)(nVertices)/static_cast<float>(nComp)));
-            printf("  t_vol       : %f\n", t_vol/static_cast<float>(nComp));
-            printf("  t_mesh      : %f\n", t_mesh/static_cast<float>(nComp));
-            printf("  t_gvf       : %f\n", t_gvf/static_cast<float>(nComp));
-            printf("  t_map       : %f\n", t_map/static_cast<float>(nComp));
-            printf("  t_subdiv    : %f\n", t_subdiv/static_cast<float>(nComp));
-            printf("  t_backtrack : %f\n", t_backtrack/static_cast<float>(nComp));
-            printf("  t_met       : %f\n", t_met/static_cast<float>(nComp));
-            printf("  t_sum       : %f\n",
+            printf("  nVox        : %i-%i(%i)\n",
+                    nVoxMin, nVoxMax,
+                    (int)((float)(nVox)/static_cast<float>(nComp)));
+            printf("  nVtx        : %i-%i(%i)\n",
+                    nVerticesMin, nVerticesMax,
+                    (int)((float)(nVertices)/static_cast<float>(nComp)));
+            printf("  t_vol       : %.1f-%.1f(%.1f)\n",
+                    t_volMin, t_volMax,
+                    t_vol/static_cast<float>(nComp));
+            printf("  t_mesh      : %.1f-%.1f(%.1f)\n",
+                    t_meshMin, t_meshMax,
+                    t_mesh/static_cast<float>(nComp));
+            printf("  t_gvf       : %.1f-%.1f(%.1f)\n",
+                    t_gvfMin, t_gvfMax,
+                    t_gvf/static_cast<float>(nComp));
+            printf("  t_map       : %.1f-%.1f(%.1f)\n",
+                    t_mapMin, t_mapMax,
+                    t_map/static_cast<float>(nComp));
+            printf("  t_subdiv    : %.1f-%.1f(%.1f)\n",
+                    t_subdivMin, t_subdivMax,
+                    t_subdiv/static_cast<float>(nComp));
+            printf("  t_backtrack : %.1f-%.1f(%.1f)\n",
+                    t_backtrackMin, t_backtrackMax,
+                    t_backtrack/static_cast<float>(nComp));
+            printf("  t_met       : %.1f-%.1f(%.1f)\n",
+                    t_metMin, t_metMax,
+                    t_met/static_cast<float>(nComp));
+            printf("  t_sum       : %.1f-%.1f(%.1f)\n",
+                t_volMin+t_meshMin+t_mapMin+t_subdivMin+t_backtrackMin+t_metMin,
+                t_volMax+t_meshMax+t_mapMax+t_subdivMax+t_backtrackMax+t_metMax,
                 (t_vol+t_mesh+t_map+t_subdiv+t_backtrack+t_met)/static_cast<float>(nComp));
 #endif // ifdef BENCHMARK
         }
@@ -1736,6 +1850,13 @@ float ProteinVariantMatch::getRMS(
         int flag,
         float rotation[3][3],
         float translation[3]) {
+
+    // No RMS fitting
+    if (this->fittingMode == RMS_NONE) {
+        this->rmsTranslation.Set(0.0f, 0.0f, 0.0f);
+        this->rmsRotation.SetIdentity();
+        return 0.0;
+    }
 
     // All particles are weighted with one
     if (this->rmsMask.GetCount() < cnt) {

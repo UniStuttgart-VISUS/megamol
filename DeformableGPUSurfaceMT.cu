@@ -4116,6 +4116,8 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVFBM(
     cudaEventElapsedTime(&dt_ms, event1, event2);
     t_gvf = dt_ms;
 
+    printf("GVF %f ms\n", t_gvf);
+
     if (trackPath) {
         // Init vbo with uncertainty information
         if (!this->InitVtxPathVBO(this->vertexCnt)) {
@@ -7711,7 +7713,7 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
             avgDisplLen /= static_cast<float>(this->nFlaggedVertices);
 //            printf("New vertex count %u\n", this->nFlaggedVertices);
 //            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-//            printf("It: %i, avgDispl: %.16f, min %.1f\n", i, avgDisplLen, surfMappedMinDisplScl);
+            printf("It: %i, avgDispl: %.16f, min %.1f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;

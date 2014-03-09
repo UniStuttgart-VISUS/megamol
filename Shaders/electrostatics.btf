@@ -239,17 +239,17 @@ void main() {
       
         float potDiff = surfAttribFrag;        
         
-        vec3 colOrangeMsh = vec3(100, 0.9746*potDiff/(maxPotential-minPotential), 0.8968);
-        //vec3 colYellowMsh = vec3(100, 0.81*potDiff/(maxPotential-minPotential), 1.7951);
+        //vec3 colOrangeMsh = vec3(100, 0.9746*potDiff/(maxPotential-minPotential), 0.8968);
+        vec3 colYellowMsh = vec3(102.44, 0.6965*potDiff/(maxPotential-minPotential), 1.5393);
         //vec3 blueMsh = vec3(90, 1.08*potDiff/(maxPotential-minPotential), -1.1);
     
-        color = vec4(MSH2RGB(colOrangeMsh.r, colOrangeMsh.g, colOrangeMsh.b), 1.0 - pathLenFrag/maxPosDiff);
+        color = vec4(MSH2RGB(colYellowMsh.r, colYellowMsh.g, colYellowMsh.b), 1.0 - pathLenFrag/maxPosDiff);
         
     } else if (colorMode == 8) { // Surface potential sign switch
       
-        /*//lightparams = vec4(0.7, 0.4, 0.0, 1.0);
-        float potOld = texture3D(potentialTex1, gl_TexCoord[1].stp).a;
-        float potNew = texture3D(potentialTex0, gl_TexCoord[0].stp).a;
+        //lightparams = vec4(0.7, 0.4, 0.0, 1.0);
+        //float potOld = texture3D(potentialTex1, gl_TexCoord[1].stp).a;
+        //float potNew = texture3D(potentialTex0, gl_TexCoord[0].stp).a;
         //float potDiff = abs(potOld-potNew); 
         // Calc euclidian distance
         // Calc euclidian distance
@@ -260,7 +260,7 @@ void main() {
             posDiff = pathLenFrag;
 //        }
         
-        float signSwitchedFlag = float(potOld*potNew < 0.0);
+        float signSwitchedFlag = surfAttribFrag;
         
         
         //vec3 colTurquoiseMsh = vec3(109.81, 0.9746*signSwitchedFlag, 0.8968);
@@ -286,19 +286,30 @@ void main() {
         // Set for corrupt triangles
         //color = color*(1.0 - corruptTriangleFlagFrag) + 
         //        vec4(1.0, 0.0, 1.0, 1.0)*corruptTriangleFlagFrag;
-        color.a *= (1.0 - corruptTriangleFlagFrag);
-        //color.rgb *= 1.0 - corruptTriangleFlagFrag;*/
+        //color.a *= (1.0 - corruptTriangleFlagFrag);
+        //color.rgb *= 1.0 - corruptTriangleFlagFrag;
         
     } else { // Invalid color mode
         color = vec4(0.5, 1.0, 1.0, 1.0);
     }
    
-   color.a *= (1.0 - corruptFrag);
+   //color.a *= (1.0 - corruptFrag);
    // Alpha scaling by the user
     color.a *= alphaScl;
     vec3 n = normalFrag;
     
-    //if (corruptFrag > 0) color.rgb = vec3(1.0, 0.0, 1.0);
+    
+    if (corruptFrag > 0) {
+        // 230,97,1
+        //color.rgb = vec3(0.90, 0.38, 0.0);
+        
+        //#e7be40
+        // 231, 190, 64
+//        color.rgb = vec3(0.905882353, 0.745098039, 0.250980392);
+        color.rgb = vec3(0.654901961, 0.494117647, 0.0);
+        //color.rgb = vec3(0.0, 0.458823529, 0.650980392);
+        //color.rgb = vec3(0.0, 0.5, 0.7);
+    }
     
     if (gl_FrontFacing) {
         gl_FragColor = vec4(LocalLighting(normalize(view), normalize(n), 

@@ -43,6 +43,18 @@
 using namespace megamol;
 using namespace megamol::protein;
 
+Vec3f dark_brown = Vec3f(0.388235294, 0.294117647, 0.0);
+Vec3f light_brown = Vec3f(0.654901961, 0.494117647, 0.0);
+Vec3f light_blue = Vec3f(0.0, 0.458823529, 0.650980392);
+Vec3f dark_blue = Vec3f(0.0, 0.309803922, 0.439215686);
+
+// Lighter brown for shading
+// #DAB23A
+// 218 178 58
+Vec3f light_surf_brown = Vec3f(0.854901961, 0.698039216, 0.22745098);
+
+Vec3f white = Vec3f(1, 1, 1);
+
 // Hardcoded parameters for 'quicksurf' class
 //const float ComparativeMolSurfaceRenderer::qsParticleRad = 0.8f;
 const float ComparativeMolSurfaceRenderer::qsGaussLim = 8.0f;
@@ -51,11 +63,9 @@ const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
 //const float ComparativeMolSurfaceRenderer::qsIsoVal = 0.5f;
 
 // Hardcoded colors for surface rendering
-//const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = Vec3f(0.7f, 0.8f, 0.4f);
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = Vec3f(0.7f, 0.8f, 0.4f);
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = Vec3f(0.0f, 0.3f, 0.8f);
-//const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = Vec3f(0.0f, 0.3f, 0.8f);
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurfMapped = Vec3f(0.7f, 0.8f, 0.4f);
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = dark_blue;
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = light_surf_brown;
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurfMapped = white;
 const Vec3f ComparativeMolSurfaceRenderer::colorMaxPotential = Vec3f(0.0f, 0.0f, 1.0f);
 const Vec3f ComparativeMolSurfaceRenderer::colorMinPotential = Vec3f(1.0f, 0.0f, 0.0f);
 
@@ -2586,10 +2596,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // target mesh enough
         int newTris;
         for (int i = 0; i < this->maxSubdivLevel; ++i) {
-//            for (int i = 0; i < 1; ++i) {
-
             for (int j = 0; j < this->subStepLevel; ++j) {
-//                for (int j = 0; j < 2; ++j) {
 
 //               printf("SUBDIV #%i\n", i);
 
@@ -2718,20 +2725,38 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             printf("Could not invert rotation matrix\n");
             return false;
         }
-        if (!this->deformSurfMapped.ComputeSurfAttribDiff(
-                this->deformSurf2,
-                this->rmsCentroid.PeekComponents(), // In case the start surface has been fitted using RMSD
-                rmsRotInv.PeekComponents(),
-                this->rmsTranslation.PeekComponents(),
-                this->surfAttribTex1_D.Peek(),
-                this->texDim1,
-                this->texOrg1,
-                this->texDelta1,
-                this->surfAttribTex2_D.Peek(),
-                this->texDim2,
-                this->texOrg2,
-                this->texDelta2)) {
-            return false;
+        if (this->surfaceMappedColorMode == SURFACE_POTENTIAL_DIFF) {
+            if (!this->deformSurfMapped.ComputeSurfAttribDiff(
+                    this->deformSurf2,
+                    this->rmsCentroid.PeekComponents(), // In case the start surface has been fitted using RMSD
+                    rmsRotInv.PeekComponents(),
+                    this->rmsTranslation.PeekComponents(),
+                    this->surfAttribTex1_D.Peek(),
+                    this->texDim1,
+                    this->texOrg1,
+                    this->texDelta1,
+                    this->surfAttribTex2_D.Peek(),
+                    this->texDim2,
+                    this->texOrg2,
+                    this->texDelta2)) {
+                return false;
+            }
+        } else {
+            if (!this->deformSurfMapped.ComputeSurfAttribSignDiff(
+                    this->deformSurf2,
+                    this->rmsCentroid.PeekComponents(), // In case the start surface has been fitted using RMSD
+                    rmsRotInv.PeekComponents(),
+                    this->rmsTranslation.PeekComponents(),
+                    this->surfAttribTex1_D.Peek(),
+                    this->texDim1,
+                    this->texOrg1,
+                    this->texDelta1,
+                    this->surfAttribTex2_D.Peek(),
+                    this->texDim2,
+                    this->texOrg2,
+                    this->texDelta2)) {
+                return false;
+            }
         }
 
 #ifdef VERBOSE
@@ -3257,7 +3282,8 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     } else if (renderMode == SURFACE_WIREFRAME) {
         glDisable(GL_LIGHTING);
-        glLineWidth(2.0f);
+        //glLineWidth(10.0f);
+        glLineWidth(4.0f);
         glCullFace(GL_BACK);
         glEnable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -3591,7 +3617,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     } else if (renderMode == SURFACE_POINTS){
         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
     }
-    glLineWidth(2.0f);
+    glLineWidth(10.0f);
 
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, vboTriangleIdx);
     CheckForGLError(); // OpenGL error check
