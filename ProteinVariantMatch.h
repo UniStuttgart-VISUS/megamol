@@ -51,7 +51,7 @@ public:
     enum Heuristic {RMS_VALUE=0, SURFACE_POTENTIAL, SURFACE_POTENTIAL_SIGN, MEAN_VERTEX_PATH, HAUSDORFF_DIST};
 
     /// Enum describing different ways of using RMS fitting
-    enum RMSFittingMode {RMS_ALL=0, RMS_BACKBONE, RMS_C_ALPHA};
+    enum RMSFittingMode {RMS_NONE=0, RMS_ALL, RMS_BACKBONE, RMS_C_ALPHA};
 
     /** CTor */
     ProteinVariantMatch(void);
