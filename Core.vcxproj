@@ -170,7 +170,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -247,7 +247,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -338,6 +338,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\SphereDataUnifier.cpp" />
     <ClCompile Include="moldyn\SphereOutlineRenderer.cpp" />
     <ClCompile Include="moldyn\VolumeDataCall.cpp" />
+    <ClCompile Include="moldyn\VTFDataSource.cpp" />
     <ClCompile Include="ObjectDescription.cpp" />
     <ClCompile Include="ObjectDescriptionManager.cpp" />
     <ClCompile Include="ParamValueSetRequest.cpp" />
@@ -582,6 +583,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\SphereDataUnifier.h" />
     <ClInclude Include="moldyn\SphereOutlineRenderer.h" />
     <ClInclude Include="moldyn\VolumeDataCall.h" />
+    <ClInclude Include="moldyn\VTFDataSource.h" />
     <ClInclude Include="ObjectDescription.h" />
     <ClInclude Include="ObjectDescriptionManager.h" />
     <ClInclude Include="ParamValueSetRequest.h" />

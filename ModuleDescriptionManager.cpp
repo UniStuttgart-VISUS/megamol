@@ -76,6 +76,7 @@
 #include "moldyn/VolumeDataCall.h"
 #include "moldyn/DatRawDataSource.h"
 #include "moldyn/SIFFWriter.h"
+#include "moldyn/VTFDataSource.h"
 
 using namespace megamol::core;
 
@@ -176,6 +177,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<moldyn::DirectVolumeRenderer>();
         instance->registerAutoDescription<moldyn::DatRawDataSource>();
         instance->registerAutoDescription<moldyn::SIFFWriter>();
+		instance->registerAutoDescription<moldyn::VTFDataSource>();
     //}
     //return instance;
 }

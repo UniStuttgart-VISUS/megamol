@@ -50,7 +50,7 @@ CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem
 LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(expatpath)/lib
 
 
-all: VersionInfo $(TargetName)d $(TargetName)
+all: VersionInfo datraw $(TargetName)d $(TargetName)
 
 datraw/lib32/libdatRaw.a:
 	$(MAKE) -C datraw

@@ -370,7 +370,8 @@ void misc::VolumeCache::buildCache(CallVolumeData* inDat) {
         }
         bpv *= voxelCnt;
         this->attr[a].SetData(this->data.At(dataSize));
-        ::memcpy(this->data.At(dataSize), inDat->Attribute(a).RawData(), bpv);
+		ASSERT(inDat->Attribute(a).RawData());
+		::memcpy(this->data.At(dataSize), inDat->Attribute(a).RawData(), bpv);
         dataSize += bpv;
     }
 
