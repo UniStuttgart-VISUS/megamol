@@ -1640,7 +1640,8 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             // Compute surface area
             float validSurfArea = surfEnd.GetTotalValidSurfArea();
             float surfArea = surfEnd.GetTotalSurfArea();
-//            printf("Surface area %f, vertexCnt %u\n", surfArea, surfEnd.GetVertexCnt());
+            //printf("Surface area %f, vertexCnt %u\n", surfArea, surfEnd.GetVertexCnt());
+            //printf("valid surface area %f, vertexCnt %u\n", validSurfArea, surfEnd.GetVertexCnt());
 
             /* Compute different metrics on a per-vertex basis */
 
@@ -1656,7 +1657,10 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             float validMeanVertexPath = surfEnd.IntVtxPathOverValidSurfArea();
             float meanVertexPath = surfEnd.IntVtxPathOverSurfArea();
 
-            this->matchMeanVertexPath[i*this->nVariants+j] = validMeanVertexPath/validSurfArea;
+            //printf("valid mean vertex path %f\n", validMeanVertexPath/validSurfArea);
+            //printf("mean vertex path %f\n", meanVertexPath/surfArea);
+
+            //this->matchMeanVertexPath[i*this->nVariants+j] = validMeanVertexPath/validSurfArea;
             this->matchMeanVertexPathCorrupt[i*this->nVariants+j] = meanVertexPath/surfArea;
 
             //            if (i != j) {
@@ -1696,6 +1700,9 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             float validMeanPotentialDiff = surfEnd.IntVtxAttribOverValidSurfArea();
             float meanPotentialDiff = surfEnd.IntVtxAttribOverSurfArea();
 
+            //printf("valid mean pot diff %f\n", validMeanPotentialDiff/validSurfArea);
+            //printf("mean pot diff %f\n", meanPotentialDiff/surfArea);
+
             //            printf("Surface area %f\, potentialDiff %f, meanPotentialDiff %f\n", surfArea, meanPotentialDiff, meanPotentialDiff/surfArea);
             this->matchSurfacePotential[i*this->nVariants+j] = validMeanPotentialDiff/validSurfArea;
             this->matchSurfacePotentialCorrupt[i*this->nVariants+j] = meanPotentialDiff/surfArea;
@@ -1730,6 +1737,10 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 
             float validMeanPotentialSignDiff = surfEnd.IntVtxAttribOverValidSurfArea();
             float meanPotentialSignDiff = surfEnd.IntVtxAttribOverSurfArea();
+
+            //printf("valid mean pot sign diff %f\n", validMeanPotentialSignDiff/validSurfArea);
+            //printf("mean pot sign diff %f\n", meanPotentialSignDiff/surfArea);
+
             this->matchSurfacePotentialSign[i*this->nVariants+j] = validMeanPotentialSignDiff/validSurfArea;
             this->matchSurfacePotentialSignCorrupt[i*this->nVariants+j] = meanPotentialSignDiff/surfArea;
 
@@ -1779,6 +1790,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             surfTarget.Release();
 
 #ifdef BENCHMARK
+            if (j==this->nVariants-1) {
             // Print current avg values
             printf("*** benchmark ***\n");
             printf("  nVox        : %i-%i(%i)\n",
@@ -1812,6 +1824,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
                 t_volMin+t_meshMin+t_mapMin+t_subdivMin+t_backtrackMin+t_metMin,
                 t_volMax+t_meshMax+t_mapMax+t_subdivMax+t_backtrackMax+t_metMax,
                 (t_vol+t_mesh+t_map+t_subdiv+t_backtrack+t_met)/static_cast<float>(nComp));
+            }
 #endif // ifdef BENCHMARK
         }
     }

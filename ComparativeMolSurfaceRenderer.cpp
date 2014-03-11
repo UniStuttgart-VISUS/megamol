@@ -63,8 +63,8 @@ const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
 //const float ComparativeMolSurfaceRenderer::qsIsoVal = 0.5f;
 
 // Hardcoded colors for surface rendering
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = dark_blue;
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = light_surf_brown;
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = light_surf_brown;
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = dark_blue;
 const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurfMapped = white;
 const Vec3f ComparativeMolSurfaceRenderer::colorMaxPotential = Vec3f(0.0f, 0.0f, 1.0f);
 const Vec3f ComparativeMolSurfaceRenderer::colorMinPotential = Vec3f(1.0f, 0.0f, 0.0f);
@@ -465,6 +465,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     mscm->SetTypePair(SURFACE_POTENTIAL1, "Potential1");
     mscm->SetTypePair(SURFACE_POTENTIAL_DIFF, "Potential Diff");
     mscm->SetTypePair(SURFACE_POTENTIAL_SIGN, "Potential Sign");
+    mscm->SetTypePair(SURFACE_LAPLACIAN, "Laplacian");
     this->surfaceMappedColorModeSlot << mscm;
     this->MakeSlotAvailable(&this->surfaceMappedColorModeSlot);
 
@@ -2699,7 +2700,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         }
 
         // Update vertex path VBO for new vertices
-        printf("BACKTRACKING\n");
+//        printf("BACKTRACKING\n");
         if (this->maxSubdivLevel > 0) {
             if (!this->deformSurfMapped.TrackPathSubdivVertices(
 #ifndef  USE_PROCEDURAL_DATA
@@ -2725,8 +2726,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
             printf("Could not invert rotation matrix\n");
             return false;
         }
-        if (this->surfaceMappedColorMode == SURFACE_POTENTIAL_DIFF) {
-            if (!this->deformSurfMapped.ComputeSurfAttribDiff(
+        if (this->surfaceMappedColorMode == SURFACE_POTENTIAL_SIGN) {
+            if (!this->deformSurfMapped.ComputeSurfAttribSignDiff(
                     this->deformSurf2,
                     this->rmsCentroid.PeekComponents(), // In case the start surface has been fitted using RMSD
                     rmsRotInv.PeekComponents(),
@@ -2741,8 +2742,14 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
                     this->texDelta2)) {
                 return false;
             }
+        } else if (this->surfaceMappedColorMode == SURFACE_LAPLACIAN) {
+            // Compute mesh Laplacian
+            if (!this->deformSurfMapped.ComputeMeshLaplacianDiff(this->deformSurf2)) {
+                printf("Could not compute mesh Laplacian\n");
+                return false;
+            }
         } else {
-            if (!this->deformSurfMapped.ComputeSurfAttribSignDiff(
+            if (!this->deformSurfMapped.ComputeSurfAttribDiff(
                     this->deformSurf2,
                     this->rmsCentroid.PeekComponents(), // In case the start surface has been fitted using RMSD
                     rmsRotInv.PeekComponents(),
@@ -3282,8 +3289,8 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     } else if (renderMode == SURFACE_WIREFRAME) {
         glDisable(GL_LIGHTING);
+        glLineWidth(3.0f);
         //glLineWidth(10.0f);
-        glLineWidth(4.0f);
         glCullFace(GL_BACK);
         glEnable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -3617,7 +3624,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     } else if (renderMode == SURFACE_POINTS){
         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
     }
-    glLineWidth(10.0f);
+    glLineWidth(3.0f);
 
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, vboTriangleIdx);
     CheckForGLError(); // OpenGL error check

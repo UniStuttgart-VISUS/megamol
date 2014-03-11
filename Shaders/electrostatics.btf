@@ -288,12 +288,19 @@ void main() {
         //        vec4(1.0, 0.0, 1.0, 1.0)*corruptTriangleFlagFrag;
         //color.a *= (1.0 - corruptTriangleFlagFrag);
         //color.rgb *= 1.0 - corruptTriangleFlagFrag;
+    } else if (colorMode == 9) { // Mesh laplacian
+        float potDiff = surfAttribFrag;        
         
+        //vec3 colOrangeMsh = vec3(100, 0.9746*(1.0-potDiff/(maxPotential-minPotential)), 0.8968);
+        vec3 colYellowMsh = vec3(102.44, 0.6965*(potDiff/(maxPotential-minPotential)), 1.5393);
+        //vec3 blueMsh = vec3(90, 1.08*potDiff/(maxPotential-minPotential), -1.1);
+    
+        color = vec4(MSH2RGB(colYellowMsh.r, colYellowMsh.g, colYellowMsh.b), 1.0);
     } else { // Invalid color mode
         color = vec4(0.5, 1.0, 1.0, 1.0);
     }
    
-   //color.a *= (1.0 - corruptFrag);
+//   color.a *= (1.0 - corruptFrag);
    // Alpha scaling by the user
     color.a *= alphaScl;
     vec3 n = normalFrag;
@@ -305,8 +312,8 @@ void main() {
         
         //#e7be40
         // 231, 190, 64
-//        color.rgb = vec3(0.905882353, 0.745098039, 0.250980392);
-        color.rgb = vec3(0.654901961, 0.494117647, 0.0);
+        //color.rgb = vec3(0.905882353, 0.745098039, 0.250980392);
+//        color.rgb = vec3(0.654901961, 0.494117647, 0.0);
         //color.rgb = vec3(0.0, 0.458823529, 0.650980392);
         //color.rgb = vec3(0.0, 0.5, 0.7);
     }
