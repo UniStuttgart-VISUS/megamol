@@ -64,7 +64,8 @@ public:
         SURFACE_POTENTIAL0,       // #5
         SURFACE_POTENTIAL1,       // #6
         SURFACE_POTENTIAL_DIFF,   // #7
-        SURFACE_POTENTIAL_SIGN};  // #8
+        SURFACE_POTENTIAL_SIGN,   // #8
+        SURFACE_LAPLACIAN};       // #9
 
     /// Enum describing different ways of using RMS fitting
     enum RMSFittingMode {RMS_NONE=0, RMS_ALL, RMS_BACKBONE, RMS_C_ALPHA};

@@ -31,6 +31,7 @@
 #include <thrust/device_ptr.h>
 
 #include "vislib/Array.h"
+#include "vislib/Vector.h"
 
 //#define USE_TIMER
 
@@ -4116,7 +4117,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVFBM(
     cudaEventElapsedTime(&dt_ms, event1, event2);
     t_gvf = dt_ms;
 
-    printf("GVF %f ms\n", t_gvf);
+//    printf("GVF %f ms\n", t_gvf);
 
     if (trackPath) {
         // Init vbo with uncertainty information
@@ -4278,6 +4279,14 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
     if ((volumeTarget_D == NULL)||(volumeSource_D == NULL)) {
         return false;
     }
+//#define USE_TIMER
+#ifdef USE_TIMER
+    float dt_ms;
+    cudaEvent_t event1, event2;
+    cudaEventCreate(&event1);
+    cudaEventCreate(&event2);
+    cudaEventRecord(event1, 0);
+#endif
 
     if (recomputeGVF) {
         if (!this->initExtForcesTwoWayGVF(
@@ -4290,6 +4299,15 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
             return false;
         }
     }
+
+#ifdef USE_TIMER
+    cudaEventRecord(event2, 0);
+    cudaEventSynchronize(event1);
+    cudaEventSynchronize(event2);
+    cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("CUDA time for GVF:                %.10f sec\n",
+            dt_ms/1000.0f);
+#endif
 
     if (trackPath) {
         // Init vbo with uncertainty information
@@ -4342,13 +4360,6 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
     if (!CudaSafeCall(this->displLen_D.Validate(this->vertexCnt))) {
         return false;
     }
-#ifdef USE_TIMER
-    float dt_ms;
-    cudaEvent_t event1, event2;
-    cudaEventCreate(&event1);
-    cudaEventCreate(&event2);
-    cudaEventRecord(event1, 0);
-#endif
 
     DeformableGPUSurfaceMT_InitExternalForceScl_D <<< Grid(this->vertexCnt, 256), 256 >>> (
             (float*)this->vertexExternalForcesScl_D.Peek(),
@@ -4399,6 +4410,8 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
         return false;
     }
+
+#undef USE_TIMER
 
     return true;
 }
@@ -7713,7 +7726,7 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
             avgDisplLen /= static_cast<float>(this->nFlaggedVertices);
 //            printf("New vertex count %u\n", this->nFlaggedVertices);
 //            if (i%5 == 0) printf("It %i, avgDispl: %.16f, min %.16f\n", i, avgDisplLen, surfMappedMinDisplScl);
-            printf("It: %i, avgDispl: %.16f, min %.1f\n", i, avgDisplLen, surfMappedMinDisplScl);
+//            printf("It: %i, avgDispl: %.16f, min %.1f\n", i, avgDisplLen, surfMappedMinDisplScl);
             if (avgDisplLen < surfMappedMinDisplScl) {
                 iterationsNeeded =i+1;
                 break;
@@ -9304,7 +9317,6 @@ __global__ void DeformableGPUSurfaceMT_ComputeSurfAttribDiff1_D (
     posRot.z += centroid.z;
 
     vertexAttrib_D[idx] = abs(vertexAttrib_D[idx] - ::SampleFieldAtPosTrilin_D<float, true>(posRot, tex1_D));
-    //vertexAttrib_D[idx] = ::SampleFieldAtPosTrilin_D<float, true>(posRot, tex1_D);
 }
 
 
@@ -9813,6 +9825,280 @@ void DeformableGPUSurfaceMT::PrintCubeStates(size_t cnt) {
         printf("CUBESTATES %u\n", cubeStates.Peek()[i]);
     }
     cubeStates.Release();
+}
+
+/*
+ * DeformableGPUSurfaceMT::ComputeMeshLaplacian
+ */
+bool DeformableGPUSurfaceMT::ComputeMeshLaplacian() {
+    typedef vislib::math::Vector<float, 3> Vec3f;
+
+    if (!this->InitVtxAttribVBO(this->vertexCnt)) {
+        return false;
+    }
+
+
+    // Get pointer to vertex attribute array
+    cudaGraphicsResource* cudaTokens[3];
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0],
+            this->vboVtxData,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1],
+            this->vboTriangleIdx,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[2],
+            this->vboVtxAttr,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsMapResources(3, cudaTokens, 0))) {
+        return false;
+    }
+    // Get mapped pointers to the vertex data buffers
+    float *vertexBuffer_D;
+    size_t vboVertexBufferSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vertexBuffer_D), // The mapped pointer
+            &vboVertexBufferSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+    // Get mapped pointers to the vertex data buffers
+    unsigned int *triIdx_D;
+    size_t vboTriIdxSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&triIdx_D), // The mapped pointer
+            &vboTriIdxSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
+        return false;
+    }
+    // Get mapped pointers to the vertex data buffers
+    float *vertexAttrib_D;
+    size_t vertexAttribSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vertexAttrib_D), // The mapped pointer
+            &vertexAttribSize,              // The size of the accessible data
+            cudaTokens[2]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Copy vertex data and triangle indices to CPU
+    HostArr<float> vertexData;
+    HostArr<unsigned int> triIdx;
+    vertexData.Validate(this->vertexCnt*9);
+    if (!CudaSafeCall(cudaMemcpy(vertexData.Peek(), vertexBuffer_D,
+            sizeof(float)*this->vertexCnt*9, cudaMemcpyDeviceToHost))) {
+        return false;
+    }
+    triIdx.Validate(this->triangleCnt*3);
+    if (!CudaSafeCall(cudaMemcpy(triIdx.Peek(), triIdx_D,
+            sizeof(uint)*this->triangleCnt*3, cudaMemcpyDeviceToHost))) {
+        return false;
+    }
+
+    // Build vertex neighbor list
+    vislib::Array<vislib::Array<uint> > vtxNeighbors;
+    vtxNeighbors.SetCount(this->vertexCnt);
+    // Loop through all triangles
+    for (size_t tri = 0; tri < this->triangleCnt; ++tri) {
+        uint idx0 = triIdx.Peek()[3*tri+0];
+        uint idx1 = triIdx.Peek()[3*tri+1];
+        uint idx2 = triIdx.Peek()[3*tri+2];
+        if (vtxNeighbors[idx0].Find(idx1) == NULL) {
+            vtxNeighbors[idx0].Append(idx1);
+        }
+        if (vtxNeighbors[idx0].Find(idx2) == NULL) {
+            vtxNeighbors[idx0].Append(idx2);
+        }
+        if (vtxNeighbors[idx1].Find(idx0) == NULL) {
+            vtxNeighbors[idx1].Append(idx0);
+        }
+        if (vtxNeighbors[idx1].Find(idx2) == NULL) {
+            vtxNeighbors[idx1].Append(idx2);
+        }
+        if (vtxNeighbors[idx2].Find(idx0) == NULL) {
+            vtxNeighbors[idx2].Append(idx0);
+        }
+        if (vtxNeighbors[idx2].Find(idx1) == NULL) {
+            vtxNeighbors[idx2].Append(idx1);
+        }
+    }
+
+//    // DEBUG printf vertex neighbor list
+//    printf("Computing vertex neighbor list...\n");
+//    for (size_t v = 0; v < this->vertexCnt; ++v) {
+//        printf("%u: ", v);
+//        for (size_t n = 0; n < vtxNeighbors[v].Count(); ++n) {
+//            printf("%u ", vtxNeighbors[v][n]);
+//        }
+//        printf("\n");
+//    }
+//    // End DEBUG
+
+    printf("Computing mesh Laplacian ...\n");
+    HostArr<float> vtxLaplacian;
+    vtxLaplacian.Validate(this->vertexCnt);
+    // Loop through all vertices
+    for (size_t v = 0; v < this->vertexCnt; ++v) {
+        vtxLaplacian.Peek()[v] = 0.0f;
+        float maxDist = 0.0f;
+        Vec3f pos(vertexData.Peek()[9*v+0],
+                               vertexData.Peek()[9*v+1],
+                               vertexData.Peek()[9*v+2]);
+        for (size_t n = 0; n < vtxNeighbors[v].Count(); ++n) {
+            // Get position of neighbor
+            uint nIdx = vtxNeighbors[v][n];
+            Vec3f posN(vertexData.Peek()[9*nIdx+0],
+                       vertexData.Peek()[9*nIdx+1],
+                       vertexData.Peek()[9*nIdx+2]);
+            float dist = (posN-pos).Length();
+            maxDist = std::max(maxDist, dist);
+            vtxLaplacian.Peek()[v] += dist;
+        }
+
+        // Normalize
+        vtxLaplacian.Peek()[v] /= static_cast<float> (vtxNeighbors[v].Count());
+        vtxLaplacian.Peek()[v] /= static_cast<float> (maxDist);
+    }
+
+//    // DEBUG Print mesh Laplacian norm
+//    for (size_t v = 0; v < this->vertexCnt; ++v) {
+//        printf("Laplacian %u: %f\n", v, vtxLaplacian.Peek()[v]);
+//    }
+//    // End DEBUG
+
+    // Write to vertex attribute array
+    if (!CudaSafeCall(cudaMemcpy(vertexAttrib_D, vtxLaplacian.Peek(),
+            sizeof(float)*this->vertexCnt, cudaMemcpyHostToDevice))) {
+        return false;
+    }
+
+    // Cleanup
+    vertexData.Release();
+    triIdx.Release();
+    vtxLaplacian.Release();
+    vtxNeighbors.Clear();
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(3, cudaTokens, 0))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[2]))) {
+        return false;
+    }
+    return ::CheckForCudaError();
+}
+
+
+/*
+ * DeformableGPUSurfaceMT_ComputeSurfAttribDiff1_D
+ */
+__global__ void DeformableGPUSurfaceMT_ComputeAttribDiff_D (
+        float *vertexAttrib_D,
+        float *vertexAttribOther_D,
+        uint vertexCnt) {
+
+    const uint idx = ::getThreadIdx();
+    if (idx >= vertexCnt) {
+        return;
+    }
+    float otherAttrib = vertexAttribOther_D[idx];
+    float thisAttrib = vertexAttrib_D[idx];
+
+    vertexAttrib_D[idx] = abs(thisAttrib-otherAttrib);
+}
+
+
+
+/*
+ * DeformableGPUSurfaceMT::ComputeMeshLaplacianDiff
+ */
+bool DeformableGPUSurfaceMT::ComputeMeshLaplacianDiff(
+        DeformableGPUSurfaceMT &surfStart) {
+
+    if (this->nFlaggedVertices != 0) {
+        printf("No subdivision allowed in this case!\n");
+        return false;
+    }
+
+    typedef vislib::math::Vector<float, 3> Vec3f;
+
+    if (!surfStart.ComputeMeshLaplacian()) {
+        return false;
+    }
+    if (!this->ComputeMeshLaplacian()) {
+        return false;
+    }
+
+    // Get pointer to vertex attribute array
+    cudaGraphicsResource* cudaTokens[2];
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[0],
+            this->vboVtxAttr,
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
+            &cudaTokens[1],
+           surfStart.GetVtxAttribVBO(),
+            cudaGraphicsMapFlagsNone))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vertexAttrib_D;
+    size_t vertexAttribSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vertexAttrib_D), // The mapped pointer
+            &vertexAttribSize,              // The size of the accessible data
+            cudaTokens[0]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Get mapped pointers to the vertex data buffers
+    float *vertexAttribOther_D;
+    size_t vertexAttribOtherSize;
+    if (!CudaSafeCall(cudaGraphicsResourceGetMappedPointer(
+            reinterpret_cast<void**>(&vertexAttribOther_D), // The mapped pointer
+            &vertexAttribOtherSize,              // The size of the accessible data
+            cudaTokens[1]))) {                 // The mapped resource
+        return false;
+    }
+
+    // Compute difference
+    DeformableGPUSurfaceMT_ComputeAttribDiff_D <<< Grid(this->vertexCnt, 256), 256 >>> (
+            vertexAttrib_D,
+            vertexAttribOther_D,
+            this->vertexCnt);
+    if (!CheckForCudaError()) {
+        return false;
+    }
+
+
+    if (!CudaSafeCall(cudaGraphicsUnmapResources(2, cudaTokens, 0))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[0]))) {
+        return false;
+    }
+    if (!CudaSafeCall(cudaGraphicsUnregisterResource(cudaTokens[1]))) {
+        return false;
+    }
+    return ::CheckForCudaError();
 }
 
 #endif // WITH_CUDA

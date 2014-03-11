@@ -513,6 +513,9 @@ public:
     void PrintExternalForces(size_t cnt);
     void PrintCubeStates(size_t cnt);
 
+    bool ComputeMeshLaplacian();
+    bool ComputeMeshLaplacianDiff(DeformableGPUSurfaceMT &surfStart);
+
 protected:
 
     /**
