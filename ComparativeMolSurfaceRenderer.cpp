@@ -65,7 +65,7 @@ const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
 // Hardcoded colors for surface rendering
 const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = light_surf_brown;
 const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = dark_blue;
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurfMapped = white;
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurfMapped = light_surf_brown;
 const Vec3f ComparativeMolSurfaceRenderer::colorMaxPotential = Vec3f(0.0f, 0.0f, 1.0f);
 const Vec3f ComparativeMolSurfaceRenderer::colorMinPotential = Vec3f(1.0f, 0.0f, 0.0f);
 
@@ -116,6 +116,10 @@ void ComparativeMolSurfaceRenderer::computeDensityBBox(
 
     this->bboxParticles.Set(minC.x, minC.y, minC.z,
             maxC.x, maxC.y, maxC.z);
+
+#ifdef USE_PROCEDURAL_DATA
+    this->bboxParticles.Set(-50, -50, -50, 50, 50, 50);
+#endif
 
 //    // DEBUG Print new bounding box
 //    printf("bbboxParticles: %f %f %f %f %f %f\n", minC.x, minC.y, minC.z,
@@ -175,6 +179,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
         surf2AlphaSclSlot("surf2::alphaScl", "Transparency scale factor"),
         surfaceMappedRMSlot("surfMap::render", "Render mode for the mapped surface"),
         surfaceMappedColorModeSlot("surfMap::color", "Color mode for the mapped surface"),
+        unmappedTrisColorSlot("surfMap::unmapped", "Color mode for the unmapped triangles"),
         surfMaxPosDiffSlot("surfMap::maxPosDiff", "Maximum value for euclidian distance"),
         surfMappedAlphaSclSlot("surfMap::alphaScl", "Transparency scale factor"),
         /* DEBUG external forces */
@@ -468,6 +473,15 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     mscm->SetTypePair(SURFACE_LAPLACIAN, "Laplacian");
     this->surfaceMappedColorModeSlot << mscm;
     this->MakeSlotAvailable(&this->surfaceMappedColorModeSlot);
+
+    // Parameter for unmapped triangles color mode
+    this->theUnmappedTrisColor = UNMAPPEDTRIS_NONE;
+    core::param::EnumParam *utcm = new core::param::EnumParam(int(this->surfaceMappedColorMode));
+    utcm->SetTypePair(UNMAPPEDTRIS_NONE, "None");
+    utcm->SetTypePair(UNMAPPEDTRIS_TRANS, "Transparent");
+    utcm->SetTypePair(UNMAPPEDTRIS_COL, "Color");
+    this->unmappedTrisColorSlot << utcm;
+    this->MakeSlotAvailable(&this->unmappedTrisColorSlot);
 
     // Param for maximum value for euclidian distance // Not needed atm
     this->surfMaxPosDiff = 1.0f;
@@ -1465,7 +1479,11 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
 
     this->bbox.SetObjectSpaceBBox(mol0->AccessBoundingBoxes().ObjectSpaceBBox());
     this->bbox.MakeScaledWorld(scale2);
+#ifndef USE_PROCEDURAL_DATA
     cr3d->AccessBoundingBoxes() = mol0->AccessBoundingBoxes();
+#else // USE_PROCEDURAL DATA
+    cr3d->AccessBoundingBoxes().SetObjectSpaceBBox(this->bboxParticles);
+#endif // USE_PROCEDURAL DATA
     cr3d->AccessBoundingBoxes().MakeScaledWorld(scale2);
 
     // The available frame count is determined by the 'compareFrames' parameter
@@ -3289,7 +3307,7 @@ bool ComparativeMolSurfaceRenderer::renderSurface(
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     } else if (renderMode == SURFACE_WIREFRAME) {
         glDisable(GL_LIGHTING);
-        glLineWidth(3.0f);
+        glLineWidth(2.0f);
         //glLineWidth(10.0f);
         glCullFace(GL_BACK);
         glEnable(GL_CULL_FACE);
@@ -3584,7 +3602,6 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     glVertexAttribPointerARB(attribLocSurfAttrib, 1, GL_FLOAT, GL_FALSE, 0, 0);
     CheckForGLError(); // OpenGL error check
 
-
     // Attribute for surface property
     glBindBufferARB(GL_ARRAY_BUFFER, this->deformSurfMapped.GetCorruptTriangleVtxFlagVBO());
     CheckForGLError(); // OpenGL error check
@@ -3598,6 +3615,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("potentialTex1"), 1);
     glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("colorMode"), static_cast<int>(colorMode));
     glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("renderMode"), static_cast<int>(renderMode));
+    glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("unmappedTrisColorMode"), static_cast<int>(this->theUnmappedTrisColor));
     glUniform3fvARB(this->pplMappedSurfaceShader.ParameterLocation("colorMin"), 1, this->colorMinPotential.PeekComponents());
     glUniform3fvARB(this->pplMappedSurfaceShader.ParameterLocation("colorMax"), 1, this->colorMaxPotential.PeekComponents());
     glUniform3fvARB(this->pplMappedSurfaceShader.ParameterLocation("colorUniform"), 1, this->uniformColorSurfMapped.PeekComponents());
@@ -3605,8 +3623,8 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("maxPotential"), this->maxPotential);
     glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("alphaScl"), this->surfMappedAlphaScl);
     glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("maxPosDiff"), this->surfMaxPosDiff);
-    glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("uncertaintyMeasurement"),static_cast<int>(this->uncertaintyCriterion));
-
+    glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("uncertaintyMeasurement"),
+            static_cast<int>(this->uncertaintyCriterion));
 
     glActiveTextureARB(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_3D, this->surfAttribTex2);
@@ -3624,7 +3642,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(
     } else if (renderMode == SURFACE_POINTS){
         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
     }
-    glLineWidth(3.0f);
+    glLineWidth(2.0f);
 
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, vboTriangleIdx);
     CheckForGLError(); // OpenGL error check
@@ -3920,6 +3938,13 @@ void ComparativeMolSurfaceRenderer::updateParams() {
         this->surfaceMappedColorModeSlot.ResetDirty();
     }
 
+    // Parameter unmapped triangles color mode
+    if (this->unmappedTrisColorSlot.IsDirty()) {
+        this->theUnmappedTrisColor = static_cast<UnmappedTrisColor>(
+                this->unmappedTrisColorSlot.Param<core::param::EnumParam>()->Value());
+        this->unmappedTrisColorSlot.ResetDirty();
+    }
+
     // Param for maximum value for euclidian distance
     if (this->surfMaxPosDiffSlot.IsDirty()) {
         this->surfMaxPosDiff = this->surfMaxPosDiffSlot.Param<core::param::FloatParam>()->Value();
@@ -4087,7 +4112,54 @@ bool ComparativeMolSurfaceRenderer::initProcFieldData() {
         return false;
     }
 
-    /* Alternative 1: Generate two spheres with different radii */
+//    /* Alternative 1: Generate two spheres with different radii */
+//
+//    const float rad1 = 15.0f;
+//    const float rad2 = 20.0f;
+//    Vec3f center(
+//            this->volOrg.x + (this->volMaxC.x-this->volOrg.x)*0.5,
+//            this->volOrg.y + (this->volMaxC.y-this->volOrg.y)*0.5,
+//            this->volOrg.z + (this->volMaxC.z-this->volOrg.z)*0.5);
+//    // Loop through all grid points
+//    for (int x = 0; x < static_cast<int>(this->volDim.x); ++x) {
+//        for (int y = 0; y < static_cast<int>(this->volDim.y); ++y) {
+//            for (int z = 0; z < static_cast<int>(this->volDim.z); ++z) {
+//                Vec3f pos(this->volOrg.x + x*this->volDelta.x,
+//                          this->volOrg.y + y*this->volDelta.y,
+//                          this->volOrg.z + z*this->volDelta.z);
+//
+//                float a1 = 1.0;
+//                float c1 = 250.0;
+//                float a2 = 1.0;
+//                float c2 = 120.0;
+//                float len = (pos-center).Length();
+//                float lenSqrt = len*len;
+////                this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = a1*std::exp(lenSqrt/(4.0*c1));
+////                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = a2*std::exp(lenSqrt/(4.0*c2));
+//
+//                this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = std::exp(-lenSqrt/(4.0*c1));
+//                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = std::exp(-lenSqrt/(4.0*c2));
+//
+////                printf("f1: %f, f2: %f\n",
+////                        this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x],
+////                        this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x]);
+//
+////                if ((pos-center).Length() <= rad1) {
+////                    this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = this->qsIsoVal+1.0;
+////                } else {
+////                    this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = this->qsIsoVal-1.0;
+////                }
+////                if ((pos-center).Length() <= rad2) {
+////                    this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = this->qsIsoVal+1.0;
+////                } else {
+////                    this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = this->qsIsoVal-1.0;
+////                }
+//            }
+//        }
+//    }
+//
+
+    /* Alternative 2: One sphere and one torus */
 
     const float rad1 = 15.0f;
     const float rad2 = 20.0f;
@@ -4112,8 +4184,25 @@ bool ComparativeMolSurfaceRenderer::initProcFieldData() {
 //                this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = a1*std::exp(lenSqrt/(4.0*c1));
 //                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = a2*std::exp(lenSqrt/(4.0*c2));
 
-                this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = std::exp(-lenSqrt/(4.0*c1));
-                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = std::exp(-lenSqrt/(4.0*c2));
+                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = std::exp(-lenSqrt/(4.0*c1));
+
+                // Implicit equation for torus: (x^2+y^2+z^2+R^2-r^2)-4R^2(x^2+y^2) = 0
+                //Vec3f offs = Vec3f(15.0, 15.0, 15.0);
+                Vec3f offs = Vec3f(0.0, 0.0, 0.0);
+                Vec3f distVec = (pos-(center+offs));
+                a2 = 1.0;
+                c2 = 12.0;
+                float R = 19.0;
+                float rad = 7.0;
+                len = pow(distVec.X()*distVec.X()+
+                        distVec.Y()*distVec.Y()+
+                        distVec.Z()*distVec.Z()+
+                        R*R-rad*rad, 2.0f)-
+                        4.0f*R*R*(distVec.X()*distVec.X()+
+                                  distVec.Y()*distVec.Y());
+                lenSqrt = len*len;
+                this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] =
+                        (10.0-len)+this->qsIsoVal;
 
 //                printf("f1: %f, f2: %f\n",
 //                        this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x],
@@ -4132,6 +4221,61 @@ bool ComparativeMolSurfaceRenderer::initProcFieldData() {
             }
         }
     }
+
+
+    /* Alternative 3: One sphere and one sphere + enclosed cavity */
+
+//    const float rad1 = 15.0f;
+//    const float rad2 = 25.0f;
+//    Vec3f center(
+//            this->volOrg.x + (this->volMaxC.x-this->volOrg.x)*0.5,
+//            this->volOrg.y + (this->volMaxC.y-this->volOrg.y)*0.5,
+//            this->volOrg.z + (this->volMaxC.z-this->volOrg.z)*0.5);
+//    // Loop through all grid points
+//    for (int x = 0; x < static_cast<int>(this->volDim.x); ++x) {
+//        for (int y = 0; y < static_cast<int>(this->volDim.y); ++y) {
+//            for (int z = 0; z < static_cast<int>(this->volDim.z); ++z) {
+//                Vec3f pos(this->volOrg.x + x*this->volDelta.x,
+//                        this->volOrg.y + y*this->volDelta.y,
+//                        this->volOrg.z + z*this->volDelta.z);
+//
+//                float a1 = 1.0;
+//                float c1 = 250.0;
+//                float a2 = 1.0;
+//                float c2 = 120.0;
+//                Vec3f offs(0.0, 25.0, 0.0);
+//                float len = (pos-(center+offs)).Length();
+//                float lenSqrt = len*len;
+//                //                this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = a1*std::exp(lenSqrt/(4.0*c1));
+//                //                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = a2*std::exp(lenSqrt/(4.0*c2));
+//
+//                this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = std::exp(-lenSqrt/(4.0*c1));
+//                Vec3f distToCenter = pos-center;
+//                len = distToCenter.Length();
+//                float diff1 = abs(len-rad1);
+//                float diff2 = abs(len-rad2);
+//                len = min(diff1, diff2);
+//                lenSqrt = len*len;
+////                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = std::exp(-lenSqrt/(4.0*c2));
+//                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = (10.0-len)+this->qsIsoVal;
+//
+//                //                printf("f1: %f, f2: %f\n",
+//                //                        this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x],
+//                //                        this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x]);
+//
+//                //                if ((pos-center).Length() <= rad1) {
+//                //                    this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = this->qsIsoVal+1.0;
+//                //                } else {
+//                //                    this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = this->qsIsoVal-1.0;
+//                //                }
+//                //                if ((pos-center).Length() <= rad2) {
+//                //                    this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = this->qsIsoVal+1.0;
+//                //                } else {
+//                //                    this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = this->qsIsoVal-1.0;
+//                //                }
+//            }
+//        }
+//    }
 
     // Copy to device array
     if (!CudaSafeCall(cudaMemcpy(this->procField1D.Peek(),
