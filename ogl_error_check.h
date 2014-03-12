@@ -14,7 +14,7 @@
 #include "vislib/Log.h"
 #include <GL/glu.h>
 
-#define OGL_ERROR_CHECK // Toggle OpenGL error checking
+//#define OGL_ERROR_CHECK // Toggle OpenGL error checking
 #define GLSafeCall( err ) glSafeCall( err, __FILE__, __LINE__ )
 #define CheckForGLError() checkForGLError( __FILE__, __LINE__ )
 

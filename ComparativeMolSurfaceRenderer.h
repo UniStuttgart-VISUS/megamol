@@ -17,7 +17,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 // Toggle the use of procedural volume fields for debugging purposes
-//#define USE_PROCEDURAL_DATA
+#define USE_PROCEDURAL_DATA
 
 #include "view/Renderer3DModuleDS.h"
 #include "CallerSlot.h"
@@ -66,6 +66,12 @@ public:
         SURFACE_POTENTIAL_DIFF,   // #7
         SURFACE_POTENTIAL_SIGN,   // #8
         SURFACE_LAPLACIAN};       // #9
+
+    enum UnmappedTrisColor {
+        UNMAPPEDTRIS_NONE=0,
+        UNMAPPEDTRIS_TRANS,
+        UNMAPPEDTRIS_COL
+    };
 
     /// Enum describing different ways of using RMS fitting
     enum RMSFittingMode {RMS_NONE=0, RMS_ALL, RMS_BACKBONE, RMS_C_ALPHA};
@@ -537,6 +543,10 @@ private:
     /// Parameter for coloring mode of mapped surface
     core::param::ParamSlot surfaceMappedColorModeSlot;
     SurfaceColorMode surfaceMappedColorMode;
+
+    /// Parameter for coloring mode of surface #1
+    core::param::ParamSlot unmappedTrisColorSlot;
+    UnmappedTrisColor theUnmappedTrisColor;
 
     /// Maximum positional difference for the surface
     core::param::ParamSlot surfMaxPosDiffSlot;

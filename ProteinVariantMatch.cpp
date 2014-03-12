@@ -1499,7 +1499,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             // Refine mesh
             // Perform subdivision with subsequent deformation to create a fine
             // target mesh enough
-            const uint maxSubdivLevel = 2;
+            const uint maxSubdivLevel = 0;
             const uint subdivSubLevel = 5;
             const uint deformIt = 50;
             int newTris;
@@ -1660,7 +1660,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
             //printf("valid mean vertex path %f\n", validMeanVertexPath/validSurfArea);
             //printf("mean vertex path %f\n", meanVertexPath/surfArea);
 
-            //this->matchMeanVertexPath[i*this->nVariants+j] = validMeanVertexPath/validSurfArea;
+            this->matchMeanVertexPath[i*this->nVariants+j] = validMeanVertexPath/validSurfArea;
             this->matchMeanVertexPathCorrupt[i*this->nVariants+j] = meanVertexPath/surfArea;
 
             //            if (i != j) {

@@ -516,6 +516,10 @@ public:
     bool ComputeMeshLaplacian();
     bool ComputeMeshLaplacianDiff(DeformableGPUSurfaceMT &surfStart);
 
+    float *PeekGeomLaplacian() {
+        return this->geometricLaplacian_D.Peek();
+    }
+
 protected:
 
     /**
@@ -708,6 +712,8 @@ private:
     CudaDevArr<uint> reducedVertexKeysTmp_D;
     CudaDevArr<float3> reducedNormalsTmp_D;
     CudaDevArr<uint> vertexNormalsIndxOffs_D;
+
+    CudaDevArr<float> geometricLaplacian_D;
 };
 
 } // namespace protein

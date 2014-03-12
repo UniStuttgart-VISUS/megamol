@@ -168,6 +168,7 @@ uniform sampler3D potentialTex0;
 uniform sampler3D potentialTex1;
 uniform int colorMode;
 uniform int renderMode;
+uniform int unmappedTrisColorMode;
 uniform vec3 colorMin;
 uniform vec3 colorMax;
 uniform vec3 colorUniform;
@@ -200,6 +201,7 @@ void main() {
     // Determine color
     if (colorMode == 0) { // Uniform color
         
+        //color = vec4(colorUniform, 1.0 - pathLenFrag/maxPosDiff);
         color = vec4(colorUniform, 1.0);
         
     } else if (colorMode == 1) { // Normal
@@ -220,6 +222,14 @@ void main() {
             vec4(1.0, 1.0, 1.0, 1.0), 
             vec4(1.0, 1.0, 0.0, 1.0), 
             vec4(1.0, 0.0, 0.0, 1.0));
+            
+        float potDiff = diff;        
+        
+        //vec3 colOrangeMsh = vec3(100, 0.9746*potDiff/(maxPotential-minPotential), 0.8968);
+        vec3 colYellowMsh = vec3(102.44, 0.6965*potDiff/maxPosDiff, 1.5393);
+        //vec3 blueMsh = vec3(90, 1.08*potDiff/maxPosDiff, -1.1);
+    
+        color = vec4(MSH2RGB(colYellowMsh.r, colYellowMsh.g, colYellowMsh.b), 1.0);
 
     } else if (colorMode == 5) { // Surface potential 0
             
@@ -300,13 +310,23 @@ void main() {
         color = vec4(0.5, 1.0, 1.0, 1.0);
     }
    
-//   color.a *= (1.0 - corruptFrag);
+   //color.a *= (1.0 - corruptFrag);
    // Alpha scaling by the user
     color.a *= alphaScl;
     vec3 n = normalFrag;
     
+    vec4 corruptColor;
+    if (unmappedTrisColorMode == 0) {
+        corruptColor = color;
+    } else if (unmappedTrisColorMode == 1) {
+        corruptColor = vec4(color.rgb, 0.0);
+    } else if (unmappedTrisColorMode == 2) {
+        corruptColor = vec4(0.0, 0.458823529, 0.650980392, 1.0);
+    }
+    color = corruptFrag*corruptColor + (1.0-corruptFrag)*color;
     
-    if (corruptFrag > 0) {
+    
+    /*if (corruptFrag > 0) {
         // 230,97,1
         //color.rgb = vec3(0.90, 0.38, 0.0);
         
@@ -315,15 +335,15 @@ void main() {
         //color.rgb = vec3(0.905882353, 0.745098039, 0.250980392);
 //        color.rgb = vec3(0.654901961, 0.494117647, 0.0);
         //color.rgb = vec3(0.0, 0.458823529, 0.650980392);
-        //color.rgb = vec3(0.0, 0.5, 0.7);
-    }
+//        color.rgb = vec3(0.0, 0.5, 0.7);
+    }*/
     
     if (gl_FrontFacing) {
         gl_FragColor = vec4(LocalLighting(normalize(view), normalize(n), 
             normalize(lightDir), color.rgb, lightparams), color.a);
     } else {
-        gl_FragColor = vec4(LocalLighting(normalize(view), normalize(-n), 
-            normalize(lightDir), color.rgb, lightparams), color.a);
+        gl_FragColor = vec4(LocalLighting(normalize(view), normalize(n), 
+            normalize(lightDir), color.rgb*0.7, lightparams), color.a);
     }
     
     
