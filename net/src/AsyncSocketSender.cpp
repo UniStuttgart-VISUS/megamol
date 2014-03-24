@@ -10,7 +10,7 @@
 #include <climits>
 
 #include "vislib/error.h"
-#include "vislib/Exception.h"
+#include "the/exception.h"
 #include "vislib/SocketException.h"
 #include "vislib/Thread.h"
 #include "the/trace.h"
@@ -35,10 +35,10 @@ vislib::net::AsyncSocketSender::~AsyncSocketSender(void) {
         this->Terminate();
         this->lockStoragePool.Lock();
         the::safe_delete(this->storagePool);
-    } catch (Exception& e) {
+    } catch (the::exception& e) {
         VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Exception while destroying "
-            "AsyncSocketSender: %s\n", e.GetMsgA());
+            "AsyncSocketSender: %s\n", e.what());
     }
 
     try {
@@ -70,7 +70,7 @@ unsigned int vislib::net::AsyncSocketSender::Run(Socket *socket) {
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket::Startup failed in "
             "AsyncSocketSender::Run().\n");
-        return e.GetErrorCode();
+        return e.get_error().native_error();
     }
 
     while (true) {
@@ -108,7 +108,7 @@ unsigned int vislib::net::AsyncSocketSender::Run(Socket *socket) {
             cntSent = socket->Send(data, task.cntBytes, task.timeout,
                 task.flags, task.forceSend);
         } catch (SocketException e) {
-            result = e.GetErrorCode();
+            result = e.get_error().native_error();
             // TODO: Could leave the loop, if exception does not designate timeout.
         }
         this->finaliseSendTask(task, result, cntSent);
@@ -144,10 +144,10 @@ void vislib::net::AsyncSocketSender::Send(const void *data,
 
     /* Sanity checks. */
     if (data == NULL) {
-        throw IllegalParamException("data", __FILE__, __LINE__);
+        throw the::argument_exception("data", __FILE__, __LINE__);
     }
     if ((onCompleted == NULL) && doNotCopy) {
-        throw IllegalParamException("onCompleted", __FILE__, __LINE__);
+        throw the::argument_exception("onCompleted", __FILE__, __LINE__);
     }
 
     this->lockQueue.Lock();
@@ -155,7 +155,7 @@ void vislib::net::AsyncSocketSender::Send(const void *data,
     /* Check the queue state. */
     if (!this->isQueueOpen) {
         this->lockQueue.Unlock();
-        throw IllegalStateException("The send queue has been closed. No more "
+        throw the::invalid_operation_exception("The send queue has been closed. No more "
             "tasks may be added.", __FILE__, __LINE__);
     }
 
@@ -229,10 +229,10 @@ bool vislib::net::AsyncSocketSender::Terminate(void) {
         }
         this->semBlockSender.Unlock();  // Ensure that the thread can run.
 
-    } catch (vislib::Exception& e) {
+    } catch (the::exception& e) {
         VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Terminating AsyncSocketSender "
-            "failed. %s\n", e.GetMsgA());
+            "failed. %s\n", e.what());
         retval = false;
     }
 

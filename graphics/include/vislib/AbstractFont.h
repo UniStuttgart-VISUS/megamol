@@ -883,7 +883,7 @@ namespace graphics {
          *
          * @param size The new default size of the font.
          *
-         * @throw IllegalParamException if size is less than zero.
+         * @throw argument_exception if size is less than zero.
          */
         virtual void SetSize(float size);
 

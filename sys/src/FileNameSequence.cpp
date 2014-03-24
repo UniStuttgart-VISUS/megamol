@@ -9,8 +9,8 @@
 #include "the/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/File.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/argument_exception.h"
+#include "the/index_out_of_range_exception.h"
 #include "vislib/Path.h"
 #include "vislib/String.h"
 
@@ -153,7 +153,7 @@ vislib::sys::FileNameSequence::FileNameCountElement::IncreaseCounter(void) {
 void vislib::sys::FileNameSequence::FileNameCountElement::SetCounterIndex(
         unsigned int idx) {
     if (idx >= this->Count()) {
-        throw OutOfRangeException(idx, 0, this->Count(), __FILE__, __LINE__);
+        throw the::index_out_of_range_exception(idx, 0, this->Count(), __FILE__, __LINE__);
     }
     this->value = this->minVal + this->step * idx;
     THE_ASSERT(this->value <= this->maxVal);
@@ -175,7 +175,7 @@ void vislib::sys::FileNameSequence::FileNameCountElement::SetDigits(
 void vislib::sys::FileNameSequence::FileNameCountElement::SetRange(
         unsigned int minVal, unsigned int maxVal, unsigned int step) {
     if (maxVal < minVal) {
-        throw IllegalParamException("maxVal must not be less minVal",
+        throw the::argument_exception("maxVal must not be less minVal",
             __FILE__, __LINE__);
     }
     this->minVal = minVal;

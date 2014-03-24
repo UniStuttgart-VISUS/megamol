@@ -119,7 +119,7 @@ namespace cluster {
          *
          * @return 0 in case of success, an error code otherwise.
          *
-         * @throws SystemException If the server thread could not be started.
+         * @throws the::system::system_exception If the server thread could not be started.
          */
         virtual unsigned int Run(void);
 
@@ -248,7 +248,7 @@ namespace cluster {
          *
          * @return The index if the peer node with the specified identifier.
          *
-         * @throws NoSuchElementException If no peer with the specified ID is
+         * @throws no_such_element_exception If no peer with the specified ID is
          *                                known.
          */
         size_t findPeerNode(const PeerIdentifier& peerId);

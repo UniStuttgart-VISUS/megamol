@@ -174,7 +174,7 @@ namespace net {
          *
          * @throws SocketException       In case the operation fails, e.g. the
          *                               host could not be found.
-         * @throws IllegalParamException If the specified host does not use 
+         * @throws argument_exception If the specified host does not use 
          *                               IPv4 or IPv6.
          */
         static void GetHostEntry(IPHostEntryA& outEntry, 
@@ -190,7 +190,7 @@ namespace net {
          *
          * @throws SocketException In case the operation fails, e.g. the host 
          *                         could not be found.
-         * @throws IllegalParamException If the specified host does not use 
+         * @throws argument_exception If the specified host does not use 
          *                               IPv4 or IPv6.
          */
         static void GetHostEntry(IPHostEntryW& outEntry,
@@ -204,7 +204,7 @@ namespace net {
          *
          * @throws SocketException       In case the operation fails, e.g. the
          *                               host could not be found.
-         * @throws IllegalParamException If the specified host does not use 
+         * @throws argument_exception If the specified host does not use 
          *                               IPv4 or IPv6.
          */
         static void GetHostEntry(IPHostEntryA& outEntry, 
@@ -218,7 +218,7 @@ namespace net {
          *
          * @throws SocketException       In case the operation fails, e.g. the
          *                               host could not be found.
-         * @throws IllegalParamException If the specified host does not use 
+         * @throws argument_exception If the specified host does not use 
          *                               IPv4 or IPv6.
          */
         static void GetHostEntry(IPHostEntryW& outEntry, 
@@ -232,7 +232,7 @@ namespace net {
          *
          * @throws SocketException       In case the operation fails, e.g. the
          *                               host could not be found.
-         * @throws IllegalParamException If the specified host does not use 
+         * @throws argument_exception If the specified host does not use 
          *                               IPv4 or IPv6.
          */
         static void GetHostEntry(IPHostEntryA& outEntry, 
@@ -246,7 +246,7 @@ namespace net {
          *
          * @throws SocketException       In case the operation fails, e.g. the
          *                               host could not be found.
-         * @throws IllegalParamException If the specified host does not use 
+         * @throws argument_exception If the specified host does not use 
          *                               IPv4 or IPv6.
          */
         static void GetHostEntry(IPHostEntryW& outEntry, 
@@ -260,7 +260,7 @@ namespace net {
          *
          * @throws SocketException       In case the operation fails, e.g. the
          *                               host could not be found.
-         * @throws IllegalParamException If the specified host does not use 
+         * @throws argument_exception If the specified host does not use 
          *                               IPv4 or IPv6.
          */
         static void GetHostEntry(IPHostEntryA& outEntry, 
@@ -274,7 +274,7 @@ namespace net {
          *
          * @throws SocketException       In case the operation fails, e.g. the
          *                               host could not be found.
-         * @throws IllegalParamException If the specified host does not use 
+         * @throws argument_exception If the specified host does not use 
          *                               IPv4 or IPv6.
          */
         static void GetHostEntry(IPHostEntryW& outEntry, 
@@ -340,7 +340,7 @@ namespace net {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         DNS(const DNS& rhs);
 
@@ -351,7 +351,7 @@ namespace net {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If (this != &rhs).
+         * @throws argument_exception If (this != &rhs).
          */
         DNS& operator =(const DNS& rhs);
 

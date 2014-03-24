@@ -14,7 +14,7 @@
 #include "the/assert.h"
 #include "vislib/error.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 
 
 
@@ -359,7 +359,7 @@ void vislib::sys::DateTime::Set(const time_t time) {
     if (::localtime_s(&tm, &time) == 0) {
         this->Set(tm);
     } else {
-        throw SystemException(ERROR_INVALID_DATA, __FILE__, __LINE__);
+        throw the::system::system_exception(ERROR_INVALID_DATA, __FILE__, __LINE__);
     }
 
 #elif defined(_WIN32)
@@ -367,7 +367,7 @@ void vislib::sys::DateTime::Set(const time_t time) {
     if (tm != NULL) {
         this->Set(*tm);
     } else {
-        throw SystemException(ERROR_INVALID_DATA, __FILE__, __LINE__);
+        throw the::system::system_exception(ERROR_INVALID_DATA, __FILE__, __LINE__);
     }
 
 #else  /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
@@ -375,7 +375,7 @@ void vislib::sys::DateTime::Set(const time_t time) {
     if (::localtime_r(&time, &tm) != NULL) {
         this->Set(tm);
     } else {
-        throw SystemException(EINVAL, __FILE__, __LINE__);
+        throw the::system::system_exception(EINVAL, __FILE__, __LINE__);
     }
 #endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
 }
@@ -389,7 +389,7 @@ void vislib::sys::DateTime::Set(const FILETIME& fileTime) {
     THE_STACK_TRACE;
     SYSTEMTIME systemTime;
     if (!::FileTimeToSystemTime(&fileTime, &systemTime)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     this->Set(systemTime, true);
 }
@@ -406,7 +406,7 @@ void vislib::sys::DateTime::Set(const SYSTEMTIME& systemTime,
     if (isUTC) {
         if (!::SystemTimeToTzSpecificLocalTime(NULL, 
                 const_cast<SYSTEMTIME *>(&systemTime), &lSystemTime)) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
         this->Set(lSystemTime.wYear, lSystemTime.wMonth, lSystemTime.wDay,
             lSystemTime.wHour, lSystemTime.wMinute, lSystemTime.wSecond, 
@@ -541,7 +541,7 @@ vislib::sys::DateTime::operator FILETIME(void) const {
     SYSTEMTIME systemTime = static_cast<SYSTEMTIME>(*this);
     
     if (!::SystemTimeToFileTime(&systemTime, &retval)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return retval;

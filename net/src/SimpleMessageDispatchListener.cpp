@@ -9,7 +9,7 @@
 #include "vislib/SimpleMessageDispatchListener.h"
 
 #include "vislib/AbstractSimpleMessage.h"
-#include "vislib/Exception.h"
+#include "the/exception.h"
 #include "vislib/SimpleMessageDispatcher.h"
 #include "the/stack_trace.h"
 
@@ -37,7 +37,7 @@ vislib::net::SimpleMessageDispatchListener::~SimpleMessageDispatchListener(
  */
 bool vislib::net::SimpleMessageDispatchListener::OnCommunicationError(
         SimpleMessageDispatcher& src, 
-        const vislib::Exception& exception) throw() {
+        const the::exception& exception) throw() {
     THE_STACK_TRACE;
     return true;
 }

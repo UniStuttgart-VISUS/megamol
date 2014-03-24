@@ -169,11 +169,11 @@ namespace vislib {
             /** 
              * Behaves like Iterator<T>::Next 
              *
-             * @throw IllegalStateException if there is no next element
+             * @throw invalid_operation_exception if there is no next element
              */
             virtual ElementPair& Next(void) {
                 if (!this->HasNext()) {
-                    throw IllegalStateException("There is no next element",
+                    throw the::invalid_operation_exception("There is no next element",
                         __FILE__, __LINE__);
                 }
                 this->retval.key = &this->owner->keys[this->idx];

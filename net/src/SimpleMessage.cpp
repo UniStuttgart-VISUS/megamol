@@ -9,7 +9,7 @@
 
 #include <climits>
 
-#include "vislib/OutOfRangeException.h"
+#include "the/index_out_of_range_exception.h"
 
 
 /*

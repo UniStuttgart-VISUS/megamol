@@ -8,11 +8,11 @@
 #include "vislib/Socket.h"  // Must be first.
 #include "vislib/CommServer.h"
 
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
+#include "the/argument_exception.h"
+#include "the/invalid_operation_exception.h"
 #include "vislib/Interlocked.h"
 #include "vislib/SocketException.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "vislib/TcpCommChannel.h"
 #include "the/trace.h"
 
@@ -90,8 +90,8 @@ unsigned int vislib::net::CommServer::Run(void *config) {
             "CommServer::Run\n.");
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket::Startup in CommServer::Run "
-            "failed: %s\n", e.GetMsgA());
-        retval = e.GetErrorCode();
+            "failed: %s\n", e.what());
+        retval = e.get_error().native_error();
         this->fireServerError(e);
         return retval;
     }
@@ -101,14 +101,14 @@ unsigned int vislib::net::CommServer::Run(void *config) {
         this->configuration.Channel->Bind(this->configuration.EndPoint);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "CommServer bound to %s.\n",
             this->configuration.EndPoint->ToStringA().PeekBuffer());
-    } catch (sys::SystemException se) {
+    } catch (the::system::system_exception se) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Binding server end point to specified "
-            "address failed: %s\n", se.GetMsgA());
-        retval = se.GetErrorCode();
+            "address failed: %s\n", se.what());
+        retval = se.get_error().native_error();
         this->fireServerError(se);
-    } catch (Exception e) {
+    } catch (the::exception e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Binding server end point to specified "
-            "address failed: %s\n", e.GetMsgA());
+            "address failed: %s\n", e.what());
         retval = -1;
         this->fireServerError(e);
     }
@@ -118,14 +118,14 @@ unsigned int vislib::net::CommServer::Run(void *config) {
         this->configuration.Channel->Listen(SOMAXCONN);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "CommServer is now in listen "
             "state.\n");
-    } catch (sys::SystemException se) {
+    } catch (::the::system::system_exception se) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Putting server end point in listen "
-            "state failed: %s\n", se.GetMsgA());
-        retval = se.GetErrorCode();
+            "state failed: %s\n", se.what());
+        retval = se.get_error().native_error();
         this->fireServerError(se);
-    } catch (Exception e) {
+    } catch (the::exception e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Putting server end point in listen "
-            "state failed: %s\n", e.GetMsgA());
+            "state failed: %s\n", e.what());
         retval = -1;
         this->fireServerError(e);
     }
@@ -150,21 +150,21 @@ unsigned int vislib::net::CommServer::Run(void *config) {
                     try {
                         channel->Close();
                         channel.Release();
-                    } catch (Exception e) {
+                    } catch (the::exception e) {
                         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Closing unused peer "
-                            "connection caused an error: %s\n", e.GetMsgA());
+                            "connection caused an error: %s\n", e.what());
                     }
                 }
-           } catch (sys::SystemException e) {
+           } catch (the::system::system_exception e) {
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Communication error in "
-                    "CommServer: %s\n", e.GetMsgA());
-                retval = e.GetErrorCode();
+                    "CommServer: %s\n", e.what());
+                retval = e.get_error().native_error();
                 int32_t ds = this->fireServerError(e); 
                 vislib::sys::Interlocked::CompareExchange(&this->doServe, ds, 
                     static_cast<int32_t>(1));
-            } catch (Exception e) {
+            } catch (the::exception e) {
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Communication error in "
-                    "CommServer: %s\n", e.GetMsgA());
+                    "CommServer: %s\n", e.what());
                 retval = -1;
                 int32_t ds = this->fireServerError(e);
                 vislib::sys::Interlocked::CompareExchange(&this->doServe, ds, 
@@ -182,8 +182,8 @@ unsigned int vislib::net::CommServer::Run(void *config) {
         Socket::Cleanup();
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Socket::Cleanup in CommServer::Run "
-            "failed: %s\n", e.GetMsgA());
-        retval = e.GetErrorCode();
+            "failed: %s\n", e.what());
+        retval = e.get_error().native_error();
         this->fireServerError(e);
     }
 
@@ -205,9 +205,9 @@ bool vislib::net::CommServer::Terminate(void) {
         if (!this->configuration.Channel.IsNull()) {
             this->configuration.Channel->Close();
         }
-    } catch (Exception e) {
+    } catch (the::exception e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Exception when shutting down "
-            "CommServer: %s. This is usually no problem.", e.GetMsgA());
+            "CommServer: %s. This is usually no problem.", e.what());
     }
     return true;
 }
@@ -242,7 +242,7 @@ bool vislib::net::CommServer::fireNewConnection(
  * vislib::net::CommServer::fireServerError
  */
 bool vislib::net::CommServer::fireServerError(
-        const vislib::Exception& exception) {
+        const the::exception& exception) {
     THE_STACK_TRACE;
     bool retval = true;
 

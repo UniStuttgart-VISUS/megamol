@@ -124,7 +124,7 @@ void TestCmdLineParser1(void) {
     AssertEqual<const CLPOption*>("parser.FindOption(h) != NULL", parser.FindOption(CLPS('h')), &helpOption);
     AssertNotEqual<const CLPOption*>("parser.FindOption(t) != NULL", parser.FindOption(CLPS('t')), NULL);
 
-    AssertException("Adding option a second time; Expecting IllegalParamException", parser.AddOption(&helpOption), vislib::IllegalParamException);
+    AssertException("Adding option a second time; Expecting argument_exception", parser.AddOption(&helpOption), the::argument_exception);
 
     parser.RemoveOption(&testOption);
 
@@ -270,27 +270,27 @@ void TestCmdLineParser1(void) {
                 AssertEqual("First Test Option Occurrence is 7", testOption.GetFirstOccurrence(), parser.GetArgument(7));
 
                 CLPArgument *arg = parser.GetArgument(7);
-                AssertException("Argument[7].GetValueString; Exception UnsupportedOperationException", arg->GetValueString(), vislib::UnsupportedOperationException);
-                AssertException("Argument[7].GetValueInt; Exception UnsupportedOperationException", arg->GetValueInt(), vislib::UnsupportedOperationException);
-                AssertNoException("Argument[7].GetValueDouble; Exception UnsupportedOperationException", arg->GetValueDouble());
+                AssertException("Argument[7].GetValueString; Exception not_supported_exception", arg->GetValueString(), the::not_supported_exception);
+                AssertException("Argument[7].GetValueInt; Exception not_supported_exception", arg->GetValueInt(), the::not_supported_exception);
+                AssertNoException("Argument[7].GetValueDouble; Exception not_supported_exception", arg->GetValueDouble());
                 AssertNearlyEqual("Argument[7].GetValueDouble == 4.2", arg->GetValueDouble(), 4.2);
 
                 arg = parser.GetArgument(8);
-                AssertException("Argument[8].GetValueString; Exception UnsupportedOperationException", arg->GetValueString(), vislib::UnsupportedOperationException);
-                AssertException("Argument[8].GetValueInt; Exception UnsupportedOperationException", arg->GetValueInt(), vislib::UnsupportedOperationException);
-                AssertNoException("Argument[8].GetValueDouble; Exception UnsupportedOperationException", arg->GetValueDouble());
+                AssertException("Argument[8].GetValueString; Exception not_supported_exception", arg->GetValueString(), the::not_supported_exception);
+                AssertException("Argument[8].GetValueInt; Exception not_supported_exception", arg->GetValueInt(), the::not_supported_exception);
+                AssertNoException("Argument[8].GetValueDouble; Exception not_supported_exception", arg->GetValueDouble());
                 AssertNearlyEqual("Argument[8].GetValueDouble == 4.2", arg->GetValueDouble(), 4.2);
 
                 arg = parser.GetArgument(13);
-                AssertException("Argument[13].GetValueString; Exception UnsupportedOperationException", arg->GetValueString(), vislib::UnsupportedOperationException);
-                AssertException("Argument[13].GetValueInt; Exception UnsupportedOperationException", arg->GetValueInt(), vislib::UnsupportedOperationException);
-                AssertNoException("Argument[13].GetValueDouble; Exception UnsupportedOperationException", arg->GetValueDouble());
+                AssertException("Argument[13].GetValueString; Exception not_supported_exception", arg->GetValueString(), the::not_supported_exception);
+                AssertException("Argument[13].GetValueInt; Exception not_supported_exception", arg->GetValueInt(), the::not_supported_exception);
+                AssertNoException("Argument[13].GetValueDouble; Exception not_supported_exception", arg->GetValueDouble());
                 AssertNearlyEqual("Argument[13].GetValueDouble == 4.1", arg->GetValueDouble(), 4.1);
 
                 arg = parser.GetArgument(14);
-                AssertException("Argument[14].GetValueString; Exception UnsupportedOperationException", arg->GetValueString(), vislib::UnsupportedOperationException);
-                AssertException("Argument[14].GetValueInt; Exception UnsupportedOperationException", arg->GetValueInt(), vislib::UnsupportedOperationException);
-                AssertNoException("Argument[14].GetValueDouble; Exception UnsupportedOperationException", arg->GetValueDouble());
+                AssertException("Argument[14].GetValueString; Exception not_supported_exception", arg->GetValueString(), the::not_supported_exception);
+                AssertException("Argument[14].GetValueInt; Exception not_supported_exception", arg->GetValueInt(), the::not_supported_exception);
+                AssertNoException("Argument[14].GetValueDouble; Exception not_supported_exception", arg->GetValueDouble());
                 AssertNearlyEqual("Argument[14].GetValueDouble == 4.1", arg->GetValueDouble(), 4.1);
 
                 CLProvider selectedArgs;

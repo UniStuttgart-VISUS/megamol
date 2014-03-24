@@ -75,16 +75,16 @@ void TestStringA(void) {
 
     try {
         s2[-1];
-        AssertTrue("OutOfRangeException at begin", false);
-    } catch (OutOfRangeException) {
-        AssertTrue("OutOfRangeException at begin", true);
+        AssertTrue("index_out_of_range_exception at begin", false);
+    } catch (the::index_out_of_range_exception) {
+        AssertTrue("index_out_of_range_exception at begin", true);
     }
 
     try {
         s2[s2.Length()];
-        AssertTrue("OutOfRangeException at end", false);
-    } catch (OutOfRangeException) {
-        AssertTrue("OutOfRangeException at end", true);
+        AssertTrue("index_out_of_range_exception at end", false);
+    } catch (the::index_out_of_range_exception) {
+        AssertTrue("index_out_of_range_exception at end", true);
     }
 
     AssertTrue("Test for inequality", s1 != s2);
@@ -305,7 +305,7 @@ void TestStringA(void) {
 
     int64 = CharTraitsA::ParseInt64("12345");
     AssertEqual("Parsing int64_t", int64, int64_t(12345));
-    AssertException("Exception for invalid int64_t", CharTraitsA::ParseInt64("hugo"), FormatException);
+    AssertException("Exception for invalid int64_t", CharTraitsA::ParseInt64("hugo"), the::format_exception);
 }
 
 void TestStringW(void) {
@@ -332,16 +332,16 @@ void TestStringW(void) {
 
     try {
         s2[-1];
-        AssertTrue("OutOfRangeException at begin", false);
-    } catch (OutOfRangeException) {
-        AssertTrue("OutOfRangeException at begin", true);
+        AssertTrue("index_out_of_range_exception at begin", false);
+    } catch (the::index_out_of_range_exception) {
+        AssertTrue("index_out_of_range_exception at begin", true);
     }
 
     try {
         s2[s2.Length()];
-        AssertTrue("OutOfRangeException at end", false);
-    } catch (OutOfRangeException) {
-        AssertTrue("OutOfRangeException at end", true);
+        AssertTrue("index_out_of_range_exception at end", false);
+    } catch (the::index_out_of_range_exception) {
+        AssertTrue("index_out_of_range_exception at end", true);
     }
 
     AssertTrue("Test for inequality", s1 != s2);
@@ -566,7 +566,7 @@ void TestStringW(void) {
 
     int64 = CharTraitsW::ParseInt64(L"12345");
     AssertEqual("Parsing int64_t", int64, int64_t(12345));
-    AssertException("Exception for invalid int64_t", CharTraitsW::ParseInt64(L"hugo"), FormatException);
+    AssertException("Exception for invalid int64_t", CharTraitsW::ParseInt64(L"hugo"), the::format_exception);
 }
 
 void TestUTF8String(void) {

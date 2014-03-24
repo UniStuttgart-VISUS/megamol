@@ -19,7 +19,7 @@
 #ifndef _WIN32
 
 #include "vislib/String.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
 
 #include <sys/types.h>
@@ -107,7 +107,7 @@ template<class T> bool vislib::sys::LinuxDaemon<T>::Run(void) {
     pid = ::fork();
     if (pid < 0) {
         /* Forking failed. */
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
 
     } else if (pid > 0) {
         /* Forking succeeded, leave parent process. */

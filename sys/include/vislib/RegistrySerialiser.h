@@ -70,7 +70,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throw SystemException If the registry handle could not be 
+         * @throw the::system::system_exception If the registry handle could not be 
          *                        duplicated.
          */
         RegistrySerialiser(const RegistrySerialiser& rhs);
@@ -309,7 +309,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throw SystemException If the registry handle could not be 
+         * @throw the::system::system_exception If the registry handle could not be 
          *                        duplicated.
          */
         RegistrySerialiser& operator =(const RegistrySerialiser& rhs);
@@ -342,10 +342,10 @@ namespace sys {
          * @param outValue Recevies the deserialised value.
          * @param name     The name of the stored value.
          *
-         * @throws IllegalParamException If 'name' is NULL or the type of the 
+         * @throws argument_exception If 'name' is NULL or the type of the 
          *                               value parameter does not match the 
          *                               type of the stored element.
-         * @throws SystemException If the registry access failed.
+         * @throws the::system::system_exception If the registry access failed.
          */
         template<class T, class R, class C>
         inline void deserialiseAsDword(T& outValue, const C *name) {
@@ -369,10 +369,10 @@ namespace sys {
          * @param outValue Recevies the deserialised value.
          * @param name     The name of the stored value.
          *
-         * @throws IllegalParamException If 'name' is NULL or the type of the 
+         * @throws argument_exception If 'name' is NULL or the type of the 
          *                               value parameter does not match the 
          *                               type of the stored element.
-         * @throws SystemException If the registry access failed.
+         * @throws the::system::system_exception If the registry access failed.
          */
         template<class T, class C>
         inline void deserialiseSignedAsDword(T& outValue, const C *name) {
@@ -391,10 +391,10 @@ namespace sys {
          * @param outValue Recevies the deserialised value.
          * @param name     The name of the stored value.
          *
-         * @throws IllegalParamException If 'name' is NULL or the type of the 
+         * @throws argument_exception If 'name' is NULL or the type of the 
          *                               value parameter does not match the 
          *                               type of the stored element.
-         * @throws SystemException If the registry access failed.
+         * @throws the::system::system_exception If the registry access failed.
          */
         template<class T, class C>
         inline void deserialiseUnsignedAsDword(T& outValue, const C *name) {
@@ -407,7 +407,7 @@ namespace sys {
          * @param subKey Name of the subkey to write to.
          * @param hKey   Key to create the subkey at.
          *
-         * @throws SystemException In case of an error.
+         * @throws the::system::system_exception In case of an error.
          */
         void initialise(const char *subKey, HKEY hKey);
 
@@ -417,7 +417,7 @@ namespace sys {
          * @param subKey Name of the subkey to write to.
          * @param hKey   Key to create the subkey at.
          *
-         * @throws SystemException In case of an error.
+         * @throws the::system::system_exception In case of an error.
          */
         void initialise(const wchar_t *subKey, HKEY hKey);
 
@@ -429,7 +429,7 @@ namespace sys {
          * @param value The value to save.
          * @param name  The name of the stored value.
          *
-         * @throws SystemException If the registry access failed.
+         * @throws the::system::system_exception If the registry access failed.
          */
         template<class T, class C>
         inline void serialiseAsDword(const T& value, const C *name) {
@@ -453,7 +453,7 @@ namespace sys {
          * @param value The value to save.
          * @param name  The name of the stored value.
          *
-         * @throws SystemException If the registry access failed.
+         * @throws the::system::system_exception If the registry access failed.
          */
         template<class T, class R, class C>
         inline void serialiseAsDword0(const T& value, const C *name) {

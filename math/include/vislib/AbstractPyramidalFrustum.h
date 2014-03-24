@@ -22,7 +22,7 @@
 #include "the/stack_trace.h"
 #include "the/types.h"
 
-#include "vislib/MissingImplementationException.h"
+#include "the/not_implemented_exception.h"
 
 namespace vislib {
 namespace math {
@@ -176,7 +176,7 @@ namespace math {
         // TODO: Check parallel
         // TODO: Check base size
         // TODO: Check apex
-        throw MissingImplementationException("checkSanity", __FILE__, __LINE__);
+        throw the::not_implemented_exception("checkSanity", __FILE__, __LINE__);
         return true;
     }
     

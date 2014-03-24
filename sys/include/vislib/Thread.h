@@ -80,7 +80,7 @@ namespace sys {
          * Causes the calling thread to yield execution to another thread that 
          * is ready to run on the current processor.
          *
-         * @throws SystemException If the operation could not be completed 
+         * @throws the::system::system_exception If the operation could not be completed 
          *                         successfully (Linux only).
          */
         static void Reschedule(void);
@@ -112,7 +112,7 @@ namespace sys {
          *
          * @return The thread exit code.
          * 
-         * @throws SystemException If the exit code could not be determined.
+         * @throws the::system::system_exception If the exit code could not be determined.
          */
         unsigned int GetExitCode(void) const;
 
@@ -143,7 +143,7 @@ namespace sys {
          * On Linux, Join() detaches the thread. Any further call to join is
          * illegal.
          *
-         * @throws SystemException If waiting for the thread failed.
+         * @throws the::system::system_exception If waiting for the thread failed.
          */
         void Join(void);
 
@@ -159,7 +159,7 @@ namespace sys {
          * @return true, if the thread was started, false, if it could not be
          *         started, because it is already running.
          *
-         * @throws SystemException If the creation of the new thread failed.
+         * @throws the::system::system_exception If the creation of the new thread failed.
          */
         bool Start(void *userData = NULL);
 
@@ -170,7 +170,7 @@ namespace sys {
          * behaviour is as follows: If 'forceTerminate' is true, the thread is
          * forcefully terminated and the method returns true. 'forceTerminate'
          * cannot be false when using a RunnableFunc. The method will throw
-         * an IllegalParamException.
+         * an argument_exception.
          *
          * If the thread has been constructed using a Runnable object, the
          * behaviour is as follows: If 'forceTerminate' is true, the thread
@@ -192,10 +192,10 @@ namespace sys {
          * 
          * @returns true, if the thread has been terminated, false, otherwise.
          *
-         * @throws IllegalStateException If 'forceTerminate' is false and the
+         * @throws invalid_operation_exception If 'forceTerminate' is false and the
          *                               thread has been constructed using a 
          *                               RunnableFunc.
-         * @throws SystemException       If terminating the thread forcefully
+         * @throws the::system::system_exception       If terminating the thread forcefully
          *                               failed.
          */
         bool Terminate(const bool forceTerminate, const int exitCode = 0);
@@ -222,7 +222,7 @@ namespace sys {
          * @return true, if the Runnable acknowledged the termination request,
          *         false otherwise.
          *
-         * @throws IllegalStateException If the thread has been constructed 
+         * @throws invalid_operation_exception If the thread has been constructed 
          *                               using a RunnableFunc.
          */
         bool TryTerminate(const bool doWait = false);
@@ -269,7 +269,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         Thread(const Thread& rhs);
 
@@ -280,7 +280,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If (this != &rhs).
+         * @throws argument_exception If (this != &rhs).
          */
         Thread& operator =(const Thread& rhs);
 

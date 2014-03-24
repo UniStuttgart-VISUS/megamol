@@ -64,7 +64,7 @@ namespace net {
          * 
          * @return The IPEndPoint if all parameters are valid.
          *
-         * @throws IllegalParamException If 'host' is not a valid host name or
+         * @throws argument_exception If 'host' is not a valid host name or
          *                               IP address.
          */
         static IPEndPoint CreateIPv4(const char *hostNameOrAddress,
@@ -80,7 +80,7 @@ namespace net {
          * 
          * @return The IPEndPoint if all parameters are valid.
          *
-         * @throws IllegalParamException If 'host' is not a valid host name or
+         * @throws argument_exception If 'host' is not a valid host name or
          *                               IP address.
          */
         static IPEndPoint CreateIPv6(const char *hostNameOrAddress,
@@ -120,7 +120,7 @@ namespace net {
          * @param addressFamily The address family to create the end point for.
          * @param port          The port number of the end point.
          *
-         * @throw IllegalParamException If 'addressFamily' is not one of the
+         * @throw argument_exception If 'addressFamily' is not one of the
          *                              supported families.
          */
         IPEndPoint(const AddressFamily addressFamily,
@@ -186,7 +186,7 @@ namespace net {
          *
          * @return The IP address of the end point.
          *
-         * @throws IllegalStateException If the address familiy is illegal.
+         * @throws invalid_operation_exception If the address familiy is illegal.
          */
         IPAgnosticAddress GetIPAddress(void) const;
 
@@ -196,7 +196,7 @@ namespace net {
          *
          * @return The IP address of the end point.
          *
-         * @throws IllegalStateException If the address familiy is illegal.
+         * @throws invalid_operation_exception If the address familiy is illegal.
          */
         IPAddress GetIPAddress4(void) const;
 
@@ -206,7 +206,7 @@ namespace net {
          *
          * @return The IP address of the end point.
          *
-         * @throws IllegalStateException If the address familiy is illegal.
+         * @throws invalid_operation_exception If the address familiy is illegal.
          */
         IPAddress6 GetIPAddress6(void) const;
 
@@ -215,7 +215,7 @@ namespace net {
          *
          * @return The port of the IP end point.
          *
-         * @throws IllegalStateException If the address familiy is illegal.
+         * @throws invalid_operation_exception If the address familiy is illegal.
          */
         unsigned short GetPort(void) const;
 
@@ -400,7 +400,7 @@ namespace net {
          * @return The legacy SocketAdddress that is equivalent to this 
          *         IPEndPoint.
          *
-         * @throws IllegalStateException If the end point cannot be converted
+         * @throws invalid_operation_exception If the end point cannot be converted
          *                               into an IPv4 SocketAddress.
          */
         operator SocketAddress(void) const;

@@ -7,7 +7,7 @@
 
 #include "vislib/BitmapPainter.h"
 #include "the/assert.h"
-#include "vislib/IllegalStateException.h"
+#include "the/invalid_operation_exception.h"
 #include "vislib/mathfunctions.h"
 
 
@@ -93,7 +93,7 @@ inline
 #endif /* _WIN32 */
 void vislib::graphics::BitmapPainter::preDraw(void) {
     if (this->img == NULL) {
-        throw vislib::IllegalStateException(
+        throw the::invalid_operation_exception(
             "You must set an image to draw to", __FILE__, __LINE__);
     }
     if (this->colBits == NULL) {

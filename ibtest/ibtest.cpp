@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 
-#include "vislib/COMException.h"
+#include "the/system/com_exception.h"
 #include "vislib/Event.h"
 #include "vislib/IbvCommChannel.h"
 #include "vislib/IbvCommServerChannel.h"
@@ -76,7 +76,7 @@ unsigned int Server::Run(void *userData) {
         return 0;
 
     } catch (IbRdmaException e) {
-        std::cerr << "IB server failed: " << e.GetMsgA() << std::endl;
+        std::cerr << "IB server failed: " << e.what() << std::endl;
         return static_cast<unsigned int>(e.GetErrorCode());
     }
 }
@@ -118,7 +118,7 @@ unsigned int Client::Run(void *userData) {
         std::cout << "Client leaving..." << std::endl;
         return 0;
     } catch (IbRdmaException e) {
-        std::cerr << "IB client failed: " << e.GetMsgA() << ", " << e.GetErrorCode() << std::endl;
+        std::cerr << "IB client failed: " << e.what() << ", " << e.GetErrorCode() << std::endl;
         return static_cast<unsigned int>(e.GetErrorCode());
     }
 }
@@ -169,7 +169,7 @@ int _tmain(int argc, _TCHAR **argv) {
         }
 
     } catch (IbRdmaException e) {
-        std::cerr << "Retrieving IB devices failed: " << e.GetMsgA() 
+        std::cerr << "Retrieving IB devices failed: " << e.what() 
             << std::endl;
     }
 
@@ -212,8 +212,8 @@ int _tmain(int argc, _TCHAR **argv) {
         //channel->Bind(ep);
         //channel->Listen();
         //channel->Accept();
-    } catch (COMException e) {
-        std::cerr << "Starting IB server failed: " << e.GetMsgA() 
+    } catch (the::system::com_exception e) {
+        std::cerr << "Starting IB server failed: " << e.what() 
             << std::endl;
     }
 

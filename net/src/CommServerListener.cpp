@@ -9,7 +9,7 @@
 #include "vislib/CommServerListener.h"
 
 #include "vislib/CommServer.h"
-#include "vislib/Exception.h"
+#include "the/exception.h"
 #include "the/stack_trace.h"
 
 
@@ -25,7 +25,7 @@ vislib::net::CommServerListener::~CommServerListener(void) {
  * vislib::net::CommServerListener::OnServerError
  */
 bool vislib::net::CommServerListener::OnServerError(
-        const CommServer& src, const vislib::Exception& exception) throw() {
+        const CommServer& src, const the::exception& exception) throw() {
     THE_STACK_TRACE;
     return true;
 }

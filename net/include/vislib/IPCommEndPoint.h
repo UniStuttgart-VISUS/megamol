@@ -152,7 +152,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'addressFamily' is not supported.
+         * @throws argument_exception If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPAgnosticAddress::AddressFamily addressFamily, 
@@ -180,7 +180,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'addressFamily' is not supported.
+         * @throws argument_exception If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
@@ -209,7 +209,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'hostNameOrAddress' is not a valid
+         * @throws argument_exception If 'hostNameOrAddress' is not a valid
          *                               host name or IP address.
          */
         static SmartRef<AbstractCommEndPoint> Create(
@@ -235,7 +235,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'hostNameOrAddress' is not a valid
+         * @throws argument_exception If 'hostNameOrAddress' is not a valid
          *                               host name or IP address.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
@@ -265,9 +265,9 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'hostNameOrAddress' is not a valid
+         * @throws argument_exception If 'hostNameOrAddress' is not a valid
          *                               host name or IP address.
-         * @throws IllegalParamException If 'addressFamily' is not supported.
+         * @throws argument_exception If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPAgnosticAddress::AddressFamily addressFamily, 
@@ -297,9 +297,9 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'hostNameOrAddress' is not a valid
+         * @throws argument_exception If 'hostNameOrAddress' is not a valid
          *                               host name or IP address.
-         * @throws IllegalParamException If 'addressFamily' is not supported.
+         * @throws argument_exception If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPAgnosticAddress::AddressFamily addressFamily, 
@@ -328,9 +328,9 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'hostNameOrAddress' is not a valid
+         * @throws argument_exception If 'hostNameOrAddress' is not a valid
          *                               host name or IP address.
-         * @throws IllegalParamException If 'addressFamily' is not supported.
+         * @throws argument_exception If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
@@ -360,9 +360,9 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'hostNameOrAddress' is not a valid
+         * @throws argument_exception If 'hostNameOrAddress' is not a valid
          *                               host name or IP address.
-         * @throws IllegalParamException If 'addressFamily' is not supported.
+         * @throws argument_exception If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
@@ -391,7 +391,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'str' is not a valid end point 
+         * @throws argument_exception If 'str' is not a valid end point 
          *                               address. "Valid" also means that the
          *                               string representation is compatible
          *                               with the given protocol version.
@@ -423,7 +423,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'str' is not a valid end point 
+         * @throws argument_exception If 'str' is not a valid end point 
          *                               address. "Valid" also means that the
          *                               string representation is compatible
          *                               with the given protocol version.
@@ -453,11 +453,11 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'str' is not a valid end point 
+         * @throws argument_exception If 'str' is not a valid end point 
          *                               address. "Valid" also means that the
          *                               string representation is compatible
          *                               with the given protocol version.
-         * @throws IllegalParamException If 'addressFamily' is not supported.
+         * @throws argument_exception If 'addressFamily' is not supported.
          */
         static SmartRef<AbstractCommEndPoint> Create(
             const IPAgnosticAddress::AddressFamily addressFamily,
@@ -481,11 +481,11 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'str' is not a valid end point 
+         * @throws argument_exception If 'str' is not a valid end point 
          *                               address. "Valid" also means that the
          *                               string representation is compatible
          *                               with the given protocol version.
-         * @throws IllegalParamException If 'addressFamily' is not supported.
+         * @throws argument_exception If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPAgnosticAddress::AddressFamily addressFamily,
@@ -512,11 +512,11 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'str' is not a valid end point 
+         * @throws argument_exception If 'str' is not a valid end point 
          *                               address. "Valid" also means that the
          *                               string representation is compatible
          *                               with the given protocol version.
-         * @throws IllegalParamException If 'addressFamily' is not supported.
+         * @throws argument_exception If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
@@ -545,11 +545,11 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'str' is not a valid end point 
+         * @throws argument_exception If 'str' is not a valid end point 
          *                               address. "Valid" also means that the
          *                               string representation is compatible
          *                               with the given protocol version.
-         * @throws IllegalParamException If 'addressFamily' is not supported.
+         * @throws argument_exception If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
@@ -576,7 +576,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'str' is not a valid end point 
+         * @throws argument_exception If 'str' is not a valid end point 
          *                               address.
          */
         static SmartRef<AbstractCommEndPoint> Create(const char *str);
@@ -599,7 +599,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws IllegalParamException If 'str' is not a valid end point 
+         * @throws argument_exception If 'str' is not a valid end point 
          *                               address.
          */
         static SmartRef<AbstractCommEndPoint> Create(const wchar_t *str);
@@ -672,7 +672,7 @@ namespace net {
          *
          * @param str A string representation of an end point address.
          *
-         * @throws vislib::Exception Or derived in case that 'str' could not
+         * @throws the::exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
         virtual void Parse(const StringA& str);
@@ -690,7 +690,7 @@ namespace net {
          * @param preferredProtocolVersion The preferred protocol version if
          *                                 more than one is possible.
          *
-         * @throws vislib::Exception Or derived in case that 'str' could not
+         * @throws the::exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
         virtual void Parse(const StringA& str, 
@@ -708,7 +708,7 @@ namespace net {
          *
          * @param str A string representation of an end point address.
          *
-         * @throws vislib::Exception Or derived in case that 'str' could not
+         * @throws the::exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
         virtual void Parse(const StringW& str);
@@ -726,7 +726,7 @@ namespace net {
          * @param preferredProtocolVersion The preferred protocol version if
          *                                 more than one is possible.
          *
-         * @throws vislib::Exception Or derived in case that 'str' could not
+         * @throws the::exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
         virtual void Parse(const StringW& str, 
@@ -837,7 +837,7 @@ namespace net {
          * @return The protocol version that represents the given address
          *         family.
          *
-         * @throws IllegalParamException If 'addressFamily' is not supported.
+         * @throws argument_exception If 'addressFamily' is not supported.
          */
         static ProtocolVersion convertAddressFamily(
             const IPAgnosticAddress::AddressFamily addressFamily);

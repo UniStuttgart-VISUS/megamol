@@ -15,7 +15,7 @@
 
 
 #include "glh/glh_genext.h"
-#include "vislib/Exception.h"
+#include "the/exception.h"
 #include "vislib/String.h"
 
 
@@ -34,7 +34,7 @@ namespace gl {
         /**
          * This exception is throws, if compiling a shader failed.
          */
-        class CompileException : public Exception {
+        class CompileException : public the::exception {
 
         public:
 
@@ -45,7 +45,7 @@ namespace gl {
                 ACTION_COMPILE_VERTEX_CODE,
                 ACTION_COMPILE_FRAGMENT_CODE,
                 ACTION_COMPILE_GEOMETRY_CODE,
-				ACTION_COMPILE_COMPUTE_CODE,
+                ACTION_COMPILE_COMPUTE_CODE,
                 ACTION_LINK
             };
 
@@ -180,7 +180,7 @@ namespace gl {
          * @return GL_NO_ERROR in case of success, an error code, if the
          *         shader could not be enabled.
          *
-         * @throws IllegalStateException If the shader is not valid, i. e. has
+         * @throws invalid_operation_exception If the shader is not valid, i. e. has
          *                               not been successfully created.
          */
         virtual GLenum Enable(void) = 0;

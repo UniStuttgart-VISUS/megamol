@@ -56,7 +56,7 @@ namespace net {
          *
          * @param str A string representation of an end point address.
          *
-         * @throws vislib::Exception Or derived in case that 'str' could not
+         * @throws the::exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
         virtual void Parse(const StringA& str) = 0;
@@ -68,7 +68,7 @@ namespace net {
          *
          * @param str A string representation of an end point address.
          *
-         * @throws vislib::Exception Or derived in case that 'str' could not
+         * @throws the::exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
         virtual void Parse(const StringW& str) = 0;

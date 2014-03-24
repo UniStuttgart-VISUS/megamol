@@ -8,11 +8,11 @@
 //#include "vislib/IbvCommChannel.h"
 //
 //#include "the/assert.h"
-//#include "vislib/Exception.h"
+//#include "the/exception.h"
 //#include "vislib/IbvInformation.h"
 //#include "vislib/IPCommEndPoint.h"
 //#include "the/memory.h"
-//#include "vislib/MissingImplementationException.h"
+//#include "the/not_implemented_exception.h"
 //#include "vislib/sysfunctions.h"
 //#include "the/trace.h"
 //
@@ -32,7 +32,7 @@
 //    if (FAILED(hr = this->connectEndPoint->GetRequest(ep, NULL))) {
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "GetRequest failed "
 //            "with error code %d.\n", hr);
-//        throw sys::COMException(hr, __FILE__, __LINE__);
+//        throw the::system::com_exception(hr, __FILE__, __LINE__);
 //    }
 //
 //    WV_CONNECT_PARAM conParam;
@@ -52,7 +52,7 @@
 //            &conParam, NULL))) {
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Accepting client failed "
 //            "with error code %d.\n", hr);
-//        throw sys::COMException(hr, __FILE__, __LINE__);
+//        throw the::system::com_exception(hr, __FILE__, __LINE__);
 //    }
 //
 //
@@ -102,7 +102,7 @@
 //            static_cast<struct sockaddr *>(ep)))) {
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Binding IB end point failed "
 //            "with error code %d.\n", hr);
-//        throw sys::COMException(hr, __FILE__, __LINE__);
+//        throw the::system::com_exception(hr, __FILE__, __LINE__);
 //    }
 //
 ////    WV_CONNECT_ATTRIBUTES atts;
@@ -162,7 +162,7 @@
 //            static_cast<const sockaddr *>(ep), &conParam, NULL))) {
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Connection to IB end point "
 //            "failed with error code %d.\n", hr);
-//        throw sys::COMException(hr, __FILE__, __LINE__);        
+//        throw the::system::com_exception(hr, __FILE__, __LINE__);        
 //    }
 //
 //    // TODO
@@ -176,7 +176,7 @@
 //vislib::net::ib::IbvCommChannel::GetLocalEndPoint(void) const {
 //    VLSTACKTRACE("IbvCommChannel::GetLocalEndPoint", __FILE__, __LINE__);
 //    // TODO
-//    throw vislib::MissingImplementationException("GetLocalEndPoint", __FILE__, __LINE__);
+//    throw the::not_implemented_exception("GetLocalEndPoint", __FILE__, __LINE__);
 //}
 //
 //
@@ -197,7 +197,7 @@
 //vislib::net::ib::IbvCommChannel::GetRemoteEndPoint(void) const {
 //    VLSTACKTRACE("IbvCommChannel::GetRemoteEndPoint", __FILE__, __LINE__);
 //    // TODO
-//    throw vislib::MissingImplementationException("GetLocalEndPoint", __FILE__, __LINE__);
+//    throw the::not_implemented_exception("GetLocalEndPoint", __FILE__, __LINE__);
 //}
 //
 //
@@ -211,7 +211,7 @@
 //    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Setting IB end point into "
 //        "listening state...\n");
 //    if (FAILED(hr = this->connectEndPoint->Listen(backlog))) {
-//        throw sys::COMException(hr, __FILE__, __LINE__);
+//        throw the::system::com_exception(hr, __FILE__, __LINE__);
 //    }
 //}
 //
@@ -295,7 +295,7 @@
 //        if (FAILED(hr = this->connectEndPoint->Query(&connAttribs))) {
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying attributes of "
 //                "connect end point failed with error code %d.\n", hr);
-//            throw sys::COMException(hr, __FILE__, __LINE__);
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);
 //        }
 //
 //        // TODO: Evil; use first device if nothing found.
@@ -312,7 +312,7 @@
 //                connAttribs.Device.DeviceGuid, &this->device))) {
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Opening IB device failed "
 //                "with error code %d.\n", hr);
-//            throw sys::COMException(hr, __FILE__, __LINE__);
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);
 //        }
 //
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying IB device "
@@ -321,7 +321,7 @@
 //        if (FAILED(hr = this->device->Query(&devAttribs))) {
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying IB device "
 //                "attributes failed with error code %d.\n", hr);
-//            throw sys::COMException(hr, __FILE__, __LINE__);
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);
 //        }
 //
 //        /* Allocate a protection domain for the device. */
@@ -333,7 +333,7 @@
 //                &this->protectionDomain))) {
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Allocating protection "
 //                "domain failed with error code %d.\n", hr);
-//            throw sys::COMException(hr, __FILE__, __LINE__);
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);
 //        }
 //
 //        /* Allocate and register memory buffers for sending and receiving. */
@@ -348,7 +348,7 @@
 //                NULL, &this->recvKeys))) {
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Registering memory for "
 //                "receiving data failed with error code %d.\n", hr);
-//            throw sys::COMException(hr, __FILE__, __LINE__);
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);
 //        }
 //
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Registering memory for "
@@ -362,7 +362,7 @@
 //                NULL, &this->sendKeys))) {
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Registering memory for "
 //                "sending data failed with error code %d.\n", hr);
-//            throw sys::COMException(hr, __FILE__, __LINE__);
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);
 //        }
 //
 //        /* Create completion queues. */
@@ -375,7 +375,7 @@
 //                &qpCreate.ReceiveDepth, &this->recvComplQueue))) {
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Creating receive "
 //                "completion queue failed with error code %d.\n", hr);
-//            throw sys::COMException(hr, __FILE__, __LINE__);        
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);        
 //        }
 //
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Creating send completion "
@@ -387,7 +387,7 @@
 //                &qpCreate.SendDepth, &this->sendComplQueue))) {
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Creating send "
 //                "completion queue failed with error code %d.\n", hr);
-//            throw sys::COMException(hr, __FILE__, __LINE__);        
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);        
 //        }
 //
 //        /* Allocate the queue pair. */
@@ -436,7 +436,7 @@
 //            &qpCreate, &this->queuePair))) {
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Creating queue pair failed "
 //                "with error code %d.\n", hr);
-//            throw sys::COMException(hr, __FILE__, __LINE__);
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);
 //        }
 //
 //    } /* end if (!this->isInitialised) */
@@ -457,7 +457,7 @@
 //                reinterpret_cast<void **>(&this->wvProvider)))) {
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Acquiring WinVerbs "
 //                "provider failed with error code %d.\n", hr);
-//            throw sys::COMException(hr, __FILE__, __LINE__);    
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);    
 //        }
 //    }
 //
@@ -469,7 +469,7 @@
 //                &this->connectEndPoint))) {
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Creating IB connect end "
 //                "point failed with error code %d.\n", hr);
-//            throw sys::COMException(hr, __FILE__, __LINE__);
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);
 //        }
 //    } 
 //

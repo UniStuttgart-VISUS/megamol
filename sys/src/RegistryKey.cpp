@@ -10,7 +10,7 @@
 #define _WINXP32_LEGACY_SUPPORT
 
 #ifdef _WIN32
-#include "vislib/MissingImplementationException.h"
+#include "the/not_implemented_exception.h"
 #ifdef _WINXP32_LEGACY_SUPPORT
 #include "DynamicFunctionPointer.h"
 #endif /* _WINXP32_LEGACY_SUPPORT */

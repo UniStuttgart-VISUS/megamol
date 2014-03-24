@@ -13,13 +13,13 @@
 #include <fcntl.h>
 #endif /* _WIN32 */
 
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "the/memory.h"
 #include "vislib/StringConverter.h"
 #include "vislib/sysfunctions.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -54,14 +54,14 @@ void vislib::sys::SharedMemory::Close(void) {
 #ifdef _WIN32
     if (this->mapping != NULL) {
         if (!::UnmapViewOfFile(this->mapping)) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
         this->mapping = NULL;
     }
 
     if (this->hSharedMem != NULL) {
         if (!::CloseHandle(this->hSharedMem)) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
         this->hSharedMem = NULL;
     }
@@ -69,7 +69,7 @@ void vislib::sys::SharedMemory::Close(void) {
 #else /* _WIN32 */
     if (this->mapping != NULL) {
         if (::munmap(this->mapping, this->size) == -1) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
         this->mapping = NULL;
         this->size = 0;
@@ -77,10 +77,10 @@ void vislib::sys::SharedMemory::Close(void) {
 
     if (this->hSharedMem != -1) {
         if (::shm_unlink(this->name.PeekBuffer()) == -1) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
         if (::close(this->hSharedMem) == -1) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
         this->hSharedMem = -1;
         this->name.Clear();
@@ -123,7 +123,7 @@ void vislib::sys::SharedMemory::Open(const char *name, const AccessMode accessMo
     if (creationMode == OPEN_ONLY) {
         this->hSharedMem = ::OpenFileMappingA(access, FALSE, name);
         if (this->hSharedMem == NULL) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
 
     } else {
@@ -131,14 +131,14 @@ void vislib::sys::SharedMemory::Open(const char *name, const AccessMode accessMo
             protect, static_cast<unsigned int>(size >> 32), 
             static_cast<unsigned int>(size & 0xFFFFFFFF), name);
         if (this->hSharedMem == NULL) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         } else if (creationMode == CREATE_ONLY) {
             /* Handle exclusive open by closing any exisiting mapping. */
             unsigned int error = ::GetLastError();
             if (error == ERROR_ALREADY_EXISTS) {
                 ::CloseHandle(this->hSharedMem);
                 this->hSharedMem = NULL;
-                throw SystemException(error, __FILE__, __LINE__);
+                throw the::system::system_exception(error, __FILE__, __LINE__);
             }
         }
     }
@@ -146,7 +146,7 @@ void vislib::sys::SharedMemory::Open(const char *name, const AccessMode accessMo
     this->mapping = ::MapViewOfFile(this->hSharedMem, access, 0, 0, 
         static_cast<size_t>(size));
     if (this->mapping == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -180,19 +180,19 @@ void vislib::sys::SharedMemory::Open(const char *name, const AccessMode accessMo
         this->name.PeekBuffer());
     this->hSharedMem = ::shm_open(this->name.PeekBuffer(), oflags, DFT_MODE);
     if (this->hSharedMem == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     this->size = static_cast<size_t>(size);
     // TODO: This is problematic in conjunction with open
     if (::ftruncate(this->hSharedMem, this->size) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     this->mapping = ::mmap(NULL, this->size, protect, MAP_SHARED, 
         this->hSharedMem, 0);
     if (this->mapping == MAP_FAILED) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #endif /* _WIN32 */
@@ -221,7 +221,7 @@ void vislib::sys::SharedMemory::Open(const wchar_t *name, const AccessMode acces
     if (creationMode == OPEN_ONLY) {
         this->hSharedMem = ::OpenFileMappingW(access, FALSE, name);
         if (this->hSharedMem == NULL) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
 
     } else {
@@ -229,14 +229,14 @@ void vislib::sys::SharedMemory::Open(const wchar_t *name, const AccessMode acces
             protect, static_cast<unsigned int>(size >> 32), 
             static_cast<unsigned int>(size & 0xFFFFFFFF), name);
         if (this->hSharedMem == NULL) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         } else if (creationMode == CREATE_ONLY) {
             /* Handle exclusive open by closing any exisiting mapping. */
             unsigned int error = ::GetLastError();
             if (error == ERROR_ALREADY_EXISTS) {
                 ::CloseHandle(this->hSharedMem);
                 this->hSharedMem = NULL;
-                throw SystemException(error, __FILE__, __LINE__);
+                throw the::system::system_exception(error, __FILE__, __LINE__);
             }
         }
     }
@@ -244,7 +244,7 @@ void vislib::sys::SharedMemory::Open(const wchar_t *name, const AccessMode acces
     this->mapping = ::MapViewOfFile(this->hSharedMem, access, 0, 0, 
         static_cast<size_t>(size));
     if (this->mapping == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -265,7 +265,7 @@ const mode_t vislib::sys::SharedMemory::DFT_MODE = 0666;
  * vislib::sys::SharedMemory::SharedMemory
  */
 vislib::sys::SharedMemory::SharedMemory(const SharedMemory& rhs) {
-    throw UnsupportedOperationException("SharedMemory", __FILE__, __LINE__);
+    throw the::not_supported_exception("SharedMemory", __FILE__, __LINE__);
 }
 
 
@@ -275,7 +275,7 @@ vislib::sys::SharedMemory::SharedMemory(const SharedMemory& rhs) {
 vislib::sys::SharedMemory& vislib::sys::SharedMemory::operator =(
         const SharedMemory& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

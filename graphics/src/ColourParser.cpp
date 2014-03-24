@@ -9,7 +9,7 @@
 #include "the/assert.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/NamedColours.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -21,7 +21,7 @@ void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
     vislib::StringA sb(inStr);
     sb.TrimSpaces();
     if (sb.IsEmpty()) {
-        throw vislib::FormatException("inStr was empty", __FILE__, __LINE__);
+        throw the::format_exception("inStr was empty", __FILE__, __LINE__);
     }
 
     // try parse named colour
@@ -71,7 +71,7 @@ void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
         }
     }
 
-    throw vislib::FormatException("Unexpected format", __FILE__, __LINE__);
+    throw the::format_exception("Unexpected format", __FILE__, __LINE__);
 }
 
 
@@ -83,7 +83,7 @@ void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
     vislib::StringA sb(inStr);
     sb.TrimSpaces();
     if (sb.IsEmpty()) {
-        throw vislib::FormatException("inStr was empty", __FILE__, __LINE__);
+        throw the::format_exception("inStr was empty", __FILE__, __LINE__);
     }
 
     // try parse named colour
@@ -117,7 +117,7 @@ void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
         return;
     }
 
-    throw vislib::FormatException("Unexpected format", __FILE__, __LINE__);
+    throw the::format_exception("Unexpected format", __FILE__, __LINE__);
 }
 
 
@@ -172,7 +172,7 @@ vislib::StringA& vislib::graphics::ColourParser::ToString(
         return outStr;
     }
 
-    throw vislib::FormatException(
+    throw the::format_exception(
         "Cannot generate string in requested representation type",
         __FILE__, __LINE__);
     return outStr;
@@ -236,7 +236,7 @@ vislib::StringA& vislib::graphics::ColourParser::ToString(
         return outStr;
     }
 
-    throw vislib::FormatException(
+    throw the::format_exception(
         "Cannot generate string in requested representation type",
         __FILE__, __LINE__);
     return outStr;
@@ -586,12 +586,12 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
         }
 
     } else {
-        throw vislib::FormatException(
+        throw the::format_exception(
             "Illegal length of HTML input", __FILE__, __LINE__);
     }
 
     if (c > 15) {
-        throw vislib::FormatException(
+        throw the::format_exception(
             "Illegal character in HTML input", __FILE__, __LINE__);
     }
 
@@ -603,7 +603,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
  * vislib::graphics::ColourParser::ColourParser
  */
 vislib::graphics::ColourParser::ColourParser(void) {
-    throw vislib::UnsupportedOperationException("ColourParser::ctor",
+    throw the::not_supported_exception("ColourParser::ctor",
         __FILE__, __LINE__);
 }
 
@@ -612,6 +612,6 @@ vislib::graphics::ColourParser::ColourParser(void) {
  * vislib::graphics::ColourParser::~ColourParser
  */
 vislib::graphics::ColourParser::~ColourParser(void) {
-    throw vislib::UnsupportedOperationException("ColourParser::dtor",
+    throw the::not_supported_exception("ColourParser::dtor",
         __FILE__, __LINE__);
 }

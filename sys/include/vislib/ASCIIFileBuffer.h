@@ -17,9 +17,9 @@
 #include "vislib/Array.h"
 #include "the/assert.h"
 #include "vislib/File.h"
-#include "vislib/IllegalStateException.h"
+#include "the/invalid_operation_exception.h"
 #include "vislib/MemmappedFile.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/index_out_of_range_exception.h"
 #include "vislib/String.h"
 
 
@@ -82,7 +82,7 @@ namespace sys {
              */
             inline const char * Pointer(void) const {
                 if (this->cnt > 0) {
-                    throw vislib::IllegalStateException(
+                    throw the::invalid_operation_exception(
                         "ASCIIFileBuffer was parsed for words. "
                         "Requesting lines is thus illegal",
                         __FILE__, __LINE__);
@@ -97,11 +97,11 @@ namespace sys {
              *
              * @return The requested word
              *
-             * @throw OutOfRangeException if a non-existing line is requested
+             * @throw index_out_of_range_exception if a non-existing line is requested
              */
             inline const char * Word(size_t idx) const {
                 if (idx >= this->cnt) {
-                    throw vislib::OutOfRangeException(static_cast<int>(idx),
+                    throw the::index_out_of_range_exception(static_cast<int>(idx),
                         0, static_cast<int>(this->cnt - 1),
                         __FILE__, __LINE__);
                 }
@@ -138,7 +138,7 @@ namespace sys {
              */
             operator const char *(void) const {
                 if (this->cnt > 0) {
-                    throw vislib::IllegalStateException(
+                    throw the::invalid_operation_exception(
                         "ASCIIFileBuffer was parsed for words. "
                         "Requesting lines is thus illegal",
                         __FILE__, __LINE__);
@@ -243,7 +243,7 @@ namespace sys {
          *
          * @return The requested line
          *
-         * @throw OutOfRangeException if a non-existing line is requested
+         * @throw index_out_of_range_exception if a non-existing line is requested
          */
         inline const LineBuffer&  Line(size_t idx) const {
             return this->lines[idx];
@@ -258,7 +258,7 @@ namespace sys {
          *
          * @return True on success, false on failure
          *
-         * @throw vislib::Exception on any critical failure
+         * @throw the::exception on any critical failure
          */
         inline bool LoadFile(const vislib::StringA& filename,
                 ParsingElement elements = PARSING_DEFAULT) {
@@ -277,7 +277,7 @@ namespace sys {
          *
          * @return True on success, false on failure
          *
-         * @throw vislib::Exception on any critical failure
+         * @throw the::exception on any critical failure
          */
         inline bool LoadFile(const char *filename,
                 ParsingElement elements = PARSING_DEFAULT) {
@@ -296,7 +296,7 @@ namespace sys {
          *
          * @return True on success, false on failure
          *
-         * @throw vislib::Exception on any critical failure
+         * @throw the::exception on any critical failure
          */
         inline bool LoadFile(const vislib::StringW& filename,
                 ParsingElement elements = PARSING_DEFAULT) {
@@ -315,7 +315,7 @@ namespace sys {
          *
          * @return True on success, false on failure
          *
-         * @throw vislib::Exception on any critical failure
+         * @throw the::exception on any critical failure
          */
         inline bool LoadFile(const wchar_t *filename,
                 ParsingElement elements = PARSING_DEFAULT) {
@@ -336,7 +336,7 @@ namespace sys {
          *
          * @return True on success, false on failure
          *
-         * @throw vislib::Exception on any critical failure
+         * @throw the::exception on any critical failure
          */
         bool LoadFile(File& file, ParsingElement elements = PARSING_DEFAULT);
 
@@ -355,7 +355,7 @@ namespace sys {
          *
          * @return The requested line
          *
-         * @throw OutOfRangeException if a non-existing line is requested
+         * @throw index_out_of_range_exception if a non-existing line is requested
          */
         inline const LineBuffer& operator[](size_t idx) const {
             return this->lines[idx];

@@ -64,7 +64,7 @@ int FBOTestApp::GLInit(void) {
                 retval++;
             }
         } catch (vislib::graphics::gl::OpenGLException e) {
-            std::cout << e.GetMsgA() << " @ " << e.GetFile() << ":" << e.GetLine() 
+            std::cout << e.what() << " @ " << e.get_file() << ":" << e.get_line() 
                 << std::endl;
             retval++;
         }
@@ -160,6 +160,6 @@ void FBOTestApp::Render(void) {
         ::glutSwapBuffers();
 
     } catch (vislib::graphics::gl::OpenGLException e) {
-        std::cout << e.GetMsgA() << std::endl;
+        std::cout << e.what() << std::endl;
     }
 }

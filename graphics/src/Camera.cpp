@@ -10,7 +10,7 @@
 #include "vislib/Camera.h"
 #include "the/assert.h"
 #include "vislib/CameraParamsStore.h"
-#include "vislib/IllegalStateException.h"
+#include "the/invalid_operation_exception.h"
 
 
 /*
@@ -55,7 +55,7 @@ vislib::graphics::SceneSpaceFrustum&
 vislib::graphics::Camera::CalcViewFrustum(SceneSpaceFrustum& outFrustum) {
     if (this->Parameters()->Projection() 
             == CameraParameters::MONO_ORTHOGRAPHIC) {
-        throw vislib::IllegalStateException("Computing frustums for "
+        throw the::invalid_operation_exception("Computing frustums for "
             "MONO_ORTHOGRAPHIC is currently unsupported.", __FILE__, __LINE__);
     }
 
@@ -160,7 +160,7 @@ vislib::graphics::Camera::CalcViewFrustum(
             break;
 
         default:
-            throw IllegalStateException("The specified projection type is not "
+            throw the::invalid_operation_exception("The specified projection type is not "
                 "supported.", __FILE__, __LINE__);
     }
 

@@ -1114,7 +1114,7 @@ namespace math {
     //            break;
 
     //        default:
-    //            throw util::RangeException(i, 0, 7, __FILE__, __LINE__);
+    //            throw util::RangeEx c e p t ion(i, 0, 7, __FILE__, __LINE__);
     //    }
 
     //    return vislib::math::Point<T, 3>(tmp);

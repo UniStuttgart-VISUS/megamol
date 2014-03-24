@@ -14,9 +14,9 @@
 #include "vislib/IPAddress.h"
 
 #include "the/assert.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/NetworkInformation.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/index_out_of_range_exception.h"
 #include "vislib/StringConverter.h"
 
 
@@ -77,7 +77,7 @@ vislib::net::IPAddress vislib::net::IPAddress::Create(const char *address) {
     IPAddress retval;
 
     if (!retval.Lookup(address)) {
-        throw IllegalParamException("address", __FILE__, __LINE__);
+        throw the::argument_exception("address", __FILE__, __LINE__);
     }
 
     return retval;
@@ -180,7 +180,7 @@ uint8_t vislib::net::IPAddress::operator [](const int i) const {
     if ((i > 0) && (i < static_cast<int>(sizeof(this->address)))) {
         return reinterpret_cast<const uint8_t *>(&this->address)[i];
     } else {
-        throw OutOfRangeException(i, 0, sizeof(this->address), __FILE__,
+        throw the::index_out_of_range_exception(i, 0, sizeof(this->address), __FILE__,
             __LINE__);
     }
 }

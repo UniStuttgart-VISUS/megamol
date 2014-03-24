@@ -354,7 +354,7 @@ namespace graphics {
          *
          * @return The image to be used.
          *
-         * @throw IllegalStateException if no image is set
+         * @throw invalid_operation_exception if no image is set
          */
         BitmapImage& image(void);
 
@@ -363,7 +363,7 @@ namespace graphics {
          *
          * @return The image to be used.
          *
-         * @throw IllegalStateException if no image is set
+         * @throw invalid_operation_exception if no image is set
          */
         const BitmapImage& image(void) const;
 

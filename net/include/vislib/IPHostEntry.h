@@ -24,7 +24,7 @@
 #include "vislib/IPAgnosticAddress.h"       // Must be first include!
 #include "vislib/IPEndPoint.h"
 #include "vislib/Array.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/String.h"
 #include "the/trace.h"
 
@@ -94,7 +94,7 @@ namespace net {
          *
          * @param addrInfo The structure holding the data to copy.
          *
-         * @throws IllegalParamException If the adress info uses an address
+         * @throws argument_exception If the adress info uses an address
          *                               family other then AF_INET4 or AF_INET6.
          */
         void set(const struct addrinfo *addrInfo);
@@ -105,7 +105,7 @@ namespace net {
          *
          * @param addrInfo The structure holding the data to copy.
          *
-         * @throws IllegalParamException If the adress info uses an address
+         * @throws argument_exception If the adress info uses an address
          *                               family other then AF_INET4 or AF_INET6.
          */
         void set(const ADDRINFOW *addrInfo);
@@ -216,7 +216,7 @@ namespace net {
                     break;
 
                 default:
-                    throw IllegalParamException("ai", __FILE__, __LINE__);
+                    throw the::argument_exception("ai", __FILE__, __LINE__);
             }
         
             if (((ai->ai_flags & AI_CANONNAME) != 0) 
@@ -256,7 +256,7 @@ namespace net {
                     break;
 
                 default:
-                    throw IllegalParamException("ai", __FILE__, __LINE__);
+                    throw the::argument_exception("ai", __FILE__, __LINE__);
             }
         
             if (((ai->ai_flags & AI_CANONNAME) != 0) 

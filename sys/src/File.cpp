@@ -27,13 +27,13 @@
 
 #include "the/assert.h"
 #include "vislib/error.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IOException.h"
+#include "the/argument_exception.h"
+#include "the/system/io/io_exception.h"
 #include "vislib/StringConverter.h"
 #include "vislib/sysfunctions.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 #ifndef _WIN32
@@ -87,14 +87,14 @@ vislib::sys::File* vislib::sys::File::CreateTempFile(void) {
             FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, NULL))
             == INVALID_HANDLE_VALUE) {
         the::safe_delete(retval);
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     TmpFile *retval = new TmpFile();
     if ((retval->hFile = ::tmpfile()) == NULL) {
         the::safe_delete(retval);
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     } else {
         retval->handle = ::fileno(retval->hFile);
     }
@@ -226,14 +226,14 @@ vislib::sys::File::FileSize vislib::sys::File::GetSize(const char *filename) {
 #ifdef _WIN32
     WIN32_FILE_ATTRIBUTE_DATA buf;
     if (::GetFileAttributesExA(filename, GetFileExInfoStandard, &buf) == 0) {
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     return (static_cast<FileSize>(buf.nFileSizeHigh) << 32)
         + static_cast<FileSize>(buf.nFileSizeLow);
 #else /* _WIN32 */
     struct stat buf;
     int i = stat(filename, &buf); 
-    if (i != 0) throw vislib::Exception(__FILE__, __LINE__);
+    if (i != 0) throw the::exception(__FILE__, __LINE__);
     return buf.st_size;
 #endif /* _WIN32 */
 }
@@ -246,14 +246,14 @@ vislib::sys::File::FileSize vislib::sys::File::GetSize(const wchar_t *filename) 
 #ifdef _WIN32
     WIN32_FILE_ATTRIBUTE_DATA buf;
     if (::GetFileAttributesExW(filename, GetFileExInfoStandard, &buf) == 0) {
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     return (static_cast<FileSize>(buf.nFileSizeHigh) << 32)
         + static_cast<FileSize>(buf.nFileSizeLow);
 #else /* _WIN32 */
     struct stat buf;
     int i = stat(W2A(filename), &buf); 
-    if (i != 0) throw vislib::Exception(__FILE__, __LINE__);
+    if (i != 0) throw the::exception(__FILE__, __LINE__);
     return buf.st_size;
 #endif /* _WIN32 */
 }
@@ -412,7 +412,7 @@ void vislib::sys::File::Flush(void) {
 #else /* _WIN32 */
     if (::fsync(this->handle) != 0) {
 #endif /* _WIN32 */
-        throw IOException(::GetLastError(), __FILE__, __LINE__);
+        throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
     }
 }
 
@@ -435,7 +435,7 @@ vislib::sys::File::FileSize vislib::sys::File::GetSize(void) const {
 
 #endif /* _WIN32 */
     } else {
-        throw IOException(::GetLastError(), __FILE__, __LINE__);
+        throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
     }
 }
 
@@ -469,7 +469,7 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
         case READ_WRITE: access = GENERIC_READ | GENERIC_WRITE; break;
         case READ_ONLY: access = GENERIC_READ; break;
         case WRITE_ONLY: access = GENERIC_WRITE; break;
-        default: throw IllegalParamException("accessMode", __FILE__, __LINE__);
+        default: throw the::argument_exception("accessMode", __FILE__, __LINE__);
     }
 
     switch (shareMode) {
@@ -477,7 +477,7 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
         case SHARE_READ: share = FILE_SHARE_READ; break;
         case SHARE_WRITE: share = FILE_SHARE_WRITE; break;
         case SHARE_READWRITE: share = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
-        default: throw IllegalParamException("shareMode", __FILE__, __LINE__);
+        default: throw the::argument_exception("shareMode", __FILE__, __LINE__);
     }
 
     switch (creationMode) {
@@ -485,7 +485,7 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
         case CREATE_OVERWRITE: create = CREATE_ALWAYS; break;
         case OPEN_ONLY: create = OPEN_EXISTING; break;
         case OPEN_CREATE: create = OPEN_ALWAYS; break;
-        default: throw IllegalParamException("creationMode", __FILE__, __LINE__);
+        default: throw the::argument_exception("creationMode", __FILE__, __LINE__);
     }
 
     this->handle = ::CreateFileA(filename, access, share, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -500,7 +500,7 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
         case READ_WRITE: oflag |= O_RDWR; break;
         case READ_ONLY: oflag |= O_RDONLY; break;
         case WRITE_ONLY: oflag |= O_WRONLY; break;
-        default: throw IllegalParamException("accessMode", __FILE__, __LINE__);
+        default: throw the::argument_exception("accessMode", __FILE__, __LINE__);
     }
 
     switch (creationMode) {
@@ -517,7 +517,7 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
         case OPEN_CREATE: 
             if (!fileExists) oflag |= O_CREAT;
             break;
-        default: throw IllegalParamException("creationMode", __FILE__, __LINE__);
+        default: throw the::argument_exception("creationMode", __FILE__, __LINE__);
     }
 
     this->handle = ::open(filename, oflag, 
@@ -544,7 +544,7 @@ bool vislib::sys::File::Open(const wchar_t *filename, const AccessMode accessMod
         case READ_WRITE: access = GENERIC_READ | GENERIC_WRITE; break;
         case READ_ONLY: access = GENERIC_READ; break;
         case WRITE_ONLY: access = GENERIC_WRITE; break;
-        default: throw IllegalParamException("accessMode", __FILE__, __LINE__);
+        default: throw the::argument_exception("accessMode", __FILE__, __LINE__);
     }
 
     switch (shareMode) {
@@ -552,7 +552,7 @@ bool vislib::sys::File::Open(const wchar_t *filename, const AccessMode accessMod
         case SHARE_READ: share = FILE_SHARE_READ; break;
         case SHARE_WRITE: share = FILE_SHARE_WRITE; break;
         case SHARE_READWRITE: share = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
-        default: throw IllegalParamException("shareMode", __FILE__, __LINE__);
+        default: throw the::argument_exception("shareMode", __FILE__, __LINE__);
     }
 
     switch (creationMode) {
@@ -560,7 +560,7 @@ bool vislib::sys::File::Open(const wchar_t *filename, const AccessMode accessMod
         case CREATE_OVERWRITE: create = CREATE_ALWAYS; break;
         case OPEN_ONLY: create = OPEN_EXISTING; break;
         case OPEN_CREATE: create = OPEN_ALWAYS; break;
-        default: throw IllegalParamException("creationMode", __FILE__, __LINE__);
+        default: throw the::argument_exception("creationMode", __FILE__, __LINE__);
     }
 
     this->handle = ::CreateFileW(filename, access, share, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -594,7 +594,7 @@ vislib::sys::File::FileSize vislib::sys::File::Read(void *outBuf,
 
 #endif /* _WIN32 */
     } else {
-        throw IOException(::GetLastError(), __FILE__, __LINE__);
+        throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
     }
 }
 
@@ -620,7 +620,7 @@ vislib::sys::File::FileSize vislib::sys::File::Seek(const FileOffset offset,
 
 #endif /* _WIN32 */
     } else {
-        throw IOException(::GetLastError(), __FILE__, __LINE__);
+        throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
     }
 }
 
@@ -645,7 +645,7 @@ vislib::sys::File::FileSize vislib::sys::File::Tell(void) const {
 
 #endif /* _WIN32 */
     } else {
-        throw IOException(::GetLastError(), __FILE__, __LINE__);
+        throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
     }
 }
 
@@ -670,7 +670,7 @@ vislib::sys::File::FileSize vislib::sys::File::Write(const void *buf,
 
 #endif /* _WIN32 */
     } else {
-        throw IOException(::GetLastError(), __FILE__, __LINE__);
+        throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
     }
 }
 
@@ -679,7 +679,7 @@ vislib::sys::File::FileSize vislib::sys::File::Write(const void *buf,
  * vislib::sys::File::File
  */
 vislib::sys::File::File(const File& rhs) {
-    throw UnsupportedOperationException("vislib::sys::File::File", 
+    throw the::not_supported_exception("vislib::sys::File::File", 
         __FILE__, __LINE__);
 }
 
@@ -689,7 +689,7 @@ vislib::sys::File::File(const File& rhs) {
  */
 vislib::sys::File& vislib::sys::File::operator =(const File& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

@@ -10,7 +10,7 @@
 #include <iostream>
 
 #include "vislib/Environment.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 
 #include "testhelper.h"
 

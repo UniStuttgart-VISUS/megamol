@@ -6,9 +6,9 @@
  */
 
 #include "vislib/FatReaderWriterLock.h"
-#include "vislib/IllegalStateException.h"
+#include "the/invalid_operation_exception.h"
 #include "vislib/Thread.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -64,7 +64,7 @@ void vislib::sys::FatReaderWriterLock::LockExclusive(void) {
     for (size_t i = 0; i < this->shThreads.Count(); i++) {
         if (this->shThreads[i] == Thread::CurrentID()) {
             this->exclusiveLock.Unlock();
-            throw IllegalStateException("LockExclusive Upgrade not allowed",
+            throw the::invalid_operation_exception("LockExclusive Upgrade not allowed",
                 __FILE__, __LINE__);
         }
     }
@@ -103,7 +103,7 @@ void vislib::sys::FatReaderWriterLock::LockShared(void) {
 void vislib::sys::FatReaderWriterLock::UnlockExclusive(void) {
 
     if (this->exThread != Thread::CurrentID()) {
-        throw IllegalStateException("UnlockExclusive illegal", __FILE__, __LINE__);
+        throw the::invalid_operation_exception("UnlockExclusive illegal", __FILE__, __LINE__);
     }
 
     if (--this->exThreadCnt == 0) {
@@ -136,7 +136,7 @@ void vislib::sys::FatReaderWriterLock::UnlockShared(void) {
     if (pos == Array<unsigned int>::INVALID_POS) {
         this->sharedLock.Unlock();
         this->exclusiveLock.Unlock();
-        throw IllegalStateException("UnlockShared illegal", __FILE__, __LINE__);
+        throw the::invalid_operation_exception("UnlockShared illegal", __FILE__, __LINE__);
     }
 
     this->shThreads.RemoveAt(pos);
@@ -156,7 +156,7 @@ void vislib::sys::FatReaderWriterLock::UnlockShared(void) {
  */
 vislib::sys::FatReaderWriterLock::FatReaderWriterLock(
         const vislib::sys::FatReaderWriterLock& src) {
-    throw UnsupportedOperationException("FatReaderWriterLock::CopyCtor",
+    throw the::not_supported_exception("FatReaderWriterLock::CopyCtor",
         __FILE__, __LINE__);
 }
 
@@ -167,6 +167,6 @@ vislib::sys::FatReaderWriterLock::FatReaderWriterLock(
 vislib::sys::FatReaderWriterLock&
 vislib::sys::FatReaderWriterLock::operator=(
         const vislib::sys::FatReaderWriterLock& rhs) {
-    throw UnsupportedOperationException("FatReaderWriterLock::operator=",
+    throw the::not_supported_exception("FatReaderWriterLock::operator=",
         __FILE__, __LINE__);
 }

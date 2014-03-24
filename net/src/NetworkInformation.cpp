@@ -29,14 +29,15 @@
 #include "the/assert.h"
 #include "vislib/DNS.h"
 #include "the/memory.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/argument_exception.h"
+#include "the/index_out_of_range_exception.h"
 #include "vislib/SocketException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
+#include "the/text/string_builder.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,9 +48,9 @@
  */
 vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(
         const char *propName, const char *file,  const int line) 
-        : Exception(file, line) {
+        : the::exception(file, line) {
     THE_STACK_TRACE;
-    this->formatMsg("Property '%s' is invalid.", propName);
+    this->set_msg(the::text::astring_builder::format("Property '%s' is invalid.", propName).c_str());
 }
 
 
@@ -58,9 +59,9 @@ vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(
  */
 vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(
         const wchar_t *propName, const char *file, const int line) 
-        : Exception(file, line) {
+        : the::exception(file, line) {
     THE_STACK_TRACE;  
-    this->formatMsg(L"Property '%s' is invalid.", propName);
+    this->set_msg(the::text::wstring_builder::format(L"Property '%s' is invalid.", propName).c_str());
 }
 
 
@@ -69,7 +70,7 @@ vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(
  */
 vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(
         const NoConfidenceException& rhs) 
-        : Exception(rhs) {
+        : the::exception(rhs) {
     THE_STACK_TRACE;
 }
 
@@ -90,7 +91,7 @@ vislib::net::NetworkInformation::NoConfidenceException&
 vislib::net::NetworkInformation::NoConfidenceException::operator =(
         const NoConfidenceException& rhs) {
     THE_STACK_TRACE;
-    Exception::operator =(rhs);
+    the::exception::operator =(rhs);
     return *this;
 }
 
@@ -396,7 +397,7 @@ void vislib::net::NetworkInformation::EnumerateAdapters(
 
     /* Sanity checks. */
     if (cb == NULL) {
-        throw IllegalParamException("cb", __FILE__, __LINE__);
+        throw the::argument_exception("cb", __FILE__, __LINE__);
     }
 
     NetworkInformation::lockAdapters.Lock();
@@ -623,7 +624,7 @@ vislib::net::NetworkInformation::GetAdapterUnsafe(const size_t idx) {
 
     } else {
         NetworkInformation::lockAdapters.Unlock();
-        throw OutOfRangeException(static_cast<int>(idx), 0,
+        throw the::index_out_of_range_exception(static_cast<int>(idx), 0,
             static_cast<int>(cntAdapters), __FILE__, __LINE__);
     }
 }
@@ -828,7 +829,7 @@ const char *vislib::net::NetworkInformation::Stringise(
         IMPLEMENT_STRINGISE_CASE(Adapter, SCOPE_GLOBAL);
 
         default:
-            throw IllegalParamException("sl", __FILE__, __LINE__);
+            throw the::argument_exception("sl", __FILE__, __LINE__);
     }
 }
 
@@ -850,7 +851,7 @@ const char *vislib::net::NetworkInformation::Stringise(
         IMPLEMENT_STRINGISE_CASE(Adapter, OPERSTATUS_LOWER_LAYER_DOWN);
 
         default:
-            throw IllegalParamException("as", __FILE__, __LINE__);
+            throw the::argument_exception("as", __FILE__, __LINE__);
     }
 }
 
@@ -874,7 +875,7 @@ const char *vislib::net::NetworkInformation::Stringise(
         IMPLEMENT_STRINGISE_CASE(Adapter, TYPE_IEEE1394);
 
         default:
-            throw IllegalParamException("at", __FILE__, __LINE__);
+            throw the::argument_exception("at", __FILE__, __LINE__);
     }
 }
 
@@ -895,7 +896,7 @@ const char *vislib::net::NetworkInformation::Stringise(
         IMPLEMENT_STRINGISE_CASE(Adapter, TUNNEL_TYPE_TEREDO);
 
         default:
-            throw IllegalParamException("tt", __FILE__, __LINE__);
+            throw the::argument_exception("tt", __FILE__, __LINE__);
     }
 }
 
@@ -920,7 +921,7 @@ const char *vislib::net::NetworkInformation::Stringise(
             PREFIX_ORIGIN_ROUTER_ADVERTISEMENT);
 
         default:
-            throw IllegalParamException("po", __FILE__, __LINE__);
+            throw the::argument_exception("po", __FILE__, __LINE__);
     }
 }
 
@@ -947,7 +948,7 @@ const char *vislib::net::NetworkInformation::Stringise(
             SUFFIX_ORIGIN_RANDOM);
 
         default:
-            throw IllegalParamException("so", __FILE__, __LINE__);
+            throw the::argument_exception("so", __FILE__, __LINE__);
     }
 }
 
@@ -1105,10 +1106,10 @@ vislib::net::IPAddress vislib::net::NetworkInformation::guessBroadcastAddress(
         static_cast<const struct in_addr *>(netmask)->s_addr);
 
     if (addr == 0) {
-        throw IllegalParamException("address", __FILE__, __LINE__);
+        throw the::argument_exception("address", __FILE__, __LINE__);
 
     } else if (mask == 0) {
-        throw IllegalParamException("netmask", __FILE__, __LINE__);
+        throw the::argument_exception("netmask", __FILE__, __LINE__);
 
     } else {
         struct in_addr retval;
@@ -1431,7 +1432,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
         Socket::Cleanup();                                                     \
     } catch (SocketException e) {                                              \
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Unexpected error while cleaning "       \
-            " up socket subsystem after an error: %s", e.GetMsgA());           \
+            " up socket subsystem after an error: %s", e.what());           \
     }
 
     PIP_ADAPTER_ADDRESSES adapterAddresses = NULL;  // Receives the data.
@@ -1447,7 +1448,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
     if ((result = ::GetAdaptersAddresses(family, flags, NULL, adapterAddresses,
             &bufLenAdapters)) != ERROR_BUFFER_OVERFLOW) {
         SAFE_CLEAN_RES();
-        throw sys::SystemException(result, __FILE__, __LINE__);
+        throw the::system::system_exception(result, __FILE__, __LINE__);
     }
 
     adapterAddresses = static_cast<PIP_ADAPTER_ADDRESSES>(::malloc(bufLenAdapters));
@@ -1459,7 +1460,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
     if ((result = ::GetIpAddrTable(NULL, &bufLenIpAddr, 0))
             != ERROR_INSUFFICIENT_BUFFER) {
         SAFE_CLEAN_RES();
-        throw sys::SystemException(result, __FILE__, __LINE__);
+        throw the::system::system_exception(result, __FILE__, __LINE__);
     }
 
     ipAddrTable = static_cast<MIB_IPADDRTABLE *>(::malloc(bufLenIpAddr));
@@ -1472,14 +1473,14 @@ void vislib::net::NetworkInformation::initAdapters(void) {
     if ((result = ::GetIpAddrTable(ipAddrTable, &bufLenIpAddr, 0)) 
             != NO_ERROR) {
         SAFE_CLEAN_RES();
-        throw sys::SystemException(result, __FILE__, __LINE__);
+        throw the::system::system_exception(result, __FILE__, __LINE__);
     }
 
     /* Get the adapter addresses. */
     if ((result = ::GetAdaptersAddresses(family, flags, NULL, adapterAddresses, 
             &bufLenAdapters)) != NO_ERROR) {
         SAFE_CLEAN_RES();
-        throw sys::SystemException(result, __FILE__, __LINE__);
+        throw the::system::system_exception(result, __FILE__, __LINE__);
     }
 
     /* Process all adapter addresses. */
@@ -1571,7 +1572,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
         try {
             adapter.type.Set(NetworkInformation::mapAdapterType(cur->IfType),
                 VALID);
-        } catch (IllegalParamException) {
+        } catch (the::argument_exception) {
             adapter.type.Set(Adapter::TYPE_OTHER, GUESSED);
         }
 
@@ -1579,7 +1580,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
         try {
             adapter.status.Set(NetworkInformation::mapOperationStatus(
                 cur->OperStatus), VALID);
-        } catch (IllegalParamException) {
+        } catch (the::argument_exception) {
             adapter.status.Set(Adapter::OPERSTATUS_UNKNOWN, GUESSED);
         }
 
@@ -1613,12 +1614,12 @@ void vislib::net::NetworkInformation::initAdapters(void) {
         Socket::Cleanup();                                                     \
     } catch (SocketException e) {                                              \
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Unexpected error while cleaning "       \
-            " up socket subsystem after an error: %s", e.GetMsgA());           \
+            " up socket subsystem after an error: %s", e.what());           \
     }
 
 #define SAFE_CLEAN_RES_THROWSYS(errorCode, file, line)                         \
     SAFE_CLEAN_RES();                                                          \
-    throw vislib::sys::SystemException(errorCode, (file), (line));
+    throw the::system::system_exception(errorCode, (file), (line));
     
     int handle = -1;                // Handle for IOCTLs
     struct ifaddrs *addrs = NULL;   // Pointer to address list.
@@ -1801,7 +1802,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
             try {
                 adapter.type.Set(NetworkInformation::mapAdapterType(
                     sll->sll_family), VALID);
-            } catch (IllegalParamException) {
+            } catch (argument_exception) {
                 adapter.type.SetConfidence(INVALID);
             }
         }
@@ -1854,7 +1855,7 @@ vislib::net::NetworkInformation::mapAdapterType(
             return Adapter::TYPE_OTHER;
 
         default:
-            throw vislib::IllegalParamException("type", __FILE__, __LINE__);
+            throw the::argument_exception("type", __FILE__, __LINE__);
     }
 }
 
@@ -1936,7 +1937,7 @@ vislib::net::NetworkInformation::mapAdapterType(
             return Adapter::TYPE_OTHER;
 
         default:
-            throw vislib::IllegalParamException("type", __FILE__, __LINE__);
+            throw the::argument_exception("type", __FILE__, __LINE__);
     }
 }
 #endif /* _WIN32 */
@@ -1975,7 +1976,7 @@ vislib::net::NetworkInformation::mapOperationStatus(
             return Adapter::OPERSTATUS_UNKNOWN;
 
         default:
-            throw IllegalParamException("status", __FILE__, __LINE__);
+            throw the::argument_exception("status", __FILE__, __LINE__);
     }
 }
 #endif /* _WIN32 */
@@ -2008,7 +2009,7 @@ vislib::net::NetworkInformation::mapPrefixOrigin(
                 PREFIX_ORIGIN_ROUTER_ADVERTISEMENT;
 
         default:
-            throw IllegalParamException("prefixOrigin", __FILE__, __LINE__);
+            throw the::argument_exception("prefixOrigin", __FILE__, __LINE__);
     }
 }
 
@@ -2041,7 +2042,7 @@ vislib::net::NetworkInformation::mapSuffixOrigin(
             return UnicastAddressInformation::SUFFIX_ORIGIN_RANDOM;
 
         default:
-            throw IllegalParamException("suffixOrigin", __FILE__, __LINE__);
+            throw the::argument_exception("suffixOrigin", __FILE__, __LINE__);
     }
 }
 #endif /* _WIN32 */
@@ -2073,7 +2074,7 @@ unsigned long vislib::net::NetworkInformation::netmaskToPrefix(const uint8_t *ne
 
     while (mask < end) {
         if (*mask != 0) {
-            throw IllegalParamException("netmask", __FILE__, __LINE__);
+            throw the::argument_exception("netmask", __FILE__, __LINE__);
         }
         mask++;
     }
@@ -2093,7 +2094,7 @@ void vislib::net::NetworkInformation::prefixToNetmask(uint8_t *outNetmask,
     long maxPrefix = 8L * static_cast<long>(len);
     
     if ((remBits < 0) || (remBits > maxPrefix)) {
-        throw vislib::OutOfRangeException(remBits, 0, maxPrefix, __FILE__, 
+        throw the::index_out_of_range_exception(remBits, 0, maxPrefix, __FILE__, 
             __LINE__);
     }
 
@@ -2215,7 +2216,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
     /* Ensure that we know the adapters and that we have at least one. */
     NetworkInformation::initAdapters();
     if (NetworkInformation::adapters.IsEmpty()) {
-        throw NoSuchElementException("There are no network adapters available "
+        throw the::no_such_element_exception("There are no network adapters available "
             "for guessing the right one.", __FILE__, __LINE__);
     }
     
@@ -2426,9 +2427,9 @@ uint32_t vislib::net::NetworkInformation::wildGuessSplitInput(
                 retval |= WILD_GUESS_HAS_PORT;
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Found port: %d\n", outPort);
 
-            } catch (Exception e) {
+            } catch (the::exception e) {
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Parsing port failed: %s\n",
-                    e.GetMsgA());
+                    e.what());
                 THE_ASSERT((retval & WILD_GUESS_HAS_PORT) == 0);
             }
         }
@@ -2466,9 +2467,9 @@ uint32_t vislib::net::NetworkInformation::wildGuessSplitInput(
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Converted netmask to prefix "
                     "length: %u\n", outPrefixLen);
 
-            } catch (Exception e) {
+            } catch (the::exception e) {
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Parsing netmask failed: %s\n",
-                    e.GetMsgA());
+                    e.what());
                 THE_ASSERT((retval & WILD_GUESS_HAS_NETMASK) == 0);
             }
 
@@ -2482,9 +2483,9 @@ uint32_t vislib::net::NetworkInformation::wildGuessSplitInput(
                     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Found prefix length: "
                         "%d.\n", outPrefixLen);
 
-                } catch (Exception e) {
+                } catch (the::exception e) {
                     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Parsing prefix length "
-                        "failed: %s.\n", e.GetMsgA());
+                        "failed: %s.\n", e.what());
                     THE_ASSERT((retval & WILD_GUESS_HAS_PREFIX_LEN) == 0);
                 }
             } 
@@ -2515,9 +2516,9 @@ uint32_t vislib::net::NetworkInformation::wildGuessSplitInput(
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Parsed address: %s\n",
             outAddress.ToStringA().PeekBuffer());
 
-    } catch (Exception e) {
+    } catch (the::exception e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Parsing address \"%s\" failed: %s\n",
-            W2A(input), e.GetMsgA());
+            W2A(input), e.what());
         THE_ASSERT((retval & WILD_GUESS_HAS_ADDRESS) == 0);
 
         outDevice = input;
@@ -2614,7 +2615,7 @@ vislib::sys::CriticalSection vislib::net::NetworkInformation::lockAdapters;
  */
 vislib::net::NetworkInformation::NetworkInformation(void) {
     THE_STACK_TRACE;
-    throw UnsupportedOperationException(
+    throw the::not_supported_exception(
         "NetworkInformation::NetworkInformation", __FILE__, __LINE__);
 }
 
@@ -2625,7 +2626,7 @@ vislib::net::NetworkInformation::NetworkInformation(void) {
 vislib::net::NetworkInformation::NetworkInformation(
         const NetworkInformation& rhs) {
     THE_STACK_TRACE;
-    throw UnsupportedOperationException(
+    throw the::not_supported_exception(
         "NetworkInformation::NetworkInformation", __FILE__, __LINE__);
 }
 

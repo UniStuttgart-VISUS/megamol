@@ -8,14 +8,14 @@
 #include "vislib/IbvInformation.h"
 
 #include "vislib/AutoLock.h"
-#include "vislib/COMException.h"
+#include "the/system/com_exception.h"
 #include "the/memory.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/argument_exception.h"
+#include "the/index_out_of_range_exception.h"
 #include "vislib/RawStorage.h"
 #include "vislib/sysfunctions.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 #include "the/utils.h"
 #include "the/string.h"
 #include "the/text/string_utility.h"
@@ -154,7 +154,7 @@ vislib::net::ib::IbvInformation::Port::Port(IWVDevice *device,
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying port attributes "
             "failed with error code %d.\n", hr);
         this->~Port();
-        throw sys::COMException(hr, __FILE__, __LINE__);
+        throw the::system::com_exception(hr, __FILE__, __LINE__);
     }
 
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying port GUID...\n");
@@ -164,7 +164,7 @@ vislib::net::ib::IbvInformation::Port::Port(IWVDevice *device,
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying port GUID failed "
             "with error code %d.\n", hr);
         this->~Port();
-        throw sys::COMException(hr, __FILE__, __LINE__);
+        throw the::system::com_exception(hr, __FILE__, __LINE__);
     }
     THE_ASSERT(!IbvInformation::IsNullGid(this->gid));
 }
@@ -226,7 +226,7 @@ const vislib::net::ib::IbvInformation::Port&
 vislib::net::ib::IbvInformation::Device::GetPort(const size_t idx) const {
     THE_STACK_TRACE;
     if ((idx < 0) || (idx > this->ports.Count() - 1)) {
-        throw OutOfRangeException(idx, 0, this->ports.Count() - 1, __FILE__, 
+        throw the::index_out_of_range_exception(idx, 0, this->ports.Count() - 1, __FILE__, 
             __LINE__);
     } else {
         return this->ports[idx];
@@ -321,7 +321,7 @@ vislib::net::ib::IbvInformation::Device::Device(IWVProvider *wvProvider,
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Opening device "
             "failed with error code %d.\n", hr);
         this->~Device();
-        throw sys::COMException(hr, __FILE__, __LINE__);
+        throw the::system::com_exception(hr, __FILE__, __LINE__);
     }
 
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying device attributes...\n");
@@ -329,7 +329,7 @@ vislib::net::ib::IbvInformation::Device::Device(IWVProvider *wvProvider,
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying device attributes "
             "failed with error code %d.\n", hr);
         this->~Device();
-        throw sys::COMException(hr, __FILE__, __LINE__);
+        throw the::system::com_exception(hr, __FILE__, __LINE__);
     }
 
     for (uint8_t i = 0; i < this->attributes.PhysPortCount; i++) {
@@ -418,7 +418,7 @@ vislib::net::ib::IbvInformation::IbvInformation(void) : wvProvider(NULL) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Acquiring WinVerbs provider "
             "failed with error code %d.\n", hr);
         this->~IbvInformation();
-        throw sys::COMException(hr, __FILE__, __LINE__);    
+        throw the::system::com_exception(hr, __FILE__, __LINE__);    
     }
 }
 
@@ -429,7 +429,7 @@ vislib::net::ib::IbvInformation::IbvInformation(void) : wvProvider(NULL) {
 vislib::net::ib::IbvInformation::IbvInformation(const IbvInformation& rhs) 
         : wvProvider(NULL) {
     THE_STACK_TRACE;
-    throw UnsupportedOperationException("IbvInformation::IbvInformation",
+    throw the::not_supported_exception("IbvInformation::IbvInformation",
         __FILE__, __LINE__);
 }
 
@@ -464,7 +464,7 @@ bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
         if (FAILED(hr = this->wvProvider->QueryDeviceList(NULL, &size))) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying number of "
                 "devices failed with error code %d.\n", hr);
-            throw sys::COMException(hr, __FILE__, __LINE__);
+            throw the::system::com_exception(hr, __FILE__, __LINE__);
         }
 
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying device GUIDs...\n");
@@ -473,7 +473,7 @@ bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
                 &size))) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying device GUIDs "
                 "failed with error code %d.\n", hr);
-            throw sys::COMException(hr, __FILE__, __LINE__);
+            throw the::system::com_exception(hr, __FILE__, __LINE__);
         }
 
         /* Get the attributes of the devices. */
@@ -500,7 +500,7 @@ vislib::net::ib::IbvInformation&
 vislib::net::ib::IbvInformation::operator =(const IbvInformation& rhs) {
     THE_STACK_TRACE;
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

@@ -157,7 +157,7 @@
     } catch (vislib::graphics::gl::OpenGLException __glvDeferredOGLe) {\
         if (__glvDeferred_glError == GL_NO_ERROR) {\
             __glvDeferred_glError = __glvDeferredOGLe.GetErrorCode();\
-            __glvDeferred_Line = __glvDeferredOGLe.GetLine();\
+            __glvDeferred_Line = __glvDeferredOGLe.get_line();\
         }\
     }
 

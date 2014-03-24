@@ -109,7 +109,7 @@ namespace net {
 		 * @param messageID  The new message ID.
 		 * @param isSystemID Disables the system ID check. Must be false.
 		 *
-		 * @throw IllegalParamException If the message ID is a system ID.
+		 * @throw argument_exception If the message ID is a system ID.
 		 */
 		void SetMessageID(const SimpleMessageID messageID, 
             bool isSystemID = false);

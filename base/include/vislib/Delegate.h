@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "the/assert.h"
-#include "vislib/IllegalStateException.h"
+#include "the/invalid_operation_exception.h"
 #include "the/memory.h"
 
 
@@ -193,7 +193,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7, P8 p8, P9 p9, P10 p10) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
         }
@@ -682,7 +682,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7, P8 p8, P9 p9) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4, p5, p6, p7, p8, p9);
         }
@@ -1171,7 +1171,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7, P8 p8) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4, p5, p6, p7, p8);
         }
@@ -1660,7 +1660,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4, p5, p6, p7);
         }
@@ -2149,7 +2149,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4, p5, p6);
         }
@@ -2638,7 +2638,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4, p5);
         }
@@ -3127,7 +3127,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4);
         }
@@ -3616,7 +3616,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3);
         }
@@ -4105,7 +4105,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2);
         }
@@ -4594,7 +4594,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1);
         }
@@ -5083,7 +5083,7 @@ namespace vislib {
          */
         Rv operator()(void) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call();
         }
@@ -5573,7 +5573,7 @@ namespace vislib {
          */
         void operator()(void) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             this->callee->Call();
         }

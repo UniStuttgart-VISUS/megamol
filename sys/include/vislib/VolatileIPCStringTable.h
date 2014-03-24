@@ -78,9 +78,9 @@ namespace sys {
             /** 
              * Creates the entry.
              *
-             * @throw vislib::AlreadyExistsException if there already is an entry
+             * @throw the::already_exists_exception if there already is an entry
              *        in the string tabe with the specified name.
-             * @throw vislib::Exception in case of an generic error.
+             * @throw the::exception in case of an generic error.
              */
             void Create(void);
 
@@ -287,9 +287,9 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw vislib::AlreadyExistsException if there already is an entry
+         * @throw the::already_exists_exception if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw vislib::Exception in case of an generic error.
+         * @throw the::exception in case of an generic error.
          */
         static Entry Create(const char *name, const char *value = NULL);
 
@@ -306,9 +306,9 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw vislib::AlreadyExistsException if there already is an entry
+         * @throw the::already_exists_exception if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw vislib::Exception in case of an generic error.
+         * @throw the::exception in case of an generic error.
          */
         static inline Entry Create(const StringA& name, 
                 const char *value = NULL) {
@@ -328,9 +328,9 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw vislib::AlreadyExistsException if there already is an entry
+         * @throw the::already_exists_exception if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw vislib::Exception in case of an generic error.
+         * @throw the::exception in case of an generic error.
          */
         static inline Entry Create(const char *name, const StringA& value) {
             return VolatileIPCStringTable::Create(name, value.PeekBuffer());
@@ -349,9 +349,9 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw vislib::AlreadyExistsException if there already is an entry
+         * @throw the::already_exists_exception if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw vislib::Exception in case of an generic error.
+         * @throw the::exception in case of an generic error.
          */
         static inline Entry Create(const StringA& name, const StringA& value) {
             return VolatileIPCStringTable::Create(name.PeekBuffer(), 
@@ -371,9 +371,9 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw vislib::AlreadyExistsException if there already is an entry
+         * @throw the::already_exists_exception if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw vislib::Exception in case of an generic error.
+         * @throw the::exception in case of an generic error.
          */
         static Entry Create(const wchar_t *name, const wchar_t *value = NULL);
 
@@ -390,9 +390,9 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw vislib::AlreadyExistsException if there already is an entry
+         * @throw the::already_exists_exception if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw vislib::Exception in case of an generic error.
+         * @throw the::exception in case of an generic error.
          */
         static inline Entry Create(const StringW& name, 
                 const wchar_t *value = NULL) {
@@ -412,9 +412,9 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw vislib::AlreadyExistsException if there already is an entry
+         * @throw the::already_exists_exception if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw vislib::Exception in case of an generic error.
+         * @throw the::exception in case of an generic error.
          */
         static inline Entry Create(const wchar_t *name, const StringW& value) {
             return VolatileIPCStringTable::Create(name, value.PeekBuffer());
@@ -433,9 +433,9 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw vislib::AlreadyExistsException if there already is an entry
+         * @throw the::already_exists_exception if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw vislib::Exception in case of an generic error.
+         * @throw the::exception in case of an generic error.
          */
         static inline Entry Create(const StringW& name, const StringW& value) {
             return VolatileIPCStringTable::Create(name.PeekBuffer(), 

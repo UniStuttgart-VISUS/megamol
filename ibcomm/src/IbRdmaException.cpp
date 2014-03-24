@@ -6,6 +6,7 @@
  */
 
 #include "vislib/IbRdmaException.h"
+#include "the/text/string_builder.h"
 
 
 /*
@@ -23,7 +24,8 @@ vislib::net::ib::IbRdmaException::IbRdmaException(const int errorCode,
 vislib::net::ib::IbRdmaException::IbRdmaException(const char *call, 
         const int errorCode, const char *file, const int line) 
         : Super(file, line), errorCode(errorCode) {
-    this->formatMsg("%s failed with error code %d.", call, this->errorCode);
+    this->set_msg(the::text::astring_builder::format(
+        "%s failed with error code %d.", call, this->errorCode).c_str());
 }
 
 

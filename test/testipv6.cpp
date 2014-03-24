@@ -8,7 +8,7 @@
 #include "testipv6.h"
 
 #include "vislib/DNS.h"
-#include "vislib/IllegalStateException.h"
+#include "the/invalid_operation_exception.h"
 #include "vislib/IPEndPoint.h"
 #include "vislib/IPAddress.h"
 #include "vislib/IPAddress6.h"
@@ -79,7 +79,7 @@ void TestIPv6(void) {
 
     IPEndPoint endPointV6(IPAddress6::ANY, 0);
     std::cout << "IPv6 default end point: " << endPointV6.ToStringA().PeekBuffer() << std::endl;
-    AssertException("GetIPAddress4 or IPv6 endpoint.", endPointV6.GetIPAddress4(), vislib::IllegalStateException);
+    AssertException("GetIPAddress4 or IPv6 endpoint.", endPointV6.GetIPAddress4(), the::invalid_operation_exception);
 
     ipAddr2 = ipV4Addr;
     endPointV6.SetIPAddress(ipAddr2);

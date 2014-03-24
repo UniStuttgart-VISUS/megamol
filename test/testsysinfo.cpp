@@ -4,7 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "vislib/SystemInformation.h"
 
 #include <iostream>
@@ -65,11 +65,11 @@ void TestSysInfo(void) {
             << virtScreen.Height() << "]" << std::endl;
 
 
-    } catch (SystemException se) {
-        std::cout << "SystemException: " << se.GetErrorCode() << " " << se.GetMsgA() << std::endl;
+    } catch (the::system::system_exception se) {
+        std::cout << "the::system::system_exception: " << se.get_error().native_error() << " " << se.what() << std::endl;
 
-    } catch (vislib::Exception e) {
-        std::cout << "Exception: " << e.GetMsgA() << std::endl;
+    } catch (the::exception e) {
+        std::cout << "Exception: " << e.what() << std::endl;
 
     } catch(...) {
         std::cout << "Unexpected exception catched." << std::endl;

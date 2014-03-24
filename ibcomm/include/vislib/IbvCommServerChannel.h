@@ -17,7 +17,7 @@
 //
 //#include "vislib/Socket.h"                      // Must be first!
 //#include "vislib/AbstractCommServerChannel.h"
-//#include "vislib/COMException.h"
+//#include "the/system/com_exception.h"
 //#include "vislib/Event.h"
 //#include "vislib/StackTrace.h"
 //#include "vislib/Thread.h"

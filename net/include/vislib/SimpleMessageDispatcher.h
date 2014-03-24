@@ -166,7 +166,7 @@ namespace net {
          *
          * @return Accumulated (ANDed) return values of all listeners.
          */
-        bool fireCommunicationError(const vislib::Exception& exception);
+        bool fireCommunicationError(const the::exception& exception);
 
         /**
          * Inform all registered listener about that the listener is exiting.

@@ -168,7 +168,7 @@ namespace graphics {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         MouseInteractionAdapter(const MouseInteractionAdapter& rhs);
 
@@ -195,7 +195,7 @@ namespace graphics {
          *
          * @param rhs The right hand side operand.
          *
-         * @throws IllegalParamException If (this != &rhs).
+         * @throws argument_exception If (this != &rhs).
          */
         MouseInteractionAdapter& operator =(const MouseInteractionAdapter& rhs);
 

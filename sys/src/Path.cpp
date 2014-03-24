@@ -23,8 +23,8 @@
 #include "vislib/error.h"
 #include "vislib/Environment.h"
 #include "the/memory.h"
-#include "vislib/SystemException.h"
-#include "vislib/MissingImplementationException.h"
+#include "the/system/system_exception.h"
+#include "the/not_implemented_exception.h"
 #include "vislib/Stack.h"
 #include "vislib/File.h"
 #include "vislib/DirectoryIterator.h"
@@ -42,7 +42,7 @@ vislib::StringA vislib::sys::Path::Canonicalise(const StringA& path) {
     StringA retval;
 
     if (::PathCanonicalizeA(retval.AllocateBuffer(MAX_PATH), path) != TRUE) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_A);
@@ -109,7 +109,7 @@ vislib::StringW vislib::sys::Path::Canonicalise(const StringW& path) {
     StringW retval;
 
     if (::PathCanonicalizeW(retval.AllocateBuffer(MAX_PATH), path) != TRUE) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_W);
@@ -276,7 +276,7 @@ void vislib::sys::Path::DeleteDirectory(const StringA& path, bool recursive) {
 #else /* _WIN32 */
     if (rmdir(fullPath) != 0) {
 #endif /* _WIN32 */
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 }
@@ -297,7 +297,7 @@ void vislib::sys::Path::DeleteDirectory(const StringW& path, bool recursive) {
     }
 
     if (RemoveDirectoryW(fullPath) == 0) {
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -542,7 +542,7 @@ vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
 
     if (::GetCurrentDirectoryA(bufferSize, buffer) == 0) {
         the::safe_array_delete(buffer);
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     StringA retval(buffer);
@@ -560,7 +560,7 @@ vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
             bufferSize += BUFFER_GROW;
             buffer = new char[bufferSize];
         } else {
-            throw SystemException(errno, __FILE__, __LINE__);
+            throw the::system::system_exception(errno, __FILE__, __LINE__);
         }
     }
 
@@ -587,7 +587,7 @@ vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
 
     if (::GetCurrentDirectoryW(bufferSize, buffer) == 0) {
         the::safe_array_delete(buffer);
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     StringW retval(buffer);
@@ -646,7 +646,7 @@ vislib::StringA vislib::sys::Path::GetTempDirectoryA(void) {
     char buffer[MAX_PATH + 1];
     buffer[MAX_PATH] = buffer[0] = 0;
     if (::GetTempPathA(MAX_PATH, buffer) > MAX_PATH) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     return buffer;
 //    return Environment::GetVariable("TEMP", false);
@@ -664,7 +664,7 @@ vislib::StringW vislib::sys::Path::GetTempDirectoryW(void) {
     wchar_t buffer[MAX_PATH + 1];
     buffer[MAX_PATH] = buffer[0] = 0;
     if (::GetTempPathW(MAX_PATH, buffer) > MAX_PATH) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     return buffer;
 //    return Environment::GetVariable(L"TEMP", false);
@@ -684,14 +684,14 @@ vislib::StringA vislib::sys::Path::GetUserHomeDirectoryA(void) {
 
     if (FAILED(::SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, 0, 
             retval.AllocateBuffer(MAX_PATH)))) {
-        throw SystemException(ERROR_NOT_FOUND, __FILE__, __LINE__);
+        throw the::system::system_exception(ERROR_NOT_FOUND, __FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     char *path = getenv("HOME"); // Crowbar
 
     if (path == NULL) {
-        throw SystemException(ENOENT, __FILE__, __LINE__);
+        throw the::system::system_exception(ENOENT, __FILE__, __LINE__);
     }
 
     StringA retval(path);
@@ -714,7 +714,7 @@ vislib::StringW vislib::sys::Path::GetUserHomeDirectoryW(void) {
 
     if (FAILED(::SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, 0, 
             retval.AllocateBuffer(MAX_PATH)))) {
-        throw SystemException(ERROR_NOT_FOUND, __FILE__, __LINE__);
+        throw the::system::system_exception(ERROR_NOT_FOUND, __FILE__, __LINE__);
     }
 
     if (!retval.EndsWith(SEPARATOR_W)) {
@@ -779,9 +779,9 @@ void vislib::sys::Path::MakeDirectory(const StringA& path) {
         } else {
             // Problem: No Separators left, but directory still does not exist.
 #ifdef _WIN32
-            throw vislib::sys::SystemException(ERROR_INVALID_NAME, __FILE__, __LINE__);
+            throw the::system::system_exception(ERROR_INVALID_NAME, __FILE__, __LINE__);
 #else /* _WIN32 */
-            throw vislib::sys::SystemException(EINVAL, __FILE__, __LINE__);
+            throw the::system::system_exception(EINVAL, __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
     }
@@ -790,9 +790,9 @@ void vislib::sys::Path::MakeDirectory(const StringA& path) {
     if (!File::IsDirectory(curPath)) {
         // the latest existing directory is not a directory (may be a file?)
 #ifdef _WIN32
-        throw vislib::sys::SystemException(ERROR_DIRECTORY, __FILE__, __LINE__);
+        throw the::system::system_exception(ERROR_DIRECTORY, __FILE__, __LINE__);
 #else /* _WIN32 */
-        throw vislib::sys::SystemException(EEXIST, __FILE__, __LINE__);
+        throw the::system::system_exception(EEXIST, __FILE__, __LINE__);
 #endif /* _WIN32 */
     }
 
@@ -819,7 +819,7 @@ void vislib::sys::Path::MakeDirectory(const StringA& path) {
             } catch(...) {
             }
 
-            throw vislib::sys::SystemException(errorCode, __FILE__, __LINE__);
+            throw the::system::system_exception(errorCode, __FILE__, __LINE__);
         }
     }
     // we are done!
@@ -848,14 +848,14 @@ void vislib::sys::Path::MakeDirectory(const StringW& path) {
 
         } else {
             // Problem: No Separators left, but directory still does not exist.
-            throw vislib::sys::SystemException(ERROR_INVALID_NAME, __FILE__, __LINE__);
+            throw the::system::system_exception(ERROR_INVALID_NAME, __FILE__, __LINE__);
         }
     }
 
     // curPath exists
     if (!File::IsDirectory(curPath)) {
         // the latest existing directory is not a directory (may be a file?)
-        throw vislib::sys::SystemException(ERROR_DIRECTORY, __FILE__, __LINE__);
+        throw the::system::system_exception(ERROR_DIRECTORY, __FILE__, __LINE__);
     }
 
     while (!missingParts.IsEmpty()) {
@@ -877,7 +877,7 @@ void vislib::sys::Path::MakeDirectory(const StringW& path) {
             } catch(...) {
             }
 
-            throw vislib::sys::SystemException(errorCode, __FILE__, __LINE__);
+            throw the::system::system_exception(errorCode, __FILE__, __LINE__);
         }
     }
     // we are done!
@@ -1052,11 +1052,11 @@ vislib::StringW vislib::sys::Path::Resolve(StringW path, StringW basepath) {
 void vislib::sys::Path::SetCurrentDirectory(const StringA& path) {
 #ifdef _WIN32
     if (::SetCurrentDirectoryA(path) != TRUE) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
     if (::chdir(static_cast<const char *>(path)) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 #endif /* _WIN32 */
 }
@@ -1068,7 +1068,7 @@ void vislib::sys::Path::SetCurrentDirectory(const StringA& path) {
 void vislib::sys::Path::SetCurrentDirectory(const StringW& path) {
 #ifdef _WIN32
     if (::SetCurrentDirectoryW(path) != TRUE) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
     SetCurrentDirectory(static_cast<StringA>(path));

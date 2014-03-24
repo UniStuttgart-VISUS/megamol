@@ -8,7 +8,7 @@
 
 #include "vislib/BitmapCodecCollection.h"
 #include "vislib/ArrayAllocator.h"
-#include "vislib/Exception.h"
+#include "the/exception.h"
 #include "vislib/MemmappedFile.h"
 #include "vislib/Path.h"
 #include "vislib/SmartPtr.h"
@@ -72,7 +72,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
 
     if (!f.Open(filename, vislib::sys::File::READ_ONLY,
             vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        throw vislib::Exception("Unable to open image file",
+        throw the::exception("Unable to open image file",
             __FILE__, __LINE__);
     }
 
@@ -142,7 +142,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
 
     if (!f.Open(filename, vislib::sys::File::READ_ONLY,
             vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        throw vislib::Exception("Unable to open image file",
+        throw the::exception("Unable to open image file",
             __FILE__, __LINE__);
     }
 

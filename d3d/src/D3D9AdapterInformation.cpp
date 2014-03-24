@@ -9,7 +9,7 @@
 #include "vislib/D3D9AdapterInformation.h"
 
 #include "vislib/d3dverify.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 
 
 /*
@@ -90,7 +90,7 @@ vislib::graphics::d3d::D3D9AdapterInformation::D3D9AdapterInformation(
             hMon = d3d->GetAdapterMonitor(output.d3dCaps.AdapterOrdinal);
             if (!::GetMonitorInfo(hMon, &output.monInfo)) {
                 this->~D3D9AdapterInformation();
-                throw vislib::sys::SystemException(__FILE__, __LINE__);
+                throw the::system::system_exception(__FILE__, __LINE__);
             }
 
             this->infos.Add(output);
@@ -120,7 +120,7 @@ vislib::graphics::d3d::D3D9AdapterInformation::GetDirect3DCapabilites(
 
     /* Range check. */
     if (outputIdx > this->infos.Count()) {
-        throw OutOfRangeException(outputIdx, 0, 
+        throw the::index_out_of_range_exception(outputIdx, 0, 
             static_cast<int>(this->infos.Count()), __FILE__, __LINE__);
     }
 
@@ -169,6 +169,6 @@ vislib::graphics::d3d::D3D9AdapterInformation::getMonitorInfo(
     }
     /* Not found. */
 
-    throw OutOfRangeException(outputIdx, 0, 
+    throw the::index_out_of_range_exception(outputIdx, 0, 
         static_cast<int>(this->infos.Count()), __FILE__, __LINE__);
 }

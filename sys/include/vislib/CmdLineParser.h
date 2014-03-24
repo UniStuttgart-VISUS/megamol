@@ -16,11 +16,11 @@
 
 
 #include "the/types.h"
-#include "vislib/UnsupportedOperationException.h"
-#include "vislib/IllegalStateException.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/FormatException.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/not_supported_exception.h"
+#include "the/invalid_operation_exception.h"
+#include "the/argument_exception.h"
+#include "the/format_exception.h"
+#include "the/index_out_of_range_exception.h"
 #include "the/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/String.h"
@@ -274,7 +274,7 @@ namespace sys {
                  *
                  * @return the name of the i-th value.
                  *
-                 * @throw OutOfRangeException if i is out of range.
+                 * @throw index_out_of_range_exception if i is out of range.
                  */
                 inline const String<T>& Name(unsigned int i) const {
                     return this->element(i).name;
@@ -285,7 +285,7 @@ namespace sys {
                  *
                  * @return the description of the i-th value.
                  *
-                 * @throw OutOfRangeException if i is out of range.
+                 * @throw index_out_of_range_exception if i is out of range.
                  */
                 inline const String<T>& Description(unsigned int i) const {
                     return this->element(i).description;
@@ -296,7 +296,7 @@ namespace sys {
                  *
                  * @return the type of the i-th value.
                  *
-                 * @throw OutOfRangeException if i is out of range.
+                 * @throw index_out_of_range_exception if i is out of range.
                  */
                 inline ValueType Type(unsigned int i) const {
                     return this->element(i).type;
@@ -315,7 +315,7 @@ namespace sys {
                  *
                  * @return the i-th value object.
                  *
-                 * @throw OutOfRangeException if i is out of range.
+                 * @throw index_out_of_range_exception if i is out of range.
                  */
                 const ValueDesc &element(unsigned int i) const;
 
@@ -700,7 +700,7 @@ namespace sys {
              *
              * @return The type of the i-th value.
              *
-             * @throws OutOfRangeException if i larger or equal value count.
+             * @throws index_out_of_range_exception if i larger or equal value count.
              */
             inline ValueType GetValueType(unsigned int i) const {
                 return this->values->Type(i);
@@ -711,7 +711,7 @@ namespace sys {
              *
              * @return The type of the i-th value.
              *
-             * @throws OutOfRangeException if i larger or equal value count.
+             * @throws index_out_of_range_exception if i larger or equal value count.
              */
             inline const String<T>& GetValueName(unsigned int i) const {
                 return this->values->Name(i);
@@ -722,7 +722,7 @@ namespace sys {
              *
              * @return The type of the i-th value.
              *
-             * @throws OutOfRangeException if i larger or equal value count.
+             * @throws index_out_of_range_exception if i larger or equal value count.
              */
             inline const String<T>& GetValueDescription(unsigned int i) const {
                 return this->values->Description(i);
@@ -961,7 +961,7 @@ namespace sys {
              *
              * @return The string value of this argument.
              *
-             * @throw UnsupportedOperationException if the value type of the 
+             * @throw not_supported_exception if the value type of the 
              *        option is not string type or if this argument does not
              *        have a value.
              */
@@ -972,10 +972,10 @@ namespace sys {
              *
              * @return The integer value of this argument.
              *
-             * @throw UnsupportedOperationException if the value type of the 
+             * @throw not_supported_exception if the value type of the 
              *        option is not integer type or if this argument does not
              *        have a value.
-             * @throw FormatException if the argument string could not be
+             * @throw format_exception if the argument string could not be
              *        converted to an integer value.
              */
             const int GetValueInt(void) const;
@@ -985,10 +985,10 @@ namespace sys {
              *
              * @return The floating point value of this argument.
              *
-             * @throw UnsupportedOperationException if the value type of the 
+             * @throw not_supported_exception if the value type of the 
              *        option is not floating point type or if this argument 
              *        does not have a value.
-             * @throw FormatException if the argument string could not be
+             * @throw format_exception if the argument string could not be
              *        converted to an floating point value.
              */
             const double GetValueDouble(void) const;
@@ -998,7 +998,7 @@ namespace sys {
              *
              * @return The bool value of this argument.
              *
-             * @throw UnsupportedOperationException if the value type of the 
+             * @throw not_supported_exception if the value type of the 
              *        option is not boolean type or if this argument does not 
              *        have a value.
              */
@@ -1282,7 +1282,7 @@ namespace sys {
             /** 
              * Behaves like Iterator<T>::Next 
              *
-             * @throw IllegalStateException if there is no next element
+             * @throw invalid_operation_exception if there is no next element
              */
             virtual Char*& Next(void);
 
@@ -1331,7 +1331,7 @@ namespace sys {
          * @param opt The option to be added to the parsers option list. If opt
          *            is NULL, nothing happens.
          *
-         * @throw IllegalParamException If there already is an option in the 
+         * @throw argument_exception If there already is an option in the 
          *                              parser option list, with the same 
          *                              shortname or longname as opt, if opt
          *                              is NULL, if opt already is added to
@@ -1349,7 +1349,7 @@ namespace sys {
          *
          * @param opt The option to be removed from the parsers option list.
          *
-         * @throw IllegalParamException If is NULL, or if opt is added to
+         * @throw argument_exception If is NULL, or if opt is added to
          *                              another parser.
          */
         void RemoveOption(const Option* opt);
@@ -1614,7 +1614,7 @@ namespace sys {
         const ValueDesc *rv = this;
         while (i > 0) {
             if (!rv) {
-                throw vislib::OutOfRangeException(i, 0, this->Count(), __FILE__, __LINE__);
+                throw the::index_out_of_range_exception(i, 0, this->Count(), __FILE__, __LINE__);
             }
             rv = rv->next;
             i--;
@@ -1628,7 +1628,7 @@ namespace sys {
      */
     template<class T> 
     CmdLineParser<T>::Option::Option(const Option& rhs) {
-        throw vislib::UnsupportedOperationException("Option Copy Ctor", __FILE__, __LINE__);
+        throw the::not_supported_exception("Option Copy Ctor", __FILE__, __LINE__);
     }
 
 
@@ -1693,7 +1693,7 @@ namespace sys {
     template<class T>
     typename CmdLineParser<T>::Option& CmdLineParser<T>::Option::operator=(const Option& rhs) {
         if (&rhs != this) {
-            throw vislib::UnsupportedOperationException("Option::operator=", __FILE__, __LINE__);
+            throw the::not_supported_exception("Option::operator=", __FILE__, __LINE__);
         }
     }
 
@@ -1722,7 +1722,7 @@ namespace sys {
      */
     template<class T>
     CmdLineParser<T>::Argument::Argument(const Argument& rhs) {
-        throw UnsupportedOperationException("Argument copy ctor", __FILE__, __LINE__);
+        throw the::not_supported_exception("Argument copy ctor", __FILE__, __LINE__);
     }
 
 
@@ -1732,7 +1732,7 @@ namespace sys {
     template<class T>
     typename CmdLineParser<T>::Argument& CmdLineParser<T>::Argument::operator=(const Argument& rhs) {
         if (&rhs != this) {
-            throw vislib::UnsupportedOperationException("Argument::operator=", __FILE__, __LINE__);
+            throw the::not_supported_exception("Argument::operator=", __FILE__, __LINE__);
         }
     }
 
@@ -1743,7 +1743,7 @@ namespace sys {
     template<class T> 
     const typename CmdLineParser<T>::Char* CmdLineParser<T>::Argument::GetValueString(void) const {
         if (this->GetValueType() != Option::STRING_VALUE) {
-            throw vislib::UnsupportedOperationException("Option value of incompatible type", __FILE__, __LINE__);
+            throw the::not_supported_exception("Option value of incompatible type", __FILE__, __LINE__);
         }
         THE_ASSERT(this->type != TYPE_UNKNOWN);
 
@@ -1757,11 +1757,11 @@ namespace sys {
     template<class T> 
     const int CmdLineParser<T>::Argument::GetValueInt(void) const {
         if (this->GetValueType() != Option::INT_VALUE) {
-            throw vislib::UnsupportedOperationException("Option value of incompatible type", __FILE__, __LINE__);
+            throw the::not_supported_exception("Option value of incompatible type", __FILE__, __LINE__);
         }
         THE_ASSERT(this->type != TYPE_UNKNOWN);
 
-        return T::ParseInt(this->valueArg); // throws FormatException on failure
+        return T::ParseInt(this->valueArg); // throws format_exception on failure
     }
 
 
@@ -1771,11 +1771,11 @@ namespace sys {
     template<class T> 
     const double CmdLineParser<T>::Argument::GetValueDouble(void) const {
         if (this->GetValueType() != Option::DOUBLE_VALUE) {
-            throw vislib::UnsupportedOperationException("Option value of incompatible type", __FILE__, __LINE__);
+            throw the::not_supported_exception("Option value of incompatible type", __FILE__, __LINE__);
         }
         THE_ASSERT(this->type != TYPE_UNKNOWN);
 
-        return T::ParseDouble(this->valueArg); // throws FormatException on failure
+        return T::ParseDouble(this->valueArg); // throws format_exception on failure
     }
 
     
@@ -1785,11 +1785,11 @@ namespace sys {
     template<class T> 
     const bool CmdLineParser<T>::Argument::GetValueBool(void) const {
         if (this->GetValueType() != Option::BOOL_VALUE) {
-            throw vislib::UnsupportedOperationException("Option value of incompatible type", __FILE__, __LINE__);
+            throw the::not_supported_exception("Option value of incompatible type", __FILE__, __LINE__);
         }
         THE_ASSERT(this->type != TYPE_UNKNOWN);
 
-        return T::ParseBool(this->valueArg); // throws FormatException on failure
+        return T::ParseBool(this->valueArg); // throws format_exception on failure
     }
 
 
@@ -1978,7 +1978,7 @@ namespace sys {
      */
     template<class T>
     CmdLineParser<T>::CmdLineParser(const CmdLineParser<T>& rhs) {
-        throw vislib::UnsupportedOperationException("Copy Ctor", __FILE__, __LINE__);
+        throw the::not_supported_exception("Copy Ctor", __FILE__, __LINE__);
     }
  
 
@@ -1998,7 +1998,7 @@ namespace sys {
     template<class T>
     CmdLineParser<T>& CmdLineParser<T>::operator=(const CmdLineParser<T>& rhs) {
         if (&rhs != this) {
-            throw vislib::UnsupportedOperationException("operator=", __FILE__, __LINE__);
+            throw the::not_supported_exception("operator=", __FILE__, __LINE__);
         }
     }
 
@@ -2012,7 +2012,7 @@ namespace sys {
                 || (this->FindOption(opt->shortName) != NULL) 
                 || (this->FindOption(opt->longName) != NULL)
                 || ((opt->shortName == 0) && (opt->longName == NULL))) {
-            throw vislib::IllegalParamException("opt", __FILE__, __LINE__);
+            throw the::argument_exception("opt", __FILE__, __LINE__);
         }
 
         this->options.Append(const_cast<Option*>(opt));
@@ -2027,7 +2027,7 @@ namespace sys {
     template<class T>
     void CmdLineParser<T>::RemoveOption(const Option* opt) {
         if ((opt == NULL) || (opt->parser != this)) {
-            throw vislib::IllegalParamException("opt", __FILE__, __LINE__);
+            throw the::argument_exception("opt", __FILE__, __LINE__);
         }
 
         this->options.RemoveAll(const_cast<Option*>(opt));

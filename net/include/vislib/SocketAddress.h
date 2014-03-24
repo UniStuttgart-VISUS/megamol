@@ -79,7 +79,7 @@ namespace net {
          * 
          * @return The socket address, if all parameters are valid.
          *
-         * @throws IllegalParamException If 'host' is not a valid host name or
+         * @throws argument_exception If 'host' is not a valid host name or
          *                               IP address.
          */
         static SocketAddress Create(const AddressFamily addressFamily, 
@@ -94,7 +94,7 @@ namespace net {
          * 
          * @return The socket address, if all parameters are valid.
          *
-         * @throws IllegalParamException If 'host' is not a valid host name or
+         * @throws argument_exception If 'host' is not a valid host name or
          *                               IP address.
          */
         static SocketAddress CreateInet(const char *host, 

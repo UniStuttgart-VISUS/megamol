@@ -9,11 +9,11 @@
 #include "vislib/OpenGLTexture2D.h"
 
 #include "the/assert.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/glverify.h"
 #include "vislib/mathfunctions.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 

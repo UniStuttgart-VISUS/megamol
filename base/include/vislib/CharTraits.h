@@ -30,9 +30,9 @@
 #include "the/assert.h"
 #include "the/memory.h"
 #include "the/types.h"
-#include "vislib/UnsupportedOperationException.h"
-#include "vislib/FormatException.h"
-#include "vislib/IllegalParamException.h"
+#include "the/not_supported_exception.h"
+#include "the/format_exception.h"
+#include "the/argument_exception.h"
 
 
 namespace vislib {
@@ -110,7 +110,7 @@ namespace vislib {
 
         /** Forbidden Ctor. */
         inline CharTraitsBase(void) {
-            throw UnsupportedOperationException("CharTraitsBase", __FILE__, 
+            throw the::not_supported_exception("CharTraitsBase", __FILE__, 
                 __LINE__);
         }
 
@@ -260,7 +260,7 @@ namespace vislib {
     protected:
         /** Forbidden Ctor. */
         inline CharTraits(void) {
-            throw UnsupportedOperationException("CharTraits", __FILE__, 
+            throw the::not_supported_exception("CharTraits", __FILE__, 
                 __LINE__);
         }
     }; /* end class CharTraits */
@@ -383,8 +383,8 @@ namespace vislib {
          *
          * @return The parsed boolean value.
          *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
+         * @throw argument_exception if str is NULL.
+         * @throw format_exception if the string could not be parsed to an
          *        boolean value.
          */
         static bool ParseBool(const Char *str);
@@ -396,8 +396,8 @@ namespace vislib {
          *
          * @return The parsed floating point value.
          *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
+         * @throw argument_exception if str is NULL.
+         * @throw format_exception if the string could not be parsed to an
          *        floating point value.
          */
         static double ParseDouble(const Char *str);
@@ -409,8 +409,8 @@ namespace vislib {
          *
          * @return The parsed integer value.
          *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
+         * @throw argument_exception if str is NULL.
+         * @throw format_exception if the string could not be parsed to an
          *        integer value.
          */
         static int ParseInt(const Char *str);
@@ -422,8 +422,8 @@ namespace vislib {
          *
          * @return The parsed integer value.
          *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
+         * @throw argument_exception if str is NULL.
+         * @throw format_exception if the string could not be parsed to an
          *        integer value.
          */
         static int64_t ParseInt64(const Char *str);
@@ -436,8 +436,8 @@ namespace vislib {
          *
          * @return The parsed integer value.
          *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
+         * @throw argument_exception if str is NULL.
+         * @throw format_exception if the string could not be parsed to an
          *        integer value.
          */
         static uint64_t ParseUInt64(const Char *str);
@@ -494,7 +494,7 @@ namespace vislib {
 
         /** Forbidden Ctor. */
         inline CharTraits(void) {
-            throw UnsupportedOperationException("CharTraits<char>", __FILE__, 
+            throw the::not_supported_exception("CharTraits<char>", __FILE__, 
                 __LINE__);
         }
 
@@ -771,8 +771,8 @@ namespace vislib {
          *
          * @return The parsed boolean value.
          *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
+         * @throw argument_exception if str is NULL.
+         * @throw format_exception if the string could not be parsed to an
          *        boolean value.
          */
         static bool ParseBool(const Char *str);
@@ -784,8 +784,8 @@ namespace vislib {
          *
          * @return The parsed floating point value.
          *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
+         * @throw argument_exception if str is NULL.
+         * @throw format_exception if the string could not be parsed to an
          *        floating point value.
          */
         static double ParseDouble(const Char *str);
@@ -797,8 +797,8 @@ namespace vislib {
          *
          * @return The parsed integer value.
          *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
+         * @throw argument_exception if str is NULL.
+         * @throw format_exception if the string could not be parsed to an
          *        integer value.
          */
         static int ParseInt(const Char *str);
@@ -810,8 +810,8 @@ namespace vislib {
          *
          * @return The parsed integer value.
          *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
+         * @throw argument_exception if str is NULL.
+         * @throw format_exception if the string could not be parsed to an
          *        integer value.
          */
         static int64_t ParseInt64(const Char *str);
@@ -824,8 +824,8 @@ namespace vislib {
          *
          * @return The parsed integer value.
          *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
+         * @throw argument_exception if str is NULL.
+         * @throw format_exception if the string could not be parsed to an
          *        integer value.
          */
         static uint64_t ParseUInt64(const Char *str);
@@ -879,7 +879,7 @@ namespace vislib {
 
         /** Forbidden Ctor. */
         inline CharTraits(void) {
-            throw UnsupportedOperationException("CharTraits<wchar_t>", __FILE__, 
+            throw the::not_supported_exception("CharTraits<wchar_t>", __FILE__, 
                 __LINE__);
         }
 

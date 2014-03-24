@@ -10,9 +10,9 @@
 
 #include "vislib/AsyncSocketContext.h"
 #include "vislib/error.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/SocketException.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
 #include "vislib/unreferenced.h"
 
@@ -43,7 +43,7 @@ void vislib::net::AsyncSocket::BeginReceive(void *outData,
 
     /* Sanity checks. */
     if (context == NULL) {
-        throw IllegalParamException("context", __FILE__, __LINE__);
+        throw the::argument_exception("context", __FILE__, __LINE__);
     }
 
 #if (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
@@ -81,10 +81,10 @@ void vislib::net::AsyncSocket::BeginReceive(IPEndPoint *outFromAddr,
 
     /* Sanity checks. */
     if (outFromAddr == NULL) {
-        throw IllegalParamException("outFromAddr", __FILE__, __LINE__);
+        throw the::argument_exception("outFromAddr", __FILE__, __LINE__);
     }
     if (context == NULL) {
-        throw IllegalParamException("context", __FILE__, __LINE__);
+        throw the::argument_exception("context", __FILE__, __LINE__);
     }
 
 #if (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
@@ -124,7 +124,7 @@ void vislib::net::AsyncSocket::BeginSend(const void *data,
 
     /* Sanity checks. */
     if (context == NULL) {
-        throw IllegalParamException("context", __FILE__, __LINE__);
+        throw the::argument_exception("context", __FILE__, __LINE__);
     }
 
 #if (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
@@ -160,7 +160,7 @@ void vislib::net::AsyncSocket::BeginSend(const IPEndPoint& toAddr,
 
     /* Sanity checks. */
     if (context == NULL) {
-        throw IllegalParamException("context", __FILE__, __LINE__);
+        throw the::argument_exception("context", __FILE__, __LINE__);
     }
 
 #if (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
@@ -334,7 +334,7 @@ unsigned int vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        return e.GetErrorCode();
+        return e.get_error().native_error();
     }
 
     try {
@@ -349,8 +349,8 @@ unsigned int vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
         }
 
         ctx->notifyCompleted(cnt, 0);
-    } catch (sys::SystemException& e) {
-        retval = e.GetErrorCode();
+    } catch (the::system::system_exception& e) {
+        retval = e.get_error().native_error();
         ctx->notifyCompleted(cnt, retval);
     } catch (...) {
         ctx->notifyCompleted(0, ::GetLastError());
@@ -386,7 +386,7 @@ unsigned int vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        return e.GetErrorCode();
+        return e.get_error().native_error();
     }
 
     try {
@@ -401,8 +401,8 @@ unsigned int vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
         }
 
         ctx->notifyCompleted(cnt, 0);
-    } catch (sys::SystemException& e) {
-        retval = e.GetErrorCode();
+    } catch (the::system::system_exception& e) {
+        retval = e.get_error().native_error();
         ctx->notifyCompleted(cnt, retval);
     } catch (...) {
         ctx->notifyCompleted(0, ::GetLastError());
@@ -438,7 +438,7 @@ size_t vislib::net::AsyncSocket::endAsync(AsyncSocketContext *context) {
 
     /* Sanity checks. */
     if (context == NULL) {
-        throw IllegalParamException("context", __FILE__, __LINE__);
+        throw the::argument_exception("context", __FILE__, __LINE__);
     }
 
     /* Check for success of the operation. */

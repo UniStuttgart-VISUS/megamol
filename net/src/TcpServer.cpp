@@ -7,7 +7,7 @@
 
 #include "vislib/TcpServer.h"
 
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/Interlocked.h"
 #include "vislib/SocketException.h"
 #include "the/trace.h"
@@ -99,7 +99,7 @@ unsigned int vislib::net::TcpServer::Run(void *userData) {
         IPEndPoint serverAddr = *static_cast<IPEndPoint *>(userData);
         return this->Run(serverAddr);
     } else {
-        throw IllegalParamException("userData", __FILE__, __LINE__);
+        throw the::argument_exception("userData", __FILE__, __LINE__);
     }
 }
 
@@ -117,8 +117,8 @@ unsigned int vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
         Socket::Startup();
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket::Startup in TcpServer failed: "
-            "%s\n", e.GetMsgA());
-        return e.GetErrorCode();
+            "%s\n", e.what());
+        return e.get_error().native_error();
     }
 
     /* Clean existing resources, if any. */
@@ -128,7 +128,7 @@ unsigned int vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
         }
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Error while cleaning existing socket of "
-            "TcpServer: %s\n", e.GetMsgA());
+            "TcpServer: %s\n", e.what());
     }
 
     /* Create socket and bind it to specified address. */
@@ -145,8 +145,8 @@ unsigned int vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
         this->socket.Bind(serverAddr);
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Creating or binding server socket of "
-            "TcpServer server: %s\n", e.GetMsgA());
-        retval = e.GetErrorCode();
+            "TcpServer server: %s\n", e.what());
+        retval = e.get_error().native_error();
     }
 
     /* Enter server loop if no error so far. */
@@ -169,13 +169,13 @@ unsigned int vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
                         peerSocket.Close();
                     } catch (SocketException e) {
                         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Closing unused peer "
-                            "connection: %s\n", e.GetMsgA());
+                            "connection: %s\n", e.what());
                     }
                 }
             }
         } catch (SocketException e) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Communication error in TcpServer: "
-                "%s\n", e.GetMsgA());
+                "%s\n", e.what());
         }
     }
 
@@ -188,8 +188,8 @@ unsigned int vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
         Socket::Cleanup();
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Error during TcpServer shutdown: %s\n",
-            e.GetMsgA());
-        retval = e.GetErrorCode();
+            e.what());
+        retval = e.get_error().native_error();
     }
 
     return retval;
@@ -213,13 +213,13 @@ bool vislib::net::TcpServer::Terminate(void) {
         this->socket.Shutdown();
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "SocketException when shutting "
-            "TcpServer down: %s\n", e.GetMsgA());
+            "TcpServer down: %s\n", e.what());
     }
     try {
         this->socket.Close();
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "SocketException when terminating "
-            "TcpServer: %s\n", e.GetMsgA());
+            "TcpServer: %s\n", e.what());
     }
     return true;
 }

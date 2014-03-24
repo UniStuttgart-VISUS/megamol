@@ -18,7 +18,7 @@
 #include "the/memory.h"
 #endif /* _WIN32 */
 #include "vislib/String.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/types.h"
 
 
@@ -35,9 +35,9 @@ namespace sys {
      * Exception on Linux.
      */
 #ifdef _WIN32
-    typedef SystemException DLLException;
+    typedef the::system::system_exception DLLException;
 #else /* _WIN32 */
-    typedef Exception DLLException;
+    typedef the::exception DLLException;
 #endif /* _WIN32 */
 
 
@@ -118,7 +118,7 @@ namespace sys {
          *         loaded. If 'false' is returned, use 'LastLoadErrorMessage'
          *         to get a human-readable error message.
          *
-         * @throws IllegalStateException If a library was already loaded and not
+         * @throws invalid_operation_exception If a library was already loaded and not
          *                               freed before this call to Load().
          */
         bool Load(const char *moduleName, bool dontResolveReferences = false,
@@ -143,7 +143,7 @@ namespace sys {
          *         loaded. If 'false' is returned, use 'LastLoadErrorMessage'
          *         to get a human-readable error message.
          *
-         * @throws IllegalStateException If a library was already loaded and not
+         * @throws invalid_operation_exception If a library was already loaded and not
          *                               freed before this call to Load().
          */
         bool Load(const wchar_t *moduleName, bool dontResolveReferences = false,
@@ -156,7 +156,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         DynamicLinkLibrary(const DynamicLinkLibrary& rhs);
 
@@ -167,7 +167,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If (this != &rhs).
+         * @throws argument_exception If (this != &rhs).
          */
         DynamicLinkLibrary& operator =(const DynamicLinkLibrary& rhs);
 

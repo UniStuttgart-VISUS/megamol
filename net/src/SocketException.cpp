@@ -13,7 +13,7 @@
  */
 vislib::net::SocketException::SocketException(const unsigned int errorCode, 
         const char *file, const int line)
-        : SystemException(errorCode, file, line) {
+        : the::system::system_exception(errorCode, file, line) {
 }
 
 
@@ -22,9 +22,9 @@ vislib::net::SocketException::SocketException(const unsigned int errorCode,
  */
 vislib::net::SocketException::SocketException(const unsigned int errorCode,
         const char *msg, const char *file, const int line)
-        : SystemException(errorCode, file, line) {
+        : the::system::system_exception(errorCode, file, line) {
     if (msg != NULL) {
-        this->setMsg(msg);
+        this->set_msg(msg);
     }
 }
 
@@ -34,9 +34,9 @@ vislib::net::SocketException::SocketException(const unsigned int errorCode,
  */
 vislib::net::SocketException::SocketException(const char *file, const int line)
 #ifdef _WIN32
-        : SystemException(::WSAGetLastError(), file, line) {
+        : the::system::system_exception(::WSAGetLastError(), file, line) {
 #else /* _WIN32 */
-        : SystemException(::GetLastError(), file, line) {
+        : the::system::system_exception(::GetLastError(), file, line) {
 #endif /* _WIN32 */
 }
 
@@ -45,7 +45,7 @@ vislib::net::SocketException::SocketException(const char *file, const int line)
  * vislib::net::SocketException::SocketException
  */
 vislib::net::SocketException::SocketException(const SocketException& rhs) 
-        : SystemException(rhs) {
+        : the::system::system_exception(rhs) {
 }
 
 
@@ -61,7 +61,7 @@ vislib::net::SocketException::~SocketException(void) {
  */
 vislib::net::SocketException& vislib::net::SocketException::operator =(
         const SocketException& rhs) {
-    SystemException::operator =(rhs);
+    the::system::system_exception::operator =(rhs);
     return *this;
 }
 
@@ -71,8 +71,8 @@ vislib::net::SocketException& vislib::net::SocketException::operator =(
  */
 bool vislib::net::SocketException::IsTimeout(void) const {
 #ifdef _WIN32
-    return (this->GetErrorCode() == WSAETIMEDOUT);
+    return (this->get_error().native_error() == WSAETIMEDOUT);
 #else /* _WIN32 */
-    return (this->GetErrorCode() == ETIMEDOUT);
+    return (this->get_error().native_error() == ETIMEDOUT);
 #endif /* _WIN32 */
 }

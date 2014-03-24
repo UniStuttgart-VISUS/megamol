@@ -16,7 +16,7 @@
 
 
 #include "vislib/AbstractRectangularPyramidalFrustum.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 
 
 namespace vislib {

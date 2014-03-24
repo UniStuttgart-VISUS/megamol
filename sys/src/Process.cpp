@@ -23,18 +23,18 @@
 #include "vislib/AutoHandle.h"
 #include "vislib/Console.h"
 #include "vislib/error.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
+#include "the/argument_exception.h"
+#include "the/invalid_operation_exception.h"
 #ifdef _WIN32 // TODO: PAM disabled
 #include "vislib/ImpersonationContext.h"
 #endif // TODO
 #include "vislib/Path.h"
 #include "vislib/RawStorage.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
-#include "vislib/MissingImplementationException.h"
+#include "the/not_implemented_exception.h"
 
 
 /*
@@ -52,7 +52,7 @@ bool vislib::sys::Process::Exists(const PID processID) {
     if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, processID))
             != NULL) {
         if (!::GetExitCodeProcess(hProcess, &exitCode)) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
 
         ::CloseHandle(hProcess);
@@ -89,12 +89,12 @@ vislib::StringA vislib::sys::Process::ModuleFileNameA(const PID processID) {
 
     if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, processID))
             == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     if (!GetModuleFileNameA(static_cast<HMODULE>(static_cast<HANDLE>(hProcess)),
             retval.AllocateBuffer(MAX_PATH), MAX_PATH)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return retval;
@@ -109,7 +109,7 @@ vislib::StringA vislib::sys::Process::ModuleFileNameA(const PID processID) {
     retvalPtr = retval.AllocateBuffer(PATH_MAX + 1);
     len = ::readlink(procAddr.PeekBuffer(), retvalPtr, PATH_MAX + 1);
     if (len == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     retvalPtr[len] = 0;
 
@@ -126,7 +126,7 @@ vislib::StringA vislib::sys::Process::ModuleFileNameA(void) {
     StringA retval;
 
     if (!GetModuleFileNameA(NULL, retval.AllocateBuffer(MAX_PATH), MAX_PATH)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return retval;
@@ -149,12 +149,12 @@ vislib::StringW vislib::sys::Process::ModuleFileNameW(const PID processID) {
 
     if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, processID))
             == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     if (!GetModuleFileNameW(static_cast<HMODULE>(static_cast<HANDLE>(hProcess)),
             retval.AllocateBuffer(MAX_PATH), MAX_PATH)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return retval;
@@ -173,7 +173,7 @@ vislib::StringW vislib::sys::Process::ModuleFileNameW(void) {
     StringW retval;
 
     if (!GetModuleFileNameW(NULL, retval.AllocateBuffer(MAX_PATH), MAX_PATH)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return retval;
@@ -247,38 +247,38 @@ void vislib::sys::Process::Owner(const PID processID, vislib::StringA& outUser,
                             }
                             ::CloseHandle(hToken);
                             ::CloseHandle(hProcess);
-                            throw SystemException(error, __FILE__, __LINE__);
+                            throw the::system::system_exception(error, __FILE__, __LINE__);
                         }
 
                     } else {
                         ::CloseHandle(hToken);
                         ::CloseHandle(hProcess);
-                        throw SystemException(error, __FILE__, __LINE__);
+                        throw the::system::system_exception(error, __FILE__, __LINE__);
                     } /* end if (::LookupAccountSidA(NULL, sid, NULL, ... */
 
                 } else {
                     error = ::GetLastError();
-                    throw SystemException(error, __FILE__, __LINE__);
+                    throw the::system::system_exception(error, __FILE__, __LINE__);
                 } /* end if (::GetTokenInformation(hToken, TokenUser, ...  */
 
             } else {
                 error = ::GetLastError();
-                throw SystemException(error, __FILE__, __LINE__);
+                throw the::system::system_exception(error, __FILE__, __LINE__);
             } /* end if (::GetTokenInformation(hToken, TokenUser, ...  */
 
         } else {
             error = ::GetLastError();
-            throw SystemException(error, __FILE__, __LINE__);
+            throw the::system::system_exception(error, __FILE__, __LINE__);
         } /* end if (::OpenProcessToken(hProcess, TOKEN_QUERY, &hToken)) */
 
     } else {
         error = ::GetLastError();
-        throw SystemException(error, __FILE__, __LINE__);
+        throw the::system::system_exception(error, __FILE__, __LINE__);
     } /* end if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION ... */
 
 #else /* _WIN32 */
     // TODO: Try something like ps -p <pid> -o user
-    throw MissingImplementationException("vislib::sys::Process::Owner", __FILE__, __LINE__);
+    throw the::not_implemented_exception("vislib::sys::Process::Owner", __FILE__, __LINE__);
 #endif /* _WIN32 */
 }
 
@@ -346,33 +346,33 @@ void vislib::sys::Process::Owner(const PID processID, vislib::StringW& outUser,
                             }
                             ::CloseHandle(hToken);
                             ::CloseHandle(hProcess);
-                            throw SystemException(error, __FILE__, __LINE__);
+                            throw the::system::system_exception(error, __FILE__, __LINE__);
                         }
 
                     } else {
                         ::CloseHandle(hToken);
                         ::CloseHandle(hProcess);
-                        throw SystemException(error, __FILE__, __LINE__);
+                        throw the::system::system_exception(error, __FILE__, __LINE__);
                     } /* end if (::LookupAccountSidW(NULL, sid, NULL, ... */
 
                 } else {
                     error = ::GetLastError();
-                    throw SystemException(error, __FILE__, __LINE__);
+                    throw the::system::system_exception(error, __FILE__, __LINE__);
                 } /* end if (::GetTokenInformation(hToken, TokenUser, ...  */
 
             } else {
                 error = ::GetLastError();
-                throw SystemException(error, __FILE__, __LINE__);
+                throw the::system::system_exception(error, __FILE__, __LINE__);
             } /* end if (::GetTokenInformation(hToken, TokenUser, ...  */
 
         } else {
             error = ::GetLastError();
-            throw SystemException(error, __FILE__, __LINE__);
+            throw the::system::system_exception(error, __FILE__, __LINE__);
         } /* end if (::OpenProcessToken(hProcess, TOKEN_QUERY, &hToken)) */
 
     } else {
         error = ::GetLastError();
-        throw SystemException(error, __FILE__, __LINE__);
+        throw the::system::system_exception(error, __FILE__, __LINE__);
     } /* end if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION ... */
 
 #else /* _WIN32 */
@@ -407,7 +407,7 @@ vislib::StringA vislib::sys::Process::OwnerA(const PID processID,
         } else {
             Process::Owner(processID, retval, NULL);
         }
-    } catch (SystemException) {
+    } catch (the::system::system_exception) {
         if (!isLenient) {
             throw;
         }
@@ -437,7 +437,7 @@ vislib::StringW vislib::sys::Process::OwnerW(const PID processID,
         } else {
             Process::Owner(processID, retval, NULL);
         }
-    } catch (SystemException) {
+    } catch (the::system::system_exception) {
         if (!isLenient) {
             throw;
         }
@@ -478,7 +478,7 @@ vislib::sys::Process::~Process(void) {
  * vislib::sys::Process::Process
  */
 vislib::sys::Process::Process(const Process& rhs) {
-    throw UnsupportedOperationException("Process", __FILE__, __LINE__);
+    throw the::not_supported_exception("Process", __FILE__, __LINE__);
 }
 
 
@@ -489,13 +489,13 @@ vislib::sys::Process::PID vislib::sys::Process::GetID(void) const {
 #ifdef _WIN32
     DWORD retval = ::GetProcessId(this->hProcess);
     if (retval == 0) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     } else {
         return retval;
     }
 #else /* _WIN32 */
     if (this->pid == -1) {
-        throw SystemException(ESRCH, __FILE__, __LINE__);
+        throw the::system::system_exception(ESRCH, __FILE__, __LINE__);
     } else {
         return this->pid;
     }
@@ -529,7 +529,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
 
     /* A process must not be started twice. */
     if (this->hProcess != NULL) {
-        throw IllegalStateException("This process was already created.",
+        throw the::invalid_operation_exception("This process was already created.",
             __FILE__, __LINE__);
     }
 
@@ -543,7 +543,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
     if ((user != NULL) && (password != NULL)) {
         if (::LogonUserA(user, domain, password, LOGON32_LOGON_INTERACTIVE, 
                 LOGON32_PROVIDER_DEFAULT, &hToken) == FALSE) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
 
         // TODO: hToken has insufficient permissions to spawn process.
@@ -552,14 +552,14 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
                 const_cast<void *>(static_cast<const void *>(environment)), 
                 currentDirectory, &si, &pi)
                 == FALSE) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
     } else {
         if (::CreateProcessA(NULL, const_cast<char *>(cmdLine.PeekBuffer()), 
                 NULL, NULL, FALSE, 0, 
                 const_cast<void *>(static_cast<const void *>(environment)),
                 currentDirectory, &si, &pi) == FALSE) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
     }
 
@@ -575,7 +575,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
 
     /* A process must not be started twice. */
     if (this->pid >= 0) {
-        throw IllegalStateException("This process was already created.",
+        throw the::invalid_operation_exception("This process was already created.",
             __FILE__, __LINE__);
     }
 
@@ -592,7 +592,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
 
     /* Open a pipe to get the exec error codes. */
     if (::pipe(pipe) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     /* Make the system close the pipe if exec is called successfully. */
@@ -600,7 +600,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         error = errno;
         ::close(pipe[0]);
         ::close(pipe[1]);
-        throw SystemException(error, __FILE__, __LINE__);
+        throw the::system::system_exception(error, __FILE__, __LINE__);
     }
 
     /* Create new process. */
@@ -658,7 +658,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         error = errno;
         ::close(pipe[0]);       // There is no child which could write.
         ::close(pipe[1]);       // We do not need the write end any more.
-        throw SystemException(error, __FILE__, __LINE__);
+        throw the::system::system_exception(error, __FILE__, __LINE__);
 
     } else {
         /* Process was spawned, we are in parent. */
@@ -672,7 +672,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
             error = errno;
             this->pid = -1;
             ::close(pipe[0]);
-            throw SystemException(error, __FILE__, __LINE__);
+            throw the::system::system_exception(error, __FILE__, __LINE__);
         } else {
             /* Reading error failed, so the child already closed the pipe. */
             ::close(pipe[0]);
@@ -688,14 +688,14 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
 void vislib::sys::Process::Terminate(const unsigned int exitCode) {
 #ifdef _WIN32
     if (!::TerminateProcess(this->hProcess, exitCode)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     
     ::CloseHandle(this->hProcess);
     this->hProcess = NULL;
 #else /* _WIN32 */
     if (::kill(this->pid, SIGKILL) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     this->pid = -1;
@@ -708,7 +708,7 @@ void vislib::sys::Process::Terminate(const unsigned int exitCode) {
  */
 vislib::sys::Process& vislib::sys::Process::operator =(const Process& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

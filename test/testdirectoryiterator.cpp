@@ -3,14 +3,14 @@
 #include "vislib/error.h"
 #include "vislib/File.h"
 #include "vislib/Path.h"
-#include "vislib/Exception.h"
+#include "the/exception.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/DirectoryIterator.h"
 #include "vislib/Array.h"
 #include "vislib/Stack.h"
 #include "testhelper.h"
-#include "vislib/SystemMessage.h"
+#include "the/system/system_message.h"
 
 #include <iostream>
 
@@ -38,7 +38,7 @@ static void createDir(const StringA& fn) {
     //std::cout << "Making directory " << dirs[i] << std::endl;
     if (mkdir(fn, S_IXUSR | S_IRUSR | S_IWUSR) != 0) {
         int e = GetLastError();
-        std::cout << e << "  " << static_cast<const char *>(SystemMessage(e)) << std::endl;
+        std::cout << e << "  " << static_cast<const char *>(the::system::system_message(e)) << std::endl;
     }
 #endif /* _WIN32 */
 }
@@ -50,7 +50,7 @@ static void createDir(const StringW& fn) {
     //std::cout << "Making directory " << StringA(dirs[i]) << std::endl;
     if (mkdir(StringA(fn), S_IXUSR | S_IRUSR | S_IWUSR) != 0) {
         int e = GetLastError();
-        std::cout << e << "  " << static_cast<const char *>(SystemMessage(e)) << std::endl;
+        std::cout << e << "  " << static_cast<const char *>(the::system::system_message(e)) << std::endl;
     }
 #endif /* _WIN32 */
 }
@@ -128,8 +128,8 @@ static void TestDirectoryIteratorA(Array<StringA> dirs, Array<StringA> files) {
             deleteDir(dirs[i]);
         }
 
-    } catch (vislib::Exception e) {
-        std::cout << e.GetMsgA() << std::endl;
+    } catch (the::exception e) {
+        std::cout << e.what() << std::endl;
     }
 }
 
@@ -172,8 +172,8 @@ static void TestDirectoryIteratorW(Array<StringW> dirs, Array<StringW> files) {
             deleteDir(dirs[i]);
         }
 
-    } catch (vislib::Exception e) {
-        std::cout << e.GetMsgA() << std::endl;
+    } catch (the::exception e) {
+        std::cout << e.what() << std::endl;
     }
 }
 

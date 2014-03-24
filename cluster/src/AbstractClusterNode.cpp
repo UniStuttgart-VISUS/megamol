@@ -8,7 +8,7 @@
 #include "vislib/AbstractClusterNode.h"
 
 #include "vislib/clustermessages.h"
-#include "vislib/MissingImplementationException.h"
+#include "the/not_implemented_exception.h"
 #include "vislib/RawStorage.h"
 #include "the/trace.h"
 #include "the/types.h"
@@ -64,7 +64,7 @@ void vislib::net::cluster::AbstractClusterNode::onCommunicationError(
         const PeerIdentifier& peerId, const ComErrorSource src,
         const SocketException& err) throw() {
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A communication error occurred while talking "
-        "to %s: %s\n", peerId.ToStringA().PeekBuffer(), err.GetMsgA());
+        "to %s: %s\n", peerId.ToStringA().PeekBuffer(), err.what());
 }
 
 

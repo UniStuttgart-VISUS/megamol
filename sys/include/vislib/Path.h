@@ -159,7 +159,7 @@ namespace sys {
          *                  removed. If false and the directory is not empty
          *                  the function will fail.
          *
-         * @throws SystemException if an error occured.
+         * @throws the::system::system_exception if an error occured.
          */
         static void DeleteDirectory(const StringA& path, bool recursive);
 
@@ -172,7 +172,7 @@ namespace sys {
          *                  removed. If false and the directory is not empty
          *                  the function will fail.
          *
-         * @throws SystemException if an error occured.
+         * @throws the::system::system_exception if an error occured.
          */
         static void DeleteDirectory(const StringW& path, bool recursive);
 
@@ -229,7 +229,7 @@ namespace sys {
          *
          * @return The current working directory.
          *
-         * @throws SystemException If the directory cannot be retrieved
+         * @throws the::system::system_exception If the directory cannot be retrieved
          * @throws std::bad_alloc If there is not enough memory for storing the
          *                        directory.
          */
@@ -242,7 +242,7 @@ namespace sys {
          *
          * @return The current working directory.
          *
-         * @throws SystemException If the directory cannot be retrieved
+         * @throws the::system::system_exception If the directory cannot be retrieved
          * @throws std::bad_alloc If there is not enough memory for storing the
          *                        directory.
          */
@@ -284,7 +284,7 @@ namespace sys {
          *
          * @return The current temp directory.
          *
-         * @throws SystemException if an error occured.
+         * @throws the::system::system_exception if an error occured.
          */
         static StringA GetTempDirectoryA(void);
 
@@ -298,7 +298,7 @@ namespace sys {
          *
          * @return The current temp directory.
          *
-         * @throws SystemException if an error occured.
+         * @throws the::system::system_exception if an error occured.
          */
         static StringW GetTempDirectoryW(void);
 
@@ -310,7 +310,7 @@ namespace sys {
          *
          * @return The users home directory.
          *
-         * @throws SystemException If the directory cannot be retrieved
+         * @throws the::system::system_exception If the directory cannot be retrieved
          */
         static StringA GetUserHomeDirectoryA(void);
 
@@ -322,7 +322,7 @@ namespace sys {
          *
          * @return The users home directory.
          *
-         * @throws SystemException If the directory cannot be retrieved
+         * @throws the::system::system_exception If the directory cannot be retrieved
          */
         static StringW GetUserHomeDirectoryW(void);
 
@@ -374,7 +374,7 @@ namespace sys {
          *
          * @param path The path to the directory to be created. 
          *
-         * @throws SystemException if an error occured.
+         * @throws the::system::system_exception if an error occured.
          */
         static void MakeDirectory(const StringA& path);
 
@@ -386,7 +386,7 @@ namespace sys {
          *
          * @param path The path to the directory to be created. 
          *
-         * @throws SystemException if an error occured.
+         * @throws the::system::system_exception if an error occured.
          */
         static void MakeDirectory(const StringW& path);
 
@@ -505,7 +505,7 @@ namespace sys {
          *
          * @param path The path to the new current directory.
          *
-         * @throws SystemException If setting a new current directory fails, 
+         * @throws the::system::system_exception If setting a new current directory fails, 
          *                         e. g. 'path' does not exist.
          */
         static void SetCurrentDirectory(const StringA& path);
@@ -515,7 +515,7 @@ namespace sys {
          *
          * @param path The path to the new current directory.
          *
-         * @throws SystemException If setting a new current directory fails, 
+         * @throws the::system::system_exception If setting a new current directory fails, 
          *                         e. g. 'path' does not exist.
          */
         static void SetCurrentDirectory(const StringW& path);

@@ -14,8 +14,8 @@
 #include "vislib/error.h"
 #include "vislib/File.h"
 #include "vislib/Path.h"
-#include "vislib/IOException.h"
-#include "vislib/SystemMessage.h"
+#include "the/system/io/io_exception.h"
+#include "the/system/system_message.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/PerformanceCounter.h"
@@ -84,9 +84,9 @@ static void generateBigOne(File& f1) {
 		SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Linear writing: %03.1f MB/s min, %03.1f MB/s max, %03.1f MB/s average\n", minrate, maxrate, f1.GetSize() / 1024.0f / ptotal);
 		std::cout << buf;
 		f1.Close();
-	} catch (IOException e) {
+	} catch (the::system::io::io_exception e) {
 		AssertTrue("Generate big testfile", false);
-		std::cout << e.GetMsgA() << std::endl;
+		std::cout << e.what() << std::endl;
 	}
 	f1.Open(fname, File::READ_ONLY, File::SHARE_READWRITE, File::OPEN_ONLY);
 	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "File size = " FORMATINT64, BIGFILE_SIZE);
@@ -142,7 +142,7 @@ static void testBigOne(File& f1) {
 			lastval = checkContent(buf, pos, numRead);
 			pos += numRead;
 		}
-	} catch (IOException e) {
+	} catch (the::system::io::io_exception e) {
 		SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Reading successful (" FORMATINT64 ")", pos);
 		AssertTrue(buf, false);
 	}
@@ -201,9 +201,9 @@ static void runTests(File& f1) {
     try {
         f1.Read(readBuffer, TEXT_SIZE);
         AssertTrue("Cannot read on WRITE_ONLY file", false);
-    } catch (IOException e) {
+    } catch (the::system::io::io_exception e) {
         AssertTrue("Cannot read on WRITE_ONLY file", true);
-        std::cout << e.GetMsgA() << std::endl;
+        std::cout << e.what() << std::endl;
     }
 
     f1.Close();
@@ -220,9 +220,9 @@ static void runTests(File& f1) {
     try {
         f1.Write(readBuffer, TEXT_SIZE);
         AssertTrue("Cannot write on READ_ONLY file", false);
-    } catch (IOException e) {
+    } catch (the::system::io::io_exception e) {
         AssertTrue("Cannot write on READ_ONLY file", true);
-        std::cout << e.GetMsgA() << std::endl;
+        std::cout << e.what() << std::endl;
     }
 
     AssertEqual("Seek to 2", f1.Seek(2, File::BEGIN), 
@@ -319,8 +319,8 @@ void TestFile(void) {
         ::TestBaseFile();
         ::TestBufferedFile();
 		::TestMemmappedFile();
-    } catch (IOException e) {
-        std::cout << e.GetMsgA() << std::endl;
+    } catch (the::system::io::io_exception e) {
+        std::cout << e.what() << std::endl;
     }
 }
 
@@ -447,8 +447,8 @@ void TestPath(void) {
         AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<vislib::CharTraitsW>(Path::Resolve(L"hugo"), L"hugo"));
 #endif /* _WIN32 */
         
-    } catch (SystemException e) {
-        cout << e.GetMsgA() << endl;
+    } catch (the::system::system_exception e) {
+        cout << e.what() << endl;
     }
 
 #ifdef _WIN32

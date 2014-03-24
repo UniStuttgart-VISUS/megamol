@@ -18,7 +18,7 @@
 #include "vislib/Socket.h"      // Must be included at begin!
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
-#include "vislib/Exception.h"
+#include "the/exception.h"
 #include "vislib/IPHostEntry.h"
 #include "the/stack_trace.h"
 #include "vislib/String.h"
@@ -57,7 +57,7 @@ namespace net {
          * This exception is thrown if a property of an adapter was retrieved 
          * that is obviously invalid, i. e. has a confidence of INVALID.
          */
-        class NoConfidenceException : public vislib::Exception {
+        class NoConfidenceException : public the::exception {
 
         public:
 
@@ -818,7 +818,7 @@ namespace net {
              *
              * @throws NoConfidenceException If the adapter has no valid
              *                               unicast addresses.
-             * @throws OutOfRangeException If the adapter has no unicast 
+             * @throws index_out_of_range_exception If the adapter has no unicast 
              *                             addresses assigned.
              */
             const IPAgnosticAddress GetUnicastAddress(
@@ -954,7 +954,7 @@ namespace net {
          *
          * @return The number of known adapters.
          * 
-         * @throws SystemException If the adapters could not be retrieved due to
+         * @throws the::system::system_exception If the adapters could not be retrieved due to
          *                         an error in a system call.
          * @throws SocketException If the adapters could not be retrieved due to
          *                         an error in a socket operation.
@@ -969,7 +969,7 @@ namespace net {
          * @param reread If set true, the cache is immediately re-read after 
          *               clearing.
          *
-         * @throws SystemException If the adapters could not be retrieved due to
+         * @throws the::system::system_exception If the adapters could not be retrieved due to
          *                         an error in a system call.
          * @throws SocketException If the adapters could not be retrieved due to
          *                         an error in a socket operation.
@@ -986,8 +986,8 @@ namespace net {
          * @param cb
          * @param userContext
          *
-         * @throws IllegalParamException If 'cb' is a NULL pointer.
-         * @throws SystemException       If the adapters could not be retrieved 
+         * @throws argument_exception If 'cb' is a NULL pointer.
+         * @throws the::system::system_exception       If the adapters could not be retrieved 
          *                               due to an error in a system call.
          * @throws SocketException       If the adapters could not be retrieved 
          *                               due to an error in a socket operation.
@@ -1012,8 +1012,8 @@ namespace net {
          *
          * @return The 'idx'th adapter.
          *
-         * @throws OutOfRangeException If 'idx' is not a valid adapter index.
-         * @throws SystemException     If an error occurred while retrieving 
+         * @throws index_out_of_range_exception If 'idx' is not a valid adapter index.
+         * @throws the::system::system_exception     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
@@ -1034,7 +1034,7 @@ namespace net {
          * @return true if an adapter with the given ID was found,
          *         false otherwise.
          *
-         * @throws SystemException     If an error occurred while retrieving 
+         * @throws the::system::system_exception     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
@@ -1057,7 +1057,7 @@ namespace net {
          * 
          * @return The number of adapters found.
          *
-         * @throws SystemException     If an error occurred while retrieving 
+         * @throws the::system::system_exception     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
@@ -1077,7 +1077,7 @@ namespace net {
          * 
          * @return The number of adapters found.
          *
-         * @throws SystemException     If an error occurred while retrieving 
+         * @throws the::system::system_exception     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
@@ -1097,7 +1097,7 @@ namespace net {
          *
          * @return The number of adapters found.
          *
-         * @throws SystemException     If an error occurred while retrieving 
+         * @throws the::system::system_exception     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
@@ -1117,7 +1117,7 @@ namespace net {
          *
          * @return The number of adapters found.
          *
-         * @throws SystemException     If an error occurred while retrieving 
+         * @throws the::system::system_exception     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
@@ -1137,7 +1137,7 @@ namespace net {
          *
          * @return The number of adapters found.
          *
-         * @throws SystemException     If an error occurred while retrieving 
+         * @throws the::system::system_exception     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
@@ -1158,7 +1158,7 @@ namespace net {
          *
          * @return The number of adapters found.
          *
-         * @throws SystemException     If an error occurred while retrieving 
+         * @throws the::system::system_exception     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
@@ -1189,8 +1189,8 @@ namespace net {
          *
          * @return The 'idx'th adapter.
          *
-         * @throws OutOfRangeException If 'idx' is not a valid adapter index.
-         * @throws SystemException     If an error occurred while retrieving 
+         * @throws index_out_of_range_exception If 'idx' is not a valid adapter index.
+         * @throws the::system::system_exception     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
@@ -1240,7 +1240,7 @@ namespace net {
          *         return value is inverted, i.e. 1.0 in best case and 0.0 in
          *         worst case.
          *
-         * @throws NoSuchElementException If there is no known adapter 
+         * @throws no_such_element_exception If there is no known adapter 
          *                                available.
          */
         static float GuessAdapter(Adapter& outAdapter, const char *str,
@@ -1287,7 +1287,7 @@ namespace net {
          *         return value is inverted, i.e. 1.0 in best case and 0.0 in
          *         worst case.
          *
-         * @throws NoSuchElementException If there is no known adapter 
+         * @throws no_such_element_exception If there is no known adapter 
          *                                available.
          */
         static float GuessAdapter(Adapter& outAdapter, const wchar_t *str,
@@ -1340,7 +1340,7 @@ namespace net {
          *
          * @return The equivalent prefix length in bits.
          *
-         * @throws IllegalParamException If 'netmask' is not a valid netmask.
+         * @throws argument_exception If 'netmask' is not a valid netmask.
          */
         inline static unsigned long NetmaskToPrefix(const IPAddress& netmask) {
             const uint8_t *mask = reinterpret_cast<const uint8_t *>(
@@ -1356,7 +1356,7 @@ namespace net {
          *
          * @return The equivalent prefix length in bits.
          *
-         * @throws IllegalParamException If 'netmask' is not a valid netmask.
+         * @throws argument_exception If 'netmask' is not a valid netmask.
          */
         inline static unsigned long NetmaskToPrefix(const IPAddress6& netmask) {
             const uint8_t *mask = reinterpret_cast<const uint8_t *>(
@@ -1372,7 +1372,7 @@ namespace net {
          *
          * @return The equivalent prefix length in bits.
          *
-         * @throws IllegalParamException If 'netmask' is not a valid netmask.
+         * @throws argument_exception If 'netmask' is not a valid netmask.
          */
         static unsigned long NetmaskToPrefix(const IPAgnosticAddress& netmask);
 
@@ -1383,7 +1383,7 @@ namespace net {
          *
          * @return The equivalent netmask.
          *
-         * @throws OutOfRangeException If the prefix length is not within the 
+         * @throws index_out_of_range_exception If the prefix length is not within the 
          *                             valid range of an IPv4 address.
          */
         inline static IPAddress PrefixToNetmask4(const unsigned long prefix) {
@@ -1404,7 +1404,7 @@ namespace net {
          * @return A string representing the enumeration value. The memory
          *         is owned by the callee.
          *
-         * @throws IllegalParamException If the enumeration value cannot be
+         * @throws argument_exception If the enumeration value cannot be
          *                               stringised.
          */
         static const char *Stringise(const Adapter::ScopeLevel sl);
@@ -1418,7 +1418,7 @@ namespace net {
          * @return A string representing the enumeration value. The memory
          *         is owned by the callee.
          *
-         * @throws IllegalParamException If the enumeration value cannot be
+         * @throws argument_exception If the enumeration value cannot be
          *                               stringised.
          */
         static const char *Stringise(const Adapter::OperStatus as);
@@ -1432,7 +1432,7 @@ namespace net {
          * @return A string representing the enumeration value. The memory
          *         is owned by the callee.
          *
-         * @throws IllegalParamException If the enumeration value cannot be
+         * @throws argument_exception If the enumeration value cannot be
          *                               stringised.
          */
         static const char *Stringise(const Adapter::Type at);
@@ -1446,7 +1446,7 @@ namespace net {
          * @return A string representing the enumeration value. The memory
          *         is owned by the callee.
          *
-         * @throws IllegalParamException If the enumeration value cannot be
+         * @throws argument_exception If the enumeration value cannot be
          *                               stringised.
          */
         static const char *Stringise(const Adapter::TunnelType tt);
@@ -1460,7 +1460,7 @@ namespace net {
          * @return A string representing the enumeration value. The memory
          *         is owned by the callee.
          *
-         * @throws IllegalParamException If the enumeration value cannot be
+         * @throws argument_exception If the enumeration value cannot be
          *                               stringised.
          */
         static const char *Stringise(
@@ -1475,7 +1475,7 @@ namespace net {
          * @return A string representing the enumeration value. The memory
          *         is owned by the callee.
          *
-         * @throws IllegalParamException If the enumeration value cannot be
+         * @throws argument_exception If the enumeration value cannot be
          *                               stringised.
          */
         static const char *Stringise(
@@ -1484,7 +1484,7 @@ namespace net {
         /**
          * Discard all cached adapter information and re-read it.
          *
-         * @throws SystemException
+         * @throws the::system::system_exception
          * @throws SocketException
          * @throws std::bad_alloc
          */
@@ -1577,7 +1577,7 @@ namespace net {
          *
          * @return A guess for the broadcast address.
          *
-         * @throws IllegalParamException If no guess could be made, e.g. 
+         * @throws argument_exception If no guess could be made, e.g. 
          *                               because the netmask is empty.
          */
         static IPAddress guessBroadcastAddress(const IPAddress& address, 
@@ -1626,7 +1626,7 @@ namespace net {
          *
          * This method is not thread-safe!
          *
-         * @throws SystemException If an error occurred while retrieving 
+         * @throws the::system::system_exception If an error occurred while retrieving 
          *                         information from the OS.
          * @throws SocketException If the socket subsystem could not be used.
          * @throws std::bad_alloc  If there was insufficient memory for 
@@ -1642,7 +1642,7 @@ namespace net {
          *
          * @return The VISlib equivalent of the input.
          *
-         * @throws IllegalParamException If no valid mapping could be found.
+         * @throws argument_exception If no valid mapping could be found.
          */
 #ifdef _WIN32
         static Adapter::Type mapAdapterType(const IFTYPE type);
@@ -1659,7 +1659,7 @@ namespace net {
          *
          * @return The VISlib equivalent of the input.
          *
-         * @throws IllegalParamException If no valid mapping could be found.
+         * @throws argument_exception If no valid mapping could be found.
          */
         static Adapter::OperStatus mapOperationStatus(
             const IF_OPER_STATUS status);
@@ -1674,7 +1674,7 @@ namespace net {
          *
          * @return The VISlib equivalent of the input.
          *
-         * @throws IllegalParamException If no valid mapping could be found.
+         * @throws argument_exception If no valid mapping could be found.
          */
         static UnicastAddressInformation::PrefixOrigin mapPrefixOrigin(
             const IP_PREFIX_ORIGIN prefixOrigin);
@@ -1687,7 +1687,7 @@ namespace net {
          *
          * @return The VISlib equivalent of the input.
          *
-         * @throws IllegalParamException If no valid mapping could be found.
+         * @throws argument_exception If no valid mapping could be found.
          */
         static UnicastAddressInformation::SuffixOrigin mapSuffixOrigin(
             const IP_SUFFIX_ORIGIN suffixOrigin);
@@ -1701,7 +1701,7 @@ namespace net {
          *
          * @return The equivalent prefix length in bits.
          *
-         * @throws IllegalParamException If 'netmask' is not a valid netmask.
+         * @throws argument_exception If 'netmask' is not a valid netmask.
          */
         static unsigned long netmaskToPrefix(const uint8_t *netmask, const size_t len);
 
@@ -1714,7 +1714,7 @@ namespace net {
          *
          * @return The equivalent netmask.
          *
-         * @throws OutOfRangeException If the prefix length is not within the 
+         * @throws index_out_of_range_exception If the prefix length is not within the 
          *                             valid range.
          */
         static void prefixToNetmask(uint8_t *outNetmask, const size_t len,
@@ -1910,14 +1910,14 @@ namespace net {
         /** 
          * Forbidden Ctor. 
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         NetworkInformation(void);
 
        /** 
          * Forbidden Ctor. 
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         NetworkInformation(const NetworkInformation& rhs);
 

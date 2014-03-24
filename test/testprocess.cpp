@@ -15,7 +15,7 @@
 #include "testhelper.h"
 #include "vislib/ImpersonationContext.h"
 #include "vislib/Process.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 
 
 void TestProcess(void) {
@@ -60,8 +60,8 @@ void TestProcess(void) {
         cout << "Impersonated as " << ::getuid() << endl;
         cout << "Impersonated as " << ::geteuid() << endl;
 #endif /* !_WIN32 */
-    } catch (SystemException se) {
-        cout << se.GetMsgA() << endl;
+    } catch (the::system::system_exception se) {
+        cout << se.what() << endl;
     }
 
     Process p1;
@@ -73,9 +73,9 @@ void TestProcess(void) {
 
     Process p2;
 #ifdef _WIN32
-    AssertException("Process::Create (non-existing image)", p2.Create(".\\crowbar27.exe"), SystemException);
+    AssertException("Process::Create (non-existing image)", p2.Create(".\\crowbar27.exe"), the::system::system_exception);
 #else /* _WIN32 */
-    AssertException("Process::Create (non-existing image)", p2.Create("./crowbar27"), SystemException);
+    AssertException("Process::Create (non-existing image)", p2.Create("./crowbar27"), the::system::system_exception);
 #endif /* _WIN32 */
 
     //Process p2;

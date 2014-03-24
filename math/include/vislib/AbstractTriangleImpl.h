@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/mathfunctions.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/index_out_of_range_exception.h"
 
 
 namespace vislib {
@@ -129,7 +129,7 @@ namespace math {
          *
          * @return A reference to the i-th vertex.
          *
-         * @throws OutOfRangeException, if 'i' is not within [0, D[.
+         * @throws index_out_of_range_exception, if 'i' is not within [0, D[.
          */
         T& operator [](const int i);
 
@@ -140,7 +140,7 @@ namespace math {
          *
          * @return the i-th vertex
          *
-         * @throws OutOfRangeException, if 'i' is not within [0, D[.
+         * @throws index_out_of_range_exception, if 'i' is not within [0, D[.
          */
         const T& operator [](const int i) const;
 
@@ -216,7 +216,7 @@ namespace math {
 		if ((i >= 0) && (i < 3)) {
 			return this->vertices[i];
 		} else {
-			throw OutOfRangeException(i, 0, 2, __FILE__, __LINE__);
+			throw the::index_out_of_range_exception(i, 0, 2, __FILE__, __LINE__);
 		}
 	}
 
@@ -229,7 +229,7 @@ namespace math {
 		if ((i >= 0) && (i < 3)) {
 			return this->vertices[i];
 		} else {
-			throw OutOfRangeException(i, 0, 2, __FILE__, __LINE__);
+			throw the::index_out_of_range_exception(i, 0, 2, __FILE__, __LINE__);
 		}
 	}
 

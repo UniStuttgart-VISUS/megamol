@@ -60,8 +60,8 @@ unsigned int Worker::Run(void *userData) {
             data = 12;
             comm->Send(&data, sizeof(data));
         }
-    } catch (vislib::Exception e) {
-        std::cerr << e.GetMsgA() << std::endl;
+    } catch (the::exception e) {
+        std::cerr << e.what() << std::endl;
         throw e;
     }
 

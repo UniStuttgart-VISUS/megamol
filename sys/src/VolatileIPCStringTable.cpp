@@ -6,12 +6,12 @@
  */
 
 #include "vislib/VolatileIPCStringTable.h"
-#include "vislib/AlreadyExistsException.h"
+#include "the/already_exists_exception.h"
 #include "the/assert.h"
-#include "vislib/MissingImplementationException.h"
+#include "the/not_implemented_exception.h"
 #include "vislib/StringConverter.h"
-#include "vislib/SystemException.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/system/system_exception.h"
+#include "the/not_supported_exception.h"
 
 
 #ifdef _WIN32
@@ -34,7 +34,7 @@ vislib::sys::VolatileIPCStringTable::EntryImplementation::EntryImplementation(
 #else /* _WIN32 */
         : name(name) {
     // TODO: Implement
-    throw MissingImplementationException("EntryImplementation::Ctor", __FILE__, __LINE__);
+    throw the::not_implemented_exception("EntryImplementation::Ctor", __FILE__, __LINE__);
 #endif /* _WIN32 */
 }
 
@@ -52,7 +52,7 @@ vislib::sys::VolatileIPCStringTable::EntryImplementation::EntryImplementation(
 #else /* _WIN32 */
         : name(W2A(name)) {
     // TODO: Implement
-    throw MissingImplementationException("EntryImplementation::Ctor", __FILE__, __LINE__);
+    throw the::not_implemented_exception("EntryImplementation::Ctor", __FILE__, __LINE__);
 #endif /* _WIN32 */
 }
 
@@ -74,7 +74,7 @@ vislib::sys::VolatileIPCStringTable::EntryImplementation::~EntryImplementation(
 
 #else /* _WIN32 */
     // TODO: Implement
-    throw MissingImplementationException("EntryImplementation::Dtor", __FILE__, __LINE__);
+    throw the::not_implemented_exception("EntryImplementation::Dtor", __FILE__, __LINE__);
 #endif /* _WIN32 */
 }
 
@@ -92,7 +92,7 @@ void vislib::sys::VolatileIPCStringTable::EntryImplementation::Create(void) {
         REG_OPTION_VOLATILE, KEY_ALL_ACCESS, NULL, &this->key, &disposition);
 
     if (errorVal != ERROR_SUCCESS) {
-        throw SystemException(errorVal, __FILE__, __LINE__);
+        throw the::system::system_exception(errorVal, __FILE__, __LINE__);
     }
 
     /*if (disposition == REG_OPENED_EXISTING_KEY)*/ {
@@ -104,12 +104,12 @@ void vislib::sys::VolatileIPCStringTable::EntryImplementation::Create(void) {
 
         RegDeleteKeyW(VIPCST_ROOT_KEY, keyname);
         this->key = NULL;
-        throw AlreadyExistsException("Entry exists", __FILE__, __LINE__);
+        throw the::already_exists_exception("Entry exists", __FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     // TODO: Implement
-    throw MissingImplementationException("EntryImplementation::Create", __FILE__, __LINE__);
+    throw the::not_implemented_exception("EntryImplementation::Create", __FILE__, __LINE__);
 #endif /* _WIN32 */
 }
 
@@ -121,10 +121,10 @@ void vislib::sys::VolatileIPCStringTable::EntryImplementation::SetValue(
         const char* value) {
 #ifdef _WIN32
     // TODO: Implement
-    throw MissingImplementationException("EntryImplementation::SetValue", __FILE__, __LINE__);
+    throw the::not_implemented_exception("EntryImplementation::SetValue", __FILE__, __LINE__);
 #else /* _WIN32 */
     // TODO: Implement
-    throw MissingImplementationException("EntryImplementation::SetValue", __FILE__, __LINE__);
+    throw the::not_implemented_exception("EntryImplementation::SetValue", __FILE__, __LINE__);
 #endif /* _WIN32 */
 }
 
@@ -136,10 +136,10 @@ void vislib::sys::VolatileIPCStringTable::EntryImplementation::SetValue(
         const wchar_t* value) {
 #ifdef _WIN32
     // TODO: Implement
-    throw MissingImplementationException("EntryImplementation::SetValue", __FILE__, __LINE__);
+    throw the::not_implemented_exception("EntryImplementation::SetValue", __FILE__, __LINE__);
 #else /* _WIN32 */
     // TODO: Implement
-    throw MissingImplementationException("EntryImplementation::SetValue", __FILE__, __LINE__);
+    throw the::not_implemented_exception("EntryImplementation::SetValue", __FILE__, __LINE__);
 #endif /* _WIN32 */
 }
 
@@ -268,7 +268,7 @@ vislib::sys::VolatileIPCStringTable::Entry::Entry(void) : impl() {
 vislib::StringA vislib::sys::VolatileIPCStringTable::GetValue(
         const char *name) {
     // TODO: Implement
-    throw MissingImplementationException("GetValue", __FILE__, __LINE__);
+    throw the::not_implemented_exception("GetValue", __FILE__, __LINE__);
 }
 
 
@@ -278,7 +278,7 @@ vislib::StringA vislib::sys::VolatileIPCStringTable::GetValue(
 vislib::StringW vislib::sys::VolatileIPCStringTable::GetValue(
         const wchar_t *name) {
     // TODO: Implement
-    throw MissingImplementationException("GetValue", __FILE__, __LINE__);
+    throw the::not_implemented_exception("GetValue", __FILE__, __LINE__);
 }
 
 
@@ -314,6 +314,6 @@ vislib::sys::VolatileIPCStringTable::Create(const wchar_t *name,
  * vislib::sys::VolatileIPCStringTable::VolatileIPCStringTable
  */
 vislib::sys::VolatileIPCStringTable::VolatileIPCStringTable(void) {
-    throw UnsupportedOperationException("VolatileIPCStringTable::Ctor", 
+    throw the::not_supported_exception("VolatileIPCStringTable::Ctor", 
         __FILE__, __LINE__);
 }

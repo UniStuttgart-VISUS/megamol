@@ -331,8 +331,8 @@ Eigenvektor zu Eigenwert 2:
             msg.Format("Eigenvector %d correct", i);
             AssertTrue(msg, tv6[i].IsParallel(eigenvectors6[p]));
         }
-    } catch(vislib::Exception ex) {
-        printf("Exception: %s\n", ex.GetMsgA());
+    } catch(the::exception ex) {
+        printf("Exception: %s\n", ex.what());
         AssertTrue("Find eigenvalues", false);
     } catch(...) {
         AssertTrue("Find eigenvalues", false);
@@ -417,8 +417,8 @@ Eigenvektoren:
             msg.Format("Eigenvector %d correct", i);
             AssertTrue(msg, tv6[i].IsParallel(eigenvectors6[p]));
         }
-    } catch(vislib::Exception ex) {
-        printf("Exception: %s\n", ex.GetMsgA());
+    } catch(the::exception ex) {
+        printf("Exception: %s\n", ex.what());
         AssertTrue("Find eigenvalues", false);
     } catch(...) {
         AssertTrue("Find eigenvalues", false);
@@ -542,8 +542,8 @@ Eigenvektor zu Eigenwert 5,299783664336905:
             msg.Format("Eigenvector %d correct", i);
             AssertTrue(msg, tv1[i].IsParallel(eigenvectors1[p]));
         }
-    } catch(vislib::Exception ex) {
-        printf("Exception: %s\n", ex.GetMsgA());
+    } catch(the::exception ex) {
+        printf("Exception: %s\n", ex.what());
         AssertTrue("Find eigenvalues", false);
     } catch(...) {
         AssertTrue("Find eigenvalues", false);

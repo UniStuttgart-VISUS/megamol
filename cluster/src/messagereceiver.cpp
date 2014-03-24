@@ -9,7 +9,7 @@
 
 #include "the/assert.h"
 #include "vislib/clustermessages.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "the/memory.h"
 #include "vislib/RawStorage.h"
 #include "vislib/SocketException.h"
@@ -56,14 +56,14 @@ unsigned int vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
     THE_ASSERT(ctx->Receiver != NULL);
     THE_ASSERT(ctx->Socket != NULL);
     if ((ctx == NULL) || (ctx->Receiver == NULL) || (ctx->Socket == NULL)) {
-        throw IllegalParamException("receiveMessagesCtx", __FILE__, __LINE__);
+        throw the::argument_exception("receiveMessagesCtx", __FILE__, __LINE__);
     }
 
     try {
         peerId = ctx->Socket->GetPeerEndPoint();
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Message receiver thread could not "
-            "retrieve identifier of peer node: %s\n", e.GetMsgA());
+            "retrieve identifier of peer node: %s\n", e.what());
     }
 
     try {
@@ -141,11 +141,11 @@ unsigned int vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
         } /* end while (true) */
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "vislib::net::cluster::ReceiveMessages "
-            "exits because of communication error: %s\n", e.GetMsgA());
+            "exits because of communication error: %s\n", e.what());
         // TODO: Remove HOTFIX
         //ctx->Receiver->onCommunicationError(peerId, 
         //    AbstractClusterNode::RECEIVE_COMMUNICATION_ERROR, e);
-        retval = e.GetErrorCode();
+        retval = e.get_error().native_error();
     } catch (...) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unexpected exception caught in "
             "vislib::net::cluster::ReceiveMessages.\n");

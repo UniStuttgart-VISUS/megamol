@@ -8,7 +8,7 @@
 
 #include "vislib/AbstractD3DAdapterInformation.h"
 
-#include "vislib/OutOfRangeException.h"
+#include "the/index_out_of_range_exception.h"
 
 
 using namespace vislib::graphics::d3d;

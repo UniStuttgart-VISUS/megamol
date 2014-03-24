@@ -76,7 +76,7 @@ namespace net {
          *
          * @return The IP address matching 'address'.
          *
-         * @throws IllegalParamException If 'address' is not a valid IP address 
+         * @throws argument_exception If 'address' is not a valid IP address 
          *                               or host name.
          */
         static IPAddress Create(const char *address = "127.0.0.1");
@@ -182,7 +182,7 @@ namespace net {
          *
          * @return The 'i'th byte of the address.
          *
-         * @throws OutOfRangeException If 'i' is not a legal byte number.
+         * @throws index_out_of_range_exception If 'i' is not a legal byte number.
          */
         uint8_t operator [](const int i) const;
 

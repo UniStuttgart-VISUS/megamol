@@ -9,7 +9,7 @@
 #include "vislib/AsyncSocketContext.h"
 
 #include "vislib/AsyncSocket.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "the/trace.h"
 
 
@@ -88,7 +88,7 @@ vislib::net::AsyncSocketContext& vislib::net::AsyncSocketContext::operator =(
     THE_STACK_TRACE;
 
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

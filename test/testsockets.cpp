@@ -10,7 +10,7 @@
 #include "vislib/AsyncSocketSender.h"
 #include "vislib/Socket.h"
 #include "vislib/SocketException.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "vislib/Thread.h"
 #include "testhelper.h"
 
@@ -59,7 +59,7 @@ unsigned int SocketReader::Run(void *cntRepeat) {
 
         Socket::Cleanup();
     } catch (SocketException e) {
-        std::cerr << e.GetMsgA() << std::endl;
+        std::cerr << e.what() << std::endl;
     }
 
     return retval;
@@ -103,7 +103,7 @@ unsigned int SocketWriter::Run(void *cntRepeat) {
 
         Socket::Cleanup();
     } catch (SocketException e) {
-        std::cerr << e.GetMsgA() << std::endl;
+        std::cerr << e.what() << std::endl;
     }
 
     return retval;
@@ -162,8 +162,8 @@ unsigned int SocketServer::Run(void *cntRepeat) {
 
         clientSocket.Close();
         Socket::Cleanup();
-    } catch (SystemException e) {
-        std::cerr << e.GetMsgA() << std::endl;
+    } catch (the::system::system_exception e) {
+        std::cerr << e.what() << std::endl;
     }
     return retval;
 }
@@ -217,8 +217,8 @@ unsigned int SocketClient::Run(void *cntRepeat) {
 
         clientSocket.Close();
         Socket::Cleanup();
-    } catch (SystemException e) {
-        std::cerr << e.GetMsgA() << std::endl;
+    } catch (the::system::system_exception e) {
+        std::cerr << e.what() << std::endl;
     }
     return retval;
 }

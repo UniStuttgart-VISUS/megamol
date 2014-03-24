@@ -9,7 +9,7 @@
 #include "vislib/D3DVISLogo.h"
 
 #include "vislib/d3dverify.h"
-#include "vislib/IllegalStateException.h"
+#include "the/invalid_operation_exception.h"
 
 
 /*
@@ -95,7 +95,7 @@ void vislib::graphics::d3d::D3DVISLogo::Create(void) {
             } break;
 
         default:
-            throw IllegalStateException("'apiVersion' must be one of "
+            throw the::invalid_operation_exception("'apiVersion' must be one of "
                 "D3DVERSION_9 or D3DVERSION_10", __FILE__, __LINE__);
             break;
     }
@@ -124,7 +124,7 @@ void vislib::graphics::d3d::D3DVISLogo::Draw(void) {
             break;
 
         default:
-            throw IllegalStateException("'apiVersion' must be one of "
+            throw the::invalid_operation_exception("'apiVersion' must be one of "
                 "D3DVERSION_9 or D3DVERSION_10", __FILE__, __LINE__);
             break;
     }

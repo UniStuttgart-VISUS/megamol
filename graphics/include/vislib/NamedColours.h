@@ -15,8 +15,8 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/ColourRGBAu8.h"
-#include "vislib/NoSuchElementException.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/no_such_element_exception.h"
+#include "the/index_out_of_range_exception.h"
 #include "vislib/String.h"
 #include "the/types.h"
 
@@ -496,7 +496,7 @@ namespace graphics {
          *
          * @return The idx-th named colour
          *
-         * @throw OutOfRangeException if idx < 0 or idx >= CountNamedColours
+         * @throw index_out_of_range_exception if idx < 0 or idx >= CountNamedColours
          */
         static const ColourRGBAu8& GetColourByIndex(size_t idx);
 
@@ -507,7 +507,7 @@ namespace graphics {
          *
          * @return The colour of the specified name
          *
-         * @throw NoSuchElementException if 'name' is not a named colour name
+         * @throw no_such_element_exception if 'name' is not a named colour name
          */
         static const ColourRGBAu8& GetColourByName(const char *name);
 
@@ -518,7 +518,7 @@ namespace graphics {
          *
          * @return The idx-th named colour name
          *
-         * @throw OutOfRangeException if idx < 0 or idx >= CountNamedColours
+         * @throw index_out_of_range_exception if idx < 0 or idx >= CountNamedColours
          */
         static const char *GetNameByIndex(size_t idx);
 
@@ -526,13 +526,13 @@ namespace graphics {
          * Answer the name of the colour
          *
          * @param col The colour to test
-         * @param throwException If set to 'true' a NoSuchElementException is
+         * @param throwException If set to 'true' a no_such_element_exception is
          *                       thrown if 'col' is not a named colour.
          *
          * @return ASCII string of the colour name or NULL if 'col' is not a
          *         named colour. Do not free the memory of the return value.
          *
-         * @throw NoSuchElementException if 'col' is not a named colour and
+         * @throw no_such_element_exception if 'col' is not a named colour and
          *        'throwException' is 'true'.
          */
         static const char *GetNameByColour(const ColourRGBAu8& col,

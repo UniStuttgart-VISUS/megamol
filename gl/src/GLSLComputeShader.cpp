@@ -143,12 +143,12 @@ bool vislib::graphics::gl::GLSLComputeShader::CompileFromFile(
     } catch(CompileException e) {
         the::safe_array_delete(computeShaderSrcPtrs);
         throw e;
-    } catch(Exception e) {
+    } catch(the::exception e) {
         the::safe_array_delete(computeShaderSrcPtrs);
         throw e;
     } catch(...) {
         the::safe_array_delete(computeShaderSrcPtrs);
-        throw Exception("Unknown Exception", __FILE__, __LINE__);
+        throw the::exception("Unknown Exception", __FILE__, __LINE__);
     }
 
     return false; // should be unreachable code!

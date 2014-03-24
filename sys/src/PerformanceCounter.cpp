@@ -16,7 +16,7 @@
 #include "the/assert.h"
 #include "vislib/error.h"
 #include "the/memory.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
 
 
@@ -30,7 +30,7 @@ uint64_t vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
     if (!::QueryPerformanceCounter(&timerCount)) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "QueryPerformanceCounter failed in "
             "vislib::sys::PerformanceCounter::Query\n");
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     if (useFullPrecision) {
@@ -42,7 +42,7 @@ uint64_t vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
 #else /* _WIN32 */
     struct timeval t;
     if (::gettimeofday(&t, NULL) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     if (useFullPrecision) {
@@ -65,7 +65,7 @@ uint64_t vislib::sys::PerformanceCounter::QueryFrequency(void) {
     if (!::QueryPerformanceFrequency(&timerFreq)) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "QueryPerformanceFrequency failed in "
             "vislib::sys::PerformanceCounter::Query\n");
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return timerFreq.QuadPart;

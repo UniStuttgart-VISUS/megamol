@@ -46,7 +46,7 @@ void vislib::graphics::AbstractCursorEvent::SetModifierTestCount(unsigned int mo
 void vislib::graphics::AbstractCursorEvent::SetModifierTest(
         unsigned int i, InputModifiers::Modifier modifier, bool value) {
     if (i >= this->countModTests) {
-        throw IllegalParamException("i", __FILE__, __LINE__);
+        throw the::argument_exception("i", __FILE__, __LINE__);
     }
     this->modifiers[i] = modifier;
     this->modifierValues[i] = value;

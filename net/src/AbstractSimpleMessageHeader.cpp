@@ -7,7 +7,7 @@
 
 #include "vislib/AbstractSimpleMessageHeader.h"
 
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "the/assert.h"
 #include <cstring>
 
@@ -27,9 +27,9 @@ void vislib::net::AbstractSimpleMessageHeader::SetMessageID(
 	THE_STACK_TRACE;
 
 	if (isSystemID && (messageID < VLSNP1_FIRST_RESERVED_MESSAGE_ID)) {
-		throw IllegalParamException("messageID", __FILE__, __LINE__);
+		throw the::argument_exception("messageID", __FILE__, __LINE__);
 	} else if (!isSystemID && (messageID >= VLSNP1_FIRST_RESERVED_MESSAGE_ID)) {
-		throw IllegalParamException("messageID", __FILE__, __LINE__);
+		throw the::argument_exception("messageID", __FILE__, __LINE__);
 	}
 
 	this->PeekData()->MessageID = messageID;

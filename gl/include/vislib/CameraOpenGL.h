@@ -54,7 +54,7 @@ namespace gl {
          * Multipiles the current openGL matrix with the projection matrix of 
          * the frustum of this camera.
          *
-         * throws IllegalStateException if no beholder is associated with this
+         * throws invalid_operation_exception if no beholder is associated with this
          *        Camera.
          */
         void glMultProjectionMatrix(void) const;
@@ -63,7 +63,7 @@ namespace gl {
          * Multiplies the current openGL matrix with the viewing matrix of this
          * camera.
          *
-         * throws IllegalStateException if no beholder is associated with this
+         * throws invalid_operation_exception if no beholder is associated with this
          *        Camera.
          */
         void glMultViewMatrix(void) const;
@@ -105,7 +105,7 @@ namespace gl {
          *
          * @param mat Points to an array of 16 floats receiving the matrix.
          *
-         * throws IllegalStateException if no beholder is associated with this
+         * throws invalid_operation_exception if no beholder is associated with this
          *        Camera.
          */
         void ProjectionMatrix(float *mat) const;
@@ -115,7 +115,7 @@ namespace gl {
          *
          * @param mat Points to an array of 16 floats receiving the matrix.
          *
-         * throws IllegalStateException if no beholder is associated with this
+         * throws invalid_operation_exception if no beholder is associated with this
          *        Camera.
          */
         void ViewMatrix(float *mat) const;

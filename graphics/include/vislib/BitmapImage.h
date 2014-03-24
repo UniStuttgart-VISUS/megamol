@@ -18,7 +18,7 @@
 #include "the/force_inline.h"
 #include "vislib/PtrArray.h"
 #include "the/types.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 namespace vislib {
@@ -909,7 +909,7 @@ namespace graphics {
              * @param src The source object
              */
             Conversion(const Conversion& src) {
-                throw vislib::UnsupportedOperationException(
+                throw the::not_supported_exception(
                     "Conversion::CopyCtor", __FILE__, __LINE__);
             }
 
@@ -922,7 +922,7 @@ namespace graphics {
              */
             Conversion& operator=(const Conversion& rhs) {
                 if (this != &rhs) {
-                    throw vislib::UnsupportedOperationException(
+                    throw the::not_supported_exception(
                         "Conversion::operator=", __FILE__, __LINE__);
                 }
                 return *this;

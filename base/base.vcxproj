@@ -176,7 +176,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\AlreadyExistsException.cpp" />
     <ClCompile Include="src\Array.cpp" />
     <ClCompile Include="src\ArrayAllocator.cpp" />
     <ClCompile Include="src\ArrayElementDftCtor.cpp" />
@@ -192,13 +191,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\Exception.cpp" />
-    <ClCompile Include="src\FormatException.cpp" />
     <ClCompile Include="src\GUID.cpp" />
     <ClCompile Include="src\HashAlgorithm.cpp" />
     <ClCompile Include="src\Heap.cpp" />
-    <ClCompile Include="src\IllegalParamException.cpp" />
-    <ClCompile Include="src\IllegalStateException.cpp" />
     <ClCompile Include="src\Iterator.cpp" />
     <ClCompile Include="src\Listenable.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -213,13 +208,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\MD5HashProvider.cpp" />
-    <ClCompile Include="src\MissingImplementationException.cpp" />
     <ClCompile Include="src\MultiSz.cpp" />
-    <ClCompile Include="src\NoSuchElementException.cpp" />
     <ClCompile Include="src\NullAllocator.cpp" />
     <ClCompile Include="src\NullLockable.cpp" />
     <ClCompile Include="src\OrderedCollection.cpp" />
-    <ClCompile Include="src\OutOfRangeException.cpp" />
     <ClCompile Include="src\Pair.cpp" />
     <ClCompile Include="src\PtrArray.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -254,13 +246,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\UnsupportedOperationException.cpp" />
     <ClCompile Include="src\UTF8Encoder.cpp" />
     <ClCompile Include="src\VersionNumber.cpp" />
     <ClCompile Include="src\xmlUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\vislib\AlreadyExistsException.h" />
     <ClInclude Include="include\vislib\Array.h" />
     <ClInclude Include="include\vislib\ArrayAllocator.h" />
     <ClInclude Include="include\vislib\ArrayElementDftCtor.h" />
@@ -271,24 +261,17 @@
     <ClInclude Include="include\vislib\ColumnFormatter.h" />
     <ClInclude Include="include\vislib\ConstIterator.h" />
     <ClInclude Include="include\vislib\Delegate.h" />
-    <ClInclude Include="include\vislib\Exception.h" />
-    <ClInclude Include="include\vislib\FormatException.h" />
     <ClInclude Include="include\vislib\GUID.h" />
     <ClInclude Include="include\vislib\HashAlgorithm.h" />
     <ClInclude Include="include\vislib\Heap.h" />
-    <ClInclude Include="include\vislib\IllegalParamException.h" />
-    <ClInclude Include="include\vislib\IllegalStateException.h" />
     <ClInclude Include="include\vislib\Iterator.h" />
     <ClInclude Include="include\vislib\Listenable.h" />
     <ClInclude Include="include\vislib\Map.h" />
     <ClInclude Include="include\vislib\MD5HashProvider.h" />
-    <ClInclude Include="include\vislib\MissingImplementationException.h" />
     <ClInclude Include="include\vislib\MultiSz.h" />
-    <ClInclude Include="include\vislib\NoSuchElementException.h" />
     <ClInclude Include="include\vislib\NullAllocator.h" />
     <ClInclude Include="include\vislib\NullLockable.h" />
     <ClInclude Include="include\vislib\OrderedCollection.h" />
-    <ClInclude Include="include\vislib\OutOfRangeException.h" />
     <ClInclude Include="include\vislib\Pair.h" />
     <ClInclude Include="include\vislib\PtrArray.h" />
     <ClInclude Include="include\vislib\RawStorage.h" />
@@ -310,7 +293,6 @@
     <ClInclude Include="include\vislib\StringTokeniser.h" />
     <ClInclude Include="include\vislib\tchar.h" />
     <ClInclude Include="include\vislib\unreferenced.h" />
-    <ClInclude Include="include\vislib\UnsupportedOperationException.h" />
     <ClInclude Include="include\vislib\UTF8Encoder.h" />
     <ClInclude Include="include\vislib\VersionNumber.h" />
     <ClInclude Include="include\vislib\vislibversion.h" />

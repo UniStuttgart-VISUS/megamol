@@ -226,7 +226,7 @@ namespace ib {
              * Create a new instance.
              *
              *
-             * @throws vislib::sys::COMException In case of an error.
+             * @throws the::system::com_exception In case of an error.
              */
             Port(IWVDevice *device, const uint8_t port);
 
@@ -409,7 +409,7 @@ namespace ib {
              * @param wvProvider The WinVerbs root object.
              * @param guid       The GUID to retrieve the attributes for.
              *
-             * @throws vislib::sys::COMException In case of an error.
+             * @throws the::system::com_exception In case of an error.
              */
             Device(IWVProvider *wvProvider, const NET64& guid);
 
@@ -461,7 +461,7 @@ namespace ib {
          * @param reread If true, update the cached devices immediately.
          *
          * @throws std::bad_alloc In case of too few memory to store the data.
-         * @throws vislib::sys::COMException In case of an error.
+         * @throws the::system::com_exception In case of an error.
          */
         void DiscardCache(const bool reread = false);
 
@@ -477,7 +477,7 @@ namespace ib {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         IbvInformation(const IbvInformation& rhs);
 
@@ -494,7 +494,7 @@ namespace ib {
          *         full before the method was called.
          *
          * @throws std::bad_alloc In case of too few memory to store the data.
-         * @throws vislib::sys::COMException In case of an error.
+         * @throws the::system::com_exception In case of an error.
          */
         bool cacheDevices(void) const;
 
@@ -505,7 +505,7 @@ namespace ib {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If (this != &rhs).
+         * @throws argument_exception If (this != &rhs).
          */
         IbvInformation& operator =(const IbvInformation& rhs);
 

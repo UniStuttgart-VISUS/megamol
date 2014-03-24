@@ -113,7 +113,7 @@ namespace sys {
              * @param outName  Receives the name of the specified variable.
              * @param outValue Receives the value of the specified variable.
              *
-             * @throws OutOfRangeException If 'idx' is not valid.
+             * @throws index_out_of_range_exception If 'idx' is not valid.
              */
             void GetAt(const size_t idx, StringA& outName, StringA& outValue);
 
@@ -125,7 +125,7 @@ namespace sys {
              * @param outName  Receives the name of the specified variable.
              * @param outValue Receives the value of the specified variable.
              *
-             * @throws OutOfRangeException If 'idx' is not valid.
+             * @throws index_out_of_range_exception If 'idx' is not valid.
              */
             void GetAt(const size_t idx, StringW& outName, StringW& outValue);
 
@@ -353,7 +353,7 @@ namespace sys {
          * @return The environment snapshot.
          *
          * @throws std::bad_alloc In case of low memory
-         * @throws SystemException If the current environment could not be 
+         * @throws the::system::system_exception If the current environment could not be 
          *                         retrieved.
          */
         static Snapshot CreateSnapshot(void);
@@ -371,7 +371,7 @@ namespace sys {
          *
          * @return The value of the specified environment variable.
          *
-         * @throws SystemException If the variable could not be retrieved, 
+         * @throws the::system::system_exception If the variable could not be retrieved, 
          *                         e. g. because it is not set.
          */
         static vislib::StringA GetVariable(const char *name, 
@@ -390,7 +390,7 @@ namespace sys {
          *
          * @return The value of the specified environment variable.
          *
-         * @throws SystemException If the variable could not be retrieved, 
+         * @throws the::system::system_exception If the variable could not be retrieved, 
          *                         e. g. because it is not set.
          */
         static vislib::StringW GetVariable(const wchar_t *name, 
@@ -409,7 +409,7 @@ namespace sys {
          *
          * @return The value of the specified environment variable.
          *
-         * @throws SystemException If the variable could not be retrieved, 
+         * @throws the::system::system_exception If the variable could not be retrieved, 
          *                         e. g. because it is not set.
          */
         inline static vislib::StringA GetVariable(const vislib::StringA& name,
@@ -430,7 +430,7 @@ namespace sys {
          *
          * @return The value of the specified environment variable.
          *
-         * @throws SystemException If the variable could not be retrieved, 
+         * @throws the::system::system_exception If the variable could not be retrieved, 
          *                         e. g. because it is not set.
          */
         inline static vislib::StringW GetVariable(const vislib::StringW& name,
@@ -445,7 +445,7 @@ namespace sys {
          *
          * @return true if the variable is set, false otherwise.
          *
-         * @throws SystemException If an error occurred during the system call.
+         * @throws the::system::system_exception If an error occurred during the system call.
          */
         static bool IsSet(const char *name);
 
@@ -456,7 +456,7 @@ namespace sys {
          *
          * @return true if the variable is set, false otherwise.
          *
-         * @throws SystemException If an error occurred during the system call.
+         * @throws the::system::system_exception If an error occurred during the system call.
          */
         static bool IsSet(const wchar_t *name);
 
@@ -467,7 +467,7 @@ namespace sys {
          *
          * @return true if the variable is set, false otherwise.
          *
-         * @throws SystemException If an error occurred during the system call.
+         * @throws the::system::system_exception If an error occurred during the system call.
          */
         inline static bool IsSet(const vislib::StringA& name) {
             return Environment::IsSet(name.PeekBuffer());
@@ -480,7 +480,7 @@ namespace sys {
          *
          * @return true if the variable is set, false otherwise.
          *
-         * @throws SystemException If an error occurred during the system call.
+         * @throws the::system::system_exception If an error occurred during the system call.
          */
         inline static bool IsSet(const vislib::StringW& name) {
             return Environment::IsSet(name.PeekBuffer());
@@ -494,7 +494,7 @@ namespace sys {
          * @param name  The name of the environment variable.
          * @param value The new value of the variable.
          *
-         * @throws SystemException If settings the environment variable failed.
+         * @throws the::system::system_exception If settings the environment variable failed.
          */
         static void SetVariable(const char *name, const char *value);
 
@@ -506,7 +506,7 @@ namespace sys {
          * @param name  The name of the environment variable.
          * @param value The new value of the variable.
          *
-         * @throws SystemException If settings the environment variable failed.
+         * @throws the::system::system_exception If settings the environment variable failed.
          */
         static void SetVariable(const wchar_t *name, const wchar_t *value);
 
@@ -517,7 +517,7 @@ namespace sys {
          * @param name  The name of the environment variable.
          * @param value The new value of the variable.
          *
-         * @throws SystemException If settings the environment variable failed.
+         * @throws the::system::system_exception If settings the environment variable failed.
          */
         inline static void SetVariable(const vislib::StringA& name, 
                                        const vislib::StringA& value) {
@@ -531,7 +531,7 @@ namespace sys {
          * @param name  The name of the environment variable.
          * @param value The new value of the variable.
          *
-         * @throws SystemException If settings the environment variable failed.
+         * @throws the::system::system_exception If settings the environment variable failed.
          */
         inline static void SetVariable(const vislib::StringW& name, 
                                        const vislib::StringW& value) {

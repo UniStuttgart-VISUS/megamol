@@ -16,10 +16,10 @@
 
 #include "the/assert.h"
 #include "vislib/CharTraits.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "the/memory.h"
 #include "the/types.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -128,10 +128,10 @@ namespace vislib {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         inline StringConverter(const StringConverter& rhs) {
-            throw UnsupportedOperationException(
+            throw the::not_supported_exception(
                 "vislib::StringConverter::StringConverter", __FILE__, 
                 __LINE__);
         }
@@ -141,7 +141,7 @@ namespace vislib {
          *
          * @param rhs The right hand side operand.
          *
-         * @throws IllegalParamException If (this != rhs).
+         * @throws argument_exception If (this != rhs).
          */
         StringConverter& operator =(const StringConverter& rhs);
 
@@ -183,7 +183,7 @@ namespace vislib {
     StringConverter<S, T, B>& StringConverter<S, T, B>::operator =(
             const StringConverter& rhs) {
         if (this != &rhs) {
-            throw IllegalParamException("vislib::StringConverT::operator =",
+            throw the::argument_exception("vislib::StringConverT::operator =",
                 __FILE__, __LINE__);
         }
         return *this;

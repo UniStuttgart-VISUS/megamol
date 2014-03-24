@@ -93,7 +93,7 @@ namespace sys {
          *
          * @return The path to the executable file of the process.
          *
-         * @throws SystemException If the module name could not be retrieved, 
+         * @throws the::system::system_exception If the module name could not be retrieved, 
          *                         e.g. because the requested process does not
          *                         exists.
          */
@@ -107,7 +107,7 @@ namespace sys {
          *
          * @return The path to the executable file of the calling process.
          *
-         * @throws SystemException If the module name could not be retrieved.
+         * @throws the::system::system_exception If the module name could not be retrieved.
          */
         static vislib::StringA ModuleFileNameA(void);
 
@@ -121,7 +121,7 @@ namespace sys {
          *
          * @return The path to the executable file of the process.
          *
-         * @throws SystemException If the module name could not be retrieved, 
+         * @throws the::system::system_exception If the module name could not be retrieved, 
          *                         e.g. because the requested process does not
          *                         exists.
          */
@@ -135,7 +135,7 @@ namespace sys {
          *
          * @return The path to the executable file of the calling process.
          *
-         * @throws SystemException If the module name could not be retrieved.
+         * @throws the::system::system_exception If the module name could not be retrieved.
          */
         static vislib::StringW ModuleFileNameW(void);
 
@@ -149,7 +149,7 @@ namespace sys {
          *
          * @return The path to the executable file of the process.
          *
-         * @throws SystemException If the module name could not be retrieved, 
+         * @throws the::system::system_exception If the module name could not be retrieved, 
          *                         e.g. because the requested process does not
          *                         exists.
          */
@@ -169,7 +169,7 @@ namespace sys {
          *
          * @return The path to the executable file of the calling process.
          *
-         * @throws SystemException If the module name could not be retrieved.
+         * @throws the::system::system_exception If the module name could not be retrieved.
          */
         inline static vislib::TString ModuleFileName(void) {
 #if defined(UNICODE) || defined(_UNICODE)
@@ -184,7 +184,7 @@ namespace sys {
          *
          * Note that it might not be possible to retrieve the owner of
          * a process if the calling process has insufficient privileges.
-         * In that case, a SystemException is thrown. It is normally not
+         * In that case, a the::system::system_exception is thrown. It is normally not
          * possible to retrieve the owner of a process if this owner is
          * SYSTEM on Windows.
          *
@@ -192,7 +192,7 @@ namespace sys {
          * @param outUser   Receives the user name.
          * @param outDomain Receives the domain name if not NULL.
          *
-         * @throws SystemException If the user could not be retrieved, e. g.
+         * @throws the::system::system_exception If the user could not be retrieved, e. g.
          *                         because the process with PID 'processID'
          *                         does not exist or because the calling 
          *                         process has insufficient privileges.
@@ -207,7 +207,7 @@ namespace sys {
          *
          * Note that it might not be possible to retrieve the owner of
          * a process if the calling process has insufficient privileges.
-         * In that case, a SystemException is thrown. It is normally not
+         * In that case, a the::system::system_exception is thrown. It is normally not
          * possible to retrieve the owner of a process if this owner is
          * SYSTEM on Windows.
          *
@@ -215,7 +215,7 @@ namespace sys {
          * @param outUser   Receives the user name.
          * @param outDomain Receives the domain name if not NULL.
          *
-         * @throws SystemException If the user could not be retrieved, e. g.
+         * @throws the::system::system_exception If the user could not be retrieved, e. g.
          *                         because the process with PID 'processID'
          *                         does not exist or because the calling 
          *                         process has insufficient privileges.
@@ -233,7 +233,7 @@ namespace sys {
          * included in the returned string. The format of the string is 
          * DOMAIN\USER in this case. On Linux, 'includeDomain' has no effect.
          *
-         * If 'isLenient' is true, no SystemException will be thrown if the
+         * If 'isLenient' is true, no the::system::system_exception will be thrown if the
          * requested process does not exist or the user could not be determined.
          * An empty string will be returned in that case. Note that 
          * std::bad_alloc might be thrown even if 'isLenient' is set.
@@ -242,11 +242,11 @@ namespace sys {
          * @param includeDomain If true, the domain of the user account is 
          *                      included in the return value.
          * @param isLenient     If true, an empty string will be returned 
-         *                      instead of throwing a SystemException.
+         *                      instead of throwing a the::system::system_exception.
          * 
          * @return The user name of the owner of 'processID'.
          *
-         * @throws SystemException If (isLenient == false) and no process with
+         * @throws the::system::system_exception If (isLenient == false) and no process with
          *                         ID 'processID' exists or if the calling 
          *                         process has insufficient permissions to 
          *                         retrieve the requested information or the 
@@ -265,7 +265,7 @@ namespace sys {
          * included in the returned string. The format of the string is 
          * DOMAIN\USER in this case. On Linux, 'includeDomain' has no effect.
          *
-         * If 'isLenient' is true, no SystemException will be thrown if the
+         * If 'isLenient' is true, no the::system::system_exception will be thrown if the
          * requested process does not exist or the user could not be determined.
          * An empty string will be returned in that case. Note that 
          * std::bad_alloc might be thrown even if 'isLenient' is set.
@@ -274,11 +274,11 @@ namespace sys {
          * @param includeDomain If true, the domain of the user account is 
          *                      included in the return value.
          * @param isLenient     If true, an empty string will be returned 
-         *                      instead of throwing a SystemException.
+         *                      instead of throwing a the::system::system_exception.
          * 
          * @return The user name of the owner of 'processID'.
          *
-         * @throws SystemException If (isLenient == false) and no process with
+         * @throws the::system::system_exception If (isLenient == false) and no process with
          *                         ID 'processID' exists or if the calling 
          *                         process has insufficient permissions to 
          *                         retrieve the requested information or the 
@@ -297,7 +297,7 @@ namespace sys {
          * included in the returned string. The format of the string is 
          * DOMAIN\USER in this case. On Linux, 'includeDomain' has no effect.
          *
-         * If 'isLenient' is true, no SystemException will be thrown if the
+         * If 'isLenient' is true, no the::system::system_exception will be thrown if the
          * requested process does not exist or the user could not be determined.
          * An empty string will be returned in that case. Note that 
          * std::bad_alloc might be thrown even if 'isLenient' is set.
@@ -306,11 +306,11 @@ namespace sys {
          * @param includeDomain If true, the domain of the user account is 
          *                      included in the return value.
          * @param isLenient     If true, an empty string will be returned 
-         *                      instead of throwing a SystemException.
+         *                      instead of throwing a the::system::system_exception.
          * 
          * @return The user name of the owner of 'processID'.
          *
-         * @throws SystemException If (isLenient == false) and no process with
+         * @throws the::system::system_exception If (isLenient == false) and no process with
          *                         ID 'processID' exists or if the calling 
          *                         process has insufficient permissions to 
          *                         retrieve the requested information or the 
@@ -358,9 +358,9 @@ namespace sys {
          *                         inherit the working directory of the calling
          *                         process.
          *
-         * @throws IllegalStateException If another process has already been
+         * @throws invalid_operation_exception If another process has already been
          *                               created using this object.
-         * @throws SystemException If the creation of the process failed.
+         * @throws the::system::system_exception If the creation of the process failed.
          */
         inline void Create(const char *command, const char *arguments[] = NULL, 
                 const Environment::Snapshot& environment = EMPTY_ENVIRONMENT, 
@@ -383,7 +383,7 @@ namespace sys {
          *
          * @return The ID of the process.
          *
-         * @throws SystemException If no process has been created or the process
+         * @throws the::system::system_exception If no process has been created or the process
          *                         already terminated.
          */
         PID GetID(void) const;
@@ -405,7 +405,7 @@ namespace sys {
          *
          * @param exitCode The exit code to set for the process.
          *
-         * @throws SystemException If the process could not be terminated.
+         * @throws the::system::system_exception If the process could not be terminated.
          */
         void Terminate(const unsigned int exitCode = 0);
 
@@ -416,7 +416,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         Process(const Process& rhs);
 
@@ -434,7 +434,7 @@ namespace sys {
          *
          * @return *this
          *
-         * @throws IllegalParamException If (this != &rhs).
+         * @throws argument_exception If (this != &rhs).
          */
         Process& operator =(const Process& rhs);
 

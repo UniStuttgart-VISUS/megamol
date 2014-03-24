@@ -9,12 +9,12 @@
 #include "vislib/TcpCommChannel.h"
 
 #include "the/assert.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/PeerDisconnectedException.h"
 #include "vislib/SocketException.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -58,7 +58,7 @@ void vislib::net::TcpCommChannel::Bind(
     SmartRef<IPCommEndPoint> ep = endPoint.DynamicCast<IPCommEndPoint>();
 
     if (ep.IsNull()) {
-        throw IllegalParamException("endPoint", __FILE__, __LINE__);
+        throw the::argument_exception("endPoint", __FILE__, __LINE__);
     }
 
     this->createSocket(static_cast<IPEndPoint>(*ep));   // Create lazily.
@@ -75,13 +75,13 @@ void vislib::net::TcpCommChannel::Close(void) {
     //    this->socket.Shutdown();
     //} catch (SocketException e) {
     //    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "SocketException when shutting down "
-    //        "socket in TcpCommChannel::Close: %s\n", e.GetMsgA());
+    //        "socket in TcpCommChannel::Close: %s\n", e.what());
     //}
     try {
         this->socket.Close();
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "SocketException when closing socket "
-            "in TcpCommChannel::Close: %s\n", e.GetMsgA());
+            "in TcpCommChannel::Close: %s\n", e.what());
         throw e;
     }
 }
@@ -96,7 +96,7 @@ void vislib::net::TcpCommChannel::Connect(
     SmartRef<IPCommEndPoint> ep = endPoint.DynamicCast<IPCommEndPoint>();
 
     if (ep.IsNull()) {
-        throw IllegalParamException("endPoint", __FILE__, __LINE__);
+        throw the::argument_exception("endPoint", __FILE__, __LINE__);
     }
 
     this->createSocket(static_cast<IPEndPoint>(*ep));   // Create lazily.
@@ -194,7 +194,7 @@ vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket, const uint64_t flags
  * vislib::net::TcpCommChannel::TcpCommChannel
  */
 vislib::net::TcpCommChannel::TcpCommChannel(const TcpCommChannel& rhs) {
-    throw UnsupportedOperationException("TcpCommChannel::TcpCommChannel", 
+    throw the::not_supported_exception("TcpCommChannel::TcpCommChannel", 
         __FILE__, __LINE__);
 }
 

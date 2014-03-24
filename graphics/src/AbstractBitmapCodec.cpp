@@ -8,12 +8,12 @@
 
 #include "vislib/AbstractBitmapCodec.h"
 #include "vislib/ArrayAllocator.h"
-#include "vislib/IllegalStateException.h"
+#include "the/invalid_operation_exception.h"
 #include "vislib/MemmappedFile.h"
 #include "vislib/MemoryFile.h"
 #include "vislib/Path.h"
 #include "vislib/SmartPtr.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -102,7 +102,7 @@ bool vislib::graphics::AbstractBitmapCodec::Load(const char* filename) {
 
     }
 
-    throw vislib::UnsupportedOperationException("Load", __FILE__, __LINE__);
+    throw the::not_supported_exception("Load", __FILE__, __LINE__);
     return false;
 }
 
@@ -142,7 +142,7 @@ bool vislib::graphics::AbstractBitmapCodec::Load(const wchar_t* filename) {
 
     }
 
-    throw vislib::UnsupportedOperationException("Load", __FILE__, __LINE__);
+    throw the::not_supported_exception("Load", __FILE__, __LINE__);
     return false;
 }
 
@@ -227,7 +227,7 @@ bool vislib::graphics::AbstractBitmapCodec::Load(vislib::sys::File& file) {
 
     }
 
-    throw vislib::UnsupportedOperationException("Load", __FILE__, __LINE__);
+    throw the::not_supported_exception("Load", __FILE__, __LINE__);
     return false;
 }
 
@@ -301,7 +301,7 @@ bool vislib::graphics::AbstractBitmapCodec::Load(const void *mem, size_t size) {
 
     }
 
-    throw vislib::UnsupportedOperationException("Load", __FILE__, __LINE__);
+    throw the::not_supported_exception("Load", __FILE__, __LINE__);
     return false;
 }
 
@@ -349,7 +349,7 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
 
     }
 
-    throw vislib::UnsupportedOperationException("Save", __FILE__, __LINE__);
+    throw the::not_supported_exception("Save", __FILE__, __LINE__);
     return false;
 }
 
@@ -397,7 +397,7 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
 
     }
 
-    throw vislib::UnsupportedOperationException("Save", __FILE__, __LINE__);
+    throw the::not_supported_exception("Save", __FILE__, __LINE__);
     return false;
 }
 
@@ -489,7 +489,7 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
 
     }
 
-    throw vislib::UnsupportedOperationException("Save", __FILE__, __LINE__);
+    throw the::not_supported_exception("Save", __FILE__, __LINE__);
     return false;
 }
 
@@ -578,7 +578,7 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
 
     }
 
-    throw vislib::UnsupportedOperationException("Save", __FILE__, __LINE__);
+    throw the::not_supported_exception("Save", __FILE__, __LINE__);
     return false;
 }
 
@@ -589,7 +589,7 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
 vislib::graphics::BitmapImage&
 vislib::graphics::AbstractBitmapCodec::image(void) {
     if (this->img == NULL) {
-        throw vislib::IllegalStateException(
+        throw the::invalid_operation_exception(
             "Must set 'Image' member before calling", __FILE__, __LINE__);
     }
     return *this->img;
@@ -602,7 +602,7 @@ vislib::graphics::AbstractBitmapCodec::image(void) {
 const vislib::graphics::BitmapImage&
 vislib::graphics::AbstractBitmapCodec::image(void) const {
     if (this->img == NULL) {
-        throw vislib::IllegalStateException(
+        throw the::invalid_operation_exception(
             "Must set 'Image' member before calling", __FILE__, __LINE__);
     }
     return *this->img;
@@ -614,7 +614,7 @@ vislib::graphics::AbstractBitmapCodec::image(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::loadFromFileA(
         const char *filename) {
-    throw vislib::UnsupportedOperationException("loadFromFileA",
+    throw the::not_supported_exception("loadFromFileA",
         __FILE__, __LINE__);
     return false;
 }
@@ -634,7 +634,7 @@ vislib::graphics::AbstractBitmapCodec::loadFromFileAImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::loadFromFileW(
         const wchar_t *filename) {
-    throw vislib::UnsupportedOperationException("loadFromFileW",
+    throw the::not_supported_exception("loadFromFileW",
         __FILE__, __LINE__);
     return false;
 }
@@ -654,7 +654,7 @@ vislib::graphics::AbstractBitmapCodec::loadFromFileWImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::loadFromMemory(const void *mem,
         size_t size) {
-    throw vislib::UnsupportedOperationException("loadFromMemory",
+    throw the::not_supported_exception("loadFromMemory",
         __FILE__, __LINE__);
     return false;
 }
@@ -674,7 +674,7 @@ vislib::graphics::AbstractBitmapCodec::loadFromMemoryImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::loadFromStream(
         vislib::sys::File& stream) {
-    throw vislib::UnsupportedOperationException("loadFromStream",
+    throw the::not_supported_exception("loadFromStream",
         __FILE__, __LINE__);
     return false;
 }
@@ -694,7 +694,7 @@ vislib::graphics::AbstractBitmapCodec::loadFromStreamImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::saveToFileA(
         const char *filename) const {
-    throw vislib::UnsupportedOperationException("saveToFileA",
+    throw the::not_supported_exception("saveToFileA",
         __FILE__, __LINE__);
     return false;
 }
@@ -714,7 +714,7 @@ vislib::graphics::AbstractBitmapCodec::saveToFileAImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::saveToFileW(
         const wchar_t *filename) const {
-    throw vislib::UnsupportedOperationException("saveToFileW",
+    throw the::not_supported_exception("saveToFileW",
         __FILE__, __LINE__);
     return false;
 }
@@ -734,7 +734,7 @@ vislib::graphics::AbstractBitmapCodec::saveToFileWImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::saveToMemory(
         vislib::RawStorage &mem) const {
-    throw vislib::UnsupportedOperationException("saveToMemory",
+    throw the::not_supported_exception("saveToMemory",
         __FILE__, __LINE__);
     return false;
 }
@@ -754,7 +754,7 @@ vislib::graphics::AbstractBitmapCodec::saveToMemoryImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::saveToStream(
         vislib::sys::File& stream) const {
-    throw vislib::UnsupportedOperationException("saveToStream",
+    throw the::not_supported_exception("saveToStream",
         __FILE__, __LINE__);
     return false;
 }

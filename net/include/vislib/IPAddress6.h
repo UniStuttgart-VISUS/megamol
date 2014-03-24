@@ -303,7 +303,7 @@ namespace net {
          *
          * @return The mapped IPv4 address.
          *
-         * @throws IllegalStateException If this address is not a mapped IPv4
+         * @throws invalid_operation_exception If this address is not a mapped IPv4
          *                               address.
          */
         IPAddress UnmapV4Address(void) const;
@@ -316,7 +316,7 @@ namespace net {
          *
          * @return The 'i'th byte of the address.
          *
-         * @throws OutOfRangeException If 'i' is not a legal byte number.
+         * @throws index_out_of_range_exception If 'i' is not a legal byte number.
          */
         uint8_t operator [](const int i) const;
 
@@ -444,7 +444,7 @@ namespace net {
          * @return The IPv4 address that is equivalent to this IPv6 address if 
          *         such a conversion is possible.
          *
-         * @throws IllegalStateException If the IPv6 address is neither an IPv4
+         * @throws invalid_operation_exception If the IPv6 address is neither an IPv4
          *                               mapped address nor IPv4 compatible.
          */
         operator IPAddress(void) const;

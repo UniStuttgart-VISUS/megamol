@@ -135,7 +135,7 @@ namespace sys {
          *                        maximum timeout values are currently set 
          *                        at 10 seconds and 30 seconds, respectively.
          *
-         * @throws SystemException If the tray icon could not be created.
+         * @throws the::system::system_exception If the tray icon could not be created.
          */
         void Create(HWND targetWnd, const unsigned int callbackMessage, const unsigned int id,
             const wchar_t *toolTip, const HICON icon,
@@ -203,7 +203,7 @@ namespace sys {
          *                        maximum timeout values are currently set 
          *                        at 10 seconds and 30 seconds, respectively.
          *
-         * @throws SystemException If the tray icon could not be created.
+         * @throws the::system::system_exception If the tray icon could not be created.
          */
         void Create(HWND targetWnd, const unsigned int callbackMessage, const unsigned int id,
             const char *toolTip, const HICON icon,
@@ -273,7 +273,7 @@ namespace sys {
          *                        maximum timeout values are currently set 
          *                        at 10 seconds and 30 seconds, respectively.
          *
-         * @throws SystemException If the tray icon could not be created.
+         * @throws the::system::system_exception If the tray icon could not be created.
          */
         void Create(HWND targetWnd, const unsigned int callbackMessage, const unsigned int id,
             HINSTANCE hResourceModule, const wchar_t *toolTip, 
@@ -343,7 +343,7 @@ namespace sys {
          *                        maximum timeout values are currently set 
          *                        at 10 seconds and 30 seconds, respectively.
          *
-         * @throws SystemException If the tray icon could not be created.
+         * @throws the::system::system_exception If the tray icon could not be created.
          */
         void Create(HWND targetWnd, const unsigned int callbackMessage, const unsigned int id,
             HINSTANCE hResourceModule, const char *toolTip, 
@@ -413,7 +413,7 @@ namespace sys {
          *                        maximum timeout values are currently set 
          *                        at 10 seconds and 30 seconds, respectively.
          *
-         * @throws SystemException If the tray icon could not be created.
+         * @throws the::system::system_exception If the tray icon could not be created.
          */
         void Create(HWND targetWnd, const unsigned int callbackMessage, const unsigned int id,
             HINSTANCE hResourceModule, const unsigned int toolTipID, 
@@ -437,7 +437,7 @@ namespace sys {
          *
          * This method has no effect, if the tray icon is not visible.
          *
-         * @throws SystemException If the icon could not be hidden.
+         * @throws the::system::system_exception If the icon could not be hidden.
          */
         void Hide(void);
 
@@ -456,7 +456,7 @@ namespace sys {
 		 * @param icon the handle of the new icon. The caller remains owner
 		 *             of the icon and can destroy it right afterwards.
 		 *
-		 * @throws SystemException in case of error.
+		 * @throws the::system::system_exception in case of error.
 		 */
 		inline void SetIcon(const HICON icon) {
 			this->configureIcon(icon);
@@ -471,7 +471,7 @@ namespace sys {
          * @param iconID          The resource ID of the icon to be added, 
          *                        modified, or deleted. 
 		 *
-		 * @throws SystemException in case of error.
+		 * @throws the::system::system_exception in case of error.
 		 */
 		void SetIcon(HINSTANCE hResourceModule, const unsigned int iconID);
 
@@ -480,7 +480,7 @@ namespace sys {
          *
          * This method has no effect, if the tray icon is already visible.
          *
-         * @throws SystemException If the icon could not be made visible.
+         * @throws the::system::system_exception If the icon could not be made visible.
          */
         void Show(void);
 
@@ -653,7 +653,7 @@ namespace sys {
          * @param message The message to send. Note that 'this->nid' must be
          *                configured appropriately.
          *
-         * @throws SystemException If ::Shell_NotifyIcon fails.
+         * @throws the::system::system_exception If ::Shell_NotifyIcon fails.
          */
         void notify(const unsigned int message);
 

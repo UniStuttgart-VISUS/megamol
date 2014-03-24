@@ -8,8 +8,8 @@
 
 #include "vislib/BitmapImage.h"
 #include "the/assert.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
+#include "the/argument_exception.h"
+#include "the/invalid_operation_exception.h"
 #include "vislib/mathfunctions.h"
 #include "the/memory.h"
 #include <climits>
@@ -882,7 +882,7 @@ void vislib::graphics::BitmapImage::Crop(unsigned int left, unsigned int top,
         height = this->height - top;
     }
     unsigned int bpp = this->BytesPerPixel();
-    if (bpp < 1) throw vislib::IllegalStateException(
+    if (bpp < 1) throw the::invalid_operation_exception(
         "Image has no colour channels", __FILE__, __LINE__);
 
     char *newData = new char[bpp * width * height];
@@ -983,7 +983,7 @@ void vislib::graphics::BitmapImage::ExtractFrom(
         height = src.Height() - top;
     }
     unsigned int bpp = src.BytesPerPixel();
-    if (bpp < 1) throw vislib::IllegalStateException(
+    if (bpp < 1) throw the::invalid_operation_exception(
         "Source image has no colour channels", __FILE__, __LINE__);
 
     this->CreateImage(width, height, src);

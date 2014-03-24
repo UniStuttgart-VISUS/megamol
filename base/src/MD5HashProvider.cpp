@@ -30,7 +30,7 @@
 #include "vislib/MD5HashProvider.h"
 
 #include "the/assert.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "the/memory.h"
 
 
@@ -372,7 +372,7 @@ const size_t vislib::MD5HashProvider::HASH_SIZE = 16;
 vislib::MD5HashProvider& vislib::MD5HashProvider::operator =(
         const MD5HashProvider& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

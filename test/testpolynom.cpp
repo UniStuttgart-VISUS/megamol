@@ -204,7 +204,7 @@ void TestPolynom(void) {
             || vislib::math::IsEqual(roots[1], testroot)
             || vislib::math::IsEqual(roots[2], testroot)
             || vislib::math::IsEqual(roots[3], testroot)));
-    } catch (vislib::Exception ex) {
+    } catch (the::exception ex) {
         AssertTrue("Root finding for polynom of degree 4 failed", false);
     }
 
@@ -262,7 +262,7 @@ void TestPolynom(void) {
             || vislib::math::IsEqual(roots[2], testroot)
             || vislib::math::IsEqual(roots[3], testroot)
             || vislib::math::IsEqual(roots[4], testroot)));
-    } catch (vislib::Exception ex) {
+    } catch (the::exception ex) {
         AssertTrue("Root finding for polynom of degree 5 failed", false);
     }
 

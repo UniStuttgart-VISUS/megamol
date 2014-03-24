@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 
 
 namespace vislib {
@@ -23,7 +23,7 @@ namespace net {
     /**
      * This exception indicates a socket error.
      */
-    class SocketException : public sys::SystemException {
+    class SocketException : public the::system::system_exception {
 
     public:
 

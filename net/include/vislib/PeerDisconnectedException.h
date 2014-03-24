@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/Exception.h"
+#include "the/exception.h"
 #include "vislib/String.h"
 
 
@@ -27,7 +27,11 @@ namespace net {
      * This exception is thrown if an AbstractCommChannel or a derived class 
      * detects a graceful disconnect of the peer node.
      */
-    class PeerDisconnectedException : public Exception {
+    class PeerDisconnectedException : public the::exception {
+    private:
+
+        /** Superclass typedef. */
+        typedef the::exception Super;
 
     public:
 
@@ -91,11 +95,6 @@ namespace net {
 
         /** Dtor. */
         virtual ~PeerDisconnectedException(void);
-
-    private:
-
-        /** Superclass typedef. */
-        typedef Exception Super;
 
     };
     

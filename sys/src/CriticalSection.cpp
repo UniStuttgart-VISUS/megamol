@@ -8,8 +8,8 @@
 #include "vislib/CriticalSection.h"
 
 #include "the/assert.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/argument_exception.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -63,7 +63,7 @@ bool vislib::sys::CriticalSection::TryLock(void) {
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400))
     return (::TryEnterCriticalSection(&this->critSect) != 0);
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400)) */
-    throw UnsupportedOperationException(
+    throw the::not_supported_exception(
         "vislib::sys::CriticalSection::TryLock", __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400)) */
 
@@ -92,7 +92,7 @@ void vislib::sys::CriticalSection::Unlock(void) {
  * vislib::sys::CriticalSection::CriticalSection
  */
 vislib::sys::CriticalSection::CriticalSection(const CriticalSection& rhs) {
-    throw UnsupportedOperationException("vislib::sys::CriticalSection::\
+    throw the::not_supported_exception("vislib::sys::CriticalSection::\
 CriticalSection", __FILE__, __LINE__);
 }
 
@@ -103,7 +103,7 @@ CriticalSection", __FILE__, __LINE__);
 vislib::sys::CriticalSection& vislib::sys::CriticalSection::operator =(
         const CriticalSection& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

@@ -8,13 +8,13 @@
 
 #include "the/assert.h"
 #include "vislib/error.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
-#include "vislib/IOException.h"
+#include "the/argument_exception.h"
+#include "the/invalid_operation_exception.h"
+#include "the/system/io/io_exception.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/SystemInformation.h"
 #include "the/memory.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 #ifndef _WIN32
 #include <sys/stat.h>
@@ -69,7 +69,7 @@ inline void vislib::sys::MemmappedFile::SafeUnmapView() {
 		size_t vs = static_cast <size_t>(this->AdjustedViewSize(this->viewStart));
 		if (munmap(this->mappedData, vs) == -1) {
 #endif /* _WIN32 */
-			throw IOException(::GetLastError(), __FILE__, __LINE__);
+			throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
 		}
 		this->mappedData = NULL;
 	}
@@ -87,7 +87,7 @@ inline char* vislib::sys::MemmappedFile::SafeMapView() {
 	ULARGE_INTEGER fp;
 	fp.QuadPart = this->AlignPosition(this->filePos);
 	if (this->mapping == NULL || this->mapping == INVALID_HANDLE_VALUE) {
-		throw IllegalStateException("SafeMapView while mapping invalid", __FILE__, __LINE__);
+		throw the::invalid_operation_exception("SafeMapView while mapping invalid", __FILE__, __LINE__);
 	}
 	size_t vs = static_cast <size_t>(this->AdjustedViewSize(this->filePos));
 	switch(this->access) {
@@ -101,13 +101,13 @@ inline char* vislib::sys::MemmappedFile::SafeMapView() {
 			da = FILE_MAP_WRITE;
 			break;
 		default:
-			throw IllegalStateException("SafeMapView", __FILE__, __LINE__);
+			throw the::invalid_operation_exception("SafeMapView", __FILE__, __LINE__);
 			break;
 	}
 	ret = static_cast <char*> (MapViewOfFile(this->mapping, da, fp.HighPart,
 		fp.LowPart, vs));
 	if (ret == NULL) {
-		throw IOException(::GetLastError(), __FILE__, __LINE__);
+		throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
 	}
 	this->viewStart = fp.QuadPart;
 #else /* _WIN32 */
@@ -117,17 +117,17 @@ inline char* vislib::sys::MemmappedFile::SafeMapView() {
 	if (this->endPos < fp + vs) {
 		/* go to the location corresponding to the last byte */
 		if (lseek (this->handle, fp + vs - 1, SEEK_SET) == -1) {
-			throw IOException(GetLastError(), __FILE__ , __LINE__);
+			throw the::system::io::io_exception(GetLastError(), __FILE__ , __LINE__);
 		}
 		/* write a dummy byte at the last location */
 		if (write (this->handle, "", 1) != 1) {
-			throw IOException(GetLastError(), __FILE__ , __LINE__);
+			throw the::system::io::io_exception(GetLastError(), __FILE__ , __LINE__);
 		}
 	}
 
 	ret = static_cast <char*> (mmap(0, vs, this->protect, MAP_SHARED, this->handle, fp));
 	if (ret == MAP_FAILED) {
-		throw IOException(::GetLastError(), __FILE__, __LINE__);
+		throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
 	}
 	this->viewStart = fp;
 #endif /* _WIN32 */
@@ -150,7 +150,7 @@ inline void vislib::sys::MemmappedFile::SafeCreateMapping(File::FileSize mapping
 		this->referenceSize = s.QuadPart;
 	}
 	if (this->mapping == NULL || this->mapping == INVALID_HANDLE_VALUE) {
-		throw IOException(::GetLastError(), __FILE__, __LINE__);
+		throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
 	}
 }
 #endif /* _WIN32 */
@@ -163,7 +163,7 @@ inline void vislib::sys::MemmappedFile::SafeCreateMapping(File::FileSize mapping
 inline void vislib::sys::MemmappedFile::SafeCloseMapping() {
 	if (this->mapping != INVALID_HANDLE_VALUE && this->mapping != NULL) {
 		if (CloseHandle(this->mapping) == 0) {
-			throw IOException(::GetLastError(), __FILE__, __LINE__);
+			throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
 		}
 		this->mapping = INVALID_HANDLE_VALUE;
 	}
@@ -220,12 +220,12 @@ void vislib::sys::MemmappedFile::Flush(void) {
 	if (this->mappedData != NULL && this->viewDirty) {
 #ifdef _WIN32
 		if (FlushViewOfFile(this->mappedData, 0) == 0) {
-			throw IOException(ERROR_WRITE_FAULT, __FILE__, __LINE__);
+			throw the::system::io::io_exception(ERROR_WRITE_FAULT, __FILE__, __LINE__);
 		}
 #else /* _WIN32 */
 		size_t vs = static_cast<size_t>(this->AdjustedViewSize(this->viewStart));
 		if (msync(this->mappedData, vs, MS_SYNC) == -1) {
-			throw IOException(GetLastError(), __FILE__, __LINE__);
+			throw the::system::io::io_exception(GetLastError(), __FILE__, __LINE__);
 		}
 #endif /* _WIN32 */
 		this->viewDirty = false;
@@ -246,7 +246,7 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::GetSize(void) const {
 #endif /* _WIN32 */
 		return this->endPos;
 	} else {
-		throw IllegalStateException("GetSize while file not open", __FILE__, __LINE__);
+		throw the::invalid_operation_exception("GetSize while file not open", __FILE__, __LINE__);
 	}
 }
 
@@ -323,7 +323,7 @@ bool vislib::sys::MemmappedFile::CommonOpen(const File::AccessMode accessMode) {
 		case READ_ONLY:
 			this->protect = PAGE_READONLY;
 			if (!GetFileSizeEx(this->handle, &oldSize)) {
-				throw IOException(::GetLastError(), __FILE__, __LINE__);
+				throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
 			} else {
 				this->endPos = oldSize.QuadPart;
 				this->referenceSize = oldSize.QuadPart;
@@ -345,7 +345,7 @@ bool vislib::sys::MemmappedFile::CommonOpen(const File::AccessMode accessMode) {
 			}
 			break;
 		default:
-			throw IllegalParamException("accessMode", __FILE__, __LINE__);
+			throw the::argument_exception("accessMode", __FILE__, __LINE__);
 			break;
 	}
 	this->SafeCreateMapping(oldSize.QuadPart);
@@ -362,7 +362,7 @@ bool vislib::sys::MemmappedFile::CommonOpen(const File::AccessMode accessMode) {
 				this->endPos = stat.st_size;
 				this->referenceSize = stat.st_size;
 			} else {
-				throw IOException(::GetLastError(), __FILE__, __LINE__);
+				throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
 			}
 			break;
 		case READ_WRITE:
@@ -381,7 +381,7 @@ bool vislib::sys::MemmappedFile::CommonOpen(const File::AccessMode accessMode) {
 			}
 			break;
 		default:
-			throw IllegalParamException("accessMode", __FILE__, __LINE__);
+			throw the::argument_exception("accessMode", __FILE__, __LINE__);
 			break;
 	}
 #endif /* _WIN32 */
@@ -397,7 +397,7 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::Read(void *outBuf,
         const vislib::sys::File::FileSize bufSize) {
 	if (bufSize < 0) {
 		// hate!
-		throw IllegalParamException("bufSize", __FILE__, __LINE__);
+		throw the::argument_exception("bufSize", __FILE__, __LINE__);
 	}
 	if (bufSize == 0) {
 		// null op
@@ -410,16 +410,16 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::Read(void *outBuf,
 
 	if (this->access == WRITE_ONLY) {
 #ifdef _WIN32
-		throw IOException(ERROR_ACCESS_DENIED, __FILE__, __LINE__);
+		throw the::system::io::io_exception(ERROR_ACCESS_DENIED, __FILE__, __LINE__);
 #else /* _WIN32 */
-		throw IOException(EACCES, __FILE__, __LINE__);
+		throw the::system::io::io_exception(EACCES, __FILE__, __LINE__);
 #endif /* _WIN32 */
 	}
 
 #ifdef _WIN32
 	if (this->mapping == INVALID_HANDLE_VALUE || this->mapping == NULL) {
 		// something went wrong when opening the file. I do not think retrying will make it better, will it?
-		throw IllegalStateException("Read", __FILE__, __LINE__);
+		throw the::invalid_operation_exception("Read", __FILE__, __LINE__);
 	}
 #endif /* _WIN32 */
 
@@ -479,7 +479,7 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::Seek(const vislib::sys::
 		default:
 			// bug: now what?
 			destination = 0;
-			throw IllegalParamException("from", __FILE__, __LINE__);
+			throw the::argument_exception("from", __FILE__, __LINE__);
 			break;
 	}
 	// I cannot be arsed...
@@ -504,7 +504,7 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::Tell(void) const {
 #endif /* _WIN32 */
 		return (this->filePos);
 	} else {
-		throw IllegalStateException("Tell while file not open", __FILE__, __LINE__);
+		throw the::invalid_operation_exception("Tell while file not open", __FILE__, __LINE__);
 	}    
 }
 
@@ -515,14 +515,14 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::Tell(void) const {
 vislib::sys::File::FileSize vislib::sys::MemmappedFile::Write(const void *buf, const File::FileSize bufSize) {
 	if (bufSize < 0) {
 		// hate!
-		throw IllegalParamException("bufSize", __FILE__, __LINE__);
+		throw the::argument_exception("bufSize", __FILE__, __LINE__);
 	}
 
 	if (this->access == READ_ONLY) {
 #ifdef _WIN32
-		throw IOException(ERROR_ACCESS_DENIED, __FILE__, __LINE__);
+		throw the::system::io::io_exception(ERROR_ACCESS_DENIED, __FILE__, __LINE__);
 #else /* _WIN32 */
-		throw IOException(EACCES, __FILE__, __LINE__);
+		throw the::system::io::io_exception(EACCES, __FILE__, __LINE__);
 #endif /* _WIN32 */
 	}
 
@@ -536,15 +536,15 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::Write(const void *buf, c
 #ifdef _WIN32
 	if (this->mapping == INVALID_HANDLE_VALUE || this->mapping == NULL) {
 		// something went wrong when opening the file. I do not think retrying will make it better, will it?
-		throw IllegalStateException("Write", __FILE__, __LINE__);
+		throw the::invalid_operation_exception("Write", __FILE__, __LINE__);
 	}
 #endif /* _WIN32 */
 	if (this->filePos > this->endPos) {
 		// what the fuck?
 #ifdef _WIN32
-		throw IOException(ERROR_WRITE_FAULT, __FILE__, __LINE__);
+		throw the::system::io::io_exception(ERROR_WRITE_FAULT, __FILE__, __LINE__);
 #else /* _WIN32 */
-		throw IOException(EFBIG, __FILE__, __LINE__);
+		throw the::system::io::io_exception(EFBIG, __FILE__, __LINE__);
 #endif /* _WIN32 */
 	}
 	while (dataLeft > 0) {
@@ -581,7 +581,7 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::Write(const void *buf, c
  * vislib::sys::MemmappedFile::MemmappedFile copy ctor
  */
 vislib::sys::MemmappedFile::MemmappedFile(const vislib::sys::MemmappedFile& rhs) {
-    throw UnsupportedOperationException("vislib::sys::MemmappedFile::MemmappedFile", __FILE__, __LINE__);
+    throw the::not_supported_exception("vislib::sys::MemmappedFile::MemmappedFile", __FILE__, __LINE__);
 }
 
 
@@ -590,7 +590,7 @@ vislib::sys::MemmappedFile::MemmappedFile(const vislib::sys::MemmappedFile& rhs)
  */
 vislib::sys::MemmappedFile& vislib::sys::MemmappedFile::operator =(const vislib::sys::MemmappedFile& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
     return *this;
 }

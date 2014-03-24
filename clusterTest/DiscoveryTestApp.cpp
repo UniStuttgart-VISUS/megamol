@@ -135,8 +135,8 @@ unsigned int DiscoveryTestApp::Run(void) {
         //this->cds.Start("MegaMolRenderCluster", &cfg, 1, 2, 0/*DiscoveryService::FLAG_SHARE_SOCKETS*/, DiscoveryService::DEFAULT_REQUEST_INTERVAL, 1);
 
         Socket::Cleanup();
-    } catch (vislib::Exception& e) {
-        std::cerr << "VISlib exception caught: " << e.GetMsgA() << std::endl;
+    } catch (the::exception& e) {
+        std::cerr << "VISlib exception caught: " << e.what() << std::endl;
     } catch (...) {
         std::cerr << "Unknown exception caught." << std::endl;
     }
@@ -146,8 +146,8 @@ unsigned int DiscoveryTestApp::Run(void) {
     try {
         this->cds.Stop();
         Socket::Cleanup();
-    } catch (vislib::Exception& e) {
-        std::cerr << "VISlib exception caught: " << e.GetMsgA() << std::endl;
+    } catch (the::exception& e) {
+        std::cerr << "VISlib exception caught: " << e.what() << std::endl;
     } catch (...) {
         std::cerr << "Unknown exception caught." << std::endl;
     }

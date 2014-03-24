@@ -8,7 +8,7 @@
 #include "vislib/Interlocked.h"
 
 #include "the/assert.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 
@@ -25,5 +25,5 @@ vislib::sys::Interlocked::~Interlocked(void) {
  * vislib::sys::Interlocked::Interlocked
  */
 vislib::sys::Interlocked::Interlocked(void) {
-    throw UnsupportedOperationException("Interlocked", __FILE__, __LINE__);
+    throw the::not_supported_exception("Interlocked", __FILE__, __LINE__);
 }

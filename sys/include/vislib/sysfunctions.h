@@ -28,7 +28,7 @@
 #include "vislib/sysfunctions.h"
 #include "vislib/RawStorage.h"
 #include "vislib/String.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/types.h"
 
 
@@ -182,9 +182,9 @@ namespace sys {
      * @return A RawStorage containing the raw resource data. This is the same
      *         object passed in as out.
      *
-     * @throws SystemException If the resource lookup or loading the resource
+     * @throws the::system::system_exception If the resource lookup or loading the resource
      *                         failed.
-     * @throws UnsupportedOperationException On Linux.
+     * @throws not_supported_exception On Linux.
      */
     RawStorage& LoadResource(RawStorage& out,
 #ifdef _WIN32
@@ -210,9 +210,9 @@ namespace sys {
      * @return A RawStorage containing the raw resource data. This is the same
      *         object passed in as out.
      *
-     * @throws SystemException If the resource lookup or loading the resource
+     * @throws the::system::system_exception If the resource lookup or loading the resource
      *                         failed.
-     * @throws UnsupportedOperationException On Linux.
+     * @throws not_supported_exception On Linux.
      */
     RawStorage& LoadResource(RawStorage& out,
 #ifdef _WIN32
@@ -235,7 +235,7 @@ namespace sys {
      *
      * @return The string holding the line read.
      *
-     * @throws IOException If the file cannot be read.
+     * @throws the::system::io::io_exception If the file cannot be read.
      * @throws std::bad_alloc If there is not enough memory to store the line.
      */
     StringA ReadLineFromFileA(File& input, unsigned int size = defMaxLineSize);
@@ -254,7 +254,7 @@ namespace sys {
      *
      * @return The string holding the line read.
      *
-     * @throws IOException If the file cannot be read.
+     * @throws the::system::io::io_exception If the file cannot be read.
      * @throws std::bad_alloc If there is not enough memory to store the line.
      */
     StringW ReadLineFromFileW(File& input, unsigned int size = defMaxLineSize);
@@ -277,7 +277,7 @@ namespace sys {
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
      *
-     * @throws IOException If reading from the file failed.
+     * @throws the::system::io::io_exception If reading from the file failed.
      */
     template<class tp1, class tp2>
     bool ReadTextFile(String<tp1>& outStr, const tp2 *filename,
@@ -291,7 +291,7 @@ namespace sys {
             file.Close();
         } else {
             // works because the last error still contains the correct value
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
         return retval;
     }
@@ -308,7 +308,7 @@ namespace sys {
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
      *
-     * @throws IOException If reading from the file failed.
+     * @throws the::system::io::io_exception If reading from the file failed.
      */
     template<class tp1, class tp2>
     bool ReadTextFile(String<tp1>& outStr, const String<tp2>& filename,
@@ -331,7 +331,7 @@ namespace sys {
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
      *
-     * @throws IOException If reading from the file failed.
+     * @throws the::system::io::io_exception If reading from the file failed.
      */
     bool ReadTextFile(StringA& outStr, File& file,
         TextFileFormat format = TEXTFF_UNSPECIFIC, bool forceFormat = false);
@@ -349,7 +349,7 @@ namespace sys {
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
      *
-     * @throws IOException If reading from the file failed.
+     * @throws the::system::io::io_exception If reading from the file failed.
      */
     bool ReadTextFile(StringW& outStr, File& file,
         TextFileFormat format = TEXTFF_UNSPECIFIC, bool forceFormat = false);
@@ -374,7 +374,7 @@ namespace sys {
      *         NOERROR in case of success or an appropriate error code 
      *         otherwise.
      *
-     * @throws SystemException If the specified module could not be opened or if
+     * @throws the::system::system_exception If the specified module could not be opened or if
      *                         it has no DllGetVersion function.
      */
     HRESULT GetDLLVersion(DLLVERSIONINFO& outVersion, const char *moduleName);
@@ -391,7 +391,7 @@ namespace sys {
      *         NOERROR in case of success or an appropriate error code 
      *         otherwise.
      *
-     * @throws SystemException If the specified module could not be opened or if
+     * @throws the::system::system_exception If the specified module could not be opened or if
      *                         it has no DllGetVersion function.
      */
     HRESULT GetDLLVersion(DLLVERSIONINFO& outVersion, 
@@ -466,7 +466,7 @@ namespace sys {
      *
      * @return The System V unique key for the name.
      *
-     * @throws SystemException If the key could not be created.
+     * @throws the::system::system_exception If the key could not be created.
      */
     key_t TranslateIpcName(const char *name);
 #endif /* !_WIN32 */
@@ -482,7 +482,7 @@ namespace sys {
      * @return 'true' on success, 'false' it not all the data has been
      *         written.
      *
-     * @throws SystemException If there was an IO error.
+     * @throws the::system::system_exception If there was an IO error.
      */
     template<class T>
     bool WriteFormattedLineToFile(File &out,
@@ -506,7 +506,7 @@ namespace sys {
      * @return 'true' on success, 'false' it not all the data has been
      *         written.
      *
-     * @throws SystemException If there was an IO error.
+     * @throws the::system::system_exception If there was an IO error.
      */
     template<class T>
     bool WriteLineToFile(File &out, const T *text) {
@@ -526,7 +526,7 @@ namespace sys {
      *
      * @return true if the data was written successfully, false otherwise.
      *
-     * @throws SystemException in case of an error.
+     * @throws the::system::system_exception in case of an error.
      */
     template<class tp1, class tp2>
     bool WriteTextFile(const String<tp1>& filename, const String<tp2>& text,
@@ -546,7 +546,7 @@ namespace sys {
      *
      * @return true if the data was written successfully, false otherwise.
      *
-     * @throws SystemException in case of an error.
+     * @throws the::system::system_exception in case of an error.
      */
     template<class tp1, class tp2>
     bool WriteTextFile(const tp1 *filename, const String<tp2>& text,
@@ -560,7 +560,7 @@ namespace sys {
             file.Close();
         } else {
             // works because the last error still contains the correct value
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
         return retval;
     }
@@ -574,7 +574,7 @@ namespace sys {
      *
      * @return true if the data was written successfully, false otherwise.
      *
-     * @throws SystemException in case of an error.
+     * @throws the::system::system_exception in case of an error.
      */
     bool WriteTextFile(File& file, const StringA& text,
         TextFileFormat format = TEXTFF_ASCII,
@@ -589,7 +589,7 @@ namespace sys {
      *
      * @return true if the data was written successfully, false otherwise.
      *
-     * @throws SystemException in case of an error.
+     * @throws the::system::system_exception in case of an error.
      */
     bool WriteTextFile(File& file, const StringW& text,
         TextFileFormat format = TEXTFF_UNICODE,

@@ -7,7 +7,7 @@
 
 #include "vislib/AbstractFont.h"
 #include "the/assert.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 
 
 /*
@@ -65,7 +65,7 @@ void vislib::graphics::AbstractFont::SetFlipY(bool flipY) {
  */
 void vislib::graphics::AbstractFont::SetSize(float size) {
     if (size < 0.0f) {
-        throw vislib::IllegalParamException("size", __FILE__, __LINE__);
+        throw the::argument_exception("size", __FILE__, __LINE__);
     }
     this->size = size;
 }

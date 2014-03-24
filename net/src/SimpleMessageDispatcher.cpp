@@ -83,9 +83,9 @@ unsigned int vislib::net::SimpleMessageDispatcher::Run(void *config) {
         Socket::Startup();
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket::Startup failed in "
-            "SimpleMessageDispatcher::Run: %s\n", e.GetMsgA());
+            "SimpleMessageDispatcher::Run: %s\n", e.what());
         this->fireCommunicationError(e);
-        return e.GetErrorCode();
+        return e.get_error().native_error();
     }
 
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "The SimpleMessageDispatcher [%u] is entering "
@@ -123,10 +123,10 @@ unsigned int vislib::net::SimpleMessageDispatcher::Run(void *config) {
                 vislib::sys::Thread::CurrentID());
             doReceive = this->fireMessageReceived(this->msg);
         }
-    } catch (Exception e) {
+    } catch (the::exception e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The SimpleMessageDispatcher [%u] "
             "encountered an error: %s\n", vislib::sys::Thread::CurrentID(),
-            e.GetMsgA());
+            e.what());
         doReceive = this->fireCommunicationError(e);
     }
 
@@ -142,7 +142,7 @@ unsigned int vislib::net::SimpleMessageDispatcher::Run(void *config) {
         Socket::Cleanup();
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Socket::Cleanup failed in "
-            "SimpleMessageDispatcher::Run: %s\n", e.GetMsgA());
+            "SimpleMessageDispatcher::Run: %s\n", e.what());
     }
 
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "The SimpleMessageDispatcher has left the "
@@ -162,9 +162,9 @@ bool vislib::net::SimpleMessageDispatcher::Terminate(void) {
     if (!this->configuration.Channel.IsNull()) {
         try {
             this->configuration.Channel->Close();
-        } catch (Exception e) {
+        } catch (the::exception e) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "An error occurred while trying to "
-                "terminate a SimpleMessageDispatcher: %s\n", e.GetMsgA());
+                "terminate a SimpleMessageDispatcher: %s\n", e.what());
         }
     }
 
@@ -176,7 +176,7 @@ bool vislib::net::SimpleMessageDispatcher::Terminate(void) {
  * vislib::net::SimpleMessageDispatcher::fireCommunicationError
  */
 bool vislib::net::SimpleMessageDispatcher::fireCommunicationError(
-        const vislib::Exception& exception) {
+        const the::exception& exception) {
     THE_STACK_TRACE;
     bool retval = true;
 

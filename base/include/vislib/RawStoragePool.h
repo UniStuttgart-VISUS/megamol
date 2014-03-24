@@ -79,7 +79,7 @@ namespace vislib {
          * @param storage The RawStorage object to be returned. This must have
          *                been acquired from the same RawStoragePool before.
          *
-         * @throws IllegalParamException If 'storage' was not created by this 
+         * @throws argument_exception If 'storage' was not created by this 
          *                               RawStoragePool.
          */
         void Return(RawStorage *storage);
@@ -94,7 +94,7 @@ namespace vislib {
          * @param storage The RawStorage object to be returned. This must have
          *                been acquired from the same RawStoragePool before.
          *
-         * @throws IllegalParamException If 'storage' was not created by this 
+         * @throws argument_exception If 'storage' was not created by this 
          *                               RawStoragePool.
          */
         void SafeReturn(RawStorage *storage);
@@ -119,7 +119,7 @@ namespace vislib {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         RawStoragePool(const RawStoragePool& rhs);
 
@@ -130,7 +130,7 @@ namespace vislib {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If (&rhs != this).
+         * @throws argument_exception If (&rhs != this).
          */
         RawStoragePool& operator =(const RawStoragePool& rhs);
 

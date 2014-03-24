@@ -6,7 +6,7 @@
 
 
 #include "vislib/UTF8Encoder.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 #include "vislib/StringConverter.h"
 #include "vislib/CharTraits.h"
 
@@ -19,7 +19,7 @@
  * vislib::UTF8Encoder::UTF8Encoder
  */
 vislib::UTF8Encoder::UTF8Encoder(void) {
-    throw UnsupportedOperationException("vislib::UTF8Encoder::Ctor", __FILE__, __LINE__);
+    throw the::not_supported_exception("vislib::UTF8Encoder::Ctor", __FILE__, __LINE__);
 }
 
 

@@ -106,10 +106,10 @@ namespace sys {
          *
          * @return 'true' if the pipe has been opened, 'false' otherwise.
          *
-         * @throws IllegalParamException if name contains any invalid 
+         * @throws argument_exception if name contains any invalid 
          *                               characters.
-         * @throws IllegalParamException if openMode == 'PIPE_MODE_NONE'
-         * @throws SystemException if the pipe could not be opened.
+         * @throws argument_exception if openMode == 'PIPE_MODE_NONE'
+         * @throws the::system::system_exception if the pipe could not be opened.
          */
         bool Open(StringA name, PipeMode mode, unsigned int timeout = 0);
 
@@ -141,10 +141,10 @@ namespace sys {
          *
          * @return 'true' if the pipe has been opened, 'false' otherwise.
          *
-         * @throws IllegalParamException if name contains any invalid 
+         * @throws argument_exception if name contains any invalid 
          *                               characters.
-         * @throws IllegalParamException if openMode == 'PIPE_MODE_NONE'
-         * @throws SystemException if the pipe could not be opened.
+         * @throws argument_exception if openMode == 'PIPE_MODE_NONE'
+         * @throws the::system::system_exception if the pipe could not be opened.
          */
         bool Open(StringW name, PipeMode mode, unsigned int timeout = 0);
 
@@ -166,10 +166,10 @@ namespace sys {
          * @param buffer Pointer to the buffer to read.
          * @param size The number of bytes to read.
          *
-         * @throws IllegalStateException if the Mode of the pipe is not
+         * @throws invalid_operation_exception if the Mode of the pipe is not
          *                               'PIPE_MODE_READ'.
-         * @throws IllegalParamException if buffer is NULL.
-         * @throws SystemException if the pipe could not be read, e. g. if the
+         * @throws argument_exception if buffer is NULL.
+         * @throws the::system::system_exception if the pipe could not be read, e. g. if the
          *                         pipe is broke.
          */
         void Read(void *buffer, unsigned int size);
@@ -184,7 +184,7 @@ namespace sys {
          *
          * @return The full system name of the named pipe.
          *
-         * @throws IllegalParamException if name is not a valid pipe name.
+         * @throws argument_exception if name is not a valid pipe name.
          */
         static vislib::StringA PipeSystemName(const vislib::StringA &name);
 
@@ -198,7 +198,7 @@ namespace sys {
          *
          * @return The full system name of the named pipe.
          *
-         * @throws IllegalParamException if name is not a valid pipe name.
+         * @throws argument_exception if name is not a valid pipe name.
          */
         static vislib::StringW PipeSystemName(const vislib::StringW &name);
 
@@ -210,10 +210,10 @@ namespace sys {
          * @param buffer Pointer to the buffer to write.
          * @param size The number of bytes to write.
          *
-         * @throws IllegalStateException If the Mode of the pipe is not
+         * @throws invalid_operation_exception If the Mode of the pipe is not
          *                               'PIPE_MODE_WRITE'.
-         * @throws IllegalParamException if buffer is NULL.
-         * @throws SystemException if the data could not be written to the 
+         * @throws argument_exception if buffer is NULL.
+         * @throws the::system::system_exception if the data could not be written to the 
          *                         pipe, e. g. if the pipe is broke.
          */
         void Write(void *buffer, unsigned int size);

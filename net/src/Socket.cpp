@@ -23,10 +23,10 @@
 
 #include "the/assert.h"
 #include "vislib/error.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/SocketException.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -272,7 +272,7 @@ void vislib::net::Socket::Create(const IPEndPoint& familySpecAddr,
             break;
 
         default:
-            throw IllegalParamException("familySpecAddr", __FILE__, __LINE__);
+            throw the::argument_exception("familySpecAddr", __FILE__, __LINE__);
     }
 }
 
@@ -324,7 +324,7 @@ bool vislib::net::Socket::GetMulticastLoop(const ProtocolFamily pf) const {
             break;
 
         default:
-            throw IllegalParamException("pf", __FILE__, __LINE__);
+            throw the::argument_exception("pf", __FILE__, __LINE__);
             break;
     }
 }
@@ -344,7 +344,7 @@ uint8_t vislib::net::Socket::GetMulticastTimeToLive(
             break;
 
         default:
-            throw IllegalParamException("pf", __FILE__, __LINE__);
+            throw the::argument_exception("pf", __FILE__, __LINE__);
             break;
     }
 
@@ -511,7 +511,7 @@ size_t vislib::net::Socket::Receive(void *outData, const size_t cntBytes,
 
     ///* Check parameter constraints. */
     //if ((timeout >= 1) && forceReceive) {
-    //    throw IllegalParamException("forceReceive", __FILE__, __LINE__);
+    //    throw the::argument_exception("forceReceive", __FILE__, __LINE__);
     //}
 
     /* Handle infinite timeout first by calling normal receive operation. */
@@ -563,7 +563,7 @@ size_t vislib::net::Socket::Receive(IPEndPoint& outFromAddr, void *outData,
 
     ///* Check parameter constraints. */
     //if ((timeout >= 1) && forceReceive) {
-    //    throw IllegalParamException("forceReceive", __FILE__, __LINE__);
+    //    throw the::argument_exception("forceReceive", __FILE__, __LINE__);
     //}
 
     /* Handle infinite timeout first by calling normal receive operation. */
@@ -630,7 +630,7 @@ size_t vislib::net::Socket::Send(const void *data, const size_t cntBytes,
 
     ///* Check parameter constraints. */
     //if ((timeout >= 1) && forceSend) {
-    //    throw IllegalParamException("forceSend", __FILE__, __LINE__);
+    //    throw the::argument_exception("forceSend", __FILE__, __LINE__);
     //}
 
     /* Handle infinite timeout first by calling normal send operation. */
@@ -682,7 +682,7 @@ size_t vislib::net::Socket::Send(const IPEndPoint& toAddr, const void *data,
 
     ///* Check parameter constraints. */
     //if ((timeout >= 1) && forceSend) {
-    //    throw IllegalParamException("forceSend", __FILE__, __LINE__);
+    //    throw the::argument_exception("forceSend", __FILE__, __LINE__);
     //}
 
     /* Handle infinite timeout first by calling normal send operation. */
@@ -737,7 +737,7 @@ void vislib::net::Socket::SetMulticastLoop(const ProtocolFamily pf,
             break;
 
         default:
-            throw IllegalParamException("pf", __FILE__, __LINE__);
+            throw the::argument_exception("pf", __FILE__, __LINE__);
             break;
     }
 }
@@ -754,7 +754,7 @@ void vislib::net::Socket::SetMulticastTimeToLive(const ProtocolFamily pf,
             break;
 
         default:
-            throw IllegalParamException("pf", __FILE__, __LINE__);
+            throw the::argument_exception("pf", __FILE__, __LINE__);
             break;
     }
 }

@@ -6,7 +6,7 @@
  */
 
 #include "vislib/SlimReaderWriterLock.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -114,7 +114,7 @@ void vislib::sys::SlimReaderWriterLock::UnlockShared(void) {
  */
 vislib::sys::SlimReaderWriterLock::SlimReaderWriterLock(
         const vislib::sys::SlimReaderWriterLock& src) {
-    throw UnsupportedOperationException("SlimReaderWriterLock::CopyCtor",
+    throw the::not_supported_exception("SlimReaderWriterLock::CopyCtor",
         __FILE__, __LINE__);
 }
 
@@ -125,6 +125,6 @@ vislib::sys::SlimReaderWriterLock::SlimReaderWriterLock(
 vislib::sys::SlimReaderWriterLock&
 vislib::sys::SlimReaderWriterLock::operator=(
         const vislib::sys::SlimReaderWriterLock& rhs) {
-    throw UnsupportedOperationException("SlimReaderWriterLock::operator=",
+    throw the::not_supported_exception("SlimReaderWriterLock::operator=",
         __FILE__, __LINE__);
 }

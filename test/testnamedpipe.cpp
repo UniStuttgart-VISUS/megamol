@@ -12,7 +12,7 @@
 #include "vislib/String.h"
 #include "vislib/Thread.h"
 #include "the/trace.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 
 #define PIPE_NAME "DieHorstPipe"
 #define COM_STR_01 "Hello World through a named pipe"
@@ -125,7 +125,7 @@ unsigned int TestNamedPipeSecondThread(void *param) {
 
     SyncHere();
 
-    AssertException("Read from closed pipe", pipe.Read(buf, 256), vislib::sys::SystemException);
+    AssertException("Read from closed pipe", pipe.Read(buf, 256), the::system::system_exception);
 
     SyncHere();
 
@@ -216,7 +216,7 @@ void TestNamedPipe(void) {
 
     //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Here: {%d}\n", __LINE__);
 
-    AssertException("Write to closed pipe", pipe.Write(buf, 256), vislib::sys::SystemException);
+    AssertException("Write to closed pipe", pipe.Write(buf, 256), the::system::system_exception);
 
     pipe.Close();
 

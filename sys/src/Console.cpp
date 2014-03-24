@@ -30,8 +30,8 @@
 #endif /* _WIN32 */
 
 #include "the/assert.h"
-#include "vislib/SystemException.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/system/system_exception.h"
+#include "the/not_supported_exception.h"
 #include "vislib/Thread.h"
 
 
@@ -450,19 +450,19 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
 
     // Create pipes
     if (!::CreatePipe(&hErrorRead, &hErrorWrite, &sa, 0)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     if (!::CreatePipe(&hInputRead, &hInputWrite, &sa, 0)) {
         ::CloseHandle(hErrorRead);
         ::CloseHandle(hErrorWrite);
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     if (!::CreatePipe(&hOutputRead, &hOutputWrite, &sa, 0)) {
         ::CloseHandle(hErrorRead);
         ::CloseHandle(hErrorWrite);
         ::CloseHandle(hInputRead);
         ::CloseHandle(hInputWrite);
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     ::ZeroMemory(&startInfo, sizeof(STARTUPINFO));
@@ -489,7 +489,7 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
         ::CloseHandle(hInputWrite);
         ::CloseHandle(hOutputRead);
         ::CloseHandle(hOutputWrite);
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     DWORD exitCode = STILL_ACTIVE;
@@ -556,17 +556,17 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
 
     /* Create two pipes for redirecting the child console output. */
     if (::pipe(stdOutPipe) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     if (::pipe(stdErrPipe) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     /* Spawn a new subprocess for running the command. */
     pid = ::fork();
     if (pid < 0) {
         /* Forking failed. */
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
 
     } else if (pid == 0) {
         /* Subprocess created, I am in the subprocess now. */
@@ -672,7 +672,7 @@ void vislib::sys::Console::WriteLine(const char *fmt, ...) {
  * vislib::sys::Console::Console
  */
 vislib::sys::Console::Console(void) {
-    throw UnsupportedOperationException("vislib::sys::Console::Console", 
+    throw the::not_supported_exception("vislib::sys::Console::Console", 
         __FILE__, __LINE__);
 }
 

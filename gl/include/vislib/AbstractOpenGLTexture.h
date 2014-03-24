@@ -141,7 +141,7 @@ namespace gl {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         AbstractOpenGLTexture(AbstractOpenGLTexture& rhs);
 
@@ -163,7 +163,7 @@ namespace gl {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If (this != &rhs).
+         * @throws argument_exception If (this != &rhs).
          */
         AbstractOpenGLTexture& operator =(const AbstractOpenGLTexture& rhs);
 

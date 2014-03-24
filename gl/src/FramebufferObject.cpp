@@ -10,13 +10,13 @@
 #include <climits>
 
 #include "vislib/glverify.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
+#include "the/argument_exception.h"
+#include "the/invalid_operation_exception.h"
 #include "the/memory.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/index_out_of_range_exception.h"
 #include "the/stack_trace.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 
@@ -67,8 +67,8 @@ vislib::graphics::gl::FramebufferObject::~FramebufferObject(void) {
         this->Release();
     } catch (OpenGLException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "\"%s\" at line %d in \"%s\" when "
-            "destroying FramebufferObject", e.GetMsgA(), e.GetLine(), 
-            e.GetFile());
+            "destroying FramebufferObject", e.what(), e.get_line(), 
+            e.get_file());
     }
 
     // Dtor must ensure deallocation in any case!
@@ -89,13 +89,13 @@ GLenum vislib::graphics::gl::FramebufferObject::BindColourTexture(
             GL_VERIFY_RETURN(::glBindTexture(GL_TEXTURE_2D, 
                 this->attachmentColour[which].id));
         } else {
-            throw IllegalStateException("The requested colour attachment "
+            throw the::invalid_operation_exception("The requested colour attachment "
                 "must be a texture attachment in order to be bound as a "
                 "texture.", __FILE__, __LINE__);
         }
 
     } else {
-        throw OutOfRangeException(which, 0, this->cntColourAttachments, 
+        throw the::index_out_of_range_exception(which, 0, this->cntColourAttachments, 
             __FILE__, __LINE__);
     }
 
@@ -116,7 +116,7 @@ GLenum vislib::graphics::gl::FramebufferObject::BindDepthTexture(void) {
         GL_VERIFY_RETURN(::glBindTexture(GL_TEXTURE_2D, 
             this->attachmentOther[ATTACH_IDX_DEPTH].id));
     } else {
-        throw IllegalStateException("The depth attachment must be "
+        throw the::invalid_operation_exception("The depth attachment must be "
             "a texture attachment in order to be bound as a texture.", 
             __FILE__, __LINE__);
     }
@@ -324,7 +324,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
         this->saveState();
     } catch (OpenGLException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not save OpenGL state before "
-            "enabling FBO (\"%s\").\n", e.GetMsgA());
+            "enabling FBO (\"%s\").\n", e.what());
         return e.GetErrorCode();
     }
 
@@ -347,7 +347,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
     } else {
         /* Illegal colour attachment id. */
         THE_ASSERT(colourAttachment >= this->cntColourAttachments);
-        throw OutOfRangeException(colourAttachment, 0, 
+        throw the::index_out_of_range_exception(colourAttachment, 0, 
             this->cntColourAttachments, __FILE__, __LINE__);
     }
 
@@ -383,7 +383,7 @@ GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(
         this->saveState();
     } catch (OpenGLException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not save OpenGL state before "
-            "enabling FBO (\"%s\").\n", e.GetMsgA());
+            "enabling FBO (\"%s\").\n", e.what());
         return e.GetErrorCode();
     }
 
@@ -429,7 +429,7 @@ GLuint vislib::graphics::gl::FramebufferObject::GetColourTextureID(
 
     if (this->cntColourAttachments < 1) {
         /* No colour attachment, this request is illegal. */
-        throw vislib::IllegalStateException("The requested colour "
+        throw the::invalid_operation_exception("The requested colour "
             "attachment is not a texture attachment.", __FILE__, __LINE__);
 
     } else if (colourAttachment < this->cntColourAttachments) {
@@ -439,7 +439,7 @@ GLuint vislib::graphics::gl::FramebufferObject::GetColourTextureID(
     } else {
         /* Illegal colour attachment id. */
         THE_ASSERT(colourAttachment >= this->cntColourAttachments);
-        throw OutOfRangeException(colourAttachment, 0, 
+        throw the::index_out_of_range_exception(colourAttachment, 0, 
             this->cntColourAttachments, __FILE__, __LINE__);
     }
 }
@@ -453,7 +453,7 @@ GLuint vislib::graphics::gl::FramebufferObject::GetDepthTextureID(void) const {
     if ((this->attachmentOther[ATTACH_IDX_DEPTH].state != ATTACHMENT_TEXTURE)
             && (this->attachmentOther[ATTACH_IDX_DEPTH].state 
             != ATTACHMENT_EXTERNAL_TEXTURE)) {
-        throw vislib::IllegalStateException("The depth attachment must be a "
+        throw the::invalid_operation_exception("The depth attachment must be a "
             "texture attachment in order to retrieve the texture id.",
             __FILE__, __LINE__);
     }
@@ -601,7 +601,7 @@ const unsigned int vislib::graphics::gl::FramebufferObject::ATTACH_IDX_STENCIL =
 vislib::graphics::gl::FramebufferObject::FramebufferObject(
         const FramebufferObject& rhs) {
     THE_STACK_TRACE;
-    throw UnsupportedOperationException("FramebufferObject::FramebufferObject", 
+    throw the::not_supported_exception("FramebufferObject::FramebufferObject", 
         __FILE__, __LINE__);
 }
 
@@ -803,7 +803,7 @@ vislib::graphics::gl::FramebufferObject::operator =(
         const FramebufferObject& rhs) {
     THE_STACK_TRACE;
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

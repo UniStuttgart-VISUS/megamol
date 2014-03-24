@@ -318,7 +318,7 @@ namespace net {
          * @param type           The type of the socket.
          * @param protocol       The protocol to use.
          *
-         * @throws IllegalParamException If 'familiySpecAddr' does not specify a
+         * @throws argument_exception If 'familiySpecAddr' does not specify a
          *                               supported address family, i.e. IPv4 or
          *                               IPv6.
          * @throws SocketException If the operation fails.
@@ -429,7 +429,7 @@ namespace net {
          * @return true if the socket receives local multicast packets, 
          *         false otherwise.
          *
-         * @throws IllegalParamException If 'pf' has an unsupported value.
+         * @throws argument_exception If 'pf' has an unsupported value.
          * @throws SocketException If the operation fails.
          */
         bool GetMulticastLoop(const ProtocolFamily pf) const;
@@ -440,7 +440,7 @@ namespace net {
          * @param pf FAMILY_INET for retrieving the value for IPv4.
          * @return The number of routers multicast packets may pass.
          *
-         * @throws IllegalParamException If 'pf' has an unsupported value.
+         * @throws argument_exception If 'pf' has an unsupported value.
          * @throws SocketException If the operation fails.
          */
         uint8_t GetMulticastTimeToLive(const ProtocolFamily pf) const;
@@ -851,7 +851,7 @@ namespace net {
          * @return The number of bytes acutally sent.
          *
          * @throws SocketException       If the operation fails.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
         virtual size_t Send(const void *data, const size_t cntBytes, 
@@ -887,7 +887,7 @@ namespace net {
          * @return The number of bytes acutally sent.
          *
          * @throws SocketException       If the operation fails.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
         virtual size_t Send(const IPEndPoint& toAddr, const void *data, 
@@ -927,7 +927,7 @@ namespace net {
          * @return The number of bytes acutally sent.
          *
          * @throws SocketException       If the operation fails.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
         inline size_t Send(const SocketAddress& toAddr, const void *data,
@@ -1173,7 +1173,7 @@ namespace net {
          *               address.
          * @param enable The new activation state of the option.
          *
-         * @throws IllegalParamException If 'pf' is unsupported.
+         * @throws argument_exception If 'pf' is unsupported.
          * @throws SocketException If the operation fails.
          */
         void SetMulticastLoop(const ProtocolFamily pf, const bool enable);
@@ -1188,7 +1188,7 @@ namespace net {
          * @param pf     The protocol (FAMILY_INET) to address.
          * @param ttl The number of routers multicast packets may pass.
          *
-         * @throws IllegalParamException If 'pf' is unsupported.
+         * @throws argument_exception If 'pf' is unsupported.
          * @throws SocketException If the operation fails.
          */
         void SetMulticastTimeToLive(const ProtocolFamily pf, const uint8_t ttl);

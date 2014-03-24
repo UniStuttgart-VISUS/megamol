@@ -161,7 +161,7 @@ namespace net {
          *
          * @return Accumulated (ANDed) return values of all listeners.
          */
-        bool fireServerError(const vislib::Exception& exception);
+        bool fireServerError(const the::exception& exception);
 
         /**
          * Inform all registered listener about that the server is exiting.

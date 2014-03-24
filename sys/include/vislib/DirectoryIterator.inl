@@ -8,7 +8,7 @@
 #ifdef _WIN32
 #include <Windows.h>
 #else /* _WIN32 */
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 #endif /* _WIN32 */
 
 namespace vislib {
@@ -39,7 +39,7 @@ namespace sys {
             if ((le == ERROR_FILE_NOT_FOUND) || (le == ERROR_PATH_NOT_FOUND)) {
                 this->nextItem.Path.Clear();
             } else {
-                throw SystemException(le, __FILE__, __LINE__);
+                throw the::system::system_exception(le, __FILE__, __LINE__);
             }
         } else if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             this->nextItem.Type = Entry::DIRECTORY;
@@ -65,7 +65,7 @@ namespace sys {
         }
         if (vislib::sys::File::Exists(this->basePath)) {
             if ((this->dirStream = opendir(this->basePath)) == NULL) {
-                throw SystemException(__FILE__, __LINE__);
+                throw the::system::system_exception(__FILE__, __LINE__);
             }
             this->fetchNextItem();
         } else {
@@ -100,7 +100,7 @@ namespace sys {
             if ((le == ERROR_FILE_NOT_FOUND) || (le == ERROR_PATH_NOT_FOUND)) {
                 this->nextItem.Path.Clear();
             } else {
-                throw SystemException(le, __FILE__, __LINE__);
+                throw the::system::system_exception(le, __FILE__, __LINE__);
             }
         } else if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             this->nextItem.Type = Entry::DIRECTORY;
@@ -126,7 +126,7 @@ namespace sys {
         }
         if (vislib::sys::File::Exists(this->basePath)) {
             if ((this->dirStream = opendir(this->basePath)) == NULL) {
-                throw SystemException(__FILE__, __LINE__);
+                throw the::system::system_exception(__FILE__, __LINE__);
             }
             this->fetchNextItem();
         } else {
@@ -153,7 +153,7 @@ namespace sys {
                     this->nextItem.Path.Clear();
                     found = true;
                 } else {
-                    throw SystemException(le, __FILE__, __LINE__);
+                    throw the::system::system_exception(le, __FILE__, __LINE__);
                 }
             } else {
                 if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
@@ -218,7 +218,7 @@ namespace sys {
                     this->nextItem.Path.Clear();
                     found = true;
                 } else {
-                    throw SystemException(le, __FILE__, __LINE__);
+                    throw the::system::system_exception(le, __FILE__, __LINE__);
                 }
             } else {
                 if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {

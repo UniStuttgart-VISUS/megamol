@@ -17,7 +17,7 @@
 #include <security/pam_appl.h>
 #endif /* !_WIN32 */
 
-#include "vislib/Exception.h"
+#include "the/exception.h"
 
 
 namespace vislib {
@@ -28,7 +28,7 @@ namespace sys {
      * This exception represents a Linux PAM error. It has no meaning on Windows
      * systems and should never been thrown there.
      */
-    class PAMException : public Exception {
+    class PAMException : public the::exception {
 
     public:
 

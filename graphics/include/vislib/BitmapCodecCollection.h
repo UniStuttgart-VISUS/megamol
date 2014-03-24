@@ -126,7 +126,7 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw vislib::Exception or derived class on error
+         * @throw the::exception or derived class on error
          */
         bool LoadBitmapImage(BitmapImage& outImg,
             const vislib::StringA& filename);
@@ -139,7 +139,7 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw vislib::Exception or derived class on error
+         * @throw the::exception or derived class on error
          */
         bool LoadBitmapImage(BitmapImage& outImg,
             const vislib::StringW& filename);
@@ -152,7 +152,7 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw vislib::Exception or derived class on error
+         * @throw the::exception or derived class on error
          */
         inline bool LoadBitmapImage(BitmapImage& outImg,
                 const char *filename) {
@@ -167,7 +167,7 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw vislib::Exception or derived class on error
+         * @throw the::exception or derived class on error
          */
         inline bool LoadBitmapImage(BitmapImage& outImg,
                 const wchar_t *filename) {
@@ -182,7 +182,7 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw vislib::Exception or derived class on error
+         * @throw the::exception or derived class on error
          */
         bool LoadBitmapImage(BitmapImage& outImg, vislib::sys::File& file);
 
@@ -195,7 +195,7 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw vislib::Exception or derived class on error
+         * @throw the::exception or derived class on error
          */
         bool LoadBitmapImage(BitmapImage& outImg,
             const void *mem, size_t size);
@@ -208,7 +208,7 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw vislib::Exception or derived class on error
+         * @throw the::exception or derived class on error
          */
         inline bool LoadBitmapImage(BitmapImage& outImg,
                 const vislib::RawStorage& mem) {

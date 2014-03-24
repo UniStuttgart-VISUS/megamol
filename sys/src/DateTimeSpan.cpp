@@ -10,8 +10,8 @@
 #include <limits>
 
 #include "vislib/mathfunctions.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
+#include "the/argument_exception.h"
+#include "the/invalid_operation_exception.h"
 
 
 
@@ -211,11 +211,11 @@ vislib::sys::DateTimeSpan& vislib::sys::DateTimeSpan::operator -=(
     try {
         this->add((-rhs).ticks);
         return *this;
-    } catch (IllegalStateException) {
-        // Repackage error into IllegalStateException, because any other
+    } catch (the::invalid_operation_exception) {
+        // Repackage error into invalid_operation_exception, because any other
         // behaviour would be inconsistent.
         // TODO: Does this implementation make sense?
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 }
 
@@ -227,7 +227,7 @@ vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::operator -(void) const {
     THE_STACK_TRACE;
     if (this->ticks == DateTimeSpan::MINIMUM) {
         // Minimum would overflow, because 0 belongs to positive range.
-        throw IllegalStateException("DateTimeSpan::MINIMUM", __FILE__, 
+        throw the::invalid_operation_exception("DateTimeSpan::MINIMUM", __FILE__, 
             __LINE__);
     }
     
@@ -262,12 +262,12 @@ void vislib::sys::DateTimeSpan::add(const int64_t millis) {
         if (this->ticks > 0) {
             /* Both values are positive. Result might exceed 'max'. */
             if (this->ticks > max - millis) {
-                throw IllegalParamException("rhs", __FILE__, __LINE__);
+                throw the::argument_exception("rhs", __FILE__, __LINE__);
             }
         } else {
             /* Both values are negative. Result might exceed 'min'. */
             if (this->ticks < min - millis) {
-                throw IllegalParamException("rhs", __FILE__, __LINE__);
+                throw the::argument_exception("rhs", __FILE__, __LINE__);
             }
         }
     }

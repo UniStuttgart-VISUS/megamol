@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/ColourRGBAu8.h"
-#include "vislib/FormatException.h"
+#include "the/format_exception.h"
 #include "vislib/String.h"
 
 
@@ -69,7 +69,7 @@ namespace graphics {
          *
          * @return A reference to outCol
          *
-         * @throw FormatException if 'inStr' cannot be parsed
+         * @throw format_exception if 'inStr' cannot be parsed
          */
         static inline ColourRGBAu8& FromString(const vislib::StringA& inStr,
                 ColourRGBAu8& outCol, bool allowQuantization = true) {
@@ -94,7 +94,7 @@ namespace graphics {
          *                          quantized; if set to false the parsing
          *                          will fail.
          *
-         * @throw FormatException if 'inStr' cannot be parsed
+         * @throw format_exception if 'inStr' cannot be parsed
          */
         static inline void FromString(const vislib::StringA& inStr,
                 unsigned char &outR, unsigned char &outG,
@@ -119,7 +119,7 @@ namespace graphics {
          *                          quantized; if set to false the parsing
          *                          will fail.
          *
-         * @throw FormatException if 'inStr' cannot be parsed
+         * @throw format_exception if 'inStr' cannot be parsed
          */
         static void FromString(const vislib::StringA& inStr,
             unsigned char &outR, unsigned char &outG, unsigned char &outB,
@@ -133,7 +133,7 @@ namespace graphics {
          * @param outG Variable to receive the green colour component
          * @param outB Variable to receive the blue colour component
          *
-         * @throw FormatException if 'inStr' cannot be parsed
+         * @throw format_exception if 'inStr' cannot be parsed
          */
         static inline void FromString(const vislib::StringA& inStr, float &outR,
                 float &outG, float &outB) {
@@ -150,7 +150,7 @@ namespace graphics {
          * @param outB Variable to receive the blue colour component
          * @param outA Variable to receive the alpha component
          *
-         * @throw FormatException if 'inStr' cannot be parsed
+         * @throw format_exception if 'inStr' cannot be parsed
          */
         static void FromString(const vislib::StringA& inStr, float &outR,
             float &outG, float &outB, float &outA);
@@ -164,7 +164,7 @@ namespace graphics {
          *
          * @return A reference to outStr
          *
-         * @throw FormatException if the colour cannot be represented in any
+         * @throw format_exception if the colour cannot be represented in any
          *        of the allowed representation types
          */
         static inline vislib::StringA& ToString(vislib::StringA& outStr,
@@ -185,7 +185,7 @@ namespace graphics {
          *
          * @return A reference to outStr
          *
-         * @throw FormatException if the colour cannot be represented in any
+         * @throw format_exception if the colour cannot be represented in any
          *        of the allowed representation types
          */
         static inline vislib::StringA& ToString(vislib::StringA& outStr,
@@ -206,7 +206,7 @@ namespace graphics {
          *
          * @return A reference to outStr
          *
-         * @throw FormatException if the colour cannot be represented in any
+         * @throw format_exception if the colour cannot be represented in any
          *        of the allowed representation types
          */
         static vislib::StringA& ToString(vislib::StringA& outStr,
@@ -225,7 +225,7 @@ namespace graphics {
          *
          * @return A reference to outStr
          *
-         * @throw FormatException if the colour cannot be represented in any
+         * @throw format_exception if the colour cannot be represented in any
          *        of the allowed representation types
          */
         static inline vislib::StringA& ToString(vislib::StringA& outStr,
@@ -246,7 +246,7 @@ namespace graphics {
          *
          * @return A reference to outStr
          *
-         * @throw FormatException if the colour cannot be represented in any
+         * @throw format_exception if the colour cannot be represented in any
          *        of the allowed representation types
          */
         static vislib::StringA& ToString(vislib::StringA& outStr, float inR,
@@ -286,7 +286,7 @@ namespace graphics {
          *
          * @return The parsed colour
          *
-         * @throw FormatException if the string could not be parsed
+         * @throw format_exception if the string could not be parsed
          */
         static ColourRGBAu8 parseHTML(const vislib::StringA& inStr);
 

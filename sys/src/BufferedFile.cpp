@@ -8,11 +8,11 @@
 
 #include "the/assert.h"
 #include "vislib/error.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IOException.h"
+#include "the/argument_exception.h"
+#include "the/system/io/io_exception.h"
 #include "the/memory.h"
 #include "vislib/SystemInformation.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 #ifdef _WIN32
 #include <WinError.h>
@@ -137,7 +137,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Read(void *outBuf,
     // check for compatible file mode
     if ((this->fileMode != File::READ_WRITE) 
             && (this->fileMode != File::READ_ONLY)) {
-        throw IOException(
+        throw the::system::io::io_exception(
 #ifdef _WIN32
             E_ACCESSDENIED  /* access denied: wrong access mode */
 #else /* _WIN32 */
@@ -226,7 +226,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Seek(
             pos = this->GetSize() + offset;
             break;
         default:
-            throw vislib::IllegalParamException("from", __FILE__, __LINE__);
+            throw the::argument_exception("from", __FILE__, __LINE__);
     }
 
     if ((pos >= this->bufferStart) 
@@ -255,7 +255,7 @@ void vislib::sys::BufferedFile::SetBufferSize(
         vislib::sys::File::FileSize newSize) {
 
     if (newSize < 1) {
-        throw vislib::IllegalParamException("newSize", __FILE__, __LINE__);
+        throw the::argument_exception("newSize", __FILE__, __LINE__);
     }
 
     this->Flush(); // writes buffer if dirty and file writeable
@@ -283,7 +283,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Write(const void *buf,
     // check for compatible file mode
     if ((this->fileMode != File::READ_WRITE) 
             && (this->fileMode != File::WRITE_ONLY)) {
-        throw IOException(
+        throw the::system::io::io_exception(
 #ifdef _WIN32
             E_ACCESSDENIED  /* access denied: wrong access mode */
 #else /* _WIN32 */
@@ -356,7 +356,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Write(const void *buf,
  * vislib::sys::BufferedFile::BufferedFile copy ctor
  */
 vislib::sys::BufferedFile::BufferedFile(const vislib::sys::BufferedFile& rhs) {
-    throw UnsupportedOperationException("vislib::sys::File::File",
+    throw the::not_supported_exception("vislib::sys::File::File",
         __FILE__, __LINE__);
 }
 
@@ -367,7 +367,7 @@ vislib::sys::BufferedFile::BufferedFile(const vislib::sys::BufferedFile& rhs) {
 vislib::sys::BufferedFile& vislib::sys::BufferedFile::operator =(
         const vislib::sys::BufferedFile& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
     return *this;
 }
@@ -389,9 +389,9 @@ void vislib::sys::BufferedFile::flush(bool fileFlush) {
                 w = File::Write(this->buffer + r, this->validBufferSize + r);
                 if (w == 0) {
 #ifdef _WIN32
-                    throw IOException(ERROR_WRITE_FAULT, __FILE__, __LINE__);
+                    throw the::system::io::io_exception(ERROR_WRITE_FAULT, __FILE__, __LINE__);
 #else /* _WIN32 */
-                    throw IOException(EIO, __FILE__, __LINE__);
+                    throw the::system::io::io_exception(EIO, __FILE__, __LINE__);
 #endif /* _WIN32 */
                 }
                 r += w;

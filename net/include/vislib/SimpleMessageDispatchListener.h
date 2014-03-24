@@ -70,7 +70,7 @@ namespace net {
          *         exit.
          */
         virtual bool OnCommunicationError(SimpleMessageDispatcher& src,
-            const vislib::Exception& exception) throw();
+            const the::exception& exception) throw();
 
         /**
          * This method is called immediately after the message dispatcher loop

@@ -130,7 +130,7 @@ namespace vislib {
          *
          * @return The root element of the heap.
          *
-         * @throws OutOfRangeException, if the heap is empty.
+         * @throws index_out_of_range_exception, if the heap is empty.
          */
         inline const T& First(void) const {
             return this->elements[0];

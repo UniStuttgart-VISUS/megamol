@@ -96,11 +96,11 @@ namespace cluster {
          *
          * @return 0 in case of success.
          *
-         * @throws IllegalStateException If the client node is already 
+         * @throws invalid_operation_exception If the client node is already 
          *                               connected.
          * @throws SocketException If it was not possible to connect to the 
          *                         server.
-         * @throws SystemException If the message receiver thread could not be
+         * @throws the::system::system_exception If the message receiver thread could not be
          *                         started.
          * @throws std::bad_alloc In case there is insufficient heap memory.
          */
@@ -145,7 +145,7 @@ namespace cluster {
          *
          * @throws SocketException If it was not possible to connect to the
          *                         server.
-         * @throws SystemException If the message receiver thread could not be
+         * @throws the::system::system_exception If the message receiver thread could not be
          *                         started.
          * @throws std::bad_alloc In case there is insufficient heap memory.
          */
@@ -161,7 +161,7 @@ namespace cluster {
          *
          * @throws SocketException In case 'isSilent' is false and a socket 
          *                         error occurred.
-         * @throws SystemException In case 'isSilent' is false and the receiver
+         * @throws the::system::system_exception In case 'isSilent' is false and the receiver
          *                         thread could not be joined.
          */
         void disconnect(const bool isSilent, const bool noReconnect);

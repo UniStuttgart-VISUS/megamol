@@ -18,11 +18,11 @@
 #include "vislib/DirectoryEntry.h"
 #include "vislib/String.h"
 #include "vislib/Iterator.h"
-#include "vislib/IOException.h"
-#include "vislib/NoSuchElementException.h"
-#include "vislib/SystemException.h"
+#include "the/system/io/io_exception.h"
+#include "the/no_such_element_exception.h"
+#include "the/system/system_exception.h"
 #include "vislib/Path.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -80,7 +80,7 @@ namespace sys {
         /** 
          * Behaves like Iterator<T>::Next 
          *
-         * @throws NoSuchElementException if there is no next element
+         * @throws no_such_element_exception if there is no next element
          */
         virtual Entry& Next(void);
 
@@ -91,10 +91,10 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         inline DirectoryIterator(const DirectoryIterator& rhs) {
-            throw UnsupportedOperationException(
+            throw the::not_supported_exception(
                 "vislib::sys::DirectoryIterator::DirectoryIterator",
                 __FILE__, __LINE__);
         }
@@ -106,11 +106,11 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If &'rhs' != this.
+         * @throws argument_exception If &'rhs' != this.
          */
         inline DirectoryIterator& operator=(const DirectoryIterator& rhs) {
             if (this != &rhs) {
-                throw IllegalParamException("rhs", __FILE__, __LINE__);
+                throw the::argument_exception("rhs", __FILE__, __LINE__);
             }
         }
 
@@ -156,7 +156,7 @@ namespace sys {
             const Char* path, bool isPattern, bool showDirs) : nextItem(),
             currentItem(), omitFolders(!showDirs) {
         // We won't find anything for this type!
-        throw UnsupportedOperationException(
+        throw the::not_supported_exception(
              "DirectoryIterator<T>::DirectoryIterator", __FILE__, __LINE__);
     }
 
@@ -207,7 +207,7 @@ namespace sys {
         this->currentItem = this->nextItem;
         this->fetchNextItem();
         if (this->currentItem.Path.IsEmpty()) {
-            throw NoSuchElementException("No next element.", __FILE__, __LINE__);
+            throw the::no_such_element_exception("No next element.", __FILE__, __LINE__);
         }
         return this->currentItem;
 
@@ -219,7 +219,7 @@ namespace sys {
      */
     template<class T> void DirectoryIterator<T>::fetchNextItem(void) {
         // We won't find anything for this type!
-        throw UnsupportedOperationException(
+        throw the::not_supported_exception(
             "DirectoryIterator<T>::fetchNextItem", __FILE__, __LINE__);
     }
 

@@ -108,9 +108,9 @@ namespace gl {
          *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          *
-         * @throws OutOfRangeException   If 'which' does not designate a valid
+         * @throws index_out_of_range_exception   If 'which' does not designate a valid
          *                               colour attachment.
-         * @throws IllegalStateException If the attachment designated by 'which'
+         * @throws invalid_operation_exception If the attachment designated by 'which'
          *                               exists, but is not a texture 
          *                               attachment.
          */
@@ -124,7 +124,7 @@ namespace gl {
          * 
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          * 
-         * @throws IllegalStateException If the framebuffer object has no 
+         * @throws invalid_operation_exception If the framebuffer object has no 
          *                               texture attachment for the depth
          *                               buffer.
          */
@@ -220,7 +220,7 @@ namespace gl {
          *
          * @return The openGL depth texture ressource ID.
          *
-         * @throw IllegalStateException if the depth attachment is not a 
+         * @throw invalid_operation_exception if the depth attachment is not a 
          *        texture attachment.
          */
         inline GLuint DepthTextureID(void) const {
@@ -271,8 +271,8 @@ namespace gl {
          *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          *
-         * @throw IllegalStateException If no colour texture is attached.
-         * @throw OutOfRangeException If colour textures are attached, but the
+         * @throw invalid_operation_exception If no colour texture is attached.
+         * @throw index_out_of_range_exception If colour textures are attached, but the
          *                            index 'colourAttachment' does not 
          *                            designate a legal attachment.
          */
@@ -299,7 +299,7 @@ namespace gl {
          *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          *
-         * @throw IllegalStateException If no depth texture attachment exists.
+         * @throw invalid_operation_exception If no depth texture attachment exists.
          */
         inline GLenum DrawDepthTexture(const GLint minFilter = GL_LINEAR,
                 const GLint magFilter = GL_LINEAR, 
@@ -330,7 +330,7 @@ namespace gl {
          * @return GL_NO_ERROR if the FBO has been enabled as render target,
          *         an error code otherwise.
          *
-         * @throw OutOfRangeException If an invalid colour attachment index was
+         * @throw index_out_of_range_exception If an invalid colour attachment index was
          *                            specified.
          */
         GLenum Enable(const unsigned int colourAttachment = 0);
@@ -392,8 +392,8 @@ namespace gl {
          *
          * @return The OpenGL resource ID of the colour texture.
          *
-         * @throw IllegalStateException If no colour texture is attached.
-         * @throw OutOfRangeException If colour textures are attached, but the
+         * @throw invalid_operation_exception If no colour texture is attached.
+         * @throw index_out_of_range_exception If colour textures are attached, but the
          *                            index 'colourAttachment' does not 
          *                            designate a legal attachment.
          */
@@ -426,7 +426,7 @@ namespace gl {
          *
          * @return The OpenGL resource ID of the depth texture.
          *
-         * @throw IllegalStateException If no depth texture is attached.
+         * @throw invalid_operation_exception If no depth texture is attached.
          */
         GLuint GetDepthTextureID(void) const;
 
@@ -509,7 +509,7 @@ namespace gl {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Always.
+         * @throws not_supported_exception Always.
          */
         FramebufferObject(const FramebufferObject& rhs);
 
@@ -602,7 +602,7 @@ namespace gl {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If this != &rhs.
+         * @throws argument_exception If this != &rhs.
          */
         FramebufferObject& operator =(const FramebufferObject& rhs);
 

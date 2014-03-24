@@ -12,13 +12,13 @@
 #include <ws2tcpip.h>
 #endif /* _WIN32 */
 
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/SocketException.h"
 #include "the/stack_trace.h"
 #include "vislib/StringConverter.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
-#include "vislib/MissingImplementationException.h"
+#include "the/not_implemented_exception.h"
 
 
 // This is a little hack for making the implementation more readable.
@@ -218,7 +218,7 @@ void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
 // */
 //void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry,
 //        const IPAddress& hostAddress) {
-//    throw MissingImplementationException("GetHostEntry", __FILE__, __LINE__);
+//    throw the::not_implemented_exception("GetHostEntry", __FILE__, __LINE__);
 //
 //}
 //
@@ -228,7 +228,7 @@ void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
 // */
 //void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry,
 //        const IPAddress6& hostAddress) {
-//    throw MissingImplementationException("GetHostEntry", __FILE__, __LINE__);
+//    throw the::not_implemented_exception("GetHostEntry", __FILE__, __LINE__);
 //}
 //
 //
@@ -237,7 +237,7 @@ void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
 // */
 //void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,
 //        const IPAddress& hostAddress) {
-//    throw MissingImplementationException("GetHostEntry", __FILE__, __LINE__);
+//    throw the::not_implemented_exception("GetHostEntry", __FILE__, __LINE__);
 //
 //}
 //
@@ -247,7 +247,7 @@ void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
 // */
 //void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,
 //        const IPAddress6& hostAddress) {
-//    throw MissingImplementationException("GetHostEntry", __FILE__, __LINE__);
+//    throw the::not_implemented_exception("GetHostEntry", __FILE__, __LINE__);
 //}
 
 
@@ -444,7 +444,7 @@ vislib::net::DNS::DNS(void) {
  */
 vislib::net::DNS::DNS(const DNS& rhs) {
     THE_STACK_TRACE;
-    throw UnsupportedOperationException("DNS::DNS", __FILE__, __LINE__);
+    throw the::not_supported_exception("DNS::DNS", __FILE__, __LINE__);
 }
 
 
@@ -455,7 +455,7 @@ vislib::net::DNS& vislib::net::DNS::operator =(const DNS& rhs) {
     THE_STACK_TRACE;
 
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

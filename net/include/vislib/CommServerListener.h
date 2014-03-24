@@ -63,7 +63,7 @@ namespace net {
          *         false will cause the server to exit.
          */
         virtual bool OnServerError(const CommServer& src,
-            const vislib::Exception& exception) throw();
+            const the::exception& exception) throw();
 
         /**
          * The server will call this method when a new client connected. The

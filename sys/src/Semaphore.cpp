@@ -15,11 +15,11 @@
 
 #include "the/assert.h"
 #include "vislib/error.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/sysfunctions.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -178,12 +178,12 @@ void vislib::sys::Semaphore::Lock(void) {
             break;
 
         default:
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     if (::sem_wait(this->handle) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 #endif /* _WIN32 */
 }
@@ -202,7 +202,7 @@ bool vislib::sys::Semaphore::TryLock(void) {
         if (error == EAGAIN) {
             return false;
         } else {
-            throw SystemException(error, __FILE__, __LINE__);
+            throw the::system::system_exception(error, __FILE__, __LINE__);
         }
     }
 
@@ -227,7 +227,7 @@ bool vislib::sys::Semaphore::TryLock(const unsigned int timeout) {
             return false;
 
         default:
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -242,7 +242,7 @@ bool vislib::sys::Semaphore::TryLock(const unsigned int timeout) {
         if ((error == EAGAIN) || (error == ETIMEDOUT)) {
             return false;
         } else {
-            throw SystemException(error, __FILE__, __LINE__);
+            throw the::system::system_exception(error, __FILE__, __LINE__);
         }
     }
 
@@ -257,12 +257,12 @@ bool vislib::sys::Semaphore::TryLock(const unsigned int timeout) {
 void vislib::sys::Semaphore::Unlock(void) {
 #ifdef _WIN32
     if (::ReleaseSemaphore(this->handle, 1, NULL) != TRUE) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     if (::sem_post(this->handle) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 #endif /* _WIN32 */
 }
@@ -272,7 +272,7 @@ void vislib::sys::Semaphore::Unlock(void) {
  * vislib::sys::Semaphore::Semaphore
  */
 vislib::sys::Semaphore::Semaphore(const Semaphore& rhs) {
-    throw UnsupportedOperationException("vislib::sys::Semaphore::Semaphore",
+    throw the::not_supported_exception("vislib::sys::Semaphore::Semaphore",
         __FILE__, __LINE__);
 }
 
@@ -312,7 +312,7 @@ const int vislib::sys::Semaphore::DFT_PERMS = 0666;
 vislib::sys::Semaphore& vislib::sys::Semaphore::operator =(
         const Semaphore& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

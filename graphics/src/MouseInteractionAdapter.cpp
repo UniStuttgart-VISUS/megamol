@@ -8,9 +8,9 @@
 
 #include "vislib/MouseInteractionAdapter.h"
 
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "the/memory.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -75,7 +75,7 @@ void vislib::graphics::MouseInteractionAdapter::ConfigureRotation(
             } break;
 
         default:
-            throw IllegalParamException("type", __FILE__, __LINE__);
+            throw the::argument_exception("type", __FILE__, __LINE__);
             break;
     }
     THE_ASSERT(this->rotator != NULL);
@@ -118,7 +118,7 @@ void vislib::graphics::MouseInteractionAdapter::ConfigureZoom(
             } break;
 
         default:
-            throw IllegalParamException("type", __FILE__, __LINE__);
+            throw the::argument_exception("type", __FILE__, __LINE__);
             break;
     }
 
@@ -162,7 +162,7 @@ void vislib::graphics::MouseInteractionAdapter::SetCamera(
  */
 vislib::graphics::MouseInteractionAdapter::MouseInteractionAdapter(
         const MouseInteractionAdapter& rhs) {
-    throw UnsupportedOperationException("MouseInteractionAdapter", __FILE__, 
+    throw the::not_supported_exception("MouseInteractionAdapter", __FILE__, 
         __LINE__);
 }
 
@@ -174,7 +174,7 @@ vislib::graphics::MouseInteractionAdapter&
 vislib::graphics::MouseInteractionAdapter::operator =(
         const MouseInteractionAdapter& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

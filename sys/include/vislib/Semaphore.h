@@ -118,7 +118,7 @@ namespace sys {
          * successfully acquired, the counter is decremented by one and if the
          * counter reaches zero, the state of the semaphore becomes nonsignaled.
          *
-         * @throws SystemException If the lock could not be acquired.
+         * @throws the::system::system_exception If the lock could not be acquired.
          */
         virtual void Lock(void);
 
@@ -130,7 +130,7 @@ namespace sys {
          *
          * @return true, if the lock was acquired, false, if not.
          *
-         * @throws SystemException If an error occurred when trying to acquire
+         * @throws the::system::system_exception If an error occurred when trying to acquire
          *                         the lock.
          */
         virtual bool TryLock(void);
@@ -143,7 +143,7 @@ namespace sys {
          *
          * @return true, if the lock was acquired, false, if not.
          *
-         * @throws SystemException If an error occurred when trying to acquire
+         * @throws the::system::system_exception If an error occurred when trying to acquire
          *                         the lock.
          */
         virtual bool TryLock(const unsigned int timeout);
@@ -155,7 +155,7 @@ namespace sys {
          * signaled, as the counter becomes greater than zero, if the semaphore
          * was successfully released.
          *
-         * @throw SystemException If the lock could not be released.
+         * @throw the::system::system_exception If the lock could not be released.
          */
         virtual void Unlock(void);
 
@@ -180,7 +180,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         Semaphore(const Semaphore& rhs);
 
@@ -191,7 +191,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If (this != &rhs).
+         * @throws argument_exception If (this != &rhs).
          */
         Semaphore& operator =(const Semaphore& rhs);
 

@@ -16,7 +16,7 @@
 
 #include "the/assert.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/index_out_of_range_exception.h"
 #include <memory.h>
 
 
@@ -150,7 +150,7 @@ namespace math {
          *
          * @return The component's value.
          *
-         * @throws OutOfRangeException If 'i' is out of range.
+         * @throws index_out_of_range_exception If 'i' is out of range.
          */
         T& operator [](const int i);
 
@@ -161,7 +161,7 @@ namespace math {
          *
          * @return The component's value.
          *
-         * @throws OutOfRangeException If 'i' is out of range.
+         * @throws index_out_of_range_exception If 'i' is out of range.
          */
         const T& operator [](const int i) const;
 
@@ -291,7 +291,7 @@ namespace math {
         if ((0 <= i) && (i < static_cast<int>(D))) {
             return this->dimension[i];
         } else {
-            throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
+            throw the::index_out_of_range_exception(i, 0, D - 1, __FILE__, __LINE__);
         }
     }
 
@@ -308,7 +308,7 @@ namespace math {
         if ((0 <= i) && (i < static_cast<int>(D))) {
             return this->dimension[i];
         } else {
-            throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
+            throw the::index_out_of_range_exception(i, 0, D - 1, __FILE__, __LINE__);
         }
     }
     

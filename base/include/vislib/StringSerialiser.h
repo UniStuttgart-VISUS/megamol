@@ -16,7 +16,7 @@
 
 
 #include "vislib/Array.h"
-#include "vislib/NoSuchElementException.h"
+#include "the/no_such_element_exception.h"
 #include "vislib/Pair.h"
 #include "vislib/Serialiser.h"
 #include "vislib/String.h"
@@ -495,7 +495,7 @@ namespace vislib {
             } else if (this->nextDePos < this->data.Count()) {
                 return this->data[this->nextDePos++].Value();
             }
-            throw NoSuchElementException("deserialisation failed", 
+            throw the::no_such_element_exception("deserialisation failed", 
                 __FILE__, __LINE__);
         }
 
@@ -522,7 +522,7 @@ namespace vislib {
             } else if (this->nextDePos < this->data.Count()) {
                 return this->data[this->nextDePos++].Value();
             }
-            throw NoSuchElementException("deserialisation failed", 
+            throw the::no_such_element_exception("deserialisation failed", 
                 __FILE__, __LINE__);
         }
 

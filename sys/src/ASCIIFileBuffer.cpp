@@ -181,7 +181,7 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
     this->buffer = new char[l + 1];
     this->buffer[l] = 0;
     if (this->buffer == NULL) {
-        throw vislib::Exception("Cannot allocate memory to store file",
+        throw the::exception("Cannot allocate memory to store file",
             __FILE__, __LINE__);
     }
     size_t rl = static_cast<size_t>(file.Read(this->buffer, l));
@@ -275,7 +275,7 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
         words.Clear();
 
     } else {
-        throw vislib::IllegalStateException("ParsingElements illegal value",
+        throw the::invalid_operation_exception("ParsingElements illegal value",
             __FILE__, __LINE__);
 
     }

@@ -41,7 +41,7 @@ namespace sys {
          * Forces all buffered data to be written.
          * This method has no effect.
          *
-         * @throws IOException
+         * @throws the::system::io::io_exception
          */
         virtual void Flush(void);
 
@@ -178,7 +178,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         MemoryFile(const MemoryFile& rhs);
 
@@ -189,7 +189,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If &'rhs' != this.
+         * @throws argument_exception If &'rhs' != this.
          */
         MemoryFile& operator=(const MemoryFile& rhs);
 

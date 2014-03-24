@@ -9,7 +9,7 @@
 //
 //#include "vislib/IPCommEndPoint.h"
 //#include "the/trace.h"
-//#include "vislib/UnsupportedOperationException.h"
+//#include "the/not_supported_exception.h"
 //
 //
 //vislib::SmartRef<vislib::net::AbstractCommChannel> 
@@ -76,7 +76,7 @@
 //
 //void vislib::net::ib::IbvCommServerChannel::Connect(
 //        SmartRef<AbstractCommEndPoint> endPoint) {
-//    throw UnsupportedOperationException("IbvCommServerChannel::Connect", 
+//    throw the::not_supported_exception("IbvCommServerChannel::Connect", 
 //        __FILE__, __LINE__);
 //}
 //
@@ -89,7 +89,7 @@
 //
 //vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 //vislib::net::ib::IbvCommServerChannel::GetRemoteEndPoint(void) const {
-//    throw UnsupportedOperationException("IbvCommServerChannel::"
+//    throw the::not_supported_exception("IbvCommServerChannel::"
 //        "GetRemoteEndPoint", __FILE__, __LINE__);
 //}
 //
@@ -103,14 +103,14 @@
 //
 //size_t vislib::net::ib::IbvCommServerChannel::Receive(void *outData, 
 //        const size_t cntBytes, const unsigned int timeout, const bool forceReceive) {
-//    throw UnsupportedOperationException("IbvCommServerChannel::Receive", 
+//    throw the::not_supported_exception("IbvCommServerChannel::Receive", 
 //        __FILE__, __LINE__);
 //}
 //
 //
 //size_t vislib::net::ib::IbvCommServerChannel::Send(const void *data, 
 //        const size_t cntBytes, const unsigned int timeout, const bool forceSend) {
-//    throw UnsupportedOperationException("IbvCommServerChannel::Send", __FILE__, 
+//    throw the::not_supported_exception("IbvCommServerChannel::Send", __FILE__, 
 //        __LINE__);
 //}
 //

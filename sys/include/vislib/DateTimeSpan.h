@@ -183,7 +183,7 @@ namespace sys {
          * @param ticks        The 100 ns part of the time span. This defaults
          *                     to zero.
          *
-         * @throws IllegalParamException If the parameters would cause a numeric
+         * @throws argument_exception If the parameters would cause a numeric
          *                               overflow.
          */
         DateTimeSpan(const int days, const int hours, const int minutes,
@@ -290,7 +290,7 @@ namespace sys {
          * @param ticks        The 100 ns part of the time span. This defaults
          *                     to zero.
          *
-         * @throws IllegalParamException If the parameters would cause a numeric
+         * @throws argument_exception If the parameters would cause a numeric
          *                               overflow.
          */
         void Set(const int days, const int hours, const int minutes,
@@ -393,7 +393,7 @@ namespace sys {
          *
          * @return The sum of this time span and 'rhs'.
          *
-         * @throws IllegalParamException If 'rhs' has a value that would cause 
+         * @throws argument_exception If 'rhs' has a value that would cause 
          *                               an overflow of the result.
          */
 	    inline DateTimeSpan operator +(const DateTimeSpan& rhs) const {
@@ -410,7 +410,7 @@ namespace sys {
          *
          * @return The difference between this time span and 'rhs'.
          *
-         * @throws IllegalParamException If 'rhs' has a value that would cause 
+         * @throws argument_exception If 'rhs' has a value that would cause 
          *                               an overflow of the result.
          */
         inline DateTimeSpan operator -(const DateTimeSpan& rhs) const {
@@ -428,7 +428,7 @@ namespace sys {
          * @return *this, which is the sum of the prior value of this time span
          *         and 'rhs'.
          *
-         * @throws IllegalParamException If 'rhs' has a value that would cause 
+         * @throws argument_exception If 'rhs' has a value that would cause 
          *                               an overflow of the result.
          */
         inline DateTimeSpan& operator +=(const DateTimeSpan& rhs) {
@@ -445,7 +445,7 @@ namespace sys {
          * @return *this, which is the difference between the prior value of 
          *         this time span and 'rhs'.
          *
-         * @throws IllegalParamException If 'rhs' has a value that would cause 
+         * @throws argument_exception If 'rhs' has a value that would cause 
          *                               an overflow of the result.
          */
         DateTimeSpan& operator -=(const DateTimeSpan& rhs);
@@ -455,7 +455,7 @@ namespace sys {
          *
          * @return This time span multiplied with -1.
          *
-         * @throws IllegalStateException If 'rhs' the time span is the smallest
+         * @throws invalid_operation_exception If 'rhs' the time span is the smallest
          *                               possible negative value, because this
          *                               would cause an overflow of the result.
          */
@@ -491,7 +491,7 @@ namespace sys {
          *
          * @param ticks The ticks to be added.
          *
-         * @throws IllegalParamException If 'ticks' has a value that would 
+         * @throws argument_exception If 'ticks' has a value that would 
          *                               cause an overflow of the result.
          */
         void add(const int64_t ticks);

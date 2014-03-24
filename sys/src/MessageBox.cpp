@@ -7,8 +7,8 @@
  */
 
 #include "vislib/MessageBox.h"
-#include "vislib/IllegalStateException.h"
-#include "vislib/MissingImplementationException.h"
+#include "the/invalid_operation_exception.h"
+#include "the/not_implemented_exception.h"
 #ifndef _WIN32
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -960,7 +960,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
         case BTNS_YESNOCANCEL: type |= MB_YESNOCANCEL; break;
         case BTNS_ABORTRETRYIGNORE: type |= MB_ABORTRETRYIGNORE; break;
         case BTNS_CANCELRETRYCONTINUE: type |= MB_CANCELTRYCONTINUE; break;
-        default : throw IllegalStateException(
+        default : throw the::invalid_operation_exception(
                   "MessageBox Buttons had no valid value.",
                   __FILE__, __LINE__);
     }

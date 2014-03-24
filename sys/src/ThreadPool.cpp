@@ -14,11 +14,11 @@
 
 #include "the/assert.h"
 #include "vislib/AutoLock.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
+#include "the/argument_exception.h"
+#include "the/invalid_operation_exception.h"
 #include "vislib/SystemInformation.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -160,7 +160,7 @@ void vislib::sys::ThreadPool::SetThreadCount(const size_t threadCount) {
     AutoLock lock(this->lockThreadCounters);
 
     if (threadCount < this->cntTotalThreads) {
-        throw IllegalParamException("The number of threads in the thread pool "
+        throw the::argument_exception("The number of threads in the thread pool "
             "cannot be reduced.", __FILE__, __LINE__);
     }
 
@@ -303,7 +303,7 @@ unsigned int vislib::sys::ThreadPool::Worker::Run(void *pool) {
  * vislib::sys::ThreadPool::ThreadPool
  */
 vislib::sys::ThreadPool::ThreadPool(const ThreadPool& rhs) {
-    throw UnsupportedOperationException("ThreadPool::ThreadPool", __FILE__, 
+    throw the::not_supported_exception("ThreadPool::ThreadPool", __FILE__, 
         __LINE__);
 }
 
@@ -362,10 +362,10 @@ void vislib::sys::ThreadPool::queueUserWorkItem(WorkItem& workItem,
         const bool createDefaultThreads) {
     /* Sanity checks. */
     if ((workItem.runnable == NULL) && (workItem.runnableFunction == NULL)) {
-        throw vislib::IllegalParamException("workItem", __FILE__, __LINE__);
+        throw the::argument_exception("workItem", __FILE__, __LINE__);
     }
     if ((workItem.runnable != NULL) && (workItem.runnableFunction != NULL)) {
-        throw vislib::IllegalParamException("workItem", __FILE__, __LINE__);
+        throw the::argument_exception("workItem", __FILE__, __LINE__);
     }
 
     /* Add work item to queue. */
@@ -381,7 +381,7 @@ void vislib::sys::ThreadPool::queueUserWorkItem(WorkItem& workItem,
 #endif /* _WIN32 */
     } else {
         this->lockQueue.Unlock();
-        throw IllegalStateException("The user work item queue has been closed, "
+        throw the::invalid_operation_exception("The user work item queue has been closed, "
             "because the thread pool is being terminated.", __FILE__, __LINE__);
     }
 
@@ -400,7 +400,7 @@ void vislib::sys::ThreadPool::queueUserWorkItem(WorkItem& workItem,
 vislib::sys::ThreadPool& vislib::sys::ThreadPool::operator =(
         const ThreadPool& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

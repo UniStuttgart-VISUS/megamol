@@ -12,7 +12,7 @@
 #include "vislib/CharTraits.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/SystemInformation.h"
-#include "vislib/MissingImplementationException.h"
+#include "the/not_implemented_exception.h"
 
 
 /*
@@ -180,7 +180,7 @@ bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, size_t si
             
             if (machineEnd != sys::SystemInformation::ENDIANNESS_LITTLE_ENDIAN
                 && machineEnd != sys::SystemInformation::ENDIANNESS_BIG_ENDIAN) {
-                    throw new vislib::MissingImplementationException(
+                    throw new the::not_implemented_exception(
                         "Your machine is too exotic for this implementation",
                         __FILE__, __LINE__);
             }
@@ -324,13 +324,13 @@ bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
             sys::SystemInformation::SystemEndianness();
 
         if (img.GetChannelCount() != 1 && img.GetChannelCount() != 3) {
-            throw new vislib::MissingImplementationException(
+            throw new the::not_implemented_exception(
                 "This implementation can only cope with RGB and greyscale images",
                 __FILE__, __LINE__);
         }
         if (machineEnd != sys::SystemInformation::ENDIANNESS_BIG_ENDIAN
             && machineEnd != sys::SystemInformation::ENDIANNESS_LITTLE_ENDIAN) {
-                throw new vislib::MissingImplementationException(
+                throw new the::not_implemented_exception(
                     "Your machine is too exotic for this implementation",
                     __FILE__, __LINE__);
         }

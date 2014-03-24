@@ -12,8 +12,8 @@
 
 #include "the/assert.h"
 #include "vislib/DNS.h"
-#include "vislib/IllegalStateException.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/invalid_operation_exception.h"
+#include "the/index_out_of_range_exception.h"
 #include "vislib/SocketException.h"
 #include "the/trace.h"
 
@@ -263,7 +263,7 @@ vislib::net::IPAddress vislib::net::IPAddress6::UnmapV4Address(void) const {
         return IPAddress(*reinterpret_cast<const in_addr *>(
             this->address.s6_addr + 12));
     } else {
-        throw IllegalStateException("The IPv6 address is not a mapped IPv4 "
+        throw the::invalid_operation_exception("The IPv6 address is not a mapped IPv4 "
             "address.", __FILE__, __LINE__);
     }
 }
@@ -276,7 +276,7 @@ uint8_t vislib::net::IPAddress6::operator [](const int i) const {
     if ((i > 0) && (i < static_cast<int>(sizeof(this->address)))) {
         return reinterpret_cast<const uint8_t *>(&this->address)[i];
     } else {
-        throw OutOfRangeException(i, 0, sizeof(this->address), __FILE__,
+        throw the::index_out_of_range_exception(i, 0, sizeof(this->address), __FILE__,
             __LINE__);
     }
 }

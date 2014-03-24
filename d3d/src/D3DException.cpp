@@ -15,7 +15,7 @@
  */
 vislib::graphics::d3d::D3DException::D3DException(const HRESULT result, 
         const char *file, const int line) 
-        : vislib::Exception(::DXGetErrorString(result), file, line), 
+        : the::exception(::DXGetErrorString(result), file, line), 
         result(result) {
 }
 
@@ -24,7 +24,7 @@ vislib::graphics::d3d::D3DException::D3DException(const HRESULT result,
  * vislib::graphics::d3d::D3DException::D3DException
  */
 vislib::graphics::d3d::D3DException::D3DException(const D3DException& rhs) 
-        : vislib::Exception(rhs), result(rhs.result) {
+        : the::exception(rhs), result(rhs.result) {
 }
 
 
@@ -41,7 +41,7 @@ vislib::graphics::d3d::D3DException::~D3DException(void) {
 vislib::graphics::d3d::D3DException& 
 vislib::graphics::d3d::D3DException::operator =(const D3DException& rhs) {
     if (this != &rhs) {
-        Exception::operator =(rhs);
+        the::exception::operator =(rhs);
         this->result = rhs.result;
     }
     return *this;

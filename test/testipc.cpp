@@ -14,7 +14,7 @@
 #include "vislib/Semaphore.h"
 #include "vislib/SharedMemory.h"
 #include "vislib/SystemInformation.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "vislib/Thread.h"
 
 
@@ -37,7 +37,7 @@ void TestIpc(void) {
     AssertException("Open non-existing shared memory.", shMemErr.Open(
         TEST_IPC_SHMEM_NAME, SharedMemory::READ_WRITE, 
         SharedMemory::OPEN_ONLY, TEST_IPC_SHMEM_SIZE),
-        SystemException);
+        the::system::system_exception);
     AssertFalse("Failed open produced non-open memory.", shMemErr.IsOpen());
 
     AssertNoException("Create shared memory.", shMem.Open(TEST_IPC_SHMEM_NAME,
@@ -49,7 +49,7 @@ void TestIpc(void) {
     AssertException("Create shared memory, no open.", shMemErr.Open(
         TEST_IPC_SHMEM_NAME, SharedMemory::READ_WRITE, 
         SharedMemory::CREATE_ONLY, TEST_IPC_SHMEM_SIZE),
-        SystemException);
+        the::system::system_exception);
     AssertFalse("Failed create produced non-open memory.", shMemErr.IsOpen());
 
     // Write specific data to shared memory.

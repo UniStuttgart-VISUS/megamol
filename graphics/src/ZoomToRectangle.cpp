@@ -9,7 +9,7 @@
 
 #include "vislib/ZoomToRectangle.h"
 #include "vislib/Camera.h"
-#include "vislib/IllegalStateException.h"
+#include "the/invalid_operation_exception.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/Vector.h"
 
@@ -49,10 +49,10 @@ vislib::graphics::ZoomToRectangle::~ZoomToRectangle(void) {
 void vislib::graphics::ZoomToRectangle::Zoom(void) {
     // check preconditions
     if (!this->IsCameraParamsValid()) {
-        throw IllegalStateException("Camera not set", __FILE__, __LINE__);
+        throw the::invalid_operation_exception("Camera not set", __FILE__, __LINE__);
     }
     if (this->targetRect.IsEmpty()) {
-        throw IllegalStateException("Zoom target rectangle is empty", 
+        throw the::invalid_operation_exception("Zoom target rectangle is empty", 
             __FILE__, __LINE__);
     }
 

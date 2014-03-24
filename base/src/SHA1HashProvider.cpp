@@ -8,8 +8,8 @@
 #include "vislib/SHA1HashProvider.h"
 
 #include "the/assert.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
+#include "the/argument_exception.h"
+#include "the/invalid_operation_exception.h"
 #include "the/memory.h"
 
 
@@ -111,12 +111,12 @@ void vislib::SHA1HashProvider::input(SHA1Context *context, const uint8_t *input,
 
     if (context->Computed) {
         context->Corrupted = shaStateError;
-        throw IllegalStateException("vislib::SHA1HashProvider::input called "
+        throw the::invalid_operation_exception("vislib::SHA1HashProvider::input called "
             "after hash was already computed.", __FILE__, __LINE__);
     }
 
     if (context->Corrupted) {
-         throw IllegalStateException("SHA1Context is corrupted.", __FILE__, 
+         throw the::invalid_operation_exception("SHA1Context is corrupted.", __FILE__, 
              __LINE__);
     }
 
@@ -279,7 +279,7 @@ void vislib::SHA1HashProvider::result(uint8_t *messageDigest,
     //}
 
     if (context->Corrupted) {
-         throw IllegalStateException("SHA1Context is corrupted.", __FILE__, 
+         throw the::invalid_operation_exception("SHA1Context is corrupted.", __FILE__, 
              __LINE__);
     }
 
@@ -307,7 +307,7 @@ void vislib::SHA1HashProvider::result(uint8_t *messageDigest,
 vislib::SHA1HashProvider& vislib::SHA1HashProvider::operator =(
         const SHA1HashProvider& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

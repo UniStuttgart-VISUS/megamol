@@ -18,7 +18,7 @@
 #include "vislib/CharTraits.h"
 #include "the/deprecated.h"
 #include "the/memory.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/index_out_of_range_exception.h"
 
 
 
@@ -549,7 +549,7 @@ namespace vislib {
          * @param pos The position to insert the character at.
          * @param c   The character to add.
          *
-         * @throws OutOfRangeException If 'pos' is not within 
+         * @throws index_out_of_range_exception If 'pos' is not within 
          *                             [0, this->Length()].
          */
         void Insert(const Size pos, const Char c);
@@ -562,7 +562,7 @@ namespace vislib {
          * @param pos The position to insert the string at.
          * @param c   The string to add. It is safe to pass a NULL pointer.
          *
-         * @throws OutOfRangeException If 'pos' is not within 
+         * @throws index_out_of_range_exception If 'pos' is not within 
          *                             [0, this->Length()].
          */
         void Insert(const Size pos, const Char *str);
@@ -575,7 +575,7 @@ namespace vislib {
          * @param pos The position to insert the string at.
          * @param c   The string to add.
          *
-         * @throws OutOfRangeException If 'pos' is not within 
+         * @throws index_out_of_range_exception If 'pos' is not within 
          *                             [0, this->Length()].
          */
         inline void Insert(const Size pos, const String& str) {
@@ -1212,7 +1212,7 @@ namespace vislib {
          *
          * @return The character at the 'i'th position in the string.
          *
-         * @throws OutOfRangeException If 'i' does not designate a valid 
+         * @throws index_out_of_range_exception If 'i' does not designate a valid 
          *                             character of the string.
          */
         Char operator [](const Size i) const;
@@ -1224,7 +1224,7 @@ namespace vislib {
          *
          * @return Reference to the character at the 'i'th position in the string.
          *
-         * @throws OutOfRangeException If 'i' does not designate a valid 
+         * @throws index_out_of_range_exception If 'i' does not designate a valid 
          *                             character of the string.
          */
         Char& operator [](const Size i);
@@ -1814,7 +1814,7 @@ namespace vislib {
             delete[] this->data;
             this->data = str;
         } else {
-            throw OutOfRangeException(pos, 0, static_cast<int>(len), __FILE__, 
+            throw the::index_out_of_range_exception(pos, 0, static_cast<int>(len), __FILE__, 
                 __LINE__);
         }
     }
@@ -1839,7 +1839,7 @@ namespace vislib {
                 this->data = newData;
             }
         } else {
-            throw OutOfRangeException(pos, 0, static_cast<int>(len), __FILE__, 
+            throw the::index_out_of_range_exception(pos, 0, static_cast<int>(len), __FILE__, 
                 __LINE__);
         }
     }
@@ -2516,7 +2516,7 @@ namespace vislib {
         if ((i >= 0) && (i < this->Length())) {
             return this->data[i];
         } else {
-            throw OutOfRangeException(i, 0, 
+            throw the::index_out_of_range_exception(i, 0, 
                 static_cast<int>(this->Length() - 1), __FILE__, __LINE__);
         }
     }
@@ -2530,7 +2530,7 @@ namespace vislib {
         if ((i >= 0) && (i < this->Length())) {
             return this->data[i];
         } else {
-            throw OutOfRangeException(i, 0, 
+            throw the::index_out_of_range_exception(i, 0, 
                 static_cast<int>(this->Length() - 1), __FILE__, __LINE__);
         }
     }

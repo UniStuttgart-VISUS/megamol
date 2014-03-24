@@ -12,12 +12,12 @@
 #include "vislib/Console.h"
 #include "vislib/ConsoleProgressBar.h"
 #include "vislib/ColumnFormatter.h"
-#include "vislib/Exception.h"
-#include "vislib/SystemException.h"
+#include "the/exception.h"
+#include "the/system/system_exception.h"
 #include "vislib/PerformanceCounter.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/StringConverter.h"
-#include "vislib/SystemMessage.h"
+#include "the/system/system_message.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/Path.h"
 #include "the/trace.h"
@@ -211,7 +211,7 @@ void TestColumnFormatter(void) {
     AssertEqual("Column[1] Text = \"This is 1. test\"", ColFormatter[1].GetText(), CFS("This is 1. test"));
     AssertEqual("Column[2] Text = \"All Text fits into line\"", ColFormatter[2].GetText(), CFS("All Text fits into line"));
 
-    AssertException("Accessing Column[3]: InvalidParamException", ColFormatter[3].SetWidth(0), vislib::IllegalParamException);
+    AssertException("Accessing Column[3]: InvalidParamException", ColFormatter[3].SetWidth(0), the::argument_exception);
 
     ColFormatter.SetColumnCount(4);
     AssertEqual<unsigned int>("Column Count = 4", ColFormatter.GetColumnCount(), 4);
@@ -437,15 +437,15 @@ void TestColumnFormatter(void) {
 
 
 void TestExceptions(void) {
-    vislib::sys::SystemException e1(2, __FILE__, __LINE__);
-    ::_tprintf(_T("%s\n"), e1.GetMsg());
+    the::system::system_exception e1(2, __FILE__, __LINE__);
+    ::_tprintf(_T("%s\n"), e1.what());
 
-    vislib::Exception e2(__FILE__, __LINE__);
-    ::_tprintf(_T("%s\n"), e2.GetMsg()); 
+    the::exception e2(__FILE__, __LINE__);
+    ::_tprintf(_T("%s\n"), e2.what()); 
 }
 
-void TestSystemMessage(void) {
-    vislib::sys::SystemMessage sysMsg(4);
+void Test_system_message(void) {
+    the::system::system_message sysMsg(4);
     ::_tprintf(_T("%s\n"), static_cast<const TCHAR *>(sysMsg));
 }
 
@@ -469,10 +469,10 @@ void TestPathManipulations(void) {
     //try {
     //    vislib::sys::Path::MakeDirectory(L"Horst/Hugo/Heinz/Hans/Helmut");
     //    vislib::sys::Path::DeleteDirectory("Wurst", true);
-    //} catch(vislib::sys::SystemException e) {
-    //    fprintf(stderr, "SystemException: %s\n", e.GetMsgA());
-    //} catch(vislib::Exception e) {
-    //    fprintf(stderr, "Exception: %s\n", e.GetMsgA());
+    //} catch(the::system::system_exception e) {
+    //    fprintf(stderr, "the::system::system_exception: %s\n", e.what());
+    //} catch(the::exception e) {
+    //    fprintf(stderr, "Exception: %s\n", e.what());
     //} catch(...) {
     //    fprintf(stderr, "Unknown Exception.\n");
     //}

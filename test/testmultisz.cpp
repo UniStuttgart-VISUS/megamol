@@ -104,9 +104,9 @@ void TestMultiSz(void) {
     AssertEqual("Insert into empty.", ::strcmp(multiSz3[0].PeekBuffer(), "Hans"), 0);
     
     multiSz3.Clear();
-    AssertException("Insert at invalid index", multiSz3.Insert(1, "Hugo"), vislib::OutOfRangeException);
-    AssertException("Array operator at invalid index", multiSz3[0], vislib::OutOfRangeException);
-    AssertException("GetAt at invalid index", multiSz3.GetAt(0), vislib::OutOfRangeException);
+    AssertException("Insert at invalid index", multiSz3.Insert(1, "Hugo"), the::index_out_of_range_exception);
+    AssertException("Array operator at invalid index", multiSz3[0], the::index_out_of_range_exception);
+    AssertException("GetAt at invalid index", multiSz3.GetAt(0), the::index_out_of_range_exception);
     AssertEqual("PeekAt at invalid index", (void *) multiSz3.PeekAt(0), (void *) NULL);
 
     multiSz.Clear();

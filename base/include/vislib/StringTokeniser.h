@@ -19,7 +19,7 @@
 #include "the/assert.h"
 #include "vislib/String.h"
 #include "vislib/Iterator.h"
-#include "vislib/NoSuchElementException.h"
+#include "the/no_such_element_exception.h"
 
 
 namespace vislib {
@@ -201,7 +201,7 @@ namespace vislib {
          * @return The next non empty element if there is one, which becomes
          *         the current element after calling this method.
          *
-         * @throws NoSuchElementException If all remaining elements are empty.
+         * @throws no_such_element_exception If all remaining elements are empty.
          */
         inline const String<C>& NextNonEmpty(void) {
             while(this->HasNext()) {
@@ -210,7 +210,7 @@ namespace vislib {
                     return str;
                 }
             }
-            throw NoSuchElementException("End of Token Sequence",
+            throw the::no_such_element_exception("End of Token Sequence",
                 __FILE__, __LINE__);
         }
 

@@ -59,7 +59,7 @@ namespace vislib {
          * @param input    The data to be added to the hash.
          * @param cntInput The number of bytes in 'input'.
          *
-         * @throws IllegalStateException If the hash has not been initialised.
+         * @throws invalid_operation_exception If the hash has not been initialised.
          */
         virtual void TransformBlock(const uint8_t *input, const size_t cntInput);
 
@@ -79,7 +79,7 @@ namespace vislib {
          * @param input     The data to be added to the hash.
          * @param cntInput  The number of bytes in 'input'.
          *
-         * @throws IllegalStateException If the hash has not been initialised.
+         * @throws invalid_operation_exception If the hash has not been initialised.
          */
         virtual bool TransformFinalBlock(uint8_t *outHash, size_t& inOutSize,
             const uint8_t *input, const size_t cntInput);
@@ -151,7 +151,7 @@ namespace vislib {
          *
          * @return *this
          *
-         * @throws IllegalParamException If this != &rhs.
+         * @throws argument_exception If this != &rhs.
          */
         MD5HashProvider& operator =(const MD5HashProvider& rhs);
 

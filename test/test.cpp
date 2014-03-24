@@ -197,8 +197,8 @@ int main(int argc, char **argv) {
         //    } else if (rv == vislib::sys::MessageBox::RET_RETRY) {
         //        printf("There is nothing to be retried!\n");
         //    }
-        //} catch(vislib::Exception e) {
-        //    fprintf(stderr, "Exception: %s\n", e.GetMsgA());
+        //} catch(the::exception e) {
+        //    fprintf(stderr, "Exception: %s\n", e.what());
         //}
 
         fprintf(stderr, "You must specify at least one test to be performed.\n\n");
@@ -266,11 +266,11 @@ int main(int argc, char **argv) {
 
                         tests[j].testFunc();
 
-                    } catch (vislib::Exception& e) {
+                    } catch (the::exception& e) {
 #ifdef _WIN32
-                        _tprintf(_T("\nUnexpected vislib::Exception: %s "), e.GetMsg());
+                        _tprintf(_T("\nUnexpected the::exception: %s "), e.what());
 #else /* _WIN32 */
-                        printf("\nUnexpected vislib::Exception: %s ", e.GetMsgA());
+                        printf("\nUnexpected the::exception: %s ", e.what());
 #endif /* _WIN32 */
                         AssertOutputFail(); // add a generic fail
                     } catch (...) {

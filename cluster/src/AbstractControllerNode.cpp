@@ -170,10 +170,10 @@ void vislib::net::cluster::AbstractControllerNode::onPeerConnected(
         const PeerIdentifier& peerId) throw() {
     try {
         this->sendAllParameters(&peerId);
-    } catch (Exception& e) {
+    } catch (the::exception& e) {
         VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Sending camera parameters to newly "
-            "connected node failed: %s\n", e.GetMsgA());
+            "connected node failed: %s\n", e.what());
     } catch (...) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Sending camera parameters to newly "
             "connected node failed for a unknown reason\n");
@@ -270,7 +270,7 @@ void vislib::net::cluster::AbstractControllerNode::setParameters(
         this->getObservableParameters()->RemoveCameraParameterObserver(this);
     }
     if (params.DynamicCast<graphics::ObservableCameraParams>() == NULL) {
-        throw IllegalParamException("params", __FILE__, __LINE__);
+        throw the::argument_exception("params", __FILE__, __LINE__);
     }
 
     this->parameters = params;

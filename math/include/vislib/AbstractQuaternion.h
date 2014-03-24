@@ -16,7 +16,7 @@
 #include <cmath>
 
 #include "the/assert.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/mathfunctions.h"
 #include "the/types.h"
 #include "vislib/Vector.h"
@@ -282,7 +282,7 @@ namespace math {
          * @param m32 Matrix component row 3, column 2.
          * @param m33 Matrix component row 3, column 3.
          *
-         * @throw IllegalParamException if the matrix components do not seem
+         * @throw argument_exception if the matrix components do not seem
          *                              to form a rotation-only matrix.
          */
         void SetFromRotationMatrix(const T& m11, const T& m12, const T& m13,
@@ -719,7 +719,7 @@ namespace math {
                 xb = q1 * xo;
             }
             if (xb != xi) {
-                throw IllegalParamException("Matrix is not rotation-only",
+                throw the::argument_exception("Matrix is not rotation-only",
                     __FILE__, __LINE__);
             }
 
@@ -729,7 +729,7 @@ namespace math {
         if (yi == yb) {
             // rot 0°
             if ((q1 * zo) != zi) {
-                throw IllegalParamException("Matrix is not rotation-only",
+                throw the::argument_exception("Matrix is not rotation-only",
                     __FILE__, __LINE__);
             }
 
@@ -753,7 +753,7 @@ namespace math {
                 yc = q2 * yb;
             }
             if (yc != yi) {
-                throw IllegalParamException("Matrix is not rotation-only",
+                throw the::argument_exception("Matrix is not rotation-only",
                     __FILE__, __LINE__);
             }
             q1 = q2 * q1;
@@ -764,7 +764,7 @@ namespace math {
         yb = q1 * yo;
         Vector<T, 3> zb = q1 * zo;
         if ((xb != xi) || (yb != yi) || (zb!= zi)) {
-            throw IllegalParamException("Matrix is not rotation-only",
+            throw the::argument_exception("Matrix is not rotation-only",
                 __FILE__, __LINE__);
         }
 

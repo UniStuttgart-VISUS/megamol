@@ -118,8 +118,8 @@ namespace sys {
          *                             number of threads is one for each 
          *                             available processor.
          *
-         * @throws IllegalStateException If the work item queue has been closed.
-         * @throws IllegalParamException If 'runnable' is NULL.
+         * @throws invalid_operation_exception If the work item queue has been closed.
+         * @throws argument_exception If 'runnable' is NULL.
          */
         void QueueUserWorkItem(Runnable *runnable, void *userData = NULL, 
             const bool createDefaultThreads = true);
@@ -143,8 +143,8 @@ namespace sys {
          *                             number of threads is one for each 
          *                             available processor.
          *
-         * @throws IllegalStateException If the work item queue has been closed.
-         * @throws IllegalParamException If 'runnable' is NULL.
+         * @throws invalid_operation_exception If the work item queue has been closed.
+         * @throws argument_exception If 'runnable' is NULL.
          */
         void QueueUserWorkItem(Runnable::Function runnable, 
             void *userData = NULL, const bool createDefaultThreads = true);
@@ -167,7 +167,7 @@ namespace sys {
          *
          * @param threadCount The number of threads to use.
          *
-         * @throws IllegalParamException If 'threadCount' is too small.
+         * @throws argument_exception If 'threadCount' is too small.
          */
         void SetThreadCount(const size_t threadCount);
 
@@ -248,7 +248,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         ThreadPool(const ThreadPool& rhs);
 
@@ -285,8 +285,8 @@ namespace sys {
          *                             number of threads is one for each 
          *                             available processor.
          * 
-         * @throws IllegalStateException If the work item queue has been closed.
-         * @throws IllegalParamException If both, the 'runnable' and the 
+         * @throws invalid_operation_exception If the work item queue has been closed.
+         * @throws argument_exception If both, the 'runnable' and the 
          *                               'runnnableFunction' in the 'workItem' 
          *                               are both NULL or not NULL.
          */
@@ -300,7 +300,7 @@ namespace sys {
          *
          * @return *this
          *
-         * @throws IllegalParameException if (this != &rhs).
+         * @throws the::argument_exception if (this != &rhs).
          */
         ThreadPool& operator =(const ThreadPool& rhs);
 

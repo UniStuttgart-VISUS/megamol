@@ -8,7 +8,7 @@
 #include "vislib/RawStorageSerialiser.h"
 
 #include "the/assert.h"
-#include "vislib/IllegalStateException.h"
+#include "the/invalid_operation_exception.h"
 
 
 /*
@@ -616,7 +616,7 @@ vislib::RawStorageSerialiser& vislib::RawStorageSerialiser::operator =(
  */
 void vislib::RawStorageSerialiser::store(const void *data, unsigned int size) {
     if (this->storage == NULL) {
-        throw vislib::IllegalStateException("No RawStorage object set",
+        throw the::invalid_operation_exception("No RawStorage object set",
             __FILE__, __LINE__);
     }
     this->storage->AssertSize(this->offset + size, true);
@@ -637,12 +637,12 @@ void vislib::RawStorageSerialiser::restore(void *data, unsigned int size) {
 
     /* Sanity checks. */
     if (this->nakedStorage == NULL) {
-        throw vislib::IllegalStateException("Either a RawStorage object or a "
+        throw the::invalid_operation_exception("Either a RawStorage object or a "
             "naked data pointer must be provided for deserialisation.",
             __FILE__, __LINE__);
     }
     if (this->nakedStorageSize < this->offset + size) {
-        throw vislib::Exception("Not enough data in storage object to "
+        throw the::exception("Not enough data in storage object to "
             "deserialise", __FILE__, __LINE__);
     }
 

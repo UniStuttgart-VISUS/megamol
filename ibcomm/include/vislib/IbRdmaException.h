@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/Exception.h"
+#include "the/exception.h"
 
 
 namespace vislib {
@@ -26,7 +26,11 @@ namespace ib {
     /**
      * These exceptions are thrown by the RDMA communication channels.
      */
-    class IbRdmaException : public Exception {
+    class IbRdmaException : public the::exception {
+    private:
+
+        /** Superclass typedef. */
+        typedef the::exception Super;
 
     public:
 
@@ -47,9 +51,6 @@ namespace ib {
         IbRdmaException& operator =(const IbRdmaException& rhs);
 
     private:
-
-        /** Superclass typedef. */
-        typedef Exception Super;
 
         int errorCode;
 

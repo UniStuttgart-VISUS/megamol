@@ -102,9 +102,9 @@ int main(int argc, char **argv) {
                 DiscoveryTestApp::GetInstance().Initialise(cmdLine);
                 return DiscoveryTestApp::GetInstance().Run();
             }
-        } catch (vislib::Exception& e) {
-            std::cerr << e.GetMsgA() << " @ " << e.GetFile() << ":" 
-                << e.GetLine() << std::endl;
+        } catch (the::exception& e) {
+            std::cerr << e.what() << " @ " << e.get_file() << ":" 
+                << e.get_line() << std::endl;
             return -1;
         } catch (...) {
         }

@@ -83,7 +83,7 @@ namespace d3d {
          *
          * @return A reference to 'outDesktopCoordinates'.
          * 
-         * @throws OutOfRangeException If 'outputIdx' does not designate a valid
+         * @throws index_out_of_range_exception If 'outputIdx' does not designate a valid
          *                             output attached to the adapter.
          */
         virtual math::Rectangle<LONG>& GetDesktopCoordinates(
@@ -99,7 +99,7 @@ namespace d3d {
          *
          * @return
          *
-         * @throws OutOfRangeException If 'outputIdx' does not designate a valid
+         * @throws index_out_of_range_exception If 'outputIdx' does not designate a valid
          *                             output attached to the adapter.
          */
         virtual StringW GetDeviceName(const SIZE_T outputIdx) const;
@@ -121,7 +121,7 @@ namespace d3d {
          *
          * @return
          *
-         * @throws OutOfRangeException If 'outputIdx' does not designate a valid
+         * @throws index_out_of_range_exception If 'outputIdx' does not designate a valid
          *                             output attached to the adapter.
          */
         virtual bool IsPrimaryDisplay(const SIZE_T outputIdx) const;
@@ -138,7 +138,7 @@ namespace d3d {
          * @return Reference to the monitor description. The value designated 
          *         must live as long as this object lives.
          *
-         * @throws OutOfRangeException If 'outputIdx' does not designate a valid
+         * @throws index_out_of_range_exception If 'outputIdx' does not designate a valid
          *                             output attached to the adapter.
          */
         virtual const MONITORINFOEXW& getMonitorInfo(

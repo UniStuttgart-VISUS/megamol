@@ -55,7 +55,7 @@ namespace net {
          * @param result       Indicate the success of the operation. If
          *                     successful, this is 0, otherwise a 
          *                     system-dependent error code that can be converted
-         *                     to a vislib::sys::SystemMessage.
+         *                     to a the::system::system_message.
          * @param data         The data pointer that was passed to Send(). If
          *                     Send() created a local copy for the queue, this
          *                     parameter will be NULL.
@@ -156,7 +156,7 @@ namespace net {
          *                  made.
          *
          * @throws SocketException       If the operation fails.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
         inline void Send(const void *data, const size_t cntBytes,

@@ -8,7 +8,7 @@
 //#include "vislib/IbvShared.h"
 //
 //#include "vislib/AutoLock.h"
-//#include "vislib/COMException.h"
+//#include "the/system/com_exception.h"
 //#include "vislib/StackTrace.h"
 //#include "vislib/sysfunctions.h"
 //#include "the/trace.h"
@@ -29,7 +29,7 @@
 //                reinterpret_cast<void **>(&IbvShared::wvProvider)))) {
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Acquiring WinVerbs "
 //                "provider failed with error code %d.\n", hr);
-//            throw sys::COMException(hr, __FILE__, __LINE__);    
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);    
 //        }
 //
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Opening completion "
@@ -38,7 +38,7 @@
 //            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Opening completion "
 //                "manager failed with error code %d.\n", hr);
 //            sys::SafeRelease(IbvShared::wvProvider);
-//            throw sys::COMException(hr, __FILE__, __LINE__);
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);
 //        }
 //
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Configuring completion "
@@ -49,7 +49,7 @@
 //                "monitoring failed with error code %d.\n", hr);
 //            ::CompManagerClose(&IbvShared::compMgr);
 //            sys::SafeRelease(IbvShared::wvProvider);
-//            throw sys::COMException(hr, __FILE__, __LINE__);
+//            throw the::system::com_exception(hr, __FILE__, __LINE__);
 //        }
 //
 //    } else {

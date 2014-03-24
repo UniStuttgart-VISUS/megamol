@@ -15,7 +15,7 @@
 
 
 #include "the/memory.h"
-#include "vislib/NoSuchElementException.h"
+#include "the/no_such_element_exception.h"
 #include "the/types.h"
 
 
@@ -82,7 +82,7 @@ namespace vislib {
          *
          * @return A pointer to the element on top of the stack.
          *
-         * @throws NoSuchElementException If the stack is empty.
+         * @throws no_such_element_exception If the stack is empty.
          */
         T *Peek(void) const;
 
@@ -91,7 +91,7 @@ namespace vislib {
          *
          * @return The element on top of the stack.
          *
-         * @throws NoSuchElementException If the stack is empty.
+         * @throws no_such_element_exception If the stack is empty.
          */
         T Pop(void);
 
@@ -112,7 +112,7 @@ namespace vislib {
          *
          * @return The element on top of the stack.
          *
-         * @throws NoSuchElementException If the stack is empty.
+         * @throws no_such_element_exception If the stack is empty.
          */
         const T& Top(void) const;
 
@@ -233,7 +233,7 @@ namespace vislib {
         if (this->top != NULL) {
             return &(this->top->element);
         } else {
-            throw NoSuchElementException("Empty stack.", __FILE__, __LINE__);
+            throw the::no_such_element_exception("Empty stack.", __FILE__, __LINE__);
         }
     }
 
@@ -248,7 +248,7 @@ namespace vislib {
             this->RemoveTop();
             return retval;
         } else {
-            throw NoSuchElementException("Empty stack.", __FILE__, __LINE__);
+            throw the::no_such_element_exception("Empty stack.", __FILE__, __LINE__);
         }
     }
 
@@ -275,7 +275,7 @@ namespace vislib {
         if (this->top != NULL) {
             return this->top->element;
         } else {
-            throw NoSuchElementException("Empty stack.", __FILE__, __LINE__);
+            throw the::no_such_element_exception("Empty stack.", __FILE__, __LINE__);
         }
     }
 

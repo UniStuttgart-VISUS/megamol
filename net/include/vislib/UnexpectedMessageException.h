@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/Exception.h"
+#include "the/exception.h"
 #include "vislib/SimpleMessageHeaderData.h"
 
 
@@ -27,7 +27,7 @@ namespace net {
      * This exception should be thrown in case a SimpleMessage was received
      * which was not expected.
      */
-    class UnexpectedMessageException : public Exception {
+    class UnexpectedMessageException : public the::exception {
 
     public:
 
@@ -78,7 +78,7 @@ namespace net {
          * @return *this.
          */
         virtual UnexpectedMessageException& operator =(
-			const UnexpectedMessageException& rhs);
+            const UnexpectedMessageException& rhs);
 
     private:
 

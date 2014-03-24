@@ -11,14 +11,14 @@
 #endif /* _WIN32 */
 
 #include "vislib/DynamicLinkLibrary.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
+#include "the/argument_exception.h"
+#include "the/invalid_operation_exception.h"
 #include "vislib/Path.h"
 #include "vislib/StringConverter.h"
 #ifdef _WIN32
-#include "vislib/SystemMessage.h"
+#include "the/system/system_message.h"
 #endif /* _WIN32 */
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -87,7 +87,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
     if (this->IsLoaded()) {
         this->loadErrorMsg = "Call to DynamicLinLibrary::Load() when"
             "a library was already loaded.";
-        throw IllegalStateException(this->loadErrorMsg, __FILE__, __LINE__);
+        throw the::invalid_operation_exception(this->loadErrorMsg, __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
@@ -100,7 +100,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
     this->hModule = ::LoadLibraryExA(moduleName, NULL, flags);
     ::SetErrorMode(oldErrorMode);
     if (this->hModule == NULL) {
-        this->loadErrorMsg = vislib::sys::SystemMessage(::GetLastError());
+        this->loadErrorMsg = vislib::StringA(the::system::system_message(::GetLastError()).operator the::astring().c_str());
     }
 #else /* _WIN32 */
 
@@ -122,7 +122,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
     if (this->IsLoaded()) {
         this->loadErrorMsg = "Call to DynamicLinLibrary::Load() when"
             "a library was already loaded.";
-        throw IllegalStateException(this->loadErrorMsg, __FILE__, __LINE__);
+        throw the::invalid_operation_exception(this->loadErrorMsg, __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
@@ -135,7 +135,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
     this->hModule = ::LoadLibraryExW(moduleName, NULL, flags);
     ::SetErrorMode(oldErrorMode);
     if (this->hModule == NULL) {
-        this->loadErrorMsg = vislib::sys::SystemMessage(::GetLastError());
+        this->loadErrorMsg = static_cast<std::string>(the::system::system_message(::GetLastError())).c_str();
     }
 #else /* _WIN32 */
     // Because we know, that Linux does not support a chefm‰ﬂige Unicode-API.
@@ -151,7 +151,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
  */
 vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary(
         const DynamicLinkLibrary& rhs) {
-    throw UnsupportedOperationException(
+    throw the::not_supported_exception(
         "vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary", __FILE__, 
         __LINE__);
 }
@@ -163,7 +163,7 @@ vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary(
 vislib::sys::DynamicLinkLibrary& vislib::sys::DynamicLinkLibrary::operator =(
         const DynamicLinkLibrary& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

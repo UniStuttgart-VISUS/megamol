@@ -9,7 +9,7 @@
 #include "vislib/d3dutils.h"
 
 #include "vislib/D3DException.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "the/stack_trace.h"
 #include "the/assert.h"
 
@@ -44,7 +44,7 @@ static bool IsDisplayModeLargerThan(const D3DDISPLAYMODE& displayMode,
             return (displayMode.Height > height);
 
         default:
-            throw vislib::IllegalParamException("criterion", __FILE__, 
+            throw the::argument_exception("criterion", __FILE__, 
                 __LINE__);
     }
 }
@@ -63,7 +63,7 @@ void vislib::graphics::d3d::GetBackbufferSize(UINT& outWidth, UINT& outHeight,
     D3DSURFACE_DESC backBufferDesc;
 
     if (device == NULL) {
-        throw IllegalParamException("device", __FILE__, __LINE__);
+        throw the::argument_exception("device", __FILE__, __LINE__);
     }
 
     if (FAILED(hr = device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, 
@@ -102,7 +102,7 @@ void vislib::graphics::d3d::GetMaximumFullscreenResolution(
 
     /* Sanity checks. */
     if (d3d == NULL) {
-        throw IllegalParamException("d3d", __FILE__, __LINE__);
+        throw the::argument_exception("d3d", __FILE__, __LINE__);
     }
 
     outWidth = outHeight = outRefreshRate = 0;
@@ -147,7 +147,7 @@ bool vislib::graphics::d3d::GetMaximumSharedFullscreenResolution(
 
     /* Sanity checks. */
     if (d3d == NULL) {
-        throw IllegalParamException("d3d", __FILE__, __LINE__);
+        throw the::argument_exception("d3d", __FILE__, __LINE__);
     }
 
     cntAdapters = d3d->GetAdapterCount();
@@ -223,7 +223,7 @@ bool vislib::graphics::d3d::IsFullscreenResolutionSupported(
 
     /* Sanity checks. */
     if (d3d == NULL) {
-        throw IllegalParamException("d3d", __FILE__, __LINE__);
+        throw the::argument_exception("d3d", __FILE__, __LINE__);
     }
 
     cntAdapterModes = d3d->GetAdapterModeCount(adapterID, format); 

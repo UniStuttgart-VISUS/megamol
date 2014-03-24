@@ -22,7 +22,7 @@
 
 #include "the/assert.h"
 #include "the/force_inline.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 #include "the/types.h"
 
 
@@ -103,7 +103,7 @@ namespace sys {
          *
          * @return The initial value of the variable designated by 'address'.
          *
-         * @throws UnsupportedOperationException If the platform does not 
+         * @throws not_supported_exception If the platform does not 
          *                                       support 64 bit interlocked
          *                                       operations.
          */
@@ -117,11 +117,11 @@ namespace sys {
                 static_cast<LONGLONG>(exchange),
                 static_cast<LONGLONG>(comparand));
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
-            throw UnsupportedOperationException("Interlocked::CompareExchange",
+            throw the::not_supported_exception("Interlocked::CompareExchange",
                 __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
 #else /* _WIN32 */
-            throw UnsupportedOperationException("Interlocked::CompareExchange",
+            throw the::not_supported_exception("Interlocked::CompareExchange",
                 __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
@@ -152,7 +152,7 @@ namespace sys {
          *
          * @return The new value of the variable.
          *
-         * @throws UnsupportedOperationException If the platform does not 
+         * @throws not_supported_exception If the platform does not 
          *                                       support 64 bit interlocked
          *                                       operations.
          */
@@ -163,11 +163,11 @@ namespace sys {
             return ::InterlockedDecrement64(
                 reinterpret_cast<volatile LONGLONG *>(address));
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
-            throw UnsupportedOperationException("Interlocked::Decrement",
+            throw the::not_supported_exception("Interlocked::Decrement",
                 __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
 #else /* _WIN32 */
-            throw UnsupportedOperationException("Interlocked::Decrement",
+            throw the::not_supported_exception("Interlocked::Decrement",
                 __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
@@ -204,7 +204,7 @@ namespace sys {
          *
          * @return The old value of the variable designated by 'address'.
          *
-         * @throws UnsupportedOperationException If the platform does not 
+         * @throws not_supported_exception If the platform does not 
          *                                       support 64 bit interlocked
          *                                       operations.
          */
@@ -217,7 +217,7 @@ namespace sys {
                 reinterpret_cast<volatile LONGLONG *>(address),
                 static_cast<LONGLONG>(value));
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
-            throw UnsupportedOperationException("Interlocked::Exchange",
+            throw the::not_supported_exception("Interlocked::Exchange",
                 __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
 #else /* _WIN32 */
@@ -297,7 +297,7 @@ namespace sys {
          * @return Value of variable designated by 'address' prior to the 
          *         operation.
          *
-         * @throws UnsupportedOperationException If the platform does not 
+         * @throws not_supported_exception If the platform does not 
          *                                       support 64 bit interlocked
          *                                       operations.
          */
@@ -310,11 +310,11 @@ namespace sys {
                 reinterpret_cast<volatile LONGLONG *>(address),
                 static_cast<LONGLONG>(value));
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
-            throw UnsupportedOperationException("Interlocked::ExchangeAdd",
+            throw the::not_supported_exception("Interlocked::ExchangeAdd",
                 __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
 #else /* _WIN32 */
-            throw UnsupportedOperationException("Interlocked::ExchangeAdd",
+            throw the::not_supported_exception("Interlocked::ExchangeAdd",
                 __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
@@ -351,7 +351,7 @@ namespace sys {
          * @return Value of variable designated by 'address' prior to the 
          *         operation.
          *
-         * @throws UnsupportedOperationException If the platform does not 
+         * @throws not_supported_exception If the platform does not 
          *                                       support 64 bit interlocked
          *                                       operations.
          */
@@ -390,7 +390,7 @@ namespace sys {
          *
          * @return The new value of the variable.
          *
-         * @throws UnsupportedOperationException If the platform does not 
+         * @throws not_supported_exception If the platform does not 
          *                                       support 64 bit interlocked
          *                                       operations.
          */
@@ -401,7 +401,7 @@ namespace sys {
             return ::InterlockedIncrement64(
                 reinterpret_cast<volatile LONGLONG *>(address));
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
-            throw UnsupportedOperationException("Interlocked::Increment",
+            throw the::not_supported_exception("Interlocked::Increment",
                 __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
 #else /* _WIN32 */
@@ -414,7 +414,7 @@ namespace sys {
         /**
          * Disallow instances.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         Interlocked(void);
 

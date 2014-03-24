@@ -18,15 +18,15 @@
 
 #include "the/assert.h"
 #include "vislib/File.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IOException.h"
+#include "the/argument_exception.h"
+#include "the/system/io/io_exception.h"
 #include "the/memory.h"
 #include "vislib/Path.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 #include "vislib/UTF8Encoder.h"
 
 
@@ -41,7 +41,7 @@
  *
  * @returns 'out'.
  *
- * @throws SystemException If the resource lookup or loading the resource
+ * @throws the::system::system_exception If the resource lookup or loading the resource
  *                         failed.
  */
 static vislib::RawStorage& loadResource(vislib::RawStorage& out, 
@@ -56,11 +56,11 @@ static vislib::RawStorage& loadResource(vislib::RawStorage& out,
         // compatibility, not because the function returns a handle to a 
         // global memory block. Do not pass this handle to the GlobalLock 
         // or GlobalFree function.
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     if ((size = ::SizeofResource(hModule, hRes)) == 0) {
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     data = ::LockResource(hGlobal);
@@ -82,7 +82,7 @@ vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
     HRSRC hRes = NULL;
     
     if ((hRes = ::FindResourceA(hModule, resourceID, resourceType)) == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     
     return ::loadResource(out, hModule, hRes);
@@ -90,7 +90,7 @@ vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
 #else /* _WIN32 */
 vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, void *hModule, 
         const char *resourceID, const char *resourceType) {
-    throw UnsupportedOperationException("LoadResource", __FILE__, __LINE__);
+    throw the::not_supported_exception("LoadResource", __FILE__, __LINE__);
 }
 #endif /* _WIN32 */
 
@@ -105,7 +105,7 @@ vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
     HRSRC hRes = NULL;
     
     if ((hRes = ::FindResourceW(hModule, resourceID, resourceType)) == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     
     return ::loadResource(out, hModule, hRes);
@@ -113,7 +113,7 @@ vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
 #else /* _WIN32 */
 vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, void *hModule, 
         const wchar_t *resourceID, const wchar_t *resourceType) {
-    throw UnsupportedOperationException("LoadResource", __FILE__, __LINE__);
+    throw the::not_supported_exception("LoadResource", __FILE__, __LINE__);
 }
 #endif /* _WIN32 */      
 
@@ -149,15 +149,15 @@ vislib::StringA vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
         }
         buf[pos] = '\0';
 
-    } catch(IOException e) {
+    } catch(the::system::io::io_exception e) {
         the::safe_array_delete(buf);
-        throw IOException(e);
-    } catch(Exception e) {
+        throw the::system::io::io_exception(e);
+    } catch(the::exception e) {
         the::safe_array_delete(buf);
-        throw Exception(e);
+        throw the::exception(e);
     } catch(...) {
         the::safe_array_delete(buf);
-        throw Exception("Unexcepted exception", __FILE__, __LINE__);
+        throw the::exception("Unexcepted exception", __FILE__, __LINE__);
     }
     StringA str(buf);
     delete[] buf;
@@ -196,15 +196,15 @@ vislib::StringW vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
         }
         buf[pos] = L'\0';
 
-    } catch(IOException e) {
+    } catch(the::system::io::io_exception e) {
         the::safe_array_delete(buf);
-        throw IOException(e);
-    } catch(Exception e) {
+        throw the::system::io::io_exception(e);
+    } catch(the::exception e) {
         the::safe_array_delete(buf);
-        throw Exception(e);
+        throw the::exception(e);
     } catch(...) {
         the::safe_array_delete(buf);
-        throw Exception("Unexcepted exception", __FILE__, __LINE__);
+        throw the::exception("Unexcepted exception", __FILE__, __LINE__);
     }
     StringW str(buf);
     delete[] buf;
@@ -522,12 +522,12 @@ HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion,
     HMODULE hModule = NULL;
 
     if ((hModule = ::LoadLibraryA(moduleName)) == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     if ((dllGetVersion = reinterpret_cast<DLLGETVERSIONPROC>(::GetProcAddress(
             hModule, "DllGetVersion"))) == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return dllGetVersion(&outVersion);
@@ -543,12 +543,12 @@ HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion,
     HMODULE hModule = NULL;
 
     if ((hModule = ::LoadLibraryW(moduleName)) == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     if ((dllGetVersion = reinterpret_cast<DLLGETVERSIONPROC>(::GetProcAddress(
             hModule, "DllGetVersion"))) == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return dllGetVersion(&outVersion);
@@ -621,7 +621,7 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
     // TODO: Ist das Verzeichnis sinnvoll? Eher nicht ...
     retval = ::ftok(Path::GetUserHomeDirectoryA().PeekBuffer(), n.HashCode());
     if (retval == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "TranslateIpcName(\"%s\") = %u\n", name, 

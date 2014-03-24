@@ -8,10 +8,10 @@
 #include "vislib/AbstractClientNode.h"
 
 #include "the/assert.h"
-#include "vislib/IllegalStateException.h"
+#include "the/invalid_operation_exception.h"
 #include "the/memory.h"
 #include "vislib/SocketException.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
 #include "vislib/unreferenced.h"
 
@@ -27,7 +27,7 @@ vislib::net::cluster::AbstractClientNode::~AbstractClientNode(void) {
         Socket::Cleanup();
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Exception while releasing "
-            "AbstractClientNode: %s\n", e.GetMsgA());
+            "AbstractClientNode: %s\n", e.what());
     }
 }
 
@@ -55,7 +55,7 @@ void vislib::net::cluster::AbstractClientNode::Initialise(
  */
 unsigned int vislib::net::cluster::AbstractClientNode::Run(void) {
     if (this->socket.IsValid() || (this->receiver.IsRunning())) {
-        throw IllegalStateException("AbstractClientNode::Run can only be "
+        throw the::invalid_operation_exception("AbstractClientNode::Run can only be "
             "called once for connecting to the server node.", __FILE__, 
             __LINE__);
     }
@@ -79,7 +79,7 @@ vislib::net::cluster::AbstractClientNode::AbstractClientNode(void)
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket::Startup failed in "
             "AbstractClientNode::ctor. The instance will probably not work. "
-            "Details: %s\n", e.GetMsgA());
+            "Details: %s\n", e.what());
     }
 }
 
@@ -96,7 +96,7 @@ vislib::net::cluster::AbstractClientNode::AbstractClientNode(
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket::Startup failed in "
             "AbstractClientNode::ctor. The instance will probably not work. "
-            "Details: %s\n", e.GetMsgA());
+            "Details: %s\n", e.what());
     }
 }
 
@@ -131,7 +131,7 @@ void vislib::net::cluster::AbstractClientNode::connect(
     }
     try {
         THE_VERIFY(this->receiver.Start(static_cast<void *>(rmc)));
-    } catch (Exception e) {
+    } catch (the::exception e) {
         FreeRecvMsgCtx(rmc);
         throw e;
     }
@@ -185,10 +185,10 @@ size_t vislib::net::cluster::AbstractClientNode::forEachPeer(
     try {
         func(this, this->serverAddress, this->socket, context);
         retval = 1;
-    } catch (Exception& e) {
+    } catch (the::exception e) {
         VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed "
-            "with an exception: %s\n", e.GetMsgA());
+            "with an exception: %s\n", e.what());
     } catch (...) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed "
             "with a non-VISlib exception.\n");
@@ -208,10 +208,10 @@ bool vislib::net::cluster::AbstractClientNode::forPeer(
         try {
             func(this, this->serverAddress, this->socket, context);
             retval = true;
-        } catch (Exception& e) {
+        } catch (the::exception e) {
             VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed "
-                "with an exception: %s\n", e.GetMsgA());
+                "with an exception: %s\n", e.what());
         } catch (...) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed "
                 "with a non-VISlib exception.\n");
@@ -239,7 +239,7 @@ void vislib::net::cluster::AbstractClientNode::onMessageReceiverExiting(
     //        this->connect(rmc);
     //    } catch (Exception& e) {
     //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Reconnection attempt failed: %s\n",
-    //            e.GetMsgA());
+    //            e.what());
     //    } catch (...) {
     //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Reconnection attempt failed.\n");
     //    }

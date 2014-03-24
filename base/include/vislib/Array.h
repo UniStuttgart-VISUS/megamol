@@ -30,7 +30,7 @@
 #include "the/assert.h"
 #include "vislib/Iterator.h"
 #include "vislib/OrderedCollection.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/index_out_of_range_exception.h"
 #include "the/memory.h"
 #include "vislib/NullLockable.h"
 #include "the/types.h"
@@ -262,7 +262,7 @@ namespace vislib {
          *
          * @return A reference to the first element in the array.
          *
-         * @throws OutOfRangeException, if the array is empty.
+         * @throws index_out_of_range_exception, if the array is empty.
          */
         virtual inline const T& First(void) const {
             return (*this)[0];
@@ -273,7 +273,7 @@ namespace vislib {
          *
          * @return A reference to the first element in the array.
          *
-         * @throws OutOfRangeException, if the array is empty.
+         * @throws index_out_of_range_exception, if the array is empty.
          */
         virtual inline T& First(void) {
             return (*this)[0];
@@ -300,7 +300,7 @@ namespace vislib {
          * @param idx     The position to insert the element at.
          * @param element The element to add.
          *
-         * @throws OutOfRangeException If 'idx' is not within 
+         * @throws index_out_of_range_exception If 'idx' is not within 
          *                             [0, this->Count()].
          */
         virtual void Insert(const size_t idx, const T& element);
@@ -318,7 +318,7 @@ namespace vislib {
          *
          * @return A reference to the last element in the array.
          *
-         * @throws OutOfRangeException, if the array is empty.
+         * @throws index_out_of_range_exception, if the array is empty.
          */
         virtual const T& Last(void) const;
 
@@ -327,7 +327,7 @@ namespace vislib {
          *
          * @return A reference to the last element in the array.
          *
-         * @throws OutOfRangeException, if the array is empty.
+         * @throws index_out_of_range_exception, if the array is empty.
          */
         virtual T& Last(void);
 
@@ -431,7 +431,7 @@ namespace vislib {
 
          * @return A reference to the 'idx'th element.
          *
-         * @throws OutOfRangeException If 'idx' is not within 
+         * @throws index_out_of_range_exception If 'idx' is not within 
          *                             [0, this->Count()[.
          */
         T& operator [](const size_t idx);
@@ -444,7 +444,7 @@ namespace vislib {
          *
          * @return A reference to the 'idx'th element.
          *
-         * @throws OutOfRangeException If 'idx' is not within 
+         * @throws index_out_of_range_exception If 'idx' is not within 
          *                             [0, this->Count()[.
          */
         const T& operator [](const size_t idx) const;
@@ -457,7 +457,7 @@ namespace vislib {
          *
          * @return A reference to the 'idx'th element.
          *
-         * @throws OutOfRangeException If 'idx' is not within 
+         * @throws index_out_of_range_exception If 'idx' is not within 
          *                             [0, this->Count()[.
          */
         template<typename Tp>
@@ -473,7 +473,7 @@ namespace vislib {
          *
          * @return A reference to the 'idx'th element.
          *
-         * @throws OutOfRangeException If 'idx' is not within 
+         * @throws index_out_of_range_exception If 'idx' is not within 
          *                             [0, this->Count()[.
          */
         template<typename Tp>
@@ -494,7 +494,7 @@ namespace vislib {
 //         *
 //         * @return A reference to the 'idx'th element.
 //         *
-//         * @throws OutOfRangeException If 'idx' is not within 
+//         * @throws index_out_of_range_exception If 'idx' is not within 
 //         *                             [0, this->Count()[.
 //         */
 //        inline T& operator [](const unsigned long idx) {
@@ -509,7 +509,7 @@ namespace vislib {
 //         *
 //         * @return A reference to the 'idx'th element.
 //         *
-//         * @throws OutOfRangeException If 'idx' is not within 
+//         * @throws index_out_of_range_exception If 'idx' is not within 
 //         *                             [0, this->Count()[.
 //         */
 //        const T& operator [](const unsigned long idx) const {
@@ -867,7 +867,7 @@ namespace vislib {
 
         } else {
             this->Unlock();
-            throw OutOfRangeException(static_cast<int>(idx), 0, 
+            throw the::index_out_of_range_exception(static_cast<int>(idx), 0, 
                 static_cast<int>(this->count), __FILE__, __LINE__);
         }
 
@@ -1166,7 +1166,7 @@ namespace vislib {
             return retval;
         } else {
             this->Unlock();
-            throw OutOfRangeException(static_cast<int>(idx), 0, 
+            throw the::index_out_of_range_exception(static_cast<int>(idx), 0, 
                 static_cast<int>(this->count - 1), __FILE__, __LINE__);
         }
     }
@@ -1184,7 +1184,7 @@ namespace vislib {
             return retval;
         } else {
             this->Unlock();
-            throw OutOfRangeException(static_cast<int>(idx), 0, 
+            throw the::index_out_of_range_exception(static_cast<int>(idx), 0, 
                 static_cast<int>(this->count - 1), __FILE__, __LINE__);
         }
     }

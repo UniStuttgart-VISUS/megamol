@@ -93,7 +93,7 @@ namespace sys {
          * thread can aquire any further shared locks, unless that thread
          * currently holds the exclusive lock.
          *
-         * @throws IllegalStateException if the calling thread holds a shared
+         * @throws invalid_operation_exception if the calling thread holds a shared
          *                               lock
          */
         virtual void LockExclusive(void);
@@ -116,7 +116,7 @@ namespace sys {
          * This method must be called for each time 'LockExclusive' was called
          * to release the exclusive lock.
          *
-         * @throws IllegalStateException if the current thread does not hold
+         * @throws invalid_operation_exception if the current thread does not hold
          *                               the exclusive lock
          */
         virtual void UnlockExclusive(void);
@@ -127,7 +127,7 @@ namespace sys {
          * This method must be called for each time 'LockShared' was called to
          * release all shared locks.
          *
-         * @throws IllegalStateException if the current thread does not hold
+         * @throws invalid_operation_exception if the current thread does not hold
          *                               any shared lock
          */
         virtual void UnlockShared(void);

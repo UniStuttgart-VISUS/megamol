@@ -112,7 +112,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Always.
+         * @throws not_supported_exception Always.
          */
         LamportClock(const LamportClock& rhs);
 
@@ -121,7 +121,7 @@ namespace sys {
          *
          * @param rhs The right hand side operand.
          *
-         * @throws IllegalParamException if &rhs != this.
+         * @throws argument_exception if &rhs != this.
          */
         LamportClock& operator =(const LamportClock& rhs);
 

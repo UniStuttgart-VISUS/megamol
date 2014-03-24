@@ -7,8 +7,8 @@
 
 #include "vislib/LamportClock.h"
 
-#include "vislib/IllegalParamException.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/argument_exception.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -57,7 +57,7 @@ uint64_t vislib::sys::LamportClock::operator ++(int) {
  * vislib::sys::LamportClock::LamportClock
  */
 vislib::sys::LamportClock::LamportClock(const LamportClock& rhs) {
-    throw UnsupportedOperationException("LamportClock::LamportClock", __FILE__, 
+    throw the::not_supported_exception("LamportClock::LamportClock", __FILE__, 
         __LINE__);
 }
 
@@ -68,7 +68,7 @@ vislib::sys::LamportClock::LamportClock(const LamportClock& rhs) {
 vislib::sys::LamportClock& vislib::sys::LamportClock::operator =(
         const LamportClock& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

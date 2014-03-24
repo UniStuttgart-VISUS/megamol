@@ -17,11 +17,11 @@
 
 #include "the/assert.h"
 #include "vislib/error.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/sysfunctions.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -78,7 +78,7 @@ void vislib::sys::IPCSemaphore::Lock(void) {
     struct sembuf lock = { MEMBER_IDX, -1, 0 };
 
     if ((::semop(this->id, &lock, 1)) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 }
 
@@ -98,7 +98,7 @@ bool vislib::sys::IPCSemaphore::TryLock(void) {
         if ((error = ::GetLastError()) == EAGAIN) {
             return false;
         } else {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
     }
 
@@ -119,7 +119,7 @@ void vislib::sys::IPCSemaphore::Unlock(void) {
     //}
 
     if ((::semop(this->id, &unlock, 1)) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 }
 
@@ -143,7 +143,7 @@ const int vislib::sys::IPCSemaphore::MEMBER_IDX = 0;
 int vislib::sys::IPCSemaphore::getCount(void) {
     int retval = ::semctl(this->id, MEMBER_IDX, GETVAL, 0);
     if (retval == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return retval;
@@ -157,7 +157,7 @@ int vislib::sys::IPCSemaphore::getCount(void) {
  * vislib::sys::IPCSemaphore::IPCSemaphore
  */
 vislib::sys::IPCSemaphore::IPCSemaphore(const IPCSemaphore& rhs) {
-    throw UnsupportedOperationException("IPCSemaphore::IPCSemaphore",
+    throw the::not_supported_exception("IPCSemaphore::IPCSemaphore",
         __FILE__, __LINE__);
 }
 
@@ -168,7 +168,7 @@ vislib::sys::IPCSemaphore::IPCSemaphore(const IPCSemaphore& rhs) {
 vislib::sys::IPCSemaphore& vislib::sys::IPCSemaphore::operator =(
         const IPCSemaphore& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

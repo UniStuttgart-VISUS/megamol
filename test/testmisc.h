@@ -22,7 +22,7 @@ void TestTrace(void);
 
 void TestExceptions(void);
 
-void TestSystemMessage(void);
+void Test_system_message(void);
 
 void TestPerformanceCounter(void);
 

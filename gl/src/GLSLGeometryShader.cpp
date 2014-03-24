@@ -205,7 +205,7 @@ bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
         the::safe_array_delete(geometryShaderSrcPtrs);
         the::safe_array_delete(fragmentShaderSrcPtrs);
         throw e;
-    } catch(Exception e) {
+    } catch(the::exception e) {
         the::safe_array_delete(vertexShaderSrcPtrs);
         the::safe_array_delete(geometryShaderSrcPtrs);
         the::safe_array_delete(fragmentShaderSrcPtrs);
@@ -214,7 +214,7 @@ bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
         the::safe_array_delete(vertexShaderSrcPtrs);
         the::safe_array_delete(geometryShaderSrcPtrs);
         the::safe_array_delete(fragmentShaderSrcPtrs);
-        throw Exception("Unknown Exception", __FILE__, __LINE__);
+        throw the::exception("Unknown Exception", __FILE__, __LINE__);
     }
 
     return false; // should be unreachable code!

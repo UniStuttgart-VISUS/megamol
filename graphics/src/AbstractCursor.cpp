@@ -77,7 +77,7 @@ void vislib::graphics::AbstractCursor::SetButtonState(unsigned int btn,
     //          one checks for this error here. Therefore, I think it is better
     //          to fail silently.
     //if (btn >= this->btnCnt) {
-    //    throw IllegalParamException("btn", __FILE__, __LINE__);
+    //    throw the::argument_exception("btn", __FILE__, __LINE__);
     //}
     if (btn >= this->btnCnt) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "%d is an illegal value for \"btn\".\n");
@@ -116,7 +116,7 @@ void vislib::graphics::AbstractCursor::ModifierChanged(
 // */
 //void vislib::graphics::AbstractCursor::SetModifierState(unsigned int modifier, bool down) {
 //    if (modifier >= this->modCnt) {
-//        throw IllegalParamException("btn", __FILE__, __LINE__);
+//        throw the::argument_exception("btn", __FILE__, __LINE__);
 //    }
 //
 //    if (down) {

@@ -11,8 +11,8 @@
 #include <cstdlib>
 
 #include "vislib/DNS.h"
-#include "vislib/IllegalStateException.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/invalid_operation_exception.h"
+#include "the/index_out_of_range_exception.h"
 #include "the/memory.h"
 
 
@@ -55,7 +55,7 @@ vislib::net::IPAgnosticAddress vislib::net::IPAgnosticAddress::CreateAny(
             return IPAgnosticAddress(IPAddress6::ANY);
 
         default:
-            throw IllegalParamException("addressFamily", __FILE__, __LINE__);
+            throw the::argument_exception("addressFamily", __FILE__, __LINE__);
     }
 }
 
@@ -316,7 +316,7 @@ uint8_t vislib::net::IPAgnosticAddress::operator [](const int i) const {
         return this->v6->operator [](i);
 
     } else {
-        throw IllegalStateException("The IPAgnosticAddress has no data to "
+        throw the::invalid_operation_exception("The IPAgnosticAddress has no data to "
             "be accessed.", __FILE__, __LINE__);
     }
 }
@@ -495,7 +495,7 @@ vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress(void) const {
         return static_cast<IPAddress>(*(this->v6));
 
     } else {
-        throw IllegalStateException("The IPAgnosticAddress cannot be converted "
+        throw the::invalid_operation_exception("The IPAgnosticAddress cannot be converted "
             "to an IPv4 address.", __FILE__, __LINE__);
     }
 }
@@ -511,7 +511,7 @@ vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress *(
     if (this->IsV4()) {
         return this->v4;
     } else {
-        throw IllegalStateException("The IPAgnosticAddress does not represent "
+        throw the::invalid_operation_exception("The IPAgnosticAddress does not represent "
             "an IPv4 address.", __FILE__, __LINE__);
     }
 }
@@ -526,7 +526,7 @@ vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress *(void) {
     if (this->IsV4()) {
         return this->v4;
     } else {
-        throw IllegalStateException("The IPAgnosticAddress does not represent "
+        throw the::invalid_operation_exception("The IPAgnosticAddress does not represent "
             "an IPv4 address.", __FILE__, __LINE__);
     }
 }
@@ -560,7 +560,7 @@ vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress6 *(
     if (this->IsV6()) {
         return this->v6;
     } else {
-        throw IllegalStateException("The IPAgnosticAddress does not represent "
+        throw the::invalid_operation_exception("The IPAgnosticAddress does not represent "
             "an IPv6 address.", __FILE__, __LINE__);
     }
 }
@@ -575,7 +575,7 @@ vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress6 *(void) {
     if (this->IsV6()) {
         return this->v6;
     } else {
-        throw IllegalStateException("The IPAgnosticAddress does not represent "
+        throw the::invalid_operation_exception("The IPAgnosticAddress does not represent "
             "an IPv6 address.", __FILE__, __LINE__);
     }
 }

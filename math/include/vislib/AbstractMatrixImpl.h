@@ -19,11 +19,11 @@
 #include <iostream>
 
 #include "the/assert.h"
-#include "vislib/Exception.h"
+#include "the/exception.h"
 #include "the/force_inline.h"
 #include "vislib/mathfunctions.h"
 #include "the/memory.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/index_out_of_range_exception.h"
 #include "vislib/Point.h"
 #include "vislib/Polynom.h"
 #include "vislib/ShallowVector.h"
@@ -92,7 +92,7 @@ namespace math {
          *
          * @return The matrix value at 'row', 'col'.
          *
-         * @throws OutOfRangeException If 'row' and 'col' does not designate a 
+         * @throws index_out_of_range_exception If 'row' and 'col' does not designate a 
          *         valid matrix component within [0, D[.
          */
         inline T GetAt(const int row, const int col) const {
@@ -107,7 +107,7 @@ namespace math {
          *
          * @return A reference to 'row', 'col'.
          *
-         * @throws OutOfRangeException If 'row' and 'col' does not designate a 
+         * @throws index_out_of_range_exception If 'row' and 'col' does not designate a 
          *                             valid matrix component within [0, D[.
          */
         inline T& GetAt(const int row, const int col) {
@@ -121,7 +121,7 @@ namespace math {
          *
          * @return The requested vector.
          *
-         * @throws OutOfRangeException If 'col' is not within [0, D[.
+         * @throws index_out_of_range_exception If 'col' is not within [0, D[.
          */
         Vector<T, D> GetColumn(const int col) const;
 
@@ -132,7 +132,7 @@ namespace math {
          *
          * @return The requested vector.
          *
-         * @throws OutOfRangeException If 'row' is not within [0, D[.
+         * @throws index_out_of_range_exception If 'row' is not within [0, D[.
          */
         Vector<T, D> GetRow(const int row) const;
 
@@ -505,7 +505,7 @@ namespace math {
         // *
         // * @return A reference to the 'i'th component.
         // *
-        // * @throws OutOfRangeException, if 'i' is not within [0, D * D[.
+        // * @throws index_out_of_range_exception, if 'i' is not within [0, D * D[.
         // */
         //T& operator [](const int i);
 
@@ -518,7 +518,7 @@ namespace math {
         // *
         // * @return Tthe 'i'th component.
         // *
-        // * @throws OutOfRangeException, if 'i' is not within [0, D * D[.
+        // * @throws index_out_of_range_exception, if 'i' is not within [0, D * D[.
         // */
         //T operator [](const int i) const;
 
@@ -530,7 +530,7 @@ namespace math {
          *
          * @return The matrix value at 'row', 'col'.
          *
-         * @throws OutOfRangeException If 'row' and 'col' does not designate a 
+         * @throws index_out_of_range_exception If 'row' and 'col' does not designate a 
          *         valid matrix component within [0, D[.
          */
         T operator ()(const int row, const int col) const;
@@ -543,7 +543,7 @@ namespace math {
          *
          * @return A reference to 'row', 'col'.
          *
-         * @throws OutOfRangeException If 'row' and 'col' does not designate a 
+         * @throws index_out_of_range_exception If 'row' and 'col' does not designate a 
          *         valid matrix component within [0, D[.
          */
         T& operator ()(const int row, const int col);
@@ -974,7 +974,7 @@ namespace math {
             this->components[idx] = value;
 
         } else {
-            throw OutOfRangeException(idx, 0, CNT_COMPONENTS - 1, __FILE__, 
+            throw the::index_out_of_range_exception(idx, 0, CNT_COMPONENTS - 1, __FILE__, 
                 __LINE__);
         }        
     }
@@ -1255,7 +1255,7 @@ namespace math {
     //    if ((i >= 0) && (i < static_cast<int>(CNT_COMPONENTS))) {
     //        return this->components[i];
     //    } else {
-    //        throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
+    //        throw the::index_out_of_range_exception(i, 0, D - 1, __FILE__, __LINE__);
     //    }
     //}
 
@@ -1270,7 +1270,7 @@ namespace math {
     //    if ((i >= 0) && (i < static_cast<int>(CNT_COMPONENTS))) {
     //        return this->components[i];
     //    } else {
-    //        throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
+    //        throw the::index_out_of_range_exception(i, 0, D - 1, __FILE__, __LINE__);
     //    }
     //}
 
@@ -1287,7 +1287,7 @@ namespace math {
         if ((idx >= 0) && (idx < static_cast<int>(CNT_COMPONENTS))) {
             return this->components[idx];
         } else {
-            throw OutOfRangeException(idx, 0, CNT_COMPONENTS - 1, __FILE__, 
+            throw the::index_out_of_range_exception(idx, 0, CNT_COMPONENTS - 1, __FILE__, 
                 __LINE__);
         }
     }
@@ -1305,7 +1305,7 @@ namespace math {
         if ((idx >= 0) && (idx < static_cast<int>(CNT_COMPONENTS))) {
             return this->components[idx];
         } else {
-            throw OutOfRangeException(idx, 0, CNT_COMPONENTS - 1, __FILE__, 
+            throw the::index_out_of_range_exception(idx, 0, CNT_COMPONENTS - 1, __FILE__, 
                 __LINE__);
         }
     }
@@ -1381,7 +1381,7 @@ namespace math {
         }
 
         if (!B[0].IsNull()) {
-            throw Exception("Characteristic polynom calculation failed",
+            throw the::exception("Characteristic polynom calculation failed",
                 __FILE__, __LINE__);
         }
 
@@ -1555,7 +1555,7 @@ namespace math {
                 }
                 if (m != l) {
                     if (iter++ == MAX_ITER) {
-                        throw vislib::Exception(
+                        throw the::exception(
                             "Too many iterations in FindEigenvalues",
                             __FILE__, __LINE__);
                     }

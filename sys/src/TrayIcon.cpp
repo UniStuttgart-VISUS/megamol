@@ -10,7 +10,7 @@
 #include "the/assert.h"
 #include "vislib/StringConverter.h"
 #include "vislib/sysfunctions.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
 
 
@@ -38,9 +38,9 @@ vislib::sys::TrayIcon::TrayIcon(HINSTANCE hInstance) {
 vislib::sys::TrayIcon::~TrayIcon(void) {
     try {
         this->Destroy();
-    } catch (SystemException e) {
+    } catch (the::system::system_exception e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Unexpected exception in dtor "
-            "of tray icon. The exception message is: %s\n", e.GetMsgA());
+            "of tray icon. The exception message is: %s\n", e.what());
     }
 
     if (this->hWnd != NULL) {
@@ -73,7 +73,7 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const unsigned int callbackMe
         
         /* Register window class, if necessary. */
         if (!this->registerWndClass()) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
 
         /* Destroy old window, if any. */
@@ -85,7 +85,7 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const unsigned int callbackMe
         if ((this->hWnd = ::CreateWindowW(TrayIcon::WNDCLASSNAME, L"", WS_POPUP,
                 CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 
                 NULL, 0, this->hInstance, 0)) == NULL) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
 
         /* Register pointer to this object as user data. */
@@ -162,7 +162,7 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const unsigned int callbackMe
     HICON icon = ::LoadIconW(hResourceModule, MAKEINTRESOURCEW(iconID));
 
     if (icon == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     this->Create(targetWnd, 
@@ -551,9 +551,9 @@ bool vislib::sys::TrayIcon::init(HINSTANCE hInstance) {
         if (GetDLLVersion(shellVersion, "shell32.dll") != NOERROR) {
             return false;
         }
-    } catch (SystemException e) {
+    } catch (the::system::system_exception e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Retrieving shell version failed: "
-            "%s (%u).\n", e.GetMsgA(), e.GetErrorCode());
+            "%s (%u).\n", e.what(), e.get_error().native_error());
         return false;
     }
 
@@ -576,7 +576,7 @@ bool vislib::sys::TrayIcon::init(HINSTANCE hInstance) {
  */
 void vislib::sys::TrayIcon::notify(const unsigned int message) {
     if (!::Shell_NotifyIconW(message, &this->nid)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 	this->nid.uFlags = 0;
 }

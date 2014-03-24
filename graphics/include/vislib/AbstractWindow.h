@@ -22,7 +22,7 @@
 
 #include "vislib/Dimension.h"
 #include "vislib/Point.h"
-#include "vislib/MissingImplementationException.h"
+#include "the/not_implemented_exception.h"
 #include "the/stack_trace.h"
 #include "vislib/String.h"
 
@@ -53,7 +53,7 @@ namespace graphics {
         /**
          * Close the window.
          *
-         * @throws SystemException In case the window could not be closed, e.g.
+         * @throws the::system::system_exception In case the window could not be closed, e.g.
          *                         because it was not open.
          */
         void Close(void);
@@ -67,9 +67,9 @@ namespace graphics {
          * @param width  The desired width of the client area of the window.
          * @param height The desired height of the client area of the window.
          * 
-         * @throws IllegalStateException If the window handle of the object has
+         * @throws invalid_operation_exception If the window handle of the object has
          *                               already been set.
-         * @throws SystemException If the instance handle could not be retrieved
+         * @throws the::system::system_exception If the instance handle could not be retrieved
          *                         or if the window rectangle could not be 
          *                         adjusted in size.
          */
@@ -85,9 +85,9 @@ namespace graphics {
          * @param width  The desired width of the client area of the window.
          * @param height The desired height of the client area of the window.
          * 
-         * @throws IllegalStateException If the window handle of the object has
+         * @throws invalid_operation_exception If the window handle of the object has
          *                               already been set.
-         * @throws SystemException If the instance handle could not be retrieved
+         * @throws the::system::system_exception If the instance handle could not be retrieved
          *                         or if the window rectangle could not be 
          *                         adjusted in size.
          */
@@ -99,7 +99,7 @@ namespace graphics {
          *
          * @return The position of the window.
          *
-         * @throws SystemException In case of an error.
+         * @throws the::system::system_exception In case of an error.
          */
         Point GetPosition(void) const;
 
@@ -108,7 +108,7 @@ namespace graphics {
          *
          * @return The size of the window.
          *
-         * @throws SystemException In case of an error.
+         * @throws the::system::system_exception In case of an error.
          */
         Dimension GetSize(void) const;
 
@@ -120,7 +120,7 @@ namespace graphics {
 #ifdef _WIN32
             ::ShowWindow(this->hWnd, SW_HIDE);
 #else /* _WIN32 */
-            throw MissingImplementationException("AbstractWindow::Hide",
+            throw the::not_implemented_exception("AbstractWindow::Hide",
                 __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
@@ -153,7 +153,7 @@ namespace graphics {
 #ifdef _WIN32
             ::ShowWindow(this->hWnd, SW_SHOW);
 #else /* _WIN32 */
-            throw MissingImplementationException("AbstractWindow::Show",
+            throw the::not_implemented_exception("AbstractWindow::Show",
                 __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
@@ -279,7 +279,7 @@ namespace graphics {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         AbstractWindow(const AbstractWindow& rhs);
 
@@ -296,7 +296,7 @@ namespace graphics {
         // *
         // * @return The name of the class that has been registered.
         // *
-        // * @throws SystemException If the instance handle could not be 
+        // * @throws the::system::system_exception If the instance handle could not be 
         // *                         retrieved or the window class could not
         // *                         be registered.
         // */
@@ -317,7 +317,7 @@ namespace graphics {
          *
          * @return The name of the class that has been registered.
          *
-         * @throws SystemException If the instance handle could not be 
+         * @throws the::system::system_exception If the instance handle could not be 
          *                         retrieved or the window class could not
          *                         be registered.
          */
@@ -331,7 +331,7 @@ namespace graphics {
          *
          * @return *this
          *
-         * @throws IllegalParamException if (this != &rhs).
+         * @throws argument_exception if (this != &rhs).
          */
         AbstractWindow& operator =(const AbstractWindow& rhs);
     };

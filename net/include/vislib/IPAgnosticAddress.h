@@ -107,7 +107,7 @@ namespace net {
          *
          * @return ANY4 or ANY6 depending on 'addressFamily'.
          *
-         * @throws IllegalParamException If 'addressFamily' is not supported.
+         * @throws argument_exception If 'addressFamily' is not supported.
          */
         static IPAgnosticAddress CreateAny(const AddressFamily addressFamily);
 
@@ -314,8 +314,8 @@ namespace net {
          *
          * @return The 'i'th byte of the address.
          *
-         * @throws OutOfRangeException If 'i' is not a legal byte number.
-         * @throws IllegalStateException If the address is invalid.
+         * @throws index_out_of_range_exception If 'i' is not a legal byte number.
+         * @throws invalid_operation_exception If the address is invalid.
          */
         uint8_t operator [](const int i) const;
 
@@ -478,7 +478,7 @@ namespace net {
          *
          * @return The IPv4 address that is equivalent to this address.
          *
-         * @throws IllegalStateException If the address is neither IPv4 nor can
+         * @throws invalid_operation_exception If the address is neither IPv4 nor can
          *                               be casted to an IPv4 address.
          */
         operator IPAddress(void) const;
@@ -491,7 +491,7 @@ namespace net {
          *
          * @return The IPv4 address that is equivalent to this address.
          *
-         * @throws IllegalStateException If the address is not IPv4.
+         * @throws invalid_operation_exception If the address is not IPv4.
          */
         operator const IPAddress *(void) const;
 
@@ -505,7 +505,7 @@ namespace net {
          *
          * @return The IPv4 address that is equivalent to this address.
          *
-         * @throws IllegalStateException If the address is not IPv4.
+         * @throws invalid_operation_exception If the address is not IPv4.
          */
         operator IPAddress *(void);
 
@@ -519,7 +519,7 @@ namespace net {
          *
          * @return The IPv6 address that is equivalent to this address.
          *
-         * @throws IllegalStateException If the address is neither IPv6 nor can
+         * @throws invalid_operation_exception If the address is neither IPv6 nor can
          *                               be casted to an IPv6 address.
          */
         operator IPAddress6(void) const;
@@ -534,7 +534,7 @@ namespace net {
          *
          * @return The IPv6 address that is equivalent to this address.
          *
-         * @throws IllegalStateException If the address is not IPv6.
+         * @throws invalid_operation_exception If the address is not IPv6.
          */
         operator const IPAddress6 *(void) const;
 
@@ -548,7 +548,7 @@ namespace net {
          *
          * @return The IPv6 address that is equivalent to this address.
          *
-         * @throws IllegalStateException If the address is not IPv6.
+         * @throws invalid_operation_exception If the address is not IPv6.
          */
         operator IPAddress6 *(void);
 

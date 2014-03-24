@@ -16,13 +16,13 @@
 #endif /* !_WIN32 */
 
 #include "vislib/error.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "the/memory.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 
@@ -59,14 +59,14 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
 #ifdef _WIN32
     if (::LogonUserA(username, domain, password, LOGON32_LOGON_INTERACTIVE,
             LOGON32_PROVIDER_DEFAULT, &this->hToken) == FALSE) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     
     if (::ImpersonateLoggedOnUser(this->hToken) == FALSE) {
         unsigned int errorCode = ::GetLastError();
         ::CloseHandle(this->hToken);
         this->hToken = NULL;
-        throw SystemException(errorCode, __FILE__, __LINE__);
+        throw the::system::system_exception(errorCode, __FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -87,7 +87,7 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
         errorCode = ::GetLastError();
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::sysconf(_SC_GETPW_R_SIZE_MAX) "
             "failed.\n");
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     buf = new char[bufLen];
     THE_ASSERT(buf != NULL);
@@ -98,14 +98,14 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
         errorCode = ::GetLastError();
         the::safe_array_delete(buf);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::getpwnam_r failed.\n");
-        throw SystemException(errorCode, __FILE__, __LINE__);
+        throw the::system::system_exception(errorCode, __FILE__, __LINE__);
     }
     if (ppw == NULL) {
         /* User was not found. */
         the::safe_array_delete(buf);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Cannot impersonate, because the "
             "user \"%s\" does not exist.\n", username);
-        throw SystemException(ENOENT, __FILE__, __LINE__);
+        throw the::system::system_exception(ENOENT, __FILE__, __LINE__);
     }
 
     /* Get shadow password of target user (pw.passwd is not valid!). */
@@ -113,7 +113,7 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
         errorCode = ::GetLastError();
         the::safe_array_delete(buf);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::getspnam_r failed.\n");
-        throw SystemException(errorCode, __FILE__, __LINE__);
+        throw the::system::system_exception(errorCode, __FILE__, __LINE__);
     }
     THE_ASSERT(pspw != NULL);
     if (pspw == NULL) {
@@ -121,7 +121,7 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
         the::safe_array_delete(buf);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Cannot impersonate, because the "
             "user \"%s\" does not exist.\n", username);
-        throw SystemException(ENOENT, __FILE__, __LINE__);
+        throw the::system::system_exception(ENOENT, __FILE__, __LINE__);
     }
 
     /* Check login data using passwd we retrieved. */
@@ -132,7 +132,7 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Cannot impersonate, because the "
                 "password is invalid: Expected \"%s\", but got \"%s\".\n",
                 spw.sp_pwdp, ::crypt(password, spw.sp_pwdp));
-            throw SystemException(EPERM, __FILE__, __LINE__);
+            throw the::system::system_exception(EPERM, __FILE__, __LINE__);
         }
     }
     /* Authentication OK when here. */
@@ -142,14 +142,14 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
         errorCode = ::GetLastError();
         the::safe_array_delete(buf);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::seteuid failed.\n");
-        throw SystemException(errorCode, __FILE__, __LINE__);
+        throw the::system::system_exception(errorCode, __FILE__, __LINE__);
     }
     if (::setegid(pw.pw_gid) != 0) {
         errorCode = ::GetLastError();
         ::seteuid(this->revertToUid);
         the::safe_array_delete(buf);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::setegid failed.\n");
-        throw SystemException(errorCode, __FILE__, __LINE__);
+        throw the::system::system_exception(errorCode, __FILE__, __LINE__);
     }
 
     the::safe_array_delete(buf);
@@ -168,14 +168,14 @@ void vislib::sys::ImpersonationContext::Impersonate(const wchar_t *username,
 
     if (::LogonUserW(username, domain, password, LOGON32_LOGON_INTERACTIVE,
             LOGON32_PROVIDER_DEFAULT, &this->hToken) == FALSE) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     if (::ImpersonateLoggedOnUser(this->hToken) == FALSE) {
         unsigned int errorCode = ::GetLastError();
         ::CloseHandle(this->hToken);
         this->hToken = NULL;
-        throw SystemException(errorCode, __FILE__, __LINE__);
+        throw the::system::system_exception(errorCode, __FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -189,7 +189,7 @@ void vislib::sys::ImpersonationContext::Impersonate(const wchar_t *username,
  */
 vislib::sys::ImpersonationContext::ImpersonationContext(
         const ImpersonationContext& rhs) {
-    throw UnsupportedOperationException("ImpersonationContext", __FILE__, 
+    throw the::not_supported_exception("ImpersonationContext", __FILE__, 
         __LINE__);
 }
 
@@ -201,7 +201,7 @@ void vislib::sys::ImpersonationContext::revert(const bool isSilent) {
 #ifdef _WIN32
     if (this->hToken != NULL) {
         if (!::RevertToSelf() && !isSilent) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
 
         ::CloseHandle(this->hToken);
@@ -210,10 +210,10 @@ void vislib::sys::ImpersonationContext::revert(const bool isSilent) {
 
 #else /* _WIN32 */
     if ((::seteuid(this->revertToUid) != 0) && !isSilent) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     if ((::setegid(this->revertToGid) != 0) && !isSilent) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     this->revertToUid = 0;
@@ -228,7 +228,7 @@ void vislib::sys::ImpersonationContext::revert(const bool isSilent) {
 vislib::sys::ImpersonationContext& 
 vislib::sys::ImpersonationContext::operator =(const ImpersonationContext& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

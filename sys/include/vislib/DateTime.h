@@ -90,7 +90,7 @@ namespace sys {
          *
          * @return The time span in 100 ns ticks.
          *
-         * @throws IllegalParamException If the conversion fails due to numeric
+         * @throws argument_exception If the conversion fails due to numeric
          *                               overflows.
          */
         inline static int64_t TimeToTicks(const int hours, const int minutes, 
@@ -393,7 +393,7 @@ namespace sys {
          *
          * @param time  The time to set.
          *
-         * @throws SystemException If 'time' has an invalid value.
+         * @throws the::system::system_exception If 'time' has an invalid value.
          */
         void Set(const time_t time);
 
@@ -406,7 +406,7 @@ namespace sys {
          *
          * @param fileTime The FILETIME to set.
          *
-         * @throws SystemException If the conversion of the FILETIME into a
+         * @throws the::system::system_exception If the conversion of the FILETIME into a
          *                         SYSTEMTIME structure failed.
          */
         void Set(const FILETIME& fileTime);
@@ -422,7 +422,7 @@ namespace sys {
          *                   local time  and will not be converted. This 
          *                   parameter defaults true.
          *
-         * @throws SystemException If the conversion from UTC to local time
+         * @throws the::system::system_exception If the conversion from UTC to local time
          *                         failed.
          */
         void Set(const SYSTEMTIME& systemTime, const bool isUTC = true);
@@ -591,7 +591,7 @@ namespace sys {
          * @return A point in time that is 'rhs' in the future from this point
          *         in time.
          *
-         * @throws IllegalParamException If 'rhs' has such a value that the
+         * @throws argument_exception If 'rhs' has such a value that the
          *                               result would overflow.
          */
         inline DateTime operator +(const DateTimeSpan& rhs) const {
@@ -608,7 +608,7 @@ namespace sys {
          *
          * @return A point in time that is 'rhs' before this point in time.
          *
-         * @throws IllegalParamException If 'rhs' has such a value that the
+         * @throws argument_exception If 'rhs' has such a value that the
          *                               result would overflow.
          */
         inline DateTime operator -(const DateTimeSpan& rhs) const {
@@ -625,7 +625,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If 'rhs' has such a value that the
+         * @throws argument_exception If 'rhs' has such a value that the
          *                               result would overflow.
          */
 	    DateTime& operator +=(const DateTimeSpan& rhs);
@@ -637,7 +637,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If 'rhs' has such a value that the
+         * @throws argument_exception If 'rhs' has such a value that the
          *                               result would overflow.
          */
 	    DateTime& operator -=(const DateTimeSpan& rhs);
@@ -649,7 +649,7 @@ namespace sys {
          *
          * @return The time span between the two points in time.
          *
-         * @throws IllegalParamException If 'rhs' has such a value that the
+         * @throws argument_exception If 'rhs' has such a value that the
          *                               result would overflow.
          */
         DateTimeSpan operator -(const DateTime& rhs) const;

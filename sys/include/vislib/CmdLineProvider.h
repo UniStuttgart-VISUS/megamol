@@ -18,7 +18,7 @@
 #include "vislib/String.h"
 
 #ifdef _WIN32
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #endif // _WIN32
 
 
@@ -72,7 +72,7 @@ namespace sys {
          *
          * @return The module file name.
          *
-         * @throw SystemException if the module file name cannot be received
+         * @throw the::system::system_exception if the module file name cannot be received
          *        due to a system error.
          */
         static String<T> GetModuleName(void);
@@ -443,7 +443,7 @@ namespace sys {
             }
 
             if (rlen == 0) {
-                throw SystemException(__FILE__, __LINE__);
+                throw the::system::system_exception(__FILE__, __LINE__);
             }
 
             if (rlen < len) break;

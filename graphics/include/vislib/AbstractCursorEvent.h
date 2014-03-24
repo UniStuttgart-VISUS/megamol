@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/InputModifiers.h"
 
 
@@ -84,7 +84,7 @@ namespace graphics {
          * @param modifier The modifier for the test i.
          * @param value The value for the test i.
          *
-         * @throws IllegalParamException if i is larger or equal to number of
+         * @throws argument_exception if i is larger or equal to number of
          *         modifier tests.
          */
         void SetModifierTest(unsigned int i, InputModifiers::Modifier modifier, bool value);
@@ -146,12 +146,12 @@ namespace graphics {
          *
          * @return The modifier of the i-th modifier test.
          *
-         * @throws IllegalParamException if i is larger or equal the number of
+         * @throws argument_exception if i is larger or equal the number of
          *         modifier tests.
          */
         inline InputModifiers::Modifier GetTestModifier(unsigned int i) {
             if (i >= this->countModTests) {
-                throw IllegalParamException("i", __FILE__, __LINE__);
+                throw the::argument_exception("i", __FILE__, __LINE__);
             }
             return this->modifiers[i];
         }
@@ -163,12 +163,12 @@ namespace graphics {
          *
          * @return The modifier test value of the i-th modifier test.
          *
-         * @throws IllegalParamException if i is larger or equal the number of
+         * @throws argument_exception if i is larger or equal the number of
          *         modifier tests.
          */
         inline bool GetTestModifierValue(unsigned int i) {
             if (i >= this->countModTests) {
-                throw IllegalParamException("i", __FILE__, __LINE__);
+                throw the::argument_exception("i", __FILE__, __LINE__);
             }
             return this->modifierValues[i];
         }

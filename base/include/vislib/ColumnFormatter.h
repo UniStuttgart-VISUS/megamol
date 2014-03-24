@@ -16,8 +16,8 @@
 
 #include <vislib/CharTraits.h>
 #include <vislib/String.h>
-#include <vislib/UnsupportedOperationException.h>
-#include <vislib/IllegalParamException.h>
+#include <the/not_supported_exception.h>
+#include <the/argument_exception.h>
 
 
 namespace vislib {
@@ -215,7 +215,7 @@ namespace vislib {
          *
          * @return The reference to the Column object specified by col.
          *
-         * @throw IllegalParamException if col is greater or equal the number
+         * @throw argument_exception if col is greater or equal the number
          *        of columns.
          */
         Column& AccessColumn(unsigned int col);
@@ -227,7 +227,7 @@ namespace vislib {
          *
          * @return The reference to the Column object specified by col.
          *
-         * @throw IllegalParamException if col is greater or equal the number
+         * @throw argument_exception if col is greater or equal the number
          *        of columns.
          */
         inline Column& operator[](unsigned int col) {
@@ -364,7 +364,7 @@ namespace vislib {
      */
     template<class T>
     ColumnFormatter<T>::Column::Column(const Column& rhs) {
-        throw UnsupportedOperationException("Column copy ctor", __FILE__, __LINE__);
+        throw the::not_supported_exception("Column copy ctor", __FILE__, __LINE__);
     }
 
 
@@ -462,7 +462,7 @@ namespace vislib {
     template<class T>
     typename ColumnFormatter<T>::Column& ColumnFormatter<T>::AccessColumn(unsigned int col) {
         if (col >= this->colCount) {
-            throw IllegalParamException("col", __FILE__, __LINE__);
+            throw the::argument_exception("col", __FILE__, __LINE__);
         }
 
         return this->cols[col];

@@ -10,7 +10,7 @@
 #include "vislib/D3DException.h"
 #include "vislib/d3dutils.h"
 #include "vislib/d3dverify.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "the/trace.h"
 
 
@@ -111,7 +111,7 @@ IDXGIAdapter *vislib::graphics::d3d::AbstractD3D11WindowImpl::findAdapter(
 
     /* Sanity checks. */
     if (hWnd == NULL) {
-        throw IllegalParamException("hWnd", __FILE__, __LINE__);
+        throw the::argument_exception("hWnd", __FILE__, __LINE__);
     }
 
     /* Determine which is the adapter that the window is visible on. */

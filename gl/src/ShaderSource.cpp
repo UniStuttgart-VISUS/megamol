@@ -7,11 +7,11 @@
 
 #include "vislib/ShaderSource.h"
 #include <cstdarg>
-#include "vislib/AlreadyExistsException.h"
+#include "the/already_exists_exception.h"
 #include "the/memory.h"
-#include "vislib/NoSuchElementException.h"
+#include "the/no_such_element_exception.h"
 #include "vislib/CharTraits.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/String.h"
 #include "vislib/sysfunctions.h"
 
@@ -168,7 +168,7 @@ vislib::graphics::gl::ShaderSource::Append(
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
     if (code.IsNull()) {
-        throw IllegalParamException("code", __FILE__, __LINE__);
+        throw the::argument_exception("code", __FILE__, __LINE__);
     }
     this->snippets.Append(code);
     the::safe_array_delete(this->code);
@@ -185,10 +185,10 @@ vislib::graphics::gl::ShaderSource::Append(
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
     if (code.IsNull()) {
-        throw IllegalParamException("code", __FILE__, __LINE__);
+        throw the::argument_exception("code", __FILE__, __LINE__);
     }
     if (this->names.Contains(name)) {
-        throw AlreadyExistsException(name, __FILE__, __LINE__);
+        throw the::already_exists_exception(name, __FILE__, __LINE__);
     }
     this->names[name] = this->snippets.Count();
     this->snippets.Append(code);
@@ -239,7 +239,7 @@ vislib::graphics::gl::ShaderSource::Insert(const size_t idx,
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
     if (code.IsNull()) {
-        throw IllegalParamException("code", __FILE__, __LINE__);
+        throw the::argument_exception("code", __FILE__, __LINE__);
     }
     Map<StringA, size_t>::Iterator i = this->names.GetIterator();
     while (i.HasNext()) {
@@ -261,10 +261,10 @@ vislib::graphics::gl::ShaderSource::Insert(const size_t idx,
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
     if (code.IsNull()) {
-        throw IllegalParamException("code", __FILE__, __LINE__);
+        throw the::argument_exception("code", __FILE__, __LINE__);
     }
     if (this->names.Contains(name)) {
-        throw AlreadyExistsException(name, __FILE__, __LINE__);
+        throw the::already_exists_exception(name, __FILE__, __LINE__);
     }
     Map<StringA, size_t>::Iterator i = this->names.GetIterator();
     while (i.HasNext()) {
@@ -283,7 +283,7 @@ vislib::graphics::gl::ShaderSource::Insert(const size_t idx,
  */
 size_t vislib::graphics::gl::ShaderSource::NameIndex(const vislib::StringA& name) {
     if (!this->names.Contains(name)) {
-        throw NoSuchElementException(name, __FILE__, __LINE__);
+        throw the::no_such_element_exception(name, __FILE__, __LINE__);
     }
     return this->names[name];
 }
@@ -297,7 +297,7 @@ vislib::graphics::gl::ShaderSource::Prepend(
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
     if (code.IsNull()) {
-        throw IllegalParamException("code", __FILE__, __LINE__);
+        throw the::argument_exception("code", __FILE__, __LINE__);
     }
     Map<StringA, size_t>::Iterator i = this->names.GetIterator();
     while (i.HasNext()) {
@@ -317,10 +317,10 @@ vislib::graphics::gl::ShaderSource::Prepend( const vislib::StringA& name,
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
     if (code.IsNull()) {
-        throw IllegalParamException("code", __FILE__, __LINE__);
+        throw the::argument_exception("code", __FILE__, __LINE__);
     }
     if (this->names.Contains(name)) {
-        throw AlreadyExistsException(name, __FILE__, __LINE__);
+        throw the::already_exists_exception(name, __FILE__, __LINE__);
     }
     Map<StringA, size_t>::Iterator i = this->names.GetIterator();
     while (i.HasNext()) {
@@ -382,7 +382,7 @@ vislib::graphics::gl::ShaderSource::Set(
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
     if (code.IsNull()) {
-        throw IllegalParamException("code", __FILE__, __LINE__);
+        throw the::argument_exception("code", __FILE__, __LINE__);
     }
     this->snippets = Array<SmartPtr<Snippet> >(1, code);
     the::safe_array_delete(this->code);
@@ -396,11 +396,11 @@ vislib::graphics::gl::ShaderSource::Set(
 void vislib::graphics::gl::ShaderSource::SetName(const vislib::StringA& name,
         size_t idx) {
     if ((idx < 0) || (idx >= this->snippets.Count())) {
-        throw OutOfRangeException(int(idx), 0, int(this->snippets.Count()) - 1,
+        throw the::index_out_of_range_exception(int(idx), 0, int(this->snippets.Count()) - 1,
             __FILE__, __LINE__);
     }
     if (this->names.Contains(name)) {
-        throw AlreadyExistsException(name, __FILE__, __LINE__);
+        throw the::already_exists_exception(name, __FILE__, __LINE__);
     }
     this->names[name] = idx;
 }

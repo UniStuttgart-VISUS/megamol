@@ -49,7 +49,7 @@ void TestPoint2D(void) {
     p1[1] = 4.0f;
     ::AssertEqual("Array write y", p1.Y(), 4.0f);
 
-    AssertException("Illegal array access", p1[2], vislib::OutOfRangeException);
+    AssertException("Illegal array access", p1[2], the::index_out_of_range_exception);
 
     p2 = p1;
     ::AssertTrue("Assignment", p1 == p2);
@@ -104,7 +104,7 @@ void TestPoint3D(void) {
     p1[2] = 7.0f;
     ::AssertEqual("Array write z", p1.Z(), 7.0f);
 
-    AssertException("Illegal array access", p1[3], vislib::OutOfRangeException);
+    AssertException("Illegal array access", p1[3], the::index_out_of_range_exception);
 
     p2 = p1;
     ::AssertTrue("Assignment", p1 == p2);

@@ -9,11 +9,11 @@
 
 #include "DynamicFunctionPointer.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
-#include "vislib/MissingImplementationException.h"
+#include "the/not_implemented_exception.h"
 
 #include <climits>
 
@@ -61,7 +61,7 @@ uint64_t vislib::sys::SystemInformation::AvailableMemorySize(void) {
         memStat.dwLength = sizeof(memStat);
 
         if (gmsEx(&memStat) == 0) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
 
         retval = memStat.ullAvailPhys;
@@ -79,7 +79,7 @@ uint64_t vislib::sys::SystemInformation::AvailableMemorySize(void) {
     struct sysinfo info;
 
     if (sysinfo(&info) != 0) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     if (sizeof(info._f) != (sizeof(char) * (20 - 2 * sizeof(long) - sizeof(int)))) {
@@ -112,7 +112,7 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringA &outName) {
             buf = outName.AllocateBuffer(bufSize);
 
         } else {
-            throw SystemException(le, __FILE__, __LINE__);
+            throw the::system::system_exception(le, __FILE__, __LINE__);
 
         }
         bufSize++;
@@ -120,7 +120,7 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringA &outName) {
 #else
     struct utsname names;
     if (uname(&names) != 0) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     outName = names.nodename;
 #endif
@@ -146,7 +146,7 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringW &outName) {
             buf = outName.AllocateBuffer(bufSize);
 
         } else {
-            throw SystemException(le, __FILE__, __LINE__);
+            throw the::system::system_exception(le, __FILE__, __LINE__);
 
         }
         bufSize++;
@@ -191,7 +191,7 @@ unsigned int vislib::sys::SystemInformation::MonitorRects(
 #ifdef _WIN32
     if (!::EnumDisplayMonitors(NULL, NULL, SystemInformation::monitorEnumProc,
             reinterpret_cast<LPARAM>(&outMonitorRects))) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -231,7 +231,7 @@ unsigned int vislib::sys::SystemInformation::PageSize(void) {
     int retval = ::sysconf(_SC_PAGESIZE);
 
     if (retval == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return static_cast<unsigned int>(retval);
@@ -258,7 +258,7 @@ uint64_t vislib::sys::SystemInformation::PhysicalMemorySize(void) {
         memStat.dwLength = sizeof(memStat);
 
         if (gmsEx(&memStat) == 0) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
 
         retval = memStat.ullTotalPhys;
@@ -276,7 +276,7 @@ uint64_t vislib::sys::SystemInformation::PhysicalMemorySize(void) {
     struct sysinfo info;
 
     if (sysinfo(&info) != 0) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     if (sizeof(info._f) != (sizeof(char) * (20 - 2 * sizeof(long) - sizeof(int)))) {
@@ -301,12 +301,12 @@ vislib::sys::SystemInformation::PrimaryMonitorRect(void) {
     if (!::EnumDisplayMonitors(NULL, NULL, 
             SystemInformation::findPrimaryMonitorProc,
             reinterpret_cast<LPARAM>(&retval))) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     if (retval.IsEmpty()) {
         /* Enumeration was not successful in finding primary display. */
-        throw SystemException(ERROR_NOT_FOUND, __FILE__, __LINE__);
+        throw the::system::system_exception(ERROR_NOT_FOUND, __FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -342,7 +342,7 @@ unsigned int vislib::sys::SystemInformation::ProcessorCount(void) {
     int retval = ::sysconf(_SC_NPROCESSORS_ONLN);
 
     if (retval == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return static_cast<unsigned int>(retval);
@@ -371,7 +371,7 @@ unsigned int vislib::sys::SystemInformation::ProcessorCount(void) {
     }
 
     // errno is set by failed fopen
-    throw SystemException(__FILE__, __LINE__);
+    throw the::system::system_exception(__FILE__, __LINE__);
 
     return 0; // never reached 
 #endif
@@ -435,7 +435,7 @@ void vislib::sys::SystemInformation::SystemVersion(unsigned int& outMajor,
     ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     
     if (::GetVersionEx(&ver) != TRUE) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     outMajor = ver.dwMajorVersion;
@@ -451,19 +451,19 @@ void vislib::sys::SystemInformation::SystemVersion(unsigned int& outMajor,
 
     // TODO: Use some shell abstraction class instead of popen.
     if ((fp = ::popen("uname -r", "r")) == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     cnt = ::fread(buffer, 1, sizeof(buffer) - 1, fp);
     ::pclose(fp);
 
     if (cnt == 0)  {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     if (::sscanf(buffer, "%d.%d", &majorVersion, &minorVersion) != 2) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "sscanf on version string failed.");
-        throw SystemException(ENOTSUP, __FILE__, __LINE__);
+        throw the::system::system_exception(ENOTSUP, __FILE__, __LINE__);
     }
 
     outMajor = majorVersion;
@@ -533,7 +533,7 @@ void vislib::sys::SystemInformation::UserName(vislib::StringA &outName) {
             buf = outName.AllocateBuffer(bufSize);
 
         } else {
-            throw SystemException(le, __FILE__, __LINE__);
+            throw the::system::system_exception(le, __FILE__, __LINE__);
 
         }
         bufSize++;
@@ -545,7 +545,7 @@ void vislib::sys::SystemInformation::UserName(vislib::StringA &outName) {
 
     struct passwd *passwd = getpwuid(uid);
     if (passwd == NULL) {
-        throw SystemException(ENOENT, __FILE__, __LINE__);
+        throw the::system::system_exception(ENOENT, __FILE__, __LINE__);
     }
     outName = passwd->pw_name;
 
@@ -572,7 +572,7 @@ void vislib::sys::SystemInformation::UserName(vislib::StringW &outName) {
             buf = outName.AllocateBuffer(bufSize);
 
         } else {
-            throw SystemException(le, __FILE__, __LINE__);
+            throw the::system::system_exception(le, __FILE__, __LINE__);
 
         }
         bufSize++;
@@ -596,7 +596,7 @@ vislib::sys::SystemInformation::VirtualScreen(void) {
     if (!::EnumDisplayMonitors(NULL, NULL, 
             SystemInformation::calcVirtualScreenProc, 
             reinterpret_cast<LPARAM>(&retval))) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -704,7 +704,7 @@ BOOL CALLBACK vislib::sys::SystemInformation::findPrimaryMonitorProc(
             // least on Vista.
         }
     } else {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
  
     return TRUE;
@@ -716,7 +716,7 @@ BOOL CALLBACK vislib::sys::SystemInformation::findPrimaryMonitorProc(
  * vislib::sys::SystemInformation::SystemInformation
  */
 vislib::sys::SystemInformation::SystemInformation(void) {
-    throw vislib::UnsupportedOperationException("SystemInformation ctor",
+    throw the::not_supported_exception("SystemInformation ctor",
         __FILE__, __LINE__);
 }
 
@@ -726,7 +726,7 @@ vislib::sys::SystemInformation::SystemInformation(void) {
  */
 vislib::sys::SystemInformation::SystemInformation(
         const vislib::sys::SystemInformation& rhs) {
-    throw vislib::UnsupportedOperationException("SystemInformation copy ctor", 
+    throw the::not_supported_exception("SystemInformation copy ctor", 
         __FILE__, __LINE__);
 }
 
@@ -735,6 +735,6 @@ vislib::sys::SystemInformation::SystemInformation(
  * vislib::sys::SystemInformation::~SystemInformation
  */
 vislib::sys::SystemInformation::~SystemInformation(void) {
-    throw vislib::UnsupportedOperationException("SystemInformation dtor", 
+    throw the::not_supported_exception("SystemInformation dtor", 
         __FILE__, __LINE__);
 }

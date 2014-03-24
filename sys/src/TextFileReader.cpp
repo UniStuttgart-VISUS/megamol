@@ -7,7 +7,7 @@
 
 #include "vislib/TextFileReader.h"
 #include "the/assert.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 #include "vislib/sysfunctions.h"
 
@@ -199,7 +199,7 @@ void vislib::sys::TextFileReader::SetFile(File *file) {
  */
 vislib::sys::TextFileReader::TextFileReader(
         const vislib::sys::TextFileReader& src) {
-    throw vislib::UnsupportedOperationException("TextFileReader::CopyCtor",
+    throw the::not_supported_exception("TextFileReader::CopyCtor",
         __FILE__, __LINE__);
 }
 
@@ -210,7 +210,7 @@ vislib::sys::TextFileReader::TextFileReader(
 vislib::sys::TextFileReader& vislib::sys::TextFileReader::operator=(
         const vislib::sys::TextFileReader& src) {
     if (&src != this) {
-        throw vislib::UnsupportedOperationException(
+        throw the::not_supported_exception(
             "TextFileReader::operator=", __FILE__, __LINE__);
     }
     return *this;

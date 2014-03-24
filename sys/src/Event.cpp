@@ -13,10 +13,10 @@
 
 #include "the/assert.h"
 #include "vislib/error.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/SystemException.h"
+#include "the/argument_exception.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -128,7 +128,7 @@ vislib::sys::Event::~Event(void) {
 void vislib::sys::Event::Reset(void) {
 #ifdef _WIN32
     if (!::ResetEvent(this->handle)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -147,7 +147,7 @@ void vislib::sys::Event::Reset(void) {
 void vislib::sys::Event::Set(void) {
 #ifdef _WIN32
     if (!::SetEvent(this->handle)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -178,7 +178,7 @@ bool vislib::sys::Event::Wait(const unsigned int timeout) {
             /* Unreachable. */
 
         default:
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
             /* Unreachable. */
     }
 
@@ -208,7 +208,7 @@ bool vislib::sys::Event::Wait(const unsigned int timeout) {
  * vislib::sys::Event::Event
  */
 vislib::sys::Event::Event(const Event& rhs) {
-    throw UnsupportedOperationException("vislib::sys::Event::Event", 
+    throw the::not_supported_exception("vislib::sys::Event::Event", 
         __FILE__, __LINE__);
 }
 
@@ -218,7 +218,7 @@ vislib::sys::Event::Event(const Event& rhs) {
  */
 vislib::sys::Event& vislib::sys::Event::operator =(const Event& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

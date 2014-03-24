@@ -17,7 +17,7 @@
 
 #include "the/force_inline.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/OutOfRangeException.h"
+#include "the/index_out_of_range_exception.h"
 #include "vislib/Point.h"
 #include "vislib/Vector.h"
 
@@ -294,7 +294,7 @@ namespace math {
     template<class T, unsigned int E>
     T& BezierCurve<T, E>::ControlPoint(unsigned int idx) {
         if (idx > E) {
-            throw vislib::OutOfRangeException(idx, 0, E, __FILE__, __LINE__);
+            throw the::index_out_of_range_exception(idx, 0, E, __FILE__, __LINE__);
         }
         return this->cp[idx];
     }
@@ -306,7 +306,7 @@ namespace math {
     template<class T, unsigned int E>
     const T& BezierCurve<T, E>::ControlPoint(unsigned int idx) const {
         if (idx > E) {
-            throw vislib::OutOfRangeException(idx, 0, E, __FILE__, __LINE__);
+            throw the::index_out_of_range_exception(idx, 0, E, __FILE__, __LINE__);
         }
         return this->cp[idx];
     }

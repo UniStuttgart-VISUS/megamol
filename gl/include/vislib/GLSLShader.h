@@ -149,7 +149,7 @@ namespace gl {
          *
          * @throws OpenGLException If an OpenGL call for compiling the shader
          *                         fails.
-         * @throws IOException     If reading the shader code from an open
+         * @throws the::system::io::io_exception     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CompileFromFile(const char *vertexShaderFile,
@@ -176,7 +176,7 @@ namespace gl {
          *
          * @throws OpenGLException If an OpenGL call for compiling the shader
          *                         fails.
-         * @throws IOException     If reading the shader code from an open
+         * @throws the::system::io::io_exception     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CompileFromFile(const char **vertexShaderFiles,
@@ -246,7 +246,7 @@ namespace gl {
          * 
          * @throws OpenGLException If an OpenGL call for creating the shader
          *                         fails.
-         * @throws IOException     If reading the shader code from an open
+         * @throws the::system::io::io_exception     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CreateFromFile(const char *vertexShaderFile,
@@ -271,7 +271,7 @@ namespace gl {
          * 
          * @throws OpenGLException If an OpenGL call for creating the shader
          *                         fails.
-         * @throws IOException     If reading the shader code from an open
+         * @throws the::system::io::io_exception     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CreateFromFile(const char **vertexShaderFiles,

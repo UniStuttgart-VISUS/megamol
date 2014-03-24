@@ -17,7 +17,7 @@
 
 #include "vislib/AbstractPyramidalFrustum.h"
 #include "vislib/AbstractViewFrustum.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "the/memory.h"
 #include "vislib/Plane.h"
 #include "vislib/Point.h"
@@ -717,7 +717,7 @@ namespace math {
         THE_ASSERT(normal.IsNormalised());
         if (inOutUp.IsParallel(normal)) {
             // Cannot fix non-perpendicular up vector if vectors are parallel.
-            throw vislib::IllegalParamException("inOutUp", __FILE__, __LINE__);
+            throw the::argument_exception("inOutUp", __FILE__, __LINE__);
         }
         
         Vector<T, 3> right = normal.Cross(inOutUp);

@@ -72,7 +72,7 @@ namespace net {
          *
          * @param endPoint The end point address to bind to.
          *
-         * @throws IllegalParamException If the specified end point is no 
+         * @throws argument_exception If the specified end point is no 
          *                               IP end point.
          * @throws SocketException If the socket could not be bound to the
          *                         specified end point address.

@@ -175,7 +175,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\COMException.cpp" />
     <ClCompile Include="src\Console.cpp" />
     <ClCompile Include="src\ConsoleProgressBar.cpp" />
     <ClCompile Include="src\CriticalSection.cpp" />
@@ -193,7 +192,6 @@
     <ClCompile Include="src\FileNameSequence.cpp" />
     <ClCompile Include="src\ImpersonationContext.cpp" />
     <ClCompile Include="src\Interlocked.cpp" />
-    <ClCompile Include="src\IOException.cpp" />
     <ClCompile Include="src\IPCSemaphore.cpp" />
     <ClCompile Include="src\KeyCode.cpp" />
     <ClCompile Include="src\LamportClock.cpp" />
@@ -230,9 +228,7 @@
     </ClCompile>
     <ClCompile Include="src\SyncObject.cpp" />
     <ClCompile Include="src\sysfunctions.cpp" />
-    <ClCompile Include="src\SystemException.cpp" />
     <ClCompile Include="src\SystemInformation.cpp" />
-    <ClCompile Include="src\SystemMessage.cpp" />
     <ClCompile Include="src\TextFileReader.cpp" />
     <ClCompile Include="src\Thread.cpp" />
     <ClCompile Include="src\ThreadPool.cpp" />
@@ -250,7 +246,6 @@
     <ClInclude Include="include\vislib\BufferedFile.h" />
     <ClInclude Include="include\vislib\CmdLineParser.h" />
     <ClInclude Include="include\vislib\CmdLineProvider.h" />
-    <ClInclude Include="include\vislib\COMException.h" />
     <ClInclude Include="include\vislib\Console.h" />
     <ClInclude Include="include\vislib\ConsoleProgressBar.h" />
     <ClInclude Include="include\vislib\CriticalSection.h" />
@@ -272,7 +267,6 @@
     <ClInclude Include="include\vislib\FileNameSequence.h" />
     <ClInclude Include="include\vislib\ImpersonationContext.h" />
     <ClInclude Include="include\vislib\Interlocked.h" />
-    <ClInclude Include="include\vislib\IOException.h" />
     <ClInclude Include="include\vislib\IPCSemaphore.h" />
     <ClInclude Include="include\vislib\KeyCode.h" />
     <ClInclude Include="include\vislib\LamportClock.h" />
@@ -295,9 +289,7 @@
     <ClInclude Include="include\vislib\SynchronisedArray.h" />
     <ClInclude Include="include\vislib\SyncObject.h" />
     <ClInclude Include="include\vislib\sysfunctions.h" />
-    <ClInclude Include="include\vislib\SystemException.h" />
     <ClInclude Include="include\vislib\SystemInformation.h" />
-    <ClInclude Include="include\vislib\SystemMessage.h" />
     <ClInclude Include="include\vislib\TextFileReader.h" />
     <ClInclude Include="include\vislib\Thread.h" />
     <ClInclude Include="include\vislib\ThreadPool.h" />

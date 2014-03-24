@@ -194,7 +194,7 @@ namespace vislib {
          *
          * @return The string at the requested position.
          *
-         * @throws OutOfRangeException If 'idx' is not within [0, Count()[.
+         * @throws index_out_of_range_exception If 'idx' is not within [0, Count()[.
          */
         String<T> GetAt(const size_t idx) const {
             return (*this)[idx];
@@ -212,7 +212,7 @@ namespace vislib {
          *            in the latter case. Nothing will happen, too, if the string 
          *            is empty.
          *
-         * @throws OutOfRangeException If 'idx' is not within 
+         * @throws index_out_of_range_exception If 'idx' is not within 
          *                             [0, this->Count()].
          * @throws std::bad_alloc If the memory required for the MultiSz could
          *                        not be allocated.
@@ -229,7 +229,7 @@ namespace vislib {
          * @param str The string to add. Nothing will happen if the string is 
          *            empty.
          *
-         * @throws OutOfRangeException If 'idx' is not within 
+         * @throws index_out_of_range_exception If 'idx' is not within 
          *                             [0, this->Count()].
          * @throws std::bad_alloc If the memory required for the MultiSz could
          *                        not be allocated.
@@ -351,7 +351,7 @@ namespace vislib {
          *
          * @return The string at the requested position.
          *
-         * @throws OutOfRangeException If 'idx' is not within [0, Count()[.
+         * @throws index_out_of_range_exception If 'idx' is not within [0, Count()[.
          */
         String<T> operator [](const size_t idx) const;
 
@@ -544,7 +544,7 @@ namespace vislib {
                 this->data = newData;
             }
         } else {
-            throw OutOfRangeException(static_cast<int>(idx), 0, 
+            throw the::index_out_of_range_exception(static_cast<int>(idx), 0, 
                 static_cast<int>(oldCnt), __FILE__, __LINE__);
         }
     }
@@ -690,7 +690,7 @@ namespace vislib {
         if (tmp != NULL) {
             return String<T>(tmp);
         } else {
-            throw OutOfRangeException(static_cast<int>(idx), 0, 
+            throw the::index_out_of_range_exception(static_cast<int>(idx), 0, 
                 static_cast<int>(this->Count()) - 1, __FILE__, __LINE__);
         }
     }

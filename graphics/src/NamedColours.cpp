@@ -6,7 +6,7 @@
  */
 
 #include "vislib/NamedColours.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -1075,7 +1075,7 @@ size_t vislib::graphics::NamedColours::CountNamedColours(void) {
 const vislib::graphics::ColourRGBAu8&
 vislib::graphics::NamedColours::GetColourByIndex(size_t idx) {
     if ((idx < 0) || (idx >= CountNamedColours())) {
-        throw vislib::OutOfRangeException(idx, 0, count - 1,
+        throw the::index_out_of_range_exception(idx, 0, count - 1,
             __FILE__, __LINE__);
     }
     return index[idx].colour;
@@ -1091,7 +1091,7 @@ vislib::graphics::NamedColours::GetColourByName(const char *name) {
     for (size_t i = 0; i < count; i++) {
         if (index[i].name.Equals(name, false)) return index[i].colour;
     }
-    throw vislib::NoSuchElementException(name, __FILE__, __LINE__);
+    throw the::no_such_element_exception(name, __FILE__, __LINE__);
 }
 
 
@@ -1100,7 +1100,7 @@ vislib::graphics::NamedColours::GetColourByName(const char *name) {
  */
 const char *vislib::graphics::NamedColours::GetNameByIndex(size_t idx) {
     if ((idx < 0) || (idx >= CountNamedColours())) {
-        throw vislib::OutOfRangeException(idx, 0, count - 1,
+        throw the::index_out_of_range_exception(idx, 0, count - 1,
             __FILE__, __LINE__);
     }
     return index[idx].name;
@@ -1117,7 +1117,7 @@ const char *vislib::graphics::NamedColours::GetNameByColour(
         if (index[i].colour == col) return index[i].name.PeekBuffer();
     }
     if (throwException) {
-        throw vislib::NoSuchElementException("col is not a named colour",
+        throw the::no_such_element_exception("col is not a named colour",
             __FILE__, __LINE__);
     }
     return NULL;
@@ -1308,7 +1308,7 @@ vislib::graphics::NamedColours::colFromHex(unsigned int hex) {
  * vislib::graphics::NamedColours::NamedColours
  */
 vislib::graphics::NamedColours::NamedColours(void) {
-    throw vislib::UnsupportedOperationException("NamedColours::Ctor",
+    throw the::not_supported_exception("NamedColours::Ctor",
         __FILE__, __LINE__);
 }
 
@@ -1317,6 +1317,6 @@ vislib::graphics::NamedColours::NamedColours(void) {
  * vislib::graphics::NamedColours::~NamedColours
  */
 vislib::graphics::NamedColours::~NamedColours(void) {
-    throw vislib::UnsupportedOperationException("NamedColours::Dtor",
+    throw the::not_supported_exception("NamedColours::Dtor",
         __FILE__, __LINE__);
 }

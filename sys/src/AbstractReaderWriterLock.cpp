@@ -6,7 +6,7 @@
  */
 
 #include "vislib/AbstractReaderWriterLock.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -47,7 +47,7 @@ void vislib::sys::AbstractReaderWriterLock::Unlock(void) {
  */
 vislib::sys::AbstractReaderWriterLock::AbstractReaderWriterLock(
         const vislib::sys::AbstractReaderWriterLock& src) {
-    throw UnsupportedOperationException("AbstractReaderWriterLock::CopyCtor",
+    throw the::not_supported_exception("AbstractReaderWriterLock::CopyCtor",
         __FILE__, __LINE__);
 }
 
@@ -58,6 +58,6 @@ vislib::sys::AbstractReaderWriterLock::AbstractReaderWriterLock(
 vislib::sys::AbstractReaderWriterLock&
 vislib::sys::AbstractReaderWriterLock::operator=(
         const vislib::sys::AbstractReaderWriterLock& rhs) {
-    throw UnsupportedOperationException("AbstractReaderWriterLock::operator=",
+    throw the::not_supported_exception("AbstractReaderWriterLock::operator=",
         __FILE__, __LINE__);
 }

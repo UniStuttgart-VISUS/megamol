@@ -94,7 +94,7 @@ namespace sys {
          *         assign the returned pointer to a 'SmartPtr' object). The
          *         return value is 'NULL' if there was an unexpected error.
          *
-         * @throws SystemException in most error cases.
+         * @throws the::system::system_exception in most error cases.
          */
         static File* CreateTempFile(void);
 
@@ -183,7 +183,7 @@ namespace sys {
          *
          * @return The size of the file.
          *
-         * @throws SystemException in most error cases.
+         * @throws the::system::system_exception in most error cases.
          */
         static FileSize GetSize(const char *filename);
 
@@ -194,7 +194,7 @@ namespace sys {
          *
          * @return The size of the file.
          *
-         * @throws SystemException in most error cases.
+         * @throws the::system::system_exception in most error cases.
          */
         static FileSize GetSize(const wchar_t *filename);
 
@@ -278,7 +278,7 @@ namespace sys {
         /**
          * Forces all buffered data to be written. 
          *
-         * @throws IOException
+         * @throws the::system::io::io_exception
          */
         virtual void Flush(void);
 
@@ -287,7 +287,7 @@ namespace sys {
          *
          * @return The size of the file in bytes.
          *
-         * @throws IOException If the file size cannot be retrieve, e. g. 
+         * @throws the::system::io::io_exception If the file size cannot be retrieve, e. g. 
          *                     because the file has not been opened.
          */
         virtual FileSize GetSize(void) const;
@@ -297,7 +297,7 @@ namespace sys {
          *
          * @return true, if the eof flag is set, false otherwise.
          *
-         * @throws IOException If the file is not open or the file pointer is at an
+         * @throws the::system::io::io_exception If the file is not open or the file pointer is at an
          *                     invalid position at the moment.
          */
         inline bool IsEOF(void) const {
@@ -327,7 +327,7 @@ namespace sys {
          *         otherwise. In case of an error you can receive additional
          *         information using 'GetLastError'.
          *
-         * @throws IllegalParamException
+         * @throws argument_exception
          */
         virtual bool Open(const char *filename, const AccessMode accessMode, 
             const ShareMode shareMode, const CreationMode creationMode);
@@ -348,7 +348,7 @@ namespace sys {
          *         otherwise. In case of an error you can receive additional
          *         information using 'GetLastError'.
          *
-         * @throws IllegalParamException
+         * @throws argument_exception
          */
         inline bool Open(const StringA& filename, const AccessMode accessMode, 
                 const ShareMode shareMode, const CreationMode creationMode) {
@@ -372,7 +372,7 @@ namespace sys {
          *         otherwise. In case of an error you can receive additional
          *         information using 'GetLastError'.
          *
-         * @throws IllegalParamException
+         * @throws argument_exception
          */
         virtual bool Open(const wchar_t *filename, const AccessMode accessMode, 
             const ShareMode shareMode, const CreationMode creationMode);
@@ -393,7 +393,7 @@ namespace sys {
          *         otherwise. In case of an error you can receive additional
          *         information using 'GetLastError'.
          *
-         * @throws IllegalParamException
+         * @throws argument_exception
          */
         inline bool Open(const StringW& filename, const AccessMode accessMode, 
                 const ShareMode shareMode, const CreationMode creationMode) {
@@ -409,7 +409,7 @@ namespace sys {
          *
          * @return The number of bytes actually read.
          *
-         * @throws IOException
+         * @throws the::system::io::io_exception
          */
         virtual FileSize Read(void *outBuf, const FileSize bufSize);
 
@@ -426,7 +426,7 @@ namespace sys {
          * @return The new offset in bytes of the file pointer from the begin of 
          *         the file.
          *
-         * @throws IOException If the file pointer could not be moved, e. g. 
+         * @throws the::system::io::io_exception If the file pointer could not be moved, e. g. 
          *                     because the file was not open or the offset was
          *                     invalid.
          */
@@ -439,7 +439,7 @@ namespace sys {
          * @return The new offset of the file pointer from the beginning of the
          *         file. This should be zero ...
          *
-         * @throws IOException If the file pointer could not be moved.
+         * @throws the::system::io::io_exception If the file pointer could not be moved.
          */
         inline FileSize SeekToBegin(void) {
             return this->Seek(0, BEGIN);
@@ -451,7 +451,7 @@ namespace sys {
          * @return The new offset of the file pointer from the beginning of the
          *         file. This should be the size of the file.
          *
-         * @throws IOException If the file pointer could not be moved.
+         * @throws the::system::io::io_exception If the file pointer could not be moved.
          */
         inline FileSize SeekToEnd(void) {
             return this->Seek(0, END);
@@ -463,7 +463,7 @@ namespace sys {
          * @return Position of the file pointer in bytes from the beginning
          *         of the file.
          *
-         * @throws IOException
+         * @throws the::system::io::io_exception
          */
         virtual FileSize Tell(void) const;
 
@@ -475,7 +475,7 @@ namespace sys {
          *
          * @return The number of bytes acutally written.
          *
-         * @throws IOException
+         * @throws the::system::io::io_exception
          */
         virtual FileSize Write(const void *buf, const FileSize bufSize);
 
@@ -486,7 +486,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         File(const File& rhs);
 
@@ -497,7 +497,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If &'rhs' != this.
+         * @throws argument_exception If &'rhs' != this.
          */
         File& operator =(const File& rhs);
 

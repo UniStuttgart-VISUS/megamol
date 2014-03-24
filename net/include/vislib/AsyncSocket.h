@@ -125,7 +125,7 @@ namespace net {
          *                     is made.
          *
          * @throws SocketException       If the operation fails.
-         * @throws IllegalParamException If 'context' is a NULL pointer.
+         * @throws argument_exception If 'context' is a NULL pointer.
          */
         void BeginReceive(void *outData, const size_t cntBytes,
             AsyncSocketContext *context, const int timeout = TIMEOUT_INFINITE, 
@@ -156,7 +156,7 @@ namespace net {
          *                     is made.
          *
          * @throws SocketException       If the operation fails.
-         * @throws IllegalParamException If 'outFromAddr' or 'context' is a 
+         * @throws argument_exception If 'outFromAddr' or 'context' is a 
          *                               NULL pointer.
          */
         void BeginReceive(IPEndPoint *outFromAddr, void *outData, 
@@ -185,7 +185,7 @@ namespace net {
          *                  made.
          *
          * @throws SocketException       If the operation fails.
-         * @throws IllegalParamException If 'outFromAddr' or 'context' is a 
+         * @throws argument_exception If 'outFromAddr' or 'context' is a 
          *                               NULL pointer.
          */
         void BeginSend(const void *data, const size_t cntBytes,
@@ -217,7 +217,7 @@ namespace net {
          *                  made.
          *
          * @throws SocketException       If the operation fails.
-         * @throws IllegalParamException If 'outFromAddr' or 'context' is a 
+         * @throws argument_exception If 'outFromAddr' or 'context' is a 
          *                               NULL pointer.
          */
         void BeginSend(const IPEndPoint& toAddr, const void *data, 
@@ -236,7 +236,7 @@ namespace net {
          *
          * @throws SocketException       If the previously initiated operation 
          *                               failed.
-         * @throws IllegalParamException If 'context' is a NULL pointer.
+         * @throws argument_exception If 'context' is a NULL pointer.
          */
         inline size_t EndReceive(AsyncSocketContext *context) {
             THE_STACK_TRACE;
@@ -255,7 +255,7 @@ namespace net {
          *
          * @throws SocketException       If the previously initiated operation 
          *                               failed.
-         * @throws IllegalParamException If 'context' is a NULL pointer.
+         * @throws argument_exception If 'context' is a NULL pointer.
          */
         inline size_t EndSend(AsyncSocketContext *context) {
             THE_STACK_TRACE;
@@ -285,7 +285,7 @@ namespace net {
          * @return The number of bytes actually received.
          *
          * @throws SocketException       If the operation fails or timeouts.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceReceive' is true.
          */
         virtual size_t Receive(void *outData, const size_t cntBytes, 
@@ -318,7 +318,7 @@ namespace net {
          * @return The number of bytes actually received.
          *
          * @throws SocketException       If the operation fails or timeouts.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceReceive' is true.
          */
         virtual size_t Receive(IPEndPoint& outFromAddr, void *outData, 
@@ -355,7 +355,7 @@ namespace net {
          * @return The number of bytes actually received.
          *
          * @throws SocketException       If the operation fails or timeouts.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceReceive' is true.
          */
         virtual size_t Receive(SocketAddress& outFromAddr, void *outData, 
@@ -382,7 +382,7 @@ namespace net {
          * @return The number of bytes acutally sent.
          *
          * @throws SocketException       If the operation fails.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
         virtual size_t Send(const void *data, const size_t cntBytes, 
@@ -412,7 +412,7 @@ namespace net {
          * @return The number of bytes acutally sent.
          *
          * @throws SocketException       If the operation fails.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
         virtual size_t Send(const IPEndPoint& toAddr, const void *data, 
@@ -516,7 +516,7 @@ namespace net {
          *
          * @throws SocketException       If the previously initiated operation 
          *                               failed.
-         * @throws IllegalParamException If 'context' is a NULL pointer.
+         * @throws argument_exception If 'context' is a NULL pointer.
          */
         size_t endAsync(AsyncSocketContext *context);
 

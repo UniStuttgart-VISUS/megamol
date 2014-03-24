@@ -57,7 +57,7 @@ namespace vislib {
          * @param input    The data to be added to the hash.
          * @param cntInput The number of bytes in 'input'.
          *
-         * @throws IllegalStateException If the hash has not been initialised.
+         * @throws invalid_operation_exception If the hash has not been initialised.
          */
         virtual void TransformBlock(const uint8_t *input, const size_t cntInput);
 
@@ -77,7 +77,7 @@ namespace vislib {
          * @param input     The data to be added to the hash.
          * @param cntInput  The number of bytes in 'input'.
          *
-         * @throws IllegalStateException If the hash has not been initialised.
+         * @throws invalid_operation_exception If the hash has not been initialised.
          */
         virtual bool TransformFinalBlock(uint8_t *outHash, size_t& inOutSize,
             const uint8_t *input, const size_t cntInput);
@@ -121,7 +121,7 @@ namespace vislib {
          *                  portion of the message.
          * @param cntInput  The length of the message in message_array
          *
-         * @throws IllegalStateException If the hash designated by 'context' was
+         * @throws invalid_operation_exception If the hash designated by 'context' was
          *                               already computed,
          *                               If the context was corrupted.
          */
@@ -159,7 +159,7 @@ namespace vislib {
          * @param messageDigest Where the digest is returned.
          * @param context       The context to use to calculate the SHA-1 hash.
          *
-         * @throws IllegalStateException If the context was corrupted.
+         * @throws invalid_operation_exception If the context was corrupted.
          */
         static void result(uint8_t *messageDigest, SHA1Context *context);
 
@@ -170,7 +170,7 @@ namespace vislib {
          *
          * @return *this
          *
-         * @throws IllegalParamException If this != &rhs.
+         * @throws argument_exception If this != &rhs.
          */
         SHA1HashProvider& operator =(const SHA1HashProvider& rhs);
 

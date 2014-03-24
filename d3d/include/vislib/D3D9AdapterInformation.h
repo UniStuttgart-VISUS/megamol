@@ -72,7 +72,7 @@ namespace d3d {
          * @return Reference to the monitor description. The value designated 
          *         must live as long as this object lives.
          *
-         * @throws OutOfRangeException If 'outputIdx' does not designate a valid
+         * @throws index_out_of_range_exception If 'outputIdx' does not designate a valid
          *                             output attached to the adapter.
          */
         virtual const MONITORINFOEXW& getMonitorInfo(

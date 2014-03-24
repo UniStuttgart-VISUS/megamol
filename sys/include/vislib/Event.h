@@ -129,7 +129,7 @@ namespace sys {
          * It is safe to reset an already non-signaled event. The operation has 
          * no effect in this case.
          *
-         * @throws SystemException If the operation failed.
+         * @throws the::system::system_exception If the operation failed.
          */
         void Reset(void);
 
@@ -139,7 +139,7 @@ namespace sys {
          * It is safe to set an already signaled event. The operation has no
          * effect in this case.
          *
-         * @throws SystemException If the operation failed.
+         * @throws the::system::system_exception If the operation failed.
          */
         void Set(void);
 
@@ -151,7 +151,7 @@ namespace sys {
          * @return true, if the event was signaled, false, if the operation
          *         timed out.
          * 
-         * @throws SystemException If the operation failed.
+         * @throws the::system::system_exception If the operation failed.
          */
         bool Wait(const unsigned int timeout = TIMEOUT_INFINITE);
 
@@ -162,7 +162,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         Event(const Event& rhs);
 
@@ -173,7 +173,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If (this != &rhs).
+         * @throws argument_exception If (this != &rhs).
          */
         Event& operator =(const Event& rhs);
 

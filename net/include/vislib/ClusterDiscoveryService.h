@@ -254,7 +254,7 @@ namespace net {
          * @return The IP address of the adapter that is used by 'hPeer' for the
          *         discovery communication.
          *
-         * @throws IllegalParamException If 'hPeer' is not a valid handle.
+         * @throws argument_exception If 'hPeer' is not a valid handle.
          */
         IPAddress GetDiscoveryAddress4(const PeerHandle& hPeer) const;
 
@@ -266,7 +266,7 @@ namespace net {
          * @return The IP address of the adapter that is used by 'hPeer' for the
          *         discovery communication.
          *
-         * @throws IllegalParamException If 'hPeer' is not a valid handle.
+         * @throws argument_exception If 'hPeer' is not a valid handle.
          */
         IPAddress6 GetDiscoveryAddress6(const PeerHandle& hPeer) const;
 
@@ -307,7 +307,7 @@ namespace net {
          * @return The socket address that has been specified by the peer node
          *         for user communication.
          *
-         * @throws IllegalParamException If 'hPeer' is not a valid handle.
+         * @throws argument_exception If 'hPeer' is not a valid handle.
          */
         inline IPEndPoint GetUserComAddress(const PeerHandle& hPeer) const {
             return (*this)[hPeer];
@@ -343,7 +343,7 @@ namespace net {
          *
          * @return true if the specified node is this node, false otherwise.
          *
-         * @throws OutOfRangeException If 'idx' is not a valid node index.
+         * @throws index_out_of_range_exception If 'idx' is not a valid node index.
          */
         inline bool IsSelf(const int idx) const {
             this->critSect.Lock();
@@ -389,7 +389,7 @@ namespace net {
          *
          * @throws SocketException       If the datagram socket for sending the 
          *                               user message could not be created.
-         * @throws IllegalParamException If 'msgType' is below MSG_TYPE_USER,
+         * @throws argument_exception If 'msgType' is below MSG_TYPE_USER,
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
@@ -416,7 +416,7 @@ namespace net {
          *
          * @throws SocketException       If the datagram socket for sending the 
          *                               user message could not be created.
-         * @throws IllegalParamException If 'hPeer' is not a valid handle.
+         * @throws argument_exception If 'hPeer' is not a valid handle.
          *                               or 'msgType' is below MSG_TYPE_USER,
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
@@ -445,7 +445,7 @@ namespace net {
          * as these threads are running, the node is regarded to be a member of
          * the specified cluster.
          *
-         * @throws SystemException If the creation of one or more threads 
+         * @throws the::system::system_exception If the creation of one or more threads 
          *                         failed.
          * @throws std::bad_alloc  If there is not enough memory for the threads
          *                         available.
@@ -461,7 +461,7 @@ namespace net {
          * @param noWait If set true, the method will not block.
          *
          * @return true, if the threads have been terminated without any
-         *         problem, false, if a SystemException has been thrown by 
+         *         problem, false, if a the::system::system_exception has been thrown by 
          *         one of the threads or if the thread did not acknowledge
          *         a 'noWait' terminate.
          */
@@ -476,7 +476,7 @@ namespace net {
          *
          * @return The response address of the 'idx'th node.
          *
-         * @throws OutOfRangeException If 'idx' is not a valid node index.
+         * @throws index_out_of_range_exception If 'idx' is not a valid node index.
          */
         inline IPEndPoint operator [](const int idx) const {
             this->critSect.Lock();
@@ -494,7 +494,7 @@ namespace net {
          *
          * @return The response address of the 'idx'th node.
          *
-         * @throws OutOfRangeException If 'idx' is not a valid node index.
+         * @throws index_out_of_range_exception If 'idx' is not a valid node index.
          */
         inline IPEndPoint operator [](const size_t idx) const {
             this->critSect.Lock();
@@ -511,7 +511,7 @@ namespace net {
          * @return The socket address that has been specified by the peer node
          *         for user communication.
          *
-         * @throws IllegalParamException If 'hPeer' is not a valid handle.
+         * @throws argument_exception If 'hPeer' is not a valid handle.
          */
         IPEndPoint operator [](const PeerHandle& hPeer) const;
 
@@ -737,7 +737,7 @@ namespace net {
          * steps are taken.
          *
          * All user input, i. e. 'msgType', 'msgBody' and 'msgSize' is validated
-         * and an IllegalParamException is thrown, if 'msgType' is not in the
+         * and an argument_exception is thrown, if 'msgType' is not in the
          * user message range, if 'msgBody' is a NULL pointer of 'msgSize' is 
          * too large.
          *
@@ -760,7 +760,7 @@ namespace net {
          *
          * @throws SocketException       If the datagram socket for sending the 
          *                               user message could not be created.
-         * @throws IllegalParamException If 'msgType' is below MSG_TYPE_USER,
+         * @throws argument_exception If 'msgType' is below MSG_TYPE_USER,
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */

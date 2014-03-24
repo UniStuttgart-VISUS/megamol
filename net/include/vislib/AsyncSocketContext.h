@@ -26,7 +26,7 @@
 #include "vislib/IPEndPoint.h"
 #include "vislib/Socket.h"
 #include "the/stack_trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 namespace vislib {
@@ -115,7 +115,7 @@ namespace net {
         /**
          * Wait for the operation associated with this context to complete.
          *
-         * @throws SystemException If the operation failed.
+         * @throws the::system::system_exception If the operation failed.
          */
         virtual void Wait(void);
 
@@ -222,12 +222,12 @@ namespace net {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @throws not_supported_exception Unconditionally.
          */
         inline AsyncSocketContext(const AsyncSocketContext& rhs)
                 : Super(NULL, NULL) {
             THE_STACK_TRACE;
-            throw UnsupportedOperationException("AsyncSocketContext", __FILE__, 
+            throw the::not_supported_exception("AsyncSocketContext", __FILE__, 
                 __LINE__);
         }
 
@@ -238,7 +238,7 @@ namespace net {
          *
          * @return *this.
          *
-         * @throws IllegalParamException If (this != &rhs).
+         * @throws argument_exception If (this != &rhs).
          */
         AsyncSocketContext& operator =(const AsyncSocketContext& rhs);
 

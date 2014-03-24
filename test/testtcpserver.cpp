@@ -9,7 +9,7 @@
 
 #include "vislib/TcpServer.h"
 #include "vislib/SocketException.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "vislib/Thread.h"
 #include "testhelper.h"
 

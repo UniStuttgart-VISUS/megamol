@@ -11,8 +11,8 @@
 
 #include "the/assert.h"
 #include "the/memory.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/argument_exception.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -112,7 +112,7 @@ void vislib::RawStoragePool::Return(RawStorage *storage) {
     }
     /* 'storage' was not found at this point. */
 
-    throw IllegalParamException("storage", __FILE__, __LINE__);
+    throw the::argument_exception("storage", __FILE__, __LINE__);
 }
 
 
@@ -132,7 +132,7 @@ void vislib::RawStoragePool::SafeReturn(RawStorage *storage) {
  */
 vislib::RawStoragePool::RawStoragePool(const RawStoragePool& rhs) {
     THE_STACK_TRACE;
-    throw UnsupportedOperationException("RawStoragePool::RawStoragePool",
+    throw the::not_supported_exception("RawStoragePool::RawStoragePool",
         __FILE__, __LINE__);
 }
 
@@ -144,7 +144,7 @@ vislib::RawStoragePool& vislib::RawStoragePool::operator =(
         const RawStoragePool& rhs) {
     THE_STACK_TRACE;
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

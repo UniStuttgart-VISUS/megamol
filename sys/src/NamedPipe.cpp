@@ -8,13 +8,13 @@
 #include "vislib/NamedPipe.h"
 #include "vislib/error.h"
 #include "vislib/File.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
-#include "vislib/MissingImplementationException.h"
+#include "the/argument_exception.h"
+#include "the/invalid_operation_exception.h"
+#include "the/not_implemented_exception.h"
 #include "vislib/Path.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
 
 #ifndef _WIN32
@@ -182,10 +182,10 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
 
     // check parameters
     if (!this->checkPipeName(name)) {
-        throw IllegalParamException("name", __FILE__, __LINE__);
+        throw the::argument_exception("name", __FILE__, __LINE__);
     }
     if (mode == vislib::sys::NamedPipe::PIPE_MODE_NONE) {
-        throw IllegalParamException("mode", __FILE__, __LINE__);
+        throw the::argument_exception("mode", __FILE__, __LINE__);
     }
 
     // close old pipe
@@ -228,12 +228,12 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
             this->isClient = true;
 
             if (this->handle == INVALID_HANDLE_VALUE) {
-                throw vislib::sys::SystemException(__FILE__, __LINE__);
+                throw the::system::system_exception(__FILE__, __LINE__);
             }
 
         } else {
             // creation really failed!
-            throw vislib::sys::SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
     }
 
@@ -246,25 +246,25 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
                 // event signaled so connection should be established
                 DWORD dummy;
                 if (::GetOverlappedResult(this->handle, &this->overlapped, &dummy, FALSE) == 0) {
-                    throw vislib::sys::SystemException(__FILE__, __LINE__);
+                    throw the::system::system_exception(__FILE__, __LINE__);
                 }
                 ::ResetEvent(this->overlapped.hEvent);
 
             } break;
             default: {
                 // unknown error
-                vislib::sys::SystemMessage msg(::GetLastError());
+                the::system::system_message msg(::GetLastError());
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, 
                     "NamedPipe Open WaitForSigleObject Error: \"%s\"", 
-                    static_cast<const char*>(msg));
+                    msg.operator the::astring().c_str());
             } // NO BREAK;
             case WAIT_TIMEOUT: {
                 // timeout
                 if (::CancelIo(this->handle) == 0) {
-                    vislib::sys::SystemMessage msg(::GetLastError());
+                    the::system::system_message msg(::GetLastError());
                     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, 
                         "NamedPipe Open Timeout: CancelIo failed \"%s\"", 
-                        static_cast<const char*>(msg));
+                        msg.operator the::astring().c_str());
                 }
                 this->Close();
                 return false;
@@ -292,7 +292,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
         auto lastError = ::GetLastError();
         if (lastError != EEXIST) {
             ::umask(oldMask);
-            throw vislib::sys::SystemException(lastError, __FILE__, __LINE__);
+            throw the::system::system_exception(lastError, __FILE__, __LINE__);
         }
     }
     ::umask(oldMask);
@@ -313,7 +313,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
 
     if (this->handle < 0) {
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "open failed.\n");
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     } else if (ext.IsTerminated()) {
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "open timed out.\n");
         ::close(this->handle);
@@ -343,10 +343,10 @@ bool vislib::sys::NamedPipe::Open(vislib::StringW name,
 
     // check parameters
     if (!this->checkPipeName(name)) {
-        throw IllegalParamException("name", __FILE__, __LINE__);
+        throw the::argument_exception("name", __FILE__, __LINE__);
     }
     if (mode == vislib::sys::NamedPipe::PIPE_MODE_NONE) {
-        throw IllegalParamException("mode", __FILE__, __LINE__);
+        throw the::argument_exception("mode", __FILE__, __LINE__);
     }
 
     // close old pipe
@@ -387,12 +387,12 @@ bool vislib::sys::NamedPipe::Open(vislib::StringW name,
             this->isClient = true;
 
             if (this->handle == INVALID_HANDLE_VALUE) {
-                throw vislib::sys::SystemException(__FILE__, __LINE__);
+                throw the::system::system_exception(__FILE__, __LINE__);
             }
 
         } else {
             // creation really failed!
-            throw vislib::sys::SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
     }
 
@@ -405,25 +405,25 @@ bool vislib::sys::NamedPipe::Open(vislib::StringW name,
                 // event signaled so connection should be established
                 DWORD dummy;
                 if (::GetOverlappedResult(this->handle, &this->overlapped, &dummy, FALSE) == 0) {
-                    throw vislib::sys::SystemException(__FILE__, __LINE__);
+                    throw the::system::system_exception(__FILE__, __LINE__);
                 }
                 ::ResetEvent(this->overlapped.hEvent);
 
             } break;
             default: {
                 // unknown error
-                vislib::sys::SystemMessage msg(::GetLastError());
+                the::system::system_message msg(::GetLastError());
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, 
                     "NamedPipe Open WaitForSigleObject Error: \"%s\"", 
-                    static_cast<const char*>(msg));
+                    msg.operator the::astring().c_str());
             } // NO BREAK;
             case WAIT_TIMEOUT: {
                 // timeout
                 if (::CancelIo(this->handle) == 0) {
-                    vislib::sys::SystemMessage msg(::GetLastError());
+                    the::system::system_message msg(::GetLastError());
                     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, 
                         "NamedPipe Open Timeout: CancelIo failed \"%s\"", 
-                        static_cast<const char*>(msg));
+                        msg.operator the::astring().c_str());
                 }
                 this->Close();
                 return false;
@@ -453,11 +453,11 @@ bool vislib::sys::NamedPipe::Open(vislib::StringW name,
 void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
 
     if (this->mode != PIPE_MODE_READ) {
-        throw IllegalStateException("Pipe not in read mode", __FILE__, __LINE__);
+        throw the::invalid_operation_exception("Pipe not in read mode", __FILE__, __LINE__);
     }
     if (size == 0) return;
     if (buffer == NULL) {
-        throw IllegalParamException("buffer", __FILE__, __LINE__);
+        throw the::argument_exception("buffer", __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
@@ -493,7 +493,7 @@ void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
                         ::CancelIo(this->handle);
                         this->cleanupLock.Unlock();
                         this->Close();
-                        throw vislib::sys::SystemException(le, __FILE__, __LINE__);
+                        throw the::system::system_exception(le, __FILE__, __LINE__);
                     }
                 }
             } else {
@@ -503,7 +503,7 @@ void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
                 ::CancelIo(this->handle);
                 this->cleanupLock.Unlock();
                 this->Close();
-                throw vislib::sys::SystemException(le, __FILE__, __LINE__);
+                throw the::system::system_exception(le, __FILE__, __LINE__);
             }
             outRead = readAll;
 
@@ -529,7 +529,7 @@ void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
 
             //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "feof or ferror ... Done!\n");
 
-            throw vislib::sys::SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
 
 #endif /* _WIN32 */ 
@@ -545,7 +545,7 @@ void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
  */
 vislib::StringA vislib::sys::NamedPipe::PipeSystemName(const vislib::StringA &name) {
     if (!checkPipeName(name)) {
-        throw IllegalParamException("name", __FILE__, __LINE__);
+        throw the::argument_exception("name", __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
@@ -565,7 +565,7 @@ vislib::StringA vislib::sys::NamedPipe::PipeSystemName(const vislib::StringA &na
  */
 vislib::StringW vislib::sys::NamedPipe::PipeSystemName(const vislib::StringW &name) {
     if (!checkPipeName(name)) {
-        throw IllegalParamException("name", __FILE__, __LINE__);
+        throw the::argument_exception("name", __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
@@ -586,11 +586,11 @@ vislib::StringW vislib::sys::NamedPipe::PipeSystemName(const vislib::StringW &na
 void vislib::sys::NamedPipe::Write(void *buffer, unsigned int size) {
 
     if (this->mode != PIPE_MODE_WRITE) {
-        throw IllegalStateException("Pipe not in write mode", __FILE__, __LINE__);
+        throw the::invalid_operation_exception("Pipe not in write mode", __FILE__, __LINE__);
     }
     if (size == 0) return;
     if (buffer == NULL) {
-        throw IllegalParamException("buffer", __FILE__, __LINE__);
+        throw the::argument_exception("buffer", __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
@@ -626,7 +626,7 @@ void vislib::sys::NamedPipe::Write(void *buffer, unsigned int size) {
                         ::CancelIo(this->handle);
                         this->cleanupLock.Unlock();
                         this->Close();
-                        throw vislib::sys::SystemException(le, __FILE__, __LINE__);
+                        throw the::system::system_exception(le, __FILE__, __LINE__);
                     }
                 }
             } else {
@@ -636,7 +636,7 @@ void vislib::sys::NamedPipe::Write(void *buffer, unsigned int size) {
                 ::CancelIo(this->handle);
                 this->cleanupLock.Unlock();
                 this->Close();
-                throw vislib::sys::SystemException(le, __FILE__, __LINE__);
+                throw the::system::system_exception(le, __FILE__, __LINE__);
             }
             outWritten = writeAll;
 
@@ -662,7 +662,7 @@ void vislib::sys::NamedPipe::Write(void *buffer, unsigned int size) {
 
             //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "feof or ferror ... Done!\n");
 
-            throw vislib::sys::SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
 
         }
 

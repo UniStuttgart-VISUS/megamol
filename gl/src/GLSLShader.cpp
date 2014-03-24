@@ -11,12 +11,12 @@
 #include "vislib/GLSLShader.h"
 
 #include "vislib/Array.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
+#include "the/argument_exception.h"
+#include "the/invalid_operation_exception.h"
 #include "the/memory.h"
 #include "vislib/RawStorage.h"
 #include "vislib/sysfunctions.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -199,14 +199,14 @@ bool vislib::graphics::gl::GLSLShader::CompileFromFile(
         the::safe_array_delete(vertexShaderSrcPtrs);
         the::safe_array_delete(fragmentShaderSrcPtrs);
         throw e;
-    } catch(Exception e) {
+    } catch(the::exception e) {
         the::safe_array_delete(vertexShaderSrcPtrs);
         the::safe_array_delete(fragmentShaderSrcPtrs);
         throw e;
     } catch(...) {
         the::safe_array_delete(vertexShaderSrcPtrs);
         the::safe_array_delete(fragmentShaderSrcPtrs);
-        throw Exception("Unknown Exception", __FILE__, __LINE__);
+        throw the::exception("Unknown Exception", __FILE__, __LINE__);
     }
 
     return false; // should be unreachable code!

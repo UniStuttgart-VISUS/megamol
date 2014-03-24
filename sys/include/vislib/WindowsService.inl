@@ -16,14 +16,14 @@
                                                                                \
     if ((hSCMgr = ::OpenSCManager##strType(NULL, NULL, SC_MANAGER_ALL_ACCESS)) \
             == NULL) {                                                         \
-        throw SystemException(__FILE__, __LINE__);                             \
+        throw the::system::system_exception(__FILE__, __LINE__);                             \
     }                                                                          \
                                                                                \
     if ((hSvc = ::CreateService##strType(hSCMgr, svcName, displayName,         \
             SERVICE_ALL_ACCESS, svcType, startType, SERVICE_ERROR_NORMAL,      \
             binaryPath, NULL, NULL, NULL, NULL, NULL)) == NULL) {              \
         ::CloseServiceHandle(hSCMgr);                                          \
-        throw SystemException(__FILE__, __LINE__);                             \
+        throw the::system::system_exception(__FILE__, __LINE__);                             \
     }                                                                          \
                                                                                \
     ::CloseServiceHandle(hSvc);                                                \
@@ -63,7 +63,7 @@
         WindowsService::Install(binaryPath, this->name,                        \
             this->displayName, this->status.dwServiceType, startType);         \
     } else {                                                                   \
-        throw SystemException(__FILE__, __LINE__);                             \
+        throw the::system::system_exception(__FILE__, __LINE__);                             \
     }
 
 
@@ -73,19 +73,19 @@
                                                                                \
     if ((hSCMgr = ::OpenSCManager##strType(NULL, NULL, SC_MANAGER_ALL_ACCESS)) \
             == NULL) {                                                         \
-        throw SystemException(__FILE__, __LINE__);                             \
+        throw the::system::system_exception(__FILE__, __LINE__);                             \
     }                                                                          \
                                                                                \
     if ((hSvc = ::OpenService##strType(hSCMgr, this->name,                     \
             SERVICE_ALL_ACCESS)) == NULL) {                                    \
         ::CloseServiceHandle(hSCMgr);                                          \
-        throw SystemException(__FILE__, __LINE__);                             \
+        throw the::system::system_exception(__FILE__, __LINE__);                             \
     }                                                                          \
                                                                                \
     if (!::DeleteService(hSvc)) {                                              \
         ::CloseServiceHandle(hSvc);                                            \
         ::CloseServiceHandle(hSCMgr);                                          \
-        throw SystemException(__FILE__, __LINE__);                             \
+        throw the::system::system_exception(__FILE__, __LINE__);                             \
     }                                                                          \
                                                                                \
     ::CloseServiceHandle(hSvc);                                                \
@@ -103,7 +103,7 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
     if (WindowsService::instance == NULL) {                                    \
         WindowsService::instance = this;                                       \
     } else {                                                                   \
-        throw IllegalStateException("There is already a Windows Service"       \
+        throw the::invalid_operation_exception("There is already a Windows Service"       \
             "instance.", __FILE__, __LINE__);                                  \
     }                                                                          \
                                                                                \
@@ -120,7 +120,7 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
             return false;                                                      \
         } else {                                                               \
             /* Could not start service for other reason. */                    \
-            throw SystemException(errorCode, __FILE__, __LINE__);              \
+            throw the::system::system_exception(errorCode, __FILE__, __LINE__);              \
         }                                                                      \
     }                                                                           
 
@@ -137,8 +137,8 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
                 if ((retval = svc->OnContinue()) == NO_ERROR) {                \
                     svc->setStatus(SERVICE_RUNNING);                           \
                 }                                                              \
-            } catch (SystemException e) {                                      \
-                retval = e.GetErrorCode();                                     \
+            } catch (the::system::system_exception e) {                                      \
+                retval = e.get_error().native_error();                                     \
             }                                                                  \
             break;                                                             \
                                                                                \
@@ -174,8 +174,8 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
                 if ((retval = svc->OnPause()) == NO_ERROR) {                   \
                     svc->setStatus(SERVICE_PAUSED);                            \
                 }                                                              \
-            } catch (SystemException e) {                                      \
-                retval = e.GetErrorCode();                                     \
+            } catch (the::system::system_exception e) {                                      \
+                retval = e.get_error().native_error();                                     \
             }                                                                  \
             break;                                                             \
                                                                                \
@@ -185,8 +185,8 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
                 if ((retval = svc->OnShutdown()) == NO_ERROR) {                \
                     svc->setStatus(SERVICE_STOPPED);                           \
                 }                                                              \
-            } catch (SystemException e) {                                      \
-                retval = e.GetErrorCode();                                     \
+            } catch (the::system::system_exception e) {                                      \
+                retval = e.get_error().native_error();                                     \
             }                                                                  \
             break;                                                             \
                                                                                \
@@ -196,8 +196,8 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
                 if ((retval = svc->OnStop()) == NO_ERROR) {                    \
                     svc->setStatus(SERVICE_STOPPED);                           \
                 }                                                              \
-            } catch (SystemException e) {                                      \
-                retval = e.GetErrorCode();                                     \
+            } catch (the::system::system_exception e) {                                      \
+                retval = e.get_error().native_error();                                     \
             }                                                                  \
             break;                                                             \
                                                                                \
@@ -464,7 +464,7 @@ vislib::sys::WindowsService<vislib::CharTraitsA>&
 vislib::sys::WindowsService<vislib::CharTraitsA>::operator =(
         const WindowsService& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;
@@ -681,7 +681,7 @@ vislib::sys::WindowsService<vislib::CharTraitsW>&
 vislib::sys::WindowsService<vislib::CharTraitsW>::operator =(
         const WindowsService& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

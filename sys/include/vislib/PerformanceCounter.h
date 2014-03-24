@@ -50,7 +50,7 @@ namespace sys {
          *         current hardware allows. Otherwise, the value is normalised
          *         to milliseconds.
          *
-         * @throws SystemException If the performance counter could not be 
+         * @throws the::system::system_exception If the performance counter could not be 
          *                         queried.
          */
         static uint64_t Query(const bool useFullPrecision = false);
@@ -69,7 +69,7 @@ namespace sys {
          *
          * @return The current perfomance counter value in milliseconds.
          *
-         * @throws SystemException If the performance counter could not be 
+         * @throws the::system::system_exception If the performance counter could not be 
          *                         queried.
          */
         inline static double QueryMillis(void) {
@@ -81,7 +81,7 @@ namespace sys {
          *
          * @return The performance counter frequency in counts per second.
          *
-         * @throws SystemException If the frequency could not be queried.
+         * @throws the::system::system_exception If the frequency could not be queried.
          */
         static uint64_t QueryFrequency(void);
 
@@ -93,7 +93,7 @@ namespace sys {
          * 
          * @return The milliseconds that 'value' represents.
          *
-         * @throws SystemException If the frequency could not be queried.
+         * @throws the::system::system_exception If the frequency could not be queried.
          */
         inline static double ToMillis(const uint64_t value) {
             return (static_cast<double>(value) * 1000.0)

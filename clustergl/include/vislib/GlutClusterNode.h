@@ -17,7 +17,7 @@
 #include "vislibGlutInclude.h"
 
 #include "vislib/AbstractClusterNode.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 #include "the/trace.h"
 
 
@@ -300,7 +300,7 @@ namespace cluster {
      */
     template<class T> 
     void GlutClusterNode<T>::Initialise(sys::CmdLineProviderW& inOutCmdLine) {
-        throw UnsupportedOperationException("glutInit is not supported for "
+        throw the::not_supported_exception("glutInit is not supported for "
             "wchar_t.", __FILE__, __LINE__);
     }
 

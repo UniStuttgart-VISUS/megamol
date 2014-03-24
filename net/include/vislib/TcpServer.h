@@ -177,7 +177,7 @@ namespace net {
          *
          * @return 0 in case of success, an error code otherwise.
          *
-         * @throws IllegalParamException if 'userData' is NULL.
+         * @throws argument_exception if 'userData' is NULL.
          */
         virtual unsigned int Run(void *userData);
 

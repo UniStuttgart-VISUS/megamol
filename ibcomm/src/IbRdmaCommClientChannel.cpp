@@ -200,7 +200,7 @@ size_t vislib::net::ib::IbRdmaCommClientChannel::Receive(void *outData,
 
         //if (cntBytes > this->cntBufRecv) {
         //    // User tries to receive more than the supplied memory range.
-        //    throw IllegalParamException("cntBytes", __FILE__, __LINE__);
+        //    throw the::argument_exception("cntBytes", __FILE__, __LINE__);
         //}
 
         //this->postReceive();
@@ -336,7 +336,7 @@ size_t vislib::net::ib::IbRdmaCommClientChannel::Send(const void *data,
 
         /* Sanity check for data range being sent. */
         if ((inPtr + totalSent) > this->bufSendEnd) {
-            throw IllegalParamException("cntBytes", __FILE__, __LINE__);
+            throw the::argument_exception("cntBytes", __FILE__, __LINE__);
         }
 
         /* Send the data. */

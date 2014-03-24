@@ -11,10 +11,10 @@
 #include <climits>
 
 #include "the/assert.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/glverify.h"
 #include "the/trace.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -124,7 +124,7 @@ vislib::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture(
 vislib::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture(
         AbstractOpenGLTexture& rhs) {
     THE_STACK_TRACE;
-    throw UnsupportedOperationException(
+    throw the::not_supported_exception(
         "AbstractOpenGLTexture::AbstractOpenGLTexture", __FILE__, __LINE__);
 }
 
@@ -149,7 +149,7 @@ vislib::graphics::gl::AbstractOpenGLTexture::operator =(
         const AbstractOpenGLTexture& rhs) {
     THE_STACK_TRACE;
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
 
     return *this;

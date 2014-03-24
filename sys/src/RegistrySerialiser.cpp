@@ -7,10 +7,10 @@
 
 #include "vislib/RegistrySerialiser.h"
 
-#include "vislib/IllegalParamException.h"
-#include "vislib/NoSuchElementException.h"
-#include "vislib/SystemException.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/argument_exception.h"
+#include "the/no_such_element_exception.h"
+#include "the/system/system_exception.h"
+#include "the/not_supported_exception.h"
 
 
 #ifdef _WIN32
@@ -32,10 +32,10 @@ namespace sys {
      * @param outValue Receives the deserialised value.
      * @param name     The name of the value to retrieve.
      *
-     * @throws IllegalParamException If 'name' is NULL or the type of the value 
+     * @throws argument_exception If 'name' is NULL or the type of the value 
      *                               parameter does not match the type of the 
      *                               stored element.
-     * @throws SystemException If the registry access failed.
+     * @throws the::system::system_exception If the registry access failed.
      */
     template<class T, DWORD R, class C, LONG (APIENTRY* F)(HKEY, const C *, 
         DWORD *, DWORD *, uint8_t *, DWORD *)>
@@ -46,24 +46,24 @@ namespace sys {
 
         /* Sanity check. */
         if (name == NULL) {
-            throw IllegalParamException("name", __FILE__, __LINE__);
+            throw the::argument_exception("name", __FILE__, __LINE__);
         }
 
         /* Retrieve size of registry value. */
         if ((result = F(hKey, name, 0, &type, NULL, &size)) 
                 != ERROR_SUCCESS) {
-            throw SystemException(result, __FILE__, __LINE__);
+            throw the::system::system_exception(result, __FILE__, __LINE__);
         }
 
         /* Sanity checks. */
         if ((type != R) && (size != sizeof(T))) {
-            throw IllegalParamException("outValue", __FILE__, __LINE__);
+            throw the::argument_exception("outValue", __FILE__, __LINE__);
         }
 
         /* Get data. */
         if ((result = F(hKey, name, 0, &type, reinterpret_cast<uint8_t *>(
                 &outValue), &size)) != ERROR_SUCCESS) {
-            throw SystemException(result, __FILE__, __LINE__);
+            throw the::system::system_exception(result, __FILE__, __LINE__);
         }
     }
 
@@ -83,7 +83,7 @@ namespace sys {
      * @param hKey  The registry key to write the value to.
      * @param name  The name of the value.
      *
-     * @throws SystemException If the registry access failed.
+     * @throws the::system::system_exception If the registry access failed.
      */
     template<class T, DWORD R, class C, LONG (APIENTRY* F)(HKEY, const C *, 
         DWORD, DWORD, const uint8_t *, DWORD)>
@@ -92,7 +92,7 @@ namespace sys {
             &value), sizeof(T));
 
         if (result != ERROR_SUCCESS) {
-            throw SystemException(result, __FILE__, __LINE__);
+            throw the::system::system_exception(result, __FILE__, __LINE__);
         }
     }
 
@@ -109,10 +109,10 @@ namespace sys {
      * @param outValue Receives the deserialised value.
      * @param name     The name of the value to retrieve.
      *
-     * @throws IllegalParamException If 'name' is NULL or the type of the value 
+     * @throws argument_exception If 'name' is NULL or the type of the value 
      *                               parameter does not match the type of the 
      *                               stored element.
-     * @throws SystemException If the registry access failed.
+     * @throws the::system::system_exception If the registry access failed.
      */
     template<class T, LONG (APIENTRY* F)(HKEY, const typename T::Char *,
         DWORD *, DWORD *, uint8_t *, DWORD *), class C>
@@ -125,18 +125,18 @@ namespace sys {
 
         /* Sanity check. */
         if (name == NULL) {
-            throw IllegalParamException("name", __FILE__, __LINE__);
+            throw the::argument_exception("name", __FILE__, __LINE__);
         }
 
         /* Retrieve size of registry value. */
         if ((result = F(hKey, tName.PeekBuffer(), 0, &type, NULL, &size)) 
                 != ERROR_SUCCESS) {
-            throw SystemException(result, __FILE__, __LINE__);
+            throw the::system::system_exception(result, __FILE__, __LINE__);
         }
 
         /* Sanity checks. */
         if (type != REG_SZ) {
-            throw IllegalParamException("outValue", __FILE__, __LINE__);
+            throw the::argument_exception("outValue", __FILE__, __LINE__);
         }
 
         outPtr = reinterpret_cast<uint8_t *>(outValue.AllocateBuffer(size));
@@ -144,7 +144,7 @@ namespace sys {
         /* Get data. */
         if ((result = F(hKey, tName.PeekBuffer(), 0, &type, outPtr, &size)) 
                 != ERROR_SUCCESS) {
-            throw SystemException(result, __FILE__, __LINE__);
+            throw the::system::system_exception(result, __FILE__, __LINE__);
         }
     }
 
@@ -162,7 +162,7 @@ namespace sys {
      * @param hKey  The registry key to write the value to.
      * @param name  The name of the value.
      *
-     * @throws SystemException If the registry access failed.
+     * @throws the::system::system_exception If the registry access failed.
      */
     template<class T, LONG (APIENTRY* F)(HKEY, const typename T::Char *,
         DWORD, DWORD, const uint8_t *, DWORD), class C>
@@ -173,7 +173,7 @@ namespace sys {
             (value.Length() + 1) * sizeof(typename T::Char));
 
         if (result != ERROR_SUCCESS) {
-            throw SystemException(result, __FILE__, __LINE__);
+            throw the::system::system_exception(result, __FILE__, __LINE__);
         }
     }
 
@@ -550,7 +550,7 @@ void vislib::sys::RegistrySerialiser::PopKey(const bool isSilent) {
 
         /* Throw if not disabled. */
         if (!isSilent) {
-            throw NoSuchElementException("There must be at least one key in "
+            throw the::no_such_element_exception("There must be at least one key in "
                 "the stack.", __FILE__, __LINE__);
         }
     }
@@ -568,7 +568,7 @@ void vislib::sys::RegistrySerialiser::PushKey(const char *name) {
         &createDisp);
 
     if (result != ERROR_SUCCESS) {
-        throw SystemException(result, __FILE__, __LINE__);
+        throw the::system::system_exception(result, __FILE__, __LINE__);
     }
 
     this->keyStack.Push(hKey);
@@ -586,7 +586,7 @@ void vislib::sys::RegistrySerialiser::PushKey(const wchar_t *name) {
         &createDisp);
 
     if (result != ERROR_SUCCESS) {
-        throw SystemException(result, __FILE__, __LINE__);
+        throw the::system::system_exception(result, __FILE__, __LINE__);
     }
 
     this->keyStack.Push(hKey);
@@ -885,7 +885,7 @@ vislib::sys::RegistrySerialiser& vislib::sys::RegistrySerialiser::operator =(
                 ::GetCurrentProcess(), reinterpret_cast<HANDLE *>(
                 &this->hBaseKey), 0, FALSE, DUPLICATE_SAME_ACCESS)) {
             this->hBaseKey = NULL;
-            SystemException(__FILE__, __LINE__);
+            the::system::system_exception(__FILE__, __LINE__);
         }
 
         this->keyStack.Push(this->hBaseKey);
@@ -930,7 +930,7 @@ void vislib::sys::RegistrySerialiser::initialise(const char *subKey,
     if (result != ERROR_SUCCESS) {
         // Note: This is safe because not resources that must be deleted in the
         // dtor have been allocated.
-        throw SystemException(result, __FILE__, __LINE__);
+        throw the::system::system_exception(result, __FILE__, __LINE__);
     }
 
     this->keyStack.Push(this->hBaseKey);
@@ -955,7 +955,7 @@ void vislib::sys::RegistrySerialiser::initialise(const wchar_t *subKey,
     if (result != ERROR_SUCCESS) {
         // Note: This is safe because not resources that must be deleted in the
         // dtor have been allocated.
-        throw SystemException(result, __FILE__, __LINE__);
+        throw the::system::system_exception(result, __FILE__, __LINE__);
     }
 
     this->keyStack.Push(this->hBaseKey);

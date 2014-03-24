@@ -54,8 +54,8 @@ namespace vislib {
          *
          * @return A reference to the first element.
          *
-         * @throws OutOfRangeException or
-         *         NoSuchElementException If the collection is empty.
+         * @throws index_out_of_range_exception or
+         *         no_such_element_exception If the collection is empty.
          */
         virtual const T& First(void) const = 0;
 
@@ -64,8 +64,8 @@ namespace vislib {
          *
          * @return A reference to the first element.
          *
-         * @throws OutOfRangeException or
-         *         NoSuchElementException If the collection is empty.
+         * @throws index_out_of_range_exception or
+         *         no_such_element_exception If the collection is empty.
          */
         virtual T& First(void) = 0;
 
@@ -74,8 +74,8 @@ namespace vislib {
          *
          * @return A reference to the last element.
          *
-         * @throws OutOfRangeException or
-         *         NoSuchElementException If the collection is empty.
+         * @throws index_out_of_range_exception or
+         *         no_such_element_exception If the collection is empty.
          */
         virtual const T& Last(void) const = 0;
 
@@ -84,8 +84,8 @@ namespace vislib {
          *
          * @return A reference to the last element.
          *
-         * @throws OutOfRangeException or
-         *         NoSuchElementException If the collection is empty.
+         * @throws index_out_of_range_exception or
+         *         no_such_element_exception If the collection is empty.
          */
         virtual T& Last(void) = 0;
 

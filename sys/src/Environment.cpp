@@ -18,7 +18,7 @@
 #include "the/assert.h"
 #include "the/memory.h"
 #include "vislib/StringConverter.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 #include "the/trace.h"
 
 #ifndef _WIN32
@@ -250,7 +250,7 @@ void vislib::sys::Environment::Snapshot::GetAt(const size_t idx,
         outName = StringA(this->data[idx], tmp - this->data[idx] - 1);
         outValue = StringA(tmp);
     } else {
-        throw OutOfRangeException(static_cast<int>(idx), 0, cntVariables - 1,
+        throw the::index_out_of_range_exception(static_cast<int>(idx), 0, cntVariables - 1,
             __FILE__, __LINE__);
     }
 #endif /* _WIN32 */
@@ -467,13 +467,13 @@ vislib::sys::Environment::CreateSnapshot(void) {
 #ifdef _WIN32
     wchar_t *env = ::GetEnvironmentStringsW();
     if (env == NULL) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     retval.data = env;
     
     if (!::FreeEnvironmentStringsW(env)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -497,7 +497,7 @@ vislib::StringA vislib::sys::Environment::GetVariable(const char *name,
     if (size == 0) {
         if (!isLenient || ((error = ::GetLastError()) 
                 != ERROR_ENVVAR_NOT_FOUND)) {
-            throw SystemException(error, __FILE__, __LINE__);
+            throw the::system::system_exception(error, __FILE__, __LINE__);
         }
     }
 
@@ -506,7 +506,7 @@ vislib::StringA vislib::sys::Environment::GetVariable(const char *name,
     if (size == 0) {
         if (!isLenient || ((error = ::GetLastError()) 
                 != ERROR_ENVVAR_NOT_FOUND)) {
-            throw SystemException(error, __FILE__, __LINE__);
+            throw the::system::system_exception(error, __FILE__, __LINE__);
         } else {
             retval[0] = 0;
         }
@@ -533,7 +533,7 @@ vislib::StringW vislib::sys::Environment::GetVariable(const wchar_t *name,
     if (size == 0) {
         if (!isLenient || ((error = ::GetLastError()) 
                 != ERROR_ENVVAR_NOT_FOUND)) {
-            throw SystemException(error, __FILE__, __LINE__);
+            throw the::system::system_exception(error, __FILE__, __LINE__);
         }
     }
 
@@ -542,7 +542,7 @@ vislib::StringW vislib::sys::Environment::GetVariable(const wchar_t *name,
     if (size == 0) {
         if (!isLenient || ((error = ::GetLastError()) 
                 != ERROR_ENVVAR_NOT_FOUND)) {
-            throw SystemException(error, __FILE__, __LINE__);
+            throw the::system::system_exception(error, __FILE__, __LINE__);
         } else {
             retval[0] = 0;
         }
@@ -561,7 +561,7 @@ vislib::StringW vislib::sys::Environment::GetVariable(const wchar_t *name,
 bool vislib::sys::Environment::IsSet(const char *name) {
 #ifdef _WIN32
     if (::GetEnvironmentVariableA(name, NULL, 0) == 0) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return (::GetLastError() != ERROR_ENVVAR_NOT_FOUND);
@@ -577,7 +577,7 @@ bool vislib::sys::Environment::IsSet(const char *name) {
 bool vislib::sys::Environment::IsSet(const wchar_t *name) {
 #ifdef _WIN32
     if (::GetEnvironmentVariableW(name, NULL, 0) == 0) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return (::GetLastError() != ERROR_ENVVAR_NOT_FOUND);
@@ -594,16 +594,16 @@ void vislib::sys::Environment::SetVariable(const char *name,
                                            const char *value) {
 #ifdef _WIN32
     if (!::SetEnvironmentVariableA(name, value)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
     if (value != NULL) {
         if (::setenv(name, value, 1) == -1) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
     } else {
         if (::unsetenv(name) == -1) {
-            throw SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
     }
 #endif /* _WIN32 */
@@ -617,7 +617,7 @@ void vislib::sys::Environment::SetVariable(const wchar_t *name,
                                            const wchar_t *value) {
 #ifdef _WIN32
     if (!::SetEnvironmentVariableW(name, value)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
     Environment::SetVariable(W2A(name), W2A(value));

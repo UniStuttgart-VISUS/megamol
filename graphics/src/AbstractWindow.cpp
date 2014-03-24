@@ -9,10 +9,10 @@
 #include "vislib/AbstractWindow.h"
 
 #include "the/assert.h"
-#include "vislib/IllegalStateException.h"
-#include "vislib/MissingImplementationException.h"
+#include "the/invalid_operation_exception.h"
+#include "the/not_implemented_exception.h"
 #include "vislib/StringConverter.h"
-#include "vislib/SystemException.h"
+#include "the/system/system_exception.h"
 
 
 /*
@@ -34,10 +34,10 @@ void vislib::graphics::AbstractWindow::Close(void) {
 
 #ifdef _WIN32
     if (::DestroyWindow(this->hWnd) == FALSE) {
-        throw sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
-    throw MissingImplementationException("AbstractWindow::Close", 
+    throw the::not_implemented_exception("AbstractWindow::Close", 
         __FILE__, __LINE__);
 #endif /* _WIN32 */
 }
@@ -54,7 +54,7 @@ void vislib::graphics::AbstractWindow::Create(const vislib::StringA& title,
     this->Create(A2W(title), left, top, width, height);
 
 #else /* _WIN32 */
-    throw MissingImplementationException("AbstractWindow::Create", 
+    throw the::not_implemented_exception("AbstractWindow::Create", 
         __FILE__, __LINE__);
 #endif /* _WIN32 */
 }
@@ -75,14 +75,14 @@ void vislib::graphics::AbstractWindow::Create(const vislib::StringW& title,
 
     /* Sanity checks. */
     if (this->hWnd != NULL) {
-        throw vislib::IllegalStateException("The window has already been "
+        throw the::invalid_operation_exception("The window has already been "
             "created.", __FILE__, __LINE__);
     }
 
     /* Get instance handle. */
     hInstance = ::GetModuleHandle(NULL);
     if (hInstance == NULL) {
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     /* Register window class. */
@@ -101,7 +101,7 @@ void vislib::graphics::AbstractWindow::Create(const vislib::StringW& title,
     wndRect.right = left + width;
     wndRect.bottom = top + height;
     if (!::AdjustWindowRectEx(&wndRect, dwStyle, FALSE, dwExStyle)) {
-        throw vislib::sys::SystemException(__FILE__, __LINE__); 
+        throw the::system::system_exception(__FILE__, __LINE__); 
     }
 
     if ((this->hWnd = ::CreateWindowExW(dwExStyle, 
@@ -116,7 +116,7 @@ void vislib::graphics::AbstractWindow::Create(const vislib::StringW& title,
             NULL,       // Menu
             hInstance, 
             NULL)) == NULL) {
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     ::SetWindowLongPtr(this->hWnd, GWLP_USERDATA,
@@ -139,12 +139,12 @@ vislib::graphics::AbstractWindow::GetPosition(void) const {
 #ifdef _WIN32
     RECT rect;
     if (::GetWindowRect(this->hWnd, &rect) == FALSE) {
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     return Point(rect.left, rect.top);
 
 #else /* _WIN32 */
-    throw MissingImplementationException("AbstractWindow::GetPosition",
+    throw the::not_implemented_exception("AbstractWindow::GetPosition",
         __FILE__, __LINE__);
 #endif /* _WIN32 */
 }
@@ -159,12 +159,12 @@ vislib::graphics::AbstractWindow::GetSize(void) const {
 #ifdef _WIN32
     RECT rect;
     if (::GetWindowRect(this->hWnd, &rect) == FALSE) {
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
     return Dimension(rect.right - rect.left, rect.bottom - rect.top);
 
 #else /* _WIN32 */
-    throw MissingImplementationException("AbstractWindow::GetSize", 
+    throw the::not_implemented_exception("AbstractWindow::GetSize", 
         __FILE__, __LINE__);
 #endif /* _WIN32 */
 }
@@ -179,10 +179,10 @@ void vislib::graphics::AbstractWindow::Move(const int x, const int y) {
     Dimension size = this->GetSize();
     if (::MoveWindow(this->hWnd, x, y, size.Width(), size.Height(), TRUE) 
             == FALSE) {
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
-    throw MissingImplementationException("AbstractWindow::Move", __FILE__, 
+    throw the::not_implemented_exception("AbstractWindow::Move", __FILE__, 
         __LINE__);
 #endif /* _WIN32 */
 }
@@ -198,10 +198,10 @@ void vislib::graphics::AbstractWindow::Resize(const int width,
     Point position = this->GetPosition();
     if (::MoveWindow(this->hWnd, position.X(), position.Y(), width, height,
             TRUE) == FALSE) {
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+        throw the::system::system_exception(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
-    throw MissingImplementationException("AbstractWindow::Resize", __FILE__,
+    throw the::not_implemented_exception("AbstractWindow::Resize", __FILE__,
         __LINE__);
 #endif /* _WIN32 */
 }
@@ -341,7 +341,7 @@ LRESULT CALLBACK vislib::graphics::AbstractWindow::wndProc(HWND hWnd, unsigned i
  */
 vislib::graphics::AbstractWindow::AbstractWindow(const AbstractWindow& rhs) {
     THE_STACK_TRACE;
-    throw UnsupportedOperationException("AbstractWindow::AbstractWindow",
+    throw the::not_supported_exception("AbstractWindow::AbstractWindow",
         __FILE__, __LINE__);
 }
 
@@ -372,7 +372,7 @@ vislib::StringW vislib::graphics::AbstractWindow::registerWindowClassW(
 
     if (!::GetClassInfoExW(wcex.hInstance, wcex.lpszClassName, &wcex)) {
         if (!::RegisterClassExW(&wcex)) {
-            throw vislib::sys::SystemException(__FILE__, __LINE__);
+            throw the::system::system_exception(__FILE__, __LINE__);
         }
     }
 
@@ -391,7 +391,7 @@ vislib::graphics::AbstractWindow& vislib::graphics::AbstractWindow::operator =(
         const AbstractWindow& rhs) {
     THE_STACK_TRACE;
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        throw the::argument_exception("rhs", __FILE__, __LINE__);
     }
     return *this;
 }

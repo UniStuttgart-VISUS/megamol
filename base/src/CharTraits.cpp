@@ -17,7 +17,7 @@
  */
 bool vislib::CharTraits<char>::ParseBool(const Char *str) {
     if (str == NULL) {
-        throw IllegalParamException("str", __FILE__, __LINE__);
+        throw the::argument_exception("str", __FILE__, __LINE__);
     }
 
     if (
@@ -54,7 +54,7 @@ bool vislib::CharTraits<char>::ParseBool(const Char *str) {
     } catch (...) {
     }
 
-    throw FormatException("Cannot convert String to Boolean", __FILE__, 
+    throw the::format_exception("Cannot convert String to Boolean", __FILE__, 
         __LINE__);
 }
 
@@ -65,7 +65,7 @@ bool vislib::CharTraits<char>::ParseBool(const Char *str) {
 double vislib::CharTraits<char>::ParseDouble(const Char *str) {
     double retval;
     if (str == NULL) {
-        throw IllegalParamException("str", __FILE__, __LINE__);
+        throw the::argument_exception("str", __FILE__, __LINE__);
     }
     
     if (
@@ -75,7 +75,7 @@ double vislib::CharTraits<char>::ParseDouble(const Char *str) {
             sscanf
 #endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
             (str, "%lf", &retval) != 1) {
-        throw FormatException("Cannot convert String to Double", __FILE__, 
+        throw the::format_exception("Cannot convert String to Double", __FILE__, 
             __LINE__);
     }
 
@@ -89,7 +89,7 @@ double vislib::CharTraits<char>::ParseDouble(const Char *str) {
 int vislib::CharTraits<char>::ParseInt(const Char *str) {
     int retval;
     if (str == NULL) {
-        throw IllegalParamException("str", __FILE__, __LINE__);
+        throw the::argument_exception("str", __FILE__, __LINE__);
     }
 
     if (
@@ -99,7 +99,7 @@ int vislib::CharTraits<char>::ParseInt(const Char *str) {
             sscanf
 #endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
             (str, "%d", &retval) != 1) {
-        throw FormatException("Cannot convert String to Integer", __FILE__, 
+        throw the::format_exception("Cannot convert String to Integer", __FILE__, 
             __LINE__);
     }
     
@@ -113,7 +113,7 @@ int vislib::CharTraits<char>::ParseInt(const Char *str) {
 int64_t vislib::CharTraits<char>::ParseInt64(const Char *str) {
     THE_STACK_TRACE;
     if (str == NULL) {
-        throw IllegalParamException("str", __FILE__, __LINE__);
+        throw the::argument_exception("str", __FILE__, __LINE__);
     }
     Char *end = NULL;
     int64_t retval = 0;
@@ -127,7 +127,7 @@ int64_t vislib::CharTraits<char>::ParseInt64(const Char *str) {
     if (str < end) {
         return retval;
     } else {
-        throw FormatException("Cannot convert String to 64 bit integer",
+        throw the::format_exception("Cannot convert String to 64 bit integer",
             __FILE__, __LINE__);
     }
 }
@@ -139,7 +139,7 @@ int64_t vislib::CharTraits<char>::ParseInt64(const Char *str) {
 uint64_t vislib::CharTraits<char>::ParseUInt64(const Char *str) {
     THE_STACK_TRACE;
     if (str == NULL) {
-        throw IllegalParamException("str", __FILE__, __LINE__);
+        throw the::argument_exception("str", __FILE__, __LINE__);
     }
     Char *end = NULL;
     uint64_t retval = 0;
@@ -153,7 +153,7 @@ uint64_t vislib::CharTraits<char>::ParseUInt64(const Char *str) {
     if (str < end) {
         return retval;
     } else {
-        throw FormatException("Cannot convert String to 64 bit integer",
+        throw the::format_exception("Cannot convert String to 64 bit integer",
             __FILE__, __LINE__);
     }
 }
@@ -285,7 +285,7 @@ vislib::CharTraitsA::Size vislib::CharTraits<char>::ToUpper(
  */
 bool vislib::CharTraits<wchar_t>::ParseBool(const Char *str) {
     if (str == NULL) {
-        throw IllegalParamException("str", __FILE__, __LINE__);
+        throw the::argument_exception("str", __FILE__, __LINE__);
     }
 
     if (
@@ -322,7 +322,7 @@ bool vislib::CharTraits<wchar_t>::ParseBool(const Char *str) {
         } catch (...) {
         }
 
-        throw FormatException("Cannot convert String to Boolean", __FILE__, 
+        throw the::format_exception("Cannot convert String to Boolean", __FILE__, 
             __LINE__);
     }
 
@@ -333,7 +333,7 @@ bool vislib::CharTraits<wchar_t>::ParseBool(const Char *str) {
 double vislib::CharTraits<wchar_t>::ParseDouble(const Char *str) {
     double retval;
     if (str == NULL) {
-        throw IllegalParamException("str", __FILE__, __LINE__);
+        throw the::argument_exception("str", __FILE__, __LINE__);
     }
 
     if (
@@ -343,7 +343,7 @@ double vislib::CharTraits<wchar_t>::ParseDouble(const Char *str) {
             swscanf
 #endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
             (str, L"%lf", &retval) != 1) {
-        throw FormatException("Cannot convert String to Double", __FILE__, 
+        throw the::format_exception("Cannot convert String to Double", __FILE__, 
             __LINE__);
     }
 
@@ -357,7 +357,7 @@ double vislib::CharTraits<wchar_t>::ParseDouble(const Char *str) {
 int vislib::CharTraits<wchar_t>::ParseInt(const Char *str) {
     int retval;
     if (str == NULL) {
-        throw IllegalParamException("str", __FILE__, __LINE__);
+        throw the::argument_exception("str", __FILE__, __LINE__);
     }
 
     if (
@@ -367,7 +367,7 @@ int vislib::CharTraits<wchar_t>::ParseInt(const Char *str) {
             swscanf
 #endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
             (str, L"%d", &retval) != 1) {
-        throw FormatException("Cannot convert String to Integer", __FILE__, 
+        throw the::format_exception("Cannot convert String to Integer", __FILE__, 
             __LINE__);
     }
     
@@ -381,7 +381,7 @@ int vislib::CharTraits<wchar_t>::ParseInt(const Char *str) {
 int64_t vislib::CharTraits<wchar_t>::ParseInt64(const Char *str) {
     THE_STACK_TRACE;
     if (str == NULL) {
-        throw IllegalParamException("str", __FILE__, __LINE__);
+        throw the::argument_exception("str", __FILE__, __LINE__);
     }
     Char *end = NULL;
     int64_t retval = 0;
@@ -395,7 +395,7 @@ int64_t vislib::CharTraits<wchar_t>::ParseInt64(const Char *str) {
     if (str < end) {
         return retval;
     } else {
-        throw FormatException("Cannot convert String to 64 bit integer",
+        throw the::format_exception("Cannot convert String to 64 bit integer",
             __FILE__, __LINE__);
     }
 }
@@ -407,7 +407,7 @@ int64_t vislib::CharTraits<wchar_t>::ParseInt64(const Char *str) {
 uint64_t vislib::CharTraits<wchar_t>::ParseUInt64(const Char *str) {
     THE_STACK_TRACE;
     if (str == NULL) {
-        throw IllegalParamException("str", __FILE__, __LINE__);
+        throw the::argument_exception("str", __FILE__, __LINE__);
     }
     Char *end = NULL;
     uint64_t retval = 0;
@@ -421,7 +421,7 @@ uint64_t vislib::CharTraits<wchar_t>::ParseUInt64(const Char *str) {
     if (str < end) {
         return retval;
     } else {
-        throw FormatException("Cannot convert String to 64 bit integer",
+        throw the::format_exception("Cannot convert String to 64 bit integer",
             __FILE__, __LINE__);
     }
 }

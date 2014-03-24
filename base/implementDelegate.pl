@@ -249,7 +249,7 @@ sub WriteClass {
          */
         $returnType operator()($paramList) {
             if (this->callee == NULL) {
-                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
+                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
             }
             ${returnStatement}this->callee->Call($paramNameList);
         }
@@ -602,7 +602,7 @@ print $out qq§/*
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "the/assert.h"
-#include "vislib/IllegalStateException.h"
+#include "the/invalid_operation_exception.h"
 #include "the/memory.h"
 
 

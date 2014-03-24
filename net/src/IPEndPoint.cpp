@@ -10,11 +10,11 @@
 
 #include "the/assert.h"
 #include "vislib/DNS.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
+#include "the/argument_exception.h"
+#include "the/invalid_operation_exception.h"
 #include "the/memory.h"
 #include "vislib/SocketException.h"
-#include "vislib/SystemMessage.h"
+#include "the/system/system_message.h"
 #include "the/trace.h"
 
 
@@ -41,8 +41,8 @@ vislib::net::IPEndPoint vislib::net::IPEndPoint::CreateIPv4(
         DNS::GetHostAddress(addr, hostNameOrAddress);
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not lookup \"%s\": %s\n", 
-            hostNameOrAddress, e.GetMsgA());
-        throw IllegalParamException("hostNameOrAddress", __FILE__, __LINE__);
+            hostNameOrAddress, e.what());
+        throw the::argument_exception("hostNameOrAddress", __FILE__, __LINE__);
     }
 
     return IPEndPoint(addr, port);
@@ -59,8 +59,8 @@ vislib::net::IPEndPoint vislib::net::IPEndPoint::CreateIPv6(
         DNS::GetHostAddress(addr, hostNameOrAddress);
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not lookup \"%s\": %s\n", 
-            hostNameOrAddress, e.GetMsgA());
-        throw IllegalParamException("hostNameOrAddress", __FILE__, __LINE__);
+            hostNameOrAddress, e.what());
+        throw the::argument_exception("hostNameOrAddress", __FILE__, __LINE__);
     }
 
     return IPEndPoint(addr, port);
@@ -121,7 +121,7 @@ vislib::net::IPEndPoint::IPEndPoint(const AddressFamily addressFamily,
         default:
             // This should be legal as we have not allocated heap memory or any
             // other OS resource until now.
-            throw IllegalParamException("addressFamily", __FILE__, __LINE__);
+            throw the::argument_exception("addressFamily", __FILE__, __LINE__);
     }
 
     this->SetPort(port);            // IP address must have been set before!
@@ -205,7 +205,7 @@ vislib::net::IPAgnosticAddress vislib::net::IPEndPoint::GetIPAddress(
             return IPAgnosticAddress(this->asV6().sin6_addr);
 
         default:
-            throw IllegalStateException("The address family of the IPEndPoint "
+            throw the::invalid_operation_exception("The address family of the IPEndPoint "
                 "is not in the expected range.", __FILE__, __LINE__);
     }
 }
@@ -225,14 +225,14 @@ vislib::net::IPAddress vislib::net::IPEndPoint::GetIPAddress4(void) const {
                 const uint8_t *bytes = reinterpret_cast<const uint8_t *>(addr);
                 return IPAddress(bytes[12], bytes[13], bytes[14], bytes[15]);
             } else {
-                throw IllegalStateException("The IPEndPoint is an IPv6 end "
+                throw the::invalid_operation_exception("The IPEndPoint is an IPv6 end "
                     "point which has no IPv4-mapped or -compatible address.",
                     __FILE__, __LINE__);
             }
             } break;
 
         default:
-            throw IllegalStateException("The address family of the IPEndPoint "
+            throw the::invalid_operation_exception("The address family of the IPEndPoint "
                 "is not in the expected range.", __FILE__, __LINE__);
     }
 }
@@ -250,7 +250,7 @@ vislib::net::IPAddress6 vislib::net::IPEndPoint::GetIPAddress6(void) const {
             return IPAddress6(this->asV6().sin6_addr);
 
         default:
-            throw IllegalStateException("The address family of the IPEndPoint "
+            throw the::invalid_operation_exception("The address family of the IPEndPoint "
                 "is not in the expected range.", __FILE__, __LINE__);
     }
 }
@@ -268,7 +268,7 @@ unsigned short vislib::net::IPEndPoint::GetPort(void) const {
             return ntohs(this->asV6().sin6_port);
 
         default:
-            throw IllegalStateException("The address family of the IPEndPoint "
+            throw the::invalid_operation_exception("The address family of the IPEndPoint "
                 "is not in the expected range.", __FILE__, __LINE__);
     }
 }
@@ -312,7 +312,7 @@ void vislib::net::IPEndPoint::SetIPAddress(const IPAgnosticAddress& ipAddress) {
             break;
 
         default:
-            throw IllegalParamException("ipAddress", __FILE__, __LINE__);
+            throw the::argument_exception("ipAddress", __FILE__, __LINE__);
     }
 }
 
@@ -450,7 +450,7 @@ vislib::net::IPEndPoint::operator vislib::net::SocketAddress(void) const {
                 this->GetPort());
 
         default:
-            throw IllegalStateException("The address family of the IPEndPoint "
+            throw the::invalid_operation_exception("The address family of the IPEndPoint "
                 "is not in the expected range.", __FILE__, __LINE__);
     }
 }

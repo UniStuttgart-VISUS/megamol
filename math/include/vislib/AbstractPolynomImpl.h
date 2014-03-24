@@ -15,9 +15,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "the/assert.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/UnsupportedOperationException.h"
+#include "the/not_supported_exception.h"
 #ifndef M_PI
 #define M_PI       3.14159265358979323846
 #endif /* !M_PI */
@@ -209,7 +209,7 @@ namespace math {
          *
          * @return A reference to this
          *
-         * @throw IllegalParamException if 'rhs' has an effective degree larger
+         * @throw argument_exception if 'rhs' has an effective degree larger
          *        than D.
          */
         template<class Tp, unsigned int Dp, class Sp>
@@ -423,7 +423,7 @@ namespace math {
     AbstractPolynomImpl<T, D, S, C>::operator=(const C<Tp, Dp, Sp>& rhs) {
         unsigned int rhsed = rhs.EffectiveDegree();
         if (rhsed > D) {
-            throw vislib::IllegalParamException("rhs", __FILE__, __LINE__);
+            throw the::argument_exception("rhs", __FILE__, __LINE__);
         }
 
         for (unsigned int i = 0; i <= rhsed; i++) {

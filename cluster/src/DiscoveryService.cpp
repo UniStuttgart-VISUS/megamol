@@ -9,13 +9,13 @@
 
 #include "the/assert.h"
 #include "vislib/DiscoveryListener.h"
-#include "vislib/IllegalParamException.h"
+#include "the/argument_exception.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/SocketException.h"
 #include "the/trace.h"
 
-#include "vislib/MissingImplementationException.h"
+#include "the/not_implemented_exception.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +129,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(void) {
     // TODO: This is not good
     NetworkInformation::Adapter adapter = NetworkInformation::GetAdapter(0);
     
-    throw MissingImplementationException("DiscoveryConfig::DiscoveryConfig", __FILE__, __LINE__);
+    throw the::not_implemented_exception("DiscoveryConfig::DiscoveryConfig", __FILE__, __LINE__);
     // TODO: use netinfo to find meaningful default configuration.
     //this->responseAddress = IPEndPoint(adapter.GetAddress4());
     //this->bindAddress = IPEndPoint(adapter.GetAddress4(), DEFAULT_PORT);
@@ -204,7 +204,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         this->bcastAddress.SetPort(bindPort);
     } else {
         this->~DiscoveryConfig();
-        throw IllegalParamException("bindAddress", __FILE__, __LINE__);
+        throw the::argument_exception("bindAddress", __FILE__, __LINE__);
     }
 }
 
@@ -235,7 +235,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
 //        this->bcastAddress.SetPort(bindPort);
 //    } else {
 //        this->~DiscoveryConfig();
-//        throw IllegalParamException("bindAddress", __FILE__, __LINE__);
+//        throw the::argument_exception("bindAddress", __FILE__, __LINE__);
 //    }
 //}
 
@@ -376,7 +376,7 @@ vislib::net::cluster::DiscoveryService::GetDiscoveryAddress4(
 
     //if ((hPeer == NULL) || !hPeer->isValid()) {
     //    this->peerNodesCritSect.Unlock();
-    //    throw IllegalParamException("hPeer", __FILE__, __LINE__);
+    //    throw the::argument_exception("hPeer", __FILE__, __LINE__);
     //} else {
     //    retval = hPeer->getDiscoveryAddress4();
     //    this->peerNodesCritSect.Unlock();
@@ -398,7 +398,7 @@ vislib::net::cluster::DiscoveryService::GetDiscoveryAddress6(
 
     //if ((hPeer == NULL) || !hPeer->isValid()) {
     //    this->peerNodesCritSect.Unlock();
-    //    throw IllegalParamException("hPeer", __FILE__, __LINE__);
+    //    throw the::argument_exception("hPeer", __FILE__, __LINE__);
     //} else {
     //    retval = hPeer->getDiscoveryAddress6();
     //    this->peerNodesCritSect.Unlock();
@@ -494,7 +494,7 @@ unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
                 this->peerNodes[i]->discoveryAddress);
         } catch (SocketException e) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "DiscoveryService could not send "
-                "user message (\"%s\").\n", e.GetMsgA());
+                "user message (\"%s\").\n", e.what());
             retval++;
         }
     }
@@ -523,14 +523,14 @@ unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
     //if ((hPeer == NULL) || !hPeer->isValid()) {
     if ((hPeer == NULL)) {
         this->peerNodesCritSect.Unlock();
-        throw IllegalParamException("hPeer", __FILE__, __LINE__);
+        throw the::argument_exception("hPeer", __FILE__, __LINE__);
     }
 
     try {
         hPeer->discoverySource->SendMessageTo(msg, hPeer->discoveryAddress);
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "DiscoveryService could not send "
-            "user message (\"%s\").\n", e.GetMsgA());
+            "user message (\"%s\").\n", e.what());
         retval++;
     }
     this->peerNodesCritSect.Unlock();
@@ -618,20 +618,20 @@ bool vislib::net::cluster::DiscoveryService::Stop(const bool noWait) {
     for (size_t i = 0; i < cntConfigs; i++) {
         try {
             this->configs[i].GetRecvThread().Terminate(false);
-        } catch (sys::SystemException e) {
+        } catch (the::system::system_exception e) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Stopping a discovery receiver "
                 "thread failed. The error code is %d (\"%s\").\n", 
-                e.GetErrorCode(), e.GetMsgA());
+                e.get_error().native_error(), e.what());
             retval = false;
         }
     }
     
     try {
         this->senderThread.Terminate(false);
-    } catch (sys::SystemException e) {
+    } catch (the::system::system_exception e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Stopping the discovery sender thread "
             "failed. The error code is %d (\"%s\").\n", 
-            e.GetErrorCode(), e.GetMsgA());
+            e.get_error().native_error(), e.what());
         retval = false;
     }
 
@@ -650,7 +650,7 @@ vislib::net::IPEndPoint vislib::net::cluster::DiscoveryService::operator [](
 
     if ((hPeer == NULL) || !hPeer->isValid()) {
         this->peerNodesCritSect.Unlock();
-        throw IllegalParamException("hPeer", __FILE__, __LINE__);
+        throw the::argument_exception("hPeer", __FILE__, __LINE__);
     } else {
         retval = hPeer->responseAddress;
         this->peerNodesCritSect.Unlock();
@@ -718,8 +718,8 @@ unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Discovery receiver thread could not "
             "create its socket and bind it to the requested address. The "
-            "error code is %d (\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
-        return e.GetErrorCode();
+            "error code is %d (\"%s\").\n", e.get_error().native_error(), e.what());
+        return e.get_error().native_error();
     }
 
     /* Register myself as known node first (observer does not know itself). */
@@ -828,7 +828,7 @@ unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
         } catch (SocketException e) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "A socket error occurred in the "
                 "discovery receiver thread. The error code is %d (\"%s\").\n",
-                e.GetErrorCode(), e.GetMsgA());
+                e.get_error().native_error(), e.what());
         } catch (...) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The discovery receiver caught an "
                 "unexpected exception and will exit.\n");
@@ -846,8 +846,8 @@ unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket cleanup failed in the discovery "
             "receiver thread. The error code is %d (\"%s\").\n", 
-            e.GetErrorCode(), e.GetMsgA());
-        return e.GetErrorCode();
+            e.get_error().native_error(), e.what());
+        return e.get_error().native_error();
     }
 
     return 0;
@@ -866,7 +866,7 @@ bool vislib::net::cluster::DiscoveryService::Receiver::Terminate(void) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Error while shutting down cluster "
             "discovery receiver socket: %s. This is normally no problem and "
             "indicates that you already stopped the receiver before.\n",
-            e.GetMsgA());
+            e.what());
     }
     try {
         this->socket.Close();
@@ -874,7 +874,7 @@ bool vislib::net::cluster::DiscoveryService::Receiver::Terminate(void) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Error while closing cluster "
             "discovery receiver socket: %s. This is normally no problem and "
             "indicates that you already stopped the receiver before.\n",
-            e.GetMsgA());
+            e.what());
     }
 
     return true;
@@ -1000,7 +1000,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::SendMessageTo(
             } catch (SocketException e) {
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The socket for the discovery "
                     "sender could not be created. The error code is %d "
-                    "(\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
+                    "(\"%s\").\n", e.get_error().native_error(), e.what());
                 throw;
             }
         }
@@ -1019,7 +1019,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::SendMessageTo(
             } catch (SocketException e) {
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The socket for sending user "
                     "messages could not be created. The error code is %d "
-                    "(\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
+                    "(\"%s\").\n", e.get_error().native_error(), e.what());
                 throw;
             } 
         }
@@ -1113,8 +1113,8 @@ unsigned int vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Discovery sender thread could not "
             "create initialise socket sub-system. The error code is %d "
-            "(\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
-        return e.GetErrorCode();
+            "(\"%s\").\n", e.get_error().native_error(), e.what());
+        return e.get_error().native_error();
     }
 
     /* Prepare the constant parameters of our requests. */
@@ -1145,7 +1145,7 @@ unsigned int vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
         } catch (SocketException e) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A socket error occurred in the "
                 "discovery sender thread. The error code is %d (\"%s\").\n",
-                e.GetErrorCode(), e.GetMsgA());
+                e.get_error().native_error(), e.what());
         }
     } /* end for (size_t i = 0; i < cntConfigs; i++) */
 
@@ -1194,7 +1194,7 @@ unsigned int vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
             } catch (SocketException e) {
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A socket error occurred in the "
                     "discovery sender thread. The error code is %d (\"%s\").\n",
-                    e.GetErrorCode(), e.GetMsgA());
+                    e.get_error().native_error(), e.what());
             }
         } /* end for (size_t i = 0; i < cntConfigs; i++) */ 
 
@@ -1203,10 +1203,10 @@ unsigned int vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
                 sys::Thread::Sleep((cntPeers < ds->cntExpectedNodes)
                     ? ds->requestIntervalIntensive : ds->requestInterval);
             }
-        } catch (sys::SystemException e) {
+        } catch (the::system::system_exception e) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "An error occurred in the "
                 "discovery sender thread while waiting. The error code is %d "
-                "(\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
+                "(\"%s\").\n", e.get_error().native_error(), e.what());
         }
     } /* end while (this->isRunning != 0) */
 
@@ -1223,7 +1223,7 @@ unsigned int vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
         } catch (SocketException e) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A socket error occurred in the "
                 "discovery sender thread. The error code is %d (\"%s\").\n",
-                e.GetErrorCode(), e.GetMsgA());
+                e.get_error().native_error(), e.what());
         }
     } /* end for (size_t i = 0; i < cntConfigs; i++) */
 
@@ -1233,8 +1233,8 @@ unsigned int vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
     } catch (SocketException e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket cleanup failed in the discovery "
             "request thread. The error code is %d (\"%s\").\n", 
-            e.GetErrorCode(), e.GetMsgA());
-        return e.GetErrorCode();
+            e.get_error().native_error(), e.what());
+        return e.get_error().native_error();
     }
 
     return 0;
@@ -1419,13 +1419,13 @@ void vislib::net::cluster::DiscoveryService::prepareUserMessage(
 
     /* Check user parameters. */
     if (msgType < MSG_TYPE_USER) {
-        throw IllegalParamException("msgType", __FILE__, __LINE__);
+        throw the::argument_exception("msgType", __FILE__, __LINE__);
     }
     if ((msgBody == NULL) && (msgSize > 0)) {
-        throw IllegalParamException("msgBody", __FILE__, __LINE__);
+        throw the::argument_exception("msgBody", __FILE__, __LINE__);
     }
     if (msgSize > MAX_USER_DATA) {
-        throw IllegalParamException("msgSize", __FILE__, __LINE__);
+        throw the::argument_exception("msgSize", __FILE__, __LINE__);
     }
 
     // Assert some stuff.
