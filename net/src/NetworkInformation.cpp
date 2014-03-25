@@ -79,7 +79,7 @@ vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(
  * ...NetworkInformation::::NoConfidenceException::~NoConfidenceException
  */
 vislib::net::NetworkInformation::NoConfidenceException::~NoConfidenceException(
-        void) {
+        void) throw() {
     THE_STACK_TRACE;
 }
 
@@ -1802,7 +1802,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
             try {
                 adapter.type.Set(NetworkInformation::mapAdapterType(
                     sll->sll_family), VALID);
-            } catch (argument_exception) {
+            } catch (the::argument_exception) {
                 adapter.type.SetConfidence(INVALID);
             }
         }

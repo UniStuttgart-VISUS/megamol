@@ -57,7 +57,7 @@ namespace gl {
         OpenGLException(const OpenGLException& rhs);
 
         /** Dtor. */
-        virtual ~OpenGLException(void);
+        virtual ~OpenGLException(void) throw();
 
         /**
          * Answer the OpenGL error code.

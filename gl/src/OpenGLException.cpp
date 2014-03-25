@@ -48,7 +48,7 @@ vislib::graphics::gl::OpenGLException::OpenGLException(
 /*
  * vislib::graphics::gl::OpenGLException::~OpenGLException
  */
-vislib::graphics::gl::OpenGLException::~OpenGLException(void) {
+vislib::graphics::gl::OpenGLException::~OpenGLException(void) throw() {
 }
 
 

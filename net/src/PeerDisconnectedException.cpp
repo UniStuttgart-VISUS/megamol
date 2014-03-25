@@ -64,5 +64,5 @@ vislib::net::PeerDisconnectedException::PeerDisconnectedException(
 /*
  * vislib::net::PeerDisconnectedException::~PeerDisconnectedException
  */
-vislib::net::PeerDisconnectedException::~PeerDisconnectedException(void) {
+vislib::net::PeerDisconnectedException::~PeerDisconnectedException(void) throw() {
 }

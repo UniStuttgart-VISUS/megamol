@@ -127,7 +127,7 @@ namespace gl {
             CompileException(const CompileException& rhs);
 
             /** Dtor. */
-            virtual ~CompileException(void);
+            virtual ~CompileException(void) throw();
 
             /**
              * Answer the failed compile action.

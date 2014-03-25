@@ -52,7 +52,7 @@ vislib::net::SocketException::SocketException(const SocketException& rhs)
 /*
  * vislib::net::SocketException::~SocketException
  */
-vislib::net::SocketException::~SocketException(void) {
+vislib::net::SocketException::~SocketException(void) throw() {
 }
 
 

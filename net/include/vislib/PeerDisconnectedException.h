@@ -94,7 +94,7 @@ namespace net {
         PeerDisconnectedException(const PeerDisconnectedException& rhs);
 
         /** Dtor. */
-        virtual ~PeerDisconnectedException(void);
+        virtual ~PeerDisconnectedException(void) throw();
 
     };
     

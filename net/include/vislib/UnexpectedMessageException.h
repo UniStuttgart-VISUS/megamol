@@ -50,7 +50,7 @@ namespace net {
         UnexpectedMessageException(const UnexpectedMessageException& rhs);
 
         /** Dtor. */
-        virtual ~UnexpectedMessageException(void);
+        virtual ~UnexpectedMessageException(void) throw();
 
         /**
          * Answer the actually received message ID.

@@ -71,7 +71,7 @@ namespace net {
         SocketException(const SocketException& rhs);
 
         /** Dtor. */
-        virtual ~SocketException(void);
+        virtual ~SocketException(void) throw();
 
         /**
          * Assignment operator.

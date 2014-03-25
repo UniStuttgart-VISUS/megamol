@@ -202,7 +202,7 @@ unsigned int vislib::sys::SystemInformation::MonitorRects(
     if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
         errorDesc.Format("Could not open display \"%s\".", 
             ::XDisplayName(NULL));
-        throw Exception(errorDesc, __FILE__, __LINE__);
+        throw the::exception(errorDesc, __FILE__, __LINE__);
     }
 
     cntScreens = ScreenCount(dpy);
@@ -316,7 +316,7 @@ vislib::sys::SystemInformation::PrimaryMonitorRect(void) {
     if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
         errorDesc.Format("Could not open display \"%s\".", 
             ::XDisplayName(NULL));
-        throw Exception(errorDesc, __FILE__, __LINE__);
+        throw the::exception(errorDesc, __FILE__, __LINE__);
     }
 
     retval = SystemInformation::getRootWndRect(dpy, DefaultScreen(dpy));

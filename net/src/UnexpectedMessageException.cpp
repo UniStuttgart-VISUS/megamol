@@ -36,7 +36,7 @@ vislib::net::UnexpectedMessageException::UnexpectedMessageException(
 /*
  * vislib::net::UnexpectedMessageException::~UnexpectedMessageException
  */
-vislib::net::UnexpectedMessageException::~UnexpectedMessageException(void) {
+vislib::net::UnexpectedMessageException::~UnexpectedMessageException(void) throw() {
 }
 
 vislib::net::UnexpectedMessageException& 

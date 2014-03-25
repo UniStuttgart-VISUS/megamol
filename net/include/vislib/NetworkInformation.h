@@ -89,7 +89,7 @@ namespace net {
             NoConfidenceException(const NoConfidenceException& rhs);
 
             /** Dtor. */
-            virtual ~NoConfidenceException(void);
+            virtual ~NoConfidenceException(void) throw();
 
             /**
              * Assignment operator.

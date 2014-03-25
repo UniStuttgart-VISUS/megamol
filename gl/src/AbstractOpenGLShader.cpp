@@ -108,7 +108,7 @@ vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
  * AbstractOpenGLShader::CompileException::~CompileException
  */
 vislib::graphics::gl::AbstractOpenGLShader::CompileException::~CompileException(
-        void) {
+        void) throw() {
 }
 
 
