@@ -22,9 +22,8 @@
 #include "the/format_exception.h"
 #include "the/index_out_of_range_exception.h"
 #include "the/assert.h"
-#include "vislib/CharTraits.h"
-#include "vislib/String.h"
-#include "vislib/StringConverter.h"
+#include "the/string.h"
+#include "the/text/string_converter.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/Iterator.h"
 #include "vislib/CmdLineProvider.h"
@@ -55,7 +54,7 @@ namespace sys {
     public:
 
         /** Define a local name for the character type. */
-        typedef typename T::Char Char;
+        typedef typename T::value_type Char;
 
         /** forward declaration of Argument nested class */
         class Argument;
@@ -164,8 +163,8 @@ namespace sys {
                  * @param desc The desctiption of the value or NULL if no 
                  *             description should be available.
                  */
-                static inline ValueDesc * ValueList(ValueType type, const String<T>& name, const Char *desc = NULL) {
-                    return ValueList(type, name.PeekBuffer(), desc);
+                static inline ValueDesc * ValueList(ValueType type, const T& name, const Char *desc = NULL) {
+                    return ValueList(type, name.c_str(), desc);
                 }
 
                 /**
@@ -178,8 +177,8 @@ namespace sys {
                  * @param desc The desctiption of the value or NULL if no 
                  *             description should be available.
                  */
-                static inline ValueDesc * ValueList(ValueType type, const Char *name, const String<T>& desc) {
-                    return ValueList(type, name, desc.PeekBuffer());
+                static inline ValueDesc * ValueList(ValueType type, const Char *name, const T& desc) {
+                    return ValueList(type, name, desc.c_str());
                 }
 
                 /**
@@ -192,8 +191,8 @@ namespace sys {
                  * @param desc The desctiption of the value or NULL if no 
                  *             description should be available.
                  */
-                static inline ValueDesc * ValueList(ValueType type, const String<T>& name, const String<T>& desc) {
-                    return ValueList(type, name.PeekBuffer(), desc.PeekBuffer());
+                static inline ValueDesc * ValueList(ValueType type, const T& name, const T& desc) {
+                    return ValueList(type, name.c_str(), desc.c_str());
                 }
 
                 /**
@@ -230,8 +229,8 @@ namespace sys {
                  * @param desc The desctiption of the value or NULL if no 
                  *             description should be available.
                  */
-                inline ValueDesc * Add(ValueType type, const String<T>& name, const Char *desc = NULL) {
-                    return Add(type, name.PeekBuffer(), desc);
+                inline ValueDesc * Add(ValueType type, const T& name, const Char *desc = NULL) {
+                    return Add(type, name.c_str(), desc);
                 }
 
                 /**
@@ -244,8 +243,8 @@ namespace sys {
                  * @param desc The desctiption of the value or NULL if no 
                  *             description should be available.
                  */
-                inline ValueDesc * Add(ValueType type, const Char *name, const String<T>& desc) {
-                    return Add(type, name, desc.PeekBuffer());
+                inline ValueDesc * Add(ValueType type, const Char *name, const T& desc) {
+                    return Add(type, name, desc.c_str());
                 }
 
                 /**
@@ -258,8 +257,8 @@ namespace sys {
                  * @param desc The desctiption of the value or NULL if no 
                  *             description should be available.
                  */
-                inline ValueDesc * Add(ValueType type, const String<T>& name, const String<T>& desc) {
-                    return Add(type, name.PeekBuffer(), desc.PeekBuffer());
+                inline ValueDesc * Add(ValueType type, const T& name, const T& desc) {
+                    return Add(type, name.c_str(), desc.c_str());
                 }
 
                 /** 
@@ -276,7 +275,7 @@ namespace sys {
                  *
                  * @throw index_out_of_range_exception if i is out of range.
                  */
-                inline const String<T>& Name(unsigned int i) const {
+                inline const T& Name(unsigned int i) const {
                     return this->element(i).name;
                 }
 
@@ -287,7 +286,7 @@ namespace sys {
                  *
                  * @throw index_out_of_range_exception if i is out of range.
                  */
-                inline const String<T>& Description(unsigned int i) const {
+                inline const T& Description(unsigned int i) const {
                     return this->element(i).description;
                 }
 
@@ -320,10 +319,10 @@ namespace sys {
                 const ValueDesc &element(unsigned int i) const;
 
                 /** the name of the value */
-                String<T> name;
+                T name;
 
                 /** the description of the value */
-                String<T> description;
+                T description;
 
                 /** the type of the value */
                 ValueType type;
@@ -371,10 +370,10 @@ namespace sys {
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            inline Option(const Char shortName, const String<T>& longName, 
+            inline Option(const Char shortName, const T& longName, 
                     const Char *description = NULL, Flags flags = FLAG_NULL, 
                     ValueDesc *valueList = NULL) {
-                this->initObject(shortName, longName.PeekBuffer(), description,
+                this->initObject(shortName, longName.c_str(), description,
                     flags, valueList);
             }            
             
@@ -395,9 +394,9 @@ namespace sys {
              *                  option directly in the command line.
              */
             inline Option(const Char shortName, const Char *longName, 
-                    const String<T>& description, Flags flags = FLAG_NULL, 
+                    const T& description, Flags flags = FLAG_NULL, 
                     ValueDesc *valueList = NULL) {
-                this->initObject(shortName, longName, description.PeekBuffer(), 
+                this->initObject(shortName, longName, description.c_str(), 
                     flags, valueList);
             }
 
@@ -417,11 +416,11 @@ namespace sys {
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            inline Option(const Char shortName, const String<T>& longName, 
-                    const String<T>& description = NULL, Flags flags = FLAG_NULL, 
+            inline Option(const Char shortName, const T& longName, 
+                    const T& description = NULL, Flags flags = FLAG_NULL, 
                     ValueDesc *valueList = NULL) {
-                this->initObject(shortName, longName.PeekBuffer(), 
-                    description.PeekBuffer(), flags, valueList);
+                this->initObject(shortName, longName.c_str(), 
+                    description.c_str(), flags, valueList);
             }
 
             /** 
@@ -459,10 +458,10 @@ namespace sys {
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            inline Option(const String<T>& longName, 
+            inline Option(const T& longName, 
                     const Char *description = NULL, Flags flags = FLAG_NULL, 
                     ValueDesc *valueList = NULL) {
-                this->initObject(static_cast<Char>(0), longName.PeekBuffer(), 
+                this->initObject(static_cast<Char>(0), longName.c_str(), 
                     description, flags, valueList);
             }            
             
@@ -480,10 +479,10 @@ namespace sys {
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            inline Option(const Char *longName, const String<T>& description, 
+            inline Option(const Char *longName, const T& description, 
                     Flags flags = FLAG_NULL, ValueDesc *valueList = NULL) {
                 this->initObject(static_cast<Char>(0), longName, 
-                    description.PeekBuffer(), flags, valueList);
+                    description.c_str(), flags, valueList);
             }
 
             /** 
@@ -500,11 +499,11 @@ namespace sys {
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            inline Option(const String<T>& longName, 
-                    const String<T>& description = NULL, 
+            inline Option(const T& longName, 
+                    const T& description = NULL, 
                     Flags flags = FLAG_NULL, ValueDesc *valueList = NULL) {
-                this->initObject(static_cast<Char>(0), longName.PeekBuffer(), 
-                    description.PeekBuffer(), flags, valueList);
+                this->initObject(static_cast<Char>(0), longName.c_str(), 
+                    description.c_str(), flags, valueList);
             }
 
             /** 
@@ -546,10 +545,10 @@ namespace sys {
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            inline Option(const Char shortName, const String<T>& longName, 
+            inline Option(const Char shortName, const T& longName, 
                     const Char *description, int flags,
                     ValueDesc *valueList = NULL) {
-                this->initObject(shortName, longName.PeekBuffer(), description,
+                this->initObject(shortName, longName.c_str(), description,
                     static_cast<Flags>(flags), valueList);
             }            
             
@@ -570,9 +569,9 @@ namespace sys {
              *                  option directly in the command line.
              */
             inline Option(const Char shortName, const Char *longName, 
-                    const String<T>& description, int flags, 
+                    const T& description, int flags, 
                     ValueDesc *valueList = NULL) {
-                this->initObject(shortName, longName, description.PeekBuffer(), 
+                this->initObject(shortName, longName, description.c_str(), 
                     static_cast<Flags>(flags), valueList);
             }
 
@@ -592,11 +591,11 @@ namespace sys {
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            inline Option(const Char shortName, const String<T>& longName, 
-                    const String<T>& description, int flags, 
+            inline Option(const Char shortName, const T& longName, 
+                    const T& description, int flags, 
                     ValueDesc *valueList = NULL) {
-                this->initObject(shortName, longName.PeekBuffer(), 
-                    description.PeekBuffer(), static_cast<Flags>(flags), 
+                this->initObject(shortName, longName.c_str(), 
+                    description.c_str(), static_cast<Flags>(flags), 
                     valueList);
             }
 
@@ -634,9 +633,9 @@ namespace sys {
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            inline Option(const String<T>& longName, const Char *description, 
+            inline Option(const T& longName, const Char *description, 
                     int flags, ValueDesc *valueList = NULL) {
-                this->initObject(static_cast<Char>(0), longName.PeekBuffer(), 
+                this->initObject(static_cast<Char>(0), longName.c_str(), 
                     description, static_cast<Flags>(flags), valueList);
             }            
             
@@ -654,10 +653,10 @@ namespace sys {
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            inline Option(const Char *longName, const String<T>& description, 
+            inline Option(const Char *longName, const T& description, 
                     int flags, ValueDesc *valueList = NULL) {
                 this->initObject(static_cast<Char>(0), longName, 
-                    description.PeekBuffer(), static_cast<Flags>(flags), 
+                    description.c_str(), static_cast<Flags>(flags), 
                     valueList);
             }
 
@@ -675,11 +674,11 @@ namespace sys {
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            inline Option(const String<T>& longName, 
-                    const String<T>& description, int flags, 
+            inline Option(const T& longName, 
+                    const T& description, int flags, 
                     ValueDesc *valueList = NULL) {
-                this->initObject(static_cast<Char>(0), longName.PeekBuffer(), 
-                    description.PeekBuffer(), static_cast<Flags>(flags), 
+                this->initObject(static_cast<Char>(0), longName.c_str(), 
+                    description.c_str(), static_cast<Flags>(flags), 
                     valueList);
             }
 
@@ -713,7 +712,7 @@ namespace sys {
              *
              * @throws index_out_of_range_exception if i larger or equal value count.
              */
-            inline const String<T>& GetValueName(unsigned int i) const {
+            inline const T& GetValueName(unsigned int i) const {
                 return this->values->Name(i);
             }
 
@@ -724,7 +723,7 @@ namespace sys {
              *
              * @throws index_out_of_range_exception if i larger or equal value count.
              */
-            inline const String<T>& GetValueDescription(unsigned int i) const {
+            inline const T& GetValueDescription(unsigned int i) const {
                 return this->values->Description(i);
             }
 
@@ -765,7 +764,7 @@ namespace sys {
              *
              * @return The long name.
              */
-            inline const String<T>& GetLongName(void) const {
+            inline const T& GetLongName(void) const {
                 return this->longName;
             }
 
@@ -774,7 +773,7 @@ namespace sys {
              *
              * @return The description.
              */
-            inline const String<T>& GetDescription(void) const {
+            inline const T& GetDescription(void) const {
                 return this->description;
             }
 
@@ -825,10 +824,10 @@ namespace sys {
             Char shortName;
 
             /** long name of the option */
-            String<T> longName;
+            T longName;
 
             /** description string of the option */
-            String<T> description;
+            T description;
 
             /** flag indicating that this option is unique */
             bool unique;
@@ -1392,7 +1391,7 @@ namespace sys {
          * @return Pointer to the found option or NULL if no option in the
          *         parsers option list has this long name.
          */
-        const Option* FindOption(const String<T>& longname) const;
+        const Option* FindOption(const T& longname) const;
 
         /**
          * Parses the command line specified by argv and argc, builds up the
@@ -1761,7 +1760,7 @@ namespace sys {
         }
         THE_ASSERT(this->type != TYPE_UNKNOWN);
 
-        return T::ParseInt(this->valueArg); // throws format_exception on failure
+        return the::text::string_utility::parse_int(this->valueArg); // throws format_exception on failure
     }
 
 
@@ -1775,7 +1774,7 @@ namespace sys {
         }
         THE_ASSERT(this->type != TYPE_UNKNOWN);
 
-        return T::ParseDouble(this->valueArg); // throws format_exception on failure
+        return the::text::string_utility::parse_double(this->valueArg); // throws format_exception on failure
     }
 
     
@@ -1789,7 +1788,7 @@ namespace sys {
         }
         THE_ASSERT(this->type != TYPE_UNKNOWN);
 
-        return T::ParseBool(this->valueArg); // throws format_exception on failure
+        return the::text::string_utility::parse_bool(this->valueArg); // throws format_exception on failure
     }
 
 
@@ -1851,12 +1850,12 @@ namespace sys {
         Option *opt = this->option.Next();
         the::safe_array_delete(this->output);
 
-        vislib::String<T> str;
-        if (!opt->GetLongName().IsEmpty()) {
-            str = vislib::String<T>(static_cast<Char>('-'), 2) + opt->GetLongName();
+        T str;
+        if (!opt->GetLongName().empty()) {
+            str = T(2, static_cast<Char>('-')) + opt->GetLongName();
         }
         if (opt->GetShortName() != 0) {
-            if (!str.IsEmpty()) {
+            if (!str.empty()) {
                 str += static_cast<Char>(' ');
             }
             str += static_cast<Char>('-');
@@ -1865,7 +1864,7 @@ namespace sys {
 
         this->formatter[0].SetText(str);
         if (this->withValues) {
-            this->formatter[1].SetText(T::EMPTY_STRING);
+            this->formatter[1].SetText(T());
             this->formatter[2].SetText(opt->GetDescription());
         } else {
             this->formatter[1].SetText(opt->GetDescription());
@@ -1875,16 +1874,16 @@ namespace sys {
         if (this->withValues) {
             if (opt->GetValueCount() > 0) {
                 str += static_cast<Char>('\n');
-                vislib::String<T> str2;
+                T str2;
 
                 this->formatter[1].SetWidth(this->formatter[0].GetWidth() - 4);
                 this->formatter[0].SetWidth(2);
-                this->formatter[0].SetText(T::EMPTY_STRING);
-                this->formatter.SetSeparator(vislib::String<T>(static_cast<Char>(' '), 2));
+                this->formatter[0].SetText(T());
+                this->formatter.SetSeparator(T(2, static_cast<Char>(' ')));
                 
                 unsigned int cnt = opt->GetValueCount();
                 for (unsigned int i = 0; i < cnt; i++) {
-                    str2 = StringConverter<CharTraitsA, T>("<");
+                    the::text::string_converter::convert(str2, "<");
                     str2 += opt->GetValueName(i);
                     str2 += static_cast<Char>('>');
                     this->formatter[1].SetText(str2);
@@ -1894,7 +1893,7 @@ namespace sys {
                     str += static_cast<Char>('\n');
                 }
 
-                this->formatter.SetSeparator(vislib::String<T>(static_cast<Char>(' '), 1));
+                this->formatter.SetSeparator(T(1, static_cast<Char>(' ')));
                 this->formatter[0].SetWidth(this->formatter[1].GetWidth() + 4);
                 this->formatter[1].SetWidth(0);
 
@@ -1903,11 +1902,11 @@ namespace sys {
             }
         }
 
-        unsigned int len = str.Length();
+        unsigned int len = static_cast<unsigned int>(str.size());
         this->output = new Char[len + 1];
         this->output[len] = 0;
         if (len > 0) {
-            ::memcpy(this->output, str.PeekBuffer(), len * T::CharSize());
+            ::memcpy(this->output, str.c_str(), len * sizeof(T::value_type));
         }
 
         return this->output;
@@ -1921,7 +1920,7 @@ namespace sys {
     CmdLineParser<T>::OptionDescIterator::OptionDescIterator(OptionPtrList &opts, bool withValues) 
             : formatter(withValues ? 3 : 2), output(NULL), withValues(withValues) {
         this->options = &opts;
-        this->formatter.SetSeparator(vislib::String<T>(static_cast<Char>(' '), withValues ? 1 : 2));
+        this->formatter.SetSeparator(T(withValues ? 1 : 2, static_cast<Char>(' ')));
         unsigned int consoleWidth = vislib::sys::Console::GetWidth();
         if (consoleWidth > 0) {
             this->formatter.SetMaxWidth(consoleWidth - 1);
@@ -1939,7 +1938,7 @@ namespace sys {
         this->option = this->options->GetIterator();
         while (this->option.HasNext()) {
             Option *opt = this->option.Next();
-            unsigned int len = opt->GetLongName().Length();
+            unsigned int len = static_cast<unsigned int>(opt->GetLongName().size());
             if (len > 0) len += 2;
             if (opt->GetShortName() != 0) {
                 len += ((len > 0) ? 3 : 2);
@@ -1949,7 +1948,7 @@ namespace sys {
 
             if (this->withValues) {
                 for (int i = opt->GetValueCount() - 1; i >= 0; i--) {
-                    len = opt->GetValueName(i).Length() + 6;
+                    len = static_cast<unsigned int>(opt->GetValueName(i).size() + 6);
                     if (len > optnamelen) optnamelen = len;
                 }
             }
@@ -2011,7 +2010,7 @@ namespace sys {
         if ((opt == NULL) || ((opt->parser != NULL) && (opt->parser != this)) 
                 || (this->FindOption(opt->shortName) != NULL) 
                 || (this->FindOption(opt->longName) != NULL)
-                || ((opt->shortName == 0) && (opt->longName == NULL))) {
+                || ((opt->shortName == 0) && (opt->longName.empty()))) {
             throw the::argument_exception("opt", __FILE__, __LINE__);
         }
 
@@ -2077,8 +2076,8 @@ namespace sys {
 
         while(it.HasNext()) {
             Option *o = it.Next();
-            if (!o->longName.IsEmpty()
-                    && o->longName.Equals(longname, false)) return o;
+            if (!o->longName.empty()
+                && the::text::string_utility::equals(o->longName, longname, false)) return o;
         }
 
         return NULL;
@@ -2090,14 +2089,14 @@ namespace sys {
      */
     template<class T>
     const typename CmdLineParser<T>::Option* CmdLineParser<T>::FindOption(
-            const String<T>& longname) const {
+            const T& longname) const {
         OptionPtrIterator it 
             = const_cast<CmdLineParser<T>*>(this)->options.GetIterator();
 
         while(it.HasNext()) {
             Option *o = it.Next();
-            if (!o->longName.IsEmpty()
-                    && o->longName.Equals(longname, false)) return o;
+            if (!o->longName.empty()
+                && the::text::string_utility::equals(o->longName, longname, false)) return o;
         }
 
         return NULL;
@@ -2138,7 +2137,7 @@ namespace sys {
                     while (opti.HasNext()) {
                         Option *opt = opti.Next();
                         THE_ASSERT(opt != NULL);
-                        if (opt->longName.Equals(&argv[i][2], false)) {
+                        if (the::text::string_utility::equals(opt->longName, &argv[i][2], false)) {
                             o = opt; 
                             break;
                         }
@@ -2331,7 +2330,7 @@ namespace sys {
                     while (opti.HasNext()) {
                         Option *opt = opti.Next();
                         THE_ASSERT(opt != NULL);
-                        if (opt->longName.Equals(&argv[i][2], false)) {
+                        if (the::text::string_utility::equals(opt->longName, &argv[i][2], false)) {
                             this->arglist[this->arglistSize].option = opt;
                             this->arglist[this->arglistSize].type = Argument::TYPE_OPTION_LONGNAME;
                             if (opt->firstArg == NULL) {
@@ -2405,7 +2404,7 @@ namespace sys {
                                 break;
                             case Option::INT_VALUE:
                                 try {
-                                    T::ParseInt(argv[i]);
+                                    the::text::string_utility::parse_int(argv[i]);
                                     this->arglist[this->arglistSize].valueType = Option::INT_VALUE;
                                 } catch(...) {
                                     this->arglist[this->arglistSize].valueType = Option::NO_VALUE;
@@ -2413,7 +2412,7 @@ namespace sys {
                                 break;
                             case Option::DOUBLE_VALUE:
                                 try {
-                                    T::ParseDouble(argv[i]);
+                                    the::text::string_utility::parse_double(argv[i]);
                                     this->arglist[this->arglistSize].valueType = Option::DOUBLE_VALUE;
                                 } catch(...) {
                                     this->arglist[this->arglistSize].valueType = Option::NO_VALUE;
@@ -2421,7 +2420,7 @@ namespace sys {
                                 break;
                             case Option::BOOL_VALUE:
                                 try {
-                                    T::ParseBool(argv[i]);
+                                    the::text::string_utility::parse_bool(argv[i]);
                                     this->arglist[this->arglistSize].valueType = Option::BOOL_VALUE;
                                 } catch(...) {
                                     this->arglist[this->arglistSize].valueType = Option::NO_VALUE;
@@ -2429,7 +2428,7 @@ namespace sys {
                                 break;
                             case Option::INT_OR_STRING_VALUE:
                                 try {
-                                    T::ParseInt(argv[i]);
+                                    the::text::string_utility::parse_int(argv[i]);
                                     this->arglist[this->arglistSize].valueType = Option::INT_VALUE;
                                 } catch(...) {
                                     this->arglist[this->arglistSize].valueType = Option::STRING_VALUE;
@@ -2437,7 +2436,7 @@ namespace sys {
                                 break;
                             case Option::DOUBLE_OR_STRING_VALUE:
                                 try {
-                                    T::ParseDouble(argv[i]);
+                                    the::text::string_utility::parse_double(argv[i]);
                                     this->arglist[this->arglistSize].valueType = Option::DOUBLE_VALUE;
                                 } catch(...) {
                                     this->arglist[this->arglistSize].valueType = Option::STRING_VALUE;
@@ -2445,7 +2444,7 @@ namespace sys {
                                 break;
                             case Option::BOOL_OR_STRING_VALUE:
                                 try {
-                                    T::ParseBool(argv[i]);
+                                    the::text::string_utility::parse_bool(argv[i]);
                                     this->arglist[this->arglistSize].valueType = Option::BOOL_VALUE;
                                 } catch(...) {
                                     this->arglist[this->arglistSize].valueType = Option::STRING_VALUE;
@@ -2568,13 +2567,13 @@ namespace sys {
 
 
     /** Template instantiation for ANSI strings. */
-    typedef CmdLineParser<CharTraitsA> CmdLineParserA;
+    typedef CmdLineParser<the::astring> CmdLineParserA;
 
     /** Template instantiation for wide strings. */
-    typedef CmdLineParser<CharTraitsW> CmdLineParserW;
+    typedef CmdLineParser<the::wstring> CmdLineParserW;
 
     /** Template instantiation for TCHARs. */
-    typedef CmdLineParser<TCharTraits> TCmdLineParser;
+    typedef CmdLineParser<the::tstring> TCmdLineParser;
 
 } /* end namespace sys */
 } /* end namespace vislib */

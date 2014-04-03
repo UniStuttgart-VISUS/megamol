@@ -285,7 +285,7 @@ namespace cluster {
      */
     template<class T>
     void AbstractServerNode::initialise(sys::CmdLineProvider<T>& inOutCmdLine) {
-        typedef vislib::String<T> String;
+        typedef T String;
         typedef vislib::sys::CmdLineParser<T> Parser;
         typedef typename Parser::Argument Argument;
         typedef typename Parser::Option Option;
@@ -294,27 +294,27 @@ namespace cluster {
         Parser parser;
         Argument *arg = NULL;
 
-        Option optServer(String(_T("bind-address")), 
-            String(_T("Specifies the address (adapter) to bind the server to.")),
+        Option optServer(the::text::string_converter::convert<String>(_T("bind-address")), 
+            the::text::string_converter::convert<String>(_T("Specifies the address (adapter) to bind the server to.")),
             Option::FLAG_UNIQUE, 
             ValueDesc::ValueList(Option::STRING_VALUE, 
-                String(_T("adapter")), 
-                String(_T("The IP address to bind the server to."))));
+                the::text::string_converter::convert<String>(_T("adapter")), 
+                the::text::string_converter::convert<String>(_T("The IP address to bind the server to."))));
         parser.AddOption(&optServer);
 
-        Option optPort(String(_T("bind-port")), 
-            String(_T("Specifies the post to bind the server to.")),
+        Option optPort(the::text::string_converter::convert<String>(_T("bind-port")), 
+            the::text::string_converter::convert<String>(_T("Specifies the post to bind the server to.")),
             Option::FLAG_UNIQUE, 
             ValueDesc::ValueList(Option::INT_VALUE, 
-                String(_T("port")), 
-                String(_T("The port the server node will listen on."))));
+                the::text::string_converter::convert<String>(_T("port")), 
+                the::text::string_converter::convert<String>(_T("The port the server node will listen on."))));
         parser.AddOption(&optPort);
 
         if (parser.Parse(inOutCmdLine.ArgC(), inOutCmdLine.ArgV()) >= 0) {
             if ((arg = optServer.GetFirstOccurrence()) != NULL) {
                 // TODO: IPv6
                 this->bindAddress.SetIPAddress(IPAddress::Create(
-                    StringA(arg->GetValueString())));
+                    the::text::string_converter::convert<the::astring>(arg->GetValueString()).c_str()));
             } else {
                 // TODO: IPv6
                 this->bindAddress.SetIPAddress(IPAddress::ANY);

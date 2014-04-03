@@ -100,7 +100,7 @@ namespace vislib {
          *
          * @return 'true' if the map is empty, 'false' otherwise.
          */
-        virtual bool IsEmpty(void) const = 0;
+        virtual bool empty(void) const = 0;
 
         /**
          * Removes the given key from the map.

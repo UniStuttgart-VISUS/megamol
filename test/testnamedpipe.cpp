@@ -9,7 +9,7 @@
 
 #include "vislib/Mutex.h"
 #include "vislib/NamedPipe.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "vislib/Thread.h"
 #include "the/trace.h"
 #include "the/system/system_exception.h"

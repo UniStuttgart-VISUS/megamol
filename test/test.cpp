@@ -16,7 +16,6 @@
 
 /* include test implementations */
 #include "testhelper.h"
-#include "teststring.h"
 #include "testfloat16.h"
 #include "testthread.h"
 #include "testfile.h"
@@ -59,7 +58,6 @@
 #include "testtriangle.h"
 #include "testBitmapImage.h"
 #include "testReaderWriterLock.h"
-#include "testmultisz.h"
 #ifdef _WIN32
 #include "testwinreg.h"
 #endif /* _WIN32 */
@@ -91,9 +89,7 @@ VislibTest tests[] = {
     {_T("Map"), ::TestMap, "Tests vislib::Map"},
     {_T("Serialiser"), ::TestSerialiser, "Tests VISlib serialisers."},
     {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
-    {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
-    {_T("multisz"), ::TestMultiSz, "Tests MultiSz container"},
     // graphics
     {_T("BitmapCodecSimple"), ::TestBitmapCodecSimple, "Performs very simple tests of vislib::graphics::*BitmapCodec"},
     {_T("NamedColours"), ::TestNamedColours, "Tests NamedColours"},

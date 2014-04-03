@@ -14,7 +14,7 @@
 #include <iostream>
 
 #include "vislib/CmdLineParser.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/trace.h"
 
 #include "GlutClient.h"
@@ -83,22 +83,22 @@ int main(int argc, char **argv) {
     Argument *arg = NULL;
     if ((arg = optTest.GetFirstOccurrence()) != NULL) {
         try {
-            vislib::TString val = arg->GetValueString();
-            if (val.Equals(_T("plainserver"), false)) {
+            the::tstring val = arg->GetValueString();
+            if (the::text::string_utility::equals(val, _T("plainserver"), false)) {
                 PlainServer::GetInstance().Initialise(cmdLine);
                 return PlainServer::GetInstance().Run();
-            } else if (val.Equals(_T("plainclient"), false)) {
+            } else if (the::text::string_utility::equals(val, _T("plainclient"), false)) {
                 PlainClient::GetInstance().Initialise(cmdLine);
                 return PlainClient::GetInstance().Run();
 #if defined(VISLIB_CLUSTER_WITH_OPENGL) && (VISLIB_CLUSTER_WITH_OPENGL != 0)
-            } else if (val.Equals(_T("glutserver"), false)) {
+            } else if (the::text::string_utility::equals(val, _T("glutserver"), false)) {
                 GlutServer::GetInstance().Initialise(cmdLine);
                 return GlutServer::GetInstance().Run();
-            } else if (val.Equals(_T("glutclient"), false)) {
+            } else if (the::text::string_utility::equals(val, _T("glutclient"), false)) {
                 GlutClient::GetInstance().Initialise(cmdLine);
                 return GlutClient::GetInstance().Run();
 #endif /*defined(VISLIB_CLUSTER_WITH_OPENGL) && ... */
-            } else if (val.Equals(_T("discovery"), false)) {
+            } else if (the::text::string_utility::equals(val, _T("discovery"), false)) {
                 DiscoveryTestApp::GetInstance().Initialise(cmdLine);
                 return DiscoveryTestApp::GetInstance().Run();
             }

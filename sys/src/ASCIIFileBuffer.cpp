@@ -7,7 +7,6 @@
 
 #include "vislib/ASCIIFileBuffer.h"
 #include "the/assert.h"
-#include "vislib/CharTraits.h"
 #include "the/memory.h"
 #include "the/trace.h"
 

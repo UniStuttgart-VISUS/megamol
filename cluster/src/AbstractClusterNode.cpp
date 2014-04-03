@@ -64,7 +64,7 @@ void vislib::net::cluster::AbstractClusterNode::onCommunicationError(
         const PeerIdentifier& peerId, const ComErrorSource src,
         const SocketException& err) throw() {
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A communication error occurred while talking "
-        "to %s: %s\n", peerId.ToStringA().PeekBuffer(), err.what());
+        "to %s: %s\n", peerId.ToStringA().c_str(), err.what());
 }
 
 

@@ -17,7 +17,7 @@
 
 #include "vislib/BitmapImage.h"
 #include "vislib/File.h"
-#include "vislib/MultiSz.h"
+#include "the/multi_sz.h"
 #include "vislib/RawStorage.h"
 #include "the/types.h"
 
@@ -163,8 +163,8 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully loaded.
          */
-        inline bool Load(const vislib::StringA& filename) {
-            return this->Load(filename.PeekBuffer());
+        inline bool Load(const the::astring& filename) {
+            return this->Load(filename.c_str());
         }
 
         /**
@@ -189,8 +189,8 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully loaded.
          */
-        inline bool Load(const vislib::StringW& filename) {
-            return this->Load(filename.PeekBuffer());
+        inline bool Load(const the::wstring& filename) {
+            return this->Load(filename.c_str());
         }
 
         /**
@@ -278,9 +278,9 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully saved.
          */
-        inline bool Save(const vislib::StringA& filename,
+        inline bool Save(const the::astring& filename,
                 bool overwrite = true) const {
-            return this->Save(filename.PeekBuffer(), overwrite);
+            return this->Save(filename.c_str(), overwrite);
         }
 
         /**
@@ -313,9 +313,9 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully saved.
          */
-        inline bool Save(const vislib::StringW& filename,
+        inline bool Save(const the::wstring& filename,
                 bool overwrite = true) const {
-            return this->Save(filename.PeekBuffer(), overwrite);
+            return this->Save(filename.c_str(), overwrite);
         }
 
         /**

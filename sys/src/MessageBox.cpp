@@ -736,7 +736,7 @@ namespace MessageBoxLinuxUtils {
     void drawDialog(Display *display, int screen, Window window, GC gc,
             Colours& colours, XFontStruct *font, const char *btn1,
             const char *btn2, const char *btn3, XImage *icon,
-            const vislib::TString& msg, unsigned int& btnFocus,
+            const the::tstring& msg, unsigned int& btnFocus,
             bool focusBtnDown) {
 
         const unsigned int btnCnt = ((btn2 == NULL) ? 1
@@ -769,10 +769,10 @@ namespace MessageBoxLinuxUtils {
         int i1, i2, i3, len, li;
         XCharStruct tsize;
         unsigned int lineCnt = 0;
-        vislib::StringA text(msg);
+        the::astring text(msg);
 
-        text.TrimSpaces();
-        const char *txt = text.PeekBuffer();
+        the::text::string_utility::trim(text);
+        const char *txt = text.c_str();
         len = strlen(txt);
 
         ::XTextExtents(font, "A", 1, &i1, &i2, &i3, &tsize);
@@ -804,7 +804,7 @@ namespace MessageBoxLinuxUtils {
 
         int ty = ((by - border) - (tsize.ascent + tsize.descent)
             * lineCnt) / 2 + tsize.ascent;
-        txt = text.PeekBuffer();
+        txt = text.c_str();
         len = strlen(txt);
 
         while (len > 0) {
@@ -873,8 +873,8 @@ namespace MessageBoxLinuxUtils {
  * vislib::sys::MessageBox::Show
  */
 vislib::sys::MessageBox::ReturnValue 
-vislib::sys::MessageBox::Show(const vislib::StringA& msg,
-        const vislib::StringA& title, MsgButtons btns, MsgIcon icon,
+vislib::sys::MessageBox::Show(const the::astring& msg,
+        const the::astring& title, MsgButtons btns, MsgIcon icon,
         DefButton defBtn) {
     return MessageBox(msg, title, btns, icon, defBtn).ShowDialog();
 }
@@ -884,8 +884,8 @@ vislib::sys::MessageBox::Show(const vislib::StringA& msg,
  * vislib::sys::MessageBox::Show
  */
 vislib::sys::MessageBox::ReturnValue 
-vislib::sys::MessageBox::Show(const vislib::StringW& msg,
-        const vislib::StringW& title, MsgButtons btns, MsgIcon icon,
+vislib::sys::MessageBox::Show(const the::wstring& msg,
+        const the::wstring& title, MsgButtons btns, MsgIcon icon,
         DefButton defBtn) {
     return MessageBox(msg, title, btns, icon, defBtn).ShowDialog();
 }
@@ -895,8 +895,8 @@ vislib::sys::MessageBox::Show(const vislib::StringW& msg,
  * vislib::sys::MessageBox::ShowDialog
  */
 vislib::sys::MessageBox::ReturnValue 
-vislib::sys::MessageBox::ShowDialog(const vislib::StringA& msg,
-        const vislib::StringA& title, MsgButtons btns, MsgIcon icon,
+vislib::sys::MessageBox::ShowDialog(const the::astring& msg,
+        const the::astring& title, MsgButtons btns, MsgIcon icon,
         DefButton defBtn) {
     return MessageBox(msg, title, btns, icon, defBtn).ShowDialog();
 }
@@ -906,8 +906,8 @@ vislib::sys::MessageBox::ShowDialog(const vislib::StringA& msg,
  * vislib::sys::MessageBox::ShowDialog
  */
 vislib::sys::MessageBox::ReturnValue 
-vislib::sys::MessageBox::ShowDialog(const vislib::StringW& msg,
-        const vislib::StringW& title, MsgButtons btns, MsgIcon icon,
+vislib::sys::MessageBox::ShowDialog(const the::wstring& msg,
+        const the::wstring& title, MsgButtons btns, MsgIcon icon,
         DefButton defBtn) {
     return MessageBox(msg, title, btns, icon, defBtn).ShowDialog();
 }
@@ -916,19 +916,20 @@ vislib::sys::MessageBox::ShowDialog(const vislib::StringW& msg,
 /*
  * vislib::sys::MessageBox::MessageBox
  */
-vislib::sys::MessageBox::MessageBox(const vislib::StringA &msg,
-        const vislib::StringA &title, MsgButtons btns, MsgIcon icon,
-        DefButton defBtn) : btns(btns), defBtn(defBtn), icon(icon), msg(msg),
-        retval(RET_NONE), title(title) {
-    // intentionally empty
+vislib::sys::MessageBox::MessageBox(const the::astring &msg,
+        const the::astring &title, MsgButtons btns, MsgIcon icon,
+        DefButton defBtn) : btns(btns), defBtn(defBtn), icon(icon), msg(),
+        retval(RET_NONE), title() {
+    the::text::string_converter::convert(this->msg, msg);
+    the::text::string_converter::convert(this->title, title);
 }
 
 
 /*
  * vislib::sys::MessageBox::MessageBox
  */
-vislib::sys::MessageBox::MessageBox(const vislib::StringW &msg,
-        const vislib::StringW &title, MsgButtons btns, MsgIcon icon,
+vislib::sys::MessageBox::MessageBox(const the::wstring &msg,
+        const the::wstring &title, MsgButtons btns, MsgIcon icon,
         DefButton defBtn) : btns(btns), defBtn(defBtn), icon(icon), msg(msg),
         retval(RET_NONE), title(title) {
     // intentionally empty
@@ -981,7 +982,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
         default : /* nothing to do */ break;
     }
 
-    rv = ::MessageBoxW(NULL, this->msg.PeekBuffer(), this->title.PeekBuffer(),
+    rv = ::MessageBoxW(NULL, this->msg.c_str(), this->title.c_str(),
         type);
 
     switch (rv) {
@@ -1009,7 +1010,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
     int answerBtn = -1;
     XImage *xIcon = NULL;
 
-    vislib::StringA titleA(this->title);
+    the::astring titleA(this->title);
 
     // construct button captions
     const char *btn1 = NULL, *btn2 = NULL, *btn3 = NULL;
@@ -1071,8 +1072,8 @@ vislib::sys::MessageBox::ShowDialog(void) {
             font = ::XQueryFont(display, ::XGContextFromGC(gc));
 
             // calculate required dialog size
-            vislib::StringA text(this->msg);
-            text.TrimSpaces();
+            the::astring text(this->msg);
+            the::text::string_utility::trim(text);
             const unsigned int maxWinWidth = 600;
             unsigned int winWidth, winHeight;
             const unsigned int btnCnt = ((btn2 == NULL) ? 1
@@ -1104,7 +1105,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
                     + MessageBoxLinuxUtils::iconSize[0]);
             }
 
-            const char *txt = text.PeekBuffer();
+            const char *txt = text.c_str();
             len = strlen(txt);
 
             ::XTextExtents(font, "A", 1, &i1, &i2, &i3, &tsize);
@@ -1405,8 +1406,8 @@ vislib::sys::MessageBox::ShowDialog(void) {
         FILE *out = (this->icon == ICON_ERROR) ? stderr : stdout;
 
         // print title and message
-        if (!titleA.IsEmpty()) {
-            fprintf(out, "\n\t%s\n\n", titleA.PeekBuffer());
+        if (!titleA.empty()) {
+            fprintf(out, "\n\t%s\n\n", titleA.c_str());
         }
         switch (this->icon) {
             case ICON_ERROR: fprintf(out, "Error: "); break;
@@ -1416,7 +1417,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
             case ICON_NONE: // fall through
             default : /* nothing to do */ break;
         }
-        fprintf(out, "%s\n\n", vislib::StringA(this->msg).PeekBuffer());
+        fprintf(out, "%s\n\n", the::astring(this->msg).c_str());
 
         // simple ok message boxes are handled separatly
         if (this->btns == BTNS_OK) {

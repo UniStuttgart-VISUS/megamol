@@ -23,7 +23,7 @@
 #endif /* _MSC_VER */
 
 
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/types.h"
 
 
@@ -105,7 +105,7 @@ namespace sys {
          *
          * @return outFn
          */
-        static vislib::StringA& CreateTempFileName(vislib::StringA& outFn);
+        static the::astring& CreateTempFileName(the::astring& outFn);
 
         /**
          * Creates a file name for a temporary file
@@ -114,15 +114,15 @@ namespace sys {
          *
          * @return outFn
          */
-        static vislib::StringW& CreateTempFileName(vislib::StringW& outFn);
+        static the::wstring& CreateTempFileName(the::wstring& outFn);
 
         /**
          * Creates a file name for a temporary file
          *
          * @return the file name created
          */
-        static inline vislib::StringA CreateTempFileNameA(void) {
-            vislib::StringA s;
+        static inline the::astring CreateTempFileNameA(void) {
+            the::astring s;
             return CreateTempFileName(s);
         }
 
@@ -131,8 +131,8 @@ namespace sys {
          *
          * @return the file name created
          */
-        static inline vislib::StringW CreateTempFileNameW(void) {
-            vislib::StringW s;
+        static inline the::wstring CreateTempFileNameW(void) {
+            the::wstring s;
             return CreateTempFileName(s);
         }
 
@@ -350,9 +350,9 @@ namespace sys {
          *
          * @throws argument_exception
          */
-        inline bool Open(const StringA& filename, const AccessMode accessMode, 
+        inline bool Open(const the::astring& filename, const AccessMode accessMode, 
                 const ShareMode shareMode, const CreationMode creationMode) {
-            return this->Open(filename.PeekBuffer(), accessMode, shareMode, 
+            return this->Open(filename.c_str(), accessMode, shareMode, 
                 creationMode);
         }
 
@@ -395,9 +395,9 @@ namespace sys {
          *
          * @throws argument_exception
          */
-        inline bool Open(const StringW& filename, const AccessMode accessMode, 
+        inline bool Open(const the::wstring& filename, const AccessMode accessMode, 
                 const ShareMode shareMode, const CreationMode creationMode) {
-            return this->Open(filename.PeekBuffer(), accessMode, shareMode, 
+            return this->Open(filename.c_str(), accessMode, shareMode, 
                 creationMode);
         }
 

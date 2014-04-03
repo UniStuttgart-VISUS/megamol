@@ -14,7 +14,7 @@
 #include "the/argument_exception.h"
 #include "the/invalid_operation_exception.h"
 #include "vislib/Path.h"
-#include "vislib/StringConverter.h"
+#include "the/text/string_converter.h"
 #ifdef _WIN32
 #include "the/system/system_message.h"
 #endif /* _WIN32 */
@@ -83,11 +83,11 @@ void *vislib::sys::DynamicLinkLibrary::GetProcAddress(
  */
 bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
         bool dontResolveReferences, bool alternateSearchPath) {
-    this->loadErrorMsg.Clear();
+    this->loadErrorMsg.clear();
     if (this->IsLoaded()) {
         this->loadErrorMsg = "Call to DynamicLinLibrary::Load() when"
             "a library was already loaded.";
-        throw the::invalid_operation_exception(this->loadErrorMsg, __FILE__, __LINE__);
+        throw the::invalid_operation_exception(this->loadErrorMsg.c_str(), __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
@@ -100,7 +100,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
     this->hModule = ::LoadLibraryExA(moduleName, NULL, flags);
     ::SetErrorMode(oldErrorMode);
     if (this->hModule == NULL) {
-        this->loadErrorMsg = vislib::StringA(the::system::system_message(::GetLastError()).operator the::astring().c_str());
+        this->loadErrorMsg = the::astring(the::system::system_message(::GetLastError()).operator the::astring().c_str());
     }
 #else /* _WIN32 */
 
@@ -118,11 +118,11 @@ bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
  */
 bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
         bool dontResolveReferences, bool alternateSearchPath) {
-    this->loadErrorMsg.Clear();
+    this->loadErrorMsg.clear();
     if (this->IsLoaded()) {
         this->loadErrorMsg = "Call to DynamicLinLibrary::Load() when"
             "a library was already loaded.";
-        throw the::invalid_operation_exception(this->loadErrorMsg, __FILE__, __LINE__);
+        throw the::invalid_operation_exception(this->loadErrorMsg.c_str(), __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
@@ -139,7 +139,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
     }
 #else /* _WIN32 */
     // Because we know, that Linux does not support a chefmäßige Unicode-API.
-    if (!this->Load(W2A(moduleName))) return false;
+    if (!this->Load(THE_W2A(moduleName))) return false;
 #endif /* _WIN32 */
     return (this->hModule!= NULL);
 

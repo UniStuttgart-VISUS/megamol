@@ -247,7 +247,6 @@
     <ClCompile Include="testmatrix.cpp" />
     <ClCompile Include="testmisc.cpp" />
     <ClCompile Include="testmsgdisp.cpp" />
-    <ClCompile Include="testmultisz.cpp" />
     <ClCompile Include="testnamedpipe.cpp" />
     <ClCompile Include="testnetinfo.cpp" />
     <ClCompile Include="testpoint.cpp" />
@@ -260,7 +259,6 @@
     <ClCompile Include="testrefcount.cpp" />
     <ClCompile Include="testserialiser.cpp" />
     <ClCompile Include="testsockets.cpp" />
-    <ClCompile Include="teststring.cpp" />
     <ClCompile Include="testsysinfo.cpp" />
     <ClCompile Include="testtcpserver.cpp" />
     <ClCompile Include="testthread.cpp" />
@@ -298,7 +296,6 @@
     <ClInclude Include="testmatrix.h" />
     <ClInclude Include="testmisc.h" />
     <ClInclude Include="testmsgdisp.h" />
-    <ClInclude Include="testmultisz.h" />
     <ClInclude Include="testnamedpipe.h" />
     <ClInclude Include="testnetinfo.h" />
     <ClInclude Include="testpoint.h" />
@@ -311,7 +308,6 @@
     <ClInclude Include="testrefcount.h" />
     <ClInclude Include="testserialiser.h" />
     <ClInclude Include="testsockets.h" />
-    <ClInclude Include="teststring.h" />
     <ClInclude Include="testsysinfo.h" />
     <ClInclude Include="testtcpserver.h" />
     <ClInclude Include="testthread.h" />

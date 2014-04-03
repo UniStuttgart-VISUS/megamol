@@ -14,7 +14,7 @@
 #include "vislib/Array.h"
 #include "vislib/glverify.h"
 #include "the/memory.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "vislib/sysfunctions.h"
 
 
@@ -23,10 +23,10 @@
  */
 const char * 
 vislib::graphics::gl::GLSLComputeShader::RequiredExtensions(void) {
-    static vislib::StringA exts = vislib::StringA(
+    static the::astring exts = the::astring(
         vislib::graphics::gl::GLSLShader::RequiredExtensions())
         + " GL_VERSION_4_3 ";
-    return exts.PeekBuffer();
+    return exts.c_str();
 }
 
 
@@ -94,13 +94,13 @@ bool vislib::graphics::gl::GLSLComputeShader::Compile(
  */
 bool vislib::graphics::gl::GLSLComputeShader::CompileFromFile(
         const char *computeShaderFile) {
-    StringA computeShaderSrc;
+    the::astring computeShaderSrc;
 
     if (!vislib::sys::ReadTextFile(computeShaderSrc, computeShaderFile)) {
         return false;
     }
 
-    return this->Compile(computeShaderSrc);
+    return this->Compile(computeShaderSrc.c_str());
 }
 
 
@@ -112,7 +112,7 @@ bool vislib::graphics::gl::GLSLComputeShader::CompileFromFile(
         bool insertLineDirective) {
 
     // using arrays for automatic cleanup when a 'read' throws an exception
-    Array<StringA> copmuteShaderSrcs(cntComputeShaderFiles);
+    Array<the::astring> copmuteShaderSrcs(cntComputeShaderFiles);
 
     for(size_t i = 0; i < cntComputeShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(copmuteShaderSrcs[i], 
@@ -126,7 +126,7 @@ bool vislib::graphics::gl::GLSLComputeShader::CompileFromFile(
 
     try {
         for(size_t i = 0; i < cntComputeShaderFiles; i++) {
-            computeShaderSrcPtrs[i] = copmuteShaderSrcs[i].PeekBuffer();
+            computeShaderSrcPtrs[i] = copmuteShaderSrcs[i].c_str();
         }
 
         bool retval = this->Compile(computeShaderSrcPtrs, cntComputeShaderFiles,

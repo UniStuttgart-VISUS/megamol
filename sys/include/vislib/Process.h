@@ -97,7 +97,7 @@ namespace sys {
          *                         e.g. because the requested process does not
          *                         exists.
          */
-        static vislib::StringA ModuleFileNameA(const PID processID);
+        static the::astring ModuleFileNameA(const PID processID);
 
         /**
          * Answer the exectuable file of the calling process.
@@ -109,7 +109,7 @@ namespace sys {
          *
          * @throws the::system::system_exception If the module name could not be retrieved.
          */
-        static vislib::StringA ModuleFileNameA(void);
+        static the::astring ModuleFileNameA(void);
 
         /**
          * Answer the exectuable file of the process with the specified ID.
@@ -125,7 +125,7 @@ namespace sys {
          *                         e.g. because the requested process does not
          *                         exists.
          */
-        static vislib::StringW ModuleFileNameW(const PID processID);
+        static the::wstring ModuleFileNameW(const PID processID);
 
         /**
          * Answer the exectuable file of the calling process.
@@ -137,7 +137,7 @@ namespace sys {
          *
          * @throws the::system::system_exception If the module name could not be retrieved.
          */
-        static vislib::StringW ModuleFileNameW(void);
+        static the::wstring ModuleFileNameW(void);
 
         /**
          * Answer the exectuable file of the process with the specified ID.
@@ -153,7 +153,7 @@ namespace sys {
          *                         e.g. because the requested process does not
          *                         exists.
          */
-        inline static vislib::TString ModuleFileName(const PID processID) {
+        inline static the::tstring ModuleFileName(const PID processID) {
 #if defined(UNICODE) || defined(_UNICODE)
             return Process::ModuleFileNameW(processID);
 #else /* defined(UNICODE) || defined(_UNICODE) */
@@ -171,7 +171,7 @@ namespace sys {
          *
          * @throws the::system::system_exception If the module name could not be retrieved.
          */
-        inline static vislib::TString ModuleFileName(void) {
+        inline static the::tstring ModuleFileName(void) {
 #if defined(UNICODE) || defined(_UNICODE)
             return Process::ModuleFileNameW();
 #else /* defined(UNICODE) || defined(_UNICODE) */
@@ -199,8 +199,8 @@ namespace sys {
          * @throws std::bad_alloc If there was insufficient memory to complete
          *                        the request.
          */
-        static void Owner(const PID processID, vislib::StringA& outUser, 
-            vislib::StringA *outDomain = NULL);
+        static void Owner(const PID processID, the::astring& outUser, 
+            the::astring *outDomain = NULL);
 
         /**
          * Answer the owner of the process with process ID 'processID'.
@@ -222,8 +222,8 @@ namespace sys {
          * @throws std::bad_alloc If there was insufficient memory to complete
          *                        the request.
          */
-        static void Owner(const PID processID, vislib::StringW& outUser, 
-            vislib::StringW *outDomain = NULL);
+        static void Owner(const PID processID, the::wstring& outUser, 
+            the::wstring *outDomain = NULL);
 
         /**
          * Answer the name of the user that owns the process with ID 
@@ -254,7 +254,7 @@ namespace sys {
          * @throws std::bad_alloc If there was insufficient memory to complete
          *                        the request.
          */
-        static vislib::StringA OwnerA(const PID processID, 
+        static the::astring OwnerA(const PID processID, 
             const bool includeDomain = false, const bool isLenient = false);
 
         /**
@@ -286,7 +286,7 @@ namespace sys {
          * @throws std::bad_alloc If there was insufficient memory to complete
          *                        the request.
          */
-        static vislib::StringW OwnerW(const PID processID, 
+        static the::wstring OwnerW(const PID processID, 
             const bool includeDomain = false, const bool isLenient = false);
 
         /**
@@ -318,7 +318,7 @@ namespace sys {
          * @throws std::bad_alloc If there was insufficient memory to complete
          *                        the request.
          */
-        inline static vislib::TString Owner(const PID processID, 
+        inline static the::tstring Owner(const PID processID, 
                 const bool includeDomain = false,
                 const bool isLenient = false) {
 #if defined(UNICODE) || defined(_UNICODE)

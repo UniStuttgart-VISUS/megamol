@@ -311,7 +311,7 @@ namespace vislib {
          *
          * @return true, if there is no element in the array, false otherwise.
          */
-        virtual bool IsEmpty(void) const;
+        virtual bool empty(void) const;
 
         /**
          * Answer the last element in the array.
@@ -876,10 +876,10 @@ namespace vislib {
 
 
     /*
-     * vislib::Array<T, L, C>::IsEmpty
+     * vislib::Array<T, L, C>::empty
      */
     template<class T, class L, class C>
-    bool Array<T, L, C>::IsEmpty(void) const {
+    bool Array<T, L, C>::empty(void) const {
         this->Lock();
         bool retval = (this->count == 0);
         this->Unlock();
@@ -1146,7 +1146,7 @@ namespace vislib {
                 r = stack.Pop();
                 l = stack.Pop();
             }
-        } while (!stack.IsEmpty());
+        } while (!stack.empty());
 
 #endif /* _WIN32 */
 

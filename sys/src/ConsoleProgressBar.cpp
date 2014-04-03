@@ -9,6 +9,8 @@
 #include "vislib/Console.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/sysfunctions.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 
 
 #define PRINT_MILLISECONDS
@@ -89,7 +91,7 @@ void vislib::sys::ConsoleProgressBar::Start(const char *title,
         this->Stop();
     }
     this->title = title;
-    this->title.Append(": ");
+    this->title.append(": ");
     this->startTime = this->lastPersTime = vislib::sys::GetTicksOfDay();
     this->maxValue = maxValue;
     this->lastPers = 0.0f;
@@ -107,7 +109,7 @@ void vislib::sys::ConsoleProgressBar::Stop(void) {
         this->lastPersTime = vislib::sys::GetTicksOfDay();
         this->running = false;
         this->update();
-        this->title = NULL;
+        this->title.clear();
     }
 }
 
@@ -116,16 +118,16 @@ void vislib::sys::ConsoleProgressBar::Stop(void) {
  * vislib::sys::ConsoleProgressBar::update
  */
 void vislib::sys::ConsoleProgressBar::update(void) {
-    static vislib::StringA left;
-    static vislib::StringA right;
-    static vislib::StringA line;
-    static vislib::StringA tmp;
+    static the::astring left;
+    static the::astring right;
+    static the::astring line;
+    static the::astring tmp;
     unsigned int width = vislib::sys::Console::GetWidth() - 1;
 
     left = this->title;
 
     if (this->running) {
-        right.Format("%3i%%", int(this->lastPers * 100.0f));
+        the::text::astring_builder::format_to(right, "%3i%%", int(this->lastPers * 100.0f));
         if ((this->lastPersTime > this->startTime) 
                 && (this->lastPers > 0.0f)) {
             unsigned int endTime = this->startTime 
@@ -134,31 +136,31 @@ void vislib::sys::ConsoleProgressBar::update(void) {
             unsigned int now = vislib::sys::GetTicksOfDay();
             // time elapsed
             printDuration(tmp, now - this->startTime);
-            right.Append(" (Times: ");
+            right.append(" (Times: ");
             right += tmp;
             // estimated time remaining
             printDuration(tmp, endTime - now);
-            right.Append("; ");
+            right.append("; ");
             right += tmp;
             // estimated overall time
             printDuration(tmp, endTime - this->startTime);
-            right.Append("; ");
+            right.append("; ");
             right += tmp;
-            right.Append(")");
+            right.append(")");
         }
 
-        int spc = int(width) - int(left.Length() + right.Length());
+        int spc = int(width) - int(left.size() + right.size());
 
         if (spc < 10) {
             // console too tiny to print a progress bar.
             if (spc < 0) {
-                int s = int(width) - int(left.Length());
+                int s = int(width) - int(left.size());
                 if (s > 0) {
-                    left += vislib::StringA(' ', s);
+                    left += the::astring(' ', s);
                 }
-                s = int(width) - int(right.Length());
+                s = int(width) - int(right.size());
                 if (s > 0) {
-                    right += vislib::StringA(' ', s);
+                    right += the::astring(' ', s);
                 }
                 line = left + "\n" + right + "\n";
             } else {
@@ -170,23 +172,23 @@ void vislib::sys::ConsoleProgressBar::update(void) {
             unsigned int filled 
                 = static_cast<unsigned int>(float(spc) * this->lastPers);
             line = left + PBAR_LEND_CHAR
-                + vislib::StringA(PBAR_FILLED_CHAR, filled)
-                + vislib::StringA(PBAR_EMPTY_CHAR, spc - filled)
+                + the::astring(PBAR_FILLED_CHAR, filled)
+                + the::astring(PBAR_EMPTY_CHAR, spc - filled)
                 + PBAR_REND_CHAR + right + "\r";
         }
 
     } else {
         this->printDuration(tmp, this->lastPersTime - this->startTime);
         line = left + "Finished in " + tmp;
-        int spc = int(width) - int(line.Length());
+        int spc = int(width) - int(line.size());
         if (spc > 0) {
-            line += vislib::StringA(' ', spc);
+            line += the::astring(' ', spc);
         }
         line += "\n";
     }
 
     // the following two lines are the ONLY once realy printing output
-    fprintf(stdout, "%s", line.PeekBuffer());
+    fprintf(stdout, "%s", line.c_str());
     fflush(stdout);
 }
 
@@ -194,7 +196,7 @@ void vislib::sys::ConsoleProgressBar::update(void) {
 /*
  * vislib::sys::ConsoleProgressBar::printDuration
  */
-void vislib::sys::ConsoleProgressBar::printDuration(vislib::StringA& outStr, 
+void vislib::sys::ConsoleProgressBar::printDuration(the::astring& outStr, 
         unsigned int duration) {
 #ifdef PRINT_MILLISECONDS
     unsigned int milli = duration % 1000;
@@ -205,7 +207,7 @@ void vislib::sys::ConsoleProgressBar::printDuration(vislib::StringA& outStr,
     min %= 60;
     sec %= 60;
     if (hour > 0) { 
-        outStr.Format("%2u:%.2u:%.2u"
+        the::text::astring_builder::format_to(outStr, "%2u:%.2u:%.2u"
 #ifdef PRINT_MILLISECONDS
             ".%.3u"
 #endif /* PRINT_MILLISECONDS */
@@ -215,7 +217,7 @@ void vislib::sys::ConsoleProgressBar::printDuration(vislib::StringA& outStr,
 #endif /* PRINT_MILLISECONDS */
             );
     } else {
-        outStr.Format("%.2u:%.2u"
+        the::text::astring_builder::format_to(outStr, "%.2u:%.2u"
 #ifdef PRINT_MILLISECONDS
             ".%.3u"
 #endif /* PRINT_MILLISECONDS */

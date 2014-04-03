@@ -192,7 +192,7 @@ namespace vislib {
          *
          * @return true, if no memory has been allocated, false otherwise.
          */
-        inline bool IsEmpty(void) const {
+        inline bool empty(void) const {
             return (this->size == 0);
         }
 

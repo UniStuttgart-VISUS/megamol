@@ -15,6 +15,8 @@
 #include "vislib/FpsCounter.h"
 #include "vislib/VersionNumber.h"
 #include "vislib/glfunctions.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 
 
 /** not nice! */
@@ -93,11 +95,11 @@ void GlutAppManager::InitGlutWindow(void) {
     }
 
     this->appMenu = glutCreateMenu(GlutAppManager::OnMenuItemClicked);
-    vislib::StringA name;
+    the::astring name;
     for (int i = 0; i < int(this->factories.Count()); i++) {
         if (this->factories[i] != NULL) {
-            name.Format("%d: %s", (i + 1), this->factories[i]->GetName());
-            glutAddMenuEntry(name.PeekBuffer(), i + 1);
+            the::text::astring_builder::format_to(name, "%d: %s", (i + 1), this->factories[i]->GetName());
+            glutAddMenuEntry(name.c_str(), i + 1);
         }
     }
 
@@ -234,11 +236,11 @@ void GlutAppManager::glRenderEmptyScreen(void) {
         "VISlib glutTest Application");
     glprintf(10.0f, float(This->height - 44), GLUT_BITMAP_HELVETICA_12,
         "Copyright  2007, Universität Stuttgart (VIS). Alle Rechte vorbehalten.");
-    vislib::StringA txt;
-    txt.Format("OpenGL Version: %s", 
-        vislib::graphics::gl::GLVersion().ToStringA(3).PeekBuffer());
+    the::astring txt;
+    the::text::astring_builder::format_to(txt, "OpenGL Version: %s", 
+        vislib::graphics::gl::GLVersion().ToStringA(3).c_str());
     glprintf(10.0f, float(This->height - 60), GLUT_BITMAP_HELVETICA_12, 
-        txt.PeekBuffer());
+        txt.c_str());
     glprintf(10.0f, float(This->height - 76), GLUT_BITMAP_HELVETICA_12,
         "Use the right click context menu to select a test.");
 

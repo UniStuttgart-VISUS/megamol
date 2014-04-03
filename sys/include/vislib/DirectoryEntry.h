@@ -14,8 +14,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/CharTraits.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -44,7 +43,7 @@ namespace sys {
          * @param path The name of the entry
          * @param type The type of the entry
          */
-        DirectoryEntry(const vislib::String<T>& path, EntryType& type);
+        DirectoryEntry(const T& path, EntryType& type);
 
         /**
          * Copy ctor.
@@ -75,7 +74,7 @@ namespace sys {
         bool operator==(const DirectoryEntry& rhs) const;
 
         /** Name of the entry */
-        String<T> Path;
+        T Path;
 
         /** Type of the entry */
         EntryType Type;
@@ -96,7 +95,7 @@ namespace sys {
      * DirectoryEntry<T>::DirectoryEntry
      */
     template<class T> DirectoryEntry<T>::DirectoryEntry(
-            const vislib::String<T>& path, EntryType& type)
+            const T& path, EntryType& type)
             : Path(path), Type(type) {
         // intentionally empty
     }
@@ -141,13 +140,13 @@ namespace sys {
 
 
     /** Template instantiation for ANSI char DirectoryEntry. */
-    typedef DirectoryEntry<CharTraitsA> DirectoryEntryA;
+    typedef DirectoryEntry<the::astring> DirectoryEntryA;
 
     /** Template instantiation for wide char DirectoryEntry. */
-    typedef DirectoryEntry<CharTraitsW> DirectoryEntryW;
+    typedef DirectoryEntry<the::wstring> DirectoryEntryW;
 
     /** Template instantiation for TCHAR DirectoryEntrys. */
-    typedef DirectoryEntry<TCharTraits> TDirectoryEntry;
+    typedef DirectoryEntry<the::tstring> TDirectoryEntry;
 
 } /* end namespace sys */
 } /* end namespace vislib */

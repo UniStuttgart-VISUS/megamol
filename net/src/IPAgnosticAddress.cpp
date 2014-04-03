@@ -270,7 +270,7 @@ vislib::net::IPAgnosticAddress vislib::net::IPAgnosticAddress::GetPrefix(
 /*
  * vislib::net::IPAgnosticAddress::ToStringA
  */
-vislib::StringA vislib::net::IPAgnosticAddress::ToStringA(void) const {
+the::astring vislib::net::IPAgnosticAddress::ToStringA(void) const {
     THE_STACK_TRACE;
 
     if (this->IsV4()) {
@@ -280,7 +280,7 @@ vislib::StringA vislib::net::IPAgnosticAddress::ToStringA(void) const {
         return this->v6->ToStringA();
 
     } else {
-        return StringA::EMPTY;
+        return "";
     }
 }
 
@@ -288,7 +288,7 @@ vislib::StringA vislib::net::IPAgnosticAddress::ToStringA(void) const {
 /*
  * vislib::net::IPAgnosticAddress::ToStringW
  */
-vislib::StringW vislib::net::IPAgnosticAddress::ToStringW(void) const {
+the::wstring vislib::net::IPAgnosticAddress::ToStringW(void) const {
     THE_STACK_TRACE;
 
     if (this->IsV4()) {
@@ -298,7 +298,7 @@ vislib::StringW vislib::net::IPAgnosticAddress::ToStringW(void) const {
         return this->v6->ToStringW();
 
     } else {
-        return StringW::EMPTY;
+        return L"";
     }
 }
 

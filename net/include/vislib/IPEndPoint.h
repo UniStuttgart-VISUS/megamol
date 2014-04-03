@@ -270,15 +270,15 @@ namespace net {
          *
          * @return The string representation of the IP address.
          */
-        StringA ToStringA(void) const;
+        the::astring ToStringA(void) const;
 
         /**
          * Convert the socket address into a human readable format.
          *
          * @return The string representation of the IP address.
          */
-        StringW ToStringW(void) const {
-            return StringW(this->ToStringA());
+        the::wstring ToStringW(void) const {
+            return the::text::string_converter::to_w(this->ToStringA());
         }
 
         /**

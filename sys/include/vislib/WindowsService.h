@@ -21,7 +21,7 @@
 #include "the/assert.h"
 #include "the/argument_exception.h"
 #include "the/invalid_operation_exception.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/system/system_exception.h"
 #include "the/not_supported_exception.h"
 
@@ -45,15 +45,15 @@ namespace sys {
     /**
      * Partial template specialisation of WindowsService for ANSI characters.
      */
-    template<> class WindowsService<CharTraitsA> {
+    template<> class WindowsService<the::astring> {
 
     public: 
 
         /** Characters to use in this class. */
-        typedef CharTraitsA::Char Char;
+        typedef the::astring::value_type Char;
 
         /** String to use in this class. */
-        typedef String<CharTraitsA> String;
+        typedef the::astring String;
 
         /**
          * Install 'binaryPath' as Windows service using 'svcName' as 
@@ -416,15 +416,15 @@ namespace sys {
     /**
      * Partial template specialisation of WindowsService for wide characters.
      */
-    template<> class WindowsService<CharTraitsW> {
+    template<> class WindowsService<the::wstring> {
 
     public: 
 
         /** Characters to use in this class. */
-        typedef CharTraitsW::Char Char;
+        typedef the::wstring::value_type Char;
 
         /** String to use in this class. */
-        typedef String<CharTraitsW> String;
+        typedef the::wstring String;
 
         /**
          * Install 'binaryPath' as Windows service using 'svcName' as 
@@ -783,10 +783,10 @@ namespace sys {
 
 
     /** Instantiation of WindowsService for ANSI strings. */
-    typedef WindowsService<CharTraitsA> WindowsServiceA;
+    typedef WindowsService<the::astring> WindowsServiceA;
 
     /** Instantiation of WindowsService for Unicode strings. */
-    typedef WindowsService<CharTraitsW> WindowsServiceW;
+    typedef WindowsService<the::wstring> WindowsServiceW;
 
 } /* end namespace sys */
 } /* end namespace vislib */

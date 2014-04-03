@@ -13,6 +13,8 @@
 #include "vislib/IPCommEndPoint.h"
 #include "the/memory.h"
 #include "the/trace.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 
 
 /*
@@ -119,8 +121,8 @@ void vislib::net::ib::IbRdmaCommServerChannel::Bind(
     THE_STACK_TRACE;
 
     int result = 0;                     // RDMA API results.
-    StringA node;                       // The address as string.
-    StringA service;                    // Endpoint port as string.
+    the::astring node;                       // The address as string.
+    the::astring service;                    // Endpoint port as string.
     struct rdma_addrinfo hints;         // Input for getaddrinfo.
     struct rdma_addrinfo *addrInfo;     // Output of getaddrinfo.
     struct ibv_qp_init_attr attr;       // Queue pair properties.
@@ -129,7 +131,7 @@ void vislib::net::ib::IbRdmaCommServerChannel::Bind(
     IPCommEndPoint *cep = endPoint.DynamicPeek<IPCommEndPoint>();
     IPEndPoint& ep = static_cast<IPEndPoint&>(*cep);
     node = ep.GetIPAddress().ToStringA();
-    service.Format("%d", ep.GetPort());
+    the::text::astring_builder::format_to(service, "%d", ep.GetPort());
 
     /* Initialise our request. */
     ::ZeroMemory(&hints, sizeof(hints));
@@ -137,7 +139,7 @@ void vislib::net::ib::IbRdmaCommServerChannel::Bind(
     hints.ai_flags = RAI_PASSIVE;
 
     /* Get the result. */
-    result = ::rdma_getaddrinfo(NULL, const_cast<char *>(service.PeekBuffer()),
+    result = ::rdma_getaddrinfo(NULL, const_cast<char *>(service.c_str()),
         &hints, &addrInfo);
     if (result != 0) {
         throw IbRdmaException("rdma_getaddrinfo", errno, __FILE__, __LINE__);

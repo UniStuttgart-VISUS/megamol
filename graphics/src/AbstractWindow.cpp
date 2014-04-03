@@ -11,8 +11,9 @@
 #include "the/assert.h"
 #include "the/invalid_operation_exception.h"
 #include "the/not_implemented_exception.h"
-#include "vislib/StringConverter.h"
+#include "the/text/string_converter.h"
 #include "the/system/system_exception.h"
+#include "the/not_supported_exception.h"
 
 
 /*
@@ -46,12 +47,12 @@ void vislib::graphics::AbstractWindow::Close(void) {
 /*
  * vislib::graphics::AbstractWindow::Create(
  */
-void vislib::graphics::AbstractWindow::Create(const vislib::StringA& title, 
+void vislib::graphics::AbstractWindow::Create(const the::astring& title, 
         int left, int top, int width, int height) {
     THE_STACK_TRACE;
 
 #ifdef _WIN32
-    this->Create(A2W(title), left, top, width, height);
+    this->Create(THE_A2W(title), left, top, width, height);
 
 #else /* _WIN32 */
     throw the::not_implemented_exception("AbstractWindow::Create", 
@@ -63,7 +64,7 @@ void vislib::graphics::AbstractWindow::Create(const vislib::StringA& title,
 /*
  * vislib::graphics::AbstractWindow::Create(
  */
-void vislib::graphics::AbstractWindow::Create(const vislib::StringW& title, 
+void vislib::graphics::AbstractWindow::Create(const the::wstring& title, 
         int left, int top, int width, int height) {
     THE_STACK_TRACE;
 
@@ -86,7 +87,7 @@ void vislib::graphics::AbstractWindow::Create(const vislib::StringW& title,
     }
 
     /* Register window class. */
-    StringW wndClass = this->registerWindowClassW(hInstance);
+    the::wstring wndClass = this->registerWindowClassW(hInstance);
 
     /* Set default styles. */
     dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
@@ -105,8 +106,8 @@ void vislib::graphics::AbstractWindow::Create(const vislib::StringW& title,
     }
 
     if ((this->hWnd = ::CreateWindowExW(dwExStyle, 
-            wndClass.PeekBuffer(),
-            title.PeekBuffer(), 
+            wndClass.c_str(),
+            title.c_str(), 
             dwStyle, 
             wndRect.left, 
             wndRect.top,
@@ -125,7 +126,7 @@ void vislib::graphics::AbstractWindow::Create(const vislib::StringW& title,
     this->onCreated(this->hWnd);
 
 #else /* _WIN32 */
-    this->Create(W2A(title), left, top, width, height);
+    this->Create(THE_W2A(title), left, top, width, height);
 #endif /* _WIN32 */
 }
 
@@ -281,7 +282,7 @@ void vislib::graphics::AbstractWindow::onWindowClassRegistering(
  * vislib::graphics::AbstractWindow::onWindowClassRegistered
  */
 void vislib::graphics::AbstractWindow::onWindowClassRegistered(
-        const vislib::StringW className) throw() {
+        const the::wstring className) throw() {
     THE_STACK_TRACE;
     // Nothing to do.
 }
@@ -350,7 +351,7 @@ vislib::graphics::AbstractWindow::AbstractWindow(const AbstractWindow& rhs) {
 /*
  * vislib::graphics::AbstractWindow::registerWindowClassW
  */
-vislib::StringW vislib::graphics::AbstractWindow::registerWindowClassW(
+the::wstring vislib::graphics::AbstractWindow::registerWindowClassW(
         HINSTANCE hInstance) {
     THE_STACK_TRACE;
 
@@ -376,7 +377,7 @@ vislib::StringW vislib::graphics::AbstractWindow::registerWindowClassW(
         }
     }
 
-    vislib::StringW retval(wcex.lpszClassName);
+    the::wstring retval(wcex.lpszClassName);
     this->onWindowClassRegistered(retval);
 
     return retval;

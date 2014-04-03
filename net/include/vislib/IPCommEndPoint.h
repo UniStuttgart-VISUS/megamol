@@ -19,7 +19,7 @@
 #include "vislib/IPEndPoint.h"                  // Must be first.
 #include "vislib/AbstractCommEndPoint.h"
 #include "the/stack_trace.h"
-#include "vislib/StringConverter.h"
+#include "the/text/string_converter.h"
 
 
 namespace vislib {
@@ -244,7 +244,7 @@ namespace net {
                 const unsigned short port) {
             THE_STACK_TRACE;
             return IPCommEndPoint::Create(protocolVersion, 
-                W2A(hostNameOrAddress), port);
+                THE_W2A(hostNameOrAddress), port);
         }
 
         /**
@@ -307,7 +307,7 @@ namespace net {
                 const unsigned short port) {
             THE_STACK_TRACE;
             return IPCommEndPoint::Create(addressFamily, 
-                W2A(hostNameOrAddress), port);
+                THE_W2A(hostNameOrAddress), port);
         }
 
         /**
@@ -370,7 +370,7 @@ namespace net {
                 const unsigned short port) {
             THE_STACK_TRACE;
             return IPCommEndPoint::Create(addressFamily, 
-                W2A(hostNameOrAddress), port);
+                THE_W2A(hostNameOrAddress), port);
         }
 
         /**
@@ -432,7 +432,7 @@ namespace net {
                 const ProtocolVersion protocolVersion,
                 const wchar_t *str) {
             THE_STACK_TRACE;
-            return IPCommEndPoint::Create(protocolVersion, W2A(str));
+            return IPCommEndPoint::Create(protocolVersion, THE_W2A(str));
         }
 
         /**
@@ -491,7 +491,7 @@ namespace net {
                 const IPAgnosticAddress::AddressFamily addressFamily,
                 const wchar_t *str) {
             THE_STACK_TRACE;
-            return IPCommEndPoint::Create(addressFamily, W2A(str));
+            return IPCommEndPoint::Create(addressFamily, THE_W2A(str));
         }
 
         /**
@@ -555,7 +555,7 @@ namespace net {
                 const IPEndPoint::AddressFamily addressFamily, 
                 const wchar_t *str) {
             THE_STACK_TRACE;
-            return IPCommEndPoint::Create(addressFamily, W2A(str));
+            return IPCommEndPoint::Create(addressFamily, THE_W2A(str));
         }
 
         /**
@@ -675,7 +675,7 @@ namespace net {
          * @throws the::exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
-        virtual void Parse(const StringA& str);
+        virtual void Parse(const the::astring& str);
 
         /**
          * Parses a string as a end point address and sets the current
@@ -693,7 +693,7 @@ namespace net {
          * @throws the::exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
-        virtual void Parse(const StringA& str, 
+        virtual void Parse(const the::astring& str, 
             const ProtocolVersion preferredProtocolVersion);
 
         /**
@@ -711,7 +711,7 @@ namespace net {
          * @throws the::exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
-        virtual void Parse(const StringW& str);
+        virtual void Parse(const the::wstring& str);
 
         /**
          * Parses a string as a end point address and sets the current
@@ -729,7 +729,7 @@ namespace net {
          * @throws the::exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
-        virtual void Parse(const StringW& str, 
+        virtual void Parse(const the::wstring& str, 
             const ProtocolVersion preferredProtocolVersion);
 
         /**
@@ -787,14 +787,14 @@ namespace net {
          *
          * @return A string representation of the address.
          */
-        virtual StringA ToStringA(void) const;
+        virtual the::astring ToStringA(void) const;
 
         /**
          * Answer a string representation of the address.
          *
          * @return A string representation of the address.
          */
-        virtual StringW ToStringW(void) const;
+        virtual the::wstring ToStringW(void) const;
 
         /**
          * Check for equality.

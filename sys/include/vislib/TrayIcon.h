@@ -450,30 +450,30 @@ namespace sys {
             return this->iconState;
         }
 
-		/**
-		 * Change the tray icon to 'icon'.
-		 *
-		 * @param icon the handle of the new icon. The caller remains owner
-		 *             of the icon and can destroy it right afterwards.
-		 *
-		 * @throws the::system::system_exception in case of error.
-		 */
-		inline void SetIcon(const HICON icon) {
-			this->configureIcon(icon);
-			this->notify(NIM_MODIFY);
-		}
+        /**
+         * Change the tray icon to 'icon'.
+         *
+         * @param icon the handle of the new icon. The caller remains owner
+         *             of the icon and can destroy it right afterwards.
+         *
+         * @throws the::system::system_exception in case of error.
+         */
+        inline void SetIcon(const HICON icon) {
+            this->configureIcon(icon);
+            this->notify(NIM_MODIFY);
+        }
 
-		/**
-		 * Change the tray icon to the icon pointed to by 'iconID'.
-		 * 
+        /**
+         * Change the tray icon to the icon pointed to by 'iconID'.
+         * 
          * @param hResourceModule A handle to the module to look for resources
          *                        in.
          * @param iconID          The resource ID of the icon to be added, 
          *                        modified, or deleted. 
-		 *
-		 * @throws the::system::system_exception in case of error.
-		 */
-		void SetIcon(HINSTANCE hResourceModule, const unsigned int iconID);
+         *
+         * @throws the::system::system_exception in case of error.
+         */
+        void SetIcon(HINSTANCE hResourceModule, const unsigned int iconID);
 
         /**
          * Show the tray icon.

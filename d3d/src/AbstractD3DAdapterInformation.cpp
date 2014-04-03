@@ -32,12 +32,12 @@ const INT_PTR AbstractD3DAdapterInformation::INVALID_OUTPUT_IDX = -1;
  * ...::d3d::AbstractD3DAdapterInformation::FindOutputIdxForDeviceName
  */
 INT_PTR AbstractD3DAdapterInformation::FindOutputIdxForDeviceName(
-        const vislib::StringW& deviceName) const {
+        const the::wstring& deviceName) const {
     THE_STACK_TRACE;
     SIZE_T cntOutputs = this->GetOutputCount();
 
     for (SIZE_T i = 0; i < cntOutputs; i++) {
-        if (deviceName.Equals(this->GetDeviceName(i))) {
+        if (deviceName.compare(this->GetDeviceName(i)) == 0) {
             return static_cast<INT_PTR>(i);
         }
     }
@@ -68,13 +68,13 @@ AbstractD3DAdapterInformation::GetDesktopCoordinates(
 /*
  * ...::d3d::AbstractD3DAdapterInformation::GetDeviceName
  */
-vislib::StringW AbstractD3DAdapterInformation::GetDeviceName(
+the::wstring AbstractD3DAdapterInformation::GetDeviceName(
         const SIZE_T outputIdx) const {
     THE_STACK_TRACE;
 
     const MONITORINFOEXW& mi = this->getMonitorInfo(outputIdx);
     THE_ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
-    return StringW(mi.szDevice);
+    return the::wstring(mi.szDevice);
 }
 
 

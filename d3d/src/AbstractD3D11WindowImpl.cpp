@@ -233,7 +233,7 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::initialise(HWND hWnd) {
                 D3D_DRIVER_TYPE_UNKNOWN,
                 NULL,
                 flags,
-                !featureLevels.IsEmpty() ? featureLevels.PeekElements() : NULL,
+                !featureLevels.empty() ? featureLevels.PeekElements() : NULL,
                 static_cast<UINT>(featureLevels.Count()),
                 D3D11_SDK_VERSION,
                 &this->device,

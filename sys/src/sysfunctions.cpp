@@ -22,12 +22,11 @@
 #include "the/system/io/io_exception.h"
 #include "the/memory.h"
 #include "vislib/Path.h"
-#include "vislib/String.h"
-#include "vislib/StringConverter.h"
+#include "the/string.h"
+#include "the/text/string_converter.h"
 #include "the/system/system_exception.h"
 #include "the/trace.h"
 #include "the/not_supported_exception.h"
-#include "vislib/UTF8Encoder.h"
 
 
 #ifdef _WIN32
@@ -121,7 +120,7 @@ vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, void *hModule,
 /*
  * vislib::sys::ReadLineFromFileA
  */
-vislib::StringA vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
+the::astring vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
     char *buf = new char[size + 1];
     unsigned int pos;
 
@@ -159,7 +158,7 @@ vislib::StringA vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
         the::safe_array_delete(buf);
         throw the::exception("Unexcepted exception", __FILE__, __LINE__);
     }
-    StringA str(buf);
+    the::astring str(buf);
     delete[] buf;
     return str;
 }
@@ -168,7 +167,7 @@ vislib::StringA vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
 /*
  * vislib::sys::ReadLineFromFileW
  */
-vislib::StringW vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
+the::wstring vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
     wchar_t *buf = new wchar_t[size + 1];
     unsigned int pos;
 
@@ -206,7 +205,7 @@ vislib::StringW vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
         the::safe_array_delete(buf);
         throw the::exception("Unexcepted exception", __FILE__, __LINE__);
     }
-    StringW str(buf);
+    the::wstring str(buf);
     delete[] buf;
     return str;
 }
@@ -315,7 +314,7 @@ void checkFileFormat(vislib::sys::File& file,
 /*
  * vislib::sys::ReadTextFile
  */
-bool vislib::sys::ReadTextFile(vislib::StringA& outStr, 
+bool vislib::sys::ReadTextFile(the::astring& outStr, 
         vislib::sys::File& file, vislib::sys::TextFileFormat format,
         bool forceFormat) {
     if ((format == TEXTFF_UNSPECIFIC) || !forceFormat) {
@@ -327,7 +326,8 @@ bool vislib::sys::ReadTextFile(vislib::StringA& outStr,
 
     switch (format) {
     case TEXTFF_ASCII: {
-        char *src = outStr.AllocateBuffer(static_cast<unsigned int>(len + 1));
+        outStr = the::astring(len + 1, ' ');
+        char *src = const_cast<char*>(outStr.c_str());
         len = file.Read(src, len);
         src[len] = 0;
         return true;
@@ -337,20 +337,20 @@ bool vislib::sys::ReadTextFile(vislib::StringA& outStr,
 CASE_TEXTFF_UNICODE: 
 #endif /* _WIN32 */
     {
-        vislib::StringW tmp;
-        wchar_t *src = tmp.AllocateBuffer(static_cast<unsigned int>(
-            (len / sizeof(wchar_t)) + sizeof(wchar_t)));
+        the::wstring tmp(static_cast<unsigned int>(
+            (len / sizeof(wchar_t)) + sizeof(wchar_t)), L' ');
+        wchar_t *src = const_cast<wchar_t*>(tmp.c_str());
         len = file.Read(src, len - len % sizeof(wchar_t));
         src[len / sizeof(wchar_t)] = 0;
-        outStr = tmp;
+        the::text::string_converter::convert(outStr, tmp);
         return true;
     } break;
     case TEXTFF_UTF8: {
-        vislib::StringA bytes;
-        char *src = bytes.AllocateBuffer(static_cast<unsigned int>(len + 1));
+        the::astring bytes(static_cast<unsigned int>(len + 1), ' ');
+        char *src = const_cast<char *>(bytes.c_str());
         len = file.Read(src, len);
         src[len] = 0;
-        UTF8Encoder::Decode(outStr, bytes);
+        the::text::string_converter::convert_from_utf8(outStr, bytes);
         return true;
     } break;
     case TEXTFF_UTF16:
@@ -399,7 +399,7 @@ CASE_TEXTFF_UNICODE:
 /*
  * vislib::sys::ReadTextFile
  */
-bool vislib::sys::ReadTextFile(vislib::StringW& outStr, 
+bool vislib::sys::ReadTextFile(the::wstring& outStr, 
         vislib::sys::File& file, vislib::sys::TextFileFormat format,
         bool forceFormat) {
     if ((format == TEXTFF_UNSPECIFIC) || !forceFormat) {
@@ -411,11 +411,11 @@ bool vislib::sys::ReadTextFile(vislib::StringW& outStr,
 
     switch (format) {
     case TEXTFF_ASCII: {
-        vislib::StringA tmp;
-        char *src = tmp.AllocateBuffer(static_cast<unsigned int>(len + 1));
+        the::astring tmp(static_cast<unsigned int>(len + 1), ' ');
+        char *src = const_cast<char*>(tmp.c_str());
         len = file.Read(src, len);
         src[len] = 0;
-        outStr = tmp;
+        the::text::string_converter::convert(outStr, tmp);
         return true;
     } break;
     case TEXTFF_UNICODE:
@@ -423,18 +423,19 @@ bool vislib::sys::ReadTextFile(vislib::StringW& outStr,
 CASE_TEXTFF_UNICODE:
 #endif /* WIN32 */
     {
-        wchar_t *src = outStr.AllocateBuffer(static_cast<unsigned int>(
-            (len / sizeof(wchar_t)) + sizeof(wchar_t)));
+        outStr = the::wstring(static_cast<unsigned int>(
+            (len / sizeof(wchar_t)) + sizeof(wchar_t)), L' ');
+        wchar_t *src = const_cast<wchar_t*>(outStr.c_str());
         len = file.Read(src, len - len % sizeof(wchar_t));
         src[len / sizeof(wchar_t)] = 0;
         return true;
     } break;
     case TEXTFF_UTF8: {
-        vislib::StringA bytes;
-        char *src = bytes.AllocateBuffer(static_cast<unsigned int>(len + 1));
+        the::astring bytes(static_cast<unsigned int>(len + 1), ' ');
+        char *src = const_cast<char*>(bytes.c_str());
         len = file.Read(src, len);
         src[len] = 0;
-        UTF8Encoder::Decode(outStr, bytes);
+        the::text::string_converter::convert_from_utf8(outStr, bytes);
         return true;
     } break;
     case TEXTFF_UTF16:
@@ -559,12 +560,12 @@ HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion,
 /*
  * vislib::sys::RemoveKernelNamespace
  */
-vislib::StringA vislib::sys::RemoveKernelNamespace(const char *name) {
-    StringA n(name);
+the::astring vislib::sys::RemoveKernelNamespace(const char *name) {
+    the::astring n(name);
 
-    if (n.StartsWithInsensitive("global\\") 
-            || n.StartsWithInsensitive("local\\")) {
-        n.Remove(0, n.Find('\\') + 1);
+    if (the::text::string_utility::starts_with(n, "global\\", false)
+            || the::text::string_utility::starts_with(n, "local\\", false)) {
+        n.erase(n.begin(), std::find(n.begin(), n.end(), '\\'));
     }
 
     return n;
@@ -574,12 +575,12 @@ vislib::StringA vislib::sys::RemoveKernelNamespace(const char *name) {
 /*
  * vislib::sys::RemoveKernelNamespace
  */
-vislib::StringW vislib::sys::RemoveKernelNamespace(const wchar_t *name) {
-    StringW n(name);
+the::wstring vislib::sys::RemoveKernelNamespace(const wchar_t *name) {
+    the::wstring n(name);
 
-    if (n.StartsWithInsensitive(L"global\\") 
-            || n.StartsWithInsensitive(L"local\\")) {
-        n.Remove(0, n.Find(L'\\') + 1);
+    if (the::text::string_utility::starts_with(n, L"global\\", false)
+            || the::text::string_utility::starts_with(n, L"local\\", false)) {
+        n.erase(n.begin(), std::find(n.begin(), n.end(), '\\'));
     }
 
     return n;
@@ -589,9 +590,9 @@ vislib::StringW vislib::sys::RemoveKernelNamespace(const wchar_t *name) {
 /*
  * vislib::sys::TranslateWinIpc2PosixName
  */
-vislib::StringA vislib::sys::TranslateWinIpc2PosixName(const char *name) {
-    StringA retval = RemoveKernelNamespace(name);
-    retval.Prepend('/');
+the::astring vislib::sys::TranslateWinIpc2PosixName(const char *name) {
+    the::astring retval = RemoveKernelNamespace(name);
+    retval.insert(0, "//");
     return retval;
 }
 
@@ -599,9 +600,9 @@ vislib::StringA vislib::sys::TranslateWinIpc2PosixName(const char *name) {
 /*
  * vislib::sys::TranslateWinIpc2PosixName
  */
-vislib::StringW vislib::sys::TranslateWinIpc2PosixName(const wchar_t *name) {
-    StringW retval = RemoveKernelNamespace(name);
-    retval.Prepend(L'/');
+the::wstring vislib::sys::TranslateWinIpc2PosixName(const wchar_t *name) {
+    the::wstring retval = RemoveKernelNamespace(name);
+    retval.insert(0, L"//");
     return retval;
 }
 
@@ -615,11 +616,11 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
     
     
     /* Remove Windows kernel namespaces from the name. */
-    StringA n = RemoveKernelNamespace(name);
+    the::astring n = RemoveKernelNamespace(name);
     THE_ASSERT(n.Length() > 0);
 
     // TODO: Ist das Verzeichnis sinnvoll? Eher nicht ...
-    retval = ::ftok(Path::GetUserHomeDirectoryA().PeekBuffer(), n.HashCode());
+    retval = ::ftok(Path::GetUserHomeDirectoryA().c_str(), n.HashCode());
     if (retval == -1) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
@@ -635,7 +636,7 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
  * vislib::sys::WriteTextFile
  */
 bool vislib::sys::WriteTextFile(vislib::sys::File& file,
-        const vislib::StringA& text, vislib::sys::TextFileFormat format,
+        const the::astring& text, vislib::sys::TextFileFormat format,
         TextFileFormatBOM bom) {
     switch (format) {
     case TEXTFF_UNSPECIFIC:
@@ -644,8 +645,8 @@ bool vislib::sys::WriteTextFile(vislib::sys::File& file,
     case TEXTFF_ASCII:
 CASE_TEXTFF_ASCII: {
         // no BOM possible
-        StringA::Size len = text.Length();
-        return (static_cast<StringA::Size>(file.Write(text.PeekBuffer(), len))
+        the::astring::size_type len = text.size();
+        return (static_cast<the::astring::size_type>(file.Write(text.c_str(), len))
             == len);
     } break;
     case TEXTFF_UNICODE:
@@ -653,17 +654,17 @@ CASE_TEXTFF_ASCII: {
 CASE_TEXTFF_UNICODE:
 #endif /* _WIN32 */
         // write BOM as sfx
-        return WriteTextFile(file, vislib::StringW(text), format, bom);
+        return WriteTextFile(file, the::text::string_converter::to_w(text), format, bom);
         break;
     case TEXTFF_UTF8: {
-        vislib::StringA bytes;
-        UTF8Encoder::Encode(bytes, text);
+        the::astring bytes;
+        the::text::string_converter::convert_to_utf8(bytes, text);
         if (bom != TEXTFF_BOM_NO) {
             unsigned char BOM[] = { 0xEF, 0xBB, 0xBF };
             file.Write(BOM, 3);
         }
-        StringA::Size len = bytes.Length();
-        return (static_cast<StringA::Size>(file.Write(bytes, len)) == len);
+        the::astring::size_type len = bytes.size();
+        return (static_cast<the::astring::size_type>(file.Write(bytes.c_str(), len)) == len);
     } break;
     case TEXTFF_UTF16:
 #ifdef _WIN32
@@ -704,7 +705,7 @@ CASE_TEXTFF_UNICODE:
         break;
     }
     //size_t len = text.Length();
-    //return (file.Write(text.PeekBuffer(), len) == len);
+    //return (file.Write(text.c_str(), len) == len);
 
     return false;
 }
@@ -714,7 +715,7 @@ CASE_TEXTFF_UNICODE:
  * vislib::sys::WriteTextFile
  */
 bool vislib::sys::WriteTextFile(vislib::sys::File& file,
-        const vislib::StringW& text, vislib::sys::TextFileFormat format,
+        const the::wstring& text, vislib::sys::TextFileFormat format,
         TextFileFormatBOM bom) {
     switch (format) {
     case TEXTFF_UNSPECIFIC:
@@ -722,7 +723,7 @@ bool vislib::sys::WriteTextFile(vislib::sys::File& file,
         break;
     case TEXTFF_ASCII:
         // no BOM possible
-        return WriteTextFile(file, vislib::StringA(text), format, bom);
+        return WriteTextFile(file, the::text::string_converter::to_a(text), format, bom);
         break;
     case TEXTFF_UNICODE:
 #ifdef _WIN32
@@ -735,20 +736,20 @@ CASE_TEXTFF_UNICODE:
             file.Write(BOM, 2);
         }
 #endif /* _WIN32 */
-        StringW::Size len = text.Length() * sizeof(wchar_t);
-        return (static_cast<StringW::Size>(file.Write(text.PeekBuffer(), len))
+        the::wstring::size_type len = text.size() * sizeof(wchar_t);
+        return (static_cast<the::wstring::size_type>(file.Write(text.c_str(), len))
             == len);
     } break;
     case TEXTFF_UTF8:
 CASE_TEXTFF_UTF8: {
-        vislib::StringA bytes;
-        UTF8Encoder::Encode(bytes, text);
+        the::astring bytes;
+        the::text::string_converter::convert_to_utf8(bytes, text);
         if (bom != TEXTFF_BOM_NO) {
             unsigned char BOM[] = { 0xEF, 0xBB, 0xBF };
             file.Write(BOM, 3);
         }
-        StringA::Size len = bytes.Length();
-        return (static_cast<StringA::Size>(file.Write(bytes, len)) == len);
+        the::astring::size_type len = bytes.size();
+        return (static_cast<the::astring::size_type>(file.Write(bytes.c_str(), len)) == len);
     } break;
     case TEXTFF_UTF16:
 #ifdef _WIN32
@@ -788,8 +789,8 @@ CASE_TEXTFF_UTF8: {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unknown text file format %d\n", format);
         break;
     }
-    //vislib::StringA tmp(text);
+    //the::astring tmp(text);
     //size_t len = tmp.Length();
-    //return (file.Write(tmp.PeekBuffer(), len) == len);
+    //return (file.Write(tmp.c_str(), len) == len);
     return false;
 }

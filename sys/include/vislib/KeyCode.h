@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "the/types.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -212,7 +212,7 @@ namespace sys {
          *
          * @return A human-readable ASCII String
          */
-        vislib::StringA ToStringA(void) const;
+        the::astring ToStringA(void) const;
 
         /**
          * Assignment operator.

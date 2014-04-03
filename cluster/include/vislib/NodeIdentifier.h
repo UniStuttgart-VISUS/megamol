@@ -66,7 +66,7 @@ namespace cluster {
          *
          * @return A string representation of the ID.
          */
-        StringA ToStringA(void) const {
+        the::astring ToStringA(void) const {
             THE_STACK_TRACE;
             return this->id.ToStringA();
         }
@@ -76,7 +76,7 @@ namespace cluster {
          *
          * @return A string representation of the ID.
          */
-        StringW ToStringW(void) const {
+        the::wstring ToStringW(void) const {
             THE_STACK_TRACE;
             return this->id.ToStringW();
         }

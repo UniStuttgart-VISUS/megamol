@@ -43,7 +43,7 @@
 //    IPEndPoint& ep = static_cast<IPEndPoint&>(*cep);
 //
 //    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Binding IB end point to %s...\n",
-//    //    ep.ToStringA().PeekBuffer());
+//    //    ep.ToStringA().c_str());
 //    //int x = ::rdma_bind_addr(this->id, static_cast<sockaddr *>(ep));
 //    //int y = ::GetLastError();
 //
@@ -54,9 +54,9 @@
 //    ::ZeroMemory(&hints, sizeof(hints));
 //    hints.ai_flags = RAI_PASSIVE;
 //    hints.ai_port_space = RDMA_PS_TCP;
-//    StringA str;
-//    str.Format("%d", ep.GetPort());
-//    retval = ::rdma_getaddrinfo(NULL, (char *) str.PeekBuffer(), &hints, &addrInfo);
+//    the::astring str;
+//    the::text::astring_builder::format_to(str, "%d", ep.GetPort());
+//    retval = ::rdma_getaddrinfo(NULL, (char *) str.c_str(), &hints, &addrInfo);
 //
 //
 //    ::ZeroMemory(&attr, sizeof(attr));

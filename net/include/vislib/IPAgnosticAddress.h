@@ -297,14 +297,14 @@ namespace net {
          *
          * @return A string representation.
          */
-        StringA ToStringA(void) const;
+        the::astring ToStringA(void) const;
 
         /** 
          * Answer a string representation of the IP address.
          *
          * @return A string representation.
          */
-        StringW ToStringW(void) const;
+        the::wstring ToStringW(void) const;
 
         /**
          * Provides access to the single bytes of the IP address.

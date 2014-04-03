@@ -11,7 +11,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractGlutApp.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "vislib/Array.h"
 
 /**
@@ -61,12 +61,12 @@ public:
          * @return The name of the factory as zero terminated ANSI string.
          */
         inline const char* GetName(void) const {
-            return this->name;
+            return this->name.c_str();
         }
 
     private:
         /** the name */
-        vislib::StringA name;
+        the::astring name;
 
     };
 

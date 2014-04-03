@@ -18,8 +18,8 @@
 
 #include "vislib/Rectangle.h"
 #include "the/stack_trace.h"
-#include "vislib/String.h"
-#include "vislib/StringConverter.h"
+#include "the/string.h"
+#include "the/text/string_converter.h"
 
 
 namespace vislib {
@@ -52,7 +52,7 @@ namespace d3d {
          *         or INVALID_OUTPUT_IDX in case such a device was not found.
          */
         virtual INT_PTR FindOutputIdxForDeviceName(
-            const StringW& deviceName) const;
+            const the::wstring& deviceName) const;
 
         /**
          * Answer the index of the output that has the display device with the
@@ -65,10 +65,10 @@ namespace d3d {
          *         or INVALID_OUTPUT_IDX in case such a device was not found.
          */
         inline INT_PTR FindOutputIdxForDeviceName(
-                const StringA& deviceName) const {
+                const the::astring& deviceName) const {
             THE_STACK_TRACE;
             return this->FindOutputIdxForDeviceName(
-                A2W(deviceName.PeekBuffer()));
+                THE_A2W(deviceName.c_str()));
         }
 
         /**
@@ -102,7 +102,7 @@ namespace d3d {
          * @throws index_out_of_range_exception If 'outputIdx' does not designate a valid
          *                             output attached to the adapter.
          */
-        virtual StringW GetDeviceName(const SIZE_T outputIdx) const;
+        virtual the::wstring GetDeviceName(const SIZE_T outputIdx) const;
 
         /**
          * Answer the number of outputs this adapter has.

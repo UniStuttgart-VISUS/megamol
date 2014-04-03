@@ -16,7 +16,7 @@
 
 #include "glh/glh_genext.h"
 #include "the/exception.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {

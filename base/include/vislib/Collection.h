@@ -120,7 +120,7 @@ namespace vislib {
          *
          * @return true, if the collection is empty, false otherwise.
          */
-        virtual bool IsEmpty(void) const = 0;
+        virtual bool empty(void) const = 0;
 
         /**
          * Acquires the lock of the collection.

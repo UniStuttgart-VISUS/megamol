@@ -12,8 +12,8 @@
 #include "the/invalid_operation_exception.h"
 #include "the/not_implemented_exception.h"
 #include "vislib/Path.h"
-#include "vislib/String.h"
-#include "vislib/StringConverter.h"
+#include "the/string.h"
+#include "the/text/string_converter.h"
 #include "the/system/system_exception.h"
 #include "the/trace.h"
 
@@ -177,7 +177,7 @@ void vislib::sys::NamedPipe::Close(void) {
 /*
  * vislib::sys::NamedPipe::Open
  */
-bool vislib::sys::NamedPipe::Open(vislib::StringA name, 
+bool vislib::sys::NamedPipe::Open(the::astring name, 
         vislib::sys::NamedPipe::PipeMode mode, unsigned int timeout) {
 
     // check parameters
@@ -193,7 +193,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
         this->Close();
     }
 
-    vislib::StringA pipeName = PipeSystemName(name);
+    the::astring pipeName = PipeSystemName(name);
 
 #ifdef _WIN32
 
@@ -208,7 +208,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
     this->overlapped.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL); // manual reset event
     
     // create the pipe
-    this->handle = ::CreateNamedPipeA(pipeName.PeekBuffer(), 
+    this->handle = ::CreateNamedPipeA(pipeName.c_str(), 
         FILE_FLAG_FIRST_PIPE_INSTANCE | FILE_FLAG_OVERLAPPED | 
         ((mode == PIPE_MODE_READ) ? PIPE_ACCESS_INBOUND : PIPE_ACCESS_OUTBOUND),
         PIPE_TYPE_BYTE | PIPE_READMODE_BYTE, 2, PIPE_BUFFER_SIZE, 
@@ -221,7 +221,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
         if (lastError == ERROR_ACCESS_DENIED) {
             // pipe already created! So we should be the client
 
-            this->handle = ::CreateFileA(pipeName.PeekBuffer(), 
+            this->handle = ::CreateFileA(pipeName.c_str(), 
                 ((mode == PIPE_MODE_WRITE) ? GENERIC_WRITE : GENERIC_READ), 
                 0, NULL, OPEN_EXISTING, 0, 0);
     
@@ -276,7 +276,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
     return true; // pipe opened
 
 #else /* _WIN32 */
-    Exterminatus ext(timeout, pipeName.PeekBuffer(), (mode != PIPE_MODE_READ));
+    Exterminatus ext(timeout, pipeName.c_str(), (mode != PIPE_MODE_READ));
     vislib::sys::Thread tot(&ext);
 
     mode_t oldMask = ::umask(0);
@@ -285,7 +285,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
     }
 
     // Create the FIFO if it does not exist
-    if (::mknod(pipeName.PeekBuffer(), S_IFIFO | 0666, 0) != 0) {
+    if (::mknod(pipeName.c_str(), S_IFIFO | 0666, 0) != 0) {
 
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "mknod failed\n");
 
@@ -303,7 +303,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
         tot.Start();
     }
 
-    this->handle = ::open(pipeName.PeekBuffer(), O_SYNC | 
+    this->handle = ::open(pipeName.c_str(), O_SYNC | 
         ((mode == PIPE_MODE_READ) ? O_RDONLY : O_WRONLY));
     ext.MarkConnected();
 
@@ -322,7 +322,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
 
     // Tricky.
     // This works since 'open' blocks until both ends of the pipe are opend.
-    ::unlink(pipeName.PeekBuffer());
+    ::unlink(pipeName.c_str());
 
     if (this->handle >= 0) {
         this->mode = mode;
@@ -336,7 +336,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
 /*
  * vislib::sys::NamedPipe::Open
  */
-bool vislib::sys::NamedPipe::Open(vislib::StringW name, 
+bool vislib::sys::NamedPipe::Open(the::wstring name, 
         vislib::sys::NamedPipe::PipeMode mode, unsigned int timeout) {
 
 #ifdef _WIN32
@@ -354,7 +354,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringW name,
         this->Close();
     }
 
-    vislib::StringW pipeName = PipeSystemName(name);
+    the::wstring pipeName = PipeSystemName(name);
 
     if (timeout == 0) {
         timeout = INFINITE;
@@ -367,7 +367,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringW name,
     this->overlapped.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL); // manual reset event
     
     // create the pipe
-    this->handle = ::CreateNamedPipeW(pipeName.PeekBuffer(), 
+    this->handle = ::CreateNamedPipeW(pipeName.c_str(), 
         FILE_FLAG_FIRST_PIPE_INSTANCE | FILE_FLAG_OVERLAPPED | 
         ((mode == PIPE_MODE_READ) ? PIPE_ACCESS_INBOUND : PIPE_ACCESS_OUTBOUND),
         PIPE_TYPE_BYTE | PIPE_READMODE_BYTE, 2, PIPE_BUFFER_SIZE, 
@@ -380,7 +380,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringW name,
         if (lastError == ERROR_ACCESS_DENIED) {
             // pipe already created! So we should be the client
 
-            this->handle = ::CreateFileW(pipeName.PeekBuffer(), 
+            this->handle = ::CreateFileW(pipeName.c_str(), 
                 ((mode == PIPE_MODE_WRITE) ? GENERIC_WRITE : GENERIC_READ), 
                 0, NULL, OPEN_EXISTING, 0, 0);
     
@@ -441,7 +441,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringW name,
 #else /* _WIN32 */
 
     // since linux and unicode do not really work (as always)           
-    return this->Open(W2A(name), mode, timeout);
+    return this->Open(THE_W2A(name), mode, timeout);
 
 #endif /* _WIN32 */ 
 }
@@ -543,16 +543,16 @@ void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
 /*
  * vislib::sys::NamedPipe::PipeSystemName
  */
-vislib::StringA vislib::sys::NamedPipe::PipeSystemName(const vislib::StringA &name) {
+the::astring vislib::sys::NamedPipe::PipeSystemName(const the::astring &name) {
     if (!checkPipeName(name)) {
         throw the::argument_exception("name", __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
-    vislib::StringA pipeName = "\\\\.\\pipe\\";
+    the::astring pipeName = "\\\\.\\pipe\\";
     pipeName += name;
 #else /* _WIN32 */
-    vislib::StringA pipeName = baseDir;
+    the::astring pipeName = baseDir;
     pipeName += "/";
     pipeName += name;
 #endif /* _WIN32 */
@@ -563,16 +563,16 @@ vislib::StringA vislib::sys::NamedPipe::PipeSystemName(const vislib::StringA &na
 /*
  * vislib::sys::NamedPipe::PipeSystemName
  */
-vislib::StringW vislib::sys::NamedPipe::PipeSystemName(const vislib::StringW &name) {
+the::wstring vislib::sys::NamedPipe::PipeSystemName(const the::wstring &name) {
     if (!checkPipeName(name)) {
         throw the::argument_exception("name", __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
-    vislib::StringW pipeName = L"\\\\.\\pipe\\";
+    the::wstring pipeName = L"\\\\.\\pipe\\";
     pipeName += name;
 #else /* _WIN32 */
-    vislib::StringW pipeName = A2W(baseDir);
+    the::wstring pipeName = THE_A2W(baseDir);
     pipeName += L"/";
     pipeName += name;
 #endif /* _WIN32 */
@@ -678,33 +678,26 @@ void vislib::sys::NamedPipe::Write(void *buffer, unsigned int size) {
  * vislib::sys::NamedPipe::checkPipeName
  */
 template<class T> bool vislib::sys::NamedPipe::checkPipeName(
-        const vislib::String<T> &name) {
-    if (name.Find(static_cast<typename T::Char>(vislib::sys::Path::SEPARATOR_A))
-           != vislib::String<T>::INVALID_POS) {
+        const T &name) {
+    if (std::find(name.begin(), name.end(), static_cast<typename T::value_type>(vislib::sys::Path::SEPARATOR_A)) != name.end()) {
         return false;
     }
-    if (name.Find(static_cast<typename T::Char>('<'))
-           != vislib::String<T>::INVALID_POS) {
+    if (std::find(name.begin(), name.end(), static_cast<typename T::value_type>('<')) != name.end()) {
         return false;
     }
-    if (name.Find(static_cast<typename T::Char>('>'))
-           != vislib::String<T>::INVALID_POS) {
+    if (std::find(name.begin(), name.end(), static_cast<typename T::value_type>('>')) != name.end()) {
         return false;
     }
-    if (name.Find(static_cast<typename T::Char>('|'))
-           != vislib::String<T>::INVALID_POS) {
+    if (std::find(name.begin(), name.end(), static_cast<typename T::value_type>('|')) != name.end()) {
         return false;
     }
-    if (name.Find(static_cast<typename T::Char>(':'))
-           != vislib::String<T>::INVALID_POS) {
+    if (std::find(name.begin(), name.end(), static_cast<typename T::value_type>(':')) != name.end()) {
         return false;
     }
-    if (name.Find(static_cast<typename T::Char>('*'))
-           != vislib::String<T>::INVALID_POS) {
+    if (std::find(name.begin(), name.end(), static_cast<typename T::value_type>('*')) != name.end()) {
         return false;
     }
-    if (name.Find(static_cast<typename T::Char>('?'))
-           != vislib::String<T>::INVALID_POS) {
+    if (std::find(name.begin(), name.end(), static_cast<typename T::value_type>('?')) != name.end()) {
         return false;
     }
 

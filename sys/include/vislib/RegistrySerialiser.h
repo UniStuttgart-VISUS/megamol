@@ -22,7 +22,7 @@
 #include "vislib/RegistryKey.h"
 #include "vislib/Serialiser.h"
 #include "vislib/Stack.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/types.h"
 
 
@@ -53,13 +53,13 @@ namespace sys {
         /**
          * TODO: documentation
          */
-        RegistrySerialiser(const vislib::StringA& subKey, 
+        RegistrySerialiser(const the::astring& subKey, 
             HKEY hKey = HKEY_CURRENT_USER);
 
         /**
          * TODO: documentation
          */
-        RegistrySerialiser(const vislib::StringW& subKey, 
+        RegistrySerialiser(const the::wstring& subKey, 
             HKEY hKey = HKEY_CURRENT_USER);
 
         /**
@@ -159,16 +159,16 @@ namespace sys {
         virtual void Deserialise(double& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(StringA& outValue, 
+        virtual void Deserialise(the::astring& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(StringA& outValue, 
+        virtual void Deserialise(the::astring& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(StringW& outValue, 
+        virtual void Deserialise(the::wstring& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(StringW& outValue, 
+        virtual void Deserialise(the::wstring& outValue, 
             const wchar_t *name);
 
         /**
@@ -201,8 +201,8 @@ namespace sys {
          *
          * @param name The name of the new key.
          */
-        inline void PushKey(const StringA& name) {
-            this->PushKey(name.PeekBuffer());
+        inline void PushKey(const the::astring& name) {
+            this->PushKey(name.c_str());
         }
 
         /**
@@ -210,8 +210,8 @@ namespace sys {
          *
          * @param name The name of the new key.
          */
-        inline void PushKey(const StringW& name) {
-            this->PushKey(name.PeekBuffer());
+        inline void PushKey(const the::wstring& name) {
+            this->PushKey(name.c_str());
         }
 
         virtual void Serialise(const bool value, 
@@ -286,16 +286,16 @@ namespace sys {
         virtual void Serialise(const double value,
             const wchar_t *name);
 
-        virtual void Serialise(const StringA& value,
+        virtual void Serialise(const the::astring& value,
             const char *name = NULL);
 
-        virtual void Serialise(const StringA& value,
+        virtual void Serialise(const the::astring& value,
             const wchar_t *name);
 
-        virtual void Serialise(const StringW& value,
+        virtual void Serialise(const the::wstring& value,
             const char *name = NULL);
 
-        virtual void Serialise(const StringW& value,
+        virtual void Serialise(const the::wstring& value,
             const wchar_t *name);
 
         /**

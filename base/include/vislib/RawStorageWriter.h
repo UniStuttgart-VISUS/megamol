@@ -16,7 +16,7 @@
 
 #include "the/types.h"
 #include "vislib/RawStorage.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include <climits>
 
 
@@ -141,17 +141,17 @@ namespace vislib {
         inline void Write(int64_t d) { this->Write(&d, 8); }
         inline void Write(float d) { this->Write(&d, 4); }
         inline void Write(double d) { this->Write(&d, 8); }
-        inline void Write(const vislib::StringA& d) {
-            this->Write(static_cast<unsigned int>(d.Length()));
-            this->Write(d.PeekBuffer(), d.Length() * sizeof(char));
+        inline void Write(const the::astring& d) {
+            this->Write(static_cast<unsigned int>(d.size()));
+            this->Write(d.c_str(), d.size() * sizeof(char));
         }
         // You really do not want to use unicode, since linux has f**ked it up
-        //inline Write(const vislib::StringW& d) {
+        //inline Write(const the::wstring& d) {
         //    this->Write(static_cast<uint64_t>(d.Length()));
-        //    this->Write(d.PeekBuffer(), d.Length() * sizeof(wchar_t));
+        //    this->Write(d.c_str(), d.Length() * sizeof(wchar_t));
         //}
         inline void Write(const char *d) {
-            size_t l = vislib::CharTraitsA::SafeStringLength(d);
+            size_t l = the::text::string_utility::c_str_len(d);
             this->Write(static_cast<unsigned int>(l));
             this->Write(d, l);
         }

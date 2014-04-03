@@ -79,8 +79,8 @@ static void TestSpan(void) {
         + 1);
 
     ts1 = DateTimeSpan(1, 1, 1, 1, 1);
-    ::AssertEqual("ToStringA", ts1.ToStringA(), vislib::StringA("1:01:01:01.0001"));
-    ::AssertEqual("ToStringW", ts1.ToStringW(), vislib::StringW(L"1:01:01:01.0001"));
+    ::AssertEqual("ToStringA", ts1.ToStringA(), the::astring("1:01:01:01.0001"));
+    ::AssertEqual("ToStringW", ts1.ToStringW(), the::wstring(L"1:01:01:01.0001"));
     ::AssertFalse("Test for equality returns false.", ts1 == ts2);
     ::AssertTrue("Test for inequality returns true.", ts1 != ts2);
     ::AssertEqual("GetDays().", ts1.GetDays(), (int) 1);

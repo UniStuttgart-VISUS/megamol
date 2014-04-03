@@ -259,7 +259,7 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        virtual void BindToDevice(const StringA& name);
+        virtual void BindToDevice(const the::astring& name);
 
         /**
          * Close the socket. If the socket is not open, i. e. not valid, this 

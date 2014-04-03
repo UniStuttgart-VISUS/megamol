@@ -1063,7 +1063,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::MegaMolBlue(
  */
 size_t vislib::graphics::NamedColours::CountNamedColours(void) {
     if (count == 0) {
-        while (!index[count].name.IsEmpty()) count++;
+        while (!index[count].name.empty()) count++;
     }
     return count;
 }
@@ -1089,7 +1089,7 @@ const vislib::graphics::ColourRGBAu8&
 vislib::graphics::NamedColours::GetColourByName(const char *name) {
     CountNamedColours();
     for (size_t i = 0; i < count; i++) {
-        if (index[i].name.Equals(name, false)) return index[i].colour;
+        if (the::text::string_utility::equals(index[i].name, name, false)) return index[i].colour;
     }
     throw the::no_such_element_exception(name, __FILE__, __LINE__);
 }
@@ -1103,7 +1103,7 @@ const char *vislib::graphics::NamedColours::GetNameByIndex(size_t idx) {
         throw the::index_out_of_range_exception(idx, 0, count - 1,
             __FILE__, __LINE__);
     }
-    return index[idx].name;
+    return index[idx].name.c_str();
 }
 
 
@@ -1114,7 +1114,7 @@ const char *vislib::graphics::NamedColours::GetNameByColour(
         const vislib::graphics::ColourRGBAu8& col, bool throwException) {
     CountNamedColours();
     for (size_t i = 0; i < count; i++) {
-        if (index[i].colour == col) return index[i].name.PeekBuffer();
+        if (index[i].colour == col) return index[i].name.c_str();
     }
     if (throwException) {
         throw the::no_such_element_exception("col is not a named colour",

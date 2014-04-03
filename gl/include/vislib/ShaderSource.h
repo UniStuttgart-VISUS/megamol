@@ -18,7 +18,7 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/Array.h"
 #include "vislib/Map.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -70,7 +70,7 @@ namespace gl {
              *
              * @param str The text of the snippet.
              */
-            StringSnippet(const vislib::StringA& str);
+            StringSnippet(const the::astring& str);
 
             /**
              * ctor.
@@ -103,7 +103,7 @@ namespace gl {
              *
              * @param str The text of the snippet.
              */
-            void Set(const vislib::StringA& str);
+            void Set(const the::astring& str);
 
             /**
              * Sets the text of the snippet.
@@ -117,7 +117,7 @@ namespace gl {
              *
              * @return The text of the snippet.
              */
-            const vislib::StringA& String(void) const;
+            const the::astring& String(void) const;
 
             /**
              * Assignment operator from vislib string.
@@ -126,7 +126,7 @@ namespace gl {
              *
              * @return A reference to this.
              */
-            inline StringSnippet& operator=(const vislib::StringA& str) {
+            inline StringSnippet& operator=(const the::astring& str) {
                 this->Set(str);
                 return *this;
             }
@@ -146,7 +146,7 @@ namespace gl {
         protected:
 
             /** The text of the snippet. */
-            vislib::StringA txt;
+            the::astring txt;
         };
 
         /**
@@ -189,7 +189,7 @@ namespace gl {
         private:
 
             /** The string representation of the version */
-            vislib::StringA verStr;
+            the::astring verStr;
         };
 
         /** ctor. Creates empty shader source. */
@@ -232,7 +232,7 @@ namespace gl {
          * @throw argument_exception if code is <NULL>.
          */
         const vislib::SmartPtr<Snippet>& Append(
-            const vislib::StringA& name,
+            const the::astring& name,
             const vislib::SmartPtr<Snippet>& code);
 
         /**
@@ -287,7 +287,7 @@ namespace gl {
          *                            [0, this->Count()[.
          */
         const vislib::SmartPtr<Snippet>& Insert(const size_t idx, 
-            const vislib::StringA& name,
+            const the::astring& name,
             const vislib::SmartPtr<Snippet>& code);
 
         /**
@@ -297,7 +297,7 @@ namespace gl {
          *
          * @throw no_such_element_exception if there is no index with this name.
          */
-        size_t NameIndex(const vislib::StringA& name);
+        size_t NameIndex(const the::astring& name);
 
         /**
          * Adds one code snippet to the beginning of the shader source.
@@ -324,7 +324,7 @@ namespace gl {
          * @throw argument_exception if code is <NULL>.
          */
         const vislib::SmartPtr<Snippet>& Prepend(
-            const vislib::StringA& name,
+            const the::astring& name,
             const vislib::SmartPtr<Snippet>& code);
 
         /**
@@ -342,7 +342,7 @@ namespace gl {
          *
          * @param name The name to be removed.
          */
-        void RemoveName(vislib::StringA& name);
+        void RemoveName(the::astring& name);
 
         /**
          * Replaces a snippet with a new one.
@@ -378,14 +378,14 @@ namespace gl {
          * @throw index_out_of_range_exception If 'idx' is not within 
          *                            [0, this->Count()[.
          */
-        void SetName(const vislib::StringA& name, size_t idx);
+        void SetName(const the::astring& name, size_t idx);
 
         /**
          * Creates a single string containing the whole shader source code.
          *
          * @return The string containing the whole shader source code.
          */
-        vislib::StringA WholeCode(void) const;
+        the::astring WholeCode(void) const;
 
         /**
          * Answers one snippet of the shader source.
@@ -416,7 +416,7 @@ namespace gl {
         vislib::Array<vislib::SmartPtr<Snippet> > snippets;
 
         /** the names of some of the shader snippets */
-        vislib::Map<vislib::StringA, size_t> names;
+        vislib::Map<the::astring, size_t> names;
 
         /** the code output array */
         mutable const char **code;

@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "the/force_inline.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -110,7 +110,7 @@ namespace math {
          *         parsed. In the later case the value of 'this' was not
          *         changed.
          */
-        bool Parse(const vislib::StringA& str);
+        bool Parse(const the::astring& str);
 
         /**
          * Parses the string 'str' to be a ternary value.
@@ -121,7 +121,7 @@ namespace math {
          *         parsed. In the later case the value of 'this' was not
          *         changed.
          */
-        bool Parse(const vislib::StringW& str);
+        bool Parse(const the::wstring& str);
 
         /**
          * Answers a string representation of the value. The returned string
@@ -129,7 +129,7 @@ namespace math {
          *
          * @return A string representation of the value.
          */
-        vislib::StringA ToStringA(void) const;
+        the::astring ToStringA(void) const;
 
         /**
          * Answers a string representation of the value. The returned string
@@ -137,7 +137,7 @@ namespace math {
          *
          * @return A string representation of the value.
          */
-        vislib::StringW ToStringW(void) const;
+        the::wstring ToStringW(void) const;
 
         /**
          * Assignment operator

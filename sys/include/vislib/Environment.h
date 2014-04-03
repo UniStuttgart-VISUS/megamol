@@ -15,8 +15,8 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/MultiSz.h"
-#include "vislib/String.h"
+#include "the/multi_sz.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -99,7 +99,7 @@ namespace sys {
              */
             inline size_t Count(void) const {
 #ifdef _WIN32
-                return this->data.Count();
+                return this->data.size();
 #else /* _WIN32 */
                 return Snapshot::count(const_cast<const char **>(this->data));
 #endif /* _WIN32 */
@@ -115,7 +115,7 @@ namespace sys {
              *
              * @throws index_out_of_range_exception If 'idx' is not valid.
              */
-            void GetAt(const size_t idx, StringA& outName, StringA& outValue);
+            void GetAt(const size_t idx, the::astring& outName, the::astring& outValue);
 
             /**
              * Get the 'idx'th variable and its value.
@@ -127,7 +127,7 @@ namespace sys {
              *
              * @throws index_out_of_range_exception If 'idx' is not valid.
              */
-            void GetAt(const size_t idx, StringW& outName, StringW& outValue);
+            void GetAt(const size_t idx, the::wstring& outName, the::wstring& outValue);
 
             /**
              * Answer the variable with the name 'name'. If such a variable does
@@ -139,7 +139,7 @@ namespace sys {
              *
              * @return The value of the specified variable.
              */
-            StringA GetVariable(const char *name) const;
+            the::astring GetVariable(const char *name) const;
 
             /**
              * Answer the variable with the name 'name'. If such a variable does
@@ -149,8 +149,8 @@ namespace sys {
              *
              * @return The value of the specified variable.
              */
-            inline StringA GetVariable(const StringA& name) const {
-                return this->GetVariable(name.PeekBuffer());
+            inline the::astring GetVariable(const the::astring& name) const {
+                return this->GetVariable(name.c_str());
             }
 
             /**
@@ -163,7 +163,7 @@ namespace sys {
              *
              * @return The value of the specified variable.
              */
-            StringW GetVariable(const wchar_t *name) const;
+            the::wstring GetVariable(const wchar_t *name) const;
 
             /**
              * Answer the variable with the name 'name'. If such a variable does
@@ -173,8 +173,8 @@ namespace sys {
              *
              * @return The value of the specified variable.
              */
-            inline StringW GetVariable(const StringW& name) const {
-                return this->GetVariable(name.PeekBuffer());
+            inline the::wstring GetVariable(const the::wstring& name) const {
+                return this->GetVariable(name.c_str());
             }
 
             /**
@@ -182,9 +182,9 @@ namespace sys {
              *
              * @return true if no variable is set, false otherwise.
              */
-            inline bool IsEmpty(void) const {
+            inline bool empty(void) const {
 #ifdef _WIN32
-                return this->data.IsEmpty();
+                return this->data.empty();
 #else /* _WIN32 */
                 return (this->data == NULL);
 #endif /* _WIN32 */
@@ -218,8 +218,8 @@ namespace sys {
              *
              * @return true if the variable is set, false otherwise.
              */
-            inline bool IsSet(const vislib::StringA& name) const {
-                return this->IsSet(name.PeekBuffer());
+            inline bool IsSet(const the::astring& name) const {
+                return this->IsSet(name.c_str());
             }
 
             /**
@@ -230,8 +230,8 @@ namespace sys {
              *
              * @return true if the variable is set, false otherwise.
              */
-            inline bool IsSet(const vislib::StringW& name) const {
-                return this->IsSet(name.PeekBuffer());
+            inline bool IsSet(const the::wstring& name) const {
+                return this->IsSet(name.c_str());
             }
 
             /**
@@ -260,7 +260,7 @@ namespace sys {
              */
             inline operator const void *(void) const {
 #ifdef _WIN32
-                return static_cast<const void *>(this->data.PeekBuffer());
+                return static_cast<const void *>(this->data.data());
 #else /* _WIN32 */
                 return this->data;
 #endif /* _WIN32 */
@@ -333,7 +333,7 @@ namespace sys {
              * snapshot uses wide characters to store the data.
              * We assume a NULL pointer representing an empty environment block.
              */
-            MultiSzW data;
+            the::multi_szw data;
 #else /* _WIN32 */
             /** 
              * The environment data in a execve-compatible format. 
@@ -374,7 +374,7 @@ namespace sys {
          * @throws the::system::system_exception If the variable could not be retrieved, 
          *                         e. g. because it is not set.
          */
-        static vislib::StringA GetVariable(const char *name, 
+        static the::astring GetVariable(const char *name, 
             const bool isLenient = false);
 
         /**
@@ -393,7 +393,7 @@ namespace sys {
          * @throws the::system::system_exception If the variable could not be retrieved, 
          *                         e. g. because it is not set.
          */
-        static vislib::StringW GetVariable(const wchar_t *name, 
+        static the::wstring GetVariable(const wchar_t *name, 
             const bool isLenient = false);
 
         /**
@@ -412,9 +412,9 @@ namespace sys {
          * @throws the::system::system_exception If the variable could not be retrieved, 
          *                         e. g. because it is not set.
          */
-        inline static vislib::StringA GetVariable(const vislib::StringA& name,
+        inline static the::astring GetVariable(const the::astring& name,
                 const bool isLenient = false) {
-            return Environment::GetVariable(name.PeekBuffer(), isLenient);
+            return Environment::GetVariable(name.c_str(), isLenient);
         }
 
         /**
@@ -433,9 +433,9 @@ namespace sys {
          * @throws the::system::system_exception If the variable could not be retrieved, 
          *                         e. g. because it is not set.
          */
-        inline static vislib::StringW GetVariable(const vislib::StringW& name,
+        inline static the::wstring GetVariable(const the::wstring& name,
                 const bool isLenient = false) {
-            return Environment::GetVariable(name.PeekBuffer(), isLenient);
+            return Environment::GetVariable(name.c_str(), isLenient);
         }
 
         /**
@@ -469,8 +469,8 @@ namespace sys {
          *
          * @throws the::system::system_exception If an error occurred during the system call.
          */
-        inline static bool IsSet(const vislib::StringA& name) {
-            return Environment::IsSet(name.PeekBuffer());
+        inline static bool IsSet(const the::astring& name) {
+            return Environment::IsSet(name.c_str());
         }
 
         /**
@@ -482,8 +482,8 @@ namespace sys {
          *
          * @throws the::system::system_exception If an error occurred during the system call.
          */
-        inline static bool IsSet(const vislib::StringW& name) {
-            return Environment::IsSet(name.PeekBuffer());
+        inline static bool IsSet(const the::wstring& name) {
+            return Environment::IsSet(name.c_str());
         }
 
         /**
@@ -519,9 +519,9 @@ namespace sys {
          *
          * @throws the::system::system_exception If settings the environment variable failed.
          */
-        inline static void SetVariable(const vislib::StringA& name, 
-                                       const vislib::StringA& value) {
-            Environment::SetVariable(name.PeekBuffer(), value.PeekBuffer());
+        inline static void SetVariable(const the::astring& name, 
+                                       const the::astring& value) {
+            Environment::SetVariable(name.c_str(), value.c_str());
         }
 
         /**
@@ -533,9 +533,9 @@ namespace sys {
          *
          * @throws the::system::system_exception If settings the environment variable failed.
          */
-        inline static void SetVariable(const vislib::StringW& name, 
-                                       const vislib::StringW& value) {
-            Environment::SetVariable(name.PeekBuffer(), value.PeekBuffer());
+        inline static void SetVariable(const the::wstring& name, 
+                                       const the::wstring& value) {
+            Environment::SetVariable(name.c_str(), value.c_str());
         }
 
         /** Dtor. */

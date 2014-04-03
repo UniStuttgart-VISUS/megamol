@@ -153,18 +153,18 @@ unsigned int vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
     if (retval == 0) {
         try {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "The TcpServer is listening on "
-                "%s ...\n", serverAddr.ToStringA().PeekBuffer());
+                "%s ...\n", serverAddr.ToStringA().c_str());
 
             while (true) {
                 this->socket.Listen();
                 peerSocket = this->socket.Accept(&peerAddr);
                 THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "TcpServer accepted new connection "
-                    "from %s.\n", peerAddr.ToStringA().PeekBuffer());
+                    "from %s.\n", peerAddr.ToStringA().c_str());
 
                 if (!this->fireNewConnection(peerSocket, peerAddr)) {
                     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "TcpServer is closing "
                         "connection to %s because no one is interested in this "
-                        "client.\n", peerAddr.ToStringA().PeekBuffer());
+                        "client.\n", peerAddr.ToStringA().c_str());
                     try {
                         peerSocket.Close();
                     } catch (SocketException e) {

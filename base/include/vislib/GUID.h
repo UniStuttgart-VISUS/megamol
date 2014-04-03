@@ -20,7 +20,7 @@
 #include <uuid/uuid.h>
 #endif /* _WIN32 */
 
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/types.h"
 
 #ifdef _MSC_VER
@@ -167,7 +167,7 @@ namespace vislib {
          * @return true in case of success, false if 'str' could not be parsed 
          *         as GUID.
          */
-        bool Parse(const StringA& str);
+        bool Parse(const the::astring& str);
 
         /**
          * Parse the GUID from a string representation.
@@ -177,7 +177,7 @@ namespace vislib {
          * @return true in case of success, false if 'str' could not be parsed 
          *         as GUID.
          */
-        bool Parse(const StringW& str);
+        bool Parse(const the::wstring& str);
 
         /**
          * Answer a hash code of the GUID.
@@ -198,7 +198,7 @@ namespace vislib {
          *
          * @throws std::bad_alloc In case there is insufficient memory.
          */
-        StringA ToStringA(void) const;
+        the::astring ToStringA(void) const;
 
         /**
          * Return a string representation of the GUID.
@@ -207,7 +207,7 @@ namespace vislib {
          *
          * @throws std::bad_alloc In case there is insufficient memory.
          */
-        StringW ToStringW(void) const;
+        the::wstring ToStringW(void) const;
 
         /**
          * Assignment.

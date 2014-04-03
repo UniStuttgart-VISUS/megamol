@@ -310,7 +310,7 @@ namespace vislib {
          *
          * @return 'true' if the map is empty, 'false' otherwise.
          */
-        virtual bool IsEmpty(void) const;
+        virtual bool empty(void) const;
 
         /**
          * Removes the given key from the map.
@@ -430,10 +430,10 @@ namespace vislib {
 
 
     /*
-     * vislib::Map::IsEmpty
+     * vislib::Map::empty
      */
-    template<class K, class V> bool Map<K, V>::IsEmpty(void) const {
-        return this->keys.IsEmpty();
+    template<class K, class V> bool Map<K, V>::empty(void) const {
+        return this->keys.empty();
     }
 
 

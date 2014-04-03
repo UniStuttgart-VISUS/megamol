@@ -188,10 +188,10 @@ vislib::net::IPCommEndPoint::Create(const struct sockaddr_in6& address) {
 /*
  * vislib::net::IPCommEndPoint::Parse
  */
-void vislib::net::IPCommEndPoint::Parse(const StringA& str) {
+void vislib::net::IPCommEndPoint::Parse(const the::astring& str) {
     THE_STACK_TRACE;
     IPEndPoint ep;
-    if (NetworkInformation::GuessRemoteEndPoint(ep, str.PeekBuffer()) > 0.0f) {
+    if (NetworkInformation::GuessRemoteEndPoint(ep, str.c_str()) > 0.0f) {
         throw the::argument_exception("str", __FILE__, __LINE__);
     } else {
         this->endPoint = ep;
@@ -202,11 +202,11 @@ void vislib::net::IPCommEndPoint::Parse(const StringA& str) {
 /*
  * vislib::net::IPCommEndPoint::Parse
  */
-void vislib::net::IPCommEndPoint::Parse(const StringA& str,
+void vislib::net::IPCommEndPoint::Parse(const the::astring& str,
         const ProtocolVersion preferredProtocolVersion) {
     THE_STACK_TRACE;
     IPEndPoint ep;
-    if (NetworkInformation::GuessRemoteEndPoint(ep, str.PeekBuffer(),
+    if (NetworkInformation::GuessRemoteEndPoint(ep, str.c_str(),
             static_cast<IPAgnosticAddress::AddressFamily>
             (preferredProtocolVersion)) > 0.0f) {
         throw the::argument_exception("str", __FILE__, __LINE__);
@@ -219,10 +219,10 @@ void vislib::net::IPCommEndPoint::Parse(const StringA& str,
 /*
  * vislib::net::IPCommEndPoint::Parse
  */
-void vislib::net::IPCommEndPoint::Parse(const StringW& str)  {
+void vislib::net::IPCommEndPoint::Parse(const the::wstring& str)  {
     THE_STACK_TRACE;
     IPEndPoint ep;
-    if (NetworkInformation::GuessRemoteEndPoint(ep, str.PeekBuffer()) > 0.0f) {
+    if (NetworkInformation::GuessRemoteEndPoint(ep, str.c_str()) > 0.0f) {
         throw the::argument_exception("str", __FILE__, __LINE__);
     } else {
         this->endPoint = ep;
@@ -233,11 +233,11 @@ void vislib::net::IPCommEndPoint::Parse(const StringW& str)  {
 /*
  * vislib::net::IPCommEndPoint::Parse
  */
-void vislib::net::IPCommEndPoint::Parse(const StringW& str,
+void vislib::net::IPCommEndPoint::Parse(const the::wstring& str,
         const ProtocolVersion preferredProtocolVersion) {
     THE_STACK_TRACE;
     IPEndPoint ep;
-    if (NetworkInformation::GuessRemoteEndPoint(ep, str.PeekBuffer(),
+    if (NetworkInformation::GuessRemoteEndPoint(ep, str.c_str(),
             static_cast<IPAgnosticAddress::AddressFamily>
             (preferredProtocolVersion)) > 0.0f) {
         throw the::argument_exception("str", __FILE__, __LINE__);
@@ -249,7 +249,7 @@ void vislib::net::IPCommEndPoint::Parse(const StringW& str,
 /*
  * vislib::net::IPCommEndPoint::ToStringA
  */
-vislib::StringA vislib::net::IPCommEndPoint::ToStringA(void) const {
+the::astring vislib::net::IPCommEndPoint::ToStringA(void) const {
     THE_STACK_TRACE;
     return this->endPoint.ToStringA();
 }
@@ -258,7 +258,7 @@ vislib::StringA vislib::net::IPCommEndPoint::ToStringA(void) const {
 /*
  * vislib::net::IPCommEndPoint::ToStringW
  */
-vislib::StringW vislib::net::IPCommEndPoint::ToStringW(void) const {
+the::wstring vislib::net::IPCommEndPoint::ToStringW(void) const {
     THE_STACK_TRACE;
     return this->endPoint.ToStringW();
 }

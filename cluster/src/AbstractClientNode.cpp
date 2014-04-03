@@ -116,7 +116,7 @@ void vislib::net::cluster::AbstractClientNode::connect(
 
     /* Connect to the server. */
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Connecting to server node %s ...\n", 
-        this->serverAddress.ToStringA().PeekBuffer());
+        this->serverAddress.ToStringA().c_str());
     this->socket.Create(Socket::FAMILY_INET, Socket::TYPE_STREAM,
         Socket::PROTOCOL_TCP);
     this->socket.SetNoDelay(true);

@@ -152,50 +152,50 @@ int SimpleFontTest::GLInit(void) {
     }
     if (!this->font1->Initialise()) return -2;
 
-    vislib::StringA lorem("Lorem ipsum dolor sit amet, consectetur adipisici elit, sed eiusmod tempor incidunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquid ex ea commodi consequat. Quis aute iure reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint obcaecat cupiditat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
+    the::astring lorem("Lorem ipsum dolor sit amet, consectetur adipisici elit, sed eiusmod tempor incidunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquid ex ea commodi consequat. Quis aute iure reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint obcaecat cupiditat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
     float z = 1.0f, s = 0.1f;
     unsigned int r = 64, g = 128, b = 255;
-    this->tests.Add(new LineTest<char>(-1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_TOP, "TopLeft"));
-    this->tests.Add(new LineTest<char>( 0.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_TOP, "TopCenter"));
-    this->tests.Add(new LineTest<char>( 1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_TOP, "TopRight"));
-    this->tests.Add(new LineTest<char>(-1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_MIDDLE, "MiddleLeft"));
+    this->tests.Add(new LineTest<the::astring>(-1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_TOP, "TopLeft"));
+    this->tests.Add(new LineTest<the::astring>( 0.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_TOP, "TopCenter"));
+    this->tests.Add(new LineTest<the::astring>( 1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_TOP, "TopRight"));
+    this->tests.Add(new LineTest<the::astring>(-1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_MIDDLE, "MiddleLeft"));
 #ifdef _WIN32
-    this->tests.Add(new LineTest<wchar_t>( 0.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, L"MiddleCänter™"));
+    this->tests.Add(new LineTest<the::wstring>( 0.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, L"MiddleCänter™"));
 #else /* _WIN32 */
-    this->tests.Add(new LineTest<wchar_t>( 0.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, L"MiddleCenter"));
+    this->tests.Add(new LineTest<the::wstring>( 0.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, L"MiddleCenter"));
 #endif /* _WIN32 */
-    this->tests.Add(new LineTest<char>( 1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_MIDDLE, "MiddleRight"));
-    this->tests.Add(new LineTest<char>(-1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_BOTTOM, "BottomLeft"));
-    this->tests.Add(new LineTest<char>( 0.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_BOTTOM, "BottomCenter"));
-    this->tests.Add(new LineTest<char>( 1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_BOTTOM, "BottomRight"));
+    this->tests.Add(new LineTest<the::astring>( 1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_MIDDLE, "MiddleRight"));
+    this->tests.Add(new LineTest<the::astring>(-1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_BOTTOM, "BottomLeft"));
+    this->tests.Add(new LineTest<the::astring>( 0.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_BOTTOM, "BottomCenter"));
+    this->tests.Add(new LineTest<the::astring>( 1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_BOTTOM, "BottomRight"));
     z -= 0.2f; r = 128; g = 192; b = 255; s = 0.2f;
-    this->tests.Add(new LineTest<char>(-1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_TOP, "Top\nLeft"));
-    this->tests.Add(new LineTest<char>( 0.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_TOP, "Top\nCenter"));
-    this->tests.Add(new LineTest<char>( 1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_TOP, "Top\nRight"));
-    this->tests.Add(new LineTest<char>(-1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_MIDDLE, "Middle\nLeft"));
-    this->tests.Add(new LineTest<char>( 0.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, "Middle\nCenter"));
-    this->tests.Add(new LineTest<char>( 1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_MIDDLE, "Middle\nRight"));
-    this->tests.Add(new LineTest<char>(-1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_BOTTOM, "Bottom\nLeft"));
-    this->tests.Add(new LineTest<char>( 0.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_BOTTOM, "Bottom\nCenter"));
-    this->tests.Add(new LineTest<char>( 1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_BOTTOM, "Bottom\nRight"));
+    this->tests.Add(new LineTest<the::astring>(-1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_TOP, "Top\nLeft"));
+    this->tests.Add(new LineTest<the::astring>( 0.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_TOP, "Top\nCenter"));
+    this->tests.Add(new LineTest<the::astring>( 1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_TOP, "Top\nRight"));
+    this->tests.Add(new LineTest<the::astring>(-1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_MIDDLE, "Middle\nLeft"));
+    this->tests.Add(new LineTest<the::astring>( 0.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, "Middle\nCenter"));
+    this->tests.Add(new LineTest<the::astring>( 1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_MIDDLE, "Middle\nRight"));
+    this->tests.Add(new LineTest<the::astring>(-1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_BOTTOM, "Bottom\nLeft"));
+    this->tests.Add(new LineTest<the::astring>( 0.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_BOTTOM, "Bottom\nCenter"));
+    this->tests.Add(new LineTest<the::astring>( 1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_BOTTOM, "Bottom\nRight"));
     z -= 0.2f; r = 0; g = 255; b = 0; s = 0.15f;
-    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_TOP, vislib::StringA("TopLeft-Text: ") + lorem));
+    this->tests.Add(new BoxTest<the::astring>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_TOP, the::astring("TopLeft-Text: ") + lorem));
     z -= 0.2f; r = 64; g = 255; b = 0; s = 0.15f;
-    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_TOP, vislib::StringA("TopCenter-Text: ") + lorem));
+    this->tests.Add(new BoxTest<the::astring>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_TOP, the::astring("TopCenter-Text: ") + lorem));
     z -= 0.2f; r = 128; g = 255; b = 0; s = 0.15f;
-    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_TOP, vislib::StringA("TopRight-Text: ") + lorem));
+    this->tests.Add(new BoxTest<the::astring>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_TOP, the::astring("TopRight-Text: ") + lorem));
     z -= 0.2f; r = 192; g = 255; b = 0; s = 0.15f;
-    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_MIDDLE, vislib::StringA("MiddleLeft-Text: ") + lorem));
+    this->tests.Add(new BoxTest<the::astring>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_MIDDLE, the::astring("MiddleLeft-Text: ") + lorem));
     z -= 0.2f; r = 255; g = 255; b = 0; s = 0.15f;
-    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, vislib::StringA("MiddleCenter-Text: ") + lorem));
+    this->tests.Add(new BoxTest<the::astring>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, the::astring("MiddleCenter-Text: ") + lorem));
     z -= 0.2f; r = 255; g = 192; b = 0; s = 0.15f;
-    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_MIDDLE, vislib::StringA("MiddleRight-Text: ") + lorem));
+    this->tests.Add(new BoxTest<the::astring>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_MIDDLE, the::astring("MiddleRight-Text: ") + lorem));
     z -= 0.2f; r = 255; g = 128; b = 0; s = 0.15f;
-    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_BOTTOM, vislib::StringA("BottomLeft-Text: ") + lorem));
+    this->tests.Add(new BoxTest<the::astring>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_BOTTOM, the::astring("BottomLeft-Text: ") + lorem));
     z -= 0.2f; r = 255; g = 64; b = 0; s = 0.15f;
-    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_BOTTOM, vislib::StringA("BottomCenter-Text: ") + lorem));
+    this->tests.Add(new BoxTest<the::astring>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_BOTTOM, the::astring("BottomCenter-Text: ") + lorem));
     z -= 0.2f; r = 255; g = 0; b = 0; s = 0.15f;
-    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_BOTTOM, vislib::StringA("BottomRight-Text: ") + lorem));
+    this->tests.Add(new BoxTest<the::astring>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_BOTTOM, the::astring("BottomRight-Text: ") + lorem));
 
     this->tests.Sort(AbstractTest::Compare);
 

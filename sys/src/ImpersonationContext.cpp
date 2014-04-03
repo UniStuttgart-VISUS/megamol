@@ -18,8 +18,8 @@
 #include "vislib/error.h"
 #include "the/argument_exception.h"
 #include "the/memory.h"
-#include "vislib/String.h"
-#include "vislib/StringConverter.h"
+#include "the/string.h"
+#include "the/text/string_converter.h"
 #include "the/system/system_exception.h"
 #include "the/trace.h"
 #include "the/not_supported_exception.h"
@@ -179,7 +179,7 @@ void vislib::sys::ImpersonationContext::Impersonate(const wchar_t *username,
     }
 
 #else /* _WIN32 */
-    return this->Impersonate(W2A(username), NULL, W2A(password));
+    return this->Impersonate(THE_W2A(username), NULL, THE_W2A(password));
 #endif /* _WIN32 */
 }
 

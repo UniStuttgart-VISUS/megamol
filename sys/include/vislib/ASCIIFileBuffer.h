@@ -20,7 +20,7 @@
 #include "the/invalid_operation_exception.h"
 #include "vislib/MemmappedFile.h"
 #include "the/index_out_of_range_exception.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -260,10 +260,10 @@ namespace sys {
          *
          * @throw the::exception on any critical failure
          */
-        inline bool LoadFile(const vislib::StringA& filename,
+        inline bool LoadFile(const the::astring& filename,
                 ParsingElement elements = PARSING_DEFAULT) {
             MemmappedFile file;
-            if (!file.Open(filename, File::READ_ONLY, File::SHARE_READ,
+            if (!file.Open(filename.c_str(), File::READ_ONLY, File::SHARE_READ,
                     File::OPEN_ONLY)) return false;
             return this->LoadFile(file, elements);
         }
@@ -298,10 +298,10 @@ namespace sys {
          *
          * @throw the::exception on any critical failure
          */
-        inline bool LoadFile(const vislib::StringW& filename,
+        inline bool LoadFile(const the::wstring& filename,
                 ParsingElement elements = PARSING_DEFAULT) {
             MemmappedFile file;
-            if (!file.Open(filename, File::READ_ONLY, File::SHARE_READ,
+            if (!file.Open(filename.c_str(), File::READ_ONLY, File::SHARE_READ,
                     File::OPEN_ONLY)) return false;
             return this->LoadFile(file, elements);
         }

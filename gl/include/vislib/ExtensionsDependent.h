@@ -23,7 +23,7 @@
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(default: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#include "vislib/String.h"
+#include "the/string.h"
 #include "vislib/StringTokeniser.h"
 
 
@@ -91,10 +91,10 @@ namespace gl {
         // check required extensions individually
         StringTokeniserA extensions(T::RequiredExtensions(), ' ');
         while (extensions.HasNext()) {
-            StringA str = extensions.Next();
-            str.TrimSpaces();
-            if (str.IsEmpty()) continue;
-            if (glh_extension_supported(str.PeekBuffer()) == 0) {
+            the::astring str = extensions.Next();
+            the::text::string_utility::trim(str);
+            if (str.empty()) continue;
+            if (glh_extension_supported(str.c_str()) == 0) {
                 return false; // this extension is missing
             }
         }

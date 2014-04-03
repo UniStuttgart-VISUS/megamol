@@ -38,7 +38,7 @@ ConnectionListener::~ConnectionListener(void) {
 bool ConnectionListener::OnNewConnection(vislib::net::Socket& socket,
         const vislib::net::IPEndPoint& addr) throw() {
     std::cout << "The TCP server accepted the connection from "
-        << addr.ToStringA().PeekBuffer() << std::endl;
+        << addr.ToStringA().c_str() << std::endl;
     this->cntConnections++;
     return false;
 }

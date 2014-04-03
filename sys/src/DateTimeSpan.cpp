@@ -12,6 +12,8 @@
 #include "vislib/mathfunctions.h"
 #include "the/argument_exception.h"
 #include "the/invalid_operation_exception.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 
 
 
@@ -179,10 +181,10 @@ void vislib::sys::DateTimeSpan::Set(const int days, const int hours,
 /*
  * vislib::sys::DateTimeSpan::ToStringA
  */
-vislib::StringA vislib::sys::DateTimeSpan::ToStringA(void) const {
+the::astring vislib::sys::DateTimeSpan::ToStringA(void) const {
     THE_STACK_TRACE;
-    StringA retval;
-    retval.Format("%d:%02d:%02d:%02d.%04d", this->GetDays(), 
+    the::astring retval;
+    the::text::astring_builder::format_to(retval, "%d:%02d:%02d:%02d.%04d", this->GetDays(), 
         math::Abs(this->GetHours()), math::Abs(this->GetMinutes()), 
         math::Abs(this->GetSeconds()), math::Abs(this->GetMilliseconds()));
     return retval;
@@ -192,10 +194,10 @@ vislib::StringA vislib::sys::DateTimeSpan::ToStringA(void) const {
 /*
  * vislib::sys::DateTimeSpan::ToStringW
  */
-vislib::StringW vislib::sys::DateTimeSpan::ToStringW(void) const {
+the::wstring vislib::sys::DateTimeSpan::ToStringW(void) const {
     THE_STACK_TRACE;
-    StringW retval;
-    retval.Format(L"%d:%02d:%02d:%02d.%04d", this->GetDays(), 
+    the::wstring retval;
+    the::text::wstring_builder::format_to(retval, L"%d:%02d:%02d:%02d.%04d", this->GetDays(), 
         math::Abs(this->GetHours()), math::Abs(this->GetMinutes()), 
         math::Abs(this->GetSeconds()), math::Abs(this->GetMilliseconds()));
     return retval;

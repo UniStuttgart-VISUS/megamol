@@ -285,15 +285,15 @@ namespace net {
          *
          * @return The string representation of the IP address.
          */
-        StringA ToStringA(void) const;
+        the::astring ToStringA(void) const;
 
         /**
          * Convert the IP address into a human readable format.
          *
          * @return The string representation of the IP address.
          */
-        inline StringW ToStringW(void) const {
-            return StringW(this->ToStringA());
+        inline the::wstring ToStringW(void) const {
+            return the::text::string_converter::to_w(this->ToStringA());
         }
 
         /**

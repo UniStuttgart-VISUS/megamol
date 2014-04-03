@@ -16,8 +16,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/String.h"
-
+#include "the/string.h"
+#include "the/text/string_utility.h"
+#include "the/text/string_converter.h"
 
 namespace vislib {
 namespace xml {
@@ -32,18 +33,23 @@ namespace xml {
      *
      * @param inOutStr The string in which the replace operations will occure.
      */
-    template<class T> void EncodeEntities(vislib::String<T>& inOutStr) {
+    template<class T> void EncodeEntities(T& inOutStr) {
         // TODO: Rewrite as soon as multi-replace is supported
-        inOutStr.Replace(static_cast<typename T::Char>('&'),
-            vislib::String<T>("&amp;"));
-        inOutStr.Replace(static_cast<typename T::Char>('<'),
-            vislib::String<T>("&lt;"));
-        inOutStr.Replace(static_cast<typename T::Char>('>'),
-            vislib::String<T>("&gt;"));
-        inOutStr.Replace(static_cast<typename T::Char>('\"'),
-            vislib::String<T>("&quot;"));
-        inOutStr.Replace(static_cast<typename T::Char>('\''),
-            vislib::String<T>("&apos;"));
+        the::text::string_utility::replace(inOutStr, 
+            the::text::string_converter::convert<T>("&", 1),
+            the::text::string_converter::convert<T>("&amp;", 5));
+        the::text::string_utility::replace(inOutStr, 
+            the::text::string_converter::convert<T>("<", 1),
+            the::text::string_converter::convert<T>("&lt;", 4));
+        the::text::string_utility::replace(inOutStr, 
+            the::text::string_converter::convert<T>(">", 1),
+            the::text::string_converter::convert<T>("&gt;", 4));
+        the::text::string_utility::replace(inOutStr, 
+            the::text::string_converter::convert<T>("\"", 1),
+            the::text::string_converter::convert<T>("&quot;", 6));
+        the::text::string_utility::replace(inOutStr, 
+            the::text::string_converter::convert<T>("'", 1),
+            the::text::string_converter::convert<T>("&apos;", 6));
     }
 
     /**
@@ -59,21 +65,26 @@ namespace xml {
      *
      * @param inOutStr The string in which the replace operations will occure.
      */
-    template<class T> void DecodeEntities(vislib::String<T>& inOutStr) {
+    template<class T> void DecodeEntities(T& inOutStr) {
         // TODO: Rewrite as soon as multi-replace is supported
         // TODO: support numeric character reference entities.
         //   (e.g. &#x3E; &62; also with leading zeros!)
         //   This will need to do all the replaceings by hand!
-        inOutStr.Replace(vislib::String<T>("&apos;"),
-            static_cast<typename T::Char>('\''));
-        inOutStr.Replace(vislib::String<T>("&quot;"),
-            static_cast<typename T::Char>('\"'));
-        inOutStr.Replace(vislib::String<T>("&gt;"),
-            static_cast<typename T::Char>('>'));
-        inOutStr.Replace(vislib::String<T>("&lt;"),
-            static_cast<typename T::Char>('<'));
-        inOutStr.Replace(vislib::String<T>("&amp;"),
-            static_cast<typename T::Char>('&'));
+        the::text::string_utility::replace(inOutStr, 
+            the::text::string_converter::convert<T>("&apos;", 6),
+            the::text::string_converter::convert<T>("'", 1));
+        the::text::string_utility::replace(inOutStr, 
+            the::text::string_converter::convert<T>("&quot;", 6),
+            the::text::string_converter::convert<T>("\"", 1));
+        the::text::string_utility::replace(inOutStr, 
+            the::text::string_converter::convert<T>("&gt;", 4),
+            the::text::string_converter::convert<T>(">", 1));
+        the::text::string_utility::replace(inOutStr, 
+            the::text::string_converter::convert<T>("&lt;", 4),
+            the::text::string_converter::convert<T>("<", 1));
+        the::text::string_utility::replace(inOutStr, 
+            the::text::string_converter::convert<T>("&amp;", 5),
+            the::text::string_converter::convert<T>("&", 1));
     }
 
 

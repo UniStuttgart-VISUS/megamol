@@ -9,6 +9,8 @@
 
 #include "the/assert.h"
 #include "the/memory.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 
 
 /*
@@ -134,10 +136,10 @@ void vislib::net::SocketAddress::SetIPAddress(const IPAddress& ipAddress) {
 /* 
  * vislib::net::SocketAddress::ToStringA
  */
-vislib::StringA vislib::net::SocketAddress::ToStringA(void) const {
-    StringA retval;
-    retval.Format("%s:%u", static_cast<const char *>(
-        this->GetIPAddress().ToStringA()), this->GetPort());
+the::astring vislib::net::SocketAddress::ToStringA(void) const {
+    the::astring retval;
+    the::text::astring_builder::format_to(retval, "%s:%u", static_cast<const char *>(
+        this->GetIPAddress().ToStringA().c_str()), this->GetPort());
     return retval;
 }
 
@@ -145,11 +147,11 @@ vislib::StringA vislib::net::SocketAddress::ToStringA(void) const {
 /* 
  * vislib::net::SocketAddress::ToStringW
  */
-vislib::StringW vislib::net::SocketAddress::ToStringW(void) const {
-    StringW retval;
+the::wstring vislib::net::SocketAddress::ToStringW(void) const {
+    the::wstring retval;
     // TODO: might fail on linux!!
-    retval.Format(L"%s:%u", static_cast<const wchar_t *>(
-        this->GetIPAddress().ToStringW()), this->GetPort());
+    the::text::wstring_builder::format_to(retval, L"%s:%u", static_cast<const wchar_t *>(
+        this->GetIPAddress().ToStringW().c_str()), this->GetPort());
     return retval;
 }
 

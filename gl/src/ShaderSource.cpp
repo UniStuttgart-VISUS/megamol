@@ -10,9 +10,9 @@
 #include "the/already_exists_exception.h"
 #include "the/memory.h"
 #include "the/no_such_element_exception.h"
-#include "vislib/CharTraits.h"
 #include "the/argument_exception.h"
-#include "vislib/String.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 #include "vislib/sysfunctions.h"
 
 
@@ -28,7 +28,7 @@ vislib::graphics::gl::ShaderSource::StringSnippet::StringSnippet(void)
  * vislib::graphics::gl::ShaderSource::StringSnippet::StringSnippet
  */
 vislib::graphics::gl::ShaderSource::StringSnippet::StringSnippet(
-        const vislib::StringA& str) : txt(str) {
+        const the::astring& str) : txt(str) {
 }
 
 
@@ -60,7 +60,7 @@ bool vislib::graphics::gl::ShaderSource::StringSnippet::LoadFile(
  * vislib::graphics::gl::ShaderSource::StringSnippet::PeekCode
  */
 const char *vislib::graphics::gl::ShaderSource::StringSnippet::PeekCode(void) const {
-    return this->txt.PeekBuffer();
+    return this->txt.c_str();
 }
 
 
@@ -68,7 +68,7 @@ const char *vislib::graphics::gl::ShaderSource::StringSnippet::PeekCode(void) co
  * vislib::graphics::gl::ShaderSource::StringSnippet::Set
  */
 void vislib::graphics::gl::ShaderSource::StringSnippet::Set(
-        const vislib::StringA& str) {
+        const the::astring& str) {
     this->txt = str;
 }
 
@@ -84,7 +84,7 @@ void vislib::graphics::gl::ShaderSource::StringSnippet::Set(const char *str) {
 /*
  * vislib::graphics::gl::ShaderSource::StringSnippet::String
  */
-const vislib::StringA& 
+const the::astring& 
 vislib::graphics::gl::ShaderSource::StringSnippet::String(void) const {
     return this->txt;
 }
@@ -111,7 +111,7 @@ vislib::graphics::gl::ShaderSource::VersionSnippet::~VersionSnippet(void) {
  * vislib::graphics::gl::ShaderSource::VersionSnippet::PeekCode
  */
 const char *vislib::graphics::gl::ShaderSource::VersionSnippet::PeekCode(void) const {
-    return this->verStr;
+    return this->verStr.c_str();
 }
 
 
@@ -119,7 +119,7 @@ const char *vislib::graphics::gl::ShaderSource::VersionSnippet::PeekCode(void) c
  * vislib::graphics::gl::ShaderSource::VersionSnippet::
  */
 void vislib::graphics::gl::ShaderSource::VersionSnippet::Set(int version) {
-    this->verStr.Format("#version %d\n", version);
+    the::text::astring_builder::format_to(verStr, "#version %d\n", version);
 }
 
 
@@ -127,8 +127,8 @@ void vislib::graphics::gl::ShaderSource::VersionSnippet::Set(int version) {
  * vislib::graphics::gl::ShaderSource::VersionSnippet::Version
  */
 int vislib::graphics::gl::ShaderSource::VersionSnippet::Version(void) const {
-    return vislib::CharTraitsA::ParseInt(
-        this->verStr.PeekBuffer() + 9);
+    return the::text::string_utility::parse_int(
+        this->verStr.c_str() + 9);
 }
 
 /*****************************************************************************/
@@ -181,14 +181,14 @@ vislib::graphics::gl::ShaderSource::Append(
  */
 const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
 vislib::graphics::gl::ShaderSource::Append(
-        const vislib::StringA& name,
+        const the::astring& name,
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
     if (code.IsNull()) {
         throw the::argument_exception("code", __FILE__, __LINE__);
     }
     if (this->names.Contains(name)) {
-        throw the::already_exists_exception(name, __FILE__, __LINE__);
+        throw the::already_exists_exception(name.c_str(), __FILE__, __LINE__);
     }
     this->names[name] = this->snippets.Count();
     this->snippets.Append(code);
@@ -241,9 +241,9 @@ vislib::graphics::gl::ShaderSource::Insert(const size_t idx,
     if (code.IsNull()) {
         throw the::argument_exception("code", __FILE__, __LINE__);
     }
-    Map<StringA, size_t>::Iterator i = this->names.GetIterator();
+    Map<the::astring, size_t>::Iterator i = this->names.GetIterator();
     while (i.HasNext()) {
-        Map<StringA, size_t>::ElementPair& ep = i.Next();
+        Map<the::astring, size_t>::ElementPair& ep = i.Next();
         if (ep.Value() >= idx) ep.Value()++;
     }
     this->snippets.Insert(idx, code);
@@ -257,18 +257,18 @@ vislib::graphics::gl::ShaderSource::Insert(const size_t idx,
  */
 const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
 vislib::graphics::gl::ShaderSource::Insert(const size_t idx, 
-        const vislib::StringA& name,
+        const the::astring& name,
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
     if (code.IsNull()) {
         throw the::argument_exception("code", __FILE__, __LINE__);
     }
     if (this->names.Contains(name)) {
-        throw the::already_exists_exception(name, __FILE__, __LINE__);
+        throw the::already_exists_exception(name.c_str(), __FILE__, __LINE__);
     }
-    Map<StringA, size_t>::Iterator i = this->names.GetIterator();
+    Map<the::astring, size_t>::Iterator i = this->names.GetIterator();
     while (i.HasNext()) {
-        Map<StringA, size_t>::ElementPair& ep = i.Next();
+        Map<the::astring, size_t>::ElementPair& ep = i.Next();
         if (ep.Value() >= idx) ep.Value()++;
     }
     this->names[name] = idx;
@@ -281,9 +281,9 @@ vislib::graphics::gl::ShaderSource::Insert(const size_t idx,
 /*
  * vislib::graphics::gl::ShaderSource::NameIndex
  */
-size_t vislib::graphics::gl::ShaderSource::NameIndex(const vislib::StringA& name) {
+size_t vislib::graphics::gl::ShaderSource::NameIndex(const the::astring& name) {
     if (!this->names.Contains(name)) {
-        throw the::no_such_element_exception(name, __FILE__, __LINE__);
+        throw the::no_such_element_exception(name.c_str(), __FILE__, __LINE__);
     }
     return this->names[name];
 }
@@ -299,11 +299,11 @@ vislib::graphics::gl::ShaderSource::Prepend(
     if (code.IsNull()) {
         throw the::argument_exception("code", __FILE__, __LINE__);
     }
-    Map<StringA, size_t>::Iterator i = this->names.GetIterator();
+    Map<the::astring, size_t>::Iterator i = this->names.GetIterator();
     while (i.HasNext()) {
         i.Next().Value()++;
     }
-    this->snippets.Prepend(code);
+    this->snippets.Insert(0, code);
     the::safe_array_delete(this->code);
     return this->snippets.First();
 }
@@ -313,21 +313,21 @@ vislib::graphics::gl::ShaderSource::Prepend(
  * vislib::graphics::gl::ShaderSource::Prepend
  */
 const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
-vislib::graphics::gl::ShaderSource::Prepend( const vislib::StringA& name,
+vislib::graphics::gl::ShaderSource::Prepend( const the::astring& name,
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
     if (code.IsNull()) {
         throw the::argument_exception("code", __FILE__, __LINE__);
     }
     if (this->names.Contains(name)) {
-        throw the::already_exists_exception(name, __FILE__, __LINE__);
+        throw the::already_exists_exception(name.c_str(), __FILE__, __LINE__);
     }
-    Map<StringA, size_t>::Iterator i = this->names.GetIterator();
+    Map<the::astring, size_t>::Iterator i = this->names.GetIterator();
     while (i.HasNext()) {
         i.Next().Value()++;
     }
     this->names[name] = 0;
-    this->snippets.Prepend(code);
+    this->snippets.Insert(0, code);
     the::safe_array_delete(this->code);
     return this->snippets.First();
 }
@@ -337,13 +337,13 @@ vislib::graphics::gl::ShaderSource::Prepend( const vislib::StringA& name,
  * vislib::graphics::gl::ShaderSource::Remove
  */
 void vislib::graphics::gl::ShaderSource::Remove(size_t idx) {
-    SingleLinkedList<StringA> keys = this->names.FindKeys(idx);
-    Map<StringA, size_t>::Iterator i = this->names.GetIterator();
+    SingleLinkedList<the::astring> keys = this->names.FindKeys(idx);
+    Map<the::astring, size_t>::Iterator i = this->names.GetIterator();
     while (i.HasNext()) {
-        Map<StringA, size_t>::ElementPair& ep = i.Next();
+        Map<the::astring, size_t>::ElementPair& ep = i.Next();
         if (ep.Value() >= idx) ep.Value()--;
     }
-    SingleLinkedList<StringA>::Iterator i2 = keys.GetIterator();
+    SingleLinkedList<the::astring>::Iterator i2 = keys.GetIterator();
     while (i2.HasNext()) {
         this->names.Remove(i2.Next());
     }
@@ -355,7 +355,7 @@ void vislib::graphics::gl::ShaderSource::Remove(size_t idx) {
 /*
  * vislib::graphics::gl::ShaderSource::RemoveName
  */
-void vislib::graphics::gl::ShaderSource::RemoveName(vislib::StringA& name) {
+void vislib::graphics::gl::ShaderSource::RemoveName(the::astring& name) {
     this->names.Remove(name);
 }
 
@@ -393,14 +393,14 @@ vislib::graphics::gl::ShaderSource::Set(
 /*
  * vislib::graphics::gl::ShaderSource::SetName
  */
-void vislib::graphics::gl::ShaderSource::SetName(const vislib::StringA& name,
+void vislib::graphics::gl::ShaderSource::SetName(const the::astring& name,
         size_t idx) {
     if ((idx < 0) || (idx >= this->snippets.Count())) {
         throw the::index_out_of_range_exception(int(idx), 0, int(this->snippets.Count()) - 1,
             __FILE__, __LINE__);
     }
     if (this->names.Contains(name)) {
-        throw the::already_exists_exception(name, __FILE__, __LINE__);
+        throw the::already_exists_exception(name.c_str(), __FILE__, __LINE__);
     }
     this->names[name] = idx;
 }
@@ -409,11 +409,11 @@ void vislib::graphics::gl::ShaderSource::SetName(const vislib::StringA& name,
 /*
  * vislib::graphics::gl::ShaderSource::WholeCode
  */
-vislib::StringA vislib::graphics::gl::ShaderSource::WholeCode(void) const {
-    vislib::StringA retval;
+the::astring vislib::graphics::gl::ShaderSource::WholeCode(void) const {
+    the::astring retval;
     size_t cnt = this->snippets.Count();
     for (size_t i = 0; i < cnt; i++) {
-        retval.Append(const_cast<Snippet*>(this->snippets[i].operator->()
+        retval.append(const_cast<Snippet*>(this->snippets[i].operator->()
             )->PeekCode());
     }
     return retval;
@@ -443,9 +443,9 @@ vislib::graphics::gl::ShaderSource::operator=(
         }
 
         this->names.Clear();
-        ConstIterator<Map<StringA, size_t>::Iterator> ci = rhs.names.GetConstIterator();
+        ConstIterator<Map<the::astring, size_t>::Iterator> ci = rhs.names.GetConstIterator();
         while (ci.HasNext()) {
-            const Map<StringA, size_t>::ElementPair& ep = ci.Next();
+            const Map<the::astring, size_t>::ElementPair& ep = ci.Next();
             this->names[ep.Key()] = ep.Value();
         }
 

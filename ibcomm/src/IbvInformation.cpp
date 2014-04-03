@@ -45,7 +45,7 @@ vislib::net::ib::IbvInformation::Port::~Port(void) {
 /*
  * vislib::net::ib::IbvInformation::Port::GetPortGuidA
  */
-vislib::StringA vislib::net::ib::IbvInformation::Port::GetPortGuidA(
+the::astring vislib::net::ib::IbvInformation::Port::GetPortGuidA(
         void) const {
     THE_STACK_TRACE;
     NET64 guid = this->GetPortGuid();
@@ -58,7 +58,7 @@ vislib::StringA vislib::net::ib::IbvInformation::Port::GetPortGuidA(
 /*
  * vislib::net::ib::IbvInformation::Port::GetPortGuidW
  */
-vislib::StringW vislib::net::ib::IbvInformation::Port::GetPortGuidW(
+the::wstring vislib::net::ib::IbvInformation::Port::GetPortGuidW(
         void) const {
     THE_STACK_TRACE;
     NET64 guid = this->GetPortGuid();
@@ -200,7 +200,7 @@ vislib::net::ib::IbvInformation::Device::~Device(void) {
 /*
  * vislib::net::ib::IbvInformation::Device::GetNodeGuidA
  */
-vislib::StringA vislib::net::ib::IbvInformation::Device::GetNodeGuidA(
+the::astring vislib::net::ib::IbvInformation::Device::GetNodeGuidA(
         void) const {
     THE_STACK_TRACE;
     return the::text::string_utility::to_hex_astring(reinterpret_cast<const uint8_t *>(
@@ -211,7 +211,7 @@ vislib::StringA vislib::net::ib::IbvInformation::Device::GetNodeGuidA(
 /*
  * vislib::net::ib::IbvInformation::Device::GetNodeGuidW
  */
-vislib::StringW vislib::net::ib::IbvInformation::Device::GetNodeGuidW(
+the::wstring vislib::net::ib::IbvInformation::Device::GetNodeGuidW(
         void) const {
     THE_STACK_TRACE;
     return the::text::string_utility::to_hex_wstring(reinterpret_cast<const uint8_t *>(
@@ -237,7 +237,7 @@ vislib::net::ib::IbvInformation::Device::GetPort(const size_t idx) const {
 /*
  * vislib::net::ib::IbvInformation::Device::GetSystemImageGuidA
  */
-vislib::StringA 
+the::astring 
 vislib::net::ib::IbvInformation::Device::GetSystemImageGuidA(void) const {
     THE_STACK_TRACE;
     return the::text::string_utility::to_hex_astring(reinterpret_cast<const uint8_t *>(
@@ -247,10 +247,10 @@ vislib::net::ib::IbvInformation::Device::GetSystemImageGuidA(void) const {
 
 
 /*
- * vislib::StringW 
+ * the::wstring 
 vislib::net::ib::IbvInformation::Device::GetSystemImageGuidW
  */
-vislib::StringW 
+the::wstring 
 vislib::net::ib::IbvInformation::Device::GetSystemImageGuidW(void) const {
     THE_STACK_TRACE;
     return the::text::string_utility::to_hex_wstring(reinterpret_cast<const uint8_t *>(
@@ -455,7 +455,7 @@ bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
     size_t size = 0;        // Receives size of GUIDs in bytes.
     HRESULT hr = S_OK;      // Receives WV API results.
 
-    if (this->devices.IsEmpty()) {
+    if (this->devices.empty()) {
 
         /* Determine number of devices and get their GUIDs. */
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying number of IB "
@@ -489,7 +489,7 @@ bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
     } else {
         return false;
 
-    } /* end if (this->devices.IsEmpty()) */
+    } /* end if (this->devices.empty()) */
 }
 
 

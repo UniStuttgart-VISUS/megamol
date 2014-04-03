@@ -21,7 +21,7 @@
 #include "vislib/File.h"
 #include "vislib/RawStorage.h"
 #include "vislib/SmartPtr.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -129,7 +129,7 @@ namespace graphics {
          * @throw the::exception or derived class on error
          */
         bool LoadBitmapImage(BitmapImage& outImg,
-            const vislib::StringA& filename);
+            const the::astring& filename);
 
         /**
          * Loads a bitmap image by automatically choosing the proper codec
@@ -142,7 +142,7 @@ namespace graphics {
          * @throw the::exception or derived class on error
          */
         bool LoadBitmapImage(BitmapImage& outImg,
-            const vislib::StringW& filename);
+            const the::wstring& filename);
 
         /**
          * Loads a bitmap image by automatically choosing the proper codec
@@ -156,7 +156,7 @@ namespace graphics {
          */
         inline bool LoadBitmapImage(BitmapImage& outImg,
                 const char *filename) {
-            return this->LoadBitmapImage(outImg, vislib::StringA(filename));
+            return this->LoadBitmapImage(outImg, the::astring(filename));
         }
 
         /**
@@ -171,7 +171,7 @@ namespace graphics {
          */
         inline bool LoadBitmapImage(BitmapImage& outImg,
                 const wchar_t *filename) {
-            return this->LoadBitmapImage(outImg, vislib::StringW(filename));
+            return this->LoadBitmapImage(outImg, the::wstring(filename));
         }
 
         /**
@@ -286,7 +286,7 @@ namespace graphics {
          * @param filename The file name
          * @param outCodecs The codec array receiving the matching codecs
          */
-        void selectCodecsByFilename(const vislib::StringA& filename,
+        void selectCodecsByFilename(const the::astring& filename,
             CodecArray& outCodecs) const;
 
         /**
@@ -295,7 +295,7 @@ namespace graphics {
          * @param filename The file name
          * @param outCodecs The codec array receiving the matching codecs
          */
-        void selectCodecsByFilename(const vislib::StringW& filename,
+        void selectCodecsByFilename(const the::wstring& filename,
             CodecArray& outCodecs) const;
 
         /**

@@ -35,7 +35,7 @@ bool Listener::OnMessageReceived(vislib::net::SimpleMessageDispatcher& src, cons
 
 void TestTcpDisp(void) {
     using namespace vislib::net;
-    const vislib::StringA TEST_ADDRESS("127.0.0.1:12345");
+    const the::astring TEST_ADDRESS("127.0.0.1:12345");
 
     vislib::sys::RunnableThread<SimpleMessageDispatcher> dispatcher;
     SimpleMessage msg;
@@ -48,9 +48,9 @@ void TestTcpDisp(void) {
     ::cntReceived = 0;
 
     /* Establish the connection. */
-    serverChannel->Bind(IPCommEndPoint::Create(TEST_ADDRESS).DynamicCast<AbstractCommEndPoint>());
+    serverChannel->Bind(IPCommEndPoint::Create(TEST_ADDRESS.c_str()).DynamicCast<AbstractCommEndPoint>());
     serverChannel->Listen();
-    recvChannel->Connect(IPCommEndPoint::Create(TEST_ADDRESS).DynamicCast<AbstractCommEndPoint>());
+    recvChannel->Connect(IPCommEndPoint::Create(TEST_ADDRESS.c_str()).DynamicCast<AbstractCommEndPoint>());
     sendChannel = serverChannel->Accept().DynamicCast<vislib::net::TcpCommChannel>();
     serverChannel->Close();
 
@@ -75,7 +75,7 @@ void TestTcpDisp(void) {
 
 void TestUdpDisp(void) {
     using namespace vislib::net;
-    const vislib::StringA TEST_ADDRESS("127.0.0.1:12345");
+    const the::astring TEST_ADDRESS("127.0.0.1:12345");
 
     vislib::sys::RunnableThread<SimpleMessageDispatcher> dispatcher;
     SimpleMessage msg;
@@ -87,8 +87,8 @@ void TestUdpDisp(void) {
     ::cntReceived = 0;
 
     /* "Connect" the end points. */
-    recvChannel->Bind(IPCommEndPoint::Create(TEST_ADDRESS).DynamicCast<AbstractCommEndPoint>());
-    sendChannel->Connect(IPCommEndPoint::Create(TEST_ADDRESS).DynamicCast<AbstractCommEndPoint>());
+    recvChannel->Bind(IPCommEndPoint::Create(TEST_ADDRESS.c_str()).DynamicCast<AbstractCommEndPoint>());
+    sendChannel->Connect(IPCommEndPoint::Create(TEST_ADDRESS.c_str()).DynamicCast<AbstractCommEndPoint>());
 
     /* Start the dispatcher thread. */
     SimpleMessageDispatcher::Configuration config(recvChannel);

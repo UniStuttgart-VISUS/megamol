@@ -14,7 +14,7 @@
 #include "vislib/Array.h"
 #include "vislib/glverify.h"
 #include "the/memory.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "vislib/sysfunctions.h"
 
 
@@ -23,10 +23,10 @@
  */
 const char * 
 vislib::graphics::gl::GLSLTesselationShader::RequiredExtensions(void) {
-    static vislib::StringA exts = vislib::StringA(
+    static the::astring exts = the::astring(
         vislib::graphics::gl::GLSLShader::RequiredExtensions())
         + " GL_ARB_gpu_shader5 GL_ARB_tessellation_shader ";
-    return exts.PeekBuffer();
+    return exts.c_str();
 }
 
 
@@ -143,11 +143,11 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
         const char *vertexShaderFile,
         const char *tessControlShaderFile, const char *tessEvalShaderFile,
         const char *geometryShaderFile, const char *fragmentShaderFile) {
-    StringA vertexShaderSrc;
-    StringA tessControlShaderSrc;
-    StringA tessEvalShaderSrc;
-    StringA geometryShaderSrc;
-    StringA fragmentShaderSrc;
+    the::astring vertexShaderSrc;
+    the::astring tessControlShaderSrc;
+    the::astring tessEvalShaderSrc;
+    the::astring geometryShaderSrc;
+    the::astring fragmentShaderSrc;
 
     if (!vislib::sys::ReadTextFile(vertexShaderSrc, vertexShaderFile)) {
         return false;
@@ -169,11 +169,11 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
         return false;
     }
 
-    return this->Compile(vertexShaderSrc,
-        tessControlShaderFile == NULL ? NULL : tessControlShaderSrc,
-        tessEvalShaderFile == NULL ? NULL : tessEvalShaderSrc,
-        geometryShaderFile == NULL ? NULL : geometryShaderSrc,
-        fragmentShaderSrc);
+    return this->Compile(vertexShaderSrc.c_str(),
+        tessControlShaderFile == NULL ? NULL : tessControlShaderSrc.c_str(),
+        tessEvalShaderFile == NULL ? NULL : tessEvalShaderSrc.c_str(),
+        geometryShaderFile == NULL ? NULL : geometryShaderSrc.c_str(),
+        fragmentShaderSrc.c_str());
 }
 
 
@@ -194,11 +194,11 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
         bool insertLineDirective) {
 
     // using arrays for automatic cleanup when a 'read' throws an exception
-    Array<StringA> vertexShaderSrcs(cntVertexShaderFiles);
-    Array<StringA> tessControlShaderSrcs(cntTessControlShaderFiles);
-    Array<StringA> tessEvalShaderSrcs(cntTessEvalShaderFiles);
-    Array<StringA> geometryShaderSrcs(cntGeometryShaderFiles);
-    Array<StringA> fragmentShaderSrcs(cntFragmentShaderFiles);
+    Array<the::astring> vertexShaderSrcs(cntVertexShaderFiles);
+    Array<the::astring> tessControlShaderSrcs(cntTessControlShaderFiles);
+    Array<the::astring> tessEvalShaderSrcs(cntTessEvalShaderFiles);
+    Array<the::astring> geometryShaderSrcs(cntGeometryShaderFiles);
+    Array<the::astring> fragmentShaderSrcs(cntFragmentShaderFiles);
 
     for(size_t i = 0; i < cntVertexShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(vertexShaderSrcs[i], 
@@ -248,19 +248,19 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
 
     try {
         for(size_t i = 0; i < cntVertexShaderFiles; i++) {
-            vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].PeekBuffer();
+            vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].c_str();
         }
         for(size_t i = 0; i < cntTessControlShaderFiles; i++) {
-            tessControlShaderSrcPtrs[i] = tessControlShaderSrcs[i].PeekBuffer();
+            tessControlShaderSrcPtrs[i] = tessControlShaderSrcs[i].c_str();
         }
         for(size_t i = 0; i < cntTessEvalShaderFiles; i++) {
-            tessEvalShaderSrcPtrs[i] = tessEvalShaderSrcs[i].PeekBuffer();
+            tessEvalShaderSrcPtrs[i] = tessEvalShaderSrcs[i].c_str();
         }
         for(size_t i = 0; i < cntGeometryShaderFiles; i++) {
-            geometryShaderSrcPtrs[i] = geometryShaderSrcs[i].PeekBuffer();
+            geometryShaderSrcPtrs[i] = geometryShaderSrcs[i].c_str();
         }
         for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
-            fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].PeekBuffer();
+            fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].c_str();
         }
 
         bool retval = this->Compile(vertexShaderSrcPtrs, cntVertexShaderFiles,

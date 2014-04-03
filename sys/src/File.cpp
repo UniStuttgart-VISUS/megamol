@@ -29,7 +29,7 @@
 #include "vislib/error.h"
 #include "the/argument_exception.h"
 #include "the/system/io/io_exception.h"
-#include "vislib/StringConverter.h"
+#include "the/text/string_converter.h"
 #include "vislib/sysfunctions.h"
 #include "the/system/system_exception.h"
 #include "the/trace.h"
@@ -80,9 +80,9 @@ namespace sys {
  */
 vislib::sys::File* vislib::sys::File::CreateTempFile(void) {
 #ifdef _WIN32
-    vislib::StringA tempName;
+    the::astring tempName;
     File *retval = new File();
-    if ((retval->handle = ::CreateFileA(CreateTempFileName(tempName),
+    if ((retval->handle = ::CreateFileA(CreateTempFileName(tempName).c_str(),
             GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
             FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, NULL))
             == INVALID_HANDLE_VALUE) {
@@ -108,7 +108,7 @@ vislib::sys::File* vislib::sys::File::CreateTempFile(void) {
 /*
  * vislib::sys::File::CreateTempFileName
  */
-vislib::StringA& vislib::sys::File::CreateTempFileName(vislib::StringA& outFn) {
+the::astring& vislib::sys::File::CreateTempFileName(the::astring& outFn) {
 #ifdef _WIN32
     const unsigned int BUFFER_SIZE = 4096;
     unsigned int bufSize=BUFFER_SIZE;
@@ -134,7 +134,7 @@ vislib::StringA& vislib::sys::File::CreateTempFileName(vislib::StringA& outFn) {
 /*
  * vislib::sys::File::CreateTempFileName
  */
-vislib::StringW& vislib::sys::File::CreateTempFileName(vislib::StringW& outFn) {
+the::wstring& vislib::sys::File::CreateTempFileName(the::wstring& outFn) {
 #ifdef _WIN32
     const unsigned int BUFFER_SIZE = 4096;
     unsigned int bufSize=BUFFER_SIZE;
@@ -147,7 +147,7 @@ vislib::StringW& vislib::sys::File::CreateTempFileName(vislib::StringW& outFn) {
     outFn = tempName;
 
 #else /* _WIN32 */
-    vislib::StringA outFnA;
+    the::astring outFnA;
     CreateTempFileName(outFnA);
     outFn = outFnA;
 
@@ -179,7 +179,7 @@ bool vislib::sys::File::Delete(const wchar_t *filename) {
     return (::DeleteFileW(filename) == TRUE); 
 
 #else /* _WIN32 */
-    return (::remove(W2A(filename)) == 0);
+    return (::remove(THE_W2A(filename)) == 0);
 
 #endif /* _WIN32 */
 }
@@ -212,7 +212,7 @@ bool vislib::sys::File::Exists(const wchar_t *filename) {
 
 #else /* _WIN32 */
     struct stat buf;
-    int i = stat(W2A(filename), &buf); 
+    int i = stat(THE_W2A(filename), &buf); 
     return (i == 0);
 
 #endif /* _WIN32 */
@@ -252,7 +252,7 @@ vislib::sys::File::FileSize vislib::sys::File::GetSize(const wchar_t *filename) 
         + static_cast<FileSize>(buf.nFileSizeLow);
 #else /* _WIN32 */
     struct stat buf;
-    int i = stat(W2A(filename), &buf); 
+    int i = stat(THE_W2A(filename), &buf); 
     if (i != 0) throw the::exception(__FILE__, __LINE__);
     return buf.st_size;
 #endif /* _WIN32 */
@@ -292,7 +292,7 @@ bool vislib::sys::File::IsDirectory(const wchar_t *filename) {
 
 #else /* _WIN32 */
     struct stat buf;
-    int i = stat(W2A(filename), &buf); 
+    int i = stat(THE_W2A(filename), &buf); 
     return (i == 0) && S_ISDIR(buf.st_mode);
 
 #endif /* _WIN32 */
@@ -332,7 +332,7 @@ bool vislib::sys::File::IsFile(const wchar_t *filename) {
 
 #else /* _WIN32 */
     struct stat buf;
-    int i = stat(W2A(filename), &buf); 
+    int i = stat(THE_W2A(filename), &buf); 
     return (i == 0) && S_ISREG(buf.st_mode);
 
 #endif /* _WIN32 */
@@ -358,7 +358,7 @@ bool vislib::sys::File::Rename(const wchar_t *oldName, const wchar_t *newName) {
 #ifdef _WIN32
     return (::MoveFileW(oldName, newName) == TRUE);
 #else /* _WIN32 */
-    return ::rename(W2A(oldName), W2A(newName));
+    return ::rename(THE_W2A(oldName), THE_W2A(newName));
 #endif /* _WIN32 */
 }
 
@@ -568,7 +568,7 @@ bool vislib::sys::File::Open(const wchar_t *filename, const AccessMode accessMod
 
 #else /* _WIN32 */
     // Because we know, that Linux does not support a chefmäßige Unicode-API.
-    return this->Open(W2A(filename), accessMode, shareMode, creationMode);
+    return this->Open(THE_W2A(filename), accessMode, shareMode, creationMode);
 
 #endif /* _WIN32 */
 }

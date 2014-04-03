@@ -15,7 +15,7 @@
 #include "the/argument_exception.h"
 #include "vislib/SocketException.h"
 #include "the/stack_trace.h"
-#include "vislib/StringConverter.h"
+#include "the/text/string_converter.h"
 #include "the/not_supported_exception.h"
 
 #include "the/not_implemented_exception.h"
@@ -76,7 +76,7 @@ void vislib::net::DNS::GetHostAddress(IPAddress& outAddress,
          * fail, if this does not work either.
          */
         THE_ASSERT(entries == NULL);
-        if (!outAddress.Lookup(W2A(hostNameOrAddress))) {
+        if (!outAddress.Lookup(THE_W2A(hostNameOrAddress))) {
             throw;
         }
     }
@@ -297,7 +297,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,
 void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry, 
         const IPAgnosticAddress& address) {
     THE_STACK_TRACE;
-    DNS::GetHostEntry(outEntry, address.ToStringA().PeekBuffer());
+    DNS::GetHostEntry(outEntry, address.ToStringA().c_str());
 }
 
 
@@ -307,7 +307,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry,
 void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,  
         const IPAgnosticAddress& address) {
     THE_STACK_TRACE;
-    DNS::GetHostEntry(outEntry, address.ToStringW().PeekBuffer());
+    DNS::GetHostEntry(outEntry, address.ToStringW().c_str());
 }
 
 
@@ -317,7 +317,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,
 void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry, 
         const IPAddress& address) {
     THE_STACK_TRACE;
-    DNS::GetHostEntry(outEntry, address.ToStringA().PeekBuffer());
+    DNS::GetHostEntry(outEntry, address.ToStringA().c_str());
 }
 
 
@@ -327,7 +327,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry,
 void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,  
         const IPAddress& address) {
     THE_STACK_TRACE;
-    DNS::GetHostEntry(outEntry, address.ToStringW().PeekBuffer());
+    DNS::GetHostEntry(outEntry, address.ToStringW().c_str());
 }
 
 
@@ -337,7 +337,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,
 void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry, 
         const IPAddress6& address) {
     THE_STACK_TRACE;
-    DNS::GetHostEntry(outEntry, address.ToStringA().PeekBuffer());
+    DNS::GetHostEntry(outEntry, address.ToStringA().c_str());
 }
 
 
@@ -347,7 +347,7 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry,
 void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,  
         const IPAddress6& address) {
     THE_STACK_TRACE;
-    DNS::GetHostEntry(outEntry, address.ToStringW().PeekBuffer());
+    DNS::GetHostEntry(outEntry, address.ToStringW().c_str());
 }
 
 
@@ -407,7 +407,7 @@ ADDRINFOW *vislib::net::DNS::getAddrInfo(const wchar_t *hostNameOrAddress,
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
     if (::GetAddrInfoW(hostNameOrAddress, NULL, &hints, &retval) != 0) {
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
-    if (::getaddrinfo(W2A(hostNameOrAddress), NULL, &hints, &retval) != 0) {
+    if (::getaddrinfo(THE_W2A(hostNameOrAddress), NULL, &hints, &retval) != 0) {
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
         THE_ASSERT(retval == NULL);
 #ifdef _WIN32

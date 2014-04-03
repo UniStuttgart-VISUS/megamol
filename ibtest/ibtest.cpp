@@ -59,7 +59,7 @@ unsigned int Server::Run(void *userData) {
         ::evtServerReady.Set();
 
         std::cout << "Server is bound to " 
-            << channel->GetLocalEndPoint()->ToStringA().PeekBuffer() 
+            << channel->GetLocalEndPoint()->ToStringA().c_str() 
             << std::endl;
 
         char *data = new char[sizeof(REFERENCE_DATA)];
@@ -107,9 +107,9 @@ unsigned int Client::Run(void *userData) {
         channel->Connect(ep);
 
         std::cout << "Client is connected to " 
-            << channel->GetRemoteEndPoint()->ToStringA().PeekBuffer() 
+            << channel->GetRemoteEndPoint()->ToStringA().c_str() 
             << " using the local end point " 
-            << channel->GetLocalEndPoint()->ToStringA().PeekBuffer() 
+            << channel->GetLocalEndPoint()->ToStringA().c_str() 
             << std::endl;
 
         channel->Send(REFERENCE_DATA, sizeof(REFERENCE_DATA));
@@ -142,11 +142,11 @@ int _tmain(int argc, _TCHAR **argv) {
             std::cout << "Device #" << i << ":" << std::endl;
 
             std::cout << "\tGUID: " 
-                << devices[i].GetNodeGuidA().PeekBuffer() 
+                << devices[i].GetNodeGuidA().c_str() 
                 << ": " << std::endl;
 
             std::cout << "\tSystem Image GUID: " 
-                << devices[i].GetSystemImageGuidA().PeekBuffer() << std::endl;
+                << devices[i].GetSystemImageGuidA().c_str() << std::endl;
 
             std::cout << "\tNumber of ports: " << devices[i].GetPortCount() 
                 << std::endl;
@@ -156,14 +156,14 @@ int _tmain(int argc, _TCHAR **argv) {
                 std::cout << "\tPort #" << j << ": " << std::endl;
 
                 std::cout << "\t\tGUID: "
-                    << port.GetPortGuidA().PeekBuffer()
+                    << port.GetPortGuidA().c_str()
                     << std::endl;
 
-                std::cout << "\t\tState: " << port.GetStateA().PeekBuffer()
+                std::cout << "\t\tState: " << port.GetStateA().c_str()
                     << std::endl;
 
                 std::cout << "\t\tPhysical State: " 
-                    << port.GetPhysicalStateA().PeekBuffer()
+                    << port.GetPhysicalStateA().c_str()
                     << std::endl;
             }
         }

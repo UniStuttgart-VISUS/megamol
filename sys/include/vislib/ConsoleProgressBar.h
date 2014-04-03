@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -94,8 +94,8 @@ namespace sys {
          *              less then 20 characters.
          * @param maxValue The maximum value to be reached at 100%
          */
-        inline void Start(const StringA& title, Size maxValue) {
-            this->Start(title.PeekBuffer(), maxValue);
+        inline void Start(const the::astring& title, Size maxValue) {
+            this->Start(title.c_str(), maxValue);
         }
 
         /**
@@ -114,7 +114,7 @@ namespace sys {
          * @param outStr The vislib string receiving the output.
          * @param duration The duration in milliseconds.
          */
-        void printDuration(vislib::StringA& outStr, unsigned int duration);
+        void printDuration(the::astring& outStr, unsigned int duration);
 
         /** flag indicating if the progress bar is running */
         bool running;
@@ -132,7 +132,7 @@ namespace sys {
         unsigned int lastPersTime;
 
         /** the title string */
-        vislib::StringA title;
+        the::astring title;
 
     };
     

@@ -17,7 +17,7 @@
 #include "the/argument_exception.h"
 #include "vislib/NetworkInformation.h"
 #include "the/index_out_of_range_exception.h"
-#include "vislib/StringConverter.h"
+#include "the/text/string_converter.h"
 
 
 /*
@@ -167,8 +167,8 @@ bool vislib::net::IPAddress::Lookup(const char *hostname) {
 /*
  * vislib::net::IPAddress::ToStringA
  */
-vislib::StringA vislib::net::IPAddress::ToStringA(void) const {
-    StringA retval(::inet_ntoa(this->address));
+the::astring vislib::net::IPAddress::ToStringA(void) const {
+    the::astring retval(::inet_ntoa(this->address));
     return retval;
 }
 

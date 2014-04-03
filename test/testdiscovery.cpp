@@ -38,12 +38,12 @@ void MyListener::OnNodeFound(const vislib::net::ClusterDiscoveryService& src,
         const vislib::net::ClusterDiscoveryService::PeerHandle& hPeer) {
     const char *WELCOME_MESSAGE = "Okaerinasai";
     const char *SINGLE_MESSAGE = "Single message";
-    std::cout << src[hPeer].ToStringA().PeekBuffer() << " was found for \"" 
-        << src.GetName().PeekBuffer() << "\"" << std::endl;
+    std::cout << src[hPeer].ToStringA().c_str() << " was found for \"" 
+        << src.GetName().c_str() << "\"" << std::endl;
 
     std::cout << "Now I know ";
     for (size_t i = 0; i < src.CountPeers(); i++) {
-        std::cout << std::endl << " " << src[i].ToStringA().PeekBuffer();
+        std::cout << std::endl << " " << src[i].ToStringA().c_str();
     }
     std::cout << std::endl;
 
@@ -68,7 +68,7 @@ void MyListener::OnNodeLost(const vislib::net::ClusterDiscoveryService& src,
         const NodeLostReason reason) {
     std::cout << src[hPeer].ToStringA() 
         << ((reason == LOST_EXPLICITLY) ? " disconnected" : " was lost")
-        << " from \"" << src.GetName().PeekBuffer() << "\"" << std::endl;
+        << " from \"" << src.GetName().c_str() << "\"" << std::endl;
 }
 
 /*
@@ -79,7 +79,7 @@ void MyListener::OnUserMessage(const vislib::net::ClusterDiscoveryService& src,
         const uint32_t msgType, const uint8_t *msgBody) {
     std::cout << "Received user message " << msgType << " (\""
         << reinterpret_cast<const char *>(msgBody) << "\") from "
-        << src[hPeer].ToStringA().PeekBuffer() << std::endl;
+        << src[hPeer].ToStringA().c_str() << std::endl;
 }
 
 
@@ -97,7 +97,7 @@ static void runCDS(const bool observer) {
     Socket::Startup();
 
     ClusterDiscoveryService cds("testnet", 
-        SocketAddress(SocketAddress::FAMILY_INET, IPAddress(SystemInformation::ComputerNameA()), 12345),
+        SocketAddress(SocketAddress::FAMILY_INET, IPAddress(SystemInformation::ComputerNameA().c_str()), 12345),
         IPAddress("129.69.215.255"), ClusterDiscoveryService::DEFAULT_PORT, observer);
     cds.AddListener(&myListener);
     cds.Start();

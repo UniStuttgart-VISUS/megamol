@@ -15,7 +15,7 @@
 
 #include "the/assert.h"
 #include "the/memory.h"
-#include "vislib/StringConverter.h"
+#include "the/text/string_converter.h"
 
 
 /*
@@ -197,12 +197,12 @@ bool vislib::GUID::IsZero(void) const {
 /*
  * vislib::GUID::Parse
  */
-bool vislib::GUID::Parse(const StringA& str) {
+bool vislib::GUID::Parse(const the::astring& str) {
 #ifdef _WIN32
     return (::UuidFromStringA(reinterpret_cast<RPC_CSTR>(const_cast<char *>(
-        str.PeekBuffer())), &this->guid) == RPC_S_OK);
+        str.c_str())), &this->guid) == RPC_S_OK);
 #else /* _WIN32 */
-    return (::uuid_parse(str.PeekBuffer(), this->guid) == 0);
+    return (::uuid_parse(str.c_str(), this->guid) == 0);
 #endif /* _WIN32 */
 }
 
@@ -210,12 +210,12 @@ bool vislib::GUID::Parse(const StringA& str) {
 /*
  * vislib::GUID::Parse
  */
-bool vislib::GUID::Parse(const StringW& str) {
+bool vislib::GUID::Parse(const the::wstring& str) {
 #ifdef _WIN32
     return (::UuidFromStringW(reinterpret_cast<RPC_WSTR>(const_cast<wchar_t *>(
-        str.PeekBuffer())), &this->guid) == RPC_S_OK);
+        str.c_str())), &this->guid) == RPC_S_OK);
 #else /* _WIN32 */
-    return this->Parse(W2A(str));
+    return this->Parse(THE_W2A(str));
 #endif /* _WIN32 */
 }
 
@@ -257,18 +257,18 @@ void vislib::GUID::SetZero(void) {
 /*
  * vislib::GUID::ToStringA
  */
-vislib::StringA vislib::GUID::ToStringA(void) const {
+the::astring vislib::GUID::ToStringA(void) const {
 #ifdef _WIN32
     RPC_CSTR str;
     if (::UuidToStringA(const_cast<::GUID *>(&this->guid), &str) == RPC_S_OK) {
-        StringA retval(reinterpret_cast<char *>(str));
+        the::astring retval(reinterpret_cast<char *>(str));
         ::RpcStringFreeA(&str);
         return retval;
     } else {
         throw std::bad_alloc();
     }
 #else /* _WIN32 */
-    StringA retval;
+    the::astring retval;
     ::uuid_unparse(this->guid, retval.AllocateBuffer((36 + 1) * sizeof(char)));
     return retval;
 #endif /* _WIN32 */
@@ -278,11 +278,11 @@ vislib::StringA vislib::GUID::ToStringA(void) const {
 /*
  * vislib::GUID::ToStringW
  */
-vislib::StringW vislib::GUID::ToStringW(void) const {
+the::wstring vislib::GUID::ToStringW(void) const {
 #ifdef _WIN32
     RPC_WSTR str;
     if (::UuidToStringW(const_cast<::GUID *>(&this->guid), &str) == RPC_S_OK) {
-        StringW retval(reinterpret_cast<wchar_t *>(str));
+        the::wstring retval(reinterpret_cast<wchar_t *>(str));
         ::RpcStringFreeW(&str);
         return retval;
     } else {
@@ -290,7 +290,7 @@ vislib::StringW vislib::GUID::ToStringW(void) const {
     }
 
 #else /* _WIN32 */
-    return StringW(this->ToStringA());
+    return the::wstring(this->ToStringA());
 #endif /* _WIN32 */
 }
 

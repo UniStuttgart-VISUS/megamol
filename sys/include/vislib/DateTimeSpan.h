@@ -16,7 +16,7 @@
 
 
 #include "the/stack_trace.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/types.h"
 
 
@@ -301,14 +301,14 @@ namespace sys {
          *
          * @return A string representation.
          */
-        StringA ToStringA(void) const;
+        the::astring ToStringA(void) const;
 
         /**
          * Answer a string representation of the time span.
          *
          * @return A string representation.
          */
-        StringW ToStringW(void) const;
+        the::wstring ToStringW(void) const;
 
         /**
          * Test for equality.

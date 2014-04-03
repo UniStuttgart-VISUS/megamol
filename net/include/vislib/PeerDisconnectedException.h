@@ -16,7 +16,7 @@
 
 
 #include "the/exception.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -46,7 +46,7 @@ namespace net {
          * @return The default message to be used for a 
          *         PeerDisconnectedException.
          */
-        static StringA FormatMessageForLocalEndpoint(const char *localEndPoint);
+        static the::astring FormatMessageForLocalEndpoint(const char *localEndPoint);
 
         /**
          * Creates an exception message for the local end point description
@@ -59,7 +59,7 @@ namespace net {
          * @return The default message to be used for a 
          *         PeerDisconnectedException.
          */
-        static StringW FormatMessageForLocalEndpoint(
+        static the::wstring FormatMessageForLocalEndpoint(
             const wchar_t *localEndPoint);
 
         /**

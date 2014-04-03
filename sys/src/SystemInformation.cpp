@@ -96,11 +96,12 @@ uint64_t vislib::sys::SystemInformation::AvailableMemorySize(void) {
 /*
  * vislib::sys::SystemInformation::ComputerName
  */
-void vislib::sys::SystemInformation::ComputerName(vislib::StringA &outName) {
+void vislib::sys::SystemInformation::ComputerName(the::astring &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = MAX_COMPUTERNAME_LENGTH; // used for paranoia test
     unsigned long bufSize = MAX_COMPUTERNAME_LENGTH;
-    char *buf = outName.AllocateBuffer(bufSize);
+    outName = the::astring(bufSize, ' ');
+    char *buf = const_cast<char *>(outName.c_str());
 
     bufSize++;
     while (!::GetComputerNameA(buf, &bufSize)) {
@@ -109,7 +110,8 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringA &outName) {
 
         if ((le == ERROR_BUFFER_OVERFLOW) && (oldBufSize != bufSize)) {
             oldBufSize = bufSize;
-            buf = outName.AllocateBuffer(bufSize);
+            outName = the::astring(bufSize, ' ');
+            buf = const_cast<char *>(outName.c_str());
 
         } else {
             throw the::system::system_exception(le, __FILE__, __LINE__);
@@ -130,11 +132,12 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringA &outName) {
 /*
  * vislib::sys::SystemInformation::ComputerName
  */
-void vislib::sys::SystemInformation::ComputerName(vislib::StringW &outName) {
+void vislib::sys::SystemInformation::ComputerName(the::wstring &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = MAX_COMPUTERNAME_LENGTH; // used for paranoia test
     unsigned long bufSize = MAX_COMPUTERNAME_LENGTH;
-    wchar_t *buf = outName.AllocateBuffer(bufSize);
+    outName = the::wstring(bufSize, ' ');
+    wchar_t *buf = const_cast<wchar_t *>(outName.c_str());
 
     bufSize++;
     while (!::GetComputerNameW(buf, &bufSize)) {
@@ -143,7 +146,8 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringW &outName) {
 
         if ((le == ERROR_BUFFER_OVERFLOW) && (oldBufSize != bufSize)) {
             oldBufSize = bufSize;
-            buf = outName.AllocateBuffer(bufSize);
+            outName = the::wstring(bufSize, ' ');
+            buf = const_cast<wchar_t *>(outName.c_str());
 
         } else {
             throw the::system::system_exception(le, __FILE__, __LINE__);
@@ -152,7 +156,7 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringW &outName) {
         bufSize++;
     }
 #else
-    vislib::StringA tmpStr;
+    the::astring tmpStr;
     SystemInformation::ComputerName(tmpStr);
     outName = tmpStr;
 #endif
@@ -197,10 +201,10 @@ unsigned int vislib::sys::SystemInformation::MonitorRects(
 #else /* _WIN32 */
     int cntScreens = 0;         // # of attached screens.
     Display *dpy = NULL;        // The display.
-    StringA errorDesc;          // For formatting an error message.
+    the::astring errorDesc;          // For formatting an error message.
     
     if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
-        errorDesc.Format("Could not open display \"%s\".", 
+        the::text::astring_builder::format_to(errorDesc, "Could not open display \"%s\".", 
             ::XDisplayName(NULL));
         throw the::exception(errorDesc, __FILE__, __LINE__);
     }
@@ -311,10 +315,10 @@ vislib::sys::SystemInformation::PrimaryMonitorRect(void) {
 
 #else /* _WIN32 */
     Display *dpy = NULL;
-    StringA errorDesc;
+    the::astring errorDesc;
 
     if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
-        errorDesc.Format("Could not open display \"%s\".", 
+        the::text::astring_builder::format_to(errorDesc, "Could not open display \"%s\".", 
             ::XDisplayName(NULL));
         throw the::exception(errorDesc, __FILE__, __LINE__);
     }
@@ -517,11 +521,12 @@ unsigned int vislib::sys::SystemInformation::SystemWordSize(void) {
 /*
  * vislib::sys::SystemInformation::UserName
  */
-void vislib::sys::SystemInformation::UserName(vislib::StringA &outName) {
+void vislib::sys::SystemInformation::UserName(the::astring &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = UNLEN; // used for paranoia test
     unsigned long bufSize = UNLEN;
-    char *buf = outName.AllocateBuffer(bufSize);
+    outName = the::astring(bufSize, ' ');
+    char *buf = const_cast<char *>(outName.c_str());
 
     bufSize++;
     while (!::GetUserNameA(buf, &bufSize)) {
@@ -530,7 +535,8 @@ void vislib::sys::SystemInformation::UserName(vislib::StringA &outName) {
 
         if ((le == ERROR_INSUFFICIENT_BUFFER) && (oldBufSize != bufSize)) {
             oldBufSize = bufSize;
-            buf = outName.AllocateBuffer(bufSize);
+            outName = the::astring(bufSize, ' ');
+            buf = const_cast<char *>(outName.c_str());
 
         } else {
             throw the::system::system_exception(le, __FILE__, __LINE__);
@@ -556,11 +562,12 @@ void vislib::sys::SystemInformation::UserName(vislib::StringA &outName) {
 /*
  * vislib::sys::SystemInformation::UserName
  */
-void vislib::sys::SystemInformation::UserName(vislib::StringW &outName) {
+void vislib::sys::SystemInformation::UserName(the::wstring &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = UNLEN; // used for paranoia test
     unsigned long bufSize = UNLEN;
-    wchar_t *buf = outName.AllocateBuffer(bufSize);
+    outName = the::wstring(bufSize, ' ');
+    wchar_t *buf = const_cast<wchar_t *>(outName.c_str());
 
     bufSize++;
     while (!::GetUserNameW(buf, &bufSize)) {
@@ -569,7 +576,8 @@ void vislib::sys::SystemInformation::UserName(vislib::StringW &outName) {
 
         if ((le == ERROR_INSUFFICIENT_BUFFER) && (oldBufSize != bufSize)) {
             oldBufSize = bufSize;
-            buf = outName.AllocateBuffer(bufSize);
+            outName = the::wstring(bufSize, ' ');
+            buf = const_cast<wchar_t *>(outName.c_str());
 
         } else {
             throw the::system::system_exception(le, __FILE__, __LINE__);
@@ -578,7 +586,7 @@ void vislib::sys::SystemInformation::UserName(vislib::StringW &outName) {
         bufSize++;
     }
 #else
-    vislib::StringA tmpStr;
+    the::astring tmpStr;
     SystemInformation::UserName(tmpStr);
     outName = tmpStr;
 #endif

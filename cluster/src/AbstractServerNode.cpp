@@ -99,11 +99,11 @@ bool vislib::net::cluster::AbstractServerNode::OnNewConnection(Socket& socket,
     } catch (the::exception e) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not accept peer node %s in "
             "ServerNodeAdapter because of an exception: %s\n", 
-            addr.ToStringA().PeekBuffer(), e.what());
+            addr.ToStringA().c_str(), e.what());
     } catch (...) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not accept peer node %s in "
             "ServerNodeAdapter because of an unexpected exception.\n", 
-            addr.ToStringA().PeekBuffer());
+            addr.ToStringA().c_str());
     }
     /* Exception was caught if here. */
 
@@ -237,14 +237,14 @@ size_t vislib::net::cluster::AbstractServerNode::forEachPeer(
             VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed for node %u "
                 "(%s) with an exception: %s\n", i, 
-                peerId.ToStringA().PeekBuffer(), e.what());
+                peerId.ToStringA().c_str(), e.what());
             // TODO: second chance??????
             this->disconnectPeer(i);
             i--;
         } catch (...) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed for node %u "
                 "(%s) with a non-VISlib exception.\n", i,
-                peerId.ToStringA().PeekBuffer());
+                peerId.ToStringA().c_str());
             // TODO: second chance??????
             this->disconnectPeer(i);
             i--;
@@ -275,13 +275,13 @@ bool vislib::net::cluster::AbstractServerNode::forPeer(
             VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed for node %u "
                 "(%s) with an exception: %s\n", i,
-                peerId.ToStringA().PeekBuffer(), e.what());
+                peerId.ToStringA().c_str(), e.what());
             // TODO: second chance??????
             this->disconnectPeer(i);
         } catch (...) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed for node %u "
                 "(%s) with a non-VISlib exception.\n", i,
-                peerId.ToStringA().PeekBuffer());
+                peerId.ToStringA().c_str());
             // TODO: second chance??????
             this->disconnectPeer(i);
         }

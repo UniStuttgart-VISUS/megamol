@@ -59,12 +59,12 @@ void DiscoveryTestApp::Initialise(CmdLineProviderW& inOutCmdLine) {
  */
 void DiscoveryTestApp::OnNodeFound(DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer) throw() {
-    std::cout << "Discovery service \"" << src.GetName().PeekBuffer() 
-        << "\" discovered new peer node " << src[hPeer].ToStringA().PeekBuffer()
+    std::cout << "Discovery service \"" << src.GetName().c_str() 
+        << "\" discovered new peer node " << src[hPeer].ToStringA().c_str()
         << std::endl
         << "Now, the following nodes are known to the service:" << std::endl;
     for (size_t i = 0; i < src.CountPeers(); i++) {
-        std::cout << "\t" << src[i].ToStringA().PeekBuffer() << std::endl;
+        std::cout << "\t" << src[i].ToStringA().c_str() << std::endl;
     }
 
     const char *msg = "Hello, nodes!";
@@ -80,13 +80,13 @@ void DiscoveryTestApp::OnNodeFound(DiscoveryService& src,
 void DiscoveryTestApp::OnNodeLost(DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer,
         const DiscoveryListener::NodeLostReason reason) throw() {
-    std::cout << "Discovery service " << src.GetName().PeekBuffer() 
-        << " lost peer node " << src[hPeer].ToStringA().PeekBuffer()
+    std::cout << "Discovery service " << src.GetName().c_str() 
+        << " lost peer node " << src[hPeer].ToStringA().c_str()
         << " for reason " << reason 
         << std::endl
         << "from the following list of known nodes:" << std::endl;
     for (size_t i = 0; i < src.CountPeers(); i++) {
-        std::cout << "\t" << src[hPeer].ToStringA().PeekBuffer() << std::endl;
+        std::cout << "\t" << src[hPeer].ToStringA().c_str() << std::endl;
     }
 }
 
@@ -98,9 +98,9 @@ void DiscoveryTestApp::OnUserMessage(DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer,
         const bool isClusterMember,
         const uint32_t msgType, const uint8_t *msgBody) throw() {
-    std::cout << "Discovery service " << src.GetName().PeekBuffer() 
+    std::cout << "Discovery service " << src.GetName().c_str() 
         << " received user message " << msgType 
-        << " from peer node " << src[hPeer].ToStringA().PeekBuffer()
+        << " from peer node " << src[hPeer].ToStringA().c_str()
         << std::endl;
 }
 
@@ -118,7 +118,7 @@ unsigned int DiscoveryTestApp::Run(void) {
     try {
         Socket::Startup();
 
-        DNS::GetHostAddress(adapter, SystemInformation::ComputerNameW());
+        DNS::GetHostAddress(adapter, SystemInformation::ComputerNameW().c_str());
         //for (unsigned int i = 0; i < NetworkInformation::AdapterCount(); i++) {
         //    NetworkInformation::Adapter ai = NetworkInformation::AdapterInformation(i);
         //    if ((adapter & ai.SubnetMask()) == (ai.BroadcastAddress() & ai.SubnetMask())) {

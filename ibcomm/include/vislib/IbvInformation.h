@@ -95,7 +95,7 @@ namespace ib {
              *
              * @return A description of the physical port state.
              */
-            inline StringA GetPhysicalStateA(void) const {
+            inline the::astring GetPhysicalStateA(void) const {
                 THE_STACK_TRACE;
                 return PHYSICAL_STATES[this->attributes.PhysicalState];
             }
@@ -105,9 +105,10 @@ namespace ib {
              *
              * @return A description of the physical port state.
              */
-            inline StringW GetPhysicalStateW(void) const {
+            inline the::wstring GetPhysicalStateW(void) const {
                 THE_STACK_TRACE;
-                return StringW(PHYSICAL_STATES[this->attributes.PhysicalState]);
+                return the::text::string_converter::to_w(
+                    PHYSICAL_STATES[this->attributes.PhysicalState]);
             }
 
             /**
@@ -125,14 +126,14 @@ namespace ib {
              *
              * @return The port GUID as hex-string.
              */
-            StringA GetPortGuidA(void) const;
+            the::astring GetPortGuidA(void) const;
 
             /**
              * Get a hex-string representation of the port GUID.
              *
              * @return The port GUID as hex-string.
              */
-            StringW GetPortGuidW(void) const;
+            the::wstring GetPortGuidW(void) const;
 
             /**
              * Gets the current state of the port.
@@ -149,7 +150,7 @@ namespace ib {
              *
              * @return The state of the port.
              */
-            inline StringA GetStateA(void) const {
+            inline the::astring GetStateA(void) const {
                 THE_STACK_TRACE;
                 return STATES[this->attributes.State];
             }
@@ -159,9 +160,10 @@ namespace ib {
              *
              * @return The state of the port.
              */             
-            inline StringW GetStateW(void) const {
+            inline the::wstring GetStateW(void) const {
                 THE_STACK_TRACE;
-                return StringW(STATES[this->attributes.State]);
+                return the::text::string_converter::to_w(
+                    STATES[this->attributes.State]);
             }
 
             /**
@@ -295,14 +297,14 @@ namespace ib {
              *
              * @return The node GUID.
              */
-            StringA GetNodeGuidA(void) const;
+            the::astring GetNodeGuidA(void) const;
 
             /**
              * Get a hex-string representation of the node GUID.
              *
              * @return The node GUID.
              */
-            StringW GetNodeGuidW(void) const;
+            the::wstring GetNodeGuidW(void) const;
 
             /**
              * Gets the descriptor object for the 'idx'th port.
@@ -353,14 +355,14 @@ namespace ib {
              *
              * @return The system image GUID.
              */
-            StringA GetSystemImageGuidA(void) const;
+            the::astring GetSystemImageGuidA(void) const;
 
             /**
              * Get a hex-string representation of system image GUID.
              *
              * @return The system image GUID.
              */
-            StringW GetSystemImageGuidW(void) const;
+            the::wstring GetSystemImageGuidW(void) const;
 
             /**
              * Assignment.

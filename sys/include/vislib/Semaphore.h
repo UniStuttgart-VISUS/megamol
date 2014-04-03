@@ -24,7 +24,7 @@
 
 #include "Lockable.h"
 #include "vislib/SyncObject.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/types.h"
 
 
@@ -205,7 +205,7 @@ namespace sys {
         sem_t *handle;
 
         /** The name of the semaphore if it is named. */
-        vislib::StringA name;
+        the::astring name;
 
 #endif /* _WIN32 */
     };

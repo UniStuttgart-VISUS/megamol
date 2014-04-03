@@ -23,11 +23,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "vislib/CharTraits.h"
 #include "vislib/File.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/RawStorage.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/system/system_exception.h"
 #include "the/types.h"
 
@@ -148,7 +147,7 @@ namespace sys {
                     vislib::String<vislib::CharTraits<T> > matchGroup(
                         pattern + pps + 1, static_cast<typename vislib::String<
                             vislib::CharTraits<T> >::Size>(pp - (1 + pps)));
-                    if (!matchGroup.Contains(filename[fnp])) return false;
+                    if (!the::text::string_utility::contains(matchGroup, filename[fnp])) return false;
                     fnp++;
                     pp++;
                 } break;
@@ -238,7 +237,7 @@ namespace sys {
      * @throws the::system::io::io_exception If the file cannot be read.
      * @throws std::bad_alloc If there is not enough memory to store the line.
      */
-    StringA ReadLineFromFileA(File& input, unsigned int size = defMaxLineSize);
+    the::astring ReadLineFromFileA(File& input, unsigned int size = defMaxLineSize);
 
     /**
      * Reads unicode characters from the file until the end of file, a line 
@@ -257,7 +256,7 @@ namespace sys {
      * @throws the::system::io::io_exception If the file cannot be read.
      * @throws std::bad_alloc If there is not enough memory to store the line.
      */
-    StringW ReadLineFromFileW(File& input, unsigned int size = defMaxLineSize);
+    the::wstring ReadLineFromFileW(File& input, unsigned int size = defMaxLineSize);
 
 #if defined(UNICODE) || defined(_UNICODE)
 #define ReadLineFromFile ReadLineFromFileW
@@ -280,7 +279,7 @@ namespace sys {
      * @throws the::system::io::io_exception If reading from the file failed.
      */
     template<class tp1, class tp2>
-    bool ReadTextFile(String<tp1>& outStr, const tp2 *filename,
+    bool ReadTextFile(tp1& outStr, const tp2 *filename,
             TextFileFormat format = TEXTFF_UNSPECIFIC,
             bool forceFormat = false) {
         File file;
@@ -311,10 +310,10 @@ namespace sys {
      * @throws the::system::io::io_exception If reading from the file failed.
      */
     template<class tp1, class tp2>
-    bool ReadTextFile(String<tp1>& outStr, const String<tp2>& filename,
+    bool ReadTextFile(tp1& outStr, const tp2& filename,
             TextFileFormat format = TEXTFF_UNSPECIFIC,
             bool forceFormat = false) {
-        return ReadTextFile(outStr, filename.PeekBuffer(), format,
+        return ReadTextFile(outStr, filename.c_str(), format,
             forceFormat);
     }
 
@@ -333,7 +332,7 @@ namespace sys {
      *
      * @throws the::system::io::io_exception If reading from the file failed.
      */
-    bool ReadTextFile(StringA& outStr, File& file,
+    bool ReadTextFile(the::astring& outStr, File& file,
         TextFileFormat format = TEXTFF_UNSPECIFIC, bool forceFormat = false);
 
     /**
@@ -351,7 +350,7 @@ namespace sys {
      *
      * @throws the::system::io::io_exception If reading from the file failed.
      */
-    bool ReadTextFile(StringW& outStr, File& file,
+    bool ReadTextFile(the::wstring& outStr, File& file,
         TextFileFormat format = TEXTFF_UNSPECIFIC, bool forceFormat = false);
 
     /**
@@ -407,7 +406,7 @@ namespace sys {
      *
      * @return The name without kernel namespace prefix.
      */
-    vislib::StringA RemoveKernelNamespace(const char *name);
+    the::astring RemoveKernelNamespace(const char *name);
 
     /**
      * Remove Windows kernel namespace prefixes "Global" and "Local" from 
@@ -418,7 +417,7 @@ namespace sys {
      *
      * @return The name without kernel namespace prefix.
      */
-    vislib::StringW RemoveKernelNamespace(const wchar_t *name);
+    the::wstring RemoveKernelNamespace(const wchar_t *name);
 
     /**
      * Release the COM pointer 'ptr' and set it NULL if not yet NULL.
@@ -443,7 +442,7 @@ namespace sys {
      *
      * @return The name in POSIX-compatible format without kernel namespace.
      */
-    vislib::StringA TranslateWinIpc2PosixName(const char *name);
+    the::astring TranslateWinIpc2PosixName(const char *name);
 
     /**
      * Take a Windows IPC resource name and construct a POSIX name for Linux 
@@ -455,7 +454,7 @@ namespace sys {
      *
      * @return The name in POSIX-compatible format without kernel namespace.
      */
-    vislib::StringW TranslateWinIpc2PosixName(const wchar_t *name);
+    the::wstring TranslateWinIpc2PosixName(const wchar_t *name);
 
 #ifndef _WIN32
     /**
@@ -493,7 +492,7 @@ namespace sys {
         tmp.FormatVa(format, argptr);
         va_end(argptr);
         size_t len = tmp.Length() * sizeof(T);
-        return out.Write(tmp.PeekBuffer(), len) == len;
+        return out.Write(tmp.c_str(), len) == len;
     }
 
     /**
@@ -529,10 +528,10 @@ namespace sys {
      * @throws the::system::system_exception in case of an error.
      */
     template<class tp1, class tp2>
-    bool WriteTextFile(const String<tp1>& filename, const String<tp2>& text,
+    bool WriteTextFile(const tp1& filename, const tp2& text,
             bool force = false, TextFileFormat format = TEXTFF_UNSPECIFIC,
             TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC) {
-        return WriteTextFile(filename.PeekBuffer(), text, force, format, bom);
+        return WriteTextFile(filename.c_str(), text, force, format, bom);
     }
 
     /**
@@ -549,7 +548,7 @@ namespace sys {
      * @throws the::system::system_exception in case of an error.
      */
     template<class tp1, class tp2>
-    bool WriteTextFile(const tp1 *filename, const String<tp2>& text,
+    bool WriteTextFile(const tp1 *filename, const tp2& text,
             bool force = false, TextFileFormat format = TEXTFF_UNSPECIFIC,
             TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC) {
         bool retval = false;
@@ -576,7 +575,7 @@ namespace sys {
      *
      * @throws the::system::system_exception in case of an error.
      */
-    bool WriteTextFile(File& file, const StringA& text,
+    bool WriteTextFile(File& file, const the::astring& text,
         TextFileFormat format = TEXTFF_ASCII,
         TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC);
 
@@ -591,7 +590,7 @@ namespace sys {
      *
      * @throws the::system::system_exception in case of an error.
      */
-    bool WriteTextFile(File& file, const StringW& text,
+    bool WriteTextFile(File& file, const the::wstring& text,
         TextFileFormat format = TEXTFF_UNICODE,
         TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC);
 

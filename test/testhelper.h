@@ -14,7 +14,7 @@
 
 #include "the/types.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 bool AssertTrue(const char *desc, const bool cond);
@@ -30,25 +30,29 @@ template<class T> bool AssertEqual(const char *desc,
 template<class T> bool AssertEqual(const char *desc, 
                                    const char *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, vislib::StringA(lhs).Equals(vislib::StringA(rhs)));
+    return ::AssertTrue(desc, the::text::string_converter::to_a(lhs).compare(the::text::string_converter::to_a(rhs)) == 0);
 }
 
 template<class T> bool AssertEqual(const char *desc, 
                                    const wchar_t *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, vislib::StringW(lhs).Equals(vislib::StringW(rhs)));
+    return ::AssertTrue(desc, the::text::string_converter::to_w(lhs).compare(the::text::string_converter::to_w(rhs)) == 0);
 }
 
 template<class T> bool AssertEqualCaseInsensitive(const char *desc, 
                                    const char *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, vislib::StringA(lhs).Equals(vislib::StringA(rhs), false));
+    return ::AssertTrue(desc, the::text::string_utility::equals(
+        the::text::string_converter::to_a(lhs),
+        the::text::string_converter::to_a(rhs), false));
 }
 
 template<class T> bool AssertEqualCaseInsensitive(const char *desc, 
                                    const wchar_t *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, vislib::StringW(lhs).Equals(vislib::StringW(rhs), false));
+    return ::AssertTrue(desc, the::text::string_utility::equals(
+        the::text::string_converter::to_w(lhs),
+        the::text::string_converter::to_w(rhs), false));
 }
 
 template<class T> bool AssertNotEqual(const char *desc,

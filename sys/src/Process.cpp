@@ -82,10 +82,10 @@ void vislib::sys::Process::Exit(const unsigned int exitCode) {
 /*
  * vislib::sys::Process::ModuleFileNameA
  */
-vislib::StringA vislib::sys::Process::ModuleFileNameA(const PID processID) {
+the::astring vislib::sys::Process::ModuleFileNameA(const PID processID) {
 #ifdef _WIN32
     AutoHandle hProcess(true);
-    StringA retval;
+    the::astring retval(MAX_PATH, ' ');
 
     if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, processID))
             == NULL) {
@@ -93,21 +93,22 @@ vislib::StringA vislib::sys::Process::ModuleFileNameA(const PID processID) {
     }
 
     if (!GetModuleFileNameA(static_cast<HMODULE>(static_cast<HANDLE>(hProcess)),
-            retval.AllocateBuffer(MAX_PATH), MAX_PATH)) {
+            const_cast<char*>(retval.c_str()), MAX_PATH)) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return retval;
 
 #else /* _WIN32 */
-    StringA procAddr;
-    StringA retval;
+    the::astring procAddr;
+    the::astring retval;
     char *retvalPtr = NULL;
     int len = -1;
 
-    procAddr.Format("/proc/%d/exe", processID);
-    retvalPtr = retval.AllocateBuffer(PATH_MAX + 1);
-    len = ::readlink(procAddr.PeekBuffer(), retvalPtr, PATH_MAX + 1);
+    the::text::astring_builder::format_to(procAddr, "/proc/%d/exe", processID);
+    retval = the::astring(MAX_PATH, ' ');
+    retvalPtr = const_cast<char*>(retval.c_str());
+    len = ::readlink(procAddr.c_str(), retvalPtr, PATH_MAX + 1);
     if (len == -1) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
@@ -121,11 +122,11 @@ vislib::StringA vislib::sys::Process::ModuleFileNameA(const PID processID) {
 /*
  * vislib::sys::Process::ModuleFileNameA
  */
-vislib::StringA vislib::sys::Process::ModuleFileNameA(void) {
+the::astring vislib::sys::Process::ModuleFileNameA(void) {
 #ifdef _WIN32
-    StringA retval;
+    the::astring retval(MAX_PATH, ' ');
 
-    if (!GetModuleFileNameA(NULL, retval.AllocateBuffer(MAX_PATH), MAX_PATH)) {
+    if (!GetModuleFileNameA(NULL, const_cast<char*>(retval.c_str()), MAX_PATH)) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
@@ -142,10 +143,10 @@ vislib::StringA vislib::sys::Process::ModuleFileNameA(void) {
 /*
  * vislib::sys::Process::ModuleFileNameW
  */
-vislib::StringW vislib::sys::Process::ModuleFileNameW(const PID processID) {
+the::wstring vislib::sys::Process::ModuleFileNameW(const PID processID) {
 #ifdef _WIN32
     AutoHandle hProcess(true);
-    StringW retval;
+    the::wstring retval(MAX_PATH, ' ');
 
     if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, processID))
             == NULL) {
@@ -153,14 +154,14 @@ vislib::StringW vislib::sys::Process::ModuleFileNameW(const PID processID) {
     }
 
     if (!GetModuleFileNameW(static_cast<HMODULE>(static_cast<HANDLE>(hProcess)),
-            retval.AllocateBuffer(MAX_PATH), MAX_PATH)) {
+            const_cast<wchar_t*>(retval.c_str()), MAX_PATH)) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
     return retval;
 
 #else /* _WIN32 */
-    return StringW(Process::ModuleFileNameA(processID));
+    return the::wstring(Process::ModuleFileNameA(processID));
 #endif /* _WIN32 */
 }
 
@@ -168,11 +169,12 @@ vislib::StringW vislib::sys::Process::ModuleFileNameW(const PID processID) {
 /*
  * vislib::sys::Process::ModuleFileNameW
  */
-vislib::StringW vislib::sys::Process::ModuleFileNameW(void) {
+the::wstring vislib::sys::Process::ModuleFileNameW(void) {
 #ifdef _WIN32
-    StringW retval;
+    the::wstring retval(MAX_PATH, ' ');
 
-    if (!GetModuleFileNameW(NULL, retval.AllocateBuffer(MAX_PATH), MAX_PATH)) {
+    if (!GetModuleFileNameW(NULL,
+            const_cast<wchar_t*>(retval.c_str()), MAX_PATH)) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
@@ -187,8 +189,8 @@ vislib::StringW vislib::sys::Process::ModuleFileNameW(void) {
 /*
  * vislib::sys::Process::Owner
  */
-void vislib::sys::Process::Owner(const PID processID, vislib::StringA& outUser,
-        vislib::StringA *outDomain) {
+void vislib::sys::Process::Owner(const PID processID, the::astring& outUser,
+        the::astring *outDomain) {
 #ifdef _WIN32
     DWORD domainLen = 0;            // Length of domain name in characters.
     DWORD error = NO_ERROR;         // Last system error code.
@@ -200,13 +202,13 @@ void vislib::sys::Process::Owner(const PID processID, vislib::StringA& outUser,
     SID_NAME_USE snu;               // Type of retrieved SID.
     RawStorage tmpDomain;           // Storage for domain if discarded.
     RawStorage userInfo;            // Receives user info of security token.
-    StringA::Char *user = NULL;     // Receives user name.
-    StringA::Char *domain = NULL;   // Receives domain name.
+    the::astring::value_type *user = NULL;     // Receives user name.
+    the::astring::value_type *domain = NULL;   // Receives domain name.
 
     /* Clear return values. */
-    outUser.Clear();
+    outUser.clear();
     if (outDomain != NULL) {
-        outDomain->Clear();
+        outDomain->clear();
     }
 
     /* Acquire a process handle. */
@@ -230,20 +232,22 @@ void vislib::sys::Process::Owner(const PID processID, vislib::StringA& outUser,
                     if (::LookupAccountSidA(NULL, sid, NULL, &userLen, NULL, 
                             &domainLen, &snu) || ((error = ::GetLastError())
                             == ERROR_INSUFFICIENT_BUFFER)) {
-                        user = outUser.AllocateBuffer(userLen);
+                        outUser = the::astring(userLen, ' ');
+                        user = const_cast<char*>(outUser.c_str());
                         if (outDomain != NULL) {
-                            domain = outDomain->AllocateBuffer(domainLen);
+                            (*outDomain) = the::astring(domainLen, ' ');
+                            domain = const_cast<char*>(outDomain->c_str());
                         } else {
                             tmpDomain.AssertSize(domainLen);
-                            domain = tmpDomain.As<StringA::Char>();
+                            domain = tmpDomain.As<the::astring::value_type>();
                         }
 
                         if (!::LookupAccountSidA(NULL, sid, user, &userLen,
                                 domain, &domainLen, &snu)) {
                             error = ::GetLastError();
-                            outUser.Clear();
+                            outUser.clear();
                             if (outDomain != NULL) {
-                                outDomain->Clear();
+                                outDomain->clear();
                             }
                             ::CloseHandle(hToken);
                             ::CloseHandle(hProcess);
@@ -286,8 +290,8 @@ void vislib::sys::Process::Owner(const PID processID, vislib::StringA& outUser,
 /*
  * vislib::sys::Process::Owner
  */
-void vislib::sys::Process::Owner(const PID processID, vislib::StringW& outUser,
-        vislib::StringW *outDomain) {
+void vislib::sys::Process::Owner(const PID processID, the::wstring& outUser,
+        the::wstring *outDomain) {
 #ifdef _WIN32
     DWORD domainLen = 0;            // Length of domain name in characters.
     DWORD error = NO_ERROR;         // Last system error code.
@@ -299,13 +303,13 @@ void vislib::sys::Process::Owner(const PID processID, vislib::StringW& outUser,
     SID_NAME_USE snu;               // Type of retrieved SID.
     RawStorage tmpDomain;           // Storage for domain if discarded.
     RawStorage userInfo;            // Receives user info of security token.
-    StringW::Char *user = NULL;     // Receives user name.
-    StringW::Char *domain = NULL;   // Receives domain name.
+    the::wstring::value_type *user = NULL;     // Receives user name.
+    the::wstring::value_type *domain = NULL;   // Receives domain name.
 
     /* Clear return values. */
-    outUser.Clear();
+    outUser.clear();
     if (outDomain != NULL) {
-        outDomain->Clear();
+        outDomain->clear();
     }
 
     /* Acquire a process handle. */
@@ -329,20 +333,22 @@ void vislib::sys::Process::Owner(const PID processID, vislib::StringW& outUser,
                     if (::LookupAccountSidW(NULL, sid, NULL, &userLen, NULL, 
                             &domainLen, &snu) || ((error = ::GetLastError())
                             == ERROR_INSUFFICIENT_BUFFER)) {
-                        user = outUser.AllocateBuffer(userLen);
+                        outUser = the::wstring(userLen, L' ');
+                        user = const_cast<wchar_t*>(outUser.c_str());
                         if (outDomain != NULL) {
-                            domain = outDomain->AllocateBuffer(domainLen);
+                            (*outDomain) = the::wstring(domainLen, L' ');
+                            domain = const_cast<wchar_t*>(outDomain->c_str());
                         } else {
                             tmpDomain.AssertSize(domainLen);
-                            domain = tmpDomain.As<StringW::Char>();
+                            domain = tmpDomain.As<the::wstring::value_type>();
                         }
 
                         if (!::LookupAccountSidW(NULL, sid, user, &userLen,
                                 domain, &domainLen, &snu)) {
                             error = ::GetLastError();
-                            outUser.Clear();
+                            outUser.clear();
                             if (outDomain != NULL) {
-                                outDomain->Clear();
+                                outDomain->clear();
                             }
                             ::CloseHandle(hToken);
                             ::CloseHandle(hProcess);
@@ -376,8 +382,8 @@ void vislib::sys::Process::Owner(const PID processID, vislib::StringW& outUser,
     } /* end if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION ... */
 
 #else /* _WIN32 */
-    StringA u;
-    StringA d;
+    the::astring u;
+    the::astring d;
 
     Process::Owner(processID, u, &d);
     if (outDomain != NULL) {
@@ -390,9 +396,9 @@ void vislib::sys::Process::Owner(const PID processID, vislib::StringW& outUser,
 /* 
  * vislib::sys::Process::OwnerA
  */
-vislib::StringA vislib::sys::Process::OwnerA(const PID processID, 
+the::astring vislib::sys::Process::OwnerA(const PID processID, 
             const bool includeDomain, const bool isLenient) {
-    StringA retval;
+    the::astring retval;
     
     try {
 #ifdef _WIN32
@@ -400,7 +406,7 @@ vislib::StringA vislib::sys::Process::OwnerA(const PID processID,
 #else /* _WIN32 */
         if (false) {
 #endif /* _WIN32 */
-            StringA user;
+            the::astring user;
             Process::Owner(processID, user, &retval);
             retval += "\\";
             retval += user;
@@ -420,9 +426,9 @@ vislib::StringA vislib::sys::Process::OwnerA(const PID processID,
 /*
  * vislib::sys::Process::OwnerW
  */
-vislib::StringW vislib::sys::Process::OwnerW(const PID processID, 
+the::wstring vislib::sys::Process::OwnerW(const PID processID, 
             const bool includeDomain, const bool isLenient) {
-    StringW retval;
+    the::wstring retval;
     
     try {
 #ifdef _WIN32
@@ -430,7 +436,7 @@ vislib::StringW vislib::sys::Process::OwnerW(const PID processID,
 #else /* _WIN32 */
         if (false) {
 #endif /* _WIN32 */
-            StringW user;
+            the::wstring user;
             Process::Owner(processID, user, &retval);
             retval += L"\\";
             retval += user;
@@ -515,7 +521,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
 #ifdef _WIN32
     const char **arg = arguments;
     HANDLE hToken = NULL;
-    StringA cmdLine("\"");
+    the::astring cmdLine("\"");
     cmdLine += command;
     cmdLine += "\"";
     if (arg != NULL) {
@@ -548,14 +554,14 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
 
         // TODO: hToken has insufficient permissions to spawn process.
         if (::CreateProcessAsUserA(hToken, NULL, 
-                const_cast<char *>(cmdLine.PeekBuffer()), NULL, NULL, FALSE, 0,
+                const_cast<char *>(cmdLine.c_str()), NULL, NULL, FALSE, 0,
                 const_cast<void *>(static_cast<const void *>(environment)), 
                 currentDirectory, &si, &pi)
                 == FALSE) {
             throw the::system::system_exception(__FILE__, __LINE__);
         }
     } else {
-        if (::CreateProcessA(NULL, const_cast<char *>(cmdLine.PeekBuffer()), 
+        if (::CreateProcessA(NULL, const_cast<char *>(cmdLine.c_str()), 
                 NULL, NULL, FALSE, 0, 
                 const_cast<void *>(static_cast<const void *>(environment)),
                 currentDirectory, &si, &pi) == FALSE) {
@@ -568,8 +574,8 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
 
 #else /* _WIN32 */
    // TODO: PAM disabled
-    StringA query;  // Query to which to expand shell commands.
-    StringA cmd;    // The command actually run.
+    the::astring query;  // Query to which to expand shell commands.
+    the::astring cmd;    // The command actually run.
     unsigned int error;    // Exception error code.
     int pipe[2];    // A pipe to get the error code of exec.
 
@@ -580,15 +586,15 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
     }
 
     /* Detect and expand shell commands first first. */
-    query.Format("which %s", command);
-    if (Console::Run(query.PeekBuffer(), &cmd) == 0) {
+    the::text::astring_builder::format_to(query, "which %s", command);
+    if (Console::Run(query.c_str(), &cmd) == 0) {
         cmd.TrimEnd("\r\n");
     } else {
         cmd = Path::Resolve(command);
     }
     THE_ASSERT(Path::IsAbsolute(cmd));
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "CreateProcess: command is \"%s\"\n",
-        cmd.PeekBuffer());
+        cmd.c_str());
 
     /* Open a pipe to get the exec error codes. */
     if (::pipe(pipe) == -1) {
@@ -625,9 +631,9 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
             }
         }
 
-        if (environment.IsEmpty() && (arguments == NULL)) {
-            char *tmp[] = { const_cast<char *>(cmd.PeekBuffer()), NULL };
-            ::execv(cmd.PeekBuffer(), tmp);
+        if (environment.empty() && (arguments == NULL)) {
+            char *tmp[] = { const_cast<char *>(cmd.c_str()), NULL };
+            ::execv(cmd.c_str(), tmp);
         } else {
             int cntArgs = 1;
             if (arguments != NULL) {
@@ -636,13 +642,13 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
                 }
             }
             vislib::RawStorage args((cntArgs + 1) * sizeof(char *));
-            args.As<char *>()[0] = const_cast<char *>(cmd.PeekBuffer());
+            args.As<char *>()[0] = const_cast<char *>(cmd.c_str());
             args.As<char *>()[cntArgs] = NULL;
             for (int i = 1; i < cntArgs; i++) {
                 args.As<char *>()[i] = const_cast<char *>(arguments[i - 1]);
             }
             
-            ::execve(cmd.PeekBuffer(), args.As<char *>(), 
+            ::execve(cmd.c_str(), args.As<char *>(), 
                 reinterpret_cast<char **>(const_cast<void *>(
                 static_cast<const void *>(environment))));
         }

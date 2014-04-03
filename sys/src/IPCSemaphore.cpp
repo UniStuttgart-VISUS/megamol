@@ -12,7 +12,7 @@
 #include <sys/ipc.h>
 #include <sys/types.h>
 
-#include "vislib/String.h"
+#include "the/string.h"
 #endif /* !_WIN32 */
 
 #include "the/assert.h"

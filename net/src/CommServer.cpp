@@ -100,7 +100,7 @@ unsigned int vislib::net::CommServer::Run(void *config) {
     try {
         this->configuration.Channel->Bind(this->configuration.EndPoint);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "CommServer bound to %s.\n",
-            this->configuration.EndPoint->ToStringA().PeekBuffer());
+            this->configuration.EndPoint->ToStringA().c_str());
     } catch (the::system::system_exception se) {
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Binding server end point to specified "
             "address failed: %s\n", se.what());

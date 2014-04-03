@@ -14,7 +14,7 @@
 #include "vislib/Pair.h"
 #include "vislib/PtrArray.h"
 #include "vislib/SingleLinkedList.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "vislib/SynchronisedArray.h"
 #include "vislib/ConsoleProgressBar.h"
 
@@ -30,7 +30,7 @@ void TestArray(void) {
 
     ::AssertEqual("Array default capacity", intAry.Capacity(), Array<int>::DEFAULT_CAPACITY);
     ::AssertEqual("Array initially empty", intAry.Count(), size_t(0));
-    ::AssertTrue("IsEmpty method", intAry.IsEmpty());
+    ::AssertTrue("empty method", intAry.empty());
     
     intAry.Append(4);
     ::AssertEqual("Appended one element", intAry.Count(), size_t(1));
@@ -85,7 +85,7 @@ void TestArray(void) {
     
     intAry.RemoveAll(42);
     ::AssertFalse("Remove element", intAry.Contains(42));
-    ::AssertTrue("Remove affects all matching elements", intAry.IsEmpty());
+    ::AssertTrue("Remove affects all matching elements", intAry.empty());
 
     intAry2.Erase(intAry2.Count());
     ::AssertEqual("Erase on non-exisiting index has no effect", intAry2.Count(), size_t(10));
@@ -100,13 +100,13 @@ void TestArray(void) {
     ::AssertEqual("Erase begining at 2", intAry2.Count(), size_t(2));
 
     intAry2.Clear();
-    ::AssertTrue("Clear array", intAry2.IsEmpty());
+    ::AssertTrue("Clear array", intAry2.empty());
 
     intAry2.Trim();
     ::AssertEqual("Trim empty array", intAry2.Capacity(), size_t(0));
 
     
-    Array<vislib::StringA> strAry;
+    Array<the::astring> strAry;
     strAry.Append("Horst");
     AssertTrue("Contains \"Horst\"", strAry.Contains("Horst"));
 
@@ -202,11 +202,11 @@ void TestHeap(void) {
 
     ::AssertEqual("Heap default capacity", heap.Capacity(), Array<MyPair>::DEFAULT_CAPACITY);
     ::AssertEqual("Heap initially empty", heap.Count(), size_t(0));
-    ::AssertTrue("IsEmpty method", heap.IsEmpty());
+    ::AssertTrue("empty method", heap.empty());
 
     heap.Add(MyPair(3, 'H'));
     ::AssertEqual("One element added", heap.Count(), size_t(1));
-    ::AssertFalse("IsEmpty method", heap.IsEmpty());
+    ::AssertFalse("empty method", heap.empty());
 
     heap.Add(MyPair(7, 't'));
     heap.Add(MyPair(5, 'r'));
@@ -224,7 +224,7 @@ void TestHeap(void) {
     heap.RemoveFirst();
     ::AssertEqual("Get element 't'", heap.First().Value(), 't');
     heap.RemoveFirst();
-    ::AssertTrue("Heap is empty now", heap.IsEmpty());
+    ::AssertTrue("Heap is empty now", heap.empty());
 
     heap.Add(MyPair(7, 't'));
     heap.Add(MyPair(5, 'r'));
@@ -246,11 +246,11 @@ void TestHeap(void) {
     heap.RemoveFirst();
     ::AssertEqual("Get element 't'", heap.First().Value(), 't');
     heap.RemoveFirst();
-    ::AssertTrue("Heap is empty now", heap.IsEmpty());
+    ::AssertTrue("Heap is empty now", heap.empty());
 
     heap.Add(MyPair(4, 'o'));
     heap.Clear();
-    ::AssertTrue("Heap is empty after Clear", heap.IsEmpty());
+    ::AssertTrue("Heap is empty after Clear", heap.empty());
 }
 
 
@@ -292,7 +292,7 @@ void TestMap(void) {
     ::AssertEqual("Map[13] correct", map[13], 2.0f);
     map.Clear();
     ::AssertEqual("Map is empty", map.Count(), static_cast<size_t>(0));
-    ::AssertTrue("Map is empty", map.IsEmpty());
+    ::AssertTrue("Map is empty", map.empty());
 
 }
 

@@ -25,7 +25,7 @@
 #pragma comment(lib, "Ws2_32")
 #endif /* _MSC_VER */
 
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -163,15 +163,15 @@ namespace net {
          *
          * @return The string representation of the IP address.
          */
-        StringA ToStringA(void) const;
+        the::astring ToStringA(void) const;
 
         /**
          * Convert the IP address into dotted string format.
          *
          * @return The string representation of the IP address.
          */
-        inline StringW ToStringW(void) const {
-            return StringW(this->ToStringA());
+        inline the::wstring ToStringW(void) const {
+            return the::text::string_converter::to_w(this->ToStringA());
         }
 
         /**

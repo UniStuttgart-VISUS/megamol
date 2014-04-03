@@ -24,7 +24,7 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/Socket.h"
 #include "vislib/SmartPtr.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/types.h"
 
 
@@ -134,7 +134,7 @@ namespace net {
          *                            may not answer before being removed from
          *                            this nodes list of known peers.
          */
-        ClusterDiscoveryService(const StringA& name, 
+        ClusterDiscoveryService(const the::astring& name, 
             const IPEndPoint& responseAddr, 
             const IPAddress& bcastAddr,
             const uint16_t bindPort = DEFAULT_PORT,
@@ -179,7 +179,7 @@ namespace net {
          *                            may not answer before being removed from
          *                            this nodes list of known peers.
          */
-        ClusterDiscoveryService(const StringA& name, 
+        ClusterDiscoveryService(const the::astring& name, 
             const IPEndPoint& responseAddr, 
             const IPAddress6& bcastAddr,
             const uint16_t bindPort = DEFAULT_PORT,
@@ -275,7 +275,7 @@ namespace net {
          *
          * @return The name.
          */
-        inline const StringA& GetName(void) const {
+        inline const the::astring& GetName(void) const {
             return this->name;
         }
 
@@ -825,7 +825,7 @@ namespace net {
         ListenerList listeners;
 
         /** The name of the cluster this discovery service should form. */
-        StringA name;
+        the::astring name;
 
         /** The thread receiving discovery requests. */
         sys::RunnableThread<Receiver> receiverThread;

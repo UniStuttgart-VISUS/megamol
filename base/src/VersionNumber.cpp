@@ -7,7 +7,8 @@
 
 
 #include "vislib/VersionNumber.h"
-#include "vislib/StringConverter.h"
+#include "the/text/string_builder.h"
+#include "the/text/string_converter.h"
 
 
 /*
@@ -172,8 +173,8 @@ unsigned int vislib::VersionNumber::Parse(const wchar_t *verStr) {
 /*
  * vislib::VersionNumber::ToStringA
  */
-vislib::StringA vislib::VersionNumber::ToStringA(unsigned int num) const {
-    vislib::StringA tmp;
+the::astring vislib::VersionNumber::ToStringA(unsigned int num) const {
+    the::astring tmp;
     if (num == 0) {
         num = 1;
         if (this->minorNumber > 0) num = 2;
@@ -181,16 +182,16 @@ vislib::StringA vislib::VersionNumber::ToStringA(unsigned int num) const {
         if (this->revisionNumber > 0) num = 4;
     }
     if (num == 1) {
-        tmp.Format("%u", static_cast<unsigned int>(this->majorNumber));
+        the::text::astring_builder::format_to(tmp, "%u", static_cast<unsigned int>(this->majorNumber));
     } else if (num == 2) {
-        tmp.Format("%u.%u", static_cast<unsigned int>(this->majorNumber), 
+        the::text::astring_builder::format_to(tmp, "%u.%u", static_cast<unsigned int>(this->majorNumber), 
             static_cast<unsigned int>(this->minorNumber));
     } else if (num == 3) {
-        tmp.Format("%u.%u.%u", static_cast<unsigned int>(this->majorNumber), 
+        the::text::astring_builder::format_to(tmp, "%u.%u.%u", static_cast<unsigned int>(this->majorNumber), 
             static_cast<unsigned int>(this->minorNumber),
             static_cast<unsigned int>(this->buildNumber));
     } else if (num >= 4) {
-        tmp.Format("%u.%u.%u.%u", static_cast<unsigned int>(this->majorNumber),
+        the::text::astring_builder::format_to(tmp, "%u.%u.%u.%u", static_cast<unsigned int>(this->majorNumber),
             static_cast<unsigned int>(this->minorNumber), 
             static_cast<unsigned int>(this->buildNumber), 
             static_cast<unsigned int>(this->revisionNumber));
@@ -202,9 +203,9 @@ vislib::StringA vislib::VersionNumber::ToStringA(unsigned int num) const {
 /*
  * vislib::VersionNumber::ToStringW
  */
-vislib::StringW vislib::VersionNumber::ToStringW(unsigned int num) const {
+the::wstring vislib::VersionNumber::ToStringW(unsigned int num) const {
 #ifdef _WIN32
-    vislib::StringW tmp;
+    the::wstring tmp;
     if (num == 0) {
         num = 1;
         if (this->minorNumber > 0) num = 2;
@@ -212,16 +213,16 @@ vislib::StringW vislib::VersionNumber::ToStringW(unsigned int num) const {
         if (this->revisionNumber > 0) num = 4;
     }
     if (num == 1) {
-        tmp.Format(L"%u", static_cast<unsigned int>(this->majorNumber));
+        the::text::wstring_builder::format_to(tmp, L"%u", static_cast<unsigned int>(this->majorNumber));
     } else if (num == 2) {
-        tmp.Format(L"%u.%u", static_cast<unsigned int>(this->majorNumber), 
+        the::text::wstring_builder::format_to(tmp, L"%u.%u", static_cast<unsigned int>(this->majorNumber), 
             static_cast<unsigned int>(this->minorNumber));
     } else if (num == 3) {
-        tmp.Format(L"%u.%u.%u", static_cast<unsigned int>(this->majorNumber),
+        the::text::wstring_builder::format_to(tmp, L"%u.%u.%u", static_cast<unsigned int>(this->majorNumber),
             static_cast<unsigned int>(this->minorNumber), 
             static_cast<unsigned int>(this->buildNumber));
     } else if (num >= 4) {
-        tmp.Format(L"%u.%u.%u.%u", 
+        the::text::wstring_builder::format_to(tmp, L"%u.%u.%u.%u", 
             static_cast<unsigned int>(this->majorNumber), 
             static_cast<unsigned int>(this->minorNumber),
             static_cast<unsigned int>(this->buildNumber),
@@ -230,7 +231,7 @@ vislib::StringW vislib::VersionNumber::ToStringW(unsigned int num) const {
     return tmp;
 #else /* _WIN32 */
     // I hate Linux
-    return A2W(this->ToStringA(num));
+    return THE_A2W(this->ToStringA(num));
 #endif /* _WIN32 */
 }
 

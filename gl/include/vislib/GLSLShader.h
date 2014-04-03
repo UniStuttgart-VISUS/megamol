@@ -894,7 +894,7 @@ namespace gl {
          *                         i. e. because 'hProg' is not a valid shader
          *                         program.
          */
-        static StringA getProgramInfoLog(GLhandleARB hProg);
+        static the::astring getProgramInfoLog(GLhandleARB hProg);
 
         /** 
          * Answer the compile status of the program designated by 'hProg'.

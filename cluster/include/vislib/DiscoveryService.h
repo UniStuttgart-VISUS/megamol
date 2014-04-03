@@ -23,7 +23,7 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/Socket.h"
 #include "vislib/SmartPtr.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/types.h"
 
 
@@ -618,7 +618,7 @@ namespace cluster {
          *
          * @return The name.
          */
-        inline const StringA& GetName(void) const {
+        inline const the::astring& GetName(void) const {
             return this->name;
         }
 
@@ -845,7 +845,7 @@ namespace cluster {
          *
          * @return A string representation.
          */
-        inline StringA ToStringA(void) const {
+        inline the::astring ToStringA(void) const {
             return this->GetName();
         }
 
@@ -858,7 +858,7 @@ namespace cluster {
          *
          * @return A string representing the peer node.
          */
-        StringA ToStringA(const PeerHandle& hPeer) const;
+        the::astring ToStringA(const PeerHandle& hPeer) const;
 
         /**
          * Answer a string representation of the discovery service, which is 
@@ -866,8 +866,8 @@ namespace cluster {
          *
          * @return A string representation.
          */
-        inline StringW ToStringW(void) const {
-            return StringW(this->GetName());
+        inline the::wstring ToStringW(void) const {
+            return the::text::string_converter::to_w(this->GetName());
         }
 
         /**
@@ -879,7 +879,7 @@ namespace cluster {
          *
          * @return A string representing the peer node.
          */
-        StringW ToStringW(const PeerHandle& hPeer) const;
+        the::wstring ToStringW(const PeerHandle& hPeer) const;
 
         /** 
          * Stop the discovery service.
@@ -1366,7 +1366,7 @@ namespace cluster {
         ListenerList listeners;
 
         /** The name of the cluster this discovery service should form. */
-        StringA name;
+        the::astring name;
 
         /** 
          * The thread sending the alive beacons of this node to the broadcast

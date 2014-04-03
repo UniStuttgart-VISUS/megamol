@@ -25,7 +25,7 @@
 #include "vislib/IPEndPoint.h"
 #include "vislib/Array.h"
 #include "the/argument_exception.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/trace.h"
 
 
@@ -69,7 +69,7 @@ namespace net {
          *
          * @return The canonical name of the host.
          */
-        inline const String<T>& GetCanonicalName(void) const {
+        inline const T& GetCanonicalName(void) const {
             return this->canonicalName;
         }
 
@@ -115,7 +115,7 @@ namespace net {
         Array<IPAgnosticAddress> addresses;
 
         /** The The official name of the host. */
-        String<T> canonicalName;
+        T canonicalName;
 
         /* Allow DNS creating IPHostEntry objects with actual data. */
         friend class DNS;
@@ -168,7 +168,7 @@ namespace net {
         int err = 0;                // OS operation return value.
 
         for (size_t i = 0; i < this->addresses.Count()
-                && this->canonicalName.IsEmpty(); ++i) {
+                && this->canonicalName.empty(); ++i) {
             IPEndPoint ep(this->addresses[i], 0);
             socklen_t size = (ep.GetAddressFamily() == IPEndPoint::FAMILY_INET)
                 ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
@@ -185,7 +185,7 @@ namespace net {
                 buffer[0] = 0;
             }
 
-            this->canonicalName = String<T>(buffer);
+            the::text::string_converter::convert(this->canonicalName, buffer);
         }
     }
 
@@ -199,7 +199,7 @@ namespace net {
 
         // Clear old values
         this->addresses.Clear();
-        this->canonicalName.Clear();
+        this->canonicalName.clear();
 
         while (ai != NULL) {
             switch (ai->ai_family) {
@@ -239,7 +239,7 @@ namespace net {
         const ADDRINFOW *ai = addrInfo;         // Cursor through linked list.
 
         this->addresses.Clear();
-        this->canonicalName.Clear();
+        this->canonicalName.clear();
 
         while (ai != NULL) {
             switch (ai->ai_family) {
@@ -273,14 +273,14 @@ namespace net {
 
 
     /** Template instantiation for ANSI strings. */
-    typedef IPHostEntry<CharTraitsA> IPHostEntryA;
+    typedef IPHostEntry<the::astring> IPHostEntryA;
 
     /** Template instantiation for wide strings. */
-    typedef IPHostEntry<CharTraitsW> IPHostEntryW;
+    typedef IPHostEntry<the::wstring> IPHostEntryW;
 
     /** Template instantiation for TCHARs. */
-    typedef IPHostEntry<TCharTraits> TIPHostEntry;
-    
+    typedef IPHostEntry<the::tstring> TIPHostEntry;
+
 } /* end namespace net */
 } /* end namespace vislib */
 

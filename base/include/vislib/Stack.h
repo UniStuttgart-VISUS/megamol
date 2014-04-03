@@ -73,7 +73,7 @@ namespace vislib {
          *
          * @return true, if the stack is empty, false otherwise.
          */
-        inline bool IsEmpty(void) const {
+        inline bool empty(void) const {
             return (this->top == NULL);
         }
 

@@ -116,7 +116,7 @@ unsigned int Receiver::Run(void *userData) {
 
         LOCK_COUT;
         std::cout << "Client (sender) " 
-            << socket.GetPeerEndPoint().ToStringA().PeekBuffer() 
+            << socket.GetPeerEndPoint().ToStringA().c_str() 
             << " connected." << std::endl;
         UNLOCK_COUT;
 

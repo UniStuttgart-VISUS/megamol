@@ -190,7 +190,7 @@ void vislib::sys::ThreadPool::Terminate(const bool abortPending) {
 
         this->lockQueue.Lock();
         this->lockThreadCounters.Lock();
-        THE_ASSERT(this->queue.IsEmpty());
+        THE_ASSERT(this->queue.empty());
         THE_ASSERT(!this->semBlockWorker.TryLock());
 
         this->evtAllCompleted.Reset();
@@ -251,7 +251,7 @@ unsigned int vislib::sys::ThreadPool::Worker::Run(void *pool) {
          * We use an empty queue as trigger for a thread to leave: If we wake a
          * thread and it does not find any work to do, it should exit.
          */
-        if (this->pool->queue.IsEmpty()) {
+        if (this->pool->queue.empty()) {
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "ThreadPool thread [%u] is "
                 "exiting ...\n", Thread::CurrentID());
             if (--this->pool->cntTotalThreads == 0) {
@@ -264,7 +264,7 @@ unsigned int vislib::sys::ThreadPool::Worker::Run(void *pool) {
         }
 
         /* Get the work item and mark thread as active. */
-        THE_ASSERT(!this->pool->queue.IsEmpty());
+        THE_ASSERT(!this->pool->queue.empty());
         WorkItem workItem = this->pool->queue.First();
         this->pool->queue.RemoveFirst();
         this->pool->cntActiveThreads++;
@@ -290,7 +290,7 @@ unsigned int vislib::sys::ThreadPool::Worker::Run(void *pool) {
         this->pool->lockQueue.Lock();
         this->pool->lockThreadCounters.Lock();
         if ((--this->pool->cntActiveThreads == 0)   // SFX. Must be first!
-                && this->pool->queue.IsEmpty()) {
+                && this->pool->queue.empty()) {
             this->pool->evtAllCompleted.Set();
         }
         this->pool->lockThreadCounters.Unlock();

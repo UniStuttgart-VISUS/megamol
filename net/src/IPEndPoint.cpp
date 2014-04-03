@@ -16,6 +16,8 @@
 #include "vislib/SocketException.h"
 #include "the/system/system_message.h"
 #include "the/trace.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 
 
 #ifdef _WIN32
@@ -339,19 +341,19 @@ void vislib::net::IPEndPoint::SetPort(const unsigned int port) {
 /*
  * vislib::net::IPEndPoint::ToStringA
  */
-vislib::StringA vislib::net::IPEndPoint::ToStringA(void) const {
-    StringA retval;
+the::astring vislib::net::IPEndPoint::ToStringA(void) const {
+    the::astring retval;
 
     switch (this->address.ss_family) {
         case AF_INET:
-            retval.Format("%s:%u", 
-                this->GetIPAddress4().ToStringA().PeekBuffer(),
+            the::text::astring_builder::format_to(retval, "%s:%u", 
+                this->GetIPAddress4().ToStringA().c_str(),
                 this->GetPort());
             break;
 
         case AF_INET6:
-            retval.Format("[%s]:%u", 
-                this->GetIPAddress6().ToStringA().PeekBuffer(),
+            the::text::astring_builder::format_to(retval, "[%s]:%u", 
+                this->GetIPAddress6().ToStringA().c_str(),
                 this->GetPort());
             break;
 

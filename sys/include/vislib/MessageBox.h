@@ -15,7 +15,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -92,8 +92,8 @@ namespace sys {
          *
          * @return The return value of the dialog.
          */
-        static ReturnValue Show(const vislib::StringA& msg,
-            const vislib::StringA& title, MsgButtons btns = BTNS_OK,
+        static ReturnValue Show(const the::astring& msg,
+            const the::astring& title, MsgButtons btns = BTNS_OK,
             MsgIcon icon = ICON_NONE, DefButton defBtn = DEFBTN_1);
 
         /**
@@ -107,8 +107,8 @@ namespace sys {
          *
          * @return The return value of the dialog.
          */
-        static ReturnValue Show(const vislib::StringW& msg,
-            const vislib::StringW& title, MsgButtons btns = BTNS_OK,
+        static ReturnValue Show(const the::wstring& msg,
+            const the::wstring& title, MsgButtons btns = BTNS_OK,
             MsgIcon icon = ICON_NONE, DefButton defBtn = DEFBTN_1);
 
         /**
@@ -122,8 +122,8 @@ namespace sys {
          *
          * @return The return value of the dialog.
          */
-        static ReturnValue ShowDialog(const vislib::StringA& msg,
-            const vislib::StringA& title, MsgButtons btns = BTNS_OK,
+        static ReturnValue ShowDialog(const the::astring& msg,
+            const the::astring& title, MsgButtons btns = BTNS_OK,
             MsgIcon icon = ICON_NONE, DefButton defBtn = DEFBTN_1);
 
         /**
@@ -137,8 +137,8 @@ namespace sys {
          *
          * @return The return value of the dialog.
          */
-        static ReturnValue ShowDialog(const vislib::StringW& msg,
-            const vislib::StringW& title, MsgButtons btns = BTNS_OK,
+        static ReturnValue ShowDialog(const the::wstring& msg,
+            const the::wstring& title, MsgButtons btns = BTNS_OK,
             MsgIcon icon = ICON_NONE, DefButton defBtn = DEFBTN_1);
 
         /**
@@ -150,7 +150,7 @@ namespace sys {
          * @param icon The icon to be shown.
          * @param defBtn The default button.
          */
-        MessageBox(const vislib::StringA& msg, const vislib::StringA& title,
+        MessageBox(const the::astring& msg, const the::astring& title,
             MsgButtons btns = BTNS_OK, MsgIcon icon = ICON_NONE,
             DefButton defBtn = DEFBTN_1);
 
@@ -163,7 +163,7 @@ namespace sys {
          * @param icon The icon to be shown.
          * @param defBtn The default button.
          */
-        MessageBox(const vislib::StringW& msg, const vislib::StringW& title,
+        MessageBox(const the::wstring& msg, const the::wstring& title,
             MsgButtons btns = BTNS_OK, MsgIcon icon = ICON_NONE,
             DefButton defBtn = DEFBTN_1);
 
@@ -211,7 +211,7 @@ namespace sys {
          *
          * @return The message text of the message box.
          */
-        inline const vislib::StringW& Message(void) const {
+        inline const the::wstring& Message(void) const {
             return this->msg;
         }
 
@@ -247,8 +247,8 @@ namespace sys {
          *
          * @param msg The message text of the message box.
          */
-        inline void SetMessage(const vislib::StringA& msg) {
-            this->msg = msg;
+        inline void SetMessage(const the::astring& msg) {
+            the::text::string_converter::convert(this->msg, msg);
         }
 
         /**
@@ -256,8 +256,8 @@ namespace sys {
          *
          * @param msg The message text of the message box.
          */
-        inline void SetMessage(const vislib::StringW& msg) {
-            this->msg = msg;
+        inline void SetMessage(const the::wstring& msg) {
+            the::text::string_converter::convert(this->msg, msg);
         }
 
         /**
@@ -265,8 +265,8 @@ namespace sys {
          *
          * @param msg The title of the message box.
          */
-        inline void SetTitle(const vislib::StringA& title) {
-            this->title = title;
+        inline void SetTitle(const the::astring& title) {
+            the::text::string_converter::convert(this->title, title);
         }
 
         /**
@@ -274,8 +274,8 @@ namespace sys {
          *
          * @param msg The title of the message box.
          */
-        inline void SetTitle(const vislib::StringW& title) {
-            this->title = title;
+        inline void SetTitle(const the::wstring& title) {
+            the::text::string_converter::convert(this->title, title);
         }
 
         /**
@@ -301,7 +301,7 @@ namespace sys {
          *
          * @return The title of the message box.
          */
-        inline const vislib::StringW& Title(void) const {
+        inline const the::wstring& Title(void) const {
             return this->title;
         }
 
@@ -317,13 +317,13 @@ namespace sys {
         MsgIcon icon;
 
         /** The message of the message box */
-        vislib::StringW msg;
+        the::wstring msg;
 
         /** The return value of the message box. */
         ReturnValue retval;
 
         /** The title of the message box. */
-        vislib::StringW title;
+        the::wstring title;
 
     };
 

@@ -8,7 +8,8 @@
 #include "vislib/TrayIcon.h"
 
 #include "the/assert.h"
-#include "vislib/StringConverter.h"
+#include "the/string.h"
+#include "the/text/string_converter.h"
 #include "vislib/sysfunctions.h"
 #include "the/system/system_exception.h"
 #include "the/trace.h"
@@ -140,11 +141,11 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const unsigned int callbackMe
     this->Create(targetWnd, 
         callbackMessage, 
         id, 
-        (toolTip != NULL) ? A2W(toolTip) : NULL, 
+        (toolTip != NULL) ? THE_A2W(toolTip) : NULL, 
         icon, 
         initiallyHidden, 
-        (balloonText != NULL) ? A2W(balloonText) : NULL, 
-        (balloonTitle != NULL) ? A2W(balloonTitle) : NULL, 
+        (balloonText != NULL) ? THE_A2W(balloonText) : NULL, 
+        (balloonTitle != NULL) ? THE_A2W(balloonTitle) : NULL, 
         balloonIcon,
         balloonTimeout);
 }
@@ -175,7 +176,7 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const unsigned int callbackMe
         balloonTitle, 
         balloonIcon, 
         balloonTimeout);
-	DestroyIcon(icon);
+    DestroyIcon(icon);
 }
 
 /*
@@ -190,11 +191,11 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const unsigned int callbackMe
         callbackMessage, 
         id, 
         hResourceModule,
-        (toolTip != NULL) ? A2W(toolTip) : NULL, 
+        (toolTip != NULL) ? THE_A2W(toolTip) : NULL, 
         iconID, 
         initiallyHidden, 
-        (balloonText != NULL) ? A2W(balloonText) : NULL, 
-        (balloonTitle != NULL) ? A2W(balloonTitle) : NULL, 
+        (balloonText != NULL) ? THE_A2W(balloonText) : NULL, 
+        (balloonTitle != NULL) ? THE_A2W(balloonTitle) : NULL, 
         balloonIcon,
         balloonTimeout);
 }
@@ -208,19 +209,29 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const unsigned int callbackMe
         const unsigned int iconID, const bool initiallyHidden, const unsigned int balloonTextID, 
         const unsigned int balloonTitleID, const unsigned int balloonIcon, 
         const unsigned int balloonTimeout) {
-    StringW toolTip, balloonText, balloonTitle;
+    the::wstring toolTip, balloonText, balloonTitle;
     HINSTANCE hInst = (hResourceModule != NULL) 
         ? hResourceModule : ::GetModuleHandleW(NULL);
+
+    if (!the::text::string_utility::load_resource(toolTip, hInst, toolTipID)) {
+        toolTip.clear();
+    }
+    if (!the::text::string_utility::load_resource(balloonText, hInst, balloonTextID)) {
+        balloonText.clear();
+    }
+    if (!the::text::string_utility::load_resource(balloonTitle, hInst, balloonTitleID)) {
+        balloonTitle.clear();
+    }
 
     this->Create(targetWnd,
         callbackMessage, 
         id,
-        hInst, 
-        toolTip.Load(hInst, toolTipID) ? toolTip : NULL, 
+        hInst,
+        (!toolTip.empty()) ? toolTip.c_str() : NULL, 
         iconID,
         initiallyHidden, 
-        balloonText.Load(hInst, balloonTextID) ? balloonText : NULL,
-        balloonTitle.Load(hInst, balloonTitleID) ? balloonTitle : NULL,
+        (!balloonText.empty()) ? balloonText.c_str() : NULL,
+        (!balloonTitle.empty()) ? balloonTitle.c_str() : NULL,
         balloonIcon, 
         balloonTimeout);
 }
@@ -262,12 +273,12 @@ void vislib::sys::TrayIcon::Hide(void) {
  * vislib::sys::TrayIcon::SetIcon
  */
 void vislib::sys::TrayIcon::SetIcon(HINSTANCE hResourceModule,
-									const unsigned int iconID) {
+                                    const unsigned int iconID) {
     HINSTANCE hInst = (hResourceModule != NULL) 
         ? hResourceModule : ::GetModuleHandleW(NULL);
     HICON icon = ::LoadIconW(hResourceModule, MAKEINTRESOURCEW(iconID));
-	this->SetIcon(icon);
-	DestroyIcon(icon);
+    this->SetIcon(icon);
+    DestroyIcon(icon);
 }
 
 
@@ -326,8 +337,8 @@ bool vislib::sys::TrayIcon::ShowBalloonHelp(const char *balloonText,
         const char *balloonTitle, const unsigned int balloonIcon, 
         const unsigned int balloonTimeout) {
     return this->ShowBalloonHelp(
-        (balloonText != NULL) ? A2W(balloonText) : NULL,
-        (balloonTitle != NULL) ? A2W(balloonTitle) : NULL, 
+        (balloonText != NULL) ? THE_A2W(balloonText) : NULL,
+        (balloonTitle != NULL) ? THE_A2W(balloonTitle) : NULL, 
         balloonIcon, balloonTimeout);
 }
 
@@ -338,13 +349,20 @@ bool vislib::sys::TrayIcon::ShowBalloonHelp(const char *balloonText,
 bool vislib::sys::TrayIcon::ShowBalloonHelp(HINSTANCE hResourceModule,
         const unsigned int balloonTextID, const unsigned int balloonTitleID, 
         const unsigned int balloonIcon, const unsigned int balloonTimeout) {
-    StringW balloonText, balloonTitle;
+    the::wstring balloonText, balloonTitle;
     HINSTANCE hInst = (hResourceModule != NULL) 
         ? hResourceModule : ::GetModuleHandleW(NULL);
-    
+
+    if (!the::text::string_utility::load_resource(balloonText, hInst, balloonTextID)) {
+        balloonText.clear();
+    }
+    if (!the::text::string_utility::load_resource(balloonTitle, hInst, balloonTitleID)) {
+        balloonTitle.clear();
+    }
+
     return this->ShowBalloonHelp(
-        balloonText.Load(hInst, balloonTextID) ? balloonText : NULL,
-        balloonTitle.Load(hInst, balloonTitleID) ? balloonTitle : NULL,
+        (!balloonText.empty()) ? balloonText.c_str() : NULL,
+        (!balloonTitle.empty()) ? balloonTitle.c_str() : NULL,
         balloonIcon, balloonTimeout);    
 }
 
@@ -578,7 +596,7 @@ void vislib::sys::TrayIcon::notify(const unsigned int message) {
     if (!::Shell_NotifyIconW(message, &this->nid)) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
-	this->nid.uFlags = 0;
+    this->nid.uFlags = 0;
 }
 
 
@@ -589,19 +607,19 @@ bool vislib::sys::TrayIcon::registerWndClass(void) {
     WNDCLASSEXW wndClass;
 
     if (!::GetClassInfoExW(this->hInstance, WNDCLASSNAME, &wndClass)) {
-	    wndClass.cbSize = sizeof(WNDCLASSEX); 
+        wndClass.cbSize = sizeof(WNDCLASSEX); 
 
-	    wndClass.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+        wndClass.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
         wndClass.lpfnWndProc = reinterpret_cast<WNDPROC>(TrayIcon::wndProc);
-	    wndClass.cbClsExtra = 0;
-	    wndClass.cbWndExtra	= 0;
-	    wndClass.hInstance = this->hInstance;
-	    wndClass.hIcon = 0;
-	    wndClass.hCursor = 0;
-	    wndClass.hbrBackground = 0;
-	    wndClass.lpszMenuName = 0;
-	    wndClass.lpszClassName = WNDCLASSNAME;
-	    wndClass.hIconSm = 0;
+        wndClass.cbClsExtra = 0;
+        wndClass.cbWndExtra	= 0;
+        wndClass.hInstance = this->hInstance;
+        wndClass.hIcon = 0;
+        wndClass.hCursor = 0;
+        wndClass.hbrBackground = 0;
+        wndClass.lpszMenuName = 0;
+        wndClass.lpszClassName = WNDCLASSNAME;
+        wndClass.hIconSm = 0;
 
         return (::RegisterClassExW(&wndClass) != FALSE);
 

@@ -44,7 +44,7 @@ bool vislib::sys::FatReaderWriterLock::HasSharedLock(void) {
     bool rv = false;
 
     this->sharedLock.Lock();
-    rv = this->shThreads.Contains(Thread::CurrentID());
+    rv = shThreads.Contains(Thread::CurrentID());
     this->sharedLock.Unlock();
 
     // value of rv cannot change, because it only could be changed by the
@@ -86,7 +86,7 @@ void vislib::sys::FatReaderWriterLock::LockShared(void) {
     this->exclusiveLock.Lock(); // for down-grade this is reentrant
     this->sharedLock.Lock();
 
-    if ((this->shThreads.IsEmpty()) && (this->exThread != Thread::CurrentID())) {
+    if ((this->shThreads.empty()) && (this->exThread != Thread::CurrentID())) {
         this->exclusiveWait.Reset();
     }
     this->shThreads.Add(Thread::CurrentID());
@@ -110,7 +110,7 @@ void vislib::sys::FatReaderWriterLock::UnlockExclusive(void) {
         this->exThread = 0;
 
         this->sharedLock.Lock();
-        if (!this->shThreads.IsEmpty()) {
+        if (!this->shThreads.empty()) {
             // last exclusive lock closed
             // disallow new exclusives because this would be an upgrade
             this->exclusiveWait.Reset();
@@ -141,7 +141,7 @@ void vislib::sys::FatReaderWriterLock::UnlockShared(void) {
 
     this->shThreads.RemoveAt(pos);
 
-    if (this->shThreads.IsEmpty()) {
+    if (this->shThreads.empty()) {
         this->exclusiveWait.Set();
     }
 

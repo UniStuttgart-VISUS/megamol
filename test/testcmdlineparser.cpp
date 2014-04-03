@@ -19,14 +19,14 @@
 typedef vislib::sys::CmdLineParserW CLParser;
 typedef vislib::sys::CmdLineProviderW CLProvider;
 #define CLPS(A) L ## A
-typedef vislib::StringW CLPString;
+typedef the::wstring CLPString;
 #define CLPChar wchar_t
 
 #else
 typedef vislib::sys::CmdLineParserA CLParser;
 typedef vislib::sys::CmdLineProviderA CLProvider;
 #define CLPS(A) A
-typedef vislib::StringA CLPString;
+typedef the::astring CLPString;
 #define CLPChar char
 
 #endif
@@ -308,7 +308,7 @@ void TestCmdLineParser1(void) {
                     AssertEqual("selectedArgs.ArgV[8] == 11", selectedArgs.ArgV()[8], CLPS("11"));
 
                     AssertEqual("selectedArgs.SingleCmdLine correct", 
-                        selectedArgs.SingleStringCommandLine(false),
+                        selectedArgs.SingleStringCommandLine(false).c_str(),
                         CLPS("Horst 1.2 \"\" -hugo \"321 \"\"Heinz\" Helmut -Help 11"));
                         
                 }
@@ -466,7 +466,7 @@ void TestCmdLineParser2(void) {
                 printf("TYPE_OPTION_VALUE ");
                 break;
         }
-        printf("%s ", T2A(arg->GetInputString()));
+        printf("%s ", THE_T2A(arg->GetInputString()));
         if (arg->IsSelected()) {
             printf("[Selected]");
         }

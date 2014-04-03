@@ -62,7 +62,7 @@ void TestIpc(void) {
 
 #ifdef _WIN32   // TODO: This does not work on Linux ... somehow
     AssertNoException("Create child process.", ipc2.Create(
-        Process::ModuleFileNameA(), ipc2Params));
+        Process::ModuleFileNameA().c_str(), ipc2Params));
 #endif
 
     endSem.Lock();

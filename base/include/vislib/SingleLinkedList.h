@@ -222,7 +222,7 @@ namespace vislib {
          *
          * @return true, if the collection is empty, false otherwise.
          */
-        virtual inline bool IsEmpty(void) const {
+        virtual inline bool empty(void) const {
             // no need to sync here (this race condition is acceptable)
             return this->first == NULL;
         }

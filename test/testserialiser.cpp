@@ -16,8 +16,8 @@
 void TestSerialiser(void) {
 #ifdef _WIN32
     using vislib::sys::RegistrySerialiser;
-    using vislib::StringA;
-    using vislib::StringW;
+    using the::astring;
+    using the::wstring;
 #define TEST_SIMPLE_SERIALISE(type) AssertNoException("Serialise " #type, rs1.Serialise(in##type, #type))
 #define TEST_SIMPLE_DESERIALISE(type) AssertNoException("Deserialise " #type, rs1.Deserialise(out##type, #type));\
     AssertEqual("Deserialisation of " #type  " returned same data", in##type, out##type)
@@ -36,8 +36,8 @@ void TestSerialiser(void) {
     uint16_t inuint16_t = 642, outuint16_t;
     uint32_t inuint32_t = 56332, outuint32_t;
     uint64_t inuint64_t = 324645, outuint64_t;
-    StringA inStringA = "Ich mach mich zum Horst", outStringA;
-    StringW inStringW = L"Ich mach mich zum Hugo", outStringW;
+    astring inastring = "Ich mach mich zum Horst", outastring;
+    wstring inwstring = L"Ich mach mich zum Hugo", outwstring;
 
     TEST_SIMPLE_SERIALISE(bool);
     TEST_SIMPLE_SERIALISE(wchar_t);
@@ -51,8 +51,8 @@ void TestSerialiser(void) {
     TEST_SIMPLE_SERIALISE(uint16_t);
     TEST_SIMPLE_SERIALISE(uint32_t);
     TEST_SIMPLE_SERIALISE(uint64_t);
-    TEST_SIMPLE_SERIALISE(StringA);
-    TEST_SIMPLE_SERIALISE(StringW);
+    TEST_SIMPLE_SERIALISE(astring);
+    TEST_SIMPLE_SERIALISE(wstring);
 
     TEST_SIMPLE_DESERIALISE(bool);
     TEST_SIMPLE_DESERIALISE(wchar_t);
@@ -66,8 +66,8 @@ void TestSerialiser(void) {
     TEST_SIMPLE_DESERIALISE(uint16_t);
     TEST_SIMPLE_DESERIALISE(uint32_t);
     TEST_SIMPLE_DESERIALISE(uint64_t);
-    TEST_SIMPLE_DESERIALISE(StringA);
-    TEST_SIMPLE_DESERIALISE(StringW);
+    TEST_SIMPLE_DESERIALISE(astring);
+    TEST_SIMPLE_DESERIALISE(wstring);
 
 #undef TEST_SIMPLE_SERIALISE
 #undef TEST_SIMPLE_DESERIALISE

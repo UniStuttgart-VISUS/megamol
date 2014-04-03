@@ -17,7 +17,7 @@
 #ifndef _WIN32
 #include "the/memory.h"
 #endif /* _WIN32 */
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/system/system_exception.h"
 #include "the/types.h"
 
@@ -95,7 +95,7 @@ namespace sys {
          *
          * @return A human-readable error message from the last call of 'Load'
          */
-        inline const vislib::StringA& LastLoadErrorMessage(void) const {
+        inline const the::astring& LastLoadErrorMessage(void) const {
             return this->loadErrorMsg;
         }
 
@@ -179,7 +179,7 @@ namespace sys {
 #endif /* _WIN32 */
 
         /** The error message describing the error during the last 'Load' */
-        vislib::StringA loadErrorMsg;
+        the::astring loadErrorMsg;
 
     };
 

@@ -147,11 +147,11 @@ void vislib::net::Socket::Bind(const SocketAddress& address) {
 /*
  * vislib::net::Socket::BindToDevice
  */
-void vislib::net::Socket::BindToDevice(const StringA& name) {
+void vislib::net::Socket::BindToDevice(const the::astring& name) {
 #ifndef _WIN32
     struct ifreq interface;
 
-    ::strncpy(interface.ifr_ifrn.ifrn_name, name.PeekBuffer(), 
+    ::strncpy(interface.ifr_ifrn.ifrn_name, name.c_str(), 
         name.Length() + 1);
 
     if (::setsockopt(this->handle, SOL_SOCKET, SO_BINDTODEVICE, &interface,

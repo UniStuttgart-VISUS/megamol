@@ -17,7 +17,7 @@
 
 #include "vislib/ReferenceCounted.h"
 #include "vislib/SmartRef.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -59,7 +59,7 @@ namespace net {
          * @throws the::exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
-        virtual void Parse(const StringA& str) = 0;
+        virtual void Parse(const the::astring& str) = 0;
 
         /**
          * Parses a string as a end point address and sets the current
@@ -71,7 +71,7 @@ namespace net {
          * @throws the::exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
-        virtual void Parse(const StringW& str) = 0;
+        virtual void Parse(const the::wstring& str) = 0;
 
         /**
          * Answer a string representation of the address.
@@ -83,7 +83,7 @@ namespace net {
          *
          * @return A string representation of the address.
          */
-        virtual StringA ToStringA(void) const = 0;
+        virtual the::astring ToStringA(void) const = 0;
 
         /**
          * Answer a string representation of the address.
@@ -95,7 +95,7 @@ namespace net {
          *
          * @return A string representation of the address.
          */
-        virtual StringW ToStringW(void) const = 0;
+        virtual the::wstring ToStringW(void) const = 0;
 
         /**
          * Test for equality.

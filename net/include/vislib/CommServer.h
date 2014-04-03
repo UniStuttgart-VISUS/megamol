@@ -21,7 +21,7 @@
 #include "vislib/Runnable.h"
 #include "vislib/SingleLinkedList.h"
 #include "the/stack_trace.h"
-#include "vislib/StringConverter.h"
+#include "the/text/string_converter.h"
 #include "vislib/TcpCommChannel.h"
 
 

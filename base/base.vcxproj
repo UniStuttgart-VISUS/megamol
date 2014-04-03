@@ -181,7 +181,6 @@
     <ClCompile Include="src\ArrayElementDftCtor.cpp" />
     <ClCompile Include="src\ArrayElementPtrCtor.cpp" />
     <ClCompile Include="src\AssociativeCollection.cpp" />
-    <ClCompile Include="src\CharTraits.cpp" />
     <ClCompile Include="src\Collection.cpp" />
     <ClCompile Include="src\ColumnFormatter.cpp" />
     <ClCompile Include="src\ConstIterator.cpp" />
@@ -208,7 +207,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\MD5HashProvider.cpp" />
-    <ClCompile Include="src\MultiSz.cpp" />
     <ClCompile Include="src\NullAllocator.cpp" />
     <ClCompile Include="src\NullLockable.cpp" />
     <ClCompile Include="src\OrderedCollection.cpp" />
@@ -232,8 +230,6 @@
     <ClCompile Include="src\SmartPtr.cpp" />
     <ClCompile Include="src\SmartRef.cpp" />
     <ClCompile Include="src\Stack.cpp" />
-    <ClCompile Include="src\String.cpp" />
-    <ClCompile Include="src\StringConverter.cpp" />
     <ClCompile Include="src\StringSerialiser.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -246,7 +242,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\UTF8Encoder.cpp" />
     <ClCompile Include="src\VersionNumber.cpp" />
     <ClCompile Include="src\xmlUtils.cpp" />
   </ItemGroup>
@@ -256,7 +251,6 @@
     <ClInclude Include="include\vislib\ArrayElementDftCtor.h" />
     <ClInclude Include="include\vislib\ArrayElementPtrCtor.h" />
     <ClInclude Include="include\vislib\AssociativeCollection.h" />
-    <ClInclude Include="include\vislib\CharTraits.h" />
     <ClInclude Include="include\vislib\Collection.h" />
     <ClInclude Include="include\vislib\ColumnFormatter.h" />
     <ClInclude Include="include\vislib\ConstIterator.h" />
@@ -268,7 +262,6 @@
     <ClInclude Include="include\vislib\Listenable.h" />
     <ClInclude Include="include\vislib\Map.h" />
     <ClInclude Include="include\vislib\MD5HashProvider.h" />
-    <ClInclude Include="include\vislib\MultiSz.h" />
     <ClInclude Include="include\vislib\NullAllocator.h" />
     <ClInclude Include="include\vislib\NullLockable.h" />
     <ClInclude Include="include\vislib\OrderedCollection.h" />
@@ -287,13 +280,10 @@
     <ClInclude Include="include\vislib\SmartPtr.h" />
     <ClInclude Include="include\vislib\SmartRef.h" />
     <ClInclude Include="include\vislib\Stack.h" />
-    <ClInclude Include="include\vislib\String.h" />
-    <ClInclude Include="include\vislib\StringConverter.h" />
     <ClInclude Include="include\vislib\StringSerialiser.h" />
     <ClInclude Include="include\vislib\StringTokeniser.h" />
     <ClInclude Include="include\vislib\tchar.h" />
     <ClInclude Include="include\vislib\unreferenced.h" />
-    <ClInclude Include="include\vislib\UTF8Encoder.h" />
     <ClInclude Include="include\vislib\VersionNumber.h" />
     <ClInclude Include="include\vislib\vislibversion.h" />
     <ClInclude Include="include\vislib\xmlUtils.h" />

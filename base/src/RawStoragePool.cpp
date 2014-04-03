@@ -38,7 +38,7 @@ vislib::RawStoragePool::~RawStoragePool(void) {
  */
 void vislib::RawStoragePool::Clear(void) {
     THE_STACK_TRACE;
-    while (!this->storageList.IsEmpty()) {
+    while (!this->storageList.empty()) {
         the::safe_delete(this->storageList.First().storage);
         this->storageList.RemoveFirst();
     }

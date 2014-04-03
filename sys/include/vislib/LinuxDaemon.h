@@ -18,7 +18,7 @@
 
 #ifndef _WIN32
 
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/system/system_exception.h"
 #include "the/trace.h"
 

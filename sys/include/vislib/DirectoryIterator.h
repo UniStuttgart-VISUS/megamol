@@ -14,9 +14,8 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/CharTraits.h"
 #include "vislib/DirectoryEntry.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "vislib/Iterator.h"
 #include "the/system/io/io_exception.h"
 #include "the/no_such_element_exception.h"
@@ -32,7 +31,7 @@
 #include <errno.h>
 #include <iostream>
 #include "vislib/File.h"
-#include "vislib/StringConverter.h"
+#include "the/text/string_converter.h"
 #include "vislib/sysfunctions.h"
 #endif /* _WIN32 */
 
@@ -52,7 +51,7 @@ namespace sys {
     public:
 
         /** Alias for correct char type */
-        typedef typename T::Char Char;
+        typedef typename T::value_type Char;
 
         /** Alias for correct entry type */
         typedef DirectoryEntry<T> Entry;
@@ -139,10 +138,10 @@ namespace sys {
         DIR *dirStream;
 
         /** The base path */
-        StringA basePath;
+        the::astring basePath;
 
         /** The file globbing pattern */
-        StringA pattern;
+        the::astring pattern;
 
 #endif /* _WIN32 */
 
@@ -164,14 +163,14 @@ namespace sys {
     /*
      * DirectoryIterator<CharTraitsA>::DirectoryIterator
      */
-    template<> DirectoryIterator<CharTraitsA>::DirectoryIterator(
+    template<> DirectoryIterator<the::astring>::DirectoryIterator(
             const Char* path, bool isPattern, bool showDirs);
 
 
     /*
      * DirectoryIterator<CharTraitsW>::DirectoryIterator
      */
-    template<> DirectoryIterator<CharTraitsW>::DirectoryIterator(
+    template<> DirectoryIterator<the::wstring>::DirectoryIterator(
             const Char* path, bool isPattern, bool showDirs);
 
 
@@ -195,7 +194,7 @@ namespace sys {
      * DirectoryIterator<T>::HasNext
      */
     template<class T> bool DirectoryIterator<T>::HasNext(void) const {
-        return !this->nextItem.Path.IsEmpty();
+        return !this->nextItem.Path.empty();
     }
 
 
@@ -206,7 +205,7 @@ namespace sys {
     typename DirectoryIterator<T>::Entry& DirectoryIterator<T>::Next(void) {
         this->currentItem = this->nextItem;
         this->fetchNextItem();
-        if (this->currentItem.Path.IsEmpty()) {
+        if (this->currentItem.Path.empty()) {
             throw the::no_such_element_exception("No next element.", __FILE__, __LINE__);
         }
         return this->currentItem;
@@ -227,23 +226,23 @@ namespace sys {
     /*
      * DirectoryIterator<CharTraitsA>::fetchNextItem
      */
-    template<> void DirectoryIterator<CharTraitsA>::fetchNextItem(void);
+    template<> void DirectoryIterator<the::astring>::fetchNextItem(void);
 
 
     /*
      * DirectoryIterator<CharTraitsW>::fetchNextItem
      */
-    template<> void DirectoryIterator<CharTraitsW>::fetchNextItem(void);
+    template<> void DirectoryIterator<the::wstring>::fetchNextItem(void);
 
 
     /** Template instantiation for ANSI char DirectoryIterator. */
-    typedef DirectoryIterator<CharTraitsA> DirectoryIteratorA;
+    typedef DirectoryIterator<the::astring> DirectoryIteratorA;
 
     /** Template instantiation for wide char DirectoryIterator. */
-    typedef DirectoryIterator<CharTraitsW> DirectoryIteratorW;
+    typedef DirectoryIterator<the::wstring> DirectoryIteratorW;
 
     /** Template instantiation for TCHAR DirectoryIterator. */
-    typedef DirectoryIterator<TCharTraits> TDirectoryIterator;
+    typedef DirectoryIterator<the::tstring> TDirectoryIterator;
 
 
 } /* end namespace sys */

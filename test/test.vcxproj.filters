@@ -87,9 +87,6 @@
     <ClCompile Include="testmsgdisp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="testmultisz.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="testnamedpipe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -121,9 +118,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="testsockets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="teststring.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="testsysinfo.cpp">
@@ -236,9 +230,6 @@
     <ClInclude Include="testmsgdisp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="testmultisz.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="testnamedpipe.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -270,9 +261,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="testsockets.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="teststring.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="testsysinfo.h">

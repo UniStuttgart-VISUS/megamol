@@ -17,7 +17,7 @@
 #include "vislib/ColourRGBAu8.h"
 #include "the/no_such_element_exception.h"
 #include "the/index_out_of_range_exception.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/types.h"
 
 
@@ -557,7 +557,7 @@ namespace graphics {
         typedef struct _namedcolourindex_t {
 
             /** The colours name */
-            const vislib::StringA name;
+            const the::astring name;
 
             /** The named colour */
             const ColourRGBAu8 colour;

@@ -140,7 +140,7 @@ size_t vislib::net::UdpCommChannel::Receive(void *outData,
     if (retval == 0) {
         throw PeerDisconnectedException(
             PeerDisconnectedException::FormatMessageForLocalEndpoint(
-            this->socket.GetLocalEndPoint().ToStringW().PeekBuffer()), 
+            this->socket.GetLocalEndPoint().ToStringW().c_str()).c_str(), 
             __FILE__, __LINE__);
     }
 

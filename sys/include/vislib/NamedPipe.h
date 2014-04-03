@@ -16,7 +16,7 @@
 
 
 #include "vislib/CriticalSection.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #ifndef _WIN32
 #include "vislib/Runnable.h"
 #endif /* !_WIN32 */
@@ -111,7 +111,7 @@ namespace sys {
          * @throws argument_exception if openMode == 'PIPE_MODE_NONE'
          * @throws the::system::system_exception if the pipe could not be opened.
          */
-        bool Open(StringA name, PipeMode mode, unsigned int timeout = 0);
+        bool Open(the::astring name, PipeMode mode, unsigned int timeout = 0);
 
         /**
          * Opens a named pipe. If another pipe is already opend, that pipe is 
@@ -146,7 +146,7 @@ namespace sys {
          * @throws argument_exception if openMode == 'PIPE_MODE_NONE'
          * @throws the::system::system_exception if the pipe could not be opened.
          */
-        bool Open(StringW name, PipeMode mode, unsigned int timeout = 0);
+        bool Open(the::wstring name, PipeMode mode, unsigned int timeout = 0);
 
         /**
          * Answers the OpenMode of the pipe or 'PIPE_MODE_NONE' if the pipe is
@@ -186,7 +186,7 @@ namespace sys {
          *
          * @throws argument_exception if name is not a valid pipe name.
          */
-        static vislib::StringA PipeSystemName(const vislib::StringA &name);
+        static the::astring PipeSystemName(const the::astring &name);
 
         /**
          * Answer the full system name of a pipe. The pipe name 'name' is 
@@ -200,7 +200,7 @@ namespace sys {
          *
          * @throws argument_exception if name is not a valid pipe name.
          */
-        static vislib::StringW PipeSystemName(const vislib::StringW &name);
+        static the::wstring PipeSystemName(const the::wstring &name);
 
         /**
          * Writes 'size' bytes from 'buffer' into the pipe. The method does not
@@ -230,7 +230,7 @@ namespace sys {
          *
          * @return true if the name is valid, false otherwise.
          */
-        template<class T> static bool checkPipeName(const String<T> &name);
+        template<class T> static bool checkPipeName(const T &name);
 
 #ifdef _WIN32
         /** The handle of the pipe */

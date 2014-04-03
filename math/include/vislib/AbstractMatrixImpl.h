@@ -27,7 +27,7 @@
 #include "vislib/Point.h"
 #include "vislib/Polynom.h"
 #include "vislib/ShallowVector.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "vislib/Vector.h"
 
 

@@ -15,7 +15,7 @@
 
 #include "the/argument_exception.h"
 #include "the/memory.h"
-#include "vislib/StringConverter.h"
+#include "the/text/string_converter.h"
 #include "vislib/sysfunctions.h"
 #include "the/system/system_exception.h"
 #include "the/trace.h"
@@ -76,7 +76,7 @@ void vislib::sys::SharedMemory::Close(void) {
     }
 
     if (this->hSharedMem != -1) {
-        if (::shm_unlink(this->name.PeekBuffer()) == -1) {
+        if (::shm_unlink(this->name.c_str()) == -1) {
             throw the::system::system_exception(__FILE__, __LINE__);
         }
         if (::close(this->hSharedMem) == -1) {
@@ -177,8 +177,8 @@ void vislib::sys::SharedMemory::Open(const char *name, const AccessMode accessMo
 
     this->name = TranslateWinIpc2PosixName(name);
     THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Open POSIX shared memory \"%s\"\n", 
-        this->name.PeekBuffer());
-    this->hSharedMem = ::shm_open(this->name.PeekBuffer(), oflags, DFT_MODE);
+        this->name.c_str());
+    this->hSharedMem = ::shm_open(this->name.c_str(), oflags, DFT_MODE);
     if (this->hSharedMem == -1) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
@@ -248,7 +248,7 @@ void vislib::sys::SharedMemory::Open(const wchar_t *name, const AccessMode acces
     }
 
 #else /* _WIN32 */
-    this->Open(W2A(name), accessMode, creationMode, size);
+    this->Open(THE_W2A(name), accessMode, creationMode, size);
 #endif /* _WIN32 */
 }
 

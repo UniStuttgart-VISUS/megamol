@@ -58,11 +58,11 @@ void vislib::sys::TextFileReader::ReaderPositionToFilePosition(void) {
 /*
  * vislib::sys::TextFileReader::ReadLine
  */
-bool vislib::sys::TextFileReader::ReadLine(vislib::StringA& outLine,
+bool vislib::sys::TextFileReader::ReadLine(the::astring& outLine,
         unsigned int maxSize) {
     THE_ASSERT(this->file != NULL);
 
-    vislib::StringA prepend;
+    the::astring prepend;
     unsigned int start = this->bufPos;
     unsigned int maxToRead = maxSize;
     unsigned int len = 0;
@@ -72,7 +72,7 @@ bool vislib::sys::TextFileReader::ReadLine(vislib::StringA& outLine,
         if (this->bufPos >= this->validBufSize) {
             if (len > 0) {
                 // copy partial line to output variable
-                prepend.Append(StringA(this->buf + start, len));
+                prepend.append(the::astring(this->buf + start, len));
             }
 
             // buffer depleted. Need new data.
@@ -88,15 +88,15 @@ bool vislib::sys::TextFileReader::ReadLine(vislib::StringA& outLine,
             if (this->validBufSize == 0) {
                 // unable to read, maybe eof
                 outLine = prepend;
-                return !outLine.IsEmpty();
+                return !outLine.empty();
             }
         }
 
         if ((this->buf[this->bufPos] == 0x0A)
                 || (this->buf[this->bufPos] == 0x0D)) {
             // I detected a new line character :-)
-            outLine = prepend + StringA(this->buf + start, len + 1);
-            len = outLine.Length();
+            outLine = prepend + the::astring(this->buf + start, len + 1);
+            len = static_cast<unsigned int>(outLine.size());
             // make the newline pretty
             outLine[static_cast<int>(len) - 1] = '\n';
 
@@ -137,7 +137,7 @@ bool vislib::sys::TextFileReader::ReadLine(vislib::StringA& outLine,
     }
 
     // no new line buf read max characters.
-    outLine = prepend + StringA(this->buf + start, len);
+    outLine = prepend + the::astring(this->buf + start, len);
     return true;
 }
 
@@ -145,16 +145,16 @@ bool vislib::sys::TextFileReader::ReadLine(vislib::StringA& outLine,
 /*
  * vislib::sys::TextFileReader::ReadLine
  */
-bool vislib::sys::TextFileReader::ReadLine(vislib::StringW& outLine,
+bool vislib::sys::TextFileReader::ReadLine(the::wstring& outLine,
         unsigned int maxSize) {
     THE_ASSERT(this->file != NULL);
 
     // Think about it! Reading unicode files seams kinda odd.
     // Would need encoding or something similar.
 
-    vislib::StringA line;
+    the::astring line;
     if (this->ReadLine(line, maxSize)) {
-        outLine = line;
+        the::text::string_converter::convert(outLine, line);
         return true;
     }
 

@@ -279,44 +279,48 @@ void vislib::RawStorageSerialiser::Deserialise(double& outValue,
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(vislib::StringA& outValue,
+void vislib::RawStorageSerialiser::Deserialise(the::astring& outValue,
         const char *name) {
     unsigned int len;
     this->restore(&len, sizeof(unsigned int));
-    this->restore(outValue.AllocateBuffer(len), len * sizeof(char));
+    outValue = the::astring(len, ' ');
+    this->restore(const_cast<char*>(outValue.c_str()), len * sizeof(char));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(vislib::StringA& outValue,
+void vislib::RawStorageSerialiser::Deserialise(the::astring& outValue,
         const wchar_t *name) {
     unsigned int len;
     this->restore(&len, sizeof(unsigned int));
-    this->restore(outValue.AllocateBuffer(len), len * sizeof(char));
+    outValue = the::astring(len, ' ');
+    this->restore(const_cast<char*>(outValue.c_str()), len * sizeof(char));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(vislib::StringW& outValue,
+void vislib::RawStorageSerialiser::Deserialise(the::wstring& outValue,
         const char *name) {
     unsigned int len;
     this->restore(&len, sizeof(unsigned int));
-    this->restore(outValue.AllocateBuffer(len), len * sizeof(wchar_t));
+    outValue = the::wstring(len, ' ');
+    this->restore(const_cast<wchar_t*>(outValue.c_str()), len * sizeof(wchar_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(vislib::StringW& outValue,
+void vislib::RawStorageSerialiser::Deserialise(the::wstring& outValue,
         const wchar_t *name) {
     unsigned int len;
     this->restore(&len, sizeof(unsigned int));
-    this->restore(outValue.AllocateBuffer(len), len * sizeof(wchar_t));
+    outValue = the::wstring(len, ' ');
+    this->restore(const_cast<wchar_t*>(outValue.c_str()), len * sizeof(wchar_t));
 }
 
 
@@ -541,44 +545,44 @@ void vislib::RawStorageSerialiser::Serialise(const double value,
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const vislib::StringA& value, 
+void vislib::RawStorageSerialiser::Serialise(const the::astring& value, 
         const char *name) {
-    unsigned int len = value.Length();
+    unsigned int len = static_cast<unsigned int>(value.size());
     this->store(&len, sizeof(unsigned int));
-    this->store(value.PeekBuffer(), len * sizeof(char));
+    this->store(value.c_str(), len * sizeof(char));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const vislib::StringA& value, 
+void vislib::RawStorageSerialiser::Serialise(const the::astring& value, 
         const wchar_t *name) {
-    unsigned int len = value.Length();
+    unsigned int len = static_cast<unsigned int>(value.size());
     this->store(&len, sizeof(unsigned int));
-    this->store(value.PeekBuffer(), len * sizeof(char));
+    this->store(value.c_str(), len * sizeof(char));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const vislib::StringW& value, 
+void vislib::RawStorageSerialiser::Serialise(const the::wstring& value, 
         const char *name) {
-    unsigned int len = value.Length();
+    unsigned int len = static_cast<unsigned int>(value.size());
     this->store(&len, sizeof(unsigned int));
-    this->store(value.PeekBuffer(), len * sizeof(wchar_t));
+    this->store(value.c_str(), len * sizeof(wchar_t));
 }
 
 
 /*
  * vislib::RawStorageSerialiser::Serialise
  */
-void vislib::RawStorageSerialiser::Serialise(const vislib::StringW& value, 
+void vislib::RawStorageSerialiser::Serialise(const the::wstring& value, 
         const wchar_t *name) {
-    unsigned int len = value.Length();
+    unsigned int len = static_cast<unsigned int>(value.size());
     this->store(&len, sizeof(unsigned int));
-    this->store(value.PeekBuffer(), len * sizeof(wchar_t));
+    this->store(value.c_str(), len * sizeof(wchar_t));
 }
 
 

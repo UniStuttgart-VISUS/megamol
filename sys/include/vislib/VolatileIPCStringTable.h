@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/String.h"
+#include "the/string.h"
 #include "vislib/SmartPtr.h"
 
 
@@ -103,21 +103,21 @@ namespace sys {
              *
              * @return The name of the entry.
              */
-            void GetName(StringA& outName) const;
+            void GetName(the::astring& outName) const;
 
             /**
              * Answer the name of the entry.
              *
              * @return The name of the entry.
              */
-            void GetName(StringW& outName) const;
+            void GetName(the::wstring& outName) const;
 
         private:
 
 #ifdef _WIN32
 
             /** The name of the entry */
-            StringW name;
+            the::wstring name;
 
             /** The registry key handle of the entry */
             HKEY key;
@@ -125,7 +125,7 @@ namespace sys {
 #else /* _WIN32 */
 
             /** The name of the entry */
-            StringA name;
+            the::astring name;
 
 #endif /* _WIN32 */
 
@@ -163,8 +163,8 @@ namespace sys {
              *
              * @param value The new value of the entry.
              */
-            inline void SetValue(const StringA& value) {
-                this->SetValue(value.PeekBuffer());
+            inline void SetValue(const the::astring& value) {
+                this->SetValue(value.c_str());
             }
 
             /**
@@ -179,8 +179,8 @@ namespace sys {
              *
              * @param value The new value of the entry.
              */
-            inline void SetValue(const StringW& value) {
-                this->SetValue(value.PeekBuffer());
+            inline void SetValue(const the::wstring& value) {
+                this->SetValue(value.c_str());
             }
 
             /**
@@ -188,14 +188,14 @@ namespace sys {
              *
              * @return The name of the entry as ANSI string.
              */
-            StringA NameA() const;
+            the::astring NameA() const;
 
             /**
              * Answer the name of the entry as unicode string.
              *
              * @return The name of the entry as unicode string.
              */
-            StringW NameW() const;
+            the::wstring NameW() const;
 
             /**
              * Assignment operator.
@@ -235,7 +235,7 @@ namespace sys {
          *
          * @return The value of the entry with the given name.
          */
-        static StringA GetValue(const char *name);
+        static the::astring GetValue(const char *name);
 
         /**
          * Answer the value of the entry with the given name. If there is no
@@ -246,8 +246,8 @@ namespace sys {
          *
          * @return The value of the entry with the given name.
          */
-        static inline StringA GetValue(const StringA& name) {
-            return VolatileIPCStringTable::GetValue(name.PeekBuffer());
+        static inline the::astring GetValue(const the::astring& name) {
+            return VolatileIPCStringTable::GetValue(name.c_str());
         }
 
         /**
@@ -259,7 +259,7 @@ namespace sys {
          *
          * @return The value of the entry with the given name.
          */
-        static StringW GetValue(const wchar_t *name);
+        static the::wstring GetValue(const wchar_t *name);
 
         /**
          * Answer the value of the entry with the given name. If there is no
@@ -270,8 +270,8 @@ namespace sys {
          *
          * @return The value of the entry with the given name.
          */
-        static StringW GetValue(const StringW& name) {
-            return VolatileIPCStringTable::GetValue(name.PeekBuffer());
+        static the::wstring GetValue(const the::wstring& name) {
+            return VolatileIPCStringTable::GetValue(name.c_str());
         }
 
         /**
@@ -310,9 +310,9 @@ namespace sys {
          *        in the string tabe with the specified name.
          * @throw the::exception in case of an generic error.
          */
-        static inline Entry Create(const StringA& name, 
+        static inline Entry Create(const the::astring& name, 
                 const char *value = NULL) {
-            return VolatileIPCStringTable::Create(name.PeekBuffer(), value);
+            return VolatileIPCStringTable::Create(name.c_str(), value);
         }
 
         /**
@@ -332,8 +332,8 @@ namespace sys {
          *        in the string tabe with the specified name.
          * @throw the::exception in case of an generic error.
          */
-        static inline Entry Create(const char *name, const StringA& value) {
-            return VolatileIPCStringTable::Create(name, value.PeekBuffer());
+        static inline Entry Create(const char *name, const the::astring& value) {
+            return VolatileIPCStringTable::Create(name, value.c_str());
         }
 
         /**
@@ -353,9 +353,9 @@ namespace sys {
          *        in the string tabe with the specified name.
          * @throw the::exception in case of an generic error.
          */
-        static inline Entry Create(const StringA& name, const StringA& value) {
-            return VolatileIPCStringTable::Create(name.PeekBuffer(), 
-                value.PeekBuffer());
+        static inline Entry Create(const the::astring& name, const the::astring& value) {
+            return VolatileIPCStringTable::Create(name.c_str(), 
+                value.c_str());
         }
 
         /**
@@ -394,9 +394,9 @@ namespace sys {
          *        in the string tabe with the specified name.
          * @throw the::exception in case of an generic error.
          */
-        static inline Entry Create(const StringW& name, 
+        static inline Entry Create(const the::wstring& name, 
                 const wchar_t *value = NULL) {
-            return VolatileIPCStringTable::Create(name.PeekBuffer(), value);
+            return VolatileIPCStringTable::Create(name.c_str(), value);
         }
 
         /**
@@ -416,8 +416,8 @@ namespace sys {
          *        in the string tabe with the specified name.
          * @throw the::exception in case of an generic error.
          */
-        static inline Entry Create(const wchar_t *name, const StringW& value) {
-            return VolatileIPCStringTable::Create(name, value.PeekBuffer());
+        static inline Entry Create(const wchar_t *name, const the::wstring& value) {
+            return VolatileIPCStringTable::Create(name, value.c_str());
         }
 
         /**
@@ -437,9 +437,9 @@ namespace sys {
          *        in the string tabe with the specified name.
          * @throw the::exception in case of an generic error.
          */
-        static inline Entry Create(const StringW& name, const StringW& value) {
-            return VolatileIPCStringTable::Create(name.PeekBuffer(), 
-                value.PeekBuffer());
+        static inline Entry Create(const the::wstring& name, const the::wstring& value) {
+            return VolatileIPCStringTable::Create(name.c_str(), 
+                value.c_str());
         }
 
     private:

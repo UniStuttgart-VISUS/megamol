@@ -18,26 +18,26 @@ namespace sys {
     /*
      * DirectoryIterator<T>::DirectoryIterator
      */
-    template<> DirectoryIterator<CharTraitsA>::DirectoryIterator(
-            const Char* path, bool isPattern, bool showDirs) : nextItem(),
+    template<> DirectoryIterator<the::astring>::DirectoryIterator(
+            const char* path, bool isPattern, bool showDirs) : nextItem(),
             currentItem(), omitFolders(!showDirs) {
 #ifdef _WIN32
         WIN32_FIND_DATAA fd;
-        StringA p = path;
+        the::astring p = path;
         if (!isPattern) {
-            if (!p.EndsWith(vislib::sys::Path::SEPARATOR_A)) {
-                if (!p.EndsWith(":")) {
+            if (!the::text::string_utility::ends_with(p, vislib::sys::Path::SEPARATOR_A)) {
+                if (!the::text::string_utility::ends_with(p, ":")) {
                     p += vislib::sys::Path::SEPARATOR_A;
                 }
             }
             p += "*.*";
         }
 
-        this->findHandle = FindFirstFileA(p, &fd);
+        this->findHandle = FindFirstFileA(p.c_str(), &fd);
         if (this->findHandle == INVALID_HANDLE_VALUE) {
             unsigned int le = ::GetLastError();
             if ((le == ERROR_FILE_NOT_FOUND) || (le == ERROR_PATH_NOT_FOUND)) {
-                this->nextItem.Path.Clear();
+                this->nextItem.Path.clear();
             } else {
                 throw the::system::system_exception(le, __FILE__, __LINE__);
             }
@@ -79,26 +79,26 @@ namespace sys {
     /*
      * DirectoryIterator<T>::DirectoryIterator
      */
-    template<> DirectoryIterator<CharTraitsW>::DirectoryIterator(
-            const Char* path, bool isPattern, bool showDirs) : nextItem(),
+    template<> DirectoryIterator<the::wstring>::DirectoryIterator(
+            const wchar_t* path, bool isPattern, bool showDirs) : nextItem(),
             currentItem(), omitFolders(!showDirs) {
 #ifdef _WIN32
         WIN32_FIND_DATAW fd;
-        StringW p = path;
+        the::wstring p = path;
         if (!isPattern) {
-            if (!p.EndsWith(vislib::sys::Path::SEPARATOR_W)) {
-                if (!p.EndsWith(L":")) {
+            if (!the::text::string_utility::ends_with(p, vislib::sys::Path::SEPARATOR_W)) {
+                if (!the::text::string_utility::ends_with(p, L":")) {
                     p += vislib::sys::Path::SEPARATOR_W;
                 }
             }
             p += L"*.*";
         }
 
-        this->findHandle = FindFirstFileW(p, &fd);
+        this->findHandle = FindFirstFileW(p.c_str(), &fd);
         if (this->findHandle == INVALID_HANDLE_VALUE) {
             unsigned int le = ::GetLastError();
             if ((le == ERROR_FILE_NOT_FOUND) || (le == ERROR_PATH_NOT_FOUND)) {
-                this->nextItem.Path.Clear();
+                this->nextItem.Path.clear();
             } else {
                 throw the::system::system_exception(le, __FILE__, __LINE__);
             }
@@ -140,17 +140,17 @@ namespace sys {
     /*
      * DirectoryIterator<T>::fetchNextItem
      */
-    template<> void DirectoryIterator<CharTraitsA>::fetchNextItem(void) {
+    template<> void DirectoryIterator<the::astring>::fetchNextItem(void) {
 #ifdef _WIN32
         WIN32_FIND_DATAA fd;
         unsigned int le;
         bool found = false;
         do {
             if (this->findHandle == INVALID_HANDLE_VALUE) {
-                this->nextItem.Path.Clear();
+                this->nextItem.Path.clear();
             } else if (FindNextFileA(this->findHandle, &fd) == 0) {
                 if ((le = GetLastError()) == ERROR_NO_MORE_FILES) {
-                    this->nextItem.Path.Clear();
+                    this->nextItem.Path.clear();
                     found = true;
                 } else {
                     throw the::system::system_exception(le, __FILE__, __LINE__);
@@ -176,8 +176,8 @@ namespace sys {
                 // BUG: Linux documentation is all lies. the errno stunt does not work at all.
                 //errno = 0;
                 if ((de = readdir(this->dirStream)) != NULL) {
-                    if (!this->pattern.IsEmpty()) {
-                        if (!vislib::sys::FilenameGlobMatch(de->d_name, this->pattern.PeekBuffer())) {
+                    if (!this->pattern.empty()) {
+                        if (!vislib::sys::FilenameGlobMatch(de->d_name, this->pattern.c_str())) {
                             continue; // one more time
                         }
                     }
@@ -205,17 +205,17 @@ namespace sys {
     /*
      * DirectoryIterator<T>::fetchNextItem
      */
-    template<> void DirectoryIterator<CharTraitsW>::fetchNextItem(void) {
+    template<> void DirectoryIterator<the::wstring>::fetchNextItem(void) {
 #ifdef _WIN32
         WIN32_FIND_DATAW fd;
         unsigned int le;
         bool found = false;
         do {
             if (this->findHandle == INVALID_HANDLE_VALUE) {
-                this->nextItem.Path.Clear();
+                this->nextItem.Path.clear();
             } else if (FindNextFileW(this->findHandle, &fd) == 0) {
                 if ((le = GetLastError()) == ERROR_NO_MORE_FILES) {
-                    this->nextItem.Path.Clear();
+                    this->nextItem.Path.clear();
                     found = true;
                 } else {
                     throw the::system::system_exception(le, __FILE__, __LINE__);
@@ -241,8 +241,8 @@ namespace sys {
                 // BUG: Linux documentation is all lies. the errno stunt does not work at all.
                 //errno = 0;
                 if ((de = readdir(this->dirStream)) != NULL) {
-                    if (!this->pattern.IsEmpty()) {
-                        if (!vislib::sys::FilenameGlobMatch(de->d_name, this->pattern.PeekBuffer())) {
+                    if (!this->pattern.empty()) {
+                        if (!vislib::sys::FilenameGlobMatch(de->d_name, this->pattern.c_str())) {
                             continue; // one more time
                         }
                     }
@@ -260,7 +260,7 @@ namespace sys {
         if (de == NULL) {
             this->nextItem.Path.Clear();
         } else {
-            this->nextItem.Path = vislib::StringW(de->d_name);
+            this->nextItem.Path = the::wstring(de->d_name);
         }
 #endif /* _WIN32 */
     }

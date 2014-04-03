@@ -143,16 +143,16 @@ namespace vislib {
         virtual void Deserialise(double& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(StringA& outValue, 
+        virtual void Deserialise(the::astring& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(StringA& outValue, 
+        virtual void Deserialise(the::astring& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(StringW& outValue, 
+        virtual void Deserialise(the::wstring& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(StringW& outValue, 
+        virtual void Deserialise(the::wstring& outValue, 
             const wchar_t *name);
 
         /**
@@ -245,16 +245,16 @@ namespace vislib {
         virtual void Serialise(const double value,
             const wchar_t *name);
 
-        virtual void Serialise(const StringA& value,
+        virtual void Serialise(const the::astring& value,
             const char *name = NULL);
 
-        virtual void Serialise(const StringA& value,
+        virtual void Serialise(const the::astring& value,
             const wchar_t *name);
 
-        virtual void Serialise(const StringW& value,
+        virtual void Serialise(const the::wstring& value,
             const char *name = NULL);
 
-        virtual void Serialise(const StringW& value,
+        virtual void Serialise(const the::wstring& value,
             const wchar_t *name);
 
         /**

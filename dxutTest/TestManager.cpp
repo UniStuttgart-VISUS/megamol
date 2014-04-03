@@ -133,7 +133,7 @@ void TestManager::OnMouse(bool bLeftButtonDown, bool bRightButtonDown,
 void TestManager::RegisterTests(CDXUTComboBox *comboBox) {
     if (comboBox != NULL) {
         for (SIZE_T i = 0; i < this->tests.Count(); i++) {
-            comboBox->AddItem(this->tests[i]->GetName().PeekBuffer(),
+            comboBox->AddItem(this->tests[i]->GetName().c_str(),
                 reinterpret_cast<void *>(i));
         }
     }

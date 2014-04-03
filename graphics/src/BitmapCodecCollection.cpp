@@ -67,7 +67,7 @@ vislib::graphics::BitmapCodecCollection::~BitmapCodecCollection(void) {
  * vislib::graphics::BitmapCodecCollection::LoadBitmapImage
  */
 bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
-        BitmapImage& outImg, const vislib::StringA& filename) {
+        BitmapImage& outImg, const the::astring& filename) {
     vislib::sys::File f;
 
     if (!f.Open(filename, vislib::sys::File::READ_ONLY,
@@ -137,7 +137,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
  * vislib::graphics::BitmapCodecCollection::LoadBitmapImage
  */
 bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
-        BitmapImage& outImg, const vislib::StringW& filename) {
+        BitmapImage& outImg, const the::wstring& filename) {
     vislib::sys::File f;
 
     if (!f.Open(filename, vislib::sys::File::READ_ONLY,
@@ -291,14 +291,14 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
  * vislib::graphics::BitmapCodecCollection::selectCodecsByFilename
  */
 void vislib::graphics::BitmapCodecCollection::selectCodecsByFilename(
-        const vislib::StringA& filename,
+        const the::astring& filename,
         vislib::graphics::BitmapCodecCollection::CodecArray& outCodecs)
         const {
     outCodecs.Clear();
     for (size_t i = 0; i < this->codecs.Count(); i++) {
         vislib::StringTokeniserA exts(this->codecs[i]->FileNameExtsA(), ';');
         while (exts.HasNext()) {
-            if (filename.EndsWith(exts.Next())) {
+            if (the::text::string_utility::ends_with(filename, exts.Next())) {
                 outCodecs.Add(this->codecs[i]);
                 break;
             }
@@ -311,14 +311,14 @@ void vislib::graphics::BitmapCodecCollection::selectCodecsByFilename(
  * vislib::graphics::BitmapCodecCollection::selectCodecsByFilename
  */
 void vislib::graphics::BitmapCodecCollection::selectCodecsByFilename(
-        const vislib::StringW& filename,
+        const the::wstring& filename,
         vislib::graphics::BitmapCodecCollection::CodecArray& outCodecs)
         const {
     outCodecs.Clear();
     for (size_t i = 0; i < this->codecs.Count(); i++) {
         vislib::StringTokeniserW exts(this->codecs[i]->FileNameExtsW(), L';');
         while (exts.HasNext()) {
-            if (filename.EndsWith(exts.Next())) {
+            if (the::text::string_utility::ends_with(filename, exts.Next())) {
                 outCodecs.Add(this->codecs[i]);
                 break;
             }

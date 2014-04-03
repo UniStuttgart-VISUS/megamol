@@ -25,19 +25,19 @@ void TestIPv6(void) {
 
     Socket::Startup();
 
-    //std::cout << IPAddress::LOCALHOST.ToStringA().PeekBuffer() << std::endl;
+    //std::cout << IPAddress::LOCALHOST.ToStringA().c_str() << std::endl;
 
     AssertTrue("LOOPBACK constant", IPAddress6::LOOPBACK.IsLoopback());
-    std::cout << "LOOPBACK constant is: " << IPAddress6::LOOPBACK.ToStringA().PeekBuffer() << std::endl;
+    std::cout << "LOOPBACK constant is: " << IPAddress6::LOOPBACK.ToStringA().c_str() << std::endl;
 
     AssertTrue("LOCALHOST constant", IPAddress6::LOCALHOST.IsLoopback());
-    std::cout << "LOCALHOST constant is: " << IPAddress6::LOCALHOST.ToStringA().PeekBuffer() << std::endl;
+    std::cout << "LOCALHOST constant is: " << IPAddress6::LOCALHOST.ToStringA().c_str() << std::endl;
 
     AssertTrue("ANY constant", IPAddress6::ANY.IsUnspecified());
-    std::cout << "ANY constant is: " << IPAddress6::ANY.ToStringA().PeekBuffer() << std::endl;
+    std::cout << "ANY constant is: " << IPAddress6::ANY.ToStringA().c_str() << std::endl;
 
     AssertTrue("UNSPECIFIED constant", IPAddress6::UNSPECIFIED.IsUnspecified());
-    std::cout << "UNSPECIFIED constant is: " << IPAddress6::UNSPECIFIED.ToStringA().PeekBuffer() << std::endl;
+    std::cout << "UNSPECIFIED constant is: " << IPAddress6::UNSPECIFIED.ToStringA().c_str() << std::endl;
 
 
     IPAddress6 ipAddr;
@@ -75,10 +75,10 @@ void TestIPv6(void) {
 
 
     IPEndPoint endPointV4;
-    std::cout << "IPv4 default end point: " << endPointV4.ToStringA().PeekBuffer() << std::endl;
+    std::cout << "IPv4 default end point: " << endPointV4.ToStringA().c_str() << std::endl;
 
     IPEndPoint endPointV6(IPAddress6::ANY, 0);
-    std::cout << "IPv6 default end point: " << endPointV6.ToStringA().PeekBuffer() << std::endl;
+    std::cout << "IPv6 default end point: " << endPointV6.ToStringA().c_str() << std::endl;
     AssertException("GetIPAddress4 or IPv6 endpoint.", endPointV6.GetIPAddress4(), the::invalid_operation_exception);
 
     ipAddr2 = ipV4Addr;

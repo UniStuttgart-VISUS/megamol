@@ -19,7 +19,7 @@
 #include "the/no_such_element_exception.h"
 #include "vislib/Pair.h"
 #include "vislib/Serialiser.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "vislib/StringTokeniser.h"
 
 
@@ -193,34 +193,34 @@ namespace vislib {
             outValue = T::ParseDouble(this->value(name));
         }
 
-        virtual void Deserialise(StringA& outValue, 
+        virtual void Deserialise(the::astring& outValue, 
                 const char *name = NULL) {
-            outValue = vislib::StringA(this->value(name));
+            outValue = the::astring(this->value(name));
         }
 
-        virtual void Deserialise(StringA& outValue, 
+        virtual void Deserialise(the::astring& outValue, 
                 const wchar_t *name) {
-            outValue = vislib::StringA(this->value(name));
+            outValue = the::astring(this->value(name));
         }
 
-        virtual void Deserialise(StringW& outValue, 
+        virtual void Deserialise(the::wstring& outValue, 
                 const char *name = NULL) {
-            outValue = vislib::StringW(this->value(name));
+            outValue = the::wstring(this->value(name));
         }
 
-        virtual void Deserialise(StringW& outValue, 
+        virtual void Deserialise(the::wstring& outValue, 
                 const wchar_t *name) {
-            outValue = vislib::StringW(this->value(name));
+            outValue = the::wstring(this->value(name));
         }
 
         virtual void Serialise(const bool value, 
                 const char *name = NULL) {
-            this->Serialise(vislib::StringA(value ? "1" : "0"), name);
+            this->Serialise(the::astring(value ? "1" : "0"), name);
         }
 
         virtual void Serialise(const bool value, 
                 const wchar_t *name) {
-            this->Serialise(vislib::StringA(value ? "1" : "0"), name);
+            this->Serialise(the::astring(value ? "1" : "0"), name);
         }
 
         virtual void Serialise(const wchar_t value,
@@ -275,57 +275,57 @@ namespace vislib {
 
         virtual void Serialise(const int32_t value,
                 const char *name = NULL) {
-            vislib::StringA s;
-            s.Format("%d", value);
+            the::astring s;
+            the::text::astring_builder::format_to(s, "%d", value);
             this->Serialise(s, name);
         }
 
         virtual void Serialise(const int32_t value,
                 const wchar_t *name) {
-            vislib::StringA s;
-            s.Format("%d", value);
+            the::astring s;
+            the::text::astring_builder::format_to(s, "%d", value);
             this->Serialise(s, name);
         }
 
         virtual void Serialise(const uint32_t value,
                 const char *name = NULL) {
-            vislib::StringA s;
-            s.Format("%u", value);
+            the::astring s;
+            the::text::astring_builder::format_to(s, "%u", value);
             this->Serialise(s, name);
         }
 
         virtual void Serialise(const uint32_t value,
                 const wchar_t *name) {
-            vislib::StringA s;
-            s.Format("%u", value);
+            the::astring s;
+            the::text::astring_builder::format_to(s, "%u", value);
             this->Serialise(s, name);
         }
 
         virtual void Serialise(const int64_t value,
                 const char *name = NULL) {
-            vislib::StringA s;
-            s.Format("%" _I64_PRINTF "d", value);
+            the::astring s;
+            the::text::astring_builder::format_to(s, "%" _I64_PRINTF "d", value);
             this->Serialise(s, name);
         }
 
         virtual void Serialise(const int64_t value,
                 const wchar_t *name) {
-            vislib::StringA s;
-            s.Format("%" _I64_PRINTF "d", value);
+            the::astring s;
+            the::text::astring_builder::format_to(s, "%" _I64_PRINTF "d", value);
             this->Serialise(s, name);
         }
 
         virtual void Serialise(const uint64_t value,
                 const char *name = NULL) {
-            vislib::StringA s;
-            s.Format("%" _I64_PRINTF "u", value);
+            the::astring s;
+            the::text::astring_builder::format_to(s, "%" _I64_PRINTF "u", value);
             this->Serialise(s, name);
         }
 
         virtual void Serialise(const uint64_t value,
                 const wchar_t *name) {
-            vislib::StringA s;
-            s.Format("%" _I64_PRINTF "u", value);
+            the::astring s;
+            the::text::astring_builder::format_to(s, "%" _I64_PRINTF "u", value);
             this->Serialise(s, name);
         }
 
@@ -341,19 +341,19 @@ namespace vislib {
 
         virtual void Serialise(const double value,
                 const char *name = NULL) {
-            vislib::StringA s;
-            s.Format("%.32g", value);
+            the::astring s;
+            the::text::astring_builder::format_to(s, "%.32g", value);
             this->Serialise(s, name);
         }
 
         virtual void Serialise(const double value,
                 const wchar_t *name) {
-            vislib::StringA s;
-            s.Format("%.32g", value);
+            the::astring s;
+            the::text::astring_builder::format_to(s, "%.32g", value);
             this->Serialise(s, name);
         }
 
-        virtual void Serialise(const StringA& value,
+        virtual void Serialise(const the::astring& value,
                 const char *name = NULL) {
             if (name != NULL) {
                 vislib::String<T> tname(name);
@@ -373,7 +373,7 @@ namespace vislib {
             }
         }
 
-        virtual void Serialise(const StringA& value,
+        virtual void Serialise(const the::astring& value,
                 const wchar_t *name) {
             vislib::String<T> tname(name);
             for (unsigned int i = 0; i < this->data.Count(); i++) {
@@ -387,7 +387,7 @@ namespace vislib {
                 vislib::String<T>(name), vislib::String<T>(value)));
         }
 
-        virtual void Serialise(const StringW& value,
+        virtual void Serialise(const the::wstring& value,
                 const char *name = NULL) {
             if (name != NULL) {
                 vislib::String<T> tname(name);
@@ -407,7 +407,7 @@ namespace vislib {
             }
         }
 
-        virtual void Serialise(const StringW& value,
+        virtual void Serialise(const the::wstring& value,
                 const wchar_t *name) {
             vislib::String<T> tname(name);
             for (unsigned int i = 0; i < this->data.Count(); i++) {
@@ -555,7 +555,7 @@ namespace vislib {
     template<class T>
     StringSerialiser<T>::StringSerialiser(const vislib::String<T>& str)
             : Serialiser(SERIALISER_SUPPORTS_NAMES), data(), nextDePos(0) {
-        this->SetInputString(str.PeekBuffer());
+        this->SetInputString(str.c_str());
     }
 
 
@@ -589,12 +589,12 @@ namespace vislib {
             typename vislib::String<T>::Size pos;
 
             do {
-                pos = line.Find(static_cast<typename T::Char>('='));
+                pos = line.find(static_cast<typename T::Char>('='));
             } while ((pos != vislib::String<T>::INVALID_POS) && (pos > 0)
                 && (line[pos - 1] == static_cast<typename T::Char>('\\')));
 
-            key = line.Substring(0, pos);
-            value = line.Substring(pos + 1);
+            key = line.substr(0, pos);
+            value = line.substr(pos + 1);
 
             key.UnescapeCharacters(static_cast<typename T::Char>('\\'), 
                 vislib::String<T>("\n\r="), vislib::String<T>("nr="));

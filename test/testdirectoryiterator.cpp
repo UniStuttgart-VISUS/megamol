@@ -4,8 +4,8 @@
 #include "vislib/File.h"
 #include "vislib/Path.h"
 #include "the/exception.h"
-#include "vislib/String.h"
-#include "vislib/StringConverter.h"
+#include "the/string.h"
+#include "the/text/string_converter.h"
 #include "vislib/DirectoryIterator.h"
 #include "vislib/Array.h"
 #include "vislib/Stack.h"
@@ -31,71 +31,71 @@
 using namespace vislib::sys;
 using namespace vislib;
 
-static void createDir(const StringA& fn) {
+static void createDir(const the::astring& fn) {
 #ifdef _WIN32
-    _mkdir(fn);
+    _mkdir(fn.c_str());
 #else /* _WIN32 */
     //std::cout << "Making directory " << dirs[i] << std::endl;
-    if (mkdir(fn, S_IXUSR | S_IRUSR | S_IWUSR) != 0) {
+    if (mkdir(fn.c_str(), S_IXUSR | S_IRUSR | S_IWUSR) != 0) {
         int e = GetLastError();
         std::cout << e << "  " << static_cast<const char *>(the::system::system_message(e)) << std::endl;
     }
 #endif /* _WIN32 */
 }
 
-static void createDir(const StringW& fn) {
+static void createDir(const the::wstring& fn) {
 #ifdef _WIN32
-    _wmkdir(fn);
+    _wmkdir(fn.c_str());
 #else /* _WIN32 */
-    //std::cout << "Making directory " << StringA(dirs[i]) << std::endl;
-    if (mkdir(StringA(fn), S_IXUSR | S_IRUSR | S_IWUSR) != 0) {
+    //std::cout << "Making directory " << the::astring(dirs[i]) << std::endl;
+    if (mkdir(the::text::string_converter::to_a(fn).c_str(), S_IXUSR | S_IRUSR | S_IWUSR) != 0) {
         int e = GetLastError();
         std::cout << e << "  " << static_cast<const char *>(the::system::system_message(e)) << std::endl;
     }
 #endif /* _WIN32 */
 }
 
-static void createFile(const StringA& fn) {
+static void createFile(const the::astring& fn) {
     File f;
     f.Open(fn, File::WRITE_ONLY, File::SHARE_READWRITE, File::CREATE_ONLY);
     f.Close();
 }
 
-static void createFile(const StringW& fn) {
+static void createFile(const the::wstring& fn) {
     File f;
     f.Open(fn, File::WRITE_ONLY, File::SHARE_READWRITE, File::CREATE_ONLY);
     f.Close();
 }
 
-static void deleteDir(const StringA& fn) {
+static void deleteDir(const the::astring& fn) {
 #ifdef _WIN32
-    _rmdir(fn);
+    _rmdir(fn.c_str());
 #else /* _WIN32 */
-    rmdir(fn);
+    rmdir(fn.c_str());
 #endif /* _WIN32 */
 }
 
-static void deleteDir(const StringW& fn) {
+static void deleteDir(const the::wstring& fn) {
 #ifdef _WIN32
-    _wrmdir(fn);
+    _wrmdir(fn.c_str());
 #else /* _WIN32 */
-    rmdir(StringA(fn));
+    rmdir(the::text::string_converter::to_a(fn).c_str());
 #endif /* _WIN32 */
 }
 
-static void deleteFile(const StringA& fn) {
-    File::Delete(fn);
+static void deleteFile(const the::astring& fn) {
+    File::Delete(fn.c_str());
 }
 
-static void deleteFile(const StringW& fn) {
-    File::Delete(fn);
+static void deleteFile(const the::wstring& fn) {
+    File::Delete(fn.c_str());
 }
 
-static void TestDirectoryIteratorA(Array<StringA> dirs, Array<StringA> files) {
+static void TestDirectoryIteratorA(Array<the::astring> dirs, Array<the::astring> files) {
     int i;
-    DirectoryEntry<CharTraitsA> de;
+    DirectoryEntry<the::astring> de;
     char buf[BUF_SIZE];
-    Stack<StringA> st;
+    Stack<the::astring> st;
 
     try {
         for (i = 0; i < static_cast<int>(dirs.Count()); i++) {
@@ -105,21 +105,22 @@ static void TestDirectoryIteratorA(Array<StringA> dirs, Array<StringA> files) {
             createFile(files[i]);
         }
 
-		st.Push(dirs[0]);
-		i = 0;
-		StringA relPath;
-		while (!st.IsEmpty()) {
-			DirectoryIterator<CharTraitsA> di(relPath = st.Pop());
-			while (di.HasNext()) {
-				i++;
-				de = di.Next();
-				if (de.Type == DirectoryEntry<CharTraitsA>::DIRECTORY) {
-					st.Push(relPath + Path::SEPARATOR_A + de.Path);
-				}
-			}
-		}
-		SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Found all %d entries", static_cast<int>(dirs.Count() - 1 + files.Count()));
-		AssertEqual(buf, static_cast<int>(dirs.Count() - 1 + files.Count()), i);
+        st.Push(dirs[0]);
+        i = 0;
+        the::astring relPath;
+        while (!st.empty()) {
+            relPath = st.Pop();
+            DirectoryIterator<the::astring> di(relPath.c_str());
+            while (di.HasNext()) {
+                i++;
+                de = di.Next();
+                if (de.Type == DirectoryEntry<the::astring>::DIRECTORY) {
+                    st.Push(relPath + Path::SEPARATOR_A + de.Path);
+                }
+            }
+        }
+        SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Found all %d entries", static_cast<int>(dirs.Count() - 1 + files.Count()));
+        AssertEqual(buf, static_cast<int>(dirs.Count() - 1 + files.Count()), i);
 
         for (i = 0; i < static_cast<int>(files.Count()); i++) {
             deleteFile(files[i]);
@@ -133,12 +134,12 @@ static void TestDirectoryIteratorA(Array<StringA> dirs, Array<StringA> files) {
     }
 }
 
-static void TestDirectoryIteratorW(Array<StringW> dirs, Array<StringW> files) {
+static void TestDirectoryIteratorW(Array<the::wstring> dirs, Array<the::wstring> files) {
     int i;
     File f;
-    DirectoryEntry<CharTraitsW> de;
+    DirectoryEntry<the::wstring> de;
     char buf[BUF_SIZE];
-    Stack<StringW> st;
+    Stack<the::wstring> st;
 
     try {
         for (i = 0; i < static_cast<int>(dirs.Count()); i++) {
@@ -148,22 +149,22 @@ static void TestDirectoryIteratorW(Array<StringW> dirs, Array<StringW> files) {
             createFile(files[i]);
         }
 
-		st.Push(dirs[0]);
-		i = 0;
-		StringW relPath;
-		while (!st.IsEmpty()) {
-			relPath = st.Pop();
-			DirectoryIterator<CharTraitsW> di(relPath);
-			while (di.HasNext()) {
-				i++;
-				de = di.Next();
-				if (de.Type == DirectoryEntry<CharTraitsW>::DIRECTORY) {
-					st.Push(relPath + Path::SEPARATOR_W + de.Path);
-				}
-			}
-		}
-		SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Found all %d entries", static_cast<int>(dirs.Count() - 1 + files.Count()));
-		AssertEqual(buf, static_cast<int>(dirs.Count() - 1 + files.Count()), i);
+        st.Push(dirs[0]);
+        i = 0;
+        the::wstring relPath;
+        while (!st.empty()) {
+            relPath = st.Pop();
+            DirectoryIterator<the::wstring> di(relPath.c_str());
+            while (di.HasNext()) {
+                i++;
+                de = di.Next();
+                if (de.Type == DirectoryEntry<the::wstring>::DIRECTORY) {
+                    st.Push(relPath + Path::SEPARATOR_W + de.Path);
+                }
+            }
+        }
+        SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Found all %d entries", static_cast<int>(dirs.Count() - 1 + files.Count()));
+        AssertEqual(buf, static_cast<int>(dirs.Count() - 1 + files.Count()), i);
 
         for (i = 0; i < static_cast<int>(files.Count()); i++) {
             deleteFile(files[i]);
@@ -196,8 +197,8 @@ void TestDirectoryGlobbing(const char *path) {
         AssertTrue("Test directory root \"$path\" does exist", true);
     }
 
-    vislib::StringA p(path);
-    if (!p.EndsWith(vislib::sys::Path::SEPARATOR_A)) p += vislib::sys::Path::SEPARATOR_A;
+    the::astring p(path);
+    if (!the::text::string_utility::ends_with(p, vislib::sys::Path::SEPARATOR_A)) p += vislib::sys::Path::SEPARATOR_A;
 
     createFile(p + "hugo.txt");
     createFile(p + "herbert.txt");
@@ -205,14 +206,14 @@ void TestDirectoryGlobbing(const char *path) {
     createDir(p + "heinz.dir");
     createDir(p + "adolf.dir");
 
-    vislib::Array<vislib::StringA> children;
+    vislib::Array<the::astring> children;
 
     {
         children.Clear();
-        DirectoryIteratorA d1(p + "*.*", true, true);
+        DirectoryIteratorA d1((p + "*.*").c_str(), true, true);
         while (d1.HasNext()) {
             children.Add(d1.Next().Path);
-            printf(" Found %s\n", children.Last().PeekBuffer());
+            printf(" Found %s\n", children.Last().c_str());
         }
     }
     AssertTrue("hugo.txt found", children.Contains("hugo.txt"));
@@ -224,10 +225,10 @@ void TestDirectoryGlobbing(const char *path) {
 
     {
         children.Clear();
-        DirectoryIteratorA d1(p + "*.*", true, false);
+        DirectoryIteratorA d1((p + "*.*").c_str(), true, false);
         while (d1.HasNext()) {
             children.Add(d1.Next().Path);
-            printf(" Found %s\n", children.Last().PeekBuffer());
+            printf(" Found %s\n", children.Last().c_str());
         }
     }
     AssertTrue("hugo.txt found", children.Contains("hugo.txt"));
@@ -239,10 +240,10 @@ void TestDirectoryGlobbing(const char *path) {
 
     {
         children.Clear();
-        DirectoryIteratorA d1(p + "h*.*", true, true);
+        DirectoryIteratorA d1((p + "h*.*").c_str(), true, true);
         while (d1.HasNext()) {
             children.Add(d1.Next().Path);
-            printf(" Found %s\n", children.Last().PeekBuffer());
+            printf(" Found %s\n", children.Last().c_str());
         }
     }
     AssertTrue("hugo.txt found", children.Contains("hugo.txt"));
@@ -254,10 +255,10 @@ void TestDirectoryGlobbing(const char *path) {
 
     {
         children.Clear();
-        DirectoryIteratorA d1(p + "h*.*", true, false);
+        DirectoryIteratorA d1((p + "h*.*").c_str(), true, false);
         while (d1.HasNext()) {
             children.Add(d1.Next().Path);
-            printf(" Found %s\n", children.Last().PeekBuffer());
+            printf(" Found %s\n", children.Last().c_str());
         }
     }
     AssertTrue("hugo.txt found", children.Contains("hugo.txt"));
@@ -278,10 +279,10 @@ void TestDirectoryGlobbing(const char *path) {
 }
 
 void TestDirectoryIterator(void) {
-    Array<StringA> dirs;
-    Array<StringA> files;
-    Array<StringW> wdirs;
-    Array<StringW> wfiles;
+    Array<the::astring> dirs;
+    Array<the::astring> files;
+    Array<the::wstring> wdirs;
+    Array<the::wstring> wfiles;
 
     if (vislib::sys::File::Exists("level0")) {
         AssertTrue("Test directory root \"level0\" does not exist", false);

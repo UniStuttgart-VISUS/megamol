@@ -23,7 +23,7 @@
 
 
 #include "vislib/File.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -193,7 +193,7 @@ namespace sys {
         int hSharedMem;
 
         /** Linux requires to preserve the name for unlinking the memory. */
-        StringA name;
+        the::astring name;
 
         /** Linux requires to preserve the mapping size for unmapping. */
         size_t size;

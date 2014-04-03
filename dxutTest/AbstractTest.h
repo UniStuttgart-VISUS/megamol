@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 class AbstractTest {
@@ -24,7 +24,7 @@ public:
 
     virtual ~AbstractTest(void);
 
-    const vislib::TString& GetName(void) const {
+    const the::tstring& GetName(void) const {
         return this->name;
     }
 
@@ -63,11 +63,11 @@ public:
 
 protected:
 
-    AbstractTest(const vislib::StringW& name);
+    AbstractTest(const the::wstring& name);
 
     float aspectRatio;
 
-    vislib::StringW name;
+    the::wstring name;
 };
 
 #if defined(_WIN32) && defined(_MANAGED)

@@ -228,7 +228,7 @@ void vislib::net::IPAddress6::MapV4Address(const struct in_addr& address) {
 /*
  * vislib::net::IPAddress6::ToStringA
  */
-vislib::StringA vislib::net::IPAddress6::ToStringA(void) const {
+the::astring vislib::net::IPAddress6::ToStringA(void) const {
     struct sockaddr_in6 addr;   // Dummy socket address used for lookup.
     char buffer[NI_MAXHOST];    // Receives the stringised address.
     int err = 0;                // OS operation return value.
@@ -251,7 +251,7 @@ vislib::StringA vislib::net::IPAddress6::ToStringA(void) const {
         buffer[0] = 0;
     }
 
-    return StringA(buffer);
+    return the::astring(buffer);
 }
 
 

@@ -21,7 +21,7 @@
 #include "the/exception.h"
 #include "vislib/IPHostEntry.h"
 #include "the/stack_trace.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 #ifdef _WIN32
 #include <iphlpapi.h>
@@ -607,7 +607,7 @@ namespace net {
              *
              * @return A string representation of the physical address.
              */
-            StringA FormatPhysicalAddressA(void) const;
+            the::astring FormatPhysicalAddressA(void) const;
 
             /**
              * Create a string from the physical (MAC) address. 
@@ -617,7 +617,7 @@ namespace net {
              *
              * @return A string representation of the physical address.
              */
-            StringW FormatPhysicalAddressW(void) const;
+            the::wstring FormatPhysicalAddressW(void) const;
 
             /** 
              * Answer the list of anycast addresses associated with the adapter.
@@ -669,7 +669,7 @@ namespace net {
              * @throws NoConfidenceException If the return value is invalid 
              *                               and 'outConfidence' is NULL.
              */
-            inline const StringW& GetDescription(
+            inline const the::wstring& GetDescription(
                     Confidence *outConfidence = NULL) const {
                 this->description.GetConfidence(outConfidence, 
                     "Description");
@@ -691,7 +691,7 @@ namespace net {
              * @throws NoConfidenceException If the return value is invalid 
              *                               and 'outConfidence' is NULL.
              */
-            inline const StringA& GetID(
+            inline const the::astring& GetID(
                     Confidence *outConfidence = NULL) const {
                 this->id.GetConfidence(outConfidence, "ID");
                 return this->id;
@@ -746,7 +746,7 @@ namespace net {
              * @throws NoConfidenceException If the return value is invalid 
              *                               and 'outConfidence' is NULL.
              */
-            inline const StringW& GetName(
+            inline const the::wstring& GetName(
                     Confidence *outConfidence = NULL) const {
                 this->name.GetConfidence(outConfidence, "Name");
                 return this->name;
@@ -889,10 +889,10 @@ namespace net {
             AssessedMember<IPAddress> broadcastAddress;
 
             /** A description of the adapter (human-readable device name). */
-            AssessedMember<StringW> description;
+            AssessedMember<the::wstring> description;
 
             /** The permanent name (ID) of the adapter. */
-            AssessedMember<StringA> id;
+            AssessedMember<the::astring> id;
 
             /** The maximum transmission unit (MTU) size, in bytes. */
             AssessedMember<unsigned int> mtu;
@@ -901,7 +901,7 @@ namespace net {
             AssessedMember<AddressList> multicastAddresses;
 
             /** The human-readable adapter name. */
-            AssessedMember<StringW> name;
+            AssessedMember<the::wstring> name;
 
             /** The physical MAC address of the adapter. */
             Array<uint8_t> physicalAddress;
@@ -1811,7 +1811,7 @@ namespace net {
          * @return The wildness of the guess within [0, 1].
          */
         static float wildGuessAdapter(Adapter& outAdapter, 
-            const IPAgnosticAddress& address, const StringW& device, 
+            const IPAgnosticAddress& address, const the::wstring& device, 
             const unsigned long prefixLen, const uint32_t validMask);
 
         /**
@@ -1834,7 +1834,7 @@ namespace net {
          * @return A bitmask specifying which of the out parameters are valid.
          */
         static uint32_t wildGuessSplitInput(IPAgnosticAddress& outAddress,
-            StringW& outDevice, unsigned long& outPrefixLen, uint16_t& outPort,
+            the::wstring& outDevice, unsigned long& outPrefixLen, uint16_t& outPort,
             const wchar_t *str, 
             const IPAgnosticAddress::AddressFamily *prefFam = NULL);
 

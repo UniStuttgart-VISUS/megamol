@@ -20,6 +20,8 @@
 #include "vislib/Polynom.h"
 #include "vislib/Quaternion.h"
 #include "vislib/pcautils.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 
 
 void TestMatrix(void) {
@@ -320,16 +322,16 @@ Eigenvektor zu Eigenwert 2:
                     break;
                 }
             }
-            vislib::StringA msg;
-            msg.Format("Eigenvalue %f found", te6[i]);
+            the::astring msg;
+            the::text::astring_builder::format_to(msg, "Eigenvalue %f found", te6[i]);
             if (p < 0) {
-                AssertTrue(msg, false);
+                AssertTrue(msg.c_str(), false);
                 continue;
             }
-            AssertTrue(msg, true);
+            AssertTrue(msg.c_str(), true);
 
-            msg.Format("Eigenvector %d correct", i);
-            AssertTrue(msg, tv6[i].IsParallel(eigenvectors6[p]));
+            the::text::astring_builder::format_to(msg, "Eigenvector %d correct", i);
+            AssertTrue(msg.c_str(), tv6[i].IsParallel(eigenvectors6[p]));
         }
     } catch(the::exception ex) {
         printf("Exception: %s\n", ex.what());
@@ -406,16 +408,16 @@ Eigenvektoren:
                     break;
                 }
             }
-            vislib::StringA msg;
-            msg.Format("Eigenvalue %f found", te6[i]);
+            the::astring msg;
+            the::text::astring_builder::format_to(msg, "Eigenvalue %f found", te6[i]);
             if (p < 0) {
-                AssertTrue(msg, false);
+                AssertTrue(msg.c_str(), false);
                 continue;
             }
-            AssertTrue(msg, true);
+            AssertTrue(msg.c_str(), true);
 
-            msg.Format("Eigenvector %d correct", i);
-            AssertTrue(msg, tv6[i].IsParallel(eigenvectors6[p]));
+            the::text::astring_builder::format_to(msg, "Eigenvector %d correct", i);
+            AssertTrue(msg.c_str(), tv6[i].IsParallel(eigenvectors6[p]));
         }
     } catch(the::exception ex) {
         printf("Exception: %s\n", ex.what());
@@ -531,16 +533,16 @@ Eigenvektor zu Eigenwert 5,299783664336905:
                     break;
                 }
             }
-            vislib::StringA msg;
-            msg.Format("Eigenvalue %f found", te1[i]);
+            the::astring msg;
+            the::text::astring_builder::format_to(msg, "Eigenvalue %f found", te1[i]);
             if (p < 0) {
-                AssertTrue(msg, false);
+                AssertTrue(msg.c_str(), false);
                 continue;
             }
-            AssertTrue(msg, true);
+            AssertTrue(msg.c_str(), true);
 
-            msg.Format("Eigenvector %d correct", i);
-            AssertTrue(msg, tv1[i].IsParallel(eigenvectors1[p]));
+            the::text::astring_builder::format_to(msg, "Eigenvector %d correct", i);
+            AssertTrue(msg.c_str(), tv1[i].IsParallel(eigenvectors1[p]));
         }
     } catch(the::exception ex) {
         printf("Exception: %s\n", ex.what());

@@ -28,31 +28,31 @@
 #include "vislib/Stack.h"
 #include "vislib/File.h"
 #include "vislib/DirectoryIterator.h"
-#include "vislib/String.h"
-#include "vislib/StringConverter.h"
+#include "the/string.h"
+#include "the/text/string_converter.h"
 
 
 /*
  * vislib::sys::Path::Canonicalise
  */
-vislib::StringA vislib::sys::Path::Canonicalise(const StringA& path) {
-    const StringA DOUBLE_SEPARATOR(Path::SEPARATOR_A, 2);
+the::astring vislib::sys::Path::Canonicalise(const the::astring& path) {
+    const the::astring DOUBLE_SEPARATOR(2, Path::SEPARATOR_A);
 
 #ifdef _WIN32
-    StringA retval;
+    the::astring retval(MAX_PATH, ' ');
 
-    if (::PathCanonicalizeA(retval.AllocateBuffer(MAX_PATH), path) != TRUE) {
+    if (::PathCanonicalizeA(const_cast<char*>(retval.c_str()), path.c_str()) != TRUE) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_A);
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_A);
+    the::text::string_utility::replace(retval, DOUBLE_SEPARATOR, the::astring(1, SEPARATOR_A));
+    the::text::string_utility::replace(retval, DOUBLE_SEPARATOR, the::astring(1, SEPARATOR_A));
 
     /* Ensure that a UNC path remains a UNC path. */
-    if (path.StartsWith(DOUBLE_SEPARATOR)) {
+    if (the::text::string_utility::starts_with(path, DOUBLE_SEPARATOR)) {
         // Note: Double separator replacement above leaves at least one 
         // separator, so we must only prepend one additional one.
-        retval.Prepend(SEPARATOR_A);
+        retval.insert(0, 1, SEPARATOR_A);
     }
 
     return retval;
@@ -60,18 +60,18 @@ vislib::StringA vislib::sys::Path::Canonicalise(const StringA& path) {
 #else /* _WIN32 */
     const char *BACK_REF = "/..";
     const char *CUR_REF = "/.";             // Note: "./" does not work
-    StringA::Size BACK_REF_LEN = ::strlen(BACK_REF);
-    StringA::Size bwRefPos = 0;             // Position of back reference.
-    StringA::Size remDirPos = 0;            // Position of directory to erase.
-    StringA retval(path);
+    the::astring::size_type BACK_REF_LEN = ::strlen(BACK_REF);
+    the::astring::size_type bwRefPos = 0;             // Position of back reference.
+    the::astring::size_type remDirPos = 0;            // Position of directory to erase.
+    the::astring retval(path);
     
 
     /* Remove backward references, first. */
-    while ((bwRefPos = retval.Find(BACK_REF)) != StringA::INVALID_POS) {
+    while ((bwRefPos = retval.find(BACK_REF)) != the::astring::npos) {
 
         if ((bwRefPos > 0) 
-                && (remDirPos = retval.FindLast(SEPARATOR_A, bwRefPos - 1))
-                != StringA::INVALID_POS) {
+                && (remDirPos = retval.rfind(SEPARATOR_A, bwRefPos - 1))
+                != the::astring::npos) {
             /* Found inner backward reference, so remove some parts. */
             retval.Remove(remDirPos, bwRefPos - remDirPos + BACK_REF_LEN);
 
@@ -91,8 +91,8 @@ vislib::StringA vislib::sys::Path::Canonicalise(const StringA& path) {
     retval.Remove(CUR_REF);
     
     /* Remove odd and even number of repeated path separators. */
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_A);
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_A);
+    the::text::string_utility::replace(retval, DOUBLE_SEPARATOR.c_str(), SEPARATOR_A);
+    the::text::string_utility::replace(retval, DOUBLE_SEPARATOR.c_str(), SEPARATOR_A);
 
     return retval;
 #endif /* _WIN32 */
@@ -102,24 +102,24 @@ vislib::StringA vislib::sys::Path::Canonicalise(const StringA& path) {
 /*
  * vislib::sys::Path::Canonicalise
  */
-vislib::StringW vislib::sys::Path::Canonicalise(const StringW& path) {
-    const StringW DOUBLE_SEPARATOR(Path::SEPARATOR_W, 2);
+the::wstring vislib::sys::Path::Canonicalise(const the::wstring& path) {
+    const the::wstring DOUBLE_SEPARATOR(2, Path::SEPARATOR_W);
 
 #ifdef _WIN32
-    StringW retval;
+    the::wstring retval(MAX_PATH, L' ');
 
-    if (::PathCanonicalizeW(retval.AllocateBuffer(MAX_PATH), path) != TRUE) {
+    if (::PathCanonicalizeW(const_cast<wchar_t*>(retval.c_str()), path.c_str()) != TRUE) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_W);
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_W);
+    the::text::string_utility::replace(retval, DOUBLE_SEPARATOR, the::wstring(1, SEPARATOR_W));
+    the::text::string_utility::replace(retval, DOUBLE_SEPARATOR, the::wstring(1, SEPARATOR_W));
 
     /* Ensure that a UNC path remains a UNC path. */
-    if (path.StartsWith(DOUBLE_SEPARATOR)) {
+    if (the::text::string_utility::starts_with(path, DOUBLE_SEPARATOR)) {
         // Note: Double separator replacement above leaves at least one 
         // separator, so we must only prepend one additional one.
-        retval.Prepend(SEPARATOR_W);
+        retval.insert(0, 1, SEPARATOR_W);
     }
 
     return retval;
@@ -127,18 +127,18 @@ vislib::StringW vislib::sys::Path::Canonicalise(const StringW& path) {
 #else /* _WIN32 */
     const wchar_t *BACK_REF = L"/..";
     const wchar_t *CUR_REF = L"/.";         // Note: "./" does not work
-    StringW::Size BACK_REF_LEN = ::wcslen(BACK_REF);
-    StringW::Size bwRefPos = 0;             // Position of back reference.
-    StringW::Size remDirPos = 0;            // Position of directory to erase.
-    StringW retval(path);
+    the::wstring::size_type BACK_REF_LEN = ::wcslen(BACK_REF);
+    the::wstring::size_type bwRefPos = 0;             // Position of back reference.
+    the::wstring::size_type remDirPos = 0;            // Position of directory to erase.
+    the::wstring retval(path);
     
 
     /* Remove backward references, first. */
-    while ((bwRefPos = retval.Find(BACK_REF)) != StringW::INVALID_POS) {
+    while ((bwRefPos = retval.find(BACK_REF)) != the::wstring::npos) {
 
         if ((bwRefPos > 0) 
-                && (remDirPos = retval.FindLast(SEPARATOR_W, bwRefPos - 1))
-                != StringW::INVALID_POS) {
+                && (remDirPos = retval.rfind(SEPARATOR_W, bwRefPos - 1))
+                != the::wstring::npos) {
             /* Found inner backward reference, so remove some parts. */
             retval.Remove(remDirPos, bwRefPos - remDirPos + BACK_REF_LEN);
 
@@ -158,8 +158,8 @@ vislib::StringW vislib::sys::Path::Canonicalise(const StringW& path) {
     retval.Remove(CUR_REF);
     
     /* Remove odd and even number of repeated path separators. */
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_W);
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_W);
+    the::text::string_utility::replace(retval, DOUBLE_SEPARATOR.c_str(), SEPARATOR_W);
+    the::text::string_utility::replace(retval, DOUBLE_SEPARATOR.c_str(), SEPARATOR_W);
 
     return retval;
 #endif /* _WIN32 */
@@ -169,20 +169,20 @@ vislib::StringW vislib::sys::Path::Canonicalise(const StringW& path) {
 /*
  * vislib::sys::Path::ChangeExtension
  */
-vislib::StringA vislib::sys::Path::ChangeExtension(const char *path,
+the::astring vislib::sys::Path::ChangeExtension(const char *path,
         const char *extension) {
     const char EXT_SEP = '.';
-    StringA retval(path);
-    StringA::Size extStart = retval.FindLast(EXT_SEP);
-    StringA ext(extension);
+    the::astring retval(path);
+    the::astring::size_type extStart = retval.rfind(EXT_SEP);
+    the::astring ext(extension);
 
-    if (!ext.IsEmpty() && !ext.StartsWith(EXT_SEP)) {
-        ext.Prepend(EXT_SEP);
+    if (!ext.empty() && !the::text::string_utility::starts_with(ext, EXT_SEP)) {
+        ext.insert(0, 1, EXT_SEP);
     }
 
-    if (extStart != StringA::INVALID_POS) {
+    if (extStart != the::astring::npos) {
         /* Found a valid extension, remove that one before adding new. */
-        retval.Truncate(extStart);
+        retval.resize(extStart);
     }
 
     retval += ext;
@@ -193,20 +193,20 @@ vislib::StringA vislib::sys::Path::ChangeExtension(const char *path,
 /*
  * vislib::sys::Path::ChangeExtension
  */
-vislib::StringW vislib::sys::Path::ChangeExtension(const wchar_t *path,
+the::wstring vislib::sys::Path::ChangeExtension(const wchar_t *path,
         const wchar_t *extension) {
     const wchar_t EXT_SEP = '.';
-    StringW retval(path);
-    StringW::Size extStart = retval.FindLast(EXT_SEP);
-    StringW ext(extension);
+    the::wstring retval(path);
+    the::wstring::size_type extStart = retval.rfind(EXT_SEP);
+    the::wstring ext(extension);
 
-    if (!ext.IsEmpty() && !ext.StartsWith(EXT_SEP)) {
-        ext.Prepend(EXT_SEP);
+    if (!ext.empty() && !the::text::string_utility::starts_with(ext, EXT_SEP)) {
+        ext.insert(0, 1, EXT_SEP);
     }
 
-    if (extStart != StringW::INVALID_POS) {
+    if (extStart != the::wstring::npos) {
         /* Found a valid extension, remove that one before adding new. */
-        retval.Truncate(extStart);
+        retval.resize(extStart);
     }
 
     retval += ext;
@@ -217,19 +217,19 @@ vislib::StringW vislib::sys::Path::ChangeExtension(const wchar_t *path,
 /*
  * vislib::sys::Path::Concatenate
  */
-vislib::StringA vislib::sys::Path::Concatenate(const StringA& lhs,
-        const StringA& rhs, const bool canonicalise) {
-    StringA retval(lhs);
+the::astring vislib::sys::Path::Concatenate(const the::astring& lhs,
+        const the::astring& rhs, const bool canonicalise) {
+    the::astring retval(lhs);
 
-    if (lhs.EndsWith(SEPARATOR_A) && rhs.StartsWith(SEPARATOR_A)) {
-        retval.Append(rhs.PeekBuffer() + 1);
+    if (the::text::string_utility::ends_with(lhs, SEPARATOR_A) && the::text::string_utility::starts_with(rhs, SEPARATOR_A)) {
+        retval.append(rhs.c_str() + 1);
 
-    } else if (!lhs.EndsWith(SEPARATOR_A) && !rhs.StartsWith(SEPARATOR_A)) {
-        retval.Append(SEPARATOR_A);
-        retval.Append(rhs);
+    } else if (!the::text::string_utility::ends_with(lhs, SEPARATOR_A) && !the::text::string_utility::starts_with(rhs, SEPARATOR_A)) {
+        retval.append(1, SEPARATOR_A);
+        retval.append(rhs);
 
     } else {
-        retval.Append(rhs);
+        retval.append(rhs);
     }
 
     return canonicalise ? Path::Canonicalise(retval) : retval;
@@ -239,19 +239,19 @@ vislib::StringA vislib::sys::Path::Concatenate(const StringA& lhs,
 /*
  * vislib::sys::Path::Concatenate
  */
-vislib::StringW vislib::sys::Path::Concatenate(const StringW& lhs, 
-        const StringW& rhs, const bool canonicalise) {
-    StringW retval(lhs);
+the::wstring vislib::sys::Path::Concatenate(const the::wstring& lhs, 
+        const the::wstring& rhs, const bool canonicalise) {
+    the::wstring retval(lhs);
 
-    if (lhs.EndsWith(SEPARATOR_W) && rhs.StartsWith(SEPARATOR_W)) {
-        retval.Append(rhs.PeekBuffer() + 1);
+    if (the::text::string_utility::ends_with(lhs, SEPARATOR_W) && the::text::string_utility::starts_with(rhs, SEPARATOR_W)) {
+        retval.append(rhs.c_str() + 1);
 
-    } else if (!lhs.EndsWith(SEPARATOR_W) && !rhs.StartsWith(SEPARATOR_W)) {
-        retval.Append(SEPARATOR_W);
-        retval.Append(rhs);
+    } else if (!the::text::string_utility::ends_with(lhs, SEPARATOR_W) && !the::text::string_utility::starts_with(rhs, SEPARATOR_W)) {
+        retval.append(1, SEPARATOR_W);
+        retval.append(rhs);
 
     } else {
-        retval.Append(rhs);
+        retval.append(rhs);
     }
 
     return canonicalise ? Path::Canonicalise(retval) : retval;
@@ -261,10 +261,10 @@ vislib::StringW vislib::sys::Path::Concatenate(const StringW& lhs,
 /*
  * vislib::sys::Path::DeleteDirectory
  */
-void vislib::sys::Path::DeleteDirectory(const StringA& path, bool recursive) {
-    if (!File::Exists(path)) return; // we don't delete non-existing stuff
-    StringA fullPath = Resolve(path);
-    if (!fullPath.EndsWith(SEPARATOR_A)) fullPath += SEPARATOR_A;
+void vislib::sys::Path::DeleteDirectory(const the::astring& path, bool recursive) {
+    if (!File::Exists(path.c_str())) return; // we don't delete non-existing stuff
+    the::astring fullPath = Resolve(path);
+    if (!the::text::string_utility::ends_with(fullPath, SEPARATOR_A)) fullPath += SEPARATOR_A;
 
     if (recursive) {
         // remove files and directory
@@ -272,7 +272,7 @@ void vislib::sys::Path::DeleteDirectory(const StringA& path, bool recursive) {
     }
 
 #ifdef _WIN32
-    if (RemoveDirectoryA(fullPath) == 0) {
+    if (RemoveDirectoryA(fullPath.c_str()) == 0) {
 #else /* _WIN32 */
     if (rmdir(fullPath) != 0) {
 #endif /* _WIN32 */
@@ -285,24 +285,24 @@ void vislib::sys::Path::DeleteDirectory(const StringA& path, bool recursive) {
 /*
  * vislib::sys::Path::DeleteDirectory
  */
-void vislib::sys::Path::DeleteDirectory(const StringW& path, bool recursive) {
+void vislib::sys::Path::DeleteDirectory(const the::wstring& path, bool recursive) {
 #ifdef _WIN32
-    if (!File::Exists(path)) return; // we don't delete non-existing stuff
-    StringW fullPath = Resolve(path);
-    if (!fullPath.EndsWith(SEPARATOR_W)) fullPath += SEPARATOR_W;
+    if (!File::Exists(path.c_str())) return; // we don't delete non-existing stuff
+    the::wstring fullPath = Resolve(path);
+    if (!the::text::string_utility::ends_with(fullPath, SEPARATOR_W)) fullPath += SEPARATOR_W;
 
     if (recursive) {
         // remove files and directory
         PurgeDirectory(fullPath, true);
     }
 
-    if (RemoveDirectoryW(fullPath) == 0) {
+    if (RemoveDirectoryW(fullPath.c_str()) == 0) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     // linux is stupid
-    DeleteDirectory(W2A(path), recursive);
+    DeleteDirectory(THE_W2A(path), recursive);
 
 #endif /* _WIN32 */
 }
@@ -311,15 +311,15 @@ void vislib::sys::Path::DeleteDirectory(const StringW& path, bool recursive) {
 /*
  * vislib::sys::Path::FindExecutablePath
  */
-vislib::StringA vislib::sys::Path::FindExecutablePath(
-        const vislib::StringA& filename) {
+the::astring vislib::sys::Path::FindExecutablePath(
+        const the::astring& filename) {
 #ifdef _WIN32
     bool found = false;
     DWORD bufSize = MAX_PATH;
     char *buffer = new char[bufSize];
 
     // first try: "SearchPath"
-    DWORD rv = ::SearchPathA(NULL, filename.PeekBuffer(), NULL, bufSize,
+    DWORD rv = ::SearchPathA(NULL, filename.c_str(), NULL, bufSize,
         buffer, NULL);
     if (rv > 0) {
         found = true;
@@ -327,7 +327,7 @@ vislib::StringA vislib::sys::Path::FindExecutablePath(
             bufSize = rv + 1;
             delete[] buffer;
             buffer = new char[bufSize];
-            rv = ::SearchPathA(NULL, filename.PeekBuffer(), NULL, bufSize,
+            rv = ::SearchPathA(NULL, filename.c_str(), NULL, bufSize,
                 buffer, NULL);
             if (rv == 0) { // failed
                 found = false;
@@ -348,7 +348,7 @@ vislib::StringA vislib::sys::Path::FindExecutablePath(
         
         do {
             hr = ::AssocQueryStringA(ASSOCF_INIT_BYEXENAME, ASSOCSTR_EXECUTABLE,
-                filename.PeekBuffer(), NULL, buffer, &bufSize);
+                filename.c_str(), NULL, buffer, &bufSize);
             if ((hr != E_POINTER) && (hr != S_OK)) { // error
                 break;
             }
@@ -364,7 +364,7 @@ vislib::StringA vislib::sys::Path::FindExecutablePath(
     }
 
     if (found) {
-        vislib::StringA retval(buffer);
+        the::astring retval(buffer);
         delete[] buffer;
         return retval;
     } else {
@@ -376,13 +376,13 @@ vislib::StringA vislib::sys::Path::FindExecutablePath(
     //  Do not use "Console::Run" or "Process" methods because they might use
     // this method to determine the full path of their binaries. So we avoid
     // calling cycles by just using "popen" directly
-    vislib::StringA cmd("which ");
-    vislib::StringA ret;
+    the::astring cmd("which ");
+    the::astring ret;
     cmd += filename;
     cmd += " 2> /dev/null";
     const int bufferSize = 1024;
     char buffer[bufferSize];
-    FILE *which = ::popen(cmd.PeekBuffer(), "r");
+    FILE *which = ::popen(cmd.c_str(), "r");
     if (which == NULL) {
         return "";
     }
@@ -391,11 +391,11 @@ vislib::StringA vislib::sys::Path::FindExecutablePath(
     }
     ::pclose(which);
 
-    vislib::StringA::Size end = ret.Find('\n');
-    if (end != vislib::StringA::INVALID_POS) {
-        ret.Truncate(end);
+    the::astring::size_type end = ret.find('\n');
+    if (end != the::astring::npos) {
+        ret.resize(end);
     }
-    if (ret.EndsWith(filename)) {
+    if (the::text::string_utility::ends_with(ret, filename)) {
         return ret;
     } else {
         return "";
@@ -408,15 +408,15 @@ vislib::StringA vislib::sys::Path::FindExecutablePath(
 /*
  * vislib::sys::Path::FindExecutablePath
  */
-vislib::StringW vislib::sys::Path::FindExecutablePath(
-        const vislib::StringW& filename) {
+the::wstring vislib::sys::Path::FindExecutablePath(
+        const the::wstring& filename) {
 #ifdef _WIN32
     bool found = false;
     DWORD bufSize = MAX_PATH;
     wchar_t *buffer = new wchar_t[bufSize];
 
     // first try: "SearchPath"
-    DWORD rv = ::SearchPathW(NULL, filename.PeekBuffer(), NULL, bufSize,
+    DWORD rv = ::SearchPathW(NULL, filename.c_str(), NULL, bufSize,
         buffer, NULL);
     if (rv > 0) {
         found = true;
@@ -424,7 +424,7 @@ vislib::StringW vislib::sys::Path::FindExecutablePath(
             bufSize = rv + 1;
             delete[] buffer;
             buffer = new wchar_t[bufSize];
-            rv = ::SearchPathW(NULL, filename.PeekBuffer(), NULL, bufSize,
+            rv = ::SearchPathW(NULL, filename.c_str(), NULL, bufSize,
                 buffer, NULL);
             if (rv == 0) { // failed
                 found = false;
@@ -445,7 +445,7 @@ vislib::StringW vislib::sys::Path::FindExecutablePath(
         
         do {
             hr = ::AssocQueryStringW(ASSOCF_INIT_BYEXENAME, ASSOCSTR_EXECUTABLE,
-                filename.PeekBuffer(), NULL, buffer, &bufSize);
+                filename.c_str(), NULL, buffer, &bufSize);
             if ((hr != E_POINTER) && (hr != S_OK)) { // error
                 break;
             }
@@ -461,7 +461,7 @@ vislib::StringW vislib::sys::Path::FindExecutablePath(
     }
 
     if (found) {
-        vislib::StringW retval(buffer);
+        the::wstring retval(buffer);
         delete[] buffer;
         return retval;
     } else {
@@ -469,7 +469,7 @@ vislib::StringW vislib::sys::Path::FindExecutablePath(
     }
 #else /* _WIN32 */
     // linux is stupid
-    return A2W(FindExecutablePath(W2A(filename)));
+    return THE_A2W(FindExecutablePath(THE_W2A(filename)));
 #endif /* _WIN32 */
 }
 
@@ -477,27 +477,28 @@ vislib::StringW vislib::sys::Path::FindExecutablePath(
 /*
  * vislib::sys::Path::GetApplicationPathA
  */
-vislib::StringA vislib::sys::Path::GetApplicationPathA(void) {
-    vislib::StringA retval;
+the::astring vislib::sys::Path::GetApplicationPathA(void) {
+    the::astring retval;
 #ifdef _WIN32
-    const DWORD nSize = 0xFFFF;
-    if (::GetModuleFileNameA(NULL, retval.AllocateBuffer(nSize), nSize)
+    const DWORD nSize = MAX_PATH;
+    retval = the::astring(nSize, ' ');
+    if (::GetModuleFileNameA(NULL, const_cast<char*>(retval.c_str()), nSize)
             == ERROR_INSUFFICIENT_BUFFER) {
-        retval.Clear();
+        retval.clear();
     } else {
         if (::GetLastError() != ERROR_SUCCESS) {
-            retval.Clear();
+            retval.clear();
         }
     }
 
 #else /* _WIN32 */
     // This is the best I got for now. Requires '/proc'
-    vislib::StringA pid;
-    pid.Format("/proc/%d/exe", getpid());
-    vislib::StringA path;
+    the::astring pid;
+    the::text::astring_builder::format_to(pid, "/proc/%d/exe", getpid());
+    the::astring path;
     const size_t bufSize = 0xFFFF;
     char *buf = path.AllocateBuffer(bufSize);
-    ssize_t size = readlink(pid.PeekBuffer(), buf, bufSize - 1);
+    ssize_t size = readlink(pid.c_str(), buf, bufSize - 1);
     if (size >= 0) {
         buf[size] = 0;
         retval = buf;
@@ -513,21 +514,22 @@ vislib::StringA vislib::sys::Path::GetApplicationPathA(void) {
 /*
  * vislib::sys::Path::GetApplicationPathW
  */
-vislib::StringW vislib::sys::Path::GetApplicationPathW(void) {
+the::wstring vislib::sys::Path::GetApplicationPathW(void) {
 #ifdef _WIN32
-    vislib::StringW retval;
-    const DWORD nSize = 0xFFFF;
-    if (::GetModuleFileNameW(NULL, retval.AllocateBuffer(nSize), nSize)
+    the::wstring retval;
+    const DWORD nSize = MAX_PATH;
+    retval = the::wstring(nSize, L' ');
+    if (::GetModuleFileNameW(NULL, const_cast<wchar_t*>(retval.c_str()), nSize)
             == ERROR_INSUFFICIENT_BUFFER) {
-        retval.Clear();
+        retval.clear();
     } else {
         if (::GetLastError() != ERROR_SUCCESS) {
-            retval.Clear();
+            retval.clear();
         }
     }
     return retval;
 #else /* _WIN32 */
-    return A2W(GetApplicationPathA());
+    return THE_A2W(GetApplicationPathA());
 #endif /* _WIN32 */
 }
 
@@ -535,7 +537,7 @@ vislib::StringW vislib::sys::Path::GetApplicationPathW(void) {
 /*
  * vislib::sys::Path::GetCurrentDirectoryA
  */
-vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
+the::astring vislib::sys::Path::GetCurrentDirectoryA(void) {
 #ifdef _WIN32
     DWORD bufferSize = ::GetCurrentDirectoryA(0, NULL);
     char *buffer = new char[bufferSize];
@@ -545,7 +547,7 @@ vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
-    StringA retval(buffer);
+    the::astring retval(buffer);
     the::safe_array_delete(buffer);
 
 #else /* _WIN32 */
@@ -564,12 +566,12 @@ vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
         }
     }
 
-    StringA retval(buffer);
+    the::astring retval(buffer);
     the::safe_array_delete(buffer);
 
 #endif /* _WIN32 */
 
-    if (!retval.EndsWith(SEPARATOR_A)) {
+    if (!the::text::string_utility::ends_with(retval, SEPARATOR_A)) {
         retval += SEPARATOR_A;
     }
 
@@ -580,7 +582,7 @@ vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
 /*
  * vislib::sys::Path::GetCurrentDirectoryW
  */
-vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
+the::wstring vislib::sys::Path::GetCurrentDirectoryW(void) {
 #ifdef _WIN32
     DWORD bufferSize = ::GetCurrentDirectoryW(0, NULL);
     wchar_t *buffer = new wchar_t[bufferSize];
@@ -590,16 +592,16 @@ vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
-    StringW retval(buffer);
+    the::wstring retval(buffer);
     the::safe_array_delete(buffer);
 
-    if (!retval.EndsWith(SEPARATOR_W)) {
+    if (!the::text::string_utility::ends_with(retval, SEPARATOR_W)) {
         retval += SEPARATOR_W;
     }
     return retval;
 
 #else /* _WIN32 */
-    return StringW(GetCurrentDirectoryA());
+    return the::wstring(GetCurrentDirectoryA());
 #endif /* _WIN32 */
 }
 
@@ -607,14 +609,14 @@ vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
 /*
  * vislib::sys::Path::GetDirectoryName
  */
-vislib::StringA vislib::sys::Path::GetDirectoryName(const char *path) {
-    StringA retval(path);
-    StringA::Size end = retval.FindLast(SEPARATOR_A);
+the::astring vislib::sys::Path::GetDirectoryName(const char *path) {
+    the::astring retval(path);
+    the::astring::size_type end = retval.rfind(SEPARATOR_A);
 
-    if (end == StringA::INVALID_POS) {
-        retval.Clear();
+    if (end == the::astring::npos) {
+        retval.clear();
     } else {
-        retval.Truncate(end);
+        retval.resize(end);
     }
 
     return retval;
@@ -624,14 +626,14 @@ vislib::StringA vislib::sys::Path::GetDirectoryName(const char *path) {
 /*
  * vislib::sys::Path::GetDirectoryName
  */
-vislib::StringW vislib::sys::Path::GetDirectoryName(const wchar_t *path) {
-    StringW retval(path);
-    StringW::Size end = retval.FindLast(SEPARATOR_W);
+the::wstring vislib::sys::Path::GetDirectoryName(const wchar_t *path) {
+    the::wstring retval(path);
+    the::wstring::size_type end = retval.rfind(SEPARATOR_W);
 
-    if (end == StringW::INVALID_POS) {
-        retval.Clear();
+    if (end == the::wstring::npos) {
+        retval.clear();
     } else {
-        retval.Truncate(end);
+        retval.resize(end);
     }
 
     return retval;
@@ -641,7 +643,7 @@ vislib::StringW vislib::sys::Path::GetDirectoryName(const wchar_t *path) {
 /*
  * vislib::sys::Path::GetTempDirectoryA
  */
-vislib::StringA vislib::sys::Path::GetTempDirectoryA(void) {
+the::astring vislib::sys::Path::GetTempDirectoryA(void) {
 #ifdef _WIN32
     char buffer[MAX_PATH + 1];
     buffer[MAX_PATH] = buffer[0] = 0;
@@ -651,7 +653,7 @@ vislib::StringA vislib::sys::Path::GetTempDirectoryA(void) {
     return buffer;
 //    return Environment::GetVariable("TEMP", false);
 #else /* _WIN32 */
-    return StringA("/tmp");
+    return the::astring("/tmp");
 #endif /* _WIN32 */
 }
 
@@ -659,7 +661,7 @@ vislib::StringA vislib::sys::Path::GetTempDirectoryA(void) {
 /*
  * vislib::sys::Path::GetTempDirectoryW
  */
-vislib::StringW vislib::sys::Path::GetTempDirectoryW(void) {
+the::wstring vislib::sys::Path::GetTempDirectoryW(void) {
 #ifdef _WIN32
     wchar_t buffer[MAX_PATH + 1];
     buffer[MAX_PATH] = buffer[0] = 0;
@@ -669,7 +671,7 @@ vislib::StringW vislib::sys::Path::GetTempDirectoryW(void) {
     return buffer;
 //    return Environment::GetVariable(L"TEMP", false);
 #else /* _WIN32 */
-    return StringW(L"/tmp");
+    return the::wstring(L"/tmp");
 #endif /* _WIN32 */
 }
 
@@ -678,12 +680,12 @@ vislib::StringW vislib::sys::Path::GetTempDirectoryW(void) {
 /*
  * vislib::sys::Path::GetUserHomeDirectoryA
  */
-vislib::StringA vislib::sys::Path::GetUserHomeDirectoryA(void) {
+the::astring vislib::sys::Path::GetUserHomeDirectoryA(void) {
 #ifdef _WIN32
-    StringA retval;
+    the::astring retval(MAX_PATH, ' ');
 
     if (FAILED(::SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, 0, 
-            retval.AllocateBuffer(MAX_PATH)))) {
+            const_cast<char*>(retval.c_str())))) {
         throw the::system::system_exception(ERROR_NOT_FOUND, __FILE__, __LINE__);
     }
 
@@ -694,10 +696,10 @@ vislib::StringA vislib::sys::Path::GetUserHomeDirectoryA(void) {
         throw the::system::system_exception(ENOENT, __FILE__, __LINE__);
     }
 
-    StringA retval(path);
+    the::astring retval(path);
 #endif /* _WIN32 */
 
-    if (!retval.EndsWith(SEPARATOR_A)) {
+    if (!the::text::string_utility::ends_with(retval, SEPARATOR_A)) {
         retval += SEPARATOR_A;
     }
 
@@ -708,22 +710,22 @@ vislib::StringA vislib::sys::Path::GetUserHomeDirectoryA(void) {
 /*
  * vislib::sys::Path::GetUserHomeDirectoryW
  */
-vislib::StringW vislib::sys::Path::GetUserHomeDirectoryW(void) {
+the::wstring vislib::sys::Path::GetUserHomeDirectoryW(void) {
 #ifdef _WIN32
-    StringW retval;
+    the::wstring retval(MAX_PATH, L' ');
 
     if (FAILED(::SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, 0, 
-            retval.AllocateBuffer(MAX_PATH)))) {
+            const_cast<wchar_t*>(retval.c_str())))) {
         throw the::system::system_exception(ERROR_NOT_FOUND, __FILE__, __LINE__);
     }
 
-    if (!retval.EndsWith(SEPARATOR_W)) {
+    if (!the::text::string_utility::ends_with(retval, SEPARATOR_W)) {
         retval += SEPARATOR_W;
     }
     return retval;
 
 #else /* _WIN32 */
-    return StringW(GetUserHomeDirectoryA());
+    return the::wstring(GetUserHomeDirectoryA());
 
 #endif /* _WIN32 */
 }
@@ -732,13 +734,13 @@ vislib::StringW vislib::sys::Path::GetUserHomeDirectoryW(void) {
 /*
  * vislib::sys::Path::IsRelative
  */
-bool vislib::sys::Path::IsRelative(const StringA& path) {
+bool vislib::sys::Path::IsRelative(const the::astring& path) {
 #ifdef _WIN32
-    return (::PathIsRelativeA(path.PeekBuffer()) != FALSE)
-        || path.IsEmpty()
-        || ((path.PeekBuffer()[0] == SEPARATOR_A) && (path.PeekBuffer()[1] != SEPARATOR_A));
+    return (::PathIsRelativeA(path.c_str()) != FALSE)
+        || path.empty()
+        || ((path.c_str()[0] == SEPARATOR_A) && (path.c_str()[1] != SEPARATOR_A));
 #else /* _WIN32 */
-    return !path.StartsWith(SEPARATOR_A);
+    return !the::text::string_utility::starts_with(path, SEPARATOR_A);
 #endif /* _WIN32 */
 }
 
@@ -746,13 +748,13 @@ bool vislib::sys::Path::IsRelative(const StringA& path) {
 /*
  * vislib::sys::Path::IsRelative
  */
-bool vislib::sys::Path::IsRelative(const StringW& path) {
+bool vislib::sys::Path::IsRelative(const the::wstring& path) {
 #ifdef _WIN32
-    return (::PathIsRelativeW(path.PeekBuffer()) != FALSE)
-        || path.IsEmpty()
-        || ((path.PeekBuffer()[0] == SEPARATOR_W) && (path.PeekBuffer()[1] != SEPARATOR_W));
+    return (::PathIsRelativeW(path.c_str()) != FALSE)
+        || path.empty()
+        || ((path.c_str()[0] == SEPARATOR_W) && (path.c_str()[1] != SEPARATOR_W));
 #else /* _WIN32 */
-    return !path.StartsWith(SEPARATOR_W);
+    return !the::text::string_utility::starts_with(path, SEPARATOR_W);
 #endif /* _WIN32 */
 }
 
@@ -760,21 +762,21 @@ bool vislib::sys::Path::IsRelative(const StringW& path) {
 /*
  * vislib::sys::Path::MakeDirectory
  */
-void vislib::sys::Path::MakeDirectory(const StringA& path) {
-    Stack<StringA> missingParts;
-    StringA firstBuilt;
-    StringA curPath = Resolve(path);
+void vislib::sys::Path::MakeDirectory(const the::astring& path) {
+    Stack<the::astring> missingParts;
+    the::astring firstBuilt;
+    the::astring curPath = Resolve(path);
 
-    while (!File::Exists(curPath)) {
-        StringA::Size pos = curPath.FindLast(SEPARATOR_A);
-        if (pos != StringA::INVALID_POS) {
-            missingParts.Push(curPath.Substring(pos + 1));
-            if (missingParts.Peek()->IsEmpty()) {
+    while (!File::Exists(curPath.c_str())) {
+        the::astring::size_type pos = curPath.rfind(SEPARATOR_A);
+        if (pos != the::astring::npos) {
+            missingParts.Push(curPath.substr(pos + 1));
+            if (missingParts.Peek()->empty()) {
                 // Remove empty directories as the incremental directory 
                 // creation later on will fail for these.
                 missingParts.Pop();
             }
-            curPath.Truncate(pos);
+            curPath.resize(pos);
 
         } else {
             // Problem: No Separators left, but directory still does not exist.
@@ -787,7 +789,7 @@ void vislib::sys::Path::MakeDirectory(const StringA& path) {
     }
 
     // curPath exists
-    if (!File::IsDirectory(curPath)) {
+    if (!File::IsDirectory(curPath.c_str())) {
         // the latest existing directory is not a directory (may be a file?)
 #ifdef _WIN32
         throw the::system::system_exception(ERROR_DIRECTORY, __FILE__, __LINE__);
@@ -796,17 +798,17 @@ void vislib::sys::Path::MakeDirectory(const StringA& path) {
 #endif /* _WIN32 */
     }
 
-    while (!missingParts.IsEmpty()) {
+    while (!missingParts.empty()) {
         curPath += SEPARATOR_A;
         curPath += missingParts.Pop();
 
 #ifdef _WIN32
-        if (CreateDirectoryA(curPath, NULL) != 0) {
+        if (CreateDirectoryA(curPath.c_str(), NULL) != 0) {
 #else /* _WIN32 */
         if (mkdir(curPath, S_IRWXG | S_IRWXO | S_IRWXU) == 0) { // TODO: Check
 #endif /* _WIN32 */
             // success, so go on.
-            if (firstBuilt.IsEmpty()) {
+            if (firstBuilt.empty()) {
                 firstBuilt = curPath;
             }
 
@@ -829,22 +831,22 @@ void vislib::sys::Path::MakeDirectory(const StringA& path) {
 /*
  * vislib::sys::Path::MakeDirectory
  */
-void vislib::sys::Path::MakeDirectory(const StringW& path) {
+void vislib::sys::Path::MakeDirectory(const the::wstring& path) {
 #ifdef _WIN32
-    Stack<StringW> missingParts;
-    StringW firstBuilt;
-    StringW curPath = Resolve(path);
+    Stack<the::wstring> missingParts;
+    the::wstring firstBuilt;
+    the::wstring curPath = Resolve(path);
 
-    while (!File::Exists(curPath)) {
-        StringW::Size pos = curPath.FindLast(SEPARATOR_W);
-        if (pos != StringW::INVALID_POS) {
-            missingParts.Push(curPath.Substring(pos + 1));
-            if (missingParts.Peek()->IsEmpty()) {
+    while (!File::Exists(curPath.c_str())) {
+        the::wstring::size_type pos = curPath.rfind(SEPARATOR_W);
+        if (pos != the::wstring::npos) {
+            missingParts.Push(curPath.substr(pos + 1));
+            if (missingParts.Peek()->empty()) {
                 // Remove empty directories as the incremental directory 
                 // creation later on will fail for these.
                 missingParts.Pop();
             }
-            curPath.Truncate(pos);
+            curPath.resize(pos);
 
         } else {
             // Problem: No Separators left, but directory still does not exist.
@@ -853,18 +855,18 @@ void vislib::sys::Path::MakeDirectory(const StringW& path) {
     }
 
     // curPath exists
-    if (!File::IsDirectory(curPath)) {
+    if (!File::IsDirectory(curPath.c_str())) {
         // the latest existing directory is not a directory (may be a file?)
         throw the::system::system_exception(ERROR_DIRECTORY, __FILE__, __LINE__);
     }
 
-    while (!missingParts.IsEmpty()) {
+    while (!missingParts.empty()) {
         curPath += SEPARATOR_W;
         curPath += missingParts.Pop();
 
-        if (CreateDirectoryW(curPath, NULL) != 0) {
+        if (CreateDirectoryW(curPath.c_str(), NULL) != 0) {
             // success, so go on.
-            if (firstBuilt.IsEmpty()) {
+            if (firstBuilt.empty()) {
                 firstBuilt = curPath;
             }
 
@@ -884,7 +886,7 @@ void vislib::sys::Path::MakeDirectory(const StringW& path) {
 
 #else /* _WIN32 */
     // linux is stupid
-    MakeDirectory(W2A(path));
+    MakeDirectory(THE_W2A(path));
 
 #endif /* _WIN32 */
 }
@@ -893,15 +895,15 @@ void vislib::sys::Path::MakeDirectory(const StringW& path) {
 /*
  * vislib::sys::Path::PurgeDirectory
  */
-void vislib::sys::Path::PurgeDirectory(const StringA& path, bool recursive) {
-    StringA fullpath = Resolve(path);
-    if (!fullpath.EndsWith(SEPARATOR_A)) fullpath += SEPARATOR_A;
-    DirectoryIteratorA iter(fullpath);
+void vislib::sys::Path::PurgeDirectory(const the::astring& path, bool recursive) {
+    the::astring fullpath = Resolve(path);
+    if (!the::text::string_utility::ends_with(fullpath, SEPARATOR_A)) fullpath += SEPARATOR_A;
+    DirectoryIteratorA iter(fullpath.c_str());
 
     while (iter.HasNext()) {
         DirectoryEntryA entry = iter.Next();
         if (entry.Type == DirectoryEntryA::FILE) {
-            vislib::sys::File::Delete(fullpath + entry.Path);
+            vislib::sys::File::Delete((fullpath + entry.Path).c_str());
 
         } else
         if (entry.Type == DirectoryEntryA::DIRECTORY) {
@@ -921,15 +923,15 @@ void vislib::sys::Path::PurgeDirectory(const StringA& path, bool recursive) {
 /*
  * vislib::sys::Path::PurgeDirectory
  */
-void vislib::sys::Path::PurgeDirectory(const StringW& path, bool recursive) {
-    StringW fullpath = Resolve(path);
-    if (!fullpath.EndsWith(SEPARATOR_W)) fullpath += SEPARATOR_W;
-    DirectoryIteratorW iter(fullpath);
+void vislib::sys::Path::PurgeDirectory(const the::wstring& path, bool recursive) {
+    the::wstring fullpath = Resolve(path);
+    if (!the::text::string_utility::ends_with(fullpath, SEPARATOR_W)) fullpath += SEPARATOR_W;
+    DirectoryIteratorW iter(fullpath.c_str());
 
     while (iter.HasNext()) {
         DirectoryEntryW entry = iter.Next();
         if (entry.Type == DirectoryEntryW::FILE) {
-            vislib::sys::File::Delete(fullpath + entry.Path);
+            vislib::sys::File::Delete((fullpath + entry.Path).c_str());
 
         } else
         if (entry.Type == DirectoryEntryW::DIRECTORY) {
@@ -949,21 +951,21 @@ void vislib::sys::Path::PurgeDirectory(const StringW& path, bool recursive) {
 /*
  * vislib::sys::Path::Resolve
  */
-vislib::StringA vislib::sys::Path::Resolve(StringA path, StringA basepath) {
+the::astring vislib::sys::Path::Resolve(the::astring path, the::astring basepath) {
     // TODO: Windows shell API resolve does not work in the expected
     // way, so we use the same manual approach for Windows and Linux.
 
 #ifdef _WIN32
     /* Replace unchefm‰ﬂige path separators. */
-    basepath.Replace('/', SEPARATOR_A);
-    path.Replace('/', SEPARATOR_A);
+    the::text::string_utility::replace(basepath, '/', SEPARATOR_A);
+    the::text::string_utility::replace(path, '/', SEPARATOR_A);
 #endif /* _WIN32 */
 
     if (Path::IsRelative(basepath)) {
         basepath = Resolve(basepath);
     }
 
-    if (path.IsEmpty()) {
+    if (path.empty()) {
         /* Path is empty, i. e. return current working directory. */
         return Path::Canonicalise(basepath);
     
@@ -972,11 +974,11 @@ vislib::StringA vislib::sys::Path::Resolve(StringA path, StringA basepath) {
         return Path::Canonicalise(path);
 
     } else if ((path[0] == MYDOCUMENTS_MARKER_A) 
-            && ((path.Length() == 1) || path[1] == SEPARATOR_A)) {
+            && ((path.size() == 1) || path[1] == SEPARATOR_A)) {
         /*
          * replace leading ~ with users home directory
          */
-        path.Replace(MYDOCUMENTS_MARKER_A, Path::GetUserHomeDirectoryA(), 1);
+        the::text::string_utility::replace(path, MYDOCUMENTS_MARKER_A, Path::GetUserHomeDirectoryA(), 1);
         return Path::Canonicalise(path);
 
     } else if ((path[0] == SEPARATOR_A) && (path[1] != SEPARATOR_A)) {
@@ -984,7 +986,7 @@ vislib::StringA vislib::sys::Path::Resolve(StringA path, StringA basepath) {
          * Concatenate current drive and relative path, and canonicalise
          * the result.
          */
-        return Path::Concatenate(basepath.Substring(0, 2), path, true);
+        return Path::Concatenate(basepath.substr(0, 2), path, true);
 
     } else {
         /*
@@ -999,21 +1001,21 @@ vislib::StringA vislib::sys::Path::Resolve(StringA path, StringA basepath) {
 /*
  * vislib::sys::Path::Resolve
  */
-vislib::StringW vislib::sys::Path::Resolve(StringW path, StringW basepath) {
+the::wstring vislib::sys::Path::Resolve(the::wstring path, the::wstring basepath) {
     // TODO: Windows shell API resolve does not work in the expected
     // way, so we use the same manual approach for Windows and Linux.
 
 #ifdef _WIN32
     /* Replace unchefm‰ﬂige path separators. */
-    basepath.Replace(L'/', SEPARATOR_W);
-    path.Replace(L'/', SEPARATOR_W);
+    the::text::string_utility::replace(basepath, L'/', SEPARATOR_W);
+    the::text::string_utility::replace(path, L'/', SEPARATOR_W);
 #endif /* _WIN32 */
 
     if (Path::IsRelative(basepath)) {
         basepath = Resolve(basepath);
     }
 
-    if (path.IsEmpty()) {
+    if (path.empty()) {
         /* Path is empty, i. e. return current working directory. */
         return Path::Canonicalise(basepath);
 
@@ -1022,11 +1024,11 @@ vislib::StringW vislib::sys::Path::Resolve(StringW path, StringW basepath) {
         return Path::Canonicalise(path);
 
     } else if ((path[0] == MYDOCUMENTS_MARKER_W) 
-            && ((path.Length() == 1) || path[1] == SEPARATOR_W)) {
+            && ((path.size() == 1) || path[1] == SEPARATOR_W)) {
         /*
          * replace leading ~ with users home directory
          */
-        path.Replace(MYDOCUMENTS_MARKER_W, Path::GetUserHomeDirectoryW());
+        the::text::string_utility::replace(path, MYDOCUMENTS_MARKER_W, Path::GetUserHomeDirectoryW());
         return Path::Canonicalise(path);
 
     } else if ((path[0] == SEPARATOR_W) && (path[1] != SEPARATOR_W)) {
@@ -1034,7 +1036,7 @@ vislib::StringW vislib::sys::Path::Resolve(StringW path, StringW basepath) {
          * Concatenate current drive and relative path, and canonicalise
          * the result.
          */
-        return Path::Concatenate(basepath.Substring(0, 2), path, true);
+        return Path::Concatenate(basepath.substr(0, 2), path, true);
 
     } else {
         /*
@@ -1049,9 +1051,9 @@ vislib::StringW vislib::sys::Path::Resolve(StringW path, StringW basepath) {
 /*
  * vislib::sys::Path::SetCurrentDirectory
  */
-void vislib::sys::Path::SetCurrentDirectory(const StringA& path) {
+void vislib::sys::Path::SetCurrentDirectory(const the::astring& path) {
 #ifdef _WIN32
-    if (::SetCurrentDirectoryA(path) != TRUE) {
+    if (::SetCurrentDirectoryA(path.c_str()) != TRUE) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
@@ -1065,13 +1067,13 @@ void vislib::sys::Path::SetCurrentDirectory(const StringA& path) {
 /*
  * vislib::sys::Path::SetCurrentDirectory
  */
-void vislib::sys::Path::SetCurrentDirectory(const StringW& path) {
+void vislib::sys::Path::SetCurrentDirectory(const the::wstring& path) {
 #ifdef _WIN32
-    if (::SetCurrentDirectoryW(path) != TRUE) {
+    if (::SetCurrentDirectoryW(path.c_str()) != TRUE) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
-    SetCurrentDirectory(static_cast<StringA>(path));
+    SetCurrentDirectory(static_cast<the::astring>(path));
 #endif /* _WIN32 */
 }
 

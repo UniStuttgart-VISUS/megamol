@@ -75,7 +75,7 @@ namespace vislib {
          */
         inline void Add(const T& element) {
             this->elements.Append(element);
-            THE_ASSERT(!this->elements.IsEmpty());
+            THE_ASSERT(!this->elements.empty());
             this->siftUp(this->elements.Count() - 1);
         }
 
@@ -144,8 +144,8 @@ namespace vislib {
          *
          * @return true, if no element is in the heap, false otherwise.
          */
-        inline bool IsEmpty(void) const {
-            return this->elements.IsEmpty();
+        inline bool empty(void) const {
+            return this->elements.empty();
         }
 
         /**

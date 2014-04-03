@@ -25,7 +25,7 @@
 #include <curses.h>
 #include <term.h>
 
-#include "vislib/StringConverter.h"
+#include "the/text/string_converter.h"
 
 #endif /* _WIN32 */
 
@@ -33,6 +33,8 @@
 #include "the/system/system_exception.h"
 #include "the/not_supported_exception.h"
 #include "vislib/Thread.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 
 
 /*
@@ -84,7 +86,7 @@ public:
 #endif /* _WIN32 */
 
         /** The target string to receive the read data */
-        vislib::StringA *target;
+        the::astring *target;
 
     } PipeReaderInfo;
 
@@ -241,8 +243,8 @@ private:
             // first time call
 
             { // check capabilities
-                vislib::StringA out;
-                vislib::StringA err;
+                the::astring out;
+                the::astring err;
 
                 this->dcopPresent = false;
                 this->isKonsole = false;
@@ -269,12 +271,12 @@ private:
 
             if (this->oldConsoleTitle == NULL) {
                 // try to store the old title
-                vislib::StringA oldName;
+                the::astring oldName;
 
                 if (this->dcopPresent && this->isKonsole) {
-                    vislib::StringA cmd;
-                    cmd.Format("dcop $KONSOLE_DCOP_SESSION sessionName");
-                    vislib::sys::Console::Run(cmd.PeekBuffer(), &oldName, NULL);
+                    the::astring cmd;
+                    the::text::astring_builder::format_to(cmd, "dcop $KONSOLE_DCOP_SESSION sessionName");
+                    vislib::sys::Console::Run(cmd.c_str(), &oldName, NULL);
 
                 } else if (this->isXterm) {
                     // getting title from xterm is very unsecure
@@ -299,7 +301,7 @@ private:
                     fflush(stdout);
 
                     {
-                        StringA rd;
+                        the::astring rd;
                         PipeReaderInfo pri;
                         pri.pipe = STDIN_FILENO;
                         pri.target = &rd;
@@ -317,7 +319,7 @@ private:
                         stdinreader.Terminate(true);
 
                         if (rd.Length() > 5) {
-                            oldName = rd.Substring(3, rd.Length() - 4);
+                            oldName = rd.substr(3, rd.Length() - 4);
                         }
 
                     }
@@ -334,7 +336,7 @@ private:
                 unsigned int size = oldName.Length();
                 if (size > 0) {
                     this->oldConsoleTitle = new char[size + 1];
-                    ::memcpy(this->oldConsoleTitle, oldName.PeekBuffer(), size * sizeof(char));
+                    ::memcpy(this->oldConsoleTitle, oldName.c_str(), size * sizeof(char));
                     this->oldConsoleTitle[size] = 0;
 
                     // truncate control characters at the end
@@ -356,9 +358,9 @@ private:
         }
 
         if (this->dcopPresent && this->isKonsole) {
-            vislib::StringA cmd;
-            cmd.Format("dcop $KONSOLE_DCOP_SESSION renameSession '%s'", title);
-            vislib::sys::Console::Run(cmd.PeekBuffer(), NULL, NULL);
+            the::astring cmd;
+            the::text::astring_builder::format_to(cmd, "dcop $KONSOLE_DCOP_SESSION renameSession '%s'", title);
+            vislib::sys::Console::Run(cmd.c_str(), NULL, NULL);
 
         } else if (this->isXterm) {
             // xterm operating system command: echo '\033]0;AAAAA\007'
@@ -432,8 +434,8 @@ private:
 /*
  * vislib::sys::Console::Run
  */
-int vislib::sys::Console::Run(const char *command, StringA *outStdOut, 
-        StringA *outStdErr) {
+int vislib::sys::Console::Run(const char *command, the::astring *outStdOut, 
+        the::astring *outStdErr) {
     // TODO: Could use some of the timeout mechanisms?
 #ifdef _WIN32
     HANDLE hErrorRead, hErrorWrite;
@@ -475,11 +477,11 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
 
     ::ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
 
-    vislib::StringA cmd = vislib::sys::Path::FindExecutablePath("cmd.exe");
-    vislib::StringA cmdLine;
-    cmdLine.Format("/A /C \"%s\"", command);
+    the::astring cmd = vislib::sys::Path::FindExecutablePath("cmd.exe");
+    the::astring cmdLine;
+    the::text::astring_builder::format_to(cmdLine, "/A /C \"%s\"", command);
 
-    BOOL cp = ::CreateProcessA(cmd, const_cast<char *>(cmdLine.PeekBuffer()), 
+    BOOL cp = ::CreateProcessA(cmd.c_str(), const_cast<char *>(cmdLine.c_str()), 
         NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &startInfo, &pi);
 
     if (cp == FALSE) {
@@ -504,7 +506,7 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
     if (outStdOut != NULL) {
         outputReaderInfo.pipe = hOutputRead;
         outputReaderInfo.target = outStdOut;
-        outStdOut->Clear();
+        outStdOut->clear();
         if (!outputReader.Start(&outputReaderInfo)) {
             outStdOut = NULL; // avoid join
         }
@@ -513,7 +515,7 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
     if (outStdErr != NULL) {
         errorReaderInfo.pipe = hErrorRead;
         errorReaderInfo.target = outStdErr;
-        outStdErr->Clear();
+        outStdErr->clear();
         if (!errorReader.Start(&errorReaderInfo)) {
             outStdErr = NULL; // avoid join
         }
@@ -954,9 +956,9 @@ unsigned int vislib::sys::Console::GetHeight(void) {
 /*
  * vislib::sys::Console::SetTitle
  */
-void vislib::sys::Console::SetTitle(const vislib::StringA& title) {
+void vislib::sys::Console::SetTitle(const the::astring& title) {
 #ifdef _WIN32
-    ::SetConsoleTitleA(title);
+    ::SetConsoleTitleA(title.c_str());
 
 #else // _WIN32
     vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(title);
@@ -968,13 +970,13 @@ void vislib::sys::Console::SetTitle(const vislib::StringA& title) {
 /*
  * vislib::sys::Console::SetTitle
  */
-void vislib::sys::Console::SetTitle(const vislib::StringW& title) {
+void vislib::sys::Console::SetTitle(const the::wstring& title) {
 #ifdef _WIN32
-    ::SetConsoleTitleW(title);
+    ::SetConsoleTitleW(title.c_str());
 
 #else // _WIN32
     // we only support ANSI-Strings for Linux consoles.
-    vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(W2A(title));
+    vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(THE_W2A(title));
 
 #endif // _WIN32
 }

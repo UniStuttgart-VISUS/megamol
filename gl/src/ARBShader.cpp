@@ -90,10 +90,10 @@ bool vislib::graphics::gl::ARBShader::Create(const char *src) {
  * vislib::graphics::gl::ARBShader::CreateFromFile
  */
 bool vislib::graphics::gl::ARBShader::CreateFromFile(const char *filename) {
-    StringA src;
+    the::astring src;
 
     if (vislib::sys::ReadTextFile(src, filename)) {
-        return this->Create(src);
+        return this->Create(src.c_str());
     } else {
         return false;
     }

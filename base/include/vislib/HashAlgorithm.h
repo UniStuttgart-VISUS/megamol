@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/types.h"
 
 
@@ -175,14 +175,14 @@ namespace vislib {
          *
          * @return The hash as string.
          */
-        virtual StringA ToStringA(void) const;
+        virtual the::astring ToStringA(void) const;
 
         /**
          * Answer a hexadecimal string representation of the hash.
          *
          * @return The hash as string.
          */
-        virtual StringW ToStringW(void) const;
+        virtual the::wstring ToStringW(void) const;
 
     protected:
 

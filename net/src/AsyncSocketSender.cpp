@@ -83,7 +83,7 @@ unsigned int vislib::net::AsyncSocketSender::Run(Socket *socket) {
          * We use an empty queue as trigger for a thread to leave: If we wake a
          * thread and it does not find any work to do, it should exit.
          */
-        if (!this->isQueueOpen && this->queue.IsEmpty()) {
+        if (!this->isQueueOpen && this->queue.empty()) {
             this->lockQueue.Unlock();
             THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "AsyncSocketSender [%u] is "
                 "exiting because of empty queue ...\n",
@@ -92,7 +92,7 @@ unsigned int vislib::net::AsyncSocketSender::Run(Socket *socket) {
         }
 
         /* Set send task and send it using our socket. */
-        THE_ASSERT(!this->queue.IsEmpty());
+        THE_ASSERT(!this->queue.empty());
         SendTask task = this->queue.First();
         this->queue.RemoveFirst();
         this->lockQueue.Unlock();

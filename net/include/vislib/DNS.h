@@ -19,7 +19,7 @@
 #include "vislib/IPAddress6.h"
 #include "vislib/IPAgnosticAddress.h"
 #include "vislib/IPHostEntry.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {

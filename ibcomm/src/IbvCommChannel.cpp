@@ -97,7 +97,7 @@
 //    IPEndPoint& ep = static_cast<IPEndPoint&>(*cep);
 //
 //    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Binding IB end point to %s...\n",
-//        ep.ToStringA().PeekBuffer());
+//        ep.ToStringA().c_str());
 //    if (FAILED(hr = this->connectEndPoint->BindAddress(
 //            static_cast<struct sockaddr *>(ep)))) {
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Binding IB end point failed "
@@ -157,7 +157,7 @@
 //
 //
 //    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Connecting to IB end point "
-//        "%s...\n", ep.ToStringA().PeekBuffer());
+//        "%s...\n", ep.ToStringA().c_str());
 //    if (FAILED(hr = this->connectEndPoint->Connect(this->queuePair, 
 //            static_cast<const sockaddr *>(ep), &conParam, NULL))) {
 //        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Connection to IB end point "

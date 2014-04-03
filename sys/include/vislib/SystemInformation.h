@@ -19,7 +19,7 @@
 
 #include "vislib/Array.h"
 #include "vislib/Rectangle.h"
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/types.h"
 
 
@@ -91,7 +91,7 @@ namespace sys {
          *
          * @throws the::system::system_exception on failure
          */
-        static void ComputerName(vislib::StringA &outName);
+        static void ComputerName(the::astring &outName);
 
         /**
          * Returns an unicode string with the local computers name.
@@ -102,7 +102,7 @@ namespace sys {
          *
          * @throws the::system::system_exception on failure
          */
-        static void ComputerName(vislib::StringW &outName);
+        static void ComputerName(the::wstring &outName);
 
         /**
          * Returns a string with the local computers name.
@@ -111,8 +111,8 @@ namespace sys {
          *
          * @throws the::system::system_exception on failure
          */
-        inline static StringA ComputerNameA(void) {
-            StringA retval;
+        inline static the::astring ComputerNameA(void) {
+            the::astring retval;
             SystemInformation::ComputerName(retval);
             return retval;
         }
@@ -124,8 +124,8 @@ namespace sys {
          *
          * @throws the::system::system_exception on failure
          */
-        inline static StringW ComputerNameW(void) {
-            StringW retval;
+        inline static the::wstring ComputerNameW(void) {
+            the::wstring retval;
             SystemInformation::ComputerName(retval);
             return retval;
         }
@@ -273,7 +273,7 @@ namespace sys {
          *
          * @throws the::system::system_exception on failure
          */
-        static void UserName(vislib::StringA &outName);
+        static void UserName(the::astring &outName);
 
         /**
          * Returns an unicode string with the local user name running this
@@ -285,7 +285,7 @@ namespace sys {
          *
          * @throws the::system::system_exception on failure
          */
-        static void UserName(vislib::StringW &outName);
+        static void UserName(the::wstring &outName);
 
         /**
          * Returns a string with the local user name running this vislib 
@@ -295,8 +295,8 @@ namespace sys {
          *
          * @throws the::system::system_exception on failure
          */
-        inline static StringA UserNameA(void) {
-            StringA retval;
+        inline static the::astring UserNameA(void) {
+            the::astring retval;
             SystemInformation::UserName(retval);
             return retval;
         }
@@ -309,8 +309,8 @@ namespace sys {
          *
          * @throws the::system::system_exception on failure
          */
-        inline static StringW UserNameW(void) {
-            StringW retval;
+        inline static the::wstring UserNameW(void) {
+            the::wstring retval;
             SystemInformation::UserName(retval);
             return retval;
         }

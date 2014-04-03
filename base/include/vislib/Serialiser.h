@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -401,7 +401,7 @@ namespace vislib {
             const wchar_t *name) = 0;
 
         /**
-         * Deserialise the StringA element with name 'name' into 'outValue'.
+         * Deserialise the the::astring element with name 'name' into 'outValue'.
          *
          * @param outValue Receives the deserialised value.
          * @param name     The name of the value to be deserialises. 
@@ -411,11 +411,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Deserialise(StringA& outValue, 
+        virtual void Deserialise(the::astring& outValue, 
             const char *name = NULL) = 0;
 
         /**
-         * Deserialise the StringA element with name 'name' into 'outValue'.
+         * Deserialise the the::astring element with name 'name' into 'outValue'.
          *
          * @param outValue Receives the deserialised value.
          * @param name     The name of the value to be deserialises. 
@@ -425,11 +425,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Deserialise(StringA& outValue, 
+        virtual void Deserialise(the::astring& outValue, 
             const wchar_t *name) = 0;
 
         /**
-         * Deserialise the StringW element with name 'name' into 'outValue'.
+         * Deserialise the the::wstring element with name 'name' into 'outValue'.
          *
          * @param outValue Receives the deserialised value.
          * @param name     The name of the value to be deserialises. 
@@ -439,11 +439,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Deserialise(StringW& outValue, 
+        virtual void Deserialise(the::wstring& outValue, 
             const char *name = NULL) = 0;
 
         /**
-         * Deserialise the StringW element with name 'name' into 'outValue'.
+         * Deserialise the the::wstring element with name 'name' into 'outValue'.
          *
          * @param outValue Receives the deserialised value.
          * @param name     The name of the value to be deserialises. 
@@ -453,7 +453,7 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Deserialise(StringW& outValue, 
+        virtual void Deserialise(the::wstring& outValue, 
             const wchar_t *name) = 0;
 
         /**
@@ -802,7 +802,7 @@ namespace vislib {
             const wchar_t *name) = 0;
 
         /**
-         * Serialise the StringA variable using the name 'name'.
+         * Serialise the the::astring variable using the name 'name'.
          *
          * @param value The value to be serialised.
          * @param name  The name for this value.
@@ -812,11 +812,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Serialise(const StringA& value,
+        virtual void Serialise(const the::astring& value,
             const char *name = NULL) = 0;
 
         /**
-         * Serialise the StringA variable using the name 'name'.
+         * Serialise the the::astring variable using the name 'name'.
          *
          * @param value The value to be serialised.
          * @param name  The name for this value.
@@ -826,11 +826,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Serialise(const StringA& value,
+        virtual void Serialise(const the::astring& value,
             const wchar_t *name) = 0;
 
         /**
-         * Serialise the StringW variable using the name 'name'.
+         * Serialise the the::wstring variable using the name 'name'.
          *
          * @param value The value to be serialised.
          * @param name  The name for this value.
@@ -840,11 +840,11 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Serialise(const StringW& value,
+        virtual void Serialise(const the::wstring& value,
             const char *name = NULL) = 0;
 
         /**
-         * Serialise the StringW variable using the name 'name'.
+         * Serialise the the::wstring variable using the name 'name'.
          *
          * @param value The value to be serialised.
          * @param name  The name for this value.
@@ -854,7 +854,7 @@ namespace vislib {
          * @throws Exception Implementing classes may throw an exception to 
          *                   indicated failure.
          */
-        virtual void Serialise(const StringW& value,
+        virtual void Serialise(const the::wstring& value,
             const wchar_t *name) = 0;
 
         /**

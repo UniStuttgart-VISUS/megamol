@@ -11,6 +11,8 @@
 #include "vislib/Point.h"
 #include "vislib/ShallowPoint.h"
 #include "testhelper.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 
 typedef vislib::math::Point<float, 2> Point2f;
 typedef vislib::math::Point<float, 3> Point3f;
@@ -120,14 +122,14 @@ void TestPoint3D(void) {
 
 void TestHalfspace2D(void) {
 #define DO_TEST(res) \
-    desc.Format("p = (%3.1f, %3.1f), n = (%3.1f, %3.1f), t = (%3.1f, %3.1f)", \
+    the::text::astring_builder::format_to(desc, "p = (%3.1f, %3.1f), n = (%3.1f, %3.1f), t = (%3.1f, %3.1f)", \
     planePt.X(), planePt.Y(), \
     normal.X(), normal.Y(), \
     testPt.X(), testPt.Y()); \
-    AssertEqual(desc.PeekBuffer(), planePt.Halfspace(normal, testPt), vislib::math::res)
+    AssertEqual(desc.c_str(), planePt.Halfspace(normal, testPt), vislib::math::res)
     
     using vislib::math::HalfSpace;
-    vislib::StringA desc;
+    the::astring desc;
     Point2f planePt;
     Vector2f normal;
     Point2f testPt;
@@ -226,14 +228,14 @@ void TestHalfspace2D(void) {
 
 void TestHalfspace3D(void) {
 #define DO_TEST(res) \
-    desc.Format("p = (%3.1f, %3.1f, %3.1f), n = (%3.1f, %3.1f, %3.1f), t = (%3.1f, %3.1f, %3.1f)", \
+    the::text::astring_builder::format_to(desc, "p = (%3.1f, %3.1f, %3.1f), n = (%3.1f, %3.1f, %3.1f), t = (%3.1f, %3.1f, %3.1f)", \
     planePt.X(), planePt.Y(), planePt.Z(), \
     normal.X(), normal.Y(), planePt.Z(), \
     testPt.X(), testPt.Y(), planePt.Z()); \
-    AssertEqual(desc.PeekBuffer(), planePt.Halfspace(normal, testPt), vislib::math::res)
+    AssertEqual(desc.c_str(), planePt.Halfspace(normal, testPt), vislib::math::res)
     
     using vislib::math::HalfSpace;
-    vislib::StringA desc;
+    the::astring desc;
     Point3f planePt;
     Vector3f normal;
     Point3f testPt;

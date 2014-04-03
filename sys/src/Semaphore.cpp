@@ -66,10 +66,10 @@ vislib::sys::Semaphore::Semaphore(const char *name, long initialCount,
     if (name != NULL) {
         this->name = TranslateWinIpc2PosixName(name);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Open named POSIX semaphore \"%s\"\n", 
-            this->name.PeekBuffer());
-        if ((this->handle = ::sem_open(this->name.PeekBuffer(), 0, 0, 0)) 
+            this->name.c_str());
+        if ((this->handle = ::sem_open(this->name.c_str(), 0, 0, 0)) 
                 == SEM_FAILED) {
-            this->handle = ::sem_open(this->name.PeekBuffer(), O_CREAT, 
+            this->handle = ::sem_open(this->name.c_str(), O_CREAT, 
                 DFT_PERMS, initialCount);
             if (outIsNew != NULL) {
                 *outIsNew = true;
@@ -114,10 +114,10 @@ vislib::sys::Semaphore::Semaphore(const wchar_t *name, long initialCount,
     if (name != NULL) {
         this->name = TranslateWinIpc2PosixName(name);
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Open named POSIX semaphore \"%ls\"\n", 
-            this->name.PeekBuffer());
-        if ((this->handle = ::sem_open(this->name.PeekBuffer(), 0, 0, 0)) 
+            this->name.c_str());
+        if ((this->handle = ::sem_open(this->name.c_str(), 0, 0, 0)) 
                 == SEM_FAILED) {
-            this->handle = ::sem_open(this->name.PeekBuffer(), O_CREAT, 
+            this->handle = ::sem_open(this->name.c_str(), O_CREAT, 
                 DFT_PERMS, initialCount);
             if (outIsNew != NULL) {
                 *outIsNew = true;
@@ -144,11 +144,11 @@ vislib::sys::Semaphore::~Semaphore(void) {
     ::CloseHandle(this->handle);
 
 #else /* _WIN32 */
-    if (this->name.IsEmpty()) {
+    if (this->name.empty()) {
         ::sem_destroy(this->handle);
         the::safe_delete(this->handle);
     } else {
-        ::sem_unlink(this->name.PeekBuffer());
+        ::sem_unlink(this->name.c_str());
         ::sem_close(this->handle);
         // mueller: I assume that this->handle is owned by the system if it was
         // returned by sem_open, but the documentation says nothing about that.

@@ -17,6 +17,8 @@
 #include "vislib/RawStorage.h"
 #include "vislib/sysfunctions.h"
 #include "the/not_supported_exception.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 
 
 /*
@@ -127,8 +129,8 @@ bool vislib::graphics::gl::GLSLShader::Compile(const char **vertexShaderSrc,
  */
 bool vislib::graphics::gl::GLSLShader::CompileFromFile(
         const char *vertexShaderFile, const char *fragmentShaderFile) {
-    StringA vertexShaderSrc;
-    StringA fragmentShaderSrc;
+    the::astring vertexShaderSrc;
+    the::astring fragmentShaderSrc;
 
     if (!vislib::sys::ReadTextFile(vertexShaderSrc, vertexShaderFile)) {
         return false;
@@ -138,7 +140,7 @@ bool vislib::graphics::gl::GLSLShader::CompileFromFile(
         return false;
     }
 
-    return this->Compile(vertexShaderSrc, fragmentShaderSrc);
+    return this->Compile(vertexShaderSrc.c_str(), fragmentShaderSrc.c_str());
 }
 
 
@@ -151,8 +153,8 @@ bool vislib::graphics::gl::GLSLShader::CompileFromFile(
         const size_t cntFragmentShaderFiles, bool insertLineDirective) {
 
     // using arrays for automatic cleanup when a 'read' throws an exception
-    Array<StringA> vertexShaderSrcs(cntVertexShaderFiles);
-    Array<StringA> fragmentShaderSrcs(cntFragmentShaderFiles);
+    Array<the::astring> vertexShaderSrcs(cntVertexShaderFiles);
+    Array<the::astring> fragmentShaderSrcs(cntFragmentShaderFiles);
 
     for(size_t i = 0; i < cntVertexShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(vertexShaderSrcs[i], 
@@ -175,10 +177,10 @@ bool vislib::graphics::gl::GLSLShader::CompileFromFile(
 
     try {
         for(size_t i = 0; i < cntVertexShaderFiles; i++) {
-            vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].PeekBuffer();
+            vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].c_str();
         }
         for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
-            fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].PeekBuffer();
+            fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].c_str();
         }
 
         bool retval = this->Compile(vertexShaderSrcPtrs, cntVertexShaderFiles, 
@@ -309,7 +311,7 @@ bool vislib::graphics::gl::GLSLShader::Link() {
     
     GL_VERIFY_THROW(::glLinkProgramARB(this->hProgObj));
     if (!this->isLinked(this->hProgObj)) {
-        throw CompileException(this->getProgramInfoLog(this->hProgObj), 
+        throw CompileException(this->getProgramInfoLog(this->hProgObj).c_str(), 
             CompileException::ACTION_LINK, __FILE__, __LINE__);
     }
 
@@ -624,22 +626,22 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
     const char lineStr[] = "\n#line 0 %d\n";
 
     if (insertLineDirective && (cnt > 1)) {
-        StringA tmp;
+        the::astring tmp;
         char *ptr;
-        tmp.Format(lineStr, cnt);
+        the::text::astring_builder::format_to(tmp, lineStr, cnt);
 
         // very tricky:
         powerMemory.AssertSize((sizeof(char*) * (cnt * 2 - 1)) 
-            + ((cnt - 1) * sizeof(char) * (tmp.Length() + 1)));
+            + ((cnt - 1) * sizeof(char) * (tmp.size() + 1)));
         ptr = powerMemory.As<char>() + (sizeof(char*) * (cnt = cnt * 2 - 1));
         for (GLsizei i = 0; i < cnt; i++) {
             if (i % 2 == 0) {
                 powerMemory.As<const char*>()[i] = src[i / 2];
             } else {
                 unsigned int len;
-                tmp.Format(lineStr, int((i + 1) / 2));
-                len = (tmp.Length() + 1) * sizeof(char);
-                memcpy(ptr, tmp.PeekBuffer(), len);
+                the::text::astring_builder::format_to(tmp, lineStr, int((i + 1) / 2));
+                len = static_cast<unsigned int>((tmp.size() + 1) * sizeof(char));
+                memcpy(ptr, tmp.c_str(), len);
                 powerMemory.As<char*>()[i] = ptr;
                 ptr += len;
             }
@@ -653,7 +655,7 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
     GL_VERIFY_THROW(::glCompileShaderARB(shader));
 
     if (!isCompiled(shader)) {
-        throw CompileException(getProgramInfoLog(shader), 
+        throw CompileException(getProgramInfoLog(shader).c_str(), 
             CompileException::CompilationFailedAction(type), 
             __FILE__, __LINE__);
     }
@@ -665,19 +667,20 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
 /*
  * vislib::graphics::gl::GLSLShader::getProgramInfoLog
  */
-vislib::StringA vislib::graphics::gl::GLSLShader::getProgramInfoLog(
+the::astring vislib::graphics::gl::GLSLShader::getProgramInfoLog(
         GLhandleARB hProg) {
     USES_GL_VERIFY;
     GLint len = 0;
     GLint written = 0;
-    StringA retval;
+    the::astring retval;
     char *log = NULL;
 
     GL_VERIFY_THROW(::glGetObjectParameterivARB(hProg, 
         GL_OBJECT_INFO_LOG_LENGTH_ARB, &len));
 
     if (len > 0) {
-        log = retval.AllocateBuffer(len);
+        retval = the::astring(len, ' ');
+        log = const_cast<char*>(retval.c_str());
         GL_VERIFY_THROW(::glGetInfoLogARB(hProg, len, &written, log));
     }
 

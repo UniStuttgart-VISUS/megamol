@@ -148,7 +148,7 @@ void TestRectangle(void) {
     ::AssertEqual("Default ctor Right().", frect1.Right(), 0.0f);
     ::AssertEqual("Default ctor Top().", frect1.Top(), 0.0f);
 
-    ::AssertTrue("IsEmpty", frect1.IsEmpty());
+    ::AssertTrue("empty", frect1.IsEmpty());
 
     ::AssertEqual("Init ctor GetLeft().", frect2.GetLeft(), 1.0f);
     ::AssertEqual("Init ctor GetBottom().", frect2.GetBottom(), 1.0f);

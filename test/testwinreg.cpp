@@ -65,7 +65,7 @@ void TestWinReg(void) {
     u32_1 = 0x12345678;
     ::AssertEqual<unsigned int>("Value u1 set", sc1.SetValue("u1", u32_1), ERROR_SUCCESS);
     ::AssertEqual<size_t>("testA now has one value", sc1.GetValueNamesW().Count(), 1);
-    ::AssertTrue("testA now has one value", sc1.GetValueNamesW()[0].Equals(L"u1"));
+    ::AssertTrue("testA now has one value", sc1.GetValueNamesW()[0].compare(L"u1") == 0);
     ::AssertEqual<RegistryKey::RegValueType>("u1 is of right type", sc1.GetValueType(L"u1"), RegistryKey::REGVAL_DWORD);
     ::AssertEqual<unsigned int>("Getting value u1", sc1.GetValue("u1", u64_1), ERROR_SUCCESS);
     u32_2 = static_cast<uint32_t>(u64_1);
@@ -77,20 +77,20 @@ void TestWinReg(void) {
     ::AssertEqual<size_t>("testA now has no values", sc1.GetValueNamesW().Count(), 0);
 
     // testing string value set/get/query
-    vislib::StringA strA("Teschtingteschtvalue");
-    vislib::StringW strW;
-    vislib::MultiSzA multiSzA;
-    vislib::Array<vislib::StringW> aryStrW;
+    the::astring strA("Teschtingteschtvalue");
+    the::wstring strW;
+    the::multi_sza multiSzA;
+    vislib::Array<the::wstring> aryStrW;
     ::AssertEqual<unsigned int>("Value s1 set", sc1.SetValue("s1", strA), ERROR_SUCCESS);
     ::AssertEqual<size_t>("testA now has one value", sc1.GetValueNamesW().Count(), 1);
-    ::AssertTrue("testA now has one value", sc1.GetValueNamesW()[0].Equals(L"s1"));
+    ::AssertTrue("testA now has one value", sc1.GetValueNamesW()[0].compare(L"s1") == 0);
     ::AssertEqual<RegistryKey::RegValueType>("s1 is of right type", sc1.GetValueType(L"s1"), RegistryKey::REGVAL_STRING);
     ::AssertEqual<unsigned int>("Value s1 get", sc1.GetValue("s1", strW), ERROR_SUCCESS);
-    ::AssertTrue("Value s1 correct", strW.Equals(vislib::StringW(strA)));
-    multiSzA.Append("Test1");
-    multiSzA.Append("Test2");
-    multiSzA.Append("Test3");
-    multiSzA.Append("Test4");
+    ::AssertTrue("Value s1 correct", strW.compare(the::text::string_converter::to_w(strA)) == 0);
+    multiSzA.add("Test1");
+    multiSzA.add("Test2");
+    multiSzA.add("Test3");
+    multiSzA.add("Test4");
     ::AssertEqual<unsigned int>("Value s2 set", sc1.SetValue("s2", multiSzA), ERROR_SUCCESS);
     ::AssertEqual<size_t>("testA now has two values", sc1.GetValueNamesW().Count(), 2);
     ::AssertEqual<RegistryKey::RegValueType>("s2 is of right type", sc1.GetValueType(L"s2"), RegistryKey::REGVAL_MULTI_SZ);
@@ -105,10 +105,10 @@ void TestWinReg(void) {
     ::AssertEqual<RegistryKey::RegValueType>("s3 is of right type", sc1.GetValueType(L"s3"), RegistryKey::REGVAL_MULTI_SZ);
     ::AssertEqual<unsigned int>("Value s3 get", sc1.GetValue("s3", multiSzA), ERROR_SUCCESS);
     ::AssertEqual<unsigned int>("Value s2 get", sc1.GetValue("s2", aryStrW), ERROR_SUCCESS);
-    ::AssertEqual("s2 and s3 equal", multiSzA.Count(), aryStrW.Count());
-    size_t cnt = vislib::math::Min(multiSzA.Count(), aryStrW.Count());
+    ::AssertEqual("s2 and s3 equal", multiSzA.size(), aryStrW.Count());
+    size_t cnt = vislib::math::Min(multiSzA.size(), aryStrW.Count());
     for (size_t i = 0; i < cnt; i++) {
-        ::AssertEqual("s2 and s3 equal", vislib::StringW(multiSzA[i]), aryStrW[i]);
+        ::AssertEqual("s2 and s3 equal", the::text::string_converter::to_w(multiSzA[i]), aryStrW[i]);
     }
 
     sc1.Close();

@@ -376,7 +376,7 @@ void TestPath(void) {
     using namespace std;
 
     try {
-        cout << "Working directory \"" << static_cast<const char *>(Path::GetCurrentDirectoryA()) << "\"" << endl;
+        cout << "Working directory \"" << static_cast<const char *>(Path::GetCurrentDirectoryA().c_str()) << "\"" << endl;
 
         cout << "Resolve \"~\" " << Path::Resolve("~") << endl;
         cout << "Resolve \"~/\" " << Path::Resolve("~/") << endl;
@@ -403,48 +403,48 @@ void TestPath(void) {
         AssertTrue("Path \"\\hugo\" is relative", Path::IsRelative("\\hugo"));
         AssertTrue("Path \"\\\\hugo\" is absolute", Path::IsAbsolute("\\\\hugo"));
 
-        AssertEqual("Canonicalise \"horst\\..\\hugo\"", Path::Canonicalise("horst\\..\\hugo"), StringA("\\hugo"));
-        AssertEqual("Canonicalise \"\\horst\\..\\hugo\"", Path::Canonicalise("\\horst\\..\\hugo"), StringA("\\hugo"));
-        AssertEqual("Canonicalise \"\\..\\horst\\..\\hugo\"", Path::Canonicalise("\\..\\horst\\..\\hugo"), StringA("\\hugo"));
-        AssertEqual("Canonicalise \"\\..\\horst\\..\\..\\hugo\"", Path::Canonicalise("\\..\\horst\\..\\..\\hugo"), StringA("\\hugo"));
-        AssertEqual("Canonicalise \"horst\\.\\hugo\"", Path::Canonicalise("horst\\.\\hugo"), StringA("horst\\hugo"));
-        AssertEqual("Canonicalise \"horst\\\\hugo\"", Path::Canonicalise("horst\\\\hugo"), StringA("horst\\hugo"));
-        AssertEqual("Canonicalise \"horst\\\\\\hugo\"", Path::Canonicalise("horst\\\\\\hugo"), StringA("horst\\hugo"));
-        AssertEqual("Canonicalise \"\\horst\\hugo\"", Path::Canonicalise("\\horst\\hugo"), StringA("\\horst\\hugo"));
-        AssertEqual("Canonicalise \"\\\\horst\\hugo\"", Path::Canonicalise("\\\\horst\\hugo"), StringA("\\\\horst\\hugo"));
-        AssertEqual("Canonicalise \"\\\\\\horst\\hugo\"", Path::Canonicalise("\\\\\\horst\\hugo"), StringA("\\\\horst\\hugo"));
+        AssertEqual("Canonicalise \"horst\\..\\hugo\"", Path::Canonicalise("horst\\..\\hugo"), the::astring("\\hugo"));
+        AssertEqual("Canonicalise \"\\horst\\..\\hugo\"", Path::Canonicalise("\\horst\\..\\hugo"), the::astring("\\hugo"));
+        AssertEqual("Canonicalise \"\\..\\horst\\..\\hugo\"", Path::Canonicalise("\\..\\horst\\..\\hugo"), the::astring("\\hugo"));
+        AssertEqual("Canonicalise \"\\..\\horst\\..\\..\\hugo\"", Path::Canonicalise("\\..\\horst\\..\\..\\hugo"), the::astring("\\hugo"));
+        AssertEqual("Canonicalise \"horst\\.\\hugo\"", Path::Canonicalise("horst\\.\\hugo"), the::astring("horst\\hugo"));
+        AssertEqual("Canonicalise \"horst\\\\hugo\"", Path::Canonicalise("horst\\\\hugo"), the::astring("horst\\hugo"));
+        AssertEqual("Canonicalise \"horst\\\\\\hugo\"", Path::Canonicalise("horst\\\\\\hugo"), the::astring("horst\\hugo"));
+        AssertEqual("Canonicalise \"\\horst\\hugo\"", Path::Canonicalise("\\horst\\hugo"), the::astring("\\horst\\hugo"));
+        AssertEqual("Canonicalise \"\\\\horst\\hugo\"", Path::Canonicalise("\\\\horst\\hugo"), the::astring("\\\\horst\\hugo"));
+        AssertEqual("Canonicalise \"\\\\\\horst\\hugo\"", Path::Canonicalise("\\\\\\horst\\hugo"), the::astring("\\\\horst\\hugo"));
 #else /* _WIN32 */
-        AssertEqual("Canonicalise \"horst/../hugo\"", Path::Canonicalise("horst/../hugo"), StringA("/hugo"));
-        AssertEqual("Canonicalise \"/horst/../hugo\"", Path::Canonicalise("/horst/../hugo"), StringA("/hugo"));
-        AssertEqual("Canonicalise \"/../horst/../hugo\"", Path::Canonicalise("/../horst/../hugo"), StringA("/hugo"));
-        AssertEqual("Canonicalise \"/../horst/../../hugo\"", Path::Canonicalise("/../horst/../../hugo"), StringA("/hugo"));
-        AssertEqual("Canonicalise \"horst/./hugo\"", Path::Canonicalise("horst/./hugo"), StringA("horst/hugo"));
-        AssertEqual("Canonicalise \"horst//hugo\"", Path::Canonicalise("horst//hugo"), StringA("horst/hugo"));
-        AssertEqual("Canonicalise \"horst///hugo\"", Path::Canonicalise("horst///hugo"), StringA("horst/hugo"));
+        AssertEqual("Canonicalise \"horst/../hugo\"", Path::Canonicalise("horst/../hugo"), the::astring("/hugo"));
+        AssertEqual("Canonicalise \"/horst/../hugo\"", Path::Canonicalise("/horst/../hugo"), the::astring("/hugo"));
+        AssertEqual("Canonicalise \"/../horst/../hugo\"", Path::Canonicalise("/../horst/../hugo"), the::astring("/hugo"));
+        AssertEqual("Canonicalise \"/../horst/../../hugo\"", Path::Canonicalise("/../horst/../../hugo"), the::astring("/hugo"));
+        AssertEqual("Canonicalise \"horst/./hugo\"", Path::Canonicalise("horst/./hugo"), the::astring("horst/hugo"));
+        AssertEqual("Canonicalise \"horst//hugo\"", Path::Canonicalise("horst//hugo"), the::astring("horst/hugo"));
+        AssertEqual("Canonicalise \"horst///hugo\"", Path::Canonicalise("horst///hugo"), the::astring("horst/hugo"));
 
 #endif /* _WIN32 */
 
         // testing compare methods
 #ifdef _WIN32
-        AssertTrue("Compare \"C:\\horst\\\" == \"C:\\..\\HoRsT\\\"", Path::Compare<vislib::CharTraitsA>("C:\\horst\\", "C:\\..\\HoRsT\\"));
-        AssertTrue("Compare \"\\horst\\\" == \"\\..\\HoRsT\\\"", Path::Compare<vislib::CharTraitsA>("\\horst\\", "\\..\\HoRsT\\"));
-        AssertFalse("Compare \"Path::Resolve(hugo)\" != \"\\hugo\"", Path::Compare<vislib::CharTraitsA>(Path::Resolve("hugo"), "\\hugo"));
-        AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<vislib::CharTraitsA>(Path::Resolve("hugo"), "hugo"));
+        AssertTrue("Compare \"C:\\horst\\\" == \"C:\\..\\HoRsT\\\"", Path::Compare<the::astring>("C:\\horst\\", "C:\\..\\HoRsT\\"));
+        AssertTrue("Compare \"\\horst\\\" == \"\\..\\HoRsT\\\"", Path::Compare<the::astring>("\\horst\\", "\\..\\HoRsT\\"));
+        AssertFalse("Compare \"Path::Resolve(hugo)\" != \"\\hugo\"", Path::Compare<the::astring>(Path::Resolve("hugo").c_str(), "\\hugo"));
+        AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<the::astring>(Path::Resolve("hugo").c_str(), "hugo"));
 
-        AssertTrue("Compare \"C:\\horst\\\" == \"C:\\..\\HoRsT\\\"", Path::Compare<vislib::CharTraitsW>(L"C:\\horst\\", L"C:\\..\\HoRsT\\"));
-        AssertTrue("Compare \"\\horst\\\" == \"\\..\\HoRsT\\\"", Path::Compare<vislib::CharTraitsW>(L"\\horst\\", L"\\..\\HoRsT\\"));
-        AssertFalse("Compare \"Path::Resolve(hugo)\" != \"\\hugo\"", Path::Compare<vislib::CharTraitsW>(Path::Resolve(L"hugo"), L"\\hugo"));
-        AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<vislib::CharTraitsW>(Path::Resolve(L"hugo"), L"hugo"));
+        AssertTrue("Compare \"C:\\horst\\\" == \"C:\\..\\HoRsT\\\"", Path::Compare<the::wstring>(L"C:\\horst\\", L"C:\\..\\HoRsT\\"));
+        AssertTrue("Compare \"\\horst\\\" == \"\\..\\HoRsT\\\"", Path::Compare<the::wstring>(L"\\horst\\", L"\\..\\HoRsT\\"));
+        AssertFalse("Compare \"Path::Resolve(hugo)\" != \"\\hugo\"", Path::Compare<the::wstring>(Path::Resolve(L"hugo").c_str(), L"\\hugo"));
+        AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<the::wstring>(Path::Resolve(L"hugo").c_str(), L"hugo"));
 #else /* _WIN32 */
-        AssertTrue("Compare \"/horst/\" == \"/../horst/\"", Path::Compare<vislib::CharTraitsA>("/horst/", "/../horst/"));
-        AssertFalse("Compare \"/horst\" != \"/Horst\"", Path::Compare<vislib::CharTraitsA>("/horst", "/Horst"));
-        AssertFalse("Compare \"Path::Resolve(hugo)\" != \"/hugo\"", Path::Compare<vislib::CharTraitsA>(Path::Resolve("hugo"), "/hugo"));
-        AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<vislib::CharTraitsA>(Path::Resolve("hugo"), "hugo"));
+        AssertTrue("Compare \"/horst/\" == \"/../horst/\"", Path::Compare<the::astring*>("/horst/", "/../horst/"));
+        AssertFalse("Compare \"/horst\" != \"/Horst\"", Path::Compare<the::astring>("/horst", "/Horst"));
+        AssertFalse("Compare \"Path::Resolve(hugo)\" != \"/hugo\"", Path::Compare<the::astring>(Path::Resolve("hugo").c_str(), "/hugo"));
+        AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<the::astring>(Path::Resolve("hugo").c_str(), "hugo"));
 
-        AssertTrue("Compare \"/horst/\" == \"/../horst/\"", Path::Compare<vislib::CharTraitsW>(L"/horst/", L"/../horst/"));
-        AssertFalse("Compare \"/horst\" != \"/Horst\"", Path::Compare<vislib::CharTraitsW>(L"/horst", L"/Horst"));
-        AssertFalse("Compare \"Path::Resolve(hugo)\" != \"/hugo\"", Path::Compare<vislib::CharTraitsW>(Path::Resolve(L"hugo"), L"/hugo"));
-        AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<vislib::CharTraitsW>(Path::Resolve(L"hugo"), L"hugo"));
+        AssertTrue("Compare \"/horst/\" == \"/../horst/\"", Path::Compare<the::wstring>(L"/horst/", L"/../horst/"));
+        AssertFalse("Compare \"/horst\" != \"/Horst\"", Path::Compare<the::wstring>(L"/horst", L"/Horst"));
+        AssertFalse("Compare \"Path::Resolve(hugo)\" != \"/hugo\"", Path::Compare<the::wstring>(Path::Resolve(L"hugo").c_str(), L"/hugo"));
+        AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<the::wstring>(Path::Resolve(L"hugo").c_str(), L"hugo"));
 #endif /* _WIN32 */
         
     } catch (the::system::system_exception e) {
@@ -452,35 +452,35 @@ void TestPath(void) {
     }
 
 #ifdef _WIN32
-    vislib::StringA p = vislib::sys::Path::FindExecutablePath("cmd.exe");
-    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    the::astring p = vislib::sys::Path::FindExecutablePath("cmd.exe");
+    cout << "Executable found at: " << p.c_str() << endl;
     p = vislib::sys::Path::FindExecutablePath("notepad.exe");
-    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    cout << "Executable found at: " << p.c_str() << endl;
     p = vislib::sys::Path::FindExecutablePath("iexplore.exe");
-    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    cout << "Executable found at: " << p.c_str() << endl;
     p = vislib::sys::Path::FindExecutablePath("calc.exe");
-    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    cout << "Executable found at: " << p.c_str() << endl;
     p = vislib::sys::Path::FindExecutablePath("subwcrev.exe");
-    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    cout << "Executable found at: " << p.c_str() << endl;
     p = vislib::sys::Path::FindExecutablePath("test.exe");
-    cout << "Executable found at: " << p.PeekBuffer() << endl;
-    vislib::StringW w = vislib::sys::Path::FindExecutablePath(L"cmd.exe");
-    cout << "Executable found at: " << vislib::StringA(w).PeekBuffer() << endl;
+    cout << "Executable found at: " << p.c_str() << endl;
+    the::wstring w = vislib::sys::Path::FindExecutablePath(L"cmd.exe");
+    cout << "Executable found at: " << the::text::string_converter::to_a(w).c_str() << endl;
     w = vislib::sys::Path::FindExecutablePath(L"notepad.exe");
-    cout << "Executable found at: " << vislib::StringA(w).PeekBuffer() << endl;
+    cout << "Executable found at: " << the::text::string_converter::to_a(w).c_str() << endl;
     w = vislib::sys::Path::FindExecutablePath(L"iexplore.exe");
-    cout << "Executable found at: " << vislib::StringA(w).PeekBuffer() << endl;
+    cout << "Executable found at: " << the::text::string_converter::to_a(w).c_str() << endl;
     w = vislib::sys::Path::FindExecutablePath(L"calc.exe");
-    cout << "Executable found at: " << vislib::StringA(w).PeekBuffer() << endl;
+    cout << "Executable found at: " << the::text::string_converter::to_a(w).c_str() << endl;
     w = vislib::sys::Path::FindExecutablePath(L"subwcrev.exe");
-    cout << "Executable found at: " << vislib::StringA(w).PeekBuffer() << endl;
+    cout << "Executable found at: " << the::text::string_converter::to_a(w).c_str() << endl;
     w = vislib::sys::Path::FindExecutablePath(L"test.exe");
-    cout << "Executable found at: " << vislib::StringA(w).PeekBuffer() << endl;
+    cout << "Executable found at: " << the::text::string_converter::to_a(w).c_str() << endl;
 #else /* _WIN32 */
-    vislib::StringA p = vislib::sys::Path::FindExecutablePath("xterm");
-    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    the::astring p = vislib::sys::Path::FindExecutablePath("xterm");
+    cout << "Executable found at: " << p.c_str() << endl;
     p = vislib::sys::Path::FindExecutablePath("bash");
-    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    cout << "Executable found at: " << p.c_str() << endl;
 #endif /* _WIN32 */
 
 }

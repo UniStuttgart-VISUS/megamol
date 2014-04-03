@@ -24,7 +24,7 @@
 #include "vislib/Point.h"
 #include "the/not_implemented_exception.h"
 #include "the/stack_trace.h"
-#include "vislib/String.h"
+#include "the/string.h"
 
 
 namespace vislib {
@@ -73,7 +73,7 @@ namespace graphics {
          *                         or if the window rectangle could not be 
          *                         adjusted in size.
          */
-        void Create(const vislib::StringA& title, int left, int top, 
+        void Create(const the::astring& title, int left, int top, 
             int width, int height);
 
         /**
@@ -91,7 +91,7 @@ namespace graphics {
          *                         or if the window rectangle could not be 
          *                         adjusted in size.
          */
-        void Create(const vislib::StringW& title, int left, int top, 
+        void Create(const the::wstring& title, int left, int top, 
             int width, int height);
 
         /**
@@ -248,7 +248,7 @@ namespace graphics {
          * @param className The name of the window class that was registered.
          */
          virtual void onWindowClassRegistered(
-             const vislib::StringW className) throw();
+             const the::wstring className) throw();
 #endif /* _WIN32 */
 
 #ifdef _WIN32
@@ -300,9 +300,9 @@ namespace graphics {
         // *                         retrieved or the window class could not
         // *                         be registered.
         // */
-        //inline vislib::StringA registerWindowClassA(HINSTANCE hInstance) {
+        //inline the::astring registerWindowClassA(HINSTANCE hInstance) {
         //    THE_STACK_TRACE;
-        //    return vislib::StringA(this->registerWindowClassW(hInstance));
+        //    return the::astring(this->registerWindowClassW(hInstance));
         //}
 
         /**
@@ -321,7 +321,7 @@ namespace graphics {
          *                         retrieved or the window class could not
          *                         be registered.
          */
-        vislib::StringW registerWindowClassW(HINSTANCE hInstance);
+        the::wstring registerWindowClassW(HINSTANCE hInstance);
 #endif /* _WIN32 */
 
         /**

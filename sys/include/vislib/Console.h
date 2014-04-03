@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/String.h"
+#include "the/string.h"
 #include "the/types.h"
 #include "the/log.h"
 
@@ -73,8 +73,8 @@ namespace sys {
          *
          * @return The exit code of the command.
          */
-        static int Run(const char *command, StringA *outStdOut = NULL, 
-            StringA *outStdErr = NULL);
+        static int Run(const char *command, the::astring *outStdOut = NULL, 
+            the::astring *outStdErr = NULL);
 
         /**
          * Write formatted text output to the standard output.
@@ -205,14 +205,14 @@ namespace sys {
          *
          * @param title The new title of the console window.
          */
-        static void SetTitle(const vislib::StringA& title);
+        static void SetTitle(const the::astring& title);
 
         /**
          * Sets the title of the console window, if possible.
          *
          * @param title The new title of the console window.
          */
-        static void SetTitle(const vislib::StringW& title);
+        static void SetTitle(const the::wstring& title);
 
         /**
          * Sets the icon of the console window, if possible.

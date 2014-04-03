@@ -13,11 +13,11 @@ void TestSysInfo(void) {
     using namespace vislib::sys;
 
     try {
-        vislib::TString userName;
-        vislib::TString compName;
+        the::tstring userName;
+        the::tstring compName;
         vislib::sys::SystemInformation::UserName(userName);
         vislib::sys::SystemInformation::ComputerName(compName);
-        ::_tprintf(_T("Running as %s@%s (%u Proc.)\n"), userName.PeekBuffer(), compName.PeekBuffer()
+        ::_tprintf(_T("Running as %s@%s (%u Proc.)\n"), userName.c_str(), compName.c_str()
             , vislib::sys::SystemInformation::ProcessorCount());
 
         std::cout << "Page Size: " << vislib::sys::SystemInformation::PageSize() << " Bytes." << std::endl;

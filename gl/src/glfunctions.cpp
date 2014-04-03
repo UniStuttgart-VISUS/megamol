@@ -199,22 +199,22 @@ const vislib::VersionNumber& vislib::graphics::gl::GLVersion(void) {
     static VersionNumber number(0, 0, 0, 0);
     if (number.GetMajorVersionNumber() == 0) {
         // fetch version string
-        vislib::StringA verStr(reinterpret_cast<const char*>(
+        the::astring verStr(reinterpret_cast<const char*>(
             glGetString(GL_VERSION)));
-        verStr.TrimSpaces();
+        the::text::string_utility::trim(verStr);
         int major = 1, minor = 0, release = 0;
 
         // truncate vendor information
-        int pos = verStr.Find(' ');
+        the::astring::size_type pos = verStr.find(' ');
         if (pos > 0) {
-            verStr.Truncate(pos);
+            verStr.resize(pos);
         }
 
         // parse major version
-        pos = verStr.Find('.');
+        pos = verStr.find('.');
         if (pos > 0) {
-            major = CharTraitsA::ParseInt(verStr.Substring(0, pos));
-            verStr = verStr.Substring(pos + 1);
+            major = the::text::string_utility::parse_int(verStr.substr(0, pos));
+            verStr = verStr.substr(pos + 1);
         } else {
             // error fallback
             number.Set(1, 0, 0, 0);
@@ -222,16 +222,16 @@ const vislib::VersionNumber& vislib::graphics::gl::GLVersion(void) {
         }
 
         // parse minor version
-        pos = verStr.Find('.');
+        pos = verStr.find('.');
         if (pos > 0) {
-            minor = CharTraitsA::ParseInt(verStr.Substring(0, pos));
-            verStr = verStr.Substring(pos + 1);
+            minor = the::text::string_utility::parse_int(verStr.substr(0, pos));
+            verStr = verStr.substr(pos + 1);
 
             // parse release number
-            release = CharTraitsA::ParseInt(verStr);
+            release = the::text::string_utility::parse_int(verStr);
 
         } else {
-            minor = CharTraitsA::ParseInt(verStr);
+            minor = the::text::string_utility::parse_int(verStr);
         }
 
         number.Set(major, minor, release);
