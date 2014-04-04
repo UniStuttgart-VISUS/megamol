@@ -21,6 +21,7 @@
 #include "vislib/Serialiser.h"
 #include "the/string.h"
 #include "vislib/StringTokeniser.h"
+#include "the/text/string_builder.h"
 
 
 namespace vislib {
@@ -49,7 +50,7 @@ namespace vislib {
          *            for deserialisation. To serialise data, leave this 
          *            parameter 'NULL'.
          */
-        StringSerialiser(const typename T::Char *str = NULL);
+        StringSerialiser(const typename T::value_type *str = NULL);
 
         /**
          * Ctor.
@@ -57,7 +58,7 @@ namespace vislib {
          * @param str The value of the string. This is used for 
          *            deserialisation.
          */
-        StringSerialiser(const String<T>& str);
+        StringSerialiser(const T& str);
 
         /** Dtor. */
         virtual ~StringSerialiser(void);
@@ -71,12 +72,12 @@ namespace vislib {
 
         virtual void Deserialise(bool& outValue, 
                 const char *name = NULL) {
-            outValue = T::ParseBool(this->value(name));
+            outValue = the::text::string_utility::parse_bool(this->value(name));
         }
 
         virtual void Deserialise(bool& outValue, 
                 const wchar_t *name) {
-            outValue = T::ParseBool(this->value(name));
+            outValue = the::text::string_utility::parse_bool(this->value(name));
         }
 
         virtual void Deserialise(wchar_t& outValue, 
@@ -95,122 +96,122 @@ namespace vislib {
 
         virtual void Deserialise(int8_t& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<int8_t>(T::ParseInt(this->value(name)));
+            outValue = static_cast<int8_t>(the::text::string_utility::parse_int(this->value(name)));
         }
 
         virtual void Deserialise(int8_t& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<int8_t>(T::ParseInt(this->value(name)));
+            outValue = static_cast<int8_t>(the::text::string_utility::parse_int(this->value(name)));
         }
 
         virtual void Deserialise(uint8_t& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<uint8_t>(T::ParseInt(this->value(name)));
+            outValue = static_cast<uint8_t>(the::text::string_utility::parse_int(this->value(name)));
         }
 
         virtual void Deserialise(uint8_t& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<uint8_t>(T::ParseInt(this->value(name)));
+            outValue = static_cast<uint8_t>(the::text::string_utility::parse_int(this->value(name)));
         }
 
         virtual void Deserialise(int16_t& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<int16_t>(T::ParseInt(this->value(name)));
+            outValue = static_cast<int16_t>(the::text::string_utility::parse_int(this->value(name)));
         }
 
         virtual void Deserialise(int16_t& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<int16_t>(T::ParseInt(this->value(name)));
+            outValue = static_cast<int16_t>(the::text::string_utility::parse_int(this->value(name)));
         }
 
         virtual void Deserialise(uint16_t& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<uint16_t>(T::ParseInt(this->value(name)));
+            outValue = static_cast<uint16_t>(the::text::string_utility::parse_int(this->value(name)));
         }
 
         virtual void Deserialise(uint16_t& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<uint16_t>(T::ParseInt(this->value(name)));
+            outValue = static_cast<uint16_t>(the::text::string_utility::parse_int(this->value(name)));
         }
 
         virtual void Deserialise(int32_t& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<int32_t>(T::ParseInt(this->value(name)));
+            outValue = static_cast<int32_t>(the::text::string_utility::parse_int(this->value(name)));
         }
 
         virtual void Deserialise(int32_t& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<int32_t>(T::ParseInt(this->value(name)));
+            outValue = static_cast<int32_t>(the::text::string_utility::parse_int(this->value(name)));
         }
 
         virtual void Deserialise(uint32_t& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<uint32_t>(T::ParseUInt64(this->value(name)));
+            outValue = static_cast<uint32_t>(the::text::string_utility::parse_uint64(this->value(name)));
         }
 
         virtual void Deserialise(uint32_t& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<uint32_t>(T::ParseUInt64(this->value(name)));
+            outValue = static_cast<uint32_t>(the::text::string_utility::parse_uint64(this->value(name)));
         }
 
         virtual void Deserialise(int64_t& outValue, 
                 const char *name = NULL) {
-            outValue = T::ParseInt64(this->value(name));
+            outValue = the::text::string_utility::parse_int64(this->value(name));
         }
 
         virtual void Deserialise(int64_t& outValue, 
                 const wchar_t *name) {
-            outValue = T::ParseInt64(this->value(name));
+            outValue = the::text::string_utility::parse_int64(this->value(name));
         }
 
         virtual void Deserialise(uint64_t& outValue, 
                 const char *name = NULL) {
-            outValue = T::ParseUInt64(this->value(name));
+            outValue = the::text::string_utility::parse_uint64(this->value(name));
         }
 
         virtual void Deserialise(uint64_t& outValue, 
                 const wchar_t *name) {
-            outValue = T::ParseUInt64(this->value(name));
+            outValue = the::text::string_utility::parse_uint64(this->value(name));
         }
 
         virtual void Deserialise(float& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<float>(T::ParseDouble(this->value(name)));
+            outValue = static_cast<float>(the::text::string_utility::parse_double(this->value(name)));
         }
 
         virtual void Deserialise(float& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<float>(T::ParseDouble(this->value(name)));
+            outValue = static_cast<float>(the::text::string_utility::parse_double(this->value(name)));
         }
 
         virtual void Deserialise(double& outValue, 
                 const char *name = NULL) {
-            outValue = T::ParseDouble(this->value(name));
+            outValue = the::text::string_utility::parse_double(this->value(name));
         }
 
         virtual void Deserialise(double& outValue, 
                 const wchar_t *name) {
-            outValue = T::ParseDouble(this->value(name));
+            outValue = the::text::string_utility::parse_double(this->value(name));
         }
 
         virtual void Deserialise(the::astring& outValue, 
                 const char *name = NULL) {
-            outValue = the::astring(this->value(name));
+            the::text::string_converter::convert(outValue, this->value(name));
         }
 
         virtual void Deserialise(the::astring& outValue, 
                 const wchar_t *name) {
-            outValue = the::astring(this->value(name));
+            the::text::string_converter::convert(outValue, this->value(name));
         }
 
         virtual void Deserialise(the::wstring& outValue, 
                 const char *name = NULL) {
-            outValue = the::wstring(this->value(name));
+            the::text::string_converter::convert(outValue, this->value(name));
         }
 
         virtual void Deserialise(the::wstring& outValue, 
                 const wchar_t *name) {
-            outValue = the::wstring(this->value(name));
+            the::text::string_converter::convert(outValue, this->value(name));
         }
 
         virtual void Serialise(const bool value, 
@@ -356,69 +357,67 @@ namespace vislib {
         virtual void Serialise(const the::astring& value,
                 const char *name = NULL) {
             if (name != NULL) {
-                vislib::String<T> tname(name);
+                T tname;
+                the::text::string_converter::convert(tname, name);
                 for (unsigned int i = 0; i < this->data.Count(); i++) {
-                    if (this->data[i].Key().Equals(tname)) {
-                        this->data[i].Second() = vislib::String<T>(value);
+                    if (the::text::string_utility::equals(this->data[i].Key(), tname)) {
+                        the::text::string_converter::convert(this->data[i].Second(), value);
                         return;
                     }
                 }
                 this->data.Append(
-                    vislib::Pair<vislib::String<T>, vislib::String<T> >(
-                    vislib::String<T>(name), vislib::String<T>(value)));
+                    vislib::Pair<T, T>(tname, the::text::string_converter::convert<T>(value)));
             } else {
                 this->data.Append(
-                    vislib::Pair<vislib::String<T>, vislib::String<T> >(
-                    NULL, vislib::String<T>(value)));
+                    vislib::Pair<T, T>(nullptr, the::text::string_converter::convert<T>(value)));
             }
         }
 
         virtual void Serialise(const the::astring& value,
                 const wchar_t *name) {
-            vislib::String<T> tname(name);
+            T tname;
+            the::text::string_converter::convert(tname, name);
             for (unsigned int i = 0; i < this->data.Count(); i++) {
-                if (this->data[i].Key().Equals(tname)) {
-                    this->data[i].Second() = vislib::String<T>(value);
+                if (the::text::string_utility::equals(this->data[i].Key(), tname)) {
+                    the::text::string_converter::convert(this->data[i].Second(), value);
                     return;
                 }
             }
             this->data.Append(
-                vislib::Pair<vislib::String<T>, vislib::String<T> >(
-                vislib::String<T>(name), vislib::String<T>(value)));
+                vislib::Pair<T, T>(tname, the::text::string_converter::convert<T>(value)));
         }
 
         virtual void Serialise(const the::wstring& value,
                 const char *name = NULL) {
             if (name != NULL) {
-                vislib::String<T> tname(name);
+                T tname;
+                the::text::string_converter::convert(tname, name);
                 for (unsigned int i = 0; i < this->data.Count(); i++) {
-                    if (this->data[i].Key().Equals(tname)) {
-                        this->data[i].Second() = vislib::String<T>(value);
+                    if (the::text::string_utility::equals(this->data[i].Key(), tname)) {
+                        the::text::string_converter::convert(this->data[i].Second(), value);
                         return;
                     }
                 }
                 this->data.Append(
-                    vislib::Pair<vislib::String<T>, vislib::String<T> >(
-                    vislib::String<T>(name), vislib::String<T>(value)));
+                    vislib::Pair<T, T>(tname, the::text::string_converter::convert<T>(value)));
             } else {
                 this->data.Append(
-                    vislib::Pair<vislib::String<T>, vislib::String<T> >(
-                    NULL, vislib::String<T>(value)));
+                    vislib::Pair<T, T>(nullptr, the::text::string_converter::convert<T>(value)));
             }
         }
 
         virtual void Serialise(const the::wstring& value,
                 const wchar_t *name) {
-            vislib::String<T> tname(name);
+            T tname;
+            the::text::string_converter::convert(tname, name);
             for (unsigned int i = 0; i < this->data.Count(); i++) {
-                if (this->data[i].Key().Equals(tname)) {
-                    this->data[i].Second() = vislib::String<T>(value);
+                if (the::text::string_utility::equals(this->data[i].Key(), tname)) {
+                    the::text::string_converter::convert(this->data[i].Second(), value);
                     return;
                 }
             }
             this->data.Append(
-                vislib::Pair<vislib::String<T>, vislib::String<T> >(
-                vislib::String<T>(name), vislib::String<T>(value)));
+                vislib::Pair<T, T>(tname, the::text::string_converter::convert<T>(value)));
         }
 
         /**
@@ -427,7 +426,7 @@ namespace vislib {
          *
          * @param str The input string.
          */
-        void SetInputString(const typename T::Char *str);
+        void SetInputString(const typename T::value_type *str);
 
         /**
          * Parses an input string to the internal representation. This method
@@ -435,7 +434,7 @@ namespace vislib {
          *
          * @param str The input string.
          */
-        inline void SetInputString(const String<T> &str) {
+        inline void SetInputString(const T &str) {
             this->SetInputString(str);
         }
 
@@ -456,7 +455,7 @@ namespace vislib {
          *
          * @param outStr The string receiving the serialised data.
          */
-        void GetString(String<T> &outStr) const;
+        void GetString(T &outStr) const;
 
         /**
          * Returns a string of the internal data. This method is usually used
@@ -464,8 +463,8 @@ namespace vislib {
          *
          * @return The string holding the serialised data.
          */
-        inline String<T> GetString(void) const {
-            vislib::String<T> tmp;
+        inline T GetString(void) const {
+            T tmp;
             this->GetString(tmp);
             return tmp;
         }
@@ -483,11 +482,12 @@ namespace vislib {
          *
          * @throws Exception in case of an error.
          */
-        inline const vislib::String<T>& value(const char *name) {
+        inline const T& value(const char *name) {
             if (name != NULL) {
-                vislib::String<T> tname(name);
+                T tname;
+                the::text::string_converter::convert(tname, name);
                 for (unsigned int i = 0; i < this->data.Count(); i++) {
-                    if (this->data[i].Key().Equals(tname)) {
+                    if (the::text::string_utility::equals(this->data[i].Key(), tname)) {
                         this->nextDePos = i + 1;
                         return this->data[i].Value();
                     }
@@ -510,11 +510,12 @@ namespace vislib {
          *
          * @throws Exception in case of an error.
          */
-        inline const vislib::String<T>& value(const wchar_t *name) {
+        inline const T& value(const wchar_t *name) {
             if (name != NULL) {
-                vislib::String<T> tname(name);
+                T tname;
+                the::text::string_converter::convert(tname, name);
                 for (unsigned int i = 0; i < this->data.Count(); i++) {
-                    if (this->data[i].Key().Equals(tname)) {
+                    if (the::text::string_utility::equals(this->data[i].Key(), tname)) {
                         this->nextDePos = i + 1;
                         return this->data[i].Value();
                     }
@@ -527,8 +528,7 @@ namespace vislib {
         }
 
         /** The internal data structure */
-        vislib::Array<vislib::Pair<vislib::String<T>, vislib::String<T> > > 
-            data;
+        vislib::Array<vislib::Pair<T, T> > data;
 
         /** 
          * The position of the next value to be deserialised, used for order
@@ -543,7 +543,7 @@ namespace vislib {
      * StringSerialiser<T>::StringSerialiser
      */
     template<class T>
-    StringSerialiser<T>::StringSerialiser(const typename T::Char *str)
+    StringSerialiser<T>::StringSerialiser(const typename T::value_type *str)
             : Serialiser(SERIALISER_SUPPORTS_NAMES), data(), nextDePos(0) {
         this->SetInputString(str);
     }
@@ -553,7 +553,7 @@ namespace vislib {
      * StringSerialiser<T>::StringSerialiser
      */
     template<class T>
-    StringSerialiser<T>::StringSerialiser(const vislib::String<T>& str)
+    StringSerialiser<T>::StringSerialiser(const T& str)
             : Serialiser(SERIALISER_SUPPORTS_NAMES), data(), nextDePos(0) {
         this->SetInputString(str.c_str());
     }
@@ -571,39 +571,41 @@ namespace vislib {
      * StringSerialiser<T>::parseInitString
      */
     template<class T>
-    void StringSerialiser<T>::SetInputString(const typename T::Char *str) {
+    void StringSerialiser<T>::SetInputString(const typename T::value_type *str) {
         this->data.Clear();
         this->nextDePos = 0;
 
-        if ((str == NULL) || (*str == static_cast<typename T::Char>(0))) {
+        if ((str == NULL) || (*str == static_cast<typename T::value_type>(0))) {
             return;
         }
 
-        vislib::String<T> key;
-        vislib::String<T> value;
+        T key;
+        T value;
         vislib::StringTokeniser<T> tokeniser(str, 
-            static_cast<typename T::Char>('\n'));
+            static_cast<typename T::value_type>('\n'));
 
         while (tokeniser.HasNext()) {
-            const vislib::String<T>& line = tokeniser.Next();
-            typename vislib::String<T>::Size pos;
+            const T& line = tokeniser.Next();
+            typename T::size_type pos;
 
             do {
-                pos = line.find(static_cast<typename T::Char>('='));
-            } while ((pos != vislib::String<T>::INVALID_POS) && (pos > 0)
-                && (line[pos - 1] == static_cast<typename T::Char>('\\')));
+                pos = line.find(static_cast<typename T::value_type>('='));
+            } while ((pos != T::npos) && (pos > 0)
+                && (line[pos - 1] == static_cast<typename T::value_type>('\\')));
 
             key = line.substr(0, pos);
             value = line.substr(pos + 1);
 
-            key.UnescapeCharacters(static_cast<typename T::Char>('\\'), 
-                vislib::String<T>("\n\r="), vislib::String<T>("nr="));
-            value.UnescapeCharacters(static_cast<typename T::Char>('\\'), 
-                vislib::String<T>("\n\r="), vislib::String<T>("nr="));
+            the::text::string_utility::unescape_characters(key,
+                static_cast<typename T::value_type>('\\'),
+                the::text::string_converter::convert<T>("\n\r="), 
+                the::text::string_converter::convert<T>("nr="));
+            the::text::string_utility::unescape_characters(value,
+                static_cast<typename T::value_type>('\\'),
+                the::text::string_converter::convert<T>("\n\r="), 
+                the::text::string_converter::convert<T>("nr="));
 
-            this->data.Append(
-                vislib::Pair<vislib::String<T>, vislib::String<T> >(
-                key, value));
+            this->data.Append(vislib::Pair<T, T>(key, value));
         }
     }
 
@@ -612,35 +614,37 @@ namespace vislib {
      * StringSerialiser<T>::GetString
      */
     template<class T>
-    void StringSerialiser<T>::GetString(vislib::String<T> &outStr) const {
-        outStr.Clear();
-        vislib::String<T> str;
+    void StringSerialiser<T>::GetString(T &outStr) const {
+        outStr.clear();
+        T str;
         for (unsigned int i = 0; i < this->data.Count(); i++) {
             str = this->data[i].Key();
-            str.EscapeCharacters(static_cast<typename T::Char>('\\'), 
-                vislib::String<T>("\n\r="), vislib::String<T>("nr="));
-
-            outStr.Append(str);
-            outStr.Append(vislib::String<T>("="));
+            the::text::string_utility::escape_characters(str,
+                static_cast<typename T::value_type>('\\'),
+                the::text::string_converter::convert<T>("\n\r="), 
+                the::text::string_converter::convert<T>("nr="));
+            outStr.append(str.c_str());
+            outStr.append(the::text::string_converter::convert<T>("="));
             str = this->data[i].Value();
-            str.EscapeCharacters(static_cast<typename T::Char>('\\'), 
-                vislib::String<T>("\n\r="), vislib::String<T>("nr="));
-
-            outStr.Append(str);
-            outStr.Append(vislib::String<T>("\n"));
+            the::text::string_utility::escape_characters(str,
+                static_cast<typename T::value_type>('\\'),
+                the::text::string_converter::convert<T>("\n\r="), 
+                the::text::string_converter::convert<T>("nr="));
+            outStr.append(str.c_str());
+            outStr.append(the::text::string_converter::convert<T>("\n"));
         }
     }
 
 #undef _I64_PRINTF
 
     /** Template instantiation for ANSI strings. */
-    typedef StringSerialiser<CharTraitsA> StringSerialiserA;
+    typedef StringSerialiser<the::astring> StringSerialiserA;
 
     /** Template instantiation for wide strings. */
-    typedef StringSerialiser<CharTraitsW> StringSerialiserW;
+    typedef StringSerialiser<the::wstring> StringSerialiserW;
 
     /** Template instantiation for TCHARs. */
-    typedef StringSerialiser<TCharTraits> TStringSerialiser;
+    typedef StringSerialiser<the::tstring> TStringSerialiser;
 
 } /* end namespace vislib */
 

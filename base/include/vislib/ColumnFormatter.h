@@ -35,7 +35,7 @@ namespace vislib {
         typedef typename T::value_type Char;
 
         /** Define a local name for the string type. */
-        typedef typename T String;
+        typedef T String;
 
         /**
          * Nested class representing a single column.

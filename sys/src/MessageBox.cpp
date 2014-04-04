@@ -1010,7 +1010,8 @@ vislib::sys::MessageBox::ShowDialog(void) {
     int answerBtn = -1;
     XImage *xIcon = NULL;
 
-    the::astring titleA(this->title);
+    the::astring titleA;
+    the::text::string_converter::convert(titleA, this->title);
 
     // construct button captions
     const char *btn1 = NULL, *btn2 = NULL, *btn3 = NULL;
@@ -1060,7 +1061,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
 
             window = ::XCreateSimpleWindow(display, DefaultRootWindow(display),
                 100, 100, 100, 100, 4, colours.black, colours.white);
-            ::XSetStandardProperties(display, window, titleA, titleA, None,
+            ::XSetStandardProperties(display, window, titleA.c_str(), titleA.c_str(), None,
                 NULL, 0, NULL);
             ::XSelectInput(display, window, ExposureMask | ButtonPressMask 
                 | ButtonReleaseMask | Button1MotionMask | KeyPressMask);
@@ -1072,7 +1073,8 @@ vislib::sys::MessageBox::ShowDialog(void) {
             font = ::XQueryFont(display, ::XGContextFromGC(gc));
 
             // calculate required dialog size
-            the::astring text(this->msg);
+            the::astring text;
+            the::text::string_converter::convert(text, this->msg);
             the::text::string_utility::trim(text);
             const unsigned int maxWinWidth = 600;
             unsigned int winWidth, winHeight;
@@ -1083,7 +1085,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
             winWidth = btnCnt * MessageBoxLinuxUtils::btnSize[0]
                 + (btnCnt + 1) * MessageBoxLinuxUtils::border;
             if (winWidth < maxWinWidth) { // if not we are in real trouble
-                int len = ::XTextWidth(font, text, text.Length());
+                int len = ::XTextWidth(font, text.c_str(), text.size());
                 len += 4 * MessageBoxLinuxUtils::border;
                 if (this->icon != ICON_NONE) {
                     len += MessageBoxLinuxUtils::border
@@ -1282,7 +1284,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
                     // the window was exposed - redraw it!
                     MessageBoxLinuxUtils::drawDialog(display, screen, window,
                         gc, colours, font, btn1, btn2, btn3, xIcon,
-                        this->msg, btnFocus,
+                        the::text::string_converter::to_a(this->msg), btnFocus,
                         focusBtnClicked && mouseOnFocusBtn);
 
                 } else if (event.type == KeyPress) {
@@ -1300,14 +1302,14 @@ vislib::sys::MessageBox::ShowDialog(void) {
                             btnFocus++;
                             MessageBoxLinuxUtils::drawDialog(display, screen,
                                 window, gc, colours, font, btn1, btn2, btn3,
-                                xIcon, this->msg, btnFocus, false);
+                                xIcon, the::text::string_converter::to_a(this->msg), btnFocus, false);
                         }
                     } else if (key == XK_Left) {
                         if ((btnFocus > 0) && (!focusBtnClicked)) {
                             btnFocus--;
                             MessageBoxLinuxUtils::drawDialog(display, screen,
                                 window, gc, colours, font, btn1, btn2, btn3,
-                                xIcon, this->msg, btnFocus, false);
+                                xIcon, the::text::string_converter::to_a(this->msg), btnFocus, false);
                         }
                     }
 
@@ -1341,7 +1343,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
                         mouseOnFocusBtn = true;
                         MessageBoxLinuxUtils::drawDialog(display, screen,
                             window, gc, colours, font, btn1, btn2, btn3,
-                            xIcon, this->msg, btnFocus,
+                            xIcon, the::text::string_converter::to_a(this->msg), btnFocus,
                             focusBtnClicked && mouseOnFocusBtn);
                     }
 
@@ -1380,7 +1382,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
                         mouseOnFocusBtn = (hitBtn == int(btnFocus));
                         MessageBoxLinuxUtils::drawDialog(display, screen,
                             window, gc, colours, font, btn1, btn2, btn3,
-                            xIcon, this->msg, btnFocus,
+                            xIcon, the::text::string_converter::to_a(this->msg), btnFocus,
                             focusBtnClicked && mouseOnFocusBtn);
                     }
 
@@ -1417,7 +1419,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
             case ICON_NONE: // fall through
             default : /* nothing to do */ break;
         }
-        fprintf(out, "%s\n\n", the::astring(this->msg).c_str());
+        fprintf(out, "%s\n\n", the::text::string_converter::to_a(this->msg).c_str());
 
         // simple ok message boxes are handled separatly
         if (this->btns == BTNS_OK) {

@@ -436,7 +436,7 @@ void TestPath(void) {
         AssertFalse("Compare \"Path::Resolve(hugo)\" != \"\\hugo\"", Path::Compare<the::wstring>(Path::Resolve(L"hugo").c_str(), L"\\hugo"));
         AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<the::wstring>(Path::Resolve(L"hugo").c_str(), L"hugo"));
 #else /* _WIN32 */
-        AssertTrue("Compare \"/horst/\" == \"/../horst/\"", Path::Compare<the::astring*>("/horst/", "/../horst/"));
+        AssertTrue("Compare \"/horst/\" == \"/../horst/\"", Path::Compare<the::astring>("/horst/", "/../horst/"));
         AssertFalse("Compare \"/horst\" != \"/Horst\"", Path::Compare<the::astring>("/horst", "/Horst"));
         AssertFalse("Compare \"Path::Resolve(hugo)\" != \"/hugo\"", Path::Compare<the::astring>(Path::Resolve("hugo").c_str(), "/hugo"));
         AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<the::astring>(Path::Resolve("hugo").c_str(), "hugo"));

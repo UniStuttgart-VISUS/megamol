@@ -268,8 +268,8 @@ the::astring vislib::GUID::ToStringA(void) const {
         throw std::bad_alloc();
     }
 #else /* _WIN32 */
-    the::astring retval;
-    ::uuid_unparse(this->guid, retval.AllocateBuffer((36 + 1) * sizeof(char)));
+    the::astring retval((36 + 1) * sizeof(char), ' ');
+    ::uuid_unparse(this->guid, const_cast<char*>(retval.c_str()));
     return retval;
 #endif /* _WIN32 */
 }
@@ -290,7 +290,7 @@ the::wstring vislib::GUID::ToStringW(void) const {
     }
 
 #else /* _WIN32 */
-    return the::wstring(this->ToStringA());
+    return the::text::string_converter::to_w(this->ToStringA());
 #endif /* _WIN32 */
 }
 

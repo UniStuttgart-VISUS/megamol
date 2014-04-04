@@ -149,7 +149,7 @@ namespace vislib {
      * Listenable<C>::AddListener
      */
     template<class C> void Listenable<C>::AddListener(Listener *listener) {
-        if (!this->the::text::string_utility::contains(listeners, listener)) {
+        if (!this->listeners.Contains(listener)) {
             this->listeners.Add(listener);
         }
     }
@@ -167,7 +167,7 @@ namespace vislib {
      * Listenable<C>::IsListener
      */
     template<class C> bool Listenable<C>::IsListener(Listener *listener) const {
-        return this->the::text::string_utility::contains(listeners, listener);
+        return this->listeners.Contains(listener);
     }
 
 

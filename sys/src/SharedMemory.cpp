@@ -83,7 +83,7 @@ void vislib::sys::SharedMemory::Close(void) {
             throw the::system::system_exception(__FILE__, __LINE__);
         }
         this->hSharedMem = -1;
-        this->name.Clear();
+        this->name.clear();
     }
 #endif /* _WIN32 */
 }

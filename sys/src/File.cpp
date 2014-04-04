@@ -149,7 +149,7 @@ the::wstring& vislib::sys::File::CreateTempFileName(the::wstring& outFn) {
 #else /* _WIN32 */
     the::astring outFnA;
     CreateTempFileName(outFnA);
-    outFn = outFnA;
+    the::text::string_converter::convert(outFn, outFnA);
 
 #endif /* _WIN32 */
 

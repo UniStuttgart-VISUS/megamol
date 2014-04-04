@@ -105,7 +105,7 @@ bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, size_t si
     for (p1 = p2; (p1 < size) && the::text::char_utility::is_space(cd[p1]); p1++);\
     for (p2 = p1; (p2 < size) && !the::text::char_utility::is_space(cd[p2]); p2++);\
     if (p1 >= size) return false; /* out of data */ \
-    variable = static_cast<type>(the::text::string_utility:: ## method(\
+    variable = static_cast<type>(the::text::string_utility::method(\
         the::astring(&cd[p1],\
         static_cast<size_t>(p2 - p1)).c_str()));
 

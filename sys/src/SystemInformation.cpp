@@ -12,8 +12,9 @@
 #include "the/system/system_exception.h"
 #include "the/trace.h"
 #include "the/not_supported_exception.h"
-
 #include "the/not_implemented_exception.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 
 #include <climits>
 
@@ -158,7 +159,7 @@ void vislib::sys::SystemInformation::ComputerName(the::wstring &outName) {
 #else
     the::astring tmpStr;
     SystemInformation::ComputerName(tmpStr);
-    outName = tmpStr;
+    the::text::string_converter::convert(outName, tmpStr);
 #endif
 }
 
@@ -206,7 +207,7 @@ unsigned int vislib::sys::SystemInformation::MonitorRects(
     if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
         the::text::astring_builder::format_to(errorDesc, "Could not open display \"%s\".", 
             ::XDisplayName(NULL));
-        throw the::exception(errorDesc, __FILE__, __LINE__);
+        throw the::exception(errorDesc.c_str(), __FILE__, __LINE__);
     }
 
     cntScreens = ScreenCount(dpy);
@@ -320,7 +321,7 @@ vislib::sys::SystemInformation::PrimaryMonitorRect(void) {
     if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
         the::text::astring_builder::format_to(errorDesc, "Could not open display \"%s\".", 
             ::XDisplayName(NULL));
-        throw the::exception(errorDesc, __FILE__, __LINE__);
+        throw the::exception(errorDesc.c_str(), __FILE__, __LINE__);
     }
 
     retval = SystemInformation::getRootWndRect(dpy, DefaultScreen(dpy));
@@ -588,7 +589,7 @@ void vislib::sys::SystemInformation::UserName(the::wstring &outName) {
 #else
     the::astring tmpStr;
     SystemInformation::UserName(tmpStr);
-    outName = tmpStr;
+    the::text::string_converter::convert(outName, tmpStr);
 #endif
 }
 

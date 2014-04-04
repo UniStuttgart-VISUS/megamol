@@ -1287,7 +1287,7 @@ vislib::graphics::NamedColours::index[] = {
     /* additional named colours */
     {"MegaMolBlue", colFromHex(0x0080C0FF)},
     /* end of list guard */
-    {NULL, colFromHex(0x00000000)}
+    {"", colFromHex(0x00000000)}
 };
 
 

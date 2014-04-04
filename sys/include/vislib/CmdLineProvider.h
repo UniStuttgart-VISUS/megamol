@@ -436,7 +436,7 @@ namespace sys {
             str = T(len, static_cast<Char>(' '));
             buf = const_cast<Char*>(str.c_str());
 
-            if (sizeof(T::value_type) == sizeof(wchar_t)) { // not too secure, but it will do
+            if (sizeof(typename T::value_type) == sizeof(wchar_t)) { // not too secure, but it will do
                 rlen = GetModuleFileNameW(NULL, reinterpret_cast<wchar_t*>(buf), len); // unicode string
             } else {
                 rlen = GetModuleFileNameA(NULL, reinterpret_cast<char*>(buf), len); // ansi string
@@ -512,7 +512,7 @@ namespace sys {
         for (int i = 0; i < this->argCount; i++) {
             size_t len = the::text::string_utility::c_str_len(argv[i]) + 1;
             this->arguments[i] = this->memoryAnchor[0][i] = new Char[len];
-            ::memcpy(this->memoryAnchor[0][i], argv[i], len * sizeof(T::value_type));
+            ::memcpy(this->memoryAnchor[0][i], argv[i], len * sizeof(typename T::value_type));
         }
     }
 
@@ -671,7 +671,7 @@ namespace sys {
             ci = const_cast<Char*>(appName);
             while (*ci != 0) { len++; ci++; }
             this->memoryAnchor[0][0] = new Char[len];
-            ::memcpy(this->memoryAnchor[0][0], appName, len * sizeof(T::value_type));
+            ::memcpy(this->memoryAnchor[0][0], appName, len * sizeof(typename T::value_type));
             this->argCount = 1;
         } else {
             this->argCount = 0;

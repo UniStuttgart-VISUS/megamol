@@ -271,8 +271,8 @@ void vislib::sys::Environment::Snapshot::GetAt(const size_t idx,
 #else /* _WIN32 */
     the::astring name, value;
     this->GetAt(idx, name, value);
-    outName = name;
-    outValue = value;
+    the::text::string_converter::convert(outName, name);
+    the::text::string_converter::convert(outValue, value);
 #endif /* _WIN32 */
 }
 
@@ -314,7 +314,7 @@ the::wstring vislib::sys::Environment::Snapshot::GetVariable(
 
     return the::wstring();
 #else /* _WIN32 */
-    return the::wstring(this->GetVariable(THE_W2A(name)));
+    return the::text::string_converter::to_w(this->GetVariable(THE_W2A(name)));
 #endif /* _WIN32 */
 }
 
@@ -552,7 +552,7 @@ the::wstring vislib::sys::Environment::GetVariable(const wchar_t *name,
 
     return retval;
 #else /* _WIN32 */
-    return the::wstring(Environment::GetVariable(THE_W2A(name)));
+    return the::text::string_converter::to_w(Environment::GetVariable(THE_W2A(name)));
 #endif /* _WIN32 */
 }
 

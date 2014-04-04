@@ -1650,8 +1650,8 @@ void vislib::net::NetworkInformation::initAdapters(void) {
          */
         Adapter *adapter = NULL;
         for (size_t i = 0; i < NetworkInformation::adapters.Count(); i++) {
-            if (NetworkInformation::adapters[i].id.GetValue().Equals(
-                    cur->ifa_name)) {
+            if (the::text::string_utility::equals(
+                    NetworkInformation::adapters[i].id.GetValue(), cur->ifa_name)) {
                 adapter = &(adapters[i]);
             }
         }
@@ -2501,7 +2501,7 @@ uint32_t vislib::net::NetworkInformation::wildGuessSplitInput(
   
     /* The rest is either the adapter address or device name. */
 #ifndef _WIN32
-    input.Trim(L"[]");  // mueller: I forgot why we do that on Linux ...
+    the::text::string_utility::trim(input, L"[]");  // mueller: I forgot why we do that on Linux ...
 #endif /* !_WIN32 */
     the::text::string_utility::trim(input);
     try {

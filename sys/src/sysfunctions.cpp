@@ -617,10 +617,10 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
     
     /* Remove Windows kernel namespaces from the name. */
     the::astring n = RemoveKernelNamespace(name);
-    THE_ASSERT(n.Length() > 0);
+    THE_ASSERT(n.size() > 0);
 
     // TODO: Ist das Verzeichnis sinnvoll? Eher nicht ...
-    retval = ::ftok(Path::GetUserHomeDirectoryA().c_str(), n.HashCode());
+    retval = ::ftok(Path::GetUserHomeDirectoryA().c_str(), the::text::string_utility::hash_code(n));
     if (retval == -1) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }

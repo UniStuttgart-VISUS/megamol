@@ -56,21 +56,21 @@ namespace sys {
 #else /* _WIN32 */
         if (isPattern) {
             this->basePath = vislib::sys::Path::GetDirectoryName(path);
-            this->pattern = path + (this->basePath.Length() + 1);
+            this->pattern = path + (this->basePath.size() + 1);
 
         } else {
             this->basePath = path;
-            this->pattern.Clear();
+            this->pattern.clear();
 
         }
-        if (vislib::sys::File::Exists(this->basePath)) {
-            if ((this->dirStream = opendir(this->basePath)) == NULL) {
+        if (vislib::sys::File::Exists(this->basePath.c_str())) {
+            if ((this->dirStream = opendir(this->basePath.c_str())) == NULL) {
                 throw the::system::system_exception(__FILE__, __LINE__);
             }
             this->fetchNextItem();
         } else {
             this->dirStream = NULL;
-            this->nextItem.Path.Clear();
+            this->nextItem.Path.clear();
         }
 #endif /* _WIN32 */
     }
@@ -116,22 +116,22 @@ namespace sys {
         }
 #else /* _WIN32 */
         if (isPattern) {
-            this->basePath = vislib::sys::Path::GetDirectoryName(path);
-            this->pattern = path + (this->basePath.Length() + 1);
+            the::text::string_converter::convert(this->basePath, vislib::sys::Path::GetDirectoryName(path));
+            the::text::string_converter::convert(this->pattern, path + (this->basePath.size() + 1));
 
         } else {
-            this->basePath = path;
-            this->pattern.Clear();
+            the::text::string_converter::convert(this->basePath, path);
+            this->pattern.clear();
 
         }
-        if (vislib::sys::File::Exists(this->basePath)) {
-            if ((this->dirStream = opendir(this->basePath)) == NULL) {
+        if (vislib::sys::File::Exists(this->basePath.c_str())) {
+            if ((this->dirStream = opendir(this->basePath.c_str())) == NULL) {
                 throw the::system::system_exception(__FILE__, __LINE__);
             }
             this->fetchNextItem();
         } else {
             this->dirStream = NULL;
-            this->nextItem.Path.Clear();
+            this->nextItem.Path.clear();
         }
 #endif /* _WIN32 */
     }
@@ -181,7 +181,7 @@ namespace sys {
                             continue; // one more time
                         }
                     }
-                    if (vislib::sys::File::IsDirectory(this->basePath + Path::SEPARATOR_A + de->d_name)) {
+                    if (vislib::sys::File::IsDirectory((this->basePath + Path::SEPARATOR_A + de->d_name).c_str())) {
                         this->nextItem.Type = Entry::DIRECTORY;
                         if (this->omitFolders) continue; // one more time
                         if ((strcmp(de->d_name, "..") != 0) && (strcmp(de->d_name, ".") != 0)) break;
@@ -193,7 +193,7 @@ namespace sys {
             } while (de != NULL);
         }
         if (de == NULL) {
-            this->nextItem.Path.Clear();
+            this->nextItem.Path.clear();
         }
         else {
             this->nextItem.Path = de->d_name;
@@ -246,7 +246,7 @@ namespace sys {
                             continue; // one more time
                         }
                     }
-                    if (vislib::sys::File::IsDirectory(this->basePath + Path::SEPARATOR_A + de->d_name)) {
+                    if (vislib::sys::File::IsDirectory((this->basePath + Path::SEPARATOR_A + de->d_name).c_str())) {
                         this->nextItem.Type = Entry::DIRECTORY;
                         if (this->omitFolders) continue; // one more time
                         if ((strcmp(de->d_name, "..") != 0) && (strcmp(de->d_name, ".") != 0)) break;
@@ -258,9 +258,9 @@ namespace sys {
             } while (de != NULL);
         }
         if (de == NULL) {
-            this->nextItem.Path.Clear();
+            this->nextItem.Path.clear();
         } else {
-            this->nextItem.Path = the::wstring(de->d_name);
+            the::text::string_converter::convert(this->nextItem.Path, de->d_name);
         }
 #endif /* _WIN32 */
     }

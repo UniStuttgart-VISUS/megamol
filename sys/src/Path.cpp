@@ -73,14 +73,14 @@ the::astring vislib::sys::Path::Canonicalise(const the::astring& path) {
                 && (remDirPos = retval.rfind(SEPARATOR_A, bwRefPos - 1))
                 != the::astring::npos) {
             /* Found inner backward reference, so remove some parts. */
-            retval.Remove(remDirPos, bwRefPos - remDirPos + BACK_REF_LEN);
+            retval.erase(remDirPos, bwRefPos - remDirPos + BACK_REF_LEN);
 
         } else {
             /* 
              * No other path separator is before this one, so we can remove
              * everything before 'bwRefPos'.
              */
-            retval.Remove(0, bwRefPos + BACK_REF_LEN);
+            retval.erase(0, bwRefPos + BACK_REF_LEN);
         }
     }
 
@@ -88,7 +88,7 @@ the::astring vislib::sys::Path::Canonicalise(const the::astring& path) {
      * Remove references to the current directory. This must be done after
      * removing backward references.
      */
-    retval.Remove(CUR_REF);
+    the::text::string_utility::remove(retval, CUR_REF);
     
     /* Remove odd and even number of repeated path separators. */
     the::text::string_utility::replace(retval, DOUBLE_SEPARATOR.c_str(), SEPARATOR_A);
@@ -140,14 +140,14 @@ the::wstring vislib::sys::Path::Canonicalise(const the::wstring& path) {
                 && (remDirPos = retval.rfind(SEPARATOR_W, bwRefPos - 1))
                 != the::wstring::npos) {
             /* Found inner backward reference, so remove some parts. */
-            retval.Remove(remDirPos, bwRefPos - remDirPos + BACK_REF_LEN);
+            retval.erase(remDirPos, bwRefPos - remDirPos + BACK_REF_LEN);
 
         } else {
             /* 
              * No other path separator is before this one, so we can remove
              * everything before 'bwRefPos'.
              */
-            retval.Remove(0, bwRefPos + BACK_REF_LEN);
+            retval.erase(0, bwRefPos + BACK_REF_LEN);
         }
     }
 
@@ -155,7 +155,7 @@ the::wstring vislib::sys::Path::Canonicalise(const the::wstring& path) {
      * Remove references to the current directory. This must be done after
      * removing backward references.
      */
-    retval.Remove(CUR_REF);
+    the::text::string_utility::remove(retval, CUR_REF);
     
     /* Remove odd and even number of repeated path separators. */
     the::text::string_utility::replace(retval, DOUBLE_SEPARATOR.c_str(), SEPARATOR_W);
@@ -274,7 +274,7 @@ void vislib::sys::Path::DeleteDirectory(const the::astring& path, bool recursive
 #ifdef _WIN32
     if (RemoveDirectoryA(fullPath.c_str()) == 0) {
 #else /* _WIN32 */
-    if (rmdir(fullPath) != 0) {
+    if (rmdir(fullPath.c_str()) != 0) {
 #endif /* _WIN32 */
         throw the::system::system_exception(__FILE__, __LINE__);
     }
@@ -495,15 +495,15 @@ the::astring vislib::sys::Path::GetApplicationPathA(void) {
     // This is the best I got for now. Requires '/proc'
     the::astring pid;
     the::text::astring_builder::format_to(pid, "/proc/%d/exe", getpid());
-    the::astring path;
     const size_t bufSize = 0xFFFF;
-    char *buf = path.AllocateBuffer(bufSize);
+    the::astring path(bufSize, ' ');
+    char *buf = const_cast<char*>(path.c_str());
     ssize_t size = readlink(pid.c_str(), buf, bufSize - 1);
     if (size >= 0) {
         buf[size] = 0;
         retval = buf;
     } else {
-        retval.Clear();
+        retval.clear();
     }
 
 #endif /* _WIN32 */
@@ -601,7 +601,7 @@ the::wstring vislib::sys::Path::GetCurrentDirectoryW(void) {
     return retval;
 
 #else /* _WIN32 */
-    return the::wstring(GetCurrentDirectoryA());
+    return the::text::string_converter::to_w(GetCurrentDirectoryA());
 #endif /* _WIN32 */
 }
 
@@ -725,7 +725,7 @@ the::wstring vislib::sys::Path::GetUserHomeDirectoryW(void) {
     return retval;
 
 #else /* _WIN32 */
-    return the::wstring(GetUserHomeDirectoryA());
+    return the::text::string_converter::to_w(GetUserHomeDirectoryA());
 
 #endif /* _WIN32 */
 }
@@ -805,7 +805,7 @@ void vislib::sys::Path::MakeDirectory(const the::astring& path) {
 #ifdef _WIN32
         if (CreateDirectoryA(curPath.c_str(), NULL) != 0) {
 #else /* _WIN32 */
-        if (mkdir(curPath, S_IRWXG | S_IRWXO | S_IRWXU) == 0) { // TODO: Check
+        if (mkdir(curPath.c_str(), S_IRWXG | S_IRWXO | S_IRWXU) == 0) { // TODO: Check
 #endif /* _WIN32 */
             // success, so go on.
             if (firstBuilt.empty()) {
@@ -1057,7 +1057,7 @@ void vislib::sys::Path::SetCurrentDirectory(const the::astring& path) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
-    if (::chdir(static_cast<const char *>(path)) == -1) {
+    if (::chdir(static_cast<const char *>(path.c_str())) == -1) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 #endif /* _WIN32 */
@@ -1073,7 +1073,7 @@ void vislib::sys::Path::SetCurrentDirectory(const the::wstring& path) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
-    SetCurrentDirectory(static_cast<the::astring>(path));
+    SetCurrentDirectory(the::text::string_converter::to_a(path));
 #endif /* _WIN32 */
 }
 

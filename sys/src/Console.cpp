@@ -252,7 +252,7 @@ private:
                 // first check if dcop is available
                 vislib::sys::Console::Run("dcop", &out, &err);
 
-                this->dcopPresent = (err.Length() == 0);
+                this->dcopPresent = (err.size() == 0);
 
                 // check if environment variable $KONSOLE_DCOP_SESSION is present
                 char *v = ::getenv("KONSOLE_DCOP_SESSION");
@@ -312,14 +312,14 @@ private:
                         while(cnt < 1000) {
                             vislib::sys::Thread::Sleep(50);
                             cnt += 50;
-                            if (rd.Length() > 0) {
+                            if (rd.size() > 0) {
                                 break;
                             }
                         }
                         stdinreader.Terminate(true);
 
-                        if (rd.Length() > 5) {
-                            oldName = rd.substr(3, rd.Length() - 4);
+                        if (rd.size() > 5) {
+                            oldName = rd.substr(3, rd.size() - 4);
                         }
 
                     }
@@ -333,7 +333,7 @@ private:
 
                 }
 
-                unsigned int size = oldName.Length();
+                unsigned int size = static_cast<unsigned int>(oldName.size());
                 if (size > 0) {
                     this->oldConsoleTitle = new char[size + 1];
                     ::memcpy(this->oldConsoleTitle, oldName.c_str(), size * sizeof(char));
@@ -607,7 +607,7 @@ int vislib::sys::Console::Run(const char *command, the::astring *outStdOut,
         if (outStdOut != NULL) {
             outputReaderInfo.pipe = stdOutPipe[0];
             outputReaderInfo.target = outStdOut;
-            outStdOut->Clear();
+            outStdOut->clear();
             if (!outputReader.Start(&outputReaderInfo)) {
                 outStdOut = NULL; // avoid join
             }
@@ -616,7 +616,7 @@ int vislib::sys::Console::Run(const char *command, the::astring *outStdOut,
         if (outStdErr != NULL) {
             errorReaderInfo.pipe = stdErrPipe[0];
             errorReaderInfo.target = outStdErr;
-            outStdErr->Clear();
+            outStdErr->clear();
             if (!errorReader.Start(&errorReaderInfo)) {
                 outStdErr = NULL; // avoid join
             }
@@ -961,7 +961,7 @@ void vislib::sys::Console::SetTitle(const the::astring& title) {
     ::SetConsoleTitleA(title.c_str());
 
 #else // _WIN32
-    vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(title);
+    vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(title.c_str());
 
 #endif // _WIN32
 }

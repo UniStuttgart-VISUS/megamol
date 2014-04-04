@@ -112,7 +112,7 @@ vislib::sys::Semaphore::Semaphore(const wchar_t *name, long initialCount,
 
 #else /* _WIN32 */
     if (name != NULL) {
-        this->name = TranslateWinIpc2PosixName(name);
+        the::text::string_converter::convert(this->name, TranslateWinIpc2PosixName(name));
         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Open named POSIX semaphore \"%ls\"\n", 
             this->name.c_str());
         if ((this->handle = ::sem_open(this->name.c_str(), 0, 0, 0)) 

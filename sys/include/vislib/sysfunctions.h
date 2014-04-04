@@ -24,11 +24,12 @@
 #include <stdarg.h>
 
 #include "vislib/File.h"
-#include "vislib/sysfunctions.h"
+//#include "vislib/sysfunctions.h"  ??? WTF ???
 #include "vislib/RawStorage.h"
 #include "the/string.h"
 #include "the/system/system_exception.h"
 #include "the/types.h"
+#include "the/text/string_builder.h"
 
 
 namespace vislib {
@@ -114,9 +115,9 @@ namespace sys {
      */
     template <class T>
     bool FilenameGlobMatch(const T* filename, const T* pattern) {
-        size_t fnl = vislib::CharTraits<T>::SafeStringLength(filename);
+        size_t fnl = the::text::string_utility::c_str_len(filename);
         size_t fnp = 0;
-        size_t pl = vislib::CharTraits<T>::SafeStringLength(pattern);
+        size_t pl = the::text::string_utility::c_str_len(pattern);
         size_t pp = 0;
 
         while ((fnp < fnl) && (pp < pl)) {
@@ -144,9 +145,8 @@ namespace sys {
                     size_t pps = pp;
                     while ((pp < pl) && (pattern[pp] != ']')) pp++;
                     if (pp == pl) return false;
-                    vislib::String<vislib::CharTraits<T> > matchGroup(
-                        pattern + pps + 1, static_cast<typename vislib::String<
-                            vislib::CharTraits<T> >::Size>(pp - (1 + pps)));
+                    std::basic_string<T> matchGroup(pattern + pps + 1,
+                        static_cast<size_t>(pp - (1 + pps)));
                     if (!the::text::string_utility::contains(matchGroup, filename[fnp])) return false;
                     fnp++;
                     pp++;
@@ -486,10 +486,10 @@ namespace sys {
     template<class T>
     bool WriteFormattedLineToFile(File &out,
             const T *format, ...) {
-        vislib::String<vislib::CharTraits<T> > tmp;
+        std::basic_string<T> tmp;
         va_list argptr;
         va_start(argptr, format);
-        tmp.FormatVa(format, argptr);
+        the::text::string_builder<T>::format_to(tmp, format, argptr);
         va_end(argptr);
         size_t len = tmp.Length() * sizeof(T);
         return out.Write(tmp.c_str(), len) == len;
@@ -509,7 +509,7 @@ namespace sys {
      */
     template<class T>
     bool WriteLineToFile(File &out, const T *text) {
-        size_t len = vislib::CharTraits<T>::SafeStringLength(text)
+        size_t len = the::text::string_utility::c_str_len(text)
             * sizeof(T);
         return out.Write(text, len) == len;
     }

@@ -33,8 +33,9 @@
 #include "the/system/system_exception.h"
 #include "the/trace.h"
 #include "the/not_supported_exception.h"
-
 #include "the/not_implemented_exception.h"
+#include "the/string.h"
+#include "the/text/string_builder.h"
 
 
 /*
@@ -106,9 +107,9 @@ the::astring vislib::sys::Process::ModuleFileNameA(const PID processID) {
     int len = -1;
 
     the::text::astring_builder::format_to(procAddr, "/proc/%d/exe", processID);
-    retval = the::astring(MAX_PATH, ' ');
+    retval = the::astring(1024, ' ');
     retvalPtr = const_cast<char*>(retval.c_str());
-    len = ::readlink(procAddr.c_str(), retvalPtr, PATH_MAX + 1);
+    len = ::readlink(procAddr.c_str(), retvalPtr, 1024 + 1);
     if (len == -1) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
@@ -161,7 +162,7 @@ the::wstring vislib::sys::Process::ModuleFileNameW(const PID processID) {
     return retval;
 
 #else /* _WIN32 */
-    return the::wstring(Process::ModuleFileNameA(processID));
+    return the::text::string_converter::to_w(Process::ModuleFileNameA(processID));
 #endif /* _WIN32 */
 }
 
@@ -181,7 +182,7 @@ the::wstring vislib::sys::Process::ModuleFileNameW(void) {
     return retval;
 
 #else /* _WIN32 */
-    return Process::ModuleFileNameA(Process::CurrentID());
+    return the::text::string_converter::to_w(Process::ModuleFileNameA(Process::CurrentID()));
 #endif /* _WIN32 */
 }
 
@@ -387,7 +388,7 @@ void vislib::sys::Process::Owner(const PID processID, the::wstring& outUser,
 
     Process::Owner(processID, u, &d);
     if (outDomain != NULL) {
-        *outDomain = d;
+        the::text::string_converter::convert(*outDomain, d);
     }
 #endif /* _WIN32 */
 }
@@ -588,7 +589,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
     /* Detect and expand shell commands first first. */
     the::text::astring_builder::format_to(query, "which %s", command);
     if (Console::Run(query.c_str(), &cmd) == 0) {
-        cmd.TrimEnd("\r\n");
+        the::text::string_utility::trim_end(cmd, "\r\n");
     } else {
         cmd = Path::Resolve(command);
     }

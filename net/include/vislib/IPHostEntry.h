@@ -221,7 +221,7 @@ namespace net {
         
             if (((ai->ai_flags & AI_CANONNAME) != 0) 
                     && (ai->ai_canonname != NULL)) {
-                this->canonicalName = ai->ai_canonname;
+                the::text::string_converter::convert(this->canonicalName, ai->ai_canonname);
             }
 
             ai = ai->ai_next;

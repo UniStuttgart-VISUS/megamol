@@ -1821,11 +1821,11 @@ namespace sys {
             this->formatter = rhs.formatter;
 
             the::safe_array_delete(this->output);
-            unsigned int len = T::SafeStringLength(rhs.output);
+            unsigned int len = the::text::string_utility::c_str_len(rhs.output);
             this->output = new Char[len + 1];
             this->output[len] = 0;
             if (len > 0) {
-                ::memcpy(this->output, rhs.output, len * T::CharSize());
+                ::memcpy(this->output, rhs.output, len * sizeof(typename T::value_type));
             }
         }
 
@@ -1906,7 +1906,7 @@ namespace sys {
         this->output = new Char[len + 1];
         this->output[len] = 0;
         if (len > 0) {
-            ::memcpy(this->output, str.c_str(), len * sizeof(T::value_type));
+            ::memcpy(this->output, str.c_str(), len * sizeof(typename T::value_type));
         }
 
         return this->output;
