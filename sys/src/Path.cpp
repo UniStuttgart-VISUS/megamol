@@ -30,6 +30,7 @@
 #include "vislib/DirectoryIterator.h"
 #include "the/string.h"
 #include "the/text/string_converter.h"
+#include "the/text/string_buffer.h"
 
 
 /*
@@ -39,9 +40,10 @@ the::astring vislib::sys::Path::Canonicalise(const the::astring& path) {
     const the::astring DOUBLE_SEPARATOR(2, Path::SEPARATOR_A);
 
 #ifdef _WIN32
-    the::astring retval(MAX_PATH, ' ');
+    the::astring retval;
 
-    if (::PathCanonicalizeA(const_cast<char*>(retval.c_str()), path.c_str()) != TRUE) {
+    if (::PathCanonicalizeA(the::text::string_buffer_allocate(retval, 
+            MAX_PATH), path.c_str()) != TRUE) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
@@ -106,9 +108,11 @@ the::wstring vislib::sys::Path::Canonicalise(const the::wstring& path) {
     const the::wstring DOUBLE_SEPARATOR(2, Path::SEPARATOR_W);
 
 #ifdef _WIN32
-    the::wstring retval(MAX_PATH, L' ');
+    the::wstring retval;
 
-    if (::PathCanonicalizeW(const_cast<wchar_t*>(retval.c_str()), path.c_str()) != TRUE) {
+    if (::PathCanonicalizeW(
+            the::text::string_buffer_allocate(retval, MAX_PATH),
+            path.c_str()) != TRUE) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
@@ -481,8 +485,8 @@ the::astring vislib::sys::Path::GetApplicationPathA(void) {
     the::astring retval;
 #ifdef _WIN32
     const DWORD nSize = MAX_PATH;
-    retval = the::astring(nSize, ' ');
-    if (::GetModuleFileNameA(NULL, const_cast<char*>(retval.c_str()), nSize)
+    if (::GetModuleFileNameA(NULL,
+            the::text::string_buffer_allocate(retval, nSize), nSize)
             == ERROR_INSUFFICIENT_BUFFER) {
         retval.clear();
     } else {
@@ -496,7 +500,7 @@ the::astring vislib::sys::Path::GetApplicationPathA(void) {
     the::astring pid;
     the::text::astring_builder::format_to(pid, "/proc/%d/exe", getpid());
     const size_t bufSize = 0xFFFF;
-    the::astring path(bufSize, ' ');
+    the::astring path(bufSize, '\0');
     char *buf = const_cast<char*>(path.c_str());
     ssize_t size = readlink(pid.c_str(), buf, bufSize - 1);
     if (size >= 0) {
@@ -519,7 +523,8 @@ the::wstring vislib::sys::Path::GetApplicationPathW(void) {
     the::wstring retval;
     const DWORD nSize = MAX_PATH;
     retval = the::wstring(nSize, L' ');
-    if (::GetModuleFileNameW(NULL, const_cast<wchar_t*>(retval.c_str()), nSize)
+    if (::GetModuleFileNameW(NULL,
+            the::text::string_buffer_allocate(retval, nSize), nSize)
             == ERROR_INSUFFICIENT_BUFFER) {
         retval.clear();
     } else {
@@ -682,10 +687,10 @@ the::wstring vislib::sys::Path::GetTempDirectoryW(void) {
  */
 the::astring vislib::sys::Path::GetUserHomeDirectoryA(void) {
 #ifdef _WIN32
-    the::astring retval(MAX_PATH, ' ');
+    the::astring retval;
 
     if (FAILED(::SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, 0, 
-            const_cast<char*>(retval.c_str())))) {
+            the::text::string_buffer_allocate(retval, MAX_PATH)))) {
         throw the::system::system_exception(ERROR_NOT_FOUND, __FILE__, __LINE__);
     }
 
@@ -712,10 +717,10 @@ the::astring vislib::sys::Path::GetUserHomeDirectoryA(void) {
  */
 the::wstring vislib::sys::Path::GetUserHomeDirectoryW(void) {
 #ifdef _WIN32
-    the::wstring retval(MAX_PATH, L' ');
+    the::wstring retval;
 
     if (FAILED(::SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, 0, 
-            const_cast<wchar_t*>(retval.c_str())))) {
+            the::text::string_buffer_allocate(retval, MAX_PATH)))) {
         throw the::system::system_exception(ERROR_NOT_FOUND, __FILE__, __LINE__);
     }
 

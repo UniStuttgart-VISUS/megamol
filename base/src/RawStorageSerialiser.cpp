@@ -9,6 +9,7 @@
 
 #include "the/assert.h"
 #include "the/invalid_operation_exception.h"
+#include "the/text/string_buffer.h"
 
 
 /*
@@ -283,8 +284,7 @@ void vislib::RawStorageSerialiser::Deserialise(the::astring& outValue,
         const char *name) {
     unsigned int len;
     this->restore(&len, sizeof(unsigned int));
-    outValue = the::astring(len, ' ');
-    this->restore(const_cast<char*>(outValue.c_str()), len * sizeof(char));
+    this->restore(the::text::string_buffer_allocate(outValue, len), len * sizeof(char));
 }
 
 
@@ -295,8 +295,7 @@ void vislib::RawStorageSerialiser::Deserialise(the::astring& outValue,
         const wchar_t *name) {
     unsigned int len;
     this->restore(&len, sizeof(unsigned int));
-    outValue = the::astring(len, ' ');
-    this->restore(const_cast<char*>(outValue.c_str()), len * sizeof(char));
+    this->restore(the::text::string_buffer_allocate(outValue, len), len * sizeof(char));
 }
 
 
@@ -307,8 +306,7 @@ void vislib::RawStorageSerialiser::Deserialise(the::wstring& outValue,
         const char *name) {
     unsigned int len;
     this->restore(&len, sizeof(unsigned int));
-    outValue = the::wstring(len, ' ');
-    this->restore(const_cast<wchar_t*>(outValue.c_str()), len * sizeof(wchar_t));
+    this->restore(the::text::string_buffer_allocate(outValue, len), len * sizeof(char));
 }
 
 
@@ -319,8 +317,7 @@ void vislib::RawStorageSerialiser::Deserialise(the::wstring& outValue,
         const wchar_t *name) {
     unsigned int len;
     this->restore(&len, sizeof(unsigned int));
-    outValue = the::wstring(len, ' ');
-    this->restore(const_cast<wchar_t*>(outValue.c_str()), len * sizeof(wchar_t));
+    this->restore(the::text::string_buffer_allocate(outValue, len), len * sizeof(char));
 }
 
 

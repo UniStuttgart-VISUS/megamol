@@ -101,7 +101,7 @@ void vislib::sys::SystemInformation::ComputerName(the::astring &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = MAX_COMPUTERNAME_LENGTH; // used for paranoia test
     unsigned long bufSize = MAX_COMPUTERNAME_LENGTH;
-    outName = the::astring(bufSize, ' ');
+    outName = the::astring(bufSize, '\0');
     char *buf = const_cast<char *>(outName.c_str());
 
     bufSize++;
@@ -111,7 +111,7 @@ void vislib::sys::SystemInformation::ComputerName(the::astring &outName) {
 
         if ((le == ERROR_BUFFER_OVERFLOW) && (oldBufSize != bufSize)) {
             oldBufSize = bufSize;
-            outName = the::astring(bufSize, ' ');
+            outName = the::astring(bufSize, '\0');
             buf = const_cast<char *>(outName.c_str());
 
         } else {
@@ -137,7 +137,7 @@ void vislib::sys::SystemInformation::ComputerName(the::wstring &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = MAX_COMPUTERNAME_LENGTH; // used for paranoia test
     unsigned long bufSize = MAX_COMPUTERNAME_LENGTH;
-    outName = the::wstring(bufSize, ' ');
+    outName = the::wstring(bufSize, '\0');
     wchar_t *buf = const_cast<wchar_t *>(outName.c_str());
 
     bufSize++;
@@ -147,7 +147,7 @@ void vislib::sys::SystemInformation::ComputerName(the::wstring &outName) {
 
         if ((le == ERROR_BUFFER_OVERFLOW) && (oldBufSize != bufSize)) {
             oldBufSize = bufSize;
-            outName = the::wstring(bufSize, ' ');
+            outName = the::wstring(bufSize, '\0');
             buf = const_cast<wchar_t *>(outName.c_str());
 
         } else {
@@ -526,7 +526,7 @@ void vislib::sys::SystemInformation::UserName(the::astring &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = UNLEN; // used for paranoia test
     unsigned long bufSize = UNLEN;
-    outName = the::astring(bufSize, ' ');
+    outName = the::astring(bufSize, '\0');
     char *buf = const_cast<char *>(outName.c_str());
 
     bufSize++;
@@ -536,7 +536,7 @@ void vislib::sys::SystemInformation::UserName(the::astring &outName) {
 
         if ((le == ERROR_INSUFFICIENT_BUFFER) && (oldBufSize != bufSize)) {
             oldBufSize = bufSize;
-            outName = the::astring(bufSize, ' ');
+            outName = the::astring(bufSize, '\0');
             buf = const_cast<char *>(outName.c_str());
 
         } else {
@@ -567,7 +567,7 @@ void vislib::sys::SystemInformation::UserName(the::wstring &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = UNLEN; // used for paranoia test
     unsigned long bufSize = UNLEN;
-    outName = the::wstring(bufSize, ' ');
+    outName = the::wstring(bufSize, '\0');
     wchar_t *buf = const_cast<wchar_t *>(outName.c_str());
 
     bufSize++;
@@ -577,7 +577,7 @@ void vislib::sys::SystemInformation::UserName(the::wstring &outName) {
 
         if ((le == ERROR_INSUFFICIENT_BUFFER) && (oldBufSize != bufSize)) {
             oldBufSize = bufSize;
-            outName = the::wstring(bufSize, ' ');
+            outName = the::wstring(bufSize, '\0');
             buf = const_cast<wchar_t *>(outName.c_str());
 
         } else {

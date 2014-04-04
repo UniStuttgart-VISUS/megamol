@@ -36,6 +36,7 @@
 #include "the/not_implemented_exception.h"
 #include "the/string.h"
 #include "the/text/string_builder.h"
+#include "the/text/string_buffer.h"
 
 
 /*
@@ -86,7 +87,7 @@ void vislib::sys::Process::Exit(const unsigned int exitCode) {
 the::astring vislib::sys::Process::ModuleFileNameA(const PID processID) {
 #ifdef _WIN32
     AutoHandle hProcess(true);
-    the::astring retval(MAX_PATH, ' ');
+    the::astring retval;
 
     if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, processID))
             == NULL) {
@@ -94,7 +95,7 @@ the::astring vislib::sys::Process::ModuleFileNameA(const PID processID) {
     }
 
     if (!GetModuleFileNameA(static_cast<HMODULE>(static_cast<HANDLE>(hProcess)),
-            const_cast<char*>(retval.c_str()), MAX_PATH)) {
+            the::text::string_buffer_allocate(retval, MAX_PATH), MAX_PATH)) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
@@ -125,9 +126,10 @@ the::astring vislib::sys::Process::ModuleFileNameA(const PID processID) {
  */
 the::astring vislib::sys::Process::ModuleFileNameA(void) {
 #ifdef _WIN32
-    the::astring retval(MAX_PATH, ' ');
+    the::astring retval;
 
-    if (!GetModuleFileNameA(NULL, const_cast<char*>(retval.c_str()), MAX_PATH)) {
+    if (!GetModuleFileNameA(NULL,
+            the::text::string_buffer_allocate(retval, MAX_PATH), MAX_PATH)) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
@@ -147,7 +149,7 @@ the::astring vislib::sys::Process::ModuleFileNameA(void) {
 the::wstring vislib::sys::Process::ModuleFileNameW(const PID processID) {
 #ifdef _WIN32
     AutoHandle hProcess(true);
-    the::wstring retval(MAX_PATH, ' ');
+    the::wstring retval;
 
     if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, processID))
             == NULL) {
@@ -155,7 +157,7 @@ the::wstring vislib::sys::Process::ModuleFileNameW(const PID processID) {
     }
 
     if (!GetModuleFileNameW(static_cast<HMODULE>(static_cast<HANDLE>(hProcess)),
-            const_cast<wchar_t*>(retval.c_str()), MAX_PATH)) {
+            the::text::string_buffer_allocate(retval, MAX_PATH), MAX_PATH)) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
@@ -172,10 +174,10 @@ the::wstring vislib::sys::Process::ModuleFileNameW(const PID processID) {
  */
 the::wstring vislib::sys::Process::ModuleFileNameW(void) {
 #ifdef _WIN32
-    the::wstring retval(MAX_PATH, ' ');
+    the::wstring retval;
 
     if (!GetModuleFileNameW(NULL,
-            const_cast<wchar_t*>(retval.c_str()), MAX_PATH)) {
+            the::text::string_buffer_allocate(retval, MAX_PATH), MAX_PATH)) {
         throw the::system::system_exception(__FILE__, __LINE__);
     }
 
@@ -233,10 +235,10 @@ void vislib::sys::Process::Owner(const PID processID, the::astring& outUser,
                     if (::LookupAccountSidA(NULL, sid, NULL, &userLen, NULL, 
                             &domainLen, &snu) || ((error = ::GetLastError())
                             == ERROR_INSUFFICIENT_BUFFER)) {
-                        outUser = the::astring(userLen, ' ');
+                        outUser = the::astring(userLen, '\0');
                         user = const_cast<char*>(outUser.c_str());
                         if (outDomain != NULL) {
-                            (*outDomain) = the::astring(domainLen, ' ');
+                            (*outDomain) = the::astring(domainLen, '\0');
                             domain = const_cast<char*>(outDomain->c_str());
                         } else {
                             tmpDomain.AssertSize(domainLen);
@@ -334,10 +336,10 @@ void vislib::sys::Process::Owner(const PID processID, the::wstring& outUser,
                     if (::LookupAccountSidW(NULL, sid, NULL, &userLen, NULL, 
                             &domainLen, &snu) || ((error = ::GetLastError())
                             == ERROR_INSUFFICIENT_BUFFER)) {
-                        outUser = the::wstring(userLen, L' ');
+                        outUser = the::wstring(userLen, L'\0');
                         user = const_cast<wchar_t*>(outUser.c_str());
                         if (outDomain != NULL) {
-                            (*outDomain) = the::wstring(domainLen, L' ');
+                            (*outDomain) = the::wstring(domainLen, L'\0');
                             domain = const_cast<wchar_t*>(outDomain->c_str());
                         } else {
                             tmpDomain.AssertSize(domainLen);

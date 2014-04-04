@@ -441,17 +441,17 @@ bool vislib::graphics::ColourParser::parseArray(const the::astring& inStr,
 
     float r, g, b, a;
     try {
-        r = static_cast<float>(the::text::string_utility::parse_double(rStr));
+        r = static_cast<float>(the::text::string_utility::parse_double_invariant(rStr));
     } catch(...) {
         return false;
     }
     try {
-        g = static_cast<float>(the::text::string_utility::parse_double(gStr));
+        g = static_cast<float>(the::text::string_utility::parse_double_invariant(gStr));
     } catch(...) {
         return false;
     }
     try {
-        b = static_cast<float>(the::text::string_utility::parse_double(bStr));
+        b = static_cast<float>(the::text::string_utility::parse_double_invariant(bStr));
     } catch(...) {
         return false;
     }
@@ -459,7 +459,7 @@ bool vislib::graphics::ColourParser::parseArray(const the::astring& inStr,
         a = isFloat ? 1.0f : 255.0f;
     } else {
         try {
-            a = static_cast<float>(the::text::string_utility::parse_double(aStr));
+            a = static_cast<float>(the::text::string_utility::parse_double_invariant(aStr));
         } catch(...) {
             return false;
         }

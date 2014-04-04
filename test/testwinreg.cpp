@@ -105,8 +105,8 @@ void TestWinReg(void) {
     ::AssertEqual<RegistryKey::RegValueType>("s3 is of right type", sc1.GetValueType(L"s3"), RegistryKey::REGVAL_MULTI_SZ);
     ::AssertEqual<unsigned int>("Value s3 get", sc1.GetValue("s3", multiSzA), ERROR_SUCCESS);
     ::AssertEqual<unsigned int>("Value s2 get", sc1.GetValue("s2", aryStrW), ERROR_SUCCESS);
-    ::AssertEqual("s2 and s3 equal", multiSzA.size(), aryStrW.Count());
-    size_t cnt = vislib::math::Min(multiSzA.size(), aryStrW.Count());
+    ::AssertEqual("s2 and s3 equal", multiSzA.count(), aryStrW.Count());
+    size_t cnt = vislib::math::Min(multiSzA.count(), aryStrW.Count());
     for (size_t i = 0; i < cnt; i++) {
         ::AssertEqual("s2 and s3 equal", the::text::string_converter::to_w(multiSzA[i]), aryStrW[i]);
     }

@@ -1654,8 +1654,16 @@ namespace sys {
         this->values = valueList;
         this->firstArg = NULL;
         this->shortName = shortName;
-        this->longName = longName;
-        this->description = description;
+        if (longName != nullptr) {
+            this->longName = longName;
+        } else {
+            this->longName.clear();
+        }
+        if (description != nullptr) {
+            this->description = description;
+        } else {
+            this->description.clear();
+        }
     }
 
 
@@ -1774,7 +1782,7 @@ namespace sys {
         }
         THE_ASSERT(this->type != TYPE_UNKNOWN);
 
-        return the::text::string_utility::parse_double(this->valueArg); // throws format_exception on failure
+        return the::text::string_utility::parse_double_invariant(this->valueArg); // throws format_exception on failure
     }
 
     
@@ -2412,7 +2420,7 @@ namespace sys {
                                 break;
                             case Option::DOUBLE_VALUE:
                                 try {
-                                    the::text::string_utility::parse_double(argv[i]);
+                                    the::text::string_utility::parse_double_invariant(argv[i]);
                                     this->arglist[this->arglistSize].valueType = Option::DOUBLE_VALUE;
                                 } catch(...) {
                                     this->arglist[this->arglistSize].valueType = Option::NO_VALUE;
@@ -2436,7 +2444,7 @@ namespace sys {
                                 break;
                             case Option::DOUBLE_OR_STRING_VALUE:
                                 try {
-                                    the::text::string_utility::parse_double(argv[i]);
+                                    the::text::string_utility::parse_double_invariant(argv[i]);
                                     this->arglist[this->arglistSize].valueType = Option::DOUBLE_VALUE;
                                 } catch(...) {
                                     this->arglist[this->arglistSize].valueType = Option::STRING_VALUE;

@@ -93,7 +93,7 @@ the::astring vislib::HashAlgorithm::ToStringA(void) const {
         hash = new uint8_t[hashSize];
         this->GetHashValue(hash, hashSize);
 
-        retval = the::astring(2 * hashSize, ' ');
+        retval.reserve(2 * hashSize);
         out = const_cast<char*>(retval.c_str());
         THE_ASSERT(out[2 * hashSize] == 0);
 
@@ -125,7 +125,7 @@ the::wstring vislib::HashAlgorithm::ToStringW(void) const {
         hash = new uint8_t[hashSize];
         this->GetHashValue(hash, hashSize);
 
-        retval = the::wstring(2 * hashSize, L' ');
+        retval.reserve(2 * hashSize);
         out = const_cast<wchar_t*>(retval.c_str());
 
         for (size_t i = 0; i < hashSize; i++) {

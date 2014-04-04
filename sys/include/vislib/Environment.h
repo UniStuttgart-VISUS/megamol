@@ -99,7 +99,7 @@ namespace sys {
              */
             inline size_t Count(void) const {
 #ifdef _WIN32
-                return this->data.size();
+                return this->data.count();
 #else /* _WIN32 */
                 return Snapshot::count(const_cast<const char **>(this->data));
 #endif /* _WIN32 */

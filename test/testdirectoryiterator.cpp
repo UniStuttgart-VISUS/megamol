@@ -285,7 +285,7 @@ void TestDirectoryIterator(void) {
     Array<the::wstring> wfiles;
 
     if (vislib::sys::File::Exists("level0")) {
-        AssertTrue("Test directory root \"level0\" does not exist", false);
+        AssertTrue("Test directory root \"level0\" does exist", false);
         fprintf(stderr, "Test aborted\n");
         return;
     } else {

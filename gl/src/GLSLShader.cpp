@@ -19,6 +19,7 @@
 #include "the/not_supported_exception.h"
 #include "the/string.h"
 #include "the/text/string_builder.h"
+#include "the/text/string_buffer.h"
 
 
 /*
@@ -673,15 +674,13 @@ the::astring vislib::graphics::gl::GLSLShader::getProgramInfoLog(
     GLint len = 0;
     GLint written = 0;
     the::astring retval;
-    char *log = NULL;
 
     GL_VERIFY_THROW(::glGetObjectParameterivARB(hProg, 
         GL_OBJECT_INFO_LOG_LENGTH_ARB, &len));
 
     if (len > 0) {
-        retval = the::astring(len, ' ');
-        log = const_cast<char*>(retval.c_str());
-        GL_VERIFY_THROW(::glGetInfoLogARB(hProg, len, &written, log));
+        GL_VERIFY_THROW(::glGetInfoLogARB(hProg, len, &written,
+            the::text::string_buffer_allocate(retval, len)));
     }
 
     return retval;

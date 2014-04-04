@@ -15,7 +15,7 @@
 
 #define PRINT_MILLISECONDS
 #ifdef _WIN32
-#define PBAR_FILLED_CHAR '\xFE' // cool ANSI-Character for Windows
+#define PBAR_FILLED_CHAR '#' // cool ANSI-Character for Windows
 #else /* _WIN32 */
 #define PBAR_FILLED_CHAR '>'    // normal ASCII-Character for Non-Windows.
 #endif /* _WIN32 */
@@ -156,11 +156,11 @@ void vislib::sys::ConsoleProgressBar::update(void) {
             if (spc < 0) {
                 int s = int(width) - int(left.size());
                 if (s > 0) {
-                    left += the::astring(' ', s);
+                    left += the::astring(s, ' ');
                 }
                 s = int(width) - int(right.size());
                 if (s > 0) {
-                    right += the::astring(' ', s);
+                    right += the::astring(s, ' ');
                 }
                 line = left + "\n" + right + "\n";
             } else {
@@ -172,8 +172,8 @@ void vislib::sys::ConsoleProgressBar::update(void) {
             unsigned int filled 
                 = static_cast<unsigned int>(float(spc) * this->lastPers);
             line = left + PBAR_LEND_CHAR
-                + the::astring(PBAR_FILLED_CHAR, filled)
-                + the::astring(PBAR_EMPTY_CHAR, spc - filled)
+                + the::astring(filled, PBAR_FILLED_CHAR)
+                + the::astring(spc - filled, PBAR_EMPTY_CHAR)
                 + PBAR_REND_CHAR + right + "\r";
         }
 
@@ -182,7 +182,7 @@ void vislib::sys::ConsoleProgressBar::update(void) {
         line = left + "Finished in " + tmp;
         int spc = int(width) - int(line.size());
         if (spc > 0) {
-            line += the::astring(' ', spc);
+            line += the::astring(spc, ' ');
         }
         line += "\n";
     }

@@ -14,6 +14,7 @@
 #ifdef _WINXP32_LEGACY_SUPPORT
 #include "DynamicFunctionPointer.h"
 #endif /* _WINXP32_LEGACY_SUPPORT */
+#include "the/text/string_buffer.h"
 
 
 #ifdef _WINXP32_LEGACY_SUPPORT
@@ -288,7 +289,7 @@ vislib::sys::RegistryKey::GetSubKeysA(void) const {
         rv.Clear();
         return rv;
     }
-    str = the::astring(subKeyMaxNameLen, ' ');
+    str = the::astring(subKeyMaxNameLen, '\0');
     strptr = const_cast<char*>(str.c_str());
 
     for (DWORD i = 0; i < subKeyCount; i++) {
@@ -323,7 +324,7 @@ vislib::sys::RegistryKey::GetSubKeysW(void) const {
         rv.Clear();
         return rv;
     }
-    str = the::wstring(subKeyMaxNameLen, L' ');
+    str = the::wstring(subKeyMaxNameLen, L'\0');
     strptr = const_cast<wchar_t*>(str.c_str());
 
     for (DWORD i = 0; i < subKeyCount; i++) {
@@ -358,7 +359,7 @@ vislib::sys::RegistryKey::GetValueNamesA(void) const {
         rv.Clear();
         return rv;
     }
-    str = the::astring(valuesMaxNameLen, ' ');
+    str = the::astring(valuesMaxNameLen, '\0');
     strptr = const_cast<char*>(str.c_str());
 
     for (DWORD i = 0; i < valuesCount; i++) {
@@ -393,7 +394,7 @@ vislib::sys::RegistryKey::GetValueNamesW(void) const {
         rv.Clear();
         return rv;
     }
-    str = the::wstring(valuesMaxNameLen, L' ');
+    str = the::wstring(valuesMaxNameLen, L'\0');
     strptr = const_cast<wchar_t*>(str.c_str());
 
     for (DWORD i = 0; i < valuesCount; i++) {
@@ -528,9 +529,9 @@ DWORD vislib::sys::RegistryKey::GetValue(
     if ((type != REG_SZ) && (type != REG_EXPAND_SZ)) {
         return ERROR_INVALID_DATATYPE;
     }
-    outStr = the::astring(size, ' ');
     errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, NULL,
-        const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(outStr.c_str())), &size);
+        reinterpret_cast<uint8_t*>(the::text::string_buffer_allocate(outStr, size).operator char *()),
+        &size);
     return errcode;
 }
 
@@ -548,9 +549,9 @@ DWORD vislib::sys::RegistryKey::GetValue(
     if ((type != REG_SZ) && (type != REG_EXPAND_SZ)) {
         return ERROR_INVALID_DATATYPE;
     }
-    outStr = the::wstring(size, L' ');
     errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, NULL,
-        const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(outStr.c_str())), &size);
+        reinterpret_cast<uint8_t*>(the::text::string_buffer_allocate(outStr, size).operator wchar_t *()),
+        &size);
     return errcode;
 }
 
@@ -602,7 +603,7 @@ DWORD vislib::sys::RegistryKey::GetValue(
 
     } else if (type == REG_MULTI_SZ) {
         errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, NULL,
-            const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(outStrs.allocate(size))), &size);
+            reinterpret_cast<uint8_t*>(outStrs.allocate(size)), &size);
 
     } else {
         errcode = ERROR_INVALID_DATATYPE;

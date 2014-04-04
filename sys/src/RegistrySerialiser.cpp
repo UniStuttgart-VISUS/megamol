@@ -140,7 +140,7 @@ namespace sys {
             throw the::argument_exception("outValue", __FILE__, __LINE__);
         }
 
-        outValue = T(size, static_cast<T::value_type>(' '));
+        outValue = T(size, static_cast<T::value_type>('\0'));
         outPtr = const_cast<uint8_t*>(reinterpret_cast<const uint8_t *>(outValue.c_str()));
 
         /* Get data. */
@@ -173,7 +173,7 @@ namespace sys {
         the::text::string_converter::convert(tName, name);
         LONG result = F(hKey, tName.c_str(), 0, REG_SZ,
             reinterpret_cast<const uint8_t *>(value.c_str()),
-            static_cast<DWORD>((value.size() + 1) * sizeof(typename T::value_type)));
+            static_cast<DWORD>(value.size() * sizeof(typename T::value_type)));
 
         if (result != ERROR_SUCCESS) {
             throw the::system::system_exception(result, __FILE__, __LINE__);

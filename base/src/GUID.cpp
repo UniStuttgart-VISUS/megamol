@@ -268,7 +268,7 @@ the::astring vislib::GUID::ToStringA(void) const {
         throw std::bad_alloc();
     }
 #else /* _WIN32 */
-    the::astring retval((36 + 1) * sizeof(char), ' ');
+    the::astring retval((36 + 1) * sizeof(char), '\0');
     ::uuid_unparse(this->guid, const_cast<char*>(retval.c_str()));
     return retval;
 #endif /* _WIN32 */

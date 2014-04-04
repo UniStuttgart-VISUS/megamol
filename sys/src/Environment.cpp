@@ -20,6 +20,7 @@
 #include "the/text/string_converter.h"
 #include "the/system/system_exception.h"
 #include "the/trace.h"
+#include "the/text/string_buffer.h"
 
 #ifndef _WIN32
 /** Gain access to the global environment data provided by the system. */
@@ -501,9 +502,8 @@ the::astring vislib::sys::Environment::GetVariable(const char *name,
         }
     }
 
-    retval = the::astring(size, ' ');
-    size = ::GetEnvironmentVariableA(name, const_cast<char*>(retval.c_str()), 
-        size + 1);
+    size = ::GetEnvironmentVariableA(name,
+        the::text::string_buffer_allocate(retval, size + 1), size + 1);
     if (size == 0) {
         if (!isLenient || ((error = ::GetLastError()) 
                 != ERROR_ENVVAR_NOT_FOUND)) {
@@ -538,9 +538,8 @@ the::wstring vislib::sys::Environment::GetVariable(const wchar_t *name,
         }
     }
 
-    retval = the::wstring(size, L' ');
-    size = ::GetEnvironmentVariableW(name, const_cast<wchar_t*>(retval.c_str()), 
-        size + 1);
+    size = ::GetEnvironmentVariableW(name,
+        the::text::string_buffer_allocate(retval, size + 1), size + 1);
     if (size == 0) {
         if (!isLenient || ((error = ::GetLastError()) 
                 != ERROR_ENVVAR_NOT_FOUND)) {

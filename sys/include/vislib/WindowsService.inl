@@ -56,7 +56,7 @@
 
 
 #define IMPLEMENT_WINDOWS_SERVICE_INSTALL2(strType)                            \
-    String binaryPath(MAX_PATH, ' ');                                                \
+    String binaryPath(MAX_PATH, '\0');                                                \
                                                                                \
     if (::GetModuleFileName##strType(NULL, const_cast<Char*>(binaryPath.c_str()),\
             MAX_PATH)) {                                                       \

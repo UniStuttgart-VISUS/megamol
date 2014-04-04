@@ -264,7 +264,7 @@ int main(int argc, char **argv) {
 
                     } catch (the::exception& e) {
 #ifdef _WIN32
-                        _tprintf(_T("\nUnexpected the::exception: %s "), e.what());
+                        _tprintf(_T("\nUnexpected the::exception: %s "), e.get_msg());
 #else /* _WIN32 */
                         printf("\nUnexpected the::exception: %s ", e.what());
 #endif /* _WIN32 */

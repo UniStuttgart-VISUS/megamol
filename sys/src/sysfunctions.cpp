@@ -326,7 +326,7 @@ bool vislib::sys::ReadTextFile(the::astring& outStr,
 
     switch (format) {
     case TEXTFF_ASCII: {
-        outStr = the::astring(len + 1, ' ');
+        outStr = the::astring(len + 1, '\0');
         char *src = const_cast<char*>(outStr.c_str());
         len = file.Read(src, len);
         src[len] = 0;
@@ -338,7 +338,7 @@ CASE_TEXTFF_UNICODE:
 #endif /* _WIN32 */
     {
         the::wstring tmp(static_cast<unsigned int>(
-            (len / sizeof(wchar_t)) + sizeof(wchar_t)), L' ');
+            (len / sizeof(wchar_t)) + sizeof(wchar_t)), L'\0');
         wchar_t *src = const_cast<wchar_t*>(tmp.c_str());
         len = file.Read(src, len - len % sizeof(wchar_t));
         src[len / sizeof(wchar_t)] = 0;
@@ -346,7 +346,7 @@ CASE_TEXTFF_UNICODE:
         return true;
     } break;
     case TEXTFF_UTF8: {
-        the::astring bytes(static_cast<unsigned int>(len + 1), ' ');
+        the::astring bytes(static_cast<unsigned int>(len + 1), '\0');
         char *src = const_cast<char *>(bytes.c_str());
         len = file.Read(src, len);
         src[len] = 0;
@@ -411,7 +411,7 @@ bool vislib::sys::ReadTextFile(the::wstring& outStr,
 
     switch (format) {
     case TEXTFF_ASCII: {
-        the::astring tmp(static_cast<unsigned int>(len + 1), ' ');
+        the::astring tmp(static_cast<unsigned int>(len + 1), '\0');
         char *src = const_cast<char*>(tmp.c_str());
         len = file.Read(src, len);
         src[len] = 0;
@@ -424,14 +424,14 @@ CASE_TEXTFF_UNICODE:
 #endif /* WIN32 */
     {
         outStr = the::wstring(static_cast<unsigned int>(
-            (len / sizeof(wchar_t)) + sizeof(wchar_t)), L' ');
+            (len / sizeof(wchar_t)) + sizeof(wchar_t)), L'\0');
         wchar_t *src = const_cast<wchar_t*>(outStr.c_str());
         len = file.Read(src, len - len % sizeof(wchar_t));
         src[len / sizeof(wchar_t)] = 0;
         return true;
     } break;
     case TEXTFF_UTF8: {
-        the::astring bytes(static_cast<unsigned int>(len + 1), ' ');
+        the::astring bytes(static_cast<unsigned int>(len + 1), '\0');
         char *src = const_cast<char*>(bytes.c_str());
         len = file.Read(src, len);
         src[len] = 0;

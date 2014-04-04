@@ -27,16 +27,23 @@ template<class T> bool AssertEqual(const char *desc,
     return ::AssertTrue(desc, (lhs == rhs));
 }
 
+template<class TC, class TT, class TA>
+bool AssertEqual(const char *desc, 
+        const std::basic_string<TC, TT, TA>& lhs, 
+        const std::basic_string<TC, TT, TA>& rhs) {
+    return ::AssertTrue(desc, the::text::string_utility::equals(lhs, rhs));
+}
+
 template<class T> bool AssertEqual(const char *desc, 
                                    const char *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, the::text::string_converter::to_a(lhs).compare(the::text::string_converter::to_a(rhs)) == 0);
+    return ::AssertTrue(desc, the::text::string_utility::equals(lhs, rhs));
 }
 
 template<class T> bool AssertEqual(const char *desc, 
                                    const wchar_t *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, the::text::string_converter::to_w(lhs).compare(the::text::string_converter::to_w(rhs)) == 0);
+    return ::AssertTrue(desc, the::text::string_utility::equals(lhs, rhs));
 }
 
 template<class T> bool AssertEqualCaseInsensitive(const char *desc, 

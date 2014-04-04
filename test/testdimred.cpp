@@ -137,7 +137,7 @@ void TestForceDirected(void) {
     destination.SetCount(source.Count());
 
     vislib::math::ForceDirected<myOtherObject, float, 1> fm(source, destination, 20, 0.1f, 3, 1, 0.0001f, 0.9f);
-
+    fm.Init();
     for (size_t loop = 0; loop < 20; loop++) {
         fm.SingleStep();
         for (size_t i = 0; i < source.Count(); i++) {

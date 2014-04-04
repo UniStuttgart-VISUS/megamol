@@ -206,13 +206,13 @@ const vislib::VersionNumber& vislib::graphics::gl::GLVersion(void) {
 
         // truncate vendor information
         the::astring::size_type pos = verStr.find(' ');
-        if (pos > 0) {
+        if (pos != the::astring::npos) {
             verStr.resize(pos);
         }
 
         // parse major version
         pos = verStr.find('.');
-        if (pos > 0) {
+        if (pos != the::astring::npos) {
             major = the::text::string_utility::parse_int(verStr.substr(0, pos));
             verStr = verStr.substr(pos + 1);
         } else {
@@ -223,7 +223,7 @@ const vislib::VersionNumber& vislib::graphics::gl::GLVersion(void) {
 
         // parse minor version
         pos = verStr.find('.');
-        if (pos > 0) {
+        if (pos != the::astring::npos) {
             minor = the::text::string_utility::parse_int(verStr.substr(0, pos));
             verStr = verStr.substr(pos + 1);
 
