@@ -22,7 +22,8 @@ endif
 
 
 # Include project default configuration.
-include ../ExtLibs.mk
+#include ../ExtLibs.mk
+thelibpath := ../thelib
 
 
 # Set Verbosity
