@@ -13,7 +13,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
+#ifdef HAVE_LEGACY_DIRECTX_SDK
 #include <d3dx9shape.h>
 
 
@@ -39,6 +39,8 @@ private:
 
     LPD3DXMESH boxZ;
 };
+
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

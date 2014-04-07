@@ -52,25 +52,29 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease32.props" />
-    <Import Project="..\ExtLibs.props" />
+    <Import Project="..\thelib.props" />
+    <Import Project="directx_legacy.props" />
     <Import Project="..\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug32.props" />
-    <Import Project="..\ExtLibs.props" />
+    <Import Project="..\thelib.props" />
+    <Import Project="directx_legacy.props" />
     <Import Project="..\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease64.props" />
-    <Import Project="..\ExtLibs.props" />
+    <Import Project="..\thelib.props" />
+    <Import Project="directx_legacy.props" />
     <Import Project="..\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug64.props" />
-    <Import Project="..\ExtLibs.props" />
+    <Import Project="..\thelib.props" />
+    <Import Project="directx_legacy.props" />
     <Import Project="..\vislib.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -167,21 +171,15 @@
     <ClCompile Include="src\D3D11Window.cpp" />
     <ClCompile Include="src\AbstractD3DAdapterInformation.cpp" />
     <ClCompile Include="src\AbstractD3D11WindowImpl.cpp" />
-    <ClCompile Include="src\D3D9AdapterInformation.cpp" />
-    <ClCompile Include="src\D3DCamera.cpp" />
+    <ClCompile Include="src\D3D9AdapterInformation.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="src\D3DCamera.cpp" Condition="$(LegacyDirectXDir) != ''" />
     <ClCompile Include="src\D3DException.cpp" />
-    <ClCompile Include="src\D3DMatrix.cpp" />
-    <ClCompile Include="src\D3DPoint3D.cpp" />
+    <ClCompile Include="src\D3DMatrix.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="src\D3DPoint3D.cpp" Condition="$(LegacyDirectXDir) != ''" />
     <ClCompile Include="src\d3dutils.cpp" />
-    <ClCompile Include="src\D3DVector3D.cpp" />
+    <ClCompile Include="src\D3DVector3D.cpp" Condition="$(LegacyDirectXDir) != ''" />
     <ClCompile Include="src\d3dverify.cpp" />
     <ClCompile Include="src\D3DVISLogo.cpp" />
-    <ClCompile Include="src\D3DWindowFactory.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\D3D11Window.h" />
@@ -196,7 +194,6 @@
     <ClInclude Include="include\vislib\D3DVector3D.h" />
     <ClInclude Include="include\vislib\d3dverify.h" />
     <ClInclude Include="include\vislib\D3DVISLogo.h" />
-    <ClInclude Include="include\vislib\D3DWindowFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\base\base.vcxproj">
@@ -214,6 +211,9 @@
     <ProjectReference Include="..\sys\sys.vcxproj">
       <Project>{ac94966a-1e30-47a8-a503-0f9737fd1fe8}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\thelib\thelib++.vcxproj">
+      <Project>{5cbe665d-74e2-4028-9a08-f627975f110d}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

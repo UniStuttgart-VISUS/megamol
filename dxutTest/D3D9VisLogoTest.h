@@ -16,6 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#ifdef HAVE_LEGACY_DIRECTX_SDK
 #include "vislib/D3DVISLogo.h"
 
 #include "AbstractTest.h"
@@ -46,6 +47,8 @@ private:
 
     vislib::graphics::d3d::D3DVISLogo *logo;
 };
+
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

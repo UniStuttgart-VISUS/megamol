@@ -15,7 +15,9 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#ifdef HAVE_LEGACY_DIRECTX_SDK
 #include <d3d9.h>
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
 #include <d3d10.h>
 
 #include "vislib/AbstractVISLogo.h"
@@ -37,10 +39,12 @@ namespace d3d {
 
     public:
 
+#ifdef HAVE_LEGACY_DIRECTX_SDK
         /**
          * Create a VIS logo to be rendered on a Direct3D 9 device.
          */
         D3DVISLogo(IDirect3DDevice9 *device);
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
         /**
          * Create a VIS logo to be rendered on a Direct3D 10 device.
@@ -81,8 +85,10 @@ namespace d3d {
         /** The number of vertices the VIS logo consists of. */
         static const Vertex VERTICES[9562];
 
+#ifdef HAVE_LEGACY_DIRECTX_SDK
         /** Flexible vertex format for VIS logo. */
         static const DWORD FVF;
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
         /** Size of our vertex vertex format. */
         static const UINT VERTEX_SIZE;
@@ -92,13 +98,17 @@ namespace d3d {
 
         /** The device to create and render the logo on. */
         union {
+#ifdef HAVE_LEGACY_DIRECTX_SDK
             IDirect3DDevice9 *device9;
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
             ID3D10Device *device10;
         };
 
         /** The vertex buffer holding the VIS logo. */
         union {
+#ifdef HAVE_LEGACY_DIRECTX_SDK
             IDirect3DVertexBuffer9 *vb9;
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
             ID3D10Buffer *vb10;
         };
 

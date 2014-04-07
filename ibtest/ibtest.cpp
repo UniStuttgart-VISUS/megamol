@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 
+#if HAVE_OFED_SDK
 #include "the/system/com_exception.h"
 #include "vislib/Event.h"
 #include "vislib/IbvCommChannel.h"
@@ -18,6 +19,10 @@
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/RunnableThread.h"
 #include "the/trace.h"
+
+#pragma comment(lib, "winverbs.lib")
+#pragma comment(lib, "librdmacm.lib")
+#pragma comment(lib, "libibverbs.lib")
 
 
 typedef vislib::SmartRef<vislib::net::AbstractCommEndPoint> IbEndPoint;
@@ -59,7 +64,7 @@ unsigned int Server::Run(void *userData) {
         ::evtServerReady.Set();
 
         std::cout << "Server is bound to " 
-            << channel->GetLocalEndPoint()->ToStringA().c_str() 
+            << channel->GetLocalEndPoint()->ToStringA().c_str()
             << std::endl;
 
         char *data = new char[sizeof(REFERENCE_DATA)];
@@ -76,8 +81,8 @@ unsigned int Server::Run(void *userData) {
         return 0;
 
     } catch (IbRdmaException e) {
-        std::cerr << "IB server failed: " << e.what() << std::endl;
-        return static_cast<unsigned int>(e.GetErrorCode());
+        std::cerr << "IB server failed: " << e.get_msg_astr() << std::endl;
+        return static_cast<DWORD>(e.GetErrorCode());
     }
 }
 
@@ -118,8 +123,8 @@ unsigned int Client::Run(void *userData) {
         std::cout << "Client leaving..." << std::endl;
         return 0;
     } catch (IbRdmaException e) {
-        std::cerr << "IB client failed: " << e.what() << ", " << e.GetErrorCode() << std::endl;
-        return static_cast<unsigned int>(e.GetErrorCode());
+        std::cerr << "IB client failed: " << e.get_msg_astr() << ", " << e.GetErrorCode() << std::endl;
+        return static_cast<DWORD>(e.GetErrorCode());
     }
 }
 
@@ -131,14 +136,14 @@ int _tmain(int argc, _TCHAR **argv) {
     using namespace vislib::net::ib;
     using namespace vislib::sys;
 
-    the::trace::get_instance().set_level(THE_TRCCHL_DEFAULT, the::trace::LEVEL_ALL);
+    //vislib::Trace::GetInstance().SetLevel(Trace::LEVEL_ALL);
 
     IbvInformation::DeviceList devices;
 
     try {
         IbvInformation::GetInstance().GetDevices(devices);
 
-        for (size_t i = 0; i < devices.Count(); i++) {
+        for (SIZE_T i = 0; i < devices.Count(); i++) {
             std::cout << "Device #" << i << ":" << std::endl;
 
             std::cout << "\tGUID: " 
@@ -151,7 +156,7 @@ int _tmain(int argc, _TCHAR **argv) {
             std::cout << "\tNumber of ports: " << devices[i].GetPortCount() 
                 << std::endl;
 
-            for (size_t j = 0; j < devices[i].GetPortCount(); j++) {
+            for (SIZE_T j = 0; j < devices[i].GetPortCount(); j++) {
                 const IbvInformation::Port& port = devices[i].GetPort(j);
                 std::cout << "\tPort #" << j << ": " << std::endl;
 
@@ -169,7 +174,7 @@ int _tmain(int argc, _TCHAR **argv) {
         }
 
     } catch (IbRdmaException e) {
-        std::cerr << "Retrieving IB devices failed: " << e.what() 
+        std::cerr << "Retrieving IB devices failed: " << e.get_msg_astr() 
             << std::endl;
     }
 
@@ -213,10 +218,20 @@ int _tmain(int argc, _TCHAR **argv) {
         //channel->Listen();
         //channel->Accept();
     } catch (the::system::com_exception e) {
-        std::cerr << "Starting IB server failed: " << e.what() 
+        std::cerr << "Starting IB server failed: " << e.get_msg_astr() 
             << std::endl;
     }
 
     ::_getch();
     return 0;
 }
+
+#else /* HAVE_OFED_SDK */
+#include <iostream>
+
+int _tmain(int argc, _TCHAR **argv) {
+    std::cerr << "Test cannot be performed as VISlib has been compiled without "
+        << "OFED SDK." << std::endl;
+}
+
+#endif /* HAVE_OFED_SDK */

@@ -26,19 +26,33 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\IbRdmaCommClientChannel.cpp" />
-    <ClCompile Include="src\IbRdmaCommServerChannel.cpp" />
-    <ClCompile Include="src\IbRdmaException.cpp" />
-    <ClCompile Include="src\IbvCommChannel.cpp">
+    <ClCompile Include="src\IbRdmaCommClientChannel.cpp" Condition="$(OfedSdkDir) != ''"  />
+    <ClCompile Include="src\IbRdmaCommServerChannel.cpp" Condition="$(OfedSdkDir) != ''" />
+    <ClCompile Include="src\IbRdmaException.cpp" Condition="$(OfedSdkDir) != ''" />
+    <ClCompile Include="src\IbvCommChannel.cpp" Condition="$(OfedSdkDir) != ''" >
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\IbvCommServerChannel.cpp">
+    <ClCompile Include="src\IbvCommServerChannel.cpp" Condition="$(OfedSdkDir) != ''" >
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\IbvInformation.cpp" />
-    <ClCompile Include="src\IbvShared.cpp">
+    <ClCompile Include="src\IbvInformation.cpp" Condition="$(OfedSdkDir) != ''"  />
+    <ClCompile Include="src\IbvShared.cpp" Condition="$(OfedSdkDir) != ''" >
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\base\base.vcxproj">
+      <Project>{4f55d730-e9de-4749-99c7-0285da1d263d}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\net\net.vcxproj">
+      <Project>{f082265b-1a1f-4dfc-be5a-c775844c7b0d}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\sys\sys.vcxproj">
+      <Project>{ac94966a-1e30-47a8-a503-0f9737fd1fe8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\thelib\thelib++.vcxproj">
+      <Project>{5cbe665d-74e2-4028-9a08-f627975f110d}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{59DEB5CE-352F-43B4-B250-60BD6D19201C}</ProjectGuid>
@@ -65,15 +79,15 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug64.props" />
-    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
+    <Import Project="..\thelib.props" />
     <Import Project="ofedsdk.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease64.props" />
-    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
+    <Import Project="..\thelib.props" />
     <Import Project="ofedsdk.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />

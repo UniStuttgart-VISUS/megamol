@@ -50,26 +50,26 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease32.props" />
-    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
+    <Import Project="..\thelib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug32.props" />
-    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
+    <Import Project="..\thelib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease64.props" />
-    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
+    <Import Project="..\thelib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug64.props" />
-    <Import Project="..\ExtLibs.props" />
     <Import Project="..\vislib.props" />
+    <Import Project="..\thelib.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -102,7 +102,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include;$(TheLibPath)include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include;$(TheLibPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRTDBG_MAP_ALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -133,7 +133,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include;$(TheLibPath)include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include;$(TheLibPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRTDBG_MAP_ALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -161,7 +161,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include;$(TheLibPath)include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include;$(TheLibPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -194,7 +194,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include;$(TheLibPath)include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\net\include;$(SolutionDir)\sys\include;$(SolutionDir)\graphics\include;$(TheLibPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -351,6 +351,9 @@
     <ProjectReference Include="..\sys\sys.vcxproj">
       <Project>{ac94966a-1e30-47a8-a503-0f9737fd1fe8}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\thelib\thelib++.vcxproj">
+      <Project>{5cbe665d-74e2-4028-9a08-f627975f110d}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Vislib.Interop\Vislib.Interop.csproj">
       <Project>{bb192aa8-8a09-4492-aeb8-1a8ae6ac9339}</Project>

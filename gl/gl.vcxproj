@@ -52,25 +52,25 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease32.props" />
-    <Import Project="..\ExtLibs.props" />
+    <Import Project="..\thelib.props" />
     <Import Project="..\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug32.props" />
-    <Import Project="..\ExtLibs.props" />
+    <Import Project="..\thelib.props" />
     <Import Project="..\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease64.props" />
-    <Import Project="..\ExtLibs.props" />
+    <Import Project="..\thelib.props" />
     <Import Project="..\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug64.props" />
-    <Import Project="..\ExtLibs.props" />
+    <Import Project="..\thelib.props" />
     <Import Project="..\vislib.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -259,6 +259,9 @@
     <ProjectReference Include="..\sys\sys.vcxproj">
       <Project>{ac94966a-1e30-47a8-a503-0f9737fd1fe8}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\thelib\thelib++.vcxproj">
+      <Project>{5cbe665d-74e2-4028-9a08-f627975f110d}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

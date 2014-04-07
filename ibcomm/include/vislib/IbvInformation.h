@@ -20,6 +20,7 @@
 #include "vislib/CriticalSection.h"
 #include "the/stack_trace.h"
 
+#ifdef HAVE_OFED_SDK
 #include "rdma/winverbs.h"
 
 
@@ -524,6 +525,8 @@ namespace ib {
 } /* end namespace ib */
 } /* end namespace net */
 } /* end namespace vislib */
+
+#endif /* HAVE_OFED_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

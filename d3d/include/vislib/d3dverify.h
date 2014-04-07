@@ -15,6 +15,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+
 #include "the/assert.h"
 #include "vislib/D3DException.h"
 
@@ -23,7 +24,7 @@
  * Declare the variable 'hr' for use in the D3D_VERIFY_* macros. Add
  * this macro at the begin of functions that use these macros.
  */
-#define USES_D3D_VERIFY HRESULT __d3dv_hr; __d3dv_hr = D3D_OK;
+#define USES_D3D_VERIFY HRESULT __d3dv_hr; __d3dv_hr = S_OK;
 // Note: Extra assignment prevent "unused variable" warning.
 
 
