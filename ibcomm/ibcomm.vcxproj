@@ -24,19 +24,21 @@
     <ClInclude Include="include\vislib\IbvShared.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="src\IbDummy.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\IbRdmaCommClientChannel.cpp" Condition="$(OfedSdkDir) != ''"  />
+    <ClCompile Include="src\IbDummy.cpp" />
+    <ClCompile Include="src\IbRdmaCommClientChannel.cpp" Condition="$(OfedSdkDir) != ''" />
     <ClCompile Include="src\IbRdmaCommServerChannel.cpp" Condition="$(OfedSdkDir) != ''" />
     <ClCompile Include="src\IbRdmaException.cpp" Condition="$(OfedSdkDir) != ''" />
-    <ClCompile Include="src\IbvCommChannel.cpp" Condition="$(OfedSdkDir) != ''" >
+    <ClCompile Include="src\IbvCommChannel.cpp" Condition="$(OfedSdkDir) != ''">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\IbvCommServerChannel.cpp" Condition="$(OfedSdkDir) != ''" >
+    <ClCompile Include="src\IbvCommServerChannel.cpp" Condition="$(OfedSdkDir) != ''">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\IbvInformation.cpp" Condition="$(OfedSdkDir) != ''"  />
-    <ClCompile Include="src\IbvShared.cpp" Condition="$(OfedSdkDir) != ''" >
+    <ClCompile Include="src\IbvInformation.cpp" Condition="$(OfedSdkDir) != ''" />
+    <ClCompile Include="src\IbvShared.cpp" Condition="$(OfedSdkDir) != ''">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
