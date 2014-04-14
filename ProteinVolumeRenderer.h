@@ -270,11 +270,15 @@ namespace protein {
          * @param time The current time
          */
         void updateVolumeSegmentationRmsd( float time);
-
+        
         /**
          * Write the current volume as a raw file.
          */
-        void writeVolumeRAW();
+        bool writeVolumeRAWUChar(core::param::ParamSlot& slot);
+        /**
+         * Write the current volume as a raw file.
+         */
+        bool writeVolumeRAWFloat(core::param::ParamSlot& slot);
 
 		/**********************************************************************
 		 * variables
@@ -309,6 +313,7 @@ namespace protein {
         megamol::core::param::ParamSlot volClipPlaneOpacityParam;
         /** parameter slot for positional interpolation */
         megamol::core::param::ParamSlot interpolParam;
+        megamol::core::param::ParamSlot writeRawFileParam;
 
         /** parameter slot for color table filename */
         megamol::core::param::ParamSlot colorTableFileParam;

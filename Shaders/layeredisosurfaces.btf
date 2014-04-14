@@ -58,7 +58,8 @@ uniform vec3 isoValues;
 uniform float isoOpacity = 0.4;
 uniform vec3 surfaceColor0 = vec3(0.7, 0.5, 0.0);
 uniform vec3 surfaceColor1 = vec3(0.0, 0.7, 0.5);
-uniform vec3 surfaceColor2 = vec3(0.7, 0.0, 0.5);
+//uniform vec3 surfaceColor2 = vec3(0.7, 0.0, 0.5);
+uniform vec3 surfaceColor2 = vec3(0.0, 0.7, 1.0);
 
 uniform vec4 clipPlane0 = vec4(0.0);
 uniform vec4 clipPlane1 = vec4(0.0);
@@ -162,7 +163,7 @@ void main(void) {
     vec3 dir = rayLength.xyz * scaleVol.xyz;
     // ray distance to traverse
     float rayDist = rayLength.w;
-
+	
     float scalarData;
     vec4 data;
 
@@ -171,10 +172,13 @@ void main(void) {
     vec3 isoDiff = vec3(0.0);
     vec3 isoDiffOld = vec3(texture3D(volumeSampler, pos).r) - isoValues;
     
+	// TEST
+	float stepSize2 = stepSize / 3.0;
+	
     // move one step forward
-    vec3 stepDir = dir * stepSize;
+    vec3 stepDir = dir * stepSize2;
     pos += stepDir;
-    rayDist -= stepSize;
+    rayDist -= stepSize2;
 
     if (rayDist <= 0.0) {
         gl_FragColor = dest;
@@ -184,7 +188,7 @@ void main(void) {
 	vec3 cpTest;
 	float lic;
 	vec3 tv;
-	
+		
     for (int j=0; (!outside && (j<numIterations)); ++j) {
         for (int i=0; i<numIterations; ++i) {
             // lookup scalar value
@@ -238,15 +242,19 @@ void main(void) {
 
                 float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
                 src = vec4(surfaceColor0, min(1.0, isoOpacity + 1.5*(1.0-tmp)));
-        //src.rgb *= lic; // TEST
-        
-        float scale=0.010;
-        float value=dot( gradient, tv);
-        if( value < 0.000 ) {
-          src.rgb = vec3( 0.3-0.7*value/scale, 0.3+0.3*value/scale, 0.3+0.3*value/scale);
-        } else {
-          src.rgb = vec3( 0.3+0.3*value/scale, 0.3-0.3*value/scale, 0.3+0.7*value/scale);
-        }
+				//src.rgb *= lic; // TEST
+				
+				/*
+				float scale=0.010;
+				float value=dot( gradient, tv);
+				if( value < 0.000 ) {
+					//src.rgb = vec3( 0.3-0.7*value/scale, 0.3+0.3*value/scale, 0.3+0.3*value/scale);
+					src.rgb = mix( vec3( 0.3), vec3( 0.0, 1.0, 1.0), (-value)/scale);
+				} else {
+					//src.rgb = vec3( 0.3+0.3*value/scale, 0.3-0.3*value/scale, 0.3+0.7*value/scale);
+					src.rgb = mix( vec3( 0.3), vec3( 1.0, 1.0, 0.0), value/scale);
+				}
+				*/
 //				if( dot( gradient, tv) > 0.001 ) {
 //					src.rgb = vec3( 1.0, 0.0, 0.0);
 //				} else if( dot( gradient, tv) < -0.001 ) {
@@ -270,7 +278,29 @@ void main(void) {
                 //  //dest.xyz *= 0.2;
                 //  dest.xyz += 0.5 * vec3(1.0, 1.0, 0.0);
                 // dest.xyz = clamp(dest.xyz, vec3(0.0), vec3(1.0));
-            }
+            } //else {
+				/*
+				if (cpTest.x < 0.5) { 
+					// illumination
+					vec3 posWorld = pos * scaleVolInv.xyz;
+					vec3 dirWorld = dir * scaleVolInv.xyz;
+					src.rgb = vec3( 0.5);
+					float val = clamp( texture3D(vectorSampler, pos).z, -0.1, 0.1);
+					if (val > 0.0) {
+						val = val / 0.1;
+						src.rgb = mix( vec3( 1.0, 1.0, 1.0), vec3( 1.0, 0.0, 0.0), val);
+					} else {
+						val = (-val) / 0.1;
+						src.rgb = mix( vec3( 1.0, 1.0, 1.0), vec3( 0.0, 0.0, 1.0), val);
+					}
+					//src.rgb = calcIllum(posWorld, vec3(0.0, 0.0, 1.0), dirWorld, src.rgb);
+					src.a = 1.0;
+					// perform blending
+					src.rgb *= src.a;
+					dest = (1.0 - dest.a) * src + dest;
+				}
+				*/
+			//}
             isoDiffOld.x = isoDiff.x;
 
             if (isoDiff.y * isoDiffOld.y  <= 0.0 && cpTest.y < 0.5) {
@@ -367,7 +397,7 @@ void main(void) {
 
             // move one step forward
             pos += stepDir;
-            rayDist -= stepSize;
+            rayDist -= stepSize2;
 
             outside = (dest.a > 0.98) || (rayDist <= 0);
             if (outside)
