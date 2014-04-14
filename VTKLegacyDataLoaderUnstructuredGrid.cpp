@@ -27,6 +27,7 @@ using namespace megamol::protein;
 
 #define VERBOSE
 #define SWAP_BYTES
+#define NORMALIZE_RADIUS
 
 /*
  * VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid
@@ -210,7 +211,12 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
             // Loop through all particle lists
 
             // Set global radius to 1 TODO ?
+            
+#ifndef NORMALIZE_RADIUS
             mpdc->AccessParticles(0).SetGlobalRadius(this->globalRadiusParam.Param<core::param::FloatParam>()->Value());
+#else
+            mpdc->AccessParticles(0).SetGlobalRadius(1.0f);
+#endif
             // Set number of frames
             mpdc->AccessParticles(0).SetCount(fr->GetNumberOfPoints());
             // Set particle type
@@ -481,13 +487,21 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 //                                tmpBuff[3*v+0],
 //                                tmpBuff[3*v+1],
 //                                tmpBuff[3*v+2]);
-                        this->bbox.Set(tmpBuff[3*v+0],
-                                tmpBuff[3*v+1],
-                                tmpBuff[3*v+2],
-                                tmpBuff[3*v+0],
-                                tmpBuff[3*v+1],
-                                tmpBuff[3*v+2]);
-
+#ifdef NORMALIZE_RADIUS
+                        this->bbox.Set( tmpBuff[3*v+0]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                        tmpBuff[3*v+1]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                        tmpBuff[3*v+2]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                        tmpBuff[3*v+0]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                        tmpBuff[3*v+1]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                        tmpBuff[3*v+2]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value());
+#else
+                        this->bbox.Set( tmpBuff[3*v+0],
+                                        tmpBuff[3*v+1],
+                                        tmpBuff[3*v+2],
+                                        tmpBuff[3*v+0],
+                                        tmpBuff[3*v+1],
+                                        tmpBuff[3*v+2]);
+#endif
 //                        printf("Bounding box %f %f %f %f %f %f\n",
 //                                this->bbox.Left(),
 //                                this->bbox.Bottom(),
@@ -501,10 +515,17 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 //                                tmpBuff[3*v+0],
 //                                tmpBuff[3*v+1],
 //                                tmpBuff[3*v+2]);
+#ifdef NORMALIZE_RADIUS
+                        this->bbox.GrowToPoint(
+                                tmpBuff[3*v+0]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                tmpBuff[3*v+1]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                tmpBuff[3*v+2]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value());
+#else
                         this->bbox.GrowToPoint(
                                 tmpBuff[3*v+0],
                                 tmpBuff[3*v+1],
                                 tmpBuff[3*v+2]);
+#endif
                     }
                     buffPt +=12;
                 }
@@ -521,6 +542,15 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 //                                ((float*)(buffPt))[v*3+0],
 //                                ((float*)(buffPt))[v*3+1],
 //                                ((float*)(buffPt))[v*3+2]);
+#ifdef NORMALIZE_RADIUS
+                        this->bbox.Set(
+                                ((float*)(buffPt))[v*3+0]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                ((float*)(buffPt))[v*3+1]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                ((float*)(buffPt))[v*3+2]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                ((float*)(buffPt))[v*3+0]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                ((float*)(buffPt))[v*3+1]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                ((float*)(buffPt))[v*3+2]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value());
+#else
                         this->bbox.Set(
                                 ((float*)(buffPt))[v*3+0],
                                 ((float*)(buffPt))[v*3+1],
@@ -528,6 +558,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
                                 ((float*)(buffPt))[v*3+0],
                                 ((float*)(buffPt))[v*3+1],
                                 ((float*)(buffPt))[v*3+2]);
+#endif
 
 //                        printf("Bounding box %f %f %f %f %f %f\n",
 //                                this->bbox.Left(),
@@ -538,10 +569,17 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 //                                this->bbox.Front());
 
                     } else {
+#ifdef NORMALIZE_RADIUS
+                        this->bbox.GrowToPoint(
+                                ((float*)(buffPt))[v*3+0]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                ((float*)(buffPt))[v*3+1]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                ((float*)(buffPt))[v*3+2]/this->globalRadiusParam.Param<core::param::FloatParam>()->Value());
+#else
                         this->bbox.GrowToPoint(
                                 ((float*)(buffPt))[v*3+0],
                                 ((float*)(buffPt))[v*3+1],
                                 ((float*)(buffPt))[v*3+2]);
+#endif
 //                        printf("VERTEX %f %f %f\n",
 //                                ((float*)(buffPt))[v*3+0],
 //                                ((float*)(buffPt))[v*3+1],
@@ -562,7 +600,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 //            this->bbox.Top(),
 //            this->bbox.Front());
 
-    this->bbox.Grow(4.0); // Add fixed offset TODO
+    //this->bbox.Grow(4.0); // Add fixed offset TODO
 
     delete[] buffer;
 
@@ -971,6 +1009,11 @@ void VTKLegacyDataLoaderUnstructuredGrid::readPoints(char*& buffPt,
     } else {
 #ifdef SWAP_BYTES
         this->swapBytes(buffPt, 4, vertexCnt*3);
+#endif
+#ifdef NORMALIZE_RADIUS
+        for( unsigned int i = 0; i < vertexCnt * 3; i++ ) {
+            ((float*)(buffPt))[i] /= this->globalRadiusParam.Param<core::param::FloatParam>()->Value();
+        }
 #endif
         fr->SetPoints((const float*)(buffPt), vertexCnt);
         // Increment buffer pointer

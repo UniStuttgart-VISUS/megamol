@@ -38,6 +38,8 @@
 #error The VMD QuickSurf feature requires CUDA 4.0 or later
 #endif
 
+//#define WRITE_DATRAW_FILE
+
 #include "utilities.h"
 #include "WKFThreads.h"
 #include "WKFUtils.h"
@@ -1643,6 +1645,8 @@ __global__ static void wendlanddensity_fast(int natoms,
             float q=r/h;
             float pi = 3.141592653589793f;
 
+            // TODO mass!! m_j
+
             if(r<=cutoff)
                 densityval1 += 21.0f/16.0f/pi/h/h/h * (1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(1.0f - q/2.0f)*(2.0f*q+1.0f);
 
@@ -2688,13 +2692,18 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
       }
     } 
   }
-
+  
 #ifdef WRITE_FILE
   //FILE *vertexFile = fopen( "vertices.dat", "wb");
   //FILE *indexFile = fopen( "indices.dat", "wb");
   FILE *objFile = fopen( "frame.obj", "w");
   unsigned int globalIndexCounter = 0;
 #endif // WRITE_FILE
+
+#ifdef WRITE_DATRAW_FILE
+  FILE *qsDatFile = fopen( "qsvolume.dat", "w");
+  FILE *qsRawFile = fopen( "qsvolume.raw", "wb");
+#endif // WRITE_DATRAW_FILE
 
   int z;
   int chunkcount=0;
@@ -2842,7 +2851,7 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
     uint3 gvsz = make_uint3(vsz[0], vsz[1], vsz[2]);
     float3 gorg = make_float3(gorigin[0], gorigin[1], gorigin[2]);
     float3 gbnds = make_float3(bbox[0], bbox[1], bbox[2]);
-
+    
     gpuh->mc->SetIsovalue(isovalue);
     if (!gpuh->mc->SetVolumeData(gpuh->devdensity, gpuh->devvoltexmap, 
                                  gvsz, gorg, gbnds, true)) {
@@ -2866,6 +2875,28 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
       gpuh->mc->SetSubVolume(volstart, volend);
     }
     
+#ifdef WRITE_DATRAW_FILE
+    float *vol;
+    vol = new float[gvsz.x * gvsz.y * gvsz.z];
+    // copy
+    cudaMemcpy( vol, gpuh->devdensity, gvsz.x * gvsz.y * gvsz.z * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaDeviceSynchronize();
+
+    fprintf( qsDatFile, "ObjectFileName: qsvolume.raw\n");
+    fprintf( qsDatFile, "TaggedFileName: ---\n");
+    fprintf( qsDatFile, "Resolution:     %i %i %i\n", gvsz.x, gvsz.y, gvsz.z);
+    fprintf( qsDatFile, "SliceThickness: 1 1 1\n");
+    fprintf( qsDatFile, "Format:         FLOAT\n");
+    fprintf( qsDatFile, "NbrTags:        0\n");
+    fprintf( qsDatFile, "ObjectType:     TEXTURE_VOLUME_OBJECT\n");
+    fprintf( qsDatFile, "ObjectModel:    DENSITY\n");
+    fprintf( qsDatFile, "GridType:       EQUIDISTANT\n");
+    fflush( qsDatFile);
+    fwrite( vol, sizeof(float), gvsz.x * gvsz.y * gvsz.z, qsRawFile);
+    fflush( qsRawFile);
+    delete[] vol;
+#endif // WRITE_DATRAW_FILE
+
 //#ifndef CUDA_ARRAY
 //    // map VBOs for writing
 //    size_t num_bytes;
@@ -3050,6 +3081,11 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
   //fclose( indexFile);
   fclose( objFile);
 #endif
+  
+#ifdef WRITE_DATRAW_FILE
+  fclose( qsDatFile);
+  fclose( qsRawFile);
+#endif // WRITE_DATRAW_FILE
 
   // catch any errors that may have occured so that at the very least,
   // all of the subsequent resource deallocation calls will succeed

@@ -21,6 +21,7 @@
 #include "param/FloatParam.h"
 #include "param/Vector3fParam.h"
 #include "param/StringParam.h"
+#include "param/ButtonParam.h"
 #include "utility/ShaderSourceFactory.h"
 #include "utility/ColourParser.h"
 #include "view/AbstractCallRender.h"
@@ -73,6 +74,7 @@ ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModule (),
         initialSegmentationSizeParam( "initSegSize", "The maximum initial segmentation size"),
         stopSegmentationParam( "stopSegmentation", "Stop segmentation and replay when segmentation threshold is reached"), 
         segmentationDeltaParam( "segmentationDelta", "The maximum allowed difference of the segmented voxels between"),
+        writeRawFileParam( "writeRawFile", "Write the volume to a RAW file."),
         currentFrameId ( 0 ), atomCount( 0 ), volumeTex( 0), volumeSize( 128), volFBO( 0),
         volFilterRadius( 1.75f), volDensityScale( 1.0f),
         width( 0), height( 0), volRayTexWidth( 0), volRayTexHeight( 0),
@@ -186,10 +188,15 @@ ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModule (),
     // the stop segmentation parameter
     this->stopSegmentationParam.SetParameter(new param::BoolParam( true));
     this->MakeSlotAvailable( &this->stopSegmentationParam);
-
+    
     // the segmentation delta parameter
     this->segmentationDeltaParam.SetParameter(new param::FloatParam( 2.0f, 0.0f, 10.0f));
     this->MakeSlotAvailable( &this->segmentationDeltaParam);
+
+    // write volume to raw file
+    this->writeRawFileParam.SetParameter(new param::ButtonParam());
+    this->writeRawFileParam.SetUpdateCallback(&ProteinVolumeRenderer::writeVolumeRAWFloat);
+    this->MakeSlotAvailable( &this->writeRawFileParam);
 
     // make all slots available
     this->MakeSlotAvailable( &this->volIsoValue1Param );
@@ -2710,7 +2717,7 @@ void ProteinVolumeRenderer::updateVolumeSegmentationRmsd( float time) {
 /*
  * write the current volume as a raw file
  */
-void ProteinVolumeRenderer::writeVolumeRAW() {
+bool ProteinVolumeRenderer::writeVolumeRAWUChar(core::param::ParamSlot& slot) {
     unsigned int numVoxel = this->volumeSize * this->volumeSize * this->volumeSize;
 
     float *volume = new float[numVoxel];
@@ -2738,6 +2745,34 @@ void ProteinVolumeRenderer::writeVolumeRAW() {
 
     delete[] volume;
     delete[] ucVol;
+
+    return true;
+}
+
+/*
+ * write the current volume as a raw file
+ */
+bool ProteinVolumeRenderer::writeVolumeRAWFloat(core::param::ParamSlot& slot) {
+    unsigned int numVoxel = this->volumeSize * this->volumeSize * this->volumeSize;
+
+    float *volume = new float[numVoxel];
+
+    glBindTexture( GL_TEXTURE_3D, this->volumeTex);
+    glGetTexImage( GL_TEXTURE_3D, 0, GL_ALPHA, GL_FLOAT, volume);
+    glBindTexture( GL_TEXTURE_3D, 0);
+    
+    // write array to file
+    FILE *foutRaw = fopen( "test.raw", "wb");
+    if( !foutRaw ) {
+        std::cout << "could not open file for writing." << std::endl;
+        delete[] volume;
+        return false;
+    } else {
+        fwrite( volume, sizeof(float), numVoxel, foutRaw);
+        fclose( foutRaw);
+    }
+    delete[] volume;
+    return true;
 }
 
     
