@@ -11,11 +11,12 @@
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
 #include "moldyn/MultiParticleDataCall.h"
-#include "vislib/File.h"
+#include "vislib/BufferedFile.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
 #include "vislib/MemmappedFile.h"
 #include "vislib/Array.h"
+#include "vislib/Map.h"
 
 
 namespace megamol {
@@ -104,7 +105,7 @@ namespace moldyn {
         public:
 
             /** Ctor */
-            SimpleType() : id(0), rad(0.0f) {
+            SimpleType() : id(0), rad(0.0f), count(0) {
                 // intentionally empty
             }
 
@@ -239,6 +240,7 @@ namespace moldyn {
                 this->col[2] = rhs.col[2];
                 this->id = rhs.id;
                 this->rad = rhs.rad;
+                this->count = rhs.count;
                 return *this;
             }
 
@@ -253,6 +255,14 @@ namespace moldyn {
                 return this->id == rhs.id; // id is currently enought to compare
             }
 
+			void SetCount(unsigned int c) {
+				this->count = c;
+			}
+
+			unsigned int GetCount() {
+				return this->count;
+			}
+
         private:
 
             /** The colour of the type */
@@ -263,6 +273,9 @@ namespace moldyn {
 
             /** The radius of spheres of this type */
             float rad;
+
+			/** number of particles of this type */
+			unsigned int count;
 
         };
 
@@ -325,6 +338,26 @@ namespace moldyn {
             const float *PartPoss(unsigned int type) const;
 
             /**
+             * Gets the array of particle colors for the requested type.
+             *
+             * @param type The requested type index.
+             *
+             * @return The array of particle positions.
+             */
+            const float *PartCols(unsigned int type) const;
+
+            /**
+             * Update the color of particle idx;
+             *
+             * @param type The requested type index.
+             * @param idx index of the particle to update
+             * @param color particles new color
+             *
+             * @return The array of particle positions.
+             */
+			void UpdatePartColor(unsigned int type, unsigned int idx, vislib::math::Vector<float,4> color);
+
+            /**
              * Answers the size of the loaded data in bytes.
              *
              * @return The size of the loaded data in bytes.
@@ -344,6 +377,16 @@ namespace moldyn {
              */
             const Frame * MakeInterpolationFrame(float alpha, const Frame &a, 
                 const Frame &b);
+
+
+			void initParticleGrid(unsigned int N1, unsigned int N2, unsigned int N3);
+			vislib::Array<int> &particleGridCell(unsigned int N1, unsigned int N2, unsigned int N3);
+
+
+			SimpleSphericalParticles::ClusterInfos *GetClusterInfos()
+			{
+				return &clusterInfos;
+			}
 
         private:
 
@@ -367,9 +410,18 @@ namespace moldyn {
 
             /** particle counts per type */
 			vislib::Array<unsigned int> partCnt;
-
+			
             /** position data per type */
 			vislib::Array<vislib::RawStorage> pos;
+            /** color data per type */
+			vislib::Array<vislib::RawStorage> col;
+
+			SimpleSphericalParticles::ClusterInfos clusterInfos;
+
+			/** grid storing the data */
+			vislib::Array<vislib::Array<int>> particleGrid;
+			unsigned int particleGridDim1,particleGridDim2,particleGridDim3;
+
         };
 
         /**
@@ -452,14 +504,19 @@ namespace moldyn {
          */
         bool getExtentCallback(Call& caller);
 
+		void preprocessFrame(Frame &frame);
+		
         /** The file name */
         param::ParamSlot filename;
+
+        /** The file name */
+        param::ParamSlot preprocessSlot;
 
         /** The slot for requesting data */
         CalleeSlot getData;
 
         /** The opened data file */
-        vislib::sys::File *file;
+        vislib::sys::BufferedFile *file;
 
         /** The types */
         vislib::Array<SimpleType> types;
@@ -472,7 +529,6 @@ namespace moldyn {
 
 		/* bounding box size */
 		vislib::math::Vector<float, 3> extents;
-
     };
 
 } /* end namespace moldyn */

@@ -40,6 +40,7 @@
 #include "moldyn/SIFFDataSource.h"
 #include "moldyn/SimpleGeoSphereRenderer.h"
 #include "moldyn/SimpleSphereRenderer.h"
+#include "moldyn/ClusteredSphereRenderer.h"
 #include "moldyn/SphereDataUnifier.h"
 #include "moldyn/SphereOutlineRenderer.h"
 #include "moldyn/VIMDataSource.h"
@@ -47,6 +48,7 @@
 #include "moldyn/DirPartColModulate.h"
 #include "moldyn/DirPartFilter.h"
 #include "moldyn/ParticleListFilter.h"
+#include "moldyn/ParticleWorker.h"
 //#include "special/ColStereoDisplay.h"
 #include "view/ClipPlane.h"
 #include "view/LinearTransferFunction.h"
@@ -135,8 +137,9 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<moldyn::MMPLDWriter>();
         instance->registerDescription<LoaderADModuleAutoDescription<moldyn::MMSPDDataSource> >();
         instance->registerAutoDescription<moldyn::SIFFDataSource>();
-        instance->registerAutoDescription<moldyn::SimpleGeoSphereRenderer>();
-        instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
+		instance->registerAutoDescription<moldyn::SimpleGeoSphereRenderer>();
+		instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
+		instance->registerAutoDescription<moldyn::ClusteredSphereRenderer>();
         instance->registerAutoDescription<moldyn::SphereDataUnifier>();
         instance->registerAutoDescription<moldyn::SphereOutlineRenderer>();
         instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
@@ -144,6 +147,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<moldyn::VisIttDataSource>();
         instance->registerAutoDescription<moldyn::DirPartColModulate>();
         instance->registerAutoDescription<moldyn::ParticleListFilter>();
+		instance->registerAutoDescription<moldyn::ParticleWorker>();
         instance->registerAutoDescription<moldyn::DirPartFilter>();
         //instance->registerAutoDescription<special::ColStereoDisplay>();
         instance->registerAutoDescription<view::ClipPlane>();

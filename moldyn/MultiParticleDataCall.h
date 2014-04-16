@@ -14,8 +14,8 @@
 #include "moldyn/AbstractParticleDataCall.h"
 #include "CallAutoDescription.h"
 #include "vislib/assert.h"
+#include "vislib/Map.h"
 #include "vislib/Array.h"
-
 
 namespace megamol {
 namespace core {
@@ -186,7 +186,7 @@ namespace moldyn {
          */
         void SetColourData(ColourDataType t, const void *p,
                 unsigned int s = 0) {
-            ASSERT((p != NULL) || (t == COLDATA_NONE));
+        //    ASSERT((p != NULL) || (t == COLDATA_NONE));
             this->colDataType = t;
             this->colPtr = p;
             this->colStride = s;
@@ -261,7 +261,7 @@ namespace moldyn {
          */
         void SetVertexData(VertexDataType t, const void *p,
                 unsigned int s = 0) {
-            ASSERT((p != NULL) || (t == VERTDATA_NONE));
+            ASSERT(this->disabledNullChecks || (p != NULL) || (t == VERTDATA_NONE));
             this->vertDataType = t;
             this->vertPtr = p;
             this->vertStride = s;
@@ -284,6 +284,66 @@ namespace moldyn {
          * @return 'true' if 'this' and 'rhs' are equal.
          */
         bool operator==(const SimpleSphericalParticles& rhs) const;
+
+		/**
+         * Disable NULL-checks in case we have an OpenGL-VAO
+         * @param disable flag to disable/enable the checks
+         */
+		void disableNullChecksForVAOs(bool disable = true)
+		{
+			disabledNullChecks = disable;
+		}
+		
+		/**
+		* Defines wether we transport VAOs instead of real data
+		* @param vao flag to disable/enable the checks
+		*/
+		void SetIsVAO(bool vao)
+		{
+			this->isVAO = vao;
+		}
+
+		/**
+		* Disable NULL-checks in case we have an OpenGL-VAO
+		* @param disable flag to disable/enable the checks
+		*/
+		bool IsVAO()
+		{
+			return this->isVAO;
+		}
+
+		struct ClusterInfos
+		{
+			vislib::Map<int, vislib::Array<int>> data;
+			unsigned int *plainData;
+			size_t sizeofPlainData;
+			unsigned int numClusters;
+			ClusterInfos() : data(), plainData(0), sizeofPlainData(0), numClusters(0) {};
+		};
+		
+		void SetClusterInfos(ClusterInfos *infos)
+		{
+			this->clusterInfos = infos;
+		}
+
+		ClusterInfos *GetClusterInfos()
+		{
+			return this->clusterInfos;
+		}
+
+		void SetVAOs(unsigned int vao, unsigned int vb, unsigned int cb)
+		{
+			this->glVAO = vao;
+			this->glVB = vb;
+			this->glCB = cb;
+		}
+
+		void GetVAOs(unsigned int &vao, unsigned int &vb, unsigned int &cb)
+		{
+			vao = this->glVAO;
+			vb = this->glVB;
+			cb = this->glCB;
+		}
 
     private:
 
@@ -322,7 +382,17 @@ namespace moldyn {
 
         /** The vertex data stride */
         unsigned int vertStride;
+		
+		/** disable NULL-checks if used with OpenGL-VAO */
+		bool disabledNullChecks;
 
+		bool isVAO;
+
+		unsigned int glVAO;
+		unsigned int glVB;
+		unsigned int glCB;
+
+		ClusterInfos *clusterInfos;
     };
 
 

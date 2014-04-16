@@ -735,6 +735,12 @@
     <ClCompile Include="moldyn\VTFDataSource.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="moldyn\ParticleWorker.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="moldyn\ClusteredSphereRenderer.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1337,6 +1343,12 @@
     <ClInclude Include="moldyn\VTFDataSource.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="moldyn\ParticleWorker.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\ClusteredSphereRenderer.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icons.rc">
@@ -1477,6 +1489,9 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="Shaders\volumerenderer.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\particleWorkerCompute.btf">
       <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>

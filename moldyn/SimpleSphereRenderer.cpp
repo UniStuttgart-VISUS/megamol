@@ -106,8 +106,8 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
     float clipDat[4];
     float clipCol[4];
     this->getClipData(clipDat, clipCol);
-
-    glDisable(GL_BLEND);
+	
+	glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 

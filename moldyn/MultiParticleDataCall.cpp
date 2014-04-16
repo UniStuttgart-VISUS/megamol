@@ -20,7 +20,9 @@ using namespace megamol::core;
 moldyn::SimpleSphericalParticles::SimpleSphericalParticles(void)
         : colDataType(COLDATA_NONE), colPtr(NULL), colStride(0), count(0),
         maxColI(1.0f), minColI(0.0f), radius(0.5f), particleType(0),
-        vertDataType(VERTDATA_NONE), vertPtr(NULL), vertStride(0) {
+        vertDataType(VERTDATA_NONE), vertPtr(NULL), vertStride(0),
+		disabledNullChecks(false), 
+		clusterInfos(NULL) {
     this->col[0] = 255;
     this->col[1] = 0;
     this->col[2] = 0;
@@ -70,6 +72,8 @@ moldyn::SimpleSphericalParticles::operator=(
     this->vertDataType = rhs.vertDataType;
     this->vertPtr = rhs.vertPtr;
     this->vertStride = rhs.vertStride;
+	this->disabledNullChecks = rhs.disabledNullChecks;
+	this->clusterInfos = rhs.clusterInfos;
     return *this;
 }
 
@@ -92,7 +96,8 @@ bool moldyn::SimpleSphericalParticles::operator==(
         && (this->radius == rhs.radius)
         && (this->vertDataType == rhs.vertDataType)
         && (this->vertPtr == rhs.vertPtr)
-        && (this->vertStride == rhs.vertStride));
+        && (this->vertStride == rhs.vertStride)
+		&& (this->clusterInfos == rhs.clusterInfos));
 }
 
 /****************************************************************************/

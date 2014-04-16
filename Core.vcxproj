@@ -76,7 +76,7 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Win$(Bits)\$(Configuration)\</IntDir>
     <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">*.obj%3b*.ilk%3b*.tlb%3b*.tli%3b*.tlh%3b*.tmp%3b*.rsp%3b*.pgc%3b*.pgd%3b$(TargetPath)%3b*.pch</ExtensionsToDeleteOnClean>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\bin\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Win$(Bits)\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Win$(Bits)\$(Configuration)\</IntDir>
     <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">*.obj%3b*.ilk%3b*.tlb%3b*.tli%3b*.tlh%3b*.tmp%3b*.rsp%3b*.pgc%3b*.pgd%3b$(TargetPath)%3b*.pch</ExtensionsToDeleteOnClean>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
@@ -84,7 +84,7 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Win$(Bits)\$(Configuration)\</IntDir>
     <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">*.obj%3b*.ilk%3b*.tlb%3b*.tli%3b*.tlh%3b*.tmp%3b*.rsp%3b*.pgc%3b*.pgd%3b$(TargetPath)%3b*.pch</ExtensionsToDeleteOnClean>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\bin\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Win$(Bits)\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Win$(Bits)\$(Configuration)\</IntDir>
     <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Release|x64'">*.obj%3b*.ilk%3b*.tlb%3b*.tli%3b*.tlh%3b*.tmp%3b*.rsp%3b*.pgc%3b*.pgd%3b$(TargetPath)%3b*.pch</ExtensionsToDeleteOnClean>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
@@ -323,6 +323,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\AbstractSimpleParticleDataSource.cpp" />
     <ClCompile Include="moldyn\AbstractSimpleSphereRenderer.cpp" />
     <ClCompile Include="moldyn\AbstractSimpleStoringParticleDataSource.cpp" />
+    <ClCompile Include="moldyn\ClusteredSphereRenderer.cpp" />
     <ClCompile Include="moldyn\DatRawDataSource.cpp" />
     <ClCompile Include="moldyn\DirectVolumeRenderer.cpp" />
     <ClCompile Include="moldyn\DirPartColModulate.cpp" />
@@ -332,6 +333,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\MMSPDFrameData.cpp" />
     <ClCompile Include="moldyn\MMSPDHeader.cpp" />
     <ClCompile Include="moldyn\ParticleListFilter.cpp" />
+    <ClCompile Include="moldyn\ParticleWorker.cpp" />
     <ClCompile Include="moldyn\SIFFWriter.cpp" />
     <ClCompile Include="moldyn\SimpleGeoSphereRenderer.cpp" />
     <ClCompile Include="moldyn\slicing.cpp" />
@@ -568,6 +570,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\AbstractSimpleParticleDataSource.h" />
     <ClInclude Include="moldyn\AbstractSimpleSphereRenderer.h" />
     <ClInclude Include="moldyn\AbstractSimpleStoringParticleDataSource.h" />
+    <ClInclude Include="moldyn\ClusteredSphereRenderer.h" />
     <ClInclude Include="moldyn\DatRawDataSource.h" />
     <ClInclude Include="moldyn\DirectVolumeRenderer.h" />
     <ClInclude Include="moldyn\DirPartColModulate.h" />
@@ -577,6 +580,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\MMSPDFrameData.h" />
     <ClInclude Include="moldyn\MMSPDHeader.h" />
     <ClInclude Include="moldyn\ParticleListFilter.h" />
+    <ClInclude Include="moldyn\ParticleWorker.h" />
     <ClInclude Include="moldyn\SIFFWriter.h" />
     <ClInclude Include="moldyn\SimpleGeoSphereRenderer.h" />
     <ClInclude Include="moldyn\slicing.h" />
@@ -729,6 +733,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="Shaders\deferred.btf">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Shaders\particleWorkerCompute.btf" />
     <None Include="Shaders\simplegeosphere.btf" />
     <None Include="Shaders\volumerenderer.btf">
       <SubType>Designer</SubType>
