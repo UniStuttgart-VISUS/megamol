@@ -129,10 +129,11 @@ namespace moldyn {
              *             to be at the correct location
              * @param idx The zero-based index of the frame
              * @param size The size of the frame data in bytes
+			 * @param version File version (100 = standard, 101 with clusterInfos)
              *
              * @return True on success
              */
-            bool LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size);
+			bool LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size, unsigned int version);
 
             /**
              * Sets the data into the call
@@ -145,6 +146,9 @@ namespace moldyn {
 
             /** position data per type */
             vislib::RawStorage dat;
+
+			/** file version */
+			unsigned int fileVersion;
 
         };
 
@@ -231,6 +235,8 @@ namespace moldyn {
         /** The data set clipping box */
         vislib::math::Cuboid<float> clipbox;
 
+		/** file version */
+		unsigned int fileVersion;
     };
 
 } /* end namespace moldyn */

@@ -16,6 +16,7 @@
 
 using namespace megamol::core;
 
+#define WITH_CLUSTERINFO
 
 /*
  * moldyn::MMPLDWriter::MMPLDWriter
@@ -182,6 +183,9 @@ bool moldyn::MMPLDWriter::run(void) {
 
     file.Seek(6); // set correct version to show that file is complete
     version = 100;
+#ifdef WITH_CLUSTERINFO
+	version++;
+#endif
     ASSERT_WRITEOUT(&version, 2);
 
     file.Seek(frameOffset);
@@ -276,6 +280,11 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
                 cp += co;
             }
         }
+#ifdef WITH_CLUSTERINFO
+		ASSERT_WRITEOUT(&points.GetClusterInfos()->numClusters, sizeof(unsigned int));
+		ASSERT_WRITEOUT(&points.GetClusterInfos()->sizeofPlainData, sizeof(size_t));
+		ASSERT_WRITEOUT(points.GetClusterInfos()->plainData, points.GetClusterInfos()->sizeofPlainData);
+#endif
     }
 
     return true;

@@ -230,6 +230,11 @@ bool moldyn::ParticleWorker::getDataCallback(Call& call) {
 	outMpdc->SetFrameID(inMpdc->FrameID());
 	outMpdc->SetUnlocker(new VAOUnlocker(), false);
 
+	if (count == 0)
+	{
+		return false;
+	}
+
 	glBindVertexArray(0);
     glBindBufferARB (GL_ARRAY_BUFFER, 0);
     glBindBufferARB (GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -270,12 +275,17 @@ bool moldyn::ParticleWorker::getDataCallback(Call& call) {
 			glClusterInfos = 0;
 		}
 	}
+	
+	if (!glClusterInfos)
+	{
+		glGenBuffersARB(1, &glClusterInfos);
+	}
 
 	unsigned int particleCount = 0;
 	unsigned int particleStride = 0;
 	float particleRadius = 0.0f;
 	SimpleSphericalParticles::ClusterInfos *clusterInfos;
-	count = 1;
+	count = (inMpdc->GetParticleListCount() < 1) ? inMpdc->GetParticleListCount() : 1;
 	for(int i = 0; i < count; ++i)
 	{
 		MultiParticleDataCall::Particles &partsIn = inMpdc->AccessParticles(i);
@@ -325,57 +335,92 @@ bool moldyn::ParticleWorker::getDataCallback(Call& call) {
 		partsOut.SetGlobalColour(color[0], color[1], color[2], color[3]);
 		partsOut.SetGlobalType(partsIn.GetGlobalType());
 
-		// highly specific, because we know:
-		partsOut.SetVertexData(partsIn.GetVertexDataType(), NULL, partsIn.GetVertexDataStride());
-		partsOut.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, NULL, partsIn.GetColourDataStride());
-		partsOut.SetVAOs(glVAO[i], glVB[i], glCB[i]);
 		GLuint &vao(glVAO[i]);
 		GLuint &vb(glVB[i]);
 		GLuint &cb(glCB[i]);
+		clusterInfos = partsIn.GetClusterInfos();
 
 		// support the rest yourself...
-		ASSERT(partsOut.GetVertexDataStride() == 3*sizeof(float));
-		ASSERT(partsOut.GetColourDataStride() == 4*sizeof(float));
+		if (partsIn.GetVertexDataStride() == 3 * sizeof(float) && partsIn.GetColourDataStride() == 4 * sizeof(float))
+		{
+			// highly specific, because we know:
+			partsOut.SetVertexData(partsIn.GetVertexDataType(), NULL, partsIn.GetVertexDataStride());
+			partsOut.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, NULL, partsIn.GetColourDataStride());
 
-		glBindVertexArray(vao);
+			partsOut.SetVAOs(glVAO[i], glVB[i], glCB[i]);
+			glBindVertexArray(vao);
 			glBindBufferARB(GL_ARRAY_BUFFER, vb);
 			glBufferDataARB(GL_ARRAY_BUFFER, partsOut.GetVertexDataStride()*partsOut.GetCount(), partsIn.GetVertexData(), GL_DYNAMIC_DRAW);
-				glEnableClientState(GL_VERTEX_ARRAY);
-				glVertexPointer(3, GL_FLOAT, partsOut.GetVertexDataStride(), partsOut.GetVertexData());
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glVertexPointer(3, GL_FLOAT, partsOut.GetVertexDataStride(), partsOut.GetVertexData());
 			glBindBufferARB(GL_ARRAY_BUFFER, cb);
-				glBufferDataARB(GL_ARRAY_BUFFER, partsOut.GetColourDataStride()*partsOut.GetCount(), partsIn.GetColourData(), GL_DYNAMIC_DRAW);
-				glEnableClientState(GL_COLOR_ARRAY);
-				glColorPointer(4, GL_FLOAT, partsOut.GetColourDataStride(), partsOut.GetColourData());
-	        glBindVertexArray(0);
-        glBindBufferARB (GL_ARRAY_BUFFER, 0);
+			glBufferDataARB(GL_ARRAY_BUFFER, partsOut.GetColourDataStride()*partsOut.GetCount(), partsIn.GetColourData(), GL_DYNAMIC_DRAW);
+			glEnableClientState(GL_COLOR_ARRAY);
+			glColorPointer(4, GL_FLOAT, partsOut.GetColourDataStride(), partsOut.GetColourData());
+			glBindVertexArray(0);
+			glBindBufferARB(GL_ARRAY_BUFFER, 0);
 
-		clusterInfos = partsIn.GetClusterInfos();
+			glBindBufferARB(GL_ARRAY_BUFFER, glClusterInfos);
+			glBufferDataARB(GL_ARRAY_BUFFER, clusterInfos->sizeofPlainData, clusterInfos->plainData, GL_DYNAMIC_DRAW);
+
+			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+			shaderOnClusterComputation.Enable();
+			glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("count"), clusterInfos->numClusters);
+			glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("pos_stride"), partsOut.GetVertexDataStride() / sizeof(float));
+			glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("col_stride"), partsOut.GetColourDataStride() / sizeof(float));
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glClusterInfos);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glVB[0]);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, glCB[0]);
+			shaderOnClusterComputation.Dispatch((clusterInfos->numClusters / 1024) + 1, 1, 1);
+			shaderOnClusterComputation.Disable();
+
+			glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+			glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+		}
+		else if (partsIn.GetVertexDataStride() == 3 * sizeof(float)+4 * sizeof(float))
+		{
+			// highly specific, because we know:
+			partsOut.SetVertexData(partsIn.GetVertexDataType(), NULL, partsIn.GetVertexDataStride());
+			partsOut.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, (void*)(NULL + 3 * sizeof(float)), partsIn.GetVertexDataStride());
+
+			partsOut.SetVAOs(glVAO[i], glVB[i], glVB[i]);
+			glBindVertexArray(vao);
+			glBindBufferARB(GL_ARRAY_BUFFER, vb);
+			glBufferDataARB(GL_ARRAY_BUFFER, partsOut.GetVertexDataStride()*partsOut.GetCount(), partsIn.GetVertexData(), GL_DYNAMIC_DRAW);
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glVertexPointer(3, GL_FLOAT, partsOut.GetVertexDataStride(), partsOut.GetVertexData());
+//			glEnableClientState(GL_COLOR_ARRAY);
+	//		glColorPointer(4, GL_FLOAT, partsOut.GetColourDataStride(), partsOut.GetColourData());
+			glBindVertexArray(0);
+			glBindBufferARB(GL_ARRAY_BUFFER, 0);
+
+			glBindBufferARB(GL_ARRAY_BUFFER, glClusterInfos);
+			glBufferDataARB(GL_ARRAY_BUFFER, clusterInfos->sizeofPlainData, clusterInfos->plainData, GL_DYNAMIC_DRAW);
+
+			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+			shaderOnClusterComputation.Enable();
+			glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("count"), clusterInfos->numClusters);
+			glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("pos_stride"), partsOut.GetVertexDataStride() / sizeof(float));
+			glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("col_stride"), partsOut.GetVertexDataStride() / sizeof(float));
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glClusterInfos);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glVB[0]);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, glVB[0]);
+			shaderOnClusterComputation.Dispatch((clusterInfos->numClusters / 1024) + 1, 1, 1);
+			shaderOnClusterComputation.Disable();
+
+			glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+			glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+		}
 
 		particleCount += partsOut.GetCount();
 		particleStride = partsOut.GetVertexDataStride();
 		particleRadius = partsOut.GetGlobalRadius();
 	}
 
-	if (!glClusterInfos)
-	{
-		glGenBuffersARB(1, &glClusterInfos);
-	}
-
-	glBindBufferARB(GL_ARRAY_BUFFER, glClusterInfos);
-	glBufferDataARB(GL_ARRAY_BUFFER, clusterInfos->sizeofPlainData, clusterInfos->plainData, GL_DYNAMIC_DRAW);
-
-	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-	shaderOnClusterComputation.Enable();
-		glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("count"), clusterInfos->numClusters);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glClusterInfos);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glVB[0]);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, glCB[0]);
-		shaderOnClusterComputation.Dispatch((clusterInfos->numClusters / 1024) + 1, 1, 1);
-	shaderOnClusterComputation.Disable();
-
-	glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-	glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-
+	
+	/*
+	
+	*/
 	/*
 	if(!glParticleList)
 	{

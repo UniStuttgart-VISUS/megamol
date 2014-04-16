@@ -48,8 +48,9 @@ moldyn::MMPLDDataSource::Frame::~Frame() {
 /*
  * moldyn::MMPLDDataSource::Frame::LoadFrame
  */
-bool moldyn::MMPLDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size) {
+bool moldyn::MMPLDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size, unsigned int version) {
     this->frame = idx;
+	this->fileVersion = version;
     this->dat.EnforceSize(static_cast<SIZE_T>(size));
     return (file->Read(this->dat, size) == size);
 }
@@ -128,7 +129,19 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
         pts.SetVertexData(vrtDatType, this->dat.At(p), stride);
         pts.SetColourData(colDatType, this->dat.At(p + vrtSize), stride);
 
-    }
+		if (this->fileVersion == 101)
+		{
+			p += stride * pts.GetCount();
+
+			// TODO: who deletes this?
+			SimpleSphericalParticles::ClusterInfos *ci = new SimpleSphericalParticles::ClusterInfos();
+			ci->numClusters = *this->dat.AsAt<unsigned int>(p); p += sizeof(unsigned int);
+			ci->sizeofPlainData = *this->dat.AsAt<size_t>(p); p += sizeof(size_t);
+			ci->plainData = (unsigned int*)malloc(ci->sizeofPlainData);
+			memcpy(ci->plainData, this->dat.At(p), ci->sizeofPlainData); p += ci->sizeofPlainData;
+			pts.SetClusterInfos(ci);
+		}
+	}
 
 }
 
@@ -197,7 +210,7 @@ void moldyn::MMPLDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
     printf("Requesting frame %u of %u frames\n", idx, this->FrameCount());
     ASSERT(idx < this->FrameCount());
     this->file->Seek(this->frameIdx[idx]);
-    if (!f->LoadFrame(this->file, idx, this->frameIdx[idx + 1] - this->frameIdx[idx])) {
+	if (!f->LoadFrame(this->file, idx, this->frameIdx[idx + 1] - this->frameIdx[idx], this->fileVersion)) {
         // failed
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from MMPLD file\n", idx);
     }
@@ -266,9 +279,10 @@ bool moldyn::MMPLDDataSource::filenameChanged(param::ParamSlot& slot) {
     }
     unsigned short ver;
     _ASSERT_READFILE(&ver, 2);
-    if (ver != 100) {
+    if (ver != 100 && ver != 101) {
         _ERROR_OUT("MMPLD file header version wrong");
     }
+	this->fileVersion = ver;
 
     UINT32 frmCnt = 0;
     _ASSERT_READFILE(&frmCnt, 4);
