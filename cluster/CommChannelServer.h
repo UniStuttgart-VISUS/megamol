@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "api/MegaMolCore.std.h"
 #include "cluster/CommChannel.h"
 #include "vislib/AbstractSimpleMessage.h"
 #include "vislib/CommServer.h"
@@ -29,7 +30,7 @@ namespace cluster {
     /**
      * class for control communication channel end points
      */
-    class CommChannelServer : public vislib::Listenable<CommChannelServer>,
+    class MEGAMOLCORE_API CommChannelServer : public vislib::Listenable<CommChannelServer>,
         protected vislib::net::CommServerListener, protected CommChannel::Listener {
     public:
 
