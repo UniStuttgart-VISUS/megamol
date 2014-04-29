@@ -104,7 +104,7 @@ ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 
 # Common linker flags
-LinkerFlags := -lX11 -ldl -lXext # -L/usr/X11R6/lib
+LinkerFlags := -lX11 -ldl -lXext -ltinfo # -L/usr/X11R6/lib
 
 
 # Additional linker flags for special configurations
