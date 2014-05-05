@@ -437,6 +437,7 @@ __global__ void DeformableGPUSurfaceMT_FlagCorruptTriangles_D(
         uint *triangleVtxIdx_D,
         float *targetVol_D,
         const unsigned int *targetActiveCells_D,
+        float4 *externalForces_D,
         uint triangleCnt,
         float isoval) {
 
@@ -523,7 +524,53 @@ __global__ void DeformableGPUSurfaceMT_FlagCorruptTriangles_D(
 //    // END DEBUG
 //    corruptTriangles_D[idx] = flag;
 
-    /* Alternative 3 Check whether the vertex lies in a active cell of the
+//    /* Alternative 3 Check whether the vertex lies in an active cell of the
+//       target volume */
+//
+//    const uint baseIdx0 = vertexDataStride*triangleVtxIdx_D[3*idx+0];
+//    const uint baseIdx1 = vertexDataStride*triangleVtxIdx_D[3*idx+1];
+//    const uint baseIdx2 = vertexDataStride*triangleVtxIdx_D[3*idx+2];
+//    const float3 p0 = make_float3(
+//            vertexData_D[baseIdx0+vertexDataOffsPos+0],
+//            vertexData_D[baseIdx0+vertexDataOffsPos+1],
+//            vertexData_D[baseIdx0+vertexDataOffsPos+2]);
+//    const float3 p1 = make_float3(
+//            vertexData_D[baseIdx1+vertexDataOffsPos+0],
+//            vertexData_D[baseIdx1+vertexDataOffsPos+1],
+//            vertexData_D[baseIdx1+vertexDataOffsPos+2]);
+//    const float3 p2 = make_float3(
+//            vertexData_D[baseIdx2+vertexDataOffsPos+0],
+//            vertexData_D[baseIdx2+vertexDataOffsPos+1],
+//            vertexData_D[baseIdx2+vertexDataOffsPos+2]);
+//
+//    // Sample volume at midpoint
+//    const float3 midpoint = (p0+p1+p2)/3.0;
+//
+//    // Get integer cell index
+//    int3 coords;
+//    coords.x = int((midpoint.x-gridOrg_D.x)/gridDelta_D.x);
+//    coords.y = int((midpoint.y-gridOrg_D.y)/gridDelta_D.y);
+//    coords.z = int((midpoint.z-gridOrg_D.z)/gridDelta_D.z);
+//
+//    int cellIDx = ::GetCellIdxByGridCoords(coords);
+//    uint cellState = targetActiveCells_D[cellIDx];
+//
+//    float currFlag0 = vertexFlag_D[triangleVtxIdx_D[3*idx+0]];
+//    float currFlag1 = vertexFlag_D[triangleVtxIdx_D[3*idx+1]];
+//    float currFlag2 = vertexFlag_D[triangleVtxIdx_D[3*idx+2]];
+////    __syncthreads();
+////    vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = float(bool(currFlag0) || bool(1-cellState));
+////    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = float(bool(currFlag1) || bool(1-cellState));
+////    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = float(bool(currFlag2) || bool(1-cellState));
+////    vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = 1.0;
+////    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = 1.0;
+////    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = 1.0;
+//
+//
+//    corruptTriangles_D[idx] = float(1-cellState);
+
+
+    /* Alternative 4 Check whether all the vertices lies in an active cell of the
        target volume */
 
     const uint baseIdx0 = vertexDataStride*triangleVtxIdx_D[3*idx+0];
@@ -542,26 +589,65 @@ __global__ void DeformableGPUSurfaceMT_FlagCorruptTriangles_D(
             vertexData_D[baseIdx2+vertexDataOffsPos+1],
             vertexData_D[baseIdx2+vertexDataOffsPos+2]);
 
+    float3 vec0 = (p1 - p0);
+    float3 vec1 = (p2 - p0);
+    float3 norm = normalize(cross(vec0, vec1));
+
     // Sample volume at midpoint
     const float3 midpoint = (p0+p1+p2)/3.0;
+
+    // Sample gradient from external forces
+    float4 externalForces = SampleFieldAtPosTrilin_D<float4, false>(midpoint, externalForces_D);
+    float3 normField = make_float3(externalForces.x, externalForces.y, externalForces.z);
+    float dotNormsAbs = dot(norm, normField);
 
     // Get integer cell index
     int3 coords;
     coords.x = int((midpoint.x-gridOrg_D.x)/gridDelta_D.x);
     coords.y = int((midpoint.y-gridOrg_D.y)/gridDelta_D.y);
     coords.z = int((midpoint.z-gridOrg_D.z)/gridDelta_D.z);
+    int3 coords0;
+    coords0.x = int((p0.x-gridOrg_D.x)/gridDelta_D.x);
+    coords0.y = int((p0.y-gridOrg_D.y)/gridDelta_D.y);
+    coords0.z = int((p0.z-gridOrg_D.z)/gridDelta_D.z);
+    int3 coords1;
+    coords1.x = int((p1.x-gridOrg_D.x)/gridDelta_D.x);
+    coords1.y = int((p1.y-gridOrg_D.y)/gridDelta_D.y);
+    coords1.z = int((p1.z-gridOrg_D.z)/gridDelta_D.z);
+    int3 coords2;
+    coords2.x = int((p2.x-gridOrg_D.x)/gridDelta_D.x);
+    coords2.y = int((p2.y-gridOrg_D.y)/gridDelta_D.y);
+    coords2.z = int((p2.z-gridOrg_D.z)/gridDelta_D.z);
 
     int cellIDx = ::GetCellIdxByGridCoords(coords);
+    int cellIDx0 = ::GetCellIdxByGridCoords(coords0);
+    int cellIDx1 = ::GetCellIdxByGridCoords(coords1);
+    int cellIDx2 = ::GetCellIdxByGridCoords(coords2);
     uint cellState = targetActiveCells_D[cellIDx];
+    uint cellState0 = targetActiveCells_D[cellIDx0];
+    uint cellState1 = targetActiveCells_D[cellIDx1];
+    uint cellState2 = targetActiveCells_D[cellIDx2];
 
-    float currFlag0 = vertexFlag_D[triangleVtxIdx_D[3*idx+0]];
-    float currFlag1 = vertexFlag_D[triangleVtxIdx_D[3*idx+1]];
-    float currFlag2 = vertexFlag_D[triangleVtxIdx_D[3*idx+2]];
-    vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = float(bool(currFlag0) || bool(1-cellState));
-    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = float(bool(currFlag1) || bool(1-cellState));
-    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = float(bool(currFlag2) || bool(1-cellState));
+//    float currFlag0 = vertexFlag_D[triangleVtxIdx_D[3*idx+0]];
+//    float currFlag1 = vertexFlag_D[triangleVtxIdx_D[3*idx+1]];
+//    float currFlag2 = vertexFlag_D[triangleVtxIdx_D[3*idx+2]];
+//    __syncthreads();
+//    vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = float(bool(currFlag0) || bool(1-cellState));
+//    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = float(bool(currFlag1) || bool(1-cellState));
+//    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = float(bool(currFlag2) || bool(1-cellState));
+//    vertexFlag_D[triangleVtxIdx_D[3*idx+0]] = 1.0;
+//    vertexFlag_D[triangleVtxIdx_D[3*idx+1]] = 1.0;
+//    vertexFlag_D[triangleVtxIdx_D[3*idx+2]] = 1.0;
 
-    corruptTriangles_D[idx] = float(1-cellState);
+    // Criteria for good triangles
+    bool flag = bool(cellState) &&
+                bool(cellState0) &&
+                bool(cellState1) &&
+                bool(cellState2);
+               // (dotNormsAbs >= 0);
+               //&& (dotNormsAbs <= 0.5);
+
+    corruptTriangles_D[idx] = float(!flag);
 }
 
 /**
@@ -1372,10 +1458,15 @@ __global__ void DeformableGPUSurfaceMT_UpdateVtxPosExternalOnlySubdiv_D(
 
     // Check convergence criterion
     float lastDisplLen = displLen_D[idx];
-    if ((lastDisplLen <= minDispl)||(vertexFlag_D[idx] == 0.0)) {
+//    if ((lastDisplLen <= minDispl)||(vertexFlag_D[idx] == 0.0)) {
+//        displLen_D[idx] = 0.0;
+//        return; // Vertex is converged
+//    }
+    if (lastDisplLen <= minDispl) {
         displLen_D[idx] = 0.0;
         return; // Vertex is converged
     }
+
 
     const uint posBaseIdx = dataArrSize*idx+dataArrOffsPos;
 
@@ -2007,24 +2098,6 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
         return false;
     }
 
-//    // DEBUG Printf triangle indices
-//    HostArr<unsigned int> triangleIdx;
-//    triangleIdx.Validate(this->triangleCnt*3);
-//    cudaMemcpy(triangleIdx.Peek(), vboTriangleIdxPt, sizeof(unsigned int)*this->triangleCnt*3, cudaMemcpyDeviceToHost);
-//    for (int i = 0; i < this->triangleCnt; ++i) {
-//        if ((triangleIdx.Peek()[i*3+0] > this->vertexCnt) ||
-//                (triangleIdx.Peek()[i*3+0] > this->vertexCnt)||
-//                (triangleIdx.Peek()[i*3+0] > this->vertexCnt)) {
-//
-//            printf("wrong vertex index idx %i: %u %u %u (vtxCnt %u\n", i,
-//                    triangleIdx.Peek()[i*3+0],
-//                    triangleIdx.Peek()[i*3+1],
-//                    triangleIdx.Peek()[i*3+2],
-//                    this->vertexCnt);
-//        }
-//    }
-//    // END DEBUG
-
     ::CheckForCudaErrorSync();
 
     if (!CudaSafeCall(cudaMemset(vboFlagPt, 0x00, this->vertexCnt*sizeof(float)))) {
@@ -2043,10 +2116,80 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
             vboTriangleIdxPt,
             volume_D,
             targetActiveCells,
+            (float4*)(this->externalForces_D.Peek()),
             this->triangleCnt,
             isovalue);
 
     ::CheckForCudaErrorSync();
+
+    // Set vertex flags according to triangle flags
+    HostArr<float> triFlags, vtxFlags;
+    HostArr<uint> triIdx;
+    triFlags.Validate(this->triangleCnt);
+    triIdx.Validate(this->triangleCnt*3);
+    vtxFlags.Validate(this->vertexCnt);
+    cudaMemcpy(vtxFlags.Peek(), vboFlagPt,
+            sizeof(float)*this->vertexCnt, cudaMemcpyDeviceToHost);
+    cudaMemcpy(triIdx.Peek(), vboTriangleIdxPt,
+            sizeof(uint)*this->triangleCnt*3, cudaMemcpyDeviceToHost);
+    cudaMemcpy(triFlags.Peek(), this->corruptTriangles_D.Peek(),
+            sizeof(float)*this->triangleCnt, cudaMemcpyDeviceToHost);
+    vtxFlags.Set(0x00);
+    for (int i = 0; i < this->triangleCnt; ++i) {
+        float triFlag = triFlags.Peek()[i];
+        if (triFlag == 1.0) {
+            vtxFlags.Peek()[triIdx.Peek()[3*i+0]] = 1.0;
+            vtxFlags.Peek()[triIdx.Peek()[3*i+1]] = 1.0;
+            vtxFlags.Peek()[triIdx.Peek()[3*i+2]] = 1.0;
+        }
+    }
+
+    // DEBUG Check validity of vertex flags
+    HostArr<bool> vtxFlagValid;
+    vtxFlagValid.Validate(this->vertexCnt);
+    vtxFlagValid.Set(0x00);
+    for (int i = 0; i < this->triangleCnt; ++i) {
+        float triFlag = triFlags.Peek()[i];
+        float vtxFlag0 = vtxFlags.Peek()[triIdx.Peek()[3*i+0]];
+        float vtxFlag1 = vtxFlags.Peek()[triIdx.Peek()[3*i+1]];
+        float vtxFlag2 = vtxFlags.Peek()[triIdx.Peek()[3*i+2]];
+        if (triFlag == 1.0) {
+            if (vtxFlag0 == 1.0) {
+                vtxFlagValid.Peek()[triIdx.Peek()[3*i+0]] = true;
+            } else {
+                printf("INVALIV zero VERTEX FLAG %i (0)\n", triIdx.Peek()[3*i+0]);
+            }
+            if (vtxFlag1 == 1.0) {
+                vtxFlagValid.Peek()[triIdx.Peek()[3*i+1]] = true;
+            } else {
+                printf("INVALIV zero VERTEX FLAG %i (1)\n", triIdx.Peek()[3*i+1]);
+            }
+            if (vtxFlag2 == 1.0) {
+                vtxFlagValid.Peek()[triIdx.Peek()[3*i+2]] = true;
+            } else {
+                printf("INVALIV zero VERTEX FLAG %i (2)\n", triIdx.Peek()[3*i+2]);
+            }
+        }
+    }
+    for (int i = 0; i < this->vertexCnt; ++i) {
+        if (vtxFlags.Peek()[i] == 1.0) {
+            if (vtxFlagValid.Peek()[i] == false) {
+                printf("INVALIV one VERTEX FLAG %i\n", i);
+            }
+        }
+    }
+    vtxFlagValid.Release();
+    // END DEBUG
+
+    cudaMemcpy(vboFlagPt, vtxFlags.Peek(),
+                sizeof(float)*this->vertexCnt, cudaMemcpyHostToDevice);
+    if (!CudaSafeCall(cudaGetLastError())) {
+        return false;
+    }
+
+    triIdx.Release();
+    vtxFlags.Release();
+    triFlags.Release();
 
     if (!CudaSafeCall(cudaGetLastError())) {
         return false;

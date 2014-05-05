@@ -205,8 +205,9 @@ void main() {
         color = vec4(colorUniform, 1.0);
         
     } else if (colorMode == 1) { // Normal
-        lightparams = vec4(1.0, 0.0, 0.0, 1.0);
+        //lightparams = vec4(1.0, 0.0, 0.0, 1.0);
         color = vec4(normalize(normalFrag), 1.0);
+        color = vec4(colorUniform, 1.0 - pathLenFrag/maxPosDiff); // DEBUG
     } else if (colorMode == 2) { // Texture coordinates
         lightparams = vec4(1.0, 0.0, 0.0, 1.0);
         color = vec4(gl_TexCoord[0].stp, 1.0);
@@ -324,7 +325,7 @@ void main() {
         corruptColor = vec4(0.0, 0.458823529, 0.650980392, 1.0);
     }
     color = corruptFrag*corruptColor + (1.0-corruptFrag)*color;
-    
+    //color = vec4(0.0, 0.458823529, 0.650980392, 1.0);
     
     /*if (corruptFrag > 0) {
         // 230,97,1
@@ -342,7 +343,7 @@ void main() {
         gl_FragColor = vec4(LocalLighting(normalize(view), normalize(n), 
             normalize(lightDir), color.rgb, lightparams), color.a);
     } else {
-        gl_FragColor = vec4(LocalLighting(normalize(view), normalize(n), 
+        gl_FragColor = vec4(LocalLighting(normalize(view), normalize(-n), 
             normalize(lightDir), color.rgb*0.7, lightparams), color.a);
     }
     

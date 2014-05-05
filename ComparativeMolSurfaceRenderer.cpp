@@ -43,6 +43,7 @@
 using namespace megamol;
 using namespace megamol::protein;
 
+// 99 75 0
 Vec3f dark_brown = Vec3f(0.388235294, 0.294117647, 0.0);
 Vec3f light_brown = Vec3f(0.654901961, 0.494117647, 0.0);
 Vec3f light_blue = Vec3f(0.0, 0.458823529, 0.650980392);
@@ -2905,14 +2906,14 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     camPos[1] = modelMatrix.GetAt(1, 3);
     camPos[2] = modelMatrix.GetAt(2, 3);
 
-    // DEBUG Render external forces as lines
-    if (!this->renderExternalForces()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: could not render external forces",
-                this->ClassName());
-        return false;
-    }
-    // END DEBUG
+//    // DEBUG Render external forces as lines
+//    if (!this->renderExternalForces()) {
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                "%s: could not render external forces",
+//                this->ClassName());
+//        return false;
+//    }
+//    // END DEBUG
 
     if (this->surface1RM != SURFACE_NONE) {
 
@@ -3094,6 +3095,15 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 //    printf("SURFACE AREA should be %f\n", area);
     // END DEBUG
 
+//
+//    // DEBUG render grid
+//    if (!this->renderGrid(this->deformSurfMapped)) {
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                "%s: could not render grid",
+//                this->ClassName());
+//        return false;
+//    }
+
 
     glDisable(GL_TEXTURE_3D);
     glDisable(GL_TEXTURE_2D);
@@ -3233,6 +3243,157 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
     glLineWidth(1.0);
 
     return CheckForGLError();
+}
+
+
+bool ComparativeMolSurfaceRenderer::renderGrid(DeformableGPUSurfaceMT &deformSurf) {
+    using namespace vislib::math;
+
+    if (this->triggerComputeLines) {
+
+//        // Copy active cells
+//        HostArr<unsigned int> activeCells;
+//        activeCells.Validate(cellCnt);
+//        CudaSafeCall(cudaMemcpy(activeCells.Peek(), deformSurf.PeekCubeStates(),
+//                sizeof(uint)*cellCnt, cudaMemcpyDeviceToHost));
+
+//        this->gvf.Validate(gridSize*4);
+//        if (!CudaSafeCall(cudaMemcpy(gvf.Peek(),
+//                this->deformSurfMapped.PeekExternalForces(), sizeof(float)*gridSize*4,
+//                cudaMemcpyDeviceToHost))) {
+//            return false;
+        //        }
+
+        this->lines.AssertCapacity(10000);
+
+        for (int x = 0; x < this->volDim.x; ++x) {
+            for (int y = 0; y < this->volDim.y; ++y) {
+
+                Vec3f pos0(this->volOrg.x + x*this->volDelta.x,
+                           this->volOrg.y + y*this->volDelta.y,
+                           this->volOrg.z);
+                Vec3f pos1(this->volOrg.x + x*this->volDelta.x,
+                           this->volOrg.y + y*this->volDelta.y,
+                           this->volMaxC.z);
+
+                // Clip
+                pos0.SetX(std::max(pos0.X(), this->posXMin));
+                pos0.SetY(std::max(pos0.Y(), this->posYMin));
+                pos0.SetZ(std::max(pos0.Z(), this->posZMin));
+                pos0.SetX(std::min(pos0.X(), this->posXMax));
+                pos0.SetY(std::min(pos0.Y(), this->posYMax));
+                pos0.SetZ(std::min(pos0.Z(), this->posZMax));
+                pos1.SetX(std::max(pos1.X(), this->posXMin));
+                pos1.SetY(std::max(pos1.Y(), this->posYMin));
+                pos1.SetZ(std::max(pos1.Z(), this->posZMin));
+                pos1.SetX(std::min(pos1.X(), this->posXMax));
+                pos1.SetY(std::min(pos1.Y(), this->posYMax));
+                pos1.SetZ(std::min(pos1.Z(), this->posZMax));
+
+                if ((pos0-pos1).Length() > 0) {
+
+                    this->lines.Add(pos0.X());
+                    this->lines.Add(pos0.Y());
+                    this->lines.Add(pos0.Z());
+                    this->lines.Add(pos1.X());
+                    this->lines.Add(pos1.Y());
+                    this->lines.Add(pos1.Z());
+                }
+            }
+        }
+
+
+        for (int z = 0; z < this->volDim.z; ++z) {
+            for (int y = 0; y < this->volDim.y; ++y) {
+
+                Vec3f pos0(this->volOrg.x,
+                           this->volOrg.y + y*this->volDelta.y,
+                           this->volOrg.z + z*this->volDelta.z);
+                Vec3f pos1(this->volMaxC.x,
+                           this->volOrg.y + y*this->volDelta.y,
+                           this->volOrg.z + z*this->volDelta.z);
+
+                // Clip
+                pos0.SetX(std::max(pos0.X(), this->posXMin));
+                pos0.SetY(std::max(pos0.Y(), this->posYMin));
+                pos0.SetZ(std::max(pos0.Z(), this->posZMin));
+                pos0.SetX(std::min(pos0.X(), this->posXMax));
+                pos0.SetY(std::min(pos0.Y(), this->posYMax));
+                pos0.SetZ(std::min(pos0.Z(), this->posZMax));
+                pos1.SetX(std::max(pos1.X(), this->posXMin));
+                pos1.SetY(std::max(pos1.Y(), this->posYMin));
+                pos1.SetZ(std::max(pos1.Z(), this->posZMin));
+                pos1.SetX(std::min(pos1.X(), this->posXMax));
+                pos1.SetY(std::min(pos1.Y(), this->posYMax));
+                pos1.SetZ(std::min(pos1.Z(), this->posZMax));
+
+                if ((pos0-pos1).Length() > 0) {
+
+                    this->lines.Add(pos0.X());
+                    this->lines.Add(pos0.Y());
+                    this->lines.Add(pos0.Z());
+                    this->lines.Add(pos1.X());
+                    this->lines.Add(pos1.Y());
+                    this->lines.Add(pos1.Z());
+                }
+            }
+        }
+
+
+        for (int z = 0; z < this->volDim.z; ++z) {
+            for (int x = 0; x < this->volDim.x; ++x) {
+
+                Vec3f pos0(this->volOrg.x + x*this->volDelta.x,
+                           this->volOrg.y,
+                           this->volOrg.z + z*this->volDelta.z);
+                Vec3f pos1(this->volOrg.x + x*this->volDelta.x,
+                           this->volMaxC.y,
+                           this->volOrg.z + z*this->volDelta.z);
+
+                // Clip
+                pos0.SetX(std::max(pos0.X(), this->posXMin));
+                pos0.SetY(std::max(pos0.Y(), this->posYMin));
+                pos0.SetZ(std::max(pos0.Z(), this->posZMin));
+                pos0.SetX(std::min(pos0.X(), this->posXMax));
+                pos0.SetY(std::min(pos0.Y(), this->posYMax));
+                pos0.SetZ(std::min(pos0.Z(), this->posZMax));
+                pos1.SetX(std::max(pos1.X(), this->posXMin));
+                pos1.SetY(std::max(pos1.Y(), this->posYMin));
+                pos1.SetZ(std::max(pos1.Z(), this->posZMin));
+                pos1.SetX(std::min(pos1.X(), this->posXMax));
+                pos1.SetY(std::min(pos1.Y(), this->posYMax));
+                pos1.SetZ(std::min(pos1.Z(), this->posZMax));
+
+                if ((pos0-pos1).Length() > 0) {
+
+                    this->lines.Add(pos0.X());
+                    this->lines.Add(pos0.Y());
+                    this->lines.Add(pos0.Z());
+                    this->lines.Add(pos1.X());
+                    this->lines.Add(pos1.Y());
+                    this->lines.Add(pos1.Z());
+                }
+            }
+        }
+
+//        activeCells.Release();
+        this->triggerComputeLines = false;
+    }
+
+    // Draw lines
+    glDisable(GL_LINE_SMOOTH);
+    glEnableClientState(GL_VERTEX_ARRAY);
+//    glEnableClientState(GL_COLOR_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, this->lines.PeekElements());
+//    glColorPointer(3, GL_FLOAT, 0, this->lineColors.PeekElements());
+
+    glLineWidth(1.0);
+    glColor3f(0.0, 0.0, 1.0);
+    glDrawArrays(GL_LINES, 0, this->lines.Count()/3);
+    // deactivate vertex arrays after drawing
+    glDisableClientState(GL_VERTEX_ARRAY);
+//    glDisableClientState(GL_COLOR_ARRAY);
+    return ::CheckForGLError();
 }
 
 
@@ -4161,8 +4322,10 @@ bool ComparativeMolSurfaceRenderer::initProcFieldData() {
 
     /* Alternative 2: One sphere and one torus */
 
-    const float rad1 = 15.0f;
-    const float rad2 = 20.0f;
+    const float rad1 = 18.5f; // sizediff 0
+    //const float rad1 = 13.0f;  // sizediff 1
+    //const float rad1 = 5.0f;  // sizediff 2
+    const float rad2 = 20.5f;
     Vec3f center(
             this->volOrg.x + (this->volMaxC.x-this->volOrg.x)*0.5,
             this->volOrg.y + (this->volMaxC.y-this->volOrg.y)*0.5,
@@ -4184,16 +4347,18 @@ bool ComparativeMolSurfaceRenderer::initProcFieldData() {
 //                this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = a1*std::exp(lenSqrt/(4.0*c1));
 //                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = a2*std::exp(lenSqrt/(4.0*c2));
 
-                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = std::exp(-lenSqrt/(4.0*c1));
+                //this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = std::exp(-lenSqrt/(4.0*c1));
+                this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = (len - rad1)*-1.0;
 
                 // Implicit equation for torus: (x^2+y^2+z^2+R^2-r^2)-4R^2(x^2+y^2) = 0
                 //Vec3f offs = Vec3f(15.0, 15.0, 15.0);
-                Vec3f offs = Vec3f(0.0, 0.0, 0.0);
+                //Vec3f offs = Vec3f(0.0, 30.0, 0.0);
+                Vec3f offs = Vec3f(0.0, 5.0, 0.0);
                 Vec3f distVec = (pos-(center+offs));
                 a2 = 1.0;
                 c2 = 12.0;
-                float R = 19.0;
-                float rad = 7.0;
+                float R = 13.0f;
+                float rad = 5.5;
                 len = pow(distVec.X()*distVec.X()+
                         distVec.Y()*distVec.Y()+
                         distVec.Z()*distVec.Z()+
@@ -4201,8 +4366,7 @@ bool ComparativeMolSurfaceRenderer::initProcFieldData() {
                         4.0f*R*R*(distVec.X()*distVec.X()+
                                   distVec.Y()*distVec.Y());
                 lenSqrt = len*len;
-                this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] =
-                        (10.0-len)+this->qsIsoVal;
+                this->procField2.Peek()[this->volDim.x*(this->volDim.y*z+y)+x] = len*-1.0;
 
 //                printf("f1: %f, f2: %f\n",
 //                        this->procField1.Peek()[this->volDim.x*(this->volDim.y*z+y)+x],
