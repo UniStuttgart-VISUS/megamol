@@ -1091,7 +1091,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
     SIZE_T frameCapacity = 10000;
     atomEntries.AssertCapacity( atomEntriesCapacity);
     
-    Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Loading PDB file: %s", T2A( filename)); // DEBUG
+    Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Loading PDB file: %s", T2A( filename.PeekBuffer())); // DEBUG
     // try to load the file
     if( file.LoadFile( T2A( filename) ) ) {
         // file successfully loaded, read first frame

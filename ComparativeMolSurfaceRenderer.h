@@ -17,7 +17,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 // Toggle the use of procedural volume fields for debugging purposes
-#define USE_PROCEDURAL_DATA
+//#define USE_PROCEDURAL_DATA
 
 #include "view/Renderer3DModuleDS.h"
 #include "CallerSlot.h"
@@ -361,6 +361,13 @@ protected:
      * @return 'True' on success, 'false' otherwise
      */
     bool renderExternalForces();
+
+    /**
+     * Render the volume grid
+     *
+     * @return 'True' on success, 'false' otherwise
+     */
+    bool renderGrid(DeformableGPUSurfaceMT &deformSurf);
 
     /**
      * Update all parameters if necessary.

@@ -4,8 +4,7 @@
 // Copyright (C) 2013 by University of Stuttgart (VISUS).
 // All rights reserved.
 //
-// Created on: Apr 04, 2013
-//     Author: scharnkn
+// $Id$
 //
 
 #ifndef MMPROTEINPLUGIN_OGL_ERROR_CHECK_H_INCLUDED
@@ -14,7 +13,7 @@
 #include "vislib/Log.h"
 #include <GL/glu.h>
 
-//#define OGL_ERROR_CHECK // Toggle OpenGL error checking
+#define OGL_ERROR_CHECK // Toggle OpenGL error checking
 #define GLSafeCall( err ) glSafeCall( err, __FILE__, __LINE__ )
 #define CheckForGLError() checkForGLError( __FILE__, __LINE__ )
 

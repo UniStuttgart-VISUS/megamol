@@ -7,6 +7,8 @@
 //     Author: scharnkn
 //
 
+#if (WITH_CUDA)
+
 // Toggle performance measurement and the respective messages
 #define USE_TIMER
 
@@ -2181,3 +2183,5 @@ void ProteinVariantMatch::updatParams() {
         this->qsIsoValSlot.ResetDirty();
     }
 }
+
+#endif
