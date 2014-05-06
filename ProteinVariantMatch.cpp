@@ -7,7 +7,10 @@
 //     Author: scharnkn
 //
 
-#if (WITH_CUDA)
+#include "stdafx.h"
+#include "ProteinVariantMatch.h"
+
+#ifdef WITH_CUDA
 
 // Toggle performance measurement and the respective messages
 #define USE_TIMER
@@ -20,9 +23,6 @@
 
 // Toggle benchmarking of the mapping
 #define BENCHMARK
-
-#include "stdafx.h"
-#include "ProteinVariantMatch.h"
 
 #include "VTIDataCall.h"
 #include "MolecularDataCall.h"
@@ -2184,4 +2184,4 @@ void ProteinVariantMatch::updatParams() {
     }
 }
 
-#endif
+#endif // WITH_CUDA
