@@ -27,7 +27,7 @@ using namespace megamol::protein;
 
 #define VERBOSE
 #define SWAP_BYTES
-#define NORMALIZE_RADIUS
+//#define NORMALIZE_RADIUS
 
 /*
  * VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid
