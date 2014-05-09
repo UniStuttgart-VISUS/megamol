@@ -81,7 +81,9 @@ public:
         COMPARE_1_1=0,
         COMPARE_1_N,
         COMPARE_N_1,
-        COMPARE_N_N
+        COMPARE_N_N,
+        COMPARE_1_MORPH,
+        COMPARE_1_ROT
     };
 
     enum ExternalForces {
@@ -807,6 +809,8 @@ private:
 
     /// Array for vertex flags of the mapped surface
     HostArr<float> mappedSurfVertexFlags;
+
+    Vec3f centroid;
 
 };
 
