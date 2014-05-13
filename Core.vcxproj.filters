@@ -741,6 +741,9 @@
     <ClCompile Include="moldyn\ClusteredSphereRenderer.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="moldyn\VTFResDataSource.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1347,6 +1350,9 @@
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="moldyn\ClusteredSphereRenderer.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\VTFResDataSource.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

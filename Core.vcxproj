@@ -341,6 +341,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\SphereOutlineRenderer.cpp" />
     <ClCompile Include="moldyn\VolumeDataCall.cpp" />
     <ClCompile Include="moldyn\VTFDataSource.cpp" />
+    <ClCompile Include="moldyn\VTFResDataSource.cpp" />
     <ClCompile Include="ObjectDescription.cpp" />
     <ClCompile Include="ObjectDescriptionManager.cpp" />
     <ClCompile Include="ParamValueSetRequest.cpp" />
@@ -588,6 +589,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\SphereOutlineRenderer.h" />
     <ClInclude Include="moldyn\VolumeDataCall.h" />
     <ClInclude Include="moldyn\VTFDataSource.h" />
+    <ClInclude Include="moldyn\VTFResDataSource.h" />
     <ClInclude Include="ObjectDescription.h" />
     <ClInclude Include="ObjectDescriptionManager.h" />
     <ClInclude Include="ParamValueSetRequest.h" />

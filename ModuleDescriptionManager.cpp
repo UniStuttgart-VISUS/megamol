@@ -79,6 +79,7 @@
 #include "moldyn/DatRawDataSource.h"
 #include "moldyn/SIFFWriter.h"
 #include "moldyn/VTFDataSource.h"
+#include "moldyn/VTFResDataSource.h"
 
 using namespace megamol::core;
 
@@ -180,8 +181,9 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<RenderVolumeSlice>();
         instance->registerAutoDescription<moldyn::DirectVolumeRenderer>();
         instance->registerAutoDescription<moldyn::DatRawDataSource>();
-        instance->registerAutoDescription<moldyn::SIFFWriter>();
+		instance->registerAutoDescription<moldyn::SIFFWriter>();
 		instance->registerAutoDescription<moldyn::VTFDataSource>();
+		instance->registerAutoDescription<moldyn::VTFResDataSource>();
     //}
     //return instance;
 }
