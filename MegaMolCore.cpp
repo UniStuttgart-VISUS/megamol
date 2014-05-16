@@ -598,7 +598,17 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
         }
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
         if (view->View() != NULL) {
-            double it = view->View()->GetCoreInstance()->GetCoreInstanceTime();
+            double it = context->SynchronisedTime;
+            if (it <= 0.0) {
+                // If we did not get a time via the context, determine the time
+                // by using the standard method.
+                it = view->View()->GetCoreInstance()->GetCoreInstanceTime();
+                if (context->SynchronisedTime != 0) {
+                    // The viewer module wants to reuse this time until it
+                    // resets 'SynchronisedTime' to -1.
+                    context->SynchronisedTime = it;
+                }
+            }
             view->View()->Render(view->View()->DefaultTime(it), it);
             context->ContinuousRedraw = true; // TODO: Implement the real thing
         }
