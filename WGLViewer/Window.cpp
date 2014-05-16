@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "glh/glh_extensions.h"
 #include "Window.h"
+#include "MegaMolCore.h"
 #include <tchar.h>
 #include <cstdio>
 #include <gl/GL.h>
@@ -291,7 +292,9 @@ LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
  */
 DWORD Window::renderThread(void *userData) {
     Window *that = static_cast<Window *>(userData);
-    bool dummy;
+    mmcRenderViewContext context;
+    ::ZeroMemory(&context, sizeof(context));
+    context.Size = sizeof(context);
 
     // not too good, but ok for now
     vislib::sys::Thread::Sleep(2500);
@@ -311,7 +314,8 @@ DWORD Window::renderThread(void *userData) {
     while (that->hRC) {
         ::glViewport(0, 0, that->w, that->h);
 
-        that->renderCallback.Call(*that, &dummy);
+        ASSERT(context.SynchronisedTime == 0);  // Standard timing behaviour.
+        that->renderCallback.Call(*that, &context);
 
         ::SwapBuffers(that->hDC);
 
