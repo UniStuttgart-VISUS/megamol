@@ -223,7 +223,8 @@ namespace view {
         /** The complete scene bounding box */
         BoundingBoxes bboxs;
 
-    private:
+    //private:
+    protected:
 
         /**
          * internal utility class storing frozen values

@@ -129,7 +129,7 @@ void main(void) {
     
     // remove the sphere radius from the w coordinates to the rad varyings
     vec4 inPos = gl_in[0].gl_Position;
-    rad = inPos.w;
+    rad = 5 * inPos.w;
     squareRad = rad*rad;
     inPos.w = 1.0;
 

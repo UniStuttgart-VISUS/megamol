@@ -49,6 +49,7 @@
 #include "moldyn/DirPartFilter.h"
 #include "moldyn/ParticleListFilter.h"
 #include "moldyn/ParticleWorker.h"
+#include "moldyn/D3D11SimpleSphereRenderer.h"
 //#include "special/ColStereoDisplay.h"
 #include "view/ClipPlane.h"
 #include "view/LinearTransferFunction.h"
@@ -63,6 +64,7 @@
 #include "view/TileView.h"
 #include "view/View2D.h"
 #include "view/View3D.h"
+#include "view/ViewDirect3D.h"
 #include "view/BlinnPhongRendererDeferred.h"
 #include "view/SplitView.h"
 #include "job/DataWriterJob.h"
@@ -168,6 +170,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<view::TileView>();
         instance->registerAutoDescription<view::View2D>();
         instance->registerAutoDescription<view::View3D>();
+        instance->registerAutoDescription<view::ViewDirect3D>();
         instance->registerAutoDescription<view::BlinnPhongRendererDeferred>();
         instance->registerAutoDescription<view::SplitView>();
         //instance->registerAutoDescription<vismol2::Mol20Renderer>();
@@ -184,6 +187,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
 		instance->registerAutoDescription<moldyn::SIFFWriter>();
 		instance->registerAutoDescription<moldyn::VTFDataSource>();
 		instance->registerAutoDescription<moldyn::VTFResDataSource>();
+        instance->registerAutoDescription<moldyn::D3D11SimpleSphereRenderer>();
     //}
     //return instance;
 }

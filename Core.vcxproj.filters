@@ -49,9 +49,11 @@
     </Filter>
     <Filter Include="view\Header Files">
       <UniqueIdentifier>{b67ed9f6-e15d-44e3-93a4-24a7e065fe35}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
     <Filter Include="view\Source Files">
       <UniqueIdentifier>{4518f5d3-349e-4781-86f3-d58af91e15a4}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
     <Filter Include="view\special">
       <UniqueIdentifier>{824045e1-8feb-4b2d-bf8c-2a5be1932851}</UniqueIdentifier>
@@ -744,6 +746,21 @@
     <ClCompile Include="moldyn\VTFResDataSource.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="view\ViewDirect3D.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="view\CallUpdateDirect3D.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="moldyn\D3D11SimpleSphereRenderer.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utility\AbstractD3D11RenderObject.cpp">
+      <Filter>utility\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utility\D3D11BoundingBox.cpp">
+      <Filter>utility\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1355,6 +1372,27 @@
     <ClInclude Include="moldyn\VTFResDataSource.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="mmd3d.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nvstereo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\D3D11SimpleSphereRenderer.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utility\D3D11BoundingBox.h">
+      <Filter>utility\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\CallUpdateDirect3D.h">
+      <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\ViewDirect3D.h">
+      <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utility\AbstractD3D11RenderObject.h">
+      <Filter>utility\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icons.rc">
@@ -1498,6 +1536,9 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="Shaders\particleWorkerCompute.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\d3d11sphere.btf">
       <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>

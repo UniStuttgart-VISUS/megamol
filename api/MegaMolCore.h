@@ -131,6 +131,28 @@ typedef enum _mmcInputModifierEnum {
     MMC_INMOD_ALT
 } mmcInputModifier;
 
+/** User context for mmcRenderView function. */
+typedef struct _mmcRenderViewContext {
+    /** 
+     * The size of this structure (Must remain first member in any future 
+     * version and must always be four-byte integer).
+     */
+    INT32 Size;
+
+    /**
+     * Boolean to receive whether or not a continuous redraw of this view is 
+     * required (Must remain second member at offset 4 Bytes in any future 
+     * version).
+     */
+    bool ContinuousRedraw;
+
+    /** (Dumb) pointer to a Direct3D device if a D3D renderer is active. */
+    void *Direct3DDevice;
+
+    /** (Dumb) pointer to the Direct3D render target. */
+    void *Direct3DRenderTarget;
+} mmcRenderViewContext;
+
 /** Library building flags */
 #define MMC_BFLAG_DEBUG     0x00000001  // debug build
 #define MMC_BFLAG_DIRTY     0x00000002  // dirty build (DO NOT RELEASE!)
@@ -479,11 +501,12 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
  * Renders a view into the currently active OpenGL context.
  *
  * @param hView The view instance handle.
- * @param contRedraw Boolean to receive whether or not a continuous redraw of
- *                   this view is required.
+ * @param context Context structure to transfer data from and to the view. 
+ *                Please ensure that the 'Size' parameter has been initialised
+ *                with sizeof(mmcRenderViewContext) before the call is made.
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
-    bool *contRedraw);
+    mmcRenderViewContext *context);
 
 /**
  * Registers a view close request function for the view. This function will be

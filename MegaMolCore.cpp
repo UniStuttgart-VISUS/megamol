@@ -11,6 +11,7 @@
 #define _LOG_CORE_HASH_INFO 1
 #define _SEND_CORE_HASH_INFO 1
 
+#include "mmd3d.h"
 #include "ApiHandle.h"
 #include "CoreInstance.h"
 #include "JobDescription.h"
@@ -28,6 +29,7 @@
 #include "ModuleDescriptionManager.h"
 #include "CallDescriptionManager.h"
 #include "CallerSlot.h"
+#include "view/ViewDirect3D.h"
 
 #include "vislib/assert.h"
 #include "vislib/CriticalSection.h"
@@ -577,19 +579,28 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
  * mmcRenderView
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
-        bool *contRedraw) {
+        mmcRenderViewContext *context) {
     VLSTACKTRACE("mmcRenderView", __FILE__, __LINE__);
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
+
     if (view != NULL) {
         view->ModuleGraphLock().LockExclusive();
+
+#ifdef MEGAMOLCORE_WITH_DIRECT3D11
+        /* Pass in the D3D device that we created in the Viewer DLL. */
+        megamol::core::view::ViewDirect3D *vd3d 
+            = dynamic_cast<megamol::core::view::ViewDirect3D *>(view->View());
+        if (vd3d != NULL) {
+            ASSERT(context->Direct3DDevice != NULL);
+            vd3d->UpdateFromContext(context);
+        }
+#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
         if (view->View() != NULL) {
             double it = view->View()->GetCoreInstance()->GetCoreInstanceTime();
             view->View()->Render(view->View()->DefaultTime(it), it);
-            if (contRedraw != NULL) {
-                *contRedraw = true; // TODO: Implement the real thing
-            }
+            context->ContinuousRedraw = true; // TODO: Implement the real thing
         }
         view->ModuleGraphLock().UnlockExclusive();
     }

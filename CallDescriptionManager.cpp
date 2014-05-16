@@ -25,6 +25,7 @@
 #include "view/CallRenderDeferred3D.h"
 #include "view/CallRenderView.h"
 #include "view/CallTimeControl.h"
+#include "view/CallUpdateDirect3D.h"
 #include "CallVolumeData.h"
 #include "moldyn/VolumeDataCall.h"
 #include "misc/BezierCurvesListDataCall.h"
@@ -79,6 +80,7 @@ void CallDescriptionManager::registerObjects(CallDescriptionManager *instance) {
         instance->registerAutoDescription<moldyn::VolumeDataCall>();
         instance->registerAutoDescription<misc::BezierCurvesListDataCall>();
         instance->registerAutoDescription<misc::VolumetricDataCall>();
+        instance->registerAutoDescription<view::CallUpdateDirect3D>();
     //}
     //return instance;
 }

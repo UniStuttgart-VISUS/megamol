@@ -16,6 +16,33 @@
 using namespace megamol::core;
 
 
+
+
+/*
+ * utility::ShaderSourceFactory::FLAGS_NO_LINE_PRAGMAS (two lowest bytes)
+ */
+const UINT32 utility::ShaderSourceFactory::FLAGS_NO_LINE_PRAGMAS = 0x00000000u;
+
+
+/*
+ * utility::ShaderSourceFactory::FLAGS_GLSL_LINE_PRAGMAS (two lowest bytes)
+ */
+const UINT32 utility::ShaderSourceFactory::FLAGS_GLSL_LINE_PRAGMAS = 0x00000001u;
+
+
+/*
+ * utility::ShaderSourceFactory::FLAGS_HLSL_LINE_PRAGMAS (two lowest bytes)
+ */
+const UINT32 utility::ShaderSourceFactory::FLAGS_HLSL_LINE_PRAGMAS = 0x00000003u;
+
+
+/*
+ * utility::ShaderSourceFactory::FLAGS_DEFAULT_FLAGS
+ */
+const UINT32 utility::ShaderSourceFactory::FLAGS_DEFAULT_FLAGS
+    = utility::ShaderSourceFactory::FLAGS_GLSL_LINE_PRAGMAS;
+
+
 /*
  * utility::ShaderSourceFactory::ShaderSourceFactory
  */
@@ -142,10 +169,11 @@ bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name) {
  * utility::ShaderSourceFactory::MakeShaderSnippet
  */
 vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>
-utility::ShaderSourceFactory::MakeShaderSnippet(const vislib::StringA& name) {
+utility::ShaderSourceFactory::MakeShaderSnippet(const vislib::StringA& name,
+        UINT32 flags) {
     vislib::SmartPtr<BTFParser::BTFElement> el = this->getBTFElement(name);
     if (el.IsNull()) return NULL;
-    return this->makeSnippet(el.DynamicCast<BTFParser::BTFSnippet>());
+    return this->makeSnippet(el.DynamicCast<BTFParser::BTFSnippet>(), flags);
 }
 
 
@@ -153,7 +181,8 @@ utility::ShaderSourceFactory::MakeShaderSnippet(const vislib::StringA& name) {
  * utility::ShaderSourceFactory::MakeShaderSource
  */
 bool utility::ShaderSourceFactory::MakeShaderSource(const vislib::StringA& name,
-        vislib::graphics::gl::ShaderSource& outShaderSrc) {
+        vislib::graphics::gl::ShaderSource& outShaderSrc,
+        UINT32 flags) {
     using vislib::sys::Log;
     vislib::SmartPtr<BTFParser::BTFElement> el = this->getBTFElement(name);
     BTFParser::BTFShader *s = el.DynamicCast<BTFParser::BTFShader>();
@@ -163,7 +192,7 @@ bool utility::ShaderSourceFactory::MakeShaderSource(const vislib::StringA& name,
             "Unable to find requested shader \"%s\"\n", name.PeekBuffer());
         return false;
     }
-    return this->makeShaderSource(s, outShaderSrc);
+    return this->makeShaderSource(s, outShaderSrc, flags);
 }
 
 
@@ -219,7 +248,7 @@ utility::ShaderSourceFactory::getBTFElement(const vislib::StringA& name) {
  */
 bool utility::ShaderSourceFactory::makeShaderSource(
         utility::BTFParser::BTFShader *s,
-        vislib::graphics::gl::ShaderSource& o) {
+        vislib::graphics::gl::ShaderSource& o, UINT32 flags) {
     ASSERT(s != NULL);
 
     unsigned int idx = 0;
@@ -238,7 +267,7 @@ bool utility::ShaderSourceFactory::makeShaderSource(
         if (c != NULL) {
             vislib::SingleLinkedList<vislib::StringA> keys = s->NameIDs().FindKeys(idx);
             vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>
-                snip = this->makeSnippet(c);
+                snip = this->makeSnippet(c, flags);
             if (snip.IsNull()) {
                 return false;
             }
@@ -255,7 +284,7 @@ bool utility::ShaderSourceFactory::makeShaderSource(
         } else {
             BTFParser::BTFShader *sh = e.DynamicCast<BTFParser::BTFShader>();
             if (sh != NULL) {
-                if (!this->makeShaderSource(sh, o)) {
+                if (!this->makeShaderSource(sh, o, flags)) {
                     return false;
                 }
             } else {
@@ -275,7 +304,7 @@ bool utility::ShaderSourceFactory::makeShaderSource(
  * utility::ShaderSourceFactory::makeSnippet
  */
 vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>
-utility::ShaderSourceFactory::makeSnippet(utility::BTFParser::BTFSnippet *s) {
+utility::ShaderSourceFactory::makeSnippet(utility::BTFParser::BTFSnippet *s, UINT32 flags) {
     if (s == NULL) return NULL;
 
     if (s->Type() == BTFParser::BTFSnippet::VERSION_SNIPPET) {
@@ -294,8 +323,21 @@ utility::ShaderSourceFactory::makeSnippet(utility::BTFParser::BTFSnippet *s) {
     }
 
     vislib::StringA content;
-    content.Format("\n#line %d %d\n%s", int(s->Line() - 1),
-        this->fileNo(s->File()), s->Content().PeekBuffer());
+    if ((flags & 0x00000003u) == FLAGS_NO_LINE_PRAGMAS) {
+        // no line pragmas
+        content = s->Content();
+
+    } else if ((flags & 0x00000003u) == FLAGS_GLSL_LINE_PRAGMAS) {
+        // glsl line pragmas
+        content.Format("\n#line %d %d\n%s", int(s->Line() - 1),
+            this->fileNo(s->File()), s->Content().PeekBuffer());
+
+    } else if ((flags & 0x00000003u) == FLAGS_HLSL_LINE_PRAGMAS) {
+        // hlsl line pragmas
+        content.Format("\n#line %d \"%s\"\n%s", int(s->Line() - 1),
+            s->File().PeekBuffer(), s->Content().PeekBuffer());
+
+    }
 
     return new vislib::graphics::gl::ShaderSource::StringSnippet(content);
 }

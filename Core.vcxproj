@@ -53,21 +53,29 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="ExtLibs.props" />
     <Import Project="vislibVSProps\TargetRelease32.props" />
+    <Import Project="nvapi\nvapi.props" />
+    <Import Project="nvapi\nvapi32.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="ExtLibs.props" />
     <Import Project="vislibVSProps\TargetDebug32.props" />
+    <Import Project="nvapi\nvapi.props" />
+    <Import Project="nvapi\nvapi32.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="ExtLibs.props" />
     <Import Project="vislibVSProps\TargetRelease64.props" />
+    <Import Project="nvapi\nvapi.props" />
+    <Import Project="nvapi\nvapi64.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="ExtLibs.props" />
     <Import Project="vislibVSProps\TargetDebug64.props" />
+    <Import Project="nvapi\nvapi.props" />
+    <Import Project="nvapi\nvapi64.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -112,7 +120,7 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(SolutionDir)datraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\d3d\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(SolutionDir)datraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -154,7 +162,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(SolutionDir)datraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\d3d\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(SolutionDir)datraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -192,7 +200,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(SolutionDir)\."</Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(SolutionDir)datraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\d3d\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(SolutionDir)datraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -233,7 +241,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(SolutionDir)datraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\d3d\include;$(VISlibPath)\gl\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(SolutionDir)datraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -325,6 +333,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\AbstractSimpleStoringParticleDataSource.cpp" />
     <ClCompile Include="moldyn\ClusteredSphereRenderer.cpp" />
     <ClCompile Include="moldyn\DatRawDataSource.cpp" />
+    <ClCompile Include="moldyn\D3D11SimpleSphereRenderer.cpp" />
     <ClCompile Include="moldyn\DirectVolumeRenderer.cpp" />
     <ClCompile Include="moldyn\DirPartColModulate.cpp" />
     <ClCompile Include="moldyn\DirPartFilter.cpp" />
@@ -356,6 +365,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="utility\AbstractD3D11RenderObject.cpp" />
+    <ClCompile Include="utility\D3D11BoundingBox.cpp" />
     <ClCompile Include="utility\ResourceWrapper.cpp" />
     <ClCompile Include="ViewDescription.cpp" />
     <ClCompile Include="ViewInstance.cpp" />
@@ -416,6 +427,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="view\CallRenderDeferred3D.cpp" />
     <ClCompile Include="view\CallRenderView.cpp" />
     <ClCompile Include="view\CallTimeControl.cpp" />
+    <ClCompile Include="view\CallUpdateDirect3D.cpp" />
     <ClCompile Include="view\CameraParamOverride.cpp" />
     <ClCompile Include="view\ClipPlane.cpp" />
     <ClCompile Include="view\DataSourceModule.cpp" />
@@ -451,6 +463,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="misc\LinesDataCall.cpp" />
     <ClCompile Include="misc\LinesRenderer.cpp" />
     <ClCompile Include="misc\SiffCSplineFitter.cpp" />
+    <ClCompile Include="view\ViewDirect3D.cpp" />
     <ClCompile Include="vismol2\Mol20DataCall.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -563,6 +576,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="misc\VolumeCache.h" />
     <ClInclude Include="misc\VolumetricDataCall.h" />
     <ClInclude Include="misc\VolumetricDataCallTypes.h" />
+    <ClInclude Include="mmd3d.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="ModuleAutoDescription.h" />
     <ClInclude Include="ModuleDescription.h" />
@@ -573,6 +587,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\AbstractSimpleStoringParticleDataSource.h" />
     <ClInclude Include="moldyn\ClusteredSphereRenderer.h" />
     <ClInclude Include="moldyn\DatRawDataSource.h" />
+    <ClInclude Include="moldyn\D3D11SimpleSphereRenderer.h" />
     <ClInclude Include="moldyn\DirectVolumeRenderer.h" />
     <ClInclude Include="moldyn\DirPartColModulate.h" />
     <ClInclude Include="moldyn\DirPartFilter.h" />
@@ -590,6 +605,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\VolumeDataCall.h" />
     <ClInclude Include="moldyn\VTFDataSource.h" />
     <ClInclude Include="moldyn\VTFResDataSource.h" />
+    <ClInclude Include="nvstereo.h" />
     <ClInclude Include="ObjectDescription.h" />
     <ClInclude Include="ObjectDescriptionManager.h" />
     <ClInclude Include="ParamValueSetRequest.h" />
@@ -601,6 +617,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="RenderVolumeSlice.h" />
     <ClInclude Include="RootModuleNamespace.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="utility\AbstractD3D11RenderObject.h" />
+    <ClInclude Include="utility\D3D11BoundingBox.h" />
     <ClInclude Include="utility\ResourceWrapper.h" />
     <ClInclude Include="versioninfo.h" />
     <ClInclude Include="ViewDescription.h" />
@@ -638,6 +656,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="view\CallRenderDeferred3D.h" />
     <ClInclude Include="view\CallRenderView.h" />
     <ClInclude Include="view\CallTimeControl.h" />
+    <ClInclude Include="view\CallUpdateDirect3D.h" />
     <ClInclude Include="view\CameraParamOverride.h" />
     <ClInclude Include="view\ClipPlane.h" />
     <ClInclude Include="view\DataSourceModule.h" />
@@ -673,6 +692,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="misc\LinesDataCall.h" />
     <ClInclude Include="misc\LinesRenderer.h" />
     <ClInclude Include="misc\SiffCSplineFitter.h" />
+    <ClInclude Include="view\ViewDirect3D.h" />
     <ClInclude Include="vismol2\Mol20DataCall.h" />
     <ClInclude Include="vismol2\Mol20DataSource.h" />
     <ClInclude Include="vismol2\Mol20Renderer.h" />
@@ -732,6 +752,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   </ItemGroup>
   <ItemGroup>
     <None Include="ExtLibs.props.input" />
+    <None Include="Shaders\d3d11sphere.btf">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Shaders\deferred.btf">
       <SubType>Designer</SubType>
     </None>
