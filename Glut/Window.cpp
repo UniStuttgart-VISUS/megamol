@@ -12,6 +12,7 @@
 #include "vislib/glfunctions.h"
 #include "vislib/KeyCode.h"
 #include "vislib/Log.h"
+#include "MegaMolCore.h"
 
 
 /*
@@ -305,9 +306,13 @@ void megamol::viewer::Window::glutDisplayCallback(void) {
 
         Window *t = thisWindow();
         if (t == NULL) return;
-        bool contRedraw = true;
 
-        t->renderCallback.Call(*thisWindow(), &contRedraw);
+        mmcRenderViewContext rvc;
+        ::ZeroMemory(&rvc, sizeof(rvc));
+        rvc.Size = sizeof(rvc);
+        rvc.ContinuousRedraw = true;
+
+        t->renderCallback.Call(*thisWindow(), &rvc);
 
         if (t->presentationMode > 0) {
             t->presentationMode = 2;
@@ -315,7 +320,7 @@ void megamol::viewer::Window::glutDisplayCallback(void) {
 
         } else {
             ::glutSwapBuffers();
-            if (contRedraw) {
+            if (rvc.ContinuousRedraw) {
                 ::glutPostRedisplay();
             }
         }

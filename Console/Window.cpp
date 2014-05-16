@@ -103,7 +103,7 @@ void megamol::console::Window::RenderCallback(void *wnd, void *params) {
     ASSERT(::mmcIsHandleValid(win->hView));
     ASSERT(::mmvIsHandleValid(win->hWnd));
     if (::mmcIsViewRunning(win->hView)) {
-        ::mmcRenderView(win->hView, static_cast<bool*>(params));
+        ::mmcRenderView(win->hView, static_cast<mmcRenderViewContext *>(params));
     } else {
         win->MarkToClose();
     }
