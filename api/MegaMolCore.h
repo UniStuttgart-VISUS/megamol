@@ -133,7 +133,7 @@ typedef enum _mmcInputModifierEnum {
 
 /** User context for mmcRenderView function. */
 typedef struct _mmcRenderViewContext {
-    /** 
+    /**
      * The size of this structure (Must remain first member in any future 
      * version and must always be four-byte integer).
      */
@@ -158,6 +158,13 @@ typedef struct _mmcRenderViewContext {
      * If negative, store this time value into the context afterwards.
      */
     double SynchronisedTime;
+
+    /** The window that is being rendered, NULL if unknown. */
+#ifdef _WIN32
+    HWND Window;
+#else /* _WIN32 */
+    void *Window;
+#endif /* _WIN32 */
 } mmcRenderViewContext;
 
 /** Library building flags */

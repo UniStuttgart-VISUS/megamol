@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "AbstractTileView.h"
 #include "CoreInstance.h"
+#include "api/MegaMolCore.h"
 #include "utility/Configuration.h"
 #include "param/EnumParam.h"
 #include "param/Vector2fParam.h"
@@ -60,6 +61,28 @@ view::AbstractTileView::AbstractTileView(void) : AbstractOverrideView(),
  */
 view::AbstractTileView::~AbstractTileView(void) {
     // Intentionally empty
+}
+
+
+/*
+ * view::AbstractTileView::AdjustTileFromContext
+ */
+void view::AbstractTileView::AdjustTileFromContext(
+        const mmcRenderViewContext *context) {
+    VLAUTOSTACKTRACE;
+    if ((context != NULL) && (context->Window != NULL)) {
+#ifdef _WIN32
+        RECT wndRect;
+        if (::GetWindowRect(context->Window, &wndRect)) {
+            this->tileSlot.ForceSetDirty();
+            this->checkParameters();
+            this->tileH = wndRect.bottom - wndRect.top;
+            this->tileW = wndRect.right - wndRect.left;
+            this->tileX += wndRect.left;
+            this->tileY += wndRect.bottom;
+        }
+#endif /* _WIN32 */
+    }
 }
 
 

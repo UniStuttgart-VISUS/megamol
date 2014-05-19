@@ -24,12 +24,13 @@
 #include "utility/Configuration.h"
 #include "ViewDescription.h"
 #include "ViewInstance.h"
+#include "view/AbstractTileView.h"
 #include "view/AbstractView.h"
+#include "view/ViewDirect3D.h"
 #include "job/AbstractJob.h"
 #include "ModuleDescriptionManager.h"
 #include "CallDescriptionManager.h"
 #include "CallerSlot.h"
-#include "view/ViewDirect3D.h"
 
 #include "vislib/assert.h"
 #include "vislib/CriticalSection.h"
@@ -584,6 +585,8 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
+    ASSERT(context != NULL);
+    ASSERT(sizeof(mmcRenderViewContext) == context->Size);
 
     if (view != NULL) {
         view->ModuleGraphLock().LockExclusive();
@@ -597,6 +600,13 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
             vd3d->UpdateFromContext(context);
         }
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
+
+        megamol::core::view::AbstractTileView *atv
+            = dynamic_cast<megamol::core::view::AbstractTileView *>(view->View());
+        if (atv != NULL) {
+            atv->AdjustTileFromContext(context);
+        }
+        
         if (view->View() != NULL) {
             double it = context->SynchronisedTime;
             if (it <= 0.0) {
