@@ -65,7 +65,7 @@ const bool ComparativeMolSurfaceRenderer::qsSclVanDerWaals = true;
 
 // Hardcoded colors for surface rendering
 const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf2 = light_surf_brown;
-const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = dark_blue;
+const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurf1 = light_blue;
 const Vec3f ComparativeMolSurfaceRenderer::uniformColorSurfMapped =
 		light_surf_brown;
 const Vec3f ComparativeMolSurfaceRenderer::colorMaxPotential = Vec3f(0.0f, 0.0f,
@@ -2930,14 +2930,14 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 	camPos[1] = modelMatrix.GetAt(1, 3);
 	camPos[2] = modelMatrix.GetAt(2, 3);
 
-//    // DEBUG Render external forces as lines
-//    if (!this->renderExternalForces()) {
-//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                "%s: could not render external forces",
-//                this->ClassName());
-//        return false;
-//    }
-//    // END DEBUG
+    // DEBUG Render external forces as lines
+    if (!this->renderExternalForces()) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "%s: could not render external forces",
+                this->ClassName());
+        return false;
+    }
+    // END DEBUG
 
 	if (this->surface1RM != SURFACE_NONE) {
 
@@ -3225,12 +3225,12 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
 					}
 
 					/// Color mode for south/north
-					this->lineColors[6 * idx + 0] = 0.0f;
+					this->lineColors[6 * idx + 0] = 1.0f;
 					this->lineColors[6 * idx + 1] = 0.0f;
-					this->lineColors[6 * idx + 2] = 1.0f;
-					this->lineColors[6 * idx + 3] = 1.0f;
-					this->lineColors[6 * idx + 4] = 1.0f;
-					this->lineColors[6 * idx + 5] = 0.0f;
+					this->lineColors[6 * idx + 2] = 0.0f;
+					this->lineColors[6 * idx + 3] = 0.7f;
+					this->lineColors[6 * idx + 4] = 0.7f;
+					this->lineColors[6 * idx + 5] = 0.7f;
 				}
 			}
 		}
@@ -3244,7 +3244,7 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
 	glVertexPointer(3, GL_FLOAT, 0, this->lines.PeekElements());
 	glColorPointer(3, GL_FLOAT, 0, this->lineColors.PeekElements());
 
-	glLineWidth(1.0);
+	glLineWidth(2.0);
 	glDrawArrays(GL_LINES, 0, gridSize * 2);
 	// deactivate vertex arrays after drawing
 	glDisableClientState(GL_VERTEX_ARRAY);

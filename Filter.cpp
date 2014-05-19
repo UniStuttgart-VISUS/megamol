@@ -287,7 +287,7 @@ bool Filter::getData(megamol::core::Call& call) {
     *molIn = *molOut;
 
     // Set unlocker object for incoming data call
-    molIn->SetUnlocker(new Filter::Unlocker(*molOut));
+    molIn->SetUnlocker(new Filter::Unlocker(*molOut), false);
 
     return true;
 }
@@ -651,6 +651,9 @@ void Filter::filterSolventAtomsAlt(float *atomPos) {
     cutilSafeCall(cudaMemcpy(this->atomPosProtD, this->atmPosProt, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3, 
         cudaMemcpyHostToDevice));
     
+//    printf("atom Count %u\n", atmCnt);
+//    printf("solvent atom Count %u\n", solvAtmCnt);
+
     // Calculate hash grid
     calcFilterHashGrid(this->gridAtomHashD, 
                        this->gridAtomIndexD,
@@ -753,6 +756,9 @@ void Filter::filterSolventAtoms(float *atomPos) {
     cutilSafeCall(cudaMemcpy(this->atomPosProtD, this->atmPosProt, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3, 
         cudaMemcpyHostToDevice));
     
+//    printf("atom Count %u\n", atmCnt);
+//    printf("solvent atom Count %u\n", solvAtmCnt);
+
     // Calculate hash grid
     calcFilterHashGrid(this->gridAtomHashD, 
                        this->gridAtomIndexD,
