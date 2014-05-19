@@ -156,12 +156,28 @@ namespace protein {
         void RenderBallAndStick( const MolecularDataCall *mol, const float *atomPos);
 
         /**
+         * Render the molecular data in ball-and-stick mode.
+         *
+         * @param mol        Pointer to the data call.
+         * @param atomPos    Pointer to the interpolated atom positions.
+         */
+        void RenderStickClipPlane( MolecularDataCall *mol, const float *atomPos);
+
+        /**
          * Render the molecular data in spacefilling mode.
          *
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
         void RenderSpacefilling( const MolecularDataCall *mol, const float *atomPos);
+
+        /**
+         * Render the molecular data in spacefilling mode.
+         *
+         * @param mol        Pointer to the data call.
+         * @param atomPos    Pointer to the interpolated atom positions.
+         */
+        void RenderSpacefillingClipPlane(MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Render the molecular data in solvent accessible surface mode.
@@ -253,15 +269,20 @@ namespace protein {
         megamol::core::param::ParamSlot offscreenRenderingParam;
         /** Toggle the use of geometry shaders for glyph raycasting */
         megamol::core::param::ParamSlot toggleGeomShaderParam;
+        /** Toggle the use of geometry shaders for glyph raycasting */
+        megamol::core::param::ParamSlot toggleZClippingParam;
+        float currentZClipPos;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;
         vislib::graphics::gl::GLSLShader sphereShaderOR;
         vislib::graphics::gl::GLSLGeometryShader sphereShaderGeom;
+        vislib::graphics::gl::GLSLShader sphereClipPlaneShader;
         /** shader for the cylinders (raycasting view) */
         vislib::graphics::gl::GLSLShader cylinderShader;
         vislib::graphics::gl::GLSLShader cylinderShaderOR;
         vislib::graphics::gl::GLSLGeometryShader cylinderShaderGeom; // (uses geometry shader)
+        vislib::graphics::gl::GLSLShader cylinderClipPlaneShader;
         /** Shader that uses filter information */
         vislib::graphics::gl::GLSLShader filterSphereShader;
         vislib::graphics::gl::GLSLShader filterSphereShaderOR;
