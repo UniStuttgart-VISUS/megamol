@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio Express 2013 for Windows Desktop
+VisualStudioVersion = 12.0.30324.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution Folder", "{152F4A60-A2BA-43ED-BD53-6E3E992EE4F7}"
 	ProjectSection(SolutionItems) = preProject
 		common.mk = common.mk
@@ -24,6 +26,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WGLViewer", "WGLViewer\WGLV
 	ProjectSection(ProjectDependencies) = postProject
 		{980D6E2F-2755-4199-B34D-35CE18C18B58} = {980D6E2F-2755-4199-B34D-35CE18C18B58}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MultiWGLViewer", "MultiWGLViewer\MultiWGLViewer.vcxproj", "{1FB05C7E-A656-4435-BDB7-5708F17C0954}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,6 +69,14 @@ Global
 		{F0091DFC-0FBE-466A-9BA4-59B214662774}.Release|Win32.Build.0 = Release|Win32
 		{F0091DFC-0FBE-466A-9BA4-59B214662774}.Release|x64.ActiveCfg = Release|x64
 		{F0091DFC-0FBE-466A-9BA4-59B214662774}.Release|x64.Build.0 = Release|x64
+		{1FB05C7E-A656-4435-BDB7-5708F17C0954}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1FB05C7E-A656-4435-BDB7-5708F17C0954}.Debug|Win32.Build.0 = Debug|Win32
+		{1FB05C7E-A656-4435-BDB7-5708F17C0954}.Debug|x64.ActiveCfg = Debug|x64
+		{1FB05C7E-A656-4435-BDB7-5708F17C0954}.Debug|x64.Build.0 = Debug|x64
+		{1FB05C7E-A656-4435-BDB7-5708F17C0954}.Release|Win32.ActiveCfg = Release|Win32
+		{1FB05C7E-A656-4435-BDB7-5708F17C0954}.Release|Win32.Build.0 = Release|Win32
+		{1FB05C7E-A656-4435-BDB7-5708F17C0954}.Release|x64.ActiveCfg = Release|x64
+		{1FB05C7E-A656-4435-BDB7-5708F17C0954}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
