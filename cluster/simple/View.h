@@ -181,11 +181,6 @@ namespace simple {
          */
         virtual void UpdateFreeze(bool freeze);
 
-    private:
-
-        /** The lock for rendering */
-        static vislib::sys::CriticalSection renderLock;
-
         /**
          * Loads the configuration
          *
@@ -194,6 +189,11 @@ namespace simple {
          * @return True on success
          */
         bool loadConfiguration(const vislib::StringA& name);
+
+    private:
+
+        /** The lock for rendering */
+        static vislib::sys::CriticalSection renderLock;
 
         /**
          * Event callback when the value of 'directCamSyncSlot' changes

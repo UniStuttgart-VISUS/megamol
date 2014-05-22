@@ -169,7 +169,8 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
     FrameState state;
 
     /* Perform some lazy initialisation (copied from simple::View). */
-    if (this->viewState = ViewState::CREATED) {
+    if (this->viewState == ViewState::CREATED) {
+        //::DebugBreak();
         this->viewState = ViewState::LAZY_INITIALISED;
         this->initTileViewParameters();
         AbstractNamedObject *ano = this;
@@ -325,6 +326,7 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
         crv->SetProjection(this->getProjType(), this->getEye());
 
         if (this->hasTile()) {
+            //::DebugBreak();
             crv->SetTile(this->getVirtWidth(), this->getVirtHeight(),
                 this->getTileX(), this->getTileY(),
                 this->getTileW(), this->getTileH());
@@ -428,21 +430,6 @@ bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
     // TODO: Register data types as necessary
 
     return retval;
-}
-
-
-/*
- *  megamol::core::cluster::mpi::View::loadConfiguration
- */
-bool megamol::core::cluster::mpi::View::loadConfiguration(
-        vislib::StringA name) {
-    VLAUTOSTACKTRACE;
-    name.Append("-tvtile");
-    if (this->instance()->Configuration().IsConfigValueSet(name)) {
-        return this->setTile(this->instance()->Configuration().ConfigValue(
-            name));
-    }
-    return false;
 }
 
 

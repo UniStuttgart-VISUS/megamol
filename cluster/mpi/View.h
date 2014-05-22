@@ -176,15 +176,6 @@ namespace mpi {
         }
 
         /**
-         * Loads the configuration for the instance.
-         *
-         * @param name The name of the configuration to be loaded.
-         *
-         * @return true on success, false on failure.
-         */
-        bool loadConfiguration(vislib::StringA name);
-
-        /**
          * Negotiate the master for MPI broadcasts.
          *
          * This method tries to identify the rank of a node that has a
