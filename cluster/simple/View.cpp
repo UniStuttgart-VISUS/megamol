@@ -99,28 +99,8 @@ void cluster::simple::View::Render(float time, double instTime) {
         }
     }
 
-    if (this->initMsg != NULL) {
-        if (this->initMsg->GetHeader().GetMessageID() == MSG_MODULGRAPH) {
-            this->GetCoreInstance()->SetupGraphFromNetwork(this->initMsg);
-            this->client->ContinueSetup();
-        } else {
-            this->directCamSyncUpdated(this->directCamSyncSlot);
-            if (this->initMsg->GetHeader().GetMessageID() == MSG_CAMERAUPDATE) {
-                this->client->ContinueSetup(2);
-            }
-        }
-        SAFE_DELETE(this->initMsg);
-    }
-
-    if (this->client == NULL) {
-        ClientViewRegistration *sccvr = this->registerSlot.CallAs<ClientViewRegistration>();
-        if (sccvr != NULL) {
-            sccvr->SetView(this);
-            if ((*sccvr)()) {
-                this->client = sccvr->GetClient();
-            }
-        }
-    }
+    this->processInitialisationMessage();
+    this->registerClient();
 
     if (this->heartBeatPortSlot.IsDirty() || this->heartBeatServerSlot.IsDirty()) {
         this->heartBeatPortSlot.ResetDirty();
@@ -293,9 +273,18 @@ void cluster::simple::View::SetCamIniMessage(void) {
 /*
  * cluster::simple::View::ConnectView
  */
-void cluster::simple::View::ConnectView(const vislib::StringA toName) {
+void cluster::simple::View::ConnectView(const vislib::StringA& toName) {
     this->GetCoreInstance()->InstantiateCall(this->FullName() + "::renderView", toName,
         CallDescriptionManager::Instance()->Find("CallRenderView"));
+}
+
+
+/*
+ * cluster::simple::View::OnControllerConnectionChanged
+ */
+void cluster::simple::View::OnControllerConnectionChanged(
+        const bool isConnected) {
+    VLAUTOSTACKTRACE;
 }
 
 
@@ -305,6 +294,56 @@ void cluster::simple::View::ConnectView(const vislib::StringA toName) {
 bool cluster::simple::View::create(void) {
     this->firstFrame = true;
     return true;
+}
+
+
+/*
+ * cluster::simple::View::onProcessInitialisationMessage
+ */
+void cluster::simple::View::onProcessInitialisationMessage(
+        const vislib::net::AbstractSimpleMessage& msg) {
+    VLAUTOSTACKTRACE;
+
+    if (msg.GetHeader().GetMessageID() == MSG_MODULGRAPH) {
+        this->GetCoreInstance()->SetupGraphFromNetwork(&msg);
+        this->client->ContinueSetup();
+    } else {
+        this->directCamSyncUpdated(this->directCamSyncSlot);
+        if (msg.GetHeader().GetMessageID() == MSG_CAMERAUPDATE) {
+            this->client->ContinueSetup(2);
+        }
+    }
+}
+
+
+/*
+ * cluster::simple::View::processInitialisationMessage
+ */
+void cluster::simple::View::processInitialisationMessage(void) {
+    VLAUTOSTACKTRACE;
+    if (this->initMsg != NULL) {
+        this->onProcessInitialisationMessage(*this->initMsg);
+        SAFE_DELETE(this->initMsg);
+    }
+}
+
+
+/*
+ * cluster::simple::View::registerClient
+ */
+bool cluster::simple::View::registerClient(void) {
+    VLAUTOSTACKTRACE;
+    if (this->client == NULL) {
+        ClientViewRegistration *sccvr = this->registerSlot.CallAs<ClientViewRegistration>();
+        if (sccvr != NULL) {
+            sccvr->SetView(this);
+            if ((*sccvr)()) {
+                this->client = sccvr->GetClient();
+            }
+        }
+    }
+
+    return (this->client != nullptr);
 }
 
 

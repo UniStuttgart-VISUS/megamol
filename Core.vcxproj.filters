@@ -159,6 +159,17 @@
     <Filter Include="profiler\Source Files">
       <UniqueIdentifier>{a51dc135-3322-4d9f-bb3c-336918557a37}</UniqueIdentifier>
     </Filter>
+    <Filter Include="cluster\mpi">
+      <UniqueIdentifier>{92abaf58-204d-4575-937a-881614de5e53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cluster\mpi\Header Files">
+      <UniqueIdentifier>{94c464e8-4f64-449a-b9ea-de8004df25b1}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="cluster\mpi\Source Files">
+      <UniqueIdentifier>{73920b4b-ece9-430f-b382-3c54170b239d}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AbstractDataWriter.cpp">
@@ -760,6 +771,9 @@
     </ClCompile>
     <ClCompile Include="utility\D3D11BoundingBox.cpp">
       <Filter>utility\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cluster\mpi\View.cpp">
+      <Filter>cluster\mpi\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1392,6 +1406,9 @@
     </ClInclude>
     <ClInclude Include="utility\AbstractD3D11RenderObject.h">
       <Filter>utility\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cluster\mpi\View.h">
+      <Filter>cluster\mpi\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

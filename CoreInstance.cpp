@@ -182,6 +182,12 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     vd->AddCall(CallDescriptionManager::Instance()->Find("SimpleClusterClientViewRegistration"), "scview::register", "::scc::registerView");
     vd->SetViewModuleID("scview");
 
+    vd = new ViewDescription("mpiclusterview");
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterClient"), "::scc");
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("MpiClusterView"), "scview");
+    vd->AddCall(CallDescriptionManager::Instance()->Find("SimpleClusterClientViewRegistration"), "scview::register", "::scc::registerView");
+    vd->SetViewModuleID("scview");
+
     vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "::logo");
     vd->AddCall(CallDescriptionManager::Instance()->Find("CallRenderView"), "scview::renderView", "::logo::render");
 

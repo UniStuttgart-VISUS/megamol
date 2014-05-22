@@ -278,6 +278,7 @@ cluster::simple::Server::Server(void) : Module(),
         serverReconnectSlot("server::Reconnect", "Send the clients a reconnect message"),
         serverRestartSlot("server::Restart", "Restarts the TCP server"),
         serverNameSlot("server::Name", "The name for this server"),
+        singleClientSlot("server::SingleClient", "Restrict the server to a single client"),
         serverThread(), clientsLock(), clients(),
         camUpdateThread(&Server::cameraUpdateThread), camUpdateThreadForce(false) {
     vislib::net::Socket::Startup();
@@ -331,6 +332,9 @@ cluster::simple::Server::Server(void) : Module(),
 
     this->serverNameSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->serverNameSlot);
+
+    this->singleClientSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->singleClientSlot);
 
     this->serverThread.AddListener(this);
 }
@@ -436,6 +440,11 @@ bool cluster::simple::Server::OnNewConnection(const vislib::net::CommServer& src
         vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel) throw() {
     vislib::sys::Log::DefaultLog.WriteInfo("Incoming TCP connection");
     vislib::sys::AutoLock(this->clientsLock);
+    if (this->singleClientSlot.Param<param::BoolParam>()->Value()) {
+        if (this->clients.Count() > 0) {
+            return false;
+        }
+    }
     this->clients.Add(new Client(*this, channel));
     return true;
 }

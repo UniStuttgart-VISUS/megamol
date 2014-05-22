@@ -161,6 +161,19 @@ namespace simple {
          */
         virtual void OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw();
 
+        /**
+         * This method is called immediately before the message dispatcher loop
+         * is entered, but after the dispatcher was initialised. This method
+         * can be used to release references to the communication channel that
+         * the caller has and does not need any more.
+         *
+         * This method should return very quickly and should not perform
+         * excessive work as it is executed in the discovery thread.
+         *
+         * @param src The SimpleMessageDispatcher that exited.
+         */
+        virtual void OnDispatcherStarted(vislib::net::SimpleMessageDispatcher& src) throw();
+
     private:
 
         /**

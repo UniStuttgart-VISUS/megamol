@@ -109,7 +109,7 @@ namespace simple {
          *
          * @param toName The slot to connect to
          */
-        void ConnectView(const vislib::StringA toName);
+        virtual void ConnectView(const vislib::StringA& toName);
 
         /**
          * Answer the connected view
@@ -120,6 +120,14 @@ namespace simple {
             return this->getConnectedView();
         }
 
+        /**
+         * The registered client calls this method if its connection to the
+         * controller node changes.
+         *
+         * @param isConnected true if the client is connected, false otherwise.
+         */
+        virtual void OnControllerConnectionChanged(const bool isConnected);
+
     protected:
 
         /**
@@ -128,6 +136,31 @@ namespace simple {
          * @return 'true' on success, 'false' otherwise.
          */
         virtual bool create(void);
+
+        /**
+         * This method is called if an initialisation message is available and
+         * needs to be processed.
+         *
+         * This implementation handles the message. Subclasses can call it to
+         * perform the standard initialisation procedure
+         *
+         * @param msg The initialisation message.
+         */
+        virtual void onProcessInitialisationMessage(
+            const vislib::net::AbstractSimpleMessage& msg);
+
+        /**
+         * Triggers processing of the next initialisation message if any.
+         */
+        void processInitialisationMessage(void);
+
+        /**
+         * If the view was not registered with a network client, do so.
+         *
+         * @return true if the view is connected to a network client,
+         *         false otherwise.
+         */
+        bool registerClient(void);
 
         /**
          * Implementation of 'Release'.

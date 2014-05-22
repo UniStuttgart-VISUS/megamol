@@ -122,6 +122,17 @@ namespace view {
         }
 
         /**
+         * Answer whether the conditions for overriding the tile when rendering
+         * are met.
+         *
+         * @return true if the tile should be overridden, false otherwise.
+         */
+        inline bool hasTile(void) const {
+            return ((this->getVirtWidth() != 0) && (this->getVirtHeight() != 0)
+                && (this->getTileW() != 0) && (this->getTileH() != 0));
+        }
+
+        /**
          * Set the tile configuration
          *
          * @param val The new tile value

@@ -380,6 +380,27 @@ bool cluster::simple::Client::OnCommunicationError(vislib::net::SimpleMessageDis
  */
 void cluster::simple::Client::OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw() {
     this->conServerAddr.Clear();
+
+    for (size_t i = 0; i < this->views.Count(); ++i) {
+        auto v = dynamic_cast<simple::View *>(this->views[i]);
+        if (v != nullptr) {
+            v->OnControllerConnectionChanged(false);
+        }
+    }
+}
+
+
+/*
+ * cluster::simple::Client::OnDispatcherStarted
+ */
+void cluster::simple::Client::OnDispatcherStarted(vislib::net::SimpleMessageDispatcher& src) throw() {
+    VLAUTOSTACKTRACE;
+    for (size_t i = 0; i < this->views.Count(); ++i) {
+        auto v = dynamic_cast<simple::View *>(this->views[i]);
+        if (v != nullptr) {
+            v->OnControllerConnectionChanged(true);
+        }
+    }
 }
 
 

@@ -15,6 +15,7 @@
 #include "cluster/ClusterController.h"
 #include "cluster/ClusterViewMaster.h"
 #include "cluster/PowerwallView.h"
+#include "cluster/mpi/View.h"
 #include "cluster/simple/Client.h"
 #include "cluster/simple/Heartbeat.h"
 #include "cluster/simple/Server.h"
@@ -122,6 +123,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<cluster::simple::Heartbeat>();
         instance->registerAutoDescription<cluster::simple::Server>();
         instance->registerAutoDescription<cluster::simple::View>();
+        instance->registerAutoDescription<cluster::mpi::View>();
         instance->registerAutoDescription<DataFileSequencer>();
         instance->registerAutoDescription<misc::ImageViewer>();
         instance->registerAutoDescription<misc::LinesRenderer>();

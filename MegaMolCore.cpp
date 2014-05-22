@@ -606,7 +606,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
         if (atv != NULL) {
             atv->AdjustTileFromContext(context);
         }
-        
+
         if (view->View() != NULL) {
             double it = context->SynchronisedTime;
             if (it <= 0.0) {
