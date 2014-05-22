@@ -226,7 +226,7 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
     typedef vislib::math::Vector<float, 3> Vector;
 
     this->curves.Add(misc::BezierCurvesListDataCall::Curves());
-    misc::BezierCurvesListDataCall::Curves& list = this->curves.Last();
+    misc::BezierCurvesListDataCall::Curves *list = &this->curves.Last();
 
     const bool useTimeColour = (this->colourMapSlot.Param<param::EnumParam>()->Value() == 1);
     const bool deCycle = this->deCycleSlot.Param<param::BoolParam>()->Value();
@@ -315,8 +315,10 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
                     || ((p1.Z() < bminZ) && (p2.Z() > bmaxZ)) // cb-jump in Z
                     || ((p2.Z() < bminZ) && (p1.Z() > bmaxZ)) ) { // cb-jump in Z
 
-                // recurse for nex spline segement
+                // recurse for next spline segement
+                SIZE_T list_idx = static_cast<SIZE_T>(this->curves.IndexOf(*list));
                 this->addSpline(pos + s * 3, times + s * 2, i - s, rad, colR, colG, colB);
+                list = &this->curves[list_idx];
                 s = i;
                 splitted = true;
             }
@@ -508,7 +510,7 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
         ::memcpy(idx, index, index.GetSize());
 
         // the list object now takes ownership of the data
-        list.Set(layout,
+        list->Set(layout,
             dat, data.GetSize() / bpp, true,
             idx, index.GetSize() / sizeof(unsigned int), true,
             rad, colR, colG, colB);
@@ -516,7 +518,7 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
         dat = nullptr; // do not delete!
         idx = nullptr; // do not delete!
     } else {
-        list.Set(BezierCurvesListDataCall::DATALAYOUT_NONE, nullptr, 0, nullptr, 0);
+        list->Set(BezierCurvesListDataCall::DATALAYOUT_NONE, nullptr, 0, nullptr, 0);
     }
 
 }
