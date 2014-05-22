@@ -465,7 +465,7 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
             idx++; index.Append(&idx, sizeof(unsigned int));
 
             // inner curves
-            for (unsigned int i = 1; i < lines.Count() - 1; i++) {
+            for (unsigned int i = 1; i < lines.Count() - 2; i++) {
                 data.Append(lines[i].Interpolate(lines[i + 1], 0.25f).PeekCoordinates(), 3 * sizeof(float));
                 r = rad * radii[i]; data.Append(&r, sizeof(float));
                 if (useTimeColour) {
