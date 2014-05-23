@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <atomic>
 #include <climits>
 
 #include "CallerSlot.h"
@@ -25,6 +26,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/RawStoragePool.h"
 #include "vislib/Serialiser.h"
+#include "vislib/SimpleMessageDispatchListener.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/StackTrace.h"
 #include "vislib/String.h"
@@ -40,7 +42,7 @@ namespace mpi {
      * Abstract base class of override rendering views
      */
     class View : public megamol::core::cluster::simple::View,
-            public megamol::core::param::ParamUpdateListener {
+            public vislib::net::SimpleMessageDispatchListener {
 
     public:
 
@@ -91,11 +93,15 @@ namespace mpi {
          */
         virtual ~View(void);
 
-        virtual void ConnectView(const vislib::StringA& toName);
+        virtual void OnDispatcherExited(
+            vislib::net::SimpleMessageDispatcher& src) throw();
 
-        virtual void OnControllerConnectionChanged(const bool isConnected);
+        virtual void OnDispatcherStarted(
+            vislib::net::SimpleMessageDispatcher& src) throw();
 
-        virtual void ParamUpdated(param::ParamSlot& slot);
+        virtual bool OnMessageReceived(
+            vislib::net::SimpleMessageDispatcher& src,
+            const vislib::net::AbstractSimpleMessage& msg) throw();
 
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
@@ -195,20 +201,9 @@ namespace mpi {
         virtual bool onInitialiseMpiChanged(param::ParamSlot& slot);
 
         /**
-         * Forward the initialisation message to all nodes and then perform
-         * the standard processing.
-         *
-         * @param msg The initialisation message to be processed.
-         */
-        virtual void onProcessInitialisationMessage(
-            const vislib::net::AbstractSimpleMessage& msg);
-
-        /**
          * Implementation of 'Release'.
          */
         virtual void release(void);
-
-        void storeCameraForRelay(void);
 
         /**
          * Store the given message for relay to other nodes.
@@ -226,7 +221,7 @@ namespace mpi {
         typedef megamol::core::cluster::simple::View Base1;
 
         /** Base class typedef. */
-        typedef megamol::core::param::ParamUpdateListener Base2;
+        typedef vislib::net::SimpleMessageDispatchListener Base2;
 
         /**
          * Rank of the broadcast master (this is the node that has a connection
@@ -238,7 +233,7 @@ namespace mpi {
          * Remembers whether the registered client has a connection to the 
          * controller node that generates the initial updates.
          */
-        bool hasMasterConnection;
+        std::atomic_bool hasMasterConnection;
 
         /** Remembers whether MPI was initialised. */
         bool isMpiInitialised;

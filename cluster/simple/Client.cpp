@@ -94,6 +94,10 @@ void cluster::simple::Client::Unregister(cluster::simple::Heartbeat *heartbeat) 
  */
 void cluster::simple::Client::Unregister(cluster::simple::View *view) {
     if (view == NULL) return;
+    auto rawListener = dynamic_cast<vislib::net::SimpleMessageDispatchListener *>(view);
+    if (rawListener != nullptr) {
+        this->tcpSan.RemoveListener(rawListener);
+    }
     if (this->views.Contains(view)) {
         this->views.RemoveAll(view);
         view->Unregister(this);
@@ -380,13 +384,6 @@ bool cluster::simple::Client::OnCommunicationError(vislib::net::SimpleMessageDis
  */
 void cluster::simple::Client::OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw() {
     this->conServerAddr.Clear();
-
-    for (size_t i = 0; i < this->views.Count(); ++i) {
-        auto v = dynamic_cast<simple::View *>(this->views[i]);
-        if (v != nullptr) {
-            v->OnControllerConnectionChanged(false);
-        }
-    }
 }
 
 
@@ -395,12 +392,6 @@ void cluster::simple::Client::OnDispatcherExited(vislib::net::SimpleMessageDispa
  */
 void cluster::simple::Client::OnDispatcherStarted(vislib::net::SimpleMessageDispatcher& src) throw() {
     VLAUTOSTACKTRACE;
-    for (size_t i = 0; i < this->views.Count(); ++i) {
-        auto v = dynamic_cast<simple::View *>(this->views[i]);
-        if (v != nullptr) {
-            v->OnControllerConnectionChanged(true);
-        }
-    }
 }
 
 
@@ -563,6 +554,10 @@ bool cluster::simple::Client::onViewRegisters(Call& call) {
     if (sccvr->GetView() != NULL) {
         if (!this->views.Contains(sccvr->GetView())) {
             this->views.Add(sccvr->GetView());
+            auto rawListener = sccvr->GetRawMessageDispatchListener();
+            if (rawListener != nullptr) {
+                this->tcpSan.AddListener(rawListener);
+            }
         }
     } else if (sccvr->GetHeartbeat() != NULL) { // else is used for legacy compatibility
         if (!this->heartbeats.Contains(sccvr->GetHeartbeat())) {

@@ -41,19 +41,27 @@
 #include "vislib/UTF8Encoder.h"
 
 
-#define _TRACE_INFO(fmt, ...)
+//#define _TRACE_INFO(fmt, ...)
 //#define _TRACE_MESSAGING(fmt, ...)
-//#define _TRACE_PACKAGING(fmt, ...)
+#define _TRACE_PACKAGING(fmt, ...)
 #define _TRACE_BARRIERS(fmt, ...)
 
-//#define _TRACE_INFO(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO, fmt,\
+#ifndef _TRACE_INFO
+#define _TRACE_INFO(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO, fmt,\
     __VA_ARGS__)
+#endif /* _TRACE_INFO */
+#ifndef _TRACE_MESSAGING
 #define _TRACE_MESSAGING(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO + 10,\
     fmt, __VA_ARGS__)
+#endif /* _TRACE_MESSAGING */
+#ifndef _TRACE_PACKAGING
 #define _TRACE_PACKAGING(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO + 20,\
     fmt, __VA_ARGS__)
-//#define _TRACE_BARRIERS(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO + 1000,\
+#endif /* _TRACE_PACKAGING */
+#ifndef _TRACE_BARRIERS
+#define _TRACE_BARRIERS(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO + 1000,\
     fmt, __VA_ARGS__)
+#endif /* _TRACE_BARRIERS */
 
 
 
@@ -75,13 +83,13 @@ bool megamol::core::cluster::mpi::View::IsAvailable(void) {
  */
 megamol::core::cluster::mpi::View::View(void) : Base1(), Base2(),
         bcastMaster(-1),
-        hasMasterConnection(0),
         isMpiInitialised(false),
         mpiRank(-1),
         mpiSize(-1),
         paramInitialiseMpi("initialiseMpi", "Enables the view to initialise the MPI library."),
         relayOffset(0) {
     VLAUTOSTACKTRACE;
+    this->hasMasterConnection.store(false);
 
     this->paramInitialiseMpi << new param::BoolParam(true);
     this->paramInitialiseMpi.SetUpdateCallback(&View::onInitialiseMpiChanged);
@@ -99,65 +107,55 @@ megamol::core::cluster::mpi::View::~View(void) {
 
 
 /*
- * megamol::core::cluster::mpi::View::ConnectView
+ * megamol::core::cluster::mpi::View::OnDispatcherExited
  */
-void megamol::core::cluster::mpi::View::ConnectView(
-        const vislib::StringA& toName) {
+void megamol::core::cluster::mpi::View::OnDispatcherExited(
+        vislib::net::SimpleMessageDispatcher& src) throw() {
     VLAUTOSTACKTRACE;
-    const size_t HEADER_SIZE = sizeof(vislib::net::SimpleMessageHeaderData);
+    _TRACE_INFO("Rank %d is no potential master any more.\n", this->mpiRank);
+    this->hasMasterConnection = false;
+}
 
-    if (this->isBcastMaster()) {
-        _TRACE_PACKAGING("Rank %d is storing view connection to \"%s\" for "
-            "relay...\n", this->mpiRank, toName.PeekBuffer());
-        size_t bodySize = + toName.Length() * sizeof(char);
-        vislib::RawStorage *mem = this->memPool.RaiseAtLeast(HEADER_SIZE
-        + bodySize);
-        ::memcpy(mem->At(HEADER_SIZE), toName.PeekBuffer(), bodySize);
-        vislib::net::ShallowSimpleMessage msg(mem->At(0), mem->GetSize());
-        msg.GetHeader().SetMessageID(MSG_VIEWCONNECT);
-        msg.GetHeader().SetBodySize(bodySize);
-        this->storeMessageForRelay(msg);
-        this->memPool.Return(mem);
+
+/*
+ * megamol::core::cluster::mpi::View::OnDispatcherStarted
+ */
+void megamol::core::cluster::mpi::View::OnDispatcherStarted(
+        vislib::net::SimpleMessageDispatcher& src) throw() {
+    VLAUTOSTACKTRACE;
+    _TRACE_INFO("Rank %d is now a potential master.\n", this->mpiRank);
+    this->hasMasterConnection = true;
+}
+
+
+/*
+ * megamol::core::cluster::mpi::View::OnMessageReceived
+ */
+bool megamol::core::cluster::mpi::View::OnMessageReceived(
+        vislib::net::SimpleMessageDispatcher& src,
+        const vislib::net::AbstractSimpleMessage& msg) throw() {
+    VLAUTOSTACKTRACE;
+
+    switch (msg.GetHeader().GetMessageID()) {
+        case MSG_TIMESYNC:
+        case MSG_MODULGRAPH:
+        case MSG_VIEWCONNECT:
+        case MSG_PARAMUPDATE:
+        case MSG_CAMERAUPDATE:
+            //::DebugBreak();
+            this->storeMessageForRelay(msg);
+            break;
+
+        case MSG_HANDSHAKE_BACK:
+        case MSG_HANDSHAKE_DONE:
+        case MSG_TCUPDATE:
+        default:
+            /* Ignore this. */
+            break;
     }
 
-    Base1::ConnectView(toName);
+    return true;
 }
-
-
-/*
- * megamol::core::cluster::mpi::View::OnControllerConnectionChanged
- */
-void megamol::core::cluster::mpi::View::OnControllerConnectionChanged(
-        const bool isConnected) {
-    VLAUTOSTACKTRACE;
-    this->hasMasterConnection = isConnected;
-    vislib::sys::Log::DefaultLog.WriteInfo("Connection to controller node %s "
-        "by rank %d.", (this->hasMasterConnection ? "established" : "lost"),
-        this->mpiRank);
-}
-
-
-/*
- * megamol::core::cluster::mpi::View::ParamUpdated
- */
-void megamol::core::cluster::mpi::View::ParamUpdated(param::ParamSlot& param) {
-    VLAUTOSTACKTRACE;
-    // Serialise the state change; code is copy from simple::Server.
-    vislib::net::SimpleMessage msg;
-    msg.GetHeader().SetMessageID(MSG_PARAMUPDATE);
-    vislib::StringA name = param.FullName();
-    vislib::StringA value;
-    vislib::UTF8Encoder::Encode(value,
-        param.Param<param::AbstractParam>()->ValueString());
-    name.Append("=");
-    name.Append(value);
-    msg.SetBody(name, name.Length());
-
-    _TRACE_PACKAGING("Storing parameter change %s for relay...\n",
-        name.PeekBuffer());
-    this->storeMessageForRelay(msg);
-}
-
 
 /*
  * megamol::core::cluster::mpi::View::Render
@@ -170,7 +168,6 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
 
     /* Perform some lazy initialisation (copied from simple::View). */
     if (this->viewState == ViewState::CREATED) {
-        //::DebugBreak();
         this->viewState = ViewState::LAZY_INITIALISED;
         this->initTileViewParameters();
         AbstractNamedObject *ano = this;
@@ -203,10 +200,6 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
             this->mpiRank);
 #ifdef WITH_MPI
         ASSERT(this->knowsBcastMaster());
-
-        // Camera must be forwarded separately. The method has only an effect on
-        // the master node.
-        this->storeCameraForRelay();
 
         {
             vislib::sys::AutoLock l(this->relayBufferLock);
@@ -251,6 +244,14 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
                 offset += msg.GetMessageSize();
 
                 switch (msg.GetHeader().GetMessageID()) {
+                    case MSG_TIMESYNC:
+                        if (msg.GetBodyAs<simple::TimeSyncData>()->cnt
+                                == TIMESYNCDATACOUNT) {
+                            // Make the view prepare for the next graph.
+                            this->DisconnectViewCall();
+                        }
+                        break;
+
                     case MSG_MODULGRAPH:
                         //::DebugBreak();
                         this->DisconnectViewCall();
@@ -294,6 +295,9 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
             } /* end while (offset < state.RelaySize) */
 
             this->ModuleGraphLock().UnlockExclusive();
+
+            _TRACE_MESSAGING("Rank %d has processed all relayed messages.\n",
+                this->mpiRank);
         } /* end if (!this->isBcastMaster() && (state.RelaySize > 0)) */
 
         if (state.InvalidateMaster) {
@@ -301,13 +305,10 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
             _TRACE_INFO("Rank %d invalidated the broadcast master.\n",
                 this->mpiRank);
         }
-
-        _TRACE_MESSAGING("Rank %d has processed all relayed messages.\n",
-            this->mpiRank);
     } /* end if (!this->isBcastMaster() && (state.RelaySize > 0)) */
 
     this->processInitialisationMessage();
-    this->registerClient();
+    this->registerClient(true);
 
     /* Ensure that we have a rendering call that we can execute. */
     if (canRender) {
@@ -373,7 +374,6 @@ bool megamol::core::cluster::mpi::View::create(void) {
 
     if (retval) {
         this->initialiseMpi();
-        this->GetCoreInstance()->RegisterParamUpdateListener(this);
     }
 
     return retval;
@@ -486,84 +486,12 @@ bool megamol::core::cluster::mpi::View::onInitialiseMpiChanged(
 
 
 /*
- * megamol::core::cluster::mpi::View::onProcessInitialisationMessage
- */
-void megamol::core::cluster::mpi::View::onProcessInitialisationMessage(
-        const vislib::net::AbstractSimpleMessage& msg) {
-    VLAUTOSTACKTRACE;
-    if (this->isBcastMaster()) {
-        _TRACE_PACKAGING("Storing initialisation message %u for relay...\n",
-            msg.GetHeader().GetMessageID());
-        this->storeMessageForRelay(msg);
-    }
-    Base1::onProcessInitialisationMessage(msg);
-}
-
-
-/*
  * megamol::core::cluster::mpi::View::release
  */
 void megamol::core::cluster::mpi::View::release(void) {
     VLAUTOSTACKTRACE;
-    this->GetCoreInstance()->UnregisterParamUpdateListener(this);
     this->finaliseMpi();
     Base1::release();
-}
-
-
-/*
- * megamol::core::cluster::mpi::View::storeCameraForRelay
- */
-void megamol::core::cluster::mpi::View::storeCameraForRelay(void) {
-    VLAUTOSTACKTRACE;
-    const size_t HEADER_SIZE = sizeof(vislib::net::SimpleMessageHeaderData);
-
-    if (this->isBcastMaster()) {
-        this->ModuleGraphLock().LockExclusive();
-
-        auto av = this->GetConnectedView();
-        if (av != nullptr) {
-            _TRACE_PACKAGING("Rank %d is storing camera for relay...\n",
-                this->mpiRank);
-            vislib::RawStorage *mem = this->memPool.RaiseAtLeast(HEADER_SIZE);
-            vislib::RawStorageSerialiser serialiser(mem, HEADER_SIZE);
-            av->SerialiseCamera(serialiser);
-
-            vislib::net::ShallowSimpleMessage msg(mem->At(0));
-            msg.GetHeader().SetMessageID(MSG_CAMERAUPDATE);
-            msg.GetHeader().SetBodySize(serialiser.Offset() 
-                - sizeof(vislib::net::SimpleMessageHeaderData));
-
-            this->ModuleGraphLock().UnlockExclusive();
-            this->storeMessageForRelay(msg);
-
-            this->memPool.Return(mem);
-
-        } else {
-            this->ModuleGraphLock().UnlockExclusive();
-        }
-
-
-#if 0
-            try {
-        vislib::net::SimpleMessage msg;
-        // WARNING: THIS IS A MAJOR BECAUSE-I-KNOW...
-        auto ser = dynamic_cast<vislib::RawStorageSerialiser&>(serialiser);
-        msg.GetHeader().SetMessageID(MSG_CAMERAUPDATE);
-        msg.SetBody(ser.Storage()->At(0), ser.Storage()->GetSize());
-
-        VLTRACE(vislib::Trace::LEVEL_INFO, "Rank %d is preparing camera "
-            "parameters for relay...\n", this->mpiRank);
-        this->storeMessageForRelay(msg);
-
-    } catch (std::bad_cast) {
-        vislib::sys::Log::DefaultLog.WriteError("%s requires the camera to be "
-            "serialised using vislib::RawStorageSerialiser in order to "
-            "forward the camera parameters.", View::ClassName());
-    }
-#endif
-        //}
-    }
 }
 
 

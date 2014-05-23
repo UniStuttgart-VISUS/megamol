@@ -9,7 +9,9 @@
 #include "AbstractD3D11RenderObject.h"
 
 #include "vislib/assert.h"
+#ifdef MEGAMOLCORE_WITH_DIRECT3D11
 #include "vislib/d3dutils.h"
+#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 #include "vislib/IllegalParamException.h"
 #include "vislib/Log.h"
 #include "vislib/StackTrace.h"

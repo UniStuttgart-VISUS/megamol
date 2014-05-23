@@ -120,14 +120,6 @@ namespace simple {
             return this->getConnectedView();
         }
 
-        /**
-         * The registered client calls this method if its connection to the
-         * controller node changes.
-         *
-         * @param isConnected true if the client is connected, false otherwise.
-         */
-        virtual void OnControllerConnectionChanged(const bool isConnected);
-
     protected:
 
         /**
@@ -157,10 +149,13 @@ namespace simple {
         /**
          * If the view was not registered with a network client, do so.
          *
+         * @param isRawMessageDispatching If true, try to register the client for
+         *                                dispatching of raw network messages.
+         *
          * @return true if the view is connected to a network client,
          *         false otherwise.
          */
-        bool registerClient(void);
+        bool registerClient(const bool isRawMessageDispatching = false);
 
         /**
          * Implementation of 'Release'.

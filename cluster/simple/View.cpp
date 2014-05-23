@@ -280,15 +280,6 @@ void cluster::simple::View::ConnectView(const vislib::StringA& toName) {
 
 
 /*
- * cluster::simple::View::OnControllerConnectionChanged
- */
-void cluster::simple::View::OnControllerConnectionChanged(
-        const bool isConnected) {
-    VLAUTOSTACKTRACE;
-}
-
-
-/*
  * cluster::simple::View::create
  */
 bool cluster::simple::View::create(void) {
@@ -331,12 +322,13 @@ void cluster::simple::View::processInitialisationMessage(void) {
 /*
  * cluster::simple::View::registerClient
  */
-bool cluster::simple::View::registerClient(void) {
+bool cluster::simple::View::registerClient(const bool isRawMessageDispatching) {
     VLAUTOSTACKTRACE;
     if (this->client == NULL) {
         ClientViewRegistration *sccvr = this->registerSlot.CallAs<ClientViewRegistration>();
         if (sccvr != NULL) {
             sccvr->SetView(this);
+            sccvr->SetIsRawMessageDispatching(isRawMessageDispatching);
             if ((*sccvr)()) {
                 this->client = sccvr->GetClient();
             }

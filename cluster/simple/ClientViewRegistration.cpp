@@ -8,6 +8,10 @@
 #include "stdafx.h"
 #include "cluster/simple/ClientViewRegistration.h"
 
+#include "cluster/simple/View.h"
+
+#include "vislib/StackTrace.h"
+
 using namespace megamol::core;
 
 
@@ -15,7 +19,8 @@ using namespace megamol::core;
  * cluster::simple::ClientViewRegistration::ClientViewRegistration
  */
 cluster::simple::ClientViewRegistration::ClientViewRegistration(void) : Call(),
-        client(NULL), view(NULL) {
+        client(NULL), view(NULL), heartbeat(NULL),
+        isRawMessageDispatching(false) {
     // intentionally empty
 }
 
@@ -26,4 +31,19 @@ cluster::simple::ClientViewRegistration::ClientViewRegistration(void) : Call(),
 cluster::simple::ClientViewRegistration::~ClientViewRegistration(void) {
     this->client = NULL; // DO NOT DELETE
     this->view = NULL; // DO NOT DELETE
+}
+
+
+/*
+ * cluster::simple::ClientViewRegistration::GetRawMessageDispatchListener
+ */
+vislib::net::SimpleMessageDispatchListener *
+cluster::simple::ClientViewRegistration::GetRawMessageDispatchListener(void) {
+    VLAUTOSTACKTRACE;
+    if (this->isRawMessageDispatching) {
+        return dynamic_cast<vislib::net::SimpleMessageDispatchListener *>(
+            this->view);
+    } else {
+        return NULL;
+    }
 }

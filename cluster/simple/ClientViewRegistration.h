@@ -14,6 +14,8 @@
 #include "Call.h"
 #include "CallAutoDescription.h"
 
+#include "vislib/SimpleMessageDispatchListener.h"
+
 
 namespace megamol {
 namespace core {
@@ -112,6 +114,15 @@ namespace simple {
         }
 
         /**
+         * If raw message dispatching was requested and is possible, return
+         * the view as message listener.
+         *
+         * @return The view end point.
+         */
+        vislib::net::SimpleMessageDispatchListener *
+            GetRawMessageDispatchListener(void);
+
+        /**
          * Get the view end point
          *
          * @return The view end point
@@ -148,6 +159,19 @@ namespace simple {
         }
 
         /**
+         * Enable or disable raw message dispatching from the client to a view 
+         * that implements vislib::net::SimpleMessageDispatchListener.
+         *
+         * @param isRawMessageDispatching true for enabling the function, false
+         *                                otherwise.
+         *
+         */
+        inline void SetIsRawMessageDispatching(
+                const bool isRawMessageDispatching) {
+            this->isRawMessageDispatching = isRawMessageDispatching;
+        }
+
+        /**
          * Set the view end point
          *
          * @param view The view end point
@@ -167,6 +191,8 @@ namespace simple {
         /** The heartbeat end */
         class Heartbeat *heartbeat;
 
+        /** Enable dispatching of raw messages to compatible clients. */
+        bool isRawMessageDispatching;
     };
 
 
