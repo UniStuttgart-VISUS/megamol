@@ -11,6 +11,8 @@
 #include "CallerSlot.h"
 #include "CalleeSlot.h"
 #include "Module.h"
+#include "MultiParticleDataCall.h"
+#include "param/ParamSlot.h"
 
 namespace megamol {
 namespace core {
@@ -87,8 +89,18 @@ class DynDensityGradientEstimator : public core::Module {
          */
         bool getData(Call& call);
 
+        bool createVolumeCPU(
+                class megamol::core::moldyn::MultiParticleDataCall& c2);
+
         core::CallerSlot getPartDataSlot;
         core::CalleeSlot putDirDataSlot;
+
+        vislib::Array<float> dir, gridPos;
+        float *dens;
+
+        param::ParamSlot xResSlot;
+        param::ParamSlot yResSlot;
+        param::ParamSlot zResSlot;
 };
 
 } // end namespace moldyn
