@@ -41,8 +41,8 @@
 #include "vislib/UTF8Encoder.h"
 
 
-//#define _TRACE_INFO(fmt, ...)
-//#define _TRACE_MESSAGING(fmt, ...)
+#define _TRACE_INFO(fmt, ...)
+#define _TRACE_MESSAGING(fmt, ...)
 #define _TRACE_PACKAGING(fmt, ...)
 #define _TRACE_BARRIERS(fmt, ...)
 
@@ -249,6 +249,7 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
                                 == TIMESYNCDATACOUNT) {
                             // Make the view prepare for the next graph.
                             this->DisconnectViewCall();
+                            this->GetCoreInstance()->CleanupModuleGraph();
                         }
                         break;
 
