@@ -586,7 +586,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
     ASSERT(context != NULL);
-    ASSERT(sizeof(mmcRenderViewContext) == context->Size);
+    //ASSERT(sizeof(mmcRenderViewContext) == context->Size);
 
     if (view != NULL) {
         view->ModuleGraphLock().LockExclusive();
@@ -609,10 +609,12 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
 
         if (view->View() != NULL) {
             double it = context->SynchronisedTime;
-            if (it <= 0.0) {
+
+            if ((it < 0.0)or(vislib::math::IsEqual(it, 0.0))) {
                 // If we did not get a time via the context, determine the time
                 // by using the standard method.
                 it = view->View()->GetCoreInstance()->GetCoreInstanceTime();
+
                 if (context->SynchronisedTime != 0) {
                     // The viewer module wants to reuse this time until it
                     // resets 'SynchronisedTime' to -1.
