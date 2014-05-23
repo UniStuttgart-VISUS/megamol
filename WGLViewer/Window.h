@@ -122,6 +122,21 @@ namespace wgl {
          */
         static DWORD renderThread(void *userData);
 
+		/**
+		 * Try to set the GPU affinity based on the coordinates of a window.
+		 * If the WGL_NV_gpu_affinity extension is available,
+		 * setupContextAffinity will try to create an affinity context for the
+		 * GPU device that holds more than 50% of the window's area. Upon
+		 * success, the affinity device context and affinity render context
+		 * are stored in affinityDC and affinityContext.
+		 *
+		 * @param window A window whose coordinates are to be used for
+		 *   deciding on a GPU device. If window is NULL, this method fails.
+		 * @returns true if the affinity has been set successfully, false
+		 *   otherwise
+		 */
+		bool setupContextAffinity(HWND window);
+
         /** The main rendering context */
         static HGLRC mainCtxt;
 
@@ -139,6 +154,18 @@ namespace wgl {
 
         /** The rendering context handle */
         HGLRC hRC;
+
+		/**
+		 * The affinity device context or NULL if GPU affinity has not been 
+		 * set.
+		 */
+		HDC affinityDC;
+
+		/**
+		 * The affinity render context or NULL if GPU affinity has not been
+		 * set.
+		 */
+		HGLRC affinityContext;
 
         /** The window width */
         unsigned int w;

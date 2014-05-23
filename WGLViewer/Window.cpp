@@ -17,14 +17,18 @@
 #include "glh/glh_extensions.h"
 #pragma warning(default: 4996)
 
+#include "vislib/Log.h"
+
 using namespace megamol::wgl;
 
+using namespace vislib::sys;
 
 /*
  * Window::Window
  */
 Window::Window(Instance& inst) : ApiHandle(), inst(inst), hWnd(NULL), hDC(NULL), hRC(NULL), w(0), h(0),
-        renderCallback(), resizeCallback(), renderer(&Window::renderThread) {
+        renderCallback(), resizeCallback(), renderer(&Window::renderThread),
+		affinityDC(NULL), affinityContext(NULL) {
 
     DWORD style = WS_OVERLAPPEDWINDOW;
     DWORD styleEx = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
@@ -128,6 +132,12 @@ Window::~Window(void) {
  */
 void Window::Close(void) {
 
+	if (affinityContext != NULL) {
+		wglMakeCurrent(NULL, NULL);
+		wglDeleteContext(affinityContext);
+		affinityContext = NULL;
+	}
+
     if (this->hRC != NULL) {
         if (Window::mainCtxt == this->hRC) {
             Window::mainCtxt = NULL;
@@ -144,6 +154,15 @@ void Window::Close(void) {
     if (this->renderer.IsRunning()) {
         this->renderer.Join();
     }
+
+	if (affinityDC != NULL) {
+		PFNWGLDELETEDCNVPROC wglDeleteDCNV =
+			(PFNWGLDELETEDCNVPROC)wglGetProcAddress("wglDeleteDCNV");
+
+		if (wglDeleteDCNV != nullptr)
+			wglDeleteDCNV(affinityDC);
+		affinityDC = NULL;
+	}
 
     if (this->hDC != NULL) {
         if (!::ReleaseDC(this->hWnd, this->hDC)) {
@@ -295,11 +314,15 @@ DWORD Window::renderThread(void *userData) {
     mmcRenderViewContext context;
     ::ZeroMemory(&context, sizeof(context));
     context.Size = sizeof(context);
+	context.Window = that->hWnd;
 
     // not too good, but ok for now
     vislib::sys::Thread::Sleep(2500);
     // The context must not be bound until ALL windows have been created
     ::wglMakeCurrent(that->hDC, that->hRC);
+
+	// (Try to) setup the affinity.
+	that->setupContextAffinity(context.Window);
 
     //if (NVSwapGroup::Instance().JoinSwapGroup(1) == GL_TRUE) {
     //    if (NVSwapGroup::Instance().BindSwapBarrier(1, 1) == GL_TRUE) {
@@ -325,4 +348,117 @@ DWORD Window::renderThread(void *userData) {
     ::wglMakeCurrent(NULL, NULL);
 
     return 0;
+}
+
+bool Window::setupContextAffinity(HWND window) {
+
+	if (window == NULL) {
+		// We can't do anything useful without knowing where our window is.
+		puts("No render window supplied, GPU affinity not set.");
+		return false;
+	}
+
+	// Try to get the affinity extension functions. The required types should
+	// be defined in wglext.h.
+	PFNWGLENUMGPUSNVPROC wglEnumGpusNV =
+		(PFNWGLENUMGPUSNVPROC)wglGetProcAddress("wglEnumGpusNV");
+	PFNWGLENUMGPUDEVICESNVPROC wglEnumGpuDevicesNV =
+		(PFNWGLENUMGPUDEVICESNVPROC)wglGetProcAddress("wglEnumGpuDevicesNV");
+	PFNWGLCREATEAFFINITYDCNVPROC wglCreateAffinityDCNV =
+		(PFNWGLCREATEAFFINITYDCNVPROC)wglGetProcAddress(
+		"wglCreateAffinityDCNV");
+	PFNWGLDELETEDCNVPROC wglDeleteDCNV =
+		(PFNWGLDELETEDCNVPROC)wglGetProcAddress("wglDeleteDCNV");
+
+	if (wglEnumGpusNV == nullptr || wglEnumGpuDevicesNV == nullptr ||
+		wglCreateAffinityDCNV == nullptr || wglDeleteDCNV == nullptr)
+	{
+		// The affinity extension is unavailable.
+		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+			"WGL_NV_gpu_affinity extension is unavailable. GPU affinity not set.");
+		/*puts("WGL_NV_gpu_affinity extension is unavailable. GPU affinity not "
+			"set.");*/
+		return false;
+	}
+
+	RECT windowRect;
+	GetWindowRect(window, &windowRect);
+
+	int windowArea = (windowRect.right - windowRect.left) *
+		(windowRect.bottom - windowRect.top);
+
+	unsigned int gpuIndex = 0;
+	HGPUNV gpuHandle = nullptr;
+	GPU_DEVICE deviceInfo;
+
+	while (wglEnumGpusNV(gpuIndex, &gpuHandle))	{
+		unsigned int deviceIndex = 0;
+
+		ZeroMemory(&deviceInfo, sizeof(deviceInfo));
+		deviceInfo.cb = sizeof(deviceInfo);
+
+		while (wglEnumGpuDevicesNV(gpuHandle, deviceIndex, &deviceInfo)) {
+			RECT intersectRect;
+			IntersectRect(&intersectRect, &windowRect,
+				&deviceInfo.rcVirtualScreen);
+
+			int intersectArea = (intersectRect.right - intersectRect.left) *
+				(intersectRect.bottom - intersectRect.top);
+
+			if (intersectArea * 2 >= windowArea) {
+				// >= 50% overlap. Good enough. Let's pick this GPU for rendering.
+				printf("Setting affinity to GPU #%u device \"%s\" (\"%s\").\n",
+					gpuIndex, deviceInfo.DeviceString, deviceInfo.DeviceName);
+
+				HGPUNV gpuMask[2] { gpuHandle, nullptr };
+
+				affinityDC = wglCreateAffinityDCNV(gpuMask);
+				if (affinityDC == NULL) {
+					puts("Failed to create an affinity device context.");
+					return false;
+				}
+
+				// Copy the pixel format from the device context to the
+				// affinity context.
+				PIXELFORMATDESCRIPTOR pixelFormat;
+				ZeroMemory(&pixelFormat, sizeof(pixelFormat));
+				pixelFormat.nSize = sizeof(pixelFormat);
+
+				int pixelFormatIndex = GetPixelFormat(hDC);
+				DescribePixelFormat(hDC, pixelFormatIndex, sizeof(pixelFormat),
+					&pixelFormat);
+
+				SetPixelFormat(affinityDC, pixelFormatIndex, &pixelFormat);
+
+				// Create an affinity render context from the affinity device
+				// context.
+				affinityContext = wglCreateContext(affinityDC);
+				if (affinityContext == NULL) {
+					puts("Failed to create a render context from the affinity "
+						"context.");
+
+					wglDeleteDCNV(affinityDC);
+					affinityDC = NULL;
+					return false;
+				}
+
+				// Now make current the affinityContext and the original (!)
+				// device context (because we want to render into the window
+				// represented by the original context).
+				if (!wglMakeCurrent(hDC, affinityContext))
+					puts("Failed to make the affinity context current.");
+
+				return true;
+			}
+
+			deviceIndex++;
+		}
+		gpuIndex++;
+	}
+
+	printf("Render window (%d, %d) - (%d, %d) has no sufficient overlap with "
+		"any GPU device. GPU affinity not set.\n", windowRect.left,
+		windowRect.top, windowRect.right, windowRect.bottom);
+
+	return false;
 }

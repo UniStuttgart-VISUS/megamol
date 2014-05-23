@@ -233,6 +233,12 @@ bool forceViewerLib(void) {
                 = vislib::sys::ThreadSafeStackTrace::Manager();
             mmvInitStackTracer(static_cast<void*>(&man));
 
+			// Without any other obvious way of giving the viewer module
+			// access to our log, (ab)use mmvSetUserData with a nullptr
+			// handle to hand over the pointer. Viewers that don't support
+			// this should silently ignore this call.
+			mmvSetUserData(nullptr, &Log::DefaultLog);
+
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 200,
                 "Viewer loaded");
             megamol::console::utility::AboutInfo::LogViewerVersionInfo();

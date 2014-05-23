@@ -12,6 +12,7 @@
 #include "Instance.h"
 #include "versioninfo.h"
 #include "Window.h"
+#include "vislib/Log.h"
 #include "vislib/memutils.h"
 #include "vislib/String.h"
 #include "vislib/ThreadSafeStackTrace.h"
@@ -275,6 +276,17 @@ MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvCreateWindow)(void *hView,
 MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetUserData)(void *hndl,
         void *userData) {
     VLSTACKTRACE("mmvSetUserData", __FILE__, __LINE__);
+
+	// It would be nice for us to have a way to access the Console's log. For
+	// now, calling mmvSetUserData with a NULL handle is understood as an
+	// attempt to set a reference to the log object.
+	if (hndl == nullptr && userData != nullptr) {
+		vislib::sys::Log::DefaultLog.SetEchoTarget(
+			new vislib::sys::Log::RedirectTarget(
+			reinterpret_cast<vislib::sys::Log *>(userData),
+			vislib::sys::Log::LEVEL_ALL));
+		return;
+	}
 
     megamol::wgl::ApiHandle *obj = megamol::wgl::ApiHandle::InterpretHandle<megamol::wgl::ApiHandle>(hndl);
     if (obj != NULL) {
