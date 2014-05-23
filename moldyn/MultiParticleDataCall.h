@@ -25,7 +25,7 @@ namespace moldyn {
     /**
      * Class holding all data of a single particle type
      *
-     * TODO: This class currenty can only hold data for spheres and should
+     * TODO: This class currently can only hold data for spheres and should
      *       be extended to be able to handle data for arbitrary glyphs.
      *       This also applies to interpolation of data.
      */

@@ -16,7 +16,7 @@
 
 using namespace megamol::core;
 
-#define WITH_CLUSTERINFO
+//#define WITH_CLUSTERINFO
 
 /*
  * moldyn::MMPLDWriter::MMPLDWriter
@@ -113,6 +113,10 @@ bool moldyn::MMPLDWriter::run(void) {
             return false;
         }
     }
+
+    // DEBUG
+//    frameCnt = 10;
+    // END DEBUG
 
     vislib::sys::MemmappedFile file;
     if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {

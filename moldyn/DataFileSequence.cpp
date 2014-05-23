@@ -166,7 +166,9 @@ bool moldyn::DataFileSequence::getDataCallback(Call& caller) {
  * moldyn::DataFileSequence::getExtentCallback
  */
 bool moldyn::DataFileSequence::getExtentCallback(Call& caller) {
+
     if (!this->checkConnections(&caller)) return false;
+
     this->checkParameters();
     this->assertData();
 
@@ -178,6 +180,8 @@ bool moldyn::DataFileSequence::getExtentCallback(Call& caller) {
 
     param::ParamSlot *fnSlot = this->findFileNameSlot();
     if (fnSlot == NULL) return false;
+
+
 
     pgdc->AccessBoundingBoxes().Clear();
     if (this->frameCnt == 0) {

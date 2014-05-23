@@ -483,6 +483,7 @@ vislib::Array<int> &moldyn::VTFResDataSource::Frame::particleGridCell(unsigned i
  * moldyn::VTFResDataSource::VTFResDataSource
  */
 moldyn::VTFResDataSource::VTFResDataSource(void) : view::AnimDataModule(),
+        // TODO scharnkn: this is actually supposed to be the directory
         filename("filename", "The path to the trisoup file to load."),
         getData("getdata", "Slot to request data from this data source."),
 		preprocessSlot("preprocess", "aggregation preprocessing"),
@@ -755,6 +756,7 @@ void moldyn::VTFResDataSource::getFrameFiles(vislib::StringA directory)
 	vislib::sys::DirectoryIterator<vislib::CharTraits<char>> di(directory + "/*.res", true, false);
 	while (di.HasNext())
 		this->frameFiles.Append(directory + "/" + di.Next().Path);
+
 
 	this->frameFiles.Sort(&sortFileArray);
 

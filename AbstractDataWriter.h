@@ -14,6 +14,7 @@
 #include "Module.h"
 #include "CalleeSlot.h"
 #include "DataWriterCtrlCall.h"
+#include "param/ParamSlot.h"
 
 
 namespace megamol {
@@ -85,8 +86,20 @@ namespace core {
          */
         bool onCallAbort(Call &call);
 
+        /**
+         * Manual start of the run method.
+         *
+         * @param slot Must be the triggerButtonSlot
+         */
+        bool triggerManualRun(param::ParamSlot& slot);
+
         /** The slot for incoming control commands */
         CalleeSlot controlSlot;
+
+        /** Triggers execution of the 'run' method */
+        param::ParamSlot manualRunSlot;
+
+
 
     };
 

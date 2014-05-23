@@ -8,6 +8,8 @@
 #include "stdafx.h"
 #include "AbstractDataWriter.h"
 #include "DataWriterCtrlCall.h"
+#include "param/ButtonParam.h"
+#include "vislib/Log.h"
 
 using namespace megamol::core;
 
@@ -16,7 +18,8 @@ using namespace megamol::core;
  * AbstractDataWriter::AbstractDataWriter
  */
 AbstractDataWriter::AbstractDataWriter(void) : Module(),
-        controlSlot("control", "Slot for incoming control commands") {
+        controlSlot("control", "Slot for incoming control commands"),
+        manualRunSlot("manualRun", "Slot fopr manual triggering of the run method.") {
 
     this->controlSlot.SetCallback(DataWriterCtrlCall::ClassName(),
         DataWriterCtrlCall::FunctionName(DataWriterCtrlCall::CALL_RUN),
@@ -28,6 +31,10 @@ AbstractDataWriter::AbstractDataWriter(void) : Module(),
         DataWriterCtrlCall::FunctionName(DataWriterCtrlCall::CALL_GETCAPABILITIES),
         &AbstractDataWriter::onCallGetCapability);
     this->MakeSlotAvailable(&this->controlSlot);
+
+    this->manualRunSlot << new core::param::ButtonParam();
+    this->manualRunSlot.SetUpdateCallback(&AbstractDataWriter::triggerManualRun);
+    this->MakeSlotAvailable(&this->manualRunSlot);
 }
 
 
@@ -69,4 +76,22 @@ bool AbstractDataWriter::onCallGetCapability(Call &call) {
  */
 bool AbstractDataWriter::onCallAbort(Call &call) {
     return this->abort();
+}
+
+/*
+ * AbstractDataWriter::triggerManualRun
+ */
+bool AbstractDataWriter::triggerManualRun(param::ParamSlot& slot) {
+    // happy trigger finger hit button action happend
+    using vislib::sys::Log;
+    ASSERT(&slot == &this->manualRunSlot);
+
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100,
+        "Manual start initiated ...");
+
+    if (!this->run()) {
+        return false;
+    }
+
+    return true;
 }

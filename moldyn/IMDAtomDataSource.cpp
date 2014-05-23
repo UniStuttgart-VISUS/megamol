@@ -1197,7 +1197,7 @@ void moldyn::IMDAtomDataSource::assertData(void) {
 
     vislib::sys::MemmappedFile file;
     vislib::TString filename = this->filenameSlot.Param<param::FilePathParam>()->Value();
-    Log::DefaultLog.WriteInfo(50, _T("Loading \"%s\""), filename.PeekBuffer());
+//    Log::DefaultLog.WriteInfo(50, _T("Loading \"%s\""), filename.PeekBuffer());
     //this->datahash = static_cast<SIZE_T>(filename.HashCode());
     if (!file.Open(filename, vislib::sys::File::READ_ONLY,
             vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
@@ -1214,12 +1214,12 @@ void moldyn::IMDAtomDataSource::assertData(void) {
         return;
     }
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100,
-        "IMDAtom with %d data colums:\n", static_cast<int>(header.captions.Count()));
-    for (SIZE_T i = 0; i < header.captions.Count(); i++) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100,
-            "\t%s\n", header.captions[i].PeekBuffer());
-    }
+//    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100,
+//        "IMDAtom with %d data colums:\n", static_cast<int>(header.captions.Count()));
+//    for (SIZE_T i = 0; i < header.captions.Count(); i++) {
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100,
+//            "\t%s\n", header.captions[i].PeekBuffer());
+//    }
 
     UINT32 endianTestInt = 0x12345678;
     UINT8 endianTestBytes[4];
@@ -1287,9 +1287,9 @@ void moldyn::IMDAtomDataSource::assertData(void) {
                 cnt += this->posData[i]->GetSize() / (sizeof(float) * 3);
             }
         }
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%d Atoms loaded\n", cnt);
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Data bounding box = (%f, %f, %f) ... (%f, %f, %f)\n", 
-            this->minX, this->minY, this->minZ, this->maxX, this->maxY, this->maxZ);
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%d Atoms loaded\n", cnt);
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Data bounding box = (%f, %f, %f) ... (%f, %f, %f)\n",
+//            this->minX, this->minY, this->minZ, this->maxX, this->maxY, this->maxZ);
 
         //this->datahash = (this->datahash << (sizeof(SIZE_T) / 2))
         //    || (this->datahash >> (sizeof(SIZE_T) / 2));
@@ -1989,7 +1989,7 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
 bool moldyn::IMDAtomDataSource::posXFilterUpdate(param::ParamSlot& slot) {
     using vislib::sys::Log;
     if (!this->posXFilter.Param<param::BoolParam>()->Value()) {
-        Log::DefaultLog.WriteInfo("PosX-Filter not enabled");
+//        Log::DefaultLog.WriteInfo("PosX-Filter not enabled");
         return true;
     }
 

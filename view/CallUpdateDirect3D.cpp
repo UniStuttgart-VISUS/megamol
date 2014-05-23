@@ -1,15 +1,16 @@
 /*
  * CallUpdateDirect3D.cpp
  *
- * Copyright (C) 2012 by Visualisierungsinstitut der Universität Stuttgart.
+ * Copyright (C) 2012 by Visualisierungsinstitut der Universitï¿½t Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #include "CallUpdateDirect3D.h"
 
+#ifdef MEGAMOLCORE_WITH_DIRECT3D11
 #include "vislib/d3dutils.h"
-
+#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 
 /*
  * megamol::core::view::CallUpdateDirect3D::FunctionName

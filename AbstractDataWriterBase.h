@@ -40,7 +40,7 @@ namespace core {
         AbstractDataWriterBase(void) : AbstractDataWriter(),
                 inData("inData", "Get the data"),
                 filenameSlot("filename", "The path to the MMPGD file to be written") {
-            this->inData.SetCompatibleCall<D>();
+            this->inData.template SetCompatibleCall<D>();
             this->MakeSlotAvailable(&this->inData);
             this->filenameSlot << new param::FilePathParam("");
             this->MakeSlotAvailable(&this->filenameSlot);
@@ -77,13 +77,13 @@ namespace core {
          */
         virtual bool run(void) {
             using vislib::sys::Log;
-            vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
+            vislib::TString filename(this->filenameSlot.template Param<param::FilePathParam>()->Value());
             if (filename.IsEmpty()) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
                 return false;
             }
 
-            T *d = this->inData.CallAs<T>();
+            T *d = this->inData.template CallAs<T>();
             if (d == NULL) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No data source connected. Abort.");
                 return false;

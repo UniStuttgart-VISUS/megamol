@@ -1,7 +1,7 @@
 /*
  * D3D11SimpleSphereRenderer.cpp
  *
- * Copyright (C) 2012 by Visualisierungsinstitut der Universität Stuttgart.
+ * Copyright (C) 2012 by Visualisierungsinstitut der Universitï¿½t Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -16,7 +16,9 @@
 
 #include "vislib/Camera.h"
 #include "vislib/COMException.h"
+#ifdef MEGAMOLCORE_WITH_DIRECT3D11
 #include "vislib/d3dutils.h"
+#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 #include "vislib/CameraOpenGL.h"
 #include "vislib/Matrix.h"
 #include "vislib/ShallowMatrix.h"
