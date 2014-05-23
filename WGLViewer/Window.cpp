@@ -354,7 +354,8 @@ bool Window::setupContextAffinity(HWND window) {
 
 	if (window == NULL) {
 		// We can't do anything useful without knowing where our window is.
-		puts("No render window supplied, GPU affinity not set.");
+		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "No render window "
+			"supplied, GPU affinity not set.");
 		return false;
 	}
 
@@ -407,14 +408,16 @@ bool Window::setupContextAffinity(HWND window) {
 
 			if (intersectArea * 2 >= windowArea) {
 				// >= 50% overlap. Good enough. Let's pick this GPU for rendering.
-				printf("Setting affinity to GPU #%u device \"%s\" (\"%s\").\n",
-					gpuIndex, deviceInfo.DeviceString, deviceInfo.DeviceName);
+				Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Setting affinity "
+					"to GPU #%u device \"%s\" (\"%s\").\n", gpuIndex,
+					deviceInfo.DeviceString, deviceInfo.DeviceName);
 
 				HGPUNV gpuMask[2] { gpuHandle, nullptr };
 
 				affinityDC = wglCreateAffinityDCNV(gpuMask);
 				if (affinityDC == NULL) {
-					puts("Failed to create an affinity device context.");
+					Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to "
+						"create an affinity device context.");
 					return false;
 				}
 
@@ -434,8 +437,8 @@ bool Window::setupContextAffinity(HWND window) {
 				// context.
 				affinityContext = wglCreateContext(affinityDC);
 				if (affinityContext == NULL) {
-					puts("Failed to create a render context from the affinity "
-						"context.");
+					Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to "
+						"create a render context from the affinity context.");
 
 					wglDeleteDCNV(affinityDC);
 					affinityDC = NULL;
@@ -445,8 +448,11 @@ bool Window::setupContextAffinity(HWND window) {
 				// Now make current the affinityContext and the original (!)
 				// device context (because we want to render into the window
 				// represented by the original context).
-				if (!wglMakeCurrent(hDC, affinityContext))
-					puts("Failed to make the affinity context current.");
+				if (!wglMakeCurrent(hDC, affinityContext)) {
+					Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to "
+						"make the affinity context current.");
+					return false;
+				}
 
 				return true;
 			}
@@ -456,9 +462,10 @@ bool Window::setupContextAffinity(HWND window) {
 		gpuIndex++;
 	}
 
-	printf("Render window (%d, %d) - (%d, %d) has no sufficient overlap with "
-		"any GPU device. GPU affinity not set.\n", windowRect.left,
-		windowRect.top, windowRect.right, windowRect.bottom);
+	Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Render window (%d, %d) - "
+		"(%d, %d) has no sufficient overlap with any GPU device. GPU "
+		"affinity not set.\n", windowRect.left, windowRect.top,
+		windowRect.right, windowRect.bottom);
 
 	return false;
 }
