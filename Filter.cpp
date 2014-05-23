@@ -742,10 +742,22 @@ void Filter::filterSolventAtomsAlt(float *atomPos) {
  * Filter::filerSolventAtoms
  */
 void Filter::filterSolventAtoms(float *atomPos) {
-    
+
     using namespace vislib::sys;
     
 #if (defined(WITH_CUDA) && (WITH_CUDA)) // GPU
+
+    setFilterParams(&this->params);
+
+    //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "numNeighbours: %u",this->params.numNeighbours );
+
+    float cellBodyDiagonal = sqrt(this->params.cellSize.x * this->params.cellSize.x +
+                            this->params.cellSize.y * this->params.cellSize.y +
+                            this->params.cellSize.z * this->params.cellSize.z);
+
+    this->params.innerCellRange = (int)(this->params.solvRange / cellBodyDiagonal);
+
+    setFilterParams(&this->params);
 
     this->getProtAtoms(atomPos);
 
