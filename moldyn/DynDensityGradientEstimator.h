@@ -14,7 +14,7 @@
 
 namespace megamol {
 namespace core {
-namespace misc {
+namespace moldyn {
 
 class DynDensityGradientEstimator : public core::Module {
     public:
@@ -91,7 +91,7 @@ class DynDensityGradientEstimator : public core::Module {
         core::CalleeSlot putDirDataSlot;
 };
 
-} // end namespace misc
+} // end namespace moldyn
 } // end namespace core
 } // end namespace megamol
 #endif /* DYNDENSITYGRADIENTESTIMATOR_H_ */

@@ -14,9 +14,9 @@ using namespace megamol;
 using namespace megamol::core;
 
 /*
- * misc::DynDensityGradientEstimator::DynDensityGradientEstimator
+ * moldyn::DynDensityGradientEstimator::DynDensityGradientEstimator
  */
-misc::DynDensityGradientEstimator::DynDensityGradientEstimator(void)
+moldyn::DynDensityGradientEstimator::DynDensityGradientEstimator(void)
         : Module(), getPartDataSlot("getPartData", "..."), putDirDataSlot(
                 "putDirData", "...") {
 
@@ -33,30 +33,30 @@ misc::DynDensityGradientEstimator::DynDensityGradientEstimator(void)
 }
 
 /*
- * misc::DynDensityGradientEstimator::~DynDensityGradientEstimator
+ * moldyn::DynDensityGradientEstimator::~DynDensityGradientEstimator
  */
-misc::DynDensityGradientEstimator::~DynDensityGradientEstimator(void) {
+moldyn::DynDensityGradientEstimator::~DynDensityGradientEstimator(void) {
     this->Release();
 }
 
 /*
- * misc::DynDensityGradientEstimator::create
+ * moldyn::DynDensityGradientEstimator::create
  */
-bool misc::DynDensityGradientEstimator::create(void) {
+bool moldyn::DynDensityGradientEstimator::create(void) {
     return true;
 }
 
 /*
- * misc::DynDensityGradientEstimator::release
+ * moldyn::DynDensityGradientEstimator::release
  */
-void misc::DynDensityGradientEstimator::release(void) {
+void moldyn::DynDensityGradientEstimator::release(void) {
 
 }
 
 /*
- * misc::DynDensityGradientEstimator::getExtent
+ * moldyn::DynDensityGradientEstimator::getExtent
  */
-bool misc::DynDensityGradientEstimator::getExtent(Call& call) {
+bool moldyn::DynDensityGradientEstimator::getExtent(Call& call) {
 
     // Get a pointer to the incoming data call.
     moldyn::DirectionalParticleDataCall *callIn = dynamic_cast<moldyn::DirectionalParticleDataCall*>(&call);
@@ -77,8 +77,8 @@ bool misc::DynDensityGradientEstimator::getExtent(Call& call) {
 }
 
 /*
- * misc::DynDensityGradientEstimator::getData
+ * moldyn::DynDensityGradientEstimator::getData
  */
-bool misc::DynDensityGradientEstimator::getData(Call& caller) {
+bool moldyn::DynDensityGradientEstimator::getData(Call& caller) {
     return true;
 }

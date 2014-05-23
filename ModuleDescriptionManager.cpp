@@ -83,6 +83,8 @@
 #include "moldyn/SIFFWriter.h"
 #include "moldyn/VTFDataSource.h"
 #include "moldyn/VTFResDataSource.h"
+#include "moldyn/AddClusterColours.h"
+#include "moldyn/DynDensityGradientEstimator.h"
 
 using namespace megamol::core;
 
@@ -190,6 +192,8 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
 		instance->registerAutoDescription<moldyn::VTFDataSource>();
 		instance->registerAutoDescription<moldyn::VTFResDataSource>();
         instance->registerAutoDescription<moldyn::D3D11SimpleSphereRenderer>();
+        instance->registerAutoDescription<moldyn::AddClusterColours>();
+        instance->registerAutoDescription<moldyn::DynDensityGradientEstimator>();
     //}
     //return instance;
 }
