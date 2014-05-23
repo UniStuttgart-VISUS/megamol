@@ -775,6 +775,12 @@
     <ClCompile Include="cluster\mpi\View.cpp">
       <Filter>cluster\mpi\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="moldyn\DynDensityGradientEstimator.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="moldyn\AddClusterColours.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1409,6 +1415,12 @@
     </ClInclude>
     <ClInclude Include="cluster\mpi\View.h">
       <Filter>cluster\mpi\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\DynDensityGradientEstimator.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moldyn\AddClusterColours.h">
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

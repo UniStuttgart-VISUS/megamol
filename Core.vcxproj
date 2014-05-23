@@ -332,6 +332,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\AbstractSimpleParticleDataSource.cpp" />
     <ClCompile Include="moldyn\AbstractSimpleSphereRenderer.cpp" />
     <ClCompile Include="moldyn\AbstractSimpleStoringParticleDataSource.cpp" />
+    <ClCompile Include="moldyn\AddClusterColours.cpp" />
     <ClCompile Include="moldyn\ClusteredSphereRenderer.cpp" />
     <ClCompile Include="moldyn\DatRawDataSource.cpp" />
     <ClCompile Include="moldyn\D3D11SimpleSphereRenderer.cpp" />
@@ -339,6 +340,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\DirPartColModulate.cpp" />
     <ClCompile Include="moldyn\DirPartFilter.cpp" />
     <ClCompile Include="moldyn\DirPartVolume.cpp" />
+    <ClCompile Include="moldyn\DynDensityGradientEstimator.cpp" />
     <ClCompile Include="moldyn\MMSPDDataSource.cpp" />
     <ClCompile Include="moldyn\MMSPDFrameData.cpp" />
     <ClCompile Include="moldyn\MMSPDHeader.cpp" />
@@ -587,6 +589,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\AbstractSimpleParticleDataSource.h" />
     <ClInclude Include="moldyn\AbstractSimpleSphereRenderer.h" />
     <ClInclude Include="moldyn\AbstractSimpleStoringParticleDataSource.h" />
+    <ClInclude Include="moldyn\AddClusterColours.h" />
     <ClInclude Include="moldyn\ClusteredSphereRenderer.h" />
     <ClInclude Include="moldyn\DatRawDataSource.h" />
     <ClInclude Include="moldyn\D3D11SimpleSphereRenderer.h" />
@@ -594,6 +597,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\DirPartColModulate.h" />
     <ClInclude Include="moldyn\DirPartFilter.h" />
     <ClInclude Include="moldyn\DirPartVolume.h" />
+    <ClInclude Include="moldyn\DynDensityGradientEstimator.h" />
     <ClInclude Include="moldyn\MMSPDDataSource.h" />
     <ClInclude Include="moldyn\MMSPDFrameData.h" />
     <ClInclude Include="moldyn\MMSPDHeader.h" />

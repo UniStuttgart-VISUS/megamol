@@ -254,7 +254,6 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
 
                     case MSG_MODULGRAPH:
                         //::DebugBreak();
-                        this->DisconnectViewCall();
                         this->SetSetupMessage(msg);
                         this->processInitialisationMessage();
                         break;
