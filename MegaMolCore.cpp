@@ -586,7 +586,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
     ASSERT(context != NULL);
-    //ASSERT(sizeof(mmcRenderViewContext) == context->Size);
+    ASSERT(sizeof(mmcRenderViewContext) == context->Size);
 
     if (view != NULL) {
         view->ModuleGraphLock().LockExclusive();
