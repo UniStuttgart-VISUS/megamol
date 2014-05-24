@@ -99,8 +99,6 @@ namespace moldyn {
          */
         virtual void release(void);
 
-    private:
-
         /** Nested class of frame data */
         class Frame : public view::AnimDataModule::Frame {
         public:
