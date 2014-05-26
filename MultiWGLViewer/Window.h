@@ -41,7 +41,9 @@ namespace wgl {
         /** Dtor */
         virtual ~Window(void);
 
-        /** Closes this window */
+        /**
+		 * Closes this window, which closes all open tiles.
+		 */
         void Close(void);
 
         /**
@@ -107,17 +109,19 @@ namespace wgl {
 
 		struct Tile
 		{
-			Window *window = nullptr;
-			int index = -1;
-			HWND handle = nullptr;
-			HDC dc = nullptr;
-			HGLRC rc = nullptr;
+			Window *window;
+			int index;
+			HWND handle;
+			HDC dc;
+			HGLRC rc;
 
-			/** The window width */
+			/** The tile width */
 			unsigned int w;
 
-			/** The window height */
+			/** The tile height */
 			unsigned int h;
+
+			Tile::Tile();
 
 			bool Create(Window *window, int index);
 			void End();
@@ -125,8 +129,13 @@ namespace wgl {
 			void Resized(unsigned int w, unsigned int h);
 		};
 
-		static const int maxWindowCount = 4;
-		int activeWindows = 0;
+		static const int maxTileCount = 4;
+		int activeTiles;
+
+		HDC infoDc;
+		HGLRC infoRc;
+
+		static bool CreateRenderContext(HWND window, HDC &dc, HGLRC &rc);
 
         /**
          * The window event processing method
@@ -158,7 +167,7 @@ namespace wgl {
         /** The library instance */
         Instance& inst;
 
-		Tile tiles[maxWindowCount];
+		Tile tiles[maxTileCount];
 
         /** The window handles */
         // HWND hWnd[maxWindowCount];

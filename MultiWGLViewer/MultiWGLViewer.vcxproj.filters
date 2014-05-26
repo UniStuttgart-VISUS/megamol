@@ -59,9 +59,6 @@
     <ClInclude Include="CallbackSlot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="NVSwapGroup.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="VersionInfo.pl" />

@@ -23,8 +23,9 @@ using namespace megamol::wgl;
 /*
  * Window::Window
  */
-Window::Window(Instance& inst, int windows) : ApiHandle(), inst(inst), /*hWnd(NULL), hDC(NULL), hRC(NULL), w(0), h(0),*/
-        renderCallback(), resizeCallback(), renderer(&Window::renderThread) {
+Window::Window(Instance& inst, int windows) : ApiHandle(), inst(inst),
+        renderCallback(), resizeCallback(), renderer(&Window::renderThread),
+		activeTiles(0), infoDc(NULL), infoRc(NULL) {
 
 	if (windows <= 0)
 	{
@@ -33,14 +34,14 @@ Window::Window(Instance& inst, int windows) : ApiHandle(), inst(inst), /*hWnd(NU
 		return;
 	}
 
-	if (windows > maxWindowCount)
+	if (windows > maxTileCount)
 	{
 		// throw std::invalid_argument("windows is too large");
 		fprintf(stderr, "windows is too large\n");
 		return;
 	}
 
-	ZeroMemory(this->tiles, sizeof(Tile) * maxWindowCount);
+	ZeroMemory(this->tiles, sizeof(Tile) * maxTileCount);
 
 	for (int i = 0; i < windows; i++)
 	{
@@ -52,39 +53,19 @@ Window::Window(Instance& inst, int windows) : ApiHandle(), inst(inst), /*hWnd(NU
 		}
 	}
 
-    // ::wglMakeCurrent(NULL, NULL); // detach RC from thread
-	::wglMakeCurrent(tiles[0].dc, tiles[0].rc);
+	// ::wglMakeCurrent(tiles[0].dc, tiles[0].rc);
 
-    // Context sharing!
-    /*if (Window::mainCtxt == NULL) {
+	// Megamol seems to assume that once a window has been created, an
+	// OpenGL context has been set for the calling thread. We don't want to
+	// set any of our tile contexts because we'll need them for rendering in
+	// the render thread (and they can't be current in two threads at the same
+	// time). Therefore, we create a dummy context for the desktop and set
+	// that.
+	if (CreateRenderContext(NULL, infoDc, infoRc))
+		::wglMakeCurrent(infoDc, infoRc);
 
-        Window::mainDC = this->hDC; // DuplicateHandle?
-        Window::mainCtxt = ::wglCreateContext(Window::mainDC);
-        if (Window::mainCtxt == NULL) {
-            this->Close();
-            fprintf(stderr, "Failed to create main rendering context\n");
-            return;
-        }
-    }
-
-    DWORD le = ::GetLastError();
-    GLenum ge = ::glGetError();
-
-    if (::wglShareLists(Window::mainCtxt, this->hRC) != TRUE) {
-        le = ::GetLastError();
-        ge = ::glGetError();
-        fprintf(stderr, "Unable to share contexts between two contexts (GLE: %u; GGE: %u)\n",
-            static_cast<unsigned int>(le), static_cast<unsigned int>(ge));
-    }
-
-    ::ShowWindow(this->hWnd, SW_SHOW);
-    ::SetForegroundWindow(this->hWnd);
-    ::SetFocus(this->hWnd);*/
-
-	int activeWindows = windows;
+	activeTiles = windows;
     this->renderer.Start(this);
-
-    // ::wglMakeCurrent(Window::mainDC, Window::mainCtxt);
 }
 
 
@@ -93,6 +74,11 @@ Window::Window(Instance& inst, int windows) : ApiHandle(), inst(inst), /*hWnd(NU
  */
 Window::~Window(void) {
     this->Close();
+
+	if (infoRc != NULL)
+		::wglDeleteContext(infoRc);
+	if (infoDc != NULL)
+		::ReleaseDC(NULL, infoDc);
 }
 
 
@@ -101,19 +87,19 @@ Window::~Window(void) {
  */
 void Window::Close(void) {
 
-	for (int i = 0; i < maxWindowCount; i++)
+	for (int i = 0; i < maxTileCount; i++)
 		tiles[i].End();
 	
 	if (this->renderer.IsRunning())
 		this->renderer.Join();
 
-	for (int i = 0; i < maxWindowCount; i++)
+	for (int i = 0; i < maxTileCount; i++)
 		tiles[i].Destroy();
 }
 
 bool Window::IsValid()
 {
-	for (int i = 0; i < activeWindows; i++) {
+	for (int i = 0; i < activeTiles; i++) {
 		if (!IsWindow(tiles[i].handle))
 			return false;
 	}
@@ -132,20 +118,20 @@ void Window::SetHint(unsigned int hint, bool f) {
             LONG_PTR normWS = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VISIBLE | WS_OVERLAPPEDWINDOW;
             /* window style without decorations */
             LONG_PTR thinWS = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VISIBLE;
-			for (int i = 0; i < activeWindows; i++)
+			for (int i = 0; i < activeTiles; i++)
 				::SetWindowLongPtr(this->tiles[i].handle, GWL_STYLE, f ? thinWS : normWS);
         } break;
 
         case MMV_WINHINT_HIDECURSOR: {
             HCURSOR cur = f ? NULL : ::LoadCursor(NULL, IDC_ARROW);
             ::SetCursor(cur);
-			for (int i = 0; i < activeWindows; i++)
+			for (int i = 0; i < activeTiles; i++)
 				::SetClassLongPtr(this->tiles[i].handle, GCLP_HCURSOR, reinterpret_cast<LONG_PTR>(cur));
         } break;
 
         case MMV_WINHINT_STAYONTOP: {
             /* window style for decorations */
-			for (int i = 0; i < activeWindows; i++)
+			for (int i = 0; i < activeTiles; i++)
 				::SetWindowPos(this->tiles[i].handle,
 					f ? HWND_TOPMOST : HWND_NOTOPMOST,
 					0, 0, 0, 0,
@@ -164,13 +150,13 @@ void Window::SetHint(unsigned int hint, bool f) {
 
 void Window::SetTitle(const char *title)
 {
-	for (int i = 0; i < activeWindows; i++)
+	for (int i = 0; i < activeTiles; i++)
 		SetWindowTextA(tiles[i].handle, title);
 }
 
 void Window::SetTitle(const wchar_t *title)
 {
-	for (int i = 0; i < activeWindows; i++)
+	for (int i = 0; i < activeTiles; i++)
 		SetWindowTextW(tiles[i].handle, title);
 }
 
@@ -184,7 +170,7 @@ void Window::SetTitle(const wchar_t *title)
 	int x1 = x + width / 2;
 	int y1 = y + height / 2;
 
-	for (int i = 0; i < activeWindows; i++)
+	for (int i = 0; i < activeTiles; i++)
 	{
 		int tx;
 		int ty;
@@ -212,72 +198,70 @@ void Window::SetTitle(const wchar_t *title)
 	}
 }*/
 
-/*
- * Window::mainCtxt
- */
-//HGLRC Window::mainCtxt = NULL;
+Window::Tile::Tile() : window(nullptr), index(-1), handle(nullptr), dc(nullptr), rc(nullptr) {
 
-
-/*
- * Window::mainDC
- */
-//HDC Window::mainDC = NULL;
-
-
-/*Window::WindowData::WindowData(Window *window, int index)
-{
-	this->window = window;
-	this->index = index;
-}*/
+}
 
 
 bool Window::Tile::Create(Window *window, int index)
 {
 	const DWORD style = WS_OVERLAPPEDWINDOW;
 	const DWORD styleEx = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
-	const unsigned int colBits = 32;
-	const unsigned int depthBits = 32;
 
 	::wglMakeCurrent(NULL, NULL); // paranoia
 
 	this->window = window;
 	this->index = index;
 
-	// Create the window itself.
+	// Decide where this window is to be placed.
+	int x = CW_USEDEFAULT;
+	int y = CW_USEDEFAULT;
+	int width = CW_USEDEFAULT;
+	int height = CW_USEDEFAULT;
+
+	bool useExtension = false;
+	if (!useExtension)
+	{
+		int vsx = GetSystemMetrics(SM_XVIRTUALSCREEN);
+		int vsy = GetSystemMetrics(SM_YVIRTUALSCREEN);
+		int vsw = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+		int vsh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+		if (index % 2 == 0) {
+			x = vsx;
+			width = vsw / 2;
+		}
+		else
+		{
+			x = vsw / 2;
+			width = vsw - x;
+		}
+		if (index / 2 == 0)
+		{
+			y = vsy;
+			height = vsh / 2;
+		}
+		else
+		{
+			y = vsh / 2;
+			height = vsh - y;
+		}
+	}
+
+	// Create the tile window.
 	handle = ::CreateWindowEx(styleEx, Instance::WindowClassName,
 		_T("MegaMol™"), style | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		x, y, width, height,
 		NULL, NULL, Instance::HInstance(), this);
 
 	if (handle == NULL)
 		return false;
 
-	// Create a GDI device context for this window.
-	dc = ::GetDC(handle);
-	if (dc == NULL)
-		return false;
-
-	static PIXELFORMATDESCRIPTOR pfd = {
-		sizeof(PIXELFORMATDESCRIPTOR), 1,
-		PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-		PFD_TYPE_RGBA, colBits, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		depthBits, 0, 0, PFD_MAIN_PLANE, 0, 0, 0, 0
-	};
-
-	int pixelFormat = ::ChoosePixelFormat(dc, &pfd);
-	if (pixelFormat == 0) {
+	if (!CreateRenderContext(handle, dc, rc)) {
+		DestroyWindow(handle);
+		handle = NULL;
 		return false;
 	}
-
-	if (!::SetPixelFormat(dc, pixelFormat, &pfd))
-		return false;
-
-	// Create an OpenGL render context for the window device context.
-	rc = ::wglCreateContext(dc);
-	if (rc == NULL)
-		return false;
-
-	ShowWindow(handle, SW_SHOW);
 
 	// Notify the window of its initial position.
 	RECT clientRect;
@@ -327,6 +311,43 @@ void Window::Tile::Resized(unsigned int w, unsigned int h) {
 	window->resizeCallback.Call(*window, p);
 }
 
+
+bool Window::CreateRenderContext(HWND window, HDC &dc, HGLRC &rc) {
+	
+	const unsigned int colBits = 32;
+	const unsigned int depthBits = 32;
+
+	dc = ::GetDC(window);
+	if (dc == NULL)
+		return false;
+
+	// Initialize the pixel format.
+	const static PIXELFORMATDESCRIPTOR pfd = {
+		sizeof(PIXELFORMATDESCRIPTOR), 1,
+		PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+		PFD_TYPE_RGBA, colBits, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		depthBits, 0, 0, PFD_MAIN_PLANE, 0, 0, 0, 0
+	};
+
+	int pixelFormat = ::ChoosePixelFormat(dc, &pfd);
+	if (pixelFormat == 0 || !::SetPixelFormat(dc, pixelFormat, &pfd))
+	{
+		ReleaseDC(window, dc);
+		dc = NULL;
+		return false;
+	}
+
+	// Create an OpenGL render context for the window device context.
+	rc = ::wglCreateContext(dc);
+	if (rc == NULL)
+	{
+		ReleaseDC(window, dc);
+		dc = NULL;
+		return false;
+	}
+
+	return true;
+}
 
 /*
  * Window::WndProc
@@ -411,16 +432,23 @@ DWORD Window::renderThread(void *userData) {
 		context.SynchronisedTime = -1.0;
 
 		// Render all windows in turn.
-		for (int i = 0; i < maxWindowCount; i++)
+		for (int i = 0; i < that->activeTiles; i++)
 		{
 			if (that->tiles[i].rc != nullptr)
 			{
 				// The context must not be bound until ALL windows have been created
-				::wglMakeCurrent(that->tiles[i].dc, that->tiles[i].rc);
+				BOOL result1 = ::wglMakeCurrent(that->tiles[i].dc, that->tiles[i].rc);
+				GLenum ge = ::glGetError();
+				const GLubyte *result = glGetString(GL_EXTENSIONS);
+				ge = ::glGetError();
+				// GL_INVALID_VALUE
+
+				// int v = glh_extension_supported("WGL_NV_gpu_affinity");
 
 				::glViewport(0, 0, that->tiles[i].w, that->tiles[i].h);
 
-				that->renderCallback.Call(*that, &context);
+				if (i == 0)
+					that->renderCallback.Call(*that, &context);
 
 				::SwapBuffers(that->tiles[i].dc);
 			}
