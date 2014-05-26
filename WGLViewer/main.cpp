@@ -494,6 +494,9 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowTitleA)(void *hWnd,
     megamol::wgl::Window *win = megamol::wgl::ApiHandle::InterpretHandle<megamol::wgl::Window>(hWnd);
     if (win == NULL) return;
 
+	if (title == nullptr)
+		win->InitContext();
+
     ::SetWindowTextA(win->Handle(), title);
 }
 

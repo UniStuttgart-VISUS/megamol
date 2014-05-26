@@ -28,7 +28,8 @@ using namespace vislib::sys;
  */
 Window::Window(Instance& inst) : ApiHandle(), inst(inst), hWnd(NULL), hDC(NULL), hRC(NULL), w(0), h(0),
         renderCallback(), resizeCallback(), renderer(&Window::renderThread),
-		affinityDC(NULL), affinityContext(NULL), renderStartEvent(nullptr) {
+		affinityDC(NULL), affinityContext(NULL), guiAffinityContext(NULL),
+		renderStartEvent(nullptr) {
 
     DWORD style = WS_OVERLAPPEDWINDOW;
     DWORD styleEx = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
@@ -112,13 +113,12 @@ Window::Window(Instance& inst) : ApiHandle(), inst(inst), hWnd(NULL), hDC(NULL),
     ::GetClientRect(this->hWnd, &r);
     this->Resized(r.right - r.left, r.bottom - r.top);
 
-	// The renderer will not actually render someone sets the instance's
+	// The renderer will not actually render until someone sets the instance's
 	// renderStartEvent.
 	this->renderStartEvent = inst.GetRenderStartEvent();
     this->renderer.Start(this);
 
     ::wglMakeCurrent(Window::mainDC, Window::mainCtxt);
-
 }
 
 
@@ -135,8 +135,14 @@ Window::~Window(void) {
  */
 void Window::Close(void) {
 
+	wglMakeCurrent(NULL, NULL);
+
+	if (guiAffinityContext != NULL) {
+		wglDeleteContext(guiAffinityContext);
+		guiAffinityContext = NULL;
+	}
+
 	if (affinityContext != NULL) {
-		wglMakeCurrent(NULL, NULL);
 		wglDeleteContext(affinityContext);
 		affinityContext = NULL;
 	}
@@ -235,6 +241,10 @@ void Window::SetHint(unsigned int hint, bool f) {
 
 }
 
+void Window::InitContext() {
+	setupContextAffinity(hWnd);
+}
+
 
 /*
  * Window::mainCtxt
@@ -305,7 +315,6 @@ LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         case WM_SIZE:
             that->Resized(LOWORD(lParam), HIWORD(lParam));
             return 0;
-
     }
 
     return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -316,23 +325,43 @@ LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
  * Window::renderThread
  */
 DWORD Window::renderThread(void *userData) {
-    Window *that = static_cast<Window *>(userData);
-    mmcRenderViewContext context;
-    ::ZeroMemory(&context, sizeof(context));
-    context.Size = sizeof(context);
+	Window *that = static_cast<Window *>(userData);
+	mmcRenderViewContext context;
+	::ZeroMemory(&context, sizeof(context));
+	context.Size = sizeof(context);
 	context.Window = that->hWnd;
 
-    // not too good, but ok for now
+	// not too good, but ok for now
 	if (that->renderStartEvent != nullptr)
 		that->renderStartEvent->Wait();
 	else
 		vislib::sys::Thread::Sleep(2500);
-	
-	// The context must not be bound until ALL windows have been created
-    ::wglMakeCurrent(that->hDC, that->hRC);
 
-	// (Try to) setup the affinity.
-	that->setupContextAffinity(context.Window);
+	// The context must not be bound until ALL windows have been created
+	if (that->affinityContext != nullptr) {
+		//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Using affinity context in "
+		//	"render thread.\n");
+		if (::wglMakeCurrent(that->hDC, that->affinityContext)) {
+			//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Current is now dc %p, rc %p.",
+			//	that->hDC, that->affinityContext);
+		}
+		else {
+			Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to make affinity render "
+				"context current for render thread (%p, %p).", that->hDC, that->affinityContext);
+		}
+	}
+	else {
+		//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Using non-affinity context "
+		//	"in render thread.\n");
+		if (::wglMakeCurrent(that->hDC, that->hRC)) {
+			//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Current is now dc %p, rc %p.",
+			//	that->hDC, that->hRC);
+		}
+		else {
+			Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to make non-affinity render "
+				"context current for render thread (%p, %p).", that->hDC, that->hRC);
+		}
+	}
 
     //if (NVSwapGroup::Instance().JoinSwapGroup(1) == GL_TRUE) {
     //    if (NVSwapGroup::Instance().BindSwapBarrier(1, 1) == GL_TRUE) {
@@ -458,14 +487,58 @@ bool Window::setupContextAffinity(HWND window) {
 					return false;
 				}
 
+				// affinityContext will be used in the render thread. We need
+				// a separate context that the gui thread can load its data
+				// into.
+				guiAffinityContext = wglCreateContext(affinityDC);
+				if (guiAffinityContext == NULL) {
+					Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to "
+						"create a second render context from the affinity "
+						"context.");
+
+					wglDeleteContext(affinityContext);
+					affinityContext = NULL;
+					wglDeleteDCNV(affinityDC);
+					affinityDC = NULL;
+					return false;
+				}
+
+				// For this to work, these context must be shared (which only
+				// works because they use the same affinity mask).
+				if (!wglShareLists(affinityContext, guiAffinityContext)) {
+					Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to "
+						"share affinity contexts.");
+
+					wglDeleteContext(guiAffinityContext);
+					guiAffinityContext = NULL;
+					wglDeleteContext(affinityContext);
+					affinityContext = NULL;
+					wglDeleteDCNV(affinityDC);
+					affinityDC = NULL;
+					return false;
+				}
+
 				// Now make current the affinityContext and the original (!)
 				// device context (because we want to render into the window
 				// represented by the original context).
-				if (!wglMakeCurrent(hDC, affinityContext)) {
+				if (!wglMakeCurrent(hDC, guiAffinityContext)) {
 					Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to "
 						"make the affinity context current.");
+
+					// Fallback to the original context.
+					wglMakeCurrent(mainDC, mainCtxt);
+
+					wglDeleteContext(guiAffinityContext);
+					guiAffinityContext = NULL;
+					wglDeleteContext(affinityContext);
+					affinityContext = NULL;
+					wglDeleteDCNV(affinityDC);
+					affinityDC = NULL;
 					return false;
 				}
+
+				//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Current is now dc %p, rc %p.",
+				//	hDC, guiAffinityContext);
 
 				return true;
 			}
@@ -480,5 +553,6 @@ bool Window::setupContextAffinity(HWND window) {
 		"affinity not set.\n", windowRect.left, windowRect.top,
 		windowRect.right, windowRect.bottom);
 
+	//::wglMakeCurrent(NULL, NULL);
 	return false;
 }

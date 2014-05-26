@@ -100,6 +100,12 @@ namespace wgl {
          */
         void SetHint(unsigned int hint, bool f);
 
+		/**
+		 * Creates and makes current an affinity context if appropriate. If
+		 * not, the non-affinity context remains current.
+		 */
+		void InitContext();
+
     private:
 
         /**
@@ -167,6 +173,13 @@ namespace wgl {
 		 * set.
 		 */
 		HGLRC affinityContext;
+
+		/**
+		 * A second affinity context that shares its resources with
+		 * affinityContext. This can be used by the gui thread to upload
+		 * resources.
+		 */
+		HGLRC guiAffinityContext;
 
 		/**
 		 * An pointer to an event that will set when the windows is to start

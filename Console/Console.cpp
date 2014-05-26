@@ -702,6 +702,144 @@ static void fixFileName(void) {
     ::mmcEnumParametersA(hCore, fixFileNameEnum, NULL);
 }
 
+/**
+ * Performs about the same task as
+ * megamol::core::view::AbstractView::desiredWindowPosition by parsing a
+ * window position string.
+ *
+ * @param str The value to be parsed
+ * @param x To receive the coordinate of the upper left corner
+ * @param y To recieve the coordinate of the upper left corner
+ * @param w To receive the width
+ * @param h To receive the height
+ * @param nd To receive the flag deactivating window decorations
+ *
+ * @return true
+ */
+static bool parseWindowPosition(const vislib::StringW& str,
+	int *x, int *y, int *w, int *h, bool *nd) {
+	vislib::StringW v = str;
+	int vi = -1;
+	v.TrimSpaces();
+
+	if (x != NULL) { *x = INT_MIN; }
+	if (y != NULL) { *y = INT_MIN; }
+	if (w != NULL) { *w = INT_MIN; }
+	if (h != NULL) { *h = INT_MIN; }
+	if (nd != NULL) { *nd = false; }
+
+	while (!v.IsEmpty()) {
+		if ((v[0] == L'X') || (v[0] == L'x')) {
+			vi = 0;
+		}
+		else if ((v[0] == L'Y') || (v[0] == L'y')) {
+			vi = 1;
+		}
+		else if ((v[0] == L'W') || (v[0] == L'w')) {
+			vi = 2;
+		}
+		else if ((v[0] == L'H') || (v[0] == L'h')) {
+			vi = 3;
+		}
+		else if ((v[0] == L'N') || (v[0] == L'n')) {
+			vi = 4;
+		}
+		else if ((v[0] == L'D') || (v[0] == L'd')) {
+			if (nd != NULL) {
+				*nd = (vi == 4);
+			}
+			vi = 4;
+		}
+		else {
+			/*Log::DefaultLog.WriteMsg(
+				vislib::sys::Log::LEVEL_WARN,
+				"Unexpected character %s in window position definition.\n",
+				vislib::StringA(vislib::StringA(v)[0], 1).PeekBuffer());*/
+			break;
+		}
+		v = v.Substring(1);
+		v.TrimSpaces();
+
+		if (vi == 4) continue; // [n]d are not followed by a number
+
+		if (vi >= 0) {
+			// now we want to parse a double :-/
+			int cp = 0;
+			int len = v.Length();
+			while ((cp < len) && (((v[cp] >= L'0') && (v[cp] <= L'9'))
+				|| (v[cp] == L'+') /*|| (v[cp] == L'.')
+								   || (v[cp] == L',') */ || (v[cp] == L'-')
+								   /*|| (v[cp] == L'e') || (v[cp] == L'E')*/)) {
+				cp++;
+			}
+
+			try {
+				int i = vislib::CharTraitsW::ParseInt(v.Substring(0, cp));
+				switch (vi) {
+					case 0:
+						if (x != NULL) { *x = i; }
+						break;
+					case 1:
+						if (y != NULL) { *y = i; }
+						break;
+					case 2:
+						if (w != NULL) { *w = i; }
+						break;
+					case 3:
+						if (h != NULL) { *h = i; }
+						break;
+				}
+			}
+			catch (...) {
+				const char *str = "unknown";
+				switch (vi) {
+					case 0: str = "X"; break;
+					case 1: str = "Y"; break;
+					case 2: str = "W"; break;
+					case 3: str = "H"; break;
+				}
+				vi = -1;
+				/*Log::DefaultLog.WriteMsg(
+					vislib::sys::Log::LEVEL_WARN,
+					"Unable to parse value for %s.\n", str);*/
+			}
+
+			v = v.Substring(cp);
+		}
+
+	}
+
+	return true;
+}
+
+/**
+ * Performs about the same task as
+ * megamol::core::view::AbstractView::DesiredWindowPosition by retrieving the
+ * wildcard window position from the configuration.
+ *
+ * @param x To receive the coordinate of the upper left corner
+ * @param y To recieve the coordinate of the upper left corner
+ * @param w To receive the width
+ * @param h To receive the height
+ * @param nd To receive the flag deactivating window decorations
+ *
+ * @return true if a window position could be retrieved, false if not. In the
+ *         latter case the value the parameters are pointing to are not altered.
+ */
+static bool getDesiredWindowPosition(int *x, int *y, int *w, int *h, bool *nd) {
+
+	vislib::StringA name = "*-Window";
+
+	::mmcValueType type = MMC_TYPE_WSTR;
+	const void *data = NULL;
+
+	type = MMC_TYPE_VOIDP;
+	data = ::mmcGetConfigurationValue(hCore, MMC_CFGID_VARIABLE, name, &type);
+	if (data == nullptr || type != MMC_TYPE_WSTR)
+		return false;
+	return parseWindowPosition(vislib::StringW((const wchar_t *)data), x, y, w, h, nd);
+}
+
 
 /**
  * runNormal
@@ -1127,6 +1265,37 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                 retval = -28;
                 continue;
             }
+
+#ifndef NOWINDOWPOSFIX
+			int wndX, wndY, wndW = -1, wndH = -1;
+			bool wndND;
+			if (getDesiredWindowPosition(&wndX, &wndY, &wndW, &wndH, &wndND)) {
+				if (wndND) {
+					unsigned int flags = MMV_WINHINT_NODECORATIONS | MMV_WINHINT_STAYONTOP;
+					if (!hotFixes.Contains("DontHideCursor")) {
+						flags |= MMV_WINHINT_HIDECURSOR;
+					}
+					::mmvSetWindowHints(win->HWnd(), flags, flags);
+
+					// TODO: Support parameters
+					::mmvSetWindowHints(win->HWnd(), MMV_WINHINT_PRESENTATION, MMV_WINHINT_PRESENTATION);
+
+				}
+				if ((wndX != INT_MIN) && (wndY != INT_MIN)) {
+					::mmvSetWindowPosition(win->HWnd(), wndX, wndY);
+				}
+				if ((wndW != INT_MIN) && (wndH != INT_MIN)) {
+					::mmvSetWindowSize(win->HWnd(), wndW, wndH);
+				}
+			}
+
+			// Create a render context for this window. Not sure how best to
+			// send a message to the window. For now, set the title to nullptr
+			// (will be replaced later) which, for the WGLViewer, will trigger
+			// the creation of the affinity context.
+			::mmvSetWindowTitleA(win->HWnd(), nullptr);
+#endif
+
             ::mmvSetUserData(win->HWnd(),
                 static_cast<void*>(win.operator->()));
             if (!::mmcInstantiatePendingView(hCore, win->HView())) {
@@ -1225,6 +1394,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                 "Testing Relevance of Parameters for \"%s\":",
                 vislib::StringA(str).PeekBuffer());
             ::mmcEnumParametersA(hCore, testParameterRelevance, win->HView());
+#ifdef NOWINDOWPOSFIX
             int wndX, wndY, wndW, wndH;
             bool wndND;
             if (::mmcDesiredViewWindowConfig(win->HView(),
@@ -1247,6 +1417,18 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                     ::mmvSetWindowSize(win->HWnd(), wndW, wndH);
                 }
             }
+#endif
+
+#ifndef NOWINDOWPOSFIX
+			// For the sake of keeping the affinity, we now place the window
+			// before creating the view. As a consequence, if the window
+			// doesn't move later, the view may never receive a Resize
+			// callback. Resize the window again to force a callback now.
+			if ((wndW != INT_MIN) && (wndH != INT_MIN)) {
+				::mmvSetWindowSize(win->HWnd(), wndW - 1, wndH);
+				::mmvSetWindowSize(win->HWnd(), wndW, wndH);
+			}
+#endif
 
             win->RegisterHotKeys(hCore);
             if (hotFixes.Contains("EnableFileNameFix")) {
@@ -1305,9 +1487,11 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 
     megamol::console::JobManager::Instance()->StartJobs();
 
-    for (SIZE_T i = 0; i < winPoss.Count(); i += 2) {
+#ifdef NOWINDOWPOSFIX
+	for (SIZE_T i = 0; i < winPoss.Count(); i += 2) {
         setWindowPosition(winPoss[i], winPoss[i + 1]);
     }
+#endif
 
     // Note: This frontend is not capable of createing new (view/job)instances
     // after this point is reached! (ATM)
