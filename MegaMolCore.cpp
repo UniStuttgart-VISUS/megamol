@@ -586,6 +586,9 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
     ASSERT(context != NULL);
+    // If the following assert explodes, some one has added a new member to the
+    // context structure in the core and not everything has been rebuilt. Most
+    // likely, you should update the frontend and rebuild it.
     ASSERT(sizeof(mmcRenderViewContext) == context->Size);
 
     if (view != NULL) {
@@ -610,9 +613,13 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
         if (view->View() != NULL) {
             double it = context->SynchronisedTime;
 
-            if ((it < 0.0)or(vislib::math::IsEqual(it, 0.0))) {
+            if (it <= 0.0) {
                 // If we did not get a time via the context, determine the time
                 // by using the standard method.
+                // Note: 'it' being *exactly* zero is a special case that we
+                // want to use the instance time and not store it; if 'it' is
+                // negative, we want to use the instance time, too, but also in
+                // the following frames until the caller resets it.
                 it = view->View()->GetCoreInstance()->GetCoreInstanceTime();
 
                 if (context->SynchronisedTime != 0) {

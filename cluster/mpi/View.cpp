@@ -187,8 +187,10 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
     if (canRender) {
         // We have a master, check whether it is still valid. It is OK to do
         // this everywhere, because only the data from the real master will
-        // remain after the broadcast.
-        state.InvalidateMaster = !this->hasMasterConnection;
+        // remain after the broadcast. Furthermore, nodes that are currently not
+        // the master can never invalidate it.
+        state.InvalidateMaster = (this->isBcastMaster()
+            && !this->hasMasterConnection);
     } else {
         // We have no master, so we try to negotiate one.
         canRender = this->negotiateBcastMaster();
@@ -264,6 +266,7 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
                         vislib::StringA name(msg.GetBodyAs<char>(),
                             msg.GetHeader().GetBodySize());
                         this->ConnectView(name);
+                        // Client additionally does: this->views[0]->SetCamIniMessage();
                         } break;
 
                     case MSG_PARAMUPDATE: {

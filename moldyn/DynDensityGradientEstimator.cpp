@@ -6,6 +6,8 @@
  */
 
 #include "stdafx.h"
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include "DynDensityGradientEstimator.h"
 #include "moldyn/MultiParticleDataCall.h"
 #include "moldyn/DirectionalParticleDataCall.h"
