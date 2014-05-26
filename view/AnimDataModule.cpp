@@ -21,7 +21,7 @@ using namespace megamol::core;
 view::AnimDataModule::AnimDataModule(void) : frameCnt(0),
         loader(loaderFunction), frameCache(NULL), cacheSize(0),
         stateLock(), lastRequested(0) {
-    // Intentionally empty
+    this->isRunning.store(false);
 }
 
 
@@ -32,10 +32,12 @@ view::AnimDataModule::~AnimDataModule(void) {
     this->Release();
 
     Frame ** frames = this->frameCache;
-    this->frameCache = NULL;
+//    this->frameCache = NULL;
+    this->isRunning.store(false);
     if (this->loader.IsRunning()) {
         this->loader.Join();
     }
+    this->frameCache = NULL;
     if (frames != NULL) {
         for (unsigned int i = 0; i < this->cacheSize; i++) {
             delete frames[i];
@@ -84,6 +86,7 @@ void view::AnimDataModule::initFrameCache(unsigned int cacheSize) {
         this->frameCache[0]->state = Frame::STATE_AVAILABLE;
         this->lastRequested = 0;
 
+        this->isRunning.store(true);
         this->loader.Start(this);
     } else {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
@@ -152,10 +155,12 @@ view::AnimDataModule::Frame * view::AnimDataModule::requestLockedFrame(unsigned 
  */
 void view::AnimDataModule::resetFrameCache(void) {
     Frame ** frames = this->frameCache;
-    this->frameCache = NULL;
+//    this->frameCache = NULL;
+    this->isRunning.store(false);
     if (this->loader.IsRunning()) {
         this->loader.Join();
     }
+    this->frameCache = NULL;
     if (frames != NULL) {
         for (unsigned int i = 0; i < this->cacheSize; i++) {
             delete frames[i];
@@ -190,10 +195,10 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
 #endif /* _LOADING_REPORTING */
     Frame *frame;
 
-    while (This->frameCache != NULL) {
+    while (This->isRunning.load()) {
         // sleep to enforce thread changes
         vislib::sys::Thread::Sleep(1);
-        if (This->frameCache == NULL) break;
+        if (!This->isRunning.load()) break;
 
         // idea:
         //  1. search for the most important frame to be loaded.
@@ -207,20 +212,20 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
         index = req = This->lastRequested;
         for (j = 0; j < This->cacheSize; j++) {
             for (i = 0; i < This->cacheSize; i++) {
-                if (This->frameCache == NULL) break;
+                if (!This->isRunning.load()) break;
                 if (((This->frameCache[i]->state == Frame::STATE_AVAILABLE)
                         || (This->frameCache[i]->state == Frame::STATE_INUSE)) 
                         && (This->frameCache[i]->frame == index)) {
                     break;
                 }
             }
-            if (This->frameCache == NULL) break;
+            if (!This->isRunning.load()) break;
             if (i >= This->cacheSize) {
                 break;
             }
             index = (index + 1) % This->frameCnt;
         }
-        if (This->frameCache == NULL) break;
+        if (!This->isRunning.load()) break;
         if (j >= This->cacheSize) {
             if (j >= This->frameCnt) {
                 ASSERT(This->frameCnt == This->cacheSize);

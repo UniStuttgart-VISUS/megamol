@@ -11,6 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <atomic>
+
 #include "Module.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/Thread.h"
@@ -233,6 +235,8 @@ namespace view {
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
+
+        std::atomic_bool isRunning;
 
     };
 
