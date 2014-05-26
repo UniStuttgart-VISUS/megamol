@@ -78,6 +78,11 @@ bool misc::ImageViewer::GetExtents(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
+    if (cr->GetCameraParameters() != NULL) {
+        bool rightEye = (cr->GetCameraParameters()->Eye() == vislib::graphics::CameraParameters::RIGHT_EYE);
+        assertImage(rightEye);
+    }
+
     cr->SetTimeFramesCount(1);
     cr->AccessBoundingBoxes().Clear();
     cr->AccessBoundingBoxes().SetObjectSpaceBBox(0.0f, 0.0f, -0.5f,
@@ -97,15 +102,8 @@ void misc::ImageViewer::release(void) {
 }
 
 
-/*
- * misc::ImageViewer::Render
- */
-bool misc::ImageViewer::Render(Call& call) {
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == NULL) return false;
-    bool rightEye = (cr3d->GetCameraParameters()->Eye() == vislib::graphics::CameraParameters::RIGHT_EYE);
+void misc::ImageViewer::assertImage(bool rightEye) {
     param::ParamSlot *filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
-    ::glEnable(GL_TEXTURE_2D);
     if (filenameSlot->IsDirty()) {
         filenameSlot->ResetDirty();
         const vislib::TString& filename = filenameSlot->Param<param::FilePathParam>()->Value();
@@ -150,6 +148,19 @@ bool misc::ImageViewer::Render(Call& call) {
             printf("Failed\n");
         }
     }
+}
+
+
+/*
+ * misc::ImageViewer::Render
+ */
+bool misc::ImageViewer::Render(Call& call) {
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>(&call);
+    if (cr3d == NULL) return false;
+    bool rightEye = (cr3d->GetCameraParameters()->Eye() == vislib::graphics::CameraParameters::RIGHT_EYE);
+    //param::ParamSlot *filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
+    ::glEnable(GL_TEXTURE_2D);
+    assertImage(rightEye);
 
     ::glDisable(GL_LINE_SMOOTH);
     ::glDisable(GL_BLEND);

@@ -120,6 +120,8 @@ namespace misc {
          */
         bool onFilesPasted(param::ParamSlot &slot);
 
+        void assertImage(bool rightEye);
+
         /** The image file path slot */
         param::ParamSlot leftFilenameSlot;
 
