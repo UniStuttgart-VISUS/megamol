@@ -25,7 +25,7 @@ const TCHAR* Instance::WindowClassName = _T("MMWGLWNDCLS");
 /*
  * Instance::Instance
  */
-Instance::Instance(void) : ApiHandle(), running(true) {
+Instance::Instance(void) : ApiHandle(), running(true), renderStartEvent(true, false) {
     // Intentionally empty
 }
 
@@ -41,6 +41,14 @@ Instance::~Instance(void) {
         }
     }
 
+}
+
+
+/*
+ * Instance::StartRender
+ */
+vislib::sys::Event *Instance::GetRenderStartEvent(void) {
+	return &renderStartEvent;
 }
 
 
@@ -81,6 +89,7 @@ bool Instance::Init(HINSTANCE hInst) {
  * Instance::ProcessEvents
  */
 bool Instance::ProcessEvents(void) {
+
     MSG msg;
     if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
         if (msg.message == WM_QUIT) {
@@ -93,11 +102,20 @@ bool Instance::ProcessEvents(void) {
         }
 
     } else {
+		StartRender();
         vislib::sys::Thread::Reschedule();
 
     }
 
     return this->running;
+}
+
+
+/*
+ * Instance::StartRender
+ */
+void Instance::StartRender(void) {
+	renderStartEvent.Set();
 }
 
 

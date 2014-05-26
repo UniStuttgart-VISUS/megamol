@@ -28,7 +28,7 @@ using namespace vislib::sys;
  */
 Window::Window(Instance& inst) : ApiHandle(), inst(inst), hWnd(NULL), hDC(NULL), hRC(NULL), w(0), h(0),
         renderCallback(), resizeCallback(), renderer(&Window::renderThread),
-		affinityDC(NULL), affinityContext(NULL) {
+		affinityDC(NULL), affinityContext(NULL), renderStartEvent(nullptr) {
 
     DWORD style = WS_OVERLAPPEDWINDOW;
     DWORD styleEx = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
@@ -112,6 +112,9 @@ Window::Window(Instance& inst) : ApiHandle(), inst(inst), hWnd(NULL), hDC(NULL),
     ::GetClientRect(this->hWnd, &r);
     this->Resized(r.right - r.left, r.bottom - r.top);
 
+	// The renderer will not actually render someone sets the instance's
+	// renderStartEvent.
+	this->renderStartEvent = inst.GetRenderStartEvent();
     this->renderer.Start(this);
 
     ::wglMakeCurrent(Window::mainDC, Window::mainCtxt);
@@ -150,6 +153,9 @@ void Window::Close(void) {
         }
         this->hRC = NULL;
     }
+
+	if (renderStartEvent != nullptr)
+		renderStartEvent->Set();
 
     if (this->renderer.IsRunning()) {
         this->renderer.Join();
@@ -317,8 +323,12 @@ DWORD Window::renderThread(void *userData) {
 	context.Window = that->hWnd;
 
     // not too good, but ok for now
-    vislib::sys::Thread::Sleep(2500);
-    // The context must not be bound until ALL windows have been created
+	if (that->renderStartEvent != nullptr)
+		that->renderStartEvent->Wait();
+	else
+		vislib::sys::Thread::Sleep(2500);
+	
+	// The context must not be bound until ALL windows have been created
     ::wglMakeCurrent(that->hDC, that->hRC);
 
 	// (Try to) setup the affinity.
@@ -350,6 +360,9 @@ DWORD Window::renderThread(void *userData) {
     return 0;
 }
 
+/*
+ * Window::setupContextAffinity
+ */
 bool Window::setupContextAffinity(HWND window) {
 
 	if (window == NULL) {
@@ -377,8 +390,6 @@ bool Window::setupContextAffinity(HWND window) {
 		// The affinity extension is unavailable.
 		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
 			"WGL_NV_gpu_affinity extension is unavailable. GPU affinity not set.");
-		/*puts("WGL_NV_gpu_affinity extension is unavailable. GPU affinity not "
-			"set.");*/
 		return false;
 	}
 
@@ -412,7 +423,9 @@ bool Window::setupContextAffinity(HWND window) {
 					"to GPU #%u device \"%s\" (\"%s\").\n", gpuIndex,
 					deviceInfo.DeviceString, deviceInfo.DeviceName);
 
-				HGPUNV gpuMask[2] { gpuHandle, nullptr };
+				HGPUNV gpuMask[2];
+				gpuMask[0] = gpuHandle;
+				gpuMask[1] = nullptr;
 
 				affinityDC = wglCreateAffinityDCNV(gpuMask);
 				if (affinityDC == NULL) {

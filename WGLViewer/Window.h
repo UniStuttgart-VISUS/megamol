@@ -14,6 +14,7 @@
 #include "ApiHandle.h"
 #include "CallbackSlot.h"
 #include "Instance.h"
+#include "vislib/Event.h"
 #include "vislib/Thread.h"
 
 
@@ -166,6 +167,13 @@ namespace wgl {
 		 * set.
 		 */
 		HGLRC affinityContext;
+
+		/**
+		 * An pointer to an event that will set when the windows is to start
+		 * rendering. If null, the window will start rendering after a short
+		 * delay instead.
+		 */
+		vislib::sys::Event *renderStartEvent;
 
         /** The window width */
         unsigned int w;

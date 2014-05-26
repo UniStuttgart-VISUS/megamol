@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "ApiHandle.h"
+#include "vislib/Event.h"
 
 
 namespace megamol {
@@ -41,6 +42,14 @@ namespace wgl {
         /** Dtor */
         virtual ~Instance(void);
 
+		/**
+		 * Retrieves a pointer to an event that will be set once this
+		 * instance's windows are to start rendering.
+		 *
+		 * @returns A pointer to the event
+		 */
+		vislib::sys::Event *GetRenderStartEvent(void);
+
         /**
          * Initializes the instance
          *
@@ -56,6 +65,12 @@ namespace wgl {
          * @return True if the application should continue
          */
         bool ProcessEvents(void);
+
+		/**
+		 * Starts the rendering loop if it is not already running (by setting
+		 * the event that can be retrieved via GetRenderStartEvent).
+		 */
+		void StartRender(void);
 
     private:
 
@@ -73,6 +88,11 @@ namespace wgl {
         /** Flag whether or not the application is running */
         bool running;
 
+		/**
+		 * An event to be set when the instance's windows are to start
+		 * rendering.
+		 */
+		vislib::sys::Event renderStartEvent;
     };
 
 
