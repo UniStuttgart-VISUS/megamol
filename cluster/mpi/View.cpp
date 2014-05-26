@@ -41,10 +41,10 @@
 #include "vislib/UTF8Encoder.h"
 
 
-#define _TRACE_INFO(fmt, ...)
-#define _TRACE_MESSAGING(fmt, ...)
-#define _TRACE_PACKAGING(fmt, ...)
-#define _TRACE_BARRIERS(fmt, ...)
+//#define _TRACE_INFO(fmt, ...)
+//#define _TRACE_MESSAGING(fmt, ...)
+//#define _TRACE_PACKAGING(fmt, ...)
+//#define _TRACE_BARRIERS(fmt, ...)
 
 #ifndef _TRACE_INFO
 #define _TRACE_INFO(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO, fmt,\
@@ -232,6 +232,7 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
         // Post-process status
         if (!this->isBcastMaster() && (state.RelaySize > 0)) {
             this->ModuleGraphLock().LockExclusive();
+            vislib::sys::AutoLock l(this->relayBufferLock); // TODO: Should be unnecessary.
             auto av = this->GetConnectedView();
             size_t offset = 0;
 
@@ -250,13 +251,19 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
                         if (msg.GetBodyAs<simple::TimeSyncData>()->cnt
                                 == TIMESYNCDATACOUNT) {
                             // Make the view prepare for the next graph.
+                            _TRACE_INFO("Rank %d is disconnecting the "
+                                "view call...", this->mpiRank);
                             this->DisconnectViewCall();
+                            _TRACE_INFO("Rank %d is cleaning up the "
+                                "module graph...", this->mpiRank);
                             this->GetCoreInstance()->CleanupModuleGraph();
                         }
                         break;
 
                     case MSG_MODULGRAPH:
                         //::DebugBreak();
+                        _TRACE_INFO("Rank %d is preparing the module "
+                            "graph...", this->mpiRank);
                         this->SetSetupMessage(msg);
                         this->processInitialisationMessage();
                         break;
@@ -286,7 +293,7 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
                         } break;
 
                     case MSG_CAMERAUPDATE:
-                        if ((av != nullptr) 
+                        if ((av != nullptr)
                                 && (msg.GetHeader().GetBodySize() > 0)) {
                             vislib::RawStorageSerialiser ser(
                                 msg.GetBodyAs<BYTE>(),
