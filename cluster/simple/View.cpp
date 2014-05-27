@@ -289,31 +289,20 @@ bool cluster::simple::View::create(void) {
 
 
 /*
- * cluster::simple::View::onProcessInitialisationMessage
- */
-void cluster::simple::View::onProcessInitialisationMessage(
-        const vislib::net::AbstractSimpleMessage& msg) {
-    VLAUTOSTACKTRACE;
-
-    if (msg.GetHeader().GetMessageID() == MSG_MODULGRAPH) {
-        this->GetCoreInstance()->SetupGraphFromNetwork(&msg);
-        this->client->ContinueSetup();
-    } else {
-        this->directCamSyncUpdated(this->directCamSyncSlot);
-        if (msg.GetHeader().GetMessageID() == MSG_CAMERAUPDATE) {
-            this->client->ContinueSetup(2);
-        }
-    }
-}
-
-
-/*
  * cluster::simple::View::processInitialisationMessage
  */
 void cluster::simple::View::processInitialisationMessage(void) {
     VLAUTOSTACKTRACE;
     if (this->initMsg != NULL) {
-        this->onProcessInitialisationMessage(*this->initMsg);
+        if (this->initMsg->GetHeader().GetMessageID() == MSG_MODULGRAPH) {
+            this->GetCoreInstance()->SetupGraphFromNetwork(this->initMsg);
+            this->client->ContinueSetup();
+        } else {
+            this->directCamSyncUpdated(this->directCamSyncSlot);
+            if (this->initMsg->GetHeader().GetMessageID() == MSG_CAMERAUPDATE) {
+                this->client->ContinueSetup(2);
+            }
+        }
         SAFE_DELETE(this->initMsg);
     }
 }

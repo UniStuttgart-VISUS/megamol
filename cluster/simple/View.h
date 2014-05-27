@@ -130,18 +130,6 @@ namespace simple {
         virtual bool create(void);
 
         /**
-         * This method is called if an initialisation message is available and
-         * needs to be processed.
-         *
-         * This implementation handles the message. Subclasses can call it to
-         * perform the standard initialisation procedure
-         *
-         * @param msg The initialisation message.
-         */
-        virtual void onProcessInitialisationMessage(
-            const vislib::net::AbstractSimpleMessage& msg);
-
-        /**
          * Triggers processing of the next initialisation message if any.
          */
         void processInitialisationMessage(void);

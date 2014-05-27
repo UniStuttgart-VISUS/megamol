@@ -86,7 +86,9 @@ megamol::core::cluster::mpi::View::View(void) : Base1(), Base2(),
         isMpiInitialised(false),
         mpiRank(-1),
         mpiSize(-1),
+        mustNegotiateMaster(true),
         paramInitialiseMpi("initialiseMpi", "Enables the view to initialise the MPI library."),
+        paramUseGsync("useGsync", "Try to synchronise buffer swaps if possible."),
         relayOffset(0) {
     VLAUTOSTACKTRACE;
     this->hasMasterConnection.store(false);
@@ -94,6 +96,9 @@ megamol::core::cluster::mpi::View::View(void) : Base1(), Base2(),
     this->paramInitialiseMpi << new param::BoolParam(true);
     this->paramInitialiseMpi.SetUpdateCallback(&View::onInitialiseMpiChanged);
     this->MakeSlotAvailable(&this->paramInitialiseMpi);
+
+    this->paramUseGsync << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->paramUseGsync);
 }
 
 
@@ -183,21 +188,35 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
     state.InstanceTime = instTime;
 
     /* Ensure that we know where to get the status from. */
-    canRender = this->knowsBcastMaster();
-    if (canRender) {
+    if (!this->knowsBcastMaster()) {
+        this->mustNegotiateMaster = true;
+    }
+    if (this->mustNegotiateMaster) {
+        // We have no master, so we try to negotiate one.
+        this->mustNegotiateMaster = !this->negotiateBcastMaster();
+        _TRACE_BARRIERS("Rank %d has negotiated the master. Must negotiate "
+            "again: %d\n", this->mpiRank, this->mustNegotiateMaster);
+
+        // Request all nodes to enable Gsync (join the swap group) given that
+        // - we have negotiated a master
+        // - the master has a Gsync-capable graphics adapter
+        // - Gsync has not yet been enabled
+        // - the user did not disable Gsync
+        state.InitSwapGroup = !this->mustNegotiateMaster
+            && this->isBcastMaster() && this->hasGsync()
+            && !this->isGsyncEnabled()
+            && this->paramUseGsync.Param<param::BoolParam>()->Value();
+    } else {
         // We have a master, check whether it is still valid. It is OK to do
         // this everywhere, because only the data from the real master will
         // remain after the broadcast. Furthermore, nodes that are currently not
         // the master can never invalidate it.
         state.InvalidateMaster = (this->isBcastMaster()
             && !this->hasMasterConnection);
-    } else {
-        // We have no master, so we try to negotiate one.
-        canRender = this->negotiateBcastMaster();
     }
 
-    /* If we can render, synchronise the state now. */
-    if (canRender && (this->mpiSize > 1)) {
+    /* If we have a master, synchronise the state now. */
+    if (this->knowsBcastMaster() && (this->mpiSize > 1)) {
         _TRACE_BARRIERS("Rank %d is before status synchronisation.\n",
             this->mpiRank);
 #ifdef WITH_MPI
@@ -211,120 +230,130 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
             ::MPI_Bcast(&state, sizeof(state), MPI_BYTE, this->getBcastMaster(),
                 MPI_COMM_WORLD);
 
-            if (!this->isBcastMaster()) {
-                _TRACE_MESSAGING("Rank %d is preparing to receive %u bytes of "
-                    "relayed messages...\n", this->mpiRank, state.RelaySize);
-                this->relayBuffer.AssertSize(state.RelaySize);
+            if (state.InitSwapGroup) {
+                SwapGroupApi::GetInstance().JoinSwapGroup(1);
             }
 
-            if (state.RelaySize > 0) {
-                _TRACE_MESSAGING("Rank %d is participating in relay of "
-                    "%u bytes.\n", this->mpiRank, state.RelaySize);
-                ::MPI_Bcast(static_cast<void *>(this->relayBuffer),
-                    state.RelaySize, MPI_BYTE, this->getBcastMaster(),
-                    MPI_COMM_WORLD);
+            if (state.InvalidateMaster) {
+                this->mustNegotiateMaster = true;
+                _TRACE_INFO("Rank %d invalidated the broadcast master. Will "
+                    "be renegotiated in the next frame.\n", this->mpiRank);
             }
 
-            ASSERT(this->relayOffset == 0);
+            //// Make the view prepare for the next graph.
+            //_TRACE_INFO("Rank %d is disconnecting the view call...",
+            //    this->mpiRank);
+            //this->DisconnectViewCall();
+            //_TRACE_INFO("Rank %d is cleaning up the module graph...",
+            //    this->mpiRank);
+            //this->GetCoreInstance()->CleanupModuleGraph();
         }
+
+
+        if (!this->isBcastMaster()) {
+            _TRACE_MESSAGING("Rank %d is preparing to receive %u bytes of "
+                "relayed messages...\n", this->mpiRank, state.RelaySize);
+            this->relayBuffer.AssertSize(state.RelaySize);
+        }
+
+        if (state.RelaySize > 0) {
+            _TRACE_MESSAGING("Rank %d is participating in relay of %u bytes.\n",
+                this->mpiRank, state.RelaySize);
+            ::MPI_Bcast(static_cast<void *>(this->relayBuffer),
+                state.RelaySize, MPI_BYTE, this->getBcastMaster(),
+                MPI_COMM_WORLD);
+        }
+
+        ASSERT(this->relayOffset == 0);
+    } /* if (this->knowsBcastMaster() && (this->mpiSize > 1)) */
 #endif /* WITH_MPI */
 
-        // Post-process status
-        if (!this->isBcastMaster() && (state.RelaySize > 0)) {
-            this->ModuleGraphLock().LockExclusive();
-            vislib::sys::AutoLock l(this->relayBufferLock); // TODO: Should be unnecessary.
-            auto av = this->GetConnectedView();
-            size_t offset = 0;
+    // Post-process status
+    if (!this->isBcastMaster() && (state.RelaySize > 0)) {
+        this->ModuleGraphLock().LockExclusive();
+        vislib::sys::AutoLock l(this->relayBufferLock); // TODO: Should be unnecessary.
+        auto av = this->GetConnectedView();
+        size_t offset = 0;
 
-            while (offset < state.RelaySize) {
-                vislib::net::ShallowSimpleMessage msg(this->relayBuffer.At(
-                    offset));
-                _TRACE_MESSAGING("Rank %d is processing relayed message %u "
-                    "(%u bytes in body) at offset %u...\n", this->mpiRank,
-                    msg.GetHeader().GetMessageID(),
-                    msg.GetHeader().GetBodySize(),
-                    offset);
-                offset += msg.GetMessageSize();
+        while (offset < state.RelaySize) {
+            vislib::net::ShallowSimpleMessage msg(this->relayBuffer.At(offset));
+            _TRACE_MESSAGING("Rank %d is processing relayed message %u "
+                "(%u bytes in body) at offset %u...\n", this->mpiRank,
+                msg.GetHeader().GetMessageID(),
+                msg.GetHeader().GetBodySize(),
+                offset);
+            offset += msg.GetMessageSize();
 
-                switch (msg.GetHeader().GetMessageID()) {
-                    case MSG_TIMESYNC:
-                        if (msg.GetBodyAs<simple::TimeSyncData>()->cnt
-                                == TIMESYNCDATACOUNT) {
-                            // Make the view prepare for the next graph.
-                            _TRACE_INFO("Rank %d is disconnecting the "
-                                "view call...", this->mpiRank);
-                            this->DisconnectViewCall();
-                            _TRACE_INFO("Rank %d is cleaning up the "
-                                "module graph...", this->mpiRank);
-                            this->GetCoreInstance()->CleanupModuleGraph();
-                        }
-                        break;
+            switch (msg.GetHeader().GetMessageID()) {
+                case MSG_TIMESYNC:
+                    if (msg.GetBodyAs<simple::TimeSyncData>()->cnt
+                            == TIMESYNCDATACOUNT) {
+                        // Make the view prepare for the next graph.
+                        _TRACE_INFO("Rank %d is disconnecting the "
+                            "view call...", this->mpiRank);
+                        this->DisconnectViewCall();
+                        _TRACE_INFO("Rank %d is cleaning up the "
+                            "module graph...", this->mpiRank);
+                        this->GetCoreInstance()->CleanupModuleGraph();
+                    }
+                    break;
 
-                    case MSG_MODULGRAPH:
-                        //::DebugBreak();
-                        _TRACE_INFO("Rank %d is preparing the module "
-                            "graph...", this->mpiRank);
-                        this->SetSetupMessage(msg);
-                        this->processInitialisationMessage();
-                        break;
+                case MSG_MODULGRAPH:
+                    //::DebugBreak();
+                    _TRACE_INFO("Rank %d is preparing the module "
+                        "graph...", this->mpiRank);
+                    this->SetSetupMessage(msg);
+                    this->processInitialisationMessage();
+                    break;
 
-                    case MSG_VIEWCONNECT: {
-                        //::DebugBreak();
-                        vislib::StringA name(msg.GetBodyAs<char>(),
+                case MSG_VIEWCONNECT: {
+                    //::DebugBreak();
+                    vislib::StringA name(msg.GetBodyAs<char>(),
+                        msg.GetHeader().GetBodySize());
+                    this->ConnectView(name);
+                    // Client additionally does: this->views[0]->SetCamIniMessage();
+                    } break;
+
+                case MSG_PARAMUPDATE: {
+                    vislib::StringA name(msg.GetBodyAs<char>(),
+                        msg.GetHeader().GetBodySize());
+                    vislib::StringA::Size pos = name.Find('=');
+                    vislib::TString value;
+                    vislib::UTF8Encoder::Decode(value,
+                        name.Substring(pos + 1));
+                    name.Truncate(pos);
+                    ////Log::DefaultLog.WriteInfo("Setting Parameter %s to %s\n", name.PeekBuffer(), vislib::StringA(value).PeekBuffer());
+                    param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(
+                        this->FindNamedObject(name, true));
+                    if (ps != nullptr) {
+                        ps->Param<param::AbstractParam>()->ParseValue(value);
+                    }
+                    } break;
+
+                case MSG_CAMERAUPDATE:
+                    if ((av != nullptr)
+                            && (msg.GetHeader().GetBodySize() > 0)) {
+                        vislib::RawStorageSerialiser ser(
+                            msg.GetBodyAs<BYTE>(),
                             msg.GetHeader().GetBodySize());
-                        this->ConnectView(name);
-                        // Client additionally does: this->views[0]->SetCamIniMessage();
-                        } break;
+                        av->DeserialiseCamera(ser);
+                    }
+                    break;
+            } /* end switch (msg.GetHeader().GetMessageID()) */
+        } /* end while (offset < state.RelaySize) */
 
-                    case MSG_PARAMUPDATE: {
-                        vislib::StringA name(msg.GetBodyAs<char>(),
-                            msg.GetHeader().GetBodySize());
-                        vislib::StringA::Size pos = name.Find('=');
-                        vislib::TString value;
-                        vislib::UTF8Encoder::Decode(value,
-                            name.Substring(pos + 1));
-                        name.Truncate(pos);
-                        ////Log::DefaultLog.WriteInfo("Setting Parameter %s to %s\n", name.PeekBuffer(), vislib::StringA(value).PeekBuffer());
-                        param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(
-                            this->FindNamedObject(name, true));
-                        if (ps != nullptr) {
-                            ps->Param<param::AbstractParam>()->ParseValue(value);
-                        }
-                        } break;
+        this->ModuleGraphLock().UnlockExclusive();
 
-                    case MSG_CAMERAUPDATE:
-                        if ((av != nullptr)
-                                && (msg.GetHeader().GetBodySize() > 0)) {
-                            vislib::RawStorageSerialiser ser(
-                                msg.GetBodyAs<BYTE>(),
-                                msg.GetHeader().GetBodySize());
-                            av->DeserialiseCamera(ser);
-                        }
-                        break;
-                } /* end switch (msg.GetHeader().GetMessageID()) */
-            } /* end while (offset < state.RelaySize) */
-
-            this->ModuleGraphLock().UnlockExclusive();
-
-            _TRACE_MESSAGING("Rank %d has processed all relayed messages.\n",
-                this->mpiRank);
-        } /* end if (!this->isBcastMaster() && (state.RelaySize > 0)) */
-
-        if (state.InvalidateMaster) {
-            this->bcastMaster = -1;
-            _TRACE_INFO("Rank %d invalidated the broadcast master.\n",
-                this->mpiRank);
-        }
+        _TRACE_MESSAGING("Rank %d has processed all relayed messages.\n",
+            this->mpiRank);
     } /* end if (!this->isBcastMaster() && (state.RelaySize > 0)) */
 
     this->processInitialisationMessage();
     this->registerClient(true);
 
     /* Ensure that we have a rendering call that we can execute. */
-    if (canRender) {
-        crv = this->getCallRenderView();
-        canRender = (crv != nullptr);
-    }
+    crv = this->getCallRenderView();
+    canRender = (crv != nullptr);
 
     /* Render the view if any; do fallback rendering otherwise. */
     if (canRender) {
@@ -368,9 +397,173 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
         ::MPI_Barrier(MPI_COMM_WORLD);
 #endif /* WITH_MPI */
 
+        if (state.InitSwapGroup && this->isBcastMaster()) {
+            // Now all nodes should have joined the swap group, so the master
+            // can enable the barrier.
+            ASSERT(this->hasGsync());
+            SwapGroupApi::GetInstance().BindSwapBarrier(1, 1);
+        }
+
     } else {
         this->renderFallbackView();
     } /* end if (canRender) */
+}
+
+
+/*
+ * megamol::core::cluster::mpi::View::SwapGroupApi::GetInstance
+ */
+megamol::core::cluster::mpi::View::SwapGroupApi&
+megamol::core::cluster::mpi::View::SwapGroupApi::GetInstance(void) {
+    VLAUTOSTACKTRACE;
+    static SwapGroupApi instance;
+    return instance;
+}
+
+
+/*
+ * megamol::core::cluster::mpi::View::SwapGroupApi::BindSwapBarrier
+ */
+bool megamol::core::cluster::mpi::View::SwapGroupApi::BindSwapBarrier(
+        const GLuint group, const GLuint barrier) {
+    VLAUTOSTACKTRACE;
+    bool retval = false;
+#if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
+    if (this->IsAvailable()) {
+        retval = (this->wglBindSwapBarrierNV(group, barrier) == TRUE);
+    }
+#endif /* (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP)) */
+    return retval;
+}
+
+
+/*
+ * megamol::core::cluster::mpi::View::SwapGroupApi::JoinSwapGroup
+ */
+bool megamol::core::cluster::mpi::View::SwapGroupApi::JoinSwapGroup(
+        const GLuint group) {
+    VLAUTOSTACKTRACE;
+    bool retval = false;
+#if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
+    if (this->IsAvailable()) {
+        HDC hDC = ::wglGetCurrentDC();
+        if (hDC != nullptr) {
+            retval = (this->wglJoinSwapGroupNV(hDC, group) == TRUE);
+        }
+    }
+#endif /* (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP)) */
+    return retval;
+}
+
+
+/*
+ * megamol::core::cluster::mpi::View::SwapGroupApi::QueryFrameCount
+ */
+bool megamol::core::cluster::mpi::View::SwapGroupApi::QueryFrameCount(
+        unsigned int &count) {
+    VLAUTOSTACKTRACE;
+    bool retval = false;
+#if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
+    if (this->IsAvailable()) {
+        HDC hDC = ::wglGetCurrentDC();
+        if (hDC != nullptr) {
+            retval = (this->wglQueryFrameCountNV(hDC, &count) == TRUE);
+        }
+    }
+#endif /* (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP)) */
+    return retval;
+}
+
+
+/*
+ * megamol::core::cluster::mpi::View::SwapGroupApi::QueryMaxSwapGroups
+ */
+bool megamol::core::cluster::mpi::View::SwapGroupApi::QueryMaxSwapGroups(
+        GLuint& outMaxGroups, GLuint& outMaxBarriers) {
+    VLAUTOSTACKTRACE;
+    bool retval = false;
+#if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
+    if (this->IsAvailable()) {
+        HDC hDC = ::wglGetCurrentDC();
+        if (hDC != nullptr) {
+            retval = (this->wglQueryMaxSwapGroupsNV(hDC, &outMaxGroups,
+                &outMaxBarriers) == TRUE);
+        }
+    }
+#endif /* (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP)) */
+    return retval;
+}
+
+
+/*
+ * megamol::core::cluster::mpi::View::SwapGroupApi::QuerySwapGroup
+ */
+bool megamol::core::cluster::mpi::View::SwapGroupApi::QuerySwapGroup(
+        GLuint& outGroup, GLuint& outBarrier) {
+    VLAUTOSTACKTRACE;
+    bool retval = false;
+#if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
+    if (this->IsAvailable()) {
+        HDC hDC = ::wglGetCurrentDC();
+        if (hDC != nullptr) {
+            retval = (this->wglQuerySwapGroupNV(hDC, &outGroup, &outBarrier)
+                == TRUE);
+        }
+    }
+#endif /* (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP)) */
+    return retval;
+}
+
+
+/*
+ * megamol::core::cluster::mpi::View::SwapGroupApi::ResetFrameCount
+ */
+bool megamol::core::cluster::mpi::View::SwapGroupApi::ResetFrameCount(void) {
+    VLAUTOSTACKTRACE;
+    bool retval = false;
+#if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
+    if (this->IsAvailable()) {
+        HDC hDC = ::wglGetCurrentDC();
+        if (hDC != nullptr) {
+            retval = (this->wglResetFrameCountNV(hDC) == TRUE);
+        }
+    }
+#endif /* (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP)) */
+    return retval;
+}
+
+
+/*
+ * megamol::core::cluster::mpi::View::SwapGroupApi::SwapGroupApi
+ */
+megamol::core::cluster::mpi::View::SwapGroupApi::SwapGroupApi(void)
+        : isAvailable(false) {
+    VLAUTOSTACKTRACE;
+#if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
+    this->wglJoinSwapGroupNV = reinterpret_cast<PFNWGLJOINSWAPGROUPNVPROC>(
+        ::wglGetProcAddress("wglJoinSwapGroupNV"));
+    this->wglBindSwapBarrierNV = reinterpret_cast<PFNWGLBINDSWAPBARRIERNVPROC>(
+        ::wglGetProcAddress("wglBindSwapBarrierNV"));
+    this->wglQuerySwapGroupNV = reinterpret_cast<PFNWGLQUERYSWAPGROUPNVPROC>(
+        ::wglGetProcAddress("wglQuerySwapGroupNV"));
+    this->wglQueryMaxSwapGroupsNV
+        = reinterpret_cast<PFNWGLQUERYMAXSWAPGROUPSNVPROC>(
+        ::wglGetProcAddress("wglQueryMaxSwapGroupsNV"));
+    this->wglQueryFrameCountNV = reinterpret_cast<PFNWGLQUERYFRAMECOUNTNVPROC>(
+        ::wglGetProcAddress("wglQueryFrameCountNV"));
+    this->wglResetFrameCountNV = reinterpret_cast<PFNWGLRESETFRAMECOUNTNVPROC>(
+        ::wglGetProcAddress("wglResetFrameCountNV"));
+
+    this->isAvailable = ((this->wglJoinSwapGroupNV != nullptr)
+        && (this->wglBindSwapBarrierNV != nullptr)
+        && (this->wglQuerySwapGroupNV != nullptr)
+        && (this->wglQueryMaxSwapGroupsNV != nullptr)
+        && (this->wglQueryFrameCountNV != nullptr)
+        && (this->wglResetFrameCountNV != nullptr));
+#endif /* (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP)) */
+
+    vislib::sys::Log::DefaultLog.WriteInfo(_T("Swap lock is%s available."),
+        (this->isAvailable ? _T("") : _T(" not")));
 }
 
 
@@ -381,6 +574,7 @@ bool megamol::core::cluster::mpi::View::create(void) {
     VLAUTOSTACKTRACE;
     bool retval = Base1::create();
     this->viewState = ViewState::CREATED;
+    this->mustNegotiateMaster = true;
 
     if (retval) {
         this->initialiseMpi();
@@ -399,6 +593,24 @@ void megamol::core::cluster::mpi::View::finaliseMpi(void) {
 #ifdef WITH_MPI
         ::MPI_Finalize();
 #endif /* WITH_MPI */
+    }
+}
+
+
+/*
+ * megamol::core::cluster::mpi::View::hasGsync
+ */
+bool megamol::core::cluster::mpi::View::hasGsync(void) const {
+    VLAUTOSTACKTRACE;
+    GLuint maxGroups, maxBarriers;
+    if (SwapGroupApi::GetInstance().QueryMaxSwapGroups(maxGroups,
+            maxBarriers)) {
+        _TRACE_INFO("Device supports %u swap groups and %u swap barriers.\n",
+            maxGroups, maxBarriers);
+        return ((maxGroups > 0) && (maxBarriers > 0));
+
+    } else {
+        return false;
     }
 }
 
@@ -444,13 +656,28 @@ bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
 
 
 /*
+ * megamol::core::cluster::mpi::View::isGsyncEnabled
+ */
+bool megamol::core::cluster::mpi::View::isGsyncEnabled(void) const {
+    VLAUTOSTACKTRACE;
+    GLuint group, barrier;
+    if (SwapGroupApi::GetInstance().QuerySwapGroup(group, barrier)) {
+        _TRACE_INFO("Swap group is %u, swap barrier is %u.\n", group, barrier);
+        return ((group > 0) && (barrier > 0));
+
+    } else {
+        return false;
+    }
+}
+
+
+/*
  * megamol::core::cluster::mpi::View::negotiateBcastMaster
  */
 bool megamol::core::cluster::mpi::View::negotiateBcastMaster(void) {
     VLAUTOSTACKTRACE;
     ASSERT(this->mpiRank >= 0);
     ASSERT(this->mpiSize > 0);
-    ASSERT(this->bcastMaster < 0);
 
 #if WITH_MPI
     std::vector<int> responses(this->mpiSize);
@@ -500,6 +727,11 @@ bool megamol::core::cluster::mpi::View::onInitialiseMpiChanged(
  */
 void megamol::core::cluster::mpi::View::release(void) {
     VLAUTOSTACKTRACE;
+    if (this->isGsyncEnabled()) {
+        // Swap group ID 1 is because-i-know (we always use 1).
+        SwapGroupApi::GetInstance().BindSwapBarrier(1, 0);
+        SwapGroupApi::GetInstance().JoinSwapGroup(0);
+    }
     this->finaliseMpi();
     Base1::release();
 }
@@ -527,183 +759,3 @@ void megamol::core::cluster::mpi::View::storeMessageForRelay(
         this->relayOffset += msgSize;
     }
 }
-
-
-#if 0
-/*
- * megamol::core::cluster::mpi::View::Render
- */
-void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
-    if (this->firstFrame) {
-        this->firstFrame = false;
-        this->initTileViewParameters();
-        AbstractNamedObject *ano = this;
-        while (ano != NULL) {
-            if (this->loadConfiguration(ano->Name())) break;
-            ano = ano->Parent();
-        }
-        if (this->GetCoreInstance()->Configuration().IsConfigValueSet("scv-heartbeat-port")) {
-            try {
-                this->heartBeatPortSlot.Param<param::IntParam>()->SetValue(
-                    vislib::CharTraitsW::ParseInt(
-                        this->GetCoreInstance()->Configuration().ConfigValue("scv-heartbeat-port")));
-            } catch(vislib::Exception e) {
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "Failed to load heartbeat port configuration: %s [%s, %d]\n",
-                    e.GetMsgA(), e.GetFile(), e.GetLine());
-            } catch(...) {
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "Failed to load heartbeat port configuration: Unknown exception\n");
-            }
-        }
-        if (this->GetCoreInstance()->Configuration().IsConfigValueSet("scv-heartbeat-server")) {
-            this->heartBeatServerSlot.Param<param::StringParam>()->SetValue(
-                this->GetCoreInstance()->Configuration().ConfigValue("scv-heartbeat-server"));
-        }
-    }
-
-    if (this->initMsg != NULL) {
-        if (this->initMsg->GetHeader().GetMessageID() == MSG_MODULGRAPH) {
-            this->GetCoreInstance()->SetupGraphFromNetwork(this->initMsg);
-            this->client->ContinueSetup();
-        } else {
-            this->directCamSyncUpdated(this->directCamSyncSlot);
-            if (this->initMsg->GetHeader().GetMessageID() == MSG_CAMERAUPDATE) {
-                this->client->ContinueSetup(2);
-            }
-        }
-        SAFE_DELETE(this->initMsg);
-    }
-
-    if (this->client == NULL) {
-        ClientViewRegistration *sccvr = this->registerSlot.CallAs<ClientViewRegistration>();
-        if (sccvr != NULL) {
-            sccvr->SetView(this);
-            if ((*sccvr)()) {
-                this->client = sccvr->GetClient();
-            }
-        }
-    }
-
-    if (this->heartBeatPortSlot.IsDirty() || this->heartBeatServerSlot.IsDirty()) {
-        this->heartBeatPortSlot.ResetDirty();
-        this->heartBeatServerSlot.ResetDirty();
-
-        try {
-            this->heartbeat.Connect(
-                this->heartBeatServerSlot.Param<param::StringParam>()->Value(),
-                static_cast<unsigned int>(this->heartBeatPortSlot.Param<param::IntParam>()->Value()));
-
-        } catch(vislib::Exception e) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Failed to configure heartbeat: %s [%s, %d]\n",
-                e.GetMsgA(), e.GetFile(), e.GetLine());
-        } catch(...) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Failed to configure heartbeat: Unknown exception\n");
-        }
-    }
-
-    bool heartbeatOn = false;
-    bool doSecondHeartbeat = false;
-    try {
-        heartbeatOn = this->heartbeat.Sync(1, this->heartbeatPayload);
-    } catch(...) {
-        heartbeatOn = false;
-        doSecondHeartbeat = true;
-    }
-    if (heartbeatOn) {
-        ASSERT(this->heartbeatPayload.GetSize() >= 13);
-        unsigned char c = *this->heartbeatPayload.As<unsigned char>();
-        doSecondHeartbeat = ((c & 0x01) == 0x01);
-        instTime = *this->heartbeatPayload.AsAt<double>(1);
-        time = *this->heartbeatPayload.AsAt<float>(1 + sizeof(double));
-        view::AbstractView *view = this->GetConnectedView();
-        if ((this->heartbeatPayload.GetSize() > 13) && (view != NULL)) {
-            vislib::RawStorageSerialiser ser(&this->heartbeatPayload, 1 + sizeof(double) + sizeof(float));
-            view->DeserialiseCamera(ser);
-        }
-    } else {
-        doSecondHeartbeat = true;
-    }
-
-    view::CallRenderView *crv = this->getCallRenderView();
-    this->checkParameters();
-
-    if (!this->frozen) {
-        this->frozenTime = instTime;
-    }
-
-    if (crv != NULL) {
-        crv->ResetAll();
-        crv->SetTime(time);
-        crv->SetInstanceTime(instTime);
-        crv->SetProjection(this->getProjType(), this->getEye());
-        if ((this->getVirtWidth() != 0) && (this->getVirtHeight() != 0)
-                && (this->getTileW() != 0) && (this->getTileH() != 0)) {
-            crv->SetTile(this->getVirtWidth(), this->getVirtHeight(),
-                this->getTileX(), this->getTileY(), this->getTileW(), this->getTileH());
-        }
-        crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight());
-
-        //if ((this->netVSyncBarrier != NULL) && (this->netVSyncBarrier->GetDataSize() > 0)) {
-        //    //printf("Barrier with %u bytes data\n", this->netVSyncBarrier->GetDataSize());
-        //    vislib::RawStorageSerialiser camera(
-        //        this->netVSyncBarrier->GetData() + 4,
-        //        this->netVSyncBarrier->GetDataSize() - 4);
-        //}
-        view::AbstractView *view = NULL;
-        if (crv->PeekCalleeSlot() != NULL) view = dynamic_cast<view::AbstractView*>(
-                const_cast<AbstractNamedObject*>(crv->PeekCalleeSlot()->Parent()));
-        if (view != NULL){
-            if (this->frozenCam != NULL) view->DeserialiseCamera(*this->frozenCam);
-            /* this forces to use this time */
-            //view->SetFrameTime(static_cast<float>(this->frozenTime));
-        }
-
-        {
-            vislib::sys::AutoLock lock(renderLock);
-
-            if (!(*crv)(view::CallRenderView::CALL_RENDER)) {
-                this->renderFallbackView();
-            }
-
-        }
-
-    } else {
-        this->renderFallbackView();
-
-    }
-
-    ::glFlush();
-
-    if (doSecondHeartbeat) {
-        try {
-            this->heartbeat.Sync(2, this->heartbeatPayload);
-        } catch(...) {
-        }
-    }
-
-#if 0 // TODO: activate with something else
-    // HAZARD: requires a second message to ensure all nodes synchronize at the same point!!!
-    // sync with second heartbeat ping 
-    heartbeatOn = false;
-    try {
-        heartbeatOn = this->heartbeat.Sync(this->heartbeatPayload);
-    } catch(...) {
-        heartbeatOn = false;
-    }
-    if (heartbeatOn) {
-        ASSERT(this->heartbeatPayload.GetSize() >= 12);
-        instTime = *this->heartbeatPayload.As<double>();
-        time = *this->heartbeatPayload.AsAt<float>(sizeof(double));
-        view::AbstractView *view = this->GetConnectedView();
-        if ((this->heartbeatPayload.GetSize() > 12) && (view != NULL)) {
-            vislib::RawStorageSerialiser ser(&this->heartbeatPayload, sizeof(double) + sizeof(float));
-            view->DeserialiseCamera(ser);
-        }
-    }
-#endif
-
-}
-#endif

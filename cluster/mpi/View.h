@@ -14,6 +14,14 @@
 #include <atomic>
 #include <climits>
 
+#ifdef _WIN32
+#include <WinSock2.h>
+#include <windows.h>
+#include "glh/glh_extensions.h"
+#include <GL/gl.h>
+#include "GL/wglext.h"
+#endif /* _WIN32 */
+
 #include "CallerSlot.h"
 
 #include "cluster/simple/View.h"
@@ -30,6 +38,8 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/StackTrace.h"
 #include "vislib/String.h"
+
+#define MPI_VIEW_WITH_SWAPGROUP
 
 
 namespace megamol {
@@ -113,11 +123,69 @@ namespace mpi {
 
     protected:
 
+        /**
+         * Encapsulates NVIDIA Gsync functionality.
+         */
+        class SwapGroupApi {
+
+        public:
+
+            /**
+             * Get the single instance of SwapGroupApi.
+             *
+             * @return The SwapGroupApi singleton.
+             */
+            static SwapGroupApi& GetInstance(void);
+
+            bool BindSwapBarrier(const GLuint group, const GLuint barrier);
+
+            bool JoinSwapGroup(const GLuint group);
+
+            /**
+             * Answer whether the whole swap group functionality is available.
+             *
+             * @return true if the swap group APIs can be used, false otherwise.
+             */
+            inline bool IsAvailable(void) const {
+                VLAUTOSTACKTRACE;
+                return this->isAvailable;
+            }
+
+            bool QueryFrameCount(unsigned int &count);
+
+            bool QueryMaxSwapGroups(GLuint& outMaxGroups,
+                GLuint& outMaxBarriers);
+
+            bool QuerySwapGroup(GLuint& outGroup, GLuint& outBarrier);
+
+            bool ResetFrameCount(void);
+
+        private:
+
+            /**
+             * Initialise a new instance.
+             */
+            SwapGroupApi(void);
+
+            /** Remembers whether ALL function pointers could be acquired. */
+            bool isAvailable;
+
+#if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
+            PFNWGLJOINSWAPGROUPNVPROC wglJoinSwapGroupNV;
+            PFNWGLBINDSWAPBARRIERNVPROC wglBindSwapBarrierNV;
+            PFNWGLQUERYSWAPGROUPNVPROC wglQuerySwapGroupNV;
+            PFNWGLQUERYMAXSWAPGROUPSNVPROC wglQueryMaxSwapGroupsNV;
+            PFNWGLQUERYFRAMECOUNTNVPROC wglQueryFrameCountNV;
+            PFNWGLRESETFRAMECOUNTNVPROC wglResetFrameCountNV;
+#endif /* (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP)) */
+        };
+
         /** The status block for each frame. */
         typedef struct FrameState {
             float Time;
             double InstanceTime;
             bool InvalidateMaster;
+            bool InitSwapGroup;
             size_t RelaySize;
         } FrameState;
 
@@ -152,6 +220,11 @@ namespace mpi {
         }
 
         /**
+         * Answer whether NVIDIA Gsync is available on this machine.
+         */
+        bool hasGsync(void) const;
+
+        /**
          * Initialise MPI if 'paramInitialiseMpi' indicates that the object
          * should do so and the object has not yet initialised MPI.
          *
@@ -170,6 +243,14 @@ namespace mpi {
             VLAUTOSTACKTRACE;
             return (this->bcastMaster == this->mpiRank);
         }
+
+        /**
+         * Answer whether the machine supports NVIDIA Gsync and whether it is
+         * currently enabled.
+         *
+         * @return true if Gsync is supported and enabled, false otherwise.
+         */
+        bool isGsyncEnabled(void) const;
 
         /**
          * Answer whether we know a valid master rank for MPI broadcasts.
@@ -247,8 +328,17 @@ namespace mpi {
         /** The siez of MPI_COMM_WORLD. */
         int mpiSize;
 
+        /**
+         * Remembers whether the master node must be re-negotiated in the next
+         * frame.
+         */
+        bool mustNegotiateMaster;
+
         /** Configures whether this view will initialise MPI. */
         param::ParamSlot paramInitialiseMpi;
+
+        /** Configures whether the view should try to enable GSync. */
+        param::ParamSlot paramUseGsync;
 
         /**
          * The buffer used to compose the status that is relayed to all 
