@@ -1247,7 +1247,7 @@ void main(void) {
       {
         sphereintersection = planeintersect;
         normal = planeNormal;
-        color = vec3( 1.0, 0.7, 0.0);
+        color *= 0.6;
       }
       else
       {
