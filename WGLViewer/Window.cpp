@@ -26,9 +26,10 @@ using namespace vislib::sys;
 /*
  * Window::Window
  */
-Window::Window(Instance& inst) : ApiHandle(), inst(inst), hWnd(NULL), hDC(NULL), hRC(NULL), w(0), h(0),
-        renderCallback(), resizeCallback(), renderer(&Window::renderThread),
-		affinityDC(NULL), affinityContext(NULL), guiAffinityContext(NULL),
+Window::Window(Instance& inst) : ApiHandle(), inst(inst), hWnd(NULL),
+		hDC(NULL), hRC(NULL), w(0), h(0), renderCallback(), resizeCallback(),
+		renderer(&Window::renderThread), affinityDC(NULL),
+		affinityContext(NULL), guiAffinityContext(NULL),
 		renderStartEvent(nullptr) {
 
     DWORD style = WS_OVERLAPPEDWINDOW;
@@ -345,7 +346,6 @@ DWORD Window::renderThread(void *userData) {
 	else
 		vislib::sys::Thread::Sleep(2500);
 
-	// The context must not be bound until ALL windows have been created
 	if (that->affinityContext != nullptr) {
 		//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Using affinity context in "
 		//	"render thread.\n");
@@ -510,7 +510,7 @@ bool Window::setupContextAffinity(HWND window) {
 					return false;
 				}
 
-				// For this to work, these context must be shared (which only
+				// For this to work, these contexts must be shared (which only
 				// works because they use the same affinity mask).
 				if (!wglShareLists(affinityContext, guiAffinityContext)) {
 					Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to "
@@ -557,7 +557,7 @@ bool Window::setupContextAffinity(HWND window) {
 
 	Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Render window (%d, %d) - "
 		"(%d, %d) has no sufficient overlap with any GPU device. GPU "
-		"affinity not set.\n", windowRect.left, windowRect.top,
+		"affinity not set.", windowRect.left, windowRect.top,
 		windowRect.right, windowRect.bottom);
 
 	return false;

@@ -1397,7 +1397,11 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 #ifdef NOWINDOWPOSFIX
             int wndX, wndY, wndW, wndH;
             bool wndND;
-            if (::mmcDesiredViewWindowConfig(win->HView(),
+#endif
+			// TODO: This may place a window onto a display incompatible with
+			// the render context affinity. Ideally, we would detect such
+			// cases and log a warning.
+			if (::mmcDesiredViewWindowConfig(win->HView(),
                     &wndX, &wndY, &wndW, &wndH, &wndND)) {
                 if (wndND) {
                     unsigned int flags = MMV_WINHINT_NODECORATIONS | MMV_WINHINT_STAYONTOP;
@@ -1417,7 +1421,6 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                     ::mmvSetWindowSize(win->HWnd(), wndW, wndH);
                 }
             }
-#endif
 
 #ifndef NOWINDOWPOSFIX
 			// For the sake of keeping the affinity, we now place the window
@@ -1487,11 +1490,12 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 
     megamol::console::JobManager::Instance()->StartJobs();
 
-#ifdef NOWINDOWPOSFIX
+	// TODO: This may place a window onto a display incompatible with the
+	// render context affinity. Ideally, we would detect such cases and log a
+	// warning.
 	for (SIZE_T i = 0; i < winPoss.Count(); i += 2) {
         setWindowPosition(winPoss[i], winPoss[i + 1]);
     }
-#endif
 
     // Note: This frontend is not capable of createing new (view/job)instances
     // after this point is reached! (ATM)
