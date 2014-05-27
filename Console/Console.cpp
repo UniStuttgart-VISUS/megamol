@@ -817,6 +817,7 @@ static bool parseWindowPosition(const vislib::StringW& str,
  * megamol::core::view::AbstractView::DesiredWindowPosition by retrieving the
  * wildcard window position from the configuration.
  *
+ * @param viewName The name of the view
  * @param x To receive the coordinate of the upper left corner
  * @param y To recieve the coordinate of the upper left corner
  * @param w To receive the width
@@ -824,14 +825,36 @@ static bool parseWindowPosition(const vislib::StringW& str,
  * @param nd To receive the flag deactivating window decorations
  *
  * @return true if a window position could be retrieved, false if not. In the
- *         latter case the value the parameters are pointing to are not altered.
+ *         latter case the value the parameters are pointing to are not
+ *         altered.
+ *
+ * @remarks This does not produce the same result as the core method if the
+ *   view has named parents. In that case, the core uses their name to look
+ *   for configuration values but we have no way of knowing about them.
  */
-static bool getDesiredWindowPosition(int *x, int *y, int *w, int *h, bool *nd) {
-
-	vislib::StringA name = "*-Window";
+static bool getDesiredWindowPosition(vislib::TString &viewName, int *x,
+	int *y, int *w, int *h, bool *nd) {
 
 	::mmcValueType type = MMC_TYPE_WSTR;
 	const void *data = NULL;
+
+	vislib::StringA name = viewName;
+
+	if (!name.IsEmpty()) {
+		// First try to load coordinates from "[name]-Window".
+		name.Append("-Window");
+
+		type = MMC_TYPE_VOIDP;
+		data = ::mmcGetConfigurationValue(hCore, MMC_CFGID_VARIABLE, name, &type);
+		if (data != nullptr && type == MMC_TYPE_WSTR &&
+			parseWindowPosition(vislib::StringW((const wchar_t *)data), x, y, w,
+			h, nd)) {
+			return true;
+		}
+	}
+
+	// If that fails, use the generic "*-Window".
+	name = "*-Window";
 
 	type = MMC_TYPE_VOIDP;
 	data = ::mmcGetConfigurationValue(hCore, MMC_CFGID_VARIABLE, name, &type);
@@ -1204,10 +1227,14 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     }
 
     // try to create all requested instances
+	// Remember the ids so we can predict view names before creating them
+	// later.
+	vislib::SingleLinkedList<vislib::TString> instanceNames;
     ASSERT((insts.Count() % 2) == 0);
     SIZE_T instsCnt = insts.Count() / 2;
     for (SIZE_T i = 0; i < instsCnt; i++) {
         ::mmcRequestInstance(hCore, insts[i * 2], insts[i * 2 + 1]);
+		instanceNames.Add(insts[i * 2 + 1]);
     }
 
     vislib::SingleLinkedList<vislib::TString>::Iterator qsi = quickstarts.GetIterator();
@@ -1229,6 +1256,13 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                 retval = -28;
                 continue;
             }
+
+			// Remove this job from the list of instanc names. We only want
+			// views in there.
+			TCHAR instanceId[1024];
+			unsigned int len = sizeof(instanceId) / sizeof(TCHAR);
+			mmcGetInstanceID(jobHandle->operator void*(), instanceId, &len);
+			instanceNames.Remove(vislib::TString(instanceId));
 
             megamol::console::JobManager::Instance()->Add(jobHandle);
         }
@@ -1269,7 +1303,24 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 #ifndef NOWINDOWPOSFIX
 			int wndX, wndY, wndW = -1, wndH = -1;
 			bool wndND;
-			if (getDesiredWindowPosition(&wndX, &wndY, &wndW, &wndH, &wndND)) {
+
+			// Predict the name of the next view. We expect the list to be
+			// non-empty or mmcHasPendingViewInstantiationRequests should
+			// not have returned true (this is somewhat dodgy, as it assumes
+			// the core instantiates exactly those instances we requested in
+			// exactly the order we requested them).
+			vislib::TString viewName;
+			if (instanceNames.Count() > 0) {
+				viewName = instanceNames.First();
+				instanceNames.RemoveFirst();
+			}
+			else {
+				Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "More views are "
+					"instantiated than were specified on the command line. "
+					"This may currently confuse the GPU affinity code.");
+			}
+
+			if (getDesiredWindowPosition(viewName, &wndX, &wndY, &wndW, &wndH, &wndND)) {
 				if (wndND) {
 					unsigned int flags = MMV_WINHINT_NODECORATIONS | MMV_WINHINT_STAYONTOP;
 					if (!hotFixes.Contains("DontHideCursor")) {
@@ -1293,6 +1344,10 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 			// send a message to the window. For now, set the title to nullptr
 			// (will be replaced later) which, for the WGLViewer, will trigger
 			// the creation of the affinity context.
+			Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "The GPU "
+				"affinity will be determined based on the assumption that "
+				"view \"%s\" is located at (%d, %d), size (%d, %d).",
+				viewName.PeekBuffer(), wndX, wndY, wndW, wndH);
 			::mmvSetWindowTitleA(win->HWnd(), nullptr);
 #endif
 
