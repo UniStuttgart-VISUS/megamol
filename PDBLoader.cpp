@@ -746,8 +746,11 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
         maxFramesSlot( "maxFrames", "The maximum number of frames to be loaded"),
         strideFlagSlot( "strideFlag", "The flag wether STRIDE should be used or not."),
         solventResidues( "solventResidues", "slot to specify a ;-list of residues to be merged into separate chains"),
+        usePDBBBoxSlot("usePDBBBox", "Determine whether to use the PDB bounding box"),
 
-        bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0),
+        bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
+        bboxPDB(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
+        datahash(0),
         stride( 0), secStructAvailable( false), numXTCFrames( 0),
         XTCFrameOffset( 0), xtcFileValid(false) {
 
@@ -772,6 +775,9 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
 
     this->solventResidues << new param::StringParam("");
     this->MakeSlotAvailable( &this->solventResidues);
+
+    this->usePDBBBoxSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable( &this->usePDBBBoxSlot);
 
     mdd = NULL; // no mdd object
 }
@@ -966,7 +972,12 @@ bool PDBLoader::getExtent( core::Call& call) {
     }
 
     // grow bounding box by 3.0 Angstrom (for volume rendering / SAS)
-    vislib::math::Cuboid<float> bBoxPlus3( this->bbox);
+    vislib::math::Cuboid<float> bBoxPlus3;
+    if (this->usePDBBBoxSlot.Param<core::param::BoolParam>()->Value()) {
+        bBoxPlus3 = this->bboxPDB;
+    } else {
+        bBoxPlus3 = this->bbox;
+    }
     bBoxPlus3.Grow( 3.0f);
 
     dc->AccessBoundingBoxes().Clear();
@@ -1099,6 +1110,18 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
         while( lineCnt < file.Count() && !line.StartsWith( "END") ) {
             // get the current line from the file
             line = file.Line( lineCnt);
+            // Store bounding box if provided
+            if( line.StartsWith( "BBOX") ) {
+                this->parseBBoxEntry(line);
+                Log::DefaultLog.WriteMsg( Log::LEVEL_INFO,
+                        "Found PDB bounding box (%f %f %f, %f %f %f)",
+                        this->bboxPDB.Left(),
+                        this->bboxPDB.Bottom(),
+                        this->bboxPDB.Back(),
+                        this->bboxPDB.Right(),
+                        this->bboxPDB.Top(),
+                        this->bboxPDB.Front()); // DEBUG
+            }
             // store all atom entries
             if( line.StartsWith( "ATOM") ) {
                 // ignore alternate locations
@@ -2006,6 +2029,18 @@ void PDBLoader::writeToXtcFile(const vislib::TString& filename) {
     // close the output-file
     outfile.close();
 
+}
+
+
+void PDBLoader::parseBBoxEntry(vislib::StringA &bboxEntry){
+    float bboxLeft = float(atof(bboxEntry.Substring(5, 12)));
+    float bboxBottom = float(atof(bboxEntry.Substring(14, 21)));
+    float bboxBack = float(atof(bboxEntry.Substring(23, 30)));
+    float bboxRight = float(atof(bboxEntry.Substring(33, 39)));
+    float bboxTop = float(atof(bboxEntry.Substring(42, 48)));
+    float bboxFront = float(atof(bboxEntry.Substring(51, 71)));
+    this->bboxPDB.Set(bboxLeft, bboxBottom, bboxBack,
+            bboxRight, bboxTop, bboxFront);
 }
 
 
