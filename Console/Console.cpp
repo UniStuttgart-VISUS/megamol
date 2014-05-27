@@ -815,11 +815,11 @@ static bool parseWindowPosition(const vislib::StringW& str,
 /**
  * Performs about the same task as
  * megamol::core::view::AbstractView::DesiredWindowPosition by retrieving the
- * wildcard window position from the configuration.
+ * view window position from the configuration.
  *
  * @param viewName The name of the view
  * @param x To receive the coordinate of the upper left corner
- * @param y To recieve the coordinate of the upper left corner
+ * @param y To receive the coordinate of the upper left corner
  * @param w To receive the width
  * @param h To receive the height
  * @param nd To receive the flag deactivating window decorations
@@ -845,10 +845,11 @@ static bool getDesiredWindowPosition(vislib::TString &viewName, int *x,
 		name.Append("-Window");
 
 		type = MMC_TYPE_VOIDP;
-		data = ::mmcGetConfigurationValue(hCore, MMC_CFGID_VARIABLE, name, &type);
+		data = ::mmcGetConfigurationValue(hCore, MMC_CFGID_VARIABLE, name,
+			&type);
 		if (data != nullptr && type == MMC_TYPE_WSTR &&
-			parseWindowPosition(vislib::StringW((const wchar_t *)data), x, y, w,
-			h, nd)) {
+			parseWindowPosition(vislib::StringW((const wchar_t *)data), x, y,
+			w, h, nd)) {
 			return true;
 		}
 	}
@@ -860,7 +861,8 @@ static bool getDesiredWindowPosition(vislib::TString &viewName, int *x,
 	data = ::mmcGetConfigurationValue(hCore, MMC_CFGID_VARIABLE, name, &type);
 	if (data == nullptr || type != MMC_TYPE_WSTR)
 		return false;
-	return parseWindowPosition(vislib::StringW((const wchar_t *)data), x, y, w, h, nd);
+	return parseWindowPosition(vislib::StringW((const wchar_t *)data), x, y, w,
+		h, nd);
 }
 
 
@@ -1301,8 +1303,8 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             }
 
 #ifndef NOWINDOWPOSFIX
-			int wndX, wndY, wndW = -1, wndH = -1;
-			bool wndND;
+			int predictedX, predictedY, predictedWidth, predictedHeight;
+			bool predictedNdFlag;
 
 			// Predict the name of the next view. We expect the list to be
 			// non-empty or mmcHasPendingViewInstantiationRequests should
@@ -1320,23 +1322,27 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 					"This may currently confuse the GPU affinity code.");
 			}
 
-			if (getDesiredWindowPosition(viewName, &wndX, &wndY, &wndW, &wndH, &wndND)) {
-				if (wndND) {
-					unsigned int flags = MMV_WINHINT_NODECORATIONS | MMV_WINHINT_STAYONTOP;
+			if (getDesiredWindowPosition(viewName, &predictedX, &predictedY,
+				&predictedWidth, &predictedHeight, &predictedNdFlag)) {
+				if (predictedNdFlag) {
+					unsigned int flags = MMV_WINHINT_NODECORATIONS |
+						MMV_WINHINT_STAYONTOP;
 					if (!hotFixes.Contains("DontHideCursor")) {
 						flags |= MMV_WINHINT_HIDECURSOR;
 					}
 					::mmvSetWindowHints(win->HWnd(), flags, flags);
-
-					// TODO: Support parameters
-					::mmvSetWindowHints(win->HWnd(), MMV_WINHINT_PRESENTATION, MMV_WINHINT_PRESENTATION);
+					::mmvSetWindowHints(win->HWnd(), MMV_WINHINT_PRESENTATION,
+						MMV_WINHINT_PRESENTATION);
 
 				}
-				if ((wndX != INT_MIN) && (wndY != INT_MIN)) {
-					::mmvSetWindowPosition(win->HWnd(), wndX, wndY);
+				if ((predictedX != INT_MIN) && (predictedY != INT_MIN)) {
+					::mmvSetWindowPosition(win->HWnd(), predictedX,
+						predictedY);
 				}
-				if ((wndW != INT_MIN) && (wndH != INT_MIN)) {
-					::mmvSetWindowSize(win->HWnd(), wndW, wndH);
+				if ((predictedWidth != INT_MIN) &&
+					(predictedHeight != INT_MIN)) {
+					::mmvSetWindowSize(win->HWnd(), predictedWidth,
+						predictedHeight);
 				}
 			}
 
@@ -1347,7 +1353,8 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 			Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "The GPU "
 				"affinity will be determined based on the assumption that "
 				"view \"%s\" is located at (%d, %d), size (%d, %d).",
-				viewName.PeekBuffer(), wndX, wndY, wndW, wndH);
+				viewName.PeekBuffer(), predictedX, predictedY, predictedWidth,
+				predictedHeight);
 			::mmvSetWindowTitleA(win->HWnd(), nullptr);
 #endif
 
@@ -1449,15 +1456,26 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                 "Testing Relevance of Parameters for \"%s\":",
                 vislib::StringA(str).PeekBuffer());
             ::mmcEnumParametersA(hCore, testParameterRelevance, win->HView());
-#ifdef NOWINDOWPOSFIX
             int wndX, wndY, wndW, wndH;
             bool wndND;
-#endif
 			// TODO: This may place a window onto a display incompatible with
 			// the render context affinity. Ideally, we would detect such
 			// cases and log a warning.
 			if (::mmcDesiredViewWindowConfig(win->HView(),
                     &wndX, &wndY, &wndW, &wndH, &wndND)) {
+
+#ifndef NOWINDOWPOSFIX
+				if (wndX != predictedX || wndY != predictedY ||
+					wndW != predictedWidth || wndH != predictedHeight) {
+					Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "The actual "
+						"view window location reported by the core (%d, %d), "
+						"size (%d, %d) is "
+						"different from the one predicted. GPU affinity "
+						"may have been set incorrectly.", wndX, wndY, wndW,
+						wndH);
+				}
+#endif
+
                 if (wndND) {
                     unsigned int flags = MMV_WINHINT_NODECORATIONS | MMV_WINHINT_STAYONTOP;
                     if (!hotFixes.Contains("DontHideCursor")) {
@@ -1548,6 +1566,14 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 	// TODO: This may place a window onto a display incompatible with the
 	// render context affinity. Ideally, we would detect such cases and log a
 	// warning.
+#ifndef NOWINDOWPOSFIX
+	if (winPoss.Count() > 0) {
+		Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Window coordinates "
+			"supplied on the command line may be different from those "
+			"used for determining GPU affinity.");
+	}
+#endif
+
 	for (SIZE_T i = 0; i < winPoss.Count(); i += 2) {
         setWindowPosition(winPoss[i], winPoss[i + 1]);
     }
