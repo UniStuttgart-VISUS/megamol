@@ -173,12 +173,31 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
                 // get residue type index
                 resTypeIdx = mol->Residues()[cntRes]->Type();
                 for( cntAtom = idx; cntAtom < idx + cnt; ++cntAtom ) {
+                    // Special cases for water/toluol/methanol
+                    if (mol->ResidueTypeNames()[resTypeIdx].Equals("SOL")) {
+                        // Water
+                        atomColorTable.Add(0.3);
+                        atomColorTable.Add(0.3);
+                        atomColorTable.Add(1.0);
+                    } else if(mol->ResidueTypeNames()[resTypeIdx].Equals("MeOH")) {
+                        // methanol
+                        atomColorTable.Add(1.0);
+                        atomColorTable.Add(0.2);
+                        atomColorTable.Add(0.0);
+                    }else if(mol->ResidueTypeNames()[resTypeIdx].Equals("TOL")) {
+                        // toluol
+                        atomColorTable.Add(1.0);
+                        atomColorTable.Add(1.0);
+                        atomColorTable.Add(1.0);
+                    }
+                    else {
                     atomColorTable.Add( colorLookupTable[resTypeIdx%
                         colorLookupTable.Count()].X());
                     atomColorTable.Add( colorLookupTable[resTypeIdx%
                         colorLookupTable.Count()].Y());
                     atomColorTable.Add( colorLookupTable[resTypeIdx%
                         colorLookupTable.Count()].Z());
+                    }
                 }
             }
         } // ... END coloring mode RESIDUE
