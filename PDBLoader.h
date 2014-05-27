@@ -521,6 +521,13 @@ namespace protein {
         void parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom, unsigned int frame, vislib::Array<vislib::TString>& solventResidueNames);
 
         /**
+         * Parse the CRYST entry in a PDB file
+         *
+         * @param bboxEntry
+         */
+        void parseBBoxEntry( vislib::StringA &bboxEntry);
+
+        /**
          * Get the radius of the element.
          *
          * @param name The name of the atom type.
@@ -614,12 +621,14 @@ namespace protein {
         core::param::ParamSlot strideFlagSlot;
         /** slot to specify a ;-list of residues to be merged into separate chains ... */
         core::param::ParamSlot solventResidues;
+        /** Determine whether to use the PDB bbox */
+        core::param::ParamSlot usePDBBBoxSlot;
 
         /** The data */
         vislib::Array<Frame*> data;
 
         /** The bounding box */
-        vislib::math::Cuboid<float> bbox;
+        vislib::math::Cuboid<float> bbox, bboxPDB;
 
         /** The data hash */
         SIZE_T datahash;
