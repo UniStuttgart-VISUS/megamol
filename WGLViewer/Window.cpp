@@ -331,7 +331,15 @@ DWORD Window::renderThread(void *userData) {
 	context.Size = sizeof(context);
 	context.Window = that->hWnd;
 
-	// not too good, but ok for now
+	// @scharnkn: The previous implementation was based on the assumption
+	// that, on average, the world is a better place after 2.5 seconds. For
+	// this new approach, plan A assumes that someone supplied a pointer to an
+	// event object to our constructor and that this event will be set once
+	// all is well. This event resides in the Instance class and is set once
+	// the Console's main loop begins and has processed all initial messages.
+	// If we don't have an event pointer (because a null pointer was supplied
+	// to the constructor), we revert to the original strategy of assuming a
+	// 2.5 second delay between now and a better time.
 	if (that->renderStartEvent != nullptr)
 		that->renderStartEvent->Wait();
 	else
@@ -447,14 +455,13 @@ bool Window::setupContextAffinity(HWND window) {
 				(intersectRect.bottom - intersectRect.top);
 
 			if (intersectArea * 2 >= windowArea) {
-				// >= 50% overlap. Good enough. Let's pick this GPU for rendering.
+				// >= 50% overlap. Good enough. Let's pick this GPU for
+				// rendering.
 				Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Setting affinity "
 					"to GPU #%u device \"%s\" (\"%s\").\n", gpuIndex,
 					deviceInfo.DeviceString, deviceInfo.DeviceName);
 
-				HGPUNV gpuMask[2];
-				gpuMask[0] = gpuHandle;
-				gpuMask[1] = nullptr;
+				HGPUNV gpuMask[2] = { gpuHandle, nullptr };
 
 				affinityDC = wglCreateAffinityDCNV(gpuMask);
 				if (affinityDC == NULL) {
@@ -553,6 +560,5 @@ bool Window::setupContextAffinity(HWND window) {
 		"affinity not set.\n", windowRect.left, windowRect.top,
 		windowRect.right, windowRect.bottom);
 
-	//::wglMakeCurrent(NULL, NULL);
 	return false;
 }
