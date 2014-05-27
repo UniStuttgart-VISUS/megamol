@@ -577,6 +577,14 @@ void Filter::setHierarchicalVisibility(const MolecularDataCall *mol) {
                     
                     if(mol->Residues()[res]->Filter() == 1) {
                         const_cast<MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(1);
+                        // TODO HACK FOR SFB DEMO --> Recalc visibility of children
+                        // Loop through all atoms of this residue if the residue is visible
+                        for(at = mol->Residues()[res]->FirstAtomIndex();
+                            at < mol->Residues()[res]->AtomCount() + mol->Residues()[res]->FirstAtomIndex();
+                            at++) {
+                            this->atomVisibility[at] = 1;
+                        }
+                        // TODO END HACK FOR SFB DEMO
                     }
                 }
                 

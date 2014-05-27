@@ -182,7 +182,7 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
                     } else if(mol->ResidueTypeNames()[resTypeIdx].Equals("MeOH")) {
                         // methanol
                         atomColorTable.Add(1.0);
-                        atomColorTable.Add(0.2);
+                        atomColorTable.Add(0.5);
                         atomColorTable.Add(0.0);
                     }else if(mol->ResidueTypeNames()[resTypeIdx].Equals("TOL")) {
                         // toluol
