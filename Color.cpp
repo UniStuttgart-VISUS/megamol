@@ -664,7 +664,7 @@ void Color::ReadColorTableFromFile( vislib::StringA filename,
     if( colorLookupTable.Count() == 0 ) {
         // set default color table
         colorLookupTable.SetCount( 25);
-        colorLookupTable[0].Set( 0.5f, 0.5f, 0.5f);
+        colorLookupTable[0].Set( 0.70f, 0.8f, 0.4f);
         colorLookupTable[1].Set( 1.0f, 0.0f, 0.0f);
         colorLookupTable[2].Set( 1.0f, 1.0f, 0.0f);
         colorLookupTable[3].Set( 0.0f, 1.0f, 0.0f);
