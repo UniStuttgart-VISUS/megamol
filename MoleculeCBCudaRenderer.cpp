@@ -10,6 +10,7 @@
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
 #define _USE_MATH_DEFINES 1
+#define SFB_DEMO
 
 #include "vislib/assert.h"
 #include "CoreInstance.h"
@@ -170,7 +171,7 @@ bool MoleculeCBCudaRenderer::create( void ) {
 			"%s: Unable to load vertex shader source for sphere shader", this->ClassName() );
 		return false;
 	}
-	if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::sphereFragment", fragSrc ) ) {
+	if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::sphereFragmentCB", fragSrc ) ) {
 		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
 			"%s: Unable to load fragment shader source for sphere shader", this->ClassName() );
 		return false;
@@ -644,15 +645,22 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-	
+
     // render atoms VBO
+#ifndef SFB_DEMO
 	glBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);     // very useful
 	glEnable( GL_BLEND);
-	glDisable( GL_CULL_FACE);
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
+    glDisable( GL_CULL_FACE);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
+#endif
+
 
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-	glColor4f( 1.0, 0.0, 0.0, this->opacityParam.Param<param::FloatParam>()->Value());
+#ifndef SFB_DEMO
+	//glColor4f( 1.0, 0.0, 0.0, this->opacityParam.Param<param::FloatParam>()->Value());
+#else
+	glColor4f(0.70f, 0.8f, 0.4f, 1.0f);
+#endif
 	glEnableClientState( GL_VERTEX_ARRAY);
 	glBindBuffer( GL_ARRAY_BUFFER, this->atomPosVBO);
 	glVertexPointer( 4, GL_FLOAT, 0, 0);
@@ -1224,26 +1232,26 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU( MolecularDataCall *mol) {
                                     arcs.RemoveAt( aCnt);
                                     aCnt--;
                                 } else {
-                                    // start- & endvektor werden geändert: s = x1, e = x2
+                                    // start- & endvektor werden geï¿½ndert: s = x1, e = x2
                                     arcs[aCnt].SetFirst( x1);
                                     arcs[aCnt].SetSecond( x2);
                                 }
                             } else {
                                 if( d3 > 0 ) {
-                                    // startvektor wird geändert: s = x1
+                                    // startvektor wird geï¿½ndert: s = x1
                                     arcs[aCnt].SetFirst( x1);
                                 } else {
-                                    // startvektor wird geändert: s = x2
+                                    // startvektor wird geï¿½ndert: s = x2
                                     arcs[aCnt].SetFirst( x2);
                                 }
                             }
                         } else {
                             if( d2 > 0 ) {
                                 if( d3 > 0 ) {
-                                    // endvektor wird geändert: e = x1
+                                    // endvektor wird geï¿½ndert: e = x1
                                     arcs[aCnt].SetSecond( x1);
                                 } else {
-                                    // endvektor wird geändert: e = x2
+                                    // endvektor wird geï¿½ndert: e = x2
                                     arcs[aCnt].SetSecond( x2);
                                 }
                             } else {
@@ -1303,26 +1311,26 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU( MolecularDataCall *mol) {
                                     arcs.RemoveAt( aCnt);
                                     aCnt--;
                                 } else {
-                                    // start- & endvektor werden geändert: s = x1, e = x2
+                                    // start- & endvektor werden geï¿½ndert: s = x1, e = x2
                                     arcs[aCnt].SetFirst( x1);
                                     arcs[aCnt].SetSecond( x2);
                                 }
                             } else {
                                 if( d3 > 0 ) {
-                                    // startvektor wird geändert: s = x1
+                                    // startvektor wird geï¿½ndert: s = x1
                                     arcs[aCnt].SetFirst( x1);
                                 } else {
-                                    // startvektor wird geändert: s = x2
+                                    // startvektor wird geï¿½ndert: s = x2
                                     arcs[aCnt].SetFirst( x2);
                                 }
                             }
                         } else {
                             if( d2 > 0 ) {
                                 if( d3 > 0 ) {
-                                    // endvektor wird geändert: e = x1
+                                    // endvektor wird geï¿½ndert: e = x1
                                     arcs[aCnt].SetSecond( x1);
                                 } else {
-                                    // endvektor wird geändert: e = x2
+                                    // endvektor wird geï¿½ndert: e = x2
                                     arcs[aCnt].SetSecond( x2);
                                 }
                             } else {
