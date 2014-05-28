@@ -654,7 +654,7 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
         // Mix two coloring modes
         Color::MakeColorTable(mol, this->currentColoringMode0,
                 this->currentColoringMode1,
-                cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the first cm
+                cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
                 1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
                 this->atomColorTable, this->colorLookupTable,
                 this->rainbowColors,

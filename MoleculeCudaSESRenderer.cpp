@@ -32,6 +32,7 @@
 
 #include "cuda_helper.h"
 #include <cuda_gl_interop.h>
+#include "cuda_error_check.h"
 
 extern "C" void cudaInit(int argc, char **argv);
 extern "C" void cudaGLInit(int argc, char **argv);
@@ -1540,17 +1541,21 @@ void MoleculeCudaSESRenderer::writeAtomPositions( MolecularDataCall *protein ) {
 	}
     */
     int cnt;
-#pragma omp parallel for
+//#pragma omp parallel for
 	for( cnt = 0; cnt < int( protein->AtomCount()); ++cnt ) {
 		// write pos and rad to array
 		m_hPos[cnt*4+0] = positions[cnt*3+0];
 		m_hPos[cnt*4+1] = positions[cnt*3+1];
 		m_hPos[cnt*4+2] = positions[cnt*3+2];
         m_hPos[cnt*4+3] = protein->AtomTypes()[protein->AtomTypeIndices()[cnt]].Radius();
+//        printf("wrote %f %f %f (%f)\n",
+//                positions[cnt*3+0], positions[cnt*3+1], positions[cnt*3+2],
+//                protein->AtomTypes()[protein->AtomTypeIndices()[cnt]].Radius());
 	}
 	// setArray( POSITION, m_hPos, 0, this->numAtoms);
 	//copyArrayToDevice( this->m_dPos, this->m_hPos, 0, this->numAtoms*4*sizeof(float));
 	cutilSafeCall( cudaMemcpyAsync( this->m_dPos, this->m_hPos, this->numAtoms*4*sizeof(float), cudaMemcpyHostToDevice, 0));
+	//cutilSafeCall( cudaMemcpy( this->m_dPos, this->m_hPos, this->numAtoms*4*sizeof(float), cudaMemcpyHostToDevice));
 }
 
 

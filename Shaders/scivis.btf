@@ -958,7 +958,9 @@ void main (void) {
 //    viewportDim
         
     //while(!(length_acc > rayLen || alpha_acc >= 1.0 || vecNDC.z >= depthValComp)) {
-    while(!(length_acc > rayLen || alpha_acc >= 1.0 || ssDepth >= depthValComp)) {
+    int MAXSTEP = 1000;
+    int stepCnt = 0;
+    while(!(length_acc > rayLen || alpha_acc >= 1.0 || ssDepth >= depthValComp || stepCnt > MAXSTEP)) {
 
         // Get sample
         if (rayMarchTex == 0) { // Use density map  
@@ -1092,9 +1094,12 @@ void main (void) {
         // Map near ... far to 0 ... 1
         ssDepth -= n;
         ssDepth /= (f-n);
+        
+        
+        stepCnt++;
     }
 
-    gl_FragColor = vec4(col_acc.rgb/alpha_acc, alpha_acc);  
+    gl_FragColor = vec4(col_acc.rgb/alpha_acc, alpha_acc);
 }
             -->
             </snippet>

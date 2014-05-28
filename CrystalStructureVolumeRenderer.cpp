@@ -7,6 +7,8 @@
  * $Id$
  */
 
+#define SFB_DEMO // Disable everything that is unnecessary and slows down the rendering
+
 
 #include <stdafx.h>
 #include "CrystalStructureVolumeRenderer.h"
@@ -148,7 +150,7 @@ protein::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(void):
         mcVertOut_D(NULL), mcNormOut(NULL), mcNormOut_D(NULL),
         idxLastFrame(-1), cudaqsurf(NULL), atomCnt(0), visAtomCnt(0),
         edgeCntBa(0), edgeCntTi(0), callTimeOld(-1.0), fboDim(-1, -1),
-        srcFboDim(-1, -1), cudaMC(NULL), nVerticesMCOld(0) {
+        srcFboDim(-1, -1), cudaMC(NULL), nVerticesMCOld(0), frameOld(-1) {
 
 
     // Data caller slot
@@ -581,7 +583,7 @@ bool protein::CrystalStructureVolumeRenderer::CalcDensityTex(
     if(this->recalcDensityGrid) {
 
         
-        printf("Calc density grid start\n"); // DEBUG
+//        printf("Calc density grid start\n"); // DEBUG
 
         Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis,
         gridZAxis, gridOrg;
@@ -728,7 +730,7 @@ bool protein::CrystalStructureVolumeRenderer::CalcDensityTex(
                     gridCol[4*i+3]);
         }*/ // DEBUG
 
-        printf("Vectors contained in density tex %u\n", dipole_cnt);
+//        printf("Vectors contained in density tex %u\n", dipole_cnt);
 
         // Compute uniform grid containing density map of the vectors
         CUDAQuickSurf *cqs = (CUDAQuickSurf *) this->cudaqsurf;
@@ -818,9 +820,9 @@ bool protein::CrystalStructureVolumeRenderer::CalcDensityTex(
             return false;
         }
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for computing density map: %f",
-                this->ClassName(),
-                (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
+//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for computing density map: %f",
+//                this->ClassName(),
+//                (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
 
         this->recalcDensityGrid = false;
     }
@@ -965,9 +967,9 @@ bool protein::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
     glBindTexture(GL_TEXTURE_3D, 0);
     glDisable(GL_TEXTURE_3D);
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for computing curl: %f",
-            this->ClassName(),
-            (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
+//    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for computing curl: %f",
+//            this->ClassName(),
+//            (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
 
     // Check for opengl error
     glErr = glGetError();
@@ -1115,10 +1117,10 @@ bool protein::CrystalStructureVolumeRenderer::CalcUniGrid (
         }
     }*/
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-            "%s: time for computing uni grid %f",
-            this->ClassName(),
-            (double(clock()-t)/double(CLOCKS_PER_SEC))); // DEBUG
+//    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//            "%s: time for computing uni grid %f",
+//            this->ClassName(),
+//            (double(clock()-t)/double(CLOCKS_PER_SEC))); // DEBUG
 
     //  Setup textures
 
@@ -1176,6 +1178,8 @@ void protein::CrystalStructureVolumeRenderer::ApplyPosFilter(
 
     using namespace vislib::sys;
 
+#ifndef SFB_DEMO
+
     // Calculate atom visibility based on interpolated atom positions
     this->visAtom.SetCount(dc->GetAtomCnt());
 #pragma omp parallel for
@@ -1204,6 +1208,8 @@ void protein::CrystalStructureVolumeRenderer::ApplyPosFilter(
         }
     }
 
+#endif // SFB_DEMO
+
     // Calculate dipole visibility based on positions
     this->visDipole.SetCount(dc->GetDipoleCnt());
 #pragma omp parallel for
@@ -1218,6 +1224,8 @@ void protein::CrystalStructureVolumeRenderer::ApplyPosFilter(
 
         this->visDipole[cnt] = true;
     }
+
+#ifndef SFB_DEMO
 
     // Setup array with atom indices of all visible Ba edges
     this->edgeIdxBa.Clear();
@@ -1242,13 +1250,15 @@ void protein::CrystalStructureVolumeRenderer::ApplyPosFilter(
         }
     }
 
+#endif // SFB_DEMO
+
     this->recalcArrowData = true;
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-            "%s: done filtering - #atoms %u, #edges %u",
-            this->ClassName(),
-            this->visAtomIdx.Count(),
-            this->edgeIdxTi.Count()+this->edgeIdxBa.Count());
+//    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//            "%s: done filtering - #atoms %u, #edges %u",
+//            this->ClassName(),
+//            this->visAtomIdx.Count(),
+//            this->edgeIdxTi.Count()+this->edgeIdxBa.Count());
 }
 
 
@@ -1873,10 +1883,17 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
         return false;
     }
 
+#ifndef SFB_DEMO
     if(this->callTimeOld != callTime) {
         this->recalcGrid = true;     // Recalc displacement if position changed
         this->recalcPosInter = true;
     }
+#else
+    if(this->frameOld != dc->FrameID()) {
+        this->recalcGrid = true;     // Recalc displacement if position changed
+        this->recalcPosInter = true;
+    }
+#endif
     this->callTimeOld = callTime;
 
     // Current frame
@@ -1884,6 +1901,7 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
         return false;
     }
 
+#ifndef SFB_DEMO
     // Copy frame data and interpolate positions
     if(this->idxLastFrame != static_cast<int>(callTime)) {
 
@@ -1960,10 +1978,12 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
         this->recalcDipole = true;
     }
 
+#endif // SFB_DEMO
     // Setup atom color array
     if(this->atomColor.Count() != dc->GetAtomCnt()*3) {
         this->SetupAtomColors(dc); // TODO write radii also here
     }
+
 
     // (Re)calculate visibility based on interpolated atom positions
     if(this->recalcVisibility) {
@@ -2025,6 +2045,8 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
 
     this->srcFbo.Enable(0);
 
+
+
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -2042,10 +2064,12 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
+#ifndef SFB_DEMO
     // Render atoms
     if(this->atomRM == ATOM_SPHERES) {
         this->RenderAtomsSpheres(dc);
     }
+
 
     // Render ba edges
     if(this->edgeBaRM == BA_EDGE_STICK) {
@@ -2063,6 +2087,8 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
         this->RenderEdgesTiLines(dc, this->posInter.PeekElements(), this->atomColor.PeekElements());
     }
 
+#endif // SFB_DEMO
+
     // Render arrow glyphs representing the vector field
     if(this->vecRM == VEC_ARROWS) {
         if(!this->RenderVecFieldArrows(dc, this->posInter.PeekElements(), this->atomColor.PeekElements())) {
@@ -2071,6 +2097,8 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
                     this->ClassName());
         }
     }
+
+
 
     Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis,gridYAxis, gridZAxis;
     Vector<int, 3> gridDim;
@@ -2093,7 +2121,7 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     gridMaxCoord[1] = gridMinCoord[1] + gridYAxis[1];
     gridMaxCoord[2] = gridMinCoord[2] + gridZAxis[2];
 
-
+#ifndef SFB_DEMO
     ////////////////////////////////////////////////////////////////////////////
     if(this->showRidge) {
 
@@ -2154,6 +2182,7 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     if(this->showIsoSurf) {
         this->RenderIsoSurfMC();
     }
+#endif // SFB_DEMO
 
     // Render slices
 
@@ -2339,6 +2368,8 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
 
     dc->Unlock();
 
+    this->frameOld = dc->FrameID();
+
     return true;
 }
 
@@ -2352,6 +2383,8 @@ bool protein::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
         const float *col) {
 
     using namespace vislib::math;
+
+
 
     // Check whether filter has been applied
     if(this->arrowVis.Count() != dc->GetDipoleCnt()) return false;
@@ -2413,6 +2446,7 @@ bool protein::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
         this->arrowDataPos[3*cnt+2] = dc->GetDipolePos()[cnt*3+2] - vec.Z()*this->vecScl*0.5f;
     }
 
+
     // Write idx array
     this->arrowVisIdx.Clear();
     this->arrowVisIdx.SetCapacityIncrement(1000);
@@ -2430,7 +2464,7 @@ bool protein::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
             }
         }
     }
-    //printf("Number of visible arrows %u\n", this->arrowVisIdx.Count());
+    // printf("Number of visible arrows %u\n", this->arrowVisIdx.Count());
 
     // Actual rendering
 
