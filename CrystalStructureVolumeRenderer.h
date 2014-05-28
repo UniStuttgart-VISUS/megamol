@@ -881,6 +881,8 @@ private:
 
     /// The maximum scaled vector length
     float maxLenDiff;
+
+    int frameOld;
 };
 
 
