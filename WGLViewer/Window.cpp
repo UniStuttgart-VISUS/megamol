@@ -119,7 +119,7 @@ Window::Window(Instance& inst) : ApiHandle(), inst(inst), hWnd(NULL),
 	this->renderStartEvent = inst.GetRenderStartEvent();
     this->renderer.Start(this);
 
-    ::wglMakeCurrent(Window::mainDC, Window::mainCtxt);
+    // ::wglMakeCurrent(Window::mainDC, Window::mainCtxt);
 }
 
 
@@ -242,8 +242,88 @@ void Window::SetHint(unsigned int hint, bool f) {
 
 }
 
+
+static LRESULT CALLBACK DummyWndProc(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
+	return DefWindowProc(handle, message, wParam, lParam);
+}
+
+/**
+ * Window::InitContext
+ */
 void Window::InitContext() {
-	setupContextAffinity(hWnd);
+
+	// We want to avoid selecting any context into a window's device context
+	// before the affinity context is selected. Since we need a context for
+	// retrieving the affinity extension functions, we create a dummy window,
+	// dummy device context and dummy rendering context.
+	WNDCLASS dummyClass;
+	ZeroMemory(&dummyClass, sizeof(dummyClass));
+	dummyClass.lpfnWndProc = DummyWndProc;
+	dummyClass.hInstance = Instance::HInstance();
+	dummyClass.lpszClassName = _T("WGLViewer::Window::DummyClass");
+
+	RegisterClass(&dummyClass);
+
+	HWND dummyWindow = ::CreateWindowEx(0, dummyClass.lpszClassName,
+		NULL, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, NULL, NULL, Instance::HInstance(), NULL);
+	if (dummyWindow == NULL) {
+		Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to create dummy "
+			"window for GPU affinity initialization.");
+		return;
+	}
+
+	HDC dummyDC = ::GetDC(dummyWindow);
+	if (dummyDC == NULL) {
+		DestroyWindow(dummyWindow);
+		Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to create dummy "
+			"device context for GPU affinity initialization.");
+		return;
+	}
+
+	const unsigned int colBits = 32;
+	const unsigned int depthBits = 32;
+
+	static PIXELFORMATDESCRIPTOR pfd = {
+		sizeof(PIXELFORMATDESCRIPTOR), 1,
+		PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+		PFD_TYPE_RGBA, colBits, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		depthBits, 0, 0, PFD_MAIN_PLANE, 0, 0, 0, 0
+	};
+
+	int pixelFormat = ::ChoosePixelFormat(dummyDC, &pfd);
+	if (pixelFormat == 0 || !::SetPixelFormat(dummyDC, pixelFormat, &pfd)) {
+		ReleaseDC(dummyWindow, dummyDC);
+		DestroyWindow(dummyWindow);
+		Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to find pixel "
+			"format for GPU affinity initialization.");
+		return;
+	}
+
+	HGLRC dummyContext = ::wglCreateContext(dummyDC);
+	if (dummyContext == NULL) {
+		ReleaseDC(dummyWindow, dummyDC);
+		DestroyWindow(dummyWindow);
+		Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to create "
+			"rendering context for GPU affinity initialization.");
+		return;
+	}
+
+	::wglMakeCurrent(dummyDC, dummyContext);
+
+	if (!setupContextAffinity(hWnd)) {
+
+		// No affinity context has been set. Fall back to the context created in our
+		// constructor.
+		::wglMakeCurrent(mainDC, mainCtxt);
+	}
+	else {
+		// An affinity context has been set.
+	}
+
+	wglDeleteContext(dummyContext);
+	ReleaseDC(dummyWindow, dummyDC);
+	DestroyWindow(dummyWindow);
 }
 
 
@@ -347,11 +427,11 @@ DWORD Window::renderThread(void *userData) {
 		vislib::sys::Thread::Sleep(2500);
 
 	if (that->affinityContext != nullptr) {
-		//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Using affinity context in "
-		//	"render thread.\n");
+		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Using affinity context in "
+			"render thread.\n");
 		if (::wglMakeCurrent(that->hDC, that->affinityContext)) {
-			//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Current is now dc %p, rc %p.",
-			//	that->hDC, that->affinityContext);
+			Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Current is now dc %p, rc %p.",
+				that->hDC, that->affinityContext);
 		}
 		else {
 			Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to make affinity render "
@@ -359,11 +439,11 @@ DWORD Window::renderThread(void *userData) {
 		}
 	}
 	else {
-		//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Using non-affinity context "
-		//	"in render thread.\n");
+		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Using non-affinity context "
+			"in render thread.\n");
 		if (::wglMakeCurrent(that->hDC, that->hRC)) {
-			//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Current is now dc %p, rc %p.",
-			//	that->hDC, that->hRC);
+			Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Current is now dc %p, rc %p.",
+				that->hDC, that->hRC);
 		}
 		else {
 			Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to make non-affinity render "
@@ -527,7 +607,10 @@ bool Window::setupContextAffinity(HWND window) {
 
 				// Now make current the affinityContext and the original (!)
 				// device context (because we want to render into the window
-				// represented by the original context).
+				// represented by the original context). We think the first
+				// wglMakeCurrent call for this window MUST be with an
+				// affinity context or affinity will not work even if an
+				// affinity context will be selected later.
 				if (!wglMakeCurrent(hDC, guiAffinityContext)) {
 					Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to "
 						"make the affinity context current.");
@@ -544,8 +627,8 @@ bool Window::setupContextAffinity(HWND window) {
 					return false;
 				}
 
-				//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Current is now dc %p, rc %p.",
-				//	hDC, guiAffinityContext);
+				Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Current is now dc %p, rc %p.",
+					hDC, guiAffinityContext);
 
 				return true;
 			}
