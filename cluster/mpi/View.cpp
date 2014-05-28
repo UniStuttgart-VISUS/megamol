@@ -41,10 +41,11 @@
 #include "vislib/UTF8Encoder.h"
 
 
-//#define _TRACE_INFO(fmt, ...)
-//#define _TRACE_MESSAGING(fmt, ...)
-//#define _TRACE_PACKAGING(fmt, ...)
-//#define _TRACE_BARRIERS(fmt, ...)
+#define _TRACE_INFO(fmt, ...)
+#define _TRACE_MESSAGING(fmt, ...)
+#define _TRACE_PACKAGING(fmt, ...)
+#define _TRACE_BARRIERS(fmt, ...)
+//#define _TRACE_GSYNC(fmt, ...)
 
 #ifndef _TRACE_INFO
 #define _TRACE_INFO(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO, fmt,\
@@ -62,6 +63,10 @@
 #define _TRACE_BARRIERS(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO + 1000,\
     fmt, __VA_ARGS__)
 #endif /* _TRACE_BARRIERS */
+#ifndef _TRACE_GSYNC
+#define _TRACE_GSYNC(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO + 2000,\
+    fmt, __VA_ARGS__)
+#endif /* _TRACE_GSYNC */
 
 
 
@@ -391,7 +396,8 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
             this->renderFallbackView();
         }
 
-        ::glFlush();
+        //::glFlush();
+        ::glFinish();
 #ifdef WITH_MPI
         _TRACE_BARRIERS("Rank %d is before swap barrier.\n", this->mpiRank);
         ::MPI_Barrier(MPI_COMM_WORLD);
@@ -401,6 +407,8 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
             // Now all nodes should have joined the swap group, so the master
             // can enable the barrier.
             ASSERT(this->hasGsync());
+            _TRACE_GSYNC("Broadcast master %d is binding swap barrier...\n",
+                this->mpiRank);
             SwapGroupApi::GetInstance().BindSwapBarrier(1, 1);
         }
 
@@ -605,7 +613,7 @@ bool megamol::core::cluster::mpi::View::hasGsync(void) const {
     GLuint maxGroups, maxBarriers;
     if (SwapGroupApi::GetInstance().QueryMaxSwapGroups(maxGroups,
             maxBarriers)) {
-        _TRACE_INFO("Device supports %u swap groups and %u swap barriers.\n",
+        _TRACE_GSYNC("Device supports %u swap groups and %u swap barriers.\n",
             maxGroups, maxBarriers);
         return ((maxGroups > 0) && (maxBarriers > 0));
 
@@ -662,7 +670,7 @@ bool megamol::core::cluster::mpi::View::isGsyncEnabled(void) const {
     VLAUTOSTACKTRACE;
     GLuint group, barrier;
     if (SwapGroupApi::GetInstance().QuerySwapGroup(group, barrier)) {
-        _TRACE_INFO("Swap group is %u, swap barrier is %u.\n", group, barrier);
+        _TRACE_GSYNC("Swap group is %u, swap barrier is %u.\n", group, barrier);
         return ((group > 0) && (barrier > 0));
 
     } else {
