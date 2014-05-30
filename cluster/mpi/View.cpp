@@ -1,7 +1,7 @@
 /*
  * View.coo
  *
- * Copyright (C) 2014 Visualisierungsinstitut der Universität Stuttgart.
+ * Copyright (C) 2014 Visualisierungsinstitut der Universitï¿½t Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -270,8 +270,9 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
         }
 
         ASSERT(this->relayOffset == 0);
-    } /* if (this->knowsBcastMaster() && (this->mpiSize > 1)) */
 #endif /* WITH_MPI */
+    } /* if (this->knowsBcastMaster() && (this->mpiSize > 1)) */
+
 
     // Post-process status
     if (!this->isBcastMaster() && (state.RelaySize > 0)) {
