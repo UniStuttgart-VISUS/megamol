@@ -180,7 +180,7 @@ bool megamol::protein::AggregatedDensity::aggregate() {
 		mol->SetFrameID(frame);
         if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
 		if (mol->AtomCount()!=n_atoms) {
-			delete pos0, vel;
+			delete[] pos0, vel;
 			return false;
 		}
     	const float* pos_new = mol->AtomPositions();
