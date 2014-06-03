@@ -207,7 +207,7 @@ void moldyn::MMPLDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
         f->Clear();
         return;
     }
-    printf("Requesting frame %u of %u frames\n", idx, this->FrameCount());
+//    printf("Requesting frame %u of %u frames\n", idx, this->FrameCount());
     ASSERT(idx < this->FrameCount());
     this->file->Seek(this->frameIdx[idx]);
 	if (!f->LoadFrame(this->file, idx, this->frameIdx[idx + 1] - this->frameIdx[idx], this->fileVersion)) {

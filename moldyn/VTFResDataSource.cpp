@@ -221,9 +221,10 @@ bool moldyn::VTFResDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigne
 					particleId = vislib::CharTraitsA::ParseInt(s);
 
 					// rgba = type=0, cluster, DF
+					// NOTE TODO Changed for SFB_DEMO
 					float *particleData = col[0].AsAt<float>(4 * sizeof(float)* particleId);
 					particleData[1] = parsedClusters;
-					particleData[2] = (float)vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 2]);
+					particleData[0] = (float)vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 2]);
 
 					this->clusterInfos.data[parsedClusters].Append(particleId);
 
@@ -878,13 +879,14 @@ bool moldyn::VTFResDataSource::getDataCallback(Call& caller) {
 			const float *cd = f->PartCols(i);
             c2->AccessParticles(i).SetColourData((cd == NULL)
                 ? moldyn::MultiParticleDataCall::Particles::COLDATA_NONE
-				: moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA,
+				: moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
 				cd, sizeof(float) * 4);
+            c2->AccessParticles(i).SetColourMapIndexValues(1.0f, 3.0f);
 			c2->AccessParticles(i).SetClusterInfos(f->GetClusterInfos());
+
         }
         return true;
     }
-
     return false;
 }
 
