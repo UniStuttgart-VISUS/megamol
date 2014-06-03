@@ -14,6 +14,7 @@
 #include "ApiHandle.h"
 #include "CallbackSlot.h"
 #include "Instance.h"
+#include "glh/glh_extensions.h"
 #include "vislib/Event.h"
 #include "vislib/Thread.h"
 
@@ -100,11 +101,11 @@ namespace wgl {
          */
         void SetHint(unsigned int hint, bool f);
 
-		/**
-		 * Creates and makes current an affinity context if appropriate. If
-		 * not, the non-affinity context remains current.
-		 */
-		void InitContext();
+        /**
+         * Creates and makes current an affinity context if appropriate. If
+         * not, the non-affinity context remains current.
+         */
+        void InitContext();
 
     private:
 
@@ -129,20 +130,20 @@ namespace wgl {
          */
         static DWORD renderThread(void *userData);
 
-		/**
-		 * Try to set the GPU affinity based on the coordinates of a window.
-		 * If the WGL_NV_gpu_affinity extension is available,
-		 * setupContextAffinity will try to create an affinity context for the
-		 * GPU device that holds more than 50% of the window's area. Upon
-		 * success, the affinity device context and affinity render context
-		 * are stored in affinityDC and affinityContext.
-		 *
-		 * @param window A window whose coordinates are to be used for
-		 *   deciding on a GPU device. If window is NULL, this method fails.
-		 * @returns true if the affinity has been set successfully, false
-		 *   otherwise
-		 */
-		bool setupContextAffinity(HWND window);
+        /**
+         * Try to set the GPU affinity based on the coordinates of a window.
+         * If the WGL_NV_gpu_affinity extension is available,
+         * setupContextAffinity will try to create an affinity context for the
+         * GPU device that holds more than 50% of the window's area. Upon
+         * success, the affinity device context and affinity render context
+         * are stored in affinityDC and affinityContext.
+         *
+         * @param window A window whose coordinates are to be used for
+         *   deciding on a GPU device. If window is NULL, this method fails.
+         * @returns true if the affinity has been set successfully, false
+         *   otherwise
+         */
+        bool setupContextAffinity(HWND window);
 
         /** The main rendering context */
         static HGLRC mainCtxt;
@@ -162,31 +163,34 @@ namespace wgl {
         /** The rendering context handle */
         HGLRC hRC;
 
-		/**
-		 * The affinity device context or NULL if GPU affinity has not been 
-		 * set.
-		 */
-		HDC affinityDC;
+        /**
+         * The affinity device context or NULL if GPU affinity has not been 
+         * set.
+         */
+        HDC affinityDC;
 
-		/**
-		 * The affinity render context or NULL if GPU affinity has not been
-		 * set.
-		 */
-		HGLRC affinityContext;
+        /**
+         * The affinity render context or NULL if GPU affinity has not been
+         * set.
+         */
+        HGLRC affinityContext;
 
-		/**
-		 * A second affinity context that shares its resources with
-		 * affinityContext. This can be used by the gui thread to upload
-		 * resources.
-		 */
-		HGLRC guiAffinityContext;
+        /**
+         * A second affinity context that shares its resources with
+         * affinityContext. This can be used by the gui thread to upload
+         * resources.
+         */
+        HGLRC guiAffinityContext;
 
-		/**
-		 * An pointer to an event that will set when the windows is to start
-		 * rendering. If null, the window will start rendering after a short
-		 * delay instead.
-		 */
-		vislib::sys::Event *renderStartEvent;
+        /** Handle to the GPU that we want to use. */
+        HGPUNV hGpu;
+
+        /**
+         * An pointer to an event that will set when the windows is to start
+         * rendering. If null, the window will start rendering after a short
+         * delay instead.
+         */
+        vislib::sys::Event *renderStartEvent;
 
         /** The window width */
         unsigned int w;

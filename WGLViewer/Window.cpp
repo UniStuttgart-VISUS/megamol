@@ -29,7 +29,7 @@ using namespace vislib::sys;
 Window::Window(Instance& inst) : ApiHandle(), inst(inst), hWnd(NULL),
 		hDC(NULL), hRC(NULL), w(0), h(0), renderCallback(), resizeCallback(),
 		renderer(&Window::renderThread), affinityDC(NULL),
-		affinityContext(NULL), guiAffinityContext(NULL),
+        affinityContext(NULL), guiAffinityContext(NULL), hGpu(nullptr),
 		renderStartEvent(nullptr) {
 
     DWORD style = WS_OVERLAPPEDWINDOW;
@@ -410,7 +410,7 @@ DWORD Window::renderThread(void *userData) {
 	mmcRenderViewContext context;
 	::ZeroMemory(&context, sizeof(context));
 	context.Size = sizeof(context);
-	context.Window = that->hWnd;
+//	context.Window = that->hWnd;
 
 	// @scharnkn: The previous implementation was based on the assumption
 	// that, on average, the world is a better place after 2.5 seconds. For
@@ -517,16 +517,16 @@ bool Window::setupContextAffinity(HWND window) {
 		(windowRect.bottom - windowRect.top);
 
 	unsigned int gpuIndex = 0;
-	HGPUNV gpuHandle = nullptr;
+    this->hGpu = nullptr;
 	GPU_DEVICE deviceInfo;
 
-	while (wglEnumGpusNV(gpuIndex, &gpuHandle))	{
+	while (wglEnumGpusNV(gpuIndex, &this->hGpu)) {
 		unsigned int deviceIndex = 0;
 
 		ZeroMemory(&deviceInfo, sizeof(deviceInfo));
 		deviceInfo.cb = sizeof(deviceInfo);
 
-		while (wglEnumGpuDevicesNV(gpuHandle, deviceIndex, &deviceInfo)) {
+		while (wglEnumGpuDevicesNV(this->hGpu, deviceIndex, &deviceInfo)) {
 			RECT intersectRect;
 			IntersectRect(&intersectRect, &windowRect,
 				&deviceInfo.rcVirtualScreen);
@@ -541,7 +541,7 @@ bool Window::setupContextAffinity(HWND window) {
 					"to GPU #%u device \"%s\" (\"%s\").\n", gpuIndex,
 					deviceInfo.DeviceString, deviceInfo.DeviceName);
 
-				HGPUNV gpuMask[2] = { gpuHandle, nullptr };
+				HGPUNV gpuMask[2] = { this->hGpu, nullptr };
 
 				affinityDC = wglCreateAffinityDCNV(gpuMask);
 				if (affinityDC == NULL) {
