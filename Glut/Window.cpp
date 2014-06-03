@@ -312,7 +312,7 @@ void megamol::viewer::Window::glutDisplayCallback(void) {
         rvc.Size = sizeof(rvc);
         rvc.ContinuousRedraw = true;
 
-        ASSERT(rvc.SynchronisedTime == 0);  // Standard timing behaviour.
+        ASSERT(rvc.Time == 0);  // Standard timing behaviour.
         t->renderCallback.Call(*thisWindow(), &rvc);
 
         if (t->presentationMode > 0) {

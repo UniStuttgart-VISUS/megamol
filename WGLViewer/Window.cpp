@@ -464,7 +464,7 @@ DWORD Window::renderThread(void *userData) {
     while (that->hRC) {
         ::glViewport(0, 0, that->w, that->h);
 
-        ASSERT(context.SynchronisedTime == 0);  // Standard timing behaviour.
+        ASSERT(context.Time == 0);  // Standard timing behaviour.
         that->renderCallback.Call(*that, &context);
 
         ::SwapBuffers(that->hDC);
