@@ -381,10 +381,10 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
     this->cameraInfo = cr3d->GetCameraParameters();
 
     // =============== Query Camera View Dimensions ===============
-    if (static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
-        static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight()) != this->height) {
-        this->width = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth());
-        this->height = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight());
+    if (static_cast<unsigned int>(cameraInfo->TileRect().Width()) != this->width ||
+        static_cast<unsigned int>(cameraInfo->TileRect().Height()) != this->height) {
+        this->width = static_cast<unsigned int>(cameraInfo->TileRect().Width());
+        this->height = static_cast<unsigned int>(cameraInfo->TileRect().Height());
     }
     
     // create the fbo, if necessary
@@ -398,11 +398,10 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
     
     // =============== Protein Rendering ===============
     // disable the output buffer
-    cr3d->DisableOutputBuffer();
+    //cr3d->DisableOutputBuffer();
     // start rendering to the FBO for protein rendering
     this->opaqueFBO.Enable();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     // Apply scaling based on combined bounding box
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -431,7 +430,7 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
         glScalef(scaleRevert, scaleRevert, scaleRevert);
         glScalef(2,2,2); // QUICK FIX/HACK for MUX-Renderer
         //*rencr3d = *cr3d;
-        rencr3d->SetOutputBuffer(&this->opaqueFBO); // TODO: Handle incoming buffers!
+        //rencr3d->SetOutputBuffer(&this->opaqueFBO); // TODO: Handle incoming buffers!
         // SFB-DEMO
         rencr3d->SetTime( cr3d->Time());
         (*rencr3d)();
@@ -440,7 +439,7 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
     // stop rendering to the FBO for protein rendering
     this->opaqueFBO.Disable();
     // re-enable the output buffer
-    cr3d->EnableOutputBuffer();
+    //cr3d->EnableOutputBuffer();
     
     glScalef( 1.0f/scale, 1.0f/scale, 1.0f/scale);
 
@@ -474,6 +473,7 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
         vti->Unlock();
     }
     
+    CHECK_FOR_OGL_ERROR();
     return retval;
 }
 
