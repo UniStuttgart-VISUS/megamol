@@ -148,7 +148,9 @@ bool moldyn::DataFileSequence::getDataCallback(Call& caller) {
             this->datahash++;
         }
 
-        ggdc->SetFrameID(0);
+        // TODO: WTF?????? all modules behind me think time is only ever 0 and "does not move"
+        //ggdc->SetFrameID(0);
+        ggdc->SetFrameID(frameID);
         if (!(*ggdc)(0)) {
             return false; // unable to get data
         }

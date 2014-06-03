@@ -11,6 +11,7 @@
 #include "param/FilePathParam.h"
 #include "param/BoolParam.h"
 #include "param/ButtonParam.h"
+#include "moldyn/DataFileSequence.h"
 #include "vislib/File.h"
 #include "vislib/assert.h"
 #include "vislib/Log.h"
@@ -98,8 +99,12 @@ bool misc::VolumeCache::outDataCallback(Call& caller) {
         if ((this->dataHash == 0) || (this->frameIdx != o->FrameID()) || this->forceAndSaveSlot.IsDirty()) {
             // no data
             bool load = vislib::sys::File::Exists(this->filenameSlot.Param<param::FilePathParam>()->Value());
-            if (load && (this->dataHash != 0) && (this->frameIdx != o->FrameID())) {
-                load = false; // most likely we want to rebuild the cache
+            // TODO: PORRRQUEEEEEEEE
+            const core::moldyn::DataFileSequence* test = dynamic_cast<const core::moldyn::DataFileSequence*>(o->PeekCallerSlot()->Parent());
+            if (test == NULL) {
+                if (load && (this->dataHash != 0) && (this->frameIdx != o->FrameID())) {
+                    load = false; // most likely we want to rebuild the cache
+                }
             }
             if (load && this->forceAndSaveSlot.IsDirty() && (i != NULL)) {
                 load = false; // no, we want to build and save instead
@@ -120,6 +125,7 @@ bool misc::VolumeCache::outDataCallback(Call& caller) {
             this->saveCache();
         }
 
+        // TODO: why is this different from the code for getextents, which sets only half of these!?!?
         o->SetDataHash(this->dataHash);
         o->AccessBoundingBoxes() = this->bboxes;
         o->SetFrameCount(this->frameCount);
@@ -165,8 +171,12 @@ bool misc::VolumeCache::outExtentCallback(Call& caller) {
         if ((this->dataHash == 0) || (this->frameIdx != o->FrameID()) || this->forceAndSaveSlot.IsDirty()) {
             // no data
             bool load = vislib::sys::File::Exists(this->filenameSlot.Param<param::FilePathParam>()->Value());
-            if (load && (this->dataHash != 0) && (this->frameIdx != o->FrameID())) {
-                load = false; // most likely we want to rebuild the cache
+            // TODO: PORRRQUEEEEEEEE
+            const core::moldyn::DataFileSequence* test = dynamic_cast<const core::moldyn::DataFileSequence*>(o->PeekCallerSlot()->Parent());
+            if (test == NULL) {
+                if (load && (this->dataHash != 0) && (this->frameIdx != o->FrameID())) {
+                    load = false; // most likely we want to rebuild the cache
+                }
             }
             if (load && this->forceAndSaveSlot.IsDirty() && (i != NULL)) {
                 load = false; // no, we want to build and save instead
