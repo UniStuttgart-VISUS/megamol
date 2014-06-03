@@ -204,6 +204,17 @@ namespace mpi {
         virtual bool create(void);
 
         /**
+         * Copies all unique messages from 'relayBuffer' into
+         * 'filteredRelayBuffer' and returns the size of the latter.
+         *
+         * The lock for the relay buffer is acquired by the method while
+         * accessing 'relayBuffer'.
+         *
+         * @return The size of the filtered message.
+         */
+        size_t filterRelayBuffer(void);
+
+        /**
          * Finalise MPI, but only if it was initialised by this object.
          */
         virtual void finaliseMpi(void);
@@ -311,6 +322,13 @@ namespace mpi {
         int bcastMaster;
 
         /**
+         * The buffer that is acutually transmitted. This buffer contains
+         * filtered messages only to prevent superseded data from being
+         * transferred.
+         */
+        vislib::RawStorage filteredRelayBuffer;
+
+        /**
          * Remembers whether the registered client has a connection to the 
          * controller node that generates the initial updates.
          */
@@ -319,8 +337,8 @@ namespace mpi {
         /** Remembers whether MPI was initialised. */
         bool isMpiInitialised;
 
-        /* A memory pool for composing messages etc. */
-        vislib::RawStoragePool memPool;
+        ///** A memory pool for composing messages etc. */
+        //vislib::RawStoragePool memPool;
 
         /** The rank of this instance in MPI_COMM_WORLD. */
         int mpiRank;
@@ -341,7 +359,7 @@ namespace mpi {
         param::ParamSlot paramUseGsync;
 
         /**
-         * The buffer used to compose the status that is relayed to all 
+         * The buffer used to compose the status that is relayed to all
          * nodes before rendering the next frame.
          */
         vislib::RawStorage relayBuffer;

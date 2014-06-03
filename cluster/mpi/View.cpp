@@ -7,6 +7,10 @@
 
 #include "stdafx.h"
 
+#include <algorithm>
+#include <functional>
+#include <unordered_map>
+#include <string>
 #include <vector>
 
 #include "AbstractNamedObject.h"
@@ -42,11 +46,11 @@
 
 
 #define _TRACE_INFO(fmt, ...)
-//#define _TRACE_MESSAGING(fmt, ...)
-#define _TRACE_PACKAGING(fmt, ...)
+#define _TRACE_MESSAGING(fmt, ...)
+//#define _TRACE_PACKAGING(fmt, ...)
 #define _TRACE_BARRIERS(fmt, ...)
 #define _TRACE_GSYNC(fmt, ...)
-//#define _TRACE_LOCKS(fmt, ...)
+#define _TRACE_LOCKS(fmt, ...)
 
 #ifndef _TRACE_INFO
 #define _TRACE_INFO(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO, fmt,\
@@ -79,7 +83,6 @@
 #define _TRACE_RELEASE_LOCK(name) _TRACE_LOCKS("Rank %d releasing "\
     name " lock in thread [%u].\n", this->mpiRank,\
     vislib::sys::Thread::CurrentID())
-
 
 
 /*
@@ -242,43 +245,37 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
 #ifdef WITH_MPI
         ASSERT(this->knowsBcastMaster());
 
-        {
-            _TRACE_ACQUIRE_LOCK("relay buffer");
-            vislib::sys::AutoLock l(this->relayBufferLock);
-            state.RelaySize = this->relayOffset;
-            this->relayOffset = 0;  // Note: bcast master must do that in CS!
+        state.RelaySize = this->filterRelayBuffer();
+        // It is safe using this size without any lock, because filtering of the
+        // relay buffer must only be triggered by the rendering thread, ie
+        // cannot occur concurrently while the following code is executed.
 
-            ::MPI_Bcast(&state, sizeof(state), MPI_BYTE, this->getBcastMaster(),
+        ::MPI_Bcast(&state, sizeof(state), MPI_BYTE, this->getBcastMaster(),
                 MPI_COMM_WORLD);
 
-            if (state.InitSwapGroup) {
-                SwapGroupApi::GetInstance().JoinSwapGroup(1);
-            }
+        if (state.InitSwapGroup) {
+            SwapGroupApi::GetInstance().JoinSwapGroup(1);
+        }
 
-            if (state.InvalidateMaster) {
-                this->mustNegotiateMaster = true;
-                _TRACE_INFO("Rank %d invalidated the broadcast master. Will "
-                    "be renegotiated in the next frame.\n", this->mpiRank);
-            }
-
-            _TRACE_RELEASE_LOCK("relay buffer");
+        if (state.InvalidateMaster) {
+            this->mustNegotiateMaster = true;
+            _TRACE_INFO("Rank %d invalidated the broadcast master. Will "
+                "be renegotiated in the next frame.\n", this->mpiRank);
         }
 
         if (!this->isBcastMaster()) {
             _TRACE_MESSAGING("Rank %d is preparing to receive %u bytes of "
                 "relayed messages...\n", this->mpiRank, state.RelaySize);
-            this->relayBuffer.AssertSize(state.RelaySize);
+            this->filteredRelayBuffer.AssertSize(state.RelaySize);
         }
 
         if (state.RelaySize > 0) {
             _TRACE_MESSAGING("Rank %d is participating in relay of %u bytes.\n",
                 this->mpiRank, state.RelaySize);
-            ::MPI_Bcast(static_cast<void *>(this->relayBuffer),
-                state.RelaySize, MPI_BYTE, this->getBcastMaster(),
-                MPI_COMM_WORLD);
+            ::MPI_Bcast(static_cast<void *>(this->filteredRelayBuffer),
+                static_cast<int>(state.RelaySize), MPI_BYTE,
+                this->getBcastMaster(), MPI_COMM_WORLD);
         }
-
-        ASSERT(this->relayOffset == 0);
 #endif /* WITH_MPI */
     } /* if (this->knowsBcastMaster() && (this->mpiSize > 1)) */
 
@@ -294,7 +291,8 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
         size_t offset = 0;
 
         while (offset < state.RelaySize) {
-            vislib::net::ShallowSimpleMessage msg(this->relayBuffer.At(offset));
+            vislib::net::ShallowSimpleMessage msg(this->filteredRelayBuffer.At(
+                offset));
             _TRACE_MESSAGING("Rank %d is processing relayed message %u "
                 "(%u bytes in body) at offset %u...\n", this->mpiRank,
                 msg.GetHeader().GetMessageID(),
@@ -602,6 +600,93 @@ bool megamol::core::cluster::mpi::View::create(void) {
         this->initialiseMpi();
     }
 
+    return retval;
+}
+
+
+/*
+ * megamol::core::cluster::mpi::View::filterRelayBuffer
+ */
+size_t megamol::core::cluster::mpi::View::filterRelayBuffer(void) {
+    VLAUTOSTACKTRACE;
+    typedef std::pair<size_t, size_t> RangeType;
+
+    size_t retval = 0;
+    std::unordered_map<vislib::net::SimpleMessageID, RangeType> msgs;
+    std::unordered_map<std::string, RangeType> params;
+    std::vector<RangeType> ranges;
+
+    _TRACE_ACQUIRE_LOCK("relay buffer");
+    vislib::sys::AutoLock l(this->relayBufferLock);
+
+    if (this->relayOffset > 0) {
+        //::DebugBreak();
+
+        /* Phase 1: Find the unique messages that we need to transmit. */
+        for (size_t offset = 0; offset < this->relayOffset;) {
+            vislib::net::ShallowSimpleMessage msg(this->relayBuffer.At(offset));
+
+            if (msg.GetHeader().GetMessageID() == MSG_PARAMUPDATE) {
+                /* Parameter messages need to be filtered by content. */
+                static_assert(sizeof(char) == 1, "Character is a byte.");
+                auto body = msg.GetBodyAs<char>();
+                auto value = ::strchr(body, '=');
+                ASSERT(value != nullptr);
+                std::string name(body, value - body);
+
+                params[name] = RangeType(offset, msg.GetMessageSize());
+
+            } else {
+                /* Only keep the last of these messages. */
+                msgs[msg.GetHeader().GetMessageID()] = RangeType(offset,
+                    msg.GetMessageSize());
+            }
+
+            offset += msg.GetMessageSize();
+        } /* for (size_t offset = 0; offset < this->relayOffset;) */
+
+        /*
+         * Phase 2: Sort all required messages according to their original 
+         * order in 'relayBuffer'.
+         */
+        ranges.reserve(msgs.size() + params.size());
+        for (auto it = msgs.begin(); it != msgs.end(); ++it) {
+            ranges.push_back(it->second);
+        }
+        for (auto it = params.begin(); it != params.end(); ++it) {
+            ranges.push_back(it->second);
+        }
+        std::sort(ranges.begin(), ranges.end(), [](RangeType& l, RangeType& r) {
+            return l.first < r.first;
+        });
+
+        /* Phase 3: Copy the data. */
+        ASSERT(!ranges.empty());
+        auto filteredSize = ranges.back().first + ranges.back().second;
+        this->filteredRelayBuffer.AssertSize(filteredSize);
+
+        if (filteredSize != this->relayOffset) {
+            //::DebugBreak();
+            ASSERT(retval == 0);
+            for (auto it = ranges.begin(); it != ranges.end(); ++it) {
+                ::memcpy(this->filteredRelayBuffer.At(retval),
+                    this->relayBuffer.At(it->first), it->second);
+                retval += it->second;
+            }
+        } else {
+            /* Can copy at once. */
+            retval = filteredSize;
+            ::memcpy(this->filteredRelayBuffer.At(0),
+                this->relayBuffer.At(0), retval);
+        }
+
+        _TRACE_PACKAGING("Rank %d repackaged %u bytes of messages for relay to "
+            "%u of filtered messages for relay.\n", this->mpiRank,
+            this->relayOffset, retval);
+    } /* end if (this->relayOffset > 0) */
+
+    this->relayOffset = 0;
+    _TRACE_RELEASE_LOCK("relay buffer");
     return retval;
 }
 
