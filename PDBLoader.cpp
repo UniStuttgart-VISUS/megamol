@@ -488,6 +488,7 @@ void PDBLoader::Frame::readFrame(std::fstream *file) {
 
     // read the lower bound of 'big' integer-coordinates
     file->read((char*)&minint,12);
+
     changeByteOrder((char*)&minint[0]);
     changeByteOrder((char*)&minint[1]);
     changeByteOrder((char*)&minint[2]);
@@ -522,6 +523,11 @@ void PDBLoader::Frame::readFrame(std::fstream *file) {
     // read number of bits used to encode 'small' integers
     // note: changes dynamically within one frame
     file->read( (char*)&smallidx, 4 );
+    if (*file) {
+          //std::cout << "all characters read successfully.";
+    } else {
+          std::cout << "error: only " << file->gcount() << " could be read";
+    }
     changeByteOrder( (char*)&smallidx );
 
     // calculate maxidx/minidx
