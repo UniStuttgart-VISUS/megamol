@@ -17,6 +17,7 @@
 #include "vislib/Array.h"
 #include "vislib/FramebufferObject.h"
 #include "vislib/Rectangle.h"
+#include "vislib/StackTrace.h"
 #include "vislib/types.h"
 
 
@@ -33,8 +34,33 @@ namespace view {
     class MEGAMOLCORE_API AbstractCallRender : public Call, public virtual AbstractRenderOutput {
     public:
 
+        /** Defines the type of a GPU handle specifying the GPU affinity. */
+        typedef void *GpuHandleType;
+
+        /** Constant value for specifying no GPU affinity is requested. */
+        static const GpuHandleType NO_GPU_AFFINITY;
+
         /** Dtor. */
         virtual ~AbstractCallRender(void);
+
+        /**
+         * Get the GPU affinity handle and convert it to its native type in
+         * one step.
+         *
+         * This value is only meaningful, if IsGpuAffinity() is true.
+         *
+         * You must ensure that the handle type you request matches the GPU in
+         * the system.
+         *
+         * @return The GPU affinity handle.
+         */
+        template<class T> T GpuAffinity(void) const {
+            VLAUTOSTACKTRACE;
+            static_assert(sizeof(T) == sizeof(this->gpuAffinity), "The size of "
+                "the GPU handle is unexpected. You are probably doing "
+                "something very nasty.");
+            return reinterpret_cast<T>(this->gpuAffinity);
+        }
 
         /**
          * Gets the instance time code
@@ -46,6 +72,16 @@ namespace view {
         }
 
         /**
+         * Answer whether GPU affinity was requested for the rendering this view.
+         *
+         * @return true in case GPU affinity was requested, false otherwise.
+         */
+        inline bool IsGpuAffinity(void) const {
+            VLAUTOSTACKTRACE;
+            return (this->gpuAffinity != NO_GPU_AFFINITY);
+        }
+
+        /**
          * Answer the flag for in situ timing.
          * If true 'TimeFramesCount' returns the number of the data frame
          * currently available from the in situ source.
@@ -54,6 +90,21 @@ namespace view {
          */
         inline bool IsInSituTime(void) const {
             return this->isInSituTime;
+        }
+
+        /**
+         * Sets the GPU that the renderer should use for the following frame.
+         *
+         * This parameter is set by the core and derived from the
+         * mmcRenderViewContext. DO NOT USE THIS UNLESS YOU KNOW WHAT YOU ARE
+         * DOING!
+         *
+         * @param gpuAffinity The handle for the GPU the renderer should use;
+         *                    NO_GPU_AFFINITY in case affinity does not matter.
+         */
+        inline void SetGpuAffinity(const GpuHandleType gpuAffinity) {
+            VLAUTOSTACKTRACE;
+            this->gpuAffinity = gpuAffinity;
         }
 
         /**
@@ -133,6 +184,9 @@ namespace view {
 
         /** The number of time frames available to render */
         unsigned int cntTimeFrames;
+
+        /** Some kind of GPU handle if GPU affinity is requested. */
+        GpuHandleType gpuAffinity;
 
         /** The time code requested to render */
         float time;

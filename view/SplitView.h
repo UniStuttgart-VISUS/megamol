@@ -108,10 +108,9 @@ namespace view {
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          *
-         * @param time The time code of the frame to be displayed
-         * @param instTime The instance time code
+         * @param context
          */
-        virtual void Render(float time, double instTime);
+        virtual void Render(const mmcRenderViewContext& context);
 
         /**
          * Resets the view. This normally sets the camera parameters to

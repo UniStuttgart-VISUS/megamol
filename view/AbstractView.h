@@ -66,12 +66,6 @@ namespace view {
 
         };
 
-        /** Defines the type of a GPU handle specifying the GPU affinity. */
-        typedef void *GpuHandleType;
-
-        /** Constant value for specifying no GPU affinity is requested. */
-        static const GpuHandleType NO_GPU_AFFINITY;
-
         /** Ctor. */
         AbstractView(void);
 
@@ -120,10 +114,9 @@ namespace view {
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          *
-         * @param time The time code of the frame to be displayed
-         * @param instTime The instance time code
+         * @param context The context information like time or GPU affinity.
          */
-        virtual void Render(float time, double instTime) = 0;
+        virtual void Render(const mmcRenderViewContext& context) = 0;
 
         /**
          * Resets the view. This normally sets the camera parameters to
@@ -234,18 +227,6 @@ namespace view {
         }
 
         /**
-         * Sets the GPU that the renderer should use for the following frame.
-         *
-         * This parameter is set by the core and derived from the
-         * mmcRenderViewContext. DO NOT USE THIS UNLESS YOU KNOW WHAT YOU ARE
-         * DOING!
-         *
-         * @param gpuAffinity The handle for the GPU the renderer should use;
-         *                    NO_GPU_AFFINITY in case affinity does not matter.
-         */
-        void SetGpuAffinity(const GpuHandleType gpuAffinity);
-
-        /**
          * Freezes, updates, or unfreezes the view onto the scene (not the
          * rendering, but camera settings, timing, etc).
          *
@@ -253,16 +234,6 @@ namespace view {
          *               false means unfreeze
          */
         virtual void UpdateFreeze(bool freeze) = 0;
-
-        /**
-         * Answer whether GPU affinity was requested for the rendering this view.
-         *
-         * @return true in case GPU affinity was requested, false otherwise.
-         */
-        inline bool IsGpuAffinity(void) const {
-            VLAUTOSTACKTRACE;
-            return (this->gpuAffinity != NO_GPU_AFFINITY);
-        }
 
     protected:
 
@@ -316,36 +287,6 @@ namespace view {
         }
 
         /**
-         * Get the GPU affinity handle and convert it to its native type in
-         * one step.
-         *
-         * This value is only meaningful, if IsGpuAffinity() is true.
-         *
-         * You must ensure that the handle type you request matches the GPU in
-         * the system.
-         *
-         * @return The GPU affinity handle.
-         */
-        template<class T> T getGpuAffinity(void) const {
-            VLAUTOSTACKTRACE;
-            static_assert(sizeof(T) == sizeof(this->gpuAffinity), "The size of "
-                "the GPU handle is unexpected. You are probably doing "
-                "something very nasty.");
-            return reinterpret_cast<T>(this->gpuAffinity);
-        }
-
-        /**
-         * This method is called if the GPU affinity actually changes.
-         *
-         * The default implementation does nothing.
-         *
-         * @param oldAffinity The previous GPU affinity.
-         * @param newAffinity The new GPU affinity.
-         */
-        virtual void onGpuAffinityChanging(const GpuHandleType oldAffinity,
-            const GpuHandleType newAffinity);
-
-        /**
          * Unpacks the mouse coordinates, which are relative to the virtual
          * viewport size.
          *
@@ -391,9 +332,6 @@ namespace view {
          * @return The return value
          */
         bool onResetView(Call& call);
-
-        /** Some kind of GPU handle if GPU affinity is requested. */
-        GpuHandleType gpuAffinity;
 
         /** Slot for incoming rendering requests */
         CalleeSlot renderSlot;

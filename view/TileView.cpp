@@ -31,7 +31,7 @@ view::TileView::~TileView(void) {
 /*
  * view::TileView::Render
  */
-void view::TileView::Render(float time, double instTime) {
+void view::TileView::Render(const mmcRenderViewContext& context) {
     view::CallRenderView *crv = this->getCallRenderView();
     if (crv == NULL) return; // false ?
     if (this->firstFrame) {
@@ -41,9 +41,10 @@ void view::TileView::Render(float time, double instTime) {
     this->checkParameters();
 
     crv->ResetAll();
-    crv->SetTime(time);
-    crv->SetInstanceTime(instTime);
+    crv->SetTime(context.Time);
+    crv->SetInstanceTime(context.InstanceTime);
     crv->SetProjection(this->getProjType(), this->getEye());
+    crv->SetGpuAffinity(context.GpuAffinity);
     if ((this->getVirtWidth() != 0) && (this->getVirtHeight() != 0)
             && (this->getTileW() != 0) && (this->getTileH() != 0)) {
         crv->SetTile(this->getVirtWidth(), this->getVirtHeight(),

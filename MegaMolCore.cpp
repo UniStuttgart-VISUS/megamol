@@ -611,25 +611,29 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
         //}
 
         if (view->View() != NULL) {
-            double it = context->SynchronisedTime;
+            //double it = context->Time;
 
-            if (it <= 0.0) {
-                // If we did not get a time via the context, determine the time
-                // by using the standard method.
-                // Note: 'it' being *exactly* zero is a special case that we
-                // want to use the instance time and not store it; if 'it' is
-                // negative, we want to use the instance time, too, but also in
-                // the following frames until the caller resets it.
-                it = view->View()->GetCoreInstance()->GetCoreInstanceTime();
+            //if (it <= 0.0) {
+            //    // If we did not get a time via the context, determine the time
+            //    // by using the standard method.
+            //    // Note: 'it' being *exactly* zero is a special case that we
+            //    // want to use the instance time and not store it; if 'it' is
+            //    // negative, we want to use the instance time, too, but also in
+            //    // the following frames until the caller resets it.
+            //    it = view->View()->GetCoreInstance()->GetCoreInstanceTime();
 
-                if (context->SynchronisedTime != 0) {
-                    // The viewer module wants to reuse this time until it
-                    // resets 'SynchronisedTime' to -1.
-                    context->SynchronisedTime = it;
-                }
-            }
-            view->View()->SetGpuAffinity(context->GpuAffinity);
-            view->View()->Render(view->View()->DefaultTime(it), it);
+            //    if (context->Time != 0) {
+            //        // The viewer module wants to reuse this time until it
+            //        // resets 'SynchronisedTime' to -1.
+            //        context->Time = it;
+            //    }
+            //}
+
+            double it = view->View()->GetCoreInstance()->GetCoreInstanceTime();
+            context->Time = view->View()->DefaultTime(it);
+            context->InstanceTime = it; 
+
+            view->View()->Render(*context);
             context->ContinuousRedraw = true; // TODO: Implement the real thing
         }
         view->ModuleGraphLock().UnlockExclusive();

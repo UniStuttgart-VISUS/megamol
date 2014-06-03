@@ -78,7 +78,7 @@ namespace simple {
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          */
-        virtual void Render(float time, double instTime);
+        virtual void Render(const mmcRenderViewContext& context);
 
         /**
          * Unregisters from the specified client

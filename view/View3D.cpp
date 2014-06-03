@@ -286,7 +286,10 @@ void view::View3D::DeserialiseCamera(vislib::Serialiser& serialiser) {
 /*
  * view::View3D::Render
  */
-void view::View3D::Render(float time, double instTime) {
+void view::View3D::Render(const mmcRenderViewContext& context) {
+    float time = context.Time;
+    float instTime = context.InstanceTime;
+
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
@@ -330,6 +333,7 @@ void view::View3D::Render(float time, double instTime) {
         this->endFrame(true);
         return; // empty enought
     } else {
+        cr3d->SetGpuAffinity(context.GpuAffinity);
         this->removeTitleRenderer();
     }
 
@@ -596,7 +600,12 @@ bool view::View3D::OnRenderView(Call& call) {
 
     float time = crv->Time();
     if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
-    this->Render(time, crv->InstanceTime());
+    mmcRenderViewContext context;
+    ::ZeroMemory(&context, sizeof(context));
+    context.Time = time;
+    context.InstanceTime = crv->InstanceTime();
+    // TODO: Affinity
+    this->Render(context);
 
     this->overrideCall = NULL;
 

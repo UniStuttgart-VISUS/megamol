@@ -116,10 +116,9 @@ namespace mpi {
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          *
-         * @param time
-         * @param instTime
+         * @param context
          */
-        virtual void Render(float time, double instTime);
+        virtual void Render(const mmcRenderViewContext& context);
 
     protected:
 
@@ -182,7 +181,7 @@ namespace mpi {
 
         /** The status block for each frame. */
         typedef struct FrameState {
-            float Time;
+            double Time;
             double InstanceTime;
             bool InvalidateMaster;
             bool InitSwapGroup;

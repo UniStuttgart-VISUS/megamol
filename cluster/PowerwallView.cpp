@@ -40,7 +40,9 @@ cluster::PowerwallView::~PowerwallView(void) {
 /*
  * cluster::PowerwallView::Render
  */
-void cluster::PowerwallView::Render(float time, double instTime) {
+void cluster::PowerwallView::Render(const mmcRenderViewContext& context) {
+    float time = context.Time;
+    float instTime = context.InstanceTime;
     view::CallRenderView *crv = this->getCallRenderView();
 
     this->commPing();
@@ -122,6 +124,7 @@ void cluster::PowerwallView::Render(float time, double instTime) {
             crv->SetOutputBuffer(this->pauseFbo);
             crv->SetTime(time);
             crv->SetInstanceTime(instTime);
+            crv->SetGpuAffinity(context.GpuAffinity);
 
             GLint vp[4];
             ::glGetIntegerv(GL_VIEWPORT, vp);

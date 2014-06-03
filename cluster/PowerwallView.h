@@ -72,10 +72,9 @@ namespace cluster {
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          *
-         * @param time The rendering time code
-         * @param instTime The instance time code
+         * @param context
          */
-        virtual void Render(float time, double instTime);
+        virtual void Render(const mmcRenderViewContext& context);
 
     protected:
 

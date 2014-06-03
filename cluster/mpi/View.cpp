@@ -186,7 +186,7 @@ bool megamol::core::cluster::mpi::View::OnMessageReceived(
 /*
  * megamol::core::cluster::mpi::View::Render
  */
-void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
+void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& context) {
     VLAUTOSTACKTRACE;
     bool canRender = false;
     view::CallRenderView *crv = nullptr;
@@ -205,8 +205,8 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
 
     /* Reset the state. */
     ::ZeroMemory(&state, sizeof(state));
-    state.Time = time;
-    state.InstanceTime = instTime;
+    state.Time = context.Time;
+    state.InstanceTime = context.InstanceTime;
 
     /* Ensure that we know where to get the status from. */
     if (!this->knowsBcastMaster()) {
@@ -378,10 +378,11 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
     /* Render the view if any; do fallback rendering otherwise. */
     if (canRender) {
         ASSERT(crv != nullptr);
+        crv->SetGpuAffinity(context.GpuAffinity);
         this->checkParameters();
 
         crv->ResetAll();
-        crv->SetTime(state.Time);
+        crv->SetTime(static_cast<float>(state.Time));
         crv->SetInstanceTime(state.InstanceTime);
         crv->SetProjection(this->getProjType(), this->getEye());
 

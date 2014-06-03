@@ -106,7 +106,11 @@ void view::SplitView::DeserialiseCamera(vislib::Serialiser& serialiser) {
 /*
  * view::SplitView::Render
  */
-void view::SplitView::Render(float time, double instTime) {
+void view::SplitView::Render(const mmcRenderViewContext& context) {
+    float time = static_cast<float>(context.Time);
+    double instTime = context.InstanceTime;
+    // TODO: Affinity
+
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
@@ -433,7 +437,12 @@ bool view::SplitView::OnRenderView(Call& call) {
     
     this->overrideCall = crv;
 
-    this->Render(crv->Time(), crv->InstanceTime());
+    mmcRenderViewContext context;
+    ::ZeroMemory(&context, sizeof(context));
+    context.Time = crv->Time();
+    context.InstanceTime = crv->InstanceTime();
+    // TODO: Affinity
+    this->Render(context);
 
     this->overrideCall = NULL;
 

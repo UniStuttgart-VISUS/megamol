@@ -76,11 +76,12 @@ void view::special::AnaglyphStereoView::Resize(unsigned int width, unsigned int 
 /*
  * view::special::AnaglyphStereoView::Render
  */
-void view::special::AnaglyphStereoView::Render(float time, double instTime) {
+void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& context) {
     CallRenderView *crv = this->getCallRenderView();
     if (crv == NULL) return;
-    crv->SetTime(time);
-    crv->SetInstanceTime(instTime);
+    crv->SetTime(context.Time);
+    crv->SetInstanceTime(context.InstanceTime);
+    crv->SetGpuAffinity(context.GpuAffinity);
 
     if (this->colourPresetsSlot.IsDirty()) {
         this->colourPresetsSlot.ResetDirty();

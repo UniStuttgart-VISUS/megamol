@@ -70,7 +70,10 @@ cluster::simple::View::~View(void) {
 /*
  * cluster::simple::View::Render
  */
-void cluster::simple::View::Render(float time, double instTime) {
+void cluster::simple::View::Render(const mmcRenderViewContext& context) {
+    double instTime = context.InstanceTime;
+    float time = context.Time;
+
     if (this->firstFrame) {
         this->firstFrame = false;
         this->initTileViewParameters();
@@ -155,6 +158,7 @@ void cluster::simple::View::Render(float time, double instTime) {
         crv->ResetAll();
         crv->SetTime(time);
         crv->SetInstanceTime(instTime);
+        crv->SetGpuAffinity(context.GpuAffinity);
         crv->SetProjection(this->getProjType(), this->getEye());
         if ((this->getVirtWidth() != 0) && (this->getVirtHeight() != 0)
                 && (this->getTileW() != 0) && (this->getTileH() != 0)) {
