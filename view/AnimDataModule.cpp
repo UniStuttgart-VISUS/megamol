@@ -267,6 +267,7 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
                     }
                 }
             }
+            if (!This->isRunning.load()) break;
         }
 
         // 3.
