@@ -878,6 +878,9 @@
     <None Include="sort_triangles.cuh">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="Shaders\layeredisosurfaces.btf">
+      <Filter>Shader Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="Shaders\protein.btf">

@@ -521,9 +521,10 @@ namespace protein {
          * Get the radius of the element.
          *
          * @param name The name of the atom type.
-         * @return The radius of the element in Angstrom.
+         * @param scaleFactor The scaling factor for the radius (default is 1)
+         * @return The radius of the element in nanometer.
          */
-        float getElementRadius( vislib::StringA name);
+        float getElementRadius( vislib::StringA name, float scaleFactor = 1.0f);
 
         /**
          * Get the color of the element.

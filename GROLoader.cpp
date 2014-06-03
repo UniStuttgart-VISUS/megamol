@@ -1411,7 +1411,7 @@ void GROLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
         float( atof( atomEntry.Substring( 28, 8))),
         float( atof( atomEntry.Substring( 36, 8))));
     // TOOD: do we really need the nm to Angstrom conversion?
-    pos *= 10.0f;
+    //pos *= 10.0f;
     this->data[frame]->SetAtomPosition( atom, pos.X(), pos.Y(), pos.Z());
 
     // get the name (atom type) of the current ATOM entry
@@ -1583,7 +1583,7 @@ void GROLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
 /*
  * Get the radius of the element
  */
-float GROLoader::getElementRadius( vislib::StringA name) {
+float GROLoader::getElementRadius( vislib::StringA name, float scaleFactor) {
     // extract the element symbol from the name
     unsigned int cnt = 0;
     vislib::StringA element;
@@ -1593,21 +1593,21 @@ float GROLoader::getElementRadius( vislib::StringA name) {
 
     // --- van der Waals radii ---
     if( name[cnt] == 'H' )
-        return 1.2f;
+        return 0.12f * scaleFactor;
     if( name[cnt] == 'C' )
-        return 1.7f;
+        return 0.17f * scaleFactor;
     if( name[cnt] == 'N' )
-        return 1.55f;
+        return 0.155f * scaleFactor;
     if( name[cnt] == 'O' )
-        return 1.52f;
+        return 0.152f * scaleFactor;
     if( name[cnt] == 'S' )
-        return 1.8f;
+        return 0.18f * scaleFactor;
     if( name[cnt] == 'P' )
-        return 1.8f;
+        return 0.18f * scaleFactor;
     if( name[cnt] == 'C' )
-        return 1.7f;
+        return 0.17f * scaleFactor;
 
-    return 1.5f;
+    return 0.15f * scaleFactor;
 }
 
 /*

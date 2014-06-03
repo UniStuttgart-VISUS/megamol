@@ -17,7 +17,7 @@
 using namespace megamol;
 using namespace megamol::protein;
 
-#define TIMEOUT 100 // normally can use vislib::net::Socket::TIMEOUT_INFINITE
+#define TIMEOUT 10000 // normally can use vislib::net::Socket::TIMEOUT_INFINITE
 #define RESET_ATTEMPTS 1 // how many times MDDriver will be reset before deciding that it has failed
 
 // TODO: Find a better way of hiding the error messages when the thread is terminated in the middle of a getData call

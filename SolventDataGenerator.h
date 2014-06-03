@@ -121,7 +121,40 @@ namespace protein {
         virtual void release(void);
 
 	private:
+             
+        /**
+         * Helper class to unlock frame data.
+         */
+        class Unlocker : public MolecularDataCall::Unlocker {
+        public:
 
+            /**
+             * Ctor.
+             *
+             * @param mol The molecular data call whos 'Unlock'-method is to be 
+             *            called.
+             */
+            Unlocker(MolecularDataCall& mol) : MolecularDataCall::Unlocker(),
+                mol(&mol){
+                // intentionally empty
+            }
+
+            /** Dtor. */
+            virtual ~Unlocker(void) {
+                this->Unlock();
+            }
+
+            /** Unlocks the data */
+            virtual void Unlock(void) {
+                this->mol->Unlock();            
+            }
+            
+        private:
+        
+            MolecularDataCall *mol;
+
+        };        
+        
         /**********************************************************************
          * variables
          **********************************************************************/
