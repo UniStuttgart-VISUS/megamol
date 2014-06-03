@@ -39,6 +39,7 @@
 #include "vislib/NetworkInformation.h"
 #include "vislib/RawStorageSerialiser.h"
 #include "vislib/ShallowSimpleMessage.h"
+#include "vislib/SystemInformation.h"
 #include "vislib/tchar.h"
 #include "vislib/Thread.h"
 #include "vislib/Trace.h"
@@ -210,6 +211,8 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
     /* Ensure that we know where to get the status from. */
     if (!this->knowsBcastMaster()) {
         this->mustNegotiateMaster = true;
+        _TRACE_INFO("Rank %d must negotiate the master, because it does not "
+            "know one.\n", this->mpiRank);
     }
     if (this->mustNegotiateMaster) {
         // We have no master, so we try to negotiate one.
@@ -749,7 +752,9 @@ bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
 
             ::MPI_Comm_rank(MPI_COMM_WORLD, &this->mpiRank);
             ::MPI_Comm_size(MPI_COMM_WORLD, &this->mpiSize);
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("This view is %d of %d."),
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
+                _T("of %d."),
+                vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(),
                 this->mpiRank, this->mpiSize);
 
 #endif /* WITH_MPI */
