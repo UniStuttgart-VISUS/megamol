@@ -163,7 +163,7 @@ void main(void) {
     vec3 dir = rayLength.xyz * scaleVol.xyz;
     // ray distance to traverse
     float rayDist = rayLength.w;
-	
+    	
     float scalarData;
     vec4 data;
 

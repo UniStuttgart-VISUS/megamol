@@ -371,7 +371,7 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
         this->width = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth());
         this->height = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight());
     }
-
+    
     // create the fbo, if necessary
     if (!this->opaqueFBO.IsValid()) {
         this->opaqueFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
@@ -380,7 +380,7 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
     if (this->opaqueFBO.GetWidth() != this->width || this->opaqueFBO.GetHeight() != this->height) {
         this->opaqueFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
     }
-
+    
     // =============== Protein Rendering ===============
     // disable the output buffer
     cr3d->DisableOutputBuffer();
@@ -566,7 +566,7 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, VTIDa
         CHECK_FOR_OGL_ERROR();
         this->lastHash = volume->DataHash();
     }
-
+    
     // reenable second renderer
     this->opaqueFBO.DrawColourTexture();
     CHECK_FOR_OGL_ERROR();
@@ -582,7 +582,7 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, VTIDa
 
     this->RenderVolume(bbox);
     CHECK_FOR_OGL_ERROR();
-    
+
     /*
     if (this->volClipPlaneFlag) {
         for (cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt) {
@@ -592,7 +592,7 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, VTIDa
     */
 
     glDisable (GL_VERTEX_PROGRAM_POINT_SIZE);
-
+    
     glDisable (GL_DEPTH_TEST);
     
     glPopMatrix();
@@ -877,15 +877,17 @@ void LayeredIsosurfaceRenderer::RenderVolume(vislib::math::Cuboid<float> boundin
     glBindTexture(GL_TEXTURE_3D, this->volumeTex);
     CHECK_FOR_OGL_ERROR();
     
+#if 0
     // vector field texture
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_3D, this->vectorfieldTex);
     CHECK_FOR_OGL_ERROR();
-
+    
     // 3D noise texture
     glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_3D, this->randNoiseTex);
     CHECK_FOR_OGL_ERROR();
+#endif
 
     // draw a screen-filling quad
     glRectf(-1.0f, -1.0f, 1.0f, 1.0f);
