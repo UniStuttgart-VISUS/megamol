@@ -278,6 +278,10 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
     float scale, xoff, yoff, zoff;
     vislib::math::Cuboid<float> boundingBox;
     vislib::math::Point<float, 3> bbc;
+    
+    // SFB-DEMO
+    view::CallRender3D *rencr3d = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    unsigned int rencr3dFrames = rencr3d->TimeFramesCount();
 
     core::moldyn::VolumeDataCall *volume = this->volDataCallerSlot.CallAs<core::moldyn::VolumeDataCall>();
     if( volume ) {
@@ -295,13 +299,18 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
         } else {
             scale = 1.0f;
         }
-        cr3d->SetTimeFramesCount(volume->FrameCount());
+        //cr3d->SetTimeFramesCount(volume->FrameCount());
+        // SFB-DEMO
+        cr3d->SetTimeFramesCount( vislib::math::Max( volume->FrameCount(), rencr3dFrames));
+        
     } else {
         VTIDataCall *vti = this->volDataCallerSlot.CallAs<VTIDataCall>();
         if( vti == NULL ) return false;
         // set call time
-        vti->SetCalltime(cr3d->Time());
-        vti->SetFrameID(static_cast<int>(cr3d->Time()));
+        // SFB-DEMO
+        float callTime = vislib::math::Min( cr3d->Time(), static_cast<float>(vti->FrameCount()-1));
+        vti->SetCalltime(callTime);
+        vti->SetFrameID(static_cast<int>(callTime));
         // try to call for extent
         if (!(*vti)(VTIDataCall::CallForGetExtent)) return false;
         // try to call for data
@@ -319,7 +328,9 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
         } else {
             scale = 1.0f;
         }
-        cr3d->SetTimeFramesCount(vti->FrameCount());
+        //cr3d->SetTimeFramesCount(vti->FrameCount());
+        // SFB-DEMO
+        cr3d->SetTimeFramesCount( vislib::math::Max( vti->FrameCount(), rencr3dFrames));
     }
 
     BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
@@ -353,9 +364,13 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
         }
     } else if (vti) {
         // set call time
-        vti->SetCalltime(cr3d->Time());
+        //vti->SetCalltime(cr3d->Time());
         // set frame ID
-        vti->SetFrameID(static_cast<int>(cr3d->Time()));
+        //vti->SetFrameID(static_cast<int>(cr3d->Time()));
+        // SFB-DEMO
+        float callTime = vislib::math::Min( cr3d->Time(), static_cast<float>(vti->FrameCount()-1));
+        vti->SetCalltime(callTime);
+        vti->SetFrameID(static_cast<int>(callTime));
         // try to call for data
         if (!(*vti)(VTIDataCall::CallForGetData)) return false;
     } else {
@@ -417,6 +432,8 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
         glScalef(2,2,2); // QUICK FIX/HACK for MUX-Renderer
         //*rencr3d = *cr3d;
         rencr3d->SetOutputBuffer(&this->opaqueFBO); // TODO: Handle incoming buffers!
+        // SFB-DEMO
+        rencr3d->SetTime( cr3d->Time());
         (*rencr3d)();
         glPopMatrix();
     }
