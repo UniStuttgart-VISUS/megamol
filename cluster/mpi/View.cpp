@@ -652,9 +652,11 @@ size_t megamol::core::cluster::mpi::View::filterRelayBuffer(void) {
         ranges.reserve(msgs.size() + params.size());
         for (auto it = msgs.begin(); it != msgs.end(); ++it) {
             ranges.push_back(it->second);
+            retval += it->second.second;
         }
         for (auto it = params.begin(); it != params.end(); ++it) {
             ranges.push_back(it->second);
+            retval += it->second.second;
         }
         std::sort(ranges.begin(), ranges.end(), [](RangeType& l, RangeType& r) {
             return l.first < r.first;
@@ -662,20 +664,18 @@ size_t megamol::core::cluster::mpi::View::filterRelayBuffer(void) {
 
         /* Phase 3: Copy the data. */
         ASSERT(!ranges.empty());
-        auto filteredSize = ranges.back().first + ranges.back().second;
-        this->filteredRelayBuffer.AssertSize(filteredSize);
+        this->filteredRelayBuffer.AssertSize(retval);
 
-        if (filteredSize != this->relayOffset) {
+        if (retval != this->relayOffset) {
             //::DebugBreak();
-            ASSERT(retval == 0);
+            size_t offset = 0;
             for (auto it = ranges.begin(); it != ranges.end(); ++it) {
-                ::memcpy(this->filteredRelayBuffer.At(retval),
+                ::memcpy(this->filteredRelayBuffer.At(offset),
                     this->relayBuffer.At(it->first), it->second);
-                retval += it->second;
+                offset += it->second;
             }
         } else {
             /* Can copy at once. */
-            retval = filteredSize;
             ::memcpy(this->filteredRelayBuffer.At(0),
                 this->relayBuffer.At(0), retval);
         }
