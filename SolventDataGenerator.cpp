@@ -677,5 +677,7 @@ bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
 		getHBonds(molDest, molSource);
 	}
 
+    
+    molDest->SetUnlocker( new SolventDataGenerator::Unlocker(*molSource), false);
 	return true;
 }
