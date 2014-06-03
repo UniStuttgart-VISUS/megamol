@@ -43,7 +43,7 @@ LinkedView3D::~LinkedView3D(void) {
 /*
  * LinkedView3D::Render
  */
-void LinkedView3D::Render(float time, double instTime) {
+void LinkedView3D::Render(const mmcRenderViewContext& context) {
 
     // Get camera parameters call
     CallCamParams *cp = this->sharedCamParamsSlot.CallAs<CallCamParams>();
@@ -67,7 +67,7 @@ void LinkedView3D::Render(float time, double instTime) {
         return;
     }
 
-    core::view::View3D::Render(time, instTime); // Call parent
+    core::view::View3D::Render(context); // Call parent
 }
 
 
