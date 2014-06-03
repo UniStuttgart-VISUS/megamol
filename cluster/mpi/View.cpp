@@ -1,7 +1,7 @@
 /*
- * View.coo
+ * View.cpp
  *
- * Copyright (C) 2014 Visualisierungsinstitut der Universit�t Stuttgart.
+ * Copyright (C) 2014 Visualisierungsinstitut der Universität Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -42,10 +42,11 @@
 
 
 #define _TRACE_INFO(fmt, ...)
-#define _TRACE_MESSAGING(fmt, ...)
+//#define _TRACE_MESSAGING(fmt, ...)
 #define _TRACE_PACKAGING(fmt, ...)
 #define _TRACE_BARRIERS(fmt, ...)
-//#define _TRACE_GSYNC(fmt, ...)
+#define _TRACE_GSYNC(fmt, ...)
+//#define _TRACE_LOCKS(fmt, ...)
 
 #ifndef _TRACE_INFO
 #define _TRACE_INFO(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO, fmt,\
@@ -67,6 +68,17 @@
 #define _TRACE_GSYNC(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO + 2000,\
     fmt, __VA_ARGS__)
 #endif /* _TRACE_GSYNC */
+#ifndef _TRACE_LOCKS
+#define _TRACE_LOCKS(fmt, ...) VLTRACE(vislib::Trace::LEVEL_INFO + 5000,\
+    fmt, __VA_ARGS__)
+#endif /* _TRACE_LOCKS */
+
+#define _TRACE_ACQUIRE_LOCK(name) _TRACE_LOCKS("Rank %d acquiring "\
+    name " lock for thread [%u].\n", this->mpiRank,\
+    vislib::sys::Thread::CurrentID())
+#define _TRACE_RELEASE_LOCK(name) _TRACE_LOCKS("Rank %d releasing "\
+    name " lock in thread [%u].\n", this->mpiRank,\
+    vislib::sys::Thread::CurrentID())
 
 
 
@@ -199,7 +211,7 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
     if (this->mustNegotiateMaster) {
         // We have no master, so we try to negotiate one.
         this->mustNegotiateMaster = !this->negotiateBcastMaster();
-        _TRACE_BARRIERS("Rank %d has negotiated the master. Must negotiate "
+        _TRACE_INFO("Rank %d has negotiated the master. Must negotiate "
             "again: %d\n", this->mpiRank, this->mustNegotiateMaster);
 
         // Request all nodes to enable Gsync (join the swap group) given that
@@ -218,6 +230,9 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
         // the master can never invalidate it.
         state.InvalidateMaster = (this->isBcastMaster()
             && !this->hasMasterConnection);
+        _TRACE_INFO("Rank %d thinks that the broadcast master %s be "
+            "invalidated.\n", this->mpiRank, 
+            (state.InvalidateMaster ? "should" : "should not"));
     }
 
     /* If we have a master, synchronise the state now. */
@@ -228,6 +243,7 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
         ASSERT(this->knowsBcastMaster());
 
         {
+            _TRACE_ACQUIRE_LOCK("relay buffer");
             vislib::sys::AutoLock l(this->relayBufferLock);
             state.RelaySize = this->relayOffset;
             this->relayOffset = 0;  // Note: bcast master must do that in CS!
@@ -245,15 +261,8 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
                     "be renegotiated in the next frame.\n", this->mpiRank);
             }
 
-            //// Make the view prepare for the next graph.
-            //_TRACE_INFO("Rank %d is disconnecting the view call...",
-            //    this->mpiRank);
-            //this->DisconnectViewCall();
-            //_TRACE_INFO("Rank %d is cleaning up the module graph...",
-            //    this->mpiRank);
-            //this->GetCoreInstance()->CleanupModuleGraph();
+            _TRACE_RELEASE_LOCK("relay buffer");
         }
-
 
         if (!this->isBcastMaster()) {
             _TRACE_MESSAGING("Rank %d is preparing to receive %u bytes of "
@@ -277,7 +286,10 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
     // Post-process status
     if (!this->isBcastMaster() && (state.RelaySize > 0)) {
         this->ModuleGraphLock().LockExclusive();
-        vislib::sys::AutoLock l(this->relayBufferLock); // TODO: Should be unnecessary.
+        _TRACE_ACQUIRE_LOCK("module graph");
+        // This code only runs on MPI slaves, ie there is no concurrent access
+        // to the relay buffer. Everything runs in the rendering thread.
+        //vislib::sys::AutoLock l(this->relayBufferLock); // TODO: Should be unnecessary.
         auto av = this->GetConnectedView();
         size_t offset = 0;
 
@@ -348,6 +360,7 @@ void megamol::core::cluster::mpi::View::Render(float time, double instTime) {
             } /* end switch (msg.GetHeader().GetMessageID()) */
         } /* end while (offset < state.RelaySize) */
 
+        _TRACE_RELEASE_LOCK("module graph");
         this->ModuleGraphLock().UnlockExclusive();
 
         _TRACE_MESSAGING("Rank %d has processed all relayed messages.\n",
@@ -691,8 +704,9 @@ bool megamol::core::cluster::mpi::View::negotiateBcastMaster(void) {
 #if WITH_MPI
     std::vector<int> responses(this->mpiSize);
 
-    //VLTRACE(vislib::Trace::LEVEL_INFO, "Negotiating master of %d "
-    //    "ranks...\n", this->mpiSize);
+    _TRACE_INFO("Negotiating master of %d ranks. Rank %d %s a candidate.\n",
+        this->mpiSize, this->mpiRank,
+        (this->hasMasterConnection ? "is" : "is not"));
     int myResponse = static_cast<int>(this->hasMasterConnection);
     ::MPI_Allgather(&myResponse, 1, MPI_INT, responses.data(), 1, MPI_INT,
         MPI_COMM_WORLD);
@@ -755,6 +769,7 @@ void megamol::core::cluster::mpi::View::storeMessageForRelay(
     if (this->isBcastMaster()) {
 // if (this->relayOffset == 8) ::DebugBreak();
 //if (msg.GetHeader().GetBodySize() == 0) ::DebugBreak();
+        _TRACE_ACQUIRE_LOCK("relay buffer");
         vislib::sys::AutoLock l(this->relayBufferLock);
         size_t msgSize = msg.GetMessageSize();
         _TRACE_PACKAGING("Rank %d is storing message %u (%u bytes in body, "
@@ -766,5 +781,6 @@ void megamol::core::cluster::mpi::View::storeMessageForRelay(
         ::memcpy(this->relayBuffer.At(this->relayOffset),
             static_cast<const void *>(msg), msgSize);
         this->relayOffset += msgSize;
+        _TRACE_RELEASE_LOCK("relay buffer");
     }
 }
