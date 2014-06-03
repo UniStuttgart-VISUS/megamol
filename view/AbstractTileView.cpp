@@ -64,26 +64,26 @@ view::AbstractTileView::~AbstractTileView(void) {
 }
 
 
-/*
- * view::AbstractTileView::AdjustTileFromContext
- */
-void view::AbstractTileView::AdjustTileFromContext(
-        const mmcRenderViewContext *context) {
-    VLAUTOSTACKTRACE;
-    if ((context != NULL) && (context->Window != NULL)) {
-#ifdef _WIN32
-        RECT wndRect;
-        if (::GetWindowRect(context->Window, &wndRect)) {
-            this->tileSlot.ForceSetDirty();
-            this->checkParameters();
-            this->tileH = wndRect.bottom - wndRect.top;
-            this->tileW = wndRect.right - wndRect.left;
-            this->tileX += wndRect.left;
-            this->tileY += wndRect.bottom;
-        }
-#endif /* _WIN32 */
-    }
-}
+///*
+// * view::AbstractTileView::AdjustTileFromContext
+// */
+//void view::AbstractTileView::AdjustTileFromContext(
+//        const mmcRenderViewContext *context) {
+//    VLAUTOSTACKTRACE;
+//    if ((context != NULL) && (context->Window != NULL)) {
+//#ifdef _WIN32
+//        RECT wndRect;
+//        if (::GetWindowRect(context->Window, &wndRect)) {
+//            this->tileSlot.ForceSetDirty();
+//            this->checkParameters();
+//            this->tileH = wndRect.bottom - wndRect.top;
+//            this->tileW = wndRect.right - wndRect.left;
+//            this->tileX += wndRect.left;
+//            this->tileY += wndRect.bottom;
+//        }
+//#endif /* _WIN32 */
+//    }
+//}
 
 
 /*

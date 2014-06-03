@@ -146,8 +146,25 @@ typedef struct _mmcRenderViewContext {
      */
     bool ContinuousRedraw;
 
-    /** (Dumb) pointer to a Direct3D device if a D3D renderer is active. */
-    void *Direct3DDevice;
+    // D3D defines the GPU affinity via the device object, therefore we do not
+    // need the device index in this case.
+    union {
+        /** (Dumb) pointer to a Direct3D device if a D3D renderer is active. */
+        void *Direct3DDevice;
+
+        /**
+         * Specifies the the GPU that the viewer uses for rendering the view.
+         * If the viewer does not know about the GPU or the GPU is not relevant,
+         * this handle is nullptr.
+         *
+         * On a Windows machine with NVDIA GPU, the pointer is actually a
+         * HGPUNV; we do not use the type here in order to prevent the OpenGL
+         * extension header being included in the MegaMol core API header.
+         *
+         * In all other cases, this parameter currently has no meaning.
+         */
+        void *GpuAffinity;
+    };
 
     /** (Dumb) pointer to the Direct3D render target. */
     void *Direct3DRenderTarget;
@@ -158,13 +175,6 @@ typedef struct _mmcRenderViewContext {
      * If negative, store this time value into the context afterwards.
      */
     double SynchronisedTime;
-
-    /** The window that is being rendered, NULL if unknown. */
-#ifdef _WIN32
-    HWND Window;
-#else /* _WIN32 */
-    void *Window;
-#endif /* _WIN32 */
 } mmcRenderViewContext;
 
 /** Library building flags */

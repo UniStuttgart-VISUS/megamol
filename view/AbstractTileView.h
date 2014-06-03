@@ -33,13 +33,13 @@ namespace view {
         /** Dtor. */
         virtual ~AbstractTileView(void);
 
-        /**
-         * Adjust the tile to match the window specified in 'context' if any.
-         *
-         * @param context The render context to adjust the tile from. It is safe
-         *                to pass NULL.
-         */
-        void AdjustTileFromContext(const mmcRenderViewContext *context);
+        ///**
+        // * Adjust the tile to match the window specified in 'context' if any.
+        // *
+        // * @param context The render context to adjust the tile from. It is safe
+        // *                to pass NULL.
+        // */
+        //void AdjustTileFromContext(const mmcRenderViewContext *context);
 
     protected:
 

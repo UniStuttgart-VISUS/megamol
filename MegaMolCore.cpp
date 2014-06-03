@@ -604,11 +604,11 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
         }
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 
-        megamol::core::view::AbstractTileView *atv
-            = dynamic_cast<megamol::core::view::AbstractTileView *>(view->View());
-        if (atv != NULL) {
-            atv->AdjustTileFromContext(context);
-        }
+        //megamol::core::view::AbstractTileView *atv
+        //    = dynamic_cast<megamol::core::view::AbstractTileView *>(view->View());
+        //if (atv != NULL) {
+        //    atv->AdjustTileFromContext(context);
+        //}
 
         if (view->View() != NULL) {
             double it = context->SynchronisedTime;
@@ -628,6 +628,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
                     context->SynchronisedTime = it;
                 }
             }
+            view->View()->SetGpuAffinity(context->GpuAffinity);
             view->View()->Render(view->View()->DefaultTime(it), it);
             context->ContinuousRedraw = true; // TODO: Implement the real thing
         }

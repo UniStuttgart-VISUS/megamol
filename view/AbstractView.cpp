@@ -21,11 +21,21 @@ using namespace megamol::core;
 using vislib::sys::Log;
 
 
+
+
+/*
+ * view::AbstractCallRender3D::NO_GPU_AFFINITY
+ */
+const view::AbstractView::GpuHandleType
+view::AbstractView::NO_GPU_AFFINITY = nullptr;
+
+
 /*
  * view::AbstractView::AbstractView
  */
 view::AbstractView::AbstractView(void) : Module(),
         renderSlot("render", "Connects modules requesting renderings"),
+        gpuAffinity(NO_GPU_AFFINITY),
         hooks() {
 
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
@@ -144,6 +154,18 @@ bool view::AbstractView::OnRenderView(Call& call) {
 
 
 /*
+ * view::AbstractView::SetGpuAffinity
+ */
+void view::AbstractView::SetGpuAffinity(const GpuHandleType gpuAffinity) {
+    VLAUTOSTACKTRACE;
+    if (this->gpuAffinity != gpuAffinity) {
+        this->onGpuAffinityChanging(this->gpuAffinity, gpuAffinity);
+    }
+    this->gpuAffinity = gpuAffinity;
+}
+
+
+/*
  * view::AbstractView::desiredWindowPosition
  */
 bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
@@ -233,6 +255,16 @@ bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
     }
 
     return true;
+}
+
+
+/*
+ * view::AbstractView::onGpuAffinityChanging
+ */
+void view::AbstractView::onGpuAffinityChanging(const GpuHandleType oldAffinity,
+        const GpuHandleType newAffinity) {
+    VLAUTOSTACKTRACE;
+    // Intentionally empty.
 }
 
 
