@@ -33,6 +33,7 @@
 #include <param/EnumParam.h>
 #include <param/StringParam.h>
 #include <param/FilePathParam.h>
+#include <param/ButtonParam.h>
 #include <CoreInstance.h>
 #include <utility/ColourParser.h>
 
@@ -140,8 +141,8 @@ protein::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(void):
         fogColourParam("fog::fogCol", "The fog color"),
         meshFileParam("ridges::meshFile", "VTK mesh file"),
         showRidgeParam("ridges::showRidge", "Render ridges"),
-        toggleIsoSurface("toggleIsoSurf", "..."),
-        toggleCurlFilter("toggleCurlFilter", "..."),
+        toggleIsoSurfaceSlot("toggleIsoSurf", "..."),
+        toggleCurlFilterSlot("toggleCurlFilter", "..."),
         // Flags
         recalcGrid(true), recalcCritPoints(true), recalcCurlMag(true),
         recalcArrowData(true), recalcPosInter(true),
