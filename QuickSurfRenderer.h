@@ -19,6 +19,7 @@
 #include "CallerSlot.h"
 #include "view/Renderer3DModuleDS.h"
 #include "view/AbstractCallRender3D.h"
+#include "view/CallRender3D.h"
 #include "vislib/GLSLShader.h"
 
 #include "WKFUtils.h"
@@ -251,6 +252,8 @@ namespace protein {
         cudaGraphicsResource *v3f_vbo_res;
         cudaGraphicsResource *n3f_vbo_res;
         cudaGraphicsResource *c3f_vbo_res;
+
+        bool setCUDAGLDevice;
     };
 
 

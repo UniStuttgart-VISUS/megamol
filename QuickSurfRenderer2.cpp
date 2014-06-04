@@ -61,7 +61,8 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
     surfaceColorParam( "surfaceColor", "The color of the surface" ),
     recomputeAreaDiagramParam( "recomputeAreaDiagram", "Recompute the area diagram"),
     m_hPos(0), m_hPosSize(0), numParticles(0), currentSurfaceArea(0.0f), recomputeAreaDiagram(true),
-    areaDiagramData(0), callTime(0.0f)
+    areaDiagramData(0), callTime(0.0f),
+    setCUDAGLDevice(true)
 {
     this->molDataCallerSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable( &this->molDataCallerSlot);
@@ -188,8 +189,8 @@ bool QuickSurfRenderer2::create(void) {
     if ( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
         return false;
     
-    cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId() );
-    printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
+    //cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId() );
+    //printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -274,6 +275,23 @@ bool QuickSurfRenderer2::Render(Call& call) {
     // cast the call to Render3D
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if( cr3d == NULL ) return false;
+    
+    if( setCUDAGLDevice ) {
+#ifdef _WIN32
+        if( cr3d->IsGpuAffinity() ) {
+            HGPUNV gpuId = cr3d->GpuAffinity<HGPUNV>();
+            int devId;
+            cudaWGLGetDevice( &devId, gpuId);
+            cudaGLSetGLDevice( devId);
+        } else {
+            cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
+        }
+#else
+        cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
+#endif
+        printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
+        setCUDAGLDevice = false;
+    }
 
     // get camera information
     this->cameraInfo = cr3d->GetCameraParameters();

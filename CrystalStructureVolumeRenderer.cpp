@@ -46,6 +46,7 @@
 
 #include <thrust/version.h>
 #include "cuda_helper.h"
+#include "cuda_gl_interop.h"
 
 #include "glh/glh_extensions.h"
 #include <GL/glu.h>
@@ -150,7 +151,8 @@ protein::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(void):
         mcVertOut_D(NULL), mcNormOut(NULL), mcNormOut_D(NULL),
         idxLastFrame(-1), cudaqsurf(NULL), atomCnt(0), visAtomCnt(0),
         edgeCntBa(0), edgeCntTi(0), callTimeOld(-1.0), fboDim(-1, -1),
-        srcFboDim(-1, -1), cudaMC(NULL), nVerticesMCOld(0), frameOld(-1) {
+        srcFboDim(-1, -1), cudaMC(NULL), nVerticesMCOld(0), frameOld(-1),
+        setCUDAGLDevice(true) {
 
 
     // Data caller slot
@@ -1856,6 +1858,19 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     if (cr3d == NULL) {
         return false;
     }
+    
+#ifdef _WIN32
+    if( setCUDAGLDevice ) {
+        if( cr3d->IsGpuAffinity() ) {
+            HGPUNV gpuId = cr3d->GpuAffinity<HGPUNV>();
+            int devId;
+            cudaWGLGetDevice( &devId, gpuId);
+            cudaGLSetGLDevice( devId);
+            printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
+        }
+        setCUDAGLDevice = false;
+    }
+#endif
 
     protein::CrystalStructureDataCall *dc =
             this->dataCallerSlot.CallAs<protein::CrystalStructureDataCall>();

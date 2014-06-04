@@ -527,6 +527,8 @@ namespace protein {
 		vislib::graphics::gl::GLSLShader haloGaussianHoriz;
 		vislib::graphics::gl::GLSLShader haloGaussianVert;
 		vislib::graphics::gl::GLSLShader haloDifferenceShader;
+        
+        bool setCUDAGLDevice;
 	};
 
 

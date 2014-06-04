@@ -883,6 +883,8 @@ private:
     float maxLenDiff;
 
     int frameOld;
+    
+    bool setCUDAGLDevice;
 };
 
 

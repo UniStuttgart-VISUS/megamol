@@ -173,7 +173,7 @@ void main(void) {
     vec3 isoDiffOld = vec3(texture3D(volumeSampler, pos).r) - isoValues;
     
 	// TEST
-	float stepSize2 = stepSize / 3.0;
+	float stepSize2 = stepSize; // / 3.0;
 	
     // move one step forward
     vec3 stepDir = dir * stepSize2;

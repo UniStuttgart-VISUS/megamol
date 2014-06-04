@@ -247,6 +247,8 @@ namespace protein {
         cudaGraphicsResource *v3f_vbo_res;
         cudaGraphicsResource *n3f_vbo_res;
         cudaGraphicsResource *c3f_vbo_res;
+        
+        bool setCUDAGLDevice;
     };
 
 

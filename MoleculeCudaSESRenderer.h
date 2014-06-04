@@ -227,9 +227,10 @@ namespace protein {
          * Initialize CUDA
          * @param protein The molecular data call.
          * @param gridDim The grid dimension.
+         * @param cr3d Pointer to the render call.
          * @return 'true' if initialization was successful, otherwise 'false'
          */
-        bool initCuda( MolecularDataCall *protein, uint gridDim);
+        bool initCuda( MolecularDataCall *protein, uint gridDim, core::view::CallRender3D *cr3d);
 
         /**
          * Write atom positions and radii to an array for processing in CUDA

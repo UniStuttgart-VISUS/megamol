@@ -441,7 +441,7 @@ bool MoleculeCudaSESRenderer::create( void ) {
 /*
  * Initialize CUDA
  */
-bool MoleculeCudaSESRenderer::initCuda( MolecularDataCall *protein, uint gridDim) {
+bool MoleculeCudaSESRenderer::initCuda( MolecularDataCall *protein, uint gridDim, view::CallRender3D *cr3d) {
     // do not initialize twice!
     // TODO: make this better...
     if( this->cudaInitalized ) return true;
@@ -449,7 +449,21 @@ bool MoleculeCudaSESRenderer::initCuda( MolecularDataCall *protein, uint gridDim
 	this->numAtoms = protein->AtomCount();
 
 	// use CUDA device with highest Gflops/s
-	cudaGLSetGLDevice( cutGetMaxGflopsDeviceId() );
+	//cudaGLSetGLDevice( cutGetMaxGflopsDeviceId() );
+    
+#ifdef _WIN32
+    if( cr3d->IsGpuAffinity() ) {
+        HGPUNV gpuId = cr3d->GpuAffinity<HGPUNV>();
+        int devId;
+        cudaWGLGetDevice( &devId, gpuId);
+        cudaGLSetGLDevice( devId);
+    } else {
+        cudaGLSetGLDevice( cutGetMaxGflopsDeviceId());
+    }
+#else
+    cudaGLSetGLDevice( cutGetMaxGflopsDeviceId());
+#endif
+    printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
 
 	// set grid dimensions
     this->gridSize.x = this->gridSize.y = this->gridSize.z = gridDim;
@@ -584,7 +598,7 @@ bool MoleculeCudaSESRenderer::Render( Call& call ) {
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if( cr3d == NULL ) return false;
-
+    
     // get camera information
     this->cameraInfo = cr3d->GetCameraParameters();
     // get the call time
@@ -594,7 +608,7 @@ bool MoleculeCudaSESRenderer::Render( Call& call ) {
     MolecularDataCall *protein = this->protDataCallerSlot.CallAs<MolecularDataCall>();
     // if something went wrong --> return
     if( !protein) return false;
-
+    
     // set frame ID and call data
     protein->SetFrameID(static_cast<int>( callTime));
     if ( !(*protein)(MolecularDataCall::CallForGetData) )
@@ -648,6 +662,13 @@ bool MoleculeCudaSESRenderer::Render( Call& call ) {
         posInter = pos0;
     }
     
+	// try to initialize CUDA
+	if( !this->cudaInitalized ) {
+        cudaInitalized = this->initCuda( protein, 16, cr3d);
+		vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, 
+			"%s: CUDA initialization: %i", this->ClassName(), cudaInitalized );
+	}
+
     // get bounding box of the protein
     this->bBox = protein->AccessBoundingBoxes().ObjectSpaceBBox();
     
@@ -1429,12 +1450,6 @@ void MoleculeCudaSESRenderer::ComputeVicinityTableCUDA( MolecularDataCall *prote
     //// reset all items in vicinity table to zero
     //memset( this->vicinityTable, 0, sizeof(float) * protein->AtomCount() * ( MAX_ATOM_VICINITY + 1) * 4);
 
-	// try to initialize CUDA
-	if( !this->cudaInitalized ) {
-		cudaInitalized = this->initCuda( protein, 16);
-		vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, 
-			"%s: CUDA initialization: %i", this->ClassName(), cudaInitalized );
-	}
 	// execute CUDA kernels, if initialization succeeded
 	if( this->cudaInitalized ) {
 		// write atom positions to array
