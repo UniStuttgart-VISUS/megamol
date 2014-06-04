@@ -69,7 +69,10 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
                 "offscreenRendering", "Toggle offscreenRendering"), toggleGeomShaderParam(
                 "geomShader",
                 "Toggle the use of geometry shaders for glyph ray casting"), toggleZClippingParam(
-                "toggleZClip", "..."), currentZClipPos(-20) {
+                "toggleZClip", "..."), 
+                clipPlaneTimeOffsetParam("clipPlane::timeOffset", "..."),
+                clipPlaneDurationParam("clipPlane::Duration", "..."),
+                currentZClipPos(-20) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
@@ -174,6 +177,14 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     // Toggle Z-Clipping
     this->toggleZClippingParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->toggleZClippingParam);
+
+    
+    this->clipPlaneTimeOffsetParam.SetParameter(new param::FloatParam(100.0f));
+    this->MakeSlotAvailable(&this->clipPlaneTimeOffsetParam);
+
+    this->clipPlaneDurationParam.SetParameter(new param::FloatParam(40.0f));
+    this->MakeSlotAvailable(&this->clipPlaneDurationParam);
+
 }
 
 /*
@@ -572,7 +583,9 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
 
     this->currentZClipPos = mol->AccessBoundingBoxes().ObjectSpaceBBox().Back()
             + (mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth())
-                    * (callTime / mol->FrameCount());
+            //* (callTime / mol->FrameCount());
+            * ((callTime - this->clipPlaneTimeOffsetParam.Param<param::FloatParam>()->Value())
+            / this->clipPlaneDurationParam.Param<param::FloatParam>()->Value());
 
     // set call time
     mol->SetCalltime(callTime);

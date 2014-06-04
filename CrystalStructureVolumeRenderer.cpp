@@ -562,10 +562,10 @@ protein::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(void):
     this->meshFileParam.SetParameter(new core::param::FilePathParam(""));
     this->MakeSlotAvailable(&this->meshFileParam);
 
-    this->toggleIsoSurfaceSlot.SetParameter(new core::param::ButtonParam('i'));
+    this->toggleIsoSurfaceSlot.SetParameter(new core::param::ButtonParam('I'));
     this->MakeSlotAvailable(&this->toggleIsoSurfaceSlot);
 
-    this->toggleCurlFilterSlot.SetParameter(new core::param::ButtonParam('c'));
+    this->toggleCurlFilterSlot.SetParameter(new core::param::ButtonParam('C'));
     this->MakeSlotAvailable(&this->toggleCurlFilterSlot);
 }
 
@@ -1897,11 +1897,13 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
 
     // Check button params
     if (this->toggleIsoSurfaceSlot.IsDirty()) {
-        this->showIsoSurf = !this->showIsoSurf;
+        this->volShow = !this->volShow;
+        this->volShowParam.Param<core::param::BoolParam>()->SetValue( this->volShow);
         this->toggleIsoSurfaceSlot.ResetDirty();
     }
     if (this->toggleCurlFilterSlot.IsDirty()) {
         this->filterVecField = !this->filterVecField;
+        this->arrowUseFilterParam.Param<core::param::BoolParam>()->SetValue( this->filterVecField);
         this->toggleCurlFilterSlot.ResetDirty();
     }
 

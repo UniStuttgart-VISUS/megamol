@@ -271,6 +271,10 @@ namespace protein {
         megamol::core::param::ParamSlot toggleGeomShaderParam;
         /** Toggle the use of geometry shaders for glyph raycasting */
         megamol::core::param::ParamSlot toggleZClippingParam;
+        /**  */
+        megamol::core::param::ParamSlot clipPlaneTimeOffsetParam;
+        /**  */
+        megamol::core::param::ParamSlot clipPlaneDurationParam;
         float currentZClipPos;
 
         /** shader for the spheres (raycasting view) */
