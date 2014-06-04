@@ -197,7 +197,8 @@ bool moldyn::VTFResDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigne
 				if (line.StartsWith("Number of agglomerates:"))
 				{
 					numClusters = vislib::CharTraitsA::ParseInt(shreds[3]);
-					pm = CLUSTERS;
+					if (numClusters > 0) // TODO scharnkn
+					    pm = CLUSTERS;
 					continue;
 				}
 				break;
@@ -755,13 +756,15 @@ int sortFileArray(const vislib::StringA &lhs, const vislib::StringA &rhs)
 void moldyn::VTFResDataSource::getFrameFiles(vislib::StringA directory)
 {
 	vislib::sys::DirectoryIterator<vislib::CharTraits<char>> di(directory + "/*.res", true, false);
-	while (di.HasNext())
+	while (di.HasNext()) {
 		this->frameFiles.Append(directory + "/" + di.Next().Path);
 
+	}
 
 	this->frameFiles.Sort(&sortFileArray);
 
 	this->setFrameCount((unsigned int)this->frameFiles.Count());
+	printf("Frame Count %u\n", (unsigned int)this->frameFiles.Count());
 
 	// only one type here
 	SimpleType type;
@@ -770,7 +773,7 @@ void moldyn::VTFResDataSource::getFrameFiles(vislib::StringA directory)
 	type.SetCount(0);
 	types.Append(type);
 
-	extents.Set(400, 400, 400);
+	extents.Set(439, 439, 439);
 }
 
 /*
@@ -862,9 +865,46 @@ bool moldyn::VTFResDataSource::getDataCallback(Call& caller) {
     if (c2 != NULL) {
         f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
         if (f == NULL) return false;
-		if (f->FrameNumber() != c2->FrameID())
-			c2->SetFrameID(f->FrameNumber());
-        c2->SetDataHash((this->file == NULL) ? 0 : this->datahash);
+        c2->SetUnlocker(new Unlocker(*f));
+
+        // If the 'force' flag is set, check whether the frame number is correct,
+        // if not re-request the frame
+        if (c2->IsFrameForced()) {
+            while (c2->FrameID() != f->FrameNumber()) {
+                c2->Unlock();
+                int frameBefore = ((static_cast<int>(c2->FrameID()-1)+
+                        static_cast<int>(this->FrameCount())))%static_cast<int>(this->FrameCount());
+//                printf("PDBLoader (while frame %i) %u requested, frame count %u\n",
+//                        frameBefore, dc->FrameID(), this->FrameCount()); // DEBUG
+
+                // scharnkn:
+                // Request the frame before the actual requested frame (modulo
+                // framenumber) to trigger loading of the actually requested frame
+                f = dynamic_cast<moldyn::VTFResDataSource::Frame *>(this->requestLockedFrame(frameBefore));
+                c2->SetUnlocker(new Unlocker(*f));
+                c2->Unlock();
+                //printf("PDBLoader: (while frame loaded): %u (%u requested)\n",
+                //        fr->FrameNumber(), frameBefore); // DEBUG
+                f = dynamic_cast<moldyn::VTFResDataSource::Frame *>(this->requestLockedFrame(c2->FrameID()));
+                c2->SetUnlocker(new Unlocker(*f));
+                //printf("PDBLoader: (while frame loaded): %u (%u requested)\n",
+                //        fr->FrameNumber(), dc->FrameID()); // DEBUG
+                if (f == NULL) {
+                    return false;
+                }
+            }
+        }
+
+
+
+//        if (f->FrameNumber() != c2->FrameID())
+//			c2->SetFrameID(f->FrameNumber());
+
+
+
+
+
+		c2->SetDataHash((this->file == NULL) ? 0 : this->datahash);
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetParticleListCount((unsigned int)this->types.Count());
         for (unsigned int i = 0; i < this->types.Count(); i++) {
