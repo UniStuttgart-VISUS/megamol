@@ -378,12 +378,12 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
     /* Render the view if any; do fallback rendering otherwise. */
     if (canRender) {
         ASSERT(crv != nullptr);
-        crv->SetGpuAffinity(context.GpuAffinity);
         this->checkParameters();
 
         crv->ResetAll();
         crv->SetTime(static_cast<float>(state.Time));
         crv->SetInstanceTime(state.InstanceTime);
+        crv->SetGpuAffinity(context.GpuAffinity);
         crv->SetProjection(this->getProjType(), this->getEye());
 
         if (this->hasTile()) {
@@ -414,23 +414,24 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
 
         //::glFlush();
         ::glFinish();
-#ifdef WITH_MPI
-        _TRACE_BARRIERS("Rank %d is before swap barrier.\n", this->mpiRank);
-        ::MPI_Barrier(MPI_COMM_WORLD);
-#endif /* WITH_MPI */
-
-        if (state.InitSwapGroup && this->isBcastMaster()) {
-            // Now all nodes should have joined the swap group, so the master
-            // can enable the barrier.
-            ASSERT(this->hasGsync());
-            _TRACE_GSYNC("Broadcast master %d is binding swap barrier...\n",
-                this->mpiRank);
-            SwapGroupApi::GetInstance().BindSwapBarrier(1, 1);
-        }
-
     } else {
         this->renderFallbackView();
     } /* end if (canRender) */
+
+#ifdef WITH_MPI
+    _TRACE_BARRIERS("Rank %d is before swap barrier.\n", this->mpiRank);
+    ::MPI_Barrier(MPI_COMM_WORLD);
+    _TRACE_BARRIERS("Rank %d is after swap barrier.\n", this->mpiRank);
+#endif /* WITH_MPI */
+
+    if (state.InitSwapGroup && this->isBcastMaster()) {
+        // Now all nodes should have joined the swap group, so the master
+        // can enable the barrier.
+        ASSERT(this->hasGsync());
+        _TRACE_GSYNC("Broadcast master %d is binding swap barrier...\n",
+            this->mpiRank);
+        SwapGroupApi::GetInstance().BindSwapBarrier(1, 1);
+    }
 }
 
 

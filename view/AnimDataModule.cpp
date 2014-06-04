@@ -279,7 +279,7 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
         // locks too much frames.
         This->stateLock.Unlock();
 
-        if (frame != NULL) {
+        if ((frame != NULL) && This->isRunning.load()) {
 #ifdef _LOADING_REPORTING
             printf("Loading frame %i into cache %i\n", index, l);
 #endif /* _LOADING_REPORTING */
@@ -291,6 +291,7 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
         }
     }
 
+    vislib::sys::Log::DefaultLog.WriteInfo("The loader thread is exiting.");
     return 0;
 }
 
