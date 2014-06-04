@@ -26,6 +26,8 @@
 #include <iostream>
 #include <fstream>
 
+#define SFB716DEMO
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -1584,6 +1586,21 @@ float PDBLoader::getElementRadius( vislib::StringA name) {
     while( vislib::CharTraitsA::IsDigit( name[cnt]) ) {
         cnt++;
     }
+    
+#ifdef SFB716DEMO
+    if( name.Equals("Po") ) // Pore
+        return 1.5f;
+    if( name.Equals("P1") ) // Pore (coarse)
+        return 0.3f;
+    if( name.Equals("XX") ) // CL
+        return 1.5f / 2.0f;
+    if( name.Equals("YY") ) // NA
+        return 1.5f / 2.0f;
+    if( name.Equals("ZZ") ) // DNA center
+        return 1.5f;
+    if( name.Equals("QQ") ) // DNA base
+        return 1.5f;
+#endif
 
     // --- van der Waals radii ---
     if( name[cnt] == 'H' )
@@ -1611,6 +1628,21 @@ vislib::math::Vector<unsigned char, 3> PDBLoader::getElementColor( vislib::Strin
     // extract the element symbol from the name
     unsigned int cnt = 0;
     vislib::StringA element;
+#ifdef SFB716DEMO
+    if( name.Equals("Po") ) // Pore
+        return vislib::math::Vector<unsigned char, 3>( 149, 149, 149);
+    if( name.Equals("P1") ) // Pore (coarse)
+        return vislib::math::Vector<unsigned char, 3>( 149, 149, 149);
+    if( name.Equals("XX") ) // CL
+        return vislib::math::Vector<unsigned char, 3>( 154, 205, 50);
+    if( name.Equals("YY") ) // NA
+        return vislib::math::Vector<unsigned char, 3>( 255, 215, 20);
+    if( name.Equals("ZZ") ) // DNA center
+        return vislib::math::Vector<unsigned char, 3>( 240, 240, 240);
+    if( name.Equals("QQ") ) // DNA base
+        return vislib::math::Vector<unsigned char, 3>( 240, 80, 50);
+#endif
+
     while( vislib::CharTraitsA::IsDigit( name[cnt]) ) {
         cnt++;
     }

@@ -923,7 +923,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </None>
     <None Include="PotentialCalculator.cuh" />
-    <None Include="Shaders\layeredisosurfaces.btf" />
+    <None Include="Shaders\layeredisosurfaces.btf">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Shaders\proteinDeferred.btf">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
