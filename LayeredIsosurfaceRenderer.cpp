@@ -14,6 +14,7 @@
 #include "CoreInstance.h"
 #include "param/EnumParam.h"
 #include "param/BoolParam.h"
+#include "param/ButtonParam.h"
 #include "param/IntParam.h"
 #include "param/FloatParam.h"
 #include "param/Vector3fParam.h"
@@ -57,6 +58,7 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
         volLicBrightParam("lic::volLicBright", "..."),
         volLicTCSclParam("lic::volLicTCScl", "Scale factor for texture coordinates."),
         doVolumeRenderingParam("doVolumeRendering", "Turn volume rendering on and off."),
+        doVolumeRenderingToggleParam("toggleVolumeRendering", "Turn volume rendering on and off."),
         volumeTex(0), vectorfieldTex(0), currentFrameId(-1), volFBO(0), width(0), height(0), volRayTexWidth(0), 
         volRayTexHeight(0), volRayStartTex(0), volRayLengthTex(0), volRayDistTex(0),
         renderIsometric(true), meanDensityValue(0.0f), isoValue0(0.5f), isoValue1(0.5f), isoValue2(0.5f), 
@@ -130,6 +132,10 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
     // --- set up parameter for volume rendering ---
     this->doVolumeRenderingParam.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->doVolumeRenderingParam);
+
+    // --- set up parameter for volume rendering ---
+    this->doVolumeRenderingToggleParam.SetParameter(new param::ButtonParam('V'));
+    this->MakeSlotAvailable(&this->doVolumeRenderingToggleParam);
     
 }
 
@@ -351,6 +357,10 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
  */
 bool LayeredIsosurfaceRenderer::Render(Call& call) {
 
+    if( this->doVolumeRenderingToggleParam.IsDirty() ) {
+        this->doVolumeRenderingParam.Param<param::BoolParam>()->SetValue( !this->doVolumeRenderingParam.Param<param::BoolParam>()->Value());
+        this->doVolumeRenderingToggleParam.ResetDirty();
+    }
 
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>(&call);

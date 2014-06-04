@@ -213,6 +213,7 @@ namespace protein {
         megamol::core::param::ParamSlot volLicBrightParam;
         megamol::core::param::ParamSlot volLicTCSclParam;
         megamol::core::param::ParamSlot doVolumeRenderingParam;
+        megamol::core::param::ParamSlot doVolumeRenderingToggleParam;
         // shader for volume rendering
         vislib::graphics::gl::GLSLShader volumeShader;
         vislib::graphics::gl::GLSLShader volRayStartShader;
@@ -267,7 +268,7 @@ namespace protein {
         vislib::Array<float> licRandBuff;
         /// Random noise texture
         GLuint randNoiseTex;
-
+        
         size_t lastHash;
 
     };

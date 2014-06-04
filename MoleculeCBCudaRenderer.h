@@ -110,7 +110,7 @@ namespace protein {
 		/**
 		 * Initialize CUDA
 		 */
-		bool initCuda( MolecularDataCall *mol, uint gridDim);
+        bool initCuda( MolecularDataCall *mol, uint gridDim, core::view::CallRender3D *cr3d);
 
 		/**
 		 * Write atom positions and radii to an array for processing in CUDA
@@ -123,6 +123,33 @@ namespace protein {
 		void writeAtomPositionsVBO( MolecularDataCall *mol);
 
     private:
+        
+        // This function returns the best GPU (with maximum GFLOPS)
+        VISLIB_FORCEINLINE int cudaUtilGetMaxGflopsDeviceId() const {
+            int device_count = 0;
+            cudaGetDeviceCount( &device_count );
+
+            cudaDeviceProp device_properties;
+            int max_gflops_device = 0;
+            int max_gflops = 0;
+    
+            int current_device = 0;
+            cudaGetDeviceProperties( &device_properties, current_device );
+            max_gflops = device_properties.multiProcessorCount * device_properties.clockRate;
+            ++current_device;
+
+            while( current_device < device_count ) {
+                cudaGetDeviceProperties( &device_properties, current_device );
+                int gflops = device_properties.multiProcessorCount * device_properties.clockRate;
+                if( gflops > max_gflops ) {
+                    max_gflops        = gflops;
+                    max_gflops_device = current_device;
+                }
+                ++current_device;
+            }
+
+            return max_gflops_device;
+        }
 
         /**
          * The get capabilities callback. The module should set the members
@@ -298,6 +325,8 @@ namespace protein {
         uint probeNeighborCount;
         unsigned int texHeight;
         unsigned int texWidth;
+
+        bool setCUDAGLDevice;
 	};
 
 } /* end namespace protein */

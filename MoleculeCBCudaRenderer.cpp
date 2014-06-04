@@ -60,7 +60,8 @@ MoleculeCBCudaRenderer::MoleculeCBCudaRenderer( void ) : Renderer3DModule (),
     opacityParam( "opacity", "Atom opacity"),
     stepsParam( "steps", "Drawing steps"),
 	probeRadius( 1.4f), atomNeighborCount( 64), cudaInitalized( false), 
-    atomPosVBO( 0), probePosVBO( 0), probeNeighborCount( 32), texHeight( 0), texWidth( 0)
+    atomPosVBO( 0), probePosVBO( 0), probeNeighborCount( 32), texHeight( 0), texWidth( 0),
+    setCUDAGLDevice(true)
 {
 	this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
 	this->MakeSlotAvailable ( &this->molDataCallerSlot );
@@ -308,7 +309,7 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 
 	// try to initialize CUDA
 	if( !this->cudaInitalized ) {
-		cudaInitalized = this->initCuda( mol, 16);
+		cudaInitalized = this->initCuda( mol, 16, cr3d);
 		vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, 
 			"%s: CUDA initialization: %i", this->ClassName(), cudaInitalized );
 	}
@@ -1613,9 +1614,26 @@ void MoleculeCBCudaRenderer::deinitialise(void) {
 /*
  * Initialize CUDA
  */
-bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim) {
+bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim, core::view::CallRender3D *cr3d) {
 	// set number of atoms
 	this->numAtoms = mol->AtomCount();
+    
+    if( setCUDAGLDevice ) {
+#ifdef _WIN32
+        if( cr3d->IsGpuAffinity() ) {
+            HGPUNV gpuId = cr3d->GpuAffinity<HGPUNV>();
+            int devId;
+            cudaWGLGetDevice( &devId, gpuId);
+            cudaGLSetGLDevice( devId);
+        } else {
+            cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
+        }
+#else
+        cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
+#endif
+        printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
+        setCUDAGLDevice = false;
+    }
 
 	// set grid dimensions
     this->gridSize.x = this->gridSize.y = this->gridSize.z = gridDim;
