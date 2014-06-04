@@ -96,7 +96,7 @@ VolumeMeshRenderer::VolumeMeshRenderer(void) : Renderer3DModuleDS(),
         activeCubeCountAllocted(0), vertexCountAllocted(0), centroidCountAllocated(0), centroidCountLast( 0), centroidsLast(0), 
         centroidColorsLast(0), centroidLabelsLast(0), centroidAreasLast( 0), featureCounter( 0), featureListIdx( 0),
         modified( 0), segmentsRemoved( 0), featureList(), splitMergeList(), transitionList(), featureSelection(), featureVisibility(),
-        resSelectionCall(0), atomSelection(0), atomSelectionCnt(0)
+        resSelectionCall(0), atomSelection(0), atomSelectionCnt(0), setCUDAGLDevice(true)
 {
     // set caller slot for different data calls
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -444,11 +444,11 @@ bool VolumeMeshRenderer::create(void) {
 	}
 
     // Create OpenGL interoperable CUDA device.
-    cudaError_t cuerr = cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
-    if( cuerr != cudaError::cudaSuccess ) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: cudaGLSetGLDevice: %s\n", this->ClassName(), cudaGetErrorString( cuerr));
-        return false;
-    }
+    //cudaError_t cuerr = cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
+    //if( cuerr != cudaError::cudaSuccess ) {
+    //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: cudaGLSetGLDevice: %s\n", this->ClassName(), cudaGetErrorString( cuerr));
+    //    return false;
+    //}
     
     // log thrust version
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Thrust Version: %d.%d.%d\n", THRUST_MAJOR_VERSION, THRUST_MINOR_VERSION, THRUST_SUBMINOR_VERSION);
@@ -557,6 +557,23 @@ bool VolumeMeshRenderer::Render(Call& call) {
         return false;
     }
     
+    if( setCUDAGLDevice ) {
+#ifdef _WIN32
+        if( cr3d->IsGpuAffinity() ) {
+            HGPUNV gpuId = cr3d->GpuAffinity<HGPUNV>();
+            int devId;
+            cudaWGLGetDevice( &devId, gpuId);
+            cudaGLSetGLDevice( devId);
+        } else {
+            cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
+        }
+#else
+        cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
+#endif
+        printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
+        setCUDAGLDevice = false;
+    }
+
     // get camera information
     this->cameraInfo = cr3d->GetCameraParameters();
 

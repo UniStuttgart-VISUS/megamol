@@ -212,6 +212,7 @@ namespace protein {
         megamol::core::param::ParamSlot volLicContrastStretchingParam;
         megamol::core::param::ParamSlot volLicBrightParam;
         megamol::core::param::ParamSlot volLicTCSclParam;
+        megamol::core::param::ParamSlot doVolumeRenderingParam;
         // shader for volume rendering
         vislib::graphics::gl::GLSLShader volumeShader;
         vislib::graphics::gl::GLSLShader volRayStartShader;

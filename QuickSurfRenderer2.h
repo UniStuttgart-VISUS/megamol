@@ -273,6 +273,8 @@ namespace protein {
         float callTime;
         /** array for surface area */
         DiagramCall::DiagramSeries *areaDiagramData;
+        
+        bool setCUDAGLDevice;
     };
 
 

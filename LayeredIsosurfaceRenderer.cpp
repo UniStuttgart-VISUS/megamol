@@ -56,6 +56,7 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
         volLicContrastStretchingParam("lic::volLicContrast", "Change the contrast of the LIC output image"),
         volLicBrightParam("lic::volLicBright", "..."),
         volLicTCSclParam("lic::volLicTCScl", "Scale factor for texture coordinates."),
+        doVolumeRenderingParam("doVolumeRendering", "Turn volume rendering on and off."),
         volumeTex(0), vectorfieldTex(0), currentFrameId(-1), volFBO(0), width(0), height(0), volRayTexWidth(0), 
         volRayTexHeight(0), volRayStartTex(0), volRayLengthTex(0), volRayDistTex(0),
         renderIsometric(true), meanDensityValue(0.0f), isoValue0(0.5f), isoValue1(0.5f), isoValue2(0.5f), 
@@ -125,7 +126,11 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
     // Volume LIC texture coordinates
     this->volLicTCSclParam.SetParameter(new core::param::FloatParam(1.0f, 0.0f));
     this->MakeSlotAvailable(&this->volLicTCSclParam);
-
+    
+    // --- set up parameter for volume rendering ---
+    this->doVolumeRenderingParam.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->doVolumeRenderingParam);
+    
 }
 
 
@@ -526,9 +531,12 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, core:
         }
     }
     */
+        
+    if( this->doVolumeRenderingParam.Param<param::BoolParam>()->Value()) {
+        this->RenderVolume(volume->BoundingBox());
+        CHECK_FOR_OGL_ERROR();
+    }
 
-    this->RenderVolume(volume->BoundingBox());
-    CHECK_FOR_OGL_ERROR();
     
     /*
     if (this->volClipPlaneFlag) {
@@ -597,8 +605,10 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, VTIDa
     }
     */
 
-    this->RenderVolume(bbox);
-    CHECK_FOR_OGL_ERROR();
+    if( this->doVolumeRenderingParam.Param<param::BoolParam>()->Value()) {
+        this->RenderVolume(bbox);
+        CHECK_FOR_OGL_ERROR();
+    }
 
     /*
     if (this->volClipPlaneFlag) {

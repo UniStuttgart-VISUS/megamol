@@ -54,7 +54,8 @@ QuickSurfRenderer::QuickSurfRenderer(void) : Renderer3DModuleDS (),
     radscaleParam( "quicksurf::radscale", "Radius scale" ),
     gridspacingParam( "quicksurf::gridspacing", "Grid spacing" ),
     isovalParam( "quicksurf::isoval", "Isovalue" ),
-    offscreenRenderingParam( "offscreenRendering", "Toggle offscreenRendering" )
+    offscreenRenderingParam( "offscreenRendering", "Toggle offscreenRendering" ),
+    setCUDAGLDevice(true)
 {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable( &this->molDataCallerSlot);
@@ -197,8 +198,8 @@ bool QuickSurfRenderer::create(void) {
     if ( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
         return false;
     
-    cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId() );
-    printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
+    //cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId() );
+    //printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -295,8 +296,25 @@ bool QuickSurfRenderer::GetExtents(Call& call) {
 bool QuickSurfRenderer::Render(Call& call) {
 
     // cast the call to Render3D
-    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if( cr3d == NULL ) return false;
+
+    if( setCUDAGLDevice ) {
+#ifdef _WIN32
+        if( cr3d->IsGpuAffinity() ) {
+            HGPUNV gpuId = cr3d->GpuAffinity<HGPUNV>();
+            int devId;
+            cudaWGLGetDevice( &devId, gpuId);
+            cudaGLSetGLDevice( devId);
+        } else {
+            cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
+        }
+#else
+        cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
+#endif
+        printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
+        setCUDAGLDevice = false;
+    }
 
     // get camera information
     this->cameraInfo = cr3d->GetCameraParameters();
