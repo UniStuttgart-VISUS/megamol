@@ -225,7 +225,10 @@ bool moldyn::VTFResDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigne
 					// NOTE TODO Changed for SFB_DEMO
 					float *particleData = col[0].AsAt<float>(4 * sizeof(float)* particleId);
 					particleData[1] = parsedClusters;
-					particleData[0] = (float)vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 2]);
+					float soa = (float)vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 4]);
+					float ld = (float)vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 3]);
+					//particleData[0] = (float)vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 1]);
+					particleData[0] = ld/std::pow(soa*0.25, 1.0/3.0);
 
 					this->clusterInfos.data[parsedClusters].Append(particleId);
 
@@ -921,7 +924,9 @@ bool moldyn::VTFResDataSource::getDataCallback(Call& caller) {
                 ? moldyn::MultiParticleDataCall::Particles::COLDATA_NONE
 				: moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
 				cd, sizeof(float) * 4);
-            c2->AccessParticles(i).SetColourMapIndexValues(1.0f, 3.0f);
+
+            c2->AccessParticles(i).SetColourMapIndexValues(1.0f, 10.0f);
+
 			c2->AccessParticles(i).SetClusterInfos(f->GetClusterInfos());
 
         }
