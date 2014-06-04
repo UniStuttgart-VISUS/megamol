@@ -140,6 +140,8 @@ protein::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(void):
         fogColourParam("fog::fogCol", "The fog color"),
         meshFileParam("ridges::meshFile", "VTK mesh file"),
         showRidgeParam("ridges::showRidge", "Render ridges"),
+        toggleIsoSurface("toggleIsoSurf", "..."),
+        toggleCurlFilter("toggleCurlFilter", "..."),
         // Flags
         recalcGrid(true), recalcCritPoints(true), recalcCurlMag(true),
         recalcArrowData(true), recalcPosInter(true),
@@ -558,6 +560,12 @@ protein::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(void):
     this->renderMesh = false;
     this->meshFileParam.SetParameter(new core::param::FilePathParam(""));
     this->MakeSlotAvailable(&this->meshFileParam);
+
+    this->toggleIsoSurfaceSlot.SetParameter(new core::param::ButtonParam('i'));
+    this->MakeSlotAvailable(&this->toggleIsoSurfaceSlot);
+
+    this->toggleCurlFilterSlot.SetParameter(new core::param::ButtonParam('c'));
+    this->MakeSlotAvailable(&this->toggleCurlFilterSlot);
 }
 
 
@@ -1884,6 +1892,16 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
                 Log::LEVEL_ERROR, "%s: Unable to update parameters",
                 this->ClassName());
         return false;
+    }
+
+    // Check button params
+    if (this->toggleIsoSurfaceSlot.IsDirty()) {
+        this->showIsoSurf = !this->showIsoSurf;
+        this->toggleIsoSurfaceSlot.ResetDirty();
+    }
+    if (this->toggleCurlFilterSlot.IsDirty()) {
+        this->filterVecField = !this->filterVecField;
+        this->toggleCurlFilterSlot.ResetDirty();
     }
 
     // Get camera information

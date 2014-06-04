@@ -641,6 +641,9 @@ private:
     vislib::Array<int> meshFaces;
     vislib::Array<double> mesh;
 
+    core::param::ParamSlot toggleIsoSurfaceSlot;
+    core::param::ParamSlot toggleCurlFilterSlot;
+
 
     /// Flag whether the uniform grid has to be recalculated
     bool recalcGrid;
