@@ -83,7 +83,7 @@ ReleaseDir := Release
 
 
 # Common compiler flags
-CompilerFlags := -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -D_LIN$(BITS) -Wall -ansi -pedantic
+CompilerFlags := -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -D_LIN$(BITS) -Wall -ansi -pedantic -std=c++11
 
 CPPVersionInfo := $(shell $(CPP) --version | tr "[:upper:]" "[:lower:]")
 ifneq (,$(findstring gcc,$(CPPVersionInfo)))
