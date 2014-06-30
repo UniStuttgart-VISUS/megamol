@@ -13,7 +13,6 @@
 // views
 #include "View3DSpaceMouse.h"
 #include "View3DMouse.h"
-#include "LinkedView3D.h"
 
 // jobs
 #include "DataWriter.h"
@@ -99,7 +98,6 @@
 #include "ResidueSelectionCall.h"
 #include "BindingSiteCall.h"
 #include "VTIDataCall.h"
-#include "CallCamParams.h"
 #include "VBODataCall.h"
 #include "VariantMatchDataCall.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
@@ -110,7 +108,6 @@
 // other modules (filter etc)
 #include "IntSelection.h"
 #include "PotentialCalculator.h"
-#include "SharedCameraParameters.h"
 #include "ProteinVariantMatch.h"
 #include "MultiParticleDataFilter.h"
 
@@ -246,9 +243,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case CUDA_OFFSET + HAPTICS_OFFSET + 35 : return new ModuleAutoDescription<protein::PotentialCalculator>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 36 : return new ModuleAutoDescription<protein::VMDDXLoader>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 37 : return new ModuleAutoDescription<protein::TrajectorySmoothFilter>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 38 : return new ModuleAutoDescription<protein::LinkedView3D>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 39 : return new ModuleAutoDescription<protein::SurfacePotentialRendererSlave>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 40 : return new ModuleAutoDescription<protein::SharedCameraParameters>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 41 : return new ModuleAutoDescription<protein::VariantMatchRenderer>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 42 : return new ModuleAutoDescription<protein::MoleculeBallifier>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 43 : return new ModuleAutoDescription<protein::ResidueSelection>();
@@ -298,7 +293,6 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
         case 15: return new megamol::core::CallAutoDescription<megamol::protein::VTIDataCall>();
         case 16: return new megamol::core::CallAutoDescription<megamol::protein::VariantMatchDataCall>();
         case 17: return new megamol::core::CallAutoDescription<megamol::protein::VBODataCall>();
-        case 18: return new megamol::core::CallAutoDescription<megamol::protein::CallCamParams>();
         case 19: return new megamol::core::CallAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
         default: return NULL;
     }
