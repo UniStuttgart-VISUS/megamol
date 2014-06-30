@@ -21,7 +21,7 @@ using namespace megamol::protein;
 MoleculeBallifier::MoleculeBallifier(void) : core::Module(), 
         outDataSlot("outData", "Sends MultiParticleDataCall data out into the world"),
         inDataSlot("inData", "Fetches MolecularDataCall data"),
-        inHash(0), outHash(0), data(), colMin(0.0f), colMax(1.0f) {
+        inHash(0), outHash(0), data(), colMin(0.0f), colMax(1.0f), frameOld(-1) {
 
     this->inDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
@@ -71,17 +71,20 @@ bool MoleculeBallifier::getData(core::Call& c) {
     MolecularDataCall *oc = this->inDataSlot.CallAs<MolecularDataCall>();
     if (oc == NULL) return false;
 
-    oc->SetFrameID(ic->FrameID());
+    // Transfer frame ID plus force flag
+    oc->SetFrameID(ic->FrameID(), ic->IsFrameForced());
 
     if ((*oc)(0)) {
-        if (this->inHash != oc->DataHash()) {
+        // Rewrite data if the frame number OR the datahash has changed
+        if ((this->inHash != oc->DataHash())||(this->frameOld = static_cast<int>(oc->FrameID()))) {
             this->inHash = oc->DataHash();
+            this->frameOld = static_cast<int>(oc->FrameID());
             this->outHash++;
 
 /*
 da kannst Du die atom-position und den B-Faktor auslesen
 AtomCount, AtomPositions, AtomBFactors
-über den Atom-Type kannst Du auf das Type-Array zugreifen, das den Radius drin hat
+ueber den Atom-Type kannst Du auf das Type-Array zugreifen, das den Radius drin hat
 */
 
             unsigned int cnt = oc->AtomCount();
@@ -129,11 +132,8 @@ bool MoleculeBallifier::getExt(core::Call& c) {
     MolecularDataCall *oc = this->inDataSlot.CallAs<MolecularDataCall>();
     if (oc == NULL) return false;
 
-    oc->SetFrameID(ic->FrameID());
-
     if ((*oc)(1)) {
         ic->SetFrameCount(oc->FrameCount());
-        ic->SetFrameID(oc->FrameID());
         ic->AccessBoundingBoxes() = oc->AccessBoundingBoxes();
         return true;
     }

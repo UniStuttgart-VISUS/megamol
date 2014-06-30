@@ -44,6 +44,7 @@ namespace protein {
         SIZE_T inHash, outHash;
         vislib::RawStorage data;
         float colMin, colMax;
+        int frameOld;
     };
 
 } /* end namespace protein */
