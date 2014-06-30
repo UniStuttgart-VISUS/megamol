@@ -68,6 +68,8 @@
 #include "view/ViewDirect3D.h"
 #include "view/BlinnPhongRendererDeferred.h"
 #include "view/SplitView.h"
+#include "view/SharedCameraParameters.h"
+#include "view/LinkedView3D.h"
 #include "job/DataWriterJob.h"
 #include "job/JobThread.h"
 //#include "vismol2/Mol20DataSource.h"
@@ -177,6 +179,8 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<view::ViewDirect3D>();
         instance->registerAutoDescription<view::BlinnPhongRendererDeferred>();
         instance->registerAutoDescription<view::SplitView>();
+        instance->registerAutoDescription<view::SharedCameraParameters>();
+        instance->registerAutoDescription<view::LinkedView3D>();
         //instance->registerAutoDescription<vismol2::Mol20Renderer>();
         //instance->registerAutoDescription<vismol2::Mol20DataSource>();
         instance->registerAutoDescription<job::DataWriterJob>();
