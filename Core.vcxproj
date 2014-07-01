@@ -423,6 +423,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="view\AbstractView3D.cpp" />
     <ClCompile Include="view\AnimDataModule.cpp" />
     <ClCompile Include="view\BlinnPhongRendererDeferred.cpp" />
+    <ClCompile Include="view\CallCamParams.cpp" />
     <ClCompile Include="view\CallClipPlane.cpp" />
     <ClCompile Include="view\CallGetTransferFunction.cpp" />
     <ClCompile Include="view\CallRender2D.cpp" />
@@ -436,6 +437,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="view\DataSourceModule.cpp" />
     <ClCompile Include="view\graphicsresources.cpp" />
     <ClCompile Include="view\LinearTransferFunction.cpp" />
+    <ClCompile Include="view\LinkedView3D.cpp" />
     <ClCompile Include="view\MouseFlags.cpp" />
     <ClCompile Include="view\MuxRenderer3D.cpp" />
     <ClCompile Include="view\RenderDeferredOutput.cpp" />
@@ -443,6 +445,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="view\Renderer3DModule.cpp" />
     <ClCompile Include="view\Renderer3DModuleDS.cpp" />
     <ClCompile Include="view\RenderOutput.cpp" />
+    <ClCompile Include="view\SharedCameraParameters.cpp" />
     <ClCompile Include="view\SplitView.cpp" />
     <ClCompile Include="view\SwitchRenderer3D.cpp" />
     <ClCompile Include="view\TileView.cpp" />
@@ -655,6 +658,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="view\AbstractView3D.h" />
     <ClInclude Include="view\AnimDataModule.h" />
     <ClInclude Include="view\BlinnPhongRendererDeferred.h" />
+    <ClInclude Include="view\CallCamParams.h" />
     <ClInclude Include="view\CallClipPlane.h" />
     <ClInclude Include="view\CallGetTransferFunction.h" />
     <ClInclude Include="view\CallRender2D.h" />
@@ -668,6 +672,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="view\DataSourceModule.h" />
     <ClInclude Include="view\graphicsresources.h" />
     <ClInclude Include="view\LinearTransferFunction.h" />
+    <ClInclude Include="view\LinkedView3D.h" />
     <ClInclude Include="view\MouseFlags.h" />
     <ClInclude Include="view\MuxRenderer3D.h" />
     <ClInclude Include="view\RenderDeferredOutput.h" />
@@ -675,6 +680,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="view\Renderer3DModule.h" />
     <ClInclude Include="view\Renderer3DModuleDS.h" />
     <ClInclude Include="view\RenderOutput.h" />
+    <ClInclude Include="view\SharedCameraParameters.h" />
     <ClInclude Include="view\SplitView.h" />
     <ClInclude Include="view\SwitchRenderer3D.h" />
     <ClInclude Include="view\TileView.h" />
