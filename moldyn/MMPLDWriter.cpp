@@ -188,7 +188,7 @@ bool moldyn::MMPLDWriter::run(void) {
     file.Seek(6); // set correct version to show that file is complete
     version = 100;
 #ifdef WITH_CLUSTERINFO
-	version++;
+    version++;
 #endif
     ASSERT_WRITEOUT(&version, 2);
 
@@ -285,9 +285,16 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
             }
         }
 #ifdef WITH_CLUSTERINFO
-		ASSERT_WRITEOUT(&points.GetClusterInfos()->numClusters, sizeof(unsigned int));
-		ASSERT_WRITEOUT(&points.GetClusterInfos()->sizeofPlainData, sizeof(size_t));
-		ASSERT_WRITEOUT(points.GetClusterInfos()->plainData, points.GetClusterInfos()->sizeofPlainData);
+        if (points.GetClusterInfos() != NULL) {
+            ASSERT_WRITEOUT(&points.GetClusterInfos()->numClusters, sizeof(unsigned int));
+            ASSERT_WRITEOUT(&points.GetClusterInfos()->sizeofPlainData, sizeof(size_t));
+            ASSERT_WRITEOUT(points.GetClusterInfos()->plainData, points.GetClusterInfos()->sizeofPlainData);
+        } else {
+            unsigned int zero1 = 0u;
+            size_t zero2 = 0;
+            ASSERT_WRITEOUT(&zero1, sizeof(unsigned int));
+            ASSERT_WRITEOUT(&zero2, sizeof(size_t));
+        }
 #endif
     }
 
