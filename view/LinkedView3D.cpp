@@ -19,13 +19,17 @@ using namespace megamol::core;
  * view::LinkedView3D::LinkedView3D
  */
 view::LinkedView3D::LinkedView3D(void) : core::view::View3D(),
-        sharedCamParamsSlot("shareCamParams", "Obtain read and write access to shared camera parameters"),
-        drag(false), camChanged(false),  oldPosX(-1.0), oldPosY(-1.0), cam() {
+        sharedCamParamsSlot("shareCamParams", "Obtain read and write access to shared camera parameters") {
 
-    // Data caller slota for the potential maps
+    using namespace vislib::graphics;
+
+    // Data caller slot to share camera parameters
     this->sharedCamParamsSlot.SetCompatibleCall<CallCamParamsDescription>();
     this->MakeSlotAvailable(&this->sharedCamParamsSlot);
 
+    this->observableCamParams = new ObservableCameraParams();
+    this->observableCamParams->CopyFrom(this->camParams);
+    this->observableCamParams->AddCameraParameterObserver(&this->observer);
 }
 
 
@@ -42,6 +46,8 @@ view::LinkedView3D::~LinkedView3D(void) {
  */
 void view::LinkedView3D::Render(const mmcRenderViewContext& context) {
 
+    this->observableCamParams->CopyChangedParamsFrom(this->camParams);
+
     // Get camera parameters call
     CallCamParams *cp = this->sharedCamParamsSlot.CallAs<CallCamParams>();
     if (cp == NULL) {
@@ -51,12 +57,11 @@ void view::LinkedView3D::Render(const mmcRenderViewContext& context) {
     cp->SetCameraParameters(this->camParams); // Set pointer
 
     // Update shared camera parameters if necessary
-    if (this->camChanged) {
+    if (this->observer.HasCamChanged()) {
         // Obtain current shared camera parameters from cam params call
         if (!(*cp)(CallCamParams::CallForSetCamParams)) {
             return;
         }
-        this->camChanged = false;
     }
 
     // Obtain current shared camera parameters from cam params call
@@ -64,36 +69,11 @@ void view::LinkedView3D::Render(const mmcRenderViewContext& context) {
         return;
     }
 
+    // Update observable parameters and reset flag
+    this->observableCamParams->CopyFrom(this->camParams);
+    this->observer.ResetCamChanged();
+
     core::view::View3D::Render(context); // Call parent
-}
-
-
-/*
- * view::LinkedView3D::SetCursor2DButtonState
- */
-void view::LinkedView3D::SetCursor2DButtonState(unsigned int btn, bool down) {
-
-    this->drag = down;
-
-    core::view::View3D::SetCursor2DButtonState(btn, down); // Call parent
-}
-
-
-/*
- * view::LinkedView3D::SetCursor2DPosition
- */
-void view::LinkedView3D::SetCursor2DPosition(float x, float y) {
-
-    using namespace vislib;
-
-    if ((this->drag) && ((!math::IsEqual(x, this->oldPosX)) || (!math::IsEqual(y, this->oldPosY)))){
-        this->camChanged = true;
-    }
-
-    this->oldPosX = x;
-    this->oldPosY = y;
-
-    core::view::View3D::SetCursor2DPosition(x, y); // Call parent
 }
 
 

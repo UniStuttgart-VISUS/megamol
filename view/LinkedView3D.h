@@ -15,94 +15,225 @@
 #include "Call.h"
 #include "CallerSlot.h"
 
+#include "vislib/CameraParameterObserver.h"
+#include "vislib/ObservableCameraParams.h"
+
 namespace megamol {
 namespace core {
 namespace view {
 
-class LinkedView3D : public core::view::View3D {
+class LinkedView3D: public core::view::View3D {
 
-public:
+    public:
 
-    /**
-     * Answer the name of this module.
-     *
-     * @return The name of this module.
-     */
-    static const char *ClassName(void) {
-        return "LinkedView3D";
-    }
+        /**
+         * Answer the name of this module.
+         *
+         * @return The name of this module.
+         */
+        static const char *ClassName(void) {
+            return "LinkedView3D";
+        }
 
-    /**
-     * Answer a human readable description of this module.
-     *
-     * @return A human readable description of this module.
-     */
-    static const char *Description(void) {
-        return "3D View Module enabling linked views.";
-    }
+        /**
+         * Answer a human readable description of this module.
+         *
+         * @return A human readable description of this module.
+         */
+        static const char *Description(void) {
+            return "3D View Module enabling linked views using shared camera " \
+                   "parameters.";
+        }
 
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static bool IsAvailable(void) {
-        return true;
-    }
+        /**
+         * Answers whether this module is available on the current system.
+         *
+         * @return 'true' if the module is available, 'false' otherwise.
+         */
+        static bool IsAvailable(void) {
+            return true;
+        }
 
-    /** Ctor. */
-    LinkedView3D(void);
+        /** Ctor. */
+        LinkedView3D(void);
 
-    /** Dtor. */
-    virtual ~LinkedView3D(void);
+        /** Dtor. */
+        virtual ~LinkedView3D(void);
 
-protected:
+    protected:
 
-    /**
-     * Renders this AbstractView3D in the currently active OpenGL context.
-     *
-     * @param context
-     */
-    virtual void Render(const mmcRenderViewContext& context);
+        class LinkedCameraParameterObserver:
+                public vislib::graphics::CameraParameterObserver {
+            public:
 
-    /**
-     * Sets the button state of a button of the 2d cursor. See
-     * 'vislib::graphics::Cursor2D' for additional information.
-     * This also sets the 'drag' flag
-     *
-     * @param button The button.
-     * @param down Flag whether the button is pressed, or not.
-     */
-    virtual void SetCursor2DButtonState(unsigned int btn, bool down);
+                /** Ctor. */
+                LinkedCameraParameterObserver(void)
+                        : camChanged(false) {
+                }
 
-    /**
-     * Sets the position of the 2d cursor. See 'vislib::graphics::Cursor2D'
-     * for additional information. Test also whether the camera has changed,
-     * if yes, set the cnew camera parameters in the shared camera module.
-     *
-     * @param x The x coordinate
-     * @param y The y coordinate
-     */
-    virtual void SetCursor2DPosition(float x, float y);
+                /** Dtor. */
+                virtual ~LinkedCameraParameterObserver(void) {
+                    this->camChanged = true;
+                }
 
-private:
+                /**
+                 * Answers the current state of the camChanged flag.
+                 *
+                 * @return 'True' if the camera has changed, 'false' otherwise.
+                 */
+                bool HasCamChanged() {
+                    return this->camChanged;
+                }
 
-    /// Caller slot to access shared camera parameters
-    core::CallerSlot sharedCamParamsSlot;
+                /**
+                 * This method is called if the aperture angle changed.
+                 *
+                 * @param newValue The new aperture angle.
+                 */
+                virtual void OnApertureAngleChanged(
+                        const vislib::math::AngleDeg newValue) {
+                    this->camChanged = true;
+                }
 
-    /// Flags whether dragging is activated (i.e. whether the left mouse button
-    /// is pressed
-    bool drag;
+                /**
+                 * This method is called if the stereo eye changed.
+                 *
+                 * @param newValue The new stereo eye.
+                 */
+                virtual void OnEyeChanged(
+                        const vislib::graphics::CameraParameters::StereoEye newValue) {
+                    this->camChanged = true;
+                }
 
-    /// Flags whether the camera has changed and, therefore, the shared cam
-    /// params have to be updated
-    bool camChanged;
+                /**
+                 * This method is called if the far clipping plane changed.
+                 *
+                 * @param newValue The new far clipping plane.
+                 */
+                virtual void OnFarClipChanged(
+                        const vislib::graphics::SceneSpaceType newValue) {
+                    this->camChanged = true;
+                }
 
-    /// Stores the cursor position at the previous cursor event
-    float oldPosX, oldPosY;
+                /**
+                 * This method is called if the focal distance changed.
+                 *
+                 * @param newValue The new forcal distance.
+                 */
+                virtual void OnFocalDistanceChanged(
+                        const vislib::graphics::SceneSpaceType newValue) {
+                    this->camChanged = true;
+                }
 
-    /// The scene camera (camera of parent class is private)
-    vislib::graphics::gl::CameraOpenGL cam;
+                /**
+                 * This method is called if the look at point changed.
+                 *
+                 * @param newValue The new look at point.
+                 */
+                virtual void OnLookAtChanged(
+                        const vislib::graphics::SceneSpacePoint3D& newValue) {
+                    this->camChanged = true;
+                }
+
+                /**
+                 * This method is called if the near clipping plane changed.
+                 *
+                 * @param newValue The new near clipping plane.
+                 */
+                virtual void OnNearClipChanged(
+                        const vislib::graphics::SceneSpaceType newValue) {
+                    this->camChanged = true;
+                }
+
+                /**
+                 * This method is called if the camera position changed.
+                 *
+                 * @param newValue The new camera position.
+                 */
+                virtual void OnPositionChanged(
+                        const vislib::graphics::SceneSpacePoint3D& newValue) {
+                    this->camChanged = true;
+                }
+
+                /**
+                 * This method is called if the projection type changed.
+                 *
+                 * @param newValue The new projection type.
+                 */
+                virtual void OnProjectionChanged(
+                        const vislib::graphics::CameraParameters::ProjectionType newValue) {
+                    this->camChanged = true;
+                }
+
+                /**
+                 * This method is called if the stereo disparity changed.
+                 *
+                 * @param newValue The new stereo disparity.
+                 */
+                virtual void OnStereoDisparityChanged(
+                        const vislib::graphics::SceneSpaceType newValue) {
+                    this->camChanged = true;
+                }
+
+                /**
+                 * This method is called if the screen tile changed.
+                 *
+                 * @param newValue The new screen tile.
+                 */
+                virtual void OnTileRectChanged(
+                        const vislib::graphics::ImageSpaceRectangle& newValue) {
+                    this->camChanged = true;
+                }
+
+                /**
+                 * This method is called if the camera up vector changed.
+                 *
+                 * @param newValue The new camera up vector.
+                 */
+                virtual void OnUpChanged(
+                        const vislib::graphics::SceneSpaceVector3D& newValue) {
+                    this->camChanged = true;
+                }
+
+                /**
+                 * This method is called if the virtual screen size changed.
+                 *
+                 * @param newValue The new virtual screen size.
+                 */
+                virtual void OnVirtualViewSizeChanged(
+                        const vislib::graphics::ImageSpaceDimension& newValue) {
+                    this->camChanged = true;
+                }
+
+                /**
+                 * Resets the camChanged flag to 'false'.
+                 */
+                void ResetCamChanged() {
+                    this->camChanged = false;
+                }
+
+            protected:
+            private:
+                bool camChanged;
+        };
+
+        /**
+         * Renders this AbstractView3D in the currently active OpenGL context.
+         *
+         * @param context
+         */
+        virtual void Render(const mmcRenderViewContext& context);
+
+    private:
+
+        /// Caller slot to access shared camera parameters
+        core::CallerSlot sharedCamParamsSlot;
+
+        /// Observable camera parameters
+        vislib::SmartPtr<vislib::graphics::ObservableCameraParams> observableCamParams;
+
+        /// Camera parameters observer
+        LinkedCameraParameterObserver observer;
 
 };
 
