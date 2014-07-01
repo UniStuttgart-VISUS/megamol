@@ -86,10 +86,31 @@ namespace view {
          */
         virtual void release(void);
 
+        /**
+         * Callback requesting a rendering of this view
+         *
+         * @param call The calling call
+         *
+         * @return The return value
+         */
+        virtual bool OnRenderView(Call& call);
+
+        /**
+         * Unpacks the mouse coordinates, which are relative to the virtual
+         * viewport size.
+         *
+         * @param x The x coordinate of the mouse position
+         * @param y The y coordinate of the mouse position
+         */
+        virtual void unpackMouseCoordinates(float &x, float &y);
+
     private:
 
         /** Flag to identify the first frame */
         bool firstFrame;
+
+        /** TODO */
+        RenderOutput * outCtrl;
 
     };
 
