@@ -8,6 +8,8 @@
 #include "stdafx.h"
 #include "MMPLDDataSource.h"
 #include "param/FilePathParam.h"
+#include "param/BoolParam.h"
+#include "param/IntParam.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
 #include "vislib/Log.h"
@@ -153,6 +155,8 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
  */
 moldyn::MMPLDDataSource::MMPLDDataSource(void) : view::AnimDataModule(),
         filename("filename", "The path to the MMPLD file to load."),
+        limitMemorySlot("limitMemory", "Limits the memory cache size"),
+        limitMemorySizeSlot("limitMemorySize", "Specifies the size limit (in MegaBytes) of the memory cache"),
         getData("getdata", "Slot to request data from this data source."),
         file(NULL), frameIdx(NULL), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
         clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f) {
@@ -160,6 +164,18 @@ moldyn::MMPLDDataSource::MMPLDDataSource(void) : view::AnimDataModule(),
     this->filename.SetParameter(new param::FilePathParam(""));
     this->filename.SetUpdateCallback(&MMPLDDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filename);
+
+    this->limitMemorySlot << new param::BoolParam(
+#if defined(_WIN64) || defined(LIN64)
+        false
+#else
+        true
+#endif
+        );
+    this->MakeSlotAvailable(&this->limitMemorySlot);
+
+    this->limitMemorySizeSlot << new param::IntParam(2 * 1024, 1);
+    this->MakeSlotAvailable(&this->limitMemorySizeSlot);
 
     this->getData.SetCallback("MultiParticleDataCall", "GetData", &MMPLDDataSource::getDataCallback);
     this->getData.SetCallback("MultiParticleDataCall", "GetExtent", &MMPLDDataSource::getExtentCallback);
@@ -309,6 +325,11 @@ bool moldyn::MMPLDDataSource::filenameChanged(param::ParamSlot& slot) {
     size *= CACHE_FRAME_FACTOR;
 
     UINT64 mem = vislib::sys::SystemInformation::AvailableMemorySize();
+    if (this->limitMemorySlot.Param<param::BoolParam>()->Value()) {
+        mem = vislib::math::Min(mem, 
+            (UINT64)(this->limitMemorySizeSlot.Param<param::IntParam>()->Value())
+            * (UINT64)(1024u * 1024u));
+    }
     unsigned int cacheSize = static_cast<unsigned int>(mem / size);
 
     if (cacheSize > CACHE_SIZE_MAX) {
