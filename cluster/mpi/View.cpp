@@ -663,7 +663,7 @@ size_t megamol::core::cluster::mpi::View::filterRelayBuffer(void) {
             ranges.push_back(it->second);
             retval += it->second.second;
         }
-        std::sort(ranges.begin(), ranges.end(), [](RangeType& l, RangeType& r) {
+        std::sort(ranges.begin(), ranges.end(), [](const RangeType& l, const RangeType& r) {
             return l.first < r.first;
         });
 
