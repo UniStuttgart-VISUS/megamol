@@ -209,6 +209,7 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
         animStepSlot("anim::step", "The time step"),
         animAddTime2FrameSlot("anim::addTime2Fname", "Add animation time to the output filenames"),
         makeAnimSlot("anim::makeAnim", "Flag whether or not to make an animation of screen shots"),
+        animTimeParamNameSlot("anim::paramname", "Name of the time parameter"),
         running(false), animLastFrameTime(0), outputCounter(0) {
 
     this->viewNameSlot << new param::StringParam("");
@@ -259,6 +260,9 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
 
     this->makeAnimSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->makeAnimSlot);
+
+    this->animTimeParamNameSlot << new param::StringParam("");
+    this->MakeSlotAvailable(&this->animTimeParamNameSlot);
 
 }
 
@@ -332,7 +336,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
     vislib::TString filename = this->imageFilenameSlot.Param<param::FilePathParam>()->Value();
     float frameTime = -1.0f;
     if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
-        param::ParamSlot* time = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time"));
+        param::ParamSlot* time = this->findTimeParam(view);
         if (time != NULL) {
             frameTime = time->Param<param::FloatParam>()->Value();
             if (frameTime == this->animLastFrameTime) {
@@ -821,7 +825,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
             //    playSlot->Param<param::BoolParam>()->SetValue(false);
             this->outputCounter = 0;
         } else {
-            param::ParamSlot* time = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time"));
+            param::ParamSlot* time = this->findTimeParam(view);
             if (time != NULL) {
                 float nextTime = this->animLastFrameTime
                     + this->animStepSlot.Param<param::FloatParam>()->Value();
@@ -864,7 +868,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
     if (vi != NULL) {
         if (vi->View() != NULL) {
             if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
-                param::ParamSlot *timeSlot = dynamic_cast<param::ParamSlot*>(vi->View()->FindNamedObject("anim::time"));
+                param::ParamSlot *timeSlot = this->findTimeParam(vi->View());
                 if (timeSlot != NULL) {
                     timeSlot->Param<param::FloatParam>()->SetValue(static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value()));
                     this->animLastFrameTime = (float)UINT_MAX;
@@ -891,4 +895,22 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
     this->ModuleGraphLock().UnlockExclusive();
 
     return true;
+}
+
+
+/*
+ * view::special::ScreenShooter::findTimeParam
+ */
+param::ParamSlot* view::special::ScreenShooter::findTimeParam(view::AbstractView* view) {
+    vislib::TString name(this->animTimeParamNameSlot.Param<param::StringParam>()->Value());
+    param::ParamSlot *timeSlot = nullptr;
+
+    if (name.IsEmpty()) {
+        timeSlot = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time"));
+    } else {
+        AbstractNamedObjectContainer * anoc = dynamic_cast<AbstractNamedObjectContainer*>(view->RootModule());
+        timeSlot = dynamic_cast<param::ParamSlot*>(anoc->FindNamedObject(vislib::StringA(name)));
+    }
+
+    return timeSlot;
 }

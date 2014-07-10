@@ -128,6 +128,8 @@ namespace special {
          */
         bool triggerButtonClicked(param::ParamSlot& slot);
 
+        param::ParamSlot* findTimeParam(view::AbstractView* view);
+
         /** The name of the view instance to be shot */
         param::ParamSlot viewNameSlot;
 
@@ -160,6 +162,7 @@ namespace special {
         param::ParamSlot animStepSlot;
         param::ParamSlot animAddTime2FrameSlot;
         param::ParamSlot makeAnimSlot;
+        param::ParamSlot animTimeParamNameSlot;
         float animLastFrameTime;
         int outputCounter;
 
