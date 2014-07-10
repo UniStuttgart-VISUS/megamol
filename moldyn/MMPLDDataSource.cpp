@@ -131,10 +131,9 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
         pts.SetVertexData(vrtDatType, this->dat.At(p), stride);
         pts.SetColourData(colDatType, this->dat.At(p + vrtSize), stride);
 
-        if (this->fileVersion == 101)
-        {
-            p += stride * pts.GetCount();
+        p += stride * pts.GetCount();
 
+        if (this->fileVersion == 101) {
             // TODO: who deletes this?
             SimpleSphericalParticles::ClusterInfos *ci = new SimpleSphericalParticles::ClusterInfos();
             ci->numClusters = *this->dat.AsAt<unsigned int>(p); p += sizeof(unsigned int);
