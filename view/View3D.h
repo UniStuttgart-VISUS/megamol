@@ -20,6 +20,7 @@
 #include "view/TimeControl.h"
 #include "CalleeSlot.h"
 #include "CallerSlot.h"
+#include "AbstractCamParamSync.h"
 #include "param/ParamSlot.h"
 #include "vislib/CameraLookAtDist.h"
 #include "vislib/CameraOpenGL.h"
@@ -45,7 +46,9 @@ namespace view {
     /**
      * Base class of rendering graph calls
      */
-    class MEGAMOLCORE_API View3D: public AbstractView3D {
+    class MEGAMOLCORE_API View3D : public AbstractView3D,
+            public AbstractCamParamSync {
+
     public:
 
         /**
@@ -275,6 +278,15 @@ namespace view {
          * Renders the soft cursor
          */
         void renderSoftCursor(void);
+
+        /**
+         * Handles a request for the camera parameters used by the view.
+         *
+         * @param c The call being executed.
+         *
+         * @return true in case of success, false otherwise.
+         */
+        virtual bool OnGetCamParams(CallCamParamSync& c);
 
         /**
          * Stores the current camera settings

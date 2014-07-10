@@ -246,6 +246,8 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
     }
 
+    this->MakeSlotAvailable(&this->slotGetCamParams);
+    this->MakeSlotAvailable(&this->slotSetCamParams);
 }
 
 
@@ -296,6 +298,9 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 
     CallRender3D *cr3d = this->rendererSlot.CallAs<CallRender3D>();
     AbstractRenderingView::beginFrame();
+
+    // Conditionally synchronise camera from somewhere else.
+    this->SyncCamParams(this->camParams);
 
     // clear viewport
     if (this->overrideViewport != NULL) {
@@ -1002,6 +1007,16 @@ void view::View3D::renderSoftCursor(void) {
 
     ::glDisable(GL_LINE_SMOOTH);
     ::glDisable(GL_BLEND);
+}
+
+
+/*
+ * view::View3D::OnGetCamParams
+ */
+bool view::View3D::OnGetCamParams(CallCamParamSync& c) {
+    VLAUTOSTACKTRACE;
+    c.SetCamParams(this->camParams);
+    return true;
 }
 
 

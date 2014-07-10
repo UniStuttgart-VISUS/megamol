@@ -414,6 +414,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="view\AbstractCallRender.cpp" />
     <ClCompile Include="view\AbstractCallRender3D.cpp" />
+    <ClCompile Include="view\AbstractCamParamSync.cpp" />
     <ClCompile Include="view\AbstractOverrideView.cpp" />
     <ClCompile Include="view\AbstractRendererDeferred3D.cpp" />
     <ClCompile Include="view\AbstractRenderingView.cpp" />
@@ -424,6 +425,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="view\AnimDataModule.cpp" />
     <ClCompile Include="view\BlinnPhongRendererDeferred.cpp" />
     <ClCompile Include="view\CallCamParams.cpp" />
+    <ClCompile Include="view\CallCamParamSync.cpp" />
     <ClCompile Include="view\CallClipPlane.cpp" />
     <ClCompile Include="view\CallGetTransferFunction.cpp" />
     <ClCompile Include="view\CallRender2D.cpp" />
@@ -649,6 +651,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="special\ColStereoDisplay.h" />
     <ClInclude Include="view\AbstractCallRender.h" />
     <ClInclude Include="view\AbstractCallRender3D.h" />
+    <ClInclude Include="view\AbstractCamParamSync.h" />
     <ClInclude Include="view\AbstractOverrideView.h" />
     <ClInclude Include="view\AbstractRendererDeferred3D.h" />
     <ClInclude Include="view\AbstractRenderingView.h" />
@@ -659,6 +662,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="view\AnimDataModule.h" />
     <ClInclude Include="view\BlinnPhongRendererDeferred.h" />
     <ClInclude Include="view\CallCamParams.h" />
+    <ClInclude Include="view\CallCamParamSync.h" />
     <ClInclude Include="view\CallClipPlane.h" />
     <ClInclude Include="view\CallGetTransferFunction.h" />
     <ClInclude Include="view\CallRender2D.h" />
