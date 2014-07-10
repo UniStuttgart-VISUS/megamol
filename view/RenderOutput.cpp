@@ -70,12 +70,12 @@ const vislib::math::Rectangle<int>& view::RenderOutput::GetViewport(void) const 
     if (this->outputViewport.IsEmpty()) {
         // sort of lazy evaluation
         if (this->outputFBO != NULL) {
-            this->outputViewport.Set(0, 0,
+            this->outputViewport.SetFromSize(0, 0,
                 this->outputFBO->GetWidth(), this->outputFBO->GetHeight());
         } else {
             GLint vp[4];
             ::glGetIntegerv(GL_VIEWPORT, vp);
-            this->outputViewport.Set(vp[0], vp[1], vp[2], vp[3]);
+            this->outputViewport.SetFromSize(vp[0], vp[1], vp[2], vp[3]);
         }
     }
     return this->outputViewport;
@@ -109,7 +109,7 @@ void view::RenderOutput::SetOutputBuffer(GLenum buffer,
     this->outputBuffer = buffer;
     this->outputFBO = NULL; // DO NOT DELETE
     this->outputFBOTargets.Clear();
-    this->outputViewport.Set(x, y, w, h);
+    this->outputViewport.SetFromSize(x, y, w, h);
 }
 
 
@@ -129,7 +129,7 @@ void view::RenderOutput::SetOutputBuffer(
             this->outputFBOTargets[i] = targets[i];
         }
     }
-    this->outputViewport.Set(x, y, w, h);
+    this->outputViewport.SetFromSize(x, y, w, h);
 }
 
 

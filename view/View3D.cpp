@@ -44,7 +44,7 @@ using namespace megamol::core;
 /*
  * view::View3D::View3D
  */
-view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
+view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam(), camParams(),
         camOverrides(), cursor2d(), modkeys(), rotator1(),
         rotator2(), zoomer1(), zoomer2(), mover(), lookAtDist(),
         rendererSlot("rendering", "Connects the view to a Renderer"),

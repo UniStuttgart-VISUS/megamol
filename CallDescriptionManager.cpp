@@ -27,6 +27,7 @@
 #include "view/CallTimeControl.h"
 #include "view/CallUpdateDirect3D.h"
 #include "view/CallCamParams.h"
+#include "view/CallCamParamSync.h"
 #include "CallVolumeData.h"
 #include "moldyn/VolumeDataCall.h"
 #include "misc/BezierCurvesListDataCall.h"
@@ -83,6 +84,7 @@ void CallDescriptionManager::registerObjects(CallDescriptionManager *instance) {
         instance->registerAutoDescription<misc::VolumetricDataCall>();
         instance->registerAutoDescription<view::CallUpdateDirect3D>();
         instance->registerAutoDescription<view::CallCamParams>();
+        instance->registerAutoDescription<view::CallCamParamSync>();
     //}
     //return instance;
 }

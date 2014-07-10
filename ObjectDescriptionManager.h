@@ -132,6 +132,7 @@ namespace core {
      */
     template<class T>
     void ObjectDescriptionManager<T>::Register(T *objDesc) {
+
         if (this->Find(objDesc->ClassName()) != NULL) {
             throw vislib::IllegalParamException("objDesc", __FILE__, __LINE__);
         }

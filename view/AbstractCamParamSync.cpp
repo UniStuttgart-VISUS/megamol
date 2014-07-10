@@ -24,7 +24,7 @@ megamol::core::view::AbstractCamParamSync::~AbstractCamParamSync(void) {
  */
 megamol::core::view::AbstractCamParamSync::AbstractCamParamSync(void)
     : slotGetCamParams("CamParamSink", ""),
-    slotSetCamParams("CamparamSource", "") {
+    slotSetCamParams("CamParamSource", "") {
     VLAUTOSTACKTRACE;
 
     this->slotGetCamParams.SetCompatibleCall<CallCamParamSyncDescription>();

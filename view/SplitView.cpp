@@ -134,7 +134,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
             || !this->fbo1.IsValid()
             || !this->fbo2.IsValid()
             || !vislib::math::IsEqual(this->clientArea.Width(), static_cast<float>(vpw))
-            || !vislib::math::IsEqual(this->clientArea.Width(), static_cast<float>(vph)) ) {
+            || !vislib::math::IsEqual(this->clientArea.Height(), static_cast<float>(vph)) ) {
 
         this->clientArea.SetWidth(static_cast<float>(vpw));
         this->clientArea.SetHeight(static_cast<float>(vph));
