@@ -199,7 +199,7 @@ void moldyn::VisIttDataSource::loadFrame(view::AnimDataModule::Frame *frame, uns
         }
 
         const SIZE_T PAGESIZE = 1024 * sizeof(float) * 3;
-        f->Data().AssertSize(((f->Size() + 3 * sizeof(float)) / PAGESIZE + 1) * PAGESIZE);
+        f->Data().AssertSize(((f->Size() + 3 * sizeof(float)) / PAGESIZE + 1) * PAGESIZE, true);
         float *pos = f->Data().AsAt<float>(f->Size());
         for (unsigned int j = 0; j < 3; j++) {
             unsigned int hidx = this->headerIdx[j];
