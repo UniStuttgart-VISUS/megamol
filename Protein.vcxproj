@@ -532,7 +532,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="BindingSiteDataSource.cpp" />
     <ClCompile Include="Base64.cpp" />
     <ClCompile Include="BSpline.cpp" />
-    <ClCompile Include="CallCamParams.cpp" />
     <ClCompile Include="CallMouseInput.cpp" />
     <ClCompile Include="CallProteinVolumeData.cpp" />
     <ClCompile Include="CCP4VolumeData.cpp" />
@@ -606,7 +605,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="GROLoader.cpp" />
     <ClCompile Include="HapticsMoleculeRenderer.cpp" />
     <ClCompile Include="LayeredIsosurfaceRenderer.cpp" />
-    <ClCompile Include="LinkedView3D.cpp" />
     <ClCompile Include="MappableCategoryFloat.cpp" />
     <ClCompile Include="MappableFloatPair.cpp" />
     <ClCompile Include="LIC.cpp" />
@@ -647,7 +645,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="IntSelectionCall.cpp" />
     <ClCompile Include="SecPlaneRenderer.cpp" />
     <ClCompile Include="SequenceRenderer.cpp" />
-    <ClCompile Include="SharedCameraParameters.cpp" />
     <ClCompile Include="SimpleMoleculeRenderer.cpp" />
     <ClCompile Include="slicing.cpp" />
     <ClCompile Include="SolPathDataCall.cpp" />
@@ -710,7 +707,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="BindingSiteCall.h" />
     <ClInclude Include="Base64.h" />
     <ClInclude Include="BSpline.h" />
-    <ClInclude Include="CallCamParams.h" />
     <ClInclude Include="CallMouseInput.h" />
     <ClInclude Include="CallProteinVolumeData.h" />
     <ClInclude Include="CCP4VolumeData.h" />
@@ -753,7 +749,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="BindingSiteDataSource.h" />
     <ClInclude Include="LayeredIsosurfaceRenderer.h" />
     <ClInclude Include="LIC.h" />
-    <ClInclude Include="LinkedView3D.h" />
     <ClInclude Include="MappableCategoryFloat.h" />
     <ClInclude Include="MappableFloatPair.h" />
     <ClInclude Include="MDDriverConnector.h" />
@@ -793,7 +788,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="IntSelectionCall.h" />
     <ClInclude Include="SecPlaneRenderer.h" />
     <ClInclude Include="SequenceRenderer.h" />
-    <ClInclude Include="SharedCameraParameters.h" />
     <ClInclude Include="simple.h" />
     <ClInclude Include="SimpleMoleculeRenderer.h" />
     <ClInclude Include="slicing.h" />
