@@ -241,7 +241,7 @@ namespace view {
         inline void PropagateContext(const mmcRenderViewContext& context) {
             this->SetGpuAffinity(context.GpuAffinity);
             this->SetInstanceTime(context.InstanceTime);
-            this->SetTime(context.Time);
+            this->SetTime(static_cast<float>(context.Time));
         }
 
         /**
