@@ -385,6 +385,20 @@ namespace utility {
          */
         void GetHotFixes(vislib::SingleLinkedList<vislib::StringA>& hotfixes) const;
 
+        /**
+         * Answer whether all possible instances should be loaded.
+         *
+         * @return 'True' if all possible instances should be loaded.
+         */
+        inline bool LoadAll(void) const {
+            ParserArgument *arg = this->loadAll.GetFirstOccurrence();
+            try {
+                return (arg != NULL);
+            } catch(...) {
+            }
+            return false;
+        }
+
     private:
 
         /** the default value of the flag of the cmd line echo */
@@ -494,6 +508,10 @@ namespace utility {
 
         /** Enables hot fixes */
         ParserOption enableHotFix;
+
+        /** Flag, that causes all instances specified in all project files to
+         *  be loaded. Is overwritten by using the '-i' option. */
+        ParserOption loadAll;
 
     };
 

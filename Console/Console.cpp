@@ -40,6 +40,7 @@
 #include "vislib/sysfunctions.h"
 #include "vislib/ThreadSafeStackTrace.h"
 #include "vislib/Trace.h"
+#include "vislib/DateTime.h"
 #ifdef _WIN32
 #include "vislib/SystemInformation.h"
 #endif /* _WIN32 */
@@ -92,6 +93,12 @@ static vislib::TString applicationExecutablePath;
  * Flag to serialize an deserialize relative file names
  */
 static bool useRelativeFileNames;
+
+
+/**
+ * The first specified project file
+ */
+static vislib::TString mainProjectFile;
 
 
 extern "C" {
@@ -571,6 +578,14 @@ void MEGAMOLCORE_CALLBACK testParameterRelevance(const char* str, void *data) {
 
 
 /**
+ * Writes the current state to an xml-file.
+ */
+void writeStateToProjectFile(vislib::StringA outFilename) {
+    ::mmcWriteStateToXMLA(hCore, outFilename.PeekBuffer());
+}
+
+
+/**
  * The menu command callback method
  *
  * @param wnd The window calling
@@ -594,6 +609,22 @@ void menuCommandCallback(void *wnd, int *params) {
             static_cast<megamol::console::Window *>(wnd)->DeactivateGUI();
             break;
 #endif /* WITH_TWEAKBAR */
+        case 5:
+        {
+            // Generate filename
+            time_t  timev;
+            time(&timev);
+            vislib::sys::DateTime dt;
+            dt.Set(timev);
+            int min,h,s,y,mon,d,mil;
+            dt.Get(y,mon,d,h,min,s,mil);
+            char statefilename[128];
+            sprintf(statefilename, "%i-%02i-%02i_%02i-%02i-%02i.mmprj", y, mon, d, h, min, s);
+            writeStateToProjectFile(statefilename);
+            break;
+        }
+        case 6:
+            writeStateToProjectFile(mainProjectFile); break;
         default:
             vislib::sys::Log::DefaultLog.WriteMsg(
                 vislib::sys::Log::LEVEL_ERROR,
@@ -890,6 +921,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     int retval = 0;
     bool showGUI = false;
     bool hideGUI = false;
+    bool loadall = false;
     bool useQuadBuffers = false;
     vislib::SingleLinkedList<vislib::StringA> hotFixes;
 
@@ -909,6 +941,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     vSyncOff = parser->SetVSyncOff();
     showGUI = parser->ShowGUI();
     hideGUI = parser->HideGUI();
+    loadall = parser->LoadAll();
     useQuadBuffers = parser->RequestOpenGLQuadBuffer();
     parser->GetHotFixes(hotFixes);
     
@@ -1224,8 +1257,16 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     // Load Projects
     vislib::SingleLinkedList<vislib::TString>::Iterator
         prjIter = projects.GetIterator();
+
+    bool first = true;
     while (prjIter.HasNext()) {
-        ::mmcLoadProject(hCore, prjIter.Next());
+        if (first) {
+            mainProjectFile = prjIter.Next();
+            ::mmcLoadProject(hCore, mainProjectFile);
+            first = false;
+        } else {
+            ::mmcLoadProject(hCore, prjIter.Next());
+        }
     }
 
     // try to create all requested instances
@@ -1242,6 +1283,13 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     vislib::SingleLinkedList<vislib::TString>::Iterator qsi = quickstarts.GetIterator();
     while (qsi.HasNext()) {
         ::mmcQuickstart(hCore, qsi.Next());
+    }
+
+    // If no instatiations have been requested through the command line and the
+    // 'loadall' flag is set request all instatiations found in all
+    // provided project files
+    if ((instsCnt == 0)&&(loadall)) {
+        ::mmcRequestAllInstances(hCore);
     }
 
     if (::mmcHasPendingJobInstantiationRequests(hCore)) {
@@ -1401,6 +1449,12 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                     ::mmvInstallContextMenuCommandA(win->HWnd(),
                         "Read Parameter File", 2);
                 }
+
+                ::mmvInstallContextMenuCommandA(win->HWnd(), "Save State to 'YY-MM-dd_hh-mm-ss.mmprj'", 5);
+                vislib::StringA saveAsMenuStr = "Save State to '";
+                saveAsMenuStr.Append(mainProjectFile);
+                saveAsMenuStr.Append("' (old)");
+                ::mmvInstallContextMenuCommandA(win->HWnd(), saveAsMenuStr, 6);
             }
             if (!parameterFile.IsEmpty()) {
                 win->RegisterHotKeyAction(vislib::sys::KeyCode(vislib::sys::KeyCode::KEY_MOD_ALT | 'p'),

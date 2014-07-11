@@ -70,7 +70,8 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
     quickstartRegistry(0, _T("quickstartreg"), _T("Registers data file types for quickstart is supported by the OS"), ParserOption::FLAG_NULL,
         ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("options"), _T("The quickstart registration options"))),
     enableHotFix(0, _T("hotfix"), _T("Enables a hot fix"), ParserOption::FLAG_NULL,
-        ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("name"), _T("The name of the hot fix to enable")))
+        ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("name"), _T("The name of the hot fix to enable"))),
+    loadAll(_T('a'), _T("loadall"), _T("Causes all instances specified in all provided project files to be loaded (has no effect if '--instantiate' or '-i' is used)."))
 {
 
     this->parser.AddOption(&this->help);
@@ -107,6 +108,7 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
     this->parser.AddOption(&this->quickstartRegistry);
 
     this->parser.AddOption(&this->enableHotFix);
+    this->parser.AddOption(&this->loadAll);
 
 }
 
