@@ -300,7 +300,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     AbstractRenderingView::beginFrame();
 
     // Conditionally synchronise camera from somewhere else.
-    this->SyncCamParams(this->camParams);
+    this->SyncCamParams(this->cam.Parameters());
 
     // clear viewport
     if (this->overrideViewport != NULL) {
@@ -1015,7 +1015,7 @@ void view::View3D::renderSoftCursor(void) {
  */
 bool view::View3D::OnGetCamParams(CallCamParamSync& c) {
     VLAUTOSTACKTRACE;
-    c.SetCamParams(this->camParams);
+    c.SetCamParams(this->cam.Parameters());
     return true;
 }
 

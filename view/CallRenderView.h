@@ -233,6 +233,18 @@ namespace view {
         }
 
         /**
+         * Propagates the parameters controlled by the frontend via 
+         * mmcRenderViewContext to the call.
+         *
+         * @param context The context to get the data from.
+         */
+        inline void PropagateContext(const mmcRenderViewContext& context) {
+            this->SetGpuAffinity(context.GpuAffinity);
+            this->SetInstanceTime(context.InstanceTime);
+            this->SetTime(context.Time);
+        }
+
+        /**
          * Resets all flags
          */
         inline void ResetAll(void) {
