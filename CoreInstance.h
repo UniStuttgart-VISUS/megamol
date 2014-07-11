@@ -164,6 +164,11 @@ namespace core {
         JobDescription* FindJobDescription(const char *name);
 
         /**
+         * Requests all available instantiations.
+         */
+        void RequestAllInstantiations();
+
+        /**
          * Requests the instantiation of the view defined by the given
          * description.
          *
@@ -435,6 +440,14 @@ namespace core {
         inline const RootModuleNamespace * ModuleGraphRoot(void) const {
             return &this->namespaceRoot;
         }
+
+        /**
+         * Writes the current state of the call graph to an xml file.
+         *
+         * @param outFilename The output file name.
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool WriteStateToXML(const char *outFilename);
 
     private:
 

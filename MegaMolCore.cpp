@@ -458,6 +458,20 @@ MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueW(
 
 
 /*
+ * mmcRequestAllInstances
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestAllInstances(void *hCore) {
+    printf("Request all instances\n");
+    VLSTACKTRACE("mmcRequestAllInstances", __FILE__, __LINE__);
+    megamol::core::CoreInstance *core
+        = megamol::core::ApiHandle::InterpretHandle<
+        megamol::core::CoreInstance>(hCore);
+    if (core == NULL) return;
+    core->RequestAllInstantiations();
+}
+
+
+/*
  * mmcRequestInstanceA
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceA(
@@ -1551,4 +1565,17 @@ MEGAMOLCORE_EXT_APICALL(void, mmcReleaseCallDescriptionInfo)(mmcCallDescriptionI
     }
     delete[] desc->funcNames;
     delete desc;
+}
+
+
+/*
+ * mmcWriteStateToXML
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcWriteStateToXMLA(void *hCore, const char *outFilename) {
+    VLSTACKTRACE("mmcWriteStateToXMLA", __FILE__, __LINE__);
+    megamol::core::CoreInstance *core
+        = megamol::core::ApiHandle::InterpretHandle<
+        megamol::core::CoreInstance>(hCore);
+    if (core == NULL) return;
+    core->WriteStateToXML(outFilename);
 }

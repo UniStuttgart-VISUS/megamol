@@ -428,6 +428,13 @@ MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueW(
     mmcValueType *outType);
 
 /**
+ * Request all available instances.
+ *
+ * @param hCore The core instance handle.
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestAllInstances(void *hCore);
+
+/**
  * Requests the instantiation of a job or a view.
  *
  * @param hCore The core instance handle.
@@ -925,6 +932,8 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryW(void *hCore,
 #define MEGAMOLCORE_EXT_APICALL(A, B) MEGAMOLCORE_API A MEGAMOLCORE_CALL B
 #endif /* MEGAMOLCORE_EXT_API */
 
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcWriteStateToXMLA(void *hCore, const char *outFilename);
+
 /**
  * TODO: Document me!
  */
@@ -1050,5 +1059,7 @@ MEGAMOLCORE_EXT_APICALL(void, mmcReleaseCallDescriptionInfo)(mmcCallDescriptionI
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
+
+
 
 #endif /* MEGAMOLCORE_MEGALMOLCORE_H_INCLUDED */
