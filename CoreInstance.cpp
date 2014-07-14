@@ -16,6 +16,8 @@
 #pragma warning(default: 4996)
 #endif /* (_MSC_VER > 1000) */
 
+#include <string>
+
 #include "CoreInstance.h"
 #include "ObjectDescriptionManager.h"
 #include "AbstractSlot.h"
