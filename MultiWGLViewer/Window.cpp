@@ -422,14 +422,14 @@ DWORD Window::renderThread(void *userData) {
 
 	ZeroMemory(&context, sizeof(context));
 	context.Size = sizeof(context);
-	context.SynchronisedTime = -1.0;
+    context.Time = -1.0;
 
     // not too good, but ok for now
     vislib::sys::Thread::Sleep(2500);
     
 	while (that->tiles[0].rc != nullptr)
 	{
-		context.SynchronisedTime = -1.0;
+		context.Time = -1.0;
 
 		// Render all windows in turn.
 		for (int i = 0; i < that->activeTiles; i++)
