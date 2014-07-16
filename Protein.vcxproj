@@ -1,14 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug CUDA|Win32">
-      <Configuration>Debug CUDA</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug CUDA|x64">
-      <Configuration>Debug CUDA</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -17,12 +9,12 @@
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release CUDA|Win32">
-      <Configuration>Release CUDA</Configuration>
+    <ProjectConfiguration Include="Debug-NoCUDA|Win32">
+      <Configuration>Debug-NoCUDA</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release CUDA|x64">
-      <Configuration>Release CUDA</Configuration>
+    <ProjectConfiguration Include="Debug-NoCUDA|x64">
+      <Configuration>Debug-NoCUDA</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
@@ -31,6 +23,14 @@
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release-NoCUDA|Win32">
+      <Configuration>Release-NoCUDA</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release-NoCUDA|x64">
+      <Configuration>Release-NoCUDA</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
@@ -42,17 +42,6 @@
     </CudaToolkitCustomDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <CharacterSet>Unicode</CharacterSet>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>v110</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v110</PlatformToolset>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
@@ -64,13 +53,13 @@
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v110</PlatformToolset>
@@ -86,20 +75,23 @@
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props')">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props" />
   </ImportGroup>
-  <ImportGroup Label="ExtensionSettings" />
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="vislibVSProps\TargetRelease32.props" />
-    <Import Project="ExtLibs.props" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="vislibVSProps\TargetDebug32.props" />
-    <Import Project="ExtLibs.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -111,14 +103,14 @@
     <Import Project="vislibVSProps\TargetDebug32.props" />
     <Import Project="ExtLibs.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="vislibVSProps\TargetRelease64.props" />
+    <Import Project="vislibVSProps\TargetRelease32.props" />
     <Import Project="ExtLibs.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="vislibVSProps\TargetDebug64.props" />
+    <Import Project="vislibVSProps\TargetDebug32.props" />
     <Import Project="ExtLibs.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
@@ -131,234 +123,244 @@
     <Import Project="vislibVSProps\TargetDebug64.props" />
     <Import Project="ExtLibs.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="vislibVSProps\TargetRelease64.props" />
+    <Import Project="ExtLibs.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="vislibVSProps\TargetDebug64.props" />
+    <Import Project="ExtLibs.props" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Win$(Bits)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Win$(Bits)\$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">Win$(Bits)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">Win$(Bits)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">Win$(Bits)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">Win$(Bits)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">Win$(Bits)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">Win$(Bits)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">Win$(Bits)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">Win$(Bits)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Win$(Bits)\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Win$(Bits)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Win$(Bits)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Win$(Bits)\$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Win$(Bits)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Win$(Bits)\$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">$(Configuration)\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">Win$(Bits)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">Win$(Bits)\$(Configuration)\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">$(Configuration)\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">$(Platform)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">$(Platform)\$(Configuration)\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">false</LinkIncremental>
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'" />
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'" />
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'" />
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'" />
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">Protein$(BitsD).win$(Bits)</TargetName>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">.mmplg</TargetExt>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'" />
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Protein$(BitsD).win$(Bits)</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.mmplg</TargetExt>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">Protein$(BitsD).win$(Bits)</TargetName>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">.mmplg</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">Protein$(BitsD).win$(Bits)</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">.mmplg</TargetExt>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Protein$(BitsD).win$(Bits)</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.mmplg</TargetExt>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">Protein$(BitsD).win$(Bits)</TargetName>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">.mmplg</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">Protein$(BitsD).win$(Bits)</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">.mmplg</TargetExt>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Protein$(BitsD).win$(Bits)</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.mmplg</TargetExt>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">Protein$(BitsD).win$(Bits)</TargetName>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">.mmplg</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">Protein$(BitsD).win$(Bits)</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">.mmplg</TargetExt>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Protein$(BitsD).win$(Bits)</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.mmplg</TargetExt>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.0\include;$(IncludePath)</IncludePath>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">Protein$(BitsD).win$(Bits)</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">.mmplg</TargetExt>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.0\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">
+    <CUDA_Build_Rule>
+      <Include>C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc</Include>
+      <Debug>true</Debug>
+    </CUDA_Build_Rule>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <OpenMPSupport>true</OpenMPSupport>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+      <IgnoreSpecificDefaultLibraries>glut32.lib</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutputBin)." mkdir "$(OutputBin)."
+xcopy "$(TargetPath)" "$(OutputBin)." /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+    <CudaCompile>
+      <Defines>_DEBUG</Defines>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">
+    <CUDA_Build_Rule>
+      <Include>C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc</Include>
+      <Debug>true</Debug>
+    </CUDA_Build_Rule>
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <OpenMPSupport>true</OpenMPSupport>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <TargetMachine>MachineX64</TargetMachine>
+      <IgnoreSpecificDefaultLibraries>glut32.lib</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutputBin)." mkdir "$(OutputBin)."
+xcopy "$(TargetPath)" "$(OutputBin)." /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+    <CudaCompile>
+      <Defines>_DEBUG</Defines>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">
+    <CUDA_Build_Rule>
+      <Include>C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc</Include>
+    </CUDA_Build_Rule>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <OpenMPSupport>true</OpenMPSupport>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+      <IgnoreSpecificDefaultLibraries>glut32.lib</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutputBin)." mkdir "$(OutputBin)."
+xcopy "$(TargetPath)" "$(OutputBin)." /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+    <CudaCompile>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">
+    <CUDA_Build_Rule>
+      <Include>C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc</Include>
+    </CUDA_Build_Rule>
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <OpenMPSupport>true</OpenMPSupport>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX64</TargetMachine>
+      <IgnoreSpecificDefaultLibraries>glut32.lib</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutputBin)." mkdir "$(OutputBin)."
+xcopy "$(TargetPath)" "$(OutputBin)." /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+    <CudaCompile>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <CUDA_Build_Rule>
-      <Include>C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc</Include>
-      <Debug>true</Debug>
-    </CUDA_Build_Rule>
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <OpenMPSupport>true</OpenMPSupport>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <TargetMachine>MachineX86</TargetMachine>
-      <IgnoreSpecificDefaultLibraries>glut32.lib</IgnoreSpecificDefaultLibraries>
-    </Link>
-    <PostBuildEvent>
-      <Command>if not exist "$(OutputBin)." mkdir "$(OutputBin)."
-xcopy "$(TargetPath)" "$(OutputBin)." /Y /F /V /G /K
-if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
-</Command>
-    </PostBuildEvent>
-    <CudaCompile>
-      <Defines>_DEBUG</Defines>
-      <CodeGeneration>compute_20,sm_20</CodeGeneration>
-    </CudaCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <CUDA_Build_Rule>
-      <Include>C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc</Include>
-      <Debug>true</Debug>
-    </CUDA_Build_Rule>
-    <Midl>
-      <TargetEnvironment>X64</TargetEnvironment>
-    </Midl>
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <OpenMPSupport>true</OpenMPSupport>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <TargetMachine>MachineX64</TargetMachine>
-      <IgnoreSpecificDefaultLibraries>glut32.lib</IgnoreSpecificDefaultLibraries>
-    </Link>
-    <PostBuildEvent>
-      <Command>if not exist "$(OutputBin)." mkdir "$(OutputBin)."
-xcopy "$(TargetPath)" "$(OutputBin)." /Y /F /V /G /K
-if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
-</Command>
-    </PostBuildEvent>
-    <CudaCompile>
-      <Defines>_DEBUG</Defines>
-      <CodeGeneration>compute_20,sm_20</CodeGeneration>
-    </CudaCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <CUDA_Build_Rule>
-      <Include>C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc</Include>
-    </CUDA_Build_Rule>
-    <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <OpenMPSupport>true</OpenMPSupport>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <OptimizeReferences>true</OptimizeReferences>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <TargetMachine>MachineX86</TargetMachine>
-      <IgnoreSpecificDefaultLibraries>glut32.lib</IgnoreSpecificDefaultLibraries>
-    </Link>
-    <PostBuildEvent>
-      <Command>if not exist "$(OutputBin)." mkdir "$(OutputBin)."
-xcopy "$(TargetPath)" "$(OutputBin)." /Y /F /V /G /K
-if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
-</Command>
-    </PostBuildEvent>
-    <CudaCompile>
-      <CodeGeneration>compute_20,sm_20</CodeGeneration>
-    </CudaCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <CUDA_Build_Rule>
-      <Include>C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc</Include>
-    </CUDA_Build_Rule>
-    <Midl>
-      <TargetEnvironment>X64</TargetEnvironment>
-    </Midl>
-    <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <OpenMPSupport>true</OpenMPSupport>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <OptimizeReferences>true</OptimizeReferences>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <TargetMachine>MachineX64</TargetMachine>
-      <IgnoreSpecificDefaultLibraries>glut32.lib</IgnoreSpecificDefaultLibraries>
-    </Link>
-    <PostBuildEvent>
-      <Command>if not exist "$(OutputBin)." mkdir "$(OutputBin)."
-xcopy "$(TargetPath)" "$(OutputBin)." /Y /F /V /G /K
-if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
-</Command>
-    </PostBuildEvent>
-    <CudaCompile>
-      <CodeGeneration>compute_20,sm_20</CodeGeneration>
-    </CudaCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">
     <CUDA_Build_Rule>
       <Include>C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc</Include>
       <Debug>true</Debug>
@@ -396,7 +398,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <CUDA_Build_Rule>
       <Include>C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc</Include>
       <Debug>true</Debug>
@@ -442,7 +444,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <TypeInfo>true</TypeInfo>
     </CudaCompile>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <CUDA_Build_Rule>
       <Include>C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc</Include>
     </CUDA_Build_Rule>
@@ -481,7 +483,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <CUDA_Build_Rule>
       <Include>C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc</Include>
     </CUDA_Build_Rule>
@@ -550,30 +552,30 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="DiagramCall.cpp" />
     <ClCompile Include="DiagramRenderer.cpp" />
     <ClCompile Include="dllmain.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">
-      </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">
-      </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </PrecompiledHeader>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </PrecompiledHeader>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">
       </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">false</CompileAsManaged>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">
       </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">false</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">
+      </PrecompiledHeader>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">false</CompileAsManaged>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">
+      </PrecompiledHeader>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">false</CompileAsManaged>
     </ClCompile>
     <ClCompile Include="DofRendererDeferred.cpp" />
     <ClCompile Include="ElectrostaticsRenderer.cpp" />
@@ -584,22 +586,22 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="GLSLVolumeRenderer.cpp" />
     <ClCompile Include="GlWidgetLibrary.cpp" />
     <ClCompile Include="gmx_system_xdr.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">
-      </PrecompiledHeader>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">CompileAsC</CompileAs>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">
       </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">
       </PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="GROLoader.cpp" />
@@ -660,14 +662,14 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="SplitMergeRenderer.cpp" />
     <ClCompile Include="SSAORendererDeferred.cpp" />
     <ClCompile Include="stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Streamline.cpp" />
     <ClCompile Include="StreamlineRenderer.cpp" />
@@ -682,7 +684,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="VecField3f.cpp" />
     <ClCompile Include="View3DMouse.cpp" />
     <ClCompile Include="UniGrid3D.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="View3DSpaceMouse.cpp" />
     <ClCompile Include="VMDDXLoader.cpp" />
@@ -840,50 +842,51 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   <ItemGroup>
     <CustomBuildStep Include="Shaders\protein.btf">
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
       <SubType>Designer</SubType>
     </CustomBuildStep>
     <CustomBuildStep Include="Shaders\reducedsurface.btf">
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
     </CustomBuildStep>
     <CustomBuildStep Include="Shaders\solpath.btf">
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
     </CustomBuildStep>
     <CustomBuildStep Include="Shaders\volume.btf">
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
       <SubType>Designer</SubType>
     </CustomBuildStep>
+    <None Include="ClassDiagram.cd" />
     <None Include="common.mk" />
     <None Include="config.bat" />
     <None Include="config.sh" />
@@ -897,187 +900,189 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="Makefile" />
     <None Include="filter_cuda.cuh">
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
     </None>
     <None Include="particles_kernel.cuh">
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
     </None>
     <None Include="particleSystem.cuh">
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
     </None>
     <None Include="PotentialCalculator.cuh" />
     <None Include="Shaders\layeredisosurfaces.btf">
       <SubType>Designer</SubType>
     </None>
     <None Include="Shaders\proteinDeferred.btf">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
     </None>
     <None Include="Shaders\puxels.btf">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <SubType>Designer</SubType>
     </None>
     <None Include="Shaders\SSAOdeferred.btf">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
     </None>
     <None Include="sort_triangles.cuh" />
     <None Include="VolumeMeshRenderer.cuh">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
     </None>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CUDACurl.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="CUDAFieldTopology.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="CUDAMarchingCubes.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">compute_20,sm_20</CodeGeneration>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">compute_20,sm_20</CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">compute_20,sm_20</CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">compute_20,sm_20</CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">compute_20,sm_20</CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">compute_20,sm_20</CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">compute_20,sm_20</CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDAQuickSurf.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">compute_20,sm_20</CodeGeneration>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">compute_20,sm_20</CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">compute_20,sm_20</CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">compute_20,sm_20</CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">compute_20,sm_20</CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">compute_20,sm_20</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">compute_20,sm_20</CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">compute_20,sm_20</CodeGeneration>
-      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">_DEBUG;WIN32;_WIN32</Defines>
-      <Defines Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">WIN32;_WIN32</Defines>
-      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|Win32'">_DEBUG;WIN32;_WIN32</Defines>
-      <Defines Condition="'$(Configuration)|$(Platform)'=='Release CUDA|Win32'">WIN32;_WIN32</Defines>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_DEBUG;WIN32;_WIN32</Defines>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;_WIN32</Defines>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_DEBUG;WIN32;_WIN32</Defines>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;_WIN32</Defines>
     </CudaCompile>
     <CudaCompile Include="CUDAStreamlines.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="DeformableGPUSurfaceMT.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="DiffusionSolver.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="filter_cuda.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="GPUSurfaceMT.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="PotentialCalculator.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="sort_triangles.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="VolumeMeshRenderer-sort.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="VolumeMeshRenderer.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
     </CudaCompile>
     <None Include="particles_kernel.cu">
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
     </None>
     <CudaCompile Include="particleSystem.cu">
-      <AddedDependencies Condition="'$(Configuration)|$(Platform)'=='Debug CUDA|x64'">particleSystem.cuh; particles_kernel.cu; particles_kernel.cuh;</AddedDependencies>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc</Include>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc</Include>
       <AddedDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">particleSystem.cuh; particles_kernel.cu; particles_kernel.cuh;</AddedDependencies>
-      <AddedDependencies Condition="'$(Configuration)|$(Platform)'=='Release CUDA|x64'">particleSystem.cuh; particles_kernel.cu; particles_kernel.cuh;</AddedDependencies>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc</Include>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc</Include>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc</Include>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">true</ExcludedFromBuild>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc</Include>
+      <AddedDependencies Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|x64'">particleSystem.cuh; particles_kernel.cu; particles_kernel.cuh;</AddedDependencies>
       <AddedDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">particleSystem.cuh; particles_kernel.cu; particles_kernel.cuh;</AddedDependencies>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">true</ExcludedFromBuild>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|Win32'">D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc</Include>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc</Include>
+      <AddedDependencies Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">particleSystem.cuh; particles_kernel.cu; particles_kernel.cuh;</AddedDependencies>
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-NoCUDA|Win32'">true</ExcludedFromBuild>
     </CudaCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets')">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets" />
   </ImportGroup>
-  <ImportGroup Label="ExtensionTargets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets" />
+  </ImportGroup>
 </Project>
