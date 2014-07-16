@@ -211,8 +211,8 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
 				true), triggerInitPotentialTex(true), triggerComputeSurfacePoints1(
 				true), triggerComputeSurfacePoints2(true), triggerSurfaceMapping(
 				true), triggerRMSFit(true), triggerComputeLines(true), oldCalltime(
-				-1.0) {
-
+				-1.0), qsGridDelta(2.0f) {
+           
 	/* Make data caller/callee slots available */
 
 	this->vboSlaveSlot1.SetCallback(VBODataCall::ClassName(),
@@ -581,7 +581,6 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
 	this->MakeSlotAvailable(&this->qsRadSclSlot);
 
 	// Quicksurf grid scaling
-	this->qsGridDelta = 2.0f;
 	this->qsGridDeltaSlot.SetParameter(
 			new core::param::FloatParam(this->qsGridDelta));
 	this->MakeSlotAvailable(&this->qsGridDeltaSlot);
