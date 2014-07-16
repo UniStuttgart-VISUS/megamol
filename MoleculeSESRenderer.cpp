@@ -1167,6 +1167,7 @@ void MoleculeSESRenderer::UpdateParameters( const MolecularDataCall *mol, const 
     }
     if( this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty()) {
         this->currentColoringMode0 = static_cast<Color::ColoringMode>(  this->coloringModeParam0.Param<param::EnumParam>()->Value() );
+        this->currentColoringMode1 = static_cast<Color::ColoringMode>(  this->coloringModeParam1.Param<param::EnumParam>()->Value() );
 
         Color::MakeColorTable( mol,
             this->currentColoringMode0,

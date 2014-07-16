@@ -192,7 +192,7 @@ namespace protein {
         /**
          * Render the molecular data in stick mode.
          */
-        void RenderStick( const MolecularDataCall *mol, const float *atomPos);
+        void RenderStick( const MolecularDataCall *mol, const float *atomPos, const BindingSiteCall *bs = NULL);
 
          /**
           * Recompute all values.
@@ -329,6 +329,7 @@ namespace protein {
 		// color of secondary structure b-spline
 		std::vector<std::vector<vislib::math::Vector<float, 3> > > cartoonColorCPU;
 
+        vislib::Array<bool> atomVisible;
     };
 
 
