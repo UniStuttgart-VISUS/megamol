@@ -857,7 +857,7 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
         this->maxGradColorParam.Param<param::StringParam>()->Value(),
         true, bs);
     // render rest as stick
-    this->RenderStick( mol, posInter);
+    this->RenderStick( mol, posInter, bs);
     // reset coloring mode
     this->currentColoringMode0 = static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
     this->currentColoringMode1 = static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
@@ -2422,13 +2422,13 @@ void MoleculeCartoonRenderer::RecomputeAll()
 /*
  * Render the molecular data in stick mode.
  */
-void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const float *atomPos) {
+void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const float *atomPos, const BindingSiteCall *bs) {
     // ----- prepare stick raycasting -----
-
+    
     /** vertex array for spheres */
     vislib::Array<float> vertSpheres;
     /** color array for spheres */
-    //vislib::Array<float> colorSpheres;
+    vislib::Array<float> colorSpheres;
     /** vertex array for cylinders */
     vislib::Array<float> vertCylinders;
     /** attribute array for quaterinons of the cylinders */
@@ -2444,14 +2444,20 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
     unsigned int totalCylinderCnt = 0;
 
     vertSpheres.SetCount( mol->AtomCount() * 4 );
-    //colorSpheres.SetCount( mol->AtomCount() * 3 );
+    colorSpheres.SetCount( mol->AtomCount() * 3 );
     vertCylinders.SetCount( mol->ConnectionCount() * 4);
     quatCylinders.SetCount( mol->ConnectionCount() * 4);
     inParaCylinders.SetCount( mol->ConnectionCount() * 2);
     color1Cylinders.SetCount( mol->ConnectionCount() * 3);
     color2Cylinders.SetCount( mol->ConnectionCount() * 3);
+    this->atomVisible.SetCount( mol->AtomCount());
 
     unsigned int cnt, idx, molCnt, resCnt, atomCnt, conCnt, idxAtom, cntAtom;
+
+    // reset atom visiblity
+    for( cnt = 0; cnt < mol->AtomCount(); cnt++ ) {
+        this->atomVisible[cnt] = false;
+    }
 
     for( molCnt = 0; molCnt < mol->MoleculeCount(); ++molCnt ) {
         idx = mol->Molecules()[molCnt].FirstResidueIndex();
@@ -2468,16 +2474,62 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
                 vertSpheres[4*totalAtomCnt+2] = atomPos[3*atomCnt+2];
                 vertSpheres[4*totalAtomCnt+3] =
                     this->stickRadiusParam.Param<param::FloatParam>()->Value();
-                /*
-                colorSpheres[3*totalAtomCnt+0] = this->atomColorTable[atomCnt].X();
-                colorSpheres[3*totalAtomCnt+1] = this->atomColorTable[atomCnt].Y();
-                colorSpheres[3*totalAtomCnt+2] = this->atomColorTable[atomCnt].Z();
-                */
+                colorSpheres[3*totalAtomCnt+0] = this->atomColorTable[3*atomCnt];
+                colorSpheres[3*totalAtomCnt+1] = this->atomColorTable[3*atomCnt+1];
+                colorSpheres[3*totalAtomCnt+2] = this->atomColorTable[3*atomCnt+2];
+                this->atomVisible[atomCnt] = true;
                 totalAtomCnt++;
             }
         }
     }
-
+    
+    
+    // search for binding sites if BindingSiteCall is available
+    if( bs ) {
+        // temporary variables
+        unsigned int firstMol;
+        unsigned int firstRes;
+        unsigned int firstAtom;
+        unsigned int atomIdx;
+        for( unsigned int cCnt = 0; cCnt < mol->ChainCount(); cCnt++ ) {
+            firstMol = mol->Chains()[cCnt].FirstMoleculeIndex();
+            for( unsigned int mCnt = firstMol; mCnt < firstMol + mol->Chains()[cCnt].MoleculeCount(); mCnt++ ) {
+                firstRes = mol->Molecules()[mCnt].FirstResidueIndex();
+                for( unsigned int rCnt = 0; rCnt < mol->Molecules()[mCnt].ResidueCount(); rCnt++ ) {
+                    // try to match binding sites
+                    vislib::Pair<char, unsigned int> bsRes;
+                    // loop over all binding sites
+                    for( unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++ ) {
+                        for( unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++ ) {
+                            bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
+                            if( mol->Chains()[cCnt].Name() == bsRes.First() &&
+                                    mol->Residues()[firstRes+rCnt]->OriginalResIndex() == bsRes.Second() &&
+                                    mol->ResidueTypeNames()[mol->Residues()[firstRes+rCnt]->Type()] == bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt) ) {
+                                // TODO loop over all atoms and add the color
+                                firstAtom = mol->Residues()[firstRes+rCnt]->FirstAtomIndex();
+                                for( unsigned int aCnt = 0; aCnt < mol->Residues()[firstRes+rCnt]->AtomCount(); aCnt++ ) {
+                                    atomIdx = firstAtom + aCnt;
+                                    // position
+                                    vertSpheres[4*totalAtomCnt+0] = atomPos[3*atomIdx];
+                                    vertSpheres[4*totalAtomCnt+1] = atomPos[3*atomIdx+1];
+                                    vertSpheres[4*totalAtomCnt+2] = atomPos[3*atomIdx+2];
+                                    vertSpheres[4*totalAtomCnt+3] = this->stickRadiusParam.Param<param::FloatParam>()->Value();
+                                    // color
+                                    colorSpheres[3*totalAtomCnt+0] = this->atomColorTable[3*atomIdx];
+                                    colorSpheres[3*totalAtomCnt+1] = this->atomColorTable[3*atomIdx+1];
+                                    colorSpheres[3*totalAtomCnt+2] = this->atomColorTable[3*atomIdx+2];
+                                    // set visiblity
+                                    this->atomVisible[atomIdx] = true;
+                                    totalAtomCnt++;
+                                }
+                            }
+                        }
+                    }
+                } // residues
+            } // molecules
+        } // chains
+    } // BindingSiteCall available
+    
     unsigned int idx0, idx1;
     vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
     vislib::math::Quaternion<float> quatC( 0, 0, 0, 1);
@@ -2487,12 +2539,16 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
     for( molCnt = 0; molCnt < mol->MoleculeCount(); ++molCnt ) {
         idx = mol->Molecules()[molCnt].FirstConnectionIndex();
         cnt = mol->Molecules()[molCnt].ConnectionCount();
-        // do nothing if molecule is a protein
-        if( mol->Residues()[mol->Molecules()[molCnt].FirstResidueIndex()]->Identifier() == MolecularDataCall::Residue::AMINOACID )
+        // do nothing if molecule is a protein and no binding sites are set
+        if( !bs && mol->Residues()[mol->Molecules()[molCnt].FirstResidueIndex()]->Identifier() == MolecularDataCall::Residue::AMINOACID )
             continue;
         for( conCnt = 0; conCnt < cnt; ++conCnt ) {
             idx0 = mol->Connection()[idx+2*conCnt];
             idx1 = mol->Connection()[idx+2*conCnt+1];
+
+            // do noting for invisible atoms
+            if( !this->atomVisible[idx0] || !this->atomVisible[idx1] )
+                continue;
 
             firstAtomPos.SetX( atomPos[3*idx0+0]);
             firstAtomPos.SetY( atomPos[3*idx0+1]);
@@ -2561,7 +2617,7 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
     glUniform3fvARB(sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, vertSpheres.PeekElements());
-    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, colorSpheres.PeekElements());
     glDrawArrays( GL_POINTS, 0, totalAtomCnt);
     // disable sphere shader
     this->sphereShader.Disable();

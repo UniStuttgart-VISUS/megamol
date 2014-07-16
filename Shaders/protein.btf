@@ -8756,14 +8756,15 @@ void main(void) {
 
     // chose color for lighting
 
-    //vec3 color = gl_Color.rgb;
+#ifdef SFB_DEMO
+    vec3 color = vec3( 0.70f, 0.8f, 0.4f);
+#else
+    vec3 color = gl_Color.rgb;
     // uniform color
     //color = vec3( 0.98, 0.23, 0.0); // for VIS
     //color = vec3( 0.17, 0.5, 0.8);
     //color = vec3( 0.19, 0.52, 0.82);
-
-    vec3 color = vec3( 0.70f, 0.8f, 0.4f);
-
+#endif
     
 #ifdef COLOR_SES
     color = COLOR_BLUE;
