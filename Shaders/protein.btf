@@ -9,7 +9,7 @@
 //#define FOGGING_SES
 //#define FLATSHADE_SES
 #define OGL_DEPTH_SES
-#define SFB_DEMO
+//#define SFB_DEMO
 
 #define CLIP
 #define DEPTH
@@ -101,7 +101,7 @@ void main(void) {
     gl_FrontColor = gl_Color;
 
 
-    // Sphere-Touch-Plane-Approach™
+    // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
     vec2 d, p, q, h, dd;
@@ -277,7 +277,7 @@ void main(void) {
     gl_FrontColor = gl_Color;
 
 
-    // Sphere-Touch-Plane-Approach™
+    // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
     vec2 d, p, q, h, dd;
@@ -512,7 +512,7 @@ void main(void) {
     
     color = inColor[0];    
     
-       // Sphere-Touch-Plane-Approach™
+       // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
     vec2 d, p, q, h, dd;
@@ -1224,7 +1224,7 @@ void main(void) {
     gl_FrontColor = gl_Color;
 
 
-    // Sphere-Touch-Plane-Approach™
+    // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
     vec2 d, p, q, h, dd;
@@ -1543,7 +1543,7 @@ void main(void) {
     // calculate point sprite
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
-    // lumberjack™ approach
+    // lumberjack approach
     vec4 pos, projPos;
     vec4 pX, pY, pZ, pOP;
     vec2 mins, maxs, pp;
@@ -1636,7 +1636,7 @@ void main(void) {
     gl_PointSize = max(maxs.x, maxs.y);
 
 
-//    // oabb-approach™
+//    // oabb-approach
 //    // calculate pOP, pX, pY, and pZ as above
 //
 //    pos = pOP + pX * circleAttr.x;
@@ -1838,7 +1838,7 @@ void main(void) {
     // calculate point sprite
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
-    // lumberjack™ approach
+    // lumberjack approach
     vec4 pos, projPos;
     vec4 pX, pY, pZ, pOP;
     vec2 mins, maxs, pp;
@@ -1931,7 +1931,7 @@ void main(void) {
     gl_PointSize = max(maxs.x, maxs.y);
 
 
-//    // oabb-approach™
+//    // oabb-approach
 //    // calculate pOP, pX, pY, and pZ as above
 //
 //    pos = pOP + pX * circleAttr.x;
@@ -2142,7 +2142,7 @@ void main(void) {
     // calculate point sprite
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
-    // lumberjack™ approach
+    // lumberjack approach
     vec4 pos, projPos;
     vec4 pX, pY, pZ, pOP;
     vec2 mins, maxs, pp;
@@ -3559,7 +3559,7 @@ void main(void) {
     // calculate point sprite
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
-    // lumberjack™ approach
+    // lumberjack approach
     vec4 pos, projPos;
     vec4 pX, pY, pZ, pOP;
     vec2 mins, maxs, pp;
@@ -3982,7 +3982,7 @@ void main(void) {
     // calculate point sprite
     //vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
-    // lumberjack™ approach
+    // lumberjack approach
     vec4 pos, projPos;
     vec4 pX, pY, pZ, pOP;
     vec2 mins, maxs, pp;
@@ -4332,7 +4332,7 @@ void main(void) {
     // send color to fragment shader
     gl_FrontColor = gl_Color; 
 
-    // Sphere-Touch-Plane-Approach™
+    // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
     vec2 d, p, q, h, dd;
@@ -4538,7 +4538,7 @@ void main(void) {
     // calculate point sprite
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
-    // lumberjack™ approach
+    // lumberjack approach
     vec4 pos, projPos;
     vec4 pX, pY, pZ, pOP;
     vec2 mins, maxs, pp;
@@ -4631,7 +4631,7 @@ void main(void) {
     gl_PointSize = max(maxs.x, maxs.y);
 
 
-//    // oabb-approach™
+//    // oabb-approach
 //    // calculate pOP, pX, pY, and pZ as above
 //
 //    pos = pOP + pX * circleAttr.x;
@@ -8737,7 +8737,7 @@ void main(void) {
     if (radicand < 0.0) { discard; }
 
 #ifdef PUXELS
-  // wenn wir puxeln, brauchen wir d1 + sqrt(...) und d1 - sqrt(...) = vorder + rückseite der kugel
+  // wenn wir puxeln, brauchen wir d1 + sqrt(...) und d1 - sqrt(...) = vorder + rueckseite der kugel
     for(float lambdaSign = -1.0; lambdaSign < 2.0; lambdaSign += 2.0)
     {
 #else
@@ -8792,8 +8792,7 @@ void main(void) {
     float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
     gl_FragColor.rgb = mix( fogCol, gl_FragColor.rgb, f);
 #endif // FOGGING_SES
-
-
+    gl_FragColor.a = alpha;
 
 #ifdef AXISHINTS
     // debug-axis-hints
@@ -10598,22 +10597,22 @@ void main(void) {
     numProbes = min( int(texCoord2.x), 16);
     if( numProbes > 0 )
     {
-     /*   for( i = 0; i < numProbes; i++ )
+        for( i = 0; i < numProbes; i++ )
         {
             //probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
             probePos = texelFetch2D( tex, ivec2( texCoord2.yz) + ivec2( i, 0), 0).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
-        }*/
+        }
     }
     numProbes = min( int(texCoord3.x), 16);
     if( numProbes > 0 )
     {
-        /*for( i = 0; i < numProbes; i++ )
+        for( i = 0; i < numProbes; i++ )
         {
             //probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
             probePos = texelFetch2D( tex, ivec2( texCoord3.yz) + ivec2( i, 0), 0).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
-        }*/
+        }
     }
     // "calc" normal at intersection point
     vec3 normal = -sphereintersection / rad;

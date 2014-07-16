@@ -2576,4 +2576,4 @@ void ComparativeFieldTopologyRenderer::updateParams() {
     }
 }
 
-#endif WITH_CUDA
+#endif // WITH_CUDA

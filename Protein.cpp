@@ -162,7 +162,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 53;
+    int moduleCount = 51;
 #ifdef WITH_CUDA
     moduleCount+=14;
 #endif // WITH_CUDA
@@ -243,19 +243,19 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case CUDA_OFFSET + HAPTICS_OFFSET + 35 : return new ModuleAutoDescription<protein::PotentialCalculator>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 36 : return new ModuleAutoDescription<protein::VMDDXLoader>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 37 : return new ModuleAutoDescription<protein::TrajectorySmoothFilter>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 39 : return new ModuleAutoDescription<protein::SurfacePotentialRendererSlave>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 41 : return new ModuleAutoDescription<protein::VariantMatchRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 42 : return new ModuleAutoDescription<protein::MoleculeBallifier>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 43 : return new ModuleAutoDescription<protein::ResidueSelection>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 44 : return new ModuleAutoDescription<protein::SecPlaneRenderer>();
-		case CUDA_OFFSET + HAPTICS_OFFSET + 45 : return new ModuleAutoDescription<protein::AggregatedDensity>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 46 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 47 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::MolecularBezierData>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 49 : return new ModuleAutoDescription<protein::MultiParticleDataFilter>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 50 : return new ModuleAutoDescription<protein::VolumeDirectionRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 51 : return new ModuleAutoDescription<protein::LayeredIsosurfaceRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 52 : return new ModuleAutoDescription<protein::MultiPDBLoader>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 38 : return new ModuleAutoDescription<protein::SurfacePotentialRendererSlave>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 39 : return new ModuleAutoDescription<protein::VariantMatchRenderer>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 40 : return new ModuleAutoDescription<protein::MoleculeBallifier>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 41 : return new ModuleAutoDescription<protein::ResidueSelection>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 42 : return new ModuleAutoDescription<protein::SecPlaneRenderer>();
+		case CUDA_OFFSET + HAPTICS_OFFSET + 43 : return new ModuleAutoDescription<protein::AggregatedDensity>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 44 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 45 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 46 : return new ModuleAutoDescription<protein::MolecularBezierData>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 47 : return new ModuleAutoDescription<protein::MultiParticleDataFilter>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::VolumeDirectionRenderer>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 49 : return new ModuleAutoDescription<protein::LayeredIsosurfaceRenderer>();
+        case CUDA_OFFSET + HAPTICS_OFFSET + 50 : return new ModuleAutoDescription<protein::MultiPDBLoader>();
         default: return NULL;
     }
     return NULL;
@@ -266,7 +266,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 PROTEIN_API int mmplgCallCount(void) {
-    return 20;
+    return 19;
 }
 
 
@@ -293,7 +293,7 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
         case 15: return new megamol::core::CallAutoDescription<megamol::protein::VTIDataCall>();
         case 16: return new megamol::core::CallAutoDescription<megamol::protein::VariantMatchDataCall>();
         case 17: return new megamol::core::CallAutoDescription<megamol::protein::VBODataCall>();
-        case 19: return new megamol::core::CallAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
+        case 18: return new megamol::core::CallAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
         default: return NULL;
     }
     return NULL;
