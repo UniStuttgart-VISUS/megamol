@@ -109,5 +109,5 @@ $c = ConfigFilePair->new();
     $c->outFile("ExtLibTw.props");
     push @cfps, $c;
 
-VISUS::configperl::Configure("MegaMol(TM) Console Configuration for Windows", ".megamol.console.win.cache", \@pps, \@fps, \@cfps, \@sps, $fullauto);
+VISUS::configperl::Configure("MegaMol(TM) Console Configuration for Windows", ".megamol.console.win.cache", \@pps, \@fps, \@cfps, \@sps, \@ARGV);
 
