@@ -78,7 +78,8 @@ namespace protein {
             CARTOON        = 0,
             CARTOON_SIMPLE = 1,
             CARTOON_CPU    = 2,
-            CARTOON_GPU    = 3
+            CARTOON_GPU    = 3,
+            CARTOON_LINE   = 4
         };
 
 
@@ -174,7 +175,7 @@ namespace protein {
          * @param prot The data interface.
          */
         void RenderCartoonHybrid( const MolecularDataCall *mol, float* atomPos);
-
+        
         /**
          * Render protein in CPU CARTOON mode using OpenGL primitives.
          *
@@ -182,12 +183,19 @@ namespace protein {
          */
         void RenderCartoonCPU( const MolecularDataCall *mol, float* atomPos);
 
+        /**
+         * Render protein in CPU CARTOON mode using OpenGL lines.
+         *
+         * @param prot The data interface.
+         */
+        void RenderCartoonLineCPU( const MolecularDataCall *mol, float* atomPos);
+
          /**
          * Render protein in GPU CARTOON mode using OpenGL primitives.
          *
          * @param prot The data interface.
          */
-        void RenderCartoonGPU( const MolecularDataCall *mol);
+        void RenderCartoonGPU( const MolecularDataCall *mol, float* atomPos);
 
         /**
          * Render the molecular data in stick mode.
@@ -289,6 +297,8 @@ namespace protein {
         bool prepareCartoonHybrid;
         // has the CPU CARTOON render mode to be prepared?
         bool prepareCartoonCPU;
+        // has the CARTOON LINE render mode to be prepared?
+        bool prepareCartoonLine;
 
         // counters, vertex- and color-arrays for cartoon mode
         float *vertTube;
@@ -321,11 +331,15 @@ namespace protein {
 
         // the Id of the current frame (for dynamic data)
         unsigned int currentFrameId;
+        // the current call time
+        float oldCallTime;
 
         unsigned int atomCount;
-
+        
 		// coordinates of the first (center) b-spline (result of the spline computation)
 		std::vector<std::vector<vislib::math::Vector<float, 3> > > bSplineCoordsCPU;
+		// coordinates of the second (direction) b-spline (result of the spline computation)
+		std::vector<std::vector<vislib::math::Vector<float, 3> > > bSplineCoordsDirCPU;
 		// color of secondary structure b-spline
 		std::vector<std::vector<vislib::math::Vector<float, 3> > > cartoonColorCPU;
 
