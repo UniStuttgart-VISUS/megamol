@@ -179,9 +179,9 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
     this->prepareCartoonLine = true;
 
     // set default value for spline segments per amino acid
-    this->numberOfSplineSeg = 6;
+    this->numberOfSplineSeg = 12;
     // set default value for tube segments
-    this->numberOfTubeSeg = 6;
+    this->numberOfTubeSeg = 12;
 
     // fill rainbow color table
     Color::MakeRainbowColorTable( 100, this->rainbowColors);
@@ -444,7 +444,7 @@ bool MoleculeCartoonRenderer::create(void) {
     this->arrowSplineShader.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
     this->arrowSplineShader.SetProgramParameter( GL_GEOMETRY_INPUT_TYPE_EXT , GL_LINES_ADJACENCY_EXT);
     this->arrowSplineShader.SetProgramParameter( GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->arrowSplineShader.SetProgramParameter( GL_GEOMETRY_VERTICES_OUT_EXT, 150);
+    this->arrowSplineShader.SetProgramParameter( GL_GEOMETRY_VERTICES_OUT_EXT, 1024);
     this->arrowSplineShader.Link();
 
     ////////////////////////////////////////////////////////
@@ -465,7 +465,7 @@ bool MoleculeCartoonRenderer::create(void) {
     this->tubeSplineShader.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
     this->tubeSplineShader.SetProgramParameter( GL_GEOMETRY_INPUT_TYPE_EXT , GL_LINES_ADJACENCY_EXT);
     this->tubeSplineShader.SetProgramParameter( GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->tubeSplineShader.SetProgramParameter( GL_GEOMETRY_VERTICES_OUT_EXT, 150);
+    this->tubeSplineShader.SetProgramParameter( GL_GEOMETRY_VERTICES_OUT_EXT, 1024);
     this->tubeSplineShader.Link();
 
     ////////////////////////////////////////////////////////
@@ -486,7 +486,7 @@ bool MoleculeCartoonRenderer::create(void) {
     this->helixSplineShader.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
     this->helixSplineShader.SetProgramParameter( GL_GEOMETRY_INPUT_TYPE_EXT , GL_LINES_ADJACENCY_EXT);
     this->helixSplineShader.SetProgramParameter( GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->helixSplineShader.SetProgramParameter( GL_GEOMETRY_VERTICES_OUT_EXT, 150);
+    this->helixSplineShader.SetProgramParameter( GL_GEOMETRY_VERTICES_OUT_EXT, 1024);
     this->helixSplineShader.Link();
 
     }
