@@ -21,7 +21,7 @@ uniform vec3 camRight;
 
 // clipping plane attributes
 uniform vec4 clipDat;
-uniform vec3 clipCol;
+uniform vec4 clipCol;
 
 uniform vec4 inConsts1;
 attribute float colIdx;
