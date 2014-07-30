@@ -49,6 +49,7 @@
 #include "vislib/Socket.h"
 #include "vislib/StackTrace.h"
 #include "vislib/StringTokeniser.h"
+#include "vislib/StringConverter.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/Trace.h"
 #include "vislib/MissingImplementationException.h"
@@ -1900,14 +1901,14 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
                 WriteLineToFile(outfile,
-                        param->Parameter()->ValueString().PeekBuffer());
+                        W2A(param->Parameter()->ValueString().PeekBuffer()));
                 WriteLineToFile(outfile, "\" />-->\n");
             } else {
                 WriteLineToFile(outfile, "      <param name=\"");
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
                 WriteLineToFile(outfile,
-                        param->Parameter()->ValueString().PeekBuffer());
+                        W2A(param->Parameter()->ValueString().PeekBuffer()));
                 WriteLineToFile(outfile, "\" />\n");
             }
         }
