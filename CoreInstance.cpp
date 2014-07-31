@@ -1900,15 +1900,29 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
                 WriteLineToFile(outfile, "      <!--<param name=\"");
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
-                WriteLineToFile(outfile,
+#ifdef WIN32
+                WriteLineToFile<char>(outfile,
                         W2A(param->Parameter()->ValueString().PeekBuffer()));
+#else
+                // TODO This does not work in windows
+                // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
+                // however, that does not compile under linux
+                WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+#endif
                 WriteLineToFile(outfile, "\" />-->\n");
             } else {
                 WriteLineToFile(outfile, "      <param name=\"");
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
-                WriteLineToFile(outfile,
+#ifdef WIN32
+                WriteLineToFile<char>(outfile,
                         W2A(param->Parameter()->ValueString().PeekBuffer()));
+#else
+                // TODO This does not work in windows
+                // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
+                // however, that does not compile under linux
+                WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+#endif
                 WriteLineToFile(outfile, "\" />\n");
             }
         }
