@@ -1952,6 +1952,7 @@ void megamol::core::CoreInstance::addProject(
         megamol::core::utility::xml::XmlReader& reader) {
     using vislib::sys::Log;
     utility::ProjectParser parser;
+    parser.SetConfigSetProvider(&this->config);
     if (parser.Parse(reader)) {
         // success, add project elements
         ViewDescription *vd = NULL;
