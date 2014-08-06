@@ -179,9 +179,9 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
     this->prepareCartoonLine = true;
 
     // set default value for spline segments per amino acid
-    this->numberOfSplineSeg = 12;
+    this->numberOfSplineSeg = 6;
     // set default value for tube segments
-    this->numberOfTubeSeg = 12;
+    this->numberOfTubeSeg = 6;
 
     // fill rainbow color table
     Color::MakeRainbowColorTable( 100, this->rainbowColors);
