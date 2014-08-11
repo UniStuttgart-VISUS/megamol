@@ -241,6 +241,10 @@ namespace moldyn {
 
         /** file version */
         unsigned int fileVersion;
+
+        /** Data file load id counter */
+        size_t data_hash;
+
     };
 
 } /* end namespace moldyn */

@@ -158,7 +158,7 @@ moldyn::MMPLDDataSource::MMPLDDataSource(void) : view::AnimDataModule(),
         limitMemorySizeSlot("limitMemorySize", "Specifies the size limit (in MegaBytes) of the memory cache"),
         getData("getdata", "Slot to request data from this data source."),
         file(NULL), frameIdx(NULL), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
-        clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f) {
+        clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), data_hash(0) {
 
     this->filename.SetParameter(new param::FilePathParam(""));
     this->filename.SetUpdateCallback(&MMPLDDataSource::filenameChanged);
@@ -259,6 +259,7 @@ bool moldyn::MMPLDDataSource::filenameChanged(param::ParamSlot& slot) {
     this->resetFrameCache();
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     this->clipbox = this->bbox;
+    this->data_hash++;
 
     if (this->file == NULL) {
         this->file = new vislib::sys::MemmappedFile();
@@ -369,7 +370,7 @@ bool moldyn::MMPLDDataSource::getDataCallback(Call& caller) {
         if (f == NULL) return false;
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());
-        c2->SetDataHash(0);
+        c2->SetDataHash(this->data_hash);
         f->SetData(*c2);
     }
 
@@ -388,6 +389,7 @@ bool moldyn::MMPLDDataSource::getExtentCallback(Call& caller) {
         c2->AccessBoundingBoxes().Clear();
         c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
         c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->clipbox);
+        c2->SetDataHash(this->data_hash);
         return true;
     }
 
