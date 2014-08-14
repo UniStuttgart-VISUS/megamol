@@ -88,10 +88,14 @@
 #include "moldyn/AddClusterColours.h"
 #include "moldyn/DynDensityGradientEstimator.h"
 #include "moldyn/DataSetTimeRewriteModule.h"
+#include "moldyn/ParticleListMergeModule.h"
 
 using namespace megamol::core;
 
 
+/*
+ * ModuleDescriptionManager::inst
+ */
 vislib::SmartPtr<ModuleDescriptionManager> ModuleDescriptionManager::inst;
 
 
@@ -107,101 +111,104 @@ ModuleDescriptionManager * ModuleDescriptionManager::Instance() {
 }
 
 
+/*
+ * ModuleDescriptionManager::ShutdownInstance
+ */
 void ModuleDescriptionManager::ShutdownInstance() {
     inst = NULL;
 }
 
 
+/*
+ * ModuleDescriptionManager::registerObjects
+ */
 void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instance) {
-    //static ModuleDescriptionManager *instance = NULL;
-    //if (instance == NULL) {
-        //instance = new ModuleDescriptionManager();
 
-        //////////////////////////////////////////////////////////////////////
-        // Register all rendering graph module descriptions here
-        //////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////
+    // Register all rendering graph module descriptions here
+    //////////////////////////////////////////////////////////////////////
 
-        instance->registerAutoDescription<cluster::ClusterController>();
-        instance->registerAutoDescription<cluster::ClusterViewMaster>();
-        instance->registerAutoDescription<cluster::PowerwallView>();
-        instance->registerAutoDescription<cluster::simple::Client>();
-        instance->registerAutoDescription<cluster::simple::Heartbeat>();
-        instance->registerAutoDescription<cluster::simple::Server>();
-        instance->registerAutoDescription<cluster::simple::View>();
-        instance->registerAutoDescription<cluster::mpi::View>();
-        instance->registerAutoDescription<DataFileSequencer>();
-        instance->registerAutoDescription<misc::ImageViewer>();
-        instance->registerAutoDescription<misc::LinesRenderer>();
-        instance->registerAutoDescription<misc::SiffCSplineFitter>();
-        instance->registerAutoDescription<misc::TestSpheresDataSource>();
-        instance->registerAutoDescription<moldyn::AddParticleColours>();
-        instance->registerAutoDescription<moldyn::ArrowRenderer>();
-        instance->registerAutoDescription<moldyn::DataFileSequence>();
-        instance->registerAutoDescription<moldyn::DataGridder>();
-        instance->registerAutoDescription<moldyn::GrimRenderer>();
-        instance->registerDescription<LoaderADModuleAutoDescription<moldyn::IMDAtomDataSource> >();
-        instance->registerAutoDescription<moldyn::MipDepthSphereRenderer>();
-        instance->registerAutoDescription<moldyn::MMPGDDataSource>();
-        instance->registerAutoDescription<moldyn::MMPGDWriter>();
-        instance->registerAutoDescription<moldyn::MMPLDDataSource>();
-        instance->registerAutoDescription<moldyn::MMPLDWriter>();
-        instance->registerDescription<LoaderADModuleAutoDescription<moldyn::MMSPDDataSource> >();
-        instance->registerAutoDescription<moldyn::SIFFDataSource>();
-        instance->registerAutoDescription<moldyn::SimpleGeoSphereRenderer>();
-        instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
-        instance->registerAutoDescription<moldyn::ClusteredSphereRenderer>();
-        instance->registerAutoDescription<moldyn::SphereDataUnifier>();
-        instance->registerAutoDescription<moldyn::SphereOutlineRenderer>();
-        instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
-        instance->registerAutoDescription<moldyn::VIMDataSource>();
-        instance->registerAutoDescription<moldyn::VisIttDataSource>();
-        instance->registerAutoDescription<moldyn::DirPartColModulate>();
-        instance->registerAutoDescription<moldyn::ParticleListFilter>();
-        instance->registerAutoDescription<moldyn::ParticleWorker>();
-        instance->registerAutoDescription<moldyn::DirPartFilter>();
-        //instance->registerAutoDescription<special::ColStereoDisplay>();
-        instance->registerAutoDescription<view::ClipPlane>();
-        instance->registerAutoDescription<view::LinearTransferFunction>();
-        instance->registerAutoDescription<view::TransferFunctionRenderer>();
-        instance->registerAutoDescription<view::MuxRenderer3D<2> >();
-        instance->registerAutoDescription<view::MuxRenderer3D<3> >();
-        instance->registerAutoDescription<view::MuxRenderer3D<4> >();
-        instance->registerAutoDescription<view::MuxRenderer3D<5> >();
-        instance->registerAutoDescription<view::MuxRenderer3D<10> >();
-        instance->registerAutoDescription<view::special::AnaglyphStereoView>();
-        instance->registerAutoDescription<view::special::ChronoGraph>();
-        instance->registerAutoDescription<view::special::DemoRenderer2D>();
-        instance->registerAutoDescription<view::special::QuadBufferStereoView>();
-        instance->registerAutoDescription<view::special::ScreenShooter>();
-        instance->registerAutoDescription<view::SwitchRenderer3D>();
-        instance->registerAutoDescription<view::TileView>();
-        instance->registerAutoDescription<view::View2D>();
-        instance->registerAutoDescription<view::View3D>();
-        instance->registerAutoDescription<view::ViewDirect3D>();
-        instance->registerAutoDescription<view::BlinnPhongRendererDeferred>();
-        instance->registerAutoDescription<view::SplitView>();
-        instance->registerAutoDescription<view::SharedCameraParameters>();
-        instance->registerAutoDescription<view::LinkedView3D>();
-        //instance->registerAutoDescription<vismol2::Mol20Renderer>();
-        //instance->registerAutoDescription<vismol2::Mol20DataSource>();
-        instance->registerAutoDescription<job::DataWriterJob>();
-        instance->registerAutoDescription<job::JobThread>();
-        instance->registerAutoDescription<BuckyBall>();
-        instance->registerAutoDescription<GridBalls>();
-        instance->registerAutoDescription<moldyn::DirPartVolume>();
-        instance->registerAutoDescription<misc::VolumeCache>();
-        instance->registerAutoDescription<RenderVolumeSlice>();
-        instance->registerAutoDescription<moldyn::DirectVolumeRenderer>();
-        instance->registerAutoDescription<moldyn::DatRawDataSource>();
-        instance->registerAutoDescription<moldyn::SIFFWriter>();
-        instance->registerAutoDescription<moldyn::VTFDataSource>();
-        instance->registerAutoDescription<moldyn::VTFResDataSource>();
-        instance->registerAutoDescription<moldyn::D3D11SimpleSphereRenderer>();
-        instance->registerAutoDescription<moldyn::AddClusterColours>();
-        instance->registerAutoDescription<moldyn::DynDensityGradientEstimator>();
-        instance->registerAutoDescription<moldyn::DataSetTimeRewriteModule>();
-    //}
-    //return instance;
+    instance->registerAutoDescription<cluster::ClusterController>();
+    instance->registerAutoDescription<cluster::ClusterViewMaster>();
+    instance->registerAutoDescription<cluster::PowerwallView>();
+    instance->registerAutoDescription<cluster::simple::Client>();
+    instance->registerAutoDescription<cluster::simple::Heartbeat>();
+    instance->registerAutoDescription<cluster::simple::Server>();
+    instance->registerAutoDescription<cluster::simple::View>();
+    instance->registerAutoDescription<cluster::mpi::View>();
+    instance->registerAutoDescription<DataFileSequencer>();
+    instance->registerAutoDescription<misc::ImageViewer>();
+    instance->registerAutoDescription<misc::LinesRenderer>();
+    instance->registerAutoDescription<misc::SiffCSplineFitter>();
+    instance->registerAutoDescription<misc::TestSpheresDataSource>();
+    instance->registerAutoDescription<moldyn::AddParticleColours>();
+    instance->registerAutoDescription<moldyn::ArrowRenderer>();
+    instance->registerAutoDescription<moldyn::DataFileSequence>();
+    instance->registerAutoDescription<moldyn::DataGridder>();
+    instance->registerAutoDescription<moldyn::GrimRenderer>();
+    instance->registerDescription<LoaderADModuleAutoDescription<moldyn::IMDAtomDataSource> >();
+    instance->registerAutoDescription<moldyn::MipDepthSphereRenderer>();
+    instance->registerAutoDescription<moldyn::MMPGDDataSource>();
+    instance->registerAutoDescription<moldyn::MMPGDWriter>();
+    instance->registerAutoDescription<moldyn::MMPLDDataSource>();
+    instance->registerAutoDescription<moldyn::MMPLDWriter>();
+    instance->registerDescription<LoaderADModuleAutoDescription<moldyn::MMSPDDataSource> >();
+    instance->registerAutoDescription<moldyn::SIFFDataSource>();
+    instance->registerAutoDescription<moldyn::SimpleGeoSphereRenderer>();
+    instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
+    instance->registerAutoDescription<moldyn::ClusteredSphereRenderer>();
+    instance->registerAutoDescription<moldyn::SphereDataUnifier>();
+    instance->registerAutoDescription<moldyn::SphereOutlineRenderer>();
+    instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
+    instance->registerAutoDescription<moldyn::VIMDataSource>();
+    instance->registerAutoDescription<moldyn::VisIttDataSource>();
+    instance->registerAutoDescription<moldyn::DirPartColModulate>();
+    instance->registerAutoDescription<moldyn::ParticleListFilter>();
+    instance->registerAutoDescription<moldyn::ParticleWorker>();
+    instance->registerAutoDescription<moldyn::DirPartFilter>();
+    //instance->registerAutoDescription<special::ColStereoDisplay>();
+    instance->registerAutoDescription<view::ClipPlane>();
+    instance->registerAutoDescription<view::LinearTransferFunction>();
+    instance->registerAutoDescription<view::TransferFunctionRenderer>();
+    instance->registerAutoDescription<view::MuxRenderer3D<2> >();
+    instance->registerAutoDescription<view::MuxRenderer3D<3> >();
+    instance->registerAutoDescription<view::MuxRenderer3D<4> >();
+    instance->registerAutoDescription<view::MuxRenderer3D<5> >();
+    instance->registerAutoDescription<view::MuxRenderer3D<10> >();
+    instance->registerAutoDescription<view::special::AnaglyphStereoView>();
+    instance->registerAutoDescription<view::special::ChronoGraph>();
+    instance->registerAutoDescription<view::special::DemoRenderer2D>();
+    instance->registerAutoDescription<view::special::QuadBufferStereoView>();
+    instance->registerAutoDescription<view::special::ScreenShooter>();
+    instance->registerAutoDescription<view::SwitchRenderer3D>();
+    instance->registerAutoDescription<view::TileView>();
+    instance->registerAutoDescription<view::View2D>();
+    instance->registerAutoDescription<view::View3D>();
+    instance->registerAutoDescription<view::ViewDirect3D>();
+    instance->registerAutoDescription<view::BlinnPhongRendererDeferred>();
+    instance->registerAutoDescription<view::SplitView>();
+    instance->registerAutoDescription<view::SharedCameraParameters>();
+    instance->registerAutoDescription<view::LinkedView3D>();
+    //instance->registerAutoDescription<vismol2::Mol20Renderer>();
+    //instance->registerAutoDescription<vismol2::Mol20DataSource>();
+    instance->registerAutoDescription<job::DataWriterJob>();
+    instance->registerAutoDescription<job::JobThread>();
+    instance->registerAutoDescription<BuckyBall>();
+    instance->registerAutoDescription<GridBalls>();
+    instance->registerAutoDescription<moldyn::DirPartVolume>();
+    instance->registerAutoDescription<misc::VolumeCache>();
+    instance->registerAutoDescription<RenderVolumeSlice>();
+    instance->registerAutoDescription<moldyn::DirectVolumeRenderer>();
+    instance->registerAutoDescription<moldyn::DatRawDataSource>();
+    instance->registerAutoDescription<moldyn::SIFFWriter>();
+    instance->registerAutoDescription<moldyn::VTFDataSource>();
+    instance->registerAutoDescription<moldyn::VTFResDataSource>();
+    instance->registerAutoDescription<moldyn::D3D11SimpleSphereRenderer>();
+    instance->registerAutoDescription<moldyn::AddClusterColours>();
+    instance->registerAutoDescription<moldyn::DynDensityGradientEstimator>();
+    instance->registerAutoDescription<moldyn::DataSetTimeRewriteModule>();
+    instance->registerAutoDescription<moldyn::ParticleListMergeModule>();
+
 }
 
 
