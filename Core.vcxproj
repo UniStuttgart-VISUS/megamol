@@ -338,6 +338,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\AbstractSimpleStoringParticleDataSource.cpp" />
     <ClCompile Include="moldyn\AddClusterColours.cpp" />
     <ClCompile Include="moldyn\ClusteredSphereRenderer.cpp" />
+    <ClCompile Include="moldyn\DataSetTimeRewriteModule.cpp" />
     <ClCompile Include="moldyn\DatRawDataSource.cpp" />
     <ClCompile Include="moldyn\D3D11SimpleSphereRenderer.cpp" />
     <ClCompile Include="moldyn\DirectVolumeRenderer.cpp" />
@@ -600,6 +601,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\AbstractSimpleStoringParticleDataSource.h" />
     <ClInclude Include="moldyn\AddClusterColours.h" />
     <ClInclude Include="moldyn\ClusteredSphereRenderer.h" />
+    <ClInclude Include="moldyn\DataSetTimeRewriteModule.h" />
     <ClInclude Include="moldyn\DatRawDataSource.h" />
     <ClInclude Include="moldyn\D3D11SimpleSphereRenderer.h" />
     <ClInclude Include="moldyn\DirectVolumeRenderer.h" />

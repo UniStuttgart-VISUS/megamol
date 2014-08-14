@@ -87,6 +87,7 @@
 #include "moldyn/VTFResDataSource.h"
 #include "moldyn/AddClusterColours.h"
 #include "moldyn/DynDensityGradientEstimator.h"
+#include "moldyn/DataSetTimeRewriteModule.h"
 
 using namespace megamol::core;
 
@@ -146,9 +147,9 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<moldyn::MMPLDWriter>();
         instance->registerDescription<LoaderADModuleAutoDescription<moldyn::MMSPDDataSource> >();
         instance->registerAutoDescription<moldyn::SIFFDataSource>();
-		instance->registerAutoDescription<moldyn::SimpleGeoSphereRenderer>();
-		instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
-		instance->registerAutoDescription<moldyn::ClusteredSphereRenderer>();
+        instance->registerAutoDescription<moldyn::SimpleGeoSphereRenderer>();
+        instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
+        instance->registerAutoDescription<moldyn::ClusteredSphereRenderer>();
         instance->registerAutoDescription<moldyn::SphereDataUnifier>();
         instance->registerAutoDescription<moldyn::SphereOutlineRenderer>();
         instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
@@ -156,7 +157,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<moldyn::VisIttDataSource>();
         instance->registerAutoDescription<moldyn::DirPartColModulate>();
         instance->registerAutoDescription<moldyn::ParticleListFilter>();
-		instance->registerAutoDescription<moldyn::ParticleWorker>();
+        instance->registerAutoDescription<moldyn::ParticleWorker>();
         instance->registerAutoDescription<moldyn::DirPartFilter>();
         //instance->registerAutoDescription<special::ColStereoDisplay>();
         instance->registerAutoDescription<view::ClipPlane>();
@@ -192,12 +193,13 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
         instance->registerAutoDescription<RenderVolumeSlice>();
         instance->registerAutoDescription<moldyn::DirectVolumeRenderer>();
         instance->registerAutoDescription<moldyn::DatRawDataSource>();
-		instance->registerAutoDescription<moldyn::SIFFWriter>();
-		instance->registerAutoDescription<moldyn::VTFDataSource>();
-		instance->registerAutoDescription<moldyn::VTFResDataSource>();
+        instance->registerAutoDescription<moldyn::SIFFWriter>();
+        instance->registerAutoDescription<moldyn::VTFDataSource>();
+        instance->registerAutoDescription<moldyn::VTFResDataSource>();
         instance->registerAutoDescription<moldyn::D3D11SimpleSphereRenderer>();
         instance->registerAutoDescription<moldyn::AddClusterColours>();
         instance->registerAutoDescription<moldyn::DynDensityGradientEstimator>();
+        instance->registerAutoDescription<moldyn::DataSetTimeRewriteModule>();
     //}
     //return instance;
 }
