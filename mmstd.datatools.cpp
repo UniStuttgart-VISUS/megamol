@@ -14,6 +14,7 @@
 #include "vislib/ThreadSafeStackTrace.h"
 #include "DataSetTimeRewriteModule.h"
 #include "ParticleListMergeModule.h"
+#include "DataFileSequencer.h"
 
 
 /*
@@ -57,7 +58,7 @@ MMSTD_DATATOOLS_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_DATATOOLS_API int mmplgModuleCount(void) {
-    return 2;
+    return 3;
 }
 
 
@@ -68,6 +69,7 @@ MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx) {
     switch(idx) {
     case 0: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataSetTimeRewriteModule>();
     case 1: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListMergeModule>();
+    case 2: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataFileSequencer>();
     }
     return nullptr;
 }
