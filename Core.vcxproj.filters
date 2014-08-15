@@ -688,9 +688,6 @@
     <ClCompile Include="utility\ResourceWrapper.cpp">
       <Filter>utility\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="moldyn\SphereDataUnifier.cpp">
-      <Filter>moldyn\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="moldyn\AbstractSimpleParticleDataSource.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
@@ -1328,9 +1325,6 @@
     </ClInclude>
     <ClInclude Include="utility\ResourceWrapper.h">
       <Filter>utility\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="moldyn\SphereDataUnifier.h">
-      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="moldyn\AbstractSimpleParticleDataSource.h">
       <Filter>moldyn\Header Files</Filter>

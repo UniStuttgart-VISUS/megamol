@@ -352,7 +352,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\SIFFWriter.cpp" />
     <ClCompile Include="moldyn\SimpleGeoSphereRenderer.cpp" />
     <ClCompile Include="moldyn\slicing.cpp" />
-    <ClCompile Include="moldyn\SphereDataUnifier.cpp" />
     <ClCompile Include="moldyn\SphereOutlineRenderer.cpp" />
     <ClCompile Include="moldyn\VolumeDataCall.cpp" />
     <ClCompile Include="moldyn\VTFDataSource.cpp" />
@@ -613,7 +612,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\SIFFWriter.h" />
     <ClInclude Include="moldyn\SimpleGeoSphereRenderer.h" />
     <ClInclude Include="moldyn\slicing.h" />
-    <ClInclude Include="moldyn\SphereDataUnifier.h" />
     <ClInclude Include="moldyn\SphereOutlineRenderer.h" />
     <ClInclude Include="moldyn\VolumeDataCall.h" />
     <ClInclude Include="moldyn\VTFDataSource.h" />

@@ -41,7 +41,6 @@
 #include "moldyn/SimpleGeoSphereRenderer.h"
 #include "moldyn/SimpleSphereRenderer.h"
 #include "moldyn/ClusteredSphereRenderer.h"
-#include "moldyn/SphereDataUnifier.h"
 #include "moldyn/SphereOutlineRenderer.h"
 #include "moldyn/VIMDataSource.h"
 #include "moldyn/VisIttDataSource.h"
@@ -153,7 +152,6 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
     instance->registerAutoDescription<moldyn::SimpleGeoSphereRenderer>();
     instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
     instance->registerAutoDescription<moldyn::ClusteredSphereRenderer>();
-    instance->registerAutoDescription<moldyn::SphereDataUnifier>();
     instance->registerAutoDescription<moldyn::SphereOutlineRenderer>();
     instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
     instance->registerAutoDescription<moldyn::VIMDataSource>();
