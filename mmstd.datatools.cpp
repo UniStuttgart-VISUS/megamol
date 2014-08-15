@@ -15,6 +15,7 @@
 #include "DataSetTimeRewriteModule.h"
 #include "ParticleListMergeModule.h"
 #include "DataFileSequencer.h"
+#include "SphereDataUnifier.h"
 
 
 /*
@@ -58,7 +59,7 @@ MMSTD_DATATOOLS_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_DATATOOLS_API int mmplgModuleCount(void) {
-    return 3;
+    return 4;
 }
 
 
@@ -70,6 +71,7 @@ MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx) {
     case 0: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataSetTimeRewriteModule>();
     case 1: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListMergeModule>();
     case 2: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataFileSequencer>();
+    case 3: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::SphereDataUnifier>();
     }
     return nullptr;
 }

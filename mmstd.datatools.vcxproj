@@ -242,6 +242,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="mmstd.datatools.cpp" />
     <ClCompile Include="ParticleListMergeModule.cpp" />
+    <ClCompile Include="SphereDataUnifier.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -254,6 +255,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="DataSetTimeRewriteModule.h" />
     <ClInclude Include="mmstd.datatools.h" />
     <ClInclude Include="ParticleListMergeModule.h" />
+    <ClInclude Include="SphereDataUnifier.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
