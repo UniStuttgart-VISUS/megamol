@@ -108,8 +108,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include;$(VISlibPath)\math\include;$(VISlibPath)\sys\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MMSTD.DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)base\include\;$(VISlibPath)math\include\;$(VISlibPath)sys\include\;$(VISlibPath)gl\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MMSTD_DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -119,7 +119,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;MegaMolCore$(BitsD).lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -138,8 +138,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include;$(VISlibPath)\math\include;$(VISlibPath)\sys\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MMSTD.DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)base\include\;$(VISlibPath)math\include\;$(VISlibPath)sys\include\;$(VISlibPath)gl\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MMSTD_DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -149,7 +149,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;MegaMolCore$(BitsD).lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -166,8 +166,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include;$(VISlibPath)\math\include;$(VISlibPath)\sys\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MMSTD.DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)base\include\;$(VISlibPath)math\include\;$(VISlibPath)sys\include\;$(VISlibPath)gl\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MMSTD_DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -176,7 +176,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;MegaMolCore$(BitsD).lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -198,8 +198,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include;$(VISlibPath)\math\include;$(VISlibPath)\sys\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MMSTD.DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)base\include\;$(VISlibPath)math\include\;$(VISlibPath)sys\include\;$(VISlibPath)gl\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MMSTD_DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -208,7 +208,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;MegaMolCore$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;MegaMolCore$(BitsD).lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -224,6 +224,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DataSetTimeRewriteModule.cpp" />
     <ClCompile Include="dllmain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </PrecompiledHeader>
@@ -239,6 +240,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
     </ClCompile>
     <ClCompile Include="mmstd.datatools.cpp" />
+    <ClCompile Include="ParticleListMergeModule.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -247,7 +249,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DataSetTimeRewriteModule.h" />
     <ClInclude Include="mmstd.datatools.h" />
+    <ClInclude Include="ParticleListMergeModule.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>

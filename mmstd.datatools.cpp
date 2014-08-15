@@ -12,12 +12,14 @@
 #include "vislib/vislibversion.h"
 #include "vislib/Log.h"
 #include "vislib/ThreadSafeStackTrace.h"
+#include "DataSetTimeRewriteModule.h"
+#include "ParticleListMergeModule.h"
 
 
 /*
  * mmplgPluginAPIVersion
  */
-MMSTD.DATATOOLS_API int mmplgPluginAPIVersion(void) {
+MMSTD_DATATOOLS_API int mmplgPluginAPIVersion(void) {
     return 100;
 }
 
@@ -25,7 +27,7 @@ MMSTD.DATATOOLS_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgPluginName
  */
-MMSTD.DATATOOLS_API const char * mmplgPluginName(void) {
+MMSTD_DATATOOLS_API const char * mmplgPluginName(void) {
     return "mmstd.datatools";
 }
 
@@ -33,15 +35,15 @@ MMSTD.DATATOOLS_API const char * mmplgPluginName(void) {
 /*
  * mmplgPluginDescription
  */
-MMSTD.DATATOOLS_API const char * mmplgPluginDescription(void) {
-    return "Template for MegaMol Plugins (TODO: CHANGE this description)";
+MMSTD_DATATOOLS_API const char * mmplgPluginDescription(void) {
+    return "MegaMol Standard-Plugin containing data manipulation and conversion modules";
 }
 
 
 /*
  * mmplgCoreCompatibilityValue
  */
-MMSTD.DATATOOLS_API const void * mmplgCoreCompatibilityValue(void) {
+MMSTD_DATATOOLS_API const void * mmplgCoreCompatibilityValue(void) {
     static const mmplgCompatibilityValues compRev = {
         sizeof(mmplgCompatibilityValues),
         MEGAMOL_CORE_COMP_REV,
@@ -54,43 +56,47 @@ MMSTD.DATATOOLS_API const void * mmplgCoreCompatibilityValue(void) {
 /*
  * mmplgModuleCount
  */
-MMSTD.DATATOOLS_API int mmplgModuleCount(void) {
-    return 0; // TODO: Implement
+MMSTD_DATATOOLS_API int mmplgModuleCount(void) {
+    return 2;
 }
 
 
 /*
  * mmplgModuleDescription
  */
-MMSTD.DATATOOLS_API void* mmplgModuleDescription(int idx) {
-    return NULL; // TODO: Implement
+MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx) {
+    switch(idx) {
+    case 0: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataSetTimeRewriteModule>();
+    case 1: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListMergeModule>();
+    }
+    return nullptr;
 }
 
 
 /*
  * mmplgCallCount
  */
-MMSTD.DATATOOLS_API int mmplgCallCount(void) {
-    return 0; // TODO: Implement
+MMSTD_DATATOOLS_API int mmplgCallCount(void) {
+    return 0;
 }
 
 
 /*
  * mmplgCallDescription
  */
-MMSTD.DATATOOLS_API void* mmplgCallDescription(int idx) {
-    return NULL; // TODO: Implement
+MMSTD_DATATOOLS_API void* mmplgCallDescription(int idx) {
+    return nullptr;
 }
 
 
 /*
  * mmplgConnectStatics
  */
-MMSTD.DATATOOLS_API bool mmplgConnectStatics(int which, void* value) {
+MMSTD_DATATOOLS_API bool mmplgConnectStatics(int which, void* value) {
     switch (which) {
 
         case 1: // vislib::log
-            vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
+            vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(nullptr), false);
             vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
             vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(static_cast<vislib::sys::Log*>(value)));
             vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);

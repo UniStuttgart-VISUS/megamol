@@ -16,7 +16,7 @@ TargetName := mmstd.datatools
 InputRootDir := $(InputDir)
 InputDirs := .
 IncludeDir := $(IncludeDir) $(mmcorepath)
-VISlibs := sys math base
+VISlibs := sys math base graphics gl
 
 
 # Additional compiler flags

@@ -4,8 +4,8 @@
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#ifndef MMSTD.DATATOOLS_H_INCLUDED
-#define MMSTD.DATATOOLS_H_INCLUDED
+#ifndef MMSTD_DATATOOLS_H_INCLUDED
+#define MMSTD_DATATOOLS_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -18,13 +18,13 @@
 // that uses this DLL. This way any other project whose source files include this file see 
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
-#ifdef MMSTD.DATATOOLS_EXPORTS
-#define MMSTD.DATATOOLS_API __declspec(dllexport)
+#ifdef MMSTD_DATATOOLS_EXPORTS
+#define MMSTD_DATATOOLS_API __declspec(dllexport)
 #else
-#define MMSTD.DATATOOLS_API __declspec(dllimport)
+#define MMSTD_DATATOOLS_API __declspec(dllimport)
 #endif
 #else /* _WIN32 */
-#define MMSTD.DATATOOLS_API
+#define MMSTD_DATATOOLS_API
 #endif /* _WIN32 */
 
 
@@ -37,35 +37,35 @@ extern "C" {
  *
  * @return The used MegaMol™ plugin api
  */
-MMSTD.DATATOOLS_API int mmplgPluginAPIVersion(void);
+MMSTD_DATATOOLS_API int mmplgPluginAPIVersion(void);
 
 /**
  * Answer the name of the plugin in UTF8/ASCII7
  *
  * @return The name of the plugin in UTF8/ASCII7
  */
-MMSTD.DATATOOLS_API const char * mmplgPluginName(void);
+MMSTD_DATATOOLS_API const char * mmplgPluginName(void);
 
 /**
  * Answer the description of the plugin in UTF8/ASCII7
  *
  * @return The description of the plugin in UTF8/ASCII7
  */
-MMSTD.DATATOOLS_API const char * mmplgPluginDescription(void);
+MMSTD_DATATOOLS_API const char * mmplgPluginDescription(void);
 
 /**
  * Answer the core compatibility information
  *
  * @return The core compatibility information
  */
-MMSTD.DATATOOLS_API const void * mmplgCoreCompatibilityValue(void);
+MMSTD_DATATOOLS_API const void * mmplgCoreCompatibilityValue(void);
 
 /**
  * Answer the number of exported modules
  *
  * @return The number of exported modules
  */
-MMSTD.DATATOOLS_API int mmplgModuleCount(void);
+MMSTD_DATATOOLS_API int mmplgModuleCount(void);
 
 /**
  * Answer the module definition object of the idx-th module
@@ -74,14 +74,14 @@ MMSTD.DATATOOLS_API int mmplgModuleCount(void);
  *
  * @return The module definition
  */
-MMSTD.DATATOOLS_API void* mmplgModuleDescription(int idx);
+MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx);
 
 /**
  * Answer the number of exported calls
  *
  * @return The number of exported calls
  */
-MMSTD.DATATOOLS_API int mmplgCallCount(void);
+MMSTD_DATATOOLS_API int mmplgCallCount(void);
 
 /**
  * Answer the call definition object of the idx-th call
@@ -90,7 +90,7 @@ MMSTD.DATATOOLS_API int mmplgCallCount(void);
  *
  * @return The call definition
  */
-MMSTD.DATATOOLS_API void* mmplgCallDescription(int idx);
+MMSTD_DATATOOLS_API void* mmplgCallDescription(int idx);
 
 /**
  * Connects static objects to the core. (See docu for more information)
@@ -101,10 +101,10 @@ MMSTD.DATATOOLS_API void* mmplgCallDescription(int idx);
  * @return True if this static object has been connected, false if the object
  *         either does not exist or if there was an error.
  */
-MMSTD.DATATOOLS_API bool mmplgConnectStatics(int which, void* value);
+MMSTD_DATATOOLS_API bool mmplgConnectStatics(int which, void* value);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif /* MMSTD.DATATOOLS_H_INCLUDED */
+#endif /* MMSTD_DATATOOLS_H_INCLUDED */
