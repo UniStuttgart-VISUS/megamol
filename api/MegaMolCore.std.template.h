@@ -41,13 +41,20 @@ typedef struct _mmplg_compatibilityvalues_t {
  */
 #   ifdef MEGAMOLCORE_EXPORTS
 #       define MEGAMOLCORE_API __declspec(dllexport)
+#       define MEGAMOLCORE_APIEXT
 #   else /* MEGAMOLCORE_EXPORTS */
 #       define MEGAMOLCORE_API __declspec(dllimport)
+#       define MEGAMOLCORE_APIEXT extern
 #   endif /* MEGAMOLCORE_EXPORTS */
 #   define MEGAMOLCORE_CALL __stdcall
 #   define MEGAMOLCORE_CALLBACK __stdcall
 #else /* _WIN32 */
 #   define MEGAMOLCORE_API
+#   ifdef MEGAMOLCORE_EXPORTS
+#       define MEGAMOLCORE_APIEXT
+#   else /* MEGAMOLCORE_EXPORTS */
+#       define MEGAMOLCORE_APIEXT extern
+#   endif /* MEGAMOLCORE_EXPORTS */
 #   define MEGAMOLCORE_CALL
 #   define MEGAMOLCORE_CALLBACK
 #endif /* _WIN32 */

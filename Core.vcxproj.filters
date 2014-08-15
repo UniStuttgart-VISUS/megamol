@@ -796,12 +796,6 @@
     <ClCompile Include="view\CallCamParamSync.cpp">
       <Filter>view\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="moldyn\DataSetTimeRewriteModule.cpp">
-      <Filter>moldyn\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="moldyn\ParticleListMergeModule.cpp">
-      <Filter>moldyn\Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1457,12 +1451,6 @@
     </ClInclude>
     <ClInclude Include="view\CallCamParamSync.h">
       <Filter>view\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="moldyn\DataSetTimeRewriteModule.h">
-      <Filter>moldyn\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="moldyn\ParticleListMergeModule.h">
-      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

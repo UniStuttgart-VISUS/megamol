@@ -20,10 +20,14 @@ namespace megamol {
 namespace core {
 
 
+    /** exporting template specialization */
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API ObjectDescriptionManager<CallDescription>;
+
+
     /**
      * Class of rendering graph call description manager
      */
-    class CallDescriptionManager
+    class MEGAMOLCORE_API CallDescriptionManager
         : public ObjectDescriptionManager<CallDescription> {
     public:
 
@@ -56,7 +60,13 @@ namespace core {
     private:
 
         /** The one an only instance */
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         static vislib::SmartPtr<CallDescriptionManager> inst;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
         /**
          * Registers object in the one and only instance

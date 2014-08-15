@@ -87,8 +87,6 @@
 #include "moldyn/VTFResDataSource.h"
 #include "moldyn/AddClusterColours.h"
 #include "moldyn/DynDensityGradientEstimator.h"
-#include "moldyn/DataSetTimeRewriteModule.h"
-#include "moldyn/ParticleListMergeModule.h"
 
 using namespace megamol::core;
 
@@ -206,8 +204,6 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
     instance->registerAutoDescription<moldyn::D3D11SimpleSphereRenderer>();
     instance->registerAutoDescription<moldyn::AddClusterColours>();
     instance->registerAutoDescription<moldyn::DynDensityGradientEstimator>();
-    instance->registerAutoDescription<moldyn::DataSetTimeRewriteModule>();
-    instance->registerAutoDescription<moldyn::ParticleListMergeModule>();
 
 }
 

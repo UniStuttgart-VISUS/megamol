@@ -79,7 +79,13 @@ namespace core {
     private:
 
         /** The registered object descriptions */
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         vislib::SingleLinkedList<T*> descriptions;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
     };
 
