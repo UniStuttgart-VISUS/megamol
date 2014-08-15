@@ -105,11 +105,21 @@ namespace moldyn {
          */
         bool getExtentCallback(Call& caller);
 
+        /**
+         * Copies the incoming data 'inDat' into the object's fields
+         *
+         * @param inDat The incoming data
+         */
+        void setData(MultiParticleDataCall& inDat);
+
         /** The slot for publishing data to the writer */
         CalleeSlot outDataSlot;
 
         /** The slot for requesting data from the source */
         CallerSlot inDataSlot;
+
+        /** The call for Transfer function */
+        CallerSlot getTFSlot;
 
         /** The hash id of the data stored */
         size_t dataHash;
