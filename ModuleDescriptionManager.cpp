@@ -20,7 +20,6 @@
 #include "cluster/simple/Heartbeat.h"
 #include "cluster/simple/Server.h"
 #include "cluster/simple/View.h"
-#include "DataFileSequencer.h"
 #include "misc/ImageViewer.h"
 #include "misc/LinesRenderer.h"
 #include "misc/SiffCSplineFitter.h"
@@ -134,7 +133,6 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
     instance->registerAutoDescription<cluster::simple::Server>();
     instance->registerAutoDescription<cluster::simple::View>();
     instance->registerAutoDescription<cluster::mpi::View>();
-    instance->registerAutoDescription<DataFileSequencer>();
     instance->registerAutoDescription<misc::ImageViewer>();
     instance->registerAutoDescription<misc::LinesRenderer>();
     instance->registerAutoDescription<misc::SiffCSplineFitter>();

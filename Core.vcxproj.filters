@@ -217,9 +217,6 @@
     <ClCompile Include="CoreInstance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DataFileSequencer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DataWriterCtrlCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -841,9 +838,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CoreInstance.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DataFileSequencer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DataWriterCtrlCall.h">

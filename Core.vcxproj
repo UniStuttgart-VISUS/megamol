@@ -303,7 +303,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="cluster\simple\Server.cpp" />
     <ClCompile Include="cluster\simple\View.cpp" />
     <ClCompile Include="CoreInstance.cpp" />
-    <ClCompile Include="DataFileSequencer.cpp" />
     <ClCompile Include="DataWriterCtrlCall.cpp" />
     <ClCompile Include="GridBalls.cpp" />
     <ClCompile Include="InstanceDescription.cpp" />
@@ -574,7 +573,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="cluster\simple\Server.h" />
     <ClInclude Include="cluster\simple\View.h" />
     <ClInclude Include="CoreInstance.h" />
-    <ClInclude Include="DataFileSequencer.h" />
     <ClInclude Include="DataWriterCtrlCall.h" />
     <ClInclude Include="GridBalls.h" />
     <ClInclude Include="InstanceDescription.h" />
