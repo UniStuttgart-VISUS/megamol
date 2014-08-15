@@ -795,6 +795,9 @@
     <ClInclude Include="MultiPDBLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CudaDevArr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="common.mk">
@@ -863,6 +866,7 @@
     <None Include="Shaders\layeredisosurfaces.btf">
       <Filter>Shader Files</Filter>
     </None>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="Shaders\protein.btf">

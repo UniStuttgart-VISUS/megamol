@@ -721,6 +721,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CrystalStructureDataCall.h" />
     <ClInclude Include="CrystalStructureDataSource.h" />
     <ClInclude Include="CrystalStructureVolumeRenderer.h" />
+    <ClInclude Include="CudaDevArr.h" />
     <ClInclude Include="CUDAKernels.h" />
     <ClInclude Include="CUDAMarchingCubes.h" />
     <ClInclude Include="CUDAQuickSurf.h" />
