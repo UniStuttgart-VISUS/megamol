@@ -13,7 +13,6 @@
 
 #include "AbstractParticleManipulator.h"
 #include "param/ParamSlot.h"
-#include "TransferFunctionQuery.h"
 
 
 namespace megamol {
@@ -50,9 +49,19 @@ namespace datatools {
     protected:
 
         /**
-         * Manipulates the particle data
+         * Manipulates the particle data extend information
          *
-         * @remarks the default implementation does not changed the data
+         * @param outData The call receiving the manipulated information
+         * @param inData The call holding the original data
+         *
+         * @return True on success
+         */
+        virtual bool manipulateExtent(
+            megamol::core::moldyn::MultiParticleDataCall& outData,
+            megamol::core::moldyn::MultiParticleDataCall& inData);
+
+        /**
+         * Manipulates the particle data
          *
          * @param outData The call receiving the manipulated data
          * @param inData The call holding the original data
@@ -65,14 +74,23 @@ namespace datatools {
 
     private:
 
-        /** The transfer function query */
-        TransferFunctionQuery tfq;
-
         /** The hash id of the data stored */
         size_t dataHash;
 
         /** The frame id of the data stored */
         unsigned int frameId;
+
+        /** The generated data */
+        vislib::RawStorage data;
+
+        /** The out data hash */
+        SIZE_T outDataHash;
+
+        /** The new bounding box */
+        vislib::math::Cuboid<float> bbox;
+
+        /** The new clip box */
+        vislib::math::Cuboid<float> cbox;
 
     };
 

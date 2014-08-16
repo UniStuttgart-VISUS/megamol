@@ -77,6 +77,7 @@ namespace datatools {
         virtual bool manipulateExtent(
             megamol::core::moldyn::MultiParticleDataCall& outData,
             megamol::core::moldyn::MultiParticleDataCall& inData);
+
     private:
 
         /**
