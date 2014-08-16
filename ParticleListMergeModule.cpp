@@ -18,19 +18,9 @@ using namespace megamol::stdplugin;
 /*
  * datatools::ParticleListMergeModule::ParticleListMergeModule
  */
-datatools::ParticleListMergeModule::ParticleListMergeModule(void) : core::Module(),
-        outDataSlot("outData", "The slot for publishing data to the writer"),
-        inDataSlot("inData", "The slot for requesting data from the source"),
+datatools::ParticleListMergeModule::ParticleListMergeModule(void) : AbstractParticleManipulator("outData", "inData"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         dataHash(0), frameId(0), parts(), data() {
-
-    this->outDataSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleListMergeModule::getDataCallback);
-    this->outDataSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleListMergeModule::getExtentCallback);
-    this->MakeSlotAvailable(&this->outDataSlot);
-
-    this->inDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
-    this->MakeSlotAvailable(&this->inDataSlot);
-
     this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 }
@@ -45,66 +35,24 @@ datatools::ParticleListMergeModule::~ParticleListMergeModule(void) {
 
 
 /*
- * datatools::ParticleListMergeModule::create
+ * datatools::ParticleListMergeModule::manipulateData
  */
-bool datatools::ParticleListMergeModule::create(void) {
-    return true;
-}
+bool datatools::ParticleListMergeModule::manipulateData(
+        megamol::core::moldyn::MultiParticleDataCall& outData,
+        megamol::core::moldyn::MultiParticleDataCall& inData) {
 
-
-/*
- * datatools::ParticleListMergeModule::release
- */
-void datatools::ParticleListMergeModule::release(void) {
-    // intentionally empty
-}
-
-
-/*
- * datatools::ParticleListMergeModule::getDataCallback
- */
-bool datatools::ParticleListMergeModule::getDataCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *pgdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
-    if (pgdc == NULL) return false;
-
-    core::moldyn::MultiParticleDataCall *ggdc = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
-    if (ggdc == NULL) return false;
-
-    ggdc->SetFrameID(pgdc->FrameID());
-    if (!(*ggdc)(0)) return false;
-
-    if ((this->frameId != ggdc->FrameID()) || (this->dataHash != ggdc->DataHash()) || (ggdc->DataHash() == 0)) {
-        this->frameId = ggdc->FrameID();
-        this->dataHash = ggdc->DataHash();
-        this->setData(*ggdc);
+    if ((this->frameId != inData.FrameID()) || (this->dataHash != inData.DataHash()) || (inData.DataHash() == 0)) {
+        this->frameId = inData.FrameID();
+        this->dataHash = inData.DataHash();
+        this->setData(inData);
     }
-    ggdc->Unlock();
+    inData.Unlock();
 
-    pgdc->SetDataHash(this->dataHash);
-    pgdc->SetFrameID(this->frameId);
-    pgdc->SetParticleListCount(1);
-    pgdc->AccessParticles(0) = this->parts;
-    pgdc->SetUnlocker(nullptr); // HAZARD: we could have one ...
-
-    return true;
-}
-
-
-/*
- * datatools::ParticleListMergeModule::getExtentCallback
- */
-bool datatools::ParticleListMergeModule::getExtentCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *pgdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
-    if (pgdc == NULL) return false;
-
-    core::moldyn::MultiParticleDataCall *ggdc = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
-    if (ggdc == NULL) return false;
-
-    *ggdc = *pgdc;
-    if (!(*ggdc)(1)) return false;
-
-    *pgdc = *ggdc;
-    ggdc->SetUnlocker(nullptr, false);
+    outData.SetDataHash(this->dataHash);
+    outData.SetFrameID(this->frameId);
+    outData.SetParticleListCount(1);
+    outData.AccessParticles(0) = this->parts;
+    outData.SetUnlocker(nullptr); // HAZARD: we could have one ...
 
     return true;
 }

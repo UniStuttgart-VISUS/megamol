@@ -57,6 +57,7 @@ bool datatools::AbstractParticleManipulator::manipulateData(
         megamol::core::moldyn::MultiParticleDataCall& outData,
         megamol::core::moldyn::MultiParticleDataCall& inData) {
     outData = inData;
+    inData.SetUnlocker(nullptr, false);
     return true;
 }
 
@@ -68,6 +69,7 @@ bool datatools::AbstractParticleManipulator::manipulateExtent(
         megamol::core::moldyn::MultiParticleDataCall& outData,
         megamol::core::moldyn::MultiParticleDataCall& inData) {
     outData = inData;
+    inData.SetUnlocker(nullptr, false);
     return true;
 }
 

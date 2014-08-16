@@ -41,6 +41,7 @@ namespace datatools {
 
         /** Dtor */
         virtual ~AbstractParticleManipulator(void);
+
     protected:
 
         /** Lazy initialization of the module */

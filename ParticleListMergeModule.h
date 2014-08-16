@@ -12,9 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Module.h"
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
-#include "moldyn/MultiParticleDataCall.h"
+#include "AbstractParticleManipulator.h"
 #include "vislib/Cuboid.h"
 
 
@@ -26,7 +24,7 @@ namespace datatools {
     /**
      * In-Between management module to change time codes of a data set
      */
-    class ParticleListMergeModule : public core::Module {
+    class ParticleListMergeModule : public AbstractParticleManipulator {
     public:
 
         /**
@@ -74,36 +72,20 @@ namespace datatools {
     protected:
 
         /**
-         * Implementation of 'Create'.
+         * Manipulates the particle data
          *
-         * @return 'true' on success, 'false' otherwise.
+         * @remarks the default implementation does not changed the data
+         *
+         * @param outData The call receiving the manipulated data
+         * @param inData The call holding the original data
+         *
+         * @return True on success
          */
-        virtual bool create(void);
-
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+        virtual bool manipulateData(
+            megamol::core::moldyn::MultiParticleDataCall& outData,
+            megamol::core::moldyn::MultiParticleDataCall& inData);
 
     private:
-
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getDataCallback(core::Call& caller);
-
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getExtentCallback(core::Call& caller);
 
         /**
          * Copies the incoming data 'inDat' into the object's fields
@@ -111,12 +93,6 @@ namespace datatools {
          * @param inDat The incoming data
          */
         void setData(core::moldyn::MultiParticleDataCall& inDat);
-
-        /** The slot for publishing data to the writer */
-        core::CalleeSlot outDataSlot;
-
-        /** The slot for requesting data from the source */
-        core::CallerSlot inDataSlot;
 
         /** The call for Transfer function */
         core::CallerSlot getTFSlot;
