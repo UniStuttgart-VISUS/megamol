@@ -49,6 +49,9 @@
     <ClCompile Include="ParticleThinner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="OverrideParticleGlobals.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mmstd.datatools.h">
@@ -76,6 +79,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ParticleThinner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OverrideParticleGlobals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

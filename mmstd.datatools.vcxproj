@@ -242,6 +242,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
     </ClCompile>
     <ClCompile Include="mmstd.datatools.cpp" />
+    <ClCompile Include="OverrideParticleGlobals.cpp" />
     <ClCompile Include="ParticleListMergeModule.cpp" />
     <ClCompile Include="ParticleThinner.cpp" />
     <ClCompile Include="SphereDataUnifier.cpp" />
@@ -257,6 +258,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="DataFileSequencer.h" />
     <ClInclude Include="DataSetTimeRewriteModule.h" />
     <ClInclude Include="mmstd.datatools.h" />
+    <ClInclude Include="OverrideParticleGlobals.h" />
     <ClInclude Include="ParticleListMergeModule.h" />
     <ClInclude Include="ParticleThinner.h" />
     <ClInclude Include="SphereDataUnifier.h" />
