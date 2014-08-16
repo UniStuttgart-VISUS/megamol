@@ -14,9 +14,9 @@ using namespace megamol::stdplugin;
 /*
  * datatools::AbstractParticleManipulator::AbstractParticleManipulator
  */
-datatools::AbstractParticleManipulator::AbstractParticleManipulator(void) : megamol::core::Module(),
-        outDataSlot("outData", "output data"),
-        inDataSlot("indata", "input data") {
+datatools::AbstractParticleManipulator::AbstractParticleManipulator(const char *outSlotName, const char *inSlotName) : megamol::core::Module(),
+        outDataSlot(outSlotName, "providing access to the manipulated data"),
+        inDataSlot(inSlotName, "accessing the original data") {
 
     this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &AbstractParticleManipulator::getDataCallback);
     this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &AbstractParticleManipulator::getExtentCallback);
@@ -87,9 +87,12 @@ bool datatools::AbstractParticleManipulator::getDataCallback(megamol::core::Call
     *inMpdc = *outMpdc; // to get the correct request time
     if (!(*inMpdc)(0)) return false;
 
-    if (!this->manipulateData(*outMpdc, *inMpdc)) return false;
+    if (!this->manipulateData(*outMpdc, *inMpdc)) {
+        inMpdc->Unlock();
+        return false;
+    }
 
-    outMpdc->SetUnlocker(NULL, false); // THIS IS TERRIBLY WRONG, but required to avoid another bug
+    inMpdc->Unlock();
 
     return true;
 }
@@ -110,9 +113,12 @@ bool datatools::AbstractParticleManipulator::getExtentCallback(megamol::core::Ca
     *inMpdc = *outMpdc; // to get the correct request time
     if (!(*inMpdc)(1)) return false;
 
-    if (!this->manipulateExtent(*outMpdc, *inMpdc)) return false;
+    if (!this->manipulateExtent(*outMpdc, *inMpdc)) {
+        inMpdc->Unlock();
+        return false;
+    }
 
-    outMpdc->SetUnlocker(NULL, false); // THIS IS TERRIBLY WRONG, but required to avoid another bug
+    inMpdc->Unlock();
 
     return true;
 }

@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractParticleManipulator.h"
+#include "param/ParamSlot.h"
 
 
 namespace megamol {
@@ -64,6 +65,9 @@ namespace datatools {
             megamol::core::moldyn::MultiParticleDataCall& inData);
 
     private:
+
+        /** The thinning factor. Only each n-th particle will be kept. */
+        core::param::ParamSlot thinningFactorSlot;
 
     };
 

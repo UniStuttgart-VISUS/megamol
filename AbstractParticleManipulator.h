@@ -30,8 +30,14 @@ namespace datatools {
     class AbstractParticleManipulator : public megamol::core::Module {
     public:
 
-        /** Ctor */
-        AbstractParticleManipulator(void);
+        /**
+         * Ctor
+         *
+         * @param outSlotName The name for the slot providing the manipulated data
+         * @param inSlotName The name for the slot accessing the original data
+         */
+        AbstractParticleManipulator(const char *outSlotName,
+            const char *inSlotName);
 
         /** Dtor */
         virtual ~AbstractParticleManipulator(void);
