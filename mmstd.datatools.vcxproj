@@ -224,6 +224,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbstractParticleManipulator.cpp" />
     <ClCompile Include="DataFileSequencer.cpp" />
     <ClCompile Include="DataSetTimeRewriteModule.cpp" />
     <ClCompile Include="dllmain.cpp">
@@ -242,6 +243,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="mmstd.datatools.cpp" />
     <ClCompile Include="ParticleListMergeModule.cpp" />
+    <ClCompile Include="ParticleThinner.cpp" />
     <ClCompile Include="SphereDataUnifier.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -251,10 +253,12 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractParticleManipulator.h" />
     <ClInclude Include="DataFileSequencer.h" />
     <ClInclude Include="DataSetTimeRewriteModule.h" />
     <ClInclude Include="mmstd.datatools.h" />
     <ClInclude Include="ParticleListMergeModule.h" />
+    <ClInclude Include="ParticleThinner.h" />
     <ClInclude Include="SphereDataUnifier.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

@@ -16,6 +16,7 @@
 #include "ParticleListMergeModule.h"
 #include "DataFileSequencer.h"
 #include "SphereDataUnifier.h"
+#include "ParticleThinner.h"
 
 
 /*
@@ -59,7 +60,7 @@ MMSTD_DATATOOLS_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_DATATOOLS_API int mmplgModuleCount(void) {
-    return 4;
+    return 5;
 }
 
 
@@ -72,6 +73,7 @@ MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx) {
     case 1: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListMergeModule>();
     case 2: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataFileSequencer>();
     case 3: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::SphereDataUnifier>();
+    case 4: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleThinner>();
     }
     return nullptr;
 }
