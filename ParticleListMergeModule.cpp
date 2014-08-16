@@ -7,9 +7,6 @@
 
 #include "stdafx.h"
 #include "ParticleListMergeModule.h"
-#include "view/CallGetTransferFunction.h"
-#include "glh/glh_extensions.h"
-#include "vislib/ShallowPoint.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -18,11 +15,10 @@ using namespace megamol::stdplugin;
 /*
  * datatools::ParticleListMergeModule::ParticleListMergeModule
  */
-datatools::ParticleListMergeModule::ParticleListMergeModule(void) : AbstractParticleManipulator("outData", "inData"),
-        getTFSlot("gettransferfunction", "Connects to the transfer function module"),
+datatools::ParticleListMergeModule::ParticleListMergeModule(void)
+        : AbstractParticleManipulator("outData", "inData"), tfq(),
         dataHash(0), frameId(0), parts(), data() {
-    this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
-    this->MakeSlotAvailable(&this->getTFSlot);
+    this->MakeSlotAvailable(this->tfq.GetSlot());
 }
 
 
@@ -194,39 +190,7 @@ void datatools::ParticleListMergeModule::setData(core::moldyn::MultiParticleData
         gc[3] = 255;
     }
 
-    // fetch transfer function
-    vislib::RawStorage texDat;
-    core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-    if ((cgtf != NULL) && ((*cgtf)(0))) {
-        ::glGetError();
-        ::glEnable(GL_TEXTURE_1D);
-        ::glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-        int texSize = 0;
-        ::glGetTexLevelParameteriv(GL_TEXTURE_1D, 0, GL_TEXTURE_WIDTH, &texSize);
-        if (::glGetError() == GL_NO_ERROR) {
-            texDat.EnforceSize(texSize * 16);
-            ::glGetTexImage(GL_TEXTURE_1D, 0, GL_RGBA, GL_FLOAT, texDat.As<void>());
-            if (::glGetError() != GL_NO_ERROR) {
-                texDat.EnforceSize(0);
-            }
-        }
-        ::glBindTexture(GL_TEXTURE_1D, 0);
-        ::glDisable(GL_TEXTURE_1D);
-    }
-    unsigned int texDatSize = 2;
-    if (texDat.GetSize() < 32) {
-        texDat.EnforceSize(32);
-        *texDat.AsAt<float>(0) = 0.0f;
-        *texDat.AsAt<float>(4) = 0.0f;
-        *texDat.AsAt<float>(8) = 0.0f;
-        *texDat.AsAt<float>(12) = 1.0f;
-        *texDat.AsAt<float>(16) = 1.0f;
-        *texDat.AsAt<float>(20) = 1.0f;
-        *texDat.AsAt<float>(24) = 1.0f;
-        *texDat.AsAt<float>(28) = 1.0f;
-    } else {
-        texDatSize = static_cast<unsigned int>(texDat.GetSize() / 16);
-    }
+    this->tfq.Clear();
 
     // finally copy data
     this->parts.SetCount(partCnt);
@@ -355,18 +319,7 @@ void datatools::ParticleListMergeModule::setData(core::moldyn::MultiParticleData
                 case SimpleSphericalParticles::COLDATA_FLOAT_I: {
                     float colI = *reinterpret_cast<const float*>(pcd);
                     colI = (colI - pgcimin) / (pgcimax - pgcimin);
-                    colI *= static_cast<float>(texDatSize);
-                    unsigned int colIdx = static_cast<unsigned int>(colI);
-                    colI -= static_cast<float>(colIdx);
-                    if (colI < 0.0f) colI = 0.0f;
-                    if (colI > 1.0f) colI = 1.0f;
-                    if (colIdx >= texDatSize - 1) ::memcpy(col, texDat.At((texDatSize - 1) * 4 * sizeof(float)), 4 * sizeof(float));
-                    else {
-                        vislib::math::ShallowPoint<float, 4> c(col);
-                        vislib::math::ShallowPoint<float, 4> c1(texDat.AsAt<float>(colIdx * 4 * sizeof(float)));
-                        vislib::math::ShallowPoint<float, 4> c2(texDat.AsAt<float>((colIdx + 1) * 4 * sizeof(float)));
-                        c = c1.Interpolate(c2, colI);
-                    }
+                    this->tfq.Query(col, colI);
                 } break;
                 }
                 ::memcpy(this->data.At(partCnt * bpp + cdoff), col, sizeof(float) * ((cdType == SimpleSphericalParticles::COLDATA_FLOAT_RGBA) ? 4 : 3));

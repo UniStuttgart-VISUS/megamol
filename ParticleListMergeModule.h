@@ -14,6 +14,7 @@
 #include "Module.h"
 #include "AbstractParticleManipulator.h"
 #include "vislib/Cuboid.h"
+#include "TransferFunctionQuery.h"
 
 
 namespace megamol {
@@ -94,8 +95,8 @@ namespace datatools {
          */
         void setData(core::moldyn::MultiParticleDataCall& inDat);
 
-        /** The call for Transfer function */
-        core::CallerSlot getTFSlot;
+        /** The transfer function query */
+        TransferFunctionQuery tfq;
 
         /** The hash id of the data stored */
         size_t dataHash;

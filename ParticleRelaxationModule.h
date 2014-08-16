@@ -13,6 +13,7 @@
 
 #include "AbstractParticleManipulator.h"
 #include "param/ParamSlot.h"
+#include "TransferFunctionQuery.h"
 
 
 namespace megamol {
@@ -63,6 +64,15 @@ namespace datatools {
             megamol::core::moldyn::MultiParticleDataCall& inData);
 
     private:
+
+        /** The transfer function query */
+        TransferFunctionQuery tfq;
+
+        /** The hash id of the data stored */
+        size_t dataHash;
+
+        /** The frame id of the data stored */
+        unsigned int frameId;
 
     };
 

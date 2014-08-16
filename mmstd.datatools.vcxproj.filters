@@ -55,6 +55,9 @@
     <ClCompile Include="ParticleRelaxationModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TransferFunctionQuery.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mmstd.datatools.h">
@@ -88,6 +91,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ParticleRelaxationModule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransferFunctionQuery.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
