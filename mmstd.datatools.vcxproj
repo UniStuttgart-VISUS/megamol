@@ -244,6 +244,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="mmstd.datatools.cpp" />
     <ClCompile Include="OverrideParticleGlobals.cpp" />
     <ClCompile Include="ParticleListMergeModule.cpp" />
+    <ClCompile Include="ParticleRelaxationModule.cpp" />
     <ClCompile Include="ParticleThinner.cpp" />
     <ClCompile Include="SphereDataUnifier.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -260,6 +261,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="mmstd.datatools.h" />
     <ClInclude Include="OverrideParticleGlobals.h" />
     <ClInclude Include="ParticleListMergeModule.h" />
+    <ClInclude Include="ParticleRelaxationModule.h" />
     <ClInclude Include="ParticleThinner.h" />
     <ClInclude Include="SphereDataUnifier.h" />
     <ClInclude Include="stdafx.h" />

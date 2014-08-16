@@ -18,6 +18,7 @@
 #include "SphereDataUnifier.h"
 #include "ParticleThinner.h"
 #include "OverrideParticleGlobals.h"
+#include "ParticleRelaxationModule.h"
 
 
 /*
@@ -61,7 +62,7 @@ MMSTD_DATATOOLS_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_DATATOOLS_API int mmplgModuleCount(void) {
-    return 6;
+    return 7;
 }
 
 
@@ -76,6 +77,7 @@ MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx) {
     case 3: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::SphereDataUnifier>();
     case 4: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleThinner>();
     case 5: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::OverrideParticleGlobals>();
+    case 6: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleRelaxationModule>();
     }
     return nullptr;
 }
