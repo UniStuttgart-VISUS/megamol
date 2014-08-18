@@ -30,7 +30,7 @@
 /**
  * Minor version number of the vislib
  */
-#define VISLIB_VERSION_MINOR 0
+#define VISLIB_VERSION_MINOR 1
 
 
 /**
