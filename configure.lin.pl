@@ -50,5 +50,5 @@ $c = ConfigFilePair->new();
     $c->outFile("ExtLibs.mk");
     push @cfps, $c;
 
-VISUS::configperl::Configure("MegaMol(TM) Plugin Configuration for Linux", ".megamol.plg.lin.cache", \@pps, \@fps, \@cfps, \@sps);
+VISUS::configperl::Configure("MegaMol(TM) Plugin Configuration for Linux", ".megamol.plg.lin.cache", \@pps, \@fps, \@cfps, \@sps, \@ARGV);
 
